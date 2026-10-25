@@ -5338,7 +5338,7 @@ html[data-ui-system="manifest"] .gsearch {background:var(--ui-surface-soft) !imp
 html[data-ui-system="manifest"] .gsearch:hover,html[data-ui-system="manifest"] .gsearch:focus-visible {background:var(--ui-surface) !important
 }
 html[data-ui-system="manifest"] .userAvatarBtn,html[data-ui-system="manifest"] [data-theme] .userAvatarBtn,html[data-ui-system="manifest"] .userMenuAvatar,html[data-ui-system="manifest"] [data-theme] .userMenuAvatar {
-  background:var(--ui-accent) url("icons/avatar-patch.png") center/cover no-repeat !important
+  background:var(--ui-avatar-paper) url("icons/avatar-patch.png") center/cover no-repeat !important
 }
 html[data-ui-system="manifest"] .blSteelInitials {
   font-family:var(--ui-font-body),"Yu Gothic UI","Meiryo UI","Microsoft YaHei UI","Microsoft JhengHei UI","Noto Sans CJK JP","Noto Sans CJK SC",sans-serif !important;
@@ -14377,7 +14377,7 @@ html[data-ui-system="manifest"] nav.tabs button.active{color:var(--ui-selected-i
 html[data-ui-system="manifest"] nav.tabs button::after{content:none;}
 html[data-ui-system="manifest"] nav.tabs button:hover{background:var(--ui-surface-strong);color:var(--ui-text);}
 html[data-ui-system="manifest"] .appTop{padding-left:28px;padding-right:24px;}
-html[data-ui-system="manifest"] .blSteelInitials,html[data-ui-system="manifest"] .accessModeBadge{background:var(--ui-surface-strong) !important;color:var(--ui-text) !important;-webkit-text-fill-color:var(--ui-text) !important;}
+html[data-ui-system="manifest"] .accessModeBadge{background:var(--ui-surface-strong) !important;color:var(--ui-text) !important;-webkit-text-fill-color:var(--ui-text) !important;}
 html[data-ui-system="manifest"] .iconbtn,html[data-ui-system="manifest"] .railCollapse,html[data-ui-system="manifest"] .lcwaiHeaderBtn,html[data-ui-system="manifest"] .corporateLcwAiBtn,html[data-ui-system="manifest"] .headerAiBtn{border-radius:0 !important;background:var(--ui-surface-soft);color:var(--ui-text-secondary);}
 html[data-ui-system="manifest"] .iconbtn::after,html[data-ui-system="manifest"] .railCollapse::after,html[data-ui-system="manifest"] .lcwaiHeaderBtn::after{content:none;}
 html[data-ui-system="manifest"] :is(#view-overview,#view-cp,.vfBar) button,html[data-ui-system="manifest"] :is(#view-overview,#view-cp,.vfBar) input,html[data-ui-system="manifest"] :is(#view-overview,#view-cp,.vfBar) select,html[data-ui-system="manifest"] :is(#view-overview,#view-cp,.vfBar) textarea{border-radius:0 !important;}
@@ -14443,7 +14443,7 @@ html[data-ui-system="manifest"] #view-cp #cpTable thead tr:first-child th{backgr
 html[data-ui-system="manifest"] #cpTable .colResizer::after{background:transparent;}
 html[data-ui-system="manifest"] #cpTable .thFilterBtn{color:var(--ui-header-ink);}
 html[data-ui-system="manifest"] #cpTable .colResizer:hover::after{background:var(--ui-accent);}
-html[data-ui-system="manifest"] #currentUserBtn,html[data-ui-system="manifest"] #currentUserBtn #currentUserInitials{background:var(--ui-surface-strong) !important;color:var(--ui-text) !important;-webkit-text-fill-color:var(--ui-text) !important;}
+
 html[data-ui-system="manifest"] #currentUserBtn::before,html[data-ui-system="manifest"] #currentUserBtn::after,html[data-ui-system="manifest"] #currentUserInitials::after{content:none;}
 html[data-ui-system="manifest"] #ovDeadline>.ovHorizonChart{flex:1 1 0;min-height:0;overflow:auto;overscroll-behavior:contain;}
 html[data-ui-system="manifest"] .ovHome>#ovPriorityReminder{overflow:auto;}
@@ -14791,3 +14791,97 @@ html[data-ui-system="manifest"] #cpTable .cpThumbFlash{opacity:.65;}
 html[data-ui-system="manifest"] .freezeLaser{background:var(--ui-accent)!important;}
 
 html[data-ui-system="manifest"] .qhApprovalMark{font-size:var(--ui-font-xs);color:var(--ui-success);font-weight:600;}
+
+/* Integration with current main: appearance for existing workflow additions. */
+html[data-ui-system="manifest"] .vfViewHelp {line-height:1.5
+}
+html[data-ui-system="manifest"] .blBulkCard .modalTitle {border-bottom:0
+}
+html[data-ui-system="manifest"] .blBulkCard .modalFoot {border-top:0
+}
+html[data-ui-system="manifest"] .blBulkBody {color:var(--ui-text)
+}
+html[data-ui-system="manifest"] .blBulkTableWrap {border:0;border-radius:0
+}
+html[data-ui-system="manifest"] .blBulkTableWrap table {font-size:var(--ui-font-sm)
+}
+html[data-ui-system="manifest"] .blBulkTableWrap th,html[data-ui-system="manifest"] .blBulkTableWrap td {border-bottom:0
+}
+html[data-ui-system="manifest"] .blBulkTableWrap th {background:var(--ui-surface);color:var(--ui-text)
+}
+html[data-ui-system="manifest"] .blBulkBody section {border-bottom:0
+}
+html[data-ui-system="manifest"] .blBulkCard button:focus-visible {outline:2px solid var(--ui-accent);box-shadow:none
+}
+@media (prefers-reduced-motion:reduce) {
+html[data-ui-system="manifest"] .blBulkOverlay,html[data-ui-system="manifest"] .blBulkCard {transition:none!important;animation:none!important
+}
+}
+html[data-ui-system="manifest"] .blCmdItem.isDisabled small {line-height:1.35
+}
+html[data-ui-system="manifest"] .ovInbox {border:0;background:var(--ui-surface)
+}
+html[data-ui-system="manifest"] .ovInboxHead {border-bottom:0;font-size:var(--ui-font-sm)
+}
+html[data-ui-system="manifest"] .ovInboxScope,html[data-ui-system="manifest"] .ovInboxStatus {color:var(--ui-text-muted);font-size:var(--ui-font-xs);line-height:1.5
+}
+html[data-ui-system="manifest"] .ovInboxTabs [aria-pressed="true"] {background:var(--ui-surface-strong);color:var(--ui-text)
+}
+html[data-ui-system="manifest"] .ovInboxRow {border:0;border-bottom:0;background:transparent;color:var(--ui-text);font:inherit;font-size:var(--ui-font-xs)
+}
+html[data-ui-system="manifest"] .ovInboxRow>span:last-child {color:var(--ui-text-muted)
+}
+html[data-ui-system="manifest"] .ovInboxRow:hover {background:var(--ui-surface-strong)
+}
+html[data-ui-system="manifest"] .ovInboxRow:focus-visible,html[data-ui-system="manifest"] .ovInbox button:focus-visible {outline:2px solid var(--ui-accent);box-shadow:none
+}
+html[data-ui-system="manifest"] .ovInboxFoot {color:var(--ui-text-muted);font-size:var(--ui-font-xs);border-top:0
+}
+html[data-ui-system="manifest"] .uiPersistenceRegion,html[data-ui-system="manifest"] .uiProgressRegion {border-bottom:0;background:var(--ui-surface)
+}
+html[data-ui-system="manifest"] .uiPersistence {color:var(--ui-text-secondary);font-size:var(--ui-font-xs)
+}
+html[data-ui-system="manifest"] .uiPersistence--warning {color:var(--ui-warning)
+}
+html[data-ui-system="manifest"] .uiPersistence--error {color:var(--ui-danger)
+}
+html[data-ui-system="manifest"] .uiProgress {font-size:var(--ui-font-xs);color:var(--ui-text-secondary)
+}
+html[data-ui-system="manifest"] .uiProgress progress {accent-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .uiProgress small {font-variant-numeric:tabular-nums
+}
+html[data-ui-system="manifest"] #_kolManualStatus .uiState {box-shadow:none
+}
+html[data-ui-system="manifest"] #_kolManualStatus .uiStateBody b {font-size:var(--ui-font-xs)
+}
+html[data-ui-system="manifest"] .cpdLineage dl>div {font-size:var(--ui-font-xs)
+}
+html[data-ui-system="manifest"] .cpdLineage dt {color:var(--ui-text-secondary)
+}
+html[data-ui-system="manifest"] .cpdLineage dd {color:var(--ui-text);font-family:var(--ui-font-mono)
+}
+html[data-ui-system="manifest"] .cpdLineage summary {font-size:var(--ui-font-xs);color:var(--ui-text-secondary)
+}
+html[data-ui-system="manifest"] .cpdLineage summary:focus-visible {outline:2px solid var(--ui-accent);box-shadow:none
+}
+html[data-ui-system="manifest"] .blRnSummary h2 {font:600 var(--ui-font-xl)/1.25 var(--ui-font-body)
+}
+html[data-ui-system="manifest"] .blRnSummary p {font-size:var(--ui-font-sm);line-height:1.5;color:var(--ui-text-secondary)
+}
+html[data-ui-system="manifest"] .blRnSummary li {border-bottom:0;font-size:var(--ui-font-sm)
+}
+html[data-ui-system="manifest"] .blRnSummary li small,html[data-ui-system="manifest"] .blRnSummaryCount {color:var(--ui-text-muted);font-size:var(--ui-font-xs)
+}
+html[data-ui-system="manifest"] .blRnSummaryActions button:focus-visible {box-shadow:none
+}
+html[data-ui-system="manifest"] .tableDensityControl {font:600 var(--ui-font-xs)/1.3 var(--ui-font-body);color:var(--ui-text-secondary)
+}
+html[data-ui-system="manifest"] .tableDensityControl select {border:0;border-radius:0;background:var(--ui-surface);color:var(--ui-text);font:600 var(--ui-font-xs)/1.3 var(--ui-font-body)
+}
+html[data-ui-system="manifest"] .tableDensityControl select:focus-visible {box-shadow:none
+}
+
+html[data-ui-system="manifest"] .blSteelInitials,html[data-ui-system="manifest"] #currentUserBtn #currentUserInitials{background:transparent!important;color:var(--ui-avatar-ink)!important;-webkit-text-fill-color:var(--ui-avatar-ink)!important;}
+
+@media(prefers-reduced-motion:reduce){html[data-ui-system="manifest"] .modalCard,html[data-ui-system="manifest"] .blBulkOverlay{animation:none!important;transition:none!important;}}

@@ -1,0 +1,9 @@
+
+> buyer-log-desktop@7.0.294 version:assert
+> node scripts/version-assert.js
+
+{
+  "canonical": "7.0.294",
+  "display": "7.294",
+  "ui": "runtime-derived"
+}

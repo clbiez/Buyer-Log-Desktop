@@ -270,10 +270,24 @@ function legacyAccessCandidates() {
 function migrateLegacyAuthStoreIfNeeded() {
   if (AUTH_DATA_ROOT === SERVER_DATA_ROOT) return false;
   const current = accessStoreQuality(ACCESS_FILE);
+  const protectedModerator=quality=>{
+    const moderator=quality&&quality.parsed&&quality.parsed.moderator;
+    return Boolean(moderator&&typeof moderator==='object'&&!Array.isArray(moderator)&&credentialHash(moderator));
+  };
+  // A local primary with protected moderator credentials (or an established
+  // central fallback) is authority, including disabled/deleted-user decisions.
+  // Structurally partial local stores still require protected recovery below.
+  // Historical copies are recovery
+  // inputs, not newer grants: more active accounts must never revive a revoked
+  // account or replace a working directory on a cold read/restart.
+  if (current && current.credentialCount > 0 && (centralConfigured || protectedModerator(current))) return false;
   const candidates = legacyAccessCandidates().map(accessStoreQuality).filter(Boolean).sort(compareAccessStoreQuality);
-  const best = candidates[0]; if (!best) return false;
-  let shouldImport = !current;
-  if (current) {
+  const partialLocal=Boolean(current&&current.credentialCount>0&&!centralConfigured&&!protectedModerator(current));
+  const best=partialLocal?candidates.find(candidate=>protectedModerator(candidate)&&hasUsableOfflineAuthStore(candidate.parsed)):candidates[0];
+  if(partialLocal&&!best)throw Object.assign(new Error('Kullanıcı deposu ve yedeği doğrulanamadı.'),{code:'IAM_LOCAL_INVALID',statusCode:503});
+  if (!best) return false;
+  let shouldImport = !current||partialLocal;
+  if (current&&!partialLocal) {
     // If the active store cannot authenticate ANY active account, a usable
     // historical store must win even if the broken/placeholder file has a newer
     // revision. This is the exact state exposed by the login screen as
@@ -806,6 +820,8 @@ function backupSafeStore(value = loadStore()) {
   }
   return cleanValue(value);
 }
+function invalidCredentialRevision(){return Object.assign(new Error('Kimlik bilgisi revizyonu geçersiz; mevcut dizin korundu. / Credential revision is invalid; the existing directory was preserved.'),{code:'IAM_CREDENTIAL_REVISION_INVALID',statusCode:503});}
+function credentialGeneration(profile){const value=profile?.credentialRevision??1;if(!Number.isSafeInteger(value)||value<1)throw invalidCredentialRevision();return value;}
 function saveStore(store, expectedRevision = null) {
   const transaction = iamTransaction.getStore();
   if (centralConfigured) {
@@ -821,6 +837,17 @@ function saveStore(store, expectedRevision = null) {
     throw error;
   }
   const saved = { ...iam.migrateStore(store), schemaVersion: 8, _revision: current._revision + 1, _updatedAt: new Date().toISOString() };
+  // Local IAM must revoke the same credential generations as central IAM.
+  // Derive them from the current durable directory; a candidate/restore may
+  // neither reset a generation nor keep old cookies valid after a hash change.
+  const previousProfiles=new Map(allProfiles(current).map(profile=>[profile.id,profile]));
+  for(const profile of allProfiles(saved)){
+    const previous=previousProfiles.get(profile.id),generation=credentialGeneration(previous);
+    const changed=previous&&(previous.passwordHash!==profile.passwordHash||previous.pinHash!==profile.pinHash);
+    const next=previous?generation+(changed?1:0):1;
+    if(!Number.isSafeInteger(next)||next<1)throw invalidCredentialRevision();
+    profile.credentialRevision=next;
+  }
   atomicWriteJson(ACCESS_FILE, saved);
   storeCache = null;
   return saved;
@@ -2183,10 +2210,19 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'IAM_EXPORT_FAILED' }); }
   }
   const IMPORT_ORG_LEVEL = { buyer: 'job_title', manager: 'mmyg', senior_manager: 'mag', moderator: 'manager' };
-  function importPlan(store, body) {
-    const data = clean(body.fileBase64);
-    if (!data) throw hierarchyError('İçe aktarılacak Excel dosyasını seçin.', 'IAM_IMPORT_FILE_REQUIRED');
-    const rows = iamExcel.readUserRows(Buffer.from(data, 'base64'));
+  function prepareIamImport(handler) {
+    return async(req,res)=>{
+      try{
+        const assertAuthority=()=>{const actor=sessionProfile(req),store=readStore();if(!actor||!iam.canAdminUsers(actor,store))throw Object.assign(new Error('Kullanıcı içe aktarma yetkisi değişti. / User import permission changed.'),{code:'CAPABILITY_REQUIRED',statusCode:403});req.currentUser=actor;};
+        assertAuthority();const data=clean(req.body?.fileBase64);if(!data)throw hierarchyError('İçe aktarılacak Excel dosyasını seçin.', 'IAM_IMPORT_FILE_REQUIRED');
+        if(data.length>Math.ceil(40*1024*1024/3)*4)throw require('../../public/file-parser-policy').fail();
+        req.iamParsedRows=await require('./parser-process-client').run('iam',{buffer:Buffer.from(data,'base64')});
+        assertAuthority();return await handler(req,res);
+      }catch(err){return res.status(err.statusCode||500).json({error:err.message,code:err.code||'IAM_IMPORT_FAILED'});}
+    };
+  }
+  function importPlan(store, body, rows) {
+    if(!Array.isArray(rows))throw hierarchyError('Excel dosyası doğrulanamadı. / The Excel file could not be verified.','IAM_IMPORT_FILE_REQUIRED');
     const byName = new Map(allProfiles(store).filter(profile => clean(profile.username)).map(profile => [usernameKey(profile.username), profile]));
     const plan = iamExcel.planImport(rows, { usernameKey, findByUsername: name => byName.get(usernameKey(name)) || null });
     for (const item of plan) if (item.action === 'create') item.patch.status = 'INACTIVE';
@@ -2199,7 +2235,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
   function iamImportPreviewHandler(req, res) {
     try {
       const store = readStore(), actor = req.currentUser || sessionProfile(req);
-      const plan = importPlan(store, req.body || {});
+      const plan = importPlan(store, req.body || {}, req.iamParsedRows);
       for (const item of plan) if (item.userId && !canManageTarget(actor, profileById(store, item.userId), store)) Object.assign(item, { action: 'error', errors: ['USER_NOT_MANAGEABLE'] });
       res.json({ ok: true, plan, summary: importSummary(plan) });
     } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'IAM_IMPORT_PREVIEW_FAILED' }); }
@@ -2208,7 +2244,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     try {
       const store = loadStore(), actor = req.currentUser || sessionProfile(req), body = req.body || {};
       if (!clean(body.reason) || body.confirmCritical !== true) throw hierarchyError('İçe aktarma için onay ve gerekçe zorunludur.', 'CRITICAL_CONFIRMATION_REQUIRED');
-      const plan = importPlan(store, body), summary = importSummary(plan);
+      const plan = importPlan(store, body, req.iamParsedRows), summary = importSummary(plan);
       if (summary.error) return res.status(400).json({ error: 'Dosyada hatalı satırlar var; hiçbir değişiklik yapılmadı.', code: 'IAM_IMPORT_INVALID', plan, summary });
       const changed = [];
       for (const item of plan) {
@@ -2410,6 +2446,10 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
         restored.passwordHash = '';
         restored.pinHash = '';
       }
+      // Backup generations are untrusted, including legacy snapshots that
+      // contain fields removed by backupSafeStore today. Restore preserves
+      // this computer's credentials, so preserve their generation as well.
+      restored.credentialRevision=credentialGeneration(existing);
       return restored;
     };
     const moderator = restoreProfile(snapshot.moderator, current.moderator);
@@ -2435,6 +2475,8 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
   }
   return {
     syncProfiles: syncProfilesForAccess, mergeCatalogValues, authoritativeOrderRows, sessionProfile, publicProfile,
+    // Opaque in-process identity; replaced whenever canonical order authority changes.
+    orderAuthorityToken: () => authoritySnapshot,
     canEditOrder: (profile, order, options = {}) => canEditOrder(profile, order, readStore(), { ...options, orderAccess:authoritySnapshot }),
     sharedOwnerOf: (recordId, userId) => {
       const store = readStore(), profile = findProfile(store, clean(userId));
@@ -2449,7 +2491,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     horizonDefaultsHandler: centralMutation(horizonDefaultsHandler, 'USER.ADMIN'),
     roleHorizonDefaultsHandler: centralMutation(roleHorizonDefaultsHandler, 'ROLE.MANAGE'),
     roleBundleHandler: centralMutation(roleBundleHandler, 'ROLE.MANAGE'),
-    iamExportHandler, iamImportPreviewHandler, iamImportHandler: centralMutation(iamImportHandler, 'USER.ADMIN'),
+    iamExportHandler, iamImportPreviewHandler:prepareIamImport(iamImportPreviewHandler), iamImportHandler:prepareIamImport(centralMutation(iamImportHandler, 'USER.ADMIN')),
     temporaryGrantHandler: centralMutation(temporaryGrantHandler, 'USER.GRANT'), temporaryGrantRevokeHandler: centralMutation(temporaryGrantRevokeHandler, 'USER.GRANT'), auditListHandler,
     iamHealthHandler, iamRefreshHandler, iamDryRunHandler, iamInitializeHandler, iamAdoptHandler,
     refreshIam: options => restoreActive ? Promise.resolve(null) : centralConfigured
@@ -2490,6 +2532,18 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       const profile = typeof profileOrId === 'object' && profileOrId ? profileOrId : profileById(store, clean(profileOrId));
       if (profile) applyAssignedHorizonDefault(profile, store);
       return roleWorkspaceEntries(profileOrId, store);
+    },
+    roleWorkspaceEntriesAsync: async (profileOrId,options={}) => {
+      for(let attempt=0;attempt<3;attempt++){
+        options.assertAuthority?.();const store=readStore(),id=typeof profileOrId==='object'&&profileOrId?profileOrId.id:clean(profileOrId),profile=profileById(store,id),assigned=profile?userWorkspaceDefault(store,id):null;
+        if(assigned?.assignedAt&&appliedHorizonDefaults.get(id)!==assigned.assignedAt){
+          await userPreferences.supersedePersonalHorizonsAsync(id,Object.keys(assigned.entries),assigned.assignedAt,options);
+          options.assertAuthority?.();appliedHorizonDefaults.set(id,assigned.assignedAt);
+        }
+        options.assertAuthority?.();const latest=readStore(),current=profileById(latest,id),latestAssigned=current?userWorkspaceDefault(latest,id):null;
+        if((latestAssigned?.assignedAt||null)===(assigned?.assignedAt||null))return roleWorkspaceEntries(current||profileOrId,latest);
+      }
+      throw Object.assign(new Error('Çalışma alanı ataması değişti; yeniden deneyin. / The workspace assignment changed; please retry.'),{code:'USER_WORKSPACE_CHANGED',statusCode:409});
     },
     // v7.23 — Horizon ön ayarları kullanıcının MAG/MMYG/Buying Group bilgisine
     // göre eşleştirildiği için profil, id'den de çözülebilmelidir.

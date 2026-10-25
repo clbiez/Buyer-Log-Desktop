@@ -8,7 +8,7 @@ function createScheduledRunner({store,scheduleOptions,dataset,execute,executor})
    store.updateRun(profile.id,run.id,{status:'running'});
    await options.assertAuthority?.();
    options.captureSource?.();
-   const data=await dataset(profile.id,profile,claim);
+   const data=await dataset(profile.id,profile,claim,options.assertAuthority);
    await options.assertAuthority?.();
    if(claim.source!=='manual'&&!data.matched&&!data.change?.configured){store.updateRun(profile.id,run.id,{status:'skipped',message:'AUTOMATION_NO_MATCH',finishedAt:new Date().toISOString()});return {reserved:true,runId:run.id,status:'skipped',processed:0};}
    const result=await execute(profile.id,profile,claim,{trigger:'schedule',dataset:data,...options,draftUrl:options.draftUrlForRun?.(run)}),status=result.outcome==='partial'?'partial':result.failed?'failed':'completed';

@@ -282,13 +282,14 @@ test('Supp. FOB hücresi şablonu uyarı durumunda birim yerine ⚠ gösteriyor'
     l => l.includes('return `<td class="editTd money${autoSource?'),
     {
       autoSource: false, ruleMissing: true, tt: ' title="Kural yok"',
-      unit: '$', cur: '', id: 42, c: { k: 'Supp. FOB' },
+      unit: '$', cur: '', id: 42, c: { k: 'Supp. FOB' },editorIdentity:' data-line-key="42|DEMO|01" data-edit-owner="buyer"',
     },
   );
   assert.match(html, /suppFobRuleMissing/);
   assert.match(html, /⚠/);
   assert.match(html, /color:var\(--ui-warning\)/);
   assert.doesNotMatch(html, />\$</, 'uyarı varken para birimi gösterilmemeli');
+  assert.match(html,/data-line-key="42\|DEMO\|01"/);
 });
 
 /* --- 6) TR Landed / Overseas Landed: aynı kural landed'a da uygulanıyor -- */

@@ -1,0 +1,360 @@
+{
+  "date": "2026-10-24T21:18:27.048Z",
+  "localDate": "2026-10-25",
+  "timezone": "Europe/Istanbul",
+  "base": "0a5d9fbbb0f1d6db59ea6062a1f779505c8f67d7",
+  "scope": "BL013 implementation complete; final integrated full regression pending. Independent branch from main; BL008 changes remain in separate draft PR708.",
+  "focused": {
+    "files": 29,
+    "pass": 229,
+    "fail": 0,
+    "skip": 0,
+    "log": "bl013-final-target.log"
+  },
+  "reds": [
+    "bl013-peer-index-red.log",
+    "bl013-editor-history-red.log",
+    "bl013-dropdown-identity-red.log",
+    "bl013-component-dialog-red.log",
+    "bl013-shared-editor-red.log"
+  ],
+  "review": {
+    "rounds": 1,
+    "agent": "review_wal_recovery",
+    "testsExecuted": false,
+    "finding": "Special delivery/checklist dropdown handlers bypassed newly bound canonical editor identity",
+    "resolution": "Delivery uses the common commit path; checklist status/components/evidence recheck canonical row and owner after awaits, before effects and on deferred dialog saves. RED/GREEN and actual native delivery/checklist persistence and stale-open-menu nonmutation verify the fix."
+  },
+  "graph": "check_index_coverage failed Transport closed; scoped actual source fallback",
+  "indexContract": {
+    "structure": "WeakMap per row array; Map<canonicalLineKey,Set<Row>> per projection; owner transition discards caches",
+    "canonical": "Existing lineKeyOfRow/turknorm behavior retained, including existing partial/incomplete data semantics",
+    "replacement": "New authoritative array references rebuild lazily; length changes rebuild; explicit updateIdentity/invalidate handles in-place identity/membership changes",
+    "limits": "Equal-length in-place membership changes must call invalidate; current identity fields are readonly and scoped source uses authoritative array replacement",
+    "ownership": "Index owner context plus bound editor/history/notes/menu identity; existing server authorization remains authoritative"
+  },
+  "benchmark": {
+    "date": "2026-10-24T21:18:17.069Z",
+    "baseline": "0a5d9fbbb0f1d6db59ea6062a1f779505c8f67d7",
+    "scope": "Actual before/after peer-sync function, existing full canonical normalization, Notes metadata, rendering disabled; two projections of N rows each, matching partials and model/colour decoys; controlled Node CPU measurement, not desktop frame time",
+    "node": "v24.18.0",
+    "platform": "win32",
+    "fullExecuted": false,
+    "sourceHashes": {
+      "beforeLf": "68846e99f5bac71e398704256d6b472175d6d56b363d38f50d7d02e1fb217efc",
+      "afterLf": "b9daa4d76ebcf6e62298364c6911fcea41a0fd1b3df107915ea65b8d3a2f4e06",
+      "indexLf": "4738ab23b9ad6b43620e698f503d37b4f563a8f6235bef1b17467850308b9afa"
+    },
+    "sizes": [
+      {
+        "rowsPerProjection": 1000,
+        "totalPeerRows": 2000,
+        "before": {
+          "coldMs": 9.735700000000001,
+          "p50Ms": 6.565299999999979,
+          "p95Ms": 6.900000000000006,
+          "retainedHeapDeltaAfterGc": 123336,
+          "cpuMicros": {
+            "user": 78000,
+            "system": 31000
+          },
+          "samples": [
+            6.628,
+            6.8355999999999995,
+            6.684100000000001,
+            6.681899999999999,
+            6.544300000000007,
+            6.596599999999995,
+            6.900000000000006,
+            6.560299999999998,
+            6.5242999999999824,
+            6.6267,
+            6.472700000000003,
+            6.565299999999979,
+            6.523300000000006,
+            6.536100000000005,
+            6.513499999999993
+          ],
+          "businessHash": "986575edca4ae82c6f38426193bf9a8a34f48307b28b87c8713c583bfb07dd10"
+        },
+        "after": {
+          "coldMs": 5.265600000000006,
+          "p50Ms": 0.0221000000000231,
+          "p95Ms": 0.05670000000000641,
+          "retainedHeapDeltaAfterGc": 752800,
+          "cpuMicros": {
+            "user": 0,
+            "system": 0
+          },
+          "samples": [
+            0.05670000000000641,
+            0.05670000000000641,
+            0.028699999999986403,
+            0.02359999999998763,
+            0.02230000000000132,
+            0.022699999999986176,
+            0.02770000000001005,
+            0.0221000000000231,
+            0.021600000000006503,
+            0.02189999999998804,
+            0.021500000000003183,
+            0.02039999999999509,
+            0.02199999999999136,
+            0.020799999999979946,
+            0.020900000000011687
+          ],
+          "businessHash": "986575edca4ae82c6f38426193bf9a8a34f48307b28b87c8713c583bfb07dd10"
+        },
+        "parity": true,
+        "warmMedianRatio": 297.0723981897338
+      },
+      {
+        "rowsPerProjection": 10000,
+        "totalPeerRows": 20000,
+        "before": {
+          "coldMs": 68.0598,
+          "p50Ms": 64.22499999999991,
+          "p95Ms": 64.85890000000006,
+          "retainedHeapDeltaAfterGc": 56000,
+          "cpuMicros": {
+            "user": 968000,
+            "system": 0
+          },
+          "samples": [
+            64.7595,
+            64.85890000000006,
+            64.67370000000005,
+            63.77620000000002,
+            64.1422,
+            64.01110000000006,
+            63.7417999999999,
+            64.40959999999995,
+            64.22499999999991,
+            64.26400000000001,
+            63.965599999999995,
+            64.3152,
+            64.27349999999979,
+            64.07720000000018,
+            64.06079999999997
+          ],
+          "businessHash": "cef4070ca1ac06ee12162046363c5dbed5e4b5378482b3e160250d68b191f86e"
+        },
+        "after": {
+          "coldMs": 46.76229999999987,
+          "p50Ms": 0.019400000000132422,
+          "p95Ms": 0.028799999999819192,
+          "retainedHeapDeltaAfterGc": 7392232,
+          "cpuMicros": {
+            "user": 0,
+            "system": 0
+          },
+          "samples": [
+            0.025300000000015643,
+            0.01950000000010732,
+            0.019000000000005457,
+            0.02229999999985921,
+            0.028799999999819192,
+            0.01929999999993015,
+            0.01999999999998181,
+            0.019199999999955253,
+            0.019400000000132422,
+            0.01880000000005566,
+            0.01939999999990505,
+            0.020300000000133878,
+            0.020299999999906504,
+            0.01869999999985339,
+            0.018500000000130967
+          ],
+          "businessHash": "cef4070ca1ac06ee12162046363c5dbed5e4b5378482b3e160250d68b191f86e"
+        },
+        "parity": true,
+        "warmMedianRatio": 3310.567010286676
+      },
+      {
+        "rowsPerProjection": 30000,
+        "totalPeerRows": 60000,
+        "before": {
+          "coldMs": 201.32690000000002,
+          "p50Ms": 191.4103,
+          "p95Ms": 194.87840000000006,
+          "retainedHeapDeltaAfterGc": 43368,
+          "cpuMicros": {
+            "user": 2890000,
+            "system": 0
+          },
+          "samples": [
+            190.43900000000008,
+            191.4103,
+            190.92799999999988,
+            192.63070000000016,
+            194.87840000000006,
+            190.27229999999963,
+            191.98720000000003,
+            190.86680000000024,
+            190.89980000000014,
+            190.9629,
+            190.90819999999985,
+            192.09599999999955,
+            192.9972000000007,
+            192.95530000000053,
+            192.88360000000011
+          ],
+          "businessHash": "3a35a2797fa6bad670ae93f951c7bc12f6d9f525b0998b0552f51ddee2211bc2"
+        },
+        "after": {
+          "coldMs": 133.5610999999999,
+          "p50Ms": 0.01929999999993015,
+          "p95Ms": 0.025399999999535794,
+          "retainedHeapDeltaAfterGc": 21683792,
+          "cpuMicros": {
+            "user": 0,
+            "system": 0
+          },
+          "samples": [
+            0.025399999999535794,
+            0.020900000000438013,
+            0.019800000000032014,
+            0.019400000000132422,
+            0.01919999999972788,
+            0.019400000000132422,
+            0.018999999999323336,
+            0.020900000000438013,
+            0.02070000000003347,
+            0.019200000000637374,
+            0.01929999999993015,
+            0.018799999999828287,
+            0.018699999999626016,
+            0.018699999999626016,
+            0.019100000000435102
+          ],
+          "businessHash": "3a35a2797fa6bad670ae93f951c7bc12f6d9f525b0998b0552f51ddee2211bc2"
+        },
+        "parity": true,
+        "warmMedianRatio": 9917.632124388225
+      }
+    ]
+  },
+  "native": {
+    "scope": "Real full Buyer Log and Windows Edge; isolated synthetic IAM/data; actual UI fields and note save, actual client Undo/Redo and paste planner, no mocked HTTP; synthetic client replacement/context tests explicitly labelled",
+    "phases": [
+      {
+        "name": "actual-ui-note-save",
+        "canonical": "4100001|DEMO-OWN|01",
+        "persisted": true,
+        "hiddenOrdersStayedLazy": true
+      },
+      {
+        "name": "orders-real-server-echo",
+        "note": "BL013 synthetic saved note"
+      },
+      {
+        "name": "actual-price-ui-manual-undo-redo",
+        "manualBaseline": 12.5,
+        "edited": 18.25,
+        "persisted": true
+      },
+      {
+        "name": "actual-runtime-two-row-paste-planner",
+        "changed": 2,
+        "singleUndoRedo": true,
+        "persisted": true
+      },
+      {
+        "name": "actual-date-editor-and-undo-redo",
+        "before": "2026-11-01",
+        "after": "2026-11-20",
+        "persisted": true,
+        "canonicalBound": true
+      },
+      {
+        "name": "delivery-popup-open",
+        "options": [
+          "",
+          "Gemi",
+          "Uçak",
+          "Gemi+Uçak",
+          "Gemi+Tır"
+        ]
+      },
+      {
+        "name": "real-delivery-dropdown-common-commit",
+        "value": "Uçak",
+        "persisted": true
+      },
+      {
+        "name": "synthetic-client-replacement-and-owner-guards",
+        "identity": false,
+        "owner": false,
+        "canonical": "4100001|DEMO-OWN|01",
+        "noPersistence": true
+      },
+      {
+        "name": "real-checklist-status-dropdown",
+        "status": "approved",
+        "persisted": true
+      },
+      {
+        "name": "real-open-checklist-menu-synthetic-id-reuse",
+        "noPersistence": true
+      },
+      {
+        "name": "unmocked-server-projection-after-all-writes",
+        "status": 200,
+        "note": "BL013 synthetic saved note",
+        "price": 20.25,
+        "delivery": "Uçak"
+      },
+      {
+        "name": "tr-en-real-saved-note-ui"
+      }
+    ],
+    "pageErrors": [],
+    "log": "bl013-native-acceptance.log",
+    "harnessCorrection": "Initial popup click followed an automatic horizontal scroll and the existing scroll-close handler closed the menu; explicitly scroll then settle two frames before opening. No product behavior or assertion was weakened."
+  },
+  "images": [
+    {
+      "name": "canonical-cp-order-peers.png",
+      "width": 1600,
+      "height": 973,
+      "sha256": "f221f44487d4773db809674a5606bebb79871346f3121e96a9f0cdb1eb3a9f56",
+      "reviewed": true
+    },
+    {
+      "name": "canonical-cp-order-peers-en.png",
+      "width": 1600,
+      "height": 973,
+      "sha256": "ef93c04bd3c332b59bd881251b4b27058142686513650c1eb5b740dd9156fb7f",
+      "reviewed": true
+    }
+  ],
+  "sourceMatches": [
+    {
+      "file": "public/app-main.js",
+      "sha256Lf": "b9daa4d76ebcf6e62298364c6911fcea41a0fd1b3df107915ea65b8d3a2f4e06"
+    },
+    {
+      "file": "public/index.html",
+      "sha256Lf": "6ba218e73dded084da0811f78a61a883c341c9602f9f2384a775d04b0afea097"
+    },
+    {
+      "file": "public/order-line-peer-index.js",
+      "sha256Lf": "4738ab23b9ad6b43620e698f503d37b4f563a8f6235bef1b17467850308b9afa"
+    },
+    {
+      "file": "public/checklist-supplier-sync.js",
+      "sha256Lf": "9c7eb972f3f7be0d5bfda421844ffad060e6bcd2deba954cb0b82e0a607d4a2d"
+    }
+  ],
+  "limits": [
+    "Node function CPU measurement with rendering disabled; not browser frame time or populated desktop acceptance",
+    "Cold index construction and retained heap are recorded separately; no zero-cost-first-edit claim",
+    "Native data has two synthetic orders; matching partial and Turkish-normalization parity is covered by targeted tests/benchmark",
+    "Price Undo native acceptance is explicit manual-to-manual; automatic-rule-to-manual provenance Undo remains a source-based BL017 investigation, not certified by this acceptance",
+    "No full regression, merge, corporate filesystem/Office acceptance or release run"
+  ],
+  "publication": {
+    "TEST": false,
+    "STABLE": false
+  }
+}

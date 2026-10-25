@@ -1,0 +1,23 @@
+{
+  "schema": "buyerlog-financial-contracts/v1",
+  "fob": [
+    {"id":"zero-rate", "supplier":1.23, "royalty":0, "hologram":0, "final":1.23},
+    {"id":"royalty-and-hologram", "supplier":1, "royalty":20, "hologram":0.01, "final":1.26},
+    {"id":"half-cent-1.005", "supplier":1.005, "royalty":0, "hologram":0, "final":1.01},
+    {"id":"half-cent-24.925", "supplier":24.925, "royalty":0, "hologram":0, "final":24.93},
+    {"id":"fractional-effective-rate", "supplier":24.925, "royalty":0.3, "hologram":0, "final":25},
+    {"id":"negative-rate", "supplier":1, "royalty":-1, "hologram":0, "final":null},
+    {"id":"one-hundred-percent", "supplier":1, "royalty":100, "hologram":0, "final":null},
+    {"id":"over-one-hundred-percent", "supplier":1, "royalty":101, "hologram":0, "final":null},
+    {"id":"negative-hologram", "supplier":4, "royalty":20, "hologram":-1, "final":null},
+    {"id":"invalid-hologram", "supplier":4, "royalty":20, "hologram":"invalid", "final":null}
+  ],
+  "localizedMoney": [
+    {"input":"1234,56", "value":1234.56},
+    {"input":"1234.56", "value":1234.56},
+    {"input":"1.234,56", "value":1234.56},
+    {"input":"1,234.56", "value":1234.56}
+  ],
+  "dateOnly": ["2024-02-29", "2026-01-01", "2026-03-08", "2026-11-01", "2026-12-31"],
+  "timeZones": ["Europe/Istanbul", "UTC", "America/Los_Angeles"]
+}

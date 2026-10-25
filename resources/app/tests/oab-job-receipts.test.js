@@ -34,7 +34,9 @@ for(const action of ['status','cancel'])test('actual native '+action+' rechecks 
  const ownerHash=require('node:crypto').createHash('sha256').update(f.owner).digest('hex'),leaseFile=path.join(root,f.owner,ownerHash,'latest.json'),ready=path.join(root,'peer-ready-'+f.owner),leaseModule=path.resolve(__dirname,'../server/lib/shared-file-transaction');
  const child=cp.spawn(process.execPath,['-e',"const fs=require('node:fs');require(process.argv[1]).withFileLeaseSync(process.argv[2],()=>{fs.writeFileSync(process.argv[4],'ready');Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,150);const p=JSON.parse(fs.readFileSync(process.argv[3],'utf8'));p.enabled=false;fs.writeFileSync(process.argv[3],JSON.stringify(p));Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,50);})",leaseModule,leaseFile,iamFile,ready],{env:process.env,stdio:'ignore'});
  const completed=new Promise((resolve,reject)=>{child.on('error',reject);child.on('exit',code=>code===0?resolve():reject(Error('peer failed '+code)));});
- for(let i=0;!fs.existsSync(ready)&&i<100;i++)await new Promise(resolve=>setTimeout(resolve,5));assert.equal(fs.existsSync(ready),true);
+ // Windows child startup can exceed 500ms under the standard four-worker suite.
+ // Wait for the actual lease holder readiness, not an assumed startup duration.
+ const readyDeadline=Date.now()+10000;while(!fs.existsSync(ready)&&Date.now()<readyDeadline)await new Promise(resolve=>setTimeout(resolve,5));assert.equal(fs.existsSync(ready),true);
  assert.throws(()=>worker.service[action](profile),{code:'OAB_ACCESS_REVOKED'});await completed;
  if(action==='cancel'){assert.equal(f.store.latest(f.owner).cancelled,false);assert.equal(audits,0);f.store.release(f.owner,f.job.jobId);}
 });

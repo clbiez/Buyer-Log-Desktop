@@ -100,19 +100,19 @@ test('kartı olan kod tekrar istenmez; tablo metni kart özetidir', () => {
   assert.deepEqual(engine.aiContext([{ code: '3859', raw: SUPREM }, { code: '3859', raw: SUPREM }]).fabrics, [`3859 :: ${SUPREM}`]);
 });
 
-test('sunucu sözlüğü kartı saklar, onlyMissing düzenlemeyi ezmez, silme çalışır', () => {
+test('sunucu sözlüğü kartı saklar, onlyMissing düzenlemeyi ezmez, silme çalışır', async () => {
   const actor = { id: 'u1', displayName: 'Buyer' };
-  const first = store.upsertFabricCards([{ code: '3859', summary: 'Süprem 150 gsm', summarySource: 'ai', raw: SUPREM }], actor); // i18n-ignore
+  const first = await store.upsertFabricCards([{ code: '3859', summary: 'Süprem 150 gsm', summarySource: 'ai', raw: SUPREM }], actor); // i18n-ignore
   assert.equal(first.updated, 1);
-  const manual = store.upsertFabricCards([{ code: '3859', summary: 'Benim özetim', summaryEn: 'My summary', summarySource: 'manual' }], actor); // i18n-ignore
+  const manual = await store.upsertFabricCards([{ code: '3859', summary: 'Benim özetim', summaryEn: 'My summary', summarySource: 'manual' }], actor); // i18n-ignore
   assert.equal(manual.updated, 1);
   assert.equal(manual.cards[0].summaryEn, 'My summary');
   assert.equal(manual.cards[0].raw, SUPREM, 'PLM metni korunur');
-  const auto = store.upsertFabricCards([{ code: '3859', summary: 'Yeni AI', summarySource: 'ai' }], actor, null, { onlyMissing: true }); // i18n-ignore
+  const auto = await store.upsertFabricCards([{ code: '3859', summary: 'Yeni AI', summarySource: 'ai' }], actor, null, { onlyMissing: true }); // i18n-ignore
   assert.equal(auto.updated, 0);
   assert.equal(store.loadFabricCards().cards['3859'].summary, 'Benim özetim'); // i18n-ignore
-  assert.equal(store.upsertFabricCards([{ code: 'abc', summary: 'x' }, { code: '4207', summary: '' }], actor).updated, 0);
-  const removed = store.deleteFabricCard('3859', actor);
+  assert.equal((await store.upsertFabricCards([{ code: 'abc', summary: 'x' }, { code: '4207', summary: '' }], actor)).updated, 0);
+  const removed = await store.deleteFabricCard('3859', actor);
   assert.equal(removed.deleted, true);
   assert.equal(store.loadFabricCards().cards['3859'], undefined);
 });
@@ -183,7 +183,7 @@ test('existing mixed-language summaries are fully localized without altering sou
   assert.equal(engine.translateTerms('Three Thread Terry','tr'),'Three Thread Terry','original type preservation remains the default');
 });
 
-test('Polyester spelling is consistent in TR/EN rule, AI, manual and legacy saved cards',()=>{
+test('Polyester spelling is consistent in TR/EN rule, AI, manual and legacy saved cards',async()=>{
   const raw='364632-Örme,Üç İplik,70 D,240 gsm,65% Pamuk,35% Poliester'; // i18n-ignore
   const rule=engine.ruleCard(raw);
   assert.match(rule.summary,/65% Pamuk 35% Polyester/);
@@ -220,7 +220,7 @@ test('Polyester spelling is consistent in TR/EN rule, AI, manual and legacy save
   const fromClient=engine.normalizeCard(legacy);
   assert.equal(fromClient.summary,loaded.summary);
   assert.equal(fromClient.summaryEn,loaded.summaryEn);
-  const saved=store.upsertFabricCards([legacy],{id:'u1',displayName:'Buyer'});
+  const saved=await store.upsertFabricCards([legacy],{id:'u1',displayName:'Buyer'});
   assert.equal(saved.cards.find(card=>card.code==='364632').summary,loaded.summary);
   assert.equal(saved.cards.find(card=>card.code==='364632').summaryEn,loaded.summaryEn);
   assert.equal(engine.displayText(raw,new Map([['364632',legacy]]),'en'),loaded.summaryEn);

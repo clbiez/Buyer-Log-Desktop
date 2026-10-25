@@ -266,3 +266,9 @@ button:disabled .ic{--ic-tint-o:.08;}
 :root :is(.ovHomePager>.ovHomePageTab,.psaTabs>[role="tab"],.dmLabTabs>.dmLabTab){
   height:var(--ui-control-height);min-height:var(--ui-control-height);padding:0 12px;
 }
+.uiPersistenceRegion,.uiProgressRegion{padding:8px 12px}
+.uiPersistenceRegion[hidden],.uiProgressRegion[hidden]{display:none}
+.uiPersistence{display:flex;gap:8px;flex-wrap:wrap}
+.uiProgress{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.uiProgress progress{width:min(260px,40vw)}
+#_kolManualStatus{flex:1;min-width:0}#_kolManualStatus .uiState{width:100%;max-width:none;margin:0;padding:6px;min-height:0;gap:6px;text-align:left}#_kolManualStatus .uiStateIcon{width:18px;height:18px;flex-basis:18px}

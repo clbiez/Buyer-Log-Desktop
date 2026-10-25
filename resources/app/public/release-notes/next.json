@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-25",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Manifest: ortak arayüz ve tüm modüller",
-    "en": "Manifest: shared interface and all modules"
+    "tr": "Manifest arayüzü, veri güvenliği ve çalışma akışı",
+    "en": "Manifest interface, data integrity and workflow"
   },
   "summary": {
-    "tr": "Manifest bütün modüllerde ortak token ve bileşen sistemini kullanır. Eski görünüm katmanları kaldırıldı; klavye, büyük yazı ve filtre yerleşimleri iyileştirildi.",
-    "en": "Manifest uses shared tokens and components across all modules. Retired appearance layers were removed; keyboard navigation, larger text and filter placement were improved."
+    "tr": "Ortak Manifest arayüzü; güvenli kayıt ve güncelleme, büyük veri performansı, toplu işlemler ve fiyat kaynakları.",
+    "en": "Shared Manifest interface; safe persistence and updates, large-data performance, bulk operations and price lineage."
   },
   "changes": [
     {
@@ -1110,6 +1110,847 @@
         "caption": {
           "tr": "Sentetik veride W6 için 24 karşılaştırma geçti; geçersiz kaynak tarihi ve S7 örnek sonucu ayrıca belirtiliyor. Şirket çalışma kitabı veya iş verisi görüntülenmiyor.",
           "en": "With synthetic data, W6 passes 24 comparisons; its invalid source date and the unavailable S7 sample result remain explicit. No company workbook or business data is displayed."
+        }
+      }
+    },
+    {
+      "id": "async-primary-store-writes",
+      "type": "improvement",
+      "module": {
+        "tr": "Kayıt performansı",
+        "en": "Save performance"
+      },
+      "title": {
+        "tr": "Dosya kilidi beklenirken diğer istekler yanıtlanır",
+        "en": "Other requests stay responsive during file-lease contention"
+      },
+      "body": {
+        "tr": "Kumaş kartı, temel checklist, kişisel tercih ve ufuk kayıtları dosya kirasını ve kalıcı yazmayı asenkron bekler. Başarı diske yazmadan sonra döner; güncel oturum, yetki ve revizyon yeniden denetlenir. Eski eşzamanlı kayıt yolları kilit çakışmasında beklemek yerine hemen yeniden deneme sonucu döndürür. Önceki yarım kalmış yazmanın kurtarma yükü eksik veya bozuksa yeni yazma durur ve mevcut kanıt korunur.",
+        "en": "Fabric cards, core checklist, personal preferences and horizons await file leases and durable writes asynchronously. Success follows persistence, with current session, authority and revision checked again. Legacy synchronous paths return an immediate retry result on lease contention. A missing or corrupt recovery payload from an unfinished write stops the new write and preserves its evidence."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "async-primary-store-writes.png",
+        "alt": {
+          "tr": "Gerçek Windows Buyer Log uygulamasında asenkron kayıt tamamlandıktan sonra yeniden açılan sentetik kumaş kartı",
+          "en": "Synthetic fabric card reopened in the real Windows Buyer Log application after its asynchronous save completes"
+        },
+        "caption": {
+          "tr": "Demo kumaş kartı gerçek arayüzle kaydedildi ve yeniden açıldı. Üç kontrollü kayıt sırasında ayrı API istekleri yanıtlandı; başarı kilit bırakıldıktan sonra döndü.",
+          "en": "The demo fabric card was saved and reopened through the actual interface. Separate API requests remained responsive during three controlled saves, and success followed lock release."
+        }
+      }
+    },
+    {
+      "id": "local-password-session-revocation",
+      "type": "fix",
+      "module": {
+        "tr": "Oturum güvenliği",
+        "en": "Session security"
+      },
+      "title": {
+        "tr": "Yerel parola değişikliği eski oturumları kapatır",
+        "en": "Local password changes revoke existing sessions"
+      },
+      "body": {
+        "tr": "Yerel kullanıcı dizininde parola değişince oturum nesli ilerler. Eski oturumla bekleyen kişisel filtre/katman yazımı reddedilir. Yedekten gelen eski revizyonlar kapatılmış oturumları yeniden geçerli kılamaz; parolası değişmeyen kullanıcıların oturumları korunur.",
+        "en": "A local password change advances the credential generation. A queued personal filter/layer write using the old session is rejected. Imported backup revisions cannot revive revoked sessions, while users whose passwords have not changed stay signed in."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "local-password-session-revocation.png",
+        "alt": {
+          "tr": "Yerel parola değişimi sonrası eski oturumun geçersizliği doğrulanan gerçek Buyer Log giriş ekranı",
+          "en": "Actual Buyer Log sign-in screen after verifying that a local password change invalidated the old session"
+        },
+        "caption": {
+          "tr": "Demo hesapta eski oturumla bekleyen işlem 403 aldı ve kişisel dosya değişmedi. Giriş ekranı açıldı; aynı etkin hesap yeni parola ile tekrar giriş yaptı.",
+          "en": "The queued operation using the demo account’s old session returned 403 without changing its preference file. The sign-in screen was opened, and the active account signed in again with its new password."
+        }
+      }
+    },
+    {
+      "id": "private-pricing-draft-reopen",
+      "module": {
+        "tr": "Koleksiyon · Fiyat talebi",
+        "en": "Collection · Pricing request"
+      },
+      "title": {
+        "tr": "Fiyat taslağı yalnız sahibi tarafından yeniden açılır",
+        "en": "Pricing drafts reopen only for their owner"
+      },
+      "body": {
+        "tr": "Geçici taslak bağlantısı kullanıcıya bağlandı; başka bir hesabın bağlantıyı bilmesi içerik veya açma izni vermez. Sonuç penceresindeki yeniden açma düğmesinin çalışmaması da düzeltildi.",
+        "en": "Temporary draft references are bound to their creator; knowing another account’s reference grants neither content nor reopen access. The result modal’s inactive reopen button was also fixed."
+      },
+      "type": "fix",
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "private-pricing-draft.png",
+        "alt": {
+          "tr": "Fiyat taslağı yalnız sahibi tarafından yeniden açılır · gerçek Buyer Log demo ekranı",
+          "en": "Pricing drafts reopen only for their owner · actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Sentetik kullanıcılarla gerçek arayüz; dosya ve yetki sınırları ayrıca üretim sunucusu testlerinde doğrulandı.",
+          "en": "Actual UI with synthetic users; file and authority boundaries were also verified against the production server."
+        }
+      }
+    },
+    {
+      "id": "private-assets-live-automation-authority",
+      "module": {
+        "tr": "Otomasyonlar · Özel dosyalar",
+        "en": "Automations · Private assets"
+      },
+      "title": {
+        "tr": "Özel çıktılar ve görseller güncel erişimle korunur",
+        "en": "Private outputs and images follow current access"
+      },
+      "body": {
+        "tr": "Otomasyon taslakları kullanıcıya özel tutulur. Yetki veya sipariş sahipliği değişirse eski önizleme ve devam eden iş durdurulur. Özel Koleksiyon görselleri CP adresinden de korunur; lisans görseli yüklenirken değişen oturum yeniden kontrol edilir.",
+        "en": "Automation drafts are stored per user. Permission or order ownership changes invalidate old previews and stop ongoing work. Private Collection images are also protected through CP URLs; session authority is rechecked after license image loading."
+      },
+      "type": "fix",
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "private-automation-output.png",
+        "alt": {
+          "tr": "Özel çıktılar ve görseller güncel erişimle korunur · gerçek Buyer Log demo ekranı",
+          "en": "Private outputs and images follow current access · actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Sentetik kullanıcılarla gerçek arayüz; dosya ve yetki sınırları ayrıca üretim sunucusu testlerinde doğrulandı.",
+          "en": "Actual UI with synthetic users; file and authority boundaries were also verified against the production server."
+        }
+      }
+    },
+    {
+      "id": "local-iam-preserves-revocation",
+      "module": {
+        "tr": "Kullanıcı yönetimi · Kurtarma",
+        "en": "User management · Recovery"
+      },
+      "title": {
+        "tr": "Eski yedekler pasif hesapları yeniden etkinleştirmez",
+        "en": "Older backups cannot reactivate disabled accounts"
+      },
+      "body": {
+        "tr": "Geçerli yerel kullanıcı deposundaki pasif veya silinmiş hesap kararları eski kopyalarla geri alınmaz. Eksik moderatör bilgisi güvenli yedekle kurtarılır; doğrulanamayan durumda yeni boş yönetici oluşturulmaz.",
+        "en": "Disabled or deleted account decisions in a valid local directory are not rolled back from older copies. Missing moderator credentials require protected recovery; unverifiable stores do not create a blank administrator."
+      },
+      "type": "fix",
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "inactive-account-stays-disabled.png",
+        "alt": {
+          "tr": "Eski yedekler pasif hesapları yeniden etkinleştirmez · gerçek Buyer Log demo ekranı",
+          "en": "Older backups cannot reactivate disabled accounts · actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Sentetik kullanıcılarla gerçek arayüz; dosya ve yetki sınırları ayrıca üretim sunucusu testlerinde doğrulandı.",
+          "en": "Actual UI with synthetic users; file and authority boundaries were also verified against the production server."
+        }
+      }
+    },
+    {
+      "id": "isolated-bounded-file-readers",
+      "type": "improvement",
+      "module": {
+        "tr": "Dosya içe aktarma · Excel ve raporlar",
+        "en": "File import · Excel and reports"
+      },
+      "title": {
+        "tr": "Dosya okuma arayüzü bekletmeden ve sınırlı kaynakla çalışır",
+        "en": "File reading runs with bounded resources while the UI stays responsive"
+      },
+      "body": {
+        "tr": "Excel içe aktarmaları güncel ve ayrı bir okuyucuda hazırlanır; tarih, formül metni ve biçimler korunur. Sunucu rapor ve Endeksmatik okumaları süre/bellek sınırlı süreçlerde çalışır. Bozuk veya sınırı aşan dosya mevcut veriyi değiştirmeden reddedilir; geçerli büyük Endeksmatik şablonları için ayrı güvenli sınır korunur.",
+        "en": "Excel imports are prepared by a current, isolated reader while preserving dates, formula text and formats. Server report and Endeksmatik reading runs in processes with lifetime and heap limits. Malformed or oversized files are rejected before existing data changes; valid large Endeksmatik templates use a separate bounded profile."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "bounded-workbook-import.png",
+        "alt": {
+          "tr": "Gerçek CP Excel içe aktarma önizlemesinde ayrı okuyucuyla yüklenen sentetik çalışma kitabı",
+          "en": "Synthetic workbook loaded by the isolated reader in the actual CP Excel import preview"
+        },
+        "caption": {
+          "tr": "TR/EN önizleme, 10 bin satır okurken arayüz yanıtı ve formül/tarih koruması gerçek Edge üzerinde doğrulandı.",
+          "en": "TR/EN preview, UI response during 10k-row reading and formula/date preservation were verified in actual Edge."
+        }
+      }
+    },
+    {
+      "id": "canonical-cp-order-peers",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker ve Siparişler",
+        "en": "CP Tracker and Orders"
+      },
+      "title": {
+        "tr": "Bağlı sipariş satırları daha hızlı ve güvenli eşitlenir",
+        "en": "Linked order lines synchronize faster and more safely"
+      },
+      "body": {
+        "tr": "Not, fiyat ve tarih değişiklikleri sipariş, model ve renk kimliğiyle yalnız eşleşen satırlara yayılır; toplu işlemler bağlı görünümleri tek kez yeniler. Yenilemede tekrar kullanılan ekran numarası başka siparişi düzenleyemez. Editörler, Geri Al ve checklist menüleri satır veya kullanıcı değişirse eski işlemi durdurur; not taslağı korunur.",
+        "en": "Notes, prices and dates propagate only to matching order/model/colour lines, with linked views refreshed once for a batch. Reused display numbers after a refresh cannot retarget edits to another order. Editors, Undo and checklist menus stop stale actions when the row or user changes, retaining note drafts."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "canonical-cp-order-peers.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP ekranında kaydedilmiş sentetik sipariş notunun yeniden açılması",
+          "en": "A saved synthetic order note reopened in the actual Buyer Log CP screen"
+        },
+        "caption": {
+          "tr": "Demo not gerçek arayüzle kaydedildi ve Siparişler ekranında sunucudan doğrulandı. Fiyat/tarih, Undo/Redo, toplu işlem ve checklist akışları aynı sentetik kayıtlarla kontrol edildi.",
+          "en": "The demo note was saved through the actual UI and verified from the server in Orders. Price/date edits, Undo/Redo, batch operations and checklist flows were checked with the same synthetic records."
+        }
+      }
+    },
+    {
+      "id": "pricing-source-history",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Fiyat ve lisansör",
+        "en": "CP Tracker · Price and licensor"
+      },
+      "title": {
+        "tr": "Fiyat Geri Al işlemi kaynağıyla birlikte geri döner",
+        "en": "Price Undo restores its source as well as its value"
+      },
+      "body": {
+        "tr": "Elle değiştirilen otomatik fiyat geri alındığında kural kaynağı ve kalıcı kayıt durumu da geri yüklenir. Lisansör geçmişi, eski sipariş bazlı değerler ve başarısız kayıt sonrası yeniden deneme doğru korunur.",
+        "en": "Undoing a manual change to an automatic price restores rule provenance and durable override presence too. Licensor history, legacy order-level values and retry after a failed save remain intact."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-source-history.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP ekranında Geri Al sonrası 4,00 otomatik fiyatlı sentetik siparişler",
+          "en": "Synthetic orders with automatic 4.00 prices after Undo in the actual Buyer Log CP screen"
+        },
+        "caption": {
+          "tr": "Demo sözleşme 4,00 üretir; gerçek hücrede 12,50 kaydedilip Geri Al ile kural fiyatına dönüldü. Sunucuda manuel kayıt kaldırıldı ve gerçek veri yanıtından doğrulandı.",
+          "en": "The demo contract produces 4.00; 12.50 was saved through the real cell and Undo returned to the rule price. The manual entry was removed and verified from a real server projection."
+        }
+      }
+    },
+    {
+      "id": "financial-contract-validation",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · Fiyat hesapları",
+        "en": "Collection · Pricing calculations"
+      },
+      "title": {
+        "tr": "Geçersiz maliyet kuralı fiyat üretmez",
+        "en": "Invalid cost rules no longer produce a price"
+      },
+      "body": {
+        "tr": "Geçersiz royalty veya hologram maliyeti sıfır kabul edilmez; fiyat çekmecesi hesaplamayı durduran nedeni açıklar. TR/EN binlik ve ondalık ayırıcılı geçerli tutarlar okunur; bozuk biçimler reddedilir.",
+        "en": "Invalid royalty or hologram cost is no longer treated as zero; the price drawer explains the calculation blocker. Valid amounts with TR/EN grouping and decimal separators are accepted, while malformed grouping stays invalid."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "financial-contract-warnings.png",
+        "alt": {
+          "tr": "Gerçek Koleksiyon fiyat çekmecesinde sentetik geçersiz maliyet kuralının TR/YD uyarıları",
+          "en": "TR/overseas invalid cost-rule warnings in the actual Collection price drawer"
+        },
+        "caption": {
+          "tr": "Demo veride geçersiz hesap girdisi için sayısal fiyat yerine neden gösterilir. Geçerli tutar ve kural ayrı pozitif kontrolle doğrulandı.",
+          "en": "For an invalid demo calculation input, the drawer shows the reason instead of a numeric price. A valid amount and rule were verified separately as a positive control."
+        }
+      }
+    },
+    {
+      "id": "collection-pricing-context",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · Fiyat hesapları",
+        "en": "Collection · Pricing calculations"
+      },
+      "title": {
+        "tr": "Bağlı siparişlerden fiyat hesaplama hızlandı",
+        "en": "Pricing linked to orders calculates faster"
+      },
+      "body": {
+        "tr": "CP bağlamı ve eşleşen royalty kuralları kaynak değişene kadar tekrar kullanılır. Sipariş, yetki veya kurallar değişince yenilenir; manuel kur ve fiyat değişiklikleri güncel girdilerle hesaplanır.",
+        "en": "CP context and matching royalty rules are reused until their inputs change. Order, access or rule changes invalidate them; manual FX and price edits still calculate from current inputs."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-pricing-context.png",
+        "alt": {
+          "tr": "Gerçek Koleksiyon fiyat çekmecesinde güncel demo royalty, kur ve maliyet adımları",
+          "en": "Current demo royalty, FX and cost steps in the actual Collection price drawer"
+        },
+        "caption": {
+          "tr": "Demo fiyatlar önceki hesapla birebir aynı kaldı; gerçek Edge üzerinde kaynak ve kural değişimi ayrıca doğrulandı.",
+          "en": "Demo prices remain identical to the previous calculation; source and rule changes were also verified in actual Edge."
+        }
+      }
+    },
+    {
+      "id": "independent-table-density",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Tablo satır sıklığı ayrı seçilebilir",
+        "en": "Choose table row spacing independently"
+      },
+      "body": {
+        "tr": "Her tablonun Satırlar kontrolünden kompakt, standart veya rahat aralık seçin. Varsayılan mevcut görünümü korur. Tercih kullanıcı ve tablo bazında saklanır; görsel boyutu değişmez ve büyük sanal tablolarda kaydırma konumu korunur.",
+        "en": "Choose compact, standard or comfortable spacing from each table’s Rows control. Default retains the existing layout. Preferences are stored per user and table; image size stays the same and large virtual tables retain the visible row position."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "independent-table-density.png",
+        "alt": {
+          "tr": "Demo CP tablosunda yazı boyutundan bağımsız Satırlar seçimi.",
+          "en": "Independent Rows control on the actual demo CP table."
+        },
+        "caption": {
+          "tr": "Demo CP tablosunda yazı boyutundan bağımsız Satırlar seçimi.",
+          "en": "Independent Rows control on the actual demo CP table."
+        }
+      }
+    },
+    {
+      "id": "collection-empty-add-model",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Boş Koleksiyon’dan ilk modele doğrudan başlayın",
+        "en": "Start the first model directly from an empty Collection"
+      },
+      "body": {
+        "tr": "Düzenlenebilir boş Koleksiyon’daki İlk modeli ekle düğmesi yeni satırı açar ve Model Adı alanına odaklanır. Filtre sonucu boşsa filtre temizleme eylemi, salt okunur görünümde ise uygun açıklama gösterilir.",
+        "en": "The Add first model button in an editable empty Collection creates a row and focuses Model Name. An empty filtered result offers filter clearing, while a read-only Collection explains its access."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-empty-add-model.png",
+        "alt": {
+          "tr": "Boş demo Koleksiyon’da doğrudan ilk model eylemi.",
+          "en": "Direct first-model action in an empty demo Collection."
+        },
+        "caption": {
+          "tr": "Boş demo Koleksiyon’da doğrudan ilk model eylemi.",
+          "en": "Direct first-model action in an empty demo Collection."
+        }
+      }
+    },
+    {
+      "id": "single-module-page-titles",
+      "type": "improvement",
+      "module": {
+        "tr": "Üreticiler · Otomasyonlar",
+        "en": "Manufacturers · Automations"
+      },
+      "title": {
+        "tr": "Sayfa başlıkları üst çubukta bir kez görünür",
+        "en": "Page titles appear once in the top bar"
+      },
+      "body": {
+        "tr": "Üreticiler ve Otomasyonlar ekranlarındaki yinelenen içerik başlıkları kaldırıldı. Açıklama, arama ve mevcut işlemler aynı yerde kullanılabilir.",
+        "en": "Removed the repeated body titles from Manufacturers and Automations. Descriptions, search and existing actions remain available in their usual places."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "single-page-title-automations.png",
+        "alt": {
+          "tr": "Gerçek Otomasyonlar ekranında tek sayfa başlığı.",
+          "en": "One page title on the actual Automations screen."
+        },
+        "caption": {
+          "tr": "Gerçek Otomasyonlar ekranında tek sayfa başlığı.",
+          "en": "One page title on the actual Automations screen."
+        }
+      }
+    },
+    {
+      "id": "contextual-collection-save",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Kayıt ve paylaşım durumunu Koleksiyon’da görün",
+        "en": "See Collection save and sharing status in context"
+      },
+      "body": {
+        "tr": "Yerel kayıt, gönderim, paylaşım bekleme, çakışma ve hata ayrı durumlar olarak gösterilir. Başarılı yerel kayıt başka cihazlara ulaştı diye sunulmaz; çakışma veya hata yerel girişin durumunu görünür tutar.",
+        "en": "Local save, saving, sharing pending, conflict and failure are shown as separate states. A local acknowledgement does not claim delivery to other devices; conflicts and failures keep the local edit status visible."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "contextual-collection-save.png",
+        "alt": {
+          "tr": "Gerçek kalıcı kayıt onayı sonrası demo Koleksiyon’un yerel kayıt durumu.",
+          "en": "Local save status after an actual durable acknowledgement in a demo Collection."
+        },
+        "caption": {
+          "tr": "Gerçek kalıcı kayıt onayı sonrası demo Koleksiyon’un yerel kayıt durumu.",
+          "en": "Local save status after an actual durable acknowledgement in a demo Collection."
+        }
+      }
+    },
+    {
+      "id": "contextual-manual-price-feedback",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · Fiyat girişi",
+        "en": "Collection · Price entry"
+      },
+      "title": {
+        "tr": "Fiyat girişi uyarıları pencerenin içinde görünür",
+        "en": "Price-entry validation stays inside the dialog"
+      },
+      "body": {
+        "tr": "Eksik üretici ve geçersiz fiyat ortak erişilebilir hata görünümüyle gösterilir. Pencere kapandığında klavye odağı açan düğmeye döner.",
+        "en": "Missing manufacturer and invalid price use the shared accessible error state. Closing the dialog returns keyboard focus to its trigger."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "contextual-manual-price-validation.png",
+        "alt": {
+          "tr": "Demo fiyat penceresinde üretici doğrulama mesajı.",
+          "en": "Manufacturer validation message in the actual demo price dialog."
+        },
+        "caption": {
+          "tr": "Demo fiyat penceresinde üretici doğrulama mesajı.",
+          "en": "Manufacturer validation message in the actual demo price dialog."
+        }
+      }
+    },
+    {
+      "id": "cancellable-detail-export",
+      "type": "feature",
+      "module": {
+        "tr": "Detay çekmecesi · Excel",
+        "en": "Detail drawer · Excel"
+      },
+      "title": {
+        "tr": "Detay Excel aktarımı ilerlemeyi gösterir ve iptal edilebilir",
+        "en": "Detail Excel export shows progress and supports cancellation"
+      },
+      "body": {
+        "tr": "Ortak detay aktarımı işlenen satır ve görsel adımlarını gösterir, büyük işleri parçalara böler. İptal veya çekmeceyi kapatma indirmeyi engeller. Paketleme sırasında sahte yüzde gösterilmez; özel aktarıcılar yalnız iptali destekliyorsa iptal düğmesi sunar.",
+        "en": "Shared detail exports show processed row/image steps and yield between batches. Cancel or closing the drawer prevents download. Packing shows no fabricated percentage; custom exporters offer cancellation only when they support it."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cancellable-detail-export.png",
+        "alt": {
+          "tr": "Gerçek 2.000 demo satırlı detay aktarımında ilerleme ve iptal.",
+          "en": "Progress and cancellation during an actual 2,000-row demo detail export."
+        },
+        "caption": {
+          "tr": "Gerçek 2.000 demo satırlı detay aktarımında ilerleme ve iptal.",
+          "en": "Progress and cancellation during an actual 2,000-row demo detail export."
+        }
+      }
+    },
+    {
+      "id": "bounded-release-onboarding",
+      "type": "improvement",
+      "module": {
+        "tr": "Başlangıç · Sürüm notları",
+        "en": "Startup · Release notes"
+      },
+      "title": {
+        "tr": "İlk açılışta kısa ve ilgili sürüm özeti",
+        "en": "A short, relevant release summary on first use"
+      },
+      "body": {
+        "tr": "Yeni profil yalnız son sürümün kısa özetini görür. Geri dönen profilde otomatik özet en fazla son üç yeni sürüm ve altı başlık içerir. Yeni değişikliklerin tüm detayları ile tam arşiv ayrı eylemlerle açılır; kapatma ve atlama tüm kartları gezmeyi gerektirmez. Onay kullanıcı ve cihaz bazında korunur.",
+        "en": "A new profile sees a short summary of the latest release. Returning profiles get at most the latest three unseen releases and six highlights automatically. Full new-change details and the complete archive open through explicit actions; closing or skipping does not require visiting every card. Acknowledgement is stored per user and device."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "relevant-release-summary.png",
+        "alt": {
+          "tr": "Gerçek ilk açılışta en fazla altı başlıklı sürüm özeti.",
+          "en": "The actual first-use release summary with at most six highlights."
+        },
+        "caption": {
+          "tr": "Gerçek ilk açılışta en fazla altı başlıklı sürüm özeti.",
+          "en": "The actual first-use release summary with at most six highlights."
+        }
+      }
+    },
+    {
+      "id": "contextual-command-palette",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Seçili kayıt işlemlerini komut paletinden açın",
+        "en": "Open selected-record actions from the command palette"
+      },
+      "body": {
+        "tr": "Tablodaki İşlemler düğmesi veya Ctrl+Shift+K ile bağlı kayıtları, eşleşen fiyat kuralını, maliyet oluşturmayı ve mevcut raporu bulun. Eksik seçim ve yetki koşulları açıklanır; seçim veya yetki değişirse eski komut çalışmaz. Birden çok bağlı Koleksiyon modeli birlikte gösterilir. Palet yalnız yetkili modülleri ve son açılan hedefleri listeler; Ctrl+K CP aramasını korur.",
+        "en": "Use the table Actions button or Ctrl+Shift+K to find linked records, the matching pricing rule, create costing and existing reports. Missing selection and permission prerequisites are explained; a stale command cannot run after selection or access changes. Multiple linked Collection models are shown together. The palette lists authorized modules and recent destinations; Ctrl+K keeps CP search."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "contextual-command-palette.png",
+        "alt": {
+          "tr": "Gerçek demo CP kaydı için bağlamsal palet eylemleri ve eksik fiyat kuralı açıklaması.",
+          "en": "Contextual palette actions and the missing-rule prerequisite for an actual demo CP record."
+        },
+        "caption": {
+          "tr": "Seçili kaydın mevcut işlemleri paletin başında görünür; modüller palet açıldığı için yüklenmez.",
+          "en": "Existing actions for the selected record appear first; opening the palette does not load modules."
+        }
+      }
+    },
+    {
+      "id": "bulk-grid-preview-receipts",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Koleksiyon",
+        "en": "CP Tracker · Collection"
+      },
+      "title": {
+        "tr": "Yapıştırmayı önizleyin, kayıt sonucunu doğrulayın",
+        "en": "Preview pasted changes and confirm the save"
+      },
+      "body": {
+        "tr": "Çoklu yapıştırmada önce/sonra değerlerini ve atlanan alan sayılarını görün. Güncel kayıt ve revizyon kontrolünden geçen değişiklikler birlikte kaydedilir; başarısız veya yanıtı belirsiz değişiklikler sonraki normal kayıtlara karışmaz. Geri alma güncel kayıtla eşleşmek zorundadır.",
+        "en": "Review before/after values and skipped-field counts before pasting. Changes are submitted together after current-record and revision checks; rejected or unconfirmed changes do not leak into later normal saves. Undo must still match the current record."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "bulk-cp-preview.png",
+        "alt": {
+          "tr": "Gerçek demo CP tablosunda iki fiyat değişikliğinin önizlemesi.",
+          "en": "Two price changes previewed in the actual demo CP table."
+        },
+        "caption": {
+          "tr": "Yapıştırmayı önizleyin, kayıt sonucunu doğrulayın",
+          "en": "Preview pasted changes and confirm the save"
+        }
+      }
+    },
+    {
+      "id": "bulk-supplier-price-save",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Üretici Excel fiyatları tek doğrulanmış işlemde kaydedilir",
+        "en": "Save supplier Excel prices in one checked transaction"
+      },
+      "body": {
+        "tr": "Üretici dönüş Excel’inin fiyat farklarını inceleyin. Satır kimliği veya revizyon değişmişse eski önizleme uygulanmaz; fiyatlar aynı Fiyat Defteri üzerinden tek kayıtla yazılır. Kayıt sonucu gelmeden başarı bildirilmez; toplu geri alma da revizyonu kontrol eder.",
+        "en": "Review the price differences in a supplier return workbook. A changed line identity or revision invalidates the old preview; prices use the same Pricing Ledger in one save. Success waits for the save response, and bulk Undo checks revisions too."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "bulk-supplier-price-preview.png",
+        "alt": {
+          "tr": "İki demo modelin eski ve yeni üretici fiyatları.",
+          "en": "Previous and proposed supplier prices for two demo models."
+        },
+        "caption": {
+          "tr": "Üretici Excel fiyatları tek doğrulanmış işlemde kaydedilir",
+          "en": "Save supplier Excel prices in one checked transaction"
+        }
+      }
+    },
+    {
+      "id": "bulk-checklist-results",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Checklist",
+        "en": "CP Tracker · Checklist"
+      },
+      "title": {
+        "tr": "Checklist içe aktarımında öğe sonuçlarını izleyin",
+        "en": "Track checklist import results per item"
+      },
+      "body": {
+        "tr": "Checklist Excel’i kaydedilmeden önce durum farklarını ve geçersiz/salt okunur kayıtları gösterir. Daha güncel yanıtlar korunur. Kısmi sonuçta yalnız reddedilen öğeler güncel veriyle yeniden önizlenebilir; kabul edilenler tekrar gönderilmez. İşlem kayıtları bu cihazdaki kullanıcıya bağlı saklanır.",
+        "en": "Checklist Excel imports show status differences and invalid/read-only counts before saving. Newer answers are preserved. After a partial result, only rejected items can be previewed again against current data; accepted items are not replayed. Operation receipts are stored for the current user on this device."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "bulk-checklist-partial-result.png",
+        "alt": {
+          "tr": "Bir öğenin kabul edildiği, daha güncel yanıtın korunduğu ve yalnız reddedilenin yeniden önizlenebildiği gerçek demo sonuç ekranı.",
+          "en": "Actual demo result: one item accepted, the newer answer preserved, and only the rejected item offered for a fresh preview."
+        },
+        "caption": {
+          "tr": "Checklist içe aktarımında öğe sonuçlarını izleyin",
+          "en": "Track checklist import results per item"
+        }
+      }
+    },
+    {
+      "id": "remaining-excel-background-readers",
+      "type": "improvement",
+      "module": {
+        "tr": "Checklist · Fiyat Masası · Excel şablonları",
+        "en": "Checklist · Pricing Desk · Excel templates"
+      },
+      "title": {
+        "tr": "Kalan Excel okumaları arka plana taşındı",
+        "en": "Remaining Excel reads moved into the background"
+      },
+      "body": {
+        "tr": "Checklist dosyaları, üretici fiyat Excel’i ve özel şablonlar ortak arka plan okuyucusunu kullanır. Dosya/sayfa/hücre sınırları ile birleşik hücre aralıkları kontrol edilir; şablon penceresi kapandığında bekleyen okuma iptal edilir. Tarih, biçim, formül ve görseller korunur.",
+        "en": "Checklist files, supplier price workbooks and custom templates use the shared background reader. File, sheet and cell limits include merged-cell ranges; closing the template window cancels its pending read. Dates, formatting, formulas and images are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "background-template-reader.png",
+        "alt": {
+          "tr": "Arka plan okuyucusundan geçen gerçek demo şablonunun üç alan eşleştirmesi.",
+          "en": "Three field mappings for an actual demo template processed by the background reader."
+        },
+        "caption": {
+          "tr": "Kalan Excel okumaları arka plana taşındı",
+          "en": "Remaining Excel reads moved into the background"
+        }
+      }
+    },
+    {
+      "id": "price-value-source-explanation",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Fiyatın kaynağını ve kullanılan kur ayını görün",
+        "en": "See where a price comes from and which FX month was used"
+      },
+      "body": {
+        "tr": "Mevcut fiyat çekmecesi; onaylı/en iyi/hedef fiyat kaynağını, kural kimliğini, istenen ve uygulanan kur ayını, kaynak tarihini ve sürümünü açıklar. Bilinmeyen tarihler güncelmiş gibi gösterilmez. Onay olayları teklifin giriş yolunu/tarihini değiştirmez; CP Update kaynağı ayrı tanınır. Varsayımları mevcut Excel raporundan indirebilir, yetkiniz varsa ilgili kuralı açabilirsiniz. CP ve Siparişler’de İşlemler paletindeki “Bu fiyat nereden geliyor?” eylemini kullanın.",
+        "en": "The existing price drawer explains the confirmed/best/target source, rule ID, requested/applied FX month, source date and revision. Unknown dates are not presented as fresh. Approval events do not replace an offer’s entry source/date, and CP Update is identified separately. Export the assumptions through the existing Excel report or open the matching rule when authorized. In CP and Orders, use “Why this value?” in the Actions palette."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "price-source-lineage.png",
+        "alt": {
+          "tr": "Gerçek demo fiyat çekmecesinde onaylı teklif kaynağı ve önceki aya dönen otomatik kur.",
+          "en": "Actual demo price drawer with confirmed-offer provenance and the automatic FX fallback month."
+        },
+        "caption": {
+          "tr": "Hesaplar mevcut motorlardan okunur; açıklama açılırken yeni sunucu isteği gönderilmez.",
+          "en": "Values come from the existing engines; opening the explanation sends no new server request."
+        }
+      }
+    },
+    {
+      "id": "price-drawer-record-binding",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · Fiyat çekmecesi",
+        "en": "Collection · Price drawer"
+      },
+      "title": {
+        "tr": "Açık fiyat çekmecesi doğru kayda bağlı kalır",
+        "en": "An open price drawer stays bound to the right record"
+      },
+      "body": {
+        "tr": "Çalışma alanı, oturum veya model kimliği değişirse eski çekmece kapanır ve eski giriş yeni kayda uygulanmaz. Güncel salt okunur yetki girişleri kapatır. Dil değiştirirken kaydedilmemiş giriş ve odak korunur; yalnız ekranı yenilemek bir fiyat kaydı oluşturmaz.",
+        "en": "Changing workspace, session or model identity closes the stale drawer and prevents an old input from changing the new record. Current view-only access disables inputs. Language changes preserve an unsaved entry and focus; refreshing the display does not create a price save."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "price-source-lineage-en.png",
+        "alt": {
+          "tr": "Gerçek demo fiyat çekmecesinin İngilizce kaynak açıklaması.",
+          "en": "English source explanation in the actual demo price drawer."
+        },
+        "caption": {
+          "tr": "TR/EN metinleri mevcut giriş taslağı korunarak yenilenir.",
+          "en": "TR/EN text refreshes while preserving the current input draft."
+        }
+      }
+    },
+    {
+      "id": "saved-view-context-density-filters",
+      "type": "improvement",
+      "module": {
+        "tr": "Kayıtlı görünümler",
+        "en": "Saved views"
+      },
+      "title": {
+        "tr": "Görünüm, satır sıklığını ve filtreleri de saklar",
+        "en": "Views also save row density and filters"
+      },
+      "body": {
+        "tr": "Mevcut görünüm seçicisi sütun düzenini, satır sıklığını, filtreleri ve sıralamayı birlikte geri getirir. Kanonik alan kimlikleri sütun adı değişikliklerine dayanır; kaldırılan alanlar atlanır. Koleksiyon özel sütunları korunur. Varsayılana dön eylemindeki seçim temizleme hatası giderildi. Ayrı favori filtre seçiminiz başlangıçta önceliğini korur.",
+        "en": "The existing picker restores column layout, row density, filters and sorting together. Canonical field IDs survive column binding changes; removed fields are skipped. Collection custom columns are retained. Resetting the system default now correctly clears the picker. A separately configured favourite filter keeps its startup priority."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "saved-view-context.png",
+        "alt": {
+          "tr": "Gerçek demo uygulamasında kayıtlı görünüm ve filtreli CP tablosu.",
+          "en": "Saved view and filtered CP table in the actual demo application."
+        },
+        "caption": {
+          "tr": "Mevcut görünüm altyapısı; kanonik alanlar, satır sıklığı ve filtreler.",
+          "en": "Existing view infrastructure with canonical fields, density and filters."
+        }
+      }
+    },
+    {
+      "id": "personal-workspace-resume",
+      "type": "feature",
+      "module": {
+        "tr": "Çalışma alanı",
+        "en": "Workspace"
+      },
+      "title": {
+        "tr": "Son yetkili çalışma ekranından devam edin",
+        "en": "Resume the last authorized workspace"
+      },
+      "body": {
+        "tr": "Son ekran bu cihazda kullanıcıya özel hatırlanır. Görünümdeki konum ve aktif hücre, güncel kanonik kayıt kimliğiyle sayfalanmış tabloda geri bulunur. Silinmiş, filtrelenmiş veya kimliği değişmiş kayıt başka satıra taşınmaz. Başka kullanıcının görünümü satır odağını taşımaz; açıkça verilen ekran adresi ve güncel erişim yetkisi önceliklidir.",
+        "en": "The last screen is remembered per user on this device. Position and active cell are resolved by current canonical identity in the paginated table. Missing, filtered or replaced records do not select another row. A view from another user cannot transfer row focus; explicit workspace routes and current access take precedence."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "saved-view-context-en.png",
+        "alt": {
+          "tr": "Gerçek demo uygulamasında kayıtlı görünüm ve filtreli CP tablosu.",
+          "en": "Saved view and filtered CP table in the actual demo application."
+        },
+        "caption": {
+          "tr": "Mevcut görünüm altyapısı; kanonik alanlar, satır sıklığı ve filtreler.",
+          "en": "Existing view infrastructure with canonical fields, density and filters."
+        }
+      }
+    },
+    {
+      "id": "scoped-confirmed-exception-inbox",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Kayıtlı verideki istisnaları tek kutuda takip edin",
+        "en": "Track confirmed exceptions in one inbox"
+      },
+      "body": {
+        "tr": "Yeni Genel Bakış widget’ı mevcut CP motorundan geçmiş Ex-Factory ve Buyer Log–ASAS tarih farklarını okur. Güncel yetkili kapsam ve Genel Bakış filtreleri uygulanır, aynı kanonik sipariş satırı tür başına bir kez sayılır. Kaydedilmemiş veya başarısız değişiklikler uyarıyı kaldırmaz; sunucu kaydı onaylandığında liste yenilenir. Kayda tıklayınca güncel durum yeniden kontrol edilip mevcut detay raporu açılır. Widget gizliyken CP okuması başlatılmaz.",
+        "en": "The new Overview widget reads overdue Ex-Factory and Buyer Log–ASAS date differences from the existing CP engine. Current authorized scope and Overview filters apply; each canonical order line is counted once per type. Unsaved or failed changes do not dismiss an exception; confirmed writes refresh the list. Opening an item rechecks its current state and uses the existing detail report. A hidden widget does not start CP reads."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "exception-inbox-confirmed.png",
+        "alt": {
+          "tr": "Gerçek demo Genel Bakış ekranında yetkili kapsamda geçmiş Ex-Factory istisnası.",
+          "en": "Overdue Ex-Factory exception in the authorized scope of the actual demo Overview."
+        },
+        "caption": {
+          "tr": "İki yerleşik sinyal; kanonik sayımlar ve kayıtlı sunucu verisi.",
+          "en": "Two existing signals, canonical counts and confirmed server data."
+        }
+      }
+    },
+    {
+      "id": "managed-table-export-progress-cancel",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker · Siparişler",
+        "en": "CP Tracker · Orders"
+      },
+      "title": {
+        "tr": "Büyük Excel aktarımlarını takip edin ve iptal edin",
+        "en": "Track and cancel large Excel exports"
+      },
+      "body": {
+        "tr": "Ana tablo aktarımında hazırlanan satır sayısı ve Excel paketleme aşaması görünür. İptal, dosyanın indirilmesini durdurur; aynı tablo için yinelenen aktarım başlatılmaz. Seçili veya filtrelenmiş tüm kayıtlar, görseller ve hücre biçimleri korunur.",
+        "en": "Main-table export shows prepared rows and workbook packing. Cancel prevents the file download, and repeated clicks cannot start duplicate exports for the same table. All selected or filtered records, images and cell formats are retained."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "managed-table-export-progress.png",
+        "alt": {
+          "tr": "Gerçek masaüstü CP tablosunda 30.030 demo satırının Excel hazırlığı ve İptal düğmesi.",
+          "en": "Actual desktop CP table preparing 30,030 synthetic rows with progress and Cancel."
+        },
+        "caption": {
+          "tr": "30.000 sipariş ve kısmi sevkiyatlar; satır sayısı görünür.",
+          "en": "30,000 orders plus partial shipments, with visible row progress."
+        }
+      }
+    },
+    {
+      "id": "collection-native-200-header",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Yüksek yakınlaştırmada üst çubuk erişilebilir kalır",
+        "en": "Header controls remain reachable at high zoom"
+      },
+      "body": {
+        "tr": "Dar görünümde çalışma alanı özeti simge ve sayı ile gösterilir; tam açıklama erişilebilir etikette ve araç ipucunda korunur. Yüzde 200 yakınlaştırmada kullanıcı düğmesi ekran içinde kalır; geniş görünümde metin yeniden gösterilir.",
+        "en": "The workspace summary uses its icon and count in narrow views, retaining the full accessible label and tooltip. The user button stays within the viewport at 200% zoom; the full text returns in wider views."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-native-200-header.png",
+        "alt": {
+          "tr": "Gerçek Electron Koleksiyon ekranında yüzde 200 yakınlaştırma, dar kapsam özeti ve görünür kullanıcı düğmesi.",
+          "en": "Actual Electron Collection at 200% zoom, compact workspace summary and visible user button."
+        },
+        "caption": {
+          "tr": "300 demo model; Türkçe ve İngilizce yerleşim doğrulandı.",
+          "en": "300 synthetic models; Turkish and English layouts verified."
         }
       }
     },
@@ -2266,6 +3107,64 @@
         "alt": {
           "tr": "Genel kültür görselleri geri geldi",
           "en": "Trivia illustrations are restored"
+        },
+        "caption": {
+          "tr": "Anonim verilerle değişiklik sonrası gerçek Buyer Log görüntüsü.",
+          "en": "Actual post-change Buyer Log screenshot with anonymous data."
+        }
+      }
+    },
+    {
+      "id": "manifest-user-avatar-restored",
+      "type": "fix",
+      "module": {
+        "tr": "Ortak arayüz",
+        "en": "Shared interface"
+      },
+      "title": {
+        "tr": "Kullanıcı simgesinin çelik zemini geri geldi",
+        "en": "The user badge satin plate is restored"
+      },
+      "body": {
+        "tr": "Üst sağdaki kullanıcı baş harfleri ve açılır menü avatarı, Buyer Log logosuna eşlik eden paketli saten çelik zeminde görünür. Üç temada koyu baş harfler okunur kalır.",
+        "en": "Upper-right initials and the menu avatar use the packaged satin plate accompanying the Buyer Log logo. Dark initials remain readable in all three themes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-user-avatar-restored.png",
+        "alt": {
+          "tr": "Kullanıcı simgesinin çelik zemini geri geldi",
+          "en": "The user badge satin plate is restored"
+        },
+        "caption": {
+          "tr": "Anonim verilerle değişiklik sonrası gerçek Buyer Log görüntüsü.",
+          "en": "Actual post-change Buyer Log screenshot with anonymous data."
+        }
+      }
+    },
+    {
+      "id": "manifest-workflow-integration",
+      "type": "improvement",
+      "module": {
+        "tr": "Ortak arayüz",
+        "en": "Shared interface"
+      },
+      "title": {
+        "tr": "Güncel iş akışları ortak görünümü kullanır",
+        "en": "Current workflows use the shared interface"
+      },
+      "body": {
+        "tr": "Satır sıklığı, istisna kutusu, fiyat kaynağı, toplu işlem ve ilerleme bileşenleri güncel veri güvenliği davranışlarını koruyarak ortak Manifest tokenlarına taşındı.",
+        "en": "Row density, exception inbox, price lineage, bulk actions and progress components use shared Manifest tokens while retaining current data integrity behavior."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-workflow-integration.png",
+        "alt": {
+          "tr": "Güncel iş akışları ortak görünümü kullanır",
+          "en": "Current workflows use the shared interface"
         },
         "caption": {
           "tr": "Anonim verilerle değişiklik sonrası gerçek Buyer Log görüntüsü.",

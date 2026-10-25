@@ -152,7 +152,7 @@ async function importFile(file){
   if(typeof XLSX==='undefined'&&window.BLPerf&&typeof window.BLPerf.ensureLibrary==='function')await window.BLPerf.ensureLibrary('xlsx');
   if(typeof XLSX==='undefined')throw new Error(L('Excel kütüphanesi yüklenemedi.','Excel library could not be loaded.'));
   window.BLExcelDates?.installSheetJsHooks(XLSX);
-  const buf=await file.arrayBuffer(),wb=XLSX.read(buf,{type:'array',cellDates:true});
+  const buf=await file.arrayBuffer(),wb=await window.BLFileParser.readWorkbook(buf,{type:'array',cellDates:true});
   const sourceFingerprint=[...new Uint8Array(await crypto.subtle.digest('SHA-256',buf))].map(b=>b.toString(16).padStart(2,'0')).join('');
   const metadata={sourceFingerprint,sourceModifiedAt:file.lastModified?new Date(file.lastModified).toISOString():null};
   try{const parsed=importWorkbook(wb,file.name);Object.assign(parsed.data,metadata);return parsed;}

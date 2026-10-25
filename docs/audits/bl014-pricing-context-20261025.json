@@ -1,0 +1,236 @@
+{
+  "package": "BL-014",
+  "status": "Implemented and focused/native verified; final integrated full/CI/merge pending",
+  "base": "1a2ba78f8e82607da5180ecc3a3093009df6bd40",
+  "focused": {
+    "files": 21,
+    "pass": 158,
+    "fail": 0,
+    "skip": 0,
+    "log": "work/bl014-final-target.log",
+    "sha256Lf": "ca92a739eff6f858d8c7e6aac76b77f90e1c1b13d8b5d1b2ed10717290dc8382"
+  },
+  "red": "work/bl014-context-red.log",
+  "native": {
+    "name": "controlled-native-edge-pricing-cache",
+    "before": {
+      "cold": 642,
+      "samples": [
+        637.3999999910593,
+        641.8000000119209,
+        630.5,
+        626.7999999970198,
+        628
+      ],
+      "p50": 630.5,
+      "p95": 641.8000000119209
+    },
+    "after": {
+      "cold": 11.400000005960464,
+      "samples": [
+        4.799999997019768,
+        4.5,
+        4.4000000059604645,
+        4.399999991059303,
+        4.700000002980232
+      ],
+      "p50": 4.5,
+      "p95": 4.799999997019768
+    },
+    "checks": {
+      "manualFx": true,
+      "ruleRevision": true,
+      "trCommission": true,
+      "sourceReplacement": true,
+      "ownerAndClearedSource": true
+    },
+    "scope": "Controlled Edge calculator CPU, rendering disabled, 300 synthetic records/30000 synthetic CP rows; not a populated Electron interaction benchmark",
+    "baseline": "1a2ba78f8e82607da5180ecc3a3093009df6bd40",
+    "beforeOutput": "224bafdd545840ae5c64c383f15cce4ca4e2a76ed554b3fe1aa2ec8bb47bc4f2",
+    "afterOutput": "224bafdd545840ae5c64c383f15cce4ca4e2a76ed554b3fe1aa2ec8bb47bc4f2"
+  },
+  "node": {
+    "before": {
+      "scope": "Actual installed client helpers, rendering disabled; 300 Collection rows, 20 licences, 50 suppliers and 30000 CP fallback rows; not Electron frame timing",
+      "dataset": {
+        "collection": 300,
+        "cp": 30000,
+        "rules": 20
+      },
+      "sources": [
+        {
+          "file": "public/app-main.js",
+          "sha256Lf": "10d633b93b62c2bca19a1f6f994cd9d67b4d76db38724fadf38ad6831880c2e1"
+        },
+        {
+          "file": "public/license-royalty-commissions.js",
+          "sha256Lf": "12063bf1cd8497c22a105068cf857eebf6dd29ac213ab027e831a98ca648d97d"
+        },
+        {
+          "file": "public/collection-pricing-engine.js",
+          "sha256Lf": "04855a3143adbe85d433b72eed9b8e833b0a45cfee3eb0b24a4ffb81b4756fa2"
+        }
+      ],
+      "lookup": {
+        "samples": [
+          3279.0359,
+          3283.7690999999995,
+          3282.976999999999,
+          3298.0067000000017,
+          3282.115999999998,
+          3281.6301999999996,
+          3280.9125999999997
+        ],
+        "p50": 3282.115999999998,
+        "p95": 3298.0067000000017,
+        "outputSha256": "837d820d28240ba9039114f83aef43b5dfd7ab95dddd6754b46c73c47ec442f9"
+      },
+      "rule": {
+        "samples": [
+          3342.8254000000015,
+          3309.538100000005,
+          3340.928,
+          3340.3551000000007,
+          3347.4739999999947,
+          3344.559199999996,
+          3272.2311999999947
+        ],
+        "p50": 3340.928,
+        "p95": 3347.4739999999947,
+        "outputSha256": "4300e69aaa3fe5d9e03303d7759cfee794d8c52311d9f4910e74ae8e944e150c"
+      },
+      "calculate": {
+        "samples": [
+          29601.863400000002,
+          29657.482999999993,
+          29801.1115,
+          29920.553000000014,
+          29969.6354,
+          30108.113199999993,
+          29862.62890000001
+        ],
+        "p50": 29862.62890000001,
+        "p95": 30108.113199999993,
+        "outputSha256": "31c52b616e1a9bc07d0fa05b73215eedb999f5ae7fd4bb08509ad42d620aff78"
+      },
+      "retainedHeapDeltaBytes": -728,
+      "allocations": {
+        "samplingInterval": 32768,
+        "sampledBytes": 48497744,
+        "includesCollectedObjects": true
+      }
+    },
+    "after": {
+      "scope": "Actual installed client helpers, rendering disabled; 300 Collection rows, 20 licences, 50 suppliers and 30000 CP fallback rows; not Electron frame timing",
+      "dataset": {
+        "collection": 300,
+        "cp": 30000,
+        "rules": 20
+      },
+      "sources": [
+        {
+          "file": "public/app-main.js",
+          "sha256Lf": "43144a0c7cbd75f509a006f3dac89a91139b02167af43203c50043dd9ac7857a"
+        },
+        {
+          "file": "public/license-royalty-commissions.js",
+          "sha256Lf": "e563da0b66dd218d4eda7d15fa267267a5cead7106ef585498d7f1d10e878d0b"
+        },
+        {
+          "file": "public/collection-pricing-engine.js",
+          "sha256Lf": "48729b6bb5e7be6a25078fbc46f5e689392927fa234840efff147d80b5ee5542"
+        }
+      ],
+      "lookup": {
+        "samples": [
+          0.3941000000000088,
+          0.3614999999999924,
+          0.30299999999999727,
+          0.2972000000000037,
+          0.29120000000000346,
+          0.2909999999999968,
+          0.2985999999999933
+        ],
+        "p50": 0.2985999999999933,
+        "p95": 0.3941000000000088,
+        "outputSha256": "837d820d28240ba9039114f83aef43b5dfd7ab95dddd6754b46c73c47ec442f9"
+      },
+      "rule": {
+        "samples": [
+          0.8697999999999979,
+          0.8382999999999896,
+          0.7691999999999979,
+          2.0271999999999935,
+          0.7608999999999924,
+          0.7210999999999927,
+          0.7506999999999948
+        ],
+        "p50": 0.7691999999999979,
+        "p95": 2.0271999999999935,
+        "outputSha256": "4300e69aaa3fe5d9e03303d7759cfee794d8c52311d9f4910e74ae8e944e150c"
+      },
+      "calculate": {
+        "samples": [
+          11.856799999999993,
+          10.138099999999994,
+          9.724900000000005,
+          9.804599999999994,
+          10.195799999999991,
+          9.469300000000004,
+          10.025499999999994
+        ],
+        "p50": 10.025499999999994,
+        "p95": 11.856799999999993,
+        "outputSha256": "31c52b616e1a9bc07d0fa05b73215eedb999f5ae7fd4bb08509ad42d620aff78"
+      },
+      "retainedHeapDeltaBytes": 1720,
+      "allocations": {
+        "samplingInterval": 32768,
+        "sampledBytes": 5030064,
+        "includesCollectedObjects": true
+      }
+    }
+  },
+  "indexMemory": {
+    "scope": "Incremental retained CP index heap after explicit GC; source rows already retained; five separately retained indexes to estimate per-index cost, not peak or total allocation",
+    "rows": 30000,
+    "samples": [
+      1886064,
+      1878816,
+      1878320,
+      1878280,
+      1878336
+    ],
+    "meanBytes": 1879963.2
+  },
+  "source": [
+    {
+      "file": "public/app-main.js",
+      "sha256Lf": "43144a0c7cbd75f509a006f3dac89a91139b02167af43203c50043dd9ac7857a"
+    },
+    {
+      "file": "public/license-royalty-commissions.js",
+      "sha256Lf": "e563da0b66dd218d4eda7d15fa267267a5cead7106ef585498d7f1d10e878d0b"
+    },
+    {
+      "file": "public/collection-pricing-engine.js",
+      "sha256Lf": "48729b6bb5e7be6a25078fbc46f5e689392927fa234840efff147d80b5ee5542"
+    }
+  ],
+  "review": {
+    "agent": "review_wal_recovery",
+    "rounds": 1,
+    "result": "No concrete new P0/P1; explicit invalidation contract documented; reviewer did not run tests/native"
+  },
+  "limits": [
+    "Controlled calculator CPU with rendering disabled; not populated Electron interactions/exports",
+    "Fast graph excludes public files; source fallback",
+    "Same-length in-place identity/rule drafts need explicit revision/invalidation; inspected production writers replace arrays"
+  ],
+  "publication": {
+    "full": false,
+    "merged": false,
+    "TEST": false,
+    "STABLE": false
+  }
+}

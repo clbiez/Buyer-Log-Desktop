@@ -20,7 +20,7 @@ module.exports = function registerLicenseCardRoutes(app, deps) {
   const notify = (entity, req, detail = {}) => publishSharedMasterChange(entity, req, { ...detail, licenseCardUpdate: true });
   const service=deps.service||createLicenseCardService({loadOverrides,saveOverrides,mutate:deps.mutateSharedResource,pricing:deps,getDiscoveryRows:profile=>getLicenseDiscoveryRows({currentUser:profile}),publish:deps.publishLicenseCardChange?((profile,change)=>deps.publishLicenseCardChange({currentUser:profile},change)):null,changed:(profile,entity,detail,context)=>notify(entity,{currentUser:profile,headers:{'x-client-id':context?.originClientId||''}},detail)});
   const authority=(req,write=false)=>()=>{
-    const profile=userAccess.profileById?userAccess.profileById(req.currentUser.id):req.currentUser;
+    const profile=userAccess.sessionProfile?userAccess.sessionProfile(req):userAccess.profileById?userAccess.profileById(req.currentUser.id):req.currentUser;
     if(!profile||profile.enabled===false||userAccess.hasArea&&!['orders','cp','source'].some(area=>userAccess.hasArea(profile,area))||write&&!userAccess.hasPermission(profile,'manageBusinessRules'))throw Object.assign(new Error('Güncel lisans kartı yetkisi gerekli. / Current license-card permission is required.'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
   };
   async function importCards(req, force) {
@@ -35,6 +35,7 @@ app.get('/api/license-cards', area, async (req, res) => {
 app.get('/api/license-cards/assets/:name', area, async (req, res) => {
     try {
       const asset=await require('../lib/license-card-assets').read(String(req.params.name||''));
+      authority(req)();
       if(!asset)return res.status(404).json({error:'Görsel bulunamadı. / Image not found.',code:'LICENSE_ASSET_NOT_FOUND'});
       res.set('Content-Type',asset.type);res.set('Cache-Control','private, max-age=31536000, immutable');res.set('X-Content-Type-Options','nosniff');
       res.end(asset.bytes);

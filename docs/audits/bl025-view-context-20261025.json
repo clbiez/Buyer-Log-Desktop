@@ -1,0 +1,77 @@
+{
+  "package": "BL025",
+  "date": "2026-10-25",
+  "PR": 714,
+  "risk": "P2: existing personal view presentation, no business writes or server permission changes",
+  "focused": {
+    "files": 13,
+    "tests": 73,
+    "pass": 73,
+    "fail": 0,
+    "skip": 0,
+    "seconds": 0.6,
+    "log": "work/bl025-final-target.log",
+    "sha256Lf": "e70f2b02841d070c97bea96a2ac13cb86af53c4b52610765afc8e0cef48a7537"
+  },
+  "native": {
+    "phases": [
+      {
+        "name": "native-save-as-existing-profile-endpoint-density-filter-sort-canonical"
+      },
+      {
+        "name": "native-existing-picker-restores-bundled-filter-density-and-sort"
+      },
+      {
+        "name": "native-scroll-and-active-cell-restored-by-current-canonical-identity"
+      },
+      {
+        "name": "controlled-id-reuse-does-not-select-replacement-row"
+      },
+      {
+        "name": "native-reload-resumes-current-user-authorized-module-and-transient-view"
+      },
+      {
+        "name": "explicit-workspace-route-takes-precedence"
+      },
+      {
+        "name": "native-system-default-resets-density-and-sort"
+      },
+      {
+        "name": "native-existing-shared-preset-preview-before-apply"
+      },
+      {
+        "name": "native-tr-en-and-three-theme-layout"
+      },
+      {
+        "name": "actual-separate-buyer-session-does-not-inherit-view-or-resume"
+      },
+      {
+        "name": "native-collection-custom-column-sort-density-roundtrip"
+      }
+    ],
+    "errors": [],
+    "ok": true
+  },
+  "contracts": {
+    "schema": "Existing profile store v2 is retained; optional data.__viewVersion=1 decorates the legacy layout. Future unsupported view versions are ignored. No parallel profile endpoint.",
+    "columns": "Exact stable local bindings take precedence. Missing bindings map only through unique canonical IDs; ambiguous and removed columns are dropped. New default columns use existing insertion behavior.",
+    "filters": "Bundled filters use the existing native filter adapters. Current column/select IDs are allowlisted. Separately configured startup favourite filters retain precedence, followed by the current-user transient resume.",
+    "context": "Active and anchor bindings contain user/workspace/row owner/source ID/canonical model tuple. Missing, filtered, replaced and foreign user/workspace records cannot change active selection. The existing table-range controller locates the matching page; numeric row position is not trusted.",
+    "resume": "Bounded 200k-character local per-user preference; no HTTP or hidden module initialization. Explicit module query takes precedence. Existing switchTab checks current permission and falls back to Overview.",
+    "reset": "Native picker clearing helper was absent and caused a live ReferenceError; added a regression and fixed view/filter default reset. Density/sorting reset in the existing path.",
+    "sharing": "Existing server preview/merge/replace/undo UI retained. Shared columns/filters may apply, but row context remains bound to its original user/workspace."
+  },
+  "visualsInspected": true,
+  "independentReview": {
+    "performed": false,
+    "reason": "Local P2 presentation-only feature; server authority, business state and sync protocols unchanged."
+  },
+  "full": false,
+  "merge": false,
+  "limits": [
+    "Actual Edge acceptance at 1440×960 with synthetic records; actual Electron 200% remains BL019.",
+    "Share preview UI was inspected without importing a foreign live workspace; transfer/undo remain covered by existing targeted preset-share tests.",
+    "Final integrated full, current-head CI and batch GitHub merge remain pending."
+  ],
+  "rollback": "Revert BL025. Legacy view payload fields are retained and no business schema is migrated."
+}

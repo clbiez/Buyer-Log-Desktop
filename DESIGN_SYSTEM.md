@@ -207,3 +207,15 @@ kürenin şekli, veri geometrisidir. Kamera ve rota hesapları değiştirilmez.
 Eski modal çağrıları da ortak `trapDialogTab` davranışını kullanır. Escape
 pencerenin kendi kapatma yoluna bağlanır; kaydetme/iptal iş kuralını değiştirmez.
 Nonmodal filtreler Tab sırasını hapsetmez.
+
+## Kullanıcı işareti ve güncel iş akışları
+
+Kullanıcı avatarı `icons/avatar-patch.png` paketli saten plakayı, uygulama logosu
+`icons/icon-mark.png` dosyasını kullanır. Plaka bütün temalarda açık olduğu için
+baş harfler `--ui-avatar-ink`, yedek zemin `--ui-avatar-paper` ile sabittir.
+Baş harf üstüne ayrı bir yüzey kapatılmaz; ad/baş harf üretimi değişmez.
+Metin gradyanı, ışıma veya yeni avatar çerçevesi eklenmez.
+
+Satır sıklığı, istisna kutusu, fiyat kaynağı, toplu işlem ve kayıt/ilerleme
+yüzeyleri de `ui-components.css` sahibidir; modül CSS dosyaları yalnız ölçü ve
+yerleşim taşır. Kullanıcıya bağlı sıklık ayarı yazı ölçeğinden bağımsızdır.

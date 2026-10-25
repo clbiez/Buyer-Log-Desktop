@@ -265,6 +265,11 @@ td.kolPriceStripTd:hover .kolManualBtn,td.kolPriceStripTd:focus-within .kolManua
 .cpdInput{display:flex;flex-direction:column;gap:3px}
 .cpdInput input{height:var(--ui-control-height);padding:0 8px}
 .cpdTarget{max-width:160px;margin-top:6px}
+.cpdLineage dl{margin:0;display:grid;gap:6px}
+.cpdLineage dl>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.cpdLineage dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.cpdLineage details{margin-top:10px}
+.cpdLineage summary{cursor:pointer;margin-bottom:8px}
 @media (max-width:560px){.cpdHead{grid-template-columns:72px 1fr auto}.cpdImage{width:72px;height:72px}.cpdWaterfall,.cpdInputs{grid-template-columns:1fr}}
 
 /* Tur başına bir model grubu, üreticiler satır içi tekliflerdir. */

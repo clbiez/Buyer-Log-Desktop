@@ -396,6 +396,12 @@
 
   function copyActive(event,options){const entry=activeEntry();return entry?copyEntry(entry,event,options):false;}
   function state(tableId){return tables.get(tableId)?.state||null;}
+  function restoreActive(tableId,cell){
+    const entry=tables.get(tableId);if(!entry||!cell)return false;
+    const data=currentRange(entry);
+    if(!resolveRange(cell,cell,{rows:data.rows,columns:data.columns,rowId:entry.config.rowId,columnId:entry.config.columnId}))return false;
+    return setFocus(entry,cell,{focus:false});
+  }
 
-  return {resolveRange,buildMatrix,selectionSize,serialize,createDiagnostics,diagnostics,nativeEditingTarget,parseClipboardText,isMultiCellText,planPaste,register,afterRender,clear,copyActive,selectAll,state,prepareContextMenu};
+  return {resolveRange,buildMatrix,selectionSize,serialize,createDiagnostics,diagnostics,nativeEditingTarget,parseClipboardText,isMultiCellText,planPaste,register,afterRender,clear,copyActive,selectAll,state,restoreActive,prepareContextMenu};
 });

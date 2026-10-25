@@ -19,7 +19,7 @@
   const LEGACY_KEY='buyerlog.overview.layout.v1';
   const LONG_PRESS_MS=520;
   const EDGE_DWELL_MS=650;
-  const HEADER_SELECTOR=['.ovPremiumHead','.ovLaunchHead','.globalFlowHead','.ovPriorityHeader','.ovCollectionSummaryHeader','.oabHeader','.intakeHeader','.ovBreakdownHead','.cpaBar','#ovAttention .cpaCard>header','#ovDataCoverage .cpaCard>header'].join(',');
+  const HEADER_SELECTOR=['.ovInboxHead','.ovPremiumHead','.ovLaunchHead','.globalFlowHead','.ovPriorityHeader','.ovCollectionSummaryHeader','.oabHeader','.intakeHeader','.ovBreakdownHead','.cpaBar','#ovAttention .cpaCard>header','#ovDataCoverage .cpaCard>header'].join(',');
   const INTERACTIVE='button,a,input,select,textarea,label,summary,[role="button"],[role="tab"],[contenteditable="true"],canvas';
   const NARROW_QUERY='(max-width: 900px)';
 

@@ -73,7 +73,7 @@
     try{return await root.BLExcelTemplateEngine.fill(bytes,config,recordsForExport,root.JSZip,root.BLExcelDates);}catch(_){throw error();}
   }
   async function open(){
-    await libraries();document.getElementById('excelTemplateManager')?.remove();
+    await libraries();document.getElementById('excelTemplateManager')?.blClose?.();
     const modal=document.createElement('div');modal.id='excelTemplateManager';modal.className='warnOverlay';modal.dataset.uiMigrated='remaining';
     modal.innerHTML=`<div class="modalCard excelTemplateCard" role="dialog" aria-modal="true" aria-labelledby="excelTemplateTitle"><div class="modalTitle"><span id="excelTemplateTitle">${T('Excel Şablonlarını Yönet','Manage Excel Templates')}</span><button type="button" data-close aria-label="${T('Kapat','Close')}">×</button></div>
     <p>${T('Bu ayarlar hesabınıza kaydedilir. Yeni formatı indirin veya yükleyin; başlıkları otomatik eşleştirin, yeni sütunların alanını seçip kaydedin. Sonraki çıktılar yeni formatı kullanır.','These settings are saved to your account. Download or upload a format, match headers automatically, choose fields for new columns and save. Future exports use the new format.')}</p>
@@ -88,6 +88,8 @@
     <p data-file></p><div class="excelTemplateMapping" data-mapping></div><p role="status" data-status></p><div class="modalFoot"><button class="tbtn" data-reset>${T('Varsayılana dön','Restore default')}</button><button class="tbtn primary" data-save>${T('Formatı kaydet','Save format')}</button><button class="tbtn" data-close>${T('Kapat','Close')}</button></div></div>`;
     document.body.appendChild(modal);const $=s=>modal.querySelector(s),type=()=> $('[data-type]').value;
     let bytes,wb,previous,columns=[],loading=false;
+    const reader=new AbortController();
+    const close=()=>{reader.abort();root.BLLayerSystem?.closeDialog(modal);modal.remove();};modal.blClose=close;
     const status=message=>{$('[data-status]').textContent=message;};
     const busy=on=>{loading=on;['[data-save]','[data-reset]','[data-type]','[data-download]','[data-match]','[data-multiplier]','[data-round-to]'].forEach(s=>$(s).disabled=on);};
     const quantityRule=()=>root.BLHologramRequest.normalizeQuantityRule({
@@ -121,7 +123,9 @@
       status(T('Eşleşmeleri kontrol edip formatı kaydedin.','Review the mappings and save the format.'));
     }
     async function inspect(item){
-      bytes=item.bytes;previous=item.config;wb=new root.ExcelJS.Workbook();await wb.xlsx.load(bytes);
+      const model=await root.BLFileParser.readExcelJsModel(item.bytes,{signal:reader.signal});
+      if(reader.signal.aborted||!modal.isConnected)return;
+      bytes=item.bytes;previous=item.config;wb=new root.ExcelJS.Workbook();wb.model=model;
       const hologram=type()==='hologram';$('[data-hologram-rule]').hidden=!hologram;
       if(hologram){
         const rule=root.BLHologramRequest.normalizeQuantityRule(previous?.quantityRule);
@@ -148,9 +152,9 @@
       if(data.rejected?.length||data.entries?.[entryKey]?.value!==value)throw error();
       status(T('Format kaydedildi. Sonraki çıktılar bu şablonu kullanacak.','Format saved. Future exports will use this template.'));
     }catch(e){status(failureMessage(e));}finally{busy(false);}};
-    const close=()=>{root.BLLayerSystem?.closeDialog(modal);modal.remove();};
     root.BLLayerSystem?.openDialog(modal,{onClose:close});
-    modal.querySelectorAll('[data-close]').forEach(b=>b.onclick=close);await load();$('[data-type]').focus();
+    modal.querySelectorAll('[data-close]').forEach(b=>b.onclick=close);
+await load();if(modal.isConnected)$('[data-type]').focus();
   }
   root.BLExcelTemplates={open,build,records,error,catalog};
 })(window);

@@ -47,6 +47,12 @@
 .blRnLegacyItems{margin:12px 0 0;padding-left:18px;display:grid;gap:10px}
 .blRnEmpty{margin:auto;padding:24px;text-align:center}
 .blRnLightbox{width:min(1500px,calc(100vw - 32px));height:min(940px,calc(100dvh - 32px));max-width:none;max-height:none;padding:0;overflow:hidden}
+
+.blRnDialog--summary{width:min(860px,calc(100vw - 32px));height:auto;max-height:calc(100dvh - 32px)}
+.blRnDialog--summary .blRnLayout{display:block;flex:0 1 auto;overflow:auto}.blRnDialog--summary .blRnMain{display:block;overflow:visible}.blRnDialog--summary .blRnStage{display:block;min-height:0}
+.blRnSummary{display:block;max-width:74ch;margin:auto;width:100%;box-sizing:border-box}
+.blRnSummary h2{margin:0 0 12px}
+.blRnSummary ul{display:grid;gap:12px;padding:0;list-style:none}.blRnSummary li{display:grid;gap:3px;padding-bottom:10px}.blRnSummaryActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
 .blRnLightbox[open]{display:flex;align-items:stretch;justify-content:stretch}
 .blRnLightboxBody{position:relative;flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
 .blRnLightboxBody img{display:block;flex:1;min-height:0;width:100%;height:100%;object-fit:contain;padding:24px;box-sizing:border-box}

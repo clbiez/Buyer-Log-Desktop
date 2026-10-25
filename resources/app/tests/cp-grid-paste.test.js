@@ -24,7 +24,12 @@ const GridClipboard = require(GRID_PATH);
 function extractFunction(source, name) {
   const start = source.indexOf(`function ${name}(`);
   assert.ok(start >= 0, `${name} bulunmalı`);
-  const open = source.indexOf('{', start);
+  let parens=0,open=-1;
+  for(let i=source.indexOf('(',start);i<source.length;i++){
+    if(source[i]==='(')parens++;
+    else if(source[i]===')'&&--parens===0){open=source.indexOf('{',i);break;}
+  }
+  assert.ok(open>start,`${name} gövdesi bulunmalı`);
   let depth = 0;
   for (let i = open; i < source.length; i += 1) {
     if (source[i] === '{') depth += 1;
@@ -197,10 +202,19 @@ test('CP değerleri ekrandaki/Excel biçiminden normalize edilir, okunamayan de�
 });
 
 test('yapıştırma tek hücre düzenleme yolundan geçer ve tek geri alma adımıdır', () => {
-  const apply = extractFunction(APP, 'applyCpGridPaste');
-  assert.match(apply, /commitCpEditor\(\{dataset:\{id:String\(id\),key:op\.column\.k,kind:op\.target\},value:op\.value\},\{refresh:false\}\)/);
+  const apply = extractFunction(APP, 'applyCpGridPasteConfirmed');
+  assert.match(apply, /commitCpEditor\(\{dataset:\{id:String\(id\),key:op\.column\.k,kind:op\.target,lineKey:lineKeyOfRow\(op\.row\),editOwner:orderLinePeerOwner\(\)\},value:op\.value\},\{refresh:false\}\)/);
+  assert.match(apply,/return !current\|\|!sameOrderLine\(current,op\.row\)/);
   assert.match(apply, /_cpPasteUndoBatch=actions/);
-  assert.match(apply, /pushUndo\(actions\.length===1\?actions\[0\]:\{kind:'batch',actions\}\)/);
+  assert.match(apply, /const history=actions\.length\?\{kind:'batch',actions\}:null/);
+  const preview=extractFunction(APP,'applyCpGridPaste');
+  assert.match(preview,/await window\.BLBulkOperations\.run/);
+  assert.match(preview,/await enqueueOverrideMutation[\s\S]*capture\.resolve\(data\)[\s\S]*pushUndo\(result\.history\)/);
   assert.match(extractFunction(APP, 'pushUndo'), /if\(_cpPasteUndoBatch\)\{ _cpPasteUndoBatch\.push\(action\); return; \}/);
   assert.match(extractFunction(APP, 'applyHistoryAction'), /action\.kind==='batch'[\s\S]*\.reverse\(\)/);
+});
+test('partial-view peers share one canonical bulk target per field',()=>{
+ const unique=new Function('lineKeyOfRow',`${extractFunction(APP,'cpBulkUniqueOperations')};return cpBulkUniqueOperations;`)(row=>row.canonical);
+ const first={row:{_id:1,canonical:'order|model|colour'},column:{k:'Supp. FOB'},value:'4'},duplicate={row:{_id:7,canonical:'order|model|colour'},column:{k:'Supp. FOB'},value:'5'},other={row:{_id:8,canonical:'other'},column:{k:'Supp. FOB'},value:'6'};
+ assert.deepEqual(unique([first,duplicate,other]),[first,other]);
 });

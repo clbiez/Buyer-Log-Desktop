@@ -1,5 +1,9 @@
 # Manifest — Faz 3 temizlik ve son doğrulama
 
+Güncelleme: kullanıcı avatar kontrolü ve main merge işlemini onayladı.
+[Güncel main entegrasyonu, yeni görseller ve son test](ui-rebuild/main-integration/README.md)
+bağlantısındadır. Aşağıdaki yerel teslim durumları önceki aşamanın tarihsel kaydıdır.
+
 Durum: yerel uygulama, temizlik ve proje sonu doğrulama tamamlandı. Yayın
 yapılmadı; platform sınırları ve performans farkı aşağıda açıkça kayıtlı. Dal:
 `ui-rebuild/phase-3-consolidation`, bağımlı taban `05951638`

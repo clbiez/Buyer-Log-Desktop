@@ -1,0 +1,3379 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "buyer-log-desktop",
+      "version": "7.0.294"
+    },
+    "properties": [
+      {
+        "name": "buyerlog:advisory-lookup-date",
+        "value": "2026-10-25"
+      },
+      {
+        "name": "buyerlog:scope",
+        "value": "Checked-out source distribution: locked Node packages and every vendored/runtime artifact. Excluded executable and published artifact identity are not certified."
+      },
+      {
+        "name": "buyerlog:package-lock-sha256",
+        "value": "b1951effed21310cc9fefb0337abc5cdfe6df2f28abd2bad2173171ebced533a"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/@kenjiuno/decompressrtf",
+      "name": "@kenjiuno/decompressrtf",
+      "version": "0.1.4",
+      "purl": "pkg:npm/%40kenjiuno/decompressrtf@0.1.4",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/@kenjiuno/decompressrtf"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "BSD-2-Clause"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@kenjiuno/decompressrtf/-/decompressrtf-0.1.4.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "bfd73f885cf5ee3456c9dd9c467aef260e153a0ff823f54293e6c6f099e85f6809f6c01eb0fce8dee4ea7269555dda5ab1323c842869055c34d2982129edea4d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/@kenjiuno/msgreader",
+      "name": "@kenjiuno/msgreader",
+      "version": "1.28.0",
+      "purl": "pkg:npm/%40kenjiuno/msgreader@1.28.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/@kenjiuno/msgreader"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/@kenjiuno/msgreader/-/msgreader-1.28.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "fa2bf6ad6086447997ff7b01c17673913844baecb01898e762cbf18fa2a9d4bfc50cc20241c16bb6a37ee8c16b9e1d9dfae9ad7c6b57f74e30c5a6040d9e7631"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/@kenjiuno/msgreader/node_modules/iconv-lite",
+      "name": "iconv-lite",
+      "version": "0.6.3",
+      "purl": "pkg:npm/iconv-lite@0.6.3",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/@kenjiuno/msgreader/node_modules/iconv-lite"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.6.3.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e1f0a4efdc2c84c773329dab1f4eaa5ab244e22a25a8b842507f8e8ae22053ef91074fbde0d9432fcd5ab4eec65f9e6e50ab9ea34b711cdb6f13223a0fb59d33"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/accepts",
+      "name": "accepts",
+      "version": "1.3.8",
+      "purl": "pkg:npm/accepts@1.3.8",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/accepts"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/accepts/-/accepts-1.3.8.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "3d802d8536b69b654ac6ebd20f70cf0bf1b2f94fac380d4b02e4fc9a4991bafc3e34009269e5c443e34771517bace365eaa71ac55dd4b9e9b06b093eefe4892f"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/array-flatten",
+      "name": "array-flatten",
+      "version": "1.1.1",
+      "purl": "pkg:npm/array-flatten@1.1.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/array-flatten"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/array-flatten/-/array-flatten-1.1.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "3c254042cc167a6bba51dc6c0c5157ffe815798a8a0287770f75159bdd631f0ca782e3b002f60f871f2736533ef8da9170ae82c71a5469f8e684874a88789baa"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/body-parser",
+      "name": "body-parser",
+      "version": "1.20.9",
+      "purl": "pkg:npm/body-parser@1.20.9",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/body-parser"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/body-parser/-/body-parser-1.20.9.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "148488431579bbdd58f60bee16adeafed03fa93a8b267dc0851704bf2a33ca1253879381145b6ff36ec074753b45bc9cb78afe05ad7ff7da056b5637cae16c77"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/bytes",
+      "name": "bytes",
+      "version": "3.1.2",
+      "purl": "pkg:npm/bytes@3.1.2",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/bytes"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/bytes/-/bytes-3.1.2.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "fcd7fb4f2cd3c7a4b7c9124e6ce015efde7aafc72bdbe3a3f000b976df3048fdc1400a1e5f9f0da07c8253c3fccc690d5d2b634d28ba7f33ba174a4175c61b12"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/call-bind-apply-helpers",
+      "name": "call-bind-apply-helpers",
+      "version": "1.0.2",
+      "purl": "pkg:npm/call-bind-apply-helpers@1.0.2",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/call-bind-apply-helpers"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/call-bind-apply-helpers/-/call-bind-apply-helpers-1.0.2.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "4a9d5a6e52748af0e44b38dc68977112e9cde7f5ef92c149dac30115fabac74af285057fd9bfcac057b6d5c329987b4f3928a3f0af7dff049fa04b9339b9ae31"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/call-bound",
+      "name": "call-bound",
+      "version": "1.0.4",
+      "purl": "pkg:npm/call-bound@1.0.4",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/call-bound"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/call-bound/-/call-bound-1.0.4.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "fb2b3df7b53dea9a382b1fc0069042aa103d12ec49690583420ef6f791f8841a61bf72198346e804abb0629b78617a7a319e4099942753fb72313951a5a49e8e"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/content-disposition",
+      "name": "content-disposition",
+      "version": "0.5.4",
+      "purl": "pkg:npm/content-disposition@0.5.4",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/content-disposition"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/content-disposition/-/content-disposition-0.5.4.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "16f7994cdb86c34e1cc6502259bce2eb34c02ff9617a16966d3b6096e261e3f13de43a8cc139a16b7299375680580f1c148847ccc654bcb7af930e51aa4fad49"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/content-type",
+      "name": "content-type",
+      "version": "1.0.5",
+      "purl": "pkg:npm/content-type@1.0.5",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/content-type"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/content-type/-/content-type-1.0.5.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "9d38ea7dc045122a4a7570afe180d05827e670b64a9bcd65745d29028a53bf2ac51956dc47a3ff54001de46ecdfb4b53afc42a894d2d15a743e852b836d27038"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/cookie",
+      "name": "cookie",
+      "version": "0.7.2",
+      "purl": "pkg:npm/cookie@0.7.2",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/cookie"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/cookie/-/cookie-0.7.2.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "ca48b95e72ae7fbe74979d2e193965b7a90a20b6389d0d5e34841ab685c40726797568272aa6e7aa64eb044e41e0dee5acc24a436cad58c8933b6a34bfa130ff"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/cookie-signature",
+      "name": "cookie-signature",
+      "version": "1.0.7",
+      "purl": "pkg:npm/cookie-signature@1.0.7",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/cookie-signature"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/cookie-signature/-/cookie-signature-1.0.7.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "35775873774baf8ee9064a54087b4a4b020e4172d59fc75912ecb06e808e258fe8b00d301522e549ac2bdca37ca97244c97eba15c38d4c7f0422556e2b4cb214"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/debug",
+      "name": "debug",
+      "version": "2.6.9",
+      "purl": "pkg:npm/debug@2.6.9",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/debug"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/debug/-/debug-2.6.9.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6c2ec496b7496899cf6c03fed44a2d62fa99b1bdde725e708ba05f8ba0494d470da30a7a72fb298348d7ce74532838e6fc4ec076014155e00f54c35c286b0730"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/depd",
+      "name": "depd",
+      "version": "2.0.0",
+      "purl": "pkg:npm/depd@2.0.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/depd"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/depd/-/depd-2.0.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "83b9c7e8fe9dc838a8268800006a6b1a90ad5489898693e4feba02cdd6f77c887ad7fb3f9cfb1f47aa27c8cc2408047f3a50b7c810b49444af52840402cb08af"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/destroy",
+      "name": "destroy",
+      "version": "1.2.0",
+      "purl": "pkg:npm/destroy@1.2.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/destroy"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/destroy/-/destroy-1.2.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "dac246253697208691d70e22252368374867318ec6a5cfe7f03e2a482270f10a855977fb72e0209c41f1069c1e69570f7af0b69772a98d80b1dcdca941081a26"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/dunder-proto",
+      "name": "dunder-proto",
+      "version": "1.0.1",
+      "purl": "pkg:npm/dunder-proto@1.0.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/dunder-proto"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/dunder-proto/-/dunder-proto-1.0.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "28837f9c3241411717c3430b561644f62407986ebca80548060f42aa65188e64088608a3f54e4c16faea9142f915bb72cb366e39e3add3375e45ee1463b72df8"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/ee-first",
+      "name": "ee-first",
+      "version": "1.1.1",
+      "purl": "pkg:npm/ee-first@1.1.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/ee-first"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ee-first/-/ee-first-1.1.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "58cc26f4b851528f9651a44dfaf46e113a86f3d22066985548d91d16079beac4bf1383ab0c837bb78f0201ec121d773a0bc95e7c3f0a29faf9bd8eb56eb425a3"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/encodeurl",
+      "name": "encodeurl",
+      "version": "2.0.0",
+      "purl": "pkg:npm/encodeurl@2.0.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/encodeurl"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/encodeurl/-/encodeurl-2.0.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "4349fd1d18b89ba26e188575785966bc907b644571bbddc8accca232c182d25acc24c5b3460c7a586aaec9f4206556f7d6f8468179df98f34d5e6c673a4441ae"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/es-define-property",
+      "name": "es-define-property",
+      "version": "1.0.1",
+      "purl": "pkg:npm/es-define-property@1.0.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/es-define-property"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/es-define-property/-/es-define-property-1.0.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "7b79d17e07d4678acd18bdb7da05205f4e90372c9ecf4e0a76316b17e2d34683979ab3a014a0e0e0109db235bc1274faf5ea9d606991a49c223d560dac2696de"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/es-errors",
+      "name": "es-errors",
+      "version": "1.3.0",
+      "purl": "pkg:npm/es-errors@1.3.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/es-errors"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/es-errors/-/es-errors-1.3.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "65fe47d8ac6ddb18d3bdb26f3f66562c4202c40ea3fa1026333225ca9cb8c5c060d6f2959f1f3d5b2d066d2fa47f9730095145cdd0858765d20853542d2e9cb3"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/es-object-atoms",
+      "name": "es-object-atoms",
+      "version": "1.1.2",
+      "purl": "pkg:npm/es-object-atoms@1.1.2",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/es-object-atoms"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/es-object-atoms/-/es-object-atoms-1.1.2.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "1d6701a0de8d8a57aab52c9d2b616a1db4bf2e80ddda9aab9d01cbc89cc18f890ea7f932d8c58c37af78c4e7e42bcfd29d4b16d831fb11fc9597274a0ac9b567"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/escape-html",
+      "name": "escape-html",
+      "version": "1.0.3",
+      "purl": "pkg:npm/escape-html@1.0.3",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/escape-html"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/escape-html/-/escape-html-1.0.3.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "3624aea59e0e7ae1b0afaf251887b29bf92c219309a1d506392099fc54a74f172b7a46efaab81d53194938ca628da299563009ad6ac6b3fe89cbc38cbb28fda3"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/etag",
+      "name": "etag",
+      "version": "1.8.1",
+      "purl": "pkg:npm/etag@1.8.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/etag"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/etag/-/etag-1.8.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6882f9171ee66b055adf4d1a976067104e2236fa35a844f12eb3c8fe8d392fbcfa828edf0b0d49e844266cae05989d804bb920545fca1195ae7c17dd0a531c3e"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/express",
+      "name": "express",
+      "version": "4.22.3",
+      "purl": "pkg:npm/express@4.22.3",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/express"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/express/-/express-4.22.3.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "05d72ce3edea969565c763519fa7e05f651edbf80645a3de6b079b81c94cd044520aa0e903ea301757dd3f08c951300958c4ee01ac630dffa1cdbd3fe1e2afbf"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/finalhandler",
+      "name": "finalhandler",
+      "version": "1.3.2",
+      "purl": "pkg:npm/finalhandler@1.3.2",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/finalhandler"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/finalhandler/-/finalhandler-1.3.2.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "680e11c8f71dddb69d6dd001183b935c2313b4e9de5020181ff831a18453665209745d183d6b86aa202c22b84d9e7a9d5c6b30624e9d1ae8de9b8c3cd1424586"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/forwarded",
+      "name": "forwarded",
+      "version": "0.2.0",
+      "purl": "pkg:npm/forwarded@0.2.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/forwarded"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/forwarded/-/forwarded-0.2.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "6ee446d1fa41b511d24c238049eea10f6e7cb44b9b16844b6f864d03a3713151cdc3680e7301e8f70c9a6e5ccccce039cfdc40f4bd4a36393f36de8c4fd698a3"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/fresh",
+      "name": "fresh",
+      "version": "0.5.2",
+      "purl": "pkg:npm/fresh@0.5.2",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/fresh"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/fresh/-/fresh-0.5.2.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "cc9da6418335f2b1053ae75e57819285318843b45bcc0ee8cdb53d23f5c1a66ee4aa0332c209b294cc171f16499a45686249daf5dda95575573dd6133fd7a3f1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/function-bind",
+      "name": "function-bind",
+      "version": "1.1.2",
+      "purl": "pkg:npm/function-bind@1.1.2",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/function-bind"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "ed71cdc47eea5fdc46e66230c6486e993a31fcc21135c3a00ebc56b0cb76a40af6dd61e9e8cad194dec50521690a9afea153b417be38894811f369c931f1b648"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/get-intrinsic",
+      "name": "get-intrinsic",
+      "version": "1.3.0",
+      "purl": "pkg:npm/get-intrinsic@1.3.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/get-intrinsic"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/get-intrinsic/-/get-intrinsic-1.3.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "f5f4a349aa2cfdf448548a7ec5226513a95fc21112ecb36d29a08121a987b23af69dad418800493e8d263a38f3f062435116ab9823c6a9a89583999f8dbf7c09"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/get-proto",
+      "name": "get-proto",
+      "version": "1.0.1",
+      "purl": "pkg:npm/get-proto@1.0.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/get-proto"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/get-proto/-/get-proto-1.0.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "b1349f063a17069f3d26f20a21e7eac3b53608279bb1cef892263a6b0886a202ada1219b823604fc6ffe97db05dcc5853cd73d21ca0e0b83837ca1dfc459a9d2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/gopd",
+      "name": "gopd",
+      "version": "1.2.0",
+      "purl": "pkg:npm/gopd@1.2.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/gopd"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/gopd/-/gopd-1.2.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "65429187afe4505a0089302d4d83d9277870f70371c7e04804e8a39e51bd3e7ac9b027128ecd70cb20fabc9a5a62d827cc3aca6114aa7f738ee917daf77c6c46"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/has-symbols",
+      "name": "has-symbols",
+      "version": "1.1.0",
+      "purl": "pkg:npm/has-symbols@1.1.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/has-symbols"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/has-symbols/-/has-symbols-1.1.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "d5c0cd77027625aa2199bdec8383a629a301c2e0b8f2c6278b91d4c360efb02f0b8c64cb2bd87e79bd57e91cae3877b8853d142c25baf22a26863528294aa53d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/hasown",
+      "name": "hasown",
+      "version": "2.0.4",
+      "purl": "pkg:npm/hasown@2.0.4",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/hasown"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/hasown/-/hasown-2.0.4.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "4f651b7db044177db089ea5722c3254d6f7e743602eb0321fedfef600e2db8e30aa96cff9f7bebd4d152c508b23fece4da65eca0c03f8bfeea57a2cabadd6dd4"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/http-errors",
+      "name": "http-errors",
+      "version": "2.0.1",
+      "purl": "pkg:npm/http-errors@2.0.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/http-errors"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/http-errors/-/http-errors-2.0.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e056d17405fe6d2766a3801416e4b458d88fcfc36016dfabf138603569a5ae3423b7543b651f7ecd395c7b6f39f71e0a497af022c69e4ea0e82909ad3fca4b99"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/iconv-lite",
+      "name": "iconv-lite",
+      "version": "0.4.24",
+      "purl": "pkg:npm/iconv-lite@0.4.24",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/iconv-lite"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.24.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "bf73179d901cbe7cb091350466898801cb657bb4575de79d391df5c3097b565ca85cee108bd6abbd27a73505a77b54dc4708422f51f02c8db56c4a9da63f3fac"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/inherits",
+      "name": "inherits",
+      "version": "2.0.4",
+      "purl": "pkg:npm/inherits@2.0.4",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/inherits"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "ISC"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "93fbc6697e3f6256b75b3c8c0af4d039761e207bea38ab67a8176ecd31e9ce9419cc0b2428c859d8af849c189233dcc64a820578ca572b16b8758799210a9ec1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/ipaddr.js",
+      "name": "ipaddr.js",
+      "version": "1.9.1",
+      "purl": "pkg:npm/ipaddr.js@1.9.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/ipaddr.js"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ipaddr.js/-/ipaddr.js-1.9.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "d0a23feb4ef1a31493a07ec68cdd457d26cba14d3e6ed4e2723b1049642587f859ca437c2a998c7fbb98c0f5b747e6a467a47fc35f199574870585e26143cede"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/math-intrinsics",
+      "name": "math-intrinsics",
+      "version": "1.1.0",
+      "purl": "pkg:npm/math-intrinsics@1.1.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/math-intrinsics"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/math-intrinsics/-/math-intrinsics-1.1.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "fc85ed6f0124e474cfc84c32297ea11a4617c4cf676e3eb807e8a55499c2fd1e81d291f91b85776f4a556cbec3063e2d921040a696d05257fa17a5e5f4b1eed6"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/media-typer",
+      "name": "media-typer",
+      "version": "0.3.0",
+      "purl": "pkg:npm/media-typer@0.3.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/media-typer"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/media-typer/-/media-typer-0.3.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "76afaa7a543d6a41e970e97f8145514f15483a4009d70477400bdbe11b158d2f285681630c64dcebbf702589949a49d41791f030b3a06f93be6b72b17d66a93d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/merge-descriptors",
+      "name": "merge-descriptors",
+      "version": "1.0.3",
+      "purl": "pkg:npm/merge-descriptors@1.0.3",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/merge-descriptors"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/merge-descriptors/-/merge-descriptors-1.0.3.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "81a36f012ed367cf7bfeb55a6749ccb40cb13728bfa5d6e36c0c14a4542937bd06aa755f3a25e979450c291066cd769243c0dd4d7e3fd26b3adabd8afa113a99"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/methods",
+      "name": "methods",
+      "version": "1.1.2",
+      "purl": "pkg:npm/methods@1.1.2",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/methods"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/methods/-/methods-1.1.2.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "89c9401de36a366ebccc5b676747bed4bdb250876fccda1ab8a53858103756f1ffbcf162785eea7d197051953e0c0f4ff5b3d7212f74ba5c68528087db7b15db"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/mime",
+      "name": "mime",
+      "version": "1.6.0",
+      "purl": "pkg:npm/mime@1.6.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/mime"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/mime/-/mime-1.6.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c74567f2ca48fb0b89d4ee92ee09db69083c3f187834d1dbeca4883661162a23c4e1128ea65be28e7f8d92662699180febc99cef48f611b793151b2bb306907a"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/mime-db",
+      "name": "mime-db",
+      "version": "1.52.0",
+      "purl": "pkg:npm/mime-db@1.52.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/mime-db"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/mime-db/-/mime-db-1.52.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "b0f538b95edd625bed589c70c311c3d0fba285536213b4f201b439496c43081f66518bce82ba103b061040e28f27c0886c4fb51135653a82b5502da7537818be"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/mime-types",
+      "name": "mime-types",
+      "version": "2.1.35",
+      "purl": "pkg:npm/mime-types@2.1.35",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/mime-types"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.35.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "64363e6cf9b9cd34c5f98a42ac053d9cad148080983d3d10b53d4d65616fe2cfbe4cd91c815693d20ebee11dae238323423cf2b07075cf1b962f9d21cda7978b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/ms",
+      "name": "ms",
+      "version": "2.0.0",
+      "purl": "pkg:npm/ms@2.0.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/ms"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ms/-/ms-2.0.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "4e9a7ad0fe885090d3b8eabfe59f1c76c93326e8dfc2a7ce4e4af02308fb211212a679099d3e92c89e0f08f9c63281630bd75d85a979295218b40b7dee2c74e4"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/negotiator",
+      "name": "negotiator",
+      "version": "0.6.3",
+      "purl": "pkg:npm/negotiator@0.6.3",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/negotiator"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/negotiator/-/negotiator-0.6.3.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "f8452ca863cbb0cfa3ff37428598ec9d7e758385eb1c53885f07e70953c695093f9398226a470ab2ec4239b051bba0d29bda29c3f3bab2559b25d82140ce1b06"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/object-inspect",
+      "name": "object-inspect",
+      "version": "1.13.4",
+      "purl": "pkg:npm/object-inspect@1.13.4",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/object-inspect"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/object-inspect/-/object-inspect-1.13.4.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5baee22e5e09d845c41936df78709f7eb8c37e2b6f2c0360d14957df01545124f1f762974457a0307515812a84fb0be101b8b85aa8c683d733cac4d5d84a5b7b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/on-finished",
+      "name": "on-finished",
+      "version": "2.4.1",
+      "purl": "pkg:npm/on-finished@2.4.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/on-finished"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/on-finished/-/on-finished-2.4.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a15973920dc4340842936cddbfb209c1dfd0503e33d91c51c2991c198f29b0255c09864dab8c189d55802c733e6ebb6e26378f5a2605fc2966b83afc0a1e7e92"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/parseurl",
+      "name": "parseurl",
+      "version": "1.3.3",
+      "purl": "pkg:npm/parseurl@1.3.3",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/parseurl"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/parseurl/-/parseurl-1.3.3.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "0a2c9e3b1153fc96723799b4cfd3df5f0e1208127a4b2833d43a65d30aa39610c418604fd469ec51510bd29eb78681b57dc8f77c7ca75e2f4d60ee2758e2fea9"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/path-to-regexp",
+      "name": "path-to-regexp",
+      "version": "0.1.13",
+      "purl": "pkg:npm/path-to-regexp@0.1.13",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/path-to-regexp"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/path-to-regexp/-/path-to-regexp-0.1.13.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "03f00634c14dddcf1b3a5bd5f51ade31daefee3b2617d5c87c378277cefe23c44d83ab3bf01849c4cbbaf4d10c1c14891712a275589311daee470124fd620aa8"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/pe-library",
+      "name": "pe-library",
+      "version": "2.0.1",
+      "purl": "pkg:npm/pe-library@2.0.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/pe-library"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/pe-library/-/pe-library-2.0.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "fea8d816a35296ae7d0790c8dfa6a6fbee7fde0320874d909f3a588a0af0ad6eacf90a54d261dfd3dfe2038c234eedb5514c6877257b6427ad5793220e168dfc"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/proxy-addr",
+      "name": "proxy-addr",
+      "version": "2.0.8",
+      "purl": "pkg:npm/proxy-addr@2.0.8",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/proxy-addr"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/proxy-addr/-/proxy-addr-2.0.8.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e679f1d321b2554718eadf519d6700456b704fd1750fc3bdaedd3c86d3ef9dde3d5b522066d98b921bbd59f333423d5c1718c720ee9ca279d43555b993b015c9"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/qs",
+      "name": "qs",
+      "version": "6.16.1",
+      "purl": "pkg:npm/qs@6.16.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/qs"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "BSD-3-Clause"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/qs/-/qs-6.16.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e4fc7a27badf1c1006521350ddeb3863370e741070d120dc56d4e126697845d9cac38b4ab367a903490f67e2bc5fe5a21e4b53f7744755c43fdf29b96930a0b6"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/range-parser",
+      "name": "range-parser",
+      "version": "1.2.1",
+      "purl": "pkg:npm/range-parser@1.2.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/range-parser"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/range-parser/-/range-parser-1.2.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "1eb82cc7ea2baa8ca09e68456ca68713a736f7a27e1d30105e8c4417a80dba944e9a6189468cb37c6ddc700bdea8206bc2bff6cb143905577f1939796a03b04a"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/raw-body",
+      "name": "raw-body",
+      "version": "2.5.3",
+      "purl": "pkg:npm/raw-body@2.5.3",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/raw-body"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/raw-body/-/raw-body-2.5.3.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "b3855239feb2374aef6d1646c6cf0e9b90968fab1e9de3302b7a036f89560c7d143e159cc70396c39faa936e1bc6af3bb335f5c9daf0ca520ea76b86d688d4a4"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/resedit",
+      "name": "resedit",
+      "version": "3.1.0",
+      "purl": "pkg:npm/resedit@3.1.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/resedit"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/resedit/-/resedit-3.1.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "8ba08df04e85cd3a73b06abfa149e6d864d685d7696446e7004fb378dc2a4e9a6e7132bbc5dd7bf2ad7158432b15bfa72e70a1fa0783a99e10c2114df1512055"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/safe-buffer",
+      "name": "safe-buffer",
+      "version": "5.2.1",
+      "purl": "pkg:npm/safe-buffer@5.2.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/safe-buffer"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "ae9dd2a34eca71d9a629b1af81a37141226bedb1954959394bd12ad45fa9a5b468ef4f9879a0f1930e4377c34f37e183e9b8e7626d95b8fb825e6a6e62f9825d"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/safer-buffer",
+      "name": "safer-buffer",
+      "version": "2.1.2",
+      "purl": "pkg:npm/safer-buffer@2.1.2",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/safer-buffer"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "619a372bcd920fb462ca2d04d4440fa232f3ee4a5ea6749023d2323db1c78355d75debdbe5d248eeda72376003c467106c71bbbdcc911e4d1c6f0a9c42b894b6"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/send",
+      "name": "send",
+      "version": "0.19.2",
+      "purl": "pkg:npm/send@0.19.2",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/send"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/send/-/send-0.19.2.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "54c6ccc5b0de7a1031a4eb5625795c512e44f225e1e9098df819115f5180452df045a5c4120cc2701d7481341accee36b69348c9af31232371f1f965d4e14fae"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/send/node_modules/ms",
+      "name": "ms",
+      "version": "2.1.3",
+      "purl": "pkg:npm/ms@2.1.3",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/send/node_modules/ms"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "e85973b9b4cb646dc9d9afcd542025784863ceae68c601f268253dc985ef70bb2fa1568726afece715c8ebf5d73fab73ed1f7100eb479d23bfb57b45dd645394"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/serve-static",
+      "name": "serve-static",
+      "version": "1.16.3",
+      "purl": "pkg:npm/serve-static@1.16.3",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/serve-static"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/serve-static/-/serve-static-1.16.3.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "c74453a907a5ea0e5263b2e0e99ade326b0ece7707154ee786745690a816b8c4eee4d3740d1e68aee72432a46f69c00df5de70e804674415e5f718430a07cc78"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/setprototypeof",
+      "name": "setprototypeof",
+      "version": "1.2.0",
+      "purl": "pkg:npm/setprototypeof@1.2.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/setprototypeof"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "ISC"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/setprototypeof/-/setprototypeof-1.2.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "1392c35fb5aba7ce4a8a5e5b859bf8ea3f2339e6e82aae4932660cde05467461fcc45a4f59750cb0dae53830ab928c4c11e362fd7648c2e46f6385cdc18309a7"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/side-channel",
+      "name": "side-channel",
+      "version": "1.1.1",
+      "purl": "pkg:npm/side-channel@1.1.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/side-channel"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/side-channel/-/side-channel-1.1.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "eb1e9d2bacc97694f3178b1078d631c2dbc1cdfe848381ad95eb12f781cebd3b9d51ec8ad965c06887e60e0b32b2562b441785225b22e78018b05194ba19afad"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/side-channel-list",
+      "name": "side-channel-list",
+      "version": "1.0.1",
+      "purl": "pkg:npm/side-channel-list@1.0.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/side-channel-list"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/side-channel-list/-/side-channel-list-1.0.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "9a39ffd1b8bfa145118dce5797b21a5a2fce24926e9aea0915025f0c3c8ee3afa1056b1f69533ae53047ab67a864187397d11c8713a28e991b442f12541414d3"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/side-channel-map",
+      "name": "side-channel-map",
+      "version": "1.0.1",
+      "purl": "pkg:npm/side-channel-map@1.0.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/side-channel-map"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/side-channel-map/-/side-channel-map-1.0.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "5428c235f80cb1bcb7b53768d369db8ed33f7b0adaea33c79a94e17a7913621f291bdb9c67fd4ff12a38bb814605e93f063a4e56c0c23282c0fe2b8128815744"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/side-channel-weakmap",
+      "name": "side-channel-weakmap",
+      "version": "1.0.2",
+      "purl": "pkg:npm/side-channel-weakmap@1.0.2",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/side-channel-weakmap"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/side-channel-weakmap/-/side-channel-weakmap-1.0.2.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "58f4bf1ef1d04d89c78ac2e8f4c72a0473899361641cefed969be5772ae77a6e1a790a7885a8b7832b61b3083aa74d684a84e5e7cadca621408c5d9baf6024d8"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/statuses",
+      "name": "statuses",
+      "version": "2.0.2",
+      "purl": "pkg:npm/statuses@2.0.2",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/statuses"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/statuses/-/statuses-2.0.2.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "0ef132e795770c1eee927468fb888e193e5f3f5b2547cc10a2155d9278a064f32932cb5a289416870898040089137525da94e70138a18416274616501c606247"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/toidentifier",
+      "name": "toidentifier",
+      "version": "1.0.1",
+      "purl": "pkg:npm/toidentifier@1.0.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/toidentifier"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/toidentifier/-/toidentifier-1.0.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a39b123ca12483f0c840d987e37574fee7ab2eba7355e764521f2d18dbda797a5fa6ec2329e9e54a8c7fd8efc14e5654b447be246eece58844cfad3c3e500744"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/type-is",
+      "name": "type-is",
+      "version": "1.6.18",
+      "purl": "pkg:npm/type-is@1.6.18",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/type-is"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/type-is/-/type-is-1.6.18.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "4e444aafdb144f1107f0c75fb8248fed58b3272cd134c8e3d89d9da3626bdcaca6e7df0955d124b2eccf4029e514f5b8932f50fa203e99af411a6d3a5d0072f2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/unpipe",
+      "name": "unpipe",
+      "version": "1.0.0",
+      "purl": "pkg:npm/unpipe@1.0.0",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/unpipe"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/unpipe/-/unpipe-1.0.0.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a63cb66d8852b2e7f05a52b03dcfa5ddc37bfb0b8994aeaecf461d2443a54036e5ea3a3f6253e2e266fc6a0524542f0117b57c36ecdec8f36a464b00de1ced29"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/utils-merge",
+      "name": "utils-merge",
+      "version": "1.0.1",
+      "purl": "pkg:npm/utils-merge@1.0.1",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/utils-merge"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/utils-merge/-/utils-merge-1.0.1.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a4c653bc8913d5df93146bc33aaa1d39c971d105a49208ba4dda1af200bc7df18002acfda733d36560326dbb071e8103ff3b4cb64bff5686136324a1527f3584"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/vary",
+      "name": "vary",
+      "version": "1.1.2",
+      "purl": "pkg:npm/vary@1.1.2",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/vary"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/vary/-/vary-1.1.2.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "04d19b58b7ddd1e50f69b8645d4566d23f2ebaf444c93879a2f45afddca8c3f06a01b649c82fb97d4f88cd03b39802b362a6110084a8461750af778867f3d7aa"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "npm:node_modules/xlsx",
+      "name": "xlsx",
+      "version": "0.20.3",
+      "purl": "pkg:npm/xlsx@0.20.3",
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log Node dependency maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update package.json/package-lock.json together; install with npm ci; review advisory changes and run relevant contracts plus final integrated regression."
+        },
+        {
+          "name": "buyerlog:lock-location",
+          "value": "node_modules/xlsx"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "file:vendor/xlsx-0.20.3.tgz"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-512",
+          "content": "a0b0eade3c3b01c2ea2961f60210a9553665f267fa5f661178ff8d7a1d12254cd5fc1759623b61f78b46e6da22301d4f3eb62dc4e09f6a850292fb6e1fedc024"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "vendor:barlow-fonts",
+      "name": "Barlow and Barlow Condensed WOFF2 subsets",
+      "version": "unversioned bundled subsets",
+      "licenses": [
+        {
+          "expression": "OFL-1.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "76162191369b02ef92d71ea0efcd9794620997433df24a16d55655a586c32720"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/google/fonts/tree/main/ofl/barlow"
+        }
+      ],
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log UI maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Replace font subsets as one documented pinned family; keep both OFL notices, Latin/Latin-ext coverage and density/readability acceptance."
+        },
+        {
+          "name": "buyerlog:version-evidence",
+          "value": "Existing named WOFF2 subsets; no upstream version stamp was recorded. Per-file hashes identify the exact distribution; source equivalence is not claimed."
+        },
+        {
+          "name": "buyerlog:file-count",
+          "value": "13"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "vendor:cesium",
+      "name": "CesiumJS",
+      "version": "1.145.0",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a4649fdef2ef3c9179b90b0b244947c268a01204d867098f0415dd5c6783918f"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/CesiumGS/cesium/releases/tag/1.145.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log map maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Replace the complete pinned Cesium distribution with Workers, Assets, ThirdParty, Widgets and license inventory; verify offline map and asset loading."
+        },
+        {
+          "name": "buyerlog:version-evidence",
+          "value": "Bundle license header and exported VERSION; tree hashes recorded. Nested third-party/data notices are retained in LICENSE.md."
+        },
+        {
+          "name": "buyerlog:file-count",
+          "value": "198"
+        }
+      ]
+    },
+    {
+      "type": "framework",
+      "bom-ref": "vendor:electron",
+      "name": "Electron portable runtime",
+      "version": "44.3.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "fbd01f9db16b7974b8decef9f3273a2fa630cb5117e9386c92396f88245dea88"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://releases.electronjs.org/release/v44.3.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log release maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Replace the complete verified Windows runtime including executable, DLLs, locales and snapshots from one upstream archive; run populated Electron acceptance and final regression before any release. Never replace only a DLL or the version marker."
+        },
+        {
+          "name": "buyerlog:version-evidence",
+          "value": "Declared source distribution version file; the executable is intentionally not tracked in this source repository. No running or published artifact identity is certified by this SBOM."
+        },
+        {
+          "name": "buyerlog:file-count",
+          "value": "71"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "vendor:exceljs",
+      "name": "ExcelJS",
+      "version": "4.4.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "bc93fada110344dff36dd530c50fc172da91f010bada0a4dd98ce236eb77b0c9"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/exceljs/-/exceljs-4.4.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log export maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Vendor the pinned official browser distribution and license; verify workbook date, style, formula and image exports."
+        },
+        {
+          "name": "buyerlog:version-evidence",
+          "value": "Exact official package dist/exceljs.min.js bytes, archive integrity verified."
+        },
+        {
+          "name": "buyerlog:file-count",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "vendor:ibm-plex-fonts",
+      "name": "IBM Plex Sans and IBM Plex Mono WOFF2",
+      "version": "unversioned bundled WOFF2",
+      "licenses": [
+        {
+          "expression": "OFL-1.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1adbd36f44814d307b263122654d8332d83b7f6a1f66d3b25e1209e327dde171"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/IBM/plex"
+        }
+      ],
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log UI maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Replace packaged Plex fonts together with their OFL notices; verify Turkish coverage, offline loading and all four UI scales."
+        },
+        {
+          "name": "buyerlog:version-evidence",
+          "value": "Packaged WOFF2 files and adjacent IBM Plex OFL notices; no upstream version stamp was recorded. Exact per-file SHA-256 identifies this source distribution; upstream byte equivalence is not claimed."
+        },
+        {
+          "name": "buyerlog:file-count",
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "vendor:jspdf",
+      "name": "jsPDF browser raster PDF writer",
+      "version": "2.5.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "528b5aaa698b64f0a621ddce9883a7f0e884c79fb008da3537b1a249594e4320"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jspdf/-/jspdf-2.5.2.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log PDF export maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Upgrade the pinned UMD bundle with its license and verify raster PDF output/attachments. Review upstream advisories against actual API use; do not equate npm audit zero with browser vendor safety."
+        },
+        {
+          "name": "buyerlog:version-evidence",
+          "value": "Exact official UMD bytes. Current application uses canvas JPEG addImage and output('blob'), not HTML/new-window output, AcroForm, addJS, GIF/BMP or Node file-loading APIs."
+        },
+        {
+          "name": "buyerlog:file-count",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "vendor:jszip",
+      "name": "JSZip",
+      "version": "3.10.1",
+      "licenses": [
+        {
+          "expression": "MIT OR GPL-3.0-or-later"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5f8353940be73c1d9e75b794d66069d8fd633a935216e3cce49188d9342ae634"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/jszip/-/jszip-3.10.1.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log workbook/export maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Vendor pinned minified distribution and license; verify bounded archive import plus template/formula/style/image preservation. MIT license option used."
+        },
+        {
+          "name": "buyerlog:version-evidence",
+          "value": "Exact official dist/jszip.min.js bytes."
+        },
+        {
+          "name": "buyerlog:file-count",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "vendor:legacy-polyfills",
+      "name": "Legacy ExcelJS browser compatibility shims",
+      "version": "unversioned",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "421b32af0aa2933ef626e38058bc5fa57e771265ad405afa34d7c104f39a932b"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/SheetJS/sheetjs"
+        }
+      ],
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log export maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Review or remove with the supported Electron/browser baseline; retain the SheetJS copyright notice. Do not identify these modified polyfills as a verified upstream release."
+        },
+        {
+          "name": "buyerlog:version-evidence",
+          "value": "Existing SheetJS-attributed compatibility code; exact upstream artifact equivalence was not established. It contains compatibility shims, not workbook parsing."
+        },
+        {
+          "name": "buyerlog:file-count",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "vendor:pdfjs",
+      "name": "PDF.js legacy browser and Node distribution",
+      "version": "3.11.174",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a381fee2e4cbfe9442d87f12f69df79c4f955eff39d1fb2a8ba81eee3056e579"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-3.11.174.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log document import maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update library and worker as one compatible pair, retain eval-disabled configuration, process/worker limits and PDF text/raster fixtures; newer ESM major versions require explicit integration changes."
+        },
+        {
+          "name": "buyerlog:version-evidence",
+          "value": "Exact official legacy/build/pdf.min.js and legacy/build/pdf.worker.min.js bytes. GHSA-wgrm-67xf-hhpq workaround isEvalSupported:false applies at every application entry."
+        },
+        {
+          "name": "buyerlog:file-count",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "vendor:sheetjs-reader",
+      "name": "SheetJS CE isolated browser reader",
+      "version": "0.20.3",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "6f01867d6cdc262f20836ba9dd32cbf4368f437de6a4d73a32f4543b65cb3ab3"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log import maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Update the pinned official local tarball and npm lock together; copy its browser reader and license, retain isolation/ZIP guards and pass import financial/date/formula/style fixtures."
+        },
+        {
+          "name": "buyerlog:version-evidence",
+          "value": "Browser reader copied from the same installed, integrity-pinned official tarball as the Node reader."
+        },
+        {
+          "name": "buyerlog:file-count",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "vendor:thinking-orbs",
+      "name": "Thinking-orbs adapted canvas states",
+      "version": "local adaptation",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "97b35b2db69b9aac70f4927102bf6d6717a1e7643d9b836678356f5cf5dac250"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/Jakubantalik/thinking-orbs"
+        }
+      ],
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log UI maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Maintain the local dependency-free adaptation, attribution and reduced-motion behavior together; verify working/breathing states."
+        },
+        {
+          "name": "buyerlog:version-evidence",
+          "value": "Local adaptations with copyright/license notice; not an unchanged upstream package."
+        },
+        {
+          "name": "buyerlog:file-count",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "vendor:world-atlas",
+      "name": "World atlas / Natural Earth map data",
+      "version": "2.0.2 (50m); unversioned imported 110m",
+      "licenses": [
+        {
+          "expression": "ISC"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "da7724db31ad217b8d277ec73352ed232af5f0c631b7be4c953c46d9da980c95"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/topojson/world-atlas"
+        }
+      ],
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log map maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Replace map data only with a pinned documented source; preserve Natural Earth public-domain and world-atlas ISC notices; verify both map resolutions."
+        },
+        {
+          "name": "buyerlog:version-evidence",
+          "value": "Existing bundled source notice; 110m has an alternate imported provenance documented in world-atlas-LICENSE.txt. No byte-equivalence claim for that import."
+        },
+        {
+          "name": "buyerlog:file-count",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "vendor:xlsx-style-writer",
+      "name": "xlsx-js-style legacy browser writer",
+      "version": "1.2.0 (SheetJS core 0.18.5)",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "401ce4e1a786d9581ee409cf54affd02be123d965b00bc13089da186bc67c2e9"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://registry.npmjs.org/xlsx-js-style/-/xlsx-js-style-1.2.0.tgz"
+        }
+      ],
+      "properties": [
+        {
+          "name": "buyerlog:owner",
+          "value": "Buyer Log export maintainers"
+        },
+        {
+          "name": "buyerlog:update-method",
+          "value": "Keep write-only; never route untrusted imports to this fork. Replacement requires equivalent style/formula/date/image export fixtures and a pinned licensed source."
+        },
+        {
+          "name": "buyerlog:version-evidence",
+          "value": "Exact official package dist/xlsx.bundle.js bytes. SheetJS read-path advisories are not a waiver for future read callers; tests enforce worker reader usage."
+        },
+        {
+          "name": "buyerlog:file-count",
+          "value": "2"
+        }
+      ]
+    }
+  ],
+  "properties": [
+    {
+      "name": "buyerlog:artifact-manifest",
+      "value": "[{\"path\":\"../../chrome_100_percent.pak\",\"component\":\"electron\",\"bytes\":719654,\"sha256\":\"ab7c4b7b6cb8832a31d44b95ec50ce52294f49422a3bdde4e21968eca2930cbe\"},{\"path\":\"../../chrome_200_percent.pak\",\"component\":\"electron\",\"bytes\":1269017,\"sha256\":\"30fa4a6e27c9ff2fb0f939f01158477e621a67d86e9ecb84cf11b3947db8eb9d\"},{\"path\":\"../../d3dcompiler_47.dll\",\"component\":\"electron\",\"bytes\":4741488,\"sha256\":\"a05f99734f7c4822fefc12b367af21fd0976ed6608752fb1e1e80b6ece7ecbbb\"},{\"path\":\"../../dxcompiler.dll\",\"component\":\"electron\",\"bytes\":25744896,\"sha256\":\"b2b5c67bc4a9c92a0ea87000415e7970488d1ca25767518d4cc27b88f18fb6ac\"},{\"path\":\"../../dxil.dll\",\"component\":\"electron\",\"bytes\":1509760,\"sha256\":\"77e039c905030a641e53658a008b74e90635a5ea9b6b79eabd0f2003bdfca59a\"},{\"path\":\"../../ffmpeg.dll\",\"component\":\"electron\",\"bytes\":3113472,\"sha256\":\"336587847c4ed3ef1a195d1aaea3d3951c9749a035ffa7951df4c0e02971e4e0\"},{\"path\":\"../../icudtl.dat\",\"component\":\"electron\",\"bytes\":10876560,\"sha256\":\"9f48c7f9c7c94d516a14870707e910ab94d75ae640ff6842c4af53276cd26ebe\"},{\"path\":\"../../LICENSE\",\"component\":\"electron\",\"bytes\":1096,\"sha256\":\"5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d\"},{\"path\":\"../../LICENSES.chromium.html\",\"component\":\"electron\",\"bytes\":20112707,\"sha256\":\"fc0a4a13020170401ee58a03b74b5cfc09cc4d6b403299d02ee83c3e22f05280\"},{\"path\":\"../../locales/af.pak\",\"component\":\"electron\",\"bytes\":636155,\"sha256\":\"3017b141bd16e24190d810f0748612f0fd4352ca8553002b9a63a7f77f7154f8\"},{\"path\":\"../../locales/am.pak\",\"component\":\"electron\",\"bytes\":1029450,\"sha256\":\"67b938d162bc75db067120bb8366b5bafd9a75fa99a0ca9ad4f46b47d1d37634\"},{\"path\":\"../../locales/ar.pak\",\"component\":\"electron\",\"bytes\":1130933,\"sha256\":\"a6eb037da4ac7930a8661c8bf602deee090fc4409bf4db24db8aab65c89b1d06\"},{\"path\":\"../../locales/bg.pak\",\"component\":\"electron\",\"bytes\":1178203,\"sha256\":\"2eb9c74c67e4b13b45a73061fa978738e335bc245da71bab0ea9b205fe91074e\"},{\"path\":\"../../locales/bn.pak\",\"component\":\"electron\",\"bytes\":1513545,\"sha256\":\"415621a5c0b1546e6e447d43b76414425a8703cc7681d637ec1f283ad0c787e7\"},{\"path\":\"../../locales/ca.pak\",\"component\":\"electron\",\"bytes\":716908,\"sha256\":\"6f28297c1ccb628f534d65dade167ae559f83eace359acf47e48ff890b9409d5\"},{\"path\":\"../../locales/cs.pak\",\"component\":\"electron\",\"bytes\":743351,\"sha256\":\"799a789ce531991cb975425730db310f9a8fe74091eee568f3e65fcc7ef0cd57\"},{\"path\":\"../../locales/da.pak\",\"component\":\"electron\",\"bytes\":666465,\"sha256\":\"9a2cd25537a4818897481ba944981e8aee3d89c7ad37588d02f1deebff3f62d0\"},{\"path\":\"../../locales/de.pak\",\"component\":\"electron\",\"bytes\":717834,\"sha256\":\"fcf63fd89e613a7ef69f16054b97b3493948e5c665aad180a91d3635256fb7d7\"},{\"path\":\"../../locales/el.pak\",\"component\":\"electron\",\"bytes\":1295538,\"sha256\":\"37d2e1ef69fea9bdb1e0902cbc61a458baa9009fc3761029bd1c1882a7a0c9b2\"},{\"path\":\"../../locales/en-GB.pak\",\"component\":\"electron\",\"bytes\":580030,\"sha256\":\"01d9200a5daee1770f7147b166d25baa6a8dd72c138c3c526421e656dec789f5\"},{\"path\":\"../../locales/en-US.pak\",\"component\":\"electron\",\"bytes\":586582,\"sha256\":\"23b271e8009bfa14783700cd0712b4ecaa5b8f2ea28a4d81ae1d7e05bc0c96b1\"},{\"path\":\"../../locales/es-419.pak\",\"component\":\"electron\",\"bytes\":707635,\"sha256\":\"6ff6ea0a14da50cacc4b72ab8c8c7b49c8423abb64f6a3a7f1643d8c3c74e6e9\"},{\"path\":\"../../locales/es.pak\",\"component\":\"electron\",\"bytes\":703926,\"sha256\":\"4578e08033967a5062bfd3b1937e711df84571d444e4940b8ffe5366bce4e778\"},{\"path\":\"../../locales/et.pak\",\"component\":\"electron\",\"bytes\":642216,\"sha256\":\"dd1205eae606f12510e24ce39f301439c98b3293d766ca5839dc292a14d7973c\"},{\"path\":\"../../locales/fa.pak\",\"component\":\"electron\",\"bytes\":1063054,\"sha256\":\"f3675255feb8b054717be9e92e93289262f35e82f25f2f8de0d3ebf3865715af\"},{\"path\":\"../../locales/fi.pak\",\"component\":\"electron\",\"bytes\":655113,\"sha256\":\"1f3123d7fb5c22a95b5250ea17450b665c3c6cd6a6dfd28bbdde15e1bf684a0e\"},{\"path\":\"../../locales/fil.pak\",\"component\":\"electron\",\"bytes\":741385,\"sha256\":\"02e2c70d3d85b0deb677a9ae576ae3cf89e80774532cb3315c14f1e8ce64b310\"},{\"path\":\"../../locales/fr.pak\",\"component\":\"electron\",\"bytes\":763453,\"sha256\":\"4db43f1cfba1ed1d7dd347d58fbab0b8d6d89dd008a3b9d2436d8744e3363453\"},{\"path\":\"../../locales/gu.pak\",\"component\":\"electron\",\"bytes\":1495625,\"sha256\":\"e86e8c240d4b6283abb03c49df9e8899607ef9def6d4933c7a541d63b5835271\"},{\"path\":\"../../locales/he.pak\",\"component\":\"electron\",\"bytes\":928748,\"sha256\":\"ddc1f304ab1f4489d19ae2b31e7f8e3ffb47dae439520159e8975422c65e4115\"},{\"path\":\"../../locales/hi.pak\",\"component\":\"electron\",\"bytes\":1586592,\"sha256\":\"10a6f19c1982590e33476427dee8d4293b0707e25dc536d6394b5782ecc3b642\"},{\"path\":\"../../locales/hr.pak\",\"component\":\"electron\",\"bytes\":715279,\"sha256\":\"d46c64ae8af3562e37eb80438aa2bee228fafda251d58ba4d0991291f1c72aab\"},{\"path\":\"../../locales/hu.pak\",\"component\":\"electron\",\"bytes\":765640,\"sha256\":\"0a46fc8d50f74effd1cfe1979e677df3de6fc47e6b551267303d93d57bd83f50\"},{\"path\":\"../../locales/id.pak\",\"component\":\"electron\",\"bytes\":635080,\"sha256\":\"f567569c42a25bb2dfc5c33e13aac558c0e2a1d5d4b969592bbd0841b36438db\"},{\"path\":\"../../locales/it.pak\",\"component\":\"electron\",\"bytes\":693990,\"sha256\":\"899be10e8f46f53d9bbe7cab827fc17b7c2bd7184e31791688016e2ca4df6622\"},{\"path\":\"../../locales/ja.pak\",\"component\":\"electron\",\"bytes\":842132,\"sha256\":\"9370c20a0612f5874dff2b015f31482e167eccf1b3c1d1a2efc1c2e38cefa88e\"},{\"path\":\"../../locales/kn.pak\",\"component\":\"electron\",\"bytes\":1720240,\"sha256\":\"af5fed2130102ecc0c878059c88faed9d6db2e8b147fb5ae9e15e3fe69706c8a\"},{\"path\":\"../../locales/ko.pak\",\"component\":\"electron\",\"bytes\":718709,\"sha256\":\"0f5bc49c4d35bfea1563db6eb77a074c65b39b49a916cb35a022ef96340338f2\"},{\"path\":\"../../locales/lt.pak\",\"component\":\"electron\",\"bytes\":777281,\"sha256\":\"af969f4407c190dd01a426fa1244cb1ec7cdf2909d1c3ba5b87ff662ba567303\"},{\"path\":\"../../locales/lv.pak\",\"component\":\"electron\",\"bytes\":774751,\"sha256\":\"27e20dfa5585161ef8b641f628aefe6c88d9f9590ffedb647e0c9da1cacf219d\"},{\"path\":\"../../locales/ml.pak\",\"component\":\"electron\",\"bytes\":1767850,\"sha256\":\"b5606265910e45098a88e989202a550531f6d00333c6b112ed4c5cbc07b2ff6a\"},{\"path\":\"../../locales/mr.pak\",\"component\":\"electron\",\"bytes\":1467313,\"sha256\":\"8465d4077ed5414cbcb7d9bdb00d85e515a1a069703cdc1d4d67c9d6e5623fb0\"},{\"path\":\"../../locales/ms.pak\",\"component\":\"electron\",\"bytes\":668356,\"sha256\":\"af7021a00befa586aa067ae3ccb339079e6f13ee0cab1621836f6abb608b6f2a\"},{\"path\":\"../../locales/nb.pak\",\"component\":\"electron\",\"bytes\":638121,\"sha256\":\"d97a2b0cbe6adc99add2ed3ce0d15d0bb124b778086c466c126634d60ea72608\"},{\"path\":\"../../locales/nl.pak\",\"component\":\"electron\",\"bytes\":664767,\"sha256\":\"9d82c384fbb6480c7a6e721c6bcd1f2cd19665d848b056b5a2911504308ba037\"},{\"path\":\"../../locales/pl.pak\",\"component\":\"electron\",\"bytes\":742064,\"sha256\":\"8a0969fc743d3e2f5111387d53c0d79e8c1d9f68256ad6553b87fca2bcaa7e6e\"},{\"path\":\"../../locales/pt-BR.pak\",\"component\":\"electron\",\"bytes\":697044,\"sha256\":\"8272a84e2e6658dc4da17c6bd21995011fbaa6c328efafd24c4ebd4fe2e64916\"},{\"path\":\"../../locales/pt-PT.pak\",\"component\":\"electron\",\"bytes\":701056,\"sha256\":\"bdfa7264dddf70f936f1785737969559a577b51d1952c820a468c611d18b17ca\"},{\"path\":\"../../locales/ro.pak\",\"component\":\"electron\",\"bytes\":728144,\"sha256\":\"1e6b5b0dac63a9e951daf523de310f6bd9e5c53e281f37706d41bd35d2a08bb5\"},{\"path\":\"../../locales/ru.pak\",\"component\":\"electron\",\"bytes\":1200996,\"sha256\":\"52a31a7ca057b8c76208620932120927a089502ddfb66c30de4324959f9e0075\"},{\"path\":\"../../locales/sk.pak\",\"component\":\"electron\",\"bytes\":755475,\"sha256\":\"a53551e8d251fa01305afe1d0d187144c56bfdffd5d1aa9f96a9350b96c0a252\"},{\"path\":\"../../locales/sl.pak\",\"component\":\"electron\",\"bytes\":722720,\"sha256\":\"e1371c8df577b979e3a515af34b0aaa3d07153c7a5c55d39a9b49a7ffe62d3d2\"},{\"path\":\"../../locales/sr.pak\",\"component\":\"electron\",\"bytes\":1112919,\"sha256\":\"be4ce17afac24dffc1eb36609cb51e766e77097d6656b1008a2a825e59609cc1\"},{\"path\":\"../../locales/sv.pak\",\"component\":\"electron\",\"bytes\":646537,\"sha256\":\"8bdff8855d23c739ece357f653c0a17bb36fe97577a5761912080d057ed341a5\"},{\"path\":\"../../locales/sw.pak\",\"component\":\"electron\",\"bytes\":685130,\"sha256\":\"312b225a81cc3cc15f13f80c45dd0e0bb3655d31873d2956861207e70c33c1dc\"},{\"path\":\"../../locales/ta.pak\",\"component\":\"electron\",\"bytes\":1758067,\"sha256\":\"91fb1460711df108d8d435a378c8be1d1e80b0886c0158d8c6ae92f35812681b\"},{\"path\":\"../../locales/te.pak\",\"component\":\"electron\",\"bytes\":1629379,\"sha256\":\"fc8c2706c5dfd36e7af8e380a240e0f697cc5fe969b512092a2185896512c4af\"},{\"path\":\"../../locales/th.pak\",\"component\":\"electron\",\"bytes\":1368866,\"sha256\":\"c1f4235c31bc05153230b0e55b7aabc9020d7460d5b0a025c386885e1e4bda3c\"},{\"path\":\"../../locales/tr.pak\",\"component\":\"electron\",\"bytes\":697368,\"sha256\":\"ae87bbd88ce0adfc2dc3c460736a7d0513472af62fc856caccc638dedfec9b4a\"},{\"path\":\"../../locales/uk.pak\",\"component\":\"electron\",\"bytes\":1211565,\"sha256\":\"a6230520dac708a6235588f5d9e894fcc9b1391e18a70e3220e06ddf80f76688\"},{\"path\":\"../../locales/ur.pak\",\"component\":\"electron\",\"bytes\":1047994,\"sha256\":\"c218e21744df2ff0669a87d497d65d76333073577360d4c662c592de146bf82a\"},{\"path\":\"../../locales/vi.pak\",\"component\":\"electron\",\"bytes\":830059,\"sha256\":\"42f3f0c4f645aedc66c12c74aee7256336a929798d736c56853daec91d44511a\"},{\"path\":\"../../locales/zh-CN.pak\",\"component\":\"electron\",\"bytes\":592116,\"sha256\":\"ba8ac4bf82b50728d907215d1993948457835bf2942a4d7266a3f8af5f51de15\"},{\"path\":\"../../locales/zh-TW.pak\",\"component\":\"electron\",\"bytes\":583860,\"sha256\":\"82739378d17ea73e57c8efae31994e0c8818ab2d0d12cb1f6b20d2f340b3229d\"},{\"path\":\"../../resources.pak\",\"component\":\"electron\",\"bytes\":12435445,\"sha256\":\"3d8c36b2ec7099a27fe00763e5af28319643ba65c1b48b85eb6a7caaae034ba6\"},{\"path\":\"../../snapshot_blob.bin\",\"component\":\"electron\",\"bytes\":368776,\"sha256\":\"1176cfa83f9ef458e7ed5b5b255c9289691dbef3ff1e4a073a5c90f9a16e8458\"},{\"path\":\"../../v8_context_snapshot.bin\",\"component\":\"electron\",\"bytes\":742208,\"sha256\":\"d9d3ec18e937ed2fddd02d92e4f0726919769e16f2ea17f962d23e40d5962b7b\"},{\"path\":\"../../version\",\"component\":\"electron\",\"bytes\":6,\"sha256\":\"a1d640d380c386200a420b590105d25da627723ee42ee1061108f3acde9f25fd\"},{\"path\":\"../../vk_swiftshader_icd.json\",\"component\":\"electron\",\"bytes\":106,\"sha256\":\"32d83ff113fef532a9f97e0d2831f8656628ab1c99e9060f0332b1532839afd9\"},{\"path\":\"../../vk_swiftshader.dll\",\"component\":\"electron\",\"bytes\":5520384,\"sha256\":\"cfb8a533c5da1ade3fd4e66ebd0acf7186bd17fb3cc09d48809a7909c4aaf0f8\"},{\"path\":\"../../vulkan-1.dll\",\"component\":\"electron\",\"bytes\":939008,\"sha256\":\"c1b383f18c0949f233e949ae197c2ad4c416abe7790894d7e395d73116403b4f\"},{\"path\":\"public/vendor/cesium/Assets/approximateTerrainHeights.json\",\"component\":\"cesium\",\"bytes\":299471,\"sha256\":\"36466e2dc84f6c173b609ffc704bc021cd9fdb33c287570bf57e4f566b58e6a6\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_0.json\",\"component\":\"cesium\",\"bytes\":67428,\"sha256\":\"eacde1b661c07ae81779214f2ee1c840dd24ea56cdba38735d9f63bb51d3f534\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_1.json\",\"component\":\"cesium\",\"bytes\":67313,\"sha256\":\"687cb449340f43ed67ccdb59e009c76642ec4a7dda63504c537f6c8b03371632\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_10.json\",\"component\":\"cesium\",\"bytes\":65984,\"sha256\":\"3337da09252e812c2609fe17966824d9387600b16b5faeca3b279121ce951a55\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_11.json\",\"component\":\"cesium\",\"bytes\":65007,\"sha256\":\"1213a76851024f19bedb1f1177099cc867876c9477214ce25c4aca5922ae0c59\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_12.json\",\"component\":\"cesium\",\"bytes\":64663,\"sha256\":\"ecea15bed860ca0dd962e427ddc929c356c8de4f5ea0599dd4a4d117c9ba5fdc\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_13.json\",\"component\":\"cesium\",\"bytes\":65854,\"sha256\":\"a7f459cda58803d906bb3e63d98f250c9211c16e99a964b39cab1af20c3c54a7\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_14.json\",\"component\":\"cesium\",\"bytes\":65547,\"sha256\":\"051627ca694ce9a0585eea402b11a7e74b70c4a941863ee731e1537da77354b8\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_15.json\",\"component\":\"cesium\",\"bytes\":65709,\"sha256\":\"ef41a0fb36667716e1aac3ed84c1e92fc0b80697a11434a08dfec80c10fa3b38\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_16.json\",\"component\":\"cesium\",\"bytes\":66030,\"sha256\":\"17c2ec764a2b2d4a93558009e1eb02912757999f3dedea775c961d689bec6155\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_17.json\",\"component\":\"cesium\",\"bytes\":65622,\"sha256\":\"95bbcd68070cff4725867054f6da18e6d79d1e7876efd116f046f6d99b6ffec7\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_18.json\",\"component\":\"cesium\",\"bytes\":65310,\"sha256\":\"19ec8e50b7a8604bcd93bf20850f033e153242663107f372e3af09194f903497\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_19.json\",\"component\":\"cesium\",\"bytes\":65537,\"sha256\":\"9d33b633af09f381d2aeabf1c08a80b327fea00105145310f706a7a2f3f3b395\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_2.json\",\"component\":\"cesium\",\"bytes\":67802,\"sha256\":\"79e5007d0f7d284035286ff31e7959f1d8c5654261ffb5a01ec298fc7ecfdaf2\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_20.json\",\"component\":\"cesium\",\"bytes\":65328,\"sha256\":\"d4a6ee787228e9ca38799199a6d69aaaf1a2401d0bad5f9b3ff30c30a6e35685\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_21.json\",\"component\":\"cesium\",\"bytes\":64843,\"sha256\":\"deab5998d0e85929227c82fd4267f179940b77ac9fe3d9da51ee222745658773\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_22.json\",\"component\":\"cesium\",\"bytes\":64977,\"sha256\":\"cbc988d6f44052aae9bea4d437b74f97a9a11d1370137cf3944d7a3dfdb00c28\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_23.json\",\"component\":\"cesium\",\"bytes\":66084,\"sha256\":\"fe1cbcb3177839ba821ae202184f4862a17321525556c06e3c000ab02d449645\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_24.json\",\"component\":\"cesium\",\"bytes\":64894,\"sha256\":\"336a61b2b5c63a31b169f19c95dfa4607874f2a2cdca3f5f6b995a2526e8090f\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_25.json\",\"component\":\"cesium\",\"bytes\":64953,\"sha256\":\"7b9d89953db4bb5d4d51b287cbf01b2c1c0a4d1d2fcf3696b4682f77cb9a12c5\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_26.json\",\"component\":\"cesium\",\"bytes\":65311,\"sha256\":\"03c47eff883b79a9863011ba286dea815320f274049ec9f71649c9a45b52db95\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_27.json\",\"component\":\"cesium\",\"bytes\":27595,\"sha256\":\"d9d755dd689d6af3d117c82e5e07c2f9986e43fe966cd3520d4a8e28201d7c6e\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_3.json\",\"component\":\"cesium\",\"bytes\":66400,\"sha256\":\"2c9ad7c9ca22e45f93354a078be51e63579cc67d960df3fb9cddd237a0fa7d05\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_4.json\",\"component\":\"cesium\",\"bytes\":65900,\"sha256\":\"2019a8459a5795b4203d58cedc5ab54e0ab17c66084198106da4755ccd89321e\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_5.json\",\"component\":\"cesium\",\"bytes\":65378,\"sha256\":\"b5cd2ed128bb530e920633cee2f9131687dc46673116fa482a59916945ab5e5e\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_6.json\",\"component\":\"cesium\",\"bytes\":65596,\"sha256\":\"775adc76b9497c0abfb6a71ec77149abf1f160aeb6dd1380056391916dc9d3c6\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_7.json\",\"component\":\"cesium\",\"bytes\":67099,\"sha256\":\"f3e330690aad3c977a66f3bb98952bcedd3c73886502e9477df9fe27855dd0cd\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_8.json\",\"component\":\"cesium\",\"bytes\":66931,\"sha256\":\"5da58dafb2a105234978e29f659dbb75ca716222cdf35dae975a9f380fa97fb6\"},{\"path\":\"public/vendor/cesium/Assets/IAU2006_XYS/IAU2006_XYS_9.json\",\"component\":\"cesium\",\"bytes\":66857,\"sha256\":\"36dc6631c6018fc9cd3df3f649b74308bb5c6a3303ac7b59067c4b4fe1e564c0\"},{\"path\":\"public/vendor/cesium/Assets/Images/bing_maps_credit.png\",\"component\":\"cesium\",\"bytes\":18831,\"sha256\":\"e5c3467a2532a0986ca0f90189e9bdae3222d3f1580d2e8c0261fb2bc2b4417f\"},{\"path\":\"public/vendor/cesium/Assets/Images/cesium_credit.png\",\"component\":\"cesium\",\"bytes\":4242,\"sha256\":\"20dadec44d030ec7de6193b0ee98329a896c4dcb4ed8f7a26d4781127b6fa989\"},{\"path\":\"public/vendor/cesium/Assets/Images/google_earth_credit.png\",\"component\":\"cesium\",\"bytes\":7703,\"sha256\":\"d4c3719a707ca487d847d7c8ea8ffc590f1297f987e95d1acf88d433b92c1c3f\"},{\"path\":\"public/vendor/cesium/Assets/Images/ion-credit.png\",\"component\":\"cesium\",\"bytes\":6028,\"sha256\":\"721870c1417e20d25e2d1b834e80c66908418e459dcf76c95bf2997dc0733289\"},{\"path\":\"public/vendor/cesium/Assets/Textures/moonSmall.jpg\",\"component\":\"cesium\",\"bytes\":18196,\"sha256\":\"380fa69424e1cd2268816e346dc56393bd1c809b8e0cb078e705ec469a5847db\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/0/0/0.jpg\",\"component\":\"cesium\",\"bytes\":12067,\"sha256\":\"919864197d2f27a165420331d47458614a056c36dcdf306ce89ed2248bd0041d\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/0/1/0.jpg\",\"component\":\"cesium\",\"bytes\":14055,\"sha256\":\"f336509772ab57ee14e15c72579dd9fb0297c779c853d4c65db04bef78305b48\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/1/0/0.jpg\",\"component\":\"cesium\",\"bytes\":7278,\"sha256\":\"3f40b94a0adb4efe212899374d3dd2bc7abe0491ce3a30d89f4392f498a328cf\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/1/0/1.jpg\",\"component\":\"cesium\",\"bytes\":11399,\"sha256\":\"76393f9322c791564a9dc9529822637fdcc8b63418be502f4ef0ab9ca2708664\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/1/1/0.jpg\",\"component\":\"cesium\",\"bytes\":10652,\"sha256\":\"cec03089c65ac612ef0655739fd1c66e068a98739aec325ba8743aca7338e6f1\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/1/1/1.jpg\",\"component\":\"cesium\",\"bytes\":13142,\"sha256\":\"b1b860b99fd3fdc1a91eb09576563efd5cc91d95f4e869fb436a35c4ff8994c6\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/1/2/0.jpg\",\"component\":\"cesium\",\"bytes\":9643,\"sha256\":\"7c59ff20319379afea17d029fca11ea497fd16a4f9da574137948b0631c71c63\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/1/2/1.jpg\",\"component\":\"cesium\",\"bytes\":15312,\"sha256\":\"ed0209ef589d9cc34a26663f8c9ecdd63de705482692290328cfd2fff984451d\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/1/3/0.jpg\",\"component\":\"cesium\",\"bytes\":10532,\"sha256\":\"d7fa5cd581a7b1d004d6dfcf329a09cd51859dd503f864a85756a35a456a0030\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/1/3/1.jpg\",\"component\":\"cesium\",\"bytes\":13262,\"sha256\":\"8637acf2981f7209ec449a5812c855650a7eeeca5bd8a9d328310bb2a5295b39\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/0/0.jpg\",\"component\":\"cesium\",\"bytes\":8157,\"sha256\":\"d12e2e52ae4d2e0c23ec15de8a1e006ccae0d3142b286578670cb4a8fd3f2311\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/0/1.jpg\",\"component\":\"cesium\",\"bytes\":9307,\"sha256\":\"87a7ea00d62fe0517680cb58953e46faf9b325b9ce8e982c5a68b7e6c6c46822\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/0/2.jpg\",\"component\":\"cesium\",\"bytes\":7891,\"sha256\":\"eecc7078cc54ec05f96cdf472519d5f159797015afaad23c2e56bed2fb79b481\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/0/3.jpg\",\"component\":\"cesium\",\"bytes\":10341,\"sha256\":\"3d4dc525adaed0c3ddf5e5047bd1b348f2df473449c50b6b8175d5d073e7d88b\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/1/0.jpg\",\"component\":\"cesium\",\"bytes\":7852,\"sha256\":\"e586e2884f6fe3a78291776b5bd4b190ffa0c9129c146ef78c7918e570e40e07\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/1/1.jpg\",\"component\":\"cesium\",\"bytes\":6850,\"sha256\":\"bd0b39a8e734b137e8017cb02f1bae541452bea034be5bc7e2bf8a6cb8a220ae\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/1/2.jpg\",\"component\":\"cesium\",\"bytes\":11581,\"sha256\":\"af8eb0a43423d28c7cb3a92553967205d9e3ced5738bd75f773d653fa5849c90\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/1/3.jpg\",\"component\":\"cesium\",\"bytes\":15862,\"sha256\":\"48450e09b99e3283945bda85be1513a5ed28a4b1e58cd0b299c295d16c25935c\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/2/0.jpg\",\"component\":\"cesium\",\"bytes\":10657,\"sha256\":\"4615813c56a8ee304d78d3768c489a4e00a5c4542f2d937b6be7db7c12b42b28\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/2/1.jpg\",\"component\":\"cesium\",\"bytes\":12456,\"sha256\":\"66df8171de54015866691a00fd03ad8c5c11dc75466a70d11a43b2020eb63dba\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/2/2.jpg\",\"component\":\"cesium\",\"bytes\":12262,\"sha256\":\"669649edf6e1e0e66ee03224a792d5fb09e8aef7a7a187697a3c10f9a7904c5c\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/2/3.jpg\",\"component\":\"cesium\",\"bytes\":14940,\"sha256\":\"21585c5a2551120948ec5d0f04a533805b2ba63b7a5b961ad722fca25cf6299f\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/3/0.jpg\",\"component\":\"cesium\",\"bytes\":9531,\"sha256\":\"640f7fd8fd3e5923ef1b021476f13c1e6919f339b17e539b9e20fe6bc16240f7\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/3/1.jpg\",\"component\":\"cesium\",\"bytes\":10234,\"sha256\":\"e418706ca6c844a67aa71e448ef97e703d5c3a9e3791db255366dad49b4adeb9\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/3/2.jpg\",\"component\":\"cesium\",\"bytes\":11678,\"sha256\":\"79d04283b385d193bbf5bd84d40744c8f5bc8d6f52dfab8d965b647fdb61d72f\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/3/3.jpg\",\"component\":\"cesium\",\"bytes\":10754,\"sha256\":\"4e693d36407dab81266071edbca5915872284532498dfa29472cc71b2810482d\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/4/0.jpg\",\"component\":\"cesium\",\"bytes\":8474,\"sha256\":\"46e6a0608fc8261bbeaad8fffa995ee3c85fddebb3b463f3e391634ea8a2a9ec\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/4/1.jpg\",\"component\":\"cesium\",\"bytes\":12265,\"sha256\":\"0f341c2ace1b0b1803aa22c09c2ab8fde4c3a1a7cb013a963e750997deb6b1c2\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/4/2.jpg\",\"component\":\"cesium\",\"bytes\":16477,\"sha256\":\"13a22c18a223ba4d8c2689793a5dff83e4e50b3790ddcb2a32ac5a97b8e1e0c8\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/4/3.jpg\",\"component\":\"cesium\",\"bytes\":11888,\"sha256\":\"93c5f45d481111b4cd2d38792cfb049e5176be566b622028e0704151c0c23aaf\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/5/0.jpg\",\"component\":\"cesium\",\"bytes\":7540,\"sha256\":\"7fbb096ff03dd162ae965a6c7e1c47e29599e7f3f1031ce59fb07ff669ca3995\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/5/1.jpg\",\"component\":\"cesium\",\"bytes\":10274,\"sha256\":\"70b04e7e362cb4c80d8c7cce1a9401ef9c7606bb2c4b9de011dea58d79b8b4e6\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/5/2.jpg\",\"component\":\"cesium\",\"bytes\":16112,\"sha256\":\"8d03e07689c97fff91497250f1cbeb19fbe5331f38bd91b38a44bb69745bb29b\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/5/3.jpg\",\"component\":\"cesium\",\"bytes\":11877,\"sha256\":\"17b46ab558da6e9fa715a8ab365109bd808d897c53a9f5401da55dd6b9566a7a\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/6/0.jpg\",\"component\":\"cesium\",\"bytes\":6636,\"sha256\":\"e25e95c8a6dcb21f6668541c925ee670c42fdc0c0d409c520bf29542a2b3fc52\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/6/1.jpg\",\"component\":\"cesium\",\"bytes\":11564,\"sha256\":\"0a57813b25a70cf86a09bb251018e488b87e795cd2dbcaee7f8a9e80e7c449bf\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/6/2.jpg\",\"component\":\"cesium\",\"bytes\":16411,\"sha256\":\"f0e9d28b216838c7c30375bb50a7c285203d4bad20eb581c2ee0b2468da20f8a\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/6/3.jpg\",\"component\":\"cesium\",\"bytes\":12756,\"sha256\":\"c2a663dcf812d9a7034d48707a33a2f341d22a99aa277f69b0e06f064de26fab\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/7/0.jpg\",\"component\":\"cesium\",\"bytes\":9032,\"sha256\":\"65c1f1b10a04387f2f64b3c4bc111803ddbf32dd2708f02eabca048e88e8edf3\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/7/1.jpg\",\"component\":\"cesium\",\"bytes\":12957,\"sha256\":\"11ac8ae6af861b966d25ed660549d2a9ce164cb9e327a247655e949f967fbc2b\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/7/2.jpg\",\"component\":\"cesium\",\"bytes\":11362,\"sha256\":\"59ca5b5264df0421c42cc9d3e6369d91ff9f5f387fc8fd578c25b113cae52b78\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/2/7/3.jpg\",\"component\":\"cesium\",\"bytes\":11859,\"sha256\":\"7064a9817de3f19fbfc66c36d575fdd10a8d976a93f655b7b1bee591b07314b7\"},{\"path\":\"public/vendor/cesium/Assets/Textures/NaturalEarthII/tilemapresource.xml\",\"component\":\"cesium\",\"bytes\":780,\"sha256\":\"23f2983b716914e8fb3f011c62d975e67b3ad72c17c92657cd956315d6694529\"},{\"path\":\"public/vendor/cesium/Assets/Textures/SkyBox/tycho2t3_80_mx.jpg\",\"component\":\"cesium\",\"bytes\":118775,\"sha256\":\"7eb5dfe95bebe58aaeff1a29f1e435e2e9985c7007d32397f63f1aa798062435\"},{\"path\":\"public/vendor/cesium/Assets/Textures/SkyBox/tycho2t3_80_my.jpg\",\"component\":\"cesium\",\"bytes\":152501,\"sha256\":\"ee944d55d7abe7799f54768f59d6a3da6b802fabd50d20d3ceb898e888b6ca7a\"},{\"path\":\"public/vendor/cesium/Assets/Textures/SkyBox/tycho2t3_80_mz.jpg\",\"component\":\"cesium\",\"bytes\":167980,\"sha256\":\"958b3d7779bf39e93dbb3373379a696c1b1d5660535d2ff963ab3c7f86d8042e\"},{\"path\":\"public/vendor/cesium/Assets/Textures/SkyBox/tycho2t3_80_px.jpg\",\"component\":\"cesium\",\"bytes\":122746,\"sha256\":\"075509b5c76a3db76baf219c71d1156c90bd87a201e4402e80d4fb1f16b526da\"},{\"path\":\"public/vendor/cesium/Assets/Textures/SkyBox/tycho2t3_80_py.jpg\",\"component\":\"cesium\",\"bytes\":152999,\"sha256\":\"62404c604baff09b6293e79d83a6c851428452a07568aca2f4b69cfd67c8a25a\"},{\"path\":\"public/vendor/cesium/Assets/Textures/SkyBox/tycho2t3_80_pz.jpg\",\"component\":\"cesium\",\"bytes\":152537,\"sha256\":\"8a367b21469de9c3d41dec0a9b1aaf80472b5945e7f6827fb3a403707333e13b\"},{\"path\":\"public/vendor/cesium/Cesium.js\",\"component\":\"cesium\",\"bytes\":6018837,\"sha256\":\"dbb7a1606ef2150c7266eee6eb10bfeba1bd1351cdce1df85787a45491f482e3\"},{\"path\":\"public/vendor/cesium/LICENSE.md\",\"component\":\"cesium\",\"bytes\":55679,\"sha256\":\"721844bc0cdaa9b1a9a145dbca1f981e2de15a7e200a5d1fd9f5f1eed8e5d030\"},{\"path\":\"public/vendor/cesium/ThirdParty/basis_transcoder.wasm\",\"component\":\"cesium\",\"bytes\":500839,\"sha256\":\"96849a2719b431008533806199ad4e513ef5a5f632b87e452fb1eea961d5730e\"},{\"path\":\"public/vendor/cesium/ThirdParty/draco_decoder.wasm\",\"component\":\"cesium\",\"bytes\":285948,\"sha256\":\"2516a4e43526d71787bf2f678f951329f7f858f8f15f42d4bc9e370b31a0da3a\"},{\"path\":\"public/vendor/cesium/Widgets/CesiumWidget/CesiumWidget.css\",\"component\":\"cesium\",\"bytes\":2265,\"sha256\":\"d177d8ab518dda483c404ece734142a51ba2389f2114d259f207b177c0840234\"},{\"path\":\"public/vendor/cesium/Workers/chunk-2X5O55FT.js\",\"component\":\"cesium\",\"bytes\":2442,\"sha256\":\"cde0efd54c24ba0c74fd42d9a77150b89f3d89a9ef1e72ddcdd32f930468442d\"},{\"path\":\"public/vendor/cesium/Workers/chunk-2Z5ROPWA.js\",\"component\":\"cesium\",\"bytes\":20554,\"sha256\":\"fa24bea3e94bf7aba33c1485c1e30a78690973ea9af4c802150579f50a23f468\"},{\"path\":\"public/vendor/cesium/Workers/chunk-3UWTFT5C.js\",\"component\":\"cesium\",\"bytes\":11817,\"sha256\":\"83bcfe188a7dc9bbee118fa5dac83a8e7c4242c2fe572ea7cb4c27a2a447dc0b\"},{\"path\":\"public/vendor/cesium/Workers/chunk-4FYX2TIB.js\",\"component\":\"cesium\",\"bytes\":4215,\"sha256\":\"b0e71837dec17459d0d17bcb921d168f520de6f20a8c1c0d6153e11ea653e9b2\"},{\"path\":\"public/vendor/cesium/Workers/chunk-5LJSZ5QI.js\",\"component\":\"cesium\",\"bytes\":4788,\"sha256\":\"c328198fd097f32b62c456161dfecbbf40e39dea8cfcc6b1605168df224ba341\"},{\"path\":\"public/vendor/cesium/Workers/chunk-5MJM22JO.js\",\"component\":\"cesium\",\"bytes\":10016,\"sha256\":\"2cbe362af855fe51f3d23a510909147c9ba08b86c2f8c8c47b4e12d3974b7a7f\"},{\"path\":\"public/vendor/cesium/Workers/chunk-5ZC5RGYZ.js\",\"component\":\"cesium\",\"bytes\":1748,\"sha256\":\"f7e6157edb35519e79e2e601554aae2266d360c8cdd3fcb88b53b6e864dc6843\"},{\"path\":\"public/vendor/cesium/Workers/chunk-6BBZNYDX.js\",\"component\":\"cesium\",\"bytes\":31684,\"sha256\":\"9a7d19b8f2645c580acf88b987b98d4cc1fdb5b39d797d88f27fc2cd6bbff649\"},{\"path\":\"public/vendor/cesium/Workers/chunk-6ZKGZZOJ.js\",\"component\":\"cesium\",\"bytes\":4312,\"sha256\":\"8366cdd83f09806dd8755590c6389f18979a0cc2db8951e92e522f6d93130cc9\"},{\"path\":\"public/vendor/cesium/Workers/chunk-7ISS7FL3.js\",\"component\":\"cesium\",\"bytes\":5986,\"sha256\":\"52276beae50eb1e72ff63877cd230aae618f9213913570377f53a37f3706c3cc\"},{\"path\":\"public/vendor/cesium/Workers/chunk-7VA5PH7H.js\",\"component\":\"cesium\",\"bytes\":12020,\"sha256\":\"f55b7ea2feae791f57479553cf5bcee7e991492c1de6c96ef963ecab3b163e40\"},{\"path\":\"public/vendor/cesium/Workers/chunk-7VKG2T2K.js\",\"component\":\"cesium\",\"bytes\":14260,\"sha256\":\"83d16ab1b69efc952a62643524373feae64e31457b5e178deeb24ff65f459c1c\"},{\"path\":\"public/vendor/cesium/Workers/chunk-A7XN2WE4.js\",\"component\":\"cesium\",\"bytes\":1644,\"sha256\":\"cde5b10fce7be7678fd766afa76179b1ed0133b811e8ae06ee2a7694d9d63efa\"},{\"path\":\"public/vendor/cesium/Workers/chunk-AE2X3VOY.js\",\"component\":\"cesium\",\"bytes\":1375,\"sha256\":\"b687a2506ff22361d2f9640e375b0119251dbc6b570779d47b0d11324510a873\"},{\"path\":\"public/vendor/cesium/Workers/chunk-B2EYCJFP.js\",\"component\":\"cesium\",\"bytes\":7212,\"sha256\":\"011c51f43479959abf8b4e3ecfb63ad2db98af2222e4bdab2db6f718c147e6f4\"},{\"path\":\"public/vendor/cesium/Workers/chunk-C2BJQ5BV.js\",\"component\":\"cesium\",\"bytes\":3759,\"sha256\":\"b3b175f6d17e185fa21efa3aa0170690a9ae2daa31b55278e25df5af57decc20\"},{\"path\":\"public/vendor/cesium/Workers/chunk-C56CH3QH.js\",\"component\":\"cesium\",\"bytes\":5570,\"sha256\":\"c9df00da350eb2b70d82b198170bcce4378846645e9ed2824c379878ddeb28ea\"},{\"path\":\"public/vendor/cesium/Workers/chunk-CAOBKNCT.js\",\"component\":\"cesium\",\"bytes\":1073,\"sha256\":\"b81b7f274b87747bcf49f380adb582cba88eae15439f7bbc820b9e5b50d91f5c\"},{\"path\":\"public/vendor/cesium/Workers/chunk-CM2CEKZH.js\",\"component\":\"cesium\",\"bytes\":12777,\"sha256\":\"a2757ceaf5c421dc2cb21151fa9320bba3ae212b1507cd218ce9949ce9913884\"},{\"path\":\"public/vendor/cesium/Workers/chunk-CRBPAMOT.js\",\"component\":\"cesium\",\"bytes\":1275,\"sha256\":\"21105133b4f71fbc4a52ff70e259bd56c074431ee71cf8b8b1225d108740727d\"},{\"path\":\"public/vendor/cesium/Workers/chunk-CXF7IXM3.js\",\"component\":\"cesium\",\"bytes\":4601,\"sha256\":\"d5d28ca6a6912fada5ffa4a091c38acdc891997d0d694e1793ebbdae1a92bf69\"},{\"path\":\"public/vendor/cesium/Workers/chunk-FR3EIV3D.js\",\"component\":\"cesium\",\"bytes\":915,\"sha256\":\"1fb2c7da15f3264e7fc148ffb8b30a02ecdca9b6ea3e88f6e8a9a2a182b79719\"},{\"path\":\"public/vendor/cesium/Workers/chunk-G7SEP2D7.js\",\"component\":\"cesium\",\"bytes\":5098,\"sha256\":\"0d67fc27adba8faa359be2e234f5ae3256e31a7d7c697ec2a2c5146ca9945323\"},{\"path\":\"public/vendor/cesium/Workers/chunk-GME3JRJ5.js\",\"component\":\"cesium\",\"bytes\":11024,\"sha256\":\"dc0b775a439b2899ddaaeddc593394bf323c7395f9e87ec7458e54684e2662bc\"},{\"path\":\"public/vendor/cesium/Workers/chunk-H3LK4GAX.js\",\"component\":\"cesium\",\"bytes\":931,\"sha256\":\"aa25b0abe2339a0d09f1c277956323e9d476da719d648cc01056396e521202a2\"},{\"path\":\"public/vendor/cesium/Workers/chunk-HV5UNN3G.js\",\"component\":\"cesium\",\"bytes\":16488,\"sha256\":\"7c501da9535df496c7d891dcab3fe45e3fe02fc4034da65f53d4890712620096\"},{\"path\":\"public/vendor/cesium/Workers/chunk-HXD4BXHU.js\",\"component\":\"cesium\",\"bytes\":10761,\"sha256\":\"695eb5b4d6859b6946525ce44ac5482253ff98a0a34a38a2e02c5ee021f7b539\"},{\"path\":\"public/vendor/cesium/Workers/chunk-IU5DFVEB.js\",\"component\":\"cesium\",\"bytes\":7543,\"sha256\":\"70f150f6717d5b9fed849d6ad1423bc3111d73fd948e86f1331aafbaa9369cfe\"},{\"path\":\"public/vendor/cesium/Workers/chunk-K7WHNMF7.js\",\"component\":\"cesium\",\"bytes\":1961,\"sha256\":\"b5141705d0ffb89d121a7941b46c4fbf889aee4d0dd902e364bd23eedd3c2d3b\"},{\"path\":\"public/vendor/cesium/Workers/chunk-KGDHXBGK.js\",\"component\":\"cesium\",\"bytes\":9401,\"sha256\":\"95ed21a5f7eb3a41ff22fe03dcb9c30a171277dab542e092b91ccccf47663a21\"},{\"path\":\"public/vendor/cesium/Workers/chunk-KPLTYDCZ.js\",\"component\":\"cesium\",\"bytes\":3381,\"sha256\":\"44bdc0379f3a67d93197b91d0ec21a723ae608942574f6f0704576c04925984b\"},{\"path\":\"public/vendor/cesium/Workers/chunk-KRWMVIB7.js\",\"component\":\"cesium\",\"bytes\":6489,\"sha256\":\"a9156e00dbb468d4825a386958488514b0d26e10633d05e03408146004c3c778\"},{\"path\":\"public/vendor/cesium/Workers/chunk-KUNU57LF.js\",\"component\":\"cesium\",\"bytes\":2262,\"sha256\":\"1b11125b584571511fbca0ec71deb4beb5744f8403a71e01553a4576a9155498\"},{\"path\":\"public/vendor/cesium/Workers/chunk-LINIBQGU.js\",\"component\":\"cesium\",\"bytes\":922,\"sha256\":\"dee3533d076d906c0b9cc742f46654cfe843eef0b84fbcf7ed00d9334fa8636b\"},{\"path\":\"public/vendor/cesium/Workers/chunk-LK26B6IJ.js\",\"component\":\"cesium\",\"bytes\":20253,\"sha256\":\"0f698d94ec968919330588f73a18c0cec83a10e5b6370dd6f7b281211168a37a\"},{\"path\":\"public/vendor/cesium/Workers/chunk-LNFEKMMV.js\",\"component\":\"cesium\",\"bytes\":8096,\"sha256\":\"11180ef38fe658a6414618ec7c32188173968cd2f530a882349d6b833a21eb3c\"},{\"path\":\"public/vendor/cesium/Workers/chunk-MMOHJWGL.js\",\"component\":\"cesium\",\"bytes\":1351,\"sha256\":\"eab7c4958969d92cf4e5ffe265fef820cda9e28282f3bcfdcfb7fbf48ec93538\"},{\"path\":\"public/vendor/cesium/Workers/chunk-MVPJ3TXD.js\",\"component\":\"cesium\",\"bytes\":14561,\"sha256\":\"6bcd5dbd94654af6ea4fa112a66c70322161198b82d04a3891ae6f30018b7b29\"},{\"path\":\"public/vendor/cesium/Workers/chunk-NNVR3ORE.js\",\"component\":\"cesium\",\"bytes\":5669,\"sha256\":\"12fe95dfb12cd80d8f47967fc8cd9bad1d9d075365ead27662fe62a9fd267875\"},{\"path\":\"public/vendor/cesium/Workers/chunk-NQ23OHF7.js\",\"component\":\"cesium\",\"bytes\":124913,\"sha256\":\"2f5ec9e00766adb24446822caec036d6a14af59cb0886b1ab0f14175ce317720\"},{\"path\":\"public/vendor/cesium/Workers/chunk-NVY6OTQX.js\",\"component\":\"cesium\",\"bytes\":2907,\"sha256\":\"b6b65b24832ee6b3f25803ec7e63ee978e8ad401ed8d4d8c0313dc876be3da6f\"},{\"path\":\"public/vendor/cesium/Workers/chunk-OSDTVMFT.js\",\"component\":\"cesium\",\"bytes\":3177,\"sha256\":\"6413820c3d2652f041cc66989c708a29c658a7b332a921c18ccfdf279d15bf55\"},{\"path\":\"public/vendor/cesium/Workers/chunk-PJAQIYS5.js\",\"component\":\"cesium\",\"bytes\":3316,\"sha256\":\"8585e7fe97f63ddedefd4eeebc898ec50f92fec35eab05efc0a0909f3116d2d8\"},{\"path\":\"public/vendor/cesium/Workers/chunk-PORF43EC.js\",\"component\":\"cesium\",\"bytes\":1240,\"sha256\":\"5c92ed34d48377322bd4170867714724c9aac35b098be99bba49b43dc7ea5424\"},{\"path\":\"public/vendor/cesium/Workers/chunk-QZXBZP7L.js\",\"component\":\"cesium\",\"bytes\":1982,\"sha256\":\"100cfee56e369fc20991f8601830a26aa9ced12cf907868696411b42b8d07151\"},{\"path\":\"public/vendor/cesium/Workers/chunk-R33GIGQZ.js\",\"component\":\"cesium\",\"bytes\":4858,\"sha256\":\"c06090273f25c7e1404a74b7ca6c53f6a436e35c68607d84f08170b78b0d4390\"},{\"path\":\"public/vendor/cesium/Workers/chunk-RMA3XZED.js\",\"component\":\"cesium\",\"bytes\":3077,\"sha256\":\"fac216eaf6a8f57a5ddaf23ce11af363c4cf7ffdf37abc55bf9d2eb87be2e9df\"},{\"path\":\"public/vendor/cesium/Workers/chunk-RO3XFS37.js\",\"component\":\"cesium\",\"bytes\":58499,\"sha256\":\"f6f4fff4d2c9a76e7881fc93b8818ef1e793d823728f34b8ba5657151caf228b\"},{\"path\":\"public/vendor/cesium/Workers/chunk-S7GDAEEX.js\",\"component\":\"cesium\",\"bytes\":7241,\"sha256\":\"355cda8ccc234ce1c120fd7a1196b90bf9666cf6f01e6c600422211158f6d880\"},{\"path\":\"public/vendor/cesium/Workers/chunk-SLUQ566D.js\",\"component\":\"cesium\",\"bytes\":2936,\"sha256\":\"7486a9aef3ce5ca0c7ec704123a2c2bd6bcb7fc6e8cf903a09a5100de5b9da62\"},{\"path\":\"public/vendor/cesium/Workers/chunk-TUO3HKCZ.js\",\"component\":\"cesium\",\"bytes\":20747,\"sha256\":\"d0f96f98a1042fbd0a12c227395c8571ade91ff221fe18189462c869ad272b11\"},{\"path\":\"public/vendor/cesium/Workers/chunk-U6RTDYNE.js\",\"component\":\"cesium\",\"bytes\":15910,\"sha256\":\"9319d274d11cccee429cfad53862d84ff17b9ba9afc0f35813d63dd7e825cb3b\"},{\"path\":\"public/vendor/cesium/Workers/chunk-VIIAT3WL.js\",\"component\":\"cesium\",\"bytes\":2666,\"sha256\":\"71483dc96a9265fa2e781786aaf879f903a07795b632b8d36db5f86e0a240050\"},{\"path\":\"public/vendor/cesium/Workers/chunk-VZF5ZKSB.js\",\"component\":\"cesium\",\"bytes\":2198,\"sha256\":\"2141d665e6698854756d3bdffe768f92f6243337ac371e02bbf64ebdda948d65\"},{\"path\":\"public/vendor/cesium/Workers/chunk-WSA4IOQR.js\",\"component\":\"cesium\",\"bytes\":147374,\"sha256\":\"5011643941b74064323b65c03ad25571c267cc914e7d56b6d72f98d68d818986\"},{\"path\":\"public/vendor/cesium/Workers/chunk-XWHQ3HEC.js\",\"component\":\"cesium\",\"bytes\":5614,\"sha256\":\"e9b192f072c0f7a88fd5758ab385dfdb5276bff000194b7f5a4b4eb570aea3db\"},{\"path\":\"public/vendor/cesium/Workers/chunk-YO6NOGYA.js\",\"component\":\"cesium\",\"bytes\":27384,\"sha256\":\"c8ebb78c269eb1e1fc4478c22978a9f581092ce9d0c28a2eaf601af07c1b2ab6\"},{\"path\":\"public/vendor/cesium/Workers/combineGeometry.js\",\"component\":\"cesium\",\"bytes\":1671,\"sha256\":\"5f50ec8bd4823b6035a6f4145b3e4f81e525404dfd6b95f45818d1db72a0c9c6\"},{\"path\":\"public/vendor/cesium/Workers/createBoxGeometry.js\",\"component\":\"cesium\",\"bytes\":1444,\"sha256\":\"2832a5b8ff9374d40f5a32f2acc93ef0020491d052ba716c0950236edbb8b156\"},{\"path\":\"public/vendor/cesium/Workers/createBoxOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":3981,\"sha256\":\"3989e786e8e51f544b67f5eda910f87b5a1b4f63321eb4fe5a241d882c0cd0a9\"},{\"path\":\"public/vendor/cesium/Workers/createCircleGeometry.js\",\"component\":\"cesium\",\"bytes\":3799,\"sha256\":\"ac1b09b13fc4b99551792279698c4ab0c8b5d765c3e19cf150657fd7c70ea241\"},{\"path\":\"public/vendor/cesium/Workers/createCircleOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":2856,\"sha256\":\"a7df09b0cc89f7c7dfa97f6c41a97e2bc187ba145ecf5e0ea5ec0b111e5fc30c\"},{\"path\":\"public/vendor/cesium/Workers/createCoplanarPolygonGeometry.js\",\"component\":\"cesium\",\"bytes\":6897,\"sha256\":\"268972701f715f527e280b72983c41d19513cddf28b406badafac640e5b77c95\"},{\"path\":\"public/vendor/cesium/Workers/createCoplanarPolygonOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":3577,\"sha256\":\"3b43bd064a52d096e81f71a3d50bad392418edcbc449fe52fb828a0ceead52ea\"},{\"path\":\"public/vendor/cesium/Workers/createCorridorGeometry.js\",\"component\":\"cesium\",\"bytes\":15286,\"sha256\":\"1891a2581e1a6b39877f8734cbab5d707ce74b4a86b94ecfdedc5523387de850\"},{\"path\":\"public/vendor/cesium/Workers/createCorridorOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":7528,\"sha256\":\"35f0ad30fe09fecca9ee007020fc34b38884edf0f4671d4e0ba902101ce0e395\"},{\"path\":\"public/vendor/cesium/Workers/createCylinderGeometry.js\",\"component\":\"cesium\",\"bytes\":1500,\"sha256\":\"d94a0935957db112ffe4f17d538509b083f88c2ed13814b701e7aeb0b0bf4281\"},{\"path\":\"public/vendor/cesium/Workers/createCylinderOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":3907,\"sha256\":\"cdf6a5d42d4698ead968d32bf1929c0c120cbf6eae830f503ac4e2d540a48d35\"},{\"path\":\"public/vendor/cesium/Workers/createEllipseGeometry.js\",\"component\":\"cesium\",\"bytes\":1751,\"sha256\":\"3a4f9e209636590741c181850e477ed8bd2bc4bb5cad5bc8b0879627fc1b36b9\"},{\"path\":\"public/vendor/cesium/Workers/createEllipseOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":1555,\"sha256\":\"8f953f70fe8dafd8b8c8f51440d82bd50e30beb1542b1e2ad70cbceca78cc593\"},{\"path\":\"public/vendor/cesium/Workers/createEllipsoidGeometry.js\",\"component\":\"cesium\",\"bytes\":1472,\"sha256\":\"12709c2aa3dda9fcb4abf8160148dc4078eefc5737ec72cc74c7377922a7f7da\"},{\"path\":\"public/vendor/cesium/Workers/createEllipsoidOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":1453,\"sha256\":\"65533a2e509444f901361ed558f3a3755293d95dc6df0755c43b97e2d0e172f9\"},{\"path\":\"public/vendor/cesium/Workers/createFrustumGeometry.js\",\"component\":\"cesium\",\"bytes\":1444,\"sha256\":\"830ff818385b4d1d414c471081b38419bf9d89653712fd1a8116e98ebe71fc20\"},{\"path\":\"public/vendor/cesium/Workers/createFrustumOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":3603,\"sha256\":\"53ed17265ad63fb914a908825833079df3530029cd2d71b817e663113227636f\"},{\"path\":\"public/vendor/cesium/Workers/createGeometry.js\",\"component\":\"cesium\",\"bytes\":6366,\"sha256\":\"cc71a440586b9e3ae20d86e71cdd9a6f44142ddc85326b24a30e94df7f6ab2c6\"},{\"path\":\"public/vendor/cesium/Workers/createGroundPolylineGeometry.js\",\"component\":\"cesium\",\"bytes\":16531,\"sha256\":\"5353d096a42700dedb588d305d3546a862a45c0bcfa7d5a2d0cbab542d956678\"},{\"path\":\"public/vendor/cesium/Workers/createPlaneGeometry.js\",\"component\":\"cesium\",\"bytes\":3216,\"sha256\":\"68a28afdaa64732bea5390a1211ee6563f587e486ab94c57f7335fa02c531870\"},{\"path\":\"public/vendor/cesium/Workers/createPlaneOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":2123,\"sha256\":\"ca7af3827ab5b6b3608541dff563e99aa9074c2bf3fe69531ca1e955f4d7f91d\"},{\"path\":\"public/vendor/cesium/Workers/createPolygonGeometry.js\",\"component\":\"cesium\",\"bytes\":18686,\"sha256\":\"b132844b2cf91ae60bd40c38f5e62ac1a09ffd9ee817a2e9da6c2dc1ba953534\"},{\"path\":\"public/vendor/cesium/Workers/createPolygonOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":7755,\"sha256\":\"00fe4b8ef4ec612bf77e4f2d036c8ac8632234ea345df4abc8a5871fdcddf392\"},{\"path\":\"public/vendor/cesium/Workers/createPolylineGeometry.js\",\"component\":\"cesium\",\"bytes\":6884,\"sha256\":\"3e7aab4d9f1cb93b8ed916cc8d9cd106abe9c458af51d368688f563789b9604b\"},{\"path\":\"public/vendor/cesium/Workers/createPolylineVolumeGeometry.js\",\"component\":\"cesium\",\"bytes\":5643,\"sha256\":\"839929538de6ff321b6c2076979a87b592348fd359c3711a7ede188e6134c1d0\"},{\"path\":\"public/vendor/cesium/Workers/createPolylineVolumeOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":4314,\"sha256\":\"8d507bf656259fbbbe593560adf95effae6eaebafe51dbfac4ef5e8953bd4041\"},{\"path\":\"public/vendor/cesium/Workers/createRectangleGeometry.js\",\"component\":\"cesium\",\"bytes\":15013,\"sha256\":\"037dbc8b42dd0d359866155317c1c677b188928034d52a877ec5ca6d99c864c4\"},{\"path\":\"public/vendor/cesium/Workers/createRectangleOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":6223,\"sha256\":\"f2453430bcbe572fc587d1f676ba09a8f31bb6ac70687a4c23ea0e128782a451\"},{\"path\":\"public/vendor/cesium/Workers/createSimplePolylineGeometry.js\",\"component\":\"cesium\",\"bytes\":5890,\"sha256\":\"e244cc438a7d1e1f684a48c77f9ef9ad87ac6e482b28eee0cebf0fb5e8977ae4\"},{\"path\":\"public/vendor/cesium/Workers/createSphereGeometry.js\",\"component\":\"cesium\",\"bytes\":2324,\"sha256\":\"529c8629829fda201d2e589ba3aa5b9f8b634c1b49bfa8a1c44e50df0a4468f3\"},{\"path\":\"public/vendor/cesium/Workers/createSphereOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":2268,\"sha256\":\"3dd63cabdbdf4479bbee73aedf88c53844bbf361e330d79fbf5e02dffd97edef\"},{\"path\":\"public/vendor/cesium/Workers/createTaskProcessorWorker.js\",\"component\":\"cesium\",\"bytes\":932,\"sha256\":\"bd55cf4f277aeaff9d98d02b5adb08168ac54390c69514eb00e36c7f6f8cd0fb\"},{\"path\":\"public/vendor/cesium/Workers/createVectorTileClampedPolylines.js\",\"component\":\"cesium\",\"bytes\":6040,\"sha256\":\"260b5a46e0379b3feeaf98af94d527e3e95027bb348f83a9aca7dc6828bf56c0\"},{\"path\":\"public/vendor/cesium/Workers/createVectorTileGeometries.js\",\"component\":\"cesium\",\"bytes\":5765,\"sha256\":\"83de812683c1c95f93cd1b2fd634f41c97978d2e662713793c3492cbb673df6c\"},{\"path\":\"public/vendor/cesium/Workers/createVectorTilePoints.js\",\"component\":\"cesium\",\"bytes\":1956,\"sha256\":\"19c3d40467fd5c6255d0aa32aa0103a195afd2c6592e0700d760a60233da6799\"},{\"path\":\"public/vendor/cesium/Workers/createVectorTilePolygons.js\",\"component\":\"cesium\",\"bytes\":5413,\"sha256\":\"f6b34b70f00874c6c50db3a6ccee73f03cf002c01dd955eade88a27cb9e14711\"},{\"path\":\"public/vendor/cesium/Workers/createVectorTilePolylines.js\",\"component\":\"cesium\",\"bytes\":3617,\"sha256\":\"00838c69f9f7a0498b98d803c77773f7eed3d7882e24b7edd10aa7d8c7904b1b\"},{\"path\":\"public/vendor/cesium/Workers/createVerticesFromCesium3DTilesTerrain.js\",\"component\":\"cesium\",\"bytes\":2081,\"sha256\":\"65abe08ee5a857f59e59d2ba9870b0160ba4cf6c5d879a8a6ebba81d0e138e2b\"},{\"path\":\"public/vendor/cesium/Workers/createVerticesFromGoogleEarthEnterpriseBuffer.js\",\"component\":\"cesium\",\"bytes\":7863,\"sha256\":\"c5660d6521f4a5f35667a56ed8c7de6909837e293ba3d93576919c9d4cd6ba7d\"},{\"path\":\"public/vendor/cesium/Workers/createVerticesFromHeightmap.js\",\"component\":\"cesium\",\"bytes\":28260,\"sha256\":\"20870f2c6e956a6f4c58683338d8578c26d94f67e2dcd49b15629428bfdc9135\"},{\"path\":\"public/vendor/cesium/Workers/createVerticesFromQuantizedTerrainMesh.js\",\"component\":\"cesium\",\"bytes\":5846,\"sha256\":\"4f36aee7926814190ce758ce286e1befdc5e254ec303c692644d8c46cc9cebe6\"},{\"path\":\"public/vendor/cesium/Workers/createWallGeometry.js\",\"component\":\"cesium\",\"bytes\":6500,\"sha256\":\"372bf245c78260436c81ecbe6aa995d908ebd21dcf13d710f723d6bc15593d63\"},{\"path\":\"public/vendor/cesium/Workers/createWallOutlineGeometry.js\",\"component\":\"cesium\",\"bytes\":4859,\"sha256\":\"75e05b3900fcd7f1ccfebfb454a587147e25445cd43247a3b6a2fc70da2ef600\"},{\"path\":\"public/vendor/cesium/Workers/decodeDraco.js\",\"component\":\"cesium\",\"bytes\":5045,\"sha256\":\"467ef1a4f1482535edb63dc33373b20e24419f8359fe9e50cbde75924352f3c2\"},{\"path\":\"public/vendor/cesium/Workers/decodeGoogleEarthEnterprisePacket.js\",\"component\":\"cesium\",\"bytes\":36097,\"sha256\":\"3b2f019e3933fb49800d37e219d5405dd769630b132324ac121567b23397db53\"},{\"path\":\"public/vendor/cesium/Workers/decodeI3S.js\",\"component\":\"cesium\",\"bytes\":17157,\"sha256\":\"24fe6c23f182fafeb78fae9a4db138d599050da98975943f19b7d36b51cdb8b0\"},{\"path\":\"public/vendor/cesium/Workers/gaussianSplatSorter.js\",\"component\":\"cesium\",\"bytes\":1266,\"sha256\":\"296f69436dfd4b3ec39991dd36750c88ae167894389a3255d281c65ee4de485c\"},{\"path\":\"public/vendor/cesium/Workers/gaussianSplatTextureGenerator.js\",\"component\":\"cesium\",\"bytes\":1304,\"sha256\":\"5f97ef918750c7923cc4c6edd350c33dac07286ce171ddcb3136a986c4fd7d2c\"},{\"path\":\"public/vendor/cesium/Workers/incrementallyBuildTerrainPicker.js\",\"component\":\"cesium\",\"bytes\":2098,\"sha256\":\"4efa9d13e058ef1f6e7fb242dcf71052c249ec77c9f48c75633bb36e1c33f9a2\"},{\"path\":\"public/vendor/cesium/Workers/transcodeKTX2.js\",\"component\":\"cesium\",\"bytes\":60183,\"sha256\":\"126c3c20240da167a4a862762b12af579b46e79ef9abd6303f29bd4782d8a6ae\"},{\"path\":\"public/vendor/cesium/Workers/transferTypedArrayTest.js\",\"component\":\"cesium\",\"bytes\":979,\"sha256\":\"fd35d04bff97fc4304ab779ac4ca73145e0a59de0bb05ccedfe7fa80ccf3b4a8\"},{\"path\":\"public/vendor/cesium/Workers/upsampleQuantizedTerrainMesh.js\",\"component\":\"cesium\",\"bytes\":9688,\"sha256\":\"99a3025ea4f0cb35b3b877dacbf2dfd2e417de8478eaad65583d7966130c1902\"},{\"path\":\"public/vendor/cesium/Workers/upsampleVerticesFromCesium3DTilesTerrain.js\",\"component\":\"cesium\",\"bytes\":2241,\"sha256\":\"64cbcb92dfb2e09467c9b0c9dea768dd68de9cfecfce7d37041ea9b7c6bdd952\"},{\"path\":\"public/vendor/exceljs-shim.js\",\"component\":\"legacy-polyfills\",\"bytes\":3215,\"sha256\":\"b819d6804bd29b0cff8f2f24b678952f1900571a4708cb2c3db8842904f1b7af\"},{\"path\":\"public/vendor/exceljs.min.js\",\"component\":\"exceljs\",\"bytes\":947702,\"sha256\":\"7e49da68588e250dbb8bba190d2caa8ab3787cc0284bda1d8b2f805c4df742c9\"},{\"path\":\"public/vendor/fonts/barlow-400-latin-ext.woff2\",\"component\":\"barlow-fonts\",\"bytes\":14268,\"sha256\":\"122b24bc2a90b0abe189f5229768bf2e9ba641324fe2459b48850079625934f1\"},{\"path\":\"public/vendor/fonts/barlow-400-latin.woff2\",\"component\":\"barlow-fonts\",\"bytes\":22196,\"sha256\":\"b0a8ad37ac45f5fb22ced461576db72e44e295107aad7a9c8a7a4bad728fd03b\"},{\"path\":\"public/vendor/fonts/barlow-500-latin-ext.woff2\",\"component\":\"barlow-fonts\",\"bytes\":14416,\"sha256\":\"3facdf66b60778c7e64693013be7799e6686b2488dad65525b4036e211ab03e0\"},{\"path\":\"public/vendor/fonts/barlow-500-latin.woff2\",\"component\":\"barlow-fonts\",\"bytes\":22008,\"sha256\":\"cd759df8ef9efc98fee14307b4eb5ba27f08b1f8f2f3ad2872432e25c89907a8\"},{\"path\":\"public/vendor/fonts/barlow-700-latin-ext.woff2\",\"component\":\"barlow-fonts\",\"bytes\":14836,\"sha256\":\"88c786d5fa8700a201615bc7b8ede09d209ec5d08cc3dd0a30ea1c4baff3476f\"},{\"path\":\"public/vendor/fonts/barlow-700-latin.woff2\",\"component\":\"barlow-fonts\",\"bytes\":22788,\"sha256\":\"2d797dd8b35dcb3413e1af9d7052b3f4f8c341a147cdcb01f4f06af80db53289\"},{\"path\":\"public/vendor/fonts/barlow-condensed-400-latin-ext.woff2\",\"component\":\"barlow-fonts\",\"bytes\":13924,\"sha256\":\"1eb62753e2922d13801bed22f0a35af396035da04958d4d7fcead522fbaae4ea\"},{\"path\":\"public/vendor/fonts/barlow-condensed-400-latin.woff2\",\"component\":\"barlow-fonts\",\"bytes\":21164,\"sha256\":\"7fff1bb22e5773f0d1a55d3093068b6dac4539e8bb3ac23fb9f0a729df2c7bb4\"},{\"path\":\"public/vendor/fonts/barlow-condensed-600-latin-ext.woff2\",\"component\":\"barlow-fonts\",\"bytes\":14516,\"sha256\":\"aef7edf54f79a5329fbca9c065b56dcec3852c680d58cf89a9ef2db6940ca4b3\"},{\"path\":\"public/vendor/fonts/barlow-condensed-600-latin.woff2\",\"component\":\"barlow-fonts\",\"bytes\":22308,\"sha256\":\"215a93c696f442034a46fbb382958f753fda60e30490683aeea6b235fcbb2b66\"},{\"path\":\"public/vendor/fonts/Barlow-OFL.txt\",\"component\":\"barlow-fonts\",\"bytes\":4376,\"sha256\":\"10b0e6bb43166a50fbe7cde2895bd7f703738a5da843acb5c97c95dc9ea26817\"},{\"path\":\"public/vendor/fonts/IBMPlexMono-OFL.txt\",\"component\":\"ibm-plex-fonts\",\"bytes\":4362,\"sha256\":\"d741e57d5f865e294df801f96b7b5161a88b211df65887e4358d271c9fc5fb4f\"},{\"path\":\"public/vendor/fonts/IBMPlexMono.woff2\",\"component\":\"ibm-plex-fonts\",\"bytes\":39100,\"sha256\":\"8b4d901d29ad0f2d99756be75ccee9b9a6bea66728e90ef98676c40f2e129580\"},{\"path\":\"public/vendor/fonts/IBMPlexSans-OFL.txt\",\"component\":\"ibm-plex-fonts\",\"bytes\":4362,\"sha256\":\"d741e57d5f865e294df801f96b7b5161a88b211df65887e4358d271c9fc5fb4f\"},{\"path\":\"public/vendor/fonts/IBMPlexSans.woff2\",\"component\":\"ibm-plex-fonts\",\"bytes\":229968,\"sha256\":\"f3c3d4795f6d91379eb50960a8499d8a75b9e32ea73a01898cc36e1fdfb5221e\"},{\"path\":\"public/vendor/fonts/OFL-Barlow.txt\",\"component\":\"barlow-fonts\",\"bytes\":4376,\"sha256\":\"10b0e6bb43166a50fbe7cde2895bd7f703738a5da843acb5c97c95dc9ea26817\"},{\"path\":\"public/vendor/fonts/OFL-BarlowCondensed.txt\",\"component\":\"barlow-fonts\",\"bytes\":4376,\"sha256\":\"10b0e6bb43166a50fbe7cde2895bd7f703738a5da843acb5c97c95dc9ea26817\"},{\"path\":\"public/vendor/jspdf.umd.min.js\",\"component\":\"jspdf\",\"bytes\":365730,\"sha256\":\"85ba2cc3ff858a20fa49fe6e457bec863ea40b55a9f3725e58a940e62f6f61a4\"},{\"path\":\"public/vendor/jszip.min.js\",\"component\":\"jszip\",\"bytes\":97630,\"sha256\":\"acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e\"},{\"path\":\"public/vendor/licenses/exceljs-4.4.0.txt\",\"component\":\"exceljs\",\"bytes\":1083,\"sha256\":\"2ee88321435317a4dbf464f275b88fe2efe6968c381f5ce34b5de539200e5855\"},{\"path\":\"public/vendor/licenses/jspdf-2.5.2.txt\",\"component\":\"jspdf\",\"bytes\":1142,\"sha256\":\"2d26bfab8a36d2250602c7a7597237e180c5cd3517acc108126e3cb399f483c8\"},{\"path\":\"public/vendor/licenses/jszip-3.10.1.txt\",\"component\":\"jszip\",\"bytes\":33753,\"sha256\":\"566c953c6090b1218ca6217dd7359d45dde46581968586dc607d59a78af6a9c4\"},{\"path\":\"public/vendor/licenses/pdfjs-dist-3.11.174.txt\",\"component\":\"pdfjs\",\"bytes\":10174,\"sha256\":\"0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594\"},{\"path\":\"public/vendor/licenses/xlsx-js-style-1.2.0.txt\",\"component\":\"xlsx-style-writer\",\"bytes\":11355,\"sha256\":\"4d2a38ac35cda06a555c84074a819d413339cd3691b822cae50f8f322fe01f64\"},{\"path\":\"public/vendor/pdf.min.js\",\"component\":\"pdfjs\",\"bytes\":377116,\"sha256\":\"978fd1b2d134a98e98966186a97777bebf87d8e770dadab1ece3687e21a5aa6c\"},{\"path\":\"public/vendor/pdf.worker.min.js\",\"component\":\"pdfjs\",\"bytes\":1133660,\"sha256\":\"38cde5311957b86bc3669f93e7d2566de333a90055ed6635bef60d9bf00e96f2\"},{\"path\":\"public/vendor/thinking-orbs-LICENSE.txt\",\"component\":\"thinking-orbs\",\"bytes\":1358,\"sha256\":\"39e11d01dfef2f9c17b02ccb369d9cb98d1002a5cefb95aadd7946f41c417a43\"},{\"path\":\"public/vendor/world-atlas-countries-110m.json\",\"component\":\"world-atlas\",\"bytes\":107761,\"sha256\":\"2516c915867c7baf18ddec727aec46c315541a07cfb3d79a6559b05d5e94eee8\"},{\"path\":\"public/vendor/world-atlas-countries-50m.json\",\"component\":\"world-atlas\",\"bytes\":756420,\"sha256\":\"04342cdc1e3016bcd7db1630de95684d67b79fe3c8c460321e87aef469502394\"},{\"path\":\"public/vendor/world-atlas-LICENSE.txt\",\"component\":\"world-atlas\",\"bytes\":1124,\"sha256\":\"1965a83d7290bacba1471df376072213224dbb174dbac8a98feb76907c723158\"},{\"path\":\"public/vendor/xlsx-reader-LICENSE.txt\",\"component\":\"sheetjs-reader\",\"bytes\":11355,\"sha256\":\"4d2a38ac35cda06a555c84074a819d413339cd3691b822cae50f8f322fe01f64\"},{\"path\":\"public/vendor/xlsx-reader.min.js\",\"component\":\"sheetjs-reader\",\"bytes\":951904,\"sha256\":\"cc015130aa8521e7f088f88898eba949ccdcbfb38df0bd129b44b7273c3a6f41\"},{\"path\":\"public/vendor/xlsx-style.js\",\"component\":\"xlsx-style-writer\",\"bytes\":425020,\"sha256\":\"1c7abf2993ff2cd61e508f9268e9acda0098c9796f3925d2ba0d2579072653e2\"},{\"path\":\"vendor/xlsx-0.20.3.tgz\",\"component\":\"sheetjs-reader\",\"bytes\":2409319,\"sha256\":\"8dc73fc3b00203e72d176e85b50938627c7b086e607c682e8d3c22c02bb99fe8\"}]"
+    }
+  ]
+}

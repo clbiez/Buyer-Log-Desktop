@@ -155,9 +155,13 @@ test('review fixes: suffix-only key, own contract blocks the merged fallback, im
     const imported=build([order(1,'ERMODA')],{},{pricingRules:[],suppfobmap:{'1':7},suppfobmetamap:{'1':{source:'manual',origin:'cpupdate'}}});
     assert.deepEqual(imported[0]._suppFobImported,{value:7,meta:{source:'manual',origin:'cpupdate'}});
   }
-  const src=read('public/app-main.js');
-  assert.match(src,/if\(row\._suppFobManual===true&&!importedSuppFob\(row\)\)\{\n\s*body\.suppFob=/);
-  assert.match(src,/if\(row\._suppFobManual===true&&!importedSuppFob\(row\)\)\{\n\s*state\.overrides\.suppfobmap\[key\]=/);
+  const save=require('./helpers/cp-note-write-context.cjs'),key='1|MODEL|01',meta={source:'manual',origin:'cpupdate'},row={'Order Code':1,'Model Name':'MODEL','C.Code':'01',Licensor:'ERMODA','Supp. FOB':7,_suppFobManual:true,_suppFobMeta:meta,_suppFobImported:{value:7,meta}};
+  const importedSave=save(row,{suppfobmap:{[key]:7},suppfobmetamap:{[key]:meta}});
+  assert.equal(Object.hasOwn(importedSave.writes[0],'suppFob'),false,'note save must not resend an imported value as manual');
+  assert.deepEqual(importedSave.overrides.suppfobmetamap[key],meta,'local normalization must preserve imported provenance');
+  const manualSave=save({...row,'Supp. FOB':12,_suppFobImported:undefined,_suppFobMeta:{source:'manual'}},{suppfobmap:{[key]:12},suppfobmetamap:{[key]:{source:'manual'}}});
+  assert.equal(manualSave.writes[0].suppFob,12,'explicit manual values still persist');
+  assert.deepEqual(manualSave.writes[0].suppFobMeta,{source:'manual'});
   const shared={version:1,license:{stages:[{id:'s',submissions:[{id:'r',addressId:'sh'}]}],addresses:[]},sharedAddresses:[{id:'sh',label:'Shared',text:'t'}],visualLibrary:[]};
   assert.deepEqual(E.pasteMap(shared,{id:'t',license:'L',licensor:'X'}).license.addresses.map(a=>a.id),['sh'],'routed shared addresses travel');
 });

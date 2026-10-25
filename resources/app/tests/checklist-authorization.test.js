@@ -58,7 +58,7 @@ const post = (entries, user = 'a', source = 'buyer_log') => call('/answers', { u
 function bytes() { return fs.existsSync(store.FILE) ? fs.readFileSync(store.FILE, 'utf8') : ''; }
 
 test('HTTP reads filter answers and tombstones to live record scope', async () => {
-  store.applyEntries([entry(orderA), entry(orderB), entry(orderB, { itemId: 'cleared', state: 'open' })], profiles.moderator);
+  await store.applyEntries([entry(orderA), entry(orderB), entry(orderB, { itemId: 'cleared', state: 'open' })], profiles.moderator);
   const result = await call();
   assert.equal(result.status, 200);
   assert.deepEqual(Object.keys(result.body.answers), [orderA + '::fabric']);

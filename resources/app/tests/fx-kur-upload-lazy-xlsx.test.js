@@ -61,6 +61,11 @@ function fxContext() {
   context.self = context;
   vm.createContext(context);
   vm.runInContext(datesSource, context);
+  // The new import dependency is a separate patched reader, as in the real
+  // browser worker. Keep the main legacy writer unloaded until ensureLibrary.
+  vm.runInContext(fs.readFileSync(path.join(ROOT,'public/vendor/xlsx-reader.min.js'),'utf8'),context);
+  const workerReader=context.XLSX;context.BLExcelDates.installSheetJsHooks(workerReader);context.XLSX=undefined;
+  context.BLFileParser={async readWorkbook(buffer,options){assert.ok(loaded.includes('xlsx'),'main-thread utils must load before workbook projection');return workerReader.read(buffer,options);}};
   vm.runInContext(engineSource, context);
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'public/fx-import-engine.js'), 'utf8'), context);
   vm.runInContext(fxSource, context);

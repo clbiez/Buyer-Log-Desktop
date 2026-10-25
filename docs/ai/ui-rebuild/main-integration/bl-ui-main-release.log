@@ -1,0 +1,5 @@
+
+> buyer-log-desktop@7.0.294 release:notes:validate
+> node scripts/release-notes.js validate
+
+Release notes OK: 109 change(s).

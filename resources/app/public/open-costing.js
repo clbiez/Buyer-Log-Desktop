@@ -628,7 +628,7 @@ async function importExcel(file){
   if(typeof XLSX==='undefined'){show(tx('Excel kitaplığı yüklenmedi.','The Excel library is not loaded.'));return;}
   try{
     const buffer=await file.arrayBuffer();
-    const wb=XLSX.read(buffer,{type:'array',cellFormula:false,cellDates:false});
+    const wb=await window.BLFileParser.readWorkbook(buffer,{type:'array',cellFormula:false,cellDates:false});
     const ws=wb.Sheets[wb.SheetNames[0]];
     if(!ws) throw new Error(tx('Sayfa okunamadı.','The sheet could not be read.'));
     const grid=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});

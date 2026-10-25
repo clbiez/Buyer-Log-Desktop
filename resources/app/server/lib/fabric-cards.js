@@ -8,10 +8,10 @@
  * Sözlük, PLM çeviri sözlüğü (plm-translations.js) gibi tüm Koleksiyon
  * kullanıcıları için ortaktır ve revizyonla korunur. */
 const path = require('path');
-const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
+const { SERVER_DATA_ROOT, atomicWriteJson, atomicWriteJsonAsync } = require('../user-data');
 const { RevisionConflictError, expectedNumber } = require('../db');
-const { readJsonWithValidatedBackup } = require('./safe-json-read');
-const { withFileLeaseSync } = require('./shared-file-transaction');
+const { readJsonWithValidatedBackup, readJsonWithValidatedBackupAsync } = require('./safe-json-read');
+const { withFileLeaseAsync } = require('./shared-file-transaction');
 const fabricEngine = require('../../public/fabric-cards-engine');
 
 const FILE = path.join(SERVER_DATA_ROOT, 'fabric-cards.json');
@@ -73,6 +73,12 @@ function loadFabricCards() {
     restore: value => atomicWriteJson(FILE, value),
   });
 }
+async function loadFabricCardsAsync({ recover = false, assertAuthority } = {}) {
+  return readJsonWithValidatedBackupAsync(FILE, {
+    fallback: emptyStore, normalize: normalizeStore,
+    ...(recover ? { beforeRestore: assertAuthority, restore: value => atomicWriteJsonAsync(FILE, value) } : {}),
+  });
+}
 function publicCards(store = loadFabricCards()) {
   return { cards: Object.values(store.cards).map(card => ({ ...card, details: { ...card.details } })), revision: store._revision, updatedAt: store._updatedAt };
 }
@@ -80,18 +86,18 @@ function checkRevision(store, expectedRevision) {
   const wanted = expectedNumber(expectedRevision);
   if (wanted != null && wanted !== store._revision) throw new RevisionConflictError('Kumaş kartları', wanted, store._revision); // i18n-ignore
 }
-function persist(store) {
+async function persist(store) {
   store._revision += 1;
   store._updatedAt = new Date().toISOString();
-  atomicWriteJson(FILE, store);
+  await atomicWriteJsonAsync(FILE, store);
 }
 
 /* Kartları ekler/günceller. onlyMissing=true ise mevcut kart EZİLMEZ
    (otomatik oluşturma başka kullanıcının düzenlemesini bozmasın). */
 function upsertFabricCards(items, actor, expectedRevision = null, { onlyMissing = false, assertAuthority } = {}) {
-  return withFileLeaseSync(FILE, () => {
+  return withFileLeaseAsync(FILE, async () => {
   assertAuthority?.();
-  const store = loadFabricCards();
+  const store = await loadFabricCardsAsync({ recover: true, assertAuthority });
   checkRevision(store, expectedRevision);
   const now = new Date().toISOString(), by = actorName(actor);
   let updated = 0, skipped = 0;
@@ -113,19 +119,19 @@ function upsertFabricCards(items, actor, expectedRevision = null, { onlyMissing 
     };
     updated += 1;
   }
-  if (updated) { assertAuthority?.(); persist(store); }
+  if (updated) { assertAuthority?.(); await persist(store); }
   return { ...publicCards(store), updated, skipped };
   });
 }
 function deleteFabricCard(code, actor, expectedRevision = null, { assertAuthority } = {}) {
-  return withFileLeaseSync(FILE, () => {
+  return withFileLeaseAsync(FILE, async () => {
   assertAuthority?.();
-  const store = loadFabricCards();
+  const store = await loadFabricCardsAsync({ recover: true, assertAuthority });
   checkRevision(store, expectedRevision);
   const key = normalizeCode(code);
   if (!key || !store.cards[key]) return { ...publicCards(store), deleted: false };
   delete store.cards[key];
-  assertAuthority?.(); persist(store);
+  assertAuthority?.(); await persist(store);
   return { ...publicCards(store), deleted: true, deletedBy: actorName(actor) };
   });
 }
@@ -133,17 +139,17 @@ function deleteFabricCard(code, actor, expectedRevision = null, { assertAuthorit
 // Trusted service inverse: target records only, same native lease/CAS. This
 // entry point is never exposed as raw store data or a caller-selected function.
 function restoreFabricCards(before, expectedRevision, { assertAuthority } = {}) {
-  return withFileLeaseSync(FILE, () => {
+  return withFileLeaseAsync(FILE, async () => {
     assertAuthority?.();
-    const store=loadFabricCards(); checkRevision(store,expectedRevision);
+    const store=await loadFabricCardsAsync({ recover: true, assertAuthority }); checkRevision(store,expectedRevision);
     if (expectedNumber(expectedRevision)==null || !before || Array.isArray(before) || Object.keys(before).length>50) throw new TypeError('Invalid fabric inverse');
     for (const [code,record] of Object.entries(before)) {
       if (normalizeCode(code)!==code || record && normalizeCard(record)?.code!==code) throw new TypeError('Invalid fabric inverse');
       if (record===null) delete store.cards[code];
       else store.cards[code]=normalizeCard(record);
     }
-    assertAuthority?.(); persist(store); return publicCards(store);
+    assertAuthority?.(); await persist(store); return publicCards(store);
   });
 }
 
-module.exports = { FILE, DETAIL_FIELDS, SUMMARY_MAX, MAX_CARDS, normalizeCode, normalizeCard, normalizeStore, loadFabricCards, publicCards, upsertFabricCards, deleteFabricCard, restoreFabricCards };
+module.exports = { FILE, DETAIL_FIELDS, SUMMARY_MAX, MAX_CARDS, normalizeCode, normalizeCard, normalizeStore, loadFabricCards, loadFabricCardsAsync, publicCards, upsertFabricCards, deleteFabricCard, restoreFabricCards };

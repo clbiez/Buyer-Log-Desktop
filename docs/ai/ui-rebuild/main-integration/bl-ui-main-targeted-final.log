@@ -1,0 +1,47 @@
+✔ checked-in SBOM covers the current lock and every packaged vendor/runtime file with explicit ownership (231.637224ms)
+✔ official reader artifact is pinned locally and byte-identical to the isolated browser reader (10.370541ms)
+✔ Ortak ölçek token'ları tanımlı ve kullanıcının yazı boyutu ayarına bağlı (2.032253ms)
+✔ Hiçbir stil dosyası sabit px yazı boyutu kullanmaz (80.525094ms)
+✔ Köşe yarıçapı yalnız --ui-radius token'larından gelir (57.392016ms)
+✔ Yazı ailesi yalnız --sans, --head veya --mono token'ından gelir (78.3996ms)
+✔ Ham renk kodu sayısı dosya başına dondurulmuş tavanı aşamaz; yeni dosya ham renk taşımaz (60.136873ms)
+✔ Kullanılan her CSS değişkeni bir yerde tanımlıdır (hayalet token yok) (79.54038ms)
+✔ pricing draft keeps a bounded temporary retry reference and exposes reopen endpoint (2.234418ms)
+✔ Send to Pricing result offers one-click Re-open Draft E-Mail per generated draft (3.715109ms)
+✔ the actual pricing result modal binds its own reopen button to the matching draft (2.624867ms)
+✔ quotation request captures retry refs only after its record id is known (3.193875ms)
+✔ Quotations exposes the retry action to the request owner and binds it to the mail bridge (0.279892ms)
+✔ Küçük kontrol yüksekliği ana ölçekten türetilir ve arayüz boyutuyla büyür (1.112807ms)
+✔ Düğme L ve S tek yükseklik, tek yazı ölçüsü kullanır (1.117314ms)
+✔ Segment bileşenleri tek görünüm ve tek aktif durum paylaşır (10.267416ms)
+✔ Filtre çipi ve sayfa sekmesi ayrı, tutarlı iki dil kullanır (0.35819ms)
+✔ KPI etiket, değer ve alt satırı her modülde aynı tipografiyle çizilir (0.471711ms)
+✔ Sayfa başlığı üst çubukta bir kez yazılır (0.466754ms)
+✔ hidden özelliği taşıyan öğeyi sınıfının display değeri görünür bırakmaz (91.438484ms)
+✔ Manifest shared controls consume canonical UI tokens, not the temporary bridge (6.40218ms)
+✔ A single shared reset replaces repeated zero borders, radii and shadows (6.664686ms)
+✔ UI JS and HTML cannot reintroduce literal font sizes, rounded controls or frames (93.623267ms)
+✔ UI layer assignments use canonical bands; only shared dialog stack computes a bounded level (69.379408ms)
+✔ all canonical UI references are defined in the single token source (52.877333ms)
+✔ retired UI files and the compatibility layer are absent from the served app (0.540725ms)
+✔ Manifest has one token source; migrated owners never consume legacy appearance aliases (17.815283ms)
+✔ Manifest prohibits frames, rounded controls, gradients and raw overlay levels (10.661701ms)
+✔ Manifest fonts scale and only transform/opacity may animate (9.072486ms)
+✔ Main column separators cover both header tiers and never the table body (1.321291ms)
+✔ Shared button contract covers interaction states and restricts explicit variants (43.558156ms)
+✔ Notes dialog keeps canonical behavior hooks, labelled field and keyboard focus containment (8.169424ms)
+✔ Unauthenticated asset serving is a fixed UI-only list before auth gates (2.413137ms)
+✔ Migrated Plan and Execute module styles contain only layout and data geometry (3.517051ms)
+✔ Commercial module CSS owns layout only; charts use square marks (5.769186ms)
+✔ Operations module CSS owns layout only; loading avoids decorative canvas (6.103099ms)
+✔ Remaining module CSS owns layout only; nested output forms use the shared dialog stack (4.043205ms)
+✔ every module and shell layout file is free of private appearance definitions (26.396458ms)
+✔ Earth markers share square geometry, local scaled fonts and static route emphasis (0.573084ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 639.025024

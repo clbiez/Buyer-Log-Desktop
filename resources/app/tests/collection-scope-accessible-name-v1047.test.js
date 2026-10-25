@@ -12,6 +12,10 @@ test('v10.47 Collection View & Permissions disclosure keeps an explicit translat
   const renderEnd = APP.indexOf("root.querySelectorAll('[data-owner-id]')", renderStart);
   const render = APP.slice(renderStart, renderEnd);
 
-  assert.match(render, /<summary aria-label="\$\{t\('workspacePermissions'\)\}">\$\{t\('workspacePermissions'\)\}/);
+  const summary=render.match(/<summary\b[^>]*>/)?.[0];
+  assert.ok(summary,'native disclosure summary exists');
+  assert.match(summary, /aria-label="\$\{t\('workspacePermissions'\)\}"/);
+  assert.match(summary, /title="\$\{t\('workspacePermissions'\)\}"/);
+  assert.match(render, /<span class="kolScopeWorkspaceLabel">\$\{t\('workspacePermissions'\)\}<\/span>/);
   assert.match(APP, /workspacePermissions:\{tr:'Görünüm ve Yetkiler',en:'View & Permissions'\}/);
 });

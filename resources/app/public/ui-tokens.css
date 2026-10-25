@@ -82,3 +82,6 @@
 
 /* Collapsed navigation keeps the content offset at its narrow width. */
 :root[data-ui-scale][data-rail="min"]{--ui-rail-width:var(--ui-rail-collapsed-width);}
+
+/* Packaged satin avatar patch is light in every theme. */
+:root{--ui-avatar-ink:#23272c;--ui-avatar-paper:#e6e9ec;}

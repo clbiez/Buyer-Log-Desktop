@@ -1,0 +1,74 @@
+[
+  {
+    "name": "shipping-dark-flatHtml.html",
+    "equal": true
+  },
+  {
+    "name": "shipping-dark-flatPlain.tsv",
+    "equal": true
+  },
+  {
+    "name": "shipping-dark-html.html",
+    "equal": true
+  },
+  {
+    "name": "shipping-dark-plain.tsv",
+    "equal": true
+  },
+  {
+    "name": "shipping-dark.xlsx",
+    "equal": true
+  },
+  {
+    "name": "shipping-generic-dark.xlsx",
+    "equal": true
+  },
+  {
+    "name": "shipping-generic-grey.xlsx",
+    "equal": true
+  },
+  {
+    "name": "shipping-generic-light.xlsx",
+    "equal": true
+  },
+  {
+    "name": "shipping-grey-flatHtml.html",
+    "equal": true
+  },
+  {
+    "name": "shipping-grey-flatPlain.tsv",
+    "equal": true
+  },
+  {
+    "name": "shipping-grey-html.html",
+    "equal": true
+  },
+  {
+    "name": "shipping-grey-plain.tsv",
+    "equal": true
+  },
+  {
+    "name": "shipping-grey.xlsx",
+    "equal": true
+  },
+  {
+    "name": "shipping-light-flatHtml.html",
+    "equal": true
+  },
+  {
+    "name": "shipping-light-flatPlain.tsv",
+    "equal": true
+  },
+  {
+    "name": "shipping-light-html.html",
+    "equal": true
+  },
+  {
+    "name": "shipping-light-plain.tsv",
+    "equal": true
+  },
+  {
+    "name": "shipping-light.xlsx",
+    "equal": true
+  }
+]

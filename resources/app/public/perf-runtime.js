@@ -157,6 +157,7 @@
        iki dosya görünümden ÖNCE yüklenir. deferredUi'de de listelidir (sağ tık
        penceresi); loadScript aynı dosyayı tek kez yükler. */
     cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','plm-sample-requests-engine.js','plm-sample-requests.js','cp-decision-runtime.js','cp-managed-rules.js?rev=20261021','cp-overview-assistant.js?rev=20261021-delete-all'],
+    exceptionInbox:['backlog-delivery-engine.js','cp-readiness-engine.js','exception-inbox.js','exception-inbox-view.js'],
     /* Test Raporu Aktarımı: yalnız menüden açılınca ya da CP'ye dosya
        bırakılınca yüklenir. Saf motor görünümden ÖNCE gelir. */
     testReportImport:['lcwai-assistant.js?rev=1','test-report-engine.js?rev=3','test-report-assessment.js?rev=1','test-report-import.js?rev=5'],

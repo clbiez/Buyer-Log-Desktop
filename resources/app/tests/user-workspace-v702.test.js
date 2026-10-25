@@ -108,7 +108,7 @@ test('mevcut workspace servisi kullanıcıdan Standard Buyer şablonu üretir ve
 
 test('rol şablonu API, UI, audit ve tarayıcı fallback cache entegrasyonu mevcuttur', () => {
   assert.match(SERVER, /\/api\/iam\/workspace-templates\/:roleId/);
-  assert.match(SERVER, /roleWorkspaceEntries\(req\.currentUser\)/);
+  assert.match(SERVER, /await userAccess\.roleWorkspaceEntriesAsync\(req\.currentUser,/);
   // v7.23: çağrıya MAG/MMYG/Buying Group ön ayar çözücüsü 5. argüman olarak
   // eklendi. Testin AMACI değişmedi — override hâlâ SESSION kullanıcısı ve rol
   // varsayılanlarıyla çözülüyor; imza kontrolü yeni argümanı da kapsar.

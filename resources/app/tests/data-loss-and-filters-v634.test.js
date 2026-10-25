@@ -87,13 +87,13 @@ test('v6.34 farklı satırların bekleyen yazmaları birbirini iptal etmiyor', (
     clearTimeout: (id) => { timers.delete(id); },
     console: { warn() {} },
   };
-  const make = new Function('setTimeout', 'clearTimeout', 'console', `
+  const make = new Function('setTimeout', 'clearTimeout', 'console', 'window', `
     const _pendingOverrideWrites = new Map();
     function schedulePendingOverrideWrite(key, delay, run){${bodyOf(APP, 'schedulePendingOverrideWrite')}}
     function flushPendingOverrideWrites(){${bodyOf(APP, 'flushPendingOverrideWrites')}}
     function pendingOverrideWriteCount(){${bodyOf(APP, 'pendingOverrideWriteCount')}}
     return {schedulePendingOverrideWrite, flushPendingOverrideWrites, pendingOverrideWriteCount};
-  `)(sandbox.setTimeout, sandbox.clearTimeout, sandbox.console);
+  `)(sandbox.setTimeout, sandbox.clearTimeout, sandbox.console, {});
 
   const ran = [];
   make.schedulePendingOverrideWrite('date:1|ALFA|RED', 400, () => ran.push('alfa'));
@@ -108,12 +108,12 @@ test('v6.34 farklı satırların bekleyen yazmaları birbirini iptal etmiyor', (
 test('v6.34 aynı satırın ardışık düzenlemesi tek yazmaya indirgenir', () => {
   const timers = new Map();
   let seq = 0;
-  const make = new Function('setTimeout', 'clearTimeout', 'console', `
+  const make = new Function('setTimeout', 'clearTimeout', 'console', 'window', `
     const _pendingOverrideWrites = new Map();
     function schedulePendingOverrideWrite(key, delay, run){${bodyOf(APP, 'schedulePendingOverrideWrite')}}
     function flushPendingOverrideWrites(){${bodyOf(APP, 'flushPendingOverrideWrites')}}
     return {schedulePendingOverrideWrite, flushPendingOverrideWrites};
-  `)((fn) => { const id = ++seq; timers.set(id, fn); return id; }, (id) => timers.delete(id), { warn() {} });
+  `)((fn) => { const id = ++seq; timers.set(id, fn); return id; }, (id) => timers.delete(id), { warn() {} }, {});
 
   const ran = [];
   make.schedulePendingOverrideWrite('date:1|ALFA|RED', 400, () => ran.push('eski'));

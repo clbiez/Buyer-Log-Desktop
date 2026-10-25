@@ -11,22 +11,26 @@
   const L=(tr,en)=>isEn()?en:tr;
   const fold=value=>String(value||'').toLocaleLowerCase('tr-TR').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ı/g,'i');
   let overlay=null,input=null,list=null,items=[],active=0,lastTrigger=null;
+  const RECENT_KEY='buyerlog.workspace.commandPalette.recent.v1';
 
-  function click(selector){const el=doc.querySelector(selector);if(el){el.click();return true;}return false;}
-  function goTab(tab){return click(`nav.tabs button[data-tab="${tab}"]`);}
-  function afterTab(tab,selector){if(!goTab(tab))return;let tries=0;const tick=()=>{if(click(selector))return;if(++tries<20)root.setTimeout(tick,150);};root.setTimeout(tick,120);}
+  function click(selector){const el=doc.querySelector(selector);if(el&&!el.disabled&&!el.hidden&&el.style?.display!=='none'&&el.getAttribute('aria-disabled')!=='true'){el.click();return true;}return false;}
+  function tabAllowed(button){return Boolean(button&&!button.disabled&&!button.hidden&&button.style?.display!=='none'&&button.getAttribute('aria-hidden')!=='true'&&root.BLCanAccessArea?.(button.dataset.tab));}
+  function recent(){try{const value=JSON.parse((root.BLStorage||root.localStorage)?.getItem(RECENT_KEY)||'[]');return Array.isArray(value)?[...new Set(value.filter(x=>typeof x==='string'))].slice(0,5):[];}catch(_){return [];}}
+  function remember(tab){try{(root.BLStorage||root.localStorage)?.setItem(RECENT_KEY,JSON.stringify([tab,...recent().filter(x=>x!==tab)].slice(0,5)));}catch(_){}}
+  function goTab(tab){const button=doc.querySelector(`nav.tabs button[data-tab="${tab}"]`);if(!tabAllowed(button))return false;button.click();if(doc.body?.dataset?.activeTab===tab){remember(tab);return true;}return false;}
+  function afterTab(tab,selector){if(!goTab(tab))return;let tries=0;const tick=()=>{if(doc.body?.dataset?.activeTab!==tab||!tabAllowed(doc.querySelector(`nav.tabs button[data-tab="${tab}"]`)))return;if(click(selector))return;if(++tries<20)root.setTimeout(tick,150);};root.setTimeout(tick,120);}
 
   function commands(){
-    const modules=[...doc.querySelectorAll('nav.tabs button[data-tab]')].filter(b=>b.offsetParent!==null||b.closest('nav.tabs')).map(b=>{
+    const modules=[...doc.querySelectorAll('nav.tabs button[data-tab]')].filter(tabAllowed).map(b=>{
       const label=(b.querySelector('span')?.textContent||b.title||b.dataset.tab).trim();
-      return {group:L('Modüller','Modules'),label,hint:L('Git','Go'),keywords:b.dataset.tab,run:()=>b.click()};
+      return {id:'tab.'+b.dataset.tab,tab:b.dataset.tab,group:L('Modüller','Modules'),label,hint:L('Git','Go'),keywords:b.dataset.tab,run:()=>goTab(b.dataset.tab)};
     });
     const actions=[
       {label:L("CP Tracker'da ara (Ctrl+K)",'Search in CP Tracker (Ctrl+K)'),hint:'CP',keywords:'cp search ara tablo',run:()=>{goTab('cp');root.setTimeout(()=>doc.getElementById('cpSearch')?.focus(),60);}},
       {label:L('Veri modelinden güncelle','Refresh from data model'),hint:L('Veri','Data'),keywords:'refresh yenile sync',run:()=>click('#topRefreshBtn')},
       {label:L('Tüm değişiklikleri kaydet','Save all changes'),hint:L('Kayıt','Save'),keywords:'save kaydet',run:()=>click('#saveAllBtn')},
-      {label:L('Backlog sunum raporunu aç','Open Backlog presentation report'),hint:'Backlog',keywords:'backlog rapor report html pdf sunum presentation',run:()=>afterTab('backlog','#backlogPresentBtn'),when:()=>!!doc.querySelector('nav.tabs button[data-tab="backlog"]')},
-      {label:L('Excel Backlog V3 indir','Download Excel Backlog V3'),hint:'Backlog',keywords:'excel backlog v3 export indir',run:()=>afterTab('backlog','#backlogExportV3Btn'),when:()=>!!doc.querySelector('nav.tabs button[data-tab="backlog"]')},
+      {label:L('Backlog sunum raporunu aç','Open Backlog presentation report'),hint:'Backlog',keywords:'backlog rapor report html pdf sunum presentation',run:()=>afterTab('backlog','#backlogPresentBtn'),when:()=>tabAllowed(doc.querySelector('nav.tabs button[data-tab="backlog"]'))},
+      {label:L('Excel Backlog V3 indir','Download Excel Backlog V3'),hint:'Backlog',keywords:'excel backlog v3 export indir',run:()=>afterTab('backlog','#backlogExportV3Btn'),when:()=>tabAllowed(doc.querySelector('nav.tabs button[data-tab="backlog"]'))},
       {label:L('Temayı değiştir','Change theme'),hint:L('Görünüm','View'),keywords:'tema theme dark karanlık kurşun grey',run:()=>click('#railThemeBtn')}, // i18n-ignore: arama anahtar kelimeleri görünmez
       {label:L('Dili değiştir (TR/EN)','Switch language (TR/EN)'),hint:L('Görünüm','View'),keywords:'dil language english türkçe',run:()=>click('#railLangBtn')},
       {label:L('Arayüz boyutunu değiştir','Change interface size'),hint:L('Görünüm','View'),keywords:'boyut size font yazı büyük compact',run:()=>click('#railFontSizeBtn')}, // i18n-ignore: arama anahtar kelimeleri görünmez
@@ -34,7 +38,8 @@
       {label:L('Not defterini aç','Open notebook'),hint:L('Araç','Tool'),keywords:'not notebook todo',run:()=>click('#todoBtn')},
       {label:L('Bildirim geçmişi','Notification history'),hint:L('Araç','Tool'),keywords:'bildirim notification',run:()=>click('#notificationsBtn')}
     ].filter(item=>!item.when||item.when()).map(item=>({...item,group:L('Komutlar','Commands')}));
-    return modules.concat(actions);
+    const destinations=recent().map(tab=>modules.find(item=>item.tab===tab)).filter(Boolean).map(item=>({...item,group:L('Son açılanlar','Recent destinations')}));
+    return (root.BLContextCommands?.commands?.()||[]).concat(destinations,modules,actions);
   }
 
   function score(item,q){
@@ -57,14 +62,16 @@
     if(!items.length){
       const empty=doc.createElement('div');empty.className='blCmdEmpty';
       empty.textContent=L('Sonuç yok. Modül adı veya komut yazın.','No results. Type a module name or a command.');
+      input.removeAttribute('aria-activedescendant');
       list.appendChild(empty);return;
     }
     let group='';
     items.forEach((item,index)=>{
       if(item.group!==group){group=item.group;const head=doc.createElement('div');head.className='blCmdGroup';head.textContent=group;head.setAttribute('role','presentation');list.appendChild(head);}
       const row=doc.createElement('div');
-      row.className='blCmdItem'+(index===active?' isActive':'');
+      row.className='blCmdItem'+(index===active?' isActive':'')+(item.disabled?' isDisabled':'');
       row.id='blCmdItem'+index;row.setAttribute('role','option');row.setAttribute('aria-selected',index===active?'true':'false');
+      row.setAttribute('aria-disabled',item.disabled?'true':'false');row.dataset.commandId=item.id||'';row.title=item.reason||item.label;
       row.dataset.index=String(index);
       const label=doc.createElement('span');label.textContent=item.label;
       const hint=doc.createElement('small');hint.textContent=item.hint||'';
@@ -114,8 +121,9 @@
   }
   function run(index){
     const item=items[index];if(!item)return;
+    if(item.disabled){root.BLUI?.notify?.(item.reason||item.hint,{kind:'info',language:isEn()?'en':'tr'});return;}
     close();
-    root.setTimeout(()=>{try{item.run();}catch(error){console.error('[command-palette]',error);}},0);
+    root.setTimeout(async()=>{try{await item.run();}catch(error){console.error('[command-palette]',error);root.BLUI?.notify?.(String(error?.message||error),{kind:'error',language:isEn()?'en':'tr'});}},0);
   }
 
   // Ctrl+K mevcut "CP Tracker'da ara" kısayoludur ve korunur. Palet Ctrl+Shift+K ile
@@ -128,4 +136,5 @@
   },true);
 
   root.BLCommandPalette={open,close,commands};
+  root.addEventListener('bl:user-access-applied',()=>{if(overlay&&!overlay.hidden)render();});
 })(typeof window!=='undefined'?window:globalThis);

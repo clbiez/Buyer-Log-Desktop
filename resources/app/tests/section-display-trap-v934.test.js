@@ -78,6 +78,7 @@ test('v9.34 <section>’a display veren kurallar biliniyor', () => {
       && /(^|;)\s*display\s*:/.test(match[2]))
     .map(match => match[1].trim());
   assert.deepEqual(granting.sort(), [
+    '.blBulkBody section',
     '.iamWizard>section',
     'section',
     'section.active',

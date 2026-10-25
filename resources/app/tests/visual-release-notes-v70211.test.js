@@ -30,10 +30,12 @@ test('release archive reuses Buyer Log guide and trivia component language',()=>
   assert.equal((CSS.match(/#[0-9a-fA-F]{3,8}\b/g)||[]).length,0);
 });
 
-test('users several stable versions behind receive cumulative chronological changes',()=>{
-  assert.match(JS,/!last\|\|cmp\(e\.version,last\)>0/);
+test('users several stable versions behind can expand unseen chronological changes from a bounded summary',()=>{
+  assert.match(JS,/eligible\.filter\(e=>cmp\(e\.version,last\)>0\)/);
   assert.match(JS,/sort\(\(a,b\)=>cmp\(a\.version,b\.version\)\)/);
   assert.match(JS,/lastSeenStable/);
+  assert.match(JS,/snapshot\.plan\.candidates\.map\(loadRelease\)/);
+  assert.match(JS,/changes\.length<6/);
 });
 
 test('release archive sorts legacy two-part versions below newer semantic versions',()=>{

@@ -1,0 +1,113 @@
+{
+  "package": "BL-017",
+  "status": "Current financial contracts implemented and focused-verified; final full/merge pending",
+  "previousSlice": "a9605aad814bdefca877f6149bcf85e33bd933c2",
+  "focused": {
+    "files": 28,
+    "pass": 211,
+    "fail": 0,
+    "skip": 0,
+    "log": "work/bl017-contracts-final-target.log",
+    "sha256Lf": "d31195a05d94162ff1025db041f80c1e1a56a753cbcb17aace51d32ca63cf981"
+  },
+  "vectors": "tests/fixtures/financial-contract-vectors.json",
+  "native": {
+    "report": "work/bl017-vectors-native.json",
+    "scope": "Real full Buyer Log, Edge, persisted isolated synthetic Collection rows/legacy contracts, no mocked HTTP or company data",
+    "phases": [
+      {
+        "name": "persisted-native-collection-vectors",
+        "values": [
+          {
+            "id": 1,
+            "model": "VALID-TR-EN-MONEY",
+            "licensor": "DEMO",
+            "royalty": "20,00%",
+            "hologram": "0",
+            "parsed": 1234.56,
+            "fob": "1543,20",
+            "landed": 1712.952,
+            "invalid": false,
+            "trInvalid": false,
+            "ruleMissing": false,
+            "trRuleMissing": false
+          },
+          {
+            "id": 2,
+            "model": "INVALID-ROYALTY",
+            "licensor": "DEMO",
+            "royalty": "",
+            "hologram": "",
+            "parsed": 4,
+            "fob": "",
+            "landed": null,
+            "invalid": false,
+            "trInvalid": false,
+            "ruleMissing": true,
+            "trRuleMissing": true
+          }
+        ]
+      },
+      {
+        "name": "controlled-invalid-client-input",
+        "invalid": true,
+        "trInvalid": true,
+        "fob": "",
+        "landed": null,
+        "scope": "Explicit synthetic invalid input to the actual loaded client calculator; not a claim that hydration admits it"
+      },
+      {
+        "name": "real-tr-price-drawer-invalid-contract-warning"
+      },
+      {
+        "name": "real-en-price-drawer-invalid-contract-warning"
+      }
+    ],
+    "root": "C:\\Users\\clbiez\\Documents\\Codex\\2026-10-24\\g\\work\\test-runs\\ui-bl016-6OX5Bc",
+    "ok": true
+  },
+  "review": {
+    "agent": "review_wal_recovery",
+    "rounds": 1,
+    "findings": 1,
+    "status": "Invalid hologram reproduced RED and corrected; reviewer did not rerun final code"
+  },
+  "source": [
+    {
+      "file": "public/app-main.js",
+      "sha256Lf": "10d633b93b62c2bca19a1f6f994cd9d67b4d76db38724fadf38ad6831880c2e1"
+    },
+    {
+      "file": "public/collection-model-groups.js",
+      "sha256Lf": "e820468693d3c6749a8a1f3ae9375b97afe2870d84fa7489ae3fefa86af761bd"
+    },
+    {
+      "file": "public/collection-pricing-engine.js",
+      "sha256Lf": "04855a3143adbe85d433b72eed9b8e833b0a45cfee3eb0b24a4ffb81b4756fa2"
+    },
+    {
+      "file": "public/license-royalty-commissions.js",
+      "sha256Lf": "12063bf1cd8497c22a105068cf857eebf6dd29ac213ab027e831a98ca648d97d"
+    },
+    {
+      "file": "public/collection-price-drawer.js",
+      "sha256Lf": "c0d14139e3defce9d0c0c1de04cb43aa64b05f561eef411c8dbc9ff38db2947f"
+    },
+    {
+      "file": "server/lib/collection-pricing-service.js",
+      "sha256Lf": "7304ea39bb872c7c22a0362fb4f373b8f61a43f546bcf7473bb5c38af4297cb2"
+    },
+    {
+      "file": "tests/financial-contract-vectors.test.js",
+      "sha256Lf": "6140a117c352f3759faab1121ea0d6e3429aa4a0b246f8c5f5f34e858e4966a0"
+    },
+    {
+      "file": "tests/fixtures/financial-contract-vectors.json",
+      "sha256Lf": "7dfbf60b6b5f305f2bc5bbc70eaef1acb2d6b88fae5ce0d92ffa70dd39efafb9"
+    }
+  ],
+  "full": false,
+  "merged": false,
+  "TEST": false,
+  "STABLE": false
+}

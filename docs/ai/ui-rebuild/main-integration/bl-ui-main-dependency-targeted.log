@@ -1,0 +1,10 @@
+✔ checked-in SBOM covers the current lock and every packaged vendor/runtime file with explicit ownership (191.871553ms)
+✔ official reader artifact is pinned locally and byte-identical to the isolated browser reader (7.79393ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 262.542176

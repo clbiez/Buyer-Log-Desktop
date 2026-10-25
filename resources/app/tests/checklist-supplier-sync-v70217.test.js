@@ -1,4 +1,5 @@
 'use strict';
+const asyncChildScript=require('./helpers/async-child-script');
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -57,14 +58,14 @@ test('shared checklist store rejects stale supplier Excel and preserves newer Bu
     const script = [
       "const store=require(" + JSON.stringify(storePath) + ");",
       "const actor={id:'buyer-1',displayName:'Buyer One'};",
-      "const first=store.applyEntries([{orderKey:'O1',itemId:'fabric-test',state:'done',at:'2026-10-03T10:00:00.000Z',loadDate:'2026-10-20'}],actor,{source:'buyer_log'});",
-      "const stale=store.applyEntries([{orderKey:'O1',itemId:'fabric-test',state:'open',at:'2026-10-03T11:00:00.000Z',baseAt:'2026-10-03T09:00:00.000Z'}],actor,{source:'supplier_excel'});",
-      "const fresh=store.applyEntries([{orderKey:'O1',itemId:'fabric-test',state:'notRequired',at:'2026-10-03T12:00:00.000Z',baseAt:'2026-10-03T10:00:00.000Z'}],actor,{source:'supplier_excel'});",
-      "const opened=store.applyEntries([{orderKey:'O1',itemId:'fabric-test',state:'open',at:'2026-10-03T13:00:00.000Z',baseAt:'2026-10-03T12:00:00.000Z'}],actor,{source:'supplier_excel'});",
-      "const def=store.replaceDefinitions([{id:'fabric-test',kind:'checklist',name:'Fabric Test',tr:'Fabric Test',en:'Fabric Test',questionTr:'Fabric Test tamam mı?',questionEn:'Is Fabric Test complete?',conditions:[]}],actor);",
+      "const first=await store.applyEntries([{orderKey:'O1',itemId:'fabric-test',state:'done',at:'2026-10-03T10:00:00.000Z',loadDate:'2026-10-20'}],actor,{source:'buyer_log'});",
+      "const stale=await store.applyEntries([{orderKey:'O1',itemId:'fabric-test',state:'open',at:'2026-10-03T11:00:00.000Z',baseAt:'2026-10-03T09:00:00.000Z'}],actor,{source:'supplier_excel'});",
+      "const fresh=await store.applyEntries([{orderKey:'O1',itemId:'fabric-test',state:'notRequired',at:'2026-10-03T12:00:00.000Z',baseAt:'2026-10-03T10:00:00.000Z'}],actor,{source:'supplier_excel'});",
+      "const opened=await store.applyEntries([{orderKey:'O1',itemId:'fabric-test',state:'open',at:'2026-10-03T13:00:00.000Z',baseAt:'2026-10-03T12:00:00.000Z'}],actor,{source:'supplier_excel'});",
+      "const def=await store.replaceDefinitions([{id:'fabric-test',kind:'checklist',name:'Fabric Test',tr:'Fabric Test',en:'Fabric Test',questionTr:'Fabric Test tamam mı?',questionEn:'Is Fabric Test complete?',conditions:[]}],actor);",
       "process.stdout.write(JSON.stringify({first,stale,fresh,opened,payload:store.publicPayload(),def}));",
     ].join('');
-    const raw = childProcess.execFileSync(process.execPath, ['-e', script], {
+    const raw = childProcess.execFileSync(process.execPath, ['-e',asyncChildScript(script)], {
       encoding: 'utf8',
       env: { ...process.env, BUYER_LOG_SERVER_DATA_ROOT: dataRoot, BUYER_LOG_LOCAL_DATA_ROOT: path.join(dataRoot, 'local') },
     });

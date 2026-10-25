@@ -9,7 +9,10 @@ function harness(rows,server=true){
   const modal=element();modal.querySelector=selector=>{if(!elements.has(selector))elements.set(selector,element());return elements.get(selector);};modal.remove=()=>{modal.removed=true;};
   const context={state:{cp:{rows},orders:{rows:rows.map(r=>({...r}))},overrides:{notesmap:{}},cpDirty:new Set()},window:{SERVER_BACKED:server},document:{activeElement:null,getElementById:()=>null,createElement:()=>modal,body:{appendChild(){}}},appLang:'en',norm:v=>String(v??'').trim(),L:s=>s,fmtOC:s=>s,escapeHtml:s=>s,setTimeout:()=>{},editableValuesEqual:(a,b)=>a===b,isAreaFrozen:()=>false,noteAuthoredByCurrentUser:id=>id==='me',overviewNoteCanonical:s=>s.trim(),showToast:msg=>calls.push(['toast',msg]),renderOrders:()=>calls.push(['renderOrders']),settleOverrideWrites:async()=>{},enqueueOverrideMutation:async(kind,url,opts)=>{calls.push(['write',JSON.parse(opts.body)]);return {ok:true,updated:JSON.parse(opts.body).items.length};},pushUndo:a=>calls.push(['undo',a]),_origMarkDirty:id=>calls.push(['dirty',id]),refreshRowEverywhere:id=>calls.push(['refresh',id]),markDirty:id=>calls.push(['local',id]),noteAuthorIdentity:()=>({id:'me',name:'Demo User'}),remoteRowLists(){return [this.state.cp.rows,this.state.orders.rows];}};
   vm.createContext(context);
+  context.refreshRowsEverywhere=ids=>{calls.push(['refreshBatch',[...ids]]);ids.forEach(id=>context.refreshRowEverywhere(id));};
   vm.runInContext(block('function turknorm(','// ================= LICENSE ROYALTY'),context);
+  context.window.BLOrderLinePeerIndex=require('../public/order-line-peer-index');
+  vm.runInContext(block('function orderLinePeerOwner(','function syncOrderLinePeersFromCpRow('),context);
   vm.runInContext(block('function openNotesEditor(','function clearRowNote('),context);
   vm.runInContext(block('function overviewOrderNoteText(','function overviewNoteTimestamp('),context);
   vm.runInContext(block('function overviewNoteEditTarget(','function openOverviewNoteOrderInCp('),context);
@@ -75,4 +78,15 @@ test('group save refuses a concurrent change in a field whose planned text would
 test('same order code with a different colour or model is never updated by identity',async()=>{
   const one=row(1,'100'),colour=row(2,'100',{'C.Code':'02'}),model=row(3,'100',{'Model Name':'OTHER'}),h=harness([one,colour,model]);
   h.open();await h.save('revised');assert.equal(one.Notes,'revised');assert.equal(colour.Notes,'old');assert.equal(model.Notes,'old');
+});
+
+test('a note dialog cannot write after its user changes',async()=>{
+ const one=row(1,'100'),h=harness([one]);h.open();h.context.state.currentUser={id:'other'};await h.save('draft');
+ assert.equal(one.Notes,'old');assert.equal(h.calls.filter(c=>c[0]==='write').length,0);assert.ok(!h.modal.removed);assert.equal(h.elements.get('.noteEditorArea').value,'draft');
+});
+
+test('a late note response cannot populate another user projection through a reused canonical key',async()=>{
+ const one=row(1,'100'),h=harness([one]);let acknowledge;h.context.enqueueOverrideMutation=()=>new Promise(resolve=>{acknowledge=resolve;});h.open();const saving=h.save('draft');await new Promise(setImmediate);
+ const current=row(1,'100',{Notes:'other user'});h.context.state.currentUser={id:'other'};h.context.state.cp.rows=[current];h.context.state.orders.rows=[{...current}];acknowledge({ok:true,updated:1});await saving;
+ assert.equal(current.Notes,'other user');assert.equal(h.context.state.orders.rows[0].Notes,'other user');assert.ok(!h.modal.removed);assert.equal(h.elements.get('.noteEditorArea').value,'draft');
 });

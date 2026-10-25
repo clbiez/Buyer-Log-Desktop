@@ -1,0 +1,15 @@
+/* Row spacing uses the existing typography, controls and theme tokens. The
+   default selector adds no row overrides, preserving existing user layouts. */
+.tableDensityControl{display:inline-flex;align-items:center;gap:var(--ui-space-1);max-inline-size:100%;}
+.tableDensityControl select{max-inline-size:100%;min-inline-size:0;min-height:var(--ui-control-height-small);padding:var(--ui-space-1);}
+.tableViewActions{flex-wrap:wrap;}
+:is(#cpTable,#ordersTable,#kolTable)[data-table-density="compact"]{--ui-table-cell-padding:1px;--ui-table-edit-padding:1px;}
+:is(#cpTable,#ordersTable,#kolTable)[data-table-density="standard"]{--ui-table-cell-padding:3px;--ui-table-edit-padding:2px;}
+:is(#cpTable,#ordersTable,#kolTable)[data-table-density="comfortable"]{--ui-table-cell-padding:7px;--ui-table-edit-padding:4px;}
+:is(#cpTable,#ordersTable,#kolTable)[data-table-density="compact"]>tbody>tr:not(.tableDetailRow):not(.cpLogisticDetailRow)>td:not(.editTd){padding-block:1px;}
+:is(#cpTable,#ordersTable,#kolTable)[data-table-density="standard"]>tbody>tr:not(.tableDetailRow):not(.cpLogisticDetailRow)>td:not(.editTd){padding-block:3px;}
+:is(#cpTable,#ordersTable,#kolTable)[data-table-density="comfortable"]>tbody>tr:not(.tableDetailRow):not(.cpLogisticDetailRow)>td:not(.editTd){padding-block:7px;}
+
+/* Inline editors use the existing bounded row content box; adding outer
+   padding would otherwise make each real row taller than its virtual step. */
+:is(#cpTable,#ordersTable,#kolTable)[data-table-density]:not([data-table-density="default"])>tbody>tr:not(.tableDetailRow):not(.cpLogisticDetailRow)>td.editTd{padding-block:1px;}

@@ -1,0 +1,10 @@
+.blBulkCard{width:min(960px,calc(100vw - 32px));max-height:calc(100dvh - 32px);display:flex;flex-direction:column}
+.blBulkCard .modalTitle{padding:16px 20px}
+.blBulkCard .modalFoot{padding:12px 20px;display:flex;gap:8px;justify-content:flex-end}
+.blBulkBody{overflow:auto;padding:16px 20px}
+.blBulkTableWrap{overflow:auto;max-height:52dvh}
+.blBulkTableWrap table{width:100%;border-collapse:collapse;text-align:left}
+.blBulkTableWrap th,.blBulkTableWrap td{padding:8px 12px;vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere;max-width:360px}
+.blBulkTableWrap th{position:sticky;top:0}
+.blBulkBody section{display:block;padding:12px 0}
+@media(prefers-reduced-motion:reduce){}

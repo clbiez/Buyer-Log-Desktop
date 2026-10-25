@@ -72,7 +72,8 @@ test('v6.01 elle giriş türetilmiş hücreye yazmıyor, arkadaki kaydı kuruyor
 
 test('v6.01 elle giriş doğrulama yapıyor', () => {
   const block = APP.slice(APP.indexOf('function openKolManualPriceModal'), APP.indexOf('function kolBestPricing'));
-  assert.match(block, /if\(!mfr\)\{status\.textContent=/);
+  assert.match(block, /if\(!mfr\)\{setStatus\('error',/);
+  assert.match(block, /BLUI\.renderState\(status,\{kind,title\}\)/);
   assert.match(block, /if\(!Number\.isFinite\(price\)\|\|price<=0\)/);
   // Üretici listede yoksa eklenmeli; yoksa Quotations kaydı boş üreticiyle açılır.
   assert.match(block, /if\(!known\)kolManufacturers\.push\(\{name:mfr,email:''\}\)/);

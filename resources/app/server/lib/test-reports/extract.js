@@ -335,4 +335,4 @@ async function processFiles(files, options) {
   return { files: fileResults, reports };
 }
 
-module.exports = { detectKind, pdfItems, readMsg, readEml, processFile, processFiles, sha256 };
+module.exports = { detectKind, pdfItems, readMsg, readEml, processFile, processFilesInline:processFiles, processFiles:(...args)=>require('./isolated-extract').processFiles(...args), sha256 };
