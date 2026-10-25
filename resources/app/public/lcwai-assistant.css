@@ -272,9 +272,27 @@
 .lcwaiEdAdvanced{padding:8px 10px;}
 .lcwaiEdDialogBody.is-nested{padding:10px 0 2px;overflow:visible;}
 
+
 /* Messages read as labelled records, preserving all transcript/action hooks. */
 .lcwaiMsg,.lcwaiMsg.is-user,.lcwaiMsg.is-ai{align-self:stretch;max-width:none;width:100%;display:grid;grid-template-columns:100px minmax(0,1fr);gap:8px;padding:16px 0;}
 .lcwaiMsgWho{grid-column:1;grid-row:1;}
 .lcwaiMsgBody{grid-column:2;grid-row:1;min-width:0;}
 .lcwaiMsgMeta,.lcwaiMsgActions{grid-column:2;text-align:left;}
 @media(max-width:700px){.lcwaiMsg,.lcwaiMsg.is-user,.lcwaiMsg.is-ai{grid-template-columns:1fr;}.lcwaiMsgWho,.lcwaiMsgBody,.lcwaiMsgMeta,.lcwaiMsgActions{grid-column:1;grid-row:auto;}}
+
+
+/* Studio owns geometry; Manifest component ownership stays in ui-components.css. */
+.lcwaiEdOverlay.is-studio:not(.is-advanced) .lcwaiEdBody{grid-template-columns:minmax(0,1fr)}
+.lcwaiEdOverlay.is-studio:not(.is-advanced) .lcwaiEdRail{display:none}
+.lcwaiStudioSource{max-width:1100px;margin:auto;display:flex;flex-direction:column;gap:var(--ui-space-3)}
+.lcwaiStudioActions{display:flex;flex-wrap:wrap;gap:var(--ui-space-2);align-items:center}
+.lcwaiStudioThumb{position:relative;display:block;width:100%;aspect-ratio:16/9;box-sizing:border-box}
+.lcwaiStudioThumb i{position:absolute;display:block;box-sizing:border-box;min-height:0}
+.lcwaiStudioThumb i::before{content:"";display:block;width:100%;height:var(--studio-image)}
+.lcwaiStudioHandle{position:absolute;left:35%;width:30%;height:16px;transform:translateY(-50%);padding:0;cursor:ns-resize;touch-action:none}
+.lcwaiStudioCardGrip{position:absolute;right:0;bottom:0;width:24px;height:24px;cursor:ns-resize;touch-action:none}
+.lcwaiLayField[hidden]{display:none}
+[data-studio-card]{cursor:pointer}
+.lcwaiLayImg{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+.lcwaiLayImg img{min-width:0;min-height:0}
+@media(max-width:950px){.lcwaiEdOverlay.is-studio .lcwaiLay{grid-template-columns:minmax(0,1fr)}.lcwaiEdOverlay.is-studio .lcwaiLayControls{position:static;max-height:none}}

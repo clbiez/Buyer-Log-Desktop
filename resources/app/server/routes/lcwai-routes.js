@@ -236,16 +236,30 @@ app.patch('/api/lcwai/layout-control/history/:id', express.json({ limit: '16kb' 
   /* ---------------- AI Çıktı Düzenleyici (taslaklar) ----------------
      Taslak yalnız sahibine açılır; düzenleme yeniden doğrulanır ve yeni bir
      dosya olarak kaydedilir (eski dosya silinmez). */
+app.post('/api/lcwai/output-studio', express.json({ limit: '48mb' }), (req, res) => {
+    try {
+      const draft = outputsOf().createStudio(ownerOf(req), req.body || {});
+      audit(req, 'OUTPUT_STUDIO_CREATE', { count: draft.source.count });
+      res.set('Cache-Control', 'no-store').json({ ok: true, draft });
+    } catch (error) { fail(res, error); }
+  });
+
 app.get('/api/lcwai/output-drafts/:id', (req, res) => {
     try {
       res.set('Cache-Control', 'no-store').json({ ok: true, draft: outputsOf().getDraft(ownerOf(req), req.params.id) });
     } catch (error) { fail(res, error); }
   });
 
-app.post('/api/lcwai/output-drafts/:id/render', express.json({ limit: '8mb' }), (req, res) => {
+app.post('/api/lcwai/output-studio/:id/images', express.json({ limit: '48mb' }), (req, res) => {
+    try {
+      res.set('Cache-Control', 'no-store').json({ ok: true, images: outputsOf().saveStudioImages(ownerOf(req), req.params.id, req.body) });
+    } catch (error) { fail(res, error); }
+  });
+
+app.post('/api/lcwai/output-drafts/:id/render', express.json({ limit: '48mb' }), (req, res) => {
     try {
       const body = req.body || {};
-      const result = outputsOf().renderDraft(ownerOf(req), req.params.id, { data: body.data, title: body.title, orientation: body.orientation });
+      const result = outputsOf().renderDraft(ownerOf(req), req.params.id, { data: body.data, title: body.title, orientation: body.orientation, format: body.format, lang: body.lang });
       audit(req, 'LCWAI_OUTPUT_EDIT', { format: result.output.format, pending: result.output.pending || undefined });
       res.set('Cache-Control', 'no-store').json({ ok: true, ...result });
     } catch (error) {
