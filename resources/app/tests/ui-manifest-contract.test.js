@@ -127,7 +127,7 @@ test('Migrated Plan and Execute module styles contain only layout and data geome
  const overview=read('backlog-overview.js');
  assert.match(overview,/function ring\(value\)\{/);
  assert.equal((overview.match(/<circle\b/g)||[]).length,2);
- assert.equal((overview.match(/stroke-dasharray=/g)||[]).length,2,'template and frame update only');
+ assert.equal((overview.match(/stroke-dasharray=/g)||[]).length,1,'only the gauge markup declares an SVG dasharray');
  for(const file of ['backlog-plan-actual.js','backlog-radar-layout.js'])assert.doesNotMatch(read(file),/<circle\b|stroke-dasharray=/);
  assert.match(read('backlog-chart.js'),/<rect x="'\+\(x-2\.6\)/);
  assert.match(read('backlog-chart.js'),/c:symbol val="circle"/,'native Excel chart geometry remains an export-only exception');
