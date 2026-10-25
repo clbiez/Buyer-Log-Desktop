@@ -79,8 +79,9 @@ function main(argv=process.argv.slice(2)){
  if(Object.keys(opts).some(key=>!allowed.includes(key))||allowed.slice(0,6).some(key=>!opts[key]))throw Error('Usage: signed-manual-patch.js --base-app <verified extracted app> --source-app <app> --out <dir> --sequence <n> --source-commit <sha> --notes <TR/EN JSON> [--previous <signed manifest>]');
  const sequence=Number(opts['--sequence']),baseRoot=path.resolve(opts['--base-app']);
  const sourceRoot=path.resolve(opts['--source-app']),git=args=>childProcess.execFileSync('git',args,{cwd:sourceRoot,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
- const repoRoot=git(['rev-parse','--show-toplevel']),relative=path.relative(repoRoot,sourceRoot).split(path.sep).join('/');
- if(git(['rev-parse','HEAD'])!==opts['--source-commit']||git(['status','--porcelain','--untracked-files=normal','--',relative||'.']))S.fail('PATCH_SOURCE_INVALID','Yalnız onaylanan temiz kaynak commitinden yama üretilebilir.','A patch can only be built from the approved clean source commit.');
+ // Git interprets this pathspec from sourceRoot itself. Comparing Node paths
+ // with Git's canonical root breaks Windows short names and nested app scopes.
+ if(git(['rev-parse','HEAD'])!==opts['--source-commit']||git(['status','--porcelain','--untracked-files=normal','--','.']))S.fail('PATCH_SOURCE_INVALID','Yalnız onaylanan temiz kaynak commitinden yama üretilebilir.','A patch can only be built from the approved clean source commit.');
  const previousManifest=opts['--previous']?F.readJsonStrict(opts['--previous']):null,acceptedBefore=historyFrom(previousManifest,baseRoot,sequence);
  const pem=process.env.BUYER_LOG_RELEASE_SIGNING_KEY;
  if(!pem)S.fail('PATCH_SIGNING_KEY_REQUIRED','Yayıncı imza anahtarı gerekli.','A publisher signing key is required.');
