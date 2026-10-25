@@ -40,6 +40,25 @@
   const FLAG_OFF = new Set(['showSubtitle', 'showNote', 'showBadge']);
   const FLAGS = Object.freeze({ pptx: CARD_FLAGS, pdf: CARD_FLAGS, xlsx: [] });
   const MAX_CARD_FIELDS = 24;
+  const PAPERS = Object.freeze({ '16:9': [960, 540], A3: [842, 1191], A4: [595, 842], A5: [420, 595], Letter: [612, 792] });
+  function normalizeStudio(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    const spans = {};
+    for (const [id, span] of Object.entries(value.spans || {}).slice(0, 30000)) if (/^[A-Z]{2,4}-\d{1,6}$/.test(id) && [1, 2].includes(span)) spans[id] = span;
+    return { version: 1, sizing: ['equal', 'sets', 'auto'].includes(value.sizing) ? value.sizing : 'sets',
+      reflow: ['dense', 'large', 'balanced', 'fixed'].includes(value.reflow) ? value.reflow : 'balanced',
+      paper: PAPERS[value.paper] ? value.paper : '16:9', orientation: value.orientation === 'portrait' ? 'portrait' : 'landscape',
+      spans, galleryFirst: value.galleryFirst === true, headerHidden: value.headerHidden === true,
+      note: cleanText(value.note, 400), noteHeight: Math.max(0, Math.min(160, Number(value.noteHeight) || 0)),
+      preset: cleanText(value.preset, 30), groupRules: Object.fromEntries(Object.entries(value.groupRules || {}).filter(([key, mode]) => /^[\w .%-]{1,60}$/.test(key) && ['page', 'section', 'inline', 'side'].includes(mode)).slice(0, 3)) };
+  }
+  function pageSize(raw) {
+    const studio = raw && raw.studio;
+    if (!studio) return { width: SLIDE.width, height: SLIDE.height };
+    const pair = PAPERS[studio.paper] || PAPERS['16:9'];
+    const [a, b] = pair;
+    return studio.orientation === 'portrait' ? { width: Math.min(a, b), height: Math.max(a, b) } : { width: Math.max(a, b), height: Math.min(a, b) };
+  }
   const specKey = format => (format === 'html' ? 'pdf' : SPEC[format] ? format : null);
 
   function defaults(format) {
@@ -116,6 +135,7 @@
       out.groupBy = normalizeGroupBy(source.groupBy);
       out.groupBreak = normalizeGroupBreak(source.groupBreak);
       out.pageTitle = normalizePageTitle(source.pageTitle);
+      if (source.studio) out.studio = normalizeStudio(source.studio);
     }
     return out;
   }
@@ -154,6 +174,7 @@
       out.groupBy = normalizeGroupBy(current && current.groupBy);
       out.groupBreak = normalizeGroupBreak(current && current.groupBreak);
       out.pageTitle = normalizePageTitle(current && current.pageTitle);
+      if (current && current.studio) out.studio = normalizeStudio(current.studio);
     }
     return out;
   }
@@ -162,9 +183,11 @@
   const SLIDE = Object.freeze({ width: 960, height: 540, footer: 44 });
   function pptxGeometry(raw) {
     const layout = normalizeLayout('pptx', raw);
-    const band = layout.headerHeight;
+    const size = pageSize(layout);
+    const band = layout.studio && layout.studio.headerHidden ? 0 : layout.headerHeight;
     const contentTop = band + 14;
-    return { layout, margin: layout.margin, band, contentTop, contentH: SLIDE.height - contentTop - SLIDE.footer, width: SLIDE.width - layout.margin * 2 };
+    const note = layout.studio && layout.studio.note ? layout.studio.noteHeight : 0;
+    return { layout, size, margin: layout.margin, band, contentTop, contentH: size.height - contentTop - SLIDE.footer - note, width: size.width - layout.margin * 2, note };
   }
   /* Galeri kartlarının konumu: bir slayttaki n kart için { x, y, w, h, imgH }. */
   function galleryCells(raw, count) {
@@ -196,6 +219,11 @@
     return RISK_VALUE.test(key) ? 'risk' : OK_VALUE.test(key) ? 'ok' : '';
   }
   function recordValue(record, key) {
+    if (record && !Array.isArray(record) && record.values) {
+      const alias = Object.keys(record.aliases || {}).find(label => fieldKey(label) === key);
+      const id = Object.keys(record.values).find(id => fieldKey(id) === key || fieldKey((record.labels || {})[id]) === key) || alias && record.aliases[alias];
+      return id ? cleanText(record.values[id], 300) : '';
+    }
     if (!Array.isArray(record)) return '';
     const hit = record.find(pair => Array.isArray(pair) && fieldKey(pair[0]) === key);
     return hit ? cleanText(hit[1], 300) : '';
@@ -224,7 +252,7 @@
     const l = raw && typeof raw.showTitle === 'boolean' && 'cardFields' in raw ? raw : normalizeLayout('pptx', raw);
     const own = (item && Array.isArray(item.fields) ? item.fields : []).filter(field => field && cleanText(field.value, 300));
     const pick = (label, value, tone) => ({ label: cleanText(label, 60), value: cleanText(value, 300), tone: TONES.includes(tone) && tone !== 'info' ? tone : autoTone(label, value) });
-    const rows = Array.isArray(record) ? record.filter(pair => Array.isArray(pair) && cleanText(pair[1], 300)) : [];
+    const rows = record && !Array.isArray(record) && record.values ? Object.entries(record.values) : Array.isArray(record) ? record.filter(pair => Array.isArray(pair) && cleanText(pair[1], 300)) : [];
     // Varsayılan: önemli bilgiler (LCW AI'ın alanları + kaynak satır); hiçbiri yoksa LCW AI'ın ilk alanları.
     let chosen = l.cardFields;
     if (!Array.isArray(chosen)) {
@@ -233,10 +261,14 @@
     }
     return chosen.map(label => {
       const key = fieldKey(label);
+      if (record && !Array.isArray(record) && record.values) {
+        const value = recordValue(record, key);
+        return value ? pick((record.labels || {})[label] || label, value, '') : null;
+      }
       const hit = own.find(field => fieldKey(field.label) === key);
-      if (hit) return pick(hit.label, hit.value, hit.tone);
       const value = recordValue(record, key);
-      return value ? pick(label, value, '') : null;
+      if (Array.isArray(record) && record.some(pair => Array.isArray(pair) && fieldKey(pair[0]) === key)) return value ? pick(label, value, '') : null;
+      return hit ? pick(hit.label, hit.value, hit.tone) : null;
     }).filter(Boolean);
   }
   /* Yerleşim aracındaki alan seçicisi: kartlarda kullanılabilecek tüm alanlar
@@ -250,10 +282,14 @@
     const source = [];
     const filled = new Set();
     const add = (list, label) => { const text = cleanText(label, 60); const key = fieldKey(text); if (key && !seen.has(key)) { seen.add(key); list.push(text); } };
-    for (const item of items || []) for (const field of (item && item.fields) || []) if (field && cleanText(field.value, 300)) add(ai, field.label);
+    for (const item of items || []) for (const field of (item && item.fields) || []) if (field && cleanText(field.value, 300)) {
+      const record = records && records[item.image];
+      const alias = Object.keys(record && record.aliases || {}).find(label => fieldKey(label) === fieldKey(field.label));
+      add(ai, alias ? record.aliases[alias] : field.label);
+    }
     for (const item of items || []) {
       const record = records && item && item.image ? records[String(item.image).toUpperCase()] : null;
-      for (const pair of Array.isArray(record) ? record : []) {
+      for (const pair of record && !Array.isArray(record) && record.values ? Object.entries(record.values) : Array.isArray(record) ? record : []) {
         if (!Array.isArray(pair)) continue;
         add(source, pair[0]);
         if (cleanText(pair[1], 300)) filled.add(fieldKey(pair[0]));
@@ -336,7 +372,32 @@
   }
   /* Sıra korunur; yalnız satırda kalan boşluğa TAMAMEN sığan sonraki küçük
      grup öne alınır (satır boş kalmasın). */
-  function packGroups(groups, columns, rows) {
+  function packGroups(groups, columns, rows, options) {
+    if (options && options.span) {
+      const out = [];
+      let page = 0, cursor = 0, occupied = new Set();
+      const next = () => { page++; cursor = 0; occupied = new Set(); };
+      groups.forEach((group, gi) => {
+        if (gi && options.separate && occupied.size) next();
+        if (gi && group.flow === 'section' && cursor % columns) cursor += columns - cursor % columns;
+        // A group that fits a whole page starts there rather than being split at the tail.
+        const area = group.items.reduce((sum, item) => sum + options.span(item), 0);
+        if (occupied.size && area <= columns * rows && area > columns * rows - occupied.size) next();
+        group.items.forEach((item, index) => {
+          const rowSpan = Math.min(rows, options.span(item));
+          for (;;) {
+            if (cursor >= columns * rows) next();
+            const row = Math.floor(cursor / columns), col = cursor % columns;
+            if (row + rowSpan <= rows && Array.from({ length: rowSpan }, (_, k) => cursor + k * columns).every(at => !occupied.has(at))) {
+              for (let k = 0; k < rowSpan; k++) occupied.add(cursor + k * columns);
+              out.push({ page, row, col, rowSpan, group: gi, index }); cursor++; break;
+            }
+            cursor++;
+          }
+        });
+      });
+      return out;
+    }
     const out = [];
     const done = new Set();
     let page = 0, row = 0, col = 0;
@@ -367,6 +428,9 @@
   function fieldValue(item, label, records) {
     const key = fieldKey(label);
     if (!key || !item) return '';
+    const record = records && item.image ? records[String(item.image).toUpperCase()] : null;
+    if (record && !Array.isArray(record) && record.values) return recordValue(record, key);
+    if (Array.isArray(record) && record.some(pair => Array.isArray(pair) && fieldKey(pair[0]) === key)) return recordValue(record, key);
     const own = (Array.isArray(item.fields) ? item.fields : []).find(field => field && fieldKey(field.label) === key && cleanText(field.value, 300));
     if (own) return cleanText(own.value, 300);
     return recordValue(records && item.image ? records[String(item.image).toUpperCase()] : null, key);
@@ -405,7 +469,19 @@
   function galleryPages(raw, groups, { english = false, fallbackTitle = '', records = null } = {}) {
     const g = pptxGeometry(raw);
     const l = g.layout;
-    const C = l.columns, R = l.rows, gap = l.gap;
+    const C = l.columns, gap = l.gap;
+    const studio = l.studio;
+    const span = item => {
+      if (!studio || studio.sizing === 'equal') return 1;
+      const override = studio.spans[item.image];
+      if (override) return override;
+      const record = records && records[item.image];
+      const pieces = record && !Array.isArray(record) && record.values ? Number(record.values.setPieceCount) : Number(fieldValue(item, 'setPieceCount', records));
+      const detailed = studio.sizing === 'auto' && (l.cardFields || []).filter(id => fieldValue(item, id, records)).length > 4;
+      return Number.isInteger(pieces) && pieces > 1 || detailed ? 2 : 1;
+    };
+    let R = studio && studio.reflow !== 'fixed' ? Math.max(1, Math.min(6, Math.floor((g.contentH - 8 + gap) / ({ dense: 110, balanced: 140, large: 220 }[studio.reflow] + gap)))) : l.rows;
+    if (studio && (groups || []).some(group => group.items.some(item => span(item) === 2))) R = Math.max(2, R);
     const list = (groups || []).filter(group => group && Array.isArray(group.items) && group.items.length);
     if (!list.length) return [];
     const labelH = Number((l.cardTextSize * 1.4 + 7).toFixed(1));
@@ -414,11 +490,14 @@
     const runs = l.packGroups ? [list] : list.map(group => [group]);
     const pages = [];
     for (const run of runs) {
-      const placed = packGroups(run, C, R);
+      const packing = studio ? { span } : null;
+      const placed = packGroups(run, C, R, packing);
       const pageCount = placed.length ? placed[placed.length - 1].page + 1 : 0;
-      const groupPages = run.map((_, gi) => [...new Set(placed.filter(p => p.group === gi).map(p => p.page))]);
+      const byPage = new Map(), groupPageSets = run.map(() => new Set());
+      placed.forEach(p => { if (!byPage.has(p.page)) byPage.set(p.page, []); byPage.get(p.page).push(p); groupPageSets[p.group].add(p.page); });
+      const groupPages = groupPageSets.map(set => [...set]);
       for (let pi = 0; pi < pageCount; pi++) {
-        let items = placed.filter(p => p.page === pi);
+        let items = byPage.get(pi) || [];
         const ids = [...new Set(items.map(p => p.group))];
         const labelled = ids.length > 1;
         const strip = labelled ? labelH : 0;
@@ -426,7 +505,7 @@
         const baseH = (availH - gap * (R - 1) - strip * R) / R;
         let cols = C, cellW = baseW, cellH = baseH;
         const split = ids.some(gi => groupPages[gi].length > 1);
-        const usedRows = Math.max(...items.map(p => p.row)) + 1;
+        const usedRows = Math.max(...items.map(p => p.row + (p.rowSpan || 1)));
         const usedCols = Math.max(...items.map(p => p.col)) + 1;
         // Az dolu sayfa: daha küçük ızgara denenir, kart oranı korunarak büyür (en çok 3 kat).
         if (l.autoFit && !split && (usedRows < R || usedCols < C)) {
@@ -435,7 +514,8 @@
           let best = null;
           for (let c = 1; c <= C; c++) {
             for (let r = 1; r <= R; r++) {
-              const trial = packGroups(subset, c, r);
+              if (studio && subset.some(group => group.items.some(item => span(item) > r))) continue;
+              const trial = packGroups(subset, c, r, packing);
               if (trial.some(p => p.page > 0)) continue;
               const w0 = (g.width - gap * (c - 1)) / c;
               const h0 = (availH - gap * (r - 1) - strip * r) / r;
@@ -452,7 +532,7 @@
         const blockW = colsUsed * cellW + gap * (colsUsed - 1);
         const left = cols === C && cellW === baseW ? g.margin : g.margin + (g.width - blockW) / 2;
         // Büyütülen blok içerik alanında dikeyde de ortalanır.
-        const rowsUsed = Math.max(...items.map(p => p.row)) + 1;
+        const rowsUsed = Math.max(...items.map(p => p.row + (p.rowSpan || 1)));
         const blockH = rowsUsed * (cellH + strip) + gap * (rowsUsed - 1);
         const offsetY = cellW === baseW ? 0 : Math.max(0, (availH - blockH) / 2);
         const xOf = col => left + col * (cellW + gap);
@@ -461,7 +541,7 @@
         // Kullanıcının gruplamasında grup adı ve sayfa başlığı açıktır; yoksa ortak önekten çıkar.
         const explicit = ids.every(gi => run[gi].label != null);
         const named = explicit ? { common: run[ids[0]].heading || '', labels: ids.map(gi => run[gi].label) } : commonLabels(titles);
-        const cells = items.map(p => ({ x: xOf(p.col), y: yOf(p.row), w: cellW, h: cellH, item: run[p.group].items[p.index], group: p.group }));
+        const cells = items.map(p => ({ x: xOf(p.col), y: yOf(p.row), w: cellW, h: cellH * (p.rowSpan || 1) + (gap + strip) * ((p.rowSpan || 1) - 1), ...(studio ? { rowSpan: p.rowSpan || 1 } : {}), item: run[p.group].items[p.index], group: p.group }));
         const labels = [], rules = [], dividers = [];
         if (labelled) {
           const segments = [];
@@ -505,17 +585,22 @@
      sayfada "Kumaş · Baskı" adıyla yan yana gruplardır.
      Grup sırası modellerin ilk görünüş sırasıdır; değeri olmayan model
      "Belirtilmemiş" grubuna girer. Döner: [{ heading, groups:[{ label, title, items, sources }] }]. */
-  function regroupItems(entries, levels, records, english, depth = levels.length - 1) {
+  function regroupItems(entries, levels, records, english, depth = levels.length - 1, rules = null) {
     const blank = english ? 'Not specified' : 'Belirtilmemiş';
     const pages = new Map();
     for (const { item, source } of entries) {
       const values = levels.map(label => fieldValue(item, label, records) || blank);
-      const pageKey = values.slice(0, depth).join('\u0001');
-      if (!pages.has(pageKey)) pages.set(pageKey, { heading: values.slice(0, depth).join(' · '), groups: new Map() });
+      const record = records && records[item.image];
+      const keys = levels.map((id, index) => record && record.keys && record.keys[id] || values[index]);
+      const isPage = (id, index) => rules && rules[id] ? rules[id] === 'page' : index < depth;
+      const pageKey = keys.filter((_, i) => isPage(levels[i], i)).join('\u0001');
+      if (!pages.has(pageKey)) pages.set(pageKey, { heading: values.filter((_, i) => isPage(levels[i], i)).join(' · '), groups: new Map() });
       const page = pages.get(pageKey);
-      const label = values.slice(depth).join(' · ');
-      if (!page.groups.has(label)) page.groups.set(label, { label, heading: page.heading, title: [page.heading, label].filter(Boolean).join(' · '), subtitle: '', items: [], sources: [] });
-      const group = page.groups.get(label);
+      const label = values.filter((_, i) => !isPage(levels[i], i)).join(' · ');
+      const groupKey = keys.filter((_, i) => !isPage(levels[i], i)).join('\u0001');
+      if (!page.groups.has(groupKey)) page.groups.set(groupKey, { label, heading: page.heading, title: [page.heading, label].filter(Boolean).join(' · '), subtitle: '', items: [], sources: [],
+        ...(rules && levels.some(id => ['section', 'inline'].includes(rules[id])) ? { flow: 'section' } : {}) });
+      const group = page.groups.get(groupKey);
       group.items.push(item);
       if (!group.sources.includes(source)) group.sources.push(source);
     }
@@ -526,6 +611,10 @@
      records: görsel anahtarı → kaynak satır (gruplama ve başlık değerleri için). */
   function expandGalleries(slides, raw, { english = false, records = null } = {}) {
     const l = normalizeLayout('pptx', raw);
+    if (l.studio && l.studio.galleryFirst) {
+      const ordered = [...(slides || []).filter(s => s.layout === 'gallery'), ...(slides || []).filter(s => s.layout !== 'gallery')];
+      return expandGalleries(ordered, { ...l, studio: { ...l.studio, galleryFirst: false } }, { english, records }).map(entry => ({ ...entry, sources: entry.sources.map(index => slides.indexOf(ordered[index])) }));
+    }
     const list = slides || [];
     const out = [];
     if (l.groupBy) {
@@ -542,7 +631,7 @@
         list.slice(0, start).forEach((slide, index) => out.push({ slide, sources: [index] }));
         const entries = [];
         galleries.forEach(index => (list[index].items || []).forEach(item => entries.push({ item, source: index })));
-        for (const page of regroupItems(entries, l.groupBy, records, english, pageDepth(l))) {
+        for (const page of regroupItems(entries, l.groupBy, records, english, pageDepth(l), l.studio && l.studio.groupRules)) {
           for (const result of galleryPages(l, page.groups, { english, fallbackTitle: page.heading || lastSection, records })) out.push({ page: result, sources: result.sources });
         }
         list.forEach((slide, index) => { if (index >= start && index <= end && slide && slide.layout !== 'gallery' && slide.layout !== 'section') out.push({ slide, sources: [index] }); });
@@ -620,6 +709,10 @@
       l.showBadge ? '' : '.bl-gallery .bl-card .bl-badge{display:none;}',
       l.showFieldLabels ? '' : '.bl-specs dt{display:none;}',
     ];
+    if (l.studio && (l.studio.sizing !== 'equal' || l.studio.reflow !== 'fixed')) {
+      const size = pageSize(l);
+      css.push(`@page{size:${size.width}pt ${size.height}pt;margin:0}.bl-page,.bl-report{padding:0!important;max-width:none!important}.bl-studio-page{margin:0!important;overflow:hidden}.bl-studio-card{border:1px solid var(--line);background:var(--paper)}.bl-studio-card img{max-width:none!important;margin:0!important}.bl-studio-title small{display:block;font-size:12pt}`);
+    }
     return css.filter(Boolean).join('\n');
   }
   /* Yarım sayfa (satırları dolmamış) galeri parçası: tam sayfa kutusu yerine
@@ -852,6 +945,20 @@
   }
   function prepareReport(html, raw, { pages = true, records = null, english = false } = {}) {
     const l = normalizeLayout('pdf', raw);
+    if (l.studio && (l.studio.sizing !== 'equal' || l.studio.reflow !== 'fixed')) {
+      const source = paginateGallery(html, null, { pages: false });
+      const { roots, cards } = reportRoots(source);
+      const edits = roots.map(root => {
+        const items = cards.filter(card => inside(card, root)).map(card => cardItem(source, card));
+        if (!items.length) return null;
+        const before = source.slice(0, root.start);
+        const heading = /<h([1-4])\b[^>]*>([^<]*)<\/h\1>\s*$/i.exec(before);
+        const title = heading ? textOf(heading[2]) : english ? 'Models' : 'Modeller';
+        const report = presentationReport({ title, layout: l, slides: [{ layout: 'gallery', title, items }] }, records || {}, english);
+        return { start: heading ? heading.index : root.start, end: root.end, text: report.body };
+      }).filter(Boolean);
+      return applyEdits(source, edits);
+    }
     const grouped = reportTitles(regroupReport(html, l, records, english), l, records);
     return paginateGallery(decorateGroups(applyCardFields(grouped, l, records), l), l, { pages });
   }
@@ -933,8 +1040,83 @@
     return { ...l, imageRow: l.imageSize + 6, imageBoxPx: Math.round(l.imageSize * 4 / 3), imageColChars: Math.max(8, Math.round(l.imageSize * 4 / 3 / 7) + 1) };
   }
 
+  // Commands change presentation state only. Unknown or invalid commands reject the entire batch.
+  function applyOperations(raw, actions, { fields = [], tokens = [] } = {}) {
+    if (!Array.isArray(actions) || !actions.length || actions.length > 24) throw Error('Invalid layout operations.');
+    let layout = normalizeLayout('pptx', raw), title;
+    layout.studio = layout.studio || normalizeStudio({});
+    const allowed = new Set(fields);
+    for (const a of actions) {
+      if (!a || typeof a !== 'object' || Object.keys(a).some(k => !['op', 'value', 'target'].includes(k))) throw Error('Invalid layout operation.');
+      const v = a.value;
+      if (a.op === 'setCardFields' || a.op === 'setGrouping') {
+        if (!Array.isArray(v) || v.length > (a.op === 'setGrouping' ? 3 : 24) || v.some(id => !allowed.has(id))) throw Error('Unavailable field.');
+        layout[a.op === 'setCardFields' ? 'cardFields' : 'groupBy'] = v;
+      } else if (a.op === 'setCardSpan') {
+        if (!tokens.includes(a.target) || ![1, 2].includes(v)) throw Error('Invalid card span.');
+        layout.studio.spans[a.target] = v;
+      } else if (a.op === 'resizeSection') {
+        const key = a.target === 'header' ? 'headerHeight' : a.target === 'note' ? 'noteHeight' : '';
+        if (!key || !Number.isFinite(v) || v < (key === 'headerHeight' ? 48 : 0) || v > 160) throw Error('Invalid section size.');
+        if (key === 'headerHeight') layout.headerHeight = v; else layout.studio.noteHeight = v;
+      } else if (a.op === 'setGrid') {
+        if (!v || Object.keys(v).some(k => !['columns', 'rows'].includes(k)) || !Number.isInteger(v.columns) || v.columns < 1 || v.columns > 8 || !Number.isInteger(v.rows) || v.rows < 1 || v.rows > 6) throw Error('Invalid grid.');
+        layout.columns = v.columns; layout.rows = v.rows; layout.studio.reflow = 'fixed';
+      } else if (a.op === 'setSizing') {
+        if (!['equal', 'sets', 'auto'].includes(v)) throw Error('Invalid sizing.'); layout.studio.sizing = v;
+      } else if (a.op === 'setReflow') {
+        if (!['dense', 'large', 'balanced', 'fixed'].includes(v)) throw Error('Invalid reflow.'); layout.studio.reflow = v;
+      } else if (a.op === 'applyPreset') {
+        if (!PRESETS[v]) throw Error('Invalid preset.'); layout = applyPreset('pptx', v, layout);
+      } else if (a.op === 'setTitle') {
+        if (typeof v !== 'string' || v.length > 140) throw Error('Invalid title.'); title = v;
+      } else if (a.op === 'toggleSection') {
+        if (a.target !== 'header' || typeof v !== 'boolean') throw Error('Invalid section.'); layout.studio.headerHidden = !v;
+      } else if (a.op === 'reorderSection') {
+        if (!['galleryFirst', 'summaryFirst'].includes(v)) throw Error('Invalid section order.'); layout.studio.galleryFirst = v === 'galleryFirst';
+      } else throw Error('Unsupported layout operation.');
+    }
+    return { layout: normalizeLayout('pptx', layout), ...(title === undefined ? {} : { title }) };
+  }
+
+  // A structured report uses the exact same gallery page plan as PowerPoint and the editor.
+  function presentationReport(data, records = {}, english = false) {
+    const l = normalizeLayout('pptx', data.layout), g = pptxGeometry(l);
+    const escape = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const block = (x, y, w, h, cls, html, extra = '') => `<div class="${cls}" style="position:absolute;left:${x}pt;top:${y}pt;width:${w}pt;height:${h}pt;${extra}">${html}</div>`;
+    const pages = expandGalleries(data.slides, l, { records, english });
+    const body = pages.map((entry, index) => {
+      const slide = entry.slide || { title: entry.page.title, subtitle: entry.page.subtitle };
+      let html = l.studio && l.studio.headerHidden ? '' : block(g.margin, 8, g.width, Math.max(1, g.band - 8), 'bl-studio-title', `<b>${escape(slide.title)}</b>${slide.subtitle ? `<small>${escape(slide.subtitle)}</small>` : ''}`, `font-size:${l.titleSize}pt;overflow:hidden;`);
+      const cover = entry.slide && ['title', 'section'].includes(entry.slide.layout);
+      if (cover) {
+        html = block(g.margin, g.size.height * .3, g.width, g.size.height * .25, 'bl-studio-title', `<b>${escape(slide.title)}</b>`, `font-size:${Math.min(40, g.size.width / 18)}pt;`);
+        if (slide.subtitle) html += block(g.margin, g.size.height * .6, g.width, g.size.height * .2, 'bl-studio-content', escape(slide.subtitle), 'font-size:16pt;');
+      } else if (entry.page) {
+        entry.page.labels.forEach(label => { html += block(label.x, label.y, label.w, label.h, 'bl-studio-label', escape(label.text), `font-size:${label.size}pt;`); });
+        entry.page.cells.forEach(cell => {
+          const content = cardContent(cell, l, cell.item, records[cell.item.image], entry.page.scale), k = content.box;
+          const fields = content.lines.map(line => line.map(row => `${l.showFieldLabels ? `${escape(row.label)} ` : ''}${escape(row.value)}`).join(' · ')).join('<br>');
+          const image = `<div style="height:${k.imgH}pt;"><img data-bl-image="${escape(cell.item.image)}" alt="${escape(cell.item.title)}" style="width:100%;height:100%;object-fit:contain;"></div>`;
+          html += block(cell.x, cell.y, cell.w, cell.h, 'bl-studio-card', `${image}<div style="font-size:${k.detail}pt;line-height:1.25;"><b>${escape(content.title)}</b><br>${fields}</div>`, `padding:${k.pad}pt;box-sizing:border-box;overflow:hidden;`);
+        });
+      } else {
+        const content = slide.layout === 'kpis' ? (slide.kpis || []).map(k => `<p><b>${escape(k.label)}: ${escape(k.value)}</b> ${escape(k.note)}</p>`).join('')
+          : slide.layout === 'table' ? `<table><thead><tr>${slide.table.columns.map(c => `<th>${escape(c)}</th>`).join('')}</tr></thead><tbody>${slide.table.rows.map(row => `<tr>${row.map(v => `<td>${escape(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+          : slide.layout === 'comparison' ? [slide.left, slide.right].map(side => `<h3>${escape(side.title)}</h3>${side.bullets.map(b => `<p>${escape(b)}</p>`).join('')}`).join('')
+          : slide.layout === 'chart' ? `<table>${slide.chart.categories.map((category, i) => `<tr><th>${escape(category)}</th>${slide.chart.series.map(series => `<td>${escape(series.name)}: ${escape(series.values[i])}</td>`).join('')}</tr>`).join('')}</table>`
+          : `<p>${escape(slide.subtitle)}</p>${(slide.bullets || []).map(b => `<p>${escape(b)}</p>`).join('')}`;
+        html += block(g.margin, g.contentTop + 8, g.width, g.contentH, 'bl-studio-content', content, `font-size:${l.bodySize}pt;`);
+      }
+      if (!cover && l.studio && l.studio.note) html += block(g.margin, g.size.height - SLIDE.footer - g.note, g.width, g.note, 'bl-studio-note', escape(l.studio.note), 'font-size:10pt;overflow:hidden;');
+      if (!cover) html += block(g.margin, g.size.height - 25, g.width, 18, 'bl-studio-footer', `${escape(data.title)} · ${index + 1}/${pages.length}`, 'font-size:9pt;');
+      return `<section class="bl-studio-page" style="position:relative;width:${g.size.width}pt;height:${g.size.height}pt;break-after:page;box-sizing:border-box;">${html}</section>`;
+    }).join('');
+    return { body, width: g.size.width, height: g.size.height, pages };
+  }
+
   return {
-    SPEC, FLAGS, PRESETS, SLIDE, PAGE, specKey, defaults, normalizeLayout, isDefault, perPage, applyPreset, pptxGeometry, galleryCells, pageBox, layoutCss, paginateGallery, xlsxMetrics,
+    SPEC, FLAGS, PRESETS, SLIDE, PAGE, PAPERS, pageSize, normalizeStudio, applyOperations, presentationReport, specKey, defaults, normalizeLayout, isDefault, perPage, applyPreset, pptxGeometry, galleryCells, pageBox, layoutCss, paginateGallery, xlsxMetrics,
     fieldKey, normalizeCardFields, normalizeGroupBy, normalizeGroupBreak, pageDepth, normalizePageTitle, fieldValue, pageValue, customTitle, regroupItems, autoTone, DEFAULT_CARD_ROLES, defaultCardFields, cardDetails, availableCardFields, packDetailLines, cardContent, cardLayout, commonLabels, fitLabel, packGroups, galleryPages, expandGalleries,
     applyCardFields, decorateGroups, regroupReport, reportTitles, prepareReport,
   };

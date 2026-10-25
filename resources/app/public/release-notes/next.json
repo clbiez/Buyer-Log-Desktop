@@ -68,6 +68,35 @@
           "en": "A new installation connected to a demo Shared Hub without audit records: sync completes with 4 users · 4 active."
         }
       }
+    },
+    {
+      "id": "smart-layout-studio",
+      "type": "feature",
+      "module": {
+        "tr": "Sunum · LCW AI · Koleksiyon · CP · Siparişler",
+        "en": "Presentations · LCW AI · Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Modellerden üç adımda akıllı sunum",
+        "en": "Smart presentations from models in three steps"
+      },
+      "body": {
+        "tr": "Tools menülerinden AI bağlantısı olmadan sunum taslağı oluşturun. Kaynak alanlarını ve grupları seçin; tekli ve set kartlarını ortak yerleşim hesabıyla düzenleyin. Başlık ve kart tutamakları, geri al/yinele, sekiz görsel şablon, A3/A4/A5/Letter/16:9 sayfalar ve PDF/PowerPoint/Excel/HTML çıktıları aynı editördedir. LCW AI düzen önerileri doğrulanır ve onayınızla uygulanır. Kaynak kayıt değerleri değişmez; büyük kapsamda 200 görsel sınırı açıkça gösterilir.",
+        "en": "Create presentation drafts from Tools without an AI connection. Choose source fields and groups; arrange single and set cards with the shared layout calculation. Title and card handles, undo/redo, eight visual presets, A3/A4/A5/Letter/16:9 pages and PDF/PowerPoint/Excel/HTML exports share one editor. LCW AI layout suggestions are validated and applied with your approval. Source record values remain unchanged; the 200-image limit is explicit for large scopes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "smart-layout-studio.png",
+        "alt": {
+          "tr": "Manifest Smart Layout Studio içinde demo tekli ve set kartları, gruplama ve görsel şablonlar",
+          "en": "Demo single and set cards, grouping and visual presets in Manifest Smart Layout Studio"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log ekranında 23 demo model; setler çift yükseklikte, kaynak bilgileri korunur.",
+          "en": "23 demo models in the actual Buyer Log screen; sets use double-height cards and source details are preserved."
+        }
+      }
     }
   ]
 }

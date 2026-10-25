@@ -23,8 +23,8 @@ const { theme, ooxml } = require('./output-theme');
 const BLOutputLayout = require('../../../public/lcwai-output-layout');
 
 const EMU = 12700; // 1 pt
-const W = 12192000;
-const H = 6858000;
+let W = 12192000;
+let H = 6858000;
 const pt = value => Math.round(value * EMU);
 /* Yerleşim geometrisi (kullanıcının Yerleşim aracındaki ayarları; bkz.
    public/lcwai-output-layout.js). Oluşturma eşzamanlıdır: renderPresentation
@@ -38,6 +38,7 @@ let TABLE_WIDTH_PT = (W - MARGIN * 2) / EMU;
 function applyGeometry(layout) {
   const g = BLOutputLayout.pptxGeometry(layout);
   LAYOUT = g.layout;
+  W = pt(g.size.width); H = pt(g.size.height);
   MARGIN = pt(g.margin);
   BAND = pt(g.band);
   CONTENT_TOP = pt(g.contentTop);
@@ -158,6 +159,7 @@ function fitSize(lines, base, min, capacity) {
 function chrome(s, slide, index, total, deck, p, lang) {
   // Başlık bandı: tablo başlığı grisi; başlık metni logo siyahı. Model
   // galerisi (line sheet) A3 sunum formatındaki gibi koyu banttır.
+  if (!(LAYOUT.studio && LAYOUT.studio.headerHidden)) {
   const dark = slide.layout === 'gallery';
   const ink = dark ? 'FFFFFF' : p.logo;
   s.box({ x: 0, y: 0, w: W, h: BAND, fill: dark ? p.logo : p.headBg, name: 'HeadBand' });
@@ -170,6 +172,8 @@ function chrome(s, slide, index, total, deck, p, lang) {
   s.text(MARGIN, Math.round(BAND * 0.08), W - MARGIN * 2, BAND - Math.round(BAND * 0.08) - pt(16) - subH, slide.title, { size: titleSize, bold: true, color: ink }, { anchor: 'b' });
   if (sub) s.text(MARGIN, BAND - pt(14) - subH, W - MARGIN * 2, subH, slide.subtitle, { size: sub, color: dark ? 'C9CDD2' : p.headInk }, { anchor: 't' });
   s.box({ x: MARGIN, y: BAND - pt(10), w: pt(64), h: pt(3), fill: dark ? 'FFFFFF' : p.logo, name: 'Rule' });
+  }
+  if (LAYOUT.studio && LAYOUT.studio.note) s.text(MARGIN, H - pt(44 + LAYOUT.studio.noteHeight), W - MARGIN * 2, pt(LAYOUT.studio.noteHeight), LAYOUT.studio.note, { size: 10, color: p.ink });
   s.text(MARGIN, H - pt(30), W / 2, pt(18), `Buyer Log · LCW AI${deck.title ? ` · ${deck.title}` : ''}`.slice(0, 110), { size: 9, color: p.muted });
   s.text(W - MARGIN - pt(120), H - pt(30), pt(120), pt(18), `${index + 1} / ${total}`, { size: 9, color: p.muted }, { align: 'r' });
 }
@@ -273,6 +277,11 @@ function renderCard(s, cell, item, page, p, lang, records) {
 
 function renderSlideBody(s, slide, index, total, deck, p, lang, records = {}) {
   const english = lang.startsWith('en');
+  if (LAYOUT.studio && ['title', 'section'].includes(slide.layout)) {
+    s.text(MARGIN, H * 0.3, W - MARGIN * 2, H * 0.25, slide.title, { size: Math.min(40, W / EMU / 18), bold: true, color: p.logo });
+    if (slide.subtitle) s.text(MARGIN, H * 0.6, W - MARGIN * 2, H * 0.2, slide.subtitle, { size: 16, color: p.ink });
+    return s.xml();
+  }
   if (slide.layout === 'title') {
     // Renk geçişli kapak + yarı saydam dekoratif daireler.
     s.box({ x: W - pt(380), y: -pt(180), w: pt(560), h: pt(560), fill: { color: p.logo, alpha: 5 }, geometry: 'ellipse', name: 'Orb' });

@@ -31,6 +31,12 @@ const ROW_DATA_KEYS = /^(rows|samplerows|records)$/i;
 const MAX_SAMPLE_ROWS = 20;
 
 const CONTRACTS = Object.freeze({
+  'output-studio': Object.freeze({
+    label: { tr: 'Sunum düzeni', en: 'Presentation layout' },
+    fields: Object.freeze({ explanation: { type: 'string', required: true, max: 1200 },
+      operationsJson: { type: 'string', required: true, max: 12000, hint: { tr: 'JSON işlem dizisi. Yalnız context.operations listesindeki işlemler; iş verisi, HTML, CSS veya JS üretme. Alanlar context.fields içinden seçilir.', en: 'JSON operation array. Only operations listed in context.operations; never produce business values, HTML, CSS or JS. Choose fields from context.fields.' } } }),
+    example: { explanation: '…', operationsJson: '[{"op":"resizeSection","target":"header","value":64},{"op":"setReflow","value":"large"}]' },
+  }),
   'fx-kur-layout': Object.freeze({
     label:{tr:'KUR tablosu düzeni',en:'KUR table layout'},
     fields:Object.freeze({

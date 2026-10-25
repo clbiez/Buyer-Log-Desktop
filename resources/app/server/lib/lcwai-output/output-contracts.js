@@ -281,7 +281,7 @@ function cardFieldsOf(value) {
     .filter(item => item.label && item.value).slice(0, CARD_FIELDS);
 }
 
-function normalizeSlide(slide, index, english, warnings) {
+function normalizeSlide(slide, index, english, warnings, studio = false) {
   const title = clean(slide.title, LIMITS.titleChars);
   let layout = String(slide.layout || slide.type || '').toLowerCase();
   if (!LAYOUTS.includes(layout)) {
@@ -319,7 +319,7 @@ function normalizeSlide(slide, index, english, warnings) {
   }
   if (layout === 'gallery') {
     base.bullets = [];
-    base.items = asArray(slide.items || slide.cards || slide.models).filter(isObject).slice(0, GALLERY_ITEMS).map(item => ({
+    base.items = asArray(slide.items || slide.cards || slide.models).filter(isObject).slice(0, studio ? 30000 : GALLERY_ITEMS).map(item => ({
       title: clean(item.title || item.name || item.model, 60), subtitle: clean(item.subtitle, 80), note: clean(item.note || item.text, 140), image: imageToken(item.image), tone: tone(item.tone),
       badge: clean(item.badge || item.tag, 24), group: clean(item.group, 80), fields: cardFieldsOf(item.fields || item.details || item.specs),
     })).filter(item => item.title || item.image);
@@ -344,7 +344,7 @@ function normalizePresentation(raw, { lang = 'tr', date } = {}) {
   if (list.length > LIMITS.slides) warnings.push(`slides-trimmed:${list.length}`);
   const slides = [];
   list.slice(0, LIMITS.slides).forEach((slide, index) => {
-    const result = normalizeSlide(slide, index, english, warnings);
+    const result = normalizeSlide(slide, index, english, warnings, Boolean(raw.layout && raw.layout.studio));
     if (result.error) errors.push(result.error); else slides.push(result.slide);
   });
   const title = clean(raw.title, LIMITS.titleChars) || (slides[0] && slides[0].title) || (english ? 'LCW AI Presentation' : 'LCW AI Sunumu');

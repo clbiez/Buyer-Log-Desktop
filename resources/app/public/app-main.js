@@ -13263,6 +13263,7 @@ window.BLAIScreenData = {
     }
     return {
       tableKey: info.tableKey, rows, all, selectedIds: selected ? [...selected] : [], filters: all ? {} : filters,
+      canonicalRow: collectionValue ? collectionRow : row => row,
       rowId: row => row && (info.tableKey === 'koleksiyon' ? row.id : row._id),
       columns: cols.filter(col => col && col.k && col.type !== 'cpImage' && col.k !== '__picture__' &&
         (!String(col.k).startsWith('_') || col.formulaCustom || col.modelCustom || col.noteCustom || col.checklistSupplierColumn ||
@@ -39341,6 +39342,7 @@ function applyLanguage(lang){
   // CSS text-transform:uppercase follows the document language. Keep English
   // headers (e.g. LICENSE) from receiving Turkish dotted İ casing.
   if(document.documentElement) document.documentElement.lang = appLang;
+  window.BLOutputEditor?.refreshLanguage();
   window.BLLayoutControl?.refreshLanguage();
   saveLang();
   applyStaticI18n();
@@ -39401,3 +39403,15 @@ loadLang();
 applyLanguage(appLang);
 syncTableToolbarActions(document.body.dataset.activeTab||'overview');
 setTimeout(()=>void loadModelImageSettings(),1200);
+
+// Presentation tools use the existing lazy output editor and canonical source scope.
+document.addEventListener('click', async event => {
+  const button = event.target.closest('[data-output-studio]');
+  if (!button) return;
+  button.disabled = true;
+  try {
+    await window.BLPerf.ensureFeature('lcwaiOutputEditor');
+    await window.BLOutputEditor.openSelection(button.dataset.outputStudio);
+  } catch (_) { showToast(appLang === 'en' ? 'The presentation editor could not be opened.' : 'Sunum düzenleyicisi açılamadı.', {kind:'error'}); }
+  finally { button.disabled = false; }
+});

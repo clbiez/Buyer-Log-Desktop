@@ -14892,3 +14892,10 @@ html[data-ui-system="manifest"] #cpTable tbody td.blGridRangeCell,
 html[data-ui-system="manifest"] #ordersTable tbody td.blGridRangeCell {
   background-color:var(--ui-selected) !important;
 }
+/* Smart Layout Studio shares Manifest surfaces, type and focus. */
+html[data-ui-system="manifest"] .lcwaiStudioSource h2{font:600 var(--ui-font-xl)/1.2 var(--ui-font-heading);color:var(--ui-text)}
+html[data-ui-system="manifest"] .lcwaiStudioThumb{background:var(--ui-surface-soft)}
+html[data-ui-system="manifest"] .lcwaiStudioThumb i{background:var(--ui-selected)}
+html[data-ui-system="manifest"] .lcwaiStudioThumb i::before{background:var(--ui-accent)}
+html[data-ui-system="manifest"] .lcwaiStudioHandle,html[data-ui-system="manifest"] .lcwaiStudioCardGrip{background:var(--ui-selected);color:var(--ui-accent);font:600 var(--ui-font-xs)/1 var(--ui-font-body);z-index:var(--ui-z-raised)}
+html[data-ui-system="manifest"] .lcwaiStudioHandle:focus-visible,html[data-ui-system="manifest"] .lcwaiStudioCardGrip:focus-visible,html[data-ui-system="manifest"] [data-studio-card]:focus-visible{outline:2px solid var(--ui-accent);outline-offset:2px}

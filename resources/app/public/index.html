@@ -310,6 +310,7 @@
 <link rel="stylesheet" href="ui-components.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="ui-motion.css?v=__BL_ASSET_VERSION__">
 <link id="blBootGuardStyle" rel="stylesheet" href="ui-startup.css?v=__BL_ASSET_VERSION__">
+<link rel="stylesheet" href="table-header-tracking.css?v=__BL_ASSET_VERSION__&rev=1">
 </head>
 <body data-active-tab="overview" data-ui-migrated="manifest">
 <script>window.BLBootGuard?.mount();</script>
@@ -879,6 +880,7 @@
           <div class="toolbarMoreWrap" id="cpToolsWrap" data-tb-priority="utility" data-tb-overflow="never">
             <button type="button" class="tbtn" id="cpToolsBtn" title="Seçili satırlar için işlemler" data-i18n-title-tr="Seçili satırlar için işlemler" data-i18n-title-en="Actions for selected rows" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
             <div class="toolbarMoreMenu" id="cpToolsMenu" hidden>
+              <button type="button" class="tbtn" data-output-studio="cp"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Sunum Oluştur" data-i18n-en="Create Presentation">Sunum Oluştur</span></button>
               <button type="button" class="tbtn" id="cpEndeksmatikBtn" title="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-tr="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-en="Calculate Endeksmatik one year before or after the selected order" disabled><svg class="ic"><use href="#i-calculator"/></svg><span>Endeksmatik</span></button>
               <button type="button" class="navActionBtn" id="cpLicenseRoyaltyBtn" data-license-royalty title="License Royalty hesaplarını düzenle"><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="License Royalty Hesapları" data-i18n-en="License Royalty Calculations">License Royalty Hesapları</span></button>
               <button type="button" class="tbtn" id="cpCapacityRequestBtn" disabled title="Seçili satırları Capacity Request formatında Excel'e aktar" data-i18n-title-tr="Seçili satırları Capacity Request formatında Excel'e aktar" data-i18n-title-en="Export selected rows in Capacity Request format"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Capacity Request Excel Oluştur" data-i18n-en="Create Capacity Request Excel">Capacity Request Excel Oluştur</span></button>
@@ -943,6 +945,7 @@
           <div class="toolbarMoreWrap" id="ordersToolsWrap" data-tb-priority="utility" data-tb-overflow="never">
             <button type="button" class="tbtn" id="ordersToolsBtn" title="Seçili satırlar için işlemler" data-i18n-title-tr="Seçili satırlar için işlemler" data-i18n-title-en="Actions for selected rows" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
             <div class="toolbarMoreMenu" id="ordersToolsMenu" hidden>
+              <button type="button" class="tbtn" data-output-studio="orders"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Sunum Oluştur" data-i18n-en="Create Presentation">Sunum Oluştur</span></button>
               <button type="button" class="navActionBtn" id="ordersLicenseRoyaltyBtn" data-license-royalty title="License Royalty hesaplarını düzenle"><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="License Royalty Hesapları" data-i18n-en="License Royalty Calculations">License Royalty Hesapları</span></button>
               <button class="tbtn" id="ordersEndeksmatikBtn" title="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-tr="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-en="Calculate Endeksmatik one year before or after the selected order" disabled><svg class="ic"><use href="#i-calculator"/></svg><span>Endeksmatik</span></button>
             </div>
@@ -1025,6 +1028,7 @@
           <div class="toolbarMoreWrap" id="kolToolsWrap" data-tb-priority="utility" data-tb-overflow="never">
           <button type="button" class="tbtn" id="kolToolsBtn" title="Koleksiyon araçları" data-i18n-title-tr="Koleksiyon araçları" data-i18n-title-en="Collection tools" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
           <div class="toolbarMoreMenu" id="kolToolsMenu" hidden>
+              <button type="button" class="tbtn" data-output-studio="koleksiyon"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Sunum Oluştur" data-i18n-en="Create Presentation">Sunum Oluştur</span></button>
             <button class="tbtn" id="kolSendPricingBtn" title="Seçili modelleri fiyatlamaya gönder" data-i18n-title-tr="Seçili modelleri fiyatlamaya gönder" data-i18n-title-en="Send selected models to pricing" disabled><svg class="ic"><use href="#i-mail-send"/></svg><span data-i18n-tr="Fiyatlamaya Gönder" data-i18n-en="Send to Pricing">Fiyatlamaya Gönder</span></button>
             <button class="tbtn" id="kolSendShippingBtn" title="Seçili modelleri Nakliye Kıyaslama'ya gönder" data-i18n-title-tr="Seçili modelleri Nakliye Kıyaslama'ya gönder" data-i18n-title-en="Send selected models to Shipping Comparison" disabled><svg class="ic"><use href="#i-ship"/></svg><span data-i18n-tr="Nakliye Kıyaslamaya Gönder" data-i18n-en="Send to Shipping Comparison">Nakliye Kıyaslamaya Gönder</span></button>
             <button class="tbtn" id="kolRemoveImagesBtn" title="Seçili modellerin görsellerini yerelden ve ortak ağ klasöründen kalıcı olarak sil" data-i18n-title-tr="Seçili modellerin görsellerini yerelden ve ortak ağ klasöründen kalıcı olarak sil" data-i18n-title-en="Permanently delete the selected models' images locally and from the shared network folder" disabled><svg class="ic"><use href="#i-trash"/></svg><span data-i18n-tr="Görselleri Kaldır" data-i18n-en="Remove Images">Görselleri Kaldır</span></button>
@@ -1530,6 +1534,7 @@
 <script src="collection-status-ui.js?v=__BL_ASSET_VERSION__"></script>
 <script src="collection-spreadsheet-engine.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="collection-spreadsheet.js?v=__BL_ASSET_VERSION__&rev=10"></script>
+<script src="table-header-tracking.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <!-- Kullanıcı Excel'i içeri aktarma: deterministik motor + sihirbaz arayüzü.
      CP ve Koleksiyon AYNI motoru kullanır (bkz. BLExcelImportBridge). -->
 <script src="excel-import-workbook.js?v=__BL_ASSET_VERSION__&rev=1"></script>
