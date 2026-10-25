@@ -37,7 +37,7 @@ test('default inventory and both backup formats do not traverse foreign system t
     assert.equal(path.dirname(data.TEMP_ROOT),systemTemp);
     const foreign=path.join(systemTemp,'unrelated-private');fs.mkdirSync(foreign);fs.writeFileSync(path.join(foreign,'sentinel'),'keep');
     let foreignReads=0;const original=fs.readdirSync;
-    fs.readdirSync=function(dir,...args){if(path.resolve(dir)===foreign){foreignReads++;throw Object.assign(new Error('unrelated denied'),{code:'EACCES'});}return original.call(this,dir,...args);};
+    fs.readdirSync=function(dir,...args){if(path.resolve(Buffer.isBuffer(dir)?dir.toString():dir)===foreign){foreignReads++;throw Object.assign(new Error('unrelated denied'),{code:'EACCES'});}return original.call(this,dir,...args);};
     const inventory=data.getUserDataInventory();assert.equal(foreignReads,0);
     assert.equal(inventory.roots.find(r=>r.id==='temp').root,data.TEMP_ROOT);
     const legacy=data.parseBackup(data.exportBackup());assert.ok(legacy.files.some(f=>f.path==='synthetic-orders.json'));
@@ -45,13 +45,16 @@ test('default inventory and both backup formats do not traverse foreign system t
     const temporaryFolder=path.dirname(streamed.path);assert.ok(fs.existsSync(streamed.path));streamed.cleanup();
     assert.equal(fs.existsSync(temporaryFolder),false);assert.equal(fs.readFileSync(path.join(foreign,'sentinel'),'utf8'),'keep');
     assert.equal(foreignReads,0);
+    assert.throws(()=>fs.readdirSync(Buffer.from(foreign)),{code:'EACCES'});
+    assert.equal(foreignReads,1,'Buffer paths retain the same foreign-directory guard');
   `);
 });
 test('unavailable excluded diagnostics return explicit warnings without breaking real backup members', () => {
   run('diagnostic', `
     for(const dir of [data.LOGS_ROOT,data.TEMP_ROOT,data.EMAIL_DRAFT_ROOT])fs.mkdirSync(dir,{recursive:true});
     const denied=new Set([data.LOGS_ROOT,data.TEMP_ROOT,data.EMAIL_DRAFT_ROOT].map(x=>path.resolve(x))),original=fs.readdirSync;
-    fs.readdirSync=function(dir,...args){if(denied.has(path.resolve(dir)))throw Object.assign(new Error('diagnostic denied'),{code:'EACCES'});return original.call(this,dir,...args);};
+    fs.readdirSync=function(dir,...args){if(denied.has(path.resolve(Buffer.isBuffer(dir)?dir.toString():dir)))throw Object.assign(new Error('diagnostic denied'),{code:'EACCES'});return original.call(this,dir,...args);};
+    assert.throws(()=>fs.readdirSync(Buffer.from(data.LOGS_ROOT)),{code:'EACCES'});
     const inventory=data.getUserDataInventory();assert.equal(inventory.warnings.length,3);
     for(const id of ['logs','temp','emailDraftTemp']){const entry=inventory.roots.find(r=>r.id===id);assert.equal(entry.available,false);assert.equal(entry.fileCount,null);assert.equal(entry.bytes,null);assert.equal(entry.backupIncluded,false);}
     assert.ok(inventory.warnings.every(w=>w.code==='DIAGNOSTIC_INVENTORY_UNAVAILABLE'&&w.errorCode==='EACCES'&&w.message.tr&&w.message.en));
