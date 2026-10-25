@@ -10,6 +10,7 @@
   const SELECTOR='.bpaTileValue,.bdaKpiValue,.psaKpi strong,.cpaChip .n,.pricingMetric b,.blvTile .bpaTileValue,.ovPulseKpi b,.ovMetricSummary strong';
   const DURATION=650;
   const seen=new WeakMap();
+  const running=new WeakSet();
   const reduced=()=>root.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
   // "726.300", "%21,8", "$8,66", "515.200 adet" → sayı + biçim parçaları
@@ -28,15 +29,19 @@
     return p.prefix+i+(d?','+d:'')+p.suffix;
   }
   function animate(el){
+    if(running.has(el))return; // Motion+ and delayed tab hooks must never overlap.
     const original=el.textContent;
     if(seen.get(el)===original)return;
     seen.set(el,original);
     const p=parse(original.trim());if(!p)return;
+    running.add(el);
     const start=performance.now();let last=null;
     const frame=now=>{
-      if(last!==null&&el.textContent!==last)return; // modül yeniden çizdi: bırak
+      if((last===null&&el.textContent!==original)||(last!==null&&el.textContent!==last)){
+        running.delete(el);return; // modül yeniden çizdi: bırak
+      }
       const t=Math.min(1,(now-start)/DURATION),e=1-Math.pow(1-t,3);
-      if(t>=1){el.textContent=original;return;}
+      if(t>=1){el.textContent=original;running.delete(el);return;}
       last=format(p,p.value*e);el.textContent=last;
       root.requestAnimationFrame(frame);
     };
