@@ -48,7 +48,7 @@
   }
   function waveTable(view,token){
     if(!enabled()||token!==generation||lastWave===token)return 0;
-    const tables=Array.from(view.querySelectorAll('table')).filter(visible).slice(0,2);
+    const tables=Array.from(view.querySelectorAll('table')).slice(0,12).filter(visible).slice(0,2);
     let count=0;
     for(const table of tables){
       const tbody=table.tBodies?.[0]||table.querySelector('tbody');
@@ -60,7 +60,7 @@
           const cell=cells[col];
           if(cell.tagName!=='TD'||!visible(cell)||
              cell.matches('.blGridActiveCell,.blGridSelectedCell,.kolSpreadsheetActiveCell,.kolActiveGridCell,[aria-selected="true"],[contenteditable="true"]')||
-             cell.querySelector('input:focus,textarea:focus,select:focus,[contenteditable="true"]:focus'))continue;
+             cell.querySelector('input:focus,textarea:focus,select:focus,[contenteditable="true"]:focus')||cell.style?.backgroundColor||cell.style?.background)continue;
           // A brief tint travels from the top-left; no cell values or selection classes change.
           if(animate(cell,[
             {opacity:.72,backgroundColor:'var(--ui-selected)',transform:'translate3d(-2px,-1px,0)'},
@@ -73,7 +73,7 @@
     return count;
   }
   function enterCards(view){
-    const cards=Array.from(view.querySelectorAll(CARDS)).filter(visible).slice(0,16);
+    const cards=Array.from(view.querySelectorAll(CARDS)).slice(0,64).filter(visible).slice(0,16);
     if(!cards.length)return 0;
     const origin=cards.reduce((p,el)=>{const b=el.getBoundingClientRect();return {x:Math.min(p.x,b.left),y:Math.min(p.y,b.top)};},{x:Infinity,y:Infinity});
     for(const el of cards){
@@ -84,7 +84,7 @@
     return cards.length;
   }
   function enterCharts(view){
-    const bars=Array.from(view.querySelectorAll(BARS)).filter(visible).slice(0,14);
+    const bars=Array.from(view.querySelectorAll(BARS)).slice(0,56).filter(visible).slice(0,14);
     for(let i=0;i<bars.length;i++)animate(bars[i],[{opacity:.4,transform:'scaleX(.4)'},{opacity:1,transform:'scaleX(1)'}],{duration:duration('bar'),delay:i*19});
   }
   function enterPage(view){
