@@ -241,6 +241,16 @@ footer{padding:10px var(--ui-space-5) 26px;}
 .workspaceContextIdentity>span{white-space:nowrap;}
 .workspaceContextIdentity>strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .workspaceContextMeta{white-space:nowrap;}
+/* CP / Orders: align the summary line with the inset table controls, not the panel edge. */
+#view-cp .workspaceContextBar,
+#view-orders .workspaceContextBar{
+  padding-inline:calc(var(--ui-space-3) + var(--ui-space-2));
+}
+@media(max-width:760px){
+  #view-cp .workspaceContextBar,
+  #view-orders .workspaceContextBar{padding-inline:var(--ui-space-2);}
+}
+
 .toolbar.tableActionToolbar :is(button,label).tbtn[data-action-role="primary"]{min-height:var(--ui-control-height);}
 @media(max-width:900px){.workspaceContextBar{align-items:flex-start;flex-direction:column;gap:var(--ui-space-1);}.workspaceContextMeta{white-space:normal;}}
 .tableViewActions{display:flex;align-items:center;gap:var(--ui-space-1);min-width:0;white-space:nowrap;}
