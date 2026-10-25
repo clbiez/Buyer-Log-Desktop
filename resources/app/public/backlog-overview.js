@@ -184,8 +184,9 @@ function opener(spec){const id='o'+(++seq);openers.set(id,spec);return id}
 function tipHtml(title,lines,hint){return `<div class="bpaTipTitle">${esc(title)}</div>${lines.map(([k,v,stage])=>`<div class="bpaTipLine"><span>${esc(k)}</span><b${stage?` data-stage="${stage}" class="blvTipVal"`:''}>${esc(v)}</b></div>`).join('')}${hint?`<div class="bpaTipHint">${esc(hint)}</div>`:''}`}
 function stageLabel(key){return R().stageLabel(key,lang())}
 function ring(value){
-  const v=Math.max(0,Math.min(1,Number(value)||0));
-  return `<div class="uiMeasure" aria-hidden="true"><i style="transform:scaleX(${v})"></i></div>`;
+  // The Backlog completion measure is a chart, not a rounded UI control.
+  const v=Math.max(0,Math.min(1,Number(value)||0)),r=42,c=2*Math.PI*r;
+  return `<svg class="blvProgressRing" viewBox="0 0 100 100" data-blv-progress="${v.toFixed(6)}" aria-hidden="true"><circle class="bpaRingTrack" cx="50" cy="50" r="${r}"/><circle class="bpaRingValue" cx="50" cy="50" r="${r}" stroke-dasharray="${(c*v).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 50 50)"/></svg>`;
 }
 function hero(s){
   const st=s.stages;
@@ -527,6 +528,55 @@ function render(){
   host.innerHTML=hero(total)+specialStrip(total)+qualityStrip()+groupCard(total)+`<div class="blvGap"></div>`+flowCard();
   // Yeni DOM sıfır scrollLeft ile başlar; zaman eksenini mevcut döneme otomatik geri odakla.
   requestAnimationFrame(()=>scrollTimelineToToday('auto'));
+  requestAnimationFrame(()=>{
+    if(!visible())return;
+    replayOverviewMotion(host);
+    window.BLKpiMotion?.run(host);
+  });
+}
+
+
+/* Backlog-only replay: the Manifest disables CSS transitions globally.
+   Use one bounded animation frame loop for the gauge, KPIs and chart geometry.
+   Reduced-motion preference and hidden module both keep the final data in place. */
+let motionFrame=0;
+function replayOverviewMotion(host){
+  if(motionFrame){cancelAnimationFrame(motionFrame);motionFrame=0;}
+  if(!host||!host.isConnected||!visible()||window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;
+  const gauge=host.querySelector('.blvProgressRing');
+  const arc=gauge&&gauge.querySelector('.bpaRingValue');
+  const radius=42,circumference=2*Math.PI*radius;
+  const fraction=Math.max(0,Math.min(1,Number(gauge&&gauge.dataset.blvProgress)||0));
+  const full=`${(circumference*fraction).toFixed(2)} ${circumference.toFixed(2)}`;
+  const targets=[
+    ...[...host.querySelectorAll('.blvTile')].map(el=>({el,kind:'tile'})),
+    ...[...host.querySelectorAll('.bpaGroups .bpaBar')].map(el=>({el,kind:'bar'})),
+    ...[...host.querySelectorAll('.blvLogisticsTrack .bpaColBar,.blvLogisticsTrack .blvGroupBars,.blvBuyerTrack .blvBuyerBars')].map(el=>({el,kind:'chart'}))
+  ];
+  const start=performance.now();
+  function tick(now){
+    if(!host.isConnected){motionFrame=0;return;}
+    const elapsed=Math.max(0,now-start);
+    for(let i=0;i<targets.length;i++){
+      const {el,kind}=targets[i];
+      const phase=Math.max(0,Math.min(1,(elapsed-Math.min(i,12)*14)/320));
+      const eased=1-Math.pow(1-phase,3);
+      el.style.opacity=eased.toFixed(3);
+      el.style.transform=kind==='tile'
+        ? `translateY(${((1-eased)*6).toFixed(2)}px)`
+        : `${kind==='bar'?'scaleX':'scaleY'}(${Math.max(.001,eased).toFixed(3)})`;
+    }
+    if(arc){
+      const progress=Math.max(0,Math.min(1,elapsed/520));
+      const eased=1-Math.pow(1-progress,3);
+      arc.setAttribute('stroke-dasharray',`${(circumference*fraction*eased).toFixed(2)} ${circumference.toFixed(2)}`);
+    }
+    if(elapsed<550){motionFrame=requestAnimationFrame(tick);return;}
+    for(const {el} of targets){el.style.removeProperty('opacity');el.style.removeProperty('transform');}
+    if(arc)arc.setAttribute('stroke-dasharray',full);
+    motionFrame=0;
+  }
+  motionFrame=requestAnimationFrame(tick);
 }
 
 /* --------------------------------------------------------- tooltip/panel */
