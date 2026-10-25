@@ -26,6 +26,7 @@
  --ui-font-2xl:calc(30px + var(--ui-font-add));
  --ui-font-3xl:calc(36px + var(--ui-font-add));
  --ui-font-4xl:calc(44px + var(--ui-font-add));
+ --ui-feedback-tone:var(--ui-accent);--ui-feedback-surface:var(--ui-surface);
  --ui-radius:0;--ui-radius-avatar:50%;
  --ui-space-1:4px;--ui-space-2:8px;--ui-space-3:12px;--ui-space-4:16px;--ui-space-5:24px;--ui-space-6:32px;
  --ui-motion-fast:100ms;--ui-motion-enter:140ms;--ui-ease:cubic-bezier(.2,.7,.3,1);

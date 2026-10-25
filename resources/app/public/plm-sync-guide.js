@@ -73,7 +73,7 @@
     const browser=resolved.resolvedBrowser||(resolved.detected&&resolved.detected.browser)||status&&status.configuration&&status.configuration.preferredBrowser||'';
     return browser==='chrome'?'chrome://inspect/#devices':'edge://inspect/#devices';
   }
-  function closeExisting(){document.getElementById('_syncGuideOverlay')?.remove();}
+  function closeExisting(){const overlay=document.getElementById('_syncGuideOverlay');if(overlay){window.BLLayerSystem?.closeDialog(overlay);overlay.remove();}}
   function closeProgress({immediate=true}={}){
     if(!activeProgress)return;
     try{if(typeof activeProgress.close==='function')activeProgress.close({immediate});}catch(_){}
@@ -163,7 +163,7 @@
     const source=category==='asas'?'ASAS':'PLM';
     const overlay=document.createElement('div');
     overlay.id='_syncGuideOverlay';
-    overlay.className='warnOverlay blSyncGuideOverlay';
+    overlay.className='warnOverlay blSyncGuideOverlay';overlay.dataset.uiMigrated='operations';
     const steps=guideSteps(category,status).map(step=>'<article class="blSyncGuideStep"><div class="blSyncGuideStepNo">'+step.icon+'</div><div class="blSyncGuideStepCopy"><h3>'+esc(step.title)+'</h3><p>'+esc(step.body)+'</p>'+step.visual+'</div></article>').join('');
     overlay.innerHTML='<div class="modalCard blSyncGuideCard" role="dialog" aria-modal="true" aria-labelledby="_syncGuideTitle">'+
       '<div class="blSyncGuideHead"><div><span class="blSyncGuideEyebrow">'+source+' SYNC</span><h2 id="_syncGuideTitle">'+esc(blocking?t('Önce tarayıcı bağlantısını hazırlayın','Prepare the browser connection first'):t('Başlamadan önce 20 saniyelik rehber','A quick guide before you start'))+'</h2>'+
@@ -182,7 +182,7 @@
         '<button type="button" class="tbtn primary" data-syncguide-continue '+(!ready?'disabled':'')+'>'+esc(t('Anladım, devam et','Continue'))+'</button></div></div></div>';
     document.body.appendChild(overlay);
 
-    const close=()=>overlay.remove();
+    const close=()=>{window.BLLayerSystem?.closeDialog(overlay);overlay.remove();};
     overlay.querySelector('[data-syncguide-close]')?.addEventListener('click',close);
     overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
     overlay.querySelector('[data-syncguide-settings]')?.addEventListener('click',()=>{
@@ -214,7 +214,7 @@
       const entry=bypassEntry;bypassEntry=null;
       if(entry&&entry.isConnected){entry.dataset.syncGuideBypass='1';entry.click();}
     });
-    try{window.BLLayerSystem?.openDialog?.(overlay,{initialFocus:'[data-syncguide-continue]:not(:disabled),[data-syncguide-enable],[data-syncguide-settings]'});}catch(_){}
+    try{window.BLLayerSystem?.openDialog?.(overlay,{onClose:close,initialFocus:'[data-syncguide-continue]:not(:disabled),[data-syncguide-enable],[data-syncguide-settings]'});}catch(_){}
   }
 
   async function interceptEntry(event){

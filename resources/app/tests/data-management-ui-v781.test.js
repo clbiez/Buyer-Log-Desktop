@@ -89,9 +89,9 @@ test('v7.81 yetkisi olmayan kullanıcıya yazma denetimi çizilmez', () => {
 test('v7.81 ekran §4 görünmez <section> tuzağına düşmez', () => {
   /* app.css: `section{display:none}` bütün belgeye uygulanır. Kendisine
      display veren bir kural bulamayan her <section> SESSİZCE kaybolur. */
-  const shell = INDEX.match(/<section id="view-source">[\s\S]*?<\/section>/);
+  const shell = INDEX.match(/<section id="view-source"[^>]*>[\s\S]*?<\/section>/);
   assert.ok(shell, 'view-source bölümü yok');
-  assert.doesNotMatch(shell[0].replace(/^<section id="view-source">/, ''), /<section/,
+  assert.doesNotMatch(shell[0].replace(/^<section id="view-source"[^>]*>/, ''), /<section/,
     'iç içe <section> kullanılmış — kendisine display veren bir kural yoksa kaybolur');
 });
 
@@ -99,8 +99,9 @@ test('v7.81 modül stili yalnız token kullanır, yeni ton uydurmaz', () => {
   // DESIGN_SYSTEM.md: renk yalnız token'lardan gelir.
   const hex = CSS.match(/#[0-9a-fA-F]{3,8}\b/g) || [];
   assert.deepEqual(hex, [], `modül CSS'inde sabit renk var: ${hex.join(', ')}`);
-  assert.match(CSS, /var\(--acc\)/);
-  assert.match(CSS, /var\(--line\)/);
+  const shared=read('public/ui-components.css');
+  assert.match(shared, /\.dm[^}]*var\(--ui-accent\)/);
+  assert.doesNotMatch(CSS, /(?:background|color|border):/);
 });
 
 test('v7.81 ekran açılış kritik yolunda değil — lazy yüklenir', () => {
@@ -568,7 +569,8 @@ test('v7.81 araç satırı açılır menü DEĞİL — kırpılacak bir kapsayı
      Çözüm menüyü doğru konumlandırmak değil, menü KULLANMAMAK oldu. */
   assert.doesNotMatch(CSS, /\.dmToolList[^}]*position:\s*fixed/);
   assert.doesNotMatch(CSS, /\.dmToolList[^}]*position:\s*absolute/);
-  assert.match(CSS, /\.dmToolList \{[^}]*border:/);
+  assert.match(CSS, /\.dmToolList \{[^}]*list-style: none/);
+  assert.match(read('public/ui-components.css'), /\.dmToolList \{[^}]*border: ?0/);
 });
 
 /* ------------------------------------------------------------------ */

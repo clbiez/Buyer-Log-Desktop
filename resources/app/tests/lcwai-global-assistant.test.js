@@ -142,7 +142,7 @@ test('istemci: chat() NDJSON akışı, createConversation/continueConversation; 
 test('navigasyon: LCW AI bağımsız modül (sol menü + üst çubuk), lazy yüklenir, herkese açık', () => {
   const INDEX = read('public/index.html'), APP = read('public/app-main.js'), PERF = read('public/perf-runtime.js'), ACCESS = read('public/user-access-ui.js'), CHAT = read('public/lcwai-chat.js');
   assert.match(INDEX, /<button data-tab="lcwai"[^>]*><svg class="ic"><use href="#i-robot"\/><\/svg><span data-i18n-tr="LCW AI" data-i18n-en="LCW AI">/);
-  assert.match(INDEX, /<section id="view-lcwai">\s*<div class="lcwaiChatPage" id="lcwaiChatPage"/);
+  assert.match(INDEX, /<section id="view-lcwai"[^>]*>\s*<div class="lcwaiChatPage" id="lcwaiChatPage"/);
   assert.match(INDEX, /id="corporateConnections"/);
   assert.match(INDEX, /data-corporate-connection="lcwai"/);
   assert.doesNotMatch(INDEX, /id="lcwaiTopBtn"/);

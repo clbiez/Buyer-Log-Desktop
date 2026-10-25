@@ -1,0 +1,46 @@
+✔ Automations grouped CP-style selector script parses and is loaded with theme CSS (4.513804ms)
+✔ Selected report fields retain intentional order through recipe persistence and CSV export (1.93771ms)
+✔ Report field selection keeps 40-column limit and explicit automatic-selection fallback (0.382597ms)
+✔ v10.37 ortak katman denetleyicisi dinamik modül ve uygulama kodundan önce yüklenir (1.110494ms)
+✔ v10.37 menü ok, Home ve End tuşları etkin seçenekler arasında döner (0.1792ms)
+✔ v10.37 modal odağı içeride tutar, Escape ile kapanır ve çağıran denetime geri döner (0.293682ms)
+✔ v10.37 Kullanıcı Yönetimi penceresi başlığına bağlıdır ve ortak modal yaşam döngüsünü kullanır (0.244939ms)
+✔ v10.37 ortak tablo menüleri ve Collection sağ-tık menüsü aynı klavye sözleşmesini kullanır (0.902541ms)
+✔ v10.37 Collection dış-tıklama dinleyicisi menü içi etkileşimde kaybolmaz (0.408776ms)
+✔ v10.37 menü seçenekleri semantik, tek tab duraklı ve pasif seçenekleri atlar (0.272511ms)
+✔ v10.37 Escape yalnız en üst katmanı kapatır ve mevcut iş eylemlerini kendisi çalıştırmaz (0.152319ms)
+✔ v10.37 modal ve menü odak yüzeyi tasarım tokenlarını kullanır (0.29174ms)
+✔ Knowledge: formül, kural ve otomasyon bilgisi GERÇEK motorlardan türetilir (40.396459ms)
+✔ Knowledge: yalnız ilgili modüller dinamik seçilir, bütün dokümantasyon gönderilmez (1.027929ms)
+✔ sohbet prompt: ilk mesaj = sistem + global + modül + bağlam + mesaj; devam mesajı tekrar göndermez (3.274425ms)
+✔ motor.chat: yeni sohbet chatId=null; ikinci mesaj aynı chatId; modül bilgisi tekrar gitmez (34.651891ms)
+✔ motor.chat: ekler mesaja gider; token yoksa giriş gerekli; 401 sonrası yenilenip tekrar denenir (3.633767ms)
+✔ kota hatası LCW AI’ın kendi açıklamasını (temizlenmiş) taşır (0.400123ms)
+✔ Markdown: tablo/kod/liste görüntülenir; ham HTML, olay öznitelikleri ve javascript: bağlantıları etkisiz (1.435674ms)
+✔ istemci: chat() NDJSON akışı, createConversation/continueConversation; bağlam sağlayıcı kaydı (3.444121ms)
+✔ navigasyon: LCW AI bağımsız modül (sol menü + üst çubuk), lazy yüklenir, herkese açık (13.456623ms)
+✔ genel ve bağlama özel AI aynı motoru kullanır; bağlama özel alanlar duruyor (1.685761ms)
+✔ regresyon: LCW AI sayfasına yeniden girince sohbet tıklama dinleyicisi çoğalmaz (Bağlam Ekle iki kez aç-kapa yapmaz) (0.523318ms)
+✔ otomatik bağlam: mesajdaki ekran adı ilgili ekran verisini seçer; "orders" kelimesi tek başına Siparişler sayılmaz (2.829905ms)
+✔ boş ekran: girişsizken giriş yönlendirmesi, girişten sonra konu (ekran) seçimi (11.561777ms)
+✔ bağlam: varsayılan sayfa filtrelerinden bağımsız TÜM kayıtlar ve tüm sütunlar; filtreli/seçili isteğe bağlı (11.624552ms)
+✔ kullanıcı kurulumu tamamlandı sayfasını açar ve yalnız boş başlangıç sekmesini kapatır (5.474581ms)
+✔ arka plan (ensureEndpoint) açılışında tamamlandı sayfası gösterilmez (1.158647ms)
+✔ enable/restart rotaları tamamlandı sayfasını yalnız kullanıcı isteğinde ister (3.070248ms)
+✔ PLM rehberi tek tıkla Remote Debugging açar ve hemen doğrular (0.363928ms)
+✔ Küçük kontrol yüksekliği ana ölçekten türetilir ve arayüz boyutuyla büyür (0.981439ms)
+✔ Düğme L ve S tek yükseklik, tek yazı ölçüsü kullanır (1.09522ms)
+✔ Segment bileşenleri tek görünüm ve tek aktif durum paylaşır (0.328275ms)
+✔ Filtre çipi ve sayfa sekmesi ayrı, tutarlı iki dil kullanır (0.269506ms)
+✔ KPI etiket, değer ve alt satırı her modülde aynı tipografiyle çizilir (0.407664ms)
+✔ Sayfa başlığı üst çubukta bir kez yazılır (0.513494ms)
+✔ hidden özelliği taşıyan öğeyi sınıfının display değeri görünür bırakmaz (68.502124ms)
+✔ Manifest shared controls consume canonical UI tokens, not the temporary bridge (2.356462ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 232.855713

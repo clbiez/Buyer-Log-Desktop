@@ -1,0 +1,389 @@
+{
+  "screens": [
+    {
+      "name": "source-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 92,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automations-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 51,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lcwai-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 56,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lcwai-records-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 62,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "users-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 104,
+        "failures": [
+          {
+            "text": "1",
+            "id": "",
+            "cls": "",
+            "fg": "rgb(36, 85, 120)",
+            "bg": [
+              53,
+              106,
+              150,
+              1
+            ],
+            "ratio": 1.38
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "guide-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 107,
+        "failures": [
+          {
+            "text": "Araçlar: önce kapsam, sonra işlem",
+            "id": "",
+            "cls": "",
+            "fg": "rgb(255, 255, 255)",
+            "bg": [
+              234,
+              242,
+              248,
+              1
+            ],
+            "ratio": 1.13
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "release-notes-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 105,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "notifications-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 70,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "sync-guide-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 86,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lcwai-connection-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 69,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "source-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 91,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automations-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 50,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lcwai-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 61,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lcwai-records-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 61,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "users-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 103,
+        "failures": [
+          {
+            "text": "1",
+            "id": "",
+            "cls": "",
+            "fg": "rgb(35, 72, 101)",
+            "bg": [
+              49,
+              94,
+              131,
+              1
+            ],
+            "ratio": 1.4
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "guide-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 106,
+        "failures": [
+          {
+            "text": "Araçlar: önce kapsam, sonra işlem",
+            "id": "",
+            "cls": "",
+            "fg": "rgb(255, 255, 255)",
+            "bg": [
+              201,
+              217,
+              230,
+              1
+            ],
+            "ratio": 1.44
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "release-notes-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 104,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "notifications-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 70,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "sync-guide-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 86,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lcwai-connection-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 69,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "source-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 91,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automations-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 50,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lcwai-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 61,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lcwai-records-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 61,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "users-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 103,
+        "failures": [
+          {
+            "text": "1",
+            "id": "",
+            "cls": "",
+            "fg": "rgb(213, 234, 253)",
+            "bg": [
+              143,
+              191,
+              232,
+              1
+            ],
+            "ratio": 1.58
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "guide-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 106,
+        "failures": [
+          {
+            "text": "Araçlar: önce kapsam, sonra işlem",
+            "id": "",
+            "cls": "",
+            "fg": "rgb(20, 32, 42)",
+            "bg": [
+              41,
+              64,
+              86,
+              1
+            ],
+            "ratio": 1.55
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "release-notes-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 104,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "notifications-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 70,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "sync-guide-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 86,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lcwai-connection-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 69,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    }
+  ],
+  "errors": []
+}

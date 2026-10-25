@@ -123,3 +123,16 @@ test('Commercial module CSS owns layout only; charts use square marks',()=>{
  assert.deepEqual(failures,[]);
  for(const name of ['pricing-desk.js','price-supplier-analysis.js'])assert.doesNotMatch(read(name),/<circle\b|stroke-dasharray=/);
 });
+
+test('Operations module CSS owns layout only; loading avoids decorative canvas',()=>{
+ const modules=['automations-fields.css','data-maintenance.css','user-management.css','lcwai-assistant.css','plm-sync-guide.css','buyerlog-guide.css','data-management.css','release-notes.css'];
+ const failures=[];
+ for(const file of modules)for(const d of declarations(read(file))){
+  if(/^(?:color|accent-color|background(?:-.*)?|border(?!-collapse|-spacing)(?:-.*)?|box-shadow|text-shadow|font(?:-.*)?|letter-spacing|line-height|text-transform|fill|stroke(?:-.*)?|outline(?:-.*)?|animation(?:-.*)?|transition(?:-.*)?|filter|backdrop-filter|(?:-webkit-)?mask(?:-.*)?|z-index)$/.test(d.prop))failures.push({file,...d});
+  if(/var\(--(?:acc|card|ink|line|muted|fs-|sans|head|mono|r-)/.test(d.value))failures.push({file,...d});
+ }
+ assert.deepEqual(failures,[]);
+ assert.doesNotMatch(read('index.html'),/<script[^>]*thinking-orb-/);
+ for(const file of ['automations.js','lcwai-assistant.js','user-management.js','plm-sync-guide.js'])assert.match(read(file),/BLLayerSystem\?\.openDialog/);
+ assert.match(read('lcwai-chat.js'),/lcwaiMsg is-user[^]*?lcwaiMsgWho/);
+});

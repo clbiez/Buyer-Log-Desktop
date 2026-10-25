@@ -1,0 +1,312 @@
+{
+  "screens": [
+    {
+      "name": "data-inspector-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 108,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-automation-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 82,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "users-roles-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 202,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "users-bundles-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 101,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "users-templates-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 118,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "users-organization-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 118,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "users-copy-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 126,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "users-compare-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 100,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "users-transfer-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 103,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "users-history-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 97,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automation-create-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 79,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automation-settings-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 67,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automation-create-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 78,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automation-settings-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 66,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automation-create-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 78,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automation-settings-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 66,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automation-editor-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 73,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automation-columns-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 93,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lcwai-error-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 58,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "users-en-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 73,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    }
+  ],
+  "keyboard": [
+    {
+      "name": "users",
+      "controls": 11,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "automation-create-light",
+      "controls": 13,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "automation-settings-light",
+      "controls": 9,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "lcwai-connection-light",
+      "controls": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "notifications-light",
+      "controls": 6,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "automation-create-grey",
+      "controls": 13,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "automation-settings-grey",
+      "controls": 9,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "lcwai-connection-grey",
+      "controls": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "notifications-grey",
+      "controls": 6,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "automation-create-dark",
+      "controls": 13,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "automation-settings-dark",
+      "controls": 9,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "lcwai-connection-dark",
+      "controls": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "notifications-dark",
+      "controls": 6,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "automation-columns",
+      "controls": 22,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "users-en",
+      "controls": 11,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    }
+  ],
+  "errors": []
+}

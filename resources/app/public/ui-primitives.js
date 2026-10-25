@@ -202,7 +202,7 @@
     return close;
   }
 
-  /* Thinking Orb işaretlemesi — durum: idle | thinking | warn | done. */
+  /* Ortak durum işareti — eski orbHtml kancası korunur. */
   function orbHtml(state='idle',size=''){
     const kind=['idle','thinking','warn','done'].includes(state)?state:'idle';
     return `<span class="blOrb${size?` blOrb--${escapeHtml(size)}`:''}" data-state="${kind}" aria-hidden="true"></span>`;

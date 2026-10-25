@@ -9,6 +9,7 @@ const read=p=>fs.readFileSync(path.join(ROOT,p),'utf8');
 const JS=read('public/release-notes.js');
 const CSS=read('public/release-notes.css');
 const HTML=read('public/index.html');
+const SHARED=read('public/ui-components.css');
 const NEXT=JSON.parse(read('public/release-notes/next.json'));
 const CLAUDE=fs.readFileSync(path.join(ROOT,'..','..','CLAUDE.md'),'utf8');
 const AGENTS=fs.readFileSync(path.join(ROOT,'..','..','AGENTS.md'),'utf8');
@@ -25,7 +26,7 @@ test('visual release notes runtime is syntactically valid and loaded by shell',(
 test('release archive reuses Buyer Log guide and trivia component language',()=>{
   assert.match(CSS,/\.blRnCard\{display:grid/);
   assert.match(CSS,/\.blTriviaProgress/);
-  assert.match(CSS,/var\(--acc\)/);
+  assert.match(SHARED,/\.blRn[^}]*var\(--ui-accent\)/);
   assert.equal((CSS.match(/#[0-9a-fA-F]{3,8}\b/g)||[]).length,0);
 });
 
@@ -53,7 +54,7 @@ test('release cards always expose readable copy, zoomable visuals and explicit n
   assert.match(JS,/data-rn-zoom/);
   assert.match(JS,/openVisual\(/);
   assert.match(JS,/blRnNavBtn--next/);
-  assert.match(CSS,/\.blRnCopy\{[^}]*background:var\(--card\)/);
+  assert.match(SHARED,/\.blRnCopy \{[^}]*background:var\(--ui-surface\)/);
   assert.match(CSS,/\.blRnLightbox\{/);
   assert.match(CSS,/\.blRnZoomHint\{/);
   assert.match(CSS,/\.blRnNavBtn\{/);

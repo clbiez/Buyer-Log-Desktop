@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-25",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Manifest: planlama ve ticari modüller",
-    "en": "Manifest: planning and commercial modules"
+    "tr": "Manifest: planlama, ticari ve operasyon ekranları",
+    "en": "Manifest: planning, commercial and operations screens"
   },
   "summary": {
-    "tr": "Manifest; Genel Bakış, CP, planlama ve ticari ekranlarda ortak kontroller, tablolar ve tipografi sunar. Mevcut CP veri bütünlüğü iyileştirmeleri korunur.",
-    "en": "Manifest brings shared controls, tables and typography to Overview, CP, planning and commercial screens. Existing CP data integrity improvements are retained."
+    "tr": "Manifest ortak kontrolleri, tabloları ve tipografisi operasyon ve ayar ekranlarına genişledi. Mevcut CP veri bütünlüğü iyileştirmeleri korunur.",
+    "en": "Manifest shared controls, tables and typography extend to operations and settings. Existing CP data integrity improvements are retained."
   },
   "changes": [
     {
@@ -1603,6 +1603,238 @@
         "caption": {
           "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
           "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-data-management",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Veri kaynakları ve denetim aşamalarında Manifest",
+        "en": "Manifest for data sources and inspection stages"
+      },
+      "body": {
+        "tr": "Kaynaklar, laboratuvar sekmeleri ve veri denetçisi ortak yüzey, tipografi ve alanları kullanır. Denetim adımları numaralı bir akışla ayrılır. Bağlantı ve veri işleme yolları korunur.",
+        "en": "Sources, lab tabs and the data inspector share surfaces, typography and fields. Inspection steps use a numbered flow. Connection and data processing paths are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-data-management.png",
+        "alt": {
+          "tr": "Veri kaynakları ve denetim aşamalarında Manifest — anonim veriyle gerçek Buyer Log",
+          "en": "Manifest for data sources and inspection stages — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-users",
+      "type": "improvement",
+      "module": {
+        "tr": "Kullanıcılar",
+        "en": "Users"
+      },
+      "title": {
+        "tr": "Kullanıcı ve yetki tablolarında ortak düzen",
+        "en": "Shared layout for users and permissions"
+      },
+      "body": {
+        "tr": "Kullanıcılar, roller ve çalışma alanı ayarları aynı tablo, sekme ve pencere diline taşındı. Pencere içinde Tab dolaşımı ve Esc ile kapanış ortak katman sisteminden gelir.",
+        "en": "Users, roles and workspace settings share tables, tabs and dialogs. Tab containment and Escape closing use the shared layer system."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-users.png",
+        "alt": {
+          "tr": "Kullanıcı ve yetki tablolarında ortak düzen — anonim veriyle gerçek Buyer Log",
+          "en": "Shared layout for users and permissions — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-automations",
+      "type": "improvement",
+      "module": {
+        "tr": "Otomasyonlar",
+        "en": "Automations"
+      },
+      "title": {
+        "tr": "Numaralı otomasyon kataloğu ve tutarlı düzenleyici",
+        "en": "Numbered automation catalogue and consistent editor"
+      },
+      "body": {
+        "tr": "Şablonlar numaralı katalog düzeninde sunulur. Oluşturma, ayarlar ve rapor sütunu pencereleri ortak kontrolleri ve klavye davranışını kullanır; çalıştırma ve kaydetme yolları korunur.",
+        "en": "Templates use a numbered catalogue. Creation, settings and report column dialogs share controls and keyboard behavior; execution and save paths are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-automations.png",
+        "alt": {
+          "tr": "Numaralı otomasyon kataloğu ve tutarlı düzenleyici — anonim veriyle gerçek Buyer Log",
+          "en": "Numbered automation catalogue and consistent editor — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-lcwai",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI aynı ürün dilinde bir çalışma kaydı",
+        "en": "LCW AI uses the same product language"
+      },
+      "body": {
+        "tr": "Mesajlar yazarı belirli, aynı hizada kayıtlar olarak gösterilir. Sohbet balonları ve yıldız işaretleri kaldırıldı; giriş ve yardımcı pencereleri ortak kontrolleri kullanır. Tek LCW AI motoru ve gönderim yolu korunur.",
+        "en": "Messages appear as aligned records with named authors. Chat bubbles and star ornaments are removed; sign-in and assistant dialogs share controls. The single LCW AI engine and send path are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-lcwai.png",
+        "alt": {
+          "tr": "LCW AI aynı ürün dilinde bir çalışma kaydı — anonim veriyle gerçek Buyer Log",
+          "en": "LCW AI uses the same product language — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-guide",
+      "type": "improvement",
+      "module": {
+        "tr": "Rehber",
+        "en": "Guide"
+      },
+      "title": {
+        "tr": "Rehberde ortak tipografi ve seçili durum",
+        "en": "Shared typography and selected states in the guide"
+      },
+      "body": {
+        "tr": "Rehberin gezinmesi, adımları ve işlevsel diyagramları Manifest sistemine taşındı. Seçili başlıklar üç temada okunur; mevcut arama ve ekrana git eylemleri korunur.",
+        "en": "Guide navigation, steps and functional diagrams use Manifest. Selected titles are readable in all three themes; search and screen navigation actions are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-guide.png",
+        "alt": {
+          "tr": "Rehberde ortak tipografi ve seçili durum — anonim veriyle gerçek Buyer Log",
+          "en": "Shared typography and selected states in the guide — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-sync-guide",
+      "type": "improvement",
+      "module": {
+        "tr": "PLM / ASAS",
+        "en": "PLM / ASAS"
+      },
+      "title": {
+        "tr": "Tarayıcı bağlantı rehberinde ortak durum dili",
+        "en": "Shared status language in the browser connection guide"
+      },
+      "body": {
+        "tr": "Tarayıcı bağlantı durumu, numaralı adımlar ve kurulum kontrolleri ortak sistemle gösterilir. Pencere klavye odağını korur; bağlantı açma ve doğrulama işlemleri değişmedi.",
+        "en": "Browser connection status, numbered steps and setup controls share the design system. The dialog contains keyboard focus; connection and verification behavior is unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-sync-guide.png",
+        "alt": {
+          "tr": "Tarayıcı bağlantı rehberinde ortak durum dili — anonim veriyle gerçek Buyer Log",
+          "en": "Shared status language in the browser connection guide — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-release-notes",
+      "type": "improvement",
+      "module": {
+        "tr": "Sürüm Notları",
+        "en": "Release Notes"
+      },
+      "title": {
+        "tr": "Sürüm arşivi Manifest görünümünde",
+        "en": "Release archive in Manifest"
+      },
+      "body": {
+        "tr": "Sürüm listesi, açıklamalar ve görsel büyütme ortak yüzey ve tipografiyi kullanır. Arşiv sırası, görülme kaydı ve geçmiş sürümlerin gerçek ekran görüntüleri korunur.",
+        "en": "The release list, descriptions and image zoom share surfaces and typography. Archive order, seen tracking and historical screenshots are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-release-notes.png",
+        "alt": {
+          "tr": "Sürüm arşivi Manifest görünümünde — anonim veriyle gerçek Buyer Log",
+          "en": "Release archive in Manifest — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-feedback",
+      "type": "improvement",
+      "module": {
+        "tr": "Bildirimler",
+        "en": "Notifications"
+      },
+      "title": {
+        "tr": "Bildirim ve yükleme durumlarında ortak işaretler",
+        "en": "Shared markers for notifications and loading states"
+      },
+      "body": {
+        "tr": "Bildirim geçmişi ortak pencere ve arama alanını kullanır; Tab ve Esc erişimi korunur. Yükleme küreleri yerine durum metnine eşlik eden sabit kare işaret kullanılır; arka planda süren küre animasyonu kaldırıldı.",
+        "en": "Notification history shares dialog and search controls with Tab and Escape access. Loading uses a static square beside status text; background orb animation is removed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-feedback.png",
+        "alt": {
+          "tr": "Bildirim ve yükleme durumlarında ortak işaretler — anonim veriyle gerçek Buyer Log",
+          "en": "Shared markers for notifications and loading states — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
         }
       }
     }

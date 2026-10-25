@@ -13,7 +13,7 @@ function block(start,end){
   return APP.slice(a,b);
 }
 
-test('core page loading states use the shared Thinking Orb loader',()=>{
+test('core page loading states use the shared status marker loader',()=>{
   const helper=block('function renderCorePageLoadingState','function ensureUnifiedPrioritiesForTable');
   assert.match(helper,/BLUI\.renderState\(empty,\{kind:'loading',title\}\)/);
   assert.match(helper,/class="uiStateSpinner blOrb uiStateOrb" data-state="thinking"/);
@@ -31,8 +31,8 @@ test('Orders failure stops the loading animation and renders an error state',()=
   assert.match(orders,/setOrdersLoadingState\(false,message\)/);
 });
 
-test('Data Management first paint uses the same Thinking Orb visual',()=>{
-  const start=INDEX.indexOf('<section id="view-source">');
+test('Data Management first paint uses the same status marker visual',()=>{
+  const start=INDEX.indexOf('<section id="view-source"');
   const end=INDEX.indexOf('</section>',start);
   const source=INDEX.slice(start,end);
   assert.match(source,/dataMgmtBooting empty/);

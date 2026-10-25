@@ -1,0 +1,86 @@
+{
+  "environment": "Chromium 154 / Node 24.19 / Linux; fixed synthetic seed 7, 220 source / 191 CP rows. Fresh helper; no Collection or quotations fixture persisted.",
+  "baseline": {
+    "startupMs": 1020.1000000000349,
+    "cpNavigationMs": 975.4000000000233,
+    "cp5000RenderMs": 2995.9000000000233,
+    "domRows": [
+      50,
+      50,
+      50,
+      50,
+      50
+    ]
+  },
+  "commercial": {
+    "startupMs": 931.9000000003725,
+    "cpNavigationMs": 1063.9000000003725,
+    "cp5000RenderMs": 3022.800000000745,
+    "domRows": [
+      50,
+      50,
+      50,
+      50,
+      50
+    ]
+  },
+  "operations": {
+    "startupMs": 968.7999999988824,
+    "cpNavigationMs": 1046.8999999985099,
+    "cp5000RenderMs": 3022.4000000003725,
+    "domRows": [
+      50,
+      50,
+      50,
+      50,
+      50
+    ]
+  },
+  "deltaVsBaseline": {
+    "startupMs": {
+      "ms": -51.3,
+      "percent": -5.0
+    },
+    "cpNavigationMs": {
+      "ms": 71.5,
+      "percent": 7.3
+    },
+    "cp5000RenderMs": {
+      "ms": 26.5,
+      "percent": 0.9
+    }
+  },
+  "hiddenFeatures": [
+    [
+      "lfl",
+      false
+    ],
+    [
+      "openCosting",
+      false
+    ],
+    [
+      "manufacturers",
+      false
+    ],
+    [
+      "licensecards",
+      false
+    ],
+    [
+      "automations",
+      false
+    ]
+  ],
+  "initialTables": [
+    {
+      "id": "cpTable",
+      "rows": 0
+    },
+    {
+      "id": "ordersTable",
+      "rows": 0
+    }
+  ],
+  "limits": "Five contexts on a warm local server, not cold disk, Electron, Windows or a guarantee of universal speed. Final project measurement still required."
+}

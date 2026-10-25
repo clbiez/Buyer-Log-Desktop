@@ -32,13 +32,12 @@ test('breathing orb geometrisi upstream golden vektörleriyle eşleşir',()=>{
 });
 
 
-test('bekleme uyarıları eski mavi küre yerine Thinking canvas ile yükseltilir',()=>{
-  assert.match(ORB_SRC,/\.blOrb\[data-state="thinking"\]/);
-  assert.match(ORB_SRC,/querySelectorAll\('\.blOrb\[data-state="thinking"\]'\)/);
-  assert.match(ORB_SRC,/className='blOrbCanvas'/);
-  assert.match(EXP,/\.blOrb\[data-state="thinking"\]\.blOrb--thinkingCanvas\{/);
-  assert.match(EXP,/\.blOrb--thinkingCanvas \.blOrbCanvas\{/);
-  assert.match(INDEX,/thinking-orb-breathing\.js\?v=__BL_ASSET_VERSION__&rev=2/);
+test('waiting notices use the shared square marker without eager canvas observers',()=>{
+  const shared=fs.readFileSync(path.join(ROOT,'public','ui-components.css'),'utf8');
+  assert.doesNotMatch(INDEX,/<script[^>]*thinking-orb-/);
+  assert.match(shared,/\.blOrb \{[^}]*background:var\(--ui-accent\)[^}]*animation:none/);
+  assert.match(shared,/\.blOrb\[data-state="warn"\]/);
+  assert.match(shared,/\.blOrb\[data-state="done"\]/);
 });
 
 test('inline Thinking orb 20px upstream presetini kullanır',()=>{

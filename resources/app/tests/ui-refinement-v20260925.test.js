@@ -45,12 +45,13 @@ test('Her modülün kendine ait simgesi var; üç analiz modülü aynı grafiği
   assert.match(INDEX, /fill:var\(--ic-tint,currentColor\)/);
 });
 
-test('Thinking Orb bileşeni durum değerini doğrular ve yükleme durumunda kullanılır', () => {
+test('Ortak durum işareti eski kancaları doğrular ve yükleme durumunda kullanılır', () => {
   assert.match(UI.orbHtml('thinking'), /class="blOrb" data-state="thinking"/);
   assert.match(UI.orbHtml('bogus', 'lg'), /class="blOrb blOrb--lg" data-state="idle"/);
   assert.match(UI.stateView({ kind: 'loading', title: 'x' }), /blOrb uiStateOrb/);
-  assert.match(EXP, /@property --orb-angle/);
-  assert.match(EXP, /@media\(prefers-reduced-motion:reduce\)\{\.blOrb,\.blOrb::after\{animation:none!important;\}\}/);
+  const shared=read('public/ui-components.css');
+  assert.doesNotMatch(EXP, /@property --orb-angle|@keyframes blOrb/);
+  assert.match(shared, /@media\(prefers-reduced-motion:reduce\)\{[^}]*\.blOrb::after\{animation:none!important;transition:none!important/);
 });
 
 test('Teslimat riski analizi bölümleri açılır/kapanır ve tercih saklanır', () => {

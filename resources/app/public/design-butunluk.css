@@ -226,25 +226,19 @@ body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
    kullanıcıya burada sorulur. Uyarı rengi bilinçli: gözden kaçmamalı. */
 .autoPendingBanner{margin:0 0 12px;}
 .autoPendingCard{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;
-  flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line2);
-  background:var(--orange);border-radius:var(--r-sm);}
-.autoPendingCard b{display:block;font-size:var(--fs-base);}
-.autoPendingCard small{display:block;margin-top:2px;font-size:var(--fs-xs);opacity:.8;}
-.autoPendingCard ul{margin:8px 0 0;padding-left:18px;font-size:var(--fs-sm);line-height:1.7;}
+  flex-wrap:wrap;padding:12px 14px;}
+.autoPendingCard b{display:block;}
+.autoPendingCard small{display:block;margin-top:2px;opacity:.8;}
+.autoPendingCard ul{margin:8px 0 0;padding-left:18px;}
 .autoPendingActions{display:flex;gap:8px;align-items:center;flex-shrink:0;}
 
 /* v6.37 — Otomasyon panosu: durum sayıları ve zenginleşen tarif kartları. */
 .autoStatChips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px;}
-.autoStatChip{display:inline-flex;align-items:baseline;gap:6px;padding:5px 11px;
-  border:1px solid var(--line2);font-size:var(--fs-xs);background:var(--card2);}
-.autoStatChip b{font-size:var(--fs-md);font-weight:700;}
-.autoStatChip.isWarn{border-color:var(--red,#b4433a);color:var(--red,#b4433a);}
-.autoRecipeSummary{display:block;margin-top:4px;font-size:var(--fs-xs);line-height:1.5;
-  opacity:.78;text-decoration:none;}
+.autoStatChip{display:inline-flex;align-items:baseline;gap:6px;padding:5px 11px;}
+.autoRecipeSummary{display:block;margin-top:4px;
+  opacity:.78;}
 .autoRecipeMeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px;}
-.autoRecipeRun,.autoRecipeNext{font-style:normal;font-size:var(--fs-2xs);padding:1px 6px;
-  border:1px solid var(--line2);opacity:.85;}
-.autoRecipeRun.failed{border-color:var(--red,#b4433a);color:var(--red,#b4433a);}
+.autoRecipeRun,.autoRecipeNext{padding:1px 6px;opacity:.85;}
 .autoRecipeRun.none{opacity:.55;}
 .autoPurposeCard.isLocked{opacity:.55;cursor:not-allowed;}
 
@@ -274,22 +268,17 @@ body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
 .imageDeleteConfirmPopover .imageDeleteConfirmActions{flex-wrap:wrap;}
 
 /* v6.41 — Yerleşik web betikleri düzenleyicisi. */
-.autoWebScriptsBtn{margin-left:auto;height:24px;padding:0 10px;font-size:var(--fs-xs);}
+.autoWebScriptsBtn{margin-left:auto;height:24px;padding:0 10px;}
 .autoWebScriptLayout{display:grid;grid-template-columns:minmax(200px,240px) minmax(0,1fr);
   gap:14px;padding:14px;align-items:start;}
 .autoWebScriptList{display:grid;gap:6px;align-content:start;}
-.autoWebScriptItem{display:grid;gap:2px;text-align:left;padding:8px 10px;
-  border:1px solid var(--line2);background:transparent;cursor:pointer;}
-.autoWebScriptItem.active{border-color:var(--acc,#5980a6);background:var(--acc-bg,rgba(89,128,166,.08));}
-.autoWebScriptItem b{font-size:var(--fs-sm);}
-.autoWebScriptItem small{font-size:var(--fs-2xs);opacity:.72;}
+.autoWebScriptItem{display:grid;gap:2px;text-align:left;padding:8px 10px;cursor:pointer;}
+.autoWebScriptItem small{opacity:.72;}
 .autoWebScriptEditor{display:grid;gap:9px;min-width:0;}
-.autoWebScriptHead b{display:block;font-size:var(--fs-base);}
-.autoWebScriptHead small{display:block;margin-top:3px;font-size:var(--fs-xs);opacity:.8;line-height:1.5;}
+.autoWebScriptHead b{display:block;}
+.autoWebScriptHead small{display:block;margin-top:3px;opacity:.8;}
 .autoWebScriptActions{display:flex;gap:8px;justify-content:flex-end;}
-.autoWebScriptStatus{min-height:16px;font-size:var(--fs-xs);}
-.autoWebScriptStatus.isOk{color:var(--green,#3f7d55);}
-.autoWebScriptStatus.isError{color:var(--red,#b4433a);}
+.autoWebScriptStatus{min-height:16px;}
 
 /* v7.81 — sürükle-kopyala tutamacı kaldırıldı (kullanıcı talebi).
    position:relative korunuyor: hücrenin konumlandırma bağlamını

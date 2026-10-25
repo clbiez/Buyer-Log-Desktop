@@ -1,0 +1,10 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),{inspect,contrast}=require('./runtime-probe.cjs');
+(async()=>{const out=path.resolve('docs/ai/ui-rebuild/phase-2-operations/language');fs.mkdirSync(out,{recursive:true});const {browser,context,page,tab}=await require('./operations-fixture.cjs')();const screens=[];
+ const shot=async name=>{await page.waitForTimeout(400);await page.mouse.move(0,0);await page.screenshot({path:path.join(out,name+'.png')});screens.push({name,...await page.evaluate(inspect),contrast:await page.evaluate(contrast),language:await page.evaluate(()=>document.documentElement.lang)});};
+ await page.evaluate(()=>{applyLanguage('en');applyUiFontStep(2);});await page.setViewportSize({width:1280,height:720});
+ await tab('automations');await page.locator('[data-auto-new]').click();await shot('automation-create-en-1280-xl');await page.keyboard.press('Escape');
+ await tab('lcwai');await shot('lcwai-en-1280-xl');const note=await page.locator('.lcwaiChatSide > .lcwaiNote').innerText();if(note!=='Chat history is kept for this user on this device.')throw Error('LCW AI history note did not translate exactly: '+note);
+ await page.evaluate(()=>applyUiFontStep(0));await page.setViewportSize({width:1440,height:900});await page.evaluate(()=>BLUserManagement.open());await page.waitForTimeout(500);await shot('users-en-light');
+ fs.writeFileSync(path.join(out,'capture.json'),JSON.stringify({screens,historyNote:note},null,2)+'\n');console.log(JSON.stringify(screens.filter(s=>s.failures.length||s.contrast.failures.length||s.overflow)));await context.close();await browser.close();
+})().catch(e=>{console.error(e.stack);process.exit(1);});

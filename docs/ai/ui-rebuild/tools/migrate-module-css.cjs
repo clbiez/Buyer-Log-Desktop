@@ -11,11 +11,16 @@ const alias={paper:'canvas','rail-bg':'rail',card:'surface',card2:'surface-soft'
 Object.assign(alias,{seg:'series-color',tile:'metric-color','series-color':'series-color',hover:'row-hover','table-row-h':'table-row-height','table-group-head-h':'table-group-height','table-head-pad-y':'table-head-padding','table-cell-pad-y':'table-cell-padding'});
 for(const size of ['2xs','xs','sm','base','md','lg','xl','2xl','3xl','4xl'])alias['fs-'+size]='font-'+size;
 for(const [old,token] of Object.entries({'blv-SHORTAGE':'danger','blv-PRODUCTION':'accent','blv-LOADING':'warning','blv-IN_TRANSIT':'chart-4','blv-CUSTOMS':'chart-5','blv-AWAITING_RETAIL_TRANSFER':'chart-3','blv-IN_WAREHOUSE':'success','blv-UNKNOWN':'text-muted','bpa-overdue':'danger','bpa-late':'warning','bpa-undated':'chart-5','bpa-pending':'accent','bpa-onTime':'success','bpa-removed':'text-muted'}))alias[old]=token;
-if(group==='commercial'){
+if(group!=='plan-execute'){
  modules=['collection-spreadsheet.css','collection-analytics.css','pricing-desk.css','pricing-workspace.css','price-supplier-analysis.css','manufacturers.css','license-cards.css','lfl.css','open-costing.css'];
  owned=/(?:[.#](?:kol\w*|collection\w*|pricing\w*|quotation\w*|qh\w*|pd[A-Z]\w*|psa\w*|mfp\w*|lc[A-Z]\w*|lfl\w*|oc[A-Z]\w*|view-koleksiyon|view-quotations|view-pricinghistory|view-priceanalysis|view-manufacturers|view-licensecards|view-lfl|view-opencosting))\b/;
  Object.assign(alias,{'acc-lite':'accent','control-sm':'control-height','sp-1':'space-1','sp-6':'space-6',hair:'row-divider','bl-motion-standard':'motion-enter','navy-deep':'text','shadow-1':'shadow-overlay','thead-line':'group-divider',blue:'accent',error:'danger',info:'accent',primary:'accent','on-primary':'on-accent','row-hover':'row-hover',success:'success',warning:'warning',line3:'group-divider','table-editBg':'selected','kol-cell-fs':'font-xs',ap:'series-color','topbar-h':'topbar-height','bl-surface-panel':'surface','bl-surface-soft':'surface-soft'});
  for(let i=1;i<=8;i++)alias['chart-'+i]='chart-'+i;
+}
+if(group==='operations'){
+ modules=['automations-fields.css','data-maintenance.css','user-management.css','lcwai-assistant.css','plm-sync-guide.css','buyerlog-guide.css','data-management.css','release-notes.css'];
+ owned=/(?:[.#](?:auto\w*|automation\w*|ao[A-Z]\w*|dm[A-Z]\w*|dataMgmt\w*|blDataMaint\w*|source[A-Z]\w*|sourceTables|sourceTable|um[A-Z]\w*|lcwai\w*|blGuide\w*|blTrivia\w*|blRn\w*|plmGuide\w*|plmSyncGuide\w*|verHist\w*|versionHistory\w*|notification\w*|syncStatus\w*|uiState\w*|uiFeedback\w*|blOrb\w*|toast\w*|view-source|view-automations|view-lcwai))\b/;
+ Object.assign(alias,{'shadow-lg':'shadow-overlay',tone:'series-color'});
 }
 const appearance=/^(?:color|accent-color|background(?:-.*)?|border(?!-collapse|-spacing)(?:-.*)?|box-shadow|text-shadow|font(?:-.*)?|letter-spacing|line-height|text-transform|text-decoration|fill|stroke(?:-.*)?|outline(?:-.*)?|animation(?:-.*)?|transition(?:-.*)?|filter|backdrop-filter|(?:-webkit-)?mask(?:-.*)?|z-index)$/;
 const source=f=>cp.execFileSync('git',['show',base+':resources/app/public/'+f],{encoding:'utf8'});
@@ -23,7 +28,7 @@ const components=postcss.root(),stats=[];
 function mapValue(value){return value.replace(/var\(--([\w-]+)/g,(m,k)=>alias[k]?'var(--ui-'+alias[k]:m);}
 function convert(d,selector){
  const p=d.prop;let v=mapValue(d.value);
- if(p.startsWith('--')){if(['--seg','--tile','--series-color','--ap'].includes(p))return {prop:'--ui-'+alias[p.slice(2)],value:v};if(alias[p.slice(2)])return null;return {prop:p,value:v};}
+ if(p.startsWith('--')){if(['--seg','--tile','--series-color','--ap','--tone'].includes(p))return {prop:'--ui-'+alias[p.slice(2)],value:v};if(alias[p.slice(2)])return null;return {prop:p,value:v};}
  if(/radius$/.test(p))v='var(--ui-radius)';
  else if(/^border/.test(p)){
   // Borders are supplied once by the common dense-table/focus contracts.
@@ -41,6 +46,8 @@ function convert(d,selector){
  if(p==='z-index'&&selector==='.blDetailDrawerSubbar')v='var(--ui-z-raised)';
  if(p==='z-index'&&selector==='.cpaModalOverlay')v='var(--ui-z-modal)';
  if(p==='z-index'&&selector==='.cpaValueMenu')v='var(--ui-z-modal-menu)';
+ if(group==='operations'&&selector.includes('.umAvatar')&&['background','color'].includes(p))v=p==='color'?'var(--ui-text-secondary)':'var(--ui-surface-strong)';
+ if(p.startsWith('animation')&&p!=='animation')return null;
  if(p==='font-size'&&/^\d+(?:\.\d+)?px$/.test(v))v='calc('+v+' + var(--ui-font-add))';
  v=v.replace(/var\(--r-[\w-]+\)/g,'var(--ui-radius)').replace(/var\(--pop-blur\)/g,'none').replace(/var\(--focus-ring\)/g,'none');
  if(/#[0-9a-f]{3,8}\b/i.test(v)){
@@ -59,7 +66,7 @@ function migrate(file,all){
   const other=selectors.filter(s=>!selected.includes(s));
   const layout=rule.clone({selector:selected.join(',')}),visual=postcss.rule({selector:selected.map(s=>/^html\b/.test(s)?s.replace(/^html\b/,'html[data-ui-system="manifest"]'):s.startsWith(':root')?s.replace(':root',':root[data-ui-system="manifest"]'):'html[data-ui-system="manifest"] '+s).join(',')});layout.removeAll();
   for(const d of rule.nodes){if(d.type!=='decl'){layout.append(d.clone());continue;}
-   const move=appearance.test(d.prop)||d.prop.startsWith('--')&&(/(?:blv-|bpa-)/.test(d.prop)||/color|var\(--(?:seg|tile|blv-|bpa-)/.test(d.value)||['--seg','--tile','--ap'].includes(d.prop));
+   const move=appearance.test(d.prop)||group==='operations'&&d.prop.startsWith('--ui-feedback-')||d.prop.startsWith('--')&&(/(?:blv-|bpa-)/.test(d.prop)||/color|var\(--(?:seg|tile|blv-|bpa-)/.test(d.value)||['--seg','--tile','--ap','--tone'].includes(d.prop));
    if(move){const next=convert(d,rule.selector);if(next){const n=d.clone(next);n.important=/^(?:border|background|color|font|box-shadow|animation|filter)/.test(n.prop);visual.append(n);}count.declarations++;}
    else {const n=d.clone();n.value=mapValue(n.value);layout.append(n);}
   }

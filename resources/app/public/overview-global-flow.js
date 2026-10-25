@@ -1226,21 +1226,15 @@ function renderMeta(){
 function ensureLoadingOverlay(){
   const wrap=$('globalFlowCanvasWrap');if(!wrap)return null;let overlay=$('globalFlowLoadingOverlay');if(overlay)return overlay;
   overlay=document.createElement('div');overlay.id='globalFlowLoadingOverlay';overlay.className='globalFlowLoadingOverlay';
-  overlay.innerHTML='<div class="gfWorkingCard"><canvas id="globalFlowWorkingOrb" width="64" height="64" aria-hidden="true"></canvas><b>'+esc(L('Harita hazırlanıyor','Preparing map'))+'</b><span>'+esc(L('Sevkiyatlar ve coğrafi katmanlar eşleştiriliyor…','Matching shipments and geographic layers…'))+'</span></div>';
+  overlay.innerHTML='<div class="gfWorkingCard"><i id="globalFlowWorkingOrb" class="blOrb" data-state="thinking" aria-hidden="true"></i><b>'+esc(L('Harita hazırlanıyor','Preparing map'))+'</b><span>'+esc(L('Sevkiyatlar ve coğrafi katmanlar eşleştiriliyor…','Matching shipments and geographic layers…'))+'</span></div>';
   wrap.appendChild(overlay);
   return overlay;
 }
-/* Yükleme küresi yalnız katman görünürken çalışır. Eskiden bir kez başlatılıp
-   hiç durdurulmuyordu: harita hazır olduktan sonra da her karede yerleşim
-   ölçümü (getBoundingClientRect) yaparak bütün uygulamayı yavaşlatıyordu. */
+/* A static square marker shares the global loading contract. No canvas loop
+   or layout measurement continues after the overlay is hidden. */
 function syncLoadingOrb(busy){
-  if(busy&&!state.orbHandle){
-    const canvas=$('globalFlowWorkingOrb');
-    if(window.BLThinkingOrb&&typeof window.BLThinkingOrb.attach==='function'&&canvas)state.orbHandle=window.BLThinkingOrb.attach(canvas,{state:'working'});
-  }else if(!busy&&state.orbHandle){
-    try{state.orbHandle.stop();}catch(_){}
-    state.orbHandle=null;
-  }
+  const marker=$('globalFlowWorkingOrb');
+  if(marker)marker.dataset.state=busy?'thinking':'idle';
 }
 function syncLoadingOverlay(){
   const overlay=ensureLoadingOverlay();if(!overlay)return;const earth=Boolean(state.earthLoading&&state.engine==='earth'),busy=Boolean(state.loading||state.worldLoading||earth);

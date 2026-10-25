@@ -13,7 +13,7 @@ const mail=require('../server/lib/automation-email');
 test('Automations grouped CP-style selector script parses and is loaded with theme CSS',()=>{
   assert.doesNotThrow(()=>new Function(UI));
   assert.match(INDEX,/automations-fields\.css\?v=__BL_ASSET_VERSION__/);
-  assert.match(CSS,/var\(--card\)/);
+  assert.match(fs.readFileSync(path.join(ROOT,'public','ui-components.css'),'utf8'), /\.autoColumnsDrawer[^}]*background:var\(--ui-surface\)/);
   assert.match(CSS,/\.autoColumnsGroup/);
   assert.match(CSS,/\.autoColumnsSelectedList/);
   assert.match(UI,/function reportFieldGroups\(fields\)/);

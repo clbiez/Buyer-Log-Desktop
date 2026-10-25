@@ -1,0 +1,145 @@
+{
+  "screens": [
+    {
+      "name": "automation-create-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 79,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "notifications-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 59,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automation-create-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 78,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "notifications-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 59,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automation-create-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 78,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "notifications-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 59,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automation-editor-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 72,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-inspector-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 108,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-inspector-1280-step-1",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 95,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-inspector-1280-step0",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 95,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-inspector-1280-step1",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 88,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-inspector-1280-step2",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 85,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "automation-create-en-1280-xl",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 76,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lcwai-en-1280-xl",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 50,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    }
+  ],
+  "errors": []
+}

@@ -406,7 +406,7 @@
     button.type = 'button';
     button.className = 'tbtn';
     button.dataset.aiAutomationImport = '1';
-    button.textContent = tr('✦ LCW AI’dan Destek Al', '✦ Get help from LCW AI');
+    button.textContent = tr('LCW AI’dan Destek Al', 'Get help from LCW AI');
     button.title = tr('Ne istediğinizi yazın, LCW AI (GPT-6 Sol) yazsın, Buyer Log denetleyip kapalı bir taslak oluştursun', 'Describe it, let LCW AI (GPT-6 Sol) write it, Buyer Log checks it and creates a disabled draft');
     button.onclick = openModal;
     actions.insertBefore(button, actions.firstChild);

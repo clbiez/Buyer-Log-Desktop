@@ -34,8 +34,6 @@
   flex-direction: column;
   padding: 0;
   overflow: hidden;
-  background: var(--card);
-  color: var(--ink);
 }
 
 .blDataMaintHead {
@@ -43,11 +41,9 @@
   align-items: flex-start;
   gap: 14px;
   padding: 16px 18px;
-  border-bottom: 1px solid var(--line);
-  background: var(--card);
 }
-.blDataMaintHead h2 { margin: 0; font-size: var(--fs-xl); color: var(--ink); }
-.blDataMaintHead p { margin: 4px 0 0; font-size: var(--fs-sm); color: var(--ink2); }
+.blDataMaintHead h2 { margin: 0; }
+.blDataMaintHead p { margin: 4px 0 0; }
 .blDataMaintHead .blDataMaintClose { margin-left: auto; }
 
 .blDataMaintToolbar {
@@ -55,8 +51,6 @@
   gap: 7px;
   flex-wrap: wrap;
   padding: 9px 14px;
-  border-bottom: 1px solid var(--line);
-  background: var(--card2);
 }
 .blDataMaintToolbar .navActionBtn { min-height: 30px; }
 
@@ -64,83 +58,43 @@
 
 .blDataMaintSummary { display: grid; grid-template-columns: repeat(5, minmax(130px, 1fr)); gap: 8px; }
 .blDataMaintMetric {
-  border: 1px solid var(--line);
-  background: var(--card2);
   padding: 9px 10px;
   min-width: 0;
 }
 .blDataMaintMetric span {
-  display: block; font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .05em;
+  display: block;
   /* --muted bu küçük, büyük harfli etiket için YETERSİZ: üç temada da
      kontrast 4.5 eşiğinin altında kalıyor (3.93 / 3.50 / 3.37 ölçüldü).
      --ink2 aynı sessizliği verir ama okunur. */
-  color: var(--ink2);
 }
 .blDataMaintMetric strong {
-  display: block; margin-top: 3px; font-size: var(--fs-lg); color: var(--ink);
+  display: block; margin-top: 3px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-.blDataMaintSection { border: 1px solid var(--line); background: var(--card); overflow: hidden; }
+.blDataMaintSection { overflow: hidden; }
 .blDataMaintSectionHead {
   display: flex; align-items: center; padding: 9px 11px;
-  background: var(--card2); border-bottom: 1px solid var(--line);
-  font-size: var(--fs-sm); font-weight: 700; color: var(--ink);
 }
 
-.blDataMaintTable { width: 100%; border-collapse: collapse; font-size: var(--fs-xs); color: var(--ink); }
-.blDataMaintTable th,
-.blDataMaintTable td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.blDataMaintTable { width: 100%; border-collapse: collapse; }
+.blDataMaintTable th,.blDataMaintTable td { padding: 7px 8px; text-align: left; vertical-align: top; }
 /* Yapışkan başlık ŞEFFAF OLAMAZ: altından kayan satırlar okunmaz hâle gelir. */
 .blDataMaintTable th {
-  position: sticky; top: 0; z-index: 1;
-  background: var(--card2); color: var(--ink2);
-  font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .04em;
+  position: sticky; top: 0;
 }
-.blDataMaintTable td.num { text-align: right; font-variant-numeric: tabular-nums; }
-.blDataMaintTable .path { max-width: 330px; word-break: break-all; color: var(--ink2); }
-.blDataMaintTable tr:last-child td { border-bottom: 0; }
+.blDataMaintTable td.num { text-align: right; }
+.blDataMaintTable .path { max-width: 330px; word-break: break-all; }
 
 /* Sınıflandırma rozetleri. Üç anlam, üç token ailesi — dördüncü bir ton
    uydurulmadı: nötr (bilinen ve güvenli), bilgi (temizlenebilir), uyarı
    (kararı kullanıcıya kalan legacy/bilinmeyen). */
 .blDataMaintTag {
   display: inline-flex; align-items: center; height: 20px; padding: 0 6px;
-  font-size: var(--fs-2xs); font-weight: 700;
-  border: 1px solid var(--line2); background: var(--card2); color: var(--ink2);
-}
-.blDataMaintTag.CACHE,
-.blDataMaintTag.BROWSER_CACHE,
-.blDataMaintTag.EXPORT {
-  background: var(--acc-bg);
-  border-color: color-mix(in srgb, var(--acc) 40%, transparent);
-  color: var(--acc-ink);
-}
-.blDataMaintTag.CRITICAL,
-.blDataMaintTag.RECOVERABLE {
-  background: var(--card2); border-color: var(--line2); color: var(--ink);
-}
-.blDataMaintTag.LEGACY_CANDIDATE,
-.blDataMaintTag.UNKNOWN {
-  background: var(--orange-bg);
-  border-color: color-mix(in srgb, var(--orange) 40%, transparent);
-  color: var(--orange);
 }
 
 .blDataMaintStatus {
   min-height: 30px; padding: 8px 10px;
-  border: 1px solid var(--line); background: var(--card2);
-  font-size: var(--fs-xs); color: var(--ink2);
-}
-.blDataMaintStatus.isError {
-  background: var(--red-bg);
-  border-color: color-mix(in srgb, var(--red) 40%, transparent);
-  color: var(--red);
-}
-.blDataMaintStatus.isOk {
-  background: var(--green-bg);
-  border-color: color-mix(in srgb, var(--green) 40%, transparent);
-  color: var(--green);
 }
 
 .blDataMaintHealth { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -150,10 +104,7 @@
    kontrast yüzeyini kullanır. */
 .blDataMaintJson {
   margin: 0; padding: 10px;
-  font: var(--fs-xs)/1.45 var(--mono);
   white-space: pre-wrap; overflow: auto; max-height: 230px;
-  background: var(--paper); color: var(--ink);
-  border: 1px solid var(--line);
 }
 
 @media (max-width: 1100px) {
@@ -163,8 +114,7 @@
 
 /* Data Temizliği (public/data-cleanup.js) — Data Maintenance yüzeyini paylaşır;
    yalnız üç küçük yardımcı eklendi, renkler mevcut token'lardan gelir. */
-.blDataCleanupHint { align-self: center; font-size: var(--fs-xs); color: var(--ink2); }
+.blDataCleanupHint { align-self: center; }
 .blDataCleanupKinds { display: flex; flex-wrap: wrap; gap: 6px; }
-.blDataCleanupEmpty { padding: 14px 12px; font-size: var(--fs-sm); color: var(--ink2); }
+.blDataCleanupEmpty { padding: 14px 12px; }
 .blDataCleanupKept > summary { cursor: pointer; list-style: revert; }
-.blDataCleanupAuto { font-size: var(--fs-xs); color: var(--ink2); }
