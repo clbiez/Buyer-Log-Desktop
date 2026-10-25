@@ -350,13 +350,13 @@ function applyEntries(entries, actor, options = {}) {
       if (!Number.isInteger(count) || count < 2 || count > 26 || part[1].charCodeAt(0) - 64 > count) throw Object.assign(new Error('Define the set roster before updating a component.'), {code:'CHECKLIST_COMPONENTS_INVALID',statusCode:400});
     }
     let updated = 0, cleared = 0, skipped = 0, conflicts = 0;
-    const changedKeys = [], rejectedAt = {};
-    for (const raw of input) {
-      if (!raw || typeof raw !== 'object') { skipped += 1; continue; }
+    const changedKeys = [], rejectedAt = {},outcomes=[];
+    for (const [index,raw] of input.entries()) {
+      if (!raw || typeof raw !== 'object') { skipped += 1;outcomes.push({key:'@index:'+index,status:'rejected',code:'INVALID_ENTRY'});continue; }
       const orderKey = text(raw.orderKey, 300);
       const itemId = text(raw.itemId, 200);
       const state = normalizeState(raw.state);
-      if (!orderKey || !itemId || !state) { skipped += 1; continue; }
+      if (!orderKey || !itemId || !state) { skipped += 1;outcomes.push({key:orderKey&&itemId?answerKey(orderKey,itemId):'@index:'+index,status:'rejected',code:'INVALID_ENTRY'});continue; }
       const key = answerKey(orderKey, itemId);
       const at = iso(raw.at);
       const baseAt = text(raw.baseAt, 80);
@@ -369,10 +369,10 @@ function applyEntries(entries, actor, options = {}) {
       // edit is a live Buyer Log action and must not be discarded merely because
       // its client baseline is older; normal "at" ordering below still prevents
       // an actually older live event from overwriting a newer one.
-      if (source === 'supplier_excel' && baseAt && previousAt && previousAt > baseAt) { conflicts += 1; continue; }
+      if (source === 'supplier_excel' && baseAt && previousAt && previousAt > baseAt) { conflicts += 1;outcomes.push({key,status:'rejected',code:'NEWER_ANSWER'});continue; }
       // Apply the same ordering to Pending as every other status: a late beacon
       // or offline retry must never clear a more recent answer.
-      if (previousAt && previousAt > at) { skipped += 1; rejectedAt[key] = previousAt; continue; }
+      if (previousAt && previousAt > at) { skipped += 1; rejectedAt[key] = previousAt;outcomes.push({key,status:'rejected',code:'NEWER_ANSWER'});continue; }
       if (Array.isArray(raw.attachments) && (raw.attachments.length > MAX_ATTACHMENTS_PER_ANSWER
         || raw.attachments.some(item => !cleanAttachmentMeta(item)))) {
         throw Object.assign(new Error('Invalid or oversized checklist attachment list; existing evidence was preserved.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
@@ -409,16 +409,16 @@ function applyEntries(entries, actor, options = {}) {
         delete store.answers[key];
         store.tombstones[key] = { ...common, state: 'open', ...(raw.deleted === true ? { deleted: true } : {}) };
         store.events.push({ type: 'answer-opened', ...common, previousState: previous && previous.state || '' });
-        cleared += 1; changedKeys.push(key);
+        cleared += 1; changedKeys.push(key);outcomes.push({key,status:'accepted'});
         continue;
       }
       store.answers[key] = { ...common, state };
       delete store.tombstones[key];
       store.events.push({ type: 'answer-upserted', ...common, state, previousState: previous && previous.state || '' });
-      updated += 1; changedKeys.push(key);
+      updated += 1; changedKeys.push(key);outcomes.push({key,status:'accepted'});
     }
     options.assertAuthority?.();await write(store);
-    const result = { ok: true, revision: store.revision, updatedAt: store.updatedAt, updated, cleared, skipped, conflicts, changedKeys, rejectedAt };
+    const result = { ok: true, revision: store.revision, updatedAt: store.updatedAt, updated, cleared, skipped, conflicts, changedKeys, rejectedAt,outcomes };
     return options.receipt ? options.receipt(result,entryReceipt(store,changedKeys)) : result;
   });
 }

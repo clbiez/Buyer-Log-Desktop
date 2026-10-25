@@ -1634,6 +1634,122 @@
           "en": "Existing actions for the selected record appear first; opening the palette does not load modules."
         }
       }
+    },
+    {
+      "id": "bulk-grid-preview-receipts",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Koleksiyon",
+        "en": "CP Tracker · Collection"
+      },
+      "title": {
+        "tr": "Yapıştırmayı önizleyin, kayıt sonucunu doğrulayın",
+        "en": "Preview pasted changes and confirm the save"
+      },
+      "body": {
+        "tr": "Çoklu yapıştırmada önce/sonra değerlerini ve atlanan alan sayılarını görün. Güncel kayıt ve revizyon kontrolünden geçen değişiklikler birlikte kaydedilir; başarısız veya yanıtı belirsiz değişiklikler sonraki normal kayıtlara karışmaz. Geri alma güncel kayıtla eşleşmek zorundadır.",
+        "en": "Review before/after values and skipped-field counts before pasting. Changes are submitted together after current-record and revision checks; rejected or unconfirmed changes do not leak into later normal saves. Undo must still match the current record."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "bulk-cp-preview.png",
+        "alt": {
+          "tr": "Gerçek demo CP tablosunda iki fiyat değişikliğinin önizlemesi.",
+          "en": "Two price changes previewed in the actual demo CP table."
+        },
+        "caption": {
+          "tr": "Yapıştırmayı önizleyin, kayıt sonucunu doğrulayın",
+          "en": "Preview pasted changes and confirm the save"
+        }
+      }
+    },
+    {
+      "id": "bulk-supplier-price-save",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Üretici Excel fiyatları tek doğrulanmış işlemde kaydedilir",
+        "en": "Save supplier Excel prices in one checked transaction"
+      },
+      "body": {
+        "tr": "Üretici dönüş Excel’inin fiyat farklarını inceleyin. Satır kimliği veya revizyon değişmişse eski önizleme uygulanmaz; fiyatlar aynı Fiyat Defteri üzerinden tek kayıtla yazılır. Kayıt sonucu gelmeden başarı bildirilmez; toplu geri alma da revizyonu kontrol eder.",
+        "en": "Review the price differences in a supplier return workbook. A changed line identity or revision invalidates the old preview; prices use the same Pricing Ledger in one save. Success waits for the save response, and bulk Undo checks revisions too."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "bulk-supplier-price-preview.png",
+        "alt": {
+          "tr": "İki demo modelin eski ve yeni üretici fiyatları.",
+          "en": "Previous and proposed supplier prices for two demo models."
+        },
+        "caption": {
+          "tr": "Üretici Excel fiyatları tek doğrulanmış işlemde kaydedilir",
+          "en": "Save supplier Excel prices in one checked transaction"
+        }
+      }
+    },
+    {
+      "id": "bulk-checklist-results",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Checklist",
+        "en": "CP Tracker · Checklist"
+      },
+      "title": {
+        "tr": "Checklist içe aktarımında öğe sonuçlarını izleyin",
+        "en": "Track checklist import results per item"
+      },
+      "body": {
+        "tr": "Checklist Excel’i kaydedilmeden önce durum farklarını ve geçersiz/salt okunur kayıtları gösterir. Daha güncel yanıtlar korunur. Kısmi sonuçta yalnız reddedilen öğeler güncel veriyle yeniden önizlenebilir; kabul edilenler tekrar gönderilmez. İşlem kayıtları bu cihazdaki kullanıcıya bağlı saklanır.",
+        "en": "Checklist Excel imports show status differences and invalid/read-only counts before saving. Newer answers are preserved. After a partial result, only rejected items can be previewed again against current data; accepted items are not replayed. Operation receipts are stored for the current user on this device."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "bulk-checklist-partial-result.png",
+        "alt": {
+          "tr": "Bir öğenin kabul edildiği, daha güncel yanıtın korunduğu ve yalnız reddedilenin yeniden önizlenebildiği gerçek demo sonuç ekranı.",
+          "en": "Actual demo result: one item accepted, the newer answer preserved, and only the rejected item offered for a fresh preview."
+        },
+        "caption": {
+          "tr": "Checklist içe aktarımında öğe sonuçlarını izleyin",
+          "en": "Track checklist import results per item"
+        }
+      }
+    },
+    {
+      "id": "remaining-excel-background-readers",
+      "type": "improvement",
+      "module": {
+        "tr": "Checklist · Fiyat Masası · Excel şablonları",
+        "en": "Checklist · Pricing Desk · Excel templates"
+      },
+      "title": {
+        "tr": "Kalan Excel okumaları arka plana taşındı",
+        "en": "Remaining Excel reads moved into the background"
+      },
+      "body": {
+        "tr": "Checklist dosyaları, üretici fiyat Excel’i ve özel şablonlar ortak arka plan okuyucusunu kullanır. Dosya/sayfa/hücre sınırları ile birleşik hücre aralıkları kontrol edilir; şablon penceresi kapandığında bekleyen okuma iptal edilir. Tarih, biçim, formül ve görseller korunur.",
+        "en": "Checklist files, supplier price workbooks and custom templates use the shared background reader. File, sheet and cell limits include merged-cell ranges; closing the template window cancels its pending read. Dates, formatting, formulas and images are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "background-template-reader.png",
+        "alt": {
+          "tr": "Arka plan okuyucusundan geçen gerçek demo şablonunun üç alan eşleştirmesi.",
+          "en": "Three field mappings for an actual demo template processed by the background reader."
+        },
+        "caption": {
+          "tr": "Kalan Excel okumaları arka plana taşındı",
+          "en": "Remaining Excel reads moved into the background"
+        }
+      }
     }
   ]
 }

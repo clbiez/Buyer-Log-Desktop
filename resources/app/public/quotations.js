@@ -15,6 +15,7 @@
   let qHydrated = false;
   let qReady = null;
   let qSaveQueue = Promise.resolve();
+  let qSaveFailureSerial=0,qSaveFailureError=null;
   let qStatusFilter = 'active';
   let qActiveSource = 'collection';
   let qActiveId = null;
@@ -184,6 +185,7 @@
           showToast(qLang('Bu satır başka bir kullanıcı tarafından da değiştirilmişti; önceki değer Fiyat Geçmişi’nde saklandı.','This line had also been changed by another user; the previous value is kept in Pricing History.'));
         }
       }catch(err){
+        qSaveFailureSerial++;qSaveFailureError=err;
         if(typeof showToast==='function')showToast(err?.message||qLang('Fiyat kaydedilemedi.','Price could not be saved.'));
         if(err?.status===403||err?.status===404||err?.status===422)await qHydrateShared(true);
       }
@@ -259,7 +261,7 @@
         const known=new Map((qServerState.get(req.id)?.items||[]).map(item=>[item.id,item.rev||0]));
         const body={...req,items:(req.items||[]).map(item=>known.has(item.id)?{...item,rev:known.get(item.id)}:item)};
         try{const data=await qApi(`/api/quotations/${encodeURIComponent(req.id)}`,{method:'PUT',body:JSON.stringify(body)});if(data.request)qReplaceRequest(data.request);}
-        catch(err){if(typeof showToast==='function')showToast((err?.message||qLang('Quotation kaydedilemedi.','Quotation could not be saved.')));if(err?.status===403)await qHydrateShared(true);}
+        catch(err){qSaveFailureSerial++;qSaveFailureError=err;if(typeof showToast==='function')showToast((err?.message||qLang('Quotation kaydedilemedi.','Quotation could not be saved.')));if(err?.status===403)await qHydrateShared(true);}
       }
     });
     return true;
@@ -994,6 +996,9 @@
     });
     if(affected.length)qSave(affected);
   }
+  async function syncModelFieldsDurable(rowId,key,value){
+    const before=qSaveFailureSerial;syncModelFields(rowId,key,value);await qFlushSaves();if(qSaveFailureSerial!==before)throw qSaveFailureError;
+  }
 
   function qMoveRequest(dragId,targetId,placeAfter=false){
     const st=qLoad(),drag=st.requests.find(r=>r.id===dragId),target=st.requests.find(r=>r.id===targetId);
@@ -1471,6 +1476,17 @@
     if(req.source==='collection') qWritePriceToCollection(req,line);
     qSave(req);qRefreshCollection();
     return value;
+  }
+  async function qApplyPricesBatch(requestId,changes,source='import'){
+    const preview=qLoad().requests.find(item=>item.id===requestId),batch=changes.map(change=>{const line=preview?.items.find(item=>item.id===change.lineId);return {...change,identity:Object.fromEntries(['modelKey','rowId','manufacturer','plmId','modelCode','orderCode'].map(key=>[key,line?.[key]]))};});
+    await qFlushSaves();
+    return qQueue(async()=>{
+      const req=qLoad().requests.find(item=>item.id===requestId);
+      if(!req||!qCanEditRequest(req))throw Object.assign(new Error(qLang('Güncel fiyat düzenleme yetkisi gerekli.','Current price edit permission is required.')),{status:403});
+      const data=await qApi(`/api/quotations/${encodeURIComponent(requestId)}/lines/batch`,{method:'POST',body:JSON.stringify({changes:batch,source})});
+      if(data.request){const saved=qReplaceRequest(data.request),ids=new Set(changes.map(item=>item.lineId));if(saved.source==='collection')saved.items.filter(item=>ids.has(item.id)).forEach(item=>qWritePriceToCollection(saved,item));}
+      qRefreshCollection();return data;
+    });
   }
 
   function qCommitPriceInput(req,input,options={}){
@@ -2809,6 +2825,7 @@
     targetDelta:qTargetDelta,ownerLabel:qOwnerLabel,profileName:qProfileName,requestTitle:qRequestTitle,workspaceTitle:qWorkspaceRequestTitle,
     moneyDisplay:qMoneyDisplay,moneyNumber:qMoneyNumber,validPrice:qValidPrice,date:qDate,lineOwnerId:qLineOwnerId,
     applyPrice(req,line,value,source='matrix'){if(!req||!line||!qCanEditLine(req,line)){qViewOnlyNotice(req);return null;}return qWithLineSource(source,()=>qApplyPrice(req,line,value));},
+    applyPricesBatch:qApplyPricesBatch,
     setApproval(req,line,approved,source='matrix'){if(!req||!line||(line.approved===true)===Boolean(approved))return false;qWithLineSource(source,()=>qToggleApproval(req,line));return true;},
     toggleDrop(req,line,source='matrix'){return qWithLineSource(source,()=>qToggleDrop(req,line));},
     async startRound(req,note=''){
@@ -2825,5 +2842,5 @@
     mountWorkspace:(host,options)=>mountWorkspace(host,options),mountHistoryTable:(host,options)=>mountPricingHistory(host,options),
     isWorkspaceMounted:()=>qWorkspaceMounted,
   };
-  window.BL_QUOTATIONS={collectionQuoteIndex,openPriceHistory,openPricingHistoryWorkspace,mountPricingHistory,mountWorkspace,openWorkspaceFromCollection,openSendToPricing,syncCollectionPricingUI,recordRequest,recordManualCollectionPrice,open:openModal,save:qSave,refresh:()=>qHydrateShared(true),renameManufacturer,syncModelFields,setPrice,toggleApproval,findCollectionLine,updateCollectionLine,sendReminder(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qOpenReminder(req):false;},toggleDrop(requestId,lineId){const req=qLoad().requests.find(r=>r.id===requestId),line=req?.items.find(x=>x.id===lineId);return req&&line?qToggleDrop(req,line):false;},desk:qDeskApi,exportRequest(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qExportRequest(req):false;},moveRequest:qMoveRequest,deleteRequest:qDeleteRequest};
+  window.BL_QUOTATIONS={collectionQuoteIndex,openPriceHistory,openPricingHistoryWorkspace,mountPricingHistory,mountWorkspace,openWorkspaceFromCollection,openSendToPricing,syncCollectionPricingUI,recordRequest,recordManualCollectionPrice,open:openModal,save:qSave,refresh:()=>qHydrateShared(true),renameManufacturer,syncModelFields,setPrice,toggleApproval,findCollectionLine,updateCollectionLine,sendReminder(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qOpenReminder(req):false;},toggleDrop(requestId,lineId){const req=qLoad().requests.find(r=>r.id===requestId),line=req?.items.find(x=>x.id===lineId);return req&&line?qToggleDrop(req,line):false;},syncModelFieldsDurable,desk:qDeskApi,exportRequest(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qExportRequest(req):false;},moveRequest:qMoveRequest,deleteRequest:qDeleteRequest};
 })();

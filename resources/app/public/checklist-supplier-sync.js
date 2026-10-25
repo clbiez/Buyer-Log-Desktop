@@ -138,6 +138,7 @@
     if (!response.ok) {
       const error = new Error(payload.error || payload.message || ('HTTP ' + response.status));
       error.code = payload.code || 'HTTP_ERROR';
+      error.status=response.status;
       throw error;
     }
     return payload;
@@ -1994,7 +1995,7 @@
     await loadShared();
     const ExcelJS = await ensureExcel();
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(await file.arrayBuffer());
+    workbook.model = await root.BLFileParser.readExcelJsModel(file);
     const liveRows = currentRows(), liveDecision = analysesForRows(liveRows);
     const liveByOrder = liveDecision.byOrderKey || new Map();
     const parsed = parseSupplierWorkbook(workbook, {
@@ -2012,25 +2013,27 @@
       toast(T('İçe aktarılacak checklist güncellemesi bulunamadı.', 'No checklist updates were found to import.'));
       return false;
     }
-    const message = T(
-      entries.length + ' checklist güncellemesi Buyer Log’a aktarılacak. Devam edilsin mi?',
-      entries.length + ' checklist updates will be imported into Buyer Log. Continue?'
-    );
-    if (typeof root.confirm === 'function' && !root.confirm(message)) return false;
-
-    const result = await post('/answers', { entries: entries, source: 'supplier_excel' });
-    await loadShared(true);
-    const conflicts = Number(result.conflicts || 0);
-    const skipped = Number(result.skipped || 0) + invalid + notApplicable + formulaCells;
-    toast(
-      T('Checklist içe aktarıldı: ', 'Checklist imported: ') + result.updated
-      + T(' güncellendi, ', ' updated, ') + result.cleared
-      + T(' yeniden açıldı', ' reopened')
-      + (conflicts ? ', ' + conflicts + T(' daha yeni Buyer Log verisi nedeniyle korunarak atlandı', ' kept because Buyer Log had newer data') : '')
-      + (staleRows ? ', ' + staleRows + T(' satır yükleme tarihi değiştiği için atlandı', ' rows skipped because the load date changed') : '')
-      + (skipped ? ', ' + skipped + T(' geçersiz/uygunsuz kayıt atlandı.', ' invalid/not-applicable entries skipped.') : '.')
-    );
-    return true;
+    await syncAnswerChanges();await loadShared(true);
+    const makeSpec = selected => {
+      const revision=state.shared.revision,user=String(root.BL_USER_CONTEXT?.id||''),editable=analysesForRows(currentRows().filter(row=>row._canEdit!==false)).byOrderKey||new Map();
+      const unique=[...new Map(selected.map(entry=>[answerKey(entry.orderKey,entry.itemId),entry])).values()];
+      const allowed=unique.filter(entry=>editable.has(entry.orderKey));
+      const items=allowed.map(entry=>{const before=state.shared.answers[answerKey(entry.orderKey,entry.itemId)]||state.shared.tombstones[answerKey(entry.orderKey,entry.itemId)]||{};return {key:answerKey(entry.orderKey,entry.itemId),label:entry.orderKey+' · '+(entry.itemLabel||entry.itemId),before:statusLabel(before.state||'open')+(before.note?' · '+before.note:''),after:statusLabel(entry.state)+(entry.note?' · '+entry.note:'')};});
+      return {module:'checklist',owner:user,expected:{checklist:revision},title:T('Checklist içe aktarma önizlemesi','Checklist import preview'),items,
+        counts:{readonly:unique.length-allowed.length,invalid:invalid+formulaCells,skipped:notApplicable+staleRows},
+        guard:()=>{const current=analysesForRows(currentRows().filter(row=>row._canEdit!==false)).byOrderKey;return user===String(root.BL_USER_CONTEXT?.id||'')&&state.shared.revision===revision&&allowed.every(entry=>{const analysis=current?.get(entry.orderKey);return analysis&&(!entry.loadDate||!analysis.plannedLoadDate||entry.loadDate===String(analysis.plannedLoadDate));});},
+        async send(){
+          const result=await post('/answers',{entries:allowed,source:'supplier_excel',expectedRevision:revision});
+          try{await loadShared(true);}catch(error){toast(error.message);}
+          return result;
+        },
+        async retry(keys){await loadShared(true);const rejected=new Set(keys),at=isoNow();return makeSpec(allowed.filter(entry=>rejected.has(answerKey(entry.orderKey,entry.itemId))).map(entry=>({...entry,at,baseAt:state.shared.updatedAt||at})));}
+      };
+    };
+    const spec=makeSpec(entries);
+    if(!spec.items.length){toast(T('İçe aktarılabilecek yetkili checklist kaydı yok.','No permitted checklist entries to import.'));return false;}
+    const receipt=await root.BLBulkOperations.run(spec);
+    return receipt?.status==='accepted'||receipt?.status==='partial';
   }
 
   async function prepareSupplierChecklistEmail() {

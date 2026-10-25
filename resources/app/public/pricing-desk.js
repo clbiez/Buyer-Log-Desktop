@@ -160,9 +160,17 @@
     state.undo.push({requestId:req.id,entries,label});
     if(state.undo.length>50)state.undo.shift();
   }
-  function undoLast(){
-    const api=Q(),group=state.undo.pop();if(!api||!group)return false;
+  async function undoLast(){
+    const api=Q(),group=state.undo[state.undo.length-1];if(!api||!group)return false;
     const req=api.requests().find(item=>item.id===group.requestId);if(!req)return false;
+    if(group.bulkGuard){
+      const guard=group.bulkGuard;
+      if(!api.canEdit(req)||api.currentUserId()!==guard.user||req.ownerId!==guard.owner||group.entries.some(entry=>Number(req.items.find(item=>item.id===entry.lineId)?.rev)!==guard.revisions[entry.lineId])){toast(L('Toplu geri alma güncelliğini yitirdi; fiyatları yeniden kontrol edin.','This bulk undo is stale; review the current prices.'));return false;}
+      if(group.saving)return false;group.saving=true;
+      try{await api.applyPricesBatch(req.id,group.entries.map(entry=>({lineId:entry.lineId,baseRev:guard.revisions[entry.lineId],price:entry.prev.price})),'undo');const index=state.undo.indexOf(group);if(index>=0)state.undo.splice(index,1);api.renderDetail();toast(L('Son değişiklik kaydedilerek geri alındı.','Last change undone and saved.'));return true;}
+      catch(error){toast(error.message||L('Geri alma doğrulanamadı.','Undo could not be confirmed.'));return false;}finally{group.saving=false;}
+    }
+    state.undo.pop();
     group.entries.forEach(entry=>{
       const line=req.items.find(item=>item.id===entry.lineId);if(!line)return;
       if(clean(line.price)!==entry.prev.price)api.applyPrice(req,line,entry.prev.price,'undo');
@@ -445,15 +453,14 @@
      satır anahtarı (BL Key = rowId) ve model adı bulunur. Üreticinin doldurduğu
      dosyada fiyat sütunu bulunur, satırlar anahtar (yoksa model adı / PLM ID)
      ile talepteki satıra eşlenir; önce fark gösterilir, onaysız yazılmaz. */
-  async function readWorkbookRows(file){
-    const buffer=await file.arrayBuffer();
+  async function readWorkbookRows(file,control={}){
     if(window.XLSX?.read){
-      const wb=await window.BLFileParser.readWorkbook(buffer,{type:'array'});
+      const wb=await window.BLFileParser.readWorkbook(file,{type:'array'},control);
       const sheet=wb.Sheets[wb.SheetNames[0]];
       return window.XLSX.utils.sheet_to_json(sheet,{header:1,raw:false,defval:''});
     }
     if(window.ExcelJS?.Workbook){
-      const wb=new window.ExcelJS.Workbook();await wb.xlsx.load(buffer);
+      const wb=new window.ExcelJS.Workbook();wb.model=await window.BLFileParser.readExcelJsModel(file,control);
       const ws=wb.worksheets[0],out=[];
       ws.eachRow({includeEmpty:false},row=>{const values=[];row.eachCell({includeEmpty:true},(cell,col)=>{const v=cell.value;values[col-1]=v&&typeof v==='object'?(v.result??v.text??(v.richText?v.richText.map(part=>part.text).join(''):'')):v;});out.push(values.map(value=>value==null?'':String(value)));});
       return out;
@@ -477,12 +484,12 @@
     const hint=` ${foldName(manufacturerHint)} `;
     let manufacturer=manufacturers.find(name=>foldName(name)&&hint.includes(` ${foldName(name)} `))||'';
     if(!manufacturer&&manufacturers.length===1)manufacturer=manufacturers[0];
-    const changes=[],unmatched=[],used=new Set();let same=0;
+    const changes=[],unmatched=[],used=new Set();let same=0,invalid=0;
     const lower=value=>clean(value).toLocaleLowerCase('tr-TR');
     const own=(req.items||[]).filter(item=>clean(item.manufacturer)===manufacturer);
     rows.slice(headerIndex+1).forEach(row=>{
       const raw=clean(row[priceCol]);if(!raw)return;
-      const value=E.price(raw);if(value==null)return;
+      const value=E.price(raw);if(value==null){invalid++;return;}
       const key=keyCol>=0?clean(row[keyCol]):'',plm=plmCol>=0?clean(row[plmCol]):'',model=modelCol>=0?clean(row[modelCol]):'';
       /* Eşleme önceliği: satır anahtarı (BL Key) varsa YALNIZ ona bakılır; yoksa
          PLM ID, sonra model kodu. Aynı modelin birden çok renk satırı varsa PLM /
@@ -498,14 +505,19 @@
       if(before!=null&&Math.abs(before-value)<0.00005){same++;return;}
       changes.push({line,before,value});
     });
-    return {manufacturer,manufacturers,changes,unmatched,same};
+    return {manufacturer,manufacturers,changes,unmatched,same,invalid};
   }
+  const supplierReaders=new WeakMap();
   async function importSupplierWorkbook(host,req,file){
     const panel=host.querySelector('[data-pd-import-panel]');if(!panel)return;
+    supplierReaders.get(host)?.abort();const reader=new AbortController();supplierReaders.set(host,reader);
     let rows;
-    try{rows=await readWorkbookRows(file);}catch(err){toast(err?.message||L('Excel okunamadı.','Excel could not be read.'));return;}
+    try{rows=await readWorkbookRows(file,{signal:reader.signal});}catch(err){if(err.code!=='FILE_PARSE_CANCELLED')toast(err?.message||L('Excel okunamadı.','Excel could not be read.'));return;}
+    if(reader.signal.aborted||!host.isConnected||!panel.isConnected)return;
+    let retryKeys=null;
     const render=manufacturerName=>{
       const plan=supplierWorkbookPlan(req,rows,manufacturerName||file.name);
+      if(retryKeys&&plan.changes)plan.changes=plan.changes.filter(change=>retryKeys.has(change.line.id));
       if(plan.error){panel.innerHTML=`<div class="pdPanelHead"><b>${esc(file.name)}</b><span class="isBad">${esc(plan.error)}</span></div><div class="pdPanelActions"><button type="button" class="tbtn" data-pd-import-cancel>${esc(L('Kapat','Close'))}</button></div>`;}
       else{
         const picker=plan.manufacturers.length>1?`<label class="pdField isInline"><span>${esc(L('Üretici','Manufacturer'))}</span><select data-pd-import-mfr>${plan.manufacturers.map(name=>`<option value="${esc(name)}"${name===plan.manufacturer?' selected':''}>${esc(name)}</option>`).join('')}</select></label>`:'';
@@ -515,14 +527,25 @@
           ${plan.unmatched.length?`<div class="pdPanelNote">${esc(L('Eşleşmeyen: ','Unmatched: '))}${esc(plan.unmatched.slice(0,8).join(', '))}${plan.unmatched.length>8?'…':''}</div>`:''}
           <div class="pdPanelActions"><button type="button" class="tbtn" data-pd-import-cancel>${esc(L('Vazgeç','Cancel'))}</button><button type="button" class="tbtn primary" data-pd-import-apply ${plan.changes.length?'':'disabled'}>${esc(L(`${plan.changes.length} fiyatı uygula`,`Apply ${plan.changes.length} prices`))}</button></div>`;
         panel.querySelector('[data-pd-import-mfr]')?.addEventListener('change',event=>render(event.target.value));
-        panel.querySelector('[data-pd-import-apply]')?.addEventListener('click',()=>{
-          const api=Q();pushUndo(req,plan.changes.map(change=>change.line),'import');
-          plan.changes.forEach(change=>{api.applyPrice(req,change.line,moneyPlain(change.value),'import');state.flash.add(change.line.id);});
-          panel.hidden=true;api.renderDetail();
-          toast(L(`${plan.changes.length} fiyat dönüş Excel’inden uygulandı.`,`${plan.changes.length} prices applied from the supplier Excel.`),{undo:true});
+        const previewUser=Q()?.currentUserId(),previewOwner=req.ownerId,baseline=new Map(plan.changes.map(change=>[change.line.id,JSON.stringify(change.line)]));
+        panel.querySelector('[data-pd-import-apply]')?.addEventListener('click',async event=>{
+          event.currentTarget.disabled=true;
+          const api=Q(),items=plan.changes.map(change=>({key:change.line.id,label:lineInfo(req,change.line).model+' · '+change.line.manufacturer,before:change.before==null?'—':money(change.before),after:money(change.value)}));
+          const guard=()=>!reader.signal.aborted&&api.currentUserId()===previewUser&&api.canEdit(req)&&req.ownerId===previewOwner&&plan.changes.every(change=>JSON.stringify(api.requests().find(item=>item.id===req.id)?.items.find(item=>item.id===change.line.id))===baseline.get(change.line.id));
+          const spec={module:'supplier-prices',owner:previewOwner,items,expected:{lines:Object.fromEntries(plan.changes.map(change=>[change.line.id,change.line.rev||0]))},title:L('Üretici fiyatlarını kaydet','Save supplier prices'),counts:{skipped:plan.unmatched.length,invalid:plan.invalid,readonly:api.canEdit(req)?0:items.length},guard,
+            async send(){
+              const entries=plan.changes.map(change=>({lineId:change.line.id,prev:snapshot(change.line)}));
+              const data=await api.applyPricesBatch(req.id,plan.changes.map(change=>({lineId:change.line.id,baseRev:change.line.rev||0,price:moneyPlain(change.value)})));
+              state.undo.push({requestId:req.id,entries,label:'import',bulkGuard:{user:previewUser,owner:previewOwner,revisions:Object.fromEntries((data.request?.items||[]).map(item=>[item.id,item.rev||0]))}});
+              panel.hidden=true;api.renderDetail();return data;
+            },
+            async retry(keys){await api.hydrate(true);if(reader.signal.aborted)return null;const current=api.requests().find(item=>item.id===req.id);if(current){req=current;retryKeys=new Set(keys);render(plan.manufacturer);}return null;}
+          };
+          await window.BLBulkOperations.run(spec);
+          if(panel.isConnected)panel.querySelector('[data-pd-import-apply]')?.removeAttribute('disabled');
         });
       }
-      panel.querySelector('[data-pd-import-cancel]')?.addEventListener('click',()=>{panel.hidden=true;});
+      panel.querySelector('[data-pd-import-cancel]')?.addEventListener('click',()=>{reader.abort();panel.hidden=true;});
       panel.hidden=false;bindThumbs(panel);
     };
     render('');

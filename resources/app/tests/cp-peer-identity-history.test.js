@@ -4,9 +4,29 @@ const source=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8'
 const row=(id,code,note='next')=>({_id:id,'Order Code':code,'Model Name':'DEMO','C.Code':'01',note_col_1:note});
 function harness(rows){
  const calls={render:0,invalidate:0,refreshIds:[],dirty:[],toast:[]},context={state:{currentUser:{id:'buyer'},cp:{rows},orders:{rows:rows.map(item=>({...item}))},overrides:{},cpDirty:new Set()},window:{BLOrderLinePeerIndex:require('../public/order-line-peer-index'),BLGridClipboard:{diagnostics:{record(){}},selectionSize:()=>({})}},document:{activeElement:null},CP_NOTE_COLUMN_DEFS:[{id:'note_col_1'}],CP_PASTE_ROW_REFRESH_LIMIT:30,appLang:'en',isAreaFrozen:()=>false,editableValuesEqual:(a,b)=>a===b,markDirty:id=>calls.dirty.push(id),invalidateCoreFacetCaches:()=>{calls.invalidate++;},refreshCpRowOnly:id=>calls.refreshIds.push(id),refreshOverviewNotesLive(){},scheduleOverviewRender(){},refreshSubmfrList(){},refreshLicensorList(){},renderOrders:()=>{calls.render++;},showToast:text=>calls.toast.push(text),applyFormulas(){},syncCpProductionLogisticSegment(){},invalidateUnifiedPriorityDecisions(){},updateUndoRedoButtons(){},managedEditorSnapshot:()=>null,norm:value=>String(value??'').trim()};
- vm.createContext(context);vm.runInContext(block('function turknorm(','// ================= LICENSE ROYALTY'),context);vm.runInContext(block('function refreshRowEverywhere(','// ================= GERİ AL'),context);vm.runInContext(block('let undoStack = [];','function discardAllChanges('),context);vm.runInContext(block('function commitCpEditor(','/* Lojistik açılır ok'),context);vm.runInContext(block('function applyCpGridPaste(','function registerManagedGridClipboard('),context);
+ vm.createContext(context);vm.runInContext(block('function turknorm(','// ================= LICENSE ROYALTY'),context);vm.runInContext(block('function refreshRowEverywhere(','// ================= GERİ AL'),context);vm.runInContext(block('let undoStack = [];','function discardAllChanges('),context);vm.runInContext(block('function commitCpEditor(','/* Lojistik açılır ok'),context);vm.runInContext(block('function applyCpGridPasteConfirmed(','function registerManagedGridClipboard('),context);
  return {context,calls};
 }
+test('preparing a native CP transaction isolates live rows, peer rows, overrides and dirty state',()=>{
+ const original=row(1,'100'),h=harness([original]),ctx=h.context;ctx.structuredClone=structuredClone;
+ const key=ctx.lineKeyOfRow(original),before=JSON.stringify(ctx.state);
+ const prepared=ctx.withCpBulkDraft([key],()=>{ctx.state.cp.rows[0].note_col_1='draft';ctx.state.orders.rows[0].note_col_1='draft';ctx.state.overrides.test='draft';ctx.state.cpDirty.add(1);return ctx.state.cp.rows[0].note_col_1;});
+ assert.equal(prepared.value,'draft');assert.equal(prepared.rows[0].after.note_col_1,'draft');assert.equal(JSON.stringify(ctx.state),before);assert.equal(ctx.state.cp.rows[0],original);
+});
+test('a normal edit while a bulk Undo ACK is pending keeps its own history action',async()=>{
+ const h=harness([row(1,'100')]),ctx=h.context;let release;
+ ctx.applyCpBulkHistory=()=>new Promise(resolve=>release=resolve);
+ vm.runInContext("undoStack=[{kind:'batch',actions:[],bulkGuard:{owner:'buyer'}}];redoStack=[];",ctx);
+ const pending=ctx.undo();ctx.pushUndo({id:1,fields:[{key:'note_col_1',prev:'before',next:'newer'}]});release(true);await pending;
+ assert.equal(vm.runInContext('undoStack.length',ctx),1);assert.equal(vm.runInContext("undoStack[0].fields[0].next",ctx),'newer');assert.equal(vm.runInContext('redoStack.length',ctx),0);
+});
+test('a normal edit while a bulk Redo ACK is pending stays after the redone action',async()=>{
+ const h=harness([row(1,'100')]),ctx=h.context;let release;
+ ctx.applyCpBulkHistory=()=>new Promise(resolve=>release=resolve);
+ vm.runInContext("undoStack=[];redoStack=[{kind:'batch',actions:[],bulkGuard:{owner:'buyer'}}];",ctx);
+ const pending=ctx.redo();ctx.pushUndo({id:1,fields:[{key:'note_col_1',prev:'before',next:'newer'}]});release(true);await pending;
+ assert.equal(vm.runInContext('undoStack.length',ctx),2);assert.equal(vm.runInContext('undoStack[0].kind',ctx),'batch');assert.equal(vm.runInContext("undoStack[1].fields[0].next",ctx),'newer');assert.equal(vm.runInContext('redoStack.length',ctx),0);
+});
 
 test('a stale inline editor cannot write to another canonical line after its display id is reused',()=>{
  const original=row(1,'100'),h=harness([original]),key=h.context.lineKeyOfRow(original),foreign=row(1,'999'),current=row(9,'100');h.context.state.cp.rows=[foreign,current];
@@ -50,7 +70,7 @@ test('a batch Undo invalidates/renders peer projections once per user command',(
 
 test('bulk paste refuses a stale source row before mutating a reused display id',()=>{
  const original=row(1,'100'),h=harness([original]),foreign=row(1,'999');h.context.state.cp.rows=[foreign];
- const result=h.context.applyCpGridPaste({source:{rows:1,columns:1},readonly:0,skipped:0,invalid:0,ops:[{row:original,column:{k:'note_col_1'},target:'text',value:'denied'}]},{});
+ const result=h.context.applyCpGridPasteConfirmed({source:{rows:1,columns:1},readonly:0,skipped:0,invalid:0,ops:[{row:original,column:{k:'note_col_1'},target:'text',value:'denied'}]},{});
  assert.equal(result.ok,false);assert.equal(foreign.note_col_1,'next');assert.equal(h.calls.dirty.length,0);
 });
 

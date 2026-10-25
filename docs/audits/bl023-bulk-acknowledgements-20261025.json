@@ -1,0 +1,213 @@
+{
+  "package": "BL023",
+  "date": "2026-10-25",
+  "PR": 714,
+  "risk": "P1 bulk consistency and durable acknowledgement",
+  "focused": {
+    "files": 33,
+    "tests": 222,
+    "pass": 222,
+    "fail": 0,
+    "skip": 0,
+    "seconds": 3.7,
+    "log": "work/bl023-final-target.log",
+    "sha256Lf": "6afab6523f13f6244b4bf624698e8e649b164157827669e513144cd5e42970ce"
+  },
+  "native": {
+    "scope": "Actual production server and Windows Edge with synthetic orders/Collection/quotation/checklist data only. Controlled client replacement and lost HTTP response are labelled separately.",
+    "phases": [
+      {
+        "name": "actual-cp-preview-one-batch-and-durable-ack",
+        "cells": 2,
+        "requests": 1
+      },
+      {
+        "name": "actual-cp-bulk-undo-redo-durable"
+      },
+      {
+        "name": "controlled-client-stale-undo-refused",
+        "requests": 0
+      },
+      {
+        "name": "controlled-preview-record-replacement-refused",
+        "requests": 0
+      },
+      {
+        "name": "controlled-lost-cp-response-not-replayed-by-later-note",
+        "unknown": 2,
+        "valuesUnchanged": true
+      },
+      {
+        "name": "actual-collection-preview-atomic-ack-and-undo-redo",
+        "cells": 2
+      },
+      {
+        "name": "controlled-collection-undo-unknown-keeps-live-data-and-history"
+      },
+      {
+        "name": "actual-supplier-excel-one-domain-batch-ledger",
+        "lines": 2
+      },
+      {
+        "name": "actual-foreign-buyer-batch-denied",
+        "httpStatus": 403,
+        "quotationUnchanged": true
+      },
+      {
+        "name": "actual-supplier-bulk-undo-durable-and-stale-revision-refused"
+      },
+      {
+        "name": "controlled-collection-failure-no-secondary-write-or-replay",
+        "httpStatus": 409
+      },
+      {
+        "name": "controlled-collection-failure-no-secondary-write-or-replay",
+        "httpStatus": 500
+      },
+      {
+        "name": "actual-checklist-worker-import-preview-and-canonical-outcomes",
+        "entries": 2
+      },
+      {
+        "name": "actual-checklist-partial-retry-repreviews-only-rejected",
+        "acceptedNotReplayed": true,
+        "retryItems": 1
+      },
+      {
+        "name": "actual-reload-receipts-no-replay",
+        "accepted": 5
+      }
+    ],
+    "errors": [],
+    "ok": true
+  },
+  "readerNative": {
+    "ok": true,
+    "scope": "Actual Edge Worker → structured model → main ExcelJS → workbook roundtrip, synthetic 10,000-row data only",
+    "rows": 10000,
+    "inputBytes": 203070,
+    "outputBytes": 203103,
+    "heartbeatTicks": 67,
+    "maxObservedHeartbeatGapMs": 5.700000002980232,
+    "idDateStyleFormulaZeroAndPngPreserved": true,
+    "actualTemplateUploadAndThreeMappings": true,
+    "cancelled": "FILE_PARSE_CANCELLED",
+    "outputSha256": "e3666ba188c7ba50344ecd3e2c0482b3c4604018edea26b88f75a729fdb17423",
+    "errors": [],
+    "limits": [
+      "Browser worker/time/byte/model bounds are not a hard V8/RSS limit.",
+      "Two remaining app-main ExcelJS loads consume internally generated workbooks, not uploaded files."
+    ]
+  },
+  "originals": {
+    "scope": "Readonly original seven Desktop files, isolated child parser; no source bytes or cell values copied to report",
+    "results": [
+      {
+        "file": "BANGLADEŞ_ENDEKSMATİK_KLASMAN_W7__22.09.2026.xlsx",
+        "bytes": 43589831,
+        "sha256": "4c2ee0686f0d5411eddaff223ef0a9b0f6a21e1974708c8a8a80e4e2de8a5863",
+        "accepted": true,
+        "model": "endeksmatik-usd-v1",
+        "records": 7532,
+        "hasSignature": true,
+        "warnings": 0,
+        "durationMs": 9556
+      },
+      {
+        "file": "ENDEKSMATİK_KLASMAN_ S7_15.10.2026.xlsx",
+        "bytes": 46944089,
+        "sha256": "3363469f9378e545d2d23fa46aa233643f265619c49ef62a65e043f31d327d5c",
+        "accepted": true,
+        "model": "legacy-tl",
+        "records": 3694,
+        "hasSignature": true,
+        "warnings": 1,
+        "durationMs": 12551
+      },
+      {
+        "file": "ENDEKSMATİK_KLASMAN_W6_15.10.2026.xlsx",
+        "bytes": 49027242,
+        "sha256": "d80b5c149d434093142a50561d441b93cace6f2d6ebe7d9a08792a835e19f5eb",
+        "accepted": true,
+        "model": "legacy-tl",
+        "records": 3400,
+        "hasSignature": true,
+        "warnings": 1,
+        "durationMs": 15479
+      },
+      {
+        "file": "HİNDİSTAN_ENDEKSMATİK_KLASMAN_W7_NORTH.xlsx",
+        "bytes": 36167440,
+        "sha256": "1fb5b1c68f3c72411c0943301c599680cb89035db422adc78df40207a81235fd",
+        "accepted": true,
+        "model": "endeksmatik-usd-v1",
+        "records": 4793,
+        "hasSignature": true,
+        "warnings": 1,
+        "durationMs": 7431
+      },
+      {
+        "file": "HİNDİSTAN_ENDEKSMATİK_KLASMAN_W7_SOUTH.xlsx",
+        "bytes": 38854636,
+        "sha256": "44edd643a7771a098404b78f8c289f707edd39515807728900c8d0df5ad74960",
+        "accepted": true,
+        "model": "endeksmatik-usd-v1",
+        "records": 4852,
+        "hasSignature": true,
+        "warnings": 1,
+        "durationMs": 8023
+      },
+      {
+        "file": "MYANMAR_ENDEKSMATİK_KLASMAN_W7.xlsx",
+        "bytes": 40480894,
+        "sha256": "1c36095147f209e20db38c900aafec453aab3a25644d9911641e288a679b1cbd",
+        "accepted": true,
+        "model": "endeksmatik-usd-v1",
+        "records": 5670,
+        "hasSignature": true,
+        "warnings": 5,
+        "durationMs": 7383
+      },
+      {
+        "file": "ÇİN_ENDEKSMATİK_KLASMAN_W7 -.xlsx",
+        "bytes": 40508445,
+        "sha256": "83a056af030b7c75f3bbc7cd546189a99710985c10ee1da480cc3a053e0051b3",
+        "accepted": true,
+        "model": "endeksmatik-usd-v1",
+        "records": 5670,
+        "hasSignature": true,
+        "warnings": 5,
+        "durationMs": 7226
+      }
+    ]
+  },
+  "review": {
+    "independent": true,
+    "boundedRounds": 1,
+    "findings": 3,
+    "resolution": [
+      "History actions are moved by object identity; concurrent newer edits retain their action. CP and Pricing Desk deferred-ACK regressions pass.",
+      "CP and Collection prepare on temporary copies. No local persistence/normal-save retry of unknown intents; controlled 500 responses followed by normal notes preserve original values. Collection Undo failure preserves rows and stacks.",
+      "Quotation metadata/image projection is delayed until the Collection primary ACK. Controlled 409/500 failures preserve quotation bytes."
+    ],
+    "rereview": false
+  },
+  "contracts": {
+    "cp": "Existing cell commit/history writers captured into one canonical override batch; staged rows and map deltas become live only after ACK. Editing affected CP operations is deferred while saving.",
+    "collection": "Existing cell writer prepares the same row PATCH in isolation; kolSaveWorkspaceNow applies acknowledged rows and rebases intervening local deltas. Failed drafts are excluded from pending-workspace recovery.",
+    "pricing": "Native price ledger batch has strict price revision and model/row/manufacturer identity guards, fresh record authority and guarded document commit.",
+    "checklist": "Existing answer writer receives optional expectedRevision and returns canonical per-item outcomes. Explicit retry receives a fresh preview of rejected keys only.",
+    "receipts": "Per-user per-device, last 20 receipts, up to 100000 unique items per intent. Storage failure prevents sending; pending receipts become unknown after restart and never execute."
+  },
+  "visualsInspected": true,
+  "full": false,
+  "merge": false,
+  "limits": [
+    "One final integrated full/CI and batch merge remain; these are targeted and native results, not final project certification.",
+    "Browser byte/range/worker/time bounds are not a hard V8/RSS memory limit.",
+    "Native error cases deliberately substitute HTTP 409/500 no-write responses; they are not a real SMB/network outage certification.",
+    "The seven Desktop workbooks were read only; reports contain file metadata/hashes and counts, no workbook bytes or business cell values.",
+    "Receipt retention is bounded and subject to browser local storage quota; a receipt is evidence, never authority or an automatic replay command."
+  ],
+  "rollback": "Revert the BL023 commit; existing single-edit endpoints remain compatible. The new optional receipt storage can be left unused."
+}

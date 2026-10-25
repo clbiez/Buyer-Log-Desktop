@@ -47,11 +47,33 @@
   }
   function inspectWorkbook(workbook,limits=LIMITS){
     const names=workbook?.SheetNames||[];if(names.length>limits.sheets)throw fail();let cells=0;
-    for(const name of names){const sheet=workbook.Sheets?.[name],ref=sheet?.['!fullref']||sheet?.['!ref'];if(!ref)continue;
-      const match=String(ref).replace(/\$/g,'').match(/^(?:([A-Z]+)(\d+):)?([A-Z]+)(\d+)$/i);if(!match)throw fail('FILE_PARSE_RANGE');
-      const col=String(match[3]).toUpperCase().split('').reduce((n,c)=>n*26+c.charCodeAt(0)-64,0),row=Number(match[4]);
-      if(row>limits.rows||col>limits.columns)throw fail();cells+=row*col;if(cells>limits.cells)throw fail();
+    for(const name of names){
+      const sheet=workbook.Sheets?.[name],ref=sheet?.['!fullref']||sheet?.['!ref'];let row=0,col=0;
+      const add=(r1,c1,r2,c2)=>{if(![r1,c1,r2,c2].every(Number.isSafeInteger)||r1<1||c1<1||r2<r1||c2<c1)throw fail('FILE_PARSE_RANGE');if(r2>limits.rows||c2>limits.columns)throw fail();row=Math.max(row,r2);col=Math.max(col,c2);};
+      const range=value=>{
+        const match=String(value).replace(/\$/g,'').match(/^(?:([A-Z]+)([1-9]\d*):)?([A-Z]+)([1-9]\d*)$/i);if(!match)throw fail('FILE_PARSE_RANGE');
+        const column=text=>String(text).toUpperCase().split('').reduce((n,c)=>n*26+c.charCodeAt(0)-64,0);
+        add(Number(match[2]||match[4]),column(match[1]||match[3]),Number(match[4]),column(match[3]));
+      };
+      if(ref)range(ref);
+      const merges=sheet?.['!merges']||[];if(!Array.isArray(merges))throw fail('FILE_PARSE_RANGE');
+      for(const merge of merges){if(typeof merge==='string')range(merge);else add(merge?.s?.r+1,merge?.s?.c+1,merge?.e?.r+1,merge?.e?.c+1);}
+      cells+=row*col;if(cells>limits.cells)throw fail();
     }return workbook;
   }
-  return Object.freeze({LIMITS,ENDEKSMATIK_LIMITS,fail,inspectBytes,inspectWorkbook});
+  function inspectExcelJsModel(model,limits=LIMITS){
+    if(!model||!Array.isArray(model.worksheets)||model.worksheets.length>limits.sheets)throw fail();
+    let cells=0,mediaBytes=0;
+    for(const sheet of model.worksheets){
+      if(!Array.isArray(sheet.rows))throw fail();
+      for(const row of sheet.rows){
+        if(!Number.isSafeInteger(row.number)||row.number<1||row.number>limits.rows||!Array.isArray(row.cells)||row.cells.length>limits.columns)throw fail();
+        for(const cell of row.cells){if(++cells>limits.cells)throw fail();if(!/^[A-Z]+[1-9]\d*$/i.test(cell?.address||''))throw fail('FILE_PARSE_RANGE');inspectWorkbook({SheetNames:['cell'],Sheets:{cell:{'!ref':cell.address}}},limits);}
+      }
+      for(const range of sheet.merges||[])inspectWorkbook({SheetNames:['merge'],Sheets:{merge:{'!ref':range}}},limits);
+    }
+    for(const media of model.media||[]){mediaBytes+=Number(media.buffer?.byteLength)||Math.ceil(String(media.base64||'').length*3/4);if(mediaBytes>limits.expandedBytes)throw fail();}
+    return model;
+  }
+  return Object.freeze({LIMITS,ENDEKSMATIK_LIMITS,fail,inspectBytes,inspectWorkbook,inspectExcelJsModel});
 });

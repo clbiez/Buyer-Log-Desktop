@@ -9569,6 +9569,7 @@ function renderOrdersNow(){
 
 // ---------- shared inline editing (CP) ----------
 function markDirty(id){
+  if(cpBulkPreparing)return;
   state.cpDirty.add(id);
   const tr=document.querySelector(`#cpTable tbody tr[data-id="${id}"]`);
   if(tr)tr.classList.add('rowDirty');
@@ -9645,12 +9646,41 @@ function refreshRowsEverywhere(ids){
 let undoStack = [];
 let redoStack = [];
 // CP çoklu yapıştırma sırasında hücre kayıtları tek bir geri alma adımında toplanır.
-let _cpPasteUndoBatch = null;
+let _cpPasteUndoBatch = null,cpBulkPreparing=false,cpBulkInFlight=false;
+window.isPreparingCpBulk=()=>cpBulkPreparing;
+window.isSavingCpBulk=()=>cpBulkInFlight||bulkCpHistoryBusy;
+function withCpBulkDraft(lineKeys,work){
+  const keys=new Set(lineKeys),saved={overrides:state.overrides,cpDirty:state.cpDirty},draft={overrides:structuredClone(state.overrides),cpDirty:new Set(state.cpDirty)},clones=new Map(),before=new Map();
+  const copy=row=>{if(!keys.has(lineKeyOfRow(row)))return row;if(!clones.has(row)){clones.set(row,structuredClone(row));before.set(row,structuredClone(row));}return clones.get(row);};
+  for(const table of ['cp','orders','orderSummary'])if(state[table]?.rows){saved[table]=state[table];draft[table]={...state[table],rows:state[table].rows.map(copy)};}
+  Object.assign(state,draft);cpBulkPreparing=true;
+  try{const value=work();return {value,rows:[...clones].map(([row,after])=>({row,before:before.get(row),after})),beforeOverrides:saved.overrides,afterOverrides:state.overrides};}finally{cpBulkPreparing=false;Object.assign(state,saved);}
+}
+function applyAcknowledgedCpDraft(prepared,data){
+  const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b),ids=new Set();
+  for(const {row,before,after}of prepared.rows){
+    if(!['cp','orders','orderSummary'].some(table=>state[table]?.rows?.includes(row)))continue;
+    for(const key of new Set([...Object.keys(before),...Object.keys(after)])){
+      if(['_pricingManualWrite','_pricingHistoryRestore','_subManufacturerWrite'].includes(key))continue;
+      if(equal(before[key],after[key])||!equal(row[key],before[key]))continue;
+      if(Object.hasOwn(after,key))row[key]=structuredClone(after[key]);else delete row[key];
+    }
+    applyFormulas(row);if(state.cp?.rows?.includes(row))ids.add(row._id);
+  }
+  for(const name of ['notesmap','submap','licensormap','suppfobmap','suppfobmetamap','datemap','delmap','importancemap','noteColumnValues']){
+    const before=prepared.beforeOverrides[name]||{},after=prepared.afterOverrides[name]||{},server=data.overrides?.[name]||after;
+    for(const key of new Set([...Object.keys(before),...Object.keys(after)]))if(!equal(before[key],after[key])){
+      state.overrides[name]||={};if(Object.hasOwn(server,key))state.overrides[name][key]=structuredClone(server[key]);else delete state.overrides[name][key];
+    }
+  }
+  if(data.overrides?._revision!=null){state.overrides._revision=data.overrides._revision;state.overrides._revisions={...state.overrides._revisions,...data.overrides._revisions};}
+  invalidateCoreFacetCaches();if(ids.size)refreshRowsEverywhere([...ids]);if(state.orders)renderOrders();
+}
 function pushUndo(action){
   bindCpHistoryIdentity(action);
   if(_cpPasteUndoBatch){ _cpPasteUndoBatch.push(action); return; }
   const last=undoStack[undoStack.length-1];
-  if(action&&action.mergeKey&&last&&last.mergeKey===action.mergeKey&&last.kind===action.kind&&last.id===action.id&&last.shipId===action.shipId&&last.lineKey===action.lineKey&&last.ownerId===action.ownerId){
+  if(!bulkCpHistoryBusy&&action&&action.mergeKey&&last&&last.mergeKey===action.mergeKey&&last.kind===action.kind&&last.id===action.id&&last.shipId===action.shipId&&last.lineKey===action.lineKey&&last.ownerId===action.ownerId){
     const byKey=new Map((last.fields||[]).map(f=>[f.key,{...f}]));
     (action.fields||[]).forEach(f=>{const prev=byKey.get(f.key);byKey.set(f.key,prev?{...prev,next:f.next}:{...f});});
     last.fields=[...byKey.values()].filter(f=>!editableValuesEqual(f.prev,f.next));
@@ -9776,6 +9806,12 @@ function restoreCpPricingHistory(row,snapshot){
   row._pricingHistoryRestore=pending;
 }
 function applyHistoryAction(action, direction, options={}){
+  if(action.kind==='importance'){
+    if(action.ownerId!==orderLinePeerOwner())return;
+    const row=orderLinePeerRows('cp',null,action.lineKey)[0];
+    if(row&&row._canEdit!==false)window.BLOrderImportanceUI.pasteAssign(row,direction==='undo'?action.prev:action.next);
+    return;
+  }
   if(action.kind==='batch'){
     const batch=options.batch||{ids:new Set(),peers:false,scheduleChanged:false};
     const list = direction==='undo' ? [...action.actions].reverse() : action.actions;
@@ -9820,25 +9856,54 @@ function applyHistoryAction(action, direction, options={}){
   markDirty(row._id);
   if(typeof syncOrderLinePeersFromCpRow==='function')syncOrderLinePeersFromCpRow(row,[...historyKeys],{batch:options.batch});
   if(options.batch)options.batch.ids.add(row._id);else refreshRowEverywhere(row._id);
-  if(action.refreshSubmfrList) refreshSubmfrList();
-  if(action.refreshLicensorList) refreshLicensorList();
+  if(!cpBulkPreparing&&action.refreshSubmfrList) refreshSubmfrList();
+  if(!cpBulkPreparing&&action.refreshLicensorList) refreshLicensorList();
+}
+let bulkCpHistoryBusy=false;
+function cpBulkHistoryCurrent(action){
+  const g=action?.bulkGuard;
+  return !g||(g.owner===orderLinePeerOwner()&&g.orders===Number(state.storeRevisions.orders)&&g.suppFob===Number(state.storeRevisions.suppFob)&&!isAreaFrozen('cp')&&(action.actions||[]).every(item=>{
+    const row=orderLinePeerRows('cp',null,item.lineKey)[0];return row&&row._canEdit!==false&&(row._canEditShared!==false||item.kind==='importance'||(item.fields||[]).every(field=>['Notes','Ek Not'].includes(field.key)));
+  }));
+}
+async function applyCpBulkHistory(action,direction){
+  if(bulkCpHistoryBusy)return false;
+  bulkCpHistoryBusy=true;
+  try{
+    await settleOverrideWrites();
+    if(!cpBulkHistoryCurrent(action)){showToast(appLang==='en'?'This bulk undo is stale. Reload and review current records.':'Bu toplu geri alma güncelliğini yitirdi. Güncel kayıtları yenileyip kontrol edin.');return false;}
+    const expected={...action.bulkGuard};
+    const prepared=withCpBulkDraft((action.actions||[]).map(item=>item.lineKey),()=>window.captureOverrideBatch(()=>{
+      applyHistoryAction(action,direction,{batch:{ids:new Set(),peers:false}});
+      for(const item of action.actions||[]){if(item.kind==='importance')continue;const row=orderLinePeerRows('cp',null,item.lineKey)[0];if(row)syncOverridesFromRow(row);}
+    })),capture=prepared.value;
+    try{
+      const data=await enqueueOverrideMutation('orders','/api/overrides/batch',{method:'POST',headers:{'Content-Type':'application/json','X-Supp-Fob-Revision':String(expected.suppFob)},expectedRevision:expected.orders,body:JSON.stringify({items:capture.items})});
+      capture.resolve(data);applyAcknowledgedCpDraft(prepared,data);action.bulkGuard={owner:expected.owner,orders:Number(data.revisions?.orders??data.revision),suppFob:Number(data.revisions?.suppFob??state.storeRevisions.suppFob)};return true;
+    }catch(error){capture.reject(error);notifyOverrideSaveError(appLang==='en'?'Bulk undo could not be confirmed. Reload and review current records.':'Toplu geri alma doğrulanamadı. Güncel kayıtları yenileyip kontrol edin.');return false;}
+  }finally{bulkCpHistoryBusy=false;}
 }
 function undo(){
+  if(bulkCpHistoryBusy)return false;
   if(!undoStack.length) return;
+  if(undoStack[undoStack.length-1].bulkGuard){const candidate=undoStack[undoStack.length-1],before=undoStack.slice();return applyCpBulkHistory(candidate,'undo').then(ok=>{if(!ok)return false;const unchanged=before.length===undoStack.length&&before.every((item,i)=>undoStack[i]===item),index=undoStack.indexOf(candidate);if(index>=0)undoStack.splice(index,1);if(index>=0&&unchanged&&candidate.bulkGuard.owner===orderLinePeerOwner())redoStack.push(candidate);updateUndoRedoButtons();return true;});}
   const action = undoStack.pop();
   applyHistoryAction(action, 'undo');
   redoStack.push(action);
   updateUndoRedoButtons();
 }
 function redo(){
+  if(bulkCpHistoryBusy)return false;
   if(!redoStack.length) return;
+  if(redoStack[redoStack.length-1].bulkGuard){const candidate=redoStack[redoStack.length-1],before=undoStack.slice();return applyCpBulkHistory(candidate,'redo').then(ok=>{if(!ok)return false;const index=redoStack.indexOf(candidate);if(index>=0)redoStack.splice(index,1);if(before.every((item,i)=>undoStack[i]===item)&&candidate.bulkGuard.owner===orderLinePeerOwner()&&!undoStack.includes(candidate))undoStack.splice(before.length,0,candidate);updateUndoRedoButtons();return true;});}
   const action = redoStack.pop();
   applyHistoryAction(action, 'redo');
   undoStack.push(action);
   updateUndoRedoButtons();
 }
-function discardAllChanges(){
-  while(undoStack.length) undo();
+function discardAllChanges(){return discardAllChangesAsync();}
+async function discardAllChangesAsync(){
+  while(undoStack.length)if(await undo()===false)return;
   // Geri alma tarihleri de orijinaline döndürdüğü için oklar kendiliğinden
   // kaybolur; ayrıca kalıcı revizyon kaydı da temizlenir.
   if(state.cp && Array.isArray(state.cp.rows)) state.cp.rows.forEach(row=>{
@@ -9976,6 +10041,7 @@ function openNotesEditor(id, key, options={}){
 // Explicit note saves use one revisioned, note-only transaction. Do not route an
 // acknowledged save through markDirty's delayed full-row write a second time.
 async function saveNotesEditorTargets(targets,next,ownNotes=false){
+  if(window.isSavingCpBulk?.())throw new Error(appLang==='en'?'A bulk save is still pending. Retry after its result.':'Toplu kayıt sürüyor. Sonucundan sonra yeniden deneyin.');
   const desired=targets.map(target=>({...target,next:target.clear?'':next}));
   const assertOwner=()=>{if(desired.some(target=>target.ownerId!=null&&target.ownerId!==orderLinePeerOwner()))throw new Error(appLang==='en'?'The session changed. Reopen the current note before saving.':'Oturum değişti. Kaydetmeden önce güncel notu yeniden açın.');};
   assertOwner();
@@ -10063,6 +10129,7 @@ function clearOverviewNoteOrder(row){
 }
 
 function commitCpEditor(t, options={}){
+  if(window.isSavingCpBulk?.()&&!window.isPreparingCpBulk?.()){showToast(appLang==='en'?'A bulk save is still pending. Retry after its result.':'Toplu kayıt sürüyor. Sonucundan sonra yeniden deneyin.');return false;}
   const refresh = options.refresh !== false;
   if(!t || !t.dataset) return false;
   // v6.34 — yenileme sürerken CP hücresi yazılmaz; tablo birazdan yeniden çizilir
@@ -12801,6 +12868,7 @@ function overrideSyncKey(row, orderCode){
   return lineKeyOfRow(row) || String(orderCode==null ? '' : orderCode);
 }
 function schedulePendingOverrideWrite(key, delay, run){
+  if(window.isCapturingOverrideBatch?.()){run();return;}
   const existing = _pendingOverrideWrites.get(key);
   if(existing) clearTimeout(existing.timer);
   const entry = {run};
@@ -13710,7 +13778,43 @@ function cpPasteValue(raw,kind){
   return {ok:true,value:text};
 }
 const CP_PASTE_ROW_REFRESH_LIMIT=40;
-function applyCpGridPaste(plan,range){
+function cpBulkUniqueOperations(operations){
+  const seen=new Set();return operations.filter(op=>{const key=lineKeyOfRow(op.row)+'|'+op.column.k;if(seen.has(key))return false;seen.add(key);return true;});
+}
+async function applyCpGridPaste(plan,range){
+  if(!plan._bulkConfirmed&&plan.ops?.length){
+    const unique=cpBulkUniqueOperations(plan.ops);plan={...plan,ops:unique,skipped:(Number(plan.skipped)||0)+plan.ops.length-unique.length};
+    const editorSnap=managedEditorSnapshot(document.activeElement);
+    if(editorSnap?.route==='cp')commitManagedEditorSnapshot(editorSnap,{refresh:false});
+    await settleOverrideWrites();
+    const owner=orderLinePeerOwner(),revision=Number(state.storeRevisions.orders)||0,suppFob=Number(state.storeRevisions.suppFob)||0;
+    const snapshots=plan.ops.map(op=>{const row=state.cp?.rows?.find(item=>item._id===Number(op.row._partialViewSourceId??op.row._id));return {op,key:lineKeyOfRow(row),before:JSON.stringify(row),value:String(row?.[op.column.k]??'')};});
+    const guard=()=>owner===orderLinePeerOwner()&&!isAreaFrozen('cp')&&revision===(Number(state.storeRevisions.orders)||0)&&suppFob===(Number(state.storeRevisions.suppFob)||0)&&snapshots.every(({op,key,before})=>{
+      const current=state.cp?.rows?.find(row=>row._id===Number(op.row._partialViewSourceId??op.row._id));
+      return current&&lineKeyOfRow(current)===key&&current._canEdit!==false&&JSON.stringify(current)===before&&cpPasteTarget(current,op.column)===op.target;
+    });
+    const items=snapshots.map(({op,key,value})=>({key:key+'|'+op.column.k,label:String(op.row['Order Code'])+' · '+op.column.k,before:value,after:op.value}));
+    const receipt=await window.BLBulkOperations.run({module:'cp',owner,expected:{orders:revision,suppFob},title:appLang==='en'?'CP paste preview':'CP yapıştırma önizlemesi',counts:plan,items,guard,
+      hint:appLang==='en'?'Date dependencies follow the same rules as cell editing.':'Tarih bağımlılıkları hücre düzenlemeyle aynı kuralları izler.',
+      async send(){
+        cpBulkInFlight=true;
+        let result,prepared,capture;
+        try{
+          prepared=withCpBulkDraft(snapshots.map(item=>item.key),()=>window.captureOverrideBatch(()=>{result=applyCpGridPasteConfirmed({...plan,_bulkConfirmed:true,_prepareOnly:true},range);}));capture=prepared.value;
+          if(!result?.ok)throw Object.assign(new Error('CP_PASTE_STALE'),{status:409});
+          const data=await enqueueOverrideMutation('orders','/api/overrides/batch',{method:'POST',headers:{'Content-Type':'application/json','X-Supp-Fob-Revision':String(suppFob)},expectedRevision:revision,body:JSON.stringify({items:capture.items})});
+          capture.resolve(data);
+          applyAcknowledgedCpDraft(prepared,data);
+          if(result.history){result.history.bulkGuard={owner,orders:Number(data.revisions?.orders??data.revision),suppFob:Number(data.revisions?.suppFob??state.storeRevisions.suppFob)};pushUndo(result.history);}
+          return {revisions:data.revisions||{orders:data.revision},outcomes:items.map(item=>({key:item.key,status:Number(data.updated)===capture.items.length&&!(data.skipped?.length)?'accepted':'unknown'}))};
+        }catch(error){capture?.reject(error);throw error;}finally{cpBulkInFlight=false;}
+      }
+    });
+    return {ok:receipt?.status==='accepted',changed:receipt?.outcomes.filter(item=>item.status==='accepted').length||0,receipt};
+  }
+  return applyCpGridPasteConfirmed(plan,range);
+}
+function applyCpGridPasteConfirmed(plan,range){
   const source=plan.source||{rows:0,columns:0};
   const record=ok=>window.BLGridClipboard?.diagnostics?.record({module:'cp',operation:'paste',selection:window.BLGridClipboard.selectionSize(range),clipboard:source,transport:'text',ok});
   if(isAreaFrozen('cp')){
@@ -13735,7 +13839,7 @@ function applyCpGridPaste(plan,range){
   // Odaktaki hücre düzenleyicisi önce kendi değerini kaydeder, sonra kimliğini
   // bırakır: odak kaybı güvenlik ağı (focusout) yapıştırılan değeri düzenleyicideki
   // eski metinle ezmesin. Satırı yeniden çizilince düzenleyici yenilenir.
-  const editorSnap=managedEditorSnapshot(document.activeElement);
+  const editorSnap=plan._prepareOnly?null:managedEditorSnapshot(document.activeElement);
   if(editorSnap?.route==='cp'){
     commitManagedEditorSnapshot(editorSnap,{refresh:false});
     const editorId=Number((editorSnap.display||editorSnap.editor).dataset.id);
@@ -13751,13 +13855,15 @@ function applyCpGridPaste(plan,range){
       seen.add(cellKey);
       if(op.target==='importance'){
         const row=state.cp.rows.find(item=>item._id===id);
-        if(window.BLOrderImportanceUI.pasteAssign(row,op.value)) changed++;
+        const prev=state.overrides.importancemap?.[lineKeyOfRow(row)]||'';
+        if(window.BLOrderImportanceUI.pasteAssign(row,op.value)){changed++;actions.push({kind:'importance',lineKey:lineKeyOfRow(row),ownerId:orderLinePeerOwner(),prev,next:op.value});}
         return;
       }
       if(commitCpEditor({dataset:{id:String(id),key:op.column.k,kind:op.target,lineKey:lineKeyOfRow(op.row),editOwner:orderLinePeerOwner()},value:op.value},{refresh:false})){changed++;touched.add(id);}
     });
   }finally{ _cpPasteUndoBatch=null; }
-  if(actions.length) pushUndo(actions.length===1?actions[0]:{kind:'batch',actions});
+  const history=actions.length?{kind:'batch',actions}:null;
+  if(!plan._prepareOnly){
   if(touched.size>CP_PASTE_ROW_REFRESH_LIMIT){ invalidateCoreFacetCaches(); renderCP(); scheduleOverviewRender('cp-paste'); }
   else if(touched.size)refreshRowsEverywhere([...touched]);
   if(touched.size&&state.orders){
@@ -13767,12 +13873,10 @@ function applyCpGridPaste(plan,range){
   }
   if(actions.some(action=>action.refreshSubmfrList)) refreshSubmfrList();
   if(actions.some(action=>action.refreshLicensorList)) refreshLicensorList();
+  }
   const rows=new Set(plan.ops.map(op=>op.row._partialViewSourceId??op.row._id)).size,extra=skippedText();
-  showToast((appLang==='en'
-    ?`${changed} cell(s) pasted across ${rows} row(s); one undo reverts the paste.`
-    :`${changed} hücre ${rows} satıra yapıştırıldı; tek geri alma yapıştırmayı geri alır.`)+(extra?` · ${extra}`:''));
   record(true);
-  return {ok:true,changed};
+  return {ok:true,changed,history};
 }
 function registerManagedGridClipboard(tableId,tableKey){
   if(!window.BLGridClipboard)return;
@@ -21860,7 +21964,7 @@ const KOLEKSIYON_SEED_ROWS = [
 // düzenlenebilir. Sunucudaki ASAS/Antrepo verisinden bağımsızdır — tarayıcıda saklanır.
 const KOL_STORAGE_KEY = 'lcw.koleksiyon.rows.v1';
 let kolWorkspaceOwnerId=String(window.BL_USER_CONTEXT&&window.BL_USER_CONTEXT.id||'moderator');
-let kolWorkspaceRevision=0;
+let kolWorkspaceRevision=0,kolBulkPreparing=false;
 let kolWorkspaceCanEdit=true;
 let kolWorkspaceList=[];
 let kolWorkspaceSharedMode=false;
@@ -22186,8 +22290,8 @@ async function kolSaveWorkspaceNow(saveOptions){
   if(!kolWorkspaceCanEdit)return {ok:true,durable:true,skipped:true};
   if(kolWorkspaceSaving){kolWorkspacePending=true;const activeResult=await kolWorkspaceSavePromise;return kolWorkspacePending?kolSaveWorkspaceNow(options):activeResult;}
   const ownerId=kolWorkspaceOwnerId;
-  const change=kolCollectChanges();
-  if(change&&change.empty){kolWorkspacePending=false;return {ok:true,durable:true,unchanged:true};}
+  const change=options.preparedChange||kolCollectChanges();
+  if(change&&change.empty){kolWorkspacePending=false;return {ok:true,durable:true,unchanged:true,primaryAcknowledged:true,revision:kolWorkspaceRevision};}
   const payload=JSON.parse(JSON.stringify(change||kolWorkspacePayload()));
   const rowMode=Boolean(change);
   if(rowMode&&options.atomic===true)payload.atomic=true;
@@ -22201,15 +22305,16 @@ async function kolSaveWorkspaceNow(saveOptions){
         body:JSON.stringify(payload),
       });
       const data=await res.json().catch(()=>({}));
-      if(!res.ok){const err=new Error(data.error||res.statusText);err.code=data.code;err.currentRevision=data.currentRevision;err.conflicts=data.conflicts;throw err;}
+      if(!res.ok){const err=new Error(data.error||res.statusText);err.status=res.status;err.code=data.code;err.currentRevision=data.currentRevision;err.conflicts=data.conflicts;throw err;}
       kolReportReplication(data.replication);
-      if(kolWorkspaceOwnerId!==ownerId)return {ok:true,durable:true,ownerChanged:true};
+      if(kolWorkspaceOwnerId!==ownerId)return {ok:true,durable:true,ownerChanged:true,primaryAcknowledged:true,revision:Number(data.revision??data.workspace?._revision)||0};
       let ownConflictRebased=false;
       if(rowMode){
         kolWorkspaceRevision=Number(data.revision)||kolWorkspaceRevision;
         for(const item of Array.isArray(data.applied)?data.applied:[]){
           if(item.kind==='removed')continue;
           const index=kolRowIndexById(item.id);
+          if(options.preparedChange&&index>=0){const key=String(item.id),sent=(payload.upserts||[]).find(row=>kolRowKey(row)===key);if(sent)kolRows[index]=kolMergeLocalRowDelta(kolBaseline?.rows.get(key),kolRows[index],{...sent,_rev:Number(item.rev)||sent._rev});}
           if(index>=0)kolRows[index]._rev=Number(item.rev)||kolRows[index]._rev;
         }
         if(!kolBaseline)kolCaptureBaseline();
@@ -22229,7 +22334,8 @@ async function kolSaveWorkspaceNow(saveOptions){
       if(dirty)kolPersistPendingWorkspace(Array.isArray(data.conflicts)&&data.conflicts.length?'conflict':'pending');
       else kolClearPendingWorkspace(ownerId);
       kolSetSaveFeedback(dirty?(Array.isArray(data.conflicts)&&data.conflicts.length?'conflict':'sending'):kolReplicationFeedback(data.replication),'',ownerId);
-      return {ok:true,durable:true,pending:dirty,retryOwnConflict:ownConflictRebased};
+      if(options.preparedChange){try{BLStorage.setItem(KOL_STORAGE_KEY,JSON.stringify(kolRows));localStorage.setItem(kolWorkspaceLocalKey(ownerId),JSON.stringify({...kolWorkspacePayload(),_revision:kolWorkspaceRevision}));}catch(_){}renderKol();}
+      return {ok:true,durable:true,pending:dirty,primaryAcknowledged:true,revision:kolWorkspaceRevision,retryOwnConflict:ownConflictRebased};
     }
     catch(err){
       const conflictCode=err.code==='REVISION_CONFLICT'||err.code==='STRUCTURE_REVISION_CONFLICT';
@@ -22249,6 +22355,7 @@ async function kolSaveWorkspaceNow(saveOptions){
     finally{kolWorkspaceSaving=false;kolWorkspaceSavePromise=null;}
   })();
   const result=await kolWorkspaceSavePromise;
+  if(options.preparedChange){if(kolWorkspacePending){kolWorkspacePending=false;void kolSaveWorkspaceNow();}return result;}
   if(result&&result.rebase&&conflictRetry<3){
     const rebased=await kolRebaseOwnWorkspace(ownerId).catch(()=>false);
     if(rebased){
@@ -25050,6 +25157,7 @@ function saveKolManufacturers(){
   kolQueueWorkspaceSave();
 }
 function saveKolRows(){
+  if(kolBulkPreparing){kolRows=kolNormalizeModelGroups(kolRows);return true;}
   // Salt okunur ve Multi-Buyer görünümleri bir raporlama projeksiyonudur. Bu
   // koruma, ileride eklenen bir UI olayının yanlışlıkla yerel veya sunucu
   // çalışma alanına veri yazmasını da engeller.
@@ -25851,7 +25959,57 @@ function kolPushUndo(summary=null){
   kolRedoSummaryStack = [];
   updateKolUndoRedoButtons();
 }
-function kolUndo(){
+let kolBulkHistoryBusy=false;
+function withKolBulkDraft(work){
+  const saved={rows:kolRows,manufacturers:kolManufacturers,custom:kolCustomCols,nextId:kolNextId,undo:kolUndoStack,undoSummary:kolUndoSummaryStack,redo:kolRedoStack,redoSummary:kolRedoSummaryStack};
+  const rows=structuredClone(kolRows),manufacturers=structuredClone(kolManufacturers),custom=structuredClone(kolCustomCols);
+  kolRows=rows;kolManufacturers=manufacturers;kolCustomCols=custom;kolUndoStack=kolUndoStack.slice();kolUndoSummaryStack=kolUndoSummaryStack.slice();kolRedoStack=kolRedoStack.slice();kolRedoSummaryStack=kolRedoSummaryStack.slice();kolBulkPreparing=true;
+  try{const result=work(),change=kolCollectChanges();if(!change)throw Object.assign(new Error('COLLECTION_BULK_BASELINE'),{status:409});return {result,change:structuredClone(change),before:structuredClone(saved.rows),after:structuredClone(kolRows)};}
+  finally{kolBulkPreparing=false;kolRows=saved.rows;kolManufacturers=saved.manufacturers;kolCustomCols=saved.custom;kolNextId=saved.nextId;kolUndoStack=saved.undo;kolUndoSummaryStack=saved.undoSummary;kolRedoStack=saved.redo;kolRedoSummaryStack=saved.redoSummary;}
+}
+function kolRebaseBulkHistoryTail(start,prepared){
+  const before=new Map(prepared.before.map(row=>[String(row.id),row])),after=new Map(prepared.after.map(row=>[String(row.id),row]));
+  for(let index=start;index<kolUndoStack.length;index++)kolUndoStack[index]=kolUndoStack[index].map(row=>before.has(String(row.id))&&after.has(String(row.id))?kolMergeLocalRowDelta(before.get(String(row.id)),row,after.get(String(row.id))):row);
+}
+async function kolSyncAcknowledgedModelFields(prepared,owner){
+  const api=window.BL_QUOTATIONS;
+  if(kolWorkspaceOwnerId!==owner)return [{module:'quotations',status:'deferred'}];
+  const before=new Map(prepared.before.map(row=>[String(row.id),row])),changes=[];
+  for(const row of prepared.after)for(const key of ['plmId','modelKod','urunTipi','colour','colourCode','season','lisans'])if(!kolValueEqual(before.get(String(row.id))?.[key],row[key]))changes.push({id:row.id,key,value:row[key]??''});
+  if(!changes.length)return [];
+  try{
+    const related=[];
+    for(const change of changes)if(['plmId','colourCode'].includes(change.key)){const row=kolRows.find(item=>String(item.id)===String(change.id));if(row?.imgRef){const linked=await kolPlmLinkImageEverywhere(row,row.imgRef);related.push({module:'images',status:linked===false?'unknown':'accepted'});}}
+    if(api?.syncModelFields){for(const change of changes)await (api.syncModelFieldsDurable||api.syncModelFields)(Number(change.id),change.key,change.value);related.push({module:'quotations',status:api.syncModelFieldsDurable?'accepted':'queued'});}
+    return related;
+  }
+  catch(error){showToast(appLang==='en'?'Collection saved; the quotation projection needs attention.':'Koleksiyon kaydedildi; fiyat talebi yansıtması kontrol gerektiriyor.');return [{module:'quotations',status:'unknown'}];}
+}
+async function kolBulkHistory(summary,work){
+  if(kolBulkHistoryBusy)return false;
+  const guard=summary?.bulkGuard;
+  if(!guard){work(false);return true;}
+  if(!kolWorkspaceCanEdit||guard.owner!==kolWorkspaceOwnerId||guard.revision!==kolWorkspaceRevision||kolHasDirtyWorkspace()){
+    showToast(appLang==='en'?'This bulk undo is stale. Review the current Collection before changing it.':'Bu toplu geri alma güncelliğini yitirdi. Değiştirmeden önce güncel Koleksiyonu kontrol edin.');return false;
+  }
+  kolBulkHistoryBusy=true;
+  try{
+    const undo=work===kolUndoLocal,source=undo?kolUndoStack:kolRedoStack,candidate=source[source.length-1],beforeUndo=kolUndoStack.slice(),prepared=withKolBulkDraft(()=>work(true));
+    const saved=await kolSaveWorkspaceNow({atomic:true,preparedChange:prepared.change});
+    if(saved.ok&&saved.primaryAcknowledged&&guard.owner===kolWorkspaceOwnerId){
+      summary.bulkGuard={owner:guard.owner,revision:saved.revision};
+      kolRebaseBulkHistoryTail(beforeUndo.length,prepared);
+      if(undo){const index=kolUndoStack.indexOf(candidate),unchanged=beforeUndo.length===kolUndoStack.length&&beforeUndo.every((item,i)=>kolUndoStack[i]===item);if(index>=0){kolUndoStack.splice(index,1);kolUndoSummaryStack.splice(index,1);}if(unchanged){kolRedoStack.push(prepared.before);kolRedoSummaryStack.push(summary);}}
+      else{const index=kolRedoStack.indexOf(candidate);if(index>=0){kolRedoStack.splice(index,1);kolRedoSummaryStack.splice(index,1);}kolUndoStack.splice(beforeUndo.length,0,prepared.before);kolUndoSummaryStack.splice(beforeUndo.length,0,summary);}
+      updateKolUndoRedoButtons();await kolSyncAcknowledgedModelFields(prepared,guard.owner);showToast(appLang==='en'?'History change saved.':'Geri alma/ileri alma kaydedildi.');return true;
+    }
+    showToast(appLang==='en'?'History change could not be confirmed. Review current data.':'Geri alma/ileri alma doğrulanamadı. Güncel veriyi kontrol edin.');return false;
+  }
+  finally{kolBulkHistoryBusy=false;}
+}
+function kolUndo(){return kolBulkHistory(kolUndoSummaryStack[kolUndoSummaryStack.length-1],kolUndoLocal);}
+function kolRedo(){return kolBulkHistory(kolRedoSummaryStack[kolRedoSummaryStack.length-1],kolRedoLocal);}
+function kolUndoLocal(silent=false){
   if(!kolRequireWorkspaceEdit())return;
   if(!kolUndoStack.length) return;
   kolRedoStack.push(kolSnapshot());
@@ -25859,22 +26017,23 @@ function kolUndo(){
   kolRedoSummaryStack.push(summary);
   kolRows = kolUndoStack.pop();
   kolNextId = 1 + kolRows.reduce((m,r)=>Math.max(m, r.id||0), 0);
-  saveKolRows(); renderKol(); updateKolUndoRedoButtons();
-  showToast(summary?.kind==='paste'
+  saveKolRows(); if(!kolBulkPreparing)renderKol(); updateKolUndoRedoButtons();
+  if(!silent)showToast(summary?.kind==='paste'
     ? (appLang==='en'?`Paste undone: ${summary.changed} cells across ${summary.updatedRows} rows.`:`Yapıştırma geri alındı: ${summary.updatedRows} satırdaki ${summary.changed} hücre.`)
     : (appLang==='en'?'Undone.':'Geri alındı.'));
 }
-function kolRedo(){
+function kolRedoLocal(silent=false){
   if(!kolRequireWorkspaceEdit())return;
   if(!kolRedoStack.length) return;
   kolUndoStack.push(kolSnapshot());
   kolUndoSummaryStack.push(kolRedoSummaryStack.pop()||null);
   kolRows = kolRedoStack.pop();
   kolNextId = 1 + kolRows.reduce((m,r)=>Math.max(m, r.id||0), 0);
-  saveKolRows(); renderKol(); updateKolUndoRedoButtons();
-  showToast('İleri alındı.');
+  saveKolRows(); if(!kolBulkPreparing)renderKol(); updateKolUndoRedoButtons();
+  if(!silent)showToast(appLang==='en'?'Redone.':'İleri alındı.');
 }
 function updateKolUndoRedoButtons(){
+  if(kolBulkPreparing)return;
   const u = document.getElementById('kolUndoBtn'), r = document.getElementById('kolRedoBtn');
   if(u) u.disabled = !kolWorkspaceCanEdit || !kolUndoStack.length;
   if(r) r.disabled = !kolWorkspaceCanEdit || !kolRedoStack.length;
@@ -27694,7 +27853,7 @@ function commitKolEditor(el, options={}){
   // kullanıcı yazdığı değerin hiçbir etkisini göremiyordu (v4.28-29 hatası).
   else if(k==='trPrice'||k==='trLandedMult'||k==='trFx'||k==='ydLandedMult'){ needsRerender=true; }
   if(persist)saveKolRows();
-  if((k==='plmId'||k==='colourCode')&&row.imgRef)void kolPlmLinkImageEverywhere(row,row.imgRef);
+  if(!kolBulkPreparing&&(k==='plmId'||k==='colourCode')&&row.imgRef)void kolPlmLinkImageEverywhere(row,row.imgRef);
   if(rerender && needsRerender) renderKol();
   else if(rerender) refreshKolSummaryFooter();
   return true;
@@ -28575,6 +28734,34 @@ function groupedFieldHasAnyOverride(row,column){
   const storageKeys=spec?.storageKeys||[String(key||'').startsWith('pricing:')?'pricing':key].filter(Boolean);
   return Boolean(row&&storageKeys.length&&storageKeys.some(storageKey=>kolHasVariantOverride(row,storageKey)));
 }
+async function kolSpreadsheetPreviewBatch(operations,summary={}){
+  if(!kolWorkspaceCanEdit||!operations?.length)return {ok:false,changed:0};
+  const owner=kolWorkspaceOwnerId,prior=await kolSaveWorkspaceNow({atomic:true});
+  if(owner!==kolWorkspaceOwnerId||!prior.ok||prior.pending)return {ok:false,pending:true};
+  const revision=kolWorkspaceRevision,snapshots=operations.map(op=>({op,before:JSON.stringify(kolRows.find(row=>String(row.id)===String(op.rowId))),value:kolSpreadsheetRawValue(kolRows.find(row=>String(row.id)===String(op.rowId)),op.key)}));
+  const guard=()=>kolWorkspaceCanEdit&&kolWorkspaceOwnerId===owner&&kolWorkspaceRevision===revision&&snapshots.every(({op,before})=>before!=null&&JSON.stringify(kolRows.find(row=>String(row.id)===String(op.rowId)))===before&&kolSpreadsheetValidateValue(op.rowId,op.key,op.value).ok);
+  const items=snapshots.map(({op,value})=>({key:String(op.rowId)+'|'+op.key,label:String(op.rowId)+' · '+(kolSpreadsheetColumnMeta(op.key)?.label||op.key),before:typeof value==='object'?JSON.stringify(value):value,after:typeof op.value==='object'?JSON.stringify(op.value):op.value}));
+  let local;
+  const receipt=await window.BLBulkOperations.run({module:'collection',owner,expected:{collection:revision},title:appLang==='en'?'Collection paste preview':'Koleksiyon yapıştırma önizlemesi',counts:summary,items,guard,
+    hint:appLang==='en'?'Linked and calculated fields keep their existing dependency rules.':'Bağlı ve hesaplanan alanların mevcut bağımlılık kuralları korunur.',
+    async send(){
+      if(kolBulkHistoryBusy)throw Object.assign(new Error('COLLECTION_BULK_BUSY'),{status:409});
+      kolBulkHistoryBusy=true;
+      try{
+        const beforeUndo=kolUndoStack.slice(),prepared=withKolBulkDraft(()=>kolSpreadsheetBatchEdit(operations,summary));local=prepared.result;
+        if(!local.ok)throw Object.assign(new Error('COLLECTION_BULK_LOCAL'),{status:422});
+        const saved=await kolSaveWorkspaceNow({atomic:true,preparedChange:prepared.change});
+        if(!saved.ok)throw saved.error||new Error('COLLECTION_BULK_UNKNOWN');
+        if(local.summary&&kolWorkspaceOwnerId===owner&&beforeUndo.every((item,i)=>kolUndoStack[i]===item)){
+          local.summary.bulkGuard={owner,revision:saved.revision};kolRebaseBulkHistoryTail(beforeUndo.length,prepared);kolUndoStack.splice(beforeUndo.length,0,prepared.before);kolUndoSummaryStack.splice(beforeUndo.length,0,local.summary);kolRedoStack=[];kolRedoSummaryStack=[];updateKolUndoRedoButtons();
+        }
+        const related=await kolSyncAcknowledgedModelFields(prepared,owner);
+        return {revision:saved.revision,related,outcomes:items.map(item=>({key:item.key,status:saved.primaryAcknowledged?'accepted':'unknown'}))};
+      }finally{kolBulkHistoryBusy=false;}
+    }
+  });
+  return {...local,ok:receipt?.status==='accepted',pending:receipt?.status==='unknown',receipt,handled:true};
+}
 function kolSpreadsheetBatchEdit(operations,summary={}){
   if(!kolWorkspaceCanEdit||!Array.isArray(operations)||!operations.length)return {ok:false,changed:0};
   const mutationSource=String(summary?.source||'paste');
@@ -28659,14 +28846,14 @@ function kolSpreadsheetBatchEdit(operations,summary={}){
       return {ok:true,changed:0};
     }
     if(!saveKolRows())throw new Error('Collection save failed');
-    if(window.BL_QUOTATIONS?.syncModelFields)quoteSync.forEach(op=>{const row=kolRows.find(r=>String(r.id)===String(op.rowId));window.BL_QUOTATIONS.syncModelFields(Number(op.rowId),op.key,row?.[op.key]??'');});
+    if(!kolBulkPreparing&&window.BL_QUOTATIONS?.syncModelFields)quoteSync.forEach(op=>{const row=kolRows.find(r=>String(r.id)===String(op.rowId));window.BL_QUOTATIONS.syncModelFields(Number(op.rowId),op.key,row?.[op.key]??'');});
     const updatedRows=new Set(validated.map(op=>String(op.rowId))).size,updatedFields=new Set(validated.map(op=>String(op.writeKey||op.key))).size;
     const undoSummary={kind:mutationSource==='paste'?'paste':'batch-edit',source:mutationSource,changed:changed+dependentChanged,explicitChanged:changed,dependentChanged,updatedRows,updatedFields,readonly:Number(summary.readonly)||0,invalid:Number(summary.invalid)||0,skipped:Number(summary.skipped)||0,at:new Date().toISOString()};
     kolUndoSummaryStack[kolUndoSummaryStack.length-1]=undoSummary;
-    renderKol();
+    if(!kolBulkPreparing)renderKol();
     return {ok:true,changed:changed+dependentChanged,explicitChanged:changed,dependentChanged,updatedRows,updatedFields,summary:undoSummary};
   }catch(err){
-    kolRows=before;kolUndoStack=previousUndo;kolUndoSummaryStack=previousUndoSummaries;kolRedoStack=previousRedo;kolRedoSummaryStack=previousRedoSummaries;updateKolUndoRedoButtons();renderKol();
+    kolRows=before;kolUndoStack=previousUndo;kolUndoSummaryStack=previousUndoSummaries;kolRedoStack=previousRedo;kolRedoSummaryStack=previousRedoSummaries;updateKolUndoRedoButtons();if(!kolBulkPreparing)renderKol();
     return {ok:false,changed:0,error:err};
   }
 }
@@ -28692,7 +28879,7 @@ function kolCollectionPlmUrl(row){
 }
 window.BLCollectionSpreadsheetBridge={
   canEdit:()=>Boolean(kolWorkspaceCanEdit),rows:()=>kolRows,filteredRows:()=>kolPresentationRows(filteredKol()),descriptors:()=>kolDisplayDescriptors(),descriptorByKey:kolDescriptorByKey,
-  selectedCount:()=>kolValidSelectedRows().length,columnMeta:kolSpreadsheetColumnMeta,rawValue:kolSpreadsheetRawValue,landedCopyToken:rowId=>`${KOL_TR_LANDED_COPY_PREFIX}${rowId}`,validateValue:kolSpreadsheetValidateValue,batchEdit:kolSpreadsheetBatchEdit,
+  selectedCount:()=>kolValidSelectedRows().length,columnMeta:kolSpreadsheetColumnMeta,rawValue:kolSpreadsheetRawValue,landedCopyToken:rowId=>`${KOL_TR_LANDED_COPY_PREFIX}${rowId}`,validateValue:kolSpreadsheetValidateValue,batchEdit:kolSpreadsheetBatchEdit,previewBatch:kolSpreadsheetPreviewBatch,
   parseNumber:kolParseMoneyNum,enterDateEdit:enterKolDateEdit,render:renderKol,saveColumnState:saveKolColState,setColumnWidth:kolSpreadsheetSetColumnWidth,autoFitColumn:kolSpreadsheetAutoFitColumn,modelGroupActions:kolModelGroupActions,
   autoFitAll:()=>{kolDisplayDescriptors().forEach(d=>kolSpreadsheetAutoFitColumn(d.k));renderKol();},resetWidths:()=>{kolColWidths={};saveKolColState();renderKol();},
   hideColumn:key=>{if(key==='__picture__')kolPictureHidden=true;else kolHiddenCols.add(key);saveKolColState();renderKol();},freezeToKey:kolSpreadsheetFreezeToKey,unfreeze:()=>{setFreeze('koleksiyon',0);applyFreeze('kolTable','koleksiyon',true);},

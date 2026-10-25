@@ -3355,6 +3355,23 @@ app.patch('/api/quotations/:id/status', userAccess.requireCapability('QUOTATIONS
 /* Fiyat Defteri — tek satır olayı. Fiyat/onay/drop bütün talebi yeniden
    göndermez; yalnız bu satırın değişikliği deftere yazılır (bkz.
    quotation-ledger.js). Onayın kaldırdığı diğer satırlar `affected` ile döner. */
+app.post('/api/quotations/:id/lines/batch',userAccess.requireCapability('QUOTATIONS.EDIT'),express.json({limit:'8mb'}),async(req,res)=>{
+  try{
+    const assertAuthority=()=>{
+      const profile=userAccess.sessionProfile(req);
+      if(!profile||!userAccess.hasCapability(profile,'QUOTATIONS.EDIT'))throw Object.assign(new Error('Güncel fiyat düzenleme yetkisi gerekli. / Current price edit permission is required.'),{code:'QUOTATION_EDIT_DENIED',statusCode:403});
+      const current=quotationStore.loadStore().requests.find(item=>item.id===req.params.id);
+      if(current&&!quotationStore.canEdit(profile,current))throw Object.assign(new Error('Güncel fiyat düzenleme yetkisi gerekli. / Current price edit permission is required.'),{code:'QUOTATION_EDIT_DENIED',statusCode:403});
+      req.currentUser=profile;
+    };
+    const result=await quotationStore.mutateAgent(options=>{
+      assertAuthority();return quotationStore.patchLines(req.currentUser,req.params.id,req.body?.changes,{...options,assertAuthority,source:req.body?.source});
+    });
+    if(!result)return res.status(404).json({error:'Quotation satırı bulunamadı. / Quotation line not found.',code:'QUOTATION_LINE_NOT_FOUND'});
+    if(result.changed){void sharedRevisionStore.update('quotation',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));userAccess.appendAudit(req.currentUser,'QUOTATION_PRICE_BATCH',result.request.id,{lines:result.outcomes.length,revision:result.revision});}
+    res.json(result);
+  }catch(error){res.status(error.statusCode||500).json({error:error.message,code:error.code||'QUOTATION_BATCH_FAILED'});}
+});
 app.patch('/api/quotations/:id/lines/:lineId', userAccess.requireCapability('QUOTATIONS.EDIT'), express.json({ limit: '64kb' }), (req, res) => {
   try {
     const body = req.body && typeof req.body === 'object' ? req.body : {};

@@ -52,10 +52,12 @@ module.exports = function registerChecklistSupplierRoutes(app, deps) {
       const entries = req.body && req.body.entries;
       if (!Array.isArray(entries)) return res.status(400).json({ error: 'entries (dizi) zorunlu. / entries must be an array.', code: 'VALIDATION_ERROR' });
       if (!['buyer_log', 'supplier_excel'].includes(req.body.source || 'buyer_log')) throw fail('CHECKLIST_SOURCE_INVALID', 400);
+      const expectedRevision=req.body.expectedRevision;
+      if(expectedRevision!=null&&(!Number.isSafeInteger(expectedRevision)||expectedRevision<0))throw fail('CHECKLIST_REVISION_INVALID',400);
       const source = req.body.source || 'buyer_log', ctx = await context(req, true);
       const assertAuthority = () => assertEntries(entries, current(req), ctx.orders());
       assertAuthority();
-      const result = await store.applyEntries(entries, req.currentUser, { source, serverIdentity: true, assertAuthority });
+      const result = await store.applyEntries(entries, req.currentUser, { source, serverIdentity: true, assertAuthority,expectedRevision });
       userAccess.appendAudit(req.currentUser, source === 'supplier_excel' ? 'CHECKLIST_SUPPLIER_EXCEL_IMPORT' : 'CHECKLIST_ANSWER_SYNC', 'checklist', {
         source, entries: entries.length, updated: result.updated, cleared: result.cleared, skipped: result.skipped, conflicts: result.conflicts || 0, revision: result.revision,
       });
