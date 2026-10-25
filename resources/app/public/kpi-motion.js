@@ -49,7 +49,7 @@
   }
   function run(host){
     // Motion+ restores KPI count-up on Overview and CP without changing the final value.
-    if(reduced()||doc.documentElement.dataset.blMotion==='off')return;
+    if(reduced()||doc.documentElement.dataset.blMotion==='off'||(doc.body?.dataset?.activeTab==='overview'&&doc.documentElement.dataset.overviewMotion==='paused'))return;
     const view=host||doc.querySelector('main section.active')||doc;
     view.querySelectorAll(SELECTOR).forEach(el=>{const r=el.getBoundingClientRect();if(r.width&&r.bottom>0&&r.top<root.innerHeight)animate(el);});
   }
