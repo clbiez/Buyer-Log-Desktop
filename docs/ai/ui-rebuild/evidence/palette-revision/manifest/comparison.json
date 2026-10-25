@@ -1,0 +1,91 @@
+{
+  "exports": [
+    {
+      "theme": "light",
+      "workbookDifferentParts": [],
+      "copyHTML": true,
+      "copyTSV": true
+    },
+    {
+      "theme": "grey",
+      "workbookDifferentParts": [],
+      "copyHTML": true,
+      "copyTSV": true
+    },
+    {
+      "theme": "dark",
+      "workbookDifferentParts": [],
+      "copyHTML": true,
+      "copyTSV": true
+    },
+    {
+      "theme": "graphite",
+      "workbookDifferentParts": [],
+      "copyHTML": true,
+      "copyTSV": true
+    }
+  ],
+  "headers": [
+    {
+      "theme": "light",
+      "baselineTheme": "light",
+      "cells": 72,
+      "sameCount": true,
+      "differences": []
+    },
+    {
+      "theme": "grey",
+      "baselineTheme": "grey",
+      "cells": 72,
+      "sameCount": true,
+      "differences": []
+    },
+    {
+      "theme": "dark",
+      "baselineTheme": "dark",
+      "cells": 72,
+      "sameCount": true,
+      "differences": []
+    },
+    {
+      "theme": "graphite",
+      "baselineTheme": "dark",
+      "cells": 72,
+      "sameCount": true,
+      "differences": []
+    }
+  ],
+  "originalNeutrals": [
+    {
+      "theme": "light",
+      "same": true
+    },
+    {
+      "theme": "dark",
+      "same": true
+    }
+  ],
+  "indicators": [
+    {
+      "theme": "light",
+      "focus": 5.75,
+      "checkbox": 3.98
+    },
+    {
+      "theme": "grey",
+      "focus": 5.7,
+      "checkbox": 4.02
+    },
+    {
+      "theme": "dark",
+      "focus": 7.83,
+      "checkbox": 4.92
+    },
+    {
+      "theme": "graphite",
+      "focus": 8.72,
+      "checkbox": 5.52
+    }
+  ],
+  "textContrastFailures": 0
+}

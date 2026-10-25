@@ -1,0 +1,2388 @@
+{
+  "contrast": [
+    {
+      "theme": "light",
+      "tab": "overview",
+      "checked": 115,
+      "failures": [
+        {
+          "text": "Version 7.294",
+          "id": "appVersionBtn",
+          "cls": "appVersionBtn",
+          "fg": "rgb(98, 113, 132)",
+          "bg": [
+            240,
+            243,
+            246,
+            1
+          ],
+          "ratio": 4.47
+        },
+        {
+          "text": "Ana Sayfa",
+          "id": "",
+          "cls": "railGroupLabel",
+          "fg": "rgb(98, 113, 132)",
+          "bg": [
+            240,
+            243,
+            246,
+            1
+          ],
+          "ratio": 4.47
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "light",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [
+        {
+          "text": "Version 7.294",
+          "id": "appVersionBtn",
+          "cls": "appVersionBtn",
+          "fg": "rgb(98, 113, 132)",
+          "bg": [
+            240,
+            243,
+            246,
+            1
+          ],
+          "ratio": 4.47
+        },
+        {
+          "text": "Ana Sayfa",
+          "id": "",
+          "cls": "railGroupLabel",
+          "fg": "rgb(98, 113, 132)",
+          "bg": [
+            240,
+            243,
+            246,
+            1
+          ],
+          "ratio": 4.47
+        },
+        {
+          "text": "Yolunda",
+          "id": "",
+          "cls": "badge b-green",
+          "fg": "rgb(63, 119, 87)",
+          "bg": [
+            227,
+            237,
+            230,
+            1
+          ],
+          "ratio": 4.39
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "overview",
+      "checked": 115,
+      "failures": [
+        {
+          "text": "Version 7.294",
+          "id": "appVersionBtn",
+          "cls": "appVersionBtn",
+          "fg": "rgb(82, 96, 109)",
+          "bg": [
+            203,
+            204,
+            206,
+            1
+          ],
+          "ratio": 4.02
+        },
+        {
+          "text": "Ana Sayfa",
+          "id": "",
+          "cls": "railGroupLabel",
+          "fg": "rgb(82, 96, 109)",
+          "bg": [
+            203,
+            204,
+            206,
+            1
+          ],
+          "ratio": 4.02
+        },
+        {
+          "text": "satır",
+          "id": "",
+          "cls": "",
+          "fg": "rgb(82, 96, 109)",
+          "bg": [
+            212,
+            213,
+            215,
+            1
+          ],
+          "ratio": 4.4
+        },
+        {
+          "text": "25 Eki",
+          "id": "",
+          "cls": "ovClockStripDate",
+          "fg": "rgb(82, 96, 109)",
+          "bg": [
+            212,
+            213,
+            215,
+            1
+          ],
+          "ratio": 4.4
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [
+        {
+          "text": "Version 7.294",
+          "id": "appVersionBtn",
+          "cls": "appVersionBtn",
+          "fg": "rgb(82, 96, 109)",
+          "bg": [
+            203,
+            204,
+            206,
+            1
+          ],
+          "ratio": 4.02
+        },
+        {
+          "text": "Ana Sayfa",
+          "id": "",
+          "cls": "railGroupLabel",
+          "fg": "rgb(82, 96, 109)",
+          "bg": [
+            203,
+            204,
+            206,
+            1
+          ],
+          "ratio": 4.02
+        },
+        {
+          "text": "GÖRÜNÜM",
+          "id": "",
+          "cls": "tableViewLabel",
+          "fg": "rgb(82, 96, 109)",
+          "bg": [
+            212,
+            213,
+            215,
+            1
+          ],
+          "ratio": 4.4
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "dark",
+      "tab": "overview",
+      "checked": 115,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "dark",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "graphite",
+      "tab": "overview",
+      "checked": 115,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "graphite",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    }
+  ],
+  "headers": [
+    {
+      "theme": "light",
+      "cells": [
+        {
+          "text": "",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Öncelik",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": "Öncelik",
+          "accent": "rgb(168, 69, 58)"
+        },
+        {
+          "text": "PLM Numune",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": "PLM Numune",
+          "accent": "rgb(55, 68, 84)"
+        },
+        {
+          "text": "Marka Detayları",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": "Marka Detayları",
+          "accent": "rgb(53, 106, 150)"
+        },
+        {
+          "text": "Model Detayları",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": "Model Detayları",
+          "accent": "rgb(53, 106, 150)"
+        },
+        {
+          "text": "Sipariş Detayları",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": "Sipariş Detayları",
+          "accent": "rgb(63, 119, 87)"
+        },
+        {
+          "text": "Lisans Detayları",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": "Lisans Detayları",
+          "accent": "rgb(55, 68, 84)"
+        },
+        {
+          "text": "Tarihler",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": "Tarihler",
+          "accent": "rgb(55, 68, 84)"
+        },
+        {
+          "text": "Kumaş Detayları",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": "Kumaş Detayları",
+          "accent": "rgb(140, 106, 31)"
+        },
+        {
+          "text": "Lojistik",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": "Lojistik",
+          "accent": "rgb(55, 68, 84)"
+        },
+        {
+          "text": "Notlar",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": "Notlar",
+          "accent": "rgb(55, 68, 84)"
+        },
+        {
+          "text": "Kontrol Listesi",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": "Checklist",
+          "accent": "rgb(63, 119, 87)"
+        },
+        {
+          "text": "▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Öncelik▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "PLM Numune▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "MMYG▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "MAG▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Buying Grup▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Buyer▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Görsel",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Line▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ürün Tanımı▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kategori▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "PLM ID▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Model Adı▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Artwork Detayı▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Fabric (PLM)▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Renk Kodu▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Renk▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Özel Kod▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sezon▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ülke▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Üretici▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Alt Üretici▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sipariş▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Önem Etiketi▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "FOB▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Alt Üretici FOB▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sipariş Adeti▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Adet▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kalan▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "%▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Lisansör▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Lisans▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Original Ex-F.▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sipariş Tarihi▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Termin▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ür. Sür.▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Retail Tarihi▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sevk→Perakende▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Model Bütçe▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaş Tipi▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaş Kategorisi▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaşçı Ülkesi▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaşçı▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Karışım▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "İplik No▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Gramaj▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Tipi▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Durum▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Onayı▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Nakliye Depo Teslim▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Antrepo Varış▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Notlar▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ek Notlar▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "PPS onayı▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "S/Off onayı▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Artwork onayı▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Testler▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaş hazırlığı▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Aksesuar hazırlığı▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Üretici yükleme teyidi▾",
+          "bg": "rgb(242, 244, 247)",
+          "color": "rgb(71, 84, 103)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
+    {
+      "theme": "grey",
+      "cells": [
+        {
+          "text": "",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Öncelik",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": "Öncelik",
+          "accent": "rgb(160, 29, 20)"
+        },
+        {
+          "text": "PLM Numune",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": "PLM Numune",
+          "accent": "rgb(57, 70, 82)"
+        },
+        {
+          "text": "Marka Detayları",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": "Marka Detayları",
+          "accent": "rgb(49, 94, 131)"
+        },
+        {
+          "text": "Model Detayları",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": "Model Detayları",
+          "accent": "rgb(49, 94, 131)"
+        },
+        {
+          "text": "Sipariş Detayları",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": "Sipariş Detayları",
+          "accent": "rgb(15, 102, 64)"
+        },
+        {
+          "text": "Lisans Detayları",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": "Lisans Detayları",
+          "accent": "rgb(57, 70, 82)"
+        },
+        {
+          "text": "Tarihler",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": "Tarihler",
+          "accent": "rgb(57, 70, 82)"
+        },
+        {
+          "text": "Kumaş Detayları",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": "Kumaş Detayları",
+          "accent": "rgb(122, 80, 0)"
+        },
+        {
+          "text": "Lojistik",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": "Lojistik",
+          "accent": "rgb(57, 70, 82)"
+        },
+        {
+          "text": "Notlar",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": "Notlar",
+          "accent": "rgb(57, 70, 82)"
+        },
+        {
+          "text": "Kontrol Listesi",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": "Checklist",
+          "accent": "rgb(15, 102, 64)"
+        },
+        {
+          "text": "▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Öncelik▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "PLM Numune▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "MMYG▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "MAG▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Buying Grup▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Buyer▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Görsel",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Line▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ürün Tanımı▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kategori▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "PLM ID▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Model Adı▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Artwork Detayı▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Fabric (PLM)▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Renk Kodu▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Renk▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Özel Kod▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sezon▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ülke▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Üretici▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Alt Üretici▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sipariş▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Önem Etiketi▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "FOB▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Alt Üretici FOB▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sipariş Adeti▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Adet▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kalan▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "%▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Lisansör▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Lisans▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Original Ex-F.▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sipariş Tarihi▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Termin▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ür. Sür.▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Retail Tarihi▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sevk→Perakende▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Model Bütçe▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaş Tipi▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaş Kategorisi▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaşçı Ülkesi▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaşçı▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Karışım▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "İplik No▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Gramaj▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Tipi▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Durum▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Onayı▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Nakliye Depo Teslim▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Antrepo Varış▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Notlar▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ek Notlar▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "PPS onayı▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "S/Off onayı▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Artwork onayı▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Testler▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaş hazırlığı▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Aksesuar hazırlığı▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Üretici yükleme teyidi▾",
+          "bg": "rgb(232, 233, 236)",
+          "color": "rgb(86, 90, 94)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "cells": [
+        {
+          "text": "",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Öncelik",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Öncelik",
+          "accent": "rgb(227, 155, 148)"
+        },
+        {
+          "text": "PLM Numune",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "PLM Numune",
+          "accent": "rgb(189, 200, 212)"
+        },
+        {
+          "text": "Marka Detayları",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Marka Detayları",
+          "accent": "rgb(143, 191, 232)"
+        },
+        {
+          "text": "Model Detayları",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Model Detayları",
+          "accent": "rgb(143, 191, 232)"
+        },
+        {
+          "text": "Sipariş Detayları",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Sipariş Detayları",
+          "accent": "rgb(147, 199, 168)"
+        },
+        {
+          "text": "Lisans Detayları",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Lisans Detayları",
+          "accent": "rgb(189, 200, 212)"
+        },
+        {
+          "text": "Tarihler",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Tarihler",
+          "accent": "rgb(189, 200, 212)"
+        },
+        {
+          "text": "Kumaş Detayları",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Kumaş Detayları",
+          "accent": "rgb(217, 186, 126)"
+        },
+        {
+          "text": "Lojistik",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Lojistik",
+          "accent": "rgb(189, 200, 212)"
+        },
+        {
+          "text": "Notlar",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Notlar",
+          "accent": "rgb(189, 200, 212)"
+        },
+        {
+          "text": "Kontrol Listesi",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Checklist",
+          "accent": "rgb(147, 199, 168)"
+        },
+        {
+          "text": "▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Öncelik▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "PLM Numune▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "MMYG▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "MAG▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Buying Grup▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Buyer▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Görsel",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Line▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ürün Tanımı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kategori▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "PLM ID▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Model Adı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Artwork Detayı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Fabric (PLM)▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Renk Kodu▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Renk▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Özel Kod▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sezon▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ülke▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Üretici▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Alt Üretici▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sipariş▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Önem Etiketi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "FOB▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Alt Üretici FOB▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sipariş Adeti▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Adet▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kalan▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "%▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Lisansör▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Lisans▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Original Ex-F.▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sipariş Tarihi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Termin▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ür. Sür.▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Retail Tarihi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sevk→Perakende▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Model Bütçe▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaş Tipi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaş Kategorisi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaşçı Ülkesi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaşçı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Karışım▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "İplik No▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Gramaj▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Tipi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Durum▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Onayı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Nakliye Depo Teslim▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Antrepo Varış▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Notlar▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ek Notlar▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "PPS onayı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "S/Off onayı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Artwork onayı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Testler▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaş hazırlığı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Aksesuar hazırlığı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Üretici yükleme teyidi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    },
+    {
+      "theme": "graphite",
+      "cells": [
+        {
+          "text": "",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Öncelik",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Öncelik",
+          "accent": "rgb(227, 155, 148)"
+        },
+        {
+          "text": "PLM Numune",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "PLM Numune",
+          "accent": "rgb(192, 202, 213)"
+        },
+        {
+          "text": "Marka Detayları",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Marka Detayları",
+          "accent": "rgb(153, 189, 224)"
+        },
+        {
+          "text": "Model Detayları",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Model Detayları",
+          "accent": "rgb(153, 189, 224)"
+        },
+        {
+          "text": "Sipariş Detayları",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Sipariş Detayları",
+          "accent": "rgb(147, 199, 168)"
+        },
+        {
+          "text": "Lisans Detayları",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Lisans Detayları",
+          "accent": "rgb(192, 202, 213)"
+        },
+        {
+          "text": "Tarihler",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Tarihler",
+          "accent": "rgb(192, 202, 213)"
+        },
+        {
+          "text": "Kumaş Detayları",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Kumaş Detayları",
+          "accent": "rgb(217, 186, 126)"
+        },
+        {
+          "text": "Lojistik",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Lojistik",
+          "accent": "rgb(192, 202, 213)"
+        },
+        {
+          "text": "Notlar",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Notlar",
+          "accent": "rgb(192, 202, 213)"
+        },
+        {
+          "text": "Kontrol Listesi",
+          "bg": "rgb(48, 58, 70)",
+          "color": "rgb(189, 200, 212)",
+          "group": "Checklist",
+          "accent": "rgb(147, 199, 168)"
+        },
+        {
+          "text": "▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Öncelik▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "PLM Numune▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "MMYG▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "MAG▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Buying Grup▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Buyer▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Görsel",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Line▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ürün Tanımı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kategori▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "PLM ID▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Model Adı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Artwork Detayı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Fabric (PLM)▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Renk Kodu▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Renk▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Özel Kod▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sezon▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ülke▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Üretici▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Alt Üretici▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sipariş▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Önem Etiketi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "FOB▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Alt Üretici FOB▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sipariş Adeti▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Adet▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kalan▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "%▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Lisansör▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Lisans▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Original Ex-F.▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sipariş Tarihi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Termin▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ür. Sür.▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Retail Tarihi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Sevk→Perakende▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Model Bütçe▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaş Tipi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaş Kategorisi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaşçı Ülkesi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaşçı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Karışım▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "İplik No▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Gramaj▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Tipi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Durum▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Yükleme Onayı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Nakliye Depo Teslim▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Antrepo Varış▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Notlar▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Ek Notlar▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "PPS onayı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "S/Off onayı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Artwork onayı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Testler▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Kumaş hazırlığı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Aksesuar hazırlığı▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        },
+        {
+          "text": "Üretici yükleme teyidi▾",
+          "bg": "rgb(37, 45, 54)",
+          "color": "rgb(189, 200, 212)",
+          "group": null,
+          "accent": "rgba(0, 0, 0, 0)"
+        }
+      ]
+    }
+  ],
+  "tokens": [
+    {
+      "theme": "light",
+      "values": {
+        "paper": "#f5f7f9",
+        "rail-bg": "#f0f3f6",
+        "card": "#fff",
+        "card2": "#fafbfc",
+        "card2-strong": "#e9edf1",
+        "acc": "#356a96",
+        "thead-bg": "#f2f4f7",
+        "thead-ink": "#475467"
+      }
+    },
+    {
+      "theme": "grey",
+      "values": {
+        "paper": "#d4d5d7",
+        "rail-bg": "#cbccce",
+        "card": "#e9eaec",
+        "card2": "#dfe1e4",
+        "card2-strong": "#c9cdd2",
+        "acc": "#315e83",
+        "thead-bg": "#e8e9ec",
+        "thead-ink": "#565a5e"
+      }
+    },
+    {
+      "theme": "dark",
+      "values": {
+        "paper": "#171c22",
+        "rail-bg": "#14191f",
+        "card": "#20262e",
+        "card2": "#252d36",
+        "card2-strong": "#303a46",
+        "acc": "#8fbfe8",
+        "thead-bg": "#252d36",
+        "thead-ink": "#bdc8d4"
+      }
+    },
+    {
+      "theme": "graphite",
+      "values": {
+        "paper": "#0f1113",
+        "rail-bg": "#0b0d0f",
+        "card": "#191c20",
+        "card2": "#20252a",
+        "card2-strong": "#2b323b",
+        "acc": "#99bde0",
+        "thead-bg": "#252d36",
+        "thead-ink": "#bdc8d4"
+      }
+    }
+  ],
+  "indicators": [
+    {
+      "theme": "light",
+      "focus": {
+        "outline": "rgb(53, 106, 150)",
+        "backdrop": "rgb(255, 255, 255)",
+        "width": "2px"
+      },
+      "checkbox": {
+        "foreground": "rgb(114, 129, 147)",
+        "backdrop": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "theme": "grey",
+      "focus": {
+        "outline": "rgb(49, 94, 131)",
+        "backdrop": "rgb(233, 234, 236)",
+        "width": "2px"
+      },
+      "checkbox": {
+        "foreground": "rgb(102, 115, 129)",
+        "backdrop": "rgb(233, 234, 236)"
+      }
+    },
+    {
+      "theme": "dark",
+      "focus": {
+        "outline": "rgb(143, 191, 232)",
+        "backdrop": "rgb(32, 38, 46)",
+        "width": "2px"
+      },
+      "checkbox": {
+        "foreground": "rgb(133, 148, 165)",
+        "backdrop": "rgb(32, 38, 46)"
+      }
+    },
+    {
+      "theme": "graphite",
+      "focus": {
+        "outline": "rgb(153, 189, 224)",
+        "backdrop": "rgb(25, 28, 32)",
+        "width": "2px"
+      },
+      "checkbox": {
+        "foreground": "rgb(133, 148, 165)",
+        "backdrop": "rgb(25, 28, 32)"
+      }
+    }
+  ],
+  "sizes": [
+    {
+      "theme": "grey",
+      "tab": "overview",
+      "overflow": false,
+      "toolbars": []
+    },
+    {
+      "theme": "grey",
+      "tab": "cp",
+      "overflow": false,
+      "toolbars": []
+    },
+    {
+      "theme": "graphite",
+      "tab": "overview",
+      "overflow": false,
+      "toolbars": []
+    },
+    {
+      "theme": "graphite",
+      "tab": "cp",
+      "overflow": false,
+      "toolbars": []
+    }
+  ]
+}

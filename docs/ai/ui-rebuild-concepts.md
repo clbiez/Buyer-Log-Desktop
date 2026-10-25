@@ -1,5 +1,9 @@
 # Buyer Log — Faz 0B konsept kararı
 
+**Güncel renk yönü:** Kullanıcı önceki nötrleri ve tablo başlık renklerini
+tercih etti. [Renk revizyonu](ui-rebuild-palette-revision.md) ve mevcut galeri
+yeni durumu gösterir; aşağıdaki ilk paletler tarihçedir. Yerleşim seçimi henüz yok.
+
 **Karar kapısı:** İki geçici dal hazır. Kullanıcı konsept seçmeden Faz 1 başlamaz.
 Prototipler üretime merge edilmez. [Üç temalı karşılaştırma galerisi](ui-rebuild/concepts.html).
 

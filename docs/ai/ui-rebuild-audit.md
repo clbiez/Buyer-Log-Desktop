@@ -1,5 +1,8 @@
 # Buyer Log UI yeniden inşası — Faz 0A
 
+Son kullanıcı geri bildirimi: eski nötr palet ve tablo başlıkları korunacak.
+Faz 0B [renk revizyonu](ui-rebuild-palette-revision.md) hazır; konsept seçimi bekleniyor.
+
 Kaynak: `0a5d9fbb` (7.0.294), yerel dal `ui-rebuild/phase-0-audit`.
 Bu faz üretim dosyalarını değiştirmez. Kullanıcı görevi, eski mimari/katman
 kısıtlarının ve ara faz tam test kuralının üstündedir. Konsept seçimi yapılmadan
