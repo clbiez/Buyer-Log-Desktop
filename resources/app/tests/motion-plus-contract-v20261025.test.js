@@ -77,3 +77,33 @@ test('Motion+ never creates full-table observers, infinite animations or new har
  assert.doesNotMatch(css,/animation:[^;]*(?:infinite|loop)/i);
  assert.match(script,/blMotion!=='off'/);
 });
+
+test('KPI counter does not overlap Motion+ and returns the exact canonical string',()=>{
+ const frames=[],el={textContent:'726.300',getBoundingClientRect:()=>({width:80,bottom:25,top:5})};
+ const view={querySelectorAll:()=>[el]};
+ const document={documentElement:{dataset:{}},querySelector:()=>view,addEventListener(){}};
+ const window={document,innerHeight:800,matchMedia:()=>({matches:false}),
+   requestAnimationFrame:callback=>frames.push(callback),setTimeout(){}};
+ vm.runInNewContext(read('kpi-motion.js'),{window,performance:{now:()=>0}});
+ window.BLKpiMotion.run(view);
+ assert.equal(frames.length,1);
+ frames.shift()(0);
+ frames.shift()(320);
+ window.BLKpiMotion.run(view);
+ assert.equal(frames.length,1,'a second motion trigger must not restart an in-flight counter');
+ frames.shift()(700);
+ assert.equal(el.textContent,'726.300');
+ window.BLKpiMotion.run(view);
+ assert.equal(frames.length,0,'finished values are not restarted');
+});
+test('KPI counter drops out if its cell is rerendered during animation',()=>{
+ const frames=[],el={textContent:'726.300',getBoundingClientRect:()=>({width:80,bottom:25,top:5})};
+ const view={querySelectorAll:()=>[el]};
+ const document={documentElement:{dataset:{}},querySelector:()=>view,addEventListener(){}};
+ const window={document,innerHeight:800,matchMedia:()=>({matches:false}),
+   requestAnimationFrame:callback=>frames.push(callback),setTimeout(){}};
+ vm.runInNewContext(read('kpi-motion.js'),{window,performance:{now:()=>0}});
+ window.BLKpiMotion.run(view);
+ frames.shift()(0);el.textContent='4.000';frames.shift()(300);
+ assert.equal(el.textContent,'4.000','canonical source wins over the abandoned animation');
+});
