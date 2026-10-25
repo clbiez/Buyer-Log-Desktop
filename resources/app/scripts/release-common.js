@@ -14,7 +14,13 @@ const APP_ROOT=path.resolve(__dirname,'..');
 const PORTABLE_ROOT=path.resolve(APP_ROOT,'..','..');
 const DIST_ROOT=path.join(APP_ROOT,'dist-updates');
 const PENDING_FILE=path.join(APP_ROOT,'.release-pending.json');
-const UPDATER_VERSION=require('../electron/manual-patch/signature').BOOTSTRAP_VERSION;
+// minimumUpdaterVersion = bu çekirdeği güvenle etkinleştirebilen en eski launcher
+// (etkinleştirme tabanı). Launcher'ın kendi sürümünden ayrıdır: daha yeni launcher
+// updater tarafından release'in kendisinden otomatik kurulur. Tabanı yükseltmek,
+// kendi kendini güncelleyemeyen eski (<= 7.0.300) istemcileri yeniden kilitler.
+const LAUNCHER_INFO=require('../electron/update/launcher-version.json');
+const UPDATER_VERSION=LAUNCHER_INFO.minimumActivationLauncher;
+if(!parseSemver(UPDATER_VERSION)||!parseSemver(LAUNCHER_INFO.launcherVersion)||compareSemver(LAUNCHER_INFO.launcherVersion,UPDATER_VERSION)<0)throw Object.assign(new Error('launcher-version.json geçersiz.'),{code:'RELEASE_LAUNCHER_INVALID'});
 
 function fail(message,code='RELEASE_FAILED'){const e=new Error(message);e.code=code;throw e;}
 function readPackage(){const pkg=readJson(path.join(APP_ROOT,'package.json'),null);if(!pkg||!parseSemver(pkg.version))fail('package.json version geçerli SemVer değil.','RELEASE_VERSION_INVALID');return pkg;}
@@ -73,6 +79,8 @@ async function buildArtifact(version,notes=''){
     for(const required of [...bootstrapFiles.BOOTSTRAP_FILES,bootstrapFiles.ANCHOR])
       if(!fs.existsSync(path.join(packedRoot,...required.split('/'))))fail('Güven kökü eksik: '+required,'RELEASE_ARTIFACT_ASSERT');
     require('../electron/manual-patch/core-verification').verifyPackagedCore(packedRoot,version);
+    const packedLauncher=require('../electron/update/launcher-host').readLauncherInfo(packedRoot);
+    if(!packedLauncher||packedLauncher.minimumActivationLauncher!==UPDATER_VERSION||compareSemver(packedLauncher.launcherVersion,UPDATER_VERSION)<0)fail('Artifact launcher sürüm kaydı manifest tabanıyla uyuşmuyor.','RELEASE_ARTIFACT_ASSERT');
     if(fs.existsSync(path.join(packedRoot,'server','data')))fail('Artifact server/data runtime verisi içeremez.','RELEASE_ARTIFACT_DATA_LEAK');
     if(githubRepo){const packedSource=readJson(path.join(packedRoot,'electron','update','release-source.json'),null);if(!packedSource||packedSource.githubSource!==`github:${githubRepo}`)fail('Artifact public GitHub update kaynağını içermiyor.','RELEASE_ARTIFACT_UPDATE_SOURCE');}
   }finally{try{fs.rmSync(verifyRoot,{recursive:true,force:true});}catch(_){}}

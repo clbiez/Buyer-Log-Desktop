@@ -54,6 +54,9 @@
       return String(status.pendingVersion) + ' ' + tr('indirildi ve doğrulandı. Yeniden başlatınca kurulacak.','was downloaded and verified. Restart to install it.');
     }
     const code = String(status.lastError && status.lastError.code || '');
+    if (code === 'UPDATE_UPDATER_TOO_OLD') return tr('Bu sürüm daha yeni güncelleme altyapısı gerektiriyor ve altyapı otomatik yükseltilemedi.','This version requires newer update infrastructure and it could not be upgraded automatically.') + (launcherFailure(status) ? ' ' + launcherFailure(status) : '');
+    if (!status.lastError && launcherFailure(status)) return launcherFailure(status);
+    if (!status.lastError && status.launcher && status.launcher.restartRequired && status.launcher.installed) return tr('Güncelleme altyapısı ','Update infrastructure ') + status.launcher.installed + tr(' sürümüne yükseltildi. Bir sonraki açılışta otomatik etkinleşir.',' is ready. It activates automatically on the next start.');
     if(status.lastError?.manualPatch)return tr('İmzalı yamanın açılışı doğrulanamadı. Önceki uygulama ve veri geri yüklendi. Daha yeni onaylı bir yama veya imzalı tam kurulum seçin.','The signed patch could not start successfully. The previous application and data were restored. Select a newer approved patch or a signed full installation.');
     if (code === 'UPDATE_ADMIN_REQUIRED') return tr('Bu güncelleme işlemi için güncel moderatör yetkisi gerekiyor.','Current moderator authority is required for this update operation.');
     if (code === 'UPDATE_RETRY_TARGET_CHANGED') return tr('Yeniden denenecek sürüm veya kanal değişti. Güncellemeyi kontrol edip paketi yeniden seçin.','The version or channel to retry changed. Check for updates and select the package again.');
@@ -91,6 +94,16 @@
     }
     if (status.latestVersion) return tr('Son bulunan sürüm: ','Latest discovered version: ') + status.latestVersion;
     return tr('Henüz güncelleme kontrolü yapılmadı.','No update check has run yet.');
+  }
+
+  function launcherFailure(status) {
+    const failure = status && status.launcher && status.launcher.lastError;
+    const code = String(failure && failure.code || '');
+    if (!code) return '';
+    if (code === 'UPDATE_LAUNCHER_BOOTSTRAP_UNVERIFIED' || code === 'UPDATE_LAUNCHER_CURRENT_UNVERIFIED') return tr('Kurulum dosyaları imzalı paketle eşleşmediği için güncelleme altyapısı yükseltilmedi; mevcut altyapı çalışmaya devam ediyor. Kalıcı çözüm için temiz imzalı tam paketi kurun.','The update infrastructure was not upgraded because installation files do not match the signed package; the current infrastructure keeps working. Install a clean signed full package for a permanent fix.');
+    if (code === 'UPDATE_LAUNCHER_BOOTSTRAP_READONLY') return tr('Kurulum klasörü yazılamadığı için güncelleme altyapısı yükseltilemedi. Buyer Log yazma izni olan bir klasörde çalışmalı.','The update infrastructure could not be upgraded because the installation folder is not writable. Buyer Log must run from a writable folder.');
+    if (code === 'UPDATE_LAUNCHER_REJECTED') return tr('Yeni güncelleme altyapısı bu bilgisayarda açılamadı; önceki altyapıya güvenle dönüldü.','The new update infrastructure could not start on this computer; the previous infrastructure was restored safely.');
+    return tr('Güncelleme altyapısı yükseltilemedi; mevcut altyapı çalışmaya devam ediyor. Bir sonraki açılışta yeniden denenir.','The update infrastructure could not be upgraded; the current infrastructure keeps working. It is retried on the next start.');
   }
 
   function close() {
@@ -140,6 +153,8 @@
     setValue('latest',status.latestVersion);
     setValue('pending',status.pendingVersion);
     setValue('state',stateLabel(status.state));
+    const launcher = status.launcher || null;
+    setValue('launcher',launcher ? String(launcher.running || status.updaterVersion || '') + (launcher.restartRequired && launcher.installed ? ' → ' + launcher.installed : '') : status.updaterVersion);
     renderProgress(status);
     const channel = overlay.querySelector('[data-update-channel]');
     if (channel && !busy) channel.value = String(status.configuredChannel || status.channel || 'stable').toLowerCase() === 'test' ? 'test' : 'stable';
@@ -147,7 +162,7 @@
     if (message) {
       message.textContent = patchFailure || messageFor(status);
       message.classList.toggle('isReady',Boolean(status.pendingReady));
-      message.classList.toggle('isError',Boolean(patchFailure) || status.state === 'FAILED' || Boolean(status.lastError));
+      message.classList.toggle('isError',Boolean(patchFailure) || status.state === 'FAILED' || Boolean(status.lastError) || Boolean(launcherFailure(status)));
     }
     const restart = overlay.querySelector('[data-update-restart]');
     if (restart) restart.hidden = !status.pendingReady;
@@ -194,6 +209,7 @@
       '<div><span>' + esc(tr('Kanal','Channel')) + '</span><b data-update-value="channel">—</b></div>',
       '<div><span>' + esc(tr('Son bulunan','Latest found')) + '</span><b data-update-value="latest">—</b></div>',
       '<div><span>' + esc(tr('Hazırlanan','Pending')) + '</span><b data-update-value="pending">—</b></div>',
+      '<div><span>' + esc(tr('Güncelleme altyapısı','Update infrastructure')) + '</span><b data-update-value="launcher">—</b></div>',
       '<div class="updateTestStateRow"><span>' + esc(tr('Durum','Status')) + '</span><b data-update-value="state">—</b></div>',
       '</div>',
       moderator ? '<div class="updateTestControls"><label><span>' + esc(tr('Güncelleme kanalı','Update channel')) + '</span>' : '',

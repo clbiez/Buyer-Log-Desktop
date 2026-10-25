@@ -3,14 +3,43 @@
   "publishedAt": "2026-10-25",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Yeni kurulumda Shared Hub kullanıcıları",
-    "en": "Shared Hub users on new installations"
+    "tr": "Kendini güncelleyen güncelleme altyapısı ve Shared Hub kullanıcı dizini",
+    "en": "Self-updating update infrastructure and Shared Hub user directory"
   },
   "summary": {
-    "tr": "Yeni Buyer Log klasörü, eksik denetim kaydına takılmadan Shared Hub kullanıcı dizinini yükler.",
-    "en": "A new Buyer Log folder loads the Shared Hub user directory without stalling on a missing audit record."
+    "tr": "Eski kurulumlar “updater altyapısı yetersiz” hatası olmadan güncellenir; güncelleme altyapısı bundan sonra imzalı sürümlerle birlikte kendini güvenle yükseltir; yeni kurulum eksik denetim kaydına takılmadan Shared Hub kullanıcılarını yükler.",
+    "en": "Older installations update without the “updater infrastructure too old” error; from now on the update infrastructure upgrades itself safely together with signed releases; a new installation loads Shared Hub users without stalling on a missing audit record."
   },
   "changes": [
+    {
+      "id": "update-infrastructure-self-upgrade",
+      "type": "fix",
+      "module": {
+        "tr": "Güncelleme",
+        "en": "Updates"
+      },
+      "title": {
+        "tr": "Güncelleme altyapısı artık kendini de güncelliyor",
+        "en": "The update infrastructure now updates itself"
+      },
+      "body": {
+        "tr": "Eski kurulumlar (updater 1.0.0 / 1.1.0) “daha yeni updater altyapısı gerekiyor” hatasında takılmadan yeni sürümü kurar. Sürümün ilk sağlıklı açılışında, imzalı ve doğrulanmış paketteki güncelleme altyapısı otomatik hazırlanır; bir sonraki açılışta etkinleşir. Yönetici yetkisi ya da elle kurulum gerekmez. Yeni altyapı açılamazsa önceki altyapıya otomatik dönülür. Kurulum dosyaları değiştirilmişse veya klasör yazılamıyorsa yükseltme yapılmaz; Güncellemeleri Kontrol Et penceresi nedenini gösterir.",
+        "en": "Older installations (updater 1.0.0 / 1.1.0) install the new version instead of stopping at “requires newer updater infrastructure”. On the version’s first healthy start, the update infrastructure from the signed, verified package is prepared automatically and activates on the next start. No administrator rights or manual installation are needed. If the new infrastructure cannot start, the previous one is restored automatically. When installation files were modified or the folder is not writable, the upgrade is skipped and Check for Updates shows the reason."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "update-infrastructure-self-upgrade.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Güncellemeleri Kontrol Et penceresi: güncelleme altyapısı 1.0.0 → 1.2.0 hazır, demo veri",
+          "en": "Real Buyer Log Check for Updates window: update infrastructure 1.0.0 → 1.2.0 ready, demo data"
+        },
+        "caption": {
+          "tr": "Güncelleme altyapısı otomatik yükseltildi",
+          "en": "Update infrastructure upgraded automatically"
+        }
+      }
+    },
     {
       "id": "new-install-shared-users",
       "type": "fix",

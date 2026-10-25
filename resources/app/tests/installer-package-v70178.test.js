@@ -30,7 +30,7 @@ function fixture(t,{appExtras={}}={}){
   childProcess.execFileSync('git',['add','-A'],{cwd:repo});
   const app=path.join(root,'app');
   write(path.join(app,'package.json'),JSON.stringify({name:'buyer-log-desktop',version:'7.0.178',dependencies:{express:'^4.19.2'}}));
-  for(const file of ['electron/launcher.js','electron/main.js','server/server.js','public/index.html'])write(path.join(app,file),'// '+file);
+  for(const file of ['electron/launcher.js','electron/launcher-core.js','electron/update/launcher-version.json','electron/main.js','server/server.js','public/index.html'])write(path.join(app,file),'// '+file);
   write(path.join(app,'node_modules','express','package.json'),'{"name":"express"}');
   for(const [file,content] of Object.entries(appExtras))write(path.join(app,file),content);
   const appZip=path.join(root,'BuyerLog-7.0.178.zip');createZipFromDirectory(app,appZip,{rootPrefix:'app'});
