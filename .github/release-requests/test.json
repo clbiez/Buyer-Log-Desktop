@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "81660255859b511793ea90aa4497930797b6e95f",
-  "release_notes": "Buyer Log 7.0.296 TEST: includes all updates merged through 81660255859b. Resolves 7.0.295 regression blockers: durable shadow-mirror test synchronization, Windows integrity-stress fixture budget, and version/lock/SBOM consistency. Unmerged draft notification PRs #694/#721 remain excluded.",
-  "request_id": "7.0.296-test-regression-fixes-20261025"
+  "commit_sha": "39699a58d1338d6abb1457d1d2c42a0949d71d9e",
+  "release_notes": "Buyer Log 7.0.297 TEST: all updates merged through 39699a58d133, including the 7.0.295/296 release regression fixes (durable shadow-mirror test, Windows stress fixture, matching SBOM metadata, deterministic XML checkout). Draft notification PRs #694/#721 remain excluded.",
+  "request_id": "7.0.297-test-windows-inventory-fix-20261025"
 }
