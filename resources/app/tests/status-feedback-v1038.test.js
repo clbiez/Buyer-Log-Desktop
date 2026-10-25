@@ -72,7 +72,7 @@ test('v10.38 bildirim yığını mesaj kaybetmez, büyümeyi sınırlar ve okuma
 
 test('v10.38 mevcut toast çağrıları ortak bildirime gider ve geçmiş kaydı korunur', () => {
   const toast = APP.slice(APP.indexOf('function showToast'), APP.indexOf('const TABLE_META'));
-  assert.match(toast, /notificationHistoryAdd\(msg,'toast'\)/);
+  assert.match(toast, /notificationHistoryAdd\(msg,'toast',\{severity:o\.kind/);
   assert.match(toast, /window\.BLUI\?\.notify/);
   assert.match(toast, /placement:'edge'/);
   assert.match(toast, /kind:o\.kind\|\|'info'/);
@@ -81,7 +81,7 @@ test('v10.38 mevcut toast çağrıları ortak bildirime gider ve geçmiş kaydı
 
 test('v10.38 merkez bildirimi ortak sözleşmeye gider, geçmiş ve kapatma işlevini korur', () => {
   const center = APP.slice(APP.indexOf('function showCenterNotice'), APP.indexOf('function showToast'));
-  assert.match(center, /notificationHistoryAdd\(msg,'center'\)/);
+  assert.match(center, /notificationHistoryAdd\(msg,'center',\{severity:o\.kind/);
   assert.match(center, /window\.BLUI\?\.notify/);
   assert.match(center, /language:appLang/);
   assert.match(center, /return close/);
