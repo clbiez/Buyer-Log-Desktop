@@ -7,7 +7,7 @@
   'use strict';
   const doc=root.document;
   if(!doc)return;
-  const SELECTOR='.bpaTileValue,.bdaKpiValue,.psaKpi strong,.cpaChip .n,.pricingMetric b,.blvTile .bpaTileValue';
+  const SELECTOR='.bpaTileValue,.bdaKpiValue,.psaKpi strong,.cpaChip .n,.pricingMetric b,.blvTile .bpaTileValue,.ovPulseKpi b,.ovMetricSummary strong';
   const DURATION=650;
   const seen=new WeakMap();
   const reduced=()=>root.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -42,11 +42,10 @@
     };
     root.requestAnimationFrame(frame);
   }
-  function run(){
-    // The Manifest pilots show the actual number immediately; no decorative count-up.
-    if(doc.documentElement.dataset.uiSystem==='manifest'&&['overview','cp'].includes(doc.body.dataset.activeTab))return;
-    if(reduced())return;
-    const view=doc.querySelector('main section.active')||doc;
+  function run(host){
+    // Motion+ restores KPI count-up on Overview and CP without changing the final value.
+    if(reduced()||doc.documentElement.dataset.blMotion==='off')return;
+    const view=host||doc.querySelector('main section.active')||doc;
     view.querySelectorAll(SELECTOR).forEach(el=>{const r=el.getBoundingClientRect();if(r.width&&r.bottom>0&&r.top<root.innerHeight)animate(el);});
   }
   // Modül değişiminden sonra içerik çizilince bir kez çalış.
