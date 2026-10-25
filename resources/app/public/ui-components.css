@@ -7723,7 +7723,7 @@ html[data-ui-system="manifest"] .notificationHistoryOpen {font-family:inherit;fo
 html[data-ui-system="manifest"] .notificationHistoryOpen:hover {text-decoration:underline
 }
 html[data-ui-system="manifest"] .notificationHistoryOpen:focus-visible,
-html[data-ui-system="manifest"] .warningList li.hasDetail:focus-visible {outline:2px solid var(--ui-focus-ring);outline-offset:2px
+html[data-ui-system="manifest"] .warningList li.hasDetail:focus-visible {outline:2px solid var(--ui-accent);outline-offset:2px
 }
 html[data-ui-system="manifest"] .notificationHistoryRemove {background:transparent !important;color:var(--ui-text-muted) !important
 }
