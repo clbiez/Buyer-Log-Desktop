@@ -42,11 +42,11 @@
     };
     root.requestAnimationFrame(frame);
   }
-  function run(){
+  function run(scope){
     // The Manifest pilots show the actual number immediately; no decorative count-up.
     if(doc.documentElement.dataset.uiSystem==='manifest'&&['overview','cp'].includes(doc.body.dataset.activeTab))return;
     if(reduced())return;
-    const view=doc.querySelector('main section.active')||doc;
+    const view=scope&&typeof scope.querySelectorAll==='function'?scope:(doc.querySelector('main section.active')||doc);
     view.querySelectorAll(SELECTOR).forEach(el=>{const r=el.getBoundingClientRect();if(r.width&&r.bottom>0&&r.top<root.innerHeight)animate(el);});
   }
   // Modül değişiminden sonra içerik çizilince bir kez çalış.
