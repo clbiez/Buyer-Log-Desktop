@@ -1,0 +1,58 @@
+name: Buyer Log Patch Coverage (READ ONLY)
+on:
+  push:
+    branches: [fix/patch-coverage-audit-signed-migration-20261025]
+    paths:
+      - scripts/patch_coverage_audit.py
+      - .github/workflows/buyerlog-patch-coverage.yml
+  pull_request_target:
+    types: [closed]
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: buyerlog-patch-coverage
+  cancel-in-progress: true
+jobs:
+  audit:
+    # Never execute PR head code or publish any app artifact.
+    if: github.event_name != 'pull_request_target' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout safe main or feature branch under test
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'push' && github.ref_name != 'main' && github.sha || 'main' }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Resolve pinned official STABLE source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          VERSION="$(curl --fail --location --silent --show-error --retry 2 --max-time 30 \
+            https://raw.githubusercontent.com/clbiez/Buyer-Log-Releases/main/stable/latest.json | \
+            python3 -c "import json,sys;print(json.load(sys.stdin)['version'])")"
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          BASE="$(gh api "repos/$REPO/branches/updates/v$VERSION" --jq '.commit.sha')"
+          [[ "$BASE" =~ ^[a-f0-9]{40}$ ]]
+          git cat-file -e "$BASE:resources/app/package.json"
+          echo "BUYER_LOG_STABLE_SOURCE_SHA=$BASE" >> "$GITHUB_ENV"
+          echo "Official source: $VERSION / $BASE"
+      - name: Report all changes not present in the published legacy patch
+        shell: bash
+        run: python3 scripts/patch_coverage_audit.py
+      - name: Retain diagnostic report only (never an application ZIP)
+        uses: actions/upload-artifact@v4
+        with:
+          name: patch-coverage-audit
+          path: |
+            dist/patch-coverage-audit.md
+            dist/patch-coverage-summary.json
+          retention-days: 7
+          if-no-files-found: error
