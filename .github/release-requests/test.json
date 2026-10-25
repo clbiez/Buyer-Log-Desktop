@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.295",
-  "commit_sha": "b7bd46e45b53553a59badda24064a8295e09e5d5",
-  "release_notes": "Buyer Log 7.0.295 TEST — 7.0.294 sonrası main dalına birleştirilmiş tüm geliştirmeler: Manifest arayüzü bütünlüğü, CP/Orders/Overview canlı veri uyumu, veri güvenliği, büyük veri performansı, toplu işlemler, fiyat kaynağı ve diğer hata düzeltmeleri. / All changes merged into main since 7.0.294: Manifest UI integration, CP/Orders/Overview consistency, data integrity, large-data performance, bulk operations, pricing lineage and fixes. Draft notification PRs #694/#721 are excluded.",
-  "request_id": "7.0.295-test-main-b7bd46e-20261025"
+  "commit_sha": "81660255859b511793ea90aa4497930797b6e95f",
+  "release_notes": "Buyer Log 7.0.296 TEST: includes all updates merged through 81660255859b. Resolves 7.0.295 regression blockers: durable shadow-mirror test synchronization, Windows integrity-stress fixture budget, and version/lock/SBOM consistency. Unmerged draft notification PRs #694/#721 remain excluded.",
+  "request_id": "7.0.296-test-regression-fixes-20261025"
 }
