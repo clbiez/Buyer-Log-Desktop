@@ -1750,6 +1750,64 @@
           "en": "Remaining Excel reads moved into the background"
         }
       }
+    },
+    {
+      "id": "price-value-source-explanation",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Fiyatın kaynağını ve kullanılan kur ayını görün",
+        "en": "See where a price comes from and which FX month was used"
+      },
+      "body": {
+        "tr": "Mevcut fiyat çekmecesi; onaylı/en iyi/hedef fiyat kaynağını, kural kimliğini, istenen ve uygulanan kur ayını, kaynak tarihini ve sürümünü açıklar. Bilinmeyen tarihler güncelmiş gibi gösterilmez. Onay olayları teklifin giriş yolunu/tarihini değiştirmez; CP Update kaynağı ayrı tanınır. Varsayımları mevcut Excel raporundan indirebilir, yetkiniz varsa ilgili kuralı açabilirsiniz. CP ve Siparişler’de İşlemler paletindeki “Bu fiyat nereden geliyor?” eylemini kullanın.",
+        "en": "The existing price drawer explains the confirmed/best/target source, rule ID, requested/applied FX month, source date and revision. Unknown dates are not presented as fresh. Approval events do not replace an offer’s entry source/date, and CP Update is identified separately. Export the assumptions through the existing Excel report or open the matching rule when authorized. In CP and Orders, use “Why this value?” in the Actions palette."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "price-source-lineage.png",
+        "alt": {
+          "tr": "Gerçek demo fiyat çekmecesinde onaylı teklif kaynağı ve önceki aya dönen otomatik kur.",
+          "en": "Actual demo price drawer with confirmed-offer provenance and the automatic FX fallback month."
+        },
+        "caption": {
+          "tr": "Hesaplar mevcut motorlardan okunur; açıklama açılırken yeni sunucu isteği gönderilmez.",
+          "en": "Values come from the existing engines; opening the explanation sends no new server request."
+        }
+      }
+    },
+    {
+      "id": "price-drawer-record-binding",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · Fiyat çekmecesi",
+        "en": "Collection · Price drawer"
+      },
+      "title": {
+        "tr": "Açık fiyat çekmecesi doğru kayda bağlı kalır",
+        "en": "An open price drawer stays bound to the right record"
+      },
+      "body": {
+        "tr": "Çalışma alanı, oturum veya model kimliği değişirse eski çekmece kapanır ve eski giriş yeni kayda uygulanmaz. Güncel salt okunur yetki girişleri kapatır. Dil değiştirirken kaydedilmemiş giriş ve odak korunur; yalnız ekranı yenilemek bir fiyat kaydı oluşturmaz.",
+        "en": "Changing workspace, session or model identity closes the stale drawer and prevents an old input from changing the new record. Current view-only access disables inputs. Language changes preserve an unsaved entry and focus; refreshing the display does not create a price save."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "price-source-lineage-en.png",
+        "alt": {
+          "tr": "Gerçek demo fiyat çekmecesinin İngilizce kaynak açıklaması.",
+          "en": "English source explanation in the actual demo price drawer."
+        },
+        "caption": {
+          "tr": "TR/EN metinleri mevcut giriş taslağı korunarak yenilenir.",
+          "en": "TR/EN text refreshes while preserving the current input draft."
+        }
+      }
     }
   ]
 }

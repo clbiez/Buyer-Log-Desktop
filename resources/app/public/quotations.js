@@ -546,6 +546,10 @@
   function qSameCollectionOwner(reqA,reqB){
     return qNorm(reqA?.ownerId)===qNorm(reqB?.ownerId);
   }
+  function qLineMatchesCollectionIdentity(line,row){
+    const model={plmId:qCollectionEffectiveValue(row,'plmId'),modelCode:qCollectionEffectiveValue(row,'modelKod')};
+    return Boolean(qNorm(line?.plmId)&&qNorm(model.plmId)||qNorm(line?.modelCode)&&qNorm(model.modelCode))&&qIdentityCompatible(line,model);
+  }
   function qBestForModel(req,item){
     let best=null;
     const source=req?.source==='cp'?'cp':'collection';
@@ -2821,6 +2825,7 @@
     ready:()=>qReady,hydrate:(force=true)=>qHydrateShared(force),flush:()=>qFlushSaves(),
     requests:()=>qLoad().requests,profiles:()=>qProfiles,currentUserId:qCurrentUserId,isModerator:qIsModerator,
     canEdit:qCanEditRequest,canManage:qCanManageAccess,findRow:qFindCollectionRow,rowValue:qCollectionEffectiveValue,
+    identityMatchesRow:qLineMatchesCollectionIdentity,
     imageSrc:qCollectionImageSrc,thumb:qCachedModelThumb,itemCategory:qItemCategory,itemTarget:qItemTargetPrice,itemFabric:qItemFabric,
     targetDelta:qTargetDelta,ownerLabel:qOwnerLabel,profileName:qProfileName,requestTitle:qRequestTitle,workspaceTitle:qWorkspaceRequestTitle,
     moneyDisplay:qMoneyDisplay,moneyNumber:qMoneyNumber,validPrice:qValidPrice,date:qDate,lineOwnerId:qLineOwnerId,

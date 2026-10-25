@@ -25575,14 +25575,16 @@ function kolSuppFob(row){
 }
 
 // Ex-Factory ayına ait 1 USD = ? TRY kuru. Yoksa bugünün ayı denenir.
-function kolAutoFx(row){
+function kolAutoFx(row,details=false){
+  const missing={rate:null,requestedMonth:null,resolvedMonth:null,exact:false};
   try{
-    if(typeof BLFX==='undefined') return null;
+    if(typeof BLFX==='undefined') return details?missing:null;
     const monthKey=row&&row.exFactory ? BLFX.monthKey(coerceDateLoose(row.exFactory)) : BLFX.monthKey(new Date());
     const snap=BLFX.snapshotForMonth(monthKey,'USD');
     const rate=BLFX.convert(1,'USD','TRY',snap);
-    return Number.isFinite(rate)&&rate>0 ? rate : null;
-  }catch(_){ return null; }
+    const info={rate:Number.isFinite(rate)&&rate>0?rate:null,requestedMonth:monthKey,resolvedMonth:snap.month,exact:snap.exact,revision:Number(BLFX.store?._revision)||0,sourceFile:BLFX.store?.sourceFile||'',sourceModifiedAt:BLFX.store?.sourceModifiedAt||null,updatedAt:BLFX.store?.updatedAt||null};
+    return details?info:info.rate;
+  }catch(_){ return details?missing:null; }
 }
 
 function kolLandedIsNonDtr(row){
@@ -28898,6 +28900,27 @@ function contextualCommandModelKey(row,module){
   if(module==='koleksiyon')return window.BLCollection.keyOf(row);
   return window.BLCollection.keyOf({plmId:window.BLCanonicalFields.canonicalValue(row,module,'plmId'),modelKod:window.BLCanonicalFields.canonicalValue(row,module,'modelName')});
 }
+function priceLineageBinding(row,module='collection'){
+  return window.BLPriceLineage.binding(row,{module,owner:module==='collection'?kolWorkspaceOwnerId:orderLinePeerOwner(),user:orderLinePeerOwner(),fields:window.BLCanonicalFields});
+}
+function priceLineageResolve(binding){
+  if(window.BLCanAccessArea?.(binding?.module==='collection'?'koleksiyon':binding?.module)===false)return null;
+  const rows=binding?.module==='collection'?kolRows:state[binding?.module]?.rows||[];
+  return rows.find(row=>String(row._collectionSourceId??row.id??row._id??'')===binding.id&&window.BLPriceLineage.sameBinding(binding,priceLineageBinding(row,binding.module)))||null;
+}
+function priceLineageSnapshot(row,module='collection',provenance={}){
+  const revisions=state.storeRevisions||{},ruleFields=rule=>rule?Object.fromEntries(['id','opdStart','opdEnd','countryGroup','licensor','license','seasons','royalty','hologramCost'].map(key=>[key,rule[key]??null])):null;
+  if(module==='collection'){
+    const effective=kolGroupSummaryEffectiveLandedRow(row),k=kolLandedCalc(effective),rule=kolFindPricingRule(effective),fx=kolAutoFx(effective,true),blockers=[];
+    if(k.ruleInvalid)blockers.push(kolPricingRuleInvalidText());else if(k.ruleMissing)blockers.push(kolLicenseRuleMissingText(effective));if(k.trRuleInvalid)blockers.push(kolPricingRuleInvalidText(true));else if(k.trRuleMissing)blockers.push(kolTrLicenseRuleMissingText(effective));
+    return window.BLPriceLineage.snapshot({module,record:[row.modelKod,row.plmId,row.colourCode].filter(Boolean).join(' · '),source:{kind:k.supp?.source||'missing',name:k.supp?.name||'',amount:k.ydBaseFob,origin:provenance.origin||'',at:provenance.at||null,requestId:provenance.requestId||'',lineId:provenance.lineId||''},values:{suppFob:k.ydBaseFob,overseasLanded:k.ydLanded,trLanded:k.trLanded},rule:ruleFields(rule),trRule:ruleFields(k.trRule),fx:{...fx,rate:k.fx,manual:k.fxIsManual},revisions:{collection:kolWorkspaceRevision,row:Number(row._rev)||0,pricingRules:Number(revisions.pricingRules)||0},blockers,precedence:'confirmed > best > target'});
+  }
+  const meta=suppFobMetaForRow(row),rule=findSuppFobRule(row.OPD,row.Country,row.Season,row.Licensor,row.License),manual=hasManualSuppFob(row);
+  return window.BLPriceLineage.snapshot({module,record:[row['Order Code'],row['Model Name'],row['C.Code']].filter(value=>value!=null&&value!=='').join(' · '),source:{kind:meta?.origin==='cpupdate'?'cp-update':manual?'manual':isSuppFobAutoCalculated(row)?'rule':turknorm(row.Licensor)==='DTR'?'dtr':'missing',amount:row['Supp. FOB'],origin:meta?.origin||'',at:null},values:{suppFob:row['Supp. FOB'],fob:row['FOB ($)']},rule:ruleFields(rule),revisions:{orders:Number(revisions.orders)||0,suppFob:Number(revisions.suppFob)||0,pricingRules:Number(revisions.pricingRules)||0},blockers:suppFobRuleMissing(row)?[suppFobRuleMissingText()]:[]});
+}
+window.BLPriceLineageBridge={binding:priceLineageBinding,resolve:priceLineageResolve,snapshot:priceLineageSnapshot,canManageRules:()=>window.BLHasPermission?.('manageBusinessRules')===true,
+  openRule(binding,id){const row=priceLineageResolve(binding);if(!row||!window.BLHasPermission?.('manageBusinessRules'))return false;const snapshot=priceLineageSnapshot(row,binding.module);if(id&&![snapshot.rule?.id,snapshot.trRule?.id].includes(id))return false;openSuppFobRulesModal();const select=document.getElementById('_ruleCheckRule');if(select&&id){select.value=id;select.dispatchEvent(new Event('change',{bubbles:true}));}return true;}
+};
 function contextualCommandRule(ctx){
   const row=ctx.rows[0];if(!row)return null;
   return ctx.module==='koleksiyon'?kolFindPricingRule(row):findSuppFobRule(...['orderPlacementDate','country','season','licensor','license'].map(id=>window.BLCanonicalFields.canonicalValue(row,ctx.module,id)));
@@ -28920,6 +28943,7 @@ window.BLContextCommands=window.BLContextualCommands.create({snapshot:contextual
     window.BLCollectionAnalyticsBridge.openDrilldown(rows,contextualCommandLabel('Bağlı Koleksiyon modelleri','Linked Collection models'));return true;
   }},
   {id:'price-detail',when:ctx=>ctx.module==='koleksiyon',label:()=>contextualCommandLabel('Fiyat ayrıntısını aç','Open price details'),guard:contextOne,run:ctx=>window.BLCollectionPriceDrawer?.open(ctx.rows[0])},
+  {id:'price-lineage',when:ctx=>ctx.module!=='koleksiyon',label:()=>contextualCommandLabel('Bu fiyat nereden geliyor?','Why this value?'),guard:contextOne,run:ctx=>window.BLCollectionPriceDrawer?.openCp(ctx.rows[0],ctx.module)},
   {id:'pricing-rule',label:()=>contextualCommandLabel('İlgili fiyat kuralını incele','Inspect the matching pricing rule'),guard:ctx=>contextOne(ctx)||(!window.BLHasPermission?.('manageBusinessRules')?contextualCommandLabel('İş kuralı yönetim yetkisi gerekli.','Business-rule management permission is required.'):'')||(!contextualCommandRule(ctx)?contextualCommandLabel('Bu kayıt için eşleşen fiyat kuralı yok.','No pricing rule matches this record.'):''),run:ctx=>{
     const rule=contextualCommandRule(ctx);openSuppFobRulesModal();const select=document.getElementById('_ruleCheckRule');if(select&&rule){select.value=rule.id;select.dispatchEvent(new Event('change',{bubbles:true}));}return true;
   }},
@@ -39169,6 +39193,7 @@ function applyLanguage(lang){
   // Modüllerde tek dilde kalan veya yeniden çizilmeyen metinleri sözlükten aktif
   // dile tamamlar (bkz. i18n-runtime.js). Yeniden çizimlerden SONRA çalışır.
   try{window.BLI18n?.absorbLegacy?.();window.BLI18n?.setLanguage?.(appLang);}catch(_){}
+  window.BLCollectionPriceDrawer?.refresh?.({force:true});
   // TR/EN etiket genişlikleri farklı: duyarlı araç çubukları yeniden ölçülür.
   window.BLToolbarResponsive?.refresh?.(null,{remeasure:true});
 }
