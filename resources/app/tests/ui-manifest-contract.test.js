@@ -1,7 +1,9 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const PUBLIC=path.join(__dirname,'..','public'),read=f=>fs.readFileSync(path.join(PUBLIC,f),'utf8');
-const OWNERS=['ui-tokens.css','ui-components.css','ui-startup.css','giris.css'];
+const OWNERS=fs.readdirSync(PUBLIC).filter(f=>f.endsWith('.css'));
+const PRINT_SELECTORS=new Set(['.shipCompare','.shipCompare thead th','.shipCompare tbody td','.shipCardPrice','.shipCardMetrics,.shipProductSub,.shipProductMeta,.shipProductQty,.shipDateRow']);
+const isPrint=d=>d.file==='ui-components.css'&&d.ancestors.includes('@media print')&&PRINT_SELECTORS.has(d.selector);
 // Small structural reader, independent of production dependencies. Retains at-rule ancestry.
 function declarations(source){
  const result=[],stack=[];let buffer='',quote='',paren=0;
@@ -13,7 +15,7 @@ function declarations(source){
   if(!paren&&c==='{'){stack.push(buffer.trim());buffer='';continue;}
   if(!paren&&(c===';'||c==='}')){
    const m=buffer.trim().match(/^([\w-]+)\s*:\s*([\s\S]+)$/);
-   if(m)result.push({prop:m[1],value:m[2].trim().replace(/\s*!important$/,''),selector:(stack.at(-1)||'').replace(/^html\[data-ui-system="manifest"\] /,'').replace(/^:where\(\[data-ui-migrated\]\) /,''),ancestors:[...stack]});
+   if(m)result.push({prop:m[1],value:m[2].trim().replace(/\s*!important$/,''),selector:(stack.at(-1)||'').replace(/html\[data-ui-system="manifest"\] /g,'').replace(/^:where\(\[data-ui-migrated\]\) /,''),ancestors:[...stack]});
    buffer='';if(c==='}')stack.pop();continue;
   }
   buffer+=c;
@@ -34,25 +36,37 @@ test('Manifest has one token source; migrated owners never consume legacy appear
    m[1]==='--kol-status-color'&&/^#kolTable (?:select|td)/.test(d.selector)||
    m[1]==='--status-color'&&d.selector==='.kolStatusManagerDot'||
    m[1]==='--swatch'&&d.selector==='.kolStatusSwatch'))continue;
+  // Module-local values may describe measured geometry, never appearance.
+  // Undefined geometry is independently rejected by design-token-guard.
+  if(!m[1].startsWith('--ui-')&&/^(?:--[\w-]+|(?:min-|max-)?(?:width|height)|padding(?:-.*)?|margin(?:-.*)?|gap|row-gap|column-gap|grid(?:-.*)?|flex(?:-.*)?|inset(?:-.*)?|top|right|bottom|left|transform|contain-intrinsic-size)$/.test(d.prop)&&!/^--(?:acc|card|ink|line|muted|fs-|sans|head|mono|r-)/.test(m[1]))continue;
   if(!tokens.has(m[1]))failures.push(`${d.file} ${d.selector}: ${m[1]}`);
  }
  assert.deepEqual(failures,[]);
  for(const name of ['index.html','select-user.html'])assert.match(read(name),/href="\/?ui-tokens\.css/);
- assert.ok(read('index.html').indexOf('href="ui-startup.css')>read('index.html').indexOf('href="design-butunluk.css'),'startup tokens must override the legacy dark/grey boot selectors');
+ assert.doesNotMatch(read('index.html'),/design-butunluk|ui-legacy-bridge|theme-transition/);
+ for(const f of ['design-butunluk.css','ui-legacy-bridge.css'])assert.equal(fs.existsSync(path.join(PUBLIC,f)),false);
+ assert.ok(read('index.html').indexOf('href="ui-startup.css')>read('index.html').indexOf('href="ui-components.css'));
  assert.doesNotMatch(read('giris.css'),/--(?:login-|ui-font-add|ui-font-(?:base|body))\s*:/);
 });
+// Exact semantically identical prefiltered header selectors; no broader border exception.
+const groupSeparator=id=>['.groupDivider','.groupBoundary'].map(key=>id+' thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary):where('+key+')').join(',');
 test('Manifest prohibits frames, rounded controls, gradients and raw overlay levels',()=>{
  const failures=[];
  for(const d of entries){
   if(d.prop.startsWith('--')||d.ancestors.some(s=>s.startsWith('@font-face')))continue;
   if(/gradient\(|blur\(/.test(d.value))failures.push(d);
   if(/radius$/.test(d.prop)&&!/^0$|^var\(--ui-radius\)$/.test(d.value))failures.push(d);
-  if(/^border/.test(d.prop)&&!/radius$/.test(d.prop)&&!/^0(?:\s|$)|^none$/.test(d.value)){
+  if(/^border(?!-collapse|-spacing)/.test(d.prop)&&!/radius$/.test(d.prop)&&!/^0(?:\s|$)|^none$/.test(d.value)){
    const row=['#cpTable tbody td','[data-ui-migrated] table tbody td'].includes(d.selector)&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-row-divider)';
-   const group=['#cpTable','#ordersTable','#kolTable'].some(id=>d.selector===id+' thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary)')&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
-   if(!row&&!group)failures.push(d); // narrow user-approved dense table exceptions
+   const group=['#cpTable','#ordersTable','#kolTable'].some(id=>d.selector===groupSeparator(id))&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
+   const printRule=isPrint(d)&&d.selector==='.shipCompare tbody td'&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-print-rule)';
+   if(!row&&!group&&!printRule)failures.push(d); // narrow user-approved dense table exceptions
   }
-  if(d.prop==='z-index'&&!/^var\(--ui-z-(below|base|data|raised|sticky|popover|modal|modal-menu|tooltip|boot)\)$/.test(d.value))failures.push(d);
+  if(d.prop==='outline'&&!/^(?:none|0)$/.test(d.value)){
+   const cursor=['.blDetailDrawer .blDetailTable td.blGridActiveCell','#cpTable td.blGridActiveCell,#ordersTable td.blGridActiveCell','[data-ui-migrated] .blDetailTable .blGridActiveCell','#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolActiveGridCell,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolSpreadsheetActiveCell'].includes(d.selector);
+   if(!/:focus/.test(d.selector)&&!cursor)failures.push(d);
+  }
+  if(d.prop==='z-index'&&!/^var\(--ui-z-(below|base|data|raised|sticky|sticky-column|chrome|popover|modal|modal-menu|tooltip|boot)\)$/.test(d.value))failures.push(d);
   if(d.prop==='box-shadow'&&!/^(none|var\(--ui-shadow-overlay\))$/.test(d.value))failures.push(d);
  }
  assert.deepEqual(failures,[]);
@@ -71,17 +85,18 @@ test('Manifest fonts scale and only transform/opacity may animate',()=>{
  }
  assert.deepEqual(failures,[]);
  for(const file of ['ui-components.css','ui-startup.css','giris.css'])assert.match(read(file),/prefers-reduced-motion:reduce/);
+ for(const file of ['overview-global-flow.js','overview-global-flow-earth.js'])assert.match(read(file),/function (?:wantsAnimation|animationWanted)\(\)\{return document.documentElement.dataset.uiSystem!=='manifest'/);
 });
 test('Main column separators cover both header tiers and never the table body',()=>{
  const rules=entries.filter(d=>d.value==='1px solid var(--ui-group-divider)');
  assert.equal(rules.length,3);
- for(const [i,id] of ['#cpTable','#ordersTable','#kolTable'].entries()){assert.equal(rules[i].selector,id+' thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary)');assert.doesNotMatch(rules[i].selector,/tbody|td\b/);}
+ for(const [i,id] of ['#cpTable','#ordersTable','#kolTable'].entries()){assert.equal(rules[i].selector,groupSeparator(id));assert.doesNotMatch(rules[i].selector,/tbody|td\b/);}
 });
 test('Shared button contract covers interaction states and restricts explicit variants',()=>{
  const source=read('ui-components.css');
  for(const state of [':hover',':focus-visible',':active',':disabled','[aria-pressed="true"]','[aria-busy="true"]','[aria-invalid="true"]','[data-state="loading"]','[data-state="error"]','.ovPremiumEmpty'])assert.ok(source.includes(state),state);
  const variants=new Set(['primary','quiet']);
- for(const file of ['index.html','app-main.js','ui-components.css'])for(const m of read(file).matchAll(/data-ui-variant=["']([^"']+)["']/g))assert.ok(variants.has(m[1]),`${file}: ${m[1]}`);
+ for(const file of fs.readdirSync(PUBLIC).filter(f=>/\.(?:js|html|css)$/.test(f)))for(const m of read(file).matchAll(/data-ui-variant=["']([^"']+)["']/g))assert.ok(variants.has(m[1]),`${file}: ${m[1]}`);
  assert.match(source,/\[data-ui-variant="primary"\]/);
  assert.match(source,/\[data-ui-variant="quiet"\]/);
 });
@@ -153,4 +168,22 @@ test('Remaining module CSS owns layout only; nested output forms use the shared 
  assert.match(editor,/function closeDialog\(\)[^\n]*BLLayerSystem\?\.closeDialog\(el\)/);
  assert.match(editor,/host\.setAttribute\('aria-label',title\)/);
  assert.doesNotMatch(editor,/dialog\.releaseKeyboard/);
+});
+
+test('every module and shell layout file is free of private appearance definitions',()=>{
+ const owners=new Set(['ui-tokens.css','ui-components.css','ui-startup.css','giris.css']);const failures=[];
+ for(const file of OWNERS.filter(f=>!owners.has(f)))for(const d of declarations(read(file))){
+  if(d.prop.startsWith('--')&&/var\(--ui-(?:text|accent|danger|surface|warning|success|chart|font-(?:body|mono|heading))/.test(d.value))failures.push({file,...d});
+  if(/^(?:color|accent-color|color-scheme|background(?:-.*)?|border(?!-collapse|-spacing)(?:-.*)?|box-shadow|text-shadow|font(?:-.*)?|letter-spacing|line-height|text-transform|fill|stroke(?:-.*)?|outline(?:-.*)?|animation(?:-.*)?|transition(?:-.*)?|filter|(?:-webkit-)?backdrop-filter|z-index)$/.test(d.prop))failures.push({file,...d});
+ }
+ assert.deepEqual(failures,[]);
+});
+
+test('Earth markers share square geometry, local scaled fonts and static route emphasis',()=>{
+ const earth=read('overview-global-flow-earth.js');
+ assert.doesNotMatch(earth,/ctx\.arc\(|createRadialGradient|PointPrimitiveCollection/);
+ assert.match(earth,/getPropertyValue\('--ui-font-add'\)/);
+ assert.match(earth,/getPropertyValue\('--ui-font-mono'\)/);
+ assert.doesNotMatch(earth,/font:'[^']*\d+px/);
+ assert.match(earth,/Rota yönü sabit işaretlerle gösterilir/);
 });

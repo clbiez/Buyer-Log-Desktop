@@ -1,7 +1,9 @@
 # Buyer Log UI yeniden inşası — Faz 0A
 
-Son kullanıcı geri bildirimi: eski nötr palet ve tablo başlıkları korunacak.
-Faz 0B [renk revizyonu](ui-rebuild-palette-revision.md) hazır; konsept seçimi bekleniyor.
+Güncel durum notu: Manifest seçildi, pilot onaylandı ve Faz 2 yerel dallarda
+hazırlandı. Faz 3 temizliği ve son yerel doğrulama tamamlandı; yayın yok.
+Aşağıdaki bulgular Faz 0A'nın başlangıç durumudur;
+[güncel kapanış raporu ve her fazın durumu](ui-rebuild-phase-3-consolidation.md).
 
 Kaynak: `0a5d9fbb` (7.0.294), yerel dal `ui-rebuild/phase-0-audit`.
 Bu faz üretim dosyalarını değiştirmez. Kullanıcı görevi, eski mimari/katman
@@ -275,11 +277,14 @@ koruma etkin varsayılmıyor.
 | --- | --- | --- | --- | --- | --- |
 | 0A | Yerel audit dalı; PR yok | Çalıştırılmadı | Yok | Yok | Yok |
 | 0B | Geçici konsept dalları; PR yok | Çalıştırılmadı | Yasak / yapılmadı | Yok | Yok |
-| 1–3 | Konsept/pilot kararları sonrası hazırlanacak | Başlamadı | Yapılmadı | Yayınlanmadı | Yayınlanmadı |
+| 1 | Pilot onaylı, yerel dal/PR taslağı hazır | Çalışmadı | Yapılmadı | Yayınlanmadı | Yayınlanmadı |
+| 2.1–2.4 | Dört ayrı bağımlı yerel dal/PR taslağı hazır | Çalışmadı | Yapılmadı | Yayınlanmadı | Yayınlanmadı |
+| 3 | Temizlik ve son yerel tam test geçti; PR taslağı hazır | Çalışmadı | Yapılmadı | Yayınlanmadı | Yayınlanmadı |
 
-## Doğrulama sınırları
+## Faz 0A tarihsel doğrulama sınırları
 
-Bu faz audit ve konsept karar hazırlığıdır; yeniden inşa tamamlanmış değildir.
+Bu bölüm başlangıç denetiminin sınırlarını kaydeder; güncel doğrulama üstteki
+kapanış raporundadır. Faz 0A tek başına yeniden inşanın tamamlandığını göstermez.
 Boş koleksiyon/fiyat/maliyet, bağlantısız LCW AI ve kaynak bekleyen Nakliye
 görüntüleri dolu senaryoların kanıtı sayılmaz. Native Office, şirket LCW AI
 oturumu ve paylaşımlı çok kullanıcılı altyapı kullanılmadı. Kaynak envanteri
@@ -294,7 +299,8 @@ referansları ve bütün uygulama tam testi Faz 3 kapanışında zorunludur.
 [Üç temalı galeri](ui-rebuild/concepts.html) ve
 [karşılaştırma / hedefli testler / BLPerf / yerel inceleme açıklamaları](ui-rebuild-concepts.md).
 Bu audit dalında üretim kodu değişmedi; konsept kodu kendi worktree/dallarında.
-Kullanıcı seçimi bekleniyor; Faz 1 başlamadı.
+Bu ekin ilk tesliminde kullanıcı seçimi bekleniyordu. Sonrasında Manifest
+seçildi, pilot onaylandı ve tüm yerel fazlar tamamlandı; güncel durum üsttedir.
 
 Ek başlangıç kanıtı `baseline/supplement.json` içinde: görünür alanlar
 düğmesiyle CP popover'ı, gerçek giriş ekranları ve büyük tablo hazırlığı

@@ -237,20 +237,79 @@ footer{color:var(--muted);font-size:11.5px;margin-top:20px}
     throw error;
   }
 
-  // Browser only: Buyer Log's own Barlow faces (design.css) inlined as data: URLs.
+  // Frozen document faces are loaded directly from packaged assets.
+  // UI font cleanup cannot change an offline supplier document.
+  const DOCUMENT_FONTS=[
+  {
+    "family": "\"Barlow\"",
+    "weight": "400",
+    "src": "vendor/fonts/barlow-400-latin-ext.woff2",
+    "range": "U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF"
+  },
+  {
+    "family": "\"Barlow\"",
+    "weight": "400",
+    "src": "vendor/fonts/barlow-400-latin.woff2",
+    "range": "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"
+  },
+  {
+    "family": "\"Barlow\"",
+    "weight": "500",
+    "src": "vendor/fonts/barlow-500-latin-ext.woff2",
+    "range": "U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF"
+  },
+  {
+    "family": "\"Barlow\"",
+    "weight": "500",
+    "src": "vendor/fonts/barlow-500-latin.woff2",
+    "range": "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"
+  },
+  {
+    "family": "\"Barlow\"",
+    "weight": "700",
+    "src": "vendor/fonts/barlow-700-latin-ext.woff2",
+    "range": "U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF"
+  },
+  {
+    "family": "\"Barlow\"",
+    "weight": "700",
+    "src": "vendor/fonts/barlow-700-latin.woff2",
+    "range": "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"
+  },
+  {
+    "family": "\"Barlow Condensed\"",
+    "weight": "400",
+    "src": "vendor/fonts/barlow-condensed-400-latin-ext.woff2",
+    "range": "U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF"
+  },
+  {
+    "family": "\"Barlow Condensed\"",
+    "weight": "400",
+    "src": "vendor/fonts/barlow-condensed-400-latin.woff2",
+    "range": "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"
+  },
+  {
+    "family": "\"Barlow Condensed\"",
+    "weight": "600",
+    "src": "vendor/fonts/barlow-condensed-600-latin-ext.woff2",
+    "range": "U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF"
+  },
+  {
+    "family": "\"Barlow Condensed\"",
+    "weight": "600",
+    "src": "vendor/fonts/barlow-condensed-600-latin.woff2",
+    "range": "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD"
+  }
+];
   let fontsPending=null;
   function loadFonts(){
     if(typeof document==='undefined')return Promise.resolve('');
     if(!fontsPending)fontsPending=(async()=>{
-      const faces=[];
-      for(const sheet of document.styleSheets){let rules;try{rules=sheet.cssRules;}catch(_){continue;}
-        for(const rule of rules||[])if(rule.type===CSSRule.FONT_FACE_RULE&&/Barlow/.test(rule.style.getPropertyValue('font-family')))faces.push(rule);}
-      const css=await Promise.all(faces.map(async rule=>{
-        const url=(rule.style.getPropertyValue('src').match(/url\(["']?([^"')]+)["']?\)/)||[])[1];if(!url)return '';
-        const response=await fetch(new URL(url,rule.parentStyleSheet.href||location.href),{credentials:'same-origin'});if(!response.ok)return '';
+      const css=await Promise.all(DOCUMENT_FONTS.map(async face=>{
+        const response=await fetch(new URL(face.src,location.href),{credentials:'same-origin'});if(!response.ok)return '';
         const blob=new Blob([await response.arrayBuffer()],{type:'font/woff2'}),data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob);});
-        const range=rule.style.getPropertyValue('unicode-range');
-        return `@font-face{font-family:${rule.style.getPropertyValue('font-family')};font-weight:${rule.style.getPropertyValue('font-weight')||400};font-display:swap;src:url("${data}") format("woff2");${range?`unicode-range:${range};`:''}}`;
+        const range=face.range;
+        return `@font-face{font-family:${face.family};font-weight:${face.weight||400};font-display:swap;src:url("${data}") format("woff2");${range?`unicode-range:${range};`:''}}`;
       }));
       return css.join('');
     })().catch(()=>{fontsPending=null;return '';});

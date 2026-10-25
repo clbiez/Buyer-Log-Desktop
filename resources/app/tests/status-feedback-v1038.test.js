@@ -9,7 +9,7 @@ const ROOT = path.join(__dirname, '..');
 const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8');
 const INDEX = read('public/index.html');
 const APP = read('public/app-main.js');
-const DESIGN = read('public/design.css');
+const DESIGN = require('./helpers/manifest-css')();
 const UI_SOURCE = read('public/ui-primitives.js');
 const UI = require('../public/ui-primitives.js');
 
@@ -102,16 +102,14 @@ test('v11.xx modal açıkken merkez bildirimi sağ üst şeride yönlendirilir, 
 });
 
 test('v10.38 geri bildirim yüzeyi token tabanlı, erişilebilir ve küçük ekrana uyumludur', () => {
-  const start = DESIGN.indexOf('/* v10.38 — DURUM VE GERİ BİLDİRİM SİSTEMİ */');
-  const block = DESIGN.slice(start);
-  assert.ok(start >= 0);
+  const block = require('./helpers/manifest-css').rules(/uiFeedback/);
   assert.match(block, /\.uiFeedbackRegion--edge/);
   assert.match(block, /\.uiFeedbackRegion--center/);
   assert.match(block, /\.uiFeedback--success/);
   assert.match(block, /\.uiFeedback--warning/);
   assert.match(block, /\.uiFeedback--error/);
   assert.match(block, /\.uiFeedbackClose:focus-visible/);
-  assert.match(block, /@media\(max-width:620px\)/);
-  assert.match(block, /@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(DESIGN, /@media\s*\(max-width:620px\)/);
+  assert.match(DESIGN, /@media\s*\(prefers-reduced-motion:reduce\)/);
   assert.doesNotMatch(block, /#[0-9a-f]{3,8}\b/i);
 });

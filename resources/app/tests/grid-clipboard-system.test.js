@@ -114,7 +114,7 @@ test('clipboard serialization keeps each logical row on one TSV row and sanitize
 test('CP and Orders are wired to the shared stable selection lifecycle', () => {
   const html = fs.readFileSync('public/index.html', 'utf8');
   const app = fs.readFileSync('public/app-main.js', 'utf8');
-  const css = fs.readFileSync('public/app.css', 'utf8');
+  const css = require('./helpers/manifest-css')();
   assert.match(html, /grid-clipboard\.js/);
   assert.match(app, /registerManagedGridClipboard\('cpTable','cp'\)/);
   assert.match(app, /registerManagedGridClipboard\('ordersTable','orders'\)/);

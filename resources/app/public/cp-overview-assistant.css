@@ -123,7 +123,8 @@
 .cpaRuleList{display:flex;flex:1 1 auto;min-height:0;flex-direction:column;gap:7px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding-right:3px}
 
 .cpaRule{display:grid;flex:0 0 auto;min-height:min-content;overflow:hidden}
-.cpaRuleBar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:9px;min-height:48px;padding:5px 8px 5px 10px}
+/* Actions occupy their own row so titles never overlap the kind label at XL. */
+.cpaRuleBar{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:9px;min-height:48px;padding:5px 8px 5px 10px}
 .cpaRule.is-disabled .cpaRuleSummaryMain,.cpaRule.is-disabled .cpaRuleSummaryMeta{opacity:.55}
 
 .cpaSwitch{position:relative;display:inline-flex;align-items:center;cursor:pointer}
@@ -132,13 +133,13 @@
 .cpaSwitchTrack span{display:block;width:12px;height:12px}
 .cpaSwitch input:checked+.cpaSwitchTrack span{transform:translateX(12px)}
 
-.cpaRuleSummary{display:grid;grid-template-columns:auto minmax(220px,1fr) auto;align-items:center;gap:10px;min-width:0;width:100%;padding:0;text-align:left;cursor:pointer}
+.cpaRuleSummary{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0;width:100%;padding:0;text-align:left;cursor:pointer}
 .cpaRuleSummary>.cpaPill{justify-self:start;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cpaRuleSummaryMain{display:grid;gap:1px;min-width:0}
 .cpaRuleSummaryMain b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cpaRuleSummaryMain small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cpaRuleSummaryMeta{white-space:nowrap}
-.cpaRuleActions{display:flex;align-items:center;gap:6px}
+.cpaRuleActions{display:flex;align-items:center;gap:6px;grid-column:2;justify-content:flex-end;flex-wrap:wrap}
 .cpaBuiltIn{display:inline-flex;align-items:center;height:24px;padding:0 8px;white-space:nowrap}
 .cpaRuleChevron{display:flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;cursor:pointer}
 .cpaRuleChevron .ic{width:15px;height:15px}

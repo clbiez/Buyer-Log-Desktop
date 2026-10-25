@@ -9,7 +9,7 @@ const launchpad = require('../public/overview-launchpad.js');
 const ROOT = path.join(__dirname, '..');
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const SOURCE = fs.readFileSync(path.join(ROOT, 'public', 'overview-launchpad.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'overview-home.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','overview-home.css'] );
 
 test('Dünya saatleri modülü saate göre doğru selamlamayı seçer', () => {
   assert.equal(launchpad.greeting(8, 'tr'), 'Günaydın');
@@ -127,10 +127,10 @@ test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekle
 });
 
 test('Premium ritim katmanı araç çubuğu dışı .tbtn için sıfır özgüllüklü ortak taban tanımlar', () => {
-  const css = fs.readFileSync(path.join(ROOT, 'public', 'experience.css'), 'utf8');
-  assert.match(css, /:where\(button,input,select,textarea,optgroup\)\{font-family:inherit;\}/);
-  assert.match(css, /:where\(button\.tbtn,label\.tbtn,a\.tbtn\)\{[\s\S]*?min-height:var\(--ctl-h\);/);
-  assert.doesNotMatch(css, /Barlow Condensed/);
+  const css = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
+  assert.match(css, /:where\(button,input,select,textarea,optgroup\)\{font-family:inherit;?\}/);
+  assert.match(css, /:where\(button\.tbtn,label\.tbtn,a\.tbtn\)\{[\s\S]*?min-height:var\(--ui-control-height\);/);
+  assert.match(css,/--ui-font-body:"BL Plex Sans"/); assert.match(css,/--ui-font-heading:"Barlow Condensed"/);
   assert.match(css, /\.ovLaunchBody\{display:grid;/);
   assert.match(css, /\.ovLaunchpad\{\s*display:block;/, 'global section{display:none} kuralı modülü gizlememeli');
 });

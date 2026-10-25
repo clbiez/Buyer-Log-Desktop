@@ -35,7 +35,7 @@ function rel(file) {
 }
 
 // Geliştirici önizleme sayfaları kullanıcıya gösterilmez.
-const SKIP_HTML = new Set(['public/design-preview.html']);
+const SKIP_HTML = new Set();
 
 function listScanFiles() {
   return fs.readdirSync(PUBLIC)

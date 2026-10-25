@@ -32,14 +32,14 @@
  --ui-motion-fast:100ms;--ui-motion-enter:140ms;--ui-ease:cubic-bezier(.2,.7,.3,1);
  --ui-shadow-overlay:0 16px 46px color-mix(in srgb,var(--ui-text) 18%,transparent);
  --ui-scrim:rgba(8,12,18,.48);
- /* Existing overlay stack remains compatible until Phase 3 normalizes all owners. */
- --ui-z-sticky:30;--ui-z-popover:1400;--ui-z-modal:20000;--ui-z-boot:2147483647;
- --ui-z-below:-1;--ui-z-base:0;--ui-z-data:1;--ui-z-raised:2;--ui-z-modal-menu:21000;--ui-z-tooltip:60000;
+ /* Shared stack bands. Nested dialogs use 201–299; menus and notices stay above. */
+ --ui-z-sticky:30;--ui-z-sticky-column:31;--ui-z-chrome:40;--ui-z-popover:100;--ui-z-modal:200;--ui-z-boot:500;
+ --ui-z-below:-1;--ui-z-base:0;--ui-z-data:1;--ui-z-raised:2;--ui-z-modal-menu:300;--ui-z-tooltip:400;
  /* Ink colors used by all categorical charts; labels carry category meaning. */
  --ui-chart-1:var(--ui-accent);--ui-chart-2:var(--ui-warning);--ui-chart-3:#376f73;--ui-chart-4:#81523e;
  --ui-chart-5:#665b35;--ui-chart-6:var(--ui-success);--ui-chart-7:var(--ui-danger);--ui-chart-8:#536478;
  --ui-table-row-height:32px;--ui-table-group-height:29px;--ui-table-head-padding:8px;--ui-table-cell-padding:7px;
- --ui-series-color:var(--ui-accent);--ui-metric-color:var(--ui-text);
+ --ui-status-default:#667085;--ui-series-color:var(--ui-accent);--ui-metric-color:var(--ui-text);
  --ui-canvas:#f5f7f9;--ui-rail:#f0f3f6;--ui-surface:#fff;--ui-surface-soft:#fafbfc;--ui-surface-strong:#e9edf1;
  --ui-text:#16212d;--ui-text-secondary:#374454;--ui-text-muted:#5f6f80;
  --ui-accent:#356a96;--ui-accent-hover:#275779;--ui-selected:#eaf2f8;--ui-selected-ink:#245578;--ui-on-accent:#fff;
@@ -70,3 +70,15 @@
 :root[data-ui-scale="standard"]{--ui-scale:1;--ui-font-add:0px;--ui-control-height:34px;}
 :root[data-ui-scale="large"]{--ui-topbar-height:58px;--ui-scale:1.125;--ui-font-add:1.5px;--ui-control-height:38px;--ui-table-row-height:36px;--ui-table-group-height:33px;--ui-table-head-padding:9px;--ui-table-cell-padding:8px;}
 :root[data-ui-scale="xl"]{--ui-topbar-height:64px;--ui-scale:1.25;--ui-font-add:3px;--ui-control-height:42px;--ui-table-row-height:40px;--ui-table-group-height:37px;--ui-table-head-padding:10px;--ui-table-cell-padding:9px;}
+
+/* Shared interaction geometry; four canonical presets. */
+:root{--ui-print-header:#f2f4f7;--ui-print-ink:#000;--ui-print-paper:#fff;--ui-print-rule:#d0d5dd;
+ --ui-space-7:40px;--ui-no-filter:none;--ui-no-shadow:none;color-scheme:light;}
+:root[data-ui-scale="standard"]{--ui-rail-width:208px;--ui-rail-collapsed-width:66px;--ui-rail-expanded-width:208px;--ui-rail-item-height:calc(35px * 1);--ui-rail-footer-height:34px;--ui-rail-control-size:30px;--ui-icon-control-size:34px;--ui-control-height-large:calc(34px + 6px);--ui-page-padding:20.4px;--ui-section-gap:13.6px;--ui-panel-padding:13.6px;--ui-table-edit-padding:2px;--ui-control-height-small:calc(var(--ui-control-height) - 4px);}
+:root[data-ui-scale="large"]{--ui-rail-width:224px;--ui-rail-collapsed-width:72px;--ui-rail-expanded-width:224px;--ui-rail-item-height:calc(35px * 1.125);--ui-rail-footer-height:38px;--ui-rail-control-size:34px;--ui-icon-control-size:38px;--ui-control-height-large:calc(38px + 6px);--ui-page-padding:23px;--ui-section-gap:18px;--ui-panel-padding:18px;--ui-table-edit-padding:3px;--ui-control-height-small:calc(var(--ui-control-height) - 4px);}
+:root[data-ui-scale="xl"]{--ui-rail-width:240px;--ui-rail-collapsed-width:78px;--ui-rail-expanded-width:240px;--ui-rail-item-height:calc(35px * 1.25);--ui-rail-footer-height:42px;--ui-rail-control-size:38px;--ui-icon-control-size:42px;--ui-control-height-large:calc(42px + 6px);--ui-page-padding:25px;--ui-section-gap:20px;--ui-panel-padding:20px;--ui-table-edit-padding:4px;--ui-control-height-small:calc(var(--ui-control-height) - 4px);}
+:root[data-ui-scale="compact"]{--ui-rail-width:196px;--ui-rail-collapsed-width:60px;--ui-rail-expanded-width:196px;--ui-rail-item-height:calc(35px * .9);--ui-rail-footer-height:32px;--ui-rail-control-size:28px;--ui-icon-control-size:32px;--ui-control-height-large:calc(30px + 6px);--ui-page-padding:18px;--ui-section-gap:14px;--ui-panel-padding:14px;--ui-table-edit-padding:1px;--ui-control-height-small:calc(var(--ui-control-height) - 4px);}
+:root[data-theme="dark"]{color-scheme:dark;}
+
+/* Collapsed navigation keeps the content offset at its narrow width. */
+:root[data-ui-scale][data-rail="min"]{--ui-rail-width:var(--ui-rail-collapsed-width);}

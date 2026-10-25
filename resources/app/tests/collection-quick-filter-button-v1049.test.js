@@ -6,9 +6,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const APP = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const GROUPS = fs.readFileSync(path.join(__dirname, '..', 'public', 'kpi-groups.js'), 'utf8');
-const DESIGN = fs.readFileSync(path.join(__dirname, '..', 'public', 'design.css'), 'utf8');
+const DESIGN = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
 test('v10.49 Collection quick filters are keyboard-operable toggle buttons with a clear state', () => {
   const renderStart = APP.indexOf('function renderKolQuickFilters()');

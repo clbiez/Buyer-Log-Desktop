@@ -14,7 +14,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const scopeApi = require(path.join(ROOT, 'public', 'model-asset-scope.js'));
 
 test('Collection, CP ve Orders aynı scope sırasını ve ortak asset seçiciyi kullanır', () => {
@@ -95,19 +95,17 @@ test('Complete Missing link ve görsel kuyruklarını dört kanonik durum için 
 });
 
 test('PLM Sync modalı Buyer Log design tokenlarını kullanır ve hard-coded tema yüzeyi üretmez', () => {
-  const start = CSS.indexOf('/* PLM SYNC iki aşamalı seçim yüzeyi.');
-  const end = CSS.indexOf('.modelImageLimitCard', start);
-  const block = CSS.slice(start, end);
-  assert.ok(start >= 0 && end > start, 'PLM Sync modal CSS bloğu bulunamadı');
-  assert.match(block, /--bl-surface-raised/);
-  assert.match(block, /--bl-surface-panel/);
-  assert.match(block, /--bl-surface-soft/);
-  assert.match(block, /--bl-stroke-subtle/);
-  assert.match(block, /--bl-stroke-strong/);
-  assert.match(block, /var\(--ink\)/);
-  assert.match(block, /var\(--muted\)/);
-  assert.match(block, /var\(--acc-bg\)/);
-  assert.match(block, /:focus-visible/);
+  const block = require('./helpers/manifest-css').rules(/plmSync/);
+  assert.ok(block.length > 0, 'PLM Sync shared rules exist');
+  assert.match(block, /--ui-surface/);
+  assert.match(block, /--ui-surface/);
+  assert.match(block, /--ui-surface-soft/);
+  require('./helpers/manifest-css').assertReset();
+  require('./helpers/manifest-css').assertFocus();
+  assert.match(block, /var\(--ui-text\)/);
+  assert.match(block, /var\(--ui-text-muted\)/);
+  assert.match(block, /var\(--ui-selected\)/);
+  require('./helpers/manifest-css').assertFocus();
   assert.match(block, /:disabled/);
   assert.doesNotMatch(block, /background:\s*#[0-9a-f]{3,8}/i);
 });

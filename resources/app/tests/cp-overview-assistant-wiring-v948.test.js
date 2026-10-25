@@ -210,7 +210,7 @@ test('v9.48 stil mevcut token\'ları kullanır, yeni renk uydurmaz', () => {
 
 /* KULLANICI BİLDİRİMİ (v9.48): "modülün yazıları aşırı küçük".
    Sebep: panel sabit px yazı boyutlarıyla (7.8–9px) çizilmişti. Tasarım
-   sistemindeki en küçük token --fs-xs bile 11px'tir ve TÜM token'lar
+   sistemindeki en küçük token --ui-font-xs bile 11px'tir ve TÜM token'lar
    calc(... + var(--ui-font-add)) ile tanımlıdır — yani kullanıcının yazı
    boyutu ayarıyla büyürler. Sabit px yazan bir kural o ayarı sessizce yok
    sayar ve ekranın geri kalanından küçük görünür. */
@@ -231,7 +231,7 @@ test('v9.48 yazı boyutları TOKEN\'dan gelir: sabit px yok, kullanıcı ayarı 
 test('v9.48 köşe yarıçapı token\'dan gelir (uygulama kare köşe kullanır)', () => {
   const hardcoded = CSS.match(/border-radius:\s*[0-9.]+px/g) || [];
   assert.deepEqual(hardcoded, [], `sabit yarıçap görsel kimliği bozar: ${hardcoded.join(', ')}`);
-  assert.match(read('public/app.css'), /--r-sm:0/, 'ön koşul: yarıçap token\'ları 0');
+  assert.match(require('./helpers/manifest-css')(), /--ui-radius:0/, 'ön koşul: yarıçap token\'ları 0');
 });
 
 test('v9.48 <section> tuzağı: panel kartları görünür bir kurala sahip', () => {

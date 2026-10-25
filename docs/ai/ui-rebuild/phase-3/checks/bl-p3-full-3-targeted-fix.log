@@ -1,0 +1,5 @@
+SUMMARY {"success":true,"counts":{"tests":6,"failed":0,"passed":6,"cancelled":0,"skipped":0,"todo":0,"topLevel":6,"suites":0},"duration_ms":318.554403,"file":"/workspace/buyerlog-rebuild/resources/app/tests/design-token-guard.test.js"}
+SUMMARY {"success":true,"counts":{"tests":3,"failed":0,"passed":3,"cancelled":0,"skipped":0,"todo":0,"topLevel":3,"suites":0},"duration_ms":33.769154,"file":"/workspace/buyerlog-rebuild/resources/app/tests/horizon-filter-ui-v808.test.js"}
+SUMMARY {"success":true,"counts":{"tests":2,"failed":0,"passed":2,"cancelled":0,"skipped":0,"todo":0,"topLevel":2,"suites":0},"duration_ms":17.639259,"file":"/workspace/buyerlog-rebuild/resources/app/tests/oab-drill-hover-v662.test.js"}
+SUMMARY {"success":true,"counts":{"tests":13,"failed":0,"passed":13,"cancelled":0,"skipped":0,"todo":0,"topLevel":13,"suites":0},"duration_ms":149.461114,"file":"/workspace/buyerlog-rebuild/resources/app/tests/ui-manifest-contract.test.js"}
+SUMMARY {"success":true,"counts":{"tests":24,"failed":0,"passed":24,"cancelled":0,"skipped":0,"todo":0,"topLevel":24,"suites":0},"duration_ms":368.550015}

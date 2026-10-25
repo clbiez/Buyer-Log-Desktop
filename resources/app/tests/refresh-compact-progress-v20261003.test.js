@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const ROOT=path.join(__dirname,'..');
 const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
-const CSS=fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
+const CSS=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const body=APP.slice(APP.indexOf('function refreshCompactConnectionKind'),APP.indexOf('function openRefreshStagesModal'));
 test('refresh progress is compact and groups the workflow into three user-facing steps',()=>{
   assert.match(body,/ASAS Verisi Çekiliyor/);
@@ -25,10 +25,10 @@ test('technical timing remains available behind details and keeps the user open 
   assert.match(body,/refreshSeconds\(t\.retryMs\)/);
   assert.match(body,/refreshSeconds\(t\.overheadMs\)/);
 });
-test('compact refresh UI uses the Buyer Log card language and animated active state',()=>{
+test('compact refresh UI uses the Buyer Log card language and static active state',()=>{
   assert.match(CSS,/\.refreshStagesCard\{[^}]*width:min\(340px/);
   assert.match(CSS,/\.refreshCompactStep\.is-active/);
-  assert.match(CSS,/@keyframes refreshCompactDot/);
-  assert.match(CSS,/@keyframes refreshCompactSweep/);
+  require('./helpers/manifest-css').assertStaticMotion();
+  assert.doesNotMatch(CSS,/@keyframes refreshCompact(?:Dot|Sweep)/);
   assert.match(CSS,/\.refreshStagesOverlay\{[^}]*pointer-events:none/);
 });

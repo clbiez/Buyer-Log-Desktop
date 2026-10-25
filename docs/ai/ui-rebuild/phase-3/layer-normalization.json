@@ -1,0 +1,312 @@
+[
+  {
+    "selector": ".blDualDatePicker",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": ".rail",
+    "from": "var(--ui-z-sticky)",
+    "to": "chrome"
+  },
+  {
+    "selector": ".appTop",
+    "from": "var(--ui-z-popover)",
+    "to": "chrome"
+  },
+  {
+    "selector": ".sourcebar",
+    "from": "var(--ui-z-popover)",
+    "to": "chrome"
+  },
+  {
+    "selector": ".dateCalendarPopup",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": ".themeDock",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".submfrDrop",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".delTypeMenu",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".warnOverlay",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".warningDetailOverlay",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".tablewrap thead th.frzL",
+    "from": "var(--ui-z-sticky)",
+    "to": "sticky-column"
+  },
+  {
+    "selector": ".tablewrap thead tr.groupRow th.frzL",
+    "from": "var(--ui-z-sticky)",
+    "to": "sticky-column"
+  },
+  {
+    "selector": ".userMenu",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": ".toolbarMoreMenu",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".topRefreshMenu",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": ".modelConnFieldPanel",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": ".centerNotice",
+    "from": "var(--ui-z-modal)",
+    "to": "tooltip"
+  },
+  {
+    "selector": ".profileSelectMenu.profileSelectMenuModal",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": ".modelConnMappingOverlay",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".awModalOverlay",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".oabColumnContextMenu",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": ".oabMultiPopover",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".oabLocalFilterAddPopover",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".intakeFilterPanel",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".hzPicker",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": ".horizonCompactDropdown",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".fcOverlay",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".rowCtxMenu",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": ".egOverlay",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".blColResizeBadge",
+    "from": "var(--ui-z-modal)",
+    "to": "tooltip"
+  },
+  {
+    "selector": ".trxPickPanel",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".blTip",
+    "from": "var(--ui-z-modal)",
+    "to": "tooltip"
+  },
+  {
+    "selector": ".lcwaiContextMenu",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".lcwaiEdOverlay",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".lcwaiTplOverlay .lcwaiEdDialog",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".blTriviaHold",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".dmfPicker",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": ".sourceBackdrop",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".kolSpreadsheetContextMenu",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": "#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.frzL",
+    "from": "var(--ui-z-sticky)",
+    "to": "sticky-column"
+  },
+  {
+    "selector": ".pdToast",
+    "from": "var(--ui-z-modal)",
+    "to": "tooltip"
+  },
+  {
+    "selector": ".psaFilterConfigPanel",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".psaMultiPanel",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".lflPortfolioModal",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".lflScenarioEditor",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".lflTrialOverlay",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".ocCompareOverlay",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": "#fxImportRecovery",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".pricingRuleSeasonPanel",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".kolTextPreviewPopup",
+    "from": "var(--ui-z-popover)",
+    "to": "tooltip"
+  },
+  {
+    "selector": ".kolChecklistMenu",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": ".blvExportMenu",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".blvFilterRoot",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".bpaTip",
+    "from": "var(--ui-z-popover)",
+    "to": "tooltip"
+  },
+  {
+    "selector": ".bpaDrawerRoot",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".colPanel",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".colFilterPanel",
+    "from": "var(--ui-z-sticky)",
+    "to": "popover"
+  },
+  {
+    "selector": ".colFilterPanel.colFilterPanelModal",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": ".backlogDetailOverlay",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".autoModalOverlay",
+    "from": "var(--ui-z-popover)",
+    "to": "modal"
+  },
+  {
+    "selector": ".tableColumnContextMenu",
+    "from": "var(--ui-z-modal)",
+    "to": "modal-menu"
+  },
+  {
+    "selector": ".backlogTimelineTip",
+    "from": "var(--ui-z-popover)",
+    "to": "tooltip"
+  }
+]

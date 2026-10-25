@@ -9,7 +9,7 @@ const root = path.join(__dirname, '..');
 // Uygulama çekirdeği index.html'den public/app-main.js'e taşındı; sınanan
 // özellik (buyingSampleManufacturer sütunu) yaşıyor, test yanlış dosyaya bakıyordu.
 const html = fs.readFileSync(path.join(root, 'public', 'app-main.js'), 'utf8');
-const css = fs.readFileSync(path.join(root, 'public', 'app.css'), 'utf8');
+const css = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
 test('Collection defines one Buying Sample column with manufacturer input and approval tick', () => {
   // v7.0.229 — Buying Numunesi sütunu kullanıcı talebiyle Koleksiyon tablosundan

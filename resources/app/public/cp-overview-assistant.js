@@ -2305,11 +2305,11 @@
     const reasonFields = rule.kind === 'priority'
       ? `<div class="cpaRuleReasons">
           <label class="cpaRuleTarget cpaRuleReasonField"><span>${esc(L('Siparişte görünecek sebep (TR)', 'Reason shown on the order (TR)'))}</span>
-            <input data-cpa-rule-reason-tr value="${esc(rule.reasonTr || '')}" placeholder="${esc('Örn. Sipariş retail aktarımı bekliyor')}"${rule.builtIn ? '' : ' required'} class="${!rule.builtIn && !String(rule.reasonTr || '').trim() ? 'is-invalid' : ''}">
+            <input data-cpa-rule-reason-tr value="${esc(rule.reasonTr || '')}" placeholder="${esc('Örn. Sipariş retail aktarımı bekliyor')}"${rule.builtIn ? '' : ' required'} aria-invalid="${!rule.builtIn && !String(rule.reasonTr || '').trim()}" class="${!rule.builtIn && !String(rule.reasonTr || '').trim() ? 'is-invalid' : ''}">
             <small class="cpaRuleFieldError"${!rule.builtIn && !String(rule.reasonTr || '').trim() ? '' : ' hidden'}>${esc(L('Türkçe sebep zorunludur.', 'Turkish reason is required.'))}</small>
           </label>
           <label class="cpaRuleTarget cpaRuleReasonField"><span>${esc(L('Siparişte görünecek sebep (EN)', 'Reason shown on the order (EN)'))}</span>
-            <input data-cpa-rule-reason-en value="${esc(rule.reasonEn || '')}" placeholder="${esc('e.g. Order is awaiting retail transfer')}"${rule.builtIn ? '' : ' required'} class="${!rule.builtIn && !String(rule.reasonEn || '').trim() ? 'is-invalid' : ''}">
+            <input data-cpa-rule-reason-en value="${esc(rule.reasonEn || '')}" placeholder="${esc('e.g. Order is awaiting retail transfer')}"${rule.builtIn ? '' : ' required'} aria-invalid="${!rule.builtIn && !String(rule.reasonEn || '').trim()}" class="${!rule.builtIn && !String(rule.reasonEn || '').trim() ? 'is-invalid' : ''}">
             <small class="cpaRuleFieldError"${!rule.builtIn && !String(rule.reasonEn || '').trim() ? '' : ' hidden'}>${esc(L('İngilizce sebep zorunludur.', 'English reason is required.'))}</small>
           </label>
         </div>`
@@ -2960,6 +2960,7 @@
         const value = String(el.value || '').trim();
         rule[key] = value;
         el.classList.toggle('is-invalid', !rule.builtIn && !value);
+        el.setAttribute('aria-invalid', String(!rule.builtIn && !value));
         const error = el.parentElement && el.parentElement.querySelector('.cpaRuleFieldError');
         if (error) error.hidden = rule.builtIn || Boolean(value);
         commit();

@@ -8,8 +8,8 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const APP = read('public/app-main.js');
-const CSS = read('public/app.css');
-const DESIGN = read('public/design.css');
+const CSS = require('./helpers/manifest-css')();
+const DESIGN = require('./helpers/manifest-css')();
 const INDEX = read('public/index.html');
 
 function sourceBetween(name, endMarker) {
@@ -51,19 +51,19 @@ test('v10.30 Interface Size dört adlandırılmış preset ile ilk boyamada ve e
   assert.match(APP, /document\.documentElement\.dataset\.uiScale=preset\.key/);
   assert.match(APP, /Arayüz boyutu:/);
   for (const preset of ['compact', 'standard', 'large', 'xl']) {
-    assert.match(CSS, new RegExp(`html\\[data-ui-scale="${preset}"\\]`));
+    assert.match(CSS, new RegExp(`:root\\[data-ui-scale="${preset}"\\]`));
   }
 });
 
 test('v10.30 ölçek yalnız fontu değil ortak kabuk, kontrol ve tablo geometrisini değiştirir', () => {
-  for (const token of ['--ui-scale', '--ctl-h', '--table-row-h', '--table-head-pad-y', '--rail-item-h', '--icon-btn-size', '--topbar-h']) {
+  for (const token of ['--ui-scale', '--ui-control-height', '--ui-table-row-height', '--ui-table-head-padding', '--ui-rail-item-height', '--ui-icon-control-size', '--ui-topbar-height']) {
     assert.match(CSS, new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
-  assert.match(CSS, /nav\.tabs button\{[^}]*height:var\(--rail-item-h\)/);
-  assert.match(CSS, /\.appTop\{[^}]*height:var\(--topbar-h\)/);
-  assert.match(DESIGN, /\.appTop\{height:var\(--topbar-h\);?\}/);
-  assert.match(CSS, /\.iconbtn\{[^}]*width:var\(--icon-btn-size\);height:var\(--icon-btn-size\)/);
-  assert.match(CSS, /thead th\{[^}]*padding:var\(--table-head-pad-y\) 10px/);
-  assert.match(CSS, /tbody td\{[^}]*padding:var\(--table-cell-pad-y\) 10px/);
-  assert.match(DESIGN, /nav\.tabs button\{height:var\(--rail-item-h\)/);
+  assert.match(CSS, /nav\.tabs button\{[^}]*height:var\(--ui-rail-item-height\)/);
+  assert.match(CSS, /\.appTop\{[^}]*height:var\(--ui-topbar-height\)/);
+  assert.match(DESIGN, /\.appTop\{height:var\(--ui-topbar-height\);?\}/);
+  assert.match(CSS, /\.iconbtn\{[^}]*width:var\(--ui-icon-control-size\);height:var\(--ui-icon-control-size\)/);
+  assert.match(CSS, /thead th\{[^}]*padding:var\(--ui-table-head-padding\) 10px/);
+  assert.match(CSS, /tbody td\{[^}]*padding:var\(--ui-table-cell-padding\) 10px/);
+  assert.match(DESIGN, /nav\.tabs button\{height:var\(--ui-rail-item-height\)/);
 });

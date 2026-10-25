@@ -10,5 +10,5 @@ test('INTAKE Settings: OAB pivot bölümleri section görünürlük tuzağına t
   assert.ok((UI.match(/<div class="oabSettingsSection">/g) || []).length >= 3,
     'Pivot Rows, Pivot Columns ve Pivot Values görünür div bölümleri olmalı');
   assert.doesNotMatch(UI, /<section class="(?:intakeConfigSection|oabSettingsSection)"/);
-  assert.match(CSS, /section\{display:none\}/);
+  assert.match(CSS, /section\{display:none;?\}/);
 });

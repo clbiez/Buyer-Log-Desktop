@@ -9,7 +9,7 @@ const root = path.join(__dirname, '..');
 // Uygulama çekirdeği index.html'den public/app-main.js'e taşındı; sınanan
 // özellik (KOL_CONFIRMED_NAME_FILTER_KEY) yaşıyor, test yanlış dosyaya bakıyordu.
 const html = fs.readFileSync(path.join(root, 'public', 'app-main.js'), 'utf8');
-const css = fs.readFileSync(path.join(root, 'public', 'app.css'), 'utf8');
+const css = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
 test('Collection Conf. Manufacturer exposes a working synthetic value filter', () => {
   assert.match(html, /const KOL_CONFIRMED_NAME_FILTER_KEY = '__confirmedName__'/);
@@ -34,7 +34,7 @@ test('Conf. Manufacturer filtering uses the displayed effective approval, not st
 });
 
 test('Buying Sample approval colours only the tick, not the whole cell', () => {
-  assert.match(css, /#kolTable \.kolBuyingSampleApprove\[aria-pressed="true"\][^{]*\{[^}]*background:var\(--green-lite,var\(--green\)\)/s);
+  assert.match(css, /#kolTable \.kolBuyingSampleApprove\[aria-pressed="true"\][^{]*\{[^}]*background:var\(--ui-success-bg,var\(--ui-success\)\)/s);
   assert.doesNotMatch(css, /#kolTable td\.kolBuyingSampleTd\.isApproved\s*\{/);
   assert.match(html, /kolBuyingSampleTd\$\{approved\?' isApproved':''\}/);
 });

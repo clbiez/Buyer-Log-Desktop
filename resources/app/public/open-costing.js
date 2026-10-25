@@ -144,7 +144,7 @@ function showOcMetaSuggest(input,showAll=false){
   }
   ocMetaSuggestInput=input;ocMetaSuggestIndex=-1;
   input.setAttribute('role','combobox');input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-expanded','true');
-  ocMetaSuggestDrop.style.zIndex=input.closest('.warnOverlay')?'450':'170';
+  ocMetaSuggestDrop.style.zIndex=input.closest('.warnOverlay')?'var(--ui-z-modal-menu)':'var(--ui-z-popover)';
   ocMetaSuggestDrop.innerHTML=matches.map(item=>`<div class="submfrDropItem" role="option" data-value="${safe(item.value)}"><span>${safe(item.label)}</span>${item.label!==item.value?`<small>${safe(item.value)}</small>`:''}</div>`).join('');
   ocMetaSuggestDrop.querySelectorAll('.submfrDropItem').forEach(item=>item.addEventListener('mousedown',event=>{
     event.preventDefault();selectOcMetaSuggestion(item.dataset.value||item.textContent||'');

@@ -1,22 +1,13 @@
 'use strict';
 
-/*
- * Buyer Log Output Theme — AI çıktılarının (HTML/PDF/XLSX/PPTX) ortak görsel dili.
- *
- * Renkler elle kopyalanmaz: Buyer Log'un gerçek tasarım anahtarları
- * public/design.css içindeki AÇIK tema :root değerlerinden okunur (ilk
- * geçen #hex değeri). Dosya okunamazsa aynı değerlerin güvenli kopyası
- * kullanılır. Yazı tipi Barlow'dur; HTML/PDF çıktısına data: URI olarak
- * gömülür (uzak kaynak yüklenmez), Office dosyalarında kurumsal
- * makinelerde bulunan Segoe UI / Calibri kullanılır.
- */
+/* Fixed document palette. UI themes are intentionally independent: removing
+ * legacy UI CSS must not recolor existing HTML/PDF/XLSX/PPTX output. Fonts are
+ * packaged and embedded for offline documents; Office fonts remain unchanged. */
 const fs = require('fs');
 const path = require('path');
 
 const PUBLIC_ROOT = path.join(__dirname, '..', '..', '..', 'public');
-const DESIGN_CSS = path.join(PUBLIC_ROOT, 'design.css');
-// Tablo başlığı anahtarları (--thead-*) app.css'te tanımlıdır.
-const APP_CSS = path.join(PUBLIC_ROOT, 'app.css');
+const PALETTE_JSON = path.join(PUBLIC_ROOT, 'export-document-palette.json');
 const FONT_ROOT = path.join(PUBLIC_ROOT, 'vendor', 'fonts');
 
 const FALLBACK = Object.freeze({
@@ -24,7 +15,7 @@ const FALLBACK = Object.freeze({
   line: '#d4d4d7', line2: '#b7b7ba', acc: '#3f6488', 'acc-bg': '#e6edf4', 'acc-lite': '#7fa3c6', 'acc-ink': '#2c455d',
   'navy-deep': '#1d2d3d', red: '#B42318', 'red-bg': '#f5e4e3', orange: '#946200', 'orange-bg': '#f4ebd5',
   green: '#177A4C', 'green-bg': '#e4efe9',
-  // Başlıklar: Buyer Log tablo başlığı grisi (app.css --thead-*).
+  // Frozen table header colors, shared by legacy document outputs.
   'thead-bg': '#F2F4F7', 'thead-ink': '#54595F', 'thead-line': '#D0D5DD',
   // Başlık metni: BL logosunun siyahı (icons/icon-mark.png). CSS anahtarı
   // olmadığı için sabittir; test logodaki değerle eşitliği denetler.
@@ -32,29 +23,16 @@ const FALLBACK = Object.freeze({
 });
 const KEYS = Object.keys(FALLBACK);
 
-/* design.css → ilk #hex değerleri. Koyu tema blokları dosyada daha sonra
-   geldiği için ilk geçen değer açık temanın değeridir. */
-function readDesignTokens(cssText) {
-  const tokens = {};
-  const re = /--([a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\b/g;
-  let match;
-  while ((match = re.exec(String(cssText || '')))) {
-    if (KEYS.includes(match[1]) && !tokens[match[1]]) tokens[match[1]] = match[2];
-  }
-  return tokens;
-}
-
 let cached = null;
 function theme() {
   if (cached) return cached;
   let found = {};
-  try { found = readDesignTokens(fs.readFileSync(DESIGN_CSS, 'utf8')); } catch (_) { found = {}; }
-  try { const app = readDesignTokens(fs.readFileSync(APP_CSS, 'utf8')); for (const key of Object.keys(app)) if (!found[key]) found[key] = app[key]; } catch (_) {}
+  try { found = JSON.parse(fs.readFileSync(PALETTE_JSON, 'utf8')); } catch (_) { found = {}; }
   const colors = {};
-  for (const key of KEYS) colors[key] = normalizeHex(found[key] || FALLBACK[key]);
+  for (const key of KEYS) colors[key] = normalizeHex(/^#[0-9a-fA-F]{6}$/.test(found[key] || '') ? found[key] : FALLBACK[key]);
   cached = Object.freeze({
     colors: Object.freeze(colors),
-    source: Object.keys(found).length ? 'design.css' : 'fallback',
+    source: Object.keys(found).length ? 'export-document-palette.json' : 'fallback',
     fonts: Object.freeze({ html: '"Barlow","Segoe UI",Arial,sans-serif', htmlHead: '"Barlow Condensed","Barlow","Segoe UI",Arial,sans-serif', office: 'Segoe UI', excel: 'Calibri' }),
     // Durum tonları (badge/KPI): Buyer Log'un ok / uyarı / risk anlamları.
     tones: Object.freeze({ ok: colors.green, warn: colors.orange, risk: colors.red, info: colors.acc, neutral: colors.ink2 }),
@@ -268,4 +246,4 @@ svg{max-width:100%;height:auto;}${motion}
 @media print{.bl-page{padding:0;}.bl-report{border:0;padding:0;background:transparent;box-shadow:none;}.bl-header{margin:0 0 22px;padding:16px 18px;}h2,h3{break-after:avoid;}*,*::before,*::after{animation:none !important;transition:none !important;}}`;
 }
 
-module.exports = { theme, reportCss, embeddedFontCss, readDesignTokens, normalizeHex, ooxml, FALLBACK };
+module.exports = { theme, reportCss, embeddedFontCss, normalizeHex, ooxml, FALLBACK };

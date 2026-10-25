@@ -4,7 +4,7 @@ const fs = require('node:fs');
 
 const APP = fs.readFileSync('public/app-main.js', 'utf8');
 const SPREADSHEET = fs.readFileSync('public/collection-spreadsheet.js', 'utf8');
-const CSS = fs.readFileSync('public/app.css', 'utf8');
+const CSS = require('./helpers/manifest-css')();
 const HTML = fs.readFileSync('public/index.html', 'utf8');
 const DB = fs.readFileSync('server/db.js', 'utf8');
 const SERVER = require('./helpers/server-source')();
@@ -50,7 +50,7 @@ test('server shipping ingestion deduplicates by canonical model and preserves ex
 
 test('calculated Collection cells are flat, hide Overseas FOB, and make symbols non-interactive', () => {
   assert.match(CSS, /td\.endeksmatikTd[\s\S]*td\.kolLandedTd\{background:transparent!important/);
-  assert.match(CSS, /\.endeksmatikCellBtn,\s*\n#kolTable tbody \.kolLandedCard\{border:0/);
+  assert.match(CSS, /\.endeksmatikCellBtn,\s*#kolTable tbody \.kolLandedCard\{border:0/);
   assert.match(APP, /kolLandedInputGroup/);
   assert.doesNotMatch(APP, /<span class="kolSuppSrc/);
   assert.match(APP, /<i aria-hidden="true">×<\/i><input/);

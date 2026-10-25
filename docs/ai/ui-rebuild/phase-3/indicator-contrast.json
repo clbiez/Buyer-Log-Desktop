@@ -1,0 +1,1100 @@
+{
+  "method": "Actual browser-resolved canonical UI tokens; required focus, checkbox, status and chart inks against four opaque surfaces, threshold 3:1. Low-contrast table separators and chart guides are structural exceptions. User-defined status data colors are preserved and always accompanied by labels.",
+  "checks": 156,
+  "min": 3.033,
+  "failures": [],
+  "results": [
+    {
+      "theme": "light",
+      "ink": "--ui-accent",
+      "surface": "--ui-canvas",
+      "ratio": 5.352,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-check-idle",
+      "surface": "--ui-canvas",
+      "ratio": 3.706,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-success",
+      "surface": "--ui-canvas",
+      "ratio": 5.569,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-warning",
+      "surface": "--ui-canvas",
+      "ratio": 5.481,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-danger",
+      "surface": "--ui-canvas",
+      "ratio": 5.466,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-1",
+      "surface": "--ui-canvas",
+      "ratio": 5.352,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-2",
+      "surface": "--ui-canvas",
+      "ratio": 5.481,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-3",
+      "surface": "--ui-canvas",
+      "ratio": 5.308,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-4",
+      "surface": "--ui-canvas",
+      "ratio": 6.092,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-5",
+      "surface": "--ui-canvas",
+      "ratio": 6.282,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-6",
+      "surface": "--ui-canvas",
+      "ratio": 5.569,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-7",
+      "surface": "--ui-canvas",
+      "ratio": 5.466,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-8",
+      "surface": "--ui-canvas",
+      "ratio": 5.649,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-accent",
+      "surface": "--ui-surface",
+      "ratio": 5.748,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-check-idle",
+      "surface": "--ui-surface",
+      "ratio": 3.98,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-success",
+      "surface": "--ui-surface",
+      "ratio": 5.98,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-warning",
+      "surface": "--ui-surface",
+      "ratio": 5.886,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-danger",
+      "surface": "--ui-surface",
+      "ratio": 5.87,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-1",
+      "surface": "--ui-surface",
+      "ratio": 5.748,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-2",
+      "surface": "--ui-surface",
+      "ratio": 5.886,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-3",
+      "surface": "--ui-surface",
+      "ratio": 5.701,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-4",
+      "surface": "--ui-surface",
+      "ratio": 6.542,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-5",
+      "surface": "--ui-surface",
+      "ratio": 6.746,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-6",
+      "surface": "--ui-surface",
+      "ratio": 5.98,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-7",
+      "surface": "--ui-surface",
+      "ratio": 5.87,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-8",
+      "surface": "--ui-surface",
+      "ratio": 6.066,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-accent",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.548,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-check-idle",
+      "surface": "--ui-surface-soft",
+      "ratio": 3.841,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-success",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.772,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-warning",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.681,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-danger",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.666,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-1",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.548,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-2",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.681,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-3",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.502,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-4",
+      "surface": "--ui-surface-soft",
+      "ratio": 6.315,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-5",
+      "surface": "--ui-surface-soft",
+      "ratio": 6.512,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-6",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.772,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-7",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.666,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-8",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.855,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-accent",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.885,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-check-idle",
+      "surface": "--ui-surface-strong",
+      "ratio": 3.382,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-success",
+      "surface": "--ui-surface-strong",
+      "ratio": 5.083,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-warning",
+      "surface": "--ui-surface-strong",
+      "ratio": 5.003,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-danger",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.989,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-1",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.885,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-2",
+      "surface": "--ui-surface-strong",
+      "ratio": 5.003,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-3",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.845,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-4",
+      "surface": "--ui-surface-strong",
+      "ratio": 5.56,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-5",
+      "surface": "--ui-surface-strong",
+      "ratio": 5.734,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-6",
+      "surface": "--ui-surface-strong",
+      "ratio": 5.083,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-7",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.989,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "ink": "--ui-chart-8",
+      "surface": "--ui-surface-strong",
+      "ratio": 5.156,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-accent",
+      "surface": "--ui-canvas",
+      "ratio": 4.674,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-check-idle",
+      "surface": "--ui-canvas",
+      "ratio": 3.299,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-success",
+      "surface": "--ui-canvas",
+      "ratio": 4.774,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-warning",
+      "surface": "--ui-canvas",
+      "ratio": 4.806,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-danger",
+      "surface": "--ui-canvas",
+      "ratio": 5.334,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-1",
+      "surface": "--ui-canvas",
+      "ratio": 4.674,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-2",
+      "surface": "--ui-canvas",
+      "ratio": 4.806,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-3",
+      "surface": "--ui-canvas",
+      "ratio": 3.881,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-4",
+      "surface": "--ui-canvas",
+      "ratio": 4.454,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-5",
+      "surface": "--ui-canvas",
+      "ratio": 4.593,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-6",
+      "surface": "--ui-canvas",
+      "ratio": 4.774,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-7",
+      "surface": "--ui-canvas",
+      "ratio": 5.334,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-8",
+      "surface": "--ui-canvas",
+      "ratio": 4.13,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-accent",
+      "surface": "--ui-surface",
+      "ratio": 5.702,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-check-idle",
+      "surface": "--ui-surface",
+      "ratio": 4.025,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-success",
+      "surface": "--ui-surface",
+      "ratio": 5.825,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-warning",
+      "surface": "--ui-surface",
+      "ratio": 5.864,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-danger",
+      "surface": "--ui-surface",
+      "ratio": 6.508,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-1",
+      "surface": "--ui-surface",
+      "ratio": 5.702,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-2",
+      "surface": "--ui-surface",
+      "ratio": 5.864,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-3",
+      "surface": "--ui-surface",
+      "ratio": 4.736,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-4",
+      "surface": "--ui-surface",
+      "ratio": 5.435,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-5",
+      "surface": "--ui-surface",
+      "ratio": 5.604,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-6",
+      "surface": "--ui-surface",
+      "ratio": 5.825,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-7",
+      "surface": "--ui-surface",
+      "ratio": 6.508,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-8",
+      "surface": "--ui-surface",
+      "ratio": 5.039,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-accent",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.239,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-check-idle",
+      "surface": "--ui-surface-soft",
+      "ratio": 3.698,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-success",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.352,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-warning",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.388,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-danger",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.979,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-1",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.239,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-2",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.388,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-3",
+      "surface": "--ui-surface-soft",
+      "ratio": 4.351,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-4",
+      "surface": "--ui-surface-soft",
+      "ratio": 4.993,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-5",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.149,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-6",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.352,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-7",
+      "surface": "--ui-surface-soft",
+      "ratio": 5.979,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-8",
+      "surface": "--ui-surface-soft",
+      "ratio": 4.63,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-accent",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.297,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-check-idle",
+      "surface": "--ui-surface-strong",
+      "ratio": 3.033,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-success",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.39,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-warning",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.419,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-danger",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.904,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-1",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.297,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-2",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.419,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-3",
+      "surface": "--ui-surface-strong",
+      "ratio": 3.569,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-4",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.096,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-5",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.223,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-6",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.39,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-7",
+      "surface": "--ui-surface-strong",
+      "ratio": 4.904,
+      "pass": true
+    },
+    {
+      "theme": "grey",
+      "ink": "--ui-chart-8",
+      "surface": "--ui-surface-strong",
+      "ratio": 3.798,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-accent",
+      "surface": "--ui-canvas",
+      "ratio": 8.8,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-check-idle",
+      "surface": "--ui-canvas",
+      "ratio": 5.529,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-success",
+      "surface": "--ui-canvas",
+      "ratio": 8.955,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-warning",
+      "surface": "--ui-canvas",
+      "ratio": 9.199,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-danger",
+      "surface": "--ui-canvas",
+      "ratio": 7.655,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-1",
+      "surface": "--ui-canvas",
+      "ratio": 8.8,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-2",
+      "surface": "--ui-canvas",
+      "ratio": 9.199,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-3",
+      "surface": "--ui-canvas",
+      "ratio": 9.26,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-4",
+      "surface": "--ui-canvas",
+      "ratio": 8.795,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-5",
+      "surface": "--ui-canvas",
+      "ratio": 9.592,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-6",
+      "surface": "--ui-canvas",
+      "ratio": 8.955,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-7",
+      "surface": "--ui-canvas",
+      "ratio": 7.655,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-8",
+      "surface": "--ui-canvas",
+      "ratio": 9.272,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-accent",
+      "surface": "--ui-surface",
+      "ratio": 7.826,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-check-idle",
+      "surface": "--ui-surface",
+      "ratio": 4.917,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-success",
+      "surface": "--ui-surface",
+      "ratio": 7.964,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-warning",
+      "surface": "--ui-surface",
+      "ratio": 8.182,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-danger",
+      "surface": "--ui-surface",
+      "ratio": 6.808,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-1",
+      "surface": "--ui-surface",
+      "ratio": 7.826,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-2",
+      "surface": "--ui-surface",
+      "ratio": 8.182,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-3",
+      "surface": "--ui-surface",
+      "ratio": 8.235,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-4",
+      "surface": "--ui-surface",
+      "ratio": 7.822,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-5",
+      "surface": "--ui-surface",
+      "ratio": 8.531,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-6",
+      "surface": "--ui-surface",
+      "ratio": 7.964,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-7",
+      "surface": "--ui-surface",
+      "ratio": 6.808,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-8",
+      "surface": "--ui-surface",
+      "ratio": 8.246,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-accent",
+      "surface": "--ui-surface-soft",
+      "ratio": 7.156,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-check-idle",
+      "surface": "--ui-surface-soft",
+      "ratio": 4.496,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-success",
+      "surface": "--ui-surface-soft",
+      "ratio": 7.282,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-warning",
+      "surface": "--ui-surface-soft",
+      "ratio": 7.48,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-danger",
+      "surface": "--ui-surface-soft",
+      "ratio": 6.225,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-1",
+      "surface": "--ui-surface-soft",
+      "ratio": 7.156,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-2",
+      "surface": "--ui-surface-soft",
+      "ratio": 7.48,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-3",
+      "surface": "--ui-surface-soft",
+      "ratio": 7.529,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-4",
+      "surface": "--ui-surface-soft",
+      "ratio": 7.151,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-5",
+      "surface": "--ui-surface-soft",
+      "ratio": 7.8,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-6",
+      "surface": "--ui-surface-soft",
+      "ratio": 7.282,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-7",
+      "surface": "--ui-surface-soft",
+      "ratio": 6.225,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-8",
+      "surface": "--ui-surface-soft",
+      "ratio": 7.539,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-accent",
+      "surface": "--ui-surface-strong",
+      "ratio": 5.928,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-check-idle",
+      "surface": "--ui-surface-strong",
+      "ratio": 3.725,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-success",
+      "surface": "--ui-surface-strong",
+      "ratio": 6.033,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-warning",
+      "surface": "--ui-surface-strong",
+      "ratio": 6.197,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-danger",
+      "surface": "--ui-surface-strong",
+      "ratio": 5.157,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-1",
+      "surface": "--ui-surface-strong",
+      "ratio": 5.928,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-2",
+      "surface": "--ui-surface-strong",
+      "ratio": 6.197,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-3",
+      "surface": "--ui-surface-strong",
+      "ratio": 6.238,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-4",
+      "surface": "--ui-surface-strong",
+      "ratio": 5.925,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-5",
+      "surface": "--ui-surface-strong",
+      "ratio": 6.462,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-6",
+      "surface": "--ui-surface-strong",
+      "ratio": 6.033,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-7",
+      "surface": "--ui-surface-strong",
+      "ratio": 5.157,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "ink": "--ui-chart-8",
+      "surface": "--ui-surface-strong",
+      "ratio": 6.246,
+      "pass": true
+    }
+  ]
+}

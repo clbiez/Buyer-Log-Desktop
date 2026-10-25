@@ -408,7 +408,7 @@ test('v10.90 doğrudan XLSX dışa aktarımı tema renklerini serialize etmez', 
   assert.match(block, /_xlsArgbFromHex\(EXPORT_LIGHT_HEADER_BG\)/);
   assert.match(block, /_xlsArgbFromHex\(EXPORT_LIGHT_HEADER_FG\)/);
   // Gövde hücresi kayıt varsa paletten stillenir.
-  assert.match(block, /const palette=record\?exportSemanticPalette\(column,record,cf\):null;/);
+  assert.match(block, /const palette=record\?exportSemanticPalette\(column,record,cf\):\(table\.id==='shipTable'\?shipDomExportPalette\(td\):null\);/);
   assert.match(block, /_xlsCellFromTd\(td,\{forceIdentifierText:[^)]*palette\}\)/);
 
   const cellFn = bodyOf('_xlsCellFromTd');

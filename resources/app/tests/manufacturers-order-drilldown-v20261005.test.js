@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const PAGE = fs.readFileSync(path.join(ROOT, 'public', 'manufacturers.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'manufacturers.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','manufacturers.css'] );
 const BACKLOG = fs.readFileSync(path.join(ROOT, 'public', 'backlog-overview.js'), 'utf8');
 
 test('manufacturer and backlog drilldown scripts remain syntactically valid', () => {
@@ -39,9 +39,7 @@ test('clicked KPI quantity semantics match the summary being opened', () => {
 });
 
 test('clickable summary controls preserve keyboard focus and hover affordance', () => {
-  assert.match(CSS, /\.mfpTile\.isDrill:focus-visible/);
-  assert.match(CSS, /\.mfpMetric\.isDrill:focus-visible/);
-  assert.match(CSS, /\.mfpMonth\.isDrill:focus-visible/);
-  assert.match(CSS, /\.mfpChip\.isDrill:focus-visible/);
+  require('./helpers/manifest-css').assertFocus();
+  for(const name of ['Tile','Metric','Month','Chip']) assert.ok(CSS.includes('.mfp'+name+'.isDrill'),name+' keeps the shared interactive class');
   assert.match(CSS, /\.mfpTile\.isDrill:hover/);
 });

@@ -40,7 +40,7 @@ const PROVIDER_TIMEOUT_MS=15000;
 const HIDE_ALL=Object.freeze({show:false});
 
 const ICON={
-  compass:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.4"/><g class="gfEarthNeedle"><path d="M12 4.2l2.6 7.8h-5.2z" fill="var(--red,#c04455)"/><path d="M12 19.8l-2.6-7.8h5.2z" fill="currentColor" opacity=".55"/></g></svg>',
+  compass:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.4"/><g class="gfEarthNeedle"><path d="M12 4.2l2.6 7.8h-5.2z" fill="var(--ui-danger,#c04455)"/><path d="M12 19.8l-2.6-7.8h5.2z" fill="currentColor" opacity=".55"/></g></svg>',
   plus:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>',
   minus:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>',
   fit:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.4" fill="currentColor"/></svg>',
@@ -82,7 +82,7 @@ function create(options){
   let C=null,widget=null,scene=null,camera=null,handler=null,destroyed=false,paused=true,ready=false;
   let runtime={provider:'free',defaultMode:'nasa-relief',googleKey:''},provider={mode:'offline',status:'ok',message:''};
   let tileset=null,providerToken=0,imageryFailures=0,tileFailures=0,tileSuccesses=0;
-  let routesBase=null,routesFlow=null,routesSelect=null,billboards=null,clusterBoards=null,labels=null,points=null,occluder=null;
+  let routesBase=null,routesFlow=null,routesSelect=null,billboards=null,clusterBoards=null,labels=null,occluder=null;
   let flowMaterials=null,baseMaterials=null,selectMaterial=null;
   let modelRevision=-1,sceneData=null,hover=null,hoverFrame=0,pendingMove=null,animFrame=0,lastAnimTick=0,reclusterTimer=0;
   let panel='',qualityLevel='balanced',effectiveQuality='balanced',adaptiveDowngraded=false,fpsWindow=[];
@@ -305,11 +305,12 @@ function create(options){
   }
   /* Simgeler 2x çözünürlükte çizilir; billboard'a CSS piksel boyutu verilir. */
   function board(collection,options){const image=options.image;return collection.add({...options,width:image.blSize,height:image.blSize,disableDepthTestDistance:Number.POSITIVE_INFINITY});}
+  function canvasFont(weight,size=11){const css=getComputedStyle(document.documentElement);return weight+' '+(size+(parseFloat(css.getPropertyValue('--ui-font-add'))||0))+'px '+css.getPropertyValue('--ui-font-mono').trim();}
   function vehicleIcon(mode,critical,overdue,selected){
     const p=host.palette(),stroke=overdue?p.yellow:(critical?p.red:host.modeColor(mode));
     return iconCanvas('veh|'+mode+'|'+(critical?1:0)+'|'+(overdue?1:0)+'|'+(selected?1:0),28,ctx=>{
       ctx.fillStyle=p.card;ctx.strokeStyle=stroke;ctx.lineWidth=critical||overdue?2.2:1.6;
-      ctx.beginPath();ctx.arc(0,0,10,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillRect(-10,-10,20,20);ctx.strokeRect(-10,-10,20,20);
       ctx.fillStyle=host.modeColor(mode);
       // Hava aracı yukarıyı gösterir; billboard alignedAxis ile rota yönüne döner.
       if(mode==='air')ctx.rotate(-Math.PI/2);
@@ -318,27 +319,26 @@ function create(options){
   }
   function badgeIcon(label,css){
     return iconCanvas('badge|'+label+'|'+css,22,ctx=>{
-      ctx.font='700 9px sans-serif';const width=Math.max(13,ctx.measureText(label).width+6);
-      ctx.fillStyle=css;ctx.beginPath();ctx.arc(0,0,width/2,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,.5);
+      ctx.font=canvasFont(600);const width=Math.max(13,ctx.measureText(label).width+6);
+      ctx.fillStyle=css;ctx.fillRect(-width/2,-8,width,16);
+      ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--ui-on-accent').trim();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,.5);
     });
   }
   function clusterIcon(count,css,critical,overdue){
     const label=count>999?'999+':String(count),size=count>99?46:count>9?40:34;
     return iconCanvas('cluster|'+label+'|'+css+'|'+(critical?1:0)+'|'+(overdue?1:0),size,ctx=>{
       const p=host.palette(),r=size/2-3;
-      ctx.fillStyle=css;ctx.globalAlpha=.28;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();
       ctx.globalAlpha=1;ctx.fillStyle=p.card;ctx.strokeStyle=overdue?p.yellow:(critical?p.red:css);ctx.lineWidth=critical||overdue?2.6:2;
-      ctx.beginPath();ctx.arc(0,0,r-5,0,Math.PI*2);ctx.fill();ctx.stroke();
-      ctx.fillStyle=p.ink;ctx.font='800 11px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,.5);
+      ctx.fillRect(-r+3,-r+3,2*r-6,2*r-6);ctx.strokeRect(-r+3,-r+3,2*r-6,2*r-6);
+      ctx.fillStyle=p.ink;ctx.font=canvasFont(600);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,.5);
     });
   }
   function nodeIcon(kind,critical,radius){
     const p=host.palette(),fill=kind==='arrival'?p.green:p.acc,r=Math.round(radius),size=r*2+20;
     return iconCanvas('node|'+kind+'|'+(critical?1:0)+'|'+r,size,ctx=>{
-      ctx.fillStyle=fill;ctx.globalAlpha=.22;ctx.beginPath();ctx.arc(0,0,r+7,0,Math.PI*2);ctx.fill();
-      ctx.globalAlpha=1;ctx.strokeStyle='#fff';ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.stroke();
-      if(critical){ctx.strokeStyle=p.red;ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(0,0,r+3.5,0,Math.PI*2);ctx.stroke();}
+      ctx.fillStyle=p.card;ctx.fillRect(-r-2,-r-2,r*2+4,r*2+4);
+      ctx.fillStyle=fill;ctx.fillRect(-r,-r,r*2,r*2);
+      if(critical){ctx.fillStyle=p.red;ctx.fillRect(r-2,-r-6,6,6);}
     });
   }
   function hubIcon(kind){
@@ -353,15 +353,14 @@ function create(options){
   function haloIcon(){
     const p=host.palette();
     return iconCanvas('halo',56,ctx=>{
-      const g=ctx.createRadialGradient(0,0,8,0,0,26);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.55,p.red);g.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.globalAlpha=.55;ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,26,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=p.red;ctx.fillRect(-20,-20,8,3);ctx.fillRect(-20,-20,3,8);ctx.fillRect(12,17,8,3);ctx.fillRect(17,12,3,8);
     });
   }
   function selectionIcon(){
     const p=host.palette();
     return iconCanvas('selection|'+p.acc,44,ctx=>{
-      ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,17,0,Math.PI*2);ctx.stroke();
-      ctx.strokeStyle=p.acc;ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(0,0,17,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle=p.card;ctx.lineWidth=4;ctx.strokeRect(-17,-17,34,34);
+      ctx.strokeStyle=p.acc;ctx.lineWidth=2.2;ctx.strokeRect(-17,-17,34,34);
     });
   }
 
@@ -381,7 +380,7 @@ function create(options){
     }));
     return [...hubs.values()];
   }
-  function clearCollections(){[routesBase,routesFlow,routesSelect,billboards,clusterBoards,labels,points].forEach(c=>{if(c)c.removeAll();});}
+  function clearCollections(){[routesBase,routesFlow,routesSelect,billboards,clusterBoards,labels].forEach(c=>{if(c)c.removeAll();});}
   function syncModel(force){
     if(!scene)return;
     const revision=host.modelRevision();if(!force&&revision===modelRevision)return;modelRevision=revision;
@@ -404,7 +403,7 @@ function create(options){
       const position=C.Cartesian3.fromDegrees(bundle.location.lon,bundle.location.lat,0),critical=bundle.records.some(r=>r.critical);
       const hit={type:'node',bundle,records:bundle.records};
       const nodeBoard=board(billboards,{position,image:nodeIcon(bundle.kind,critical,host.nodeRadius(bundle)),id:hit});
-      const label=labels.add({position,text:bundle.kind==='arrival'?host.istanbulName():bundle.location.name,id:hit,font:'600 12px Barlow, "Segoe UI", sans-serif',fillColor:C.Color.WHITE,outlineColor:C.Color.BLACK.withAlpha(.85),outlineWidth:3,style:C.LabelStyle.FILL_AND_OUTLINE,pixelOffset:new C.Cartesian2(0,-(host.nodeRadius(bundle)+14)),horizontalOrigin:C.HorizontalOrigin.CENTER,verticalOrigin:C.VerticalOrigin.BOTTOM,disableDepthTestDistance:Number.POSITIVE_INFINITY});
+      const label=labels.add({position,text:bundle.kind==='arrival'?host.istanbulName():bundle.location.name,id:hit,font:canvasFont(600,12),fillColor:C.Color.WHITE,outlineColor:C.Color.BLACK.withAlpha(.85),outlineWidth:3,style:C.LabelStyle.FILL_AND_OUTLINE,pixelOffset:new C.Cartesian2(0,-(host.nodeRadius(bundle)+14)),horizontalOrigin:C.HorizontalOrigin.CENTER,verticalOrigin:C.VerticalOrigin.BOTTOM,disableDepthTestDistance:Number.POSITIVE_INFINITY});
       data.nodes.push({hit,position,board:nodeBoard,label,layer:'origins'});data.bounds.push(position);
       if(critical)data.halos.push({position,board:board(billboards,{position,image:haloIcon(),show:false})});
     });
@@ -420,7 +419,8 @@ function create(options){
       if(soloRecords.has(p.rec.id))return;
       const geo=host.pointAlongLeg(p.leg,p.legProgress);if(!geo)return;
       const position=cartesian(geo,p.leg.mode),hit={type:'shipment',rec:p.rec,placement:p,records:[p.rec]};
-      const point=points.add({position,pixelSize:6,color:imageryColor(host.modeColor(p.leg.mode)),outlineColor:C.Color.WHITE.withAlpha(.9),outlineWidth:1.2,id:hit,disableDepthTestDistance:Number.POSITIVE_INFINITY,distanceDisplayCondition:new C.DistanceDisplayCondition(0,LOD.shipmentPoints)});
+      const css=host.modeColor(p.leg.mode),image=iconCanvas('shipment|'+css,8,ctx=>{ctx.fillStyle=host.palette().card;ctx.fillRect(-4,-4,8,8);ctx.fillStyle=css;ctx.fillRect(-3,-3,6,6);});
+      const point=board(billboards,{position,image,id:hit,distanceDisplayCondition:new C.DistanceDisplayCondition(0,LOD.shipmentPoints)});
       data.shipments.push({hit,position,point});
     });
     model.vehicles.forEach(vehicle=>{
@@ -433,7 +433,7 @@ function create(options){
       }
       const vehicleBoard=board(billboards,{position,image:vehicleIcon(vehicle.mode,vehicle.critical,vehicle.overdue),id:hit,alignedAxis});
       const count=vehicle.records.length,badge=count>1?board(billboards,{position,image:badgeIcon(count>99?'99+':String(count),vehicle.critical?host.palette().red:host.modeColor(vehicle.mode)),pixelOffset:new C.Cartesian2(10,-10),id:hit}):null;
-      const label=labels.add({position,text:host.vehicleTitle(vehicle),id:hit,font:'600 11px Barlow, "Segoe UI", sans-serif',fillColor:C.Color.WHITE,outlineColor:C.Color.BLACK.withAlpha(.85),outlineWidth:3,style:C.LabelStyle.FILL_AND_OUTLINE,pixelOffset:new C.Cartesian2(0,16),horizontalOrigin:C.HorizontalOrigin.CENTER,verticalOrigin:C.VerticalOrigin.TOP,disableDepthTestDistance:Number.POSITIVE_INFINITY,show:false});
+      const label=labels.add({position,text:host.vehicleTitle(vehicle),id:hit,font:canvasFont(600),fillColor:C.Color.WHITE,outlineColor:C.Color.BLACK.withAlpha(.85),outlineWidth:3,style:C.LabelStyle.FILL_AND_OUTLINE,pixelOffset:new C.Cartesian2(0,16),horizontalOrigin:C.HorizontalOrigin.CENTER,verticalOrigin:C.VerticalOrigin.TOP,disableDepthTestDistance:Number.POSITIVE_INFINITY,show:false});
       const halo=vehicle.critical?board(billboards,{position,image:haloIcon(),show:false}):null;
       data.vehicles.push({hit,vehicle,position,board:vehicleBoard,badge,label,halo,id:vehicle.id});data.bounds.push(position);
     });
@@ -723,7 +723,7 @@ function create(options){
       radio('gfEarthQuality','balanced',quality,qualityLabel('balanced'))+
       radio('gfEarthQuality','high',quality,qualityLabel('high'))+adaptive+
       '<h4>'+host.esc(L('Animasyon','Animation'))+'</h4>'+
-      '<label class="gfEarthOption"><input type="checkbox" data-gf-earth-pref="routeAnimation"'+(prefs().routeAnimation!==false?' checked':'')+'><span>'+host.esc(L('Rota akış animasyonu','Route flow animation'))+(reducedMotion()?'<small>'+host.esc(L('Sistem hareket azaltma tercihi nedeniyle durdurulur','Paused by the system reduced-motion preference'))+'</small>':'')+'</span></label>'+
+      '<label class="gfEarthOption"><input type="checkbox" data-gf-earth-pref="routeAnimation"'+(document.documentElement.dataset.uiSystem==='manifest'?' disabled':(prefs().routeAnimation!==false?' checked':''))+'><span>'+host.esc(L('Rota akış animasyonu','Route flow animation'))+(document.documentElement.dataset.uiSystem==='manifest'?'<small>'+host.esc(L('Rota yönü sabit işaretlerle gösterilir','Route direction uses static markers'))+'</small>':reducedMotion()?'<small>'+host.esc(L('Sistem hareket azaltma tercihi nedeniyle durdurulur','Paused by the system reduced-motion preference'))+'</small>':'')+'</span></label>'+
       providerHtml;
   }
   function renderPanel(){
@@ -803,7 +803,7 @@ function create(options){
 
   /* ---------- Döngü ---------- */
   function requestRender(){if(scene&&!paused)scene.requestRender();}
-  function animationWanted(){return !paused&&!destroyed&&layerOn('routes')&&prefs().routeAnimation!==false&&!reducedMotion()&&Boolean(sceneData&&sceneData.routes.length);}
+  function animationWanted(){return document.documentElement.dataset.uiSystem!=='manifest'&&!paused&&!destroyed&&layerOn('routes')&&prefs().routeAnimation!==false&&!reducedMotion()&&Boolean(sceneData&&sceneData.routes.length);}
   /* Tüm rotalar tek bir "time" uniform'u ile akar: rota başına döngü yoktur. */
   function animationTick(now){
     animFrame=0;if(!animationWanted())return;
@@ -827,14 +827,16 @@ function create(options){
     const cfg=q();
     try{
       widget=new C.CesiumWidget(viewportEl,{
-        baseLayer:false,scene3DOnly:true,useDefaultRenderLoop:false,requestRenderMode:true,maximumRenderTimeChange:Number.POSITIVE_INFINITY,
+        baseLayer:false,skyBox:false,skyAtmosphere:false,scene3DOnly:true,useDefaultRenderLoop:false,requestRenderMode:true,maximumRenderTimeChange:Number.POSITIVE_INFINITY,
         useBrowserRecommendedResolution:!cfg.nativeResolution,msaaSamples:cfg.msaa,showRenderLoopErrors:false,orderIndependentTranslucency:false,
         contextOptions:{webgl:{alpha:false,antialias:false,powerPreference:'high-performance',preserveDrawingBuffer:false,failIfMajorPerformanceCaveat:false}}
       });
     }catch(error){throw Object.assign(new Error(L('WebGL başlatılamadı: ','WebGL could not start: ')+String(error&&error.message||error)),{code:'EARTH_WEBGL'});}
     scene=widget.scene;camera=widget.camera;
-    scene.globe.baseColor=C.Color.fromCssColorString(getComputedStyle(document.documentElement).getPropertyValue('--navy-deep').trim()||'#1d2d3d');
-    scene.globe.enableLighting=false;scene.globe.showGroundAtmosphere=true;scene.fog.enabled=true;scene.highDynamicRange=false;
+    scene.globe.baseColor=C.Color.fromCssColorString(getComputedStyle(document.documentElement).getPropertyValue('--ui-text').trim()||'#1d2d3d');
+    scene.backgroundColor=color(host.palette().water);
+    if(scene.sun)scene.sun.show=false;if(scene.moon)scene.moon.show=false;
+    scene.globe.enableLighting=false;scene.globe.showGroundAtmosphere=false;scene.fog.enabled=false;scene.highDynamicRange=false;
     const ctrl=scene.screenSpaceCameraController;
     ctrl.minimumZoomDistance=150;ctrl.maximumZoomDistance=4.2e7;ctrl.enableCollisionDetection=true;
     // Kamera küre içine girmez, yüzey normaline göre ufkun altına eğilemez.
@@ -845,7 +847,6 @@ function create(options){
     routesBase=scene.primitives.add(new C.PolylineCollection());
     routesFlow=scene.primitives.add(new C.PolylineCollection());
     routesSelect=scene.primitives.add(new C.PolylineCollection());
-    points=scene.primitives.add(new C.PointPrimitiveCollection());
     billboards=scene.primitives.add(new C.BillboardCollection());
     clusterBoards=scene.primitives.add(new C.BillboardCollection());
     labels=scene.primitives.add(new C.LabelCollection());
@@ -911,7 +912,7 @@ function create(options){
     pause,resume,destroy,
     update(reason){
       if(destroyed||!scene)return;
-      if(reason==='theme'){iconCache.clear();buildMaterialsSafe();syncModel(true);renderControls();renderPanel();return;}
+      if(reason==='theme'){scene.backgroundColor=color(host.palette().water);iconCache.clear();buildMaterialsSafe();syncModel(true);renderControls();renderPanel();return;}
       if(reason==='language'){renderControls();renderPanel();renderNotice();syncModel(true);return;}
       if(reason==='selection'){syncSelection();scheduleRecluster(0);requestRender();return;}
       if(paused)return;

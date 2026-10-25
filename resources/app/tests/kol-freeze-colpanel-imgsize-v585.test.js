@@ -13,7 +13,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const APP = read('public/app-main.js');
-const CSS = read('public/app.css');
+const CSS = require('./helpers/manifest-css')();
 
 function bodyOf(name, source = APP) {
   const start = source.indexOf(`function ${name}(`);
@@ -38,29 +38,28 @@ test('v5.85 dondurma sticky’si kimlik seçicili ezmelerden sonra geri veriliyo
     'relative kuralı hâlâ duruyor olmalı — mutlak konumlu çocuklar ona bağlı');
   // Yalnız v5.85 bloğuna bak: dosya sonuna kadar dilimlemek sonradan eklenen
   // ilgisiz kuralları bu teste dahil ediyordu.
-  const fixStart = CSS.indexOf('v5.85 — Freeze: kimlik seçicili ezmeler');
-  const fix = CSS.slice(fixStart, CSS.indexOf('#kolTable tbody td.editTd.frzL{z-index:4;}', fixStart) + 60);
+  const fix = require('./helpers/manifest-css').rules(/(?:#kolTable|#cpTable|#ordersTable).*frzL/);
   assert.match(fix, /#kolTable tbody td\.editTd\.frzL/);
   assert.match(fix, /#kolTable tbody td\.kolPictureCell\.frzL/);
   assert.match(fix, /position:sticky/);
   // Düzeltme !important ile değil, özgüllükle yapılmalı.
-  assert.doesNotMatch(fix, /!important/);
+  const positionRules=fix.match(/position:[^;}]+/g)||[];
+  assert.ok(positionRules.includes('position:sticky'));
+  assert.ok(positionRules.every(v=>!v.includes('!important')));
 });
 
 test('v5.85 yapışan düzenlenebilir hücre kayan hücrelerin üstünde kalıyor', () => {
   // Yalnız v5.85 bloğuna bak: dosya sonuna kadar dilimlemek sonradan eklenen
   // ilgisiz kuralları bu teste dahil ediyordu.
-  const fixStart = CSS.indexOf('v5.85 — Freeze: kimlik seçicili ezmeler');
-  const fix = CSS.slice(fixStart, CSS.indexOf('#kolTable tbody td.editTd.frzL{z-index:4;}', fixStart) + 60);
-  assert.match(fix, /#kolTable tbody td\.editTd\.frzL\{z-index:4;\}/);
+  const fix = require('./helpers/manifest-css').rules(/(?:#kolTable|#cpTable|#ordersTable).*frzL/);
+  assert.match(fix, /#kolTable tbody td\.editTd\.frzL\{z-index:var\(--ui-z-raised\)/);
 });
 
 test('v5.85 CP ve Siparişler de aynı korumayı alıyor', () => {
   // Aynı sınıf hata ileride o tablolarda da çıkabilir; kural şimdiden kapsıyor.
   // Yalnız v5.85 bloğuna bak: dosya sonuna kadar dilimlemek sonradan eklenen
   // ilgisiz kuralları bu teste dahil ediyordu.
-  const fixStart = CSS.indexOf('v5.85 — Freeze: kimlik seçicili ezmeler');
-  const fix = CSS.slice(fixStart, CSS.indexOf('#kolTable tbody td.editTd.frzL{z-index:4;}', fixStart) + 60);
+  const fix = require('./helpers/manifest-css').rules(/(?:#kolTable|#cpTable|#ordersTable).*frzL/);
   assert.match(fix, /#cpTable tbody td\.editTd\.frzL/);
   assert.match(fix, /#ordersTable tbody td\.editTd\.frzL/);
 });

@@ -75,7 +75,7 @@ test('Collection renderer applies row-scoped height after each thumbnail load', 
   assert.match(html, /max-width:\$\{hasCollectionImage\?_imgDim\.w:22\}px/);
   assert.match(html, /kolApplyCompactImageRowHeight\(img\)/);
   assert.match(html, /img\.addEventListener\('load',compactRow,\{once:true\}\)/);
-  const css = fs.readFileSync(path.join(root, 'public', 'app.css'), 'utf8');
+  const css = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
   assert.match(css, /#kolTable tbody tr\{height:var\(--kol-row-h,34px\);\}/);
   assert.match(css, /#kolTable tbody td\.kolPictureCell/);
 });
@@ -98,10 +98,10 @@ test('Collection Status keeps native select lifecycle while rendering shared cat
   assert.match(html,/kolStatusEntries\(\)/);
   assert.match(html,/statusValue=kolStatusCanonicalName\(val\)/);
   assert.match(html,/kolStatusColor\(statusValue\)/);
-  const css=fs.readFileSync(path.join(root,'public','app.css'),'utf8');
+  const css=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
   assert.match(css,/#kolTable select\.kolStatusNoArrow/);
   assert.match(css,/appearance:none/);
   assert.match(css,/--kol-status-color/);
-  // Tasarım dili denetimi (2026-10-15): durum etiketi diğer çiplerle aynı --r-full token'ını kullanır.
-  assert.match(css,/border-radius:var\(--r-full\)/);
+  // Tasarım dili denetimi (2026-10-15): durum etiketi diğer çiplerle aynı --ui-radius token'ını kullanır.
+  assert.match(css,/border-radius:var\(--ui-radius\)/);
 });

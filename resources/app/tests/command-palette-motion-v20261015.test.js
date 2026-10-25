@@ -50,14 +50,14 @@ test('Palet araması Türkçe karakterlerden bağımsız eşleşir ve önce baş
 });
 
 test('Dar ray üzerine gelince tam genişlikte, içeriği itmeden açılır', () => {
-  assert.match(APP_CSS, /html\[data-rail="min"\] \.rail:is\(:hover,:focus-within\)\{width:var\(--rail-full-w\);/);
-  const shared=fs.readFileSync(path.join(__dirname,'..','public','ui-components.css'),'utf8');
-  assert.match(shared,/html\[data-ui-system="manifest"\]\[data-rail="min"\] \.rail:is\(:hover,:focus-within\)[^}]*box-shadow:none/);
+  assert.match(APP_CSS, /html\[data-rail="min"\] \.rail:is\(:hover,:focus-within\)\{width:var\(--ui-rail-expanded-width\);/);
+  const shared=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
+  require('./helpers/manifest-css').assertReset();
   assert.doesNotMatch(shared,/transition:width/);
   for (const [preset, width] of [['compact', '196px'], ['standard', '208px'], ['large', '224px'], ['xl', '240px']]) {
-    assert.match(APP_CSS, new RegExp(`html\\[data-ui-scale="${preset}"\\]\\{\\n  --rail-full-w:${width};`));
+    assert.match(shared, new RegExp(`:root\\[data-ui-scale="${preset}"\\]\\{[^}]*--ui-rail-expanded-width:${width};`));
   }
-  assert.match(APP_CSS, /html\[data-rail="min"\]\{--rail-w:var\(--rail-min-w\);\}/, 'gövde boşluğu dar genişlikte kalır');
+  assert.match(shared, /:root\[data-ui-scale\]\[data-rail="min"\]\{--ui-rail-width:var\(--ui-rail-collapsed-width\);\}/, 'gövde boşluğu dar genişlikte kalır');
 });
 
 test('KPI sayacı özgün metne döner, yeniden çizimde durur ve azaltılmış harekete uyar', () => {

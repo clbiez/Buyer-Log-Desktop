@@ -1,9 +1,9 @@
 /* ============================================================
    LFL — v2.03 "kibar" yeniden tasarım
    Ölçü sistemi (app.css ile ortak):
-   - Tüm kontroller: yükseklik var(--ctl-h,30px), radius var(--r-sm,8px), 11.5px
+   - Tüm kontroller: yükseklik var(--ui-control-height,30px), radius var(--ui-radius,8px), 11.5px
    - Etiketler: 9.5px / 700 / uppercase / muted
-   - Kartlar: radius var(--r-lg,12px), 16px iç boşluk, ince çizgi
+   - Kartlar: radius var(--ui-radius,12px), 16px iç boşluk, ince çizgi
    - Boşluk ritmi: 10px (grid), 12px (bloklar arası)
    ============================================================ */
 #view-lfl{padding-bottom:28px;min-width:0;max-width:100%;overflow-x:hidden;}
@@ -53,7 +53,7 @@
 .lflDimBtn.isTrialDisabled,.lflDimBtn:disabled{opacity:.48;cursor:not-allowed;}
 
 /* ---- Boyut popover'ı (macOS mantığı: blur'lu, yumuşak) ---- */
-.lflDimPanel{position:absolute;left:0;top:calc(100% + 6px);min-width:280px;width:max-content;max-width:min(390px,calc(100vw - 36px));-webkit-backdrop-filter:var(--pop-blur,none);overflow:hidden;}
+.lflDimPanel{position:absolute;left:0;top:calc(100% + 6px);min-width:280px;width:max-content;max-width:min(390px,calc(100vw - 36px));overflow:hidden;}
 .lflDimPanel[hidden]{display:none!important;}
 .lflDimPanelHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px 9px;}
 .lflDimPanelHead>div{display:flex;flex-direction:column;gap:2px;}
@@ -181,7 +181,7 @@ body.lflSplitDragging{cursor:col-resize;user-select:none;}
 .lflCustomComparePicker{position:relative;display:flex;flex-direction:column;gap:5px;min-width:0;}
 .lflCustomCompareValueBtn{height:var(--ui-control-height,30px);width:100%;padding:0 9px;display:flex;align-items:center;gap:6px;cursor:pointer;text-align:left;}
 .lflCustomCompareValueBtn #lflCustomCompareValueText{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
-.lflCustomComparePanel{position:absolute;right:0;top:calc(100% + 6px);width:min(440px,calc(100vw - 36px));-webkit-backdrop-filter:var(--pop-blur,none);overflow:hidden;}
+.lflCustomComparePanel{position:absolute;right:0;top:calc(100% + 6px);width:min(440px,calc(100vw - 36px));overflow:hidden;}
 .lflCustomComparePanel[hidden]{display:none!important;}
 .lflCustomComparePanelHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px 9px;}
 .lflCustomComparePanelHead>div{display:grid;gap:2px;min-width:0;}

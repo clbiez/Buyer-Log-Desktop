@@ -8,7 +8,7 @@ const out=path.resolve(process.argv[2]||'docs/ai/ui-rebuild/evidence/baseline');
  const session=await existing.context().newCDPSession(existing);
  const {cookies}=await session.send('Network.getAllCookies');await session.detach();
  const runs=[];
- for(let i=0;i<5;i++){
+ for(let i=0;i<Number(process.env.BL_PERF_RUNS||5);i++){
   const ctx=await browser.newContext({viewport:{width:1440,height:900},locale:'tr-TR',timezoneId:'UTC',reducedMotion:'reduce'});await ctx.addCookies(cookies.map(({name,value,domain,path,secure,httpOnly,sameSite})=>({name,value,domain,path,secure,httpOnly,sameSite})));const p=await ctx.newPage();
   await p.addInitScript(()=>{localStorage.setItem('bl.user.moderator.lcw_theme','light');localStorage.setItem('bl.user.moderator.lcw_font_step','0');});
   await p.goto(base+'/',{waitUntil:'domcontentloaded'});await p.getByText("Buyer Log'a devam et",{exact:false}).waitFor({timeout:60000});
@@ -33,6 +33,6 @@ const out=path.resolve(process.argv[2]||'docs/ai/ui-rebuild/evidence/baseline');
  }
  const median=vs=>vs.sort((a,b)=>a-b)[Math.floor(vs.length/2)];
  const summary={startupMs:median(runs.map(r=>r.start.metrics.firstUsableInteractionMs.lastMs)),cpNavigationMs:median(runs.map(r=>r.large.metrics.auditFirstCPNavigationMs.lastMs)),cp5000RenderMs:median(runs.map(r=>r.large.metrics.auditCP5000RenderMs.lastMs)),domRows:runs.map(r=>r.large.domRows)};
- fs.writeFileSync(path.join(out,'performance.json'),JSON.stringify({method:'5 fresh browser contexts, same warm server/process and fixed synthetic dataset; no CPU throttling. Startup is BLPerf firstUsableInteractionMs, excluding reading the boot guide. CP 5000 in-memory canonical rows, normal pagination; two animation frames included. Not a Windows/Electron or cold-disk benchmark.',browser:browser.version(),node:process.version,summary,runs},null,2)+'\n');
+ fs.writeFileSync(path.join(out,'performance.json'),JSON.stringify({method:(process.env.BL_PERF_RUNS||'5')+' fresh browser contexts, same warm server/process and fixed synthetic dataset; no CPU throttling. Startup is BLPerf firstUsableInteractionMs, excluding reading the boot guide. CP 5000 in-memory canonical rows, normal pagination; two animation frames included. Not a Windows/Electron or cold-disk benchmark.',browser:browser.version(),node:process.version,summary,runs},null,2)+'\n');
  console.log(summary);await browser.close();
 })().catch(e=>{console.error(e);process.exit(1);});

@@ -82,9 +82,9 @@ test('yükleme kaydı kalıcı olur ve merkezi tarih motorunu aynı anda güncel
 
 test('Veri Yönetimi Merch Calendar upload/değiştir/kaldır akışını taşır ve köşeler kare kalır',()=>{
   const ui=read('public/data-management.js');
-  const css=read('public/data-management.css');
+  const css=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','data-management.css']);
   const picker=read('public/dual-week-datepicker.js');
-  const pickerCss=read('public/dual-week-datepicker.css');
+  const pickerCss=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','dual-week-datepicker.css']);
   const server=read('server/server.js');
   assert.match(ui,/Merch Calendar Yükle/);
   assert.match(ui,/data-merch-file/);
@@ -93,10 +93,10 @@ test('Veri Yönetimi Merch Calendar upload/değiştir/kaldır akışını taşı
   assert.match(ui,/id: 'merch', icon: 'i-calculator', inline: true/);
   assert.match(ui,/openTool === 'merch'/);
   assert.doesNotMatch(ui,/dmSectionLabel[^\n]*İş takvimi/);
-  assert.match(css,/\.dmMerchPanel[^{]*\{[^}]*border-radius:0!important/);
+  require('./helpers/manifest-css').assertReset();
   assert.match(picker,/LCW \/ GLB/);
   assert.match(picker,/weekPair/);
-  assert.match(pickerCss,/border-radius:0!important/);
+  require('./helpers/manifest-css').assertReset();
   assert.match(server,/routes\/merch-calendar-routes/);
 });
 

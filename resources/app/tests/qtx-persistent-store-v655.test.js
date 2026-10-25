@@ -23,7 +23,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const SERVER = require('./helpers/server-source')();
 const CONNECTOR = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'agent-browser-connector.js'), 'utf8');
 
@@ -237,6 +237,6 @@ test('v6.55 uygulama açılışında kayıtlı liste çekiliyor', () => {
 test('v6.55 Colour Code hücreleri VARSAYILAN olarak sade, yalnız kayıtlı olan kalın+mavi', () => {
   // Eski kural TÜM hücreleri koşulsuz mavi+kalın yapıyordu; artık yalnız
   // .qtxSavedColourCell sınıfı taşıyan hücreler bu görünümü alıyor.
-  assert.doesNotMatch(CSS, /#cpTable td\[data-key="C\.Code"\],#ordersTable td\[data-key="C\.Code"\],#kolTable td\[data-key="colourCode"\]\{color:var\(--acc\);font-weight:700/);
-  assert.match(CSS, /td\.qtxSavedColourCell\[data-key="C\.Code"\],#ordersTable td\.qtxSavedColourCell\[data-key="C\.Code"\],#kolTable td\.qtxSavedColourCell\[data-key="colourCode"\]\{color:var\(--acc\);font-weight:700/);
+  assert.doesNotMatch(CSS, /#cpTable td\[data-key="C\.Code"\],#ordersTable td\[data-key="C\.Code"\],#kolTable td\[data-key="colourCode"\]\{color:var\(--ui-accent\);font-weight:700/);
+  for(const selector of ["#cpTable td.qtxSavedColourCell","#ordersTable td.qtxSavedColourCell","#kolTable td.qtxSavedColourCell"]) { const rules=require("./helpers/manifest-css").rules(new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"))); assert.match(rules,/color:var\(--ui-accent\)/); assert.match(rules,/font-weight:700/); assert.match(rules,/text-decoration:underline dotted/); }
 });

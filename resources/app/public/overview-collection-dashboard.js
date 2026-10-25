@@ -80,7 +80,7 @@
     const width=Math.min(350,Math.max(0,viewportWidth-(margin*2)));
     const maxHeight=Math.max(0,viewportHeight-(margin*2));
     pop.style.position='fixed';
-    pop.style.zIndex='560';
+    pop.style.zIndex='var(--ui-z-popover)';
     pop.style.right='auto';
     pop.style.bottom='auto';
     pop.style.width=width+'px';
@@ -193,7 +193,7 @@
     /* Renk verilmemiş (varsayılan gri) statüler dağılımda birbirinden ayrılsın:
        yalnız görselleştirmede tema tokenlarından sıralı renk atanır; katalog
        verisi ve Excel renkleri değişmez. */
-    const VIS_PALETTE=['var(--acc)','var(--green)','var(--orange)','var(--purple,#5e4f8c)','var(--teal,#33685c)','var(--red)','var(--blue-lite,var(--acc))'];
+    const VIS_PALETTE=['var(--ui-accent)','var(--ui-success)','var(--ui-warning)','var(--ui-chart-4,#5e4f8c)','var(--ui-chart-3,#33685c)','var(--ui-danger)','var(--ui-accent,var(--ui-accent))'];
     const visColor=function(status,index){const c=ctx.statusColor(status);return (!c||/^#667085$/i.test(String(c)))?VIS_PALETTE[index%VIS_PALETTE.length]:c;};
     const colorByStatus=new Map(rows.map(function(row,index){return [row.status,visColor(row.status,index)];}));
     const rank=function(status){return order.has(status)?order.get(status):9999;};

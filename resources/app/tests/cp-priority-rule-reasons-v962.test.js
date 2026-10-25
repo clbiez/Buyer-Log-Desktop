@@ -8,7 +8,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const Rules = require('../public/cp-rules-engine.js');
 const VIEW = fs.readFileSync(path.join(ROOT, 'public', 'cp-overview-assistant.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'cp-overview-assistant.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','cp-overview-assistant.css'] );
 
 test('v9.62 priority rule reasonTr/reasonEn normalize edilir ve built-in nedenleri kaybolmaz', () => {
   const custom = Rules.normalizeRule({
@@ -38,7 +38,9 @@ test('v9.62 Rules UI Priority Rule editöründe iki dilli reason alanlarını ve
   assert.match(VIEW, /function validateNewPriorityReasons\(\)/);
   assert.match(VIEW, /if \(!validateNewPriorityReasons\(\)\) return;/);
   assert.match(CSS, /\.cpaRuleReasons\{[^}]*grid-template-columns:/);
-  assert.match(CSS, /\.cpaRuleReasonField input\.is-invalid\{/);
+  assert.match(CSS, /\.cpaRuleReasonField input\.is-invalid\{background:var\(--ui-danger-bg\)[^}]*color:var\(--ui-danger\)/);
+  assert.match(VIEW, /aria-invalid="\$\{!rule\.builtIn/);
+  assert.match(VIEW, /setAttribute\('aria-invalid', String\(!rule\.builtIn && !value\)\)/);
 });
 
 test('v9.62 matched custom priority rule stabil CUSTOM_RULE:<id> identity ve TR/EN metadata taşır', () => {

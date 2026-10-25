@@ -1,0 +1,88 @@
+cp-rule-invalid-light-standard-1440
+cp-rule-invalid-light-standard-1280
+cp-rule-invalid-light-large-1440
+cp-rule-invalid-light-large-1280
+cp-rule-invalid-light-xl-1440
+cp-rule-invalid-light-xl-1280
+cp-rule-invalid-light-compact-1440
+cp-rule-invalid-light-compact-1280
+cp-rule-invalid-grey-standard-1440
+cp-rule-invalid-grey-standard-1280
+cp-rule-invalid-grey-large-1440
+cp-rule-invalid-grey-large-1280
+cp-rule-invalid-grey-xl-1440
+cp-rule-invalid-grey-xl-1280
+cp-rule-invalid-grey-compact-1440
+cp-rule-invalid-grey-compact-1280
+cp-rule-invalid-dark-standard-1440
+cp-rule-invalid-dark-standard-1280
+cp-rule-invalid-dark-large-1440
+cp-rule-invalid-dark-large-1280
+cp-rule-invalid-dark-xl-1440
+cp-rule-invalid-dark-xl-1280
+cp-rule-invalid-dark-compact-1440
+cp-rule-invalid-dark-compact-1280
+locator.click: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('nav.tabs [data-tab="shipping"]')[22m
+[2m    - locator resolved to <button data-tab="shipping" aria-hidden="false" title="Nakliye Kıyaslama" aria-label="Nakliye Kıyaslama" data-i18n-title-tr="Nakliye Kıyaslama" data-i18n-title-en="Shipping Comparison">…</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div class="cpaRuleBody" id="cpa-rule-body-rule_cndcqbeq">…</div> from <div class="cpaModalOverlay" data-ui-migrated="cp-assistant">…</div> subtree intercepts pointer events[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    - waiting for element to be visible, enabled and stable[22m
+[2m    - element is visible, enabled and stable[22m
+[2m    - scrolling into view if needed[22m
+[2m    - done scrolling[22m
+[2m    - <div class="cpaRuleBody" id="cpa-rule-body-rule_cndcqbeq">…</div> from <div class="cpaModalOverlay" data-ui-migrated="cp-assistant">…</div> subtree intercepts pointer events[22m
+[2m  2 × retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m      - waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <header class="cpaRuleBar">…</header> from <div class="cpaModalOverlay" data-ui-migrated="cp-assistant">…</div> subtree intercepts pointer events[22m
+[2m  6 × retrying click action[22m
+[2m      - waiting 500ms[22m
+[2m      - waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div class="cpaRuleBody" id="cpa-rule-body-rule_cndcqbeq">…</div> from <div class="cpaModalOverlay" data-ui-migrated="cp-assistant">…</div> subtree intercepts pointer events[22m
+[2m    - retrying click action[22m
+[2m      - waiting 500ms[22m
+[2m      - waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div class="cpaRuleBody" id="cpa-rule-body-rule_cndcqbeq">…</div> from <div class="cpaModalOverlay" data-ui-migrated="cp-assistant">…</div> subtree intercepts pointer events[22m
+[2m    - retrying click action[22m
+[2m      - waiting 500ms[22m
+[2m      - waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <header class="cpaRuleBar">…</header> from <div class="cpaModalOverlay" data-ui-migrated="cp-assistant">…</div> subtree intercepts pointer events[22m
+[2m    - retrying click action[22m
+[2m      - waiting 500ms[22m
+[2m      - waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <header class="cpaRuleBar">…</header> from <div class="cpaModalOverlay" data-ui-migrated="cp-assistant">…</div> subtree intercepts pointer events[22m
+[2m  2 × retrying click action[22m
+[2m      - waiting 500ms[22m
+[2m      - waiting for element to be visible, enabled and stable[22m
+[2m      - element is visible, enabled and stable[22m
+[2m      - scrolling into view if needed[22m
+[2m      - done scrolling[22m
+[2m      - <div class="cpaRuleBody" id="cpa-rule-body-rule_cndcqbeq">…</div> from <div class="cpaModalOverlay" data-ui-migrated="cp-assistant">…</div> subtree intercepts pointer events[22m
+[2m  - retrying click action[22m
+[2m    - waiting 500ms[22m
+
+    at tab (/workspace/buyerlog-rebuild/docs/ai/ui-rebuild/tools/operations-fixture.cjs:16:76)
+    at /workspace/buyerlog-rebuild/docs/ai/ui-rebuild/tools/matrix-final-states.cjs:6:7

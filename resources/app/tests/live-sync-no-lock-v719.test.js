@@ -34,7 +34,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
 // live-events tek başına yüklenebilir: HTTP sunucusu ya da veri kökü gerektirmez.
 const liveEvents = require('../server/lib/live-events');
@@ -293,12 +293,9 @@ test('v7.19 uzak yama kullanıcının kendi çalışma durumunu silmez', () => {
 
 test('v7.19 değişen satır görünür kılınır ama yerleşimi bozmaz', () => {
   assert.match(APP, /tr\.classList\.add\('blRemoteChanged'\)/);
-  const style = CSS.slice(CSS.indexOf('tr.blRemoteChanged'));
-  assert.match(style, /animation:blRemoteChangedFade/);
-  // Yükseklik/kenarlık değiştiren bir özellik sanallaştırılmış tabloda titremeye yol açar.
-  const keyframes = style.slice(0, style.indexOf('@media'));
-  ['height', 'border', 'padding', 'font-size'].forEach(prop => {
-    assert.ok(!new RegExp(`${prop}\\s*:`).test(keyframes), `${prop} vurgusu yerleşimi bozar`);
-  });
-  assert.match(style, /prefers-reduced-motion/, 'hareket azaltma tercihi karşılanmalı');
+  const style = require('./helpers/manifest-css').rules(/tr\.blRemoteChanged/);
+  assert.match(style,/background-color:color-mix/);
+  assert.match(style,/animation:none/);
+  for(const prop of ['height','border','padding','font-size']) assert.doesNotMatch(style,new RegExp(prop+'\\s*:'));
+  require('./helpers/manifest-css').assertStaticMotion();
 });

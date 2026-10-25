@@ -19,7 +19,7 @@ const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const APP = read('public/app-main.js');
 const OPS = read('public/plm-operations.js');
-const CSS = read('public/app.css');
+const CSS = require('./helpers/manifest-css')();
 const INDEX = read('public/index.html');
 
 /* ---- 3. sebep: tek zamanlayıcı ---- */
@@ -184,21 +184,16 @@ test('arayüz mevcut Buyer Log bileşenlerini kullanıyor', () => {
 });
 
 test('stiller yalnız tema değişkenlerini kullanıyor ve köşe yuvarlamıyor', () => {
-  const start = CSS.indexOf('PLM OPERASYON MERKEZİ');
-  /* v9.53: blok SINIRLANDI. Eskiden dosya sonuna kadar uzanıyordu; sonradan
-     eklenen bambaşka bölümlerin stilleri PLM stili sanılıp test kırılıyordu.
-     Test adı PLM Operasyon Merkezi'ni ölçtüğünü söylüyor; blok da onu ölçmeli. */
-  const nextSection = CSS.indexOf('E-MAIL GROUPS V2', start);
-  const block = CSS.slice(start, nextSection > start ? nextSection : CSS.length);
+  const block=require('./helpers/manifest-css').rules(/plmOps/);
   assert.ok(block.length > 500, 'stil bloğu bulunmalı');
   // Sabit renk kodu olmamalı (tema dışına çıkmamalı).
   assert.doesNotMatch(block, /#[0-9a-fA-F]{3,6}\b/);
   // Uygulama köşe yuvarlaması kullanmıyor.
   assert.doesNotMatch(block, /border-radius:\s*(?!var\(--r-full\))[0-9]/);
   // Durum renkleri tema değişkenlerinden.
-  assert.match(block, /var\(--green\)/);
-  assert.match(block, /var\(--red\)/);
-  assert.match(block, /var\(--acc\)/);
+  assert.match(block, /var\(--ui-success\)/);
+  assert.match(block, /var\(--ui-danger\)/);
+  assert.match(block, /var\(--ui-accent\)/);
 });
 
 test('modül yükleniyor ve menülerden erişilebiliyor', () => {

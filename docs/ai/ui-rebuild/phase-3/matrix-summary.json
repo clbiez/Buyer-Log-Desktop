@@ -1,0 +1,528 @@
+{
+  "matrix": "3 themes × 4 UI scales × 2 viewports (1440×900,1280×720)",
+  "uniqueFamilies": 164,
+  "currentCases": 3936,
+  "storedPngCount": 4464,
+  "inventoryEntries": 145,
+  "uniqueInventoryIds": 142,
+  "unmappedOrPending": [],
+  "incompleteFamilies": {},
+  "currentFindings": [],
+  "textNodesChecked": 508983,
+  "supersedingGroups": [
+    "revision",
+    "contrast-revision",
+    "fx-revision",
+    "drag-revision",
+    "dialog-layout-revision",
+    "intake-revision",
+    "fixture-revision",
+    "user-create-final",
+    "earth-final",
+    "earth-marker-revision",
+    "state-revision",
+    "rail-final",
+    "state-final"
+  ],
+  "review": "Computed-text contrast, visible migrated geometry and document horizontal overflow across all cases. Per-family contact sheets reviewed at grey XL/1280, then targeted full-size light/dark and discovered clipping/overlap. Superseded evidence is retained. Export iframe/document styling is a separate frozen contract. Earth marker revision represents the map behind otherwise unchanged View/Layers/Settings panels. This is not a formal WCAG certification.",
+  "keyboardHistory": "rare/ Escape failures corrected and retested in keyboard-final.json (36/36). user-create setup failure was capture timing, superseded by user-create-final/. INTAKE is nonmodal: Tab follows document order, Escape closes it. Image hover preview has no controls or modal focus trap.",
+  "families": {
+    "automation-columns": [
+      "operationStates"
+    ],
+    "automation-create": [
+      "operationStates"
+    ],
+    "automation-editor": [
+      "operationStates"
+    ],
+    "automation-settings": [
+      "operationStates"
+    ],
+    "automations": [
+      "main"
+    ],
+    "backlog": [
+      "main"
+    ],
+    "backlog-add-dimension": [
+      "auxiliary"
+    ],
+    "backlog-chart-settings": [
+      "last"
+    ],
+    "backlog-export-fields": [
+      "contrast-revision"
+    ],
+    "backlog-filter": [
+      "deep"
+    ],
+    "backlog-pivot": [
+      "planStates"
+    ],
+    "backlog-plan-actual": [
+      "deep"
+    ],
+    "backlog-plan-detail": [
+      "last"
+    ],
+    "backlog-presentation": [
+      "deep"
+    ],
+    "blocking-operation": [
+      "rare"
+    ],
+    "browser-settings": [
+      "rare"
+    ],
+    "calendar-native": [
+      "remainingStates"
+    ],
+    "clipboard-diagnostics": [
+      "auxiliary"
+    ],
+    "clipboard-menu": [
+      "popovers"
+    ],
+    "collection-buying-approved": [
+      "state-final"
+    ],
+    "collection-plm-drag": [
+      "drag-revision"
+    ],
+    "collection-quick-filters": [
+      "rare"
+    ],
+    "column-name": [
+      "rare"
+    ],
+    "command": [
+      "remaining"
+    ],
+    "costing-compare": [
+      "deep"
+    ],
+    "costing-fx": [
+      "fx-revision"
+    ],
+    "cp": [
+      "main"
+    ],
+    "cp-checklist-settings": [
+      "revision"
+    ],
+    "cp-detail-columns": [
+      "planStates"
+    ],
+    "cp-rule-invalid": [
+      "state-final"
+    ],
+    "cp-rules": [
+      "revision"
+    ],
+    "data-automation": [
+      "operationStates"
+    ],
+    "data-inspector": [
+      "operationStates"
+    ],
+    "data-maintenance": [
+      "popovers"
+    ],
+    "date-picker": [
+      "remaining"
+    ],
+    "earth-layers": [
+      "earth-final"
+    ],
+    "earth-offline": [
+      "earth-marker-revision"
+    ],
+    "earth-settings": [
+      "earth-final"
+    ],
+    "earth-view": [
+      "earth-final"
+    ],
+    "excel-import": [
+      "remaining"
+    ],
+    "excel-templates": [
+      "remaining"
+    ],
+    "fabric-batch": [
+      "fixture-revision"
+    ],
+    "fabric-card": [
+      "rare"
+    ],
+    "flow-filters": [
+      "earth"
+    ],
+    "flow-globe": [
+      "earth"
+    ],
+    "flow-map": [
+      "earth"
+    ],
+    "formula-builder": [
+      "auxiliary"
+    ],
+    "frozen-cp": [
+      "popovers"
+    ],
+    "frozen-koleksiyon": [
+      "popovers"
+    ],
+    "frozen-orders": [
+      "popovers"
+    ],
+    "guide": [
+      "operations"
+    ],
+    "horizon-name": [
+      "rare"
+    ],
+    "image-preview": [
+      "last"
+    ],
+    "image-settings": [
+      "remainingStates"
+    ],
+    "image-source": [
+      "rare"
+    ],
+    "import-columns": [
+      "output"
+    ],
+    "import-en": [
+      "remainingStates"
+    ],
+    "import-match": [
+      "output"
+    ],
+    "import-plan": [
+      "rare"
+    ],
+    "import-review": [
+      "output"
+    ],
+    "import-sheet": [
+      "output"
+    ],
+    "index-model": [
+      "rare"
+    ],
+    "index-sets": [
+      "rare"
+    ],
+    "intake-filter": [
+      "intake-revision"
+    ],
+    "koleksiyon": [
+      "main"
+    ],
+    "landed-defaults": [
+      "rare"
+    ],
+    "layout-control": [
+      "remaining"
+    ],
+    "lcwai": [
+      "main"
+    ],
+    "lcwai-connection": [
+      "operations"
+    ],
+    "lcwai-error": [
+      "operationStates"
+    ],
+    "lcwai-records": [
+      "operations"
+    ],
+    "lfl": [
+      "main"
+    ],
+    "lfl-filter": [
+      "popovers"
+    ],
+    "lfl-portfolio": [
+      "commercialStates"
+    ],
+    "lfl-scenario": [
+      "commercialStates"
+    ],
+    "lfl-trial": [
+      "last"
+    ],
+    "license-map": [
+      "commercialStates"
+    ],
+    "licensecards": [
+      "main"
+    ],
+    "login": [
+      "entry"
+    ],
+    "login-error": [
+      "entry"
+    ],
+    "login-hub": [
+      "entry"
+    ],
+    "login-setup": [
+      "entry"
+    ],
+    "login-suggest": [
+      "entry"
+    ],
+    "mail-topic": [
+      "dialog-layout-revision"
+    ],
+    "manual-price": [
+      "auxiliary"
+    ],
+    "manufacturer-editor": [
+      "deep"
+    ],
+    "manufacturers": [
+      "main"
+    ],
+    "model-column": [
+      "last"
+    ],
+    "model-files": [
+      "rare"
+    ],
+    "notes": [
+      "main"
+    ],
+    "notifications": [
+      "operations"
+    ],
+    "opencosting": [
+      "main"
+    ],
+    "orders": [
+      "main"
+    ],
+    "output-editor": [
+      "remainingStates"
+    ],
+    "output-layout": [
+      "remainingStates"
+    ],
+    "output-template-form": [
+      "remainingStates"
+    ],
+    "output-templates": [
+      "remaining"
+    ],
+    "overview": [
+      "main"
+    ],
+    "overview-collection": [
+      "deep"
+    ],
+    "overview-collection-columns": [
+      "deep"
+    ],
+    "overview-collection-scope": [
+      "deep"
+    ],
+    "overview-layout-selected": [
+      "deep"
+    ],
+    "overview-widgets": [
+      "remaining"
+    ],
+    "plm-actions": [
+      "popovers"
+    ],
+    "plm-columns": [
+      "fixture-revision"
+    ],
+    "plm-connection": [
+      "auxiliary"
+    ],
+    "plm-import": [
+      "rare"
+    ],
+    "plm-language": [
+      "rare"
+    ],
+    "plm-list": [
+      "rare"
+    ],
+    "plm-preview": [
+      "rare"
+    ],
+    "plm-properties": [
+      "rare"
+    ],
+    "plm-scope": [
+      "last"
+    ],
+    "price-drawer": [
+      "commercialStates"
+    ],
+    "price-history-approved": [
+      "state-final"
+    ],
+    "price-history-approved-matrix": [
+      "state-final"
+    ],
+    "priceanalysis": [
+      "main"
+    ],
+    "pricing-analysis": [
+      "commercialStates"
+    ],
+    "pricing-export-fields": [
+      "rare"
+    ],
+    "pricing-history": [
+      "commercialStates"
+    ],
+    "pricing-preflight": [
+      "auxiliary"
+    ],
+    "pricing-results": [
+      "rare"
+    ],
+    "pricing-rounds": [
+      "commercialStates"
+    ],
+    "pricinghistory": [
+      "main"
+    ],
+    "quotation-access": [
+      "last"
+    ],
+    "quotation-note": [
+      "last"
+    ],
+    "quotations": [
+      "main"
+    ],
+    "rail-collapsed": [
+      "rail-final"
+    ],
+    "rail-collapsed-expanded": [
+      "state-revision"
+    ],
+    "recycle-bin": [
+      "rare"
+    ],
+    "refresh-error": [
+      "rare"
+    ],
+    "refresh-history": [
+      "rare"
+    ],
+    "refresh-menu": [
+      "popovers"
+    ],
+    "release-notes": [
+      "operations"
+    ],
+    "row-tools": [
+      "popovers"
+    ],
+    "royalty": [
+      "remainingStates"
+    ],
+    "search-help": [
+      "remaining"
+    ],
+    "shipping": [
+      "main"
+    ],
+    "shipping-drag-target": [
+      "state-final"
+    ],
+    "shipping-freight": [
+      "planStates"
+    ],
+    "source": [
+      "main"
+    ],
+    "source-required": [
+      "rare"
+    ],
+    "startup-error": [
+      "entry"
+    ],
+    "startup-loading": [
+      "entry"
+    ],
+    "startup-ready": [
+      "entry"
+    ],
+    "status-delete": [
+      "dialog-layout-revision"
+    ],
+    "status-manager": [
+      "dialog-layout-revision"
+    ],
+    "sync-guide": [
+      "operations"
+    ],
+    "sync-settings": [
+      "remainingStates"
+    ],
+    "sync-status": [
+      "rare"
+    ],
+    "table-actions": [
+      "popovers"
+    ],
+    "table-fields": [
+      "popovers"
+    ],
+    "transit": [
+      "remainingStates"
+    ],
+    "user-create": [
+      "user-create-final"
+    ],
+    "users": [
+      "operations"
+    ],
+    "users-bundles": [
+      "operationStates"
+    ],
+    "users-compare": [
+      "operationStates"
+    ],
+    "users-copy": [
+      "operationStates"
+    ],
+    "users-en": [
+      "operationStates"
+    ],
+    "users-history": [
+      "operationStates"
+    ],
+    "users-organization": [
+      "operationStates"
+    ],
+    "users-roles": [
+      "operationStates"
+    ],
+    "users-templates": [
+      "operationStates"
+    ],
+    "users-transfer": [
+      "operationStates"
+    ],
+    "warning-list": [
+      "rare"
+    ]
+  },
+  "captureHistory": [
+    "state-revision: DataTransfer was missing in the capture fixture; shipping and later screenshots superseded by state-final (120 cases, 0 runtime errors).",
+    "rail-final: cursor kept outside the collapsed rail; earlier hover-expanded image retained as history.",
+    "Invalid rule field correctly prevents closing; fixture restores a valid reason before leaving, preserving validation."
+  ]
+}

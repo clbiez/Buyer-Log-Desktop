@@ -33,7 +33,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const APP = read('public/app-main.js');
-const CSS = read('public/design-butunluk.css');
+const CSS = require('./helpers/manifest-css')();
 const INDEX = read('public/index.html');
 
 /* Kaynaktan tek bir işlevi söker. ÖNCE parametre parantezi atlanır: varsayılan

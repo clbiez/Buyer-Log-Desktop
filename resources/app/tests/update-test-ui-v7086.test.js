@@ -9,7 +9,7 @@ const ROOT = path.resolve(__dirname, '..');
 const ui = fs.readFileSync(path.join(ROOT,'public','user-access-ui.js'),'utf8');
 const updateUi = fs.readFileSync(path.join(ROOT,'public','update-test-ui.js'),'utf8');
 const perf = fs.readFileSync(path.join(ROOT,'public','perf-runtime.js'),'utf8');
-const css = fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
+const css = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
 test('user menu exposes App Update for every user; runtime availability is checked when opened', () => {
   assert.doesNotMatch(ui, /profile\.systemRole === 'moderator' \? `<button type="button" data-update-test>/);
@@ -55,8 +55,8 @@ test('Update Test UI is loaded before the user menu module in deferred UI', () =
 
 test('Update Test modal CSS keeps the dialog visible above the dimmed overlay', () => {
   assert.match(css, /\.updateTestOverlay\{[\s\S]*?position:fixed[\s\S]*?display:grid[\s\S]*?place-items:center/);
-  assert.match(css, /\.updateTestCard\{[\s\S]*?width:min\(540px[\s\S]*?background:var\(--card\)[\s\S]*?color:var\(--ink\)[\s\S]*?display:block/);
-  assert.match(css, /section\{display:none\}/);
+  assert.match(css, /\.updateTestCard\{[\s\S]*?width:min\(540px[\s\S]*?background:var\(--ui-surface\)[\s\S]*?color:var\(--ui-text\)[\s\S]*?display:block/);
+  assert.match(css, /section\{display:none;?\}/);
   assert.match(css, /\.updateTestHead\{[\s\S]*?display:flex/);
   assert.match(css, /\.updateTestActions\{[\s\S]*?display:flex/);
 });

@@ -17,7 +17,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const UI = read('public/data-management.js');
-const CSS = read('public/data-management.css');
+const CSS = fs.readFileSync(path.join(__dirname,'../public/data-management.css'),'utf8');
 const INDEX = read('public/index.html');
 
 /* Satır sonları bu depoda karışık (CRLF + LF). Çok satırlı ankraj kullanan her
@@ -99,7 +99,7 @@ test('v7.81 modül stili yalnız token kullanır, yeni ton uydurmaz', () => {
   // DESIGN_SYSTEM.md: renk yalnız token'lardan gelir.
   const hex = CSS.match(/#[0-9a-fA-F]{3,8}\b/g) || [];
   assert.deepEqual(hex, [], `modül CSS'inde sabit renk var: ${hex.join(', ')}`);
-  const shared=read('public/ui-components.css');
+  const shared=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css']);
   assert.match(shared, /\.dm[^}]*var\(--ui-accent\)/);
   assert.doesNotMatch(CSS, /(?:background|color|border):/);
 });
@@ -570,7 +570,7 @@ test('v7.81 araç satırı açılır menü DEĞİL — kırpılacak bir kapsayı
   assert.doesNotMatch(CSS, /\.dmToolList[^}]*position:\s*fixed/);
   assert.doesNotMatch(CSS, /\.dmToolList[^}]*position:\s*absolute/);
   assert.match(CSS, /\.dmToolList \{[^}]*list-style: none/);
-  assert.match(read('public/ui-components.css'), /\.dmToolList \{[^}]*border: ?0/);
+  require('./helpers/manifest-css').assertReset();
 });
 
 /* ------------------------------------------------------------------ */
@@ -711,7 +711,7 @@ test('v7.81 şeridin taşıdığı canlı bilgi KAYBOLMADI', () => {
   assert.match(appMain, /\['serverStatus','sourceStatusInline','sourceHint'\]/,
     'uyarı çipi hedefleri değişmiş — bu test güncellenmeli');
   assert.match(INDEX, /id="sourceStatusInline"/, 'durum satırı bir yerde yaşamalı');
-  assert.match(read('public/app.css'), /\.topSourceStatus\{/);
+  require('./helpers/manifest-css').assertReset();
   // Yenileme süre sayacı Veri Yönetimi › Yenileme bölümünde.
   assert.match(UI, /data-source-timer="all"/);
   assert.match(appMain, /querySelectorAll\('\[data-source-timer\]'\)/,

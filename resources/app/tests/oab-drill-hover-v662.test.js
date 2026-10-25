@@ -13,7 +13,7 @@ const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 
 test('OAB drill-down images use the shared large hover preview above the modal overlay', () => {
   assert.match(APP, /function bindDetailModelThumb\(img\)[\s\S]*BLImageRuntime\.scheduleHover\(img,event\)/);
-  assert.match(APP, /z-index:54990/);
+  assert.match(APP, /z-index:var\(--ui-z-tooltip\)/);
   assert.match(APP, /BLDetailImages=\{[\s\S]*bindThumbs:bindDetailModelThumbs/);
   assert.match(OAB, /oabDrillModelThumb detailModelThumb/);
   assert.match(OAB, /global\.BLDetailImages\.bindThumbs\(table\)/);

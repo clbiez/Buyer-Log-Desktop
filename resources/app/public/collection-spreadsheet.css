@@ -268,3 +268,6 @@
   .kolFabricFacetPanel>strong{grid-column:1}
   .colFilterPanel:has(.kolFabricFacetPanel)>.cfpApplyRow{display:flex;flex-wrap:wrap;gap:5px}
 }
+
+#view-koleksiyon.blPlmDragOver{position:relative;}
+#view-koleksiyon:is(.blPlmDragOver,.blPlmDragBusy)::after{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);padding:var(--ui-space-4) var(--ui-space-6);pointer-events:none;}

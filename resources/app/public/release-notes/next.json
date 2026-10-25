@@ -7,8 +7,8 @@
     "en": "Manifest: shared interface and all modules"
   },
   "summary": {
-    "tr": "Manifest ortak kontrolleri, tabloları ve tipografisi kalan yardımcı ekranlara genişledi. Mevcut CP veri bütünlüğü iyileştirmeleri korunur.",
-    "en": "Manifest shared controls, tables and typography extend to the remaining utility screens. Existing CP data integrity improvements are retained."
+    "tr": "Manifest bütün modüllerde ortak token ve bileşen sistemini kullanır. Eski görünüm katmanları kaldırıldı; klavye, büyük yazı ve filtre yerleşimleri iyileştirildi.",
+    "en": "Manifest uses shared tokens and components across all modules. Retired appearance layers were removed; keyboard navigation, larger text and filter placement were improved."
   },
   "changes": [
     {
@@ -1980,6 +1980,238 @@
         "caption": {
           "tr": "Manifest Faz 2, kalan ekranlar; değişiklik sonrası gerçek PNG.",
           "en": "Manifest Phase 2, remaining screens; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-dialog-keyboard",
+      "type": "improvement",
+      "module": {
+        "tr": "Pencereler",
+        "en": "Dialogs"
+      },
+      "title": {
+        "tr": "Pencerelerde tutarlı klavye kullanımı",
+        "en": "Consistent keyboard navigation in dialogs"
+      },
+      "body": {
+        "tr": "Tab ve Shift+Tab açık pencerede kalır. Escape desteklenen pencereleri kapatır ve odağı önceki kontrole döndürür. İç içe durum ve kullanıcı pencereleri ortak katman sırasını izler.",
+        "en": "Tab and Shift+Tab stay within the open dialog. Escape closes supported dialogs and returns focus to the previous control. Nested status and user dialogs follow the shared layer order."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-dialog-keyboard.png",
+        "alt": {
+          "tr": "Pencerelerde tutarlı klavye kullanımı — anonim veriyle gerçek Buyer Log",
+          "en": "Consistent keyboard navigation in dialogs — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-dense-readability",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Büyük yazıda kontrol ayarları daha okunaklı",
+        "en": "More readable control settings at larger text sizes"
+      },
+      "body": {
+        "tr": "Kural adı ve türü büyük yazıda çakışmaz; işlemler ayrı satırda yer alır. Sabit tablo sütunları doğru katmanda kalır ve ana başlıkların ince grup çizgileri korunur.",
+        "en": "Rule names and types no longer overlap at larger text sizes; actions occupy a separate row. Frozen table columns retain the correct stacking order and main headers keep their subtle group separators."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-dense-readability.png",
+        "alt": {
+          "tr": "Büyük yazıda kontrol ayarları daha okunaklı — anonim veriyle gerçek Buyer Log",
+          "en": "More readable control settings at larger text sizes — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-filter-placement",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "INTAKE filtresi kesilmeden açılır",
+        "en": "INTAKE filters open without clipping"
+      },
+      "body": {
+        "tr": "Filtre paneli widget sınırlarında kesilmez; alan adları ve seçimler ekranda görünür kalır. Escape ve filtre işlemleri korunur.",
+        "en": "The filter panel is no longer clipped by the widget; field names and selections remain visible. Escape and filter actions are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-filter-placement.png",
+        "alt": {
+          "tr": "INTAKE filtresi kesilmeden açılır — anonim veriyle gerçek Buyer Log",
+          "en": "INTAKE filters open without clipping — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-mail-option-layout",
+      "type": "improvement",
+      "module": {
+        "tr": "E-posta ayarları",
+        "en": "Email settings"
+      },
+      "title": {
+        "tr": "E-posta seçeneklerinde dengeli yerleşim",
+        "en": "Balanced email option layout"
+      },
+      "body": {
+        "tr": "Excel, tablo ve TP seçenekleri ortak köşeli onay kutularını kullanır. Açıklamalar geniş metin alanında okunur; klavye odağı görünür kalır.",
+        "en": "Excel, table and TP options use shared square checkboxes. Descriptions have room to wrap and keyboard focus remains visible."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-mail-option-layout.png",
+        "alt": {
+          "tr": "E-posta seçeneklerinde dengeli yerleşim — anonim veriyle gerçek Buyer Log",
+          "en": "Balanced email option layout — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-control-contrast",
+      "type": "improvement",
+      "module": {
+        "tr": "Ortak kontroller",
+        "en": "Shared controls"
+      },
+      "title": {
+        "tr": "Yoğun seçim alanlarında daha net metin",
+        "en": "Clearer text in dense selection panels"
+      },
+      "body": {
+        "tr": "Backlog Excel sütun seçicisi ve döviz kuru dosyası seçimi, güçlü yüzeylerde okunaklı ortak metin renklerini kullanır. Durum silme penceresi açıklama ve işlemlere yeterli boşluk ayırır.",
+        "en": "The Backlog Excel column picker and exchange-rate file selector use readable shared text colors on stronger surfaces. The status deletion dialog provides room for its explanation and actions."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-control-contrast.png",
+        "alt": {
+          "tr": "Yoğun seçim alanlarında daha net metin — anonim veriyle gerçek Buyer Log",
+          "en": "Clearer text in dense selection panels — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-earth-map",
+      "type": "improvement",
+      "module": {
+        "tr": "Küresel Akış Haritası",
+        "en": "Global Flow Map"
+      },
+      "title": {
+        "tr": "Earth haritası ortak görsel dili kullanır",
+        "en": "Earth maps use the shared visual language"
+      },
+      "body": {
+        "tr": "Araç, küme ve sevkiyat işaretçileri köşelidir; harita etiketleri yerel fontlarla arayüz boyutuna uyar. Dekoratif ışıma ve sürekli rota animasyonu kaldırıldı. Rota, seçim ve yakınlaştırma davranışı korunur.",
+        "en": "Vehicle, cluster and shipment markers are square; map labels use local fonts and follow interface size. Decorative glow and continuous route animation were removed. Routes, selection and zoom behavior are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-earth-map.png",
+        "alt": {
+          "tr": "Ortak Manifest kontrolleriyle çevrimdışı Earth haritası",
+          "en": "Offline Earth map with shared Manifest controls"
+        },
+        "caption": {
+          "tr": "Anonim demo verisi; yerel harita dokusuyla değişiklik sonrası gerçek PNG.",
+          "en": "Anonymous demo data; actual post-change PNG with local map imagery."
+        }
+      }
+    },
+    {
+      "id": "manifest-state-feedback",
+      "type": "improvement",
+      "module": {
+        "tr": "Ortak durumlar",
+        "en": "Shared states"
+      },
+      "title": {
+        "tr": "Onay, hata ve sürükleme durumu daha belirgin",
+        "en": "Clearer approval, error and drag states"
+      },
+      "body": {
+        "tr": "Fiyat geçmişinde onay metinle de gösterilir. Eksik kural sebebi ortak hata yüzeyini ve erişilebilir hata bilgisini kullanır; sürükleme hedefi ve görsel geri bildirimi ortak durum diliyle belirginleşir.",
+        "en": "Pricing history includes an approval label. Missing rule reasons use the shared error surface and accessible invalid state; drag targets and image feedback use the common state language."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-state-feedback.png",
+        "alt": {
+          "tr": "Onay, hata ve sürükleme durumu daha belirgin — anonim Buyer Log verisi",
+          "en": "Clearer approval, error and drag states — anonymous Buyer Log data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-collapsed-navigation",
+      "type": "improvement",
+      "module": {
+        "tr": "Gezinme",
+        "en": "Navigation"
+      },
+      "title": {
+        "tr": "Dar menü çalışma alanını geri kazandırır",
+        "en": "Collapsed navigation returns space to the workspace"
+      },
+      "body": {
+        "tr": "Menü daraltıldığında içerik dört boyutta dar menü genişliğine oturur. Menüye odaklanınca veya üzerine gelince açılan gezinme, içeriği yerinden oynatmaz.",
+        "en": "When collapsed, the menu leaves the correct narrow content offset in all four sizes. Navigation expands on hover or keyboard focus without moving the content."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-collapsed-navigation.png",
+        "alt": {
+          "tr": "Dar menü çalışma alanını geri kazandırır — anonim Buyer Log verisi",
+          "en": "Collapsed navigation returns space to the workspace — anonymous Buyer Log data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
         }
       }
     }

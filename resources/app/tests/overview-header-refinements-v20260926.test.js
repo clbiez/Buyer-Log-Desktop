@@ -8,8 +8,8 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
-const DESIGN = fs.readFileSync(path.join(ROOT, 'public', 'design-butunluk.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')();
+const DESIGN = require('./helpers/manifest-css')();
 const INTAKE = fs.readFileSync(path.join(ROOT, 'public', 'intake.js'), 'utf8');
 
 test('refresh scope feedback uses normal notifications without the yellow global strip', () => {

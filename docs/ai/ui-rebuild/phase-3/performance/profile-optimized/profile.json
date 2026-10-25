@@ -1,0 +1,778 @@
+{
+  "top": [
+    {
+      "fn": "(program)",
+      "file": "",
+      "line": -1,
+      "samples": 657
+    },
+    {
+      "fn": "(idle)",
+      "file": "",
+      "line": -1,
+      "samples": 187
+    },
+    {
+      "fn": "getBoundingClientRect",
+      "file": "",
+      "line": -1,
+      "samples": 187
+    },
+    {
+      "fn": "renderFullTable",
+      "file": "app-main.js?v=7.0.294&rev=20261024-notebook-rich-editor",
+      "line": 7530,
+      "samples": 177
+    },
+    {
+      "fn": "getBoundingClientRect",
+      "file": "",
+      "line": -1,
+      "samples": 158
+    },
+    {
+      "fn": "value",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 209,
+      "samples": 120
+    },
+    {
+      "fn": "value",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 209,
+      "samples": 112
+    },
+    {
+      "fn": "value",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 209,
+      "samples": 85
+    },
+    {
+      "fn": "token",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 26,
+      "samples": 77
+    },
+    {
+      "fn": "token",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 26,
+      "samples": 75
+    },
+    {
+      "fn": "value",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 209,
+      "samples": 55
+    },
+    {
+      "fn": "rowLookup",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 203,
+      "samples": 52
+    },
+    {
+      "fn": "renderFullTable",
+      "file": "app-main.js?v=7.0.294&rev=20261024-notebook-rich-editor",
+      "line": 7530,
+      "samples": 50
+    },
+    {
+      "fn": "rowLookup",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 203,
+      "samples": 45
+    },
+    {
+      "fn": "(garbage collector)",
+      "file": "",
+      "line": -1,
+      "samples": 38
+    },
+    {
+      "fn": "rowLookup",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 203,
+      "samples": 38
+    },
+    {
+      "fn": "",
+      "file": "cp-decision-runtime.js?v=7.0.294",
+      "line": 53,
+      "samples": 34
+    },
+    {
+      "fn": "personalModelSteps",
+      "file": "cp-overview-assistant.js?rev=20261021-delete-all&v=7.0.294",
+      "line": 3517,
+      "samples": 34
+    },
+    {
+      "fn": "token",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 26,
+      "samples": 32
+    },
+    {
+      "fn": "value",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 209,
+      "samples": 27
+    },
+    {
+      "fn": "",
+      "file": "checklist-supplier-sync.js?v=7.0.294&rev=5",
+      "line": 567,
+      "samples": 26
+    },
+    {
+      "fn": "worker.onmessage",
+      "file": "cp-decision-runtime.js?v=7.0.294",
+      "line": 40,
+      "samples": 25
+    },
+    {
+      "fn": "value",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 209,
+      "samples": 25
+    },
+    {
+      "fn": "buildRow",
+      "file": "app-main.js?v=7.0.294&rev=20261024-notebook-rich-editor",
+      "line": 7655,
+      "samples": 23
+    },
+    {
+      "fn": "token",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 26,
+      "samples": 23
+    },
+    {
+      "fn": "token",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 26,
+      "samples": 23
+    },
+    {
+      "fn": "value",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 209,
+      "samples": 22
+    },
+    {
+      "fn": "rowLookup",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 203,
+      "samples": 21
+    },
+    {
+      "fn": "value",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 209,
+      "samples": 20
+    },
+    {
+      "fn": "token",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 26,
+      "samples": 19
+    },
+    {
+      "fn": "value",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 209,
+      "samples": 19
+    },
+    {
+      "fn": "count",
+      "file": "checklist-components-engine.js?v=7.0.294",
+      "line": 14,
+      "samples": 19
+    },
+    {
+      "fn": "token",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 26,
+      "samples": 19
+    },
+    {
+      "fn": "rowLookup",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 203,
+      "samples": 19
+    },
+    {
+      "fn": "value",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 209,
+      "samples": 19
+    },
+    {
+      "fn": "token",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 26,
+      "samples": 18
+    },
+    {
+      "fn": "value",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 209,
+      "samples": 18
+    },
+    {
+      "fn": "buildRow",
+      "file": "app-main.js?v=7.0.294&rev=20261024-notebook-rich-editor",
+      "line": 7655,
+      "samples": 18
+    },
+    {
+      "fn": "buildRow",
+      "file": "app-main.js?v=7.0.294&rev=20261024-notebook-rich-editor",
+      "line": 7655,
+      "samples": 17
+    },
+    {
+      "fn": "normalizeStatus",
+      "file": "cp-checklist-engine.js?v=7.0.294",
+      "line": 167,
+      "samples": 17
+    },
+    {
+      "fn": "token",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 26,
+      "samples": 17
+    },
+    {
+      "fn": "getBoundingClientRect",
+      "file": "",
+      "line": -1,
+      "samples": 16
+    },
+    {
+      "fn": "value",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 209,
+      "samples": 16
+    },
+    {
+      "fn": "resolveOperand",
+      "file": "cp-rules-engine.js?v=7.0.294",
+      "line": 827,
+      "samples": 16
+    },
+    {
+      "fn": "token",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 26,
+      "samples": 16
+    },
+    {
+      "fn": "value",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 209,
+      "samples": 16
+    },
+    {
+      "fn": "rowLookup",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 203,
+      "samples": 15
+    },
+    {
+      "fn": "analyzeRowsWithPersonalRulesAsync",
+      "file": "cp-overview-assistant.js?rev=20261021-delete-all&v=7.0.294",
+      "line": 3480,
+      "samples": 14
+    },
+    {
+      "fn": "count",
+      "file": "checklist-components-engine.js?v=7.0.294",
+      "line": 14,
+      "samples": 14
+    },
+    {
+      "fn": "openEntry",
+      "file": "cp-checklist-engine.js?v=7.0.294",
+      "line": 376,
+      "samples": 14
+    },
+    {
+      "fn": "normalizeStatus",
+      "file": "cp-checklist-engine.js?v=7.0.294",
+      "line": 167,
+      "samples": 14
+    },
+    {
+      "fn": "rowLookup",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 203,
+      "samples": 14
+    },
+    {
+      "fn": "getBoundingClientRect",
+      "file": "",
+      "line": -1,
+      "samples": 14
+    },
+    {
+      "fn": "rowLookup",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 203,
+      "samples": 13
+    },
+    {
+      "fn": "rowLookup",
+      "file": "canonical-fields.js?v=7.0.294&rev=layout3",
+      "line": 203,
+      "samples": 13
+    }
+  ],
+  "metricsBefore": {
+    "metrics": [
+      {
+        "name": "Timestamp",
+        "value": 15916.176041
+      },
+      {
+        "name": "AudioHandlers",
+        "value": 0
+      },
+      {
+        "name": "AudioWorkletProcessors",
+        "value": 0
+      },
+      {
+        "name": "Documents",
+        "value": 5
+      },
+      {
+        "name": "Frames",
+        "value": 2
+      },
+      {
+        "name": "JSEventListeners",
+        "value": 1454
+      },
+      {
+        "name": "LayoutObjects",
+        "value": 1886
+      },
+      {
+        "name": "MediaKeySessions",
+        "value": 0
+      },
+      {
+        "name": "MediaKeys",
+        "value": 0
+      },
+      {
+        "name": "Nodes",
+        "value": 11563
+      },
+      {
+        "name": "Resources",
+        "value": 166
+      },
+      {
+        "name": "ContextLifecycleStateObservers",
+        "value": 167
+      },
+      {
+        "name": "V8PerContextDatas",
+        "value": 2
+      },
+      {
+        "name": "WorkerGlobalScopes",
+        "value": 1
+      },
+      {
+        "name": "UACSSResources",
+        "value": 0
+      },
+      {
+        "name": "RTCPeerConnections",
+        "value": 0
+      },
+      {
+        "name": "ResourceFetchers",
+        "value": 6
+      },
+      {
+        "name": "AdSubframes",
+        "value": 0
+      },
+      {
+        "name": "DetachedScriptStates",
+        "value": 2
+      },
+      {
+        "name": "ArrayBufferContents",
+        "value": 9
+      },
+      {
+        "name": "LayoutCount",
+        "value": 0
+      },
+      {
+        "name": "RecalcStyleCount",
+        "value": 0
+      },
+      {
+        "name": "LayoutDuration",
+        "value": 0
+      },
+      {
+        "name": "RecalcStyleDuration",
+        "value": 0
+      },
+      {
+        "name": "DevToolsCommandDuration",
+        "value": 0.21305
+      },
+      {
+        "name": "ScriptDuration",
+        "value": 0.000173
+      },
+      {
+        "name": "V8CompileDuration",
+        "value": 0
+      },
+      {
+        "name": "TaskDuration",
+        "value": 0.213733
+      },
+      {
+        "name": "TaskOtherDuration",
+        "value": 0.00051
+      },
+      {
+        "name": "ThreadTime",
+        "value": 0.210876
+      },
+      {
+        "name": "ProcessTime",
+        "value": 2.5
+      },
+      {
+        "name": "JSHeapUsedSize",
+        "value": 27830744
+      },
+      {
+        "name": "JSHeapTotalSize",
+        "value": 58990592
+      },
+      {
+        "name": "FirstMeaningfulPaint",
+        "value": 0
+      },
+      {
+        "name": "DomContentLoaded",
+        "value": 15913.912688
+      },
+      {
+        "name": "NavigationStart",
+        "value": 15913.112821
+      }
+    ]
+  },
+  "metricsNav": {
+    "metrics": [
+      {
+        "name": "Timestamp",
+        "value": 15917.285295
+      },
+      {
+        "name": "AudioHandlers",
+        "value": 0
+      },
+      {
+        "name": "AudioWorkletProcessors",
+        "value": 0
+      },
+      {
+        "name": "Documents",
+        "value": 4
+      },
+      {
+        "name": "Frames",
+        "value": 3
+      },
+      {
+        "name": "JSEventListeners",
+        "value": 3507
+      },
+      {
+        "name": "LayoutObjects",
+        "value": 18273
+      },
+      {
+        "name": "MediaKeySessions",
+        "value": 0
+      },
+      {
+        "name": "MediaKeys",
+        "value": 0
+      },
+      {
+        "name": "Nodes",
+        "value": 29947
+      },
+      {
+        "name": "Resources",
+        "value": 143
+      },
+      {
+        "name": "ContextLifecycleStateObservers",
+        "value": 153
+      },
+      {
+        "name": "V8PerContextDatas",
+        "value": 2
+      },
+      {
+        "name": "WorkerGlobalScopes",
+        "value": 1
+      },
+      {
+        "name": "UACSSResources",
+        "value": 0
+      },
+      {
+        "name": "RTCPeerConnections",
+        "value": 0
+      },
+      {
+        "name": "ResourceFetchers",
+        "value": 5
+      },
+      {
+        "name": "AdSubframes",
+        "value": 0
+      },
+      {
+        "name": "DetachedScriptStates",
+        "value": 0
+      },
+      {
+        "name": "ArrayBufferContents",
+        "value": 9
+      },
+      {
+        "name": "LayoutCount",
+        "value": 18
+      },
+      {
+        "name": "RecalcStyleCount",
+        "value": 28
+      },
+      {
+        "name": "LayoutDuration",
+        "value": 0.25273
+      },
+      {
+        "name": "RecalcStyleDuration",
+        "value": 0.37025
+      },
+      {
+        "name": "DevToolsCommandDuration",
+        "value": 0.226364
+      },
+      {
+        "name": "ScriptDuration",
+        "value": 0.146624
+      },
+      {
+        "name": "V8CompileDuration",
+        "value": 0
+      },
+      {
+        "name": "TaskDuration",
+        "value": 1.277272
+      },
+      {
+        "name": "TaskOtherDuration",
+        "value": 0.281304
+      },
+      {
+        "name": "ThreadTime",
+        "value": 1.265488
+      },
+      {
+        "name": "ProcessTime",
+        "value": 3.79
+      },
+      {
+        "name": "JSHeapUsedSize",
+        "value": 25880616
+      },
+      {
+        "name": "JSHeapTotalSize",
+        "value": 62398464
+      },
+      {
+        "name": "FirstMeaningfulPaint",
+        "value": 0
+      },
+      {
+        "name": "DomContentLoaded",
+        "value": 15913.912688
+      },
+      {
+        "name": "NavigationStart",
+        "value": 15913.112821
+      }
+    ]
+  },
+  "metricsLarge": {
+    "metrics": [
+      {
+        "name": "Timestamp",
+        "value": 15920.572577
+      },
+      {
+        "name": "AudioHandlers",
+        "value": 0
+      },
+      {
+        "name": "AudioWorkletProcessors",
+        "value": 0
+      },
+      {
+        "name": "Documents",
+        "value": 4
+      },
+      {
+        "name": "Frames",
+        "value": 3
+      },
+      {
+        "name": "JSEventListeners",
+        "value": 4654
+      },
+      {
+        "name": "LayoutObjects",
+        "value": 39128
+      },
+      {
+        "name": "MediaKeySessions",
+        "value": 0
+      },
+      {
+        "name": "MediaKeys",
+        "value": 0
+      },
+      {
+        "name": "Nodes",
+        "value": 41520
+      },
+      {
+        "name": "Resources",
+        "value": 145
+      },
+      {
+        "name": "ContextLifecycleStateObservers",
+        "value": 159
+      },
+      {
+        "name": "V8PerContextDatas",
+        "value": 2
+      },
+      {
+        "name": "WorkerGlobalScopes",
+        "value": 1
+      },
+      {
+        "name": "UACSSResources",
+        "value": 0
+      },
+      {
+        "name": "RTCPeerConnections",
+        "value": 0
+      },
+      {
+        "name": "ResourceFetchers",
+        "value": 5
+      },
+      {
+        "name": "AdSubframes",
+        "value": 0
+      },
+      {
+        "name": "DetachedScriptStates",
+        "value": 0
+      },
+      {
+        "name": "ArrayBufferContents",
+        "value": 9
+      },
+      {
+        "name": "LayoutCount",
+        "value": 28
+      },
+      {
+        "name": "RecalcStyleCount",
+        "value": 42
+      },
+      {
+        "name": "LayoutDuration",
+        "value": 0.429666
+      },
+      {
+        "name": "RecalcStyleDuration",
+        "value": 0.731091
+      },
+      {
+        "name": "DevToolsCommandDuration",
+        "value": 0.24499
+      },
+      {
+        "name": "ScriptDuration",
+        "value": 0.200313
+      },
+      {
+        "name": "V8CompileDuration",
+        "value": 0
+      },
+      {
+        "name": "TaskDuration",
+        "value": 4.356421
+      },
+      {
+        "name": "TaskOtherDuration",
+        "value": 2.750361
+      },
+      {
+        "name": "ThreadTime",
+        "value": 4.32675
+      },
+      {
+        "name": "ProcessTime",
+        "value": 7.59
+      },
+      {
+        "name": "JSHeapUsedSize",
+        "value": 50465076
+      },
+      {
+        "name": "JSHeapTotalSize",
+        "value": 114565120
+      },
+      {
+        "name": "FirstMeaningfulPaint",
+        "value": 0
+      },
+      {
+        "name": "DomContentLoaded",
+        "value": 15913.912688
+      },
+      {
+        "name": "NavigationStart",
+        "value": 15913.112821
+      }
+    ]
+  }
+}

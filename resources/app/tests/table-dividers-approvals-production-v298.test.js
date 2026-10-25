@@ -4,11 +4,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
-const css = fs.readFileSync(path.join(ROOT, 'public/app.css'), 'utf8');
+const css = require('./helpers/manifest-css')();
 
-test('resizable headers show a short visible divider while preserving the wide drag target', () => {
-  assert.match(css, /\.colResizer\{[^}]*width:7px[^}]*cursor:col-resize/);
-  assert.match(css, /\.colResizer::after\{[^}]*top:28%[^}]*bottom:28%[^}]*width:1px[^}]*background:color-mix\(in srgb,var\(--thead-ink\) 28%,transparent\)[^}]*opacity:\.68/);
-  assert.match(css, /\.colResizer:hover::after\{[^}]*background:var\(--acc\)[^}]*opacity:1/);
-  assert.match(css, /\.quotationColResize::after\{[^}]*top:28%[^}]*bottom:28%[^}]*background:color-mix\(in srgb,var\(--thead-ink\) 28%,transparent\)/);
+test('group boundaries remain visible; resizers keep their full drag target without a body grid',()=>{
+ assert.match(css,/\.colResizer\{[^}]*width:7px[^}]*cursor:col-resize/);
+ assert.match(css,/\.quotationColResize\{[^}]*cursor:col-resize/);
+ for(const id of ['cpTable','ordersTable','kolTable']){const base='#'+id+' thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary)'; const exact=['.groupDivider','.groupBoundary'].map(key=>base+':where('+key+')').join(',');assert.ok(css.includes(exact+'{border-inline-start:1px solid var(--ui-group-divider)'));}
+ assert.match(css,/\[data-ui-migrated\] \.colResizer::after\{background:transparent!important/);
 });

@@ -1,0 +1,5314 @@
+{
+  "screens": [
+    {
+      "name": "table-actions-light-standard-1440",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 188,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-light-standard-1280",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 135,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-light-large-1440",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 188,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-light-large-1280",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 133,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-light-xl-1440",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 185,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-light-xl-1280",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 130,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-light-compact-1440",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 196,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-light-compact-1280",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 144,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-grey-standard-1440",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 188,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-grey-standard-1280",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 135,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-grey-large-1440",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 188,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-grey-large-1280",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 133,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-grey-xl-1440",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 185,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-grey-xl-1280",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 130,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-grey-compact-1440",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 196,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-grey-compact-1280",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 144,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-dark-standard-1440",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 188,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-dark-standard-1280",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 135,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-dark-large-1440",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 188,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-dark-large-1280",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 133,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-dark-xl-1440",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 185,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-dark-xl-1280",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 130,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-dark-compact-1440",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 196,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-actions-dark-compact-1280",
+      "family": "table-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 144,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-light-standard-1440",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-light-standard-1280",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 136,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-light-large-1440",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-light-large-1280",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 134,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-light-xl-1440",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 186,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-light-xl-1280",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 130,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-light-compact-1440",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 197,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-light-compact-1280",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 145,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-grey-standard-1440",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-grey-standard-1280",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 136,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-grey-large-1440",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-grey-large-1280",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 134,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-grey-xl-1440",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 186,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-grey-xl-1280",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 130,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-grey-compact-1440",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 197,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-grey-compact-1280",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 145,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-dark-standard-1440",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-dark-standard-1280",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 136,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-dark-large-1440",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-dark-large-1280",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 134,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-dark-xl-1440",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 186,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-dark-xl-1280",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 130,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-dark-compact-1440",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 197,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "row-tools-dark-compact-1280",
+      "family": "row-tools",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 145,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-light-standard-1440",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-light-standard-1280",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 136,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-light-large-1440",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-light-large-1280",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 134,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-light-xl-1440",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 186,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-light-xl-1280",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 130,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-light-compact-1440",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 197,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-light-compact-1280",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 145,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-grey-standard-1440",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-grey-standard-1280",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 136,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-grey-large-1440",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-grey-large-1280",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 134,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-grey-xl-1440",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 186,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-grey-xl-1280",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 130,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-grey-compact-1440",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 197,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-grey-compact-1280",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 145,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-dark-standard-1440",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-dark-standard-1280",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 136,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-dark-large-1440",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-dark-large-1280",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 134,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-dark-xl-1440",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 186,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-dark-xl-1280",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 130,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-dark-compact-1440",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 197,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "plm-actions-dark-compact-1280",
+      "family": "plm-actions",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 145,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-light-standard-1440",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 187,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-light-standard-1280",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 134,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-light-large-1440",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 187,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-light-large-1280",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 132,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-light-xl-1440",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 184,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-light-xl-1280",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 128,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-light-compact-1440",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 195,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-light-compact-1280",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 143,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-grey-standard-1440",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 187,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-grey-standard-1280",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 134,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-grey-large-1440",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 187,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-grey-large-1280",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 132,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-grey-xl-1440",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 184,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-grey-xl-1280",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 128,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-grey-compact-1440",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 195,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-grey-compact-1280",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 143,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-dark-standard-1440",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 187,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-dark-standard-1280",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 134,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-dark-large-1440",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 187,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-dark-large-1280",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 132,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-dark-xl-1440",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 184,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-dark-xl-1280",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 128,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-dark-compact-1440",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 195,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "clipboard-menu-dark-compact-1280",
+      "family": "clipboard-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 143,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-light-standard-1440",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 176,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-light-standard-1280",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 94,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-light-large-1440",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 146,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-light-large-1280",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 81,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-light-xl-1440",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 113,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-light-xl-1280",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 68,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-light-compact-1440",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 198,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-light-compact-1280",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 96,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-grey-standard-1440",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 176,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-grey-standard-1280",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 94,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-grey-large-1440",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 146,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-grey-large-1280",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 81,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-grey-xl-1440",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 113,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-grey-xl-1280",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 68,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-grey-compact-1440",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 198,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-grey-compact-1280",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 96,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-dark-standard-1440",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 176,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-dark-standard-1280",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 94,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-dark-large-1440",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 146,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-dark-large-1280",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 81,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-dark-xl-1440",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 113,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-dark-xl-1280",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 68,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-dark-compact-1440",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 198,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-filter-dark-compact-1280",
+      "family": "lfl-filter",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 96,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-light-standard-1440",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 190,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-light-standard-1280",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 137,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-light-large-1440",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 190,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-light-large-1280",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 135,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-light-xl-1440",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 187,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-light-xl-1280",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 131,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-light-compact-1440",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 198,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-light-compact-1280",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 146,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-grey-standard-1440",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 190,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-grey-standard-1280",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 137,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-grey-large-1440",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 190,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-grey-large-1280",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 135,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-grey-xl-1440",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 187,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-grey-xl-1280",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 131,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-grey-compact-1440",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 198,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-grey-compact-1280",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 146,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-dark-standard-1440",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 190,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-dark-standard-1280",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 137,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-dark-large-1440",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 190,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-dark-large-1280",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 135,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-dark-xl-1440",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 187,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-dark-xl-1280",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 131,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-dark-compact-1440",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 198,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "refresh-menu-dark-compact-1280",
+      "family": "refresh-menu",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 146,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-light-standard-1440",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 227,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-light-standard-1280",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 174,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-light-large-1440",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 227,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-light-large-1280",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 172,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-light-xl-1440",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 224,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-light-xl-1280",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 168,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-light-compact-1440",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 235,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-light-compact-1280",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 183,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-grey-standard-1440",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 227,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-grey-standard-1280",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 174,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-grey-large-1440",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 227,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-grey-large-1280",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 172,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-grey-xl-1440",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 224,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-grey-xl-1280",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 168,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-grey-compact-1440",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 235,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-grey-compact-1280",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 183,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-dark-standard-1440",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 227,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-dark-standard-1280",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 174,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-dark-large-1440",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 227,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-dark-large-1280",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 172,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-dark-xl-1440",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 224,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-dark-xl-1280",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 168,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-dark-compact-1440",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 235,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "table-fields-dark-compact-1280",
+      "family": "table-fields",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 183,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-light-standard-1440",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 200,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-light-standard-1280",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 141,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-light-large-1440",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 200,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-light-large-1280",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 139,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-light-xl-1440",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 196,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-light-xl-1280",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 136,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-light-compact-1440",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 209,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-light-compact-1280",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 152,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-grey-standard-1440",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 200,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-grey-standard-1280",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 141,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-grey-large-1440",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 200,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-grey-large-1280",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 139,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-grey-xl-1440",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 196,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-grey-xl-1280",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 136,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-grey-compact-1440",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 209,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-grey-compact-1280",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 152,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-dark-standard-1440",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 200,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-dark-standard-1280",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 141,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-dark-large-1440",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 200,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-dark-large-1280",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 139,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-dark-xl-1440",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 196,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-dark-xl-1280",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 136,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-dark-compact-1440",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 209,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-cp-dark-compact-1280",
+      "family": "frozen-cp",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 152,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-light-standard-1440",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 208,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-light-standard-1280",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 158,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-light-large-1440",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 198,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-light-large-1280",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 156,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-light-xl-1440",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 187,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-light-xl-1280",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 144,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-light-compact-1440",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 217,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-light-compact-1280",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 169,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-grey-standard-1440",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 208,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-grey-standard-1280",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 158,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-grey-large-1440",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 198,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-grey-large-1280",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 156,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-grey-xl-1440",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 187,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-grey-xl-1280",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 144,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-grey-compact-1440",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 217,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-grey-compact-1280",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 169,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-dark-standard-1440",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 208,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-dark-standard-1280",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 158,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-dark-large-1440",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 198,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-dark-large-1280",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 156,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-dark-xl-1440",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 187,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-dark-xl-1280",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 144,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-dark-compact-1440",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 217,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-orders-dark-compact-1280",
+      "family": "frozen-orders",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 169,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-light-standard-1440",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 91,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-light-standard-1280",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 85,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-light-large-1440",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 91,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-light-large-1280",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 81,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-light-xl-1440",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 87,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-light-xl-1280",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 78,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-light-compact-1440",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 92,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-light-compact-1280",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 87,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-grey-standard-1440",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 91,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-grey-standard-1280",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 84,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-grey-large-1440",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 91,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-grey-large-1280",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 81,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-grey-xl-1440",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 87,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-grey-xl-1280",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 78,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-grey-compact-1440",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 92,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-grey-compact-1280",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 87,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-dark-standard-1440",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 91,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-dark-standard-1280",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 84,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-dark-large-1440",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 91,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-dark-large-1280",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 81,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-dark-xl-1440",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 87,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-dark-xl-1280",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 78,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-dark-compact-1440",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 92,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "frozen-koleksiyon-dark-compact-1280",
+      "family": "frozen-koleksiyon",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 87,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-light-standard-1440",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 193,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-light-standard-1280",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 181,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-light-large-1440",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-light-large-1280",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 176,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-light-xl-1440",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 185,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-light-xl-1280",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 160,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-light-compact-1440",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 195,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-light-compact-1280",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 184,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-grey-standard-1440",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 193,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-grey-standard-1280",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 179,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-grey-large-1440",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-grey-large-1280",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 175,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-grey-xl-1440",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 184,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-grey-xl-1280",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 159,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-grey-compact-1440",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 195,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-grey-compact-1280",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 184,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-dark-standard-1440",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 193,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-dark-standard-1280",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 179,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-dark-large-1440",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-dark-large-1280",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 175,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-dark-xl-1440",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 184,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-dark-xl-1280",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 159,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-dark-compact-1440",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 195,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "data-maintenance-dark-compact-1280",
+      "family": "data-maintenance",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "e49940fc85a372d3da19b9913fe9aaf92449ba9d692b3db320ebee57985fb09e",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 184,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    }
+  ],
+  "checks": [
+    {
+      "name": "frozen-layer-cpTable",
+      "header": "31",
+      "normal": "1",
+      "cell": {
+        "z": "2",
+        "background": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "name": "frozen-layer-ordersTable",
+      "header": "31",
+      "normal": "1",
+      "cell": {
+        "z": "2",
+        "background": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "name": "frozen-layer-kolTable",
+      "header": "31",
+      "normal": "30",
+      "cell": {
+        "z": "2",
+        "background": "rgb(255, 255, 255)"
+      }
+    }
+  ],
+  "errors": []
+}

@@ -124,7 +124,7 @@ Test runner: `resources/app` içinden `npm test` → `tests/run-tests.js` (batch
   belleğine gelir (kullanıcı tarayıcı görmez); tarayıcı kipinde Edge/CDP yolu. Dosya çıktısı (PDF/PowerPoint/Excel/HTML) için ortak yol
   `server/lib/lcwai-output/` (AI Export Engine): LCW AI yalnız içerik/yapı
   (HTML ya da sözleşmeli JSON) üretir; Buyer Log doğrular, onarım ister ve
-  dosyayı kendi temasıyla (`design.css` anahtarları) oluşturur. AI HTML'i
+  dosyayı kendi temasıyla (`export-document-palette.json` sabit paleti) oluşturur. AI HTML'i
   temizlenir, katı CSP ile sarılır ve ana DOM'a eklenmez; PDF, JS'i kapalı ve
   ağı engelli gizli pencerede (`buyerlog:render-pdf`) basılır. Model görselleri LCW AI'a aktarılabilir: bağlam CSV'sinde her kaydın anahtarı (`BL Image`, ör. `KOL-3`) bulunur ve sohbet görselleri bu anahtarla etiketli paftalar hâlinde ek olarak yükler; dosya çıktısında LCW AI görsel verisi değil anahtar yazar, Buyer Log kullanılan görselleri yerel depodan (kanonik çözümleyici) gömer. Başka bir AI sağlayıcısı eklemek ayrı ürün ve güvenlik kararıdır.
 - Secret, credential, private ağ bilgisi veya kaynak kodunu dış servislere

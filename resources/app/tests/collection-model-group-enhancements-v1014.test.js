@@ -8,7 +8,7 @@ const Groups = require('../public/collection-model-groups.js');
 const Spreadsheet = require('../public/collection-spreadsheet-engine.js');
 const appSource = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
 const spreadsheetSource = fs.readFileSync(path.join(__dirname, '..', 'public', 'collection-spreadsheet.js'), 'utf8');
-const spreadsheetCssSource = fs.readFileSync(path.join(__dirname, '..', 'public', 'collection-spreadsheet.css'), 'utf8');
+const spreadsheetCssSource = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','collection-spreadsheet.css'] );
 const indexSource = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
 
 const rows = [
@@ -94,6 +94,6 @@ test('row-gutter colour hierarchy is theme-safe and visually explicit', () => {
   assert.match(appSource, /#i-chevron-right/);
   assert.match(appSource, /#i-chevron-down/);
   assert.doesNotMatch(spreadsheetCssSource, /kolSpreadsheetRowNumber:hover[^\n]*blue-soft/);
-  assert.match(spreadsheetCssSource, /border-left:2px solid color-mix/);
+  assert.match(spreadsheetCssSource, /kolModelGroupGutterSpacer\.isVariant::after\{[^}]*background:color-mix/);
   assert.match(spreadsheetCssSource, /kolModelGroupGutterSpacer\.isVariant::after/);
 });

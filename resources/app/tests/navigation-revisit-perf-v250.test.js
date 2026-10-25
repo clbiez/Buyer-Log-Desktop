@@ -50,7 +50,7 @@ test('working orb stops by itself once its canvas leaves the document', () => {
   };
   const context = { window, getComputedStyle: () => ({ getPropertyValue: () => '#123456' }) };
   context.document = window.document;
-  vm.runInNewContext(read('public/thinking-orb-working.js'), context);
+  vm.runInNewContext(read('tests/fixtures/retired-ui/thinking-orb-working.js'), context);
   window.BLThinkingOrb.attach(canvas);
   for (let i = 0; i < 5; i++) { const fn = callbacks.shift(); if (fn) { frames++; fn(16 * (i + 1)); } }
   assert.equal(rects, 1, 'size is measured once, not every frame');

@@ -170,7 +170,7 @@
   }
 
   function stackedBar(row, scale) {
-    const parts = [['loading', 'var(--blue)'], ['transit', 'var(--teal)'], ['customs', 'var(--orange)']]
+    const parts = [['loading', 'var(--ui-accent)'], ['transit', 'var(--ui-chart-3)'], ['customs', 'var(--ui-warning)']]
       .map(([m, color]) => ({ m, color, v: Math.max(0, Number(row[m]) || 0) }));
     if (!scale || !parts.some(p => p.v)) return '';
     return `<div style="display:flex;height:6px;width:100%;max-width:140px;border-radius:var(--ui-radius);overflow:hidden;background:var(--ui-surface-soft);margin-top:4px;" aria-hidden="true">${parts.map(p => `<span title="${esc(TA().labels(lang()).metric[p.m])}: ${fmt(p.v)} ${L('gün', 'days')}" style="width:${(p.v / scale * 100).toFixed(1)}%;background:${p.color};"></span>`).join('')}</div>`;
@@ -179,7 +179,7 @@
   function trendCell(row) {
     if (row.trend == null || row.periods < 2) return '<span style="color:var(--ui-text-muted);">—</span>';
     const t = Number(row.trend);
-    const color = Math.abs(t) < 2 ? 'var(--muted)' : t > 0 ? 'var(--red)' : 'var(--green)';
+    const color = Math.abs(t) < 2 ? 'var(--ui-text-muted)' : t > 0 ? 'var(--ui-danger)' : 'var(--ui-success)';
     const arrow = Math.abs(t) < 2 ? '→' : t > 0 ? '↑' : '↓';
     return `<span style="color:${color};font-weight:600;" title="${L('Son 3 dönem ortalaması', 'Average of the last 3 periods:')} ${fmt(row.lastMean)} ${L('gün', 'days')}">${arrow} ${t > 0 ? '+' : ''}${fmt(t)}</span>`;
   }

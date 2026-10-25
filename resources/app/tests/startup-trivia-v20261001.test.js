@@ -182,7 +182,7 @@ test('cards never mount under the startup curtain and hidden tabs do not consume
 });
 test('LFL and Backlog show the shared loading state on first load instead of an unready screen',()=>{
   const LFL=read('lfl.js'),LFLCSS=read('lfl.css'),APP=read('app-main.js');
-  assert.match(INDEX,/<section id="view-lfl">\s*<div id="lflLoadingState" class="lflLoadingState" hidden><\/div>/);
+  assert.match(INDEX,/<section id="view-lfl"[^>]*>\s*<div id="lflLoadingState" class="lflLoadingState" hidden><\/div>/);
   assert.match(LFL,/BLUI\.renderState\(host,\{kind:'loading'/);assert.match(LFL,/if\(state\.initialized&&!state\.serverRows\.length\)setLoadingView\(true\);/);
   assert.match(LFL,/setLoadingView\(false\);\s*if\(state\.initialized\)\{fillControls\(\);render\(\);\}/,'loading view is lifted before the first render');
   assert.match(LFLCSS,/#view-lfl\.lflIsLoading>:not\(#lflLoadingState\)\{display:none!important\}/);
@@ -192,12 +192,12 @@ test('LFL and Backlog show the shared loading state on first load instead of an 
 });
 
 test('startup Continue button centers its label consistently',()=>{
-  assert.match(CSS,/\.blBootContinue\{[^}]*display:inline-flex;[^}]*align-items:center;[^}]*justify-content:center;[^}]*text-align:center;[^}]*line-height:1\.2/);
+  assert.match(CSS,/\.blBootContinue\{[^}]*display:inline-flex;[^}]*align-items:center;[^}]*justify-content:center;[^}]*text-align:center/); assert.match(require("./helpers/manifest-css").rules(/blBootContinue/),/line-height:1\.2/);
 });
 
 test('trivia scripts load before the guide and motion respects reduced-motion',()=>{
   const at=name=>INDEX.indexOf(name);
   assert.ok(at('buyerlog-trivia-data.js')>0&&at('buyerlog-trivia-data.js')<at('buyerlog-trivia.js')&&at('buyerlog-trivia.js')<at('buyerlog-guide.js?'));
-  assert.match(CSS,/@media\(prefers-reduced-motion:reduce\)\{\.blTriviaVisual,\.blTriviaVisual \*/);
+  require('./helpers/manifest-css').assertStaticMotion();
   assert.doesNotMatch(TRIVIA,/fetch\(|XMLHttpRequest|https?:\/\//);
 });

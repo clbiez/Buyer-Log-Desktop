@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'collection-spreadsheet.css'), 'utf8');
+const css = require('./helpers/manifest-css')(['collection-spreadsheet.css','ui-components.css'] );
 
 test('Collection business cells are left aligned and vertically centered', () => {
   assert.match(
@@ -21,18 +21,20 @@ test('Collection editors share left-aligned text geometry', () => {
   );
   assert.match(
     css,
-    /#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable tbody :is\(input\.editCell,select\.editCell\)\{[\s\S]*?line-height:18px!important;[\s\S]*?\}/
+    /#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable tbody input\.editCell,[^{]*\{[^}]*line-height:18px[\s\S]*?\}/
   );
 });
 
 test('Collection textarea-backed cells center single-line text instead of sitting high', () => {
+  assert.match(css,/textarea\.editCell\{[^}]*line-height:var\(--kol-text-lh\)/);
+  assert.match(css,/tr\.kolModelGroupVariant textarea\.editCell\{[^}]*line-height:17px/);
   assert.match(
     css,
-    /#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable tbody textarea\.editCell\{[\s\S]*?min-height:calc\(var\(--kol-text-lh\) \+ 4px\)!important;[\s\S]*?line-height:var\(--kol-text-lh\)!important;[\s\S]*?padding-top:2px!important;[\s\S]*?padding-bottom:2px!important;[\s\S]*?margin:0!important;[\s\S]*?\}/
+    /#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable tbody textarea\.editCell\{[\s\S]*?min-height:calc\(var\(--kol-text-lh\) \+ 4px\)!important;[\s\S]*?padding-top:2px!important;[\s\S]*?padding-bottom:2px!important;[\s\S]*?margin:0!important;[\s\S]*?\}/
   );
   assert.match(
     css,
-    /tr\.kolModelGroupVariant textarea\.editCell\{[\s\S]*?height:calc\(var\(--kol-variant-row-h,27px\) - 2px\)!important;[\s\S]*?line-height:17px!important;[\s\S]*?padding-top:4px!important;[\s\S]*?padding-bottom:4px!important;[\s\S]*?\}/
+    /tr\.kolModelGroupVariant textarea\.editCell\{[\s\S]*?height:calc\(var\(--kol-variant-row-h,27px\) - 2px\)!important;[\s\S]*?padding-top:4px!important;[\s\S]*?padding-bottom:4px!important;[\s\S]*?\}/
   );
 });
 

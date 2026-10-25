@@ -113,7 +113,7 @@ test('Hesaplanan Sütun entegrasyonu: ortak panel + formül motoru doğrulaması
 });
 
 test('CP Kuralları entegrasyonu: ortak panel + kural motoru doğrulaması + Uygula → applyFormula', () => {
-  const block = CPA.slice(CPA.indexOf('function mountRuleLcwAi(row, rule)'), CPA.indexOf('function confirmDelete(rule)'));
+  const block = CPA.slice(CPA.indexOf('function mountRuleLcwAi(row, rule)'), CPA.indexOf('function confirmDelete(rule,'));
   assert.match(block, /AI\.mountAssistant\(host, \{\s*source: 'rules'/);
   assert.match(block, /guide: aiGuideFor\(rule\.kind, rule, text,[\s\S]*draft\.purpose === 'auto'[\s\S]*draft\.autoStatus/);
   assert.match(CPA, /availableFields: fields/);
@@ -125,7 +125,7 @@ test('CP Kuralları entegrasyonu: ortak panel + kural motoru doğrulaması + Uyg
   assert.match(block, /taskPurpose: draft\.purpose === 'auto' \? 'auto_status_assignment' : 'checklist_question'/);
   assert.match(CPA, /function applyAiFormula\(rule, formula, draft\)[\s\S]*rule\.autoFormula = formula;[\s\S]*else applyFormula\(rule, formula\);/);
   assert.match(CPA, /renderAiResult\(openRow, openRule\); mountRuleLcwAi\(openRow, openRule\);/);
-  assert.match(CPA, /L\('✦ LCW AI’dan Destek Al', '✦ Get help from LCW AI'\)/);
+  assert.match(CPA, /L\('LCW AI’dan Destek Al', 'Get help from LCW AI'\)/);
 });
 
 test('Otomasyon entegrasyonu: ortak panel + sunucu DSL denetimi + Uygula → mevcut denetle/taslak akışı', () => {
@@ -138,7 +138,7 @@ test('Otomasyon entegrasyonu: ortak panel + sunucu DSL denetimi + Uygula → mev
   assert.match(block, /api\('\/api\/automations\/ai\/analyze'/, 'öneri sunucudaki yetkili denetimden geçer');
   assert.doesNotMatch(block, /\/api\/automations\/ai\/import/, 'panel taslak oluşturmaz; kullanıcı "Kapalı taslak oluştur" der');
   assert.match(block, /onApply: code => \{[\s\S]*analyze\(modal\);/);
-  assert.match(AUTO, /tr\('✦ LCW AI’dan Destek Al', '✦ Get help from LCW AI'\)/);
+  assert.match(AUTO, /tr\('LCW AI’dan Destek Al', 'Get help from LCW AI'\)/);
 });
 
 test('kullanıcı menüsü: Kurumsal Bağlantılar altında PLM ve LCW AI bağımsız durum gösterir', () => {
@@ -163,7 +163,7 @@ test('regresyon: LCW AI geçerli JSON ile formülü boş bıraktıysa ham JSON f
 });
 
 test('Kurallar bağlamı alan ANLAMLARINI, hedef türünü ve seçilebilir öncelikleri taşır; öneri önceliği uygulanır', () => {
-  const block = CPA.slice(CPA.indexOf('const DERIVED_MEANINGS'), CPA.indexOf('function confirmDelete(rule)'));
+  const block = CPA.slice(CPA.indexOf('const DERIVED_MEANINGS'), CPA.indexOf('function confirmDelete(rule,'));
   assert.match(block, /Rules\.DERIVED_FIELDS/);
   const Rules = require('../public/cp-rules-engine.js');
   for (const id of ['@deliveryOutcome', '@scheduleBufferDays', '@stage']) assert.ok(Rules.DERIVED_FIELDS.find(item => item.id === id).meaning.tr, id);

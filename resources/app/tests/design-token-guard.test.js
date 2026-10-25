@@ -1,8 +1,8 @@
 'use strict';
 
 /* Tasarım dili bekçisi (DESIGN_SYSTEM.md).
-   Buyer Log'un görsel bütünlüğü üç ortak ölçeğe dayanır: yazı boyutu (--fs-*),
-   köşe yarıçapı (--r-*) ve yazı ailesi (--sans / --head / --mono). Sabit px yazı
+   Buyer Log'un görsel bütünlüğü üç ortak ölçeğe dayanır: yazı boyutu (--ui-font-*),
+   köşe yarıçapı (--ui-radius) ve yazı ailesi (--ui-font-body / --ui-font-heading / --ui-font-mono). Sabit px yazı
    boyutu "Arayüz boyutu" ayarını sessizce yok sayar; sabit yarıçap ve aile
    listesi her modülün kendi görsel dilini üretmesine yol açar. Bu test yeni
    sızıntıları engeller. Ham renk kodları için dosya başına dondurulmuş bir tavan
@@ -17,7 +17,7 @@ const PUBLIC = path.join(__dirname, '..', 'public');
 const CSS_FILES = fs.readdirSync(PUBLIC).filter(name => name.endsWith('.css')).sort();
 const COLOR_BASELINE = require('./fixtures/design-color-baseline.json');
 
-function declarations(source) {
+function declarations(source, includeCustom=false) {
   const css = source.replace(/\/\*[\s\S]*?\*\//g, '');
   const out = [];
   let selector = '', buffer = '', fontFace = false;
@@ -25,7 +25,7 @@ function declarations(source) {
     if (ch === '{') { selector = buffer.trim(); buffer = ''; if (/@font-face/.test(selector)) fontFace = true; continue; }
     if (ch === ';' || ch === '}') {
       const match = buffer.match(/^\s*([\w-]+)\s*:\s*([\s\S]*)$/);
-      if (match && !match[1].startsWith('--')) out.push({ prop: match[1].toLowerCase(), value: match[2].trim(), selector, fontFace });
+      if (match && (includeCustom || !match[1].startsWith('--'))) out.push({ prop: match[1].toLowerCase(), value: match[2].trim(), selector, fontFace });
       buffer = '';
       if (ch === '}') fontFace = false;
       continue;
@@ -41,21 +41,17 @@ function withoutVarFallbacks(value) {
   return value;
 }
 
-function literalColorCount(source) {
-  return declarations(source).reduce((count, decl) =>
-    count + (withoutVarFallbacks(decl.value).match(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/g) || []).length, 0);
+function literalColorCount(source, includeCustom=true) {
+  return declarations(source,includeCustom).reduce((count, decl) =>
+    count + (decl.value.match(/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/g) || []).length, 0);
 }
 
 const read = name => fs.readFileSync(path.join(PUBLIC, name), 'utf8');
 
 test('Ortak ölçek token\'ları tanımlı ve kullanıcının yazı boyutu ayarına bağlı', () => {
-  const app = read('app.css');
-  for (const token of ['--fs-2xs', '--fs-xs', '--fs-sm', '--fs-base', '--fs-md', '--fs-lg', '--fs-xl', '--fs-2xl', '--fs-3xl', '--fs-4xl']) {
-    assert.match(app, new RegExp(`${token}:calc\\([0-9.]+px \\+ var\\(--ui-font-add\\)\\)`), `${token} tanımı eksik`);
-  }
   const tokens=read('ui-tokens.css');
   for(const size of ['2xs','xs','sm','base','md','lg','xl','2xl','3xl','4xl']) {
-    assert.ok(tokens.includes('--ui-font-'+size+':calc('), size+' ortak token olmalı');
+    assert.match(tokens,new RegExp('--ui-font-'+size+':calc\\([0-9.]+px \\+ var\\(--ui-font-add\\)\\)'),size+' must preserve user scaling');
   }
   assert.match(tokens,/--ui-radius:0;--ui-radius-avatar:50%;/);
   for(const entry of ['index.html','select-user.html'])assert.match(read(entry),/href="\/?ui-tokens\.css/);
@@ -70,10 +66,10 @@ test('Hiçbir stil dosyası sabit px yazı boyutu kullanmaz', () => {
       if (decl.prop === 'font' && /(^|\s)\d*\.?\d+px(?=[\s/]|$)/.test(decl.value)) leaks.push(`${file} ${decl.selector} → font:${decl.value}`);
     }
   }
-  assert.deepEqual(leaks.slice(0, 25), [], `sabit yazı boyutu --fs-* ölçeğine bağlanmalı (${leaks.length} adet)`);
+  assert.deepEqual(leaks.slice(0, 25), [], `sabit yazı boyutu --ui-font-* ölçeğine bağlanmalı (${leaks.length} adet)`);
 });
 
-test('Köşe yarıçapı yalnız --r-* token\'larından gelir', () => {
+test('Köşe yarıçapı yalnız --ui-radius token\'larından gelir', () => {
   const leaks = [];
   for (const file of CSS_FILES) {
     for (const decl of declarations(read(file))) {
@@ -103,9 +99,12 @@ test('Yazı ailesi yalnız --sans, --head veya --mono token\'ından gelir', () =
 });
 
 test('Ham renk kodu sayısı dosya başına dondurulmuş tavanı aşamaz; yeni dosya ham renk taşımaz', () => {
+  assert.deepEqual(COLOR_BASELINE,{},'completed migration has no color debt; baseline cannot grow');
   const over = [];
   for (const file of CSS_FILES) {
-    const count = literalColorCount(read(file));
+    // Only the canonical token source defines palette literals. All other
+    // files include custom properties and var() fallbacks in the zero budget.
+    const count = literalColorCount(read(file), file!=='ui-tokens.css');
     const ceiling = Object.prototype.hasOwnProperty.call(COLOR_BASELINE, file) ? COLOR_BASELINE[file] : 0;
     if (count > ceiling) over.push(`${file}: ${count} > ${ceiling}`);
   }

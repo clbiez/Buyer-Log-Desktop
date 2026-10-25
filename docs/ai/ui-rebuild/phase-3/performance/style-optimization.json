@@ -1,0 +1,16 @@
+{
+  "beforeBytes": 1196867,
+  "afterBytes": 1058385,
+  "removedRepeatedDeclarations": 4035,
+  "removedEmptyRules": 708,
+  "computedStyleCases": 21,
+  "visibleElementSnapshots": 31833,
+  "computedStyleDifferences": 0,
+  "policy": "All active styles now reject arbitrary borders/corners. Repeated component-level zero borders/radii/shadows become one shared reset. Remove zero-specificity migration ancestor gates after body migration; JS hooks remain. No functional or layout properties changed. Actual computed styles compared before/after on CP, Overview, Collection, Backlog, Data Management, Costing and LCW AI across three themes.",
+  "expandedEqualSpecificitySelectorLists": 102,
+  "initialCandidate": "Initial broad border reset exposed row dividers in Collection and Backlog. Table-scoped zeros were restored; final computed-style differences are zero. Initial evidence is retained.",
+  "complexSelectorPrefilters": 30,
+  "prefilterMethod": "Original :is selector retained with zero-specificity :where rightmost class/tag guards. Union is identical and CSS specificity unchanged. Chromium can bucket candidates. 21 before/after computed-style cases, zero differences before later separately captured state fixes.",
+  "finalComponentBytes": 1052724,
+  "afterBytesNote": "afterBytes is the measured optimization snapshot; finalComponentBytes also includes separately captured state fixes and deletion of unreachable Horizon selectors."
+}

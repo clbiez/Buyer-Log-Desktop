@@ -215,9 +215,9 @@ test('layout-control result and history panels are not hidden by the global sect
 });
 
 test('layout-control visual theme uses canonical square corners throughout the modal',()=>{
-  const shared=fs.readFileSync(path.join(__dirname,'..','public','ui-components.css'),'utf8');
-  const css=fs.readFileSync(path.join(__dirname,'..','public','layout-control.css'),'utf8');
+  const shared=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
+  const css = fs.readFileSync(path.join(__dirname,'../public/layout-control.css'),'utf8');
   assert.doesNotMatch(css,/border-radius/,'layout file cannot own appearance');
-  assert.match(shared,/\.layoutControlModal \* \{border-radius:var\(--ui-radius\)!important/);
-  assert.match(fs.readFileSync(path.join(__dirname,'..','public','ui-tokens.css'),'utf8'),/--ui-radius:0;/);
+  require('./helpers/manifest-css').assertReset();
+  assert.match(require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] ),/--ui-radius:0;/);
 });

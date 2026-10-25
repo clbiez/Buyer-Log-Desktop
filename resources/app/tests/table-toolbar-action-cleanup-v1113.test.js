@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const UI = fs.readFileSync(path.join(ROOT, 'public', 'table-toolbar-action-cleanup.js'), 'utf8');
 
 test('CP Orders Collection ortak toolbar cleanup katmanı yüklenir', () => {
@@ -28,7 +28,7 @@ test('Kopyala ve Excel export CP Orders Collection üzerinde ikon-only olur', ()
   for (const id of ['navCopy', 'navExcelBtn', 'kolCopySelectedBtn', 'kolExportImgBtn', 'kolAddRowBtn']) {
     assert.ok(UI.includes(`'${id}'`), `icon-only target missing: ${id}`);
   }
-  assert.match(CSS, /\.tableActionIconOnly\{[\s\S]*?width:var\(--ctl-h\)!important;/);
+  assert.match(CSS, /\.tableActionIconOnly\{[\s\S]*?width:var\(--ui-control-height\)!important;/);
   assert.match(CSS, /\.tableActionIconOnly>span\{display:none!important;\}/);
   assert.ok(UI.includes("button.setAttribute('aria-label', label)"), 'icon buttons must keep an accessible name');
 });

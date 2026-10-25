@@ -54,19 +54,11 @@
     doc?.body?.classList?.toggle('blDialogOpen',openDialogs.size>0);
   }
 
-  /* İÇ İÇE DİYALOG YIĞINI.
-   *
-   * Katmanların z-index'i modül modül CSS'te sabitlenmiş durumda
-   * (.warnOverlay 400, .autoModalOverlay 550, .awModalOverlay 520 …). Bir
-   * modalın ÜSTÜNDEN açılan ortak bir çocuk diyalog (ör. Model Görselleri
-   * seçicisi) bu yüzden ebeveyninin ARKASINDA kalıyordu. Çözüm modül başına
-   * z-index yamamak değil: çocuk diyalog açılırken o an AÇIK olan modal
-   * yüzeylerin en üstü ölçülür ve bir basamak üstüne alınır.
-   *
-   * Yalnız MODAL YÜZEYLER ölçülür (kendisi ya da içi [role="dialog"]):
-   * toast (50000) ve bildirim bölgesi (50010) gibi katmanlar kasten
-   * diyalogların üstünde kalır; tavan da bu yüzden 49000'dir. */
-  const DIALOG_Z_CEILING=49000;
+  // Dialogs occupy the token-defined modal band; menus/toasts stay above it.
+  function dialogCeiling(view,doc){
+    const menu=Number.parseInt(view.getComputedStyle(doc.documentElement).getPropertyValue('--ui-z-modal-menu'),10);
+    return Number.isFinite(menu)?menu-1:299;
+  }
 
   function topDialogZIndex(exclude){
     const doc=exclude?.ownerDocument||(typeof document!=='undefined'?document:null);
@@ -94,7 +86,7 @@
     if(!top)return false;
     const own=Number.parseInt(view.getComputedStyle(overlay).zIndex,10);
     if(Number.isFinite(own)&&own>top)return false;
-    overlay.style.zIndex=String(Math.min(DIALOG_Z_CEILING,top+1));
+    overlay.style.zIndex=String(Math.min(dialogCeiling(view,doc),top+1));
     return true;
   }
 
@@ -109,6 +101,27 @@
       if(candidate)return candidate;
     }
     return focusableElements(dialog)[0]||dialog;
+  }
+
+  // The same Tab contract also serves older overlays at the document boundary.
+  // It never closes a dialog or invokes a save/cancel action.
+  function trapDialogTab(dialog,event){
+    if(!dialog||event.defaultPrevented||event.key!=='Tab')return;
+    const doc=dialog.ownerDocument;
+    const items=focusableElements(dialog);
+    if(!items.length){event.preventDefault();dialog.focus?.();return;}
+    const current=items.indexOf(doc.activeElement);
+    if(event.shiftKey&&current<=0){event.preventDefault();items[items.length-1].focus();}
+    else if(!event.shiftKey&&(current<0||current===items.length-1)){event.preventDefault();items[0].focus();}
+    else{
+      // aria-hidden/aria-disabled controls remain in native Tab order.
+      // Intercept only when such an excluded control lies on this step;
+      // otherwise keep the browser's radio/shadow/control navigation.
+      const all=[...dialog.querySelectorAll(focusableSelector)].filter(item=>item.tabIndex>=0)
+        .sort((a,b)=>(a.tabIndex||Infinity)-(b.tabIndex||Infinity));
+      const nativeNext=all[all.indexOf(doc.activeElement)+(event.shiftKey?-1:1)];
+      if(nativeNext&&!isAvailable(nativeNext)){event.preventDefault();items[current+(event.shiftKey?-1:1)].focus();}
+    }
   }
 
   function openDialog(overlay,options={}){
@@ -127,22 +140,7 @@
         state.onClose?.();
         return;
       }
-      if(event.key==='Tab'){
-        const items=focusableElements(dialog);
-        if(!items.length){event.preventDefault();dialog.focus?.();return;}
-        const current=items.indexOf(doc.activeElement);
-        if(event.shiftKey&&current<=0){event.preventDefault();items[items.length-1].focus();}
-        else if(!event.shiftKey&&(current<0||current===items.length-1)){event.preventDefault();items[0].focus();}
-        else{
-          // aria-hidden/aria-disabled controls remain in native Tab order.
-          // Intercept only when such an excluded control lies on this step;
-          // otherwise keep the browser's radio/shadow/control navigation.
-          const all=[...dialog.querySelectorAll(focusableSelector)].filter(item=>item.tabIndex>=0)
-            .sort((a,b)=>(a.tabIndex||Infinity)-(b.tabIndex||Infinity));
-          const nativeNext=all[all.indexOf(doc.activeElement)+(event.shiftKey?-1:1)];
-          if(nativeNext&&!isAvailable(nativeNext)){event.preventDefault();items[current+(event.shiftKey?-1:1)].focus();}
-        }
-      }
+      trapDialogTab(dialog,event);
     };
     dialog.setAttribute('aria-modal','true');
     if(!dialog.hasAttribute('tabindex'))dialog.setAttribute('tabindex','-1');
@@ -206,5 +204,5 @@
     defer(()=>{if(shouldRestore&&state.returnTarget&&state.returnTarget.isConnected!==false)state.returnTarget.focus?.();});
   }
 
-  return {nextMenuIndex,focusableElements,menuItems,openDialog,closeDialog,openMenu,closeMenu,topDialogZIndex};
+  return {trapDialogTab,nextMenuIndex,focusableElements,menuItems,openDialog,closeDialog,openMenu,closeMenu,topDialogZIndex};
 });

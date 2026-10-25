@@ -7,7 +7,7 @@ const path=require('node:path');
 
 const ROOT=path.join(__dirname,'..');
 const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
-const CSS=fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
+const CSS=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
 function between(start,end){
   const a=APP.indexOf(start),b=APP.indexOf(end,a+start.length);
@@ -48,5 +48,5 @@ test('e-mail Operation Center card reuses PLM visual language and busy-button st
   assert.match(CSS,/\.prepareEmailOperationStage\{/);
   assert.match(CSS,/\.prepareEmailOperationBar>span\{/);
   assert.match(CSS,/\.prepareEmailProgressSpinner\{/);
-  assert.match(CSS,/#cpProdStatusBtn\.prepareEmailBusy,#kolSendPricingBtn\.prepareEmailBusy/);
+  for(const id of ["cpProdStatusBtn","kolSendPricingBtn"]) assert.ok(CSS.includes(`#${id}.prepareEmailBusy`));
 });

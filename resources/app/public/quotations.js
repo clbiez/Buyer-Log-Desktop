@@ -1315,7 +1315,9 @@
       <div class="verHistFoot"><button type="button" class="tbtn" data-access-close>${qEsc(qLang('Vazgeç','Cancel'))}</button><span style="flex:1"></span><button type="button" class="tbtn primary" data-access-save>${qEsc(qLang('Yetkileri Kaydet','Save Permissions'))}</button></div>
     </div>`;
     document.body.appendChild(overlay);
-    const close=()=>overlay.remove();
+    let releaseKeyboard=()=>{};
+    const close=()=>{releaseKeyboard();overlay.remove();};
+    releaseKeyboard=window.BLUI?.bindDialogKeyboard(overlay,{onEscape:close})||(()=>{});
     overlay.querySelectorAll('[data-access-close]').forEach(button=>button.addEventListener('click',close));
     overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
     overlay.querySelector('[data-access-clear]')?.addEventListener('click',()=>overlay.querySelectorAll('input[type="checkbox"]').forEach(input=>{input.checked=false;}));
@@ -1350,7 +1352,9 @@
     </div>`;
     document.body.appendChild(overlay);
     const area=overlay.querySelector('[data-qnote-area]');
-    const close=()=>overlay.remove();
+    let releaseKeyboard=()=>{};
+    const close=()=>{releaseKeyboard();overlay.remove();};
+    releaseKeyboard=window.BLUI?.bindDialogKeyboard(overlay,{onEscape:close})||(()=>{});
     overlay.querySelectorAll('[data-qnote-close]').forEach(btn=>btn.addEventListener('click',close));
     overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
     area?.addEventListener('input',()=>{const count=overlay.querySelector('[data-qnote-count]');if(count)count.textContent=String(area.value.length);});
@@ -2457,7 +2461,7 @@
           priceCells=Array.from({length:orderedColumnCount},(_,i)=>{
             const c=offers[i];if(!c)return '<td class="isNum qhEmpty">—</td>';
             const cls=c.deltaPct==null?'':(c.meetsTarget?'qhGood':'qhBad');
-            return `<td class="isNum qhOrderCell qhEditable${c.approved?' qhApproved':''}" data-qh-req="${qhEsc(c.requestId||'')}" data-qh-item="${qhEsc(c.itemId||'')}" data-qh-price="${qhEsc(String(c.price))}" title="${qhEsc(en?'Double-click to edit':'Düzenlemek için çift tıklayın')}"><span class="qhOrderPrice">${qhCapacityMarkup(c)}${qhEsc(qhMoney(c.price))}</span><span class="qhOrderMfr" title="${qhEsc(c.manufacturer)}">${qhEsc(c.manufacturer)}</span><span class="qhDelta ${cls}">${qhEsc(c.deltaText)}</span><button type="button" class="qhCellDrop" data-qh-drop aria-label="${qhEsc(en?'Delete price':'Fiyatı sil')}" title="${qhEsc(en?'Delete price':'Fiyatı sil')}">×</button></td>`;
+            return `<td class="isNum qhOrderCell qhEditable${c.approved?' qhApproved':''}" data-qh-req="${qhEsc(c.requestId||'')}" data-qh-item="${qhEsc(c.itemId||'')}" data-qh-price="${qhEsc(String(c.price))}" title="${qhEsc(en?'Double-click to edit':'Düzenlemek için çift tıklayın')}"><span class="qhOrderPrice">${qhCapacityMarkup(c)}${qhEsc(qhMoney(c.price))}</span>${c.approved?`<span class="qhApprovalMark">${qhEsc(en?'Approved':'Onaylı')}</span>`:''}<span class="qhOrderMfr" title="${qhEsc(c.manufacturer)}">${qhEsc(c.manufacturer)}</span><span class="qhDelta ${cls}">${qhEsc(c.deltaText)}</span><button type="button" class="qhCellDrop" data-qh-drop aria-label="${qhEsc(en?'Delete price':'Fiyatı sil')}" title="${qhEsc(en?'Delete price':'Fiyatı sil')}">×</button></td>`;
           }).join('');
         }else{
           const rankFor=qhPriceRanks(m,manufacturers);
@@ -2469,7 +2473,7 @@
             const rank=rankFor(c.price);
             const rankLabel=rank?(en?['Best price','2nd best price','3rd best price'][rank-1]:['En iyi fiyat','En iyi ikinci fiyat','En iyi üçüncü fiyat'][rank-1]):'';
             const medal=rank?`<i class="qhMedal qhMedal${rank}" title="${qhEsc(rankLabel)}" aria-label="${qhEsc(rankLabel)}">${rank}</i>`:'';
-            return `<td class="isNum qhEditable${c.approved?' qhApproved':''}" data-qh-req="${qhEsc(c.requestId||'')}" data-qh-item="${qhEsc(c.itemId||'')}" data-qh-price="${qhEsc(String(c.price))}" title="${qhEsc(en?'Double-click to edit':'Düzenlemek için çift tıklayın')}"><span class="qhPrice">${medal}${qhCapacityMarkup(c)}${qhEsc(qhMoney(c.price))}</span><span class="qhDelta ${cls}">${qhEsc(c.deltaText)}</span>${extra}<button type="button" class="qhCellDrop" data-qh-drop aria-label="${qhEsc(en?'Delete price':'Fiyatı sil')}" title="${qhEsc(en?'Delete price':'Fiyatı sil')}">×</button></td>`;
+            return `<td class="isNum qhEditable${c.approved?' qhApproved':''}" data-qh-req="${qhEsc(c.requestId||'')}" data-qh-item="${qhEsc(c.itemId||'')}" data-qh-price="${qhEsc(String(c.price))}" title="${qhEsc(en?'Double-click to edit':'Düzenlemek için çift tıklayın')}"><span class="qhPrice">${medal}${qhCapacityMarkup(c)}${qhEsc(qhMoney(c.price))}</span>${c.approved?`<span class="qhApprovalMark">${qhEsc(en?'Approved':'Onaylı')}</span>`:''}<span class="qhDelta ${cls}">${qhEsc(c.deltaText)}</span>${extra}<button type="button" class="qhCellDrop" data-qh-drop aria-label="${qhEsc(en?'Delete price':'Fiyatı sil')}" title="${qhEsc(en?'Delete price':'Fiyatı sil')}">×</button></td>`;
           }).join('');
         }
         return `<tr>

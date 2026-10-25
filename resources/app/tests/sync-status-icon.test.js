@@ -7,7 +7,7 @@ const path=require('node:path');
 
 const ROOT=path.join(__dirname,'..');
 const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
-const CSS=fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
+const CSS=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const INDEX=fs.readFileSync(path.join(ROOT,'public','index.html'),'utf8');
 
 test('sync status header uses the shared compact line-icon pattern',()=>{

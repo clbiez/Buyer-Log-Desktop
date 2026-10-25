@@ -1,0 +1,5 @@
+
+> buyer-log-desktop@7.0.294 i18n:check
+> node scripts/i18n-coverage.js
+
+[i18n] Yeni eksik: 0 · Baseline'daki eski eksik: 0

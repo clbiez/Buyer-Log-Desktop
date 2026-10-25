@@ -12,6 +12,7 @@ const APP = read('public/app-main.js');
 const COLLECTION = read('public/collection-spreadsheet.js');
 const UM = read('public/user-management.js');
 const DESIGN = read('public/design.css');
+const COMPONENTS = read('public/ui-components.css');
 const LAYER_PATH = path.join(ROOT, 'public', 'layer-system.js');
 const LAYER_SOURCE = fs.existsSync(LAYER_PATH) ? fs.readFileSync(LAYER_PATH, 'utf8') : '';
 const LAYER = fs.existsSync(LAYER_PATH) ? require(LAYER_PATH) : {};
@@ -36,7 +37,7 @@ test('v10.37 menü ok, Home ve End tuşları etkin seçenekler arasında döner'
 test('v10.37 modal odağı içeride tutar, Escape ile kapanır ve çağıran denetime geri döner', () => {
   assert.match(LAYER_SOURCE, /function openDialog\(/);
   assert.match(LAYER_SOURCE, /function closeDialog\(/);
-  assert.match(LAYER_SOURCE, /event\.key\s*===\s*'Tab'/);
+  assert.match(LAYER_SOURCE, /trapDialogTab\(dialog,event\)/);
   assert.match(LAYER_SOURCE, /event\.key\s*===\s*'Escape'/);
   assert.match(LAYER_SOURCE, /stopPropagation\(\)/);
   assert.match(LAYER_SOURCE, /blDialogOpen/);
@@ -90,12 +91,11 @@ test('v10.37 Escape yalnız en üst katmanı kapatır ve mevcut iş eylemlerini 
 });
 
 test('v10.37 modal ve menü odak yüzeyi tasarım tokenlarını kullanır', () => {
-  const start = DESIGN.indexOf('/* v10.37 — MODAL VE MENÜ KATMANI */');
-  const block = DESIGN.slice(start);
-  assert.ok(start >= 0);
-  assert.match(block, /body\.blDialogOpen/);
+  const block = COMPONENTS;
+  assert.match(DESIGN, /body\.blDialogOpen/);
   assert.match(block, /\[data-bl-layer="menu"\]/);
   assert.match(block, /\[role="menuitem"\]:focus-visible/);
-  assert.match(block, /var\(--focus-ring\)/);
-  assert.doesNotMatch(block, /#[0-9a-f]{3,8}\b/i, 'katman sistemi tema dışı sabit renk üretmemeli');
+  assert.match(block, /var\(--ui-accent\)/);
+  const focus=block.match(/\[data-bl-layer="dialog"\][^{]+\{([^}]+)\}/)[1];
+  assert.doesNotMatch(focus, /#[0-9a-f]{3,8}\b/i, 'katman sistemi tema dışı sabit renk üretmemeli');
 });

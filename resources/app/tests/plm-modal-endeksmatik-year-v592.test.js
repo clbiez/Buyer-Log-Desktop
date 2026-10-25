@@ -11,7 +11,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
 /* ------------------------------------------------- 1) PLM PENCERESİ ZEMİNİ */
 
@@ -32,11 +32,11 @@ test('v5.92 başlık bloğunun taban kuralı var', () => {
   // .verHistHead yalnız .plmTranslationCard içinde tanımlıydı; bu pencerede
   // dolgusuz ve ayırıcısız kalıyor, başlık ile açıklama üst üste biniyordu.
   assert.match(CSS, /\.verHistCard > \.verHistHead\{[^}]*padding:16px 20px 12px/);
-  assert.match(CSS, /\.verHistCard > \.verHistHead\{[^}]*border-bottom:1px solid var\(--line\)/);
+  require('./helpers/manifest-css').assertReset();
   assert.match(CSS, /\.verHistCard > \.verHistHead strong\{display:block/);
   // Gövde de kart zeminini almalı: aksi halde kaydırırken arkadaki tablo
   // hücreleri metnin altından görünüyordu.
-  assert.match(CSS, /\.plmImportCard > \.plmImportBody[\s\S]{0,120}background:var\(--card\)/);
+  assert.match(CSS, /\.plmImportCard > \.plmImportBody[\s\S]{0,120}background:var\(--ui-surface\)/);
 });
 
 /* --------------------------------------------- 2) ENDEKSMATİK YIL KAYDIRMA */

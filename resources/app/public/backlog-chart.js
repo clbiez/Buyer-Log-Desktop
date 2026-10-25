@@ -29,9 +29,10 @@
     showAverage:false,
     showSubtotal:false,
   });
-  /* Kategorik grafik paleti tema token'larından okunur (app.css --chart-1…8); tema değişince yeniden çizimde güncellenir. */
+  /* Export series colors remain fixed; screenModel reads --ui-chart-* on every render. */
   const CHART_FALLBACK=['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#6250d6','#e34948'];
-  function chartColors(){try{const cs=getComputedStyle(document.documentElement);const out=[];for(let i=1;i<=8;i++){const v=cs.getPropertyValue('--chart-'+i).trim();if(v)out.push(v);}return out.length===8?out:CHART_FALLBACK;}catch(_){return CHART_FALLBACK;}}
+  // Frozen workbook palette; screenModel uses the canonical UI chart tokens.
+  function chartColors(){return CHART_FALLBACK.slice();}
   // Only the screen projection uses Manifest ink colors. The report model and
   // native Excel chart palette remain unchanged for export equivalence.
   function screenModel(model){
@@ -931,8 +932,8 @@
     if(!root.document)return;
     root.document.getElementById('_backlogChartSettingsModal')?.remove();
     const overlay=root.document.createElement('div');overlay.id='_backlogChartSettingsModal';overlay.className='autoModalOverlay';
-    overlay.innerHTML='<div class="autoModal backlogChartSettingsModal"><header><h3>'+esc(tr('Backlog Grafik Ayarları','Backlog Chart Settings'))+'</h3><button type="button" data-chart-close>×</button></header><div class="autoModalBody"><div class="backlogChartLoading">'+esc(tr('Alanlar yükleniyor…','Loading fields…'))+'</div></div></div>';
-    root.document.body.appendChild(overlay);const close=()=>overlay.remove();overlay.querySelector('[data-chart-close]')?.addEventListener('click',close);
+    overlay.innerHTML='<div class="autoModal backlogChartSettingsModal" role="dialog" aria-modal="true" aria-labelledby="backlogChartSettingsTitle"><header><h3 id="backlogChartSettingsTitle">'+esc(tr('Backlog Grafik Ayarları','Backlog Chart Settings'))+'</h3><button type="button" data-chart-close>×</button></header><div class="autoModalBody"><div class="backlogChartLoading">'+esc(tr('Alanlar yükleniyor…','Loading fields…'))+'</div></div></div>';
+    root.document.body.appendChild(overlay);let releaseKeyboard=()=>{};const close=()=>{releaseKeyboard();overlay.remove();};releaseKeyboard=root.BLUI?.bindDialogKeyboard(overlay,{onEscape:close})||(()=>{});overlay.querySelector('[data-chart-close]')?.addEventListener('click',close);
     let detail;try{detail=await loadDetail(false);}catch(err){overlay.querySelector('.autoModalBody').innerHTML='<div class="backlogChartError">'+esc(err.message)+'</div>';return;}
     const headers=normalizeHeaders(detail.headers,detail.rows),dates=detectDateHeaders(headers,detail.rows),draft=inferState(headers,detail.rows,state),body=overlay.querySelector('.autoModalBody');
     body.innerHTML='<div class="backlogChartSettingsGrid">'

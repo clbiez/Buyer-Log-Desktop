@@ -4,9 +4,9 @@
    v7.81'de TAMAMEN YENİDEN YAZILDI. Önceki sürüm var olmayan token'lara
    dayanıyordu:
 
-       background: var(--card)
-       border:     var(--line)
-       background: var(--card2)
+       background: var(--ui-surface)
+       border:     var(--ui-row-divider)
+       background: var(--ui-surface-soft)
 
    --panel, --border ve --soft bu tasarım sisteminde TANIMLI DEĞİL. Yani her
    temada geri düşüş değeri geçerli oluyordu: kart hep beyaz, yazı hep koyu.

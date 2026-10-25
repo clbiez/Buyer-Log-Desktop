@@ -3,11 +3,11 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const orb=require('../public/thinking-orb-breathing.js');
+const orb=require('./fixtures/retired-ui/thinking-orb-breathing.js');
 const ROOT=path.join(__dirname,'..');
 const INDEX=fs.readFileSync(path.join(ROOT,'public','index.html'),'utf8');
 const EXP=fs.readFileSync(path.join(ROOT,'public','experience.css'),'utf8');
-const ORB_SRC=fs.readFileSync(path.join(ROOT,'public','thinking-orb-breathing.js'),'utf8');
+const ORB_SRC=fs.readFileSync(path.join(ROOT,'tests','fixtures','retired-ui','thinking-orb-breathing.js'),'utf8');
 
 test('Manifest açılışı kare durum işareti ve açık Devam eylemi kullanır',()=>{
   const head=INDEX.slice(0,INDEX.indexOf('</head>'));

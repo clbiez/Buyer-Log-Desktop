@@ -1,0 +1,23 @@
+{
+  "title": "Buyer Log · Manifest · Arayüz incelemesi",
+  "images": 75,
+  "broken": 0,
+  "fonts": "loaded",
+  "details": 75,
+  "keyboardOpen": true,
+  "keyboardClose": true,
+  "viewports": [
+    {
+      "width": 1440,
+      "overflow": false
+    },
+    {
+      "width": 1280,
+      "overflow": false
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "offline": true,
+  "input": "exact local HTML bytes via setContent (managed file: navigation blocked)"
+}

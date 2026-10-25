@@ -1843,7 +1843,9 @@ function showSourceFilterRequiredNotice(status,message){
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const reopen=event.target.closest('[data-reopen-pricing-draft]');if(reopen){event.preventDefault();const row=results[Number(reopen.dataset.reopenPricingDraft)];if(row?.draftId)void prepareEmailReopenSingleDraft({draftId:row.draftId,manufacturer:row.manufacturer,filename:row.emlFilename,reopenUntil:row.reopenUntil},row.quotationRequestId||'',reopen);return;}const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
-  const close=()=>modal.remove();
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   modal.querySelectorAll('[data-source-filter-close]').forEach(btn=>btn.addEventListener('click',close));
   modal.querySelector('[data-source-filter-open]')?.addEventListener('click',()=>{close();openDataSourceAndFilters({target:preferredTarget});});
   modal.addEventListener('click',e=>{if(e.target===modal)close();});
@@ -2507,7 +2509,9 @@ function openClipboardDiagnostics(){
   const entries=window.BLGridClipboard?.diagnostics?.list?.()||[],overlay=document.createElement('div');overlay.className='kolSpreadsheetPasteOverlay gridClipboardDiagnosticsOverlay';
   const rows=entries.length?entries.slice().reverse().map(item=>`<tr><td>${escapeHtml(item.at||'')}</td><td>${escapeHtml(item.module||'')}</td><td>${escapeHtml(item.operation||'')}</td><td>${escapeHtml(item.selection?`${item.selection.rows}×${item.selection.columns}`:'—')}</td><td>${item.ok?'✓':'×'}</td><td>${escapeHtml(item.error||'')}</td></tr>`).join(''):`<tr><td colspan="6">${appLang==='en'?'No clipboard events recorded.':'Kaydedilmiş pano olayı yok.'}</td></tr>`;
   overlay.innerHTML=`<div class="kolSpreadsheetPasteCard gridClipboardDiagnosticsCard" role="dialog" aria-modal="true" aria-labelledby="gridClipboardDiagnosticsTitle" tabindex="-1"><div class="kolSpreadsheetPasteHead"><b id="gridClipboardDiagnosticsTitle">${appLang==='en'?'Clipboard diagnostics':'Pano hata teşhisi'}</b><span>${appLang==='en'?'Metadata only; copied values are never recorded.':'Yalnız metadata; kopyalanan değerler kaydedilmez.'}</span></div><div class="kolSpreadsheetPasteBody"><table class="gridClipboardDiagnosticsTable"><thead><tr><th>${appLang==='en'?'Time':'Zaman'}</th><th>${appLang==='en'?'Module':'Modül'}</th><th>${appLang==='en'?'Action':'İşlem'}</th><th>${appLang==='en'?'Range':'Alan'}</th><th>${appLang==='en'?'OK':'Başarılı'}</th><th>${appLang==='en'?'Error':'Hata'}</th></tr></thead><tbody>${rows}</tbody></table></div><div class="kolSpreadsheetPasteFoot"><button class="tbtn" data-clear>${appLang==='en'?'Clear':'Temizle'}</button><button class="tbtn primary" data-close>${appLang==='en'?'Close':'Kapat'}</button></div></div>`;
-  const close=()=>overlay.remove();overlay.querySelector('[data-close]').onclick=close;overlay.querySelector('[data-clear]').onclick=()=>{window.BLGridClipboard?.diagnostics?.clear?.();close();showToast(appLang==='en'?'Clipboard diagnostics cleared.':'Pano tanılama kayıtları temizlendi.');};overlay.addEventListener('click',event=>{if(event.target===overlay)close();});document.body.appendChild(overlay);overlay.querySelector('.gridClipboardDiagnosticsCard')?.focus();
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();overlay.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(overlay,{onEscape:close})||(()=>{});overlay.querySelector('[data-close]').onclick=close;overlay.querySelector('[data-clear]').onclick=()=>{window.BLGridClipboard?.diagnostics?.clear?.();close();showToast(appLang==='en'?'Clipboard diagnostics cleared.':'Pano tanılama kayıtları temizlendi.');};overlay.addEventListener('click',event=>{if(event.target===overlay)close();});document.body.appendChild(overlay);overlay.querySelector('.gridClipboardDiagnosticsCard')?.focus();
 }
 document.getElementById('navCopyMenuBtn')?.addEventListener('click',event=>{
   event.stopPropagation();closeGridClipboardMenu();const button=event.currentTarget,rect=button.getBoundingClientRect(),menu=document.createElement('div');menu.id='gridClipboardMenu';menu.className='kolSpreadsheetContextMenu';menu.setAttribute('role','menu');
@@ -2640,6 +2644,26 @@ document.addEventListener('keydown', event=>{
   event.preventDefault(); event.stopPropagation();
 }, true);
 
+// Unregistered older overlays share the same Tab boundary. The bubble phase
+// leaves local handlers and native modal dialogs in control. Only a key press
+// queries visible layers; no observer or background module render is needed.
+document.addEventListener('keydown', event=>{
+  if(event.key!=='Tab'||event.defaultPrevented)return;
+  const candidates=[...document.querySelectorAll(BL_OVERLAY_SELECTOR+', [aria-modal="true"]')]
+    .filter(el=>el.checkVisibility()&&!el.closest('[inert]'));
+  let top=null,topZ=-Infinity;
+  for(const el of candidates){
+    let z=0;
+    for(let node=el;node&&node!==document.body;node=node.parentElement){
+      const value=Number.parseInt(getComputedStyle(node).zIndex,10);
+      if(Number.isFinite(value)){z=value;break;}
+    }
+    if(z>=topZ){top=el;topZ=z;}
+  }
+  if(!top||top.matches('dialog:modal')||top.closest('dialog:modal'))return;
+  window.BLLayerSystem?.trapDialogTab(top,event);
+});
+
 // Kaydırma zinciri: olayın hedefinden pencereye kadar çıkıp gerçekten
 // kaydırılabilecek bir alan var mı diye bakılır. Yoksa olay burada biter.
 function _blScrollableAncestor(node, root, deltaY){
@@ -2681,7 +2705,7 @@ function closeAllColumnPanels(except=null){
 function positionColumnPanelAtAnchor(panel,anchor){
   if(!panel||!anchor||!panel.classList.contains('show')) return;
   panel.classList.add('viewportFloating');
-  panel.style.position='fixed'; panel.style.right='auto'; panel.style.bottom='auto'; panel.style.zIndex='260';
+  panel.style.position='fixed'; panel.style.right='auto'; panel.style.bottom='auto'; panel.style.zIndex='var(--ui-z-popover)';
   panel.style.display='block'; panel.style.visibility='hidden';
   const rect=anchor.getBoundingClientRect();
   const width=Math.min(Math.max(panel.offsetWidth||210,210),Math.max(210,window.innerWidth-16));
@@ -3645,7 +3669,7 @@ function cpPlmDetailsSync(){
 /* Grup bantları artık doygun renk + beyaz yazı yerine, tabloyla aynı sakin
    yüzey rengini kullanır; ayrım rengi ince bir ÜST ÇİZGİ ile verilir (yazı
    okunurluğu bozulmaz). Renkler CSS'te .groupRow th[data-grp] ile uygulanır. */
-const GROUP_ACCENTS = {'Öncelik':'var(--red,var(--acc))','PLM Numune':'var(--teal)','Marka Detayları':'var(--acc)','Model Detayları':'var(--acc)','Sipariş Detayları':'var(--green)','Lisans Detayları':'var(--purple)','Tarihler':'var(--teal)','Tarihler & Sevkiyat':'var(--teal)','Kumaş Detayları':'var(--orange)','Lojistik':'var(--purple)','Notlar':'var(--ink2)','Checklist':'var(--green)','Fiyatlandırma':'var(--green)','Endeksmatik & Avantaj':'var(--orange)','Hesaplanan':'var(--chart-5)'}; // i18n-ignore — sütun grubu anahtarları (veri)
+const GROUP_ACCENTS = {'Öncelik':'var(--ui-danger,var(--ui-accent))','PLM Numune':'var(--ui-chart-3)','Marka Detayları':'var(--ui-accent)','Model Detayları':'var(--ui-accent)','Sipariş Detayları':'var(--ui-success)','Lisans Detayları':'var(--ui-chart-4)','Tarihler':'var(--ui-chart-3)','Tarihler & Sevkiyat':'var(--ui-chart-3)','Kumaş Detayları':'var(--ui-warning)','Lojistik':'var(--ui-chart-4)','Notlar':'var(--ui-text-secondary)','Checklist':'var(--ui-success)','Fiyatlandırma':'var(--ui-success)','Endeksmatik & Avantaj':'var(--ui-warning)','Hesaplanan':'var(--ui-chart-5)'}; // i18n-ignore — sütun grubu anahtarları (veri)
 /* Tablo ana başlıklarının (sütun grubu) görünen TR/EN adları. `group` değeri
    kimliktir; ekranda daima aktif dile göre bu katalogdan okunur. */
 const TABLE_COLUMN_GROUP_LABELS = Object.freeze({
@@ -4492,7 +4516,7 @@ function renderTableFieldsMenu(menu,tableKey){
       const draggable=!meta.fixed&&entry.keys.length>1;
       return `<div class="tableFieldsColumn${hidden.has(key)?' isHiddenNow':''}${meta.userLabel?' hasUserLabel':''}" data-table-fields-col="${escapeHtml(key)}" data-group="${escapeHtml(entry.group)}"${draggable?' draggable="true"':''}><span class="tableFieldsDrag${draggable?'':' isDisabled'}" aria-hidden="true">⋮⋮</span><span class="tableFieldsColumnName" title="${escapeHtml(meta.label)}">${escapeHtml(meta.label)}</span><span class="tableFieldsActions">${actions}</span><span class="tableFieldsChecks">${checks}</span></div>`;
     }).join(''):'';
-    return `<div class="tableFieldsGroup is-${mode}${open?' isOpen':''}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--acc)'}"><div class="tableFieldsGroupRow"><button type="button" class="tableFieldsGroupToggle" data-table-fields-toggle="${escapeHtml(entry.group)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b>${escapeHtml(entry.label)}</b><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button><button type="button" class="tableFieldsModeBtn is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(modeTitle)}">${escapeHtml(modeLabel)}</button><span class="tableFieldsChecks">${groupChecks}</span></div>${columns?`<div class="tableFieldsColumns">${columns}</div>`:''}</div>`;
+    return `<div class="tableFieldsGroup is-${mode}${open?' isOpen':''}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--ui-accent)'}"><div class="tableFieldsGroupRow"><button type="button" class="tableFieldsGroupToggle" data-table-fields-toggle="${escapeHtml(entry.group)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b>${escapeHtml(entry.label)}</b><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button><button type="button" class="tableFieldsModeBtn is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(modeTitle)}">${escapeHtml(modeLabel)}</button><span class="tableFieldsChecks">${groupChecks}</span></div>${columns?`<div class="tableFieldsColumns">${columns}</div>`:''}</div>`;
   }).join('');
   const addButtons=[];
   if(tableKey==='cp'||tableKey==='orders'){
@@ -5403,7 +5427,10 @@ async function openCpModelColumnModal(editId,rerenderFn){
   const groupSelect=modal.querySelector('#_cpModelGroup'), groupNew=modal.querySelector('#_cpModelGroupNew'), groupNewWrap=modal.querySelector('#_cpModelGroupNewWrap');
   const chosenGroup=()=>(groupSelect.value===NEW_GROUP_OPTION?groupNew.value:groupSelect.value).replace(/\s+/g,' ').trim();
   groupSelect.addEventListener('change',()=>{const wantsNew=groupSelect.value===NEW_GROUP_OPTION;groupNewWrap.hidden=!wantsNew;if(wantsNew)groupNew.focus();});
-  modal.querySelectorAll('.cpModelClose').forEach(btn=>btn.addEventListener('click',()=>modal.remove()));modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
+  modal.querySelectorAll('.cpModelClose').forEach(btn=>btn.addEventListener('click',()=>close()));modal.addEventListener('click',e=>{if(e.target===modal)close();});
   modal.querySelector('#_cpModelSave').addEventListener('click',async e=>{const labelEn=modal.querySelector('#_cpModelLabelEn').value.replace(/\s+/g,' ').trim(),labelTr=modal.querySelector('#_cpModelLabelTr').value.replace(/\s+/g,' ').trim(),label=labelTr||labelEn;if(!label){status.textContent=appLang==='en'?'Enter a column heading.':'Sütun başlığı girin.';return;}if(!selectedField){status.textContent=appLang==='en'?'Select a source column.':'Bir kaynak sütun seçin.';return;}const group=chosenGroup();if(groupSelect.value===NEW_GROUP_OPTION&&!group){status.textContent=appLang==='en'?'Enter a new heading name.':'Yeni başlık adı girin.';groupNew.focus();return;}const btn=e.currentTarget;btn.disabled=true;status.textContent=appLang==='en'?'Saving…':'Kaydediliyor…';try{
       /* Sütunu BAŞKA bir kaynağa taşımak iki yazma gerektirir. SIRA ÖNEMLİ:
          ÖNCE EKLE, SONRA KALDIR. Ters sırada, ekleme başarısız olursa sütun
@@ -5419,7 +5446,7 @@ async function openCpModelColumnModal(editId,rerenderFn){
         ?await writeCpModelColumn(selectedConnectionId,{op:'add',label,labelEn,labelTr,group,entry})
         :await writeCpModelColumn(selectedConnectionId,{op:'update',id:editId,label,labelEn,labelTr,group,entry});
       if(movingSource)await writeCpModelColumn(previous.connectionId,{op:'remove',id:editId});
-      syncCpModelColumns(cpModelColumnDefinitionsFromConnections(saved));modal.remove();if(typeof rerenderFn==='function')rerenderFn();else renderCP();showToast(appLang==='en'?'Column saved. Refresh CP to load its values.':'Sütun kaydedildi. Değerlerini almak için CP’yi yenileyin.');}catch(err){btn.disabled=false;status.textContent=err.message||String(err);}});
+      syncCpModelColumns(cpModelColumnDefinitionsFromConnections(saved));close();if(typeof rerenderFn==='function')rerenderFn();else renderCP();showToast(appLang==='en'?'Column saved. Refresh CP to load its values.':'Sütun kaydedildi. Değerlerini almak için CP’yi yenileyin.');}catch(err){btn.disabled=false;status.textContent=err.message||String(err);}});
   loadSchema(); setTimeout(()=>modal.querySelector(appLang==='en'?'#_cpModelLabelEn':'#_cpModelLabelTr').focus(),0);
 }
 /* v7.33 — Hesaplanan sütun penceresi de bu pencereyi açar (ASAS / IAS-Antrepo
@@ -7540,7 +7567,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
       else{cur={group:g,span:1,start:index,end:index};runs.push(cur);}
     });
     theadHtml+='<tr class="groupRow">'+(withChk?'<th class="groupSpacer"></th>':'')+
-      runs.map((r,i)=>`<th colspan="${r.span}" class="${i>0?'groupDivider':''}" data-grp="${escapeHtml(r.group)}" data-start="${r.start}" data-end="${r.end}" style="--grp-accent:${GROUP_ACCENTS[r.group]||'var(--acc)'}">${escapeHtml(tableColumnGroupLabel(r.group))}</th>`).join('')+'</tr>';
+      runs.map((r,i)=>`<th colspan="${r.span}" class="${i>0?'groupDivider':''}" data-grp="${escapeHtml(r.group)}" data-start="${r.start}" data-end="${r.end}" style="--grp-accent:${GROUP_ACCENTS[r.group]||'var(--ui-accent)'}">${escapeHtml(tableColumnGroupLabel(r.group))}</th>`).join('')+'</tr>';
   }
   const checkFilterActive = !!normalizeCheckFilterMode(state.checkFilter[tableKey]);
   const checkFilterLabel=appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele';
@@ -8641,7 +8668,7 @@ function renderCpDimPanel(dim){
   const validSet = computeValidValueSet(base, otherEntries, meta.col);
   const vals = sortWithFacet(allVals, validSet);
   const selected = cpDimFilters[dim] || new Set();
-  panel.innerHTML = `<label style="display:flex;align-items:center;gap:6px;padding:4px 2px;font-weight:600;border-bottom:1px solid var(--line);margin-bottom:4px;">
+  panel.innerHTML = `<label style="display:flex;align-items:center;gap:6px;padding:4px 2px;font-weight:600;border-bottom:0;margin-bottom:4px;">
     <input type="checkbox" class="cpDimAll" ${selected.size===0?'checked':''}> Hepsi
   </label>` + facetChecklistHtml(vals, validSet, selected, 'cpDimChk');
   panel.querySelector('.cpDimAll').addEventListener('change', e=>{
@@ -8729,7 +8756,7 @@ function renderOrdersDimPanel(dim){
   const otherEntries=Object.keys(ORDERS_DIM_META).filter(d=>d!==dim).map(d=>[ordersDimFilters[d],ORDERS_DIM_META[d].col]);
   const validSet=computeValidValueSet(base,otherEntries,meta.col);
   const vals=sortWithFacet(allVals,validSet),selected=ordersDimFilters[dim]||new Set();
-  panel.innerHTML=`<label style="display:flex;align-items:center;gap:6px;padding:4px 2px;font-weight:600;border-bottom:1px solid var(--line);margin-bottom:4px;">
+  panel.innerHTML=`<label style="display:flex;align-items:center;gap:6px;padding:4px 2px;font-weight:600;border-bottom:0;margin-bottom:4px;">
     <input type="checkbox" class="ordersDimAll" ${selected.size===0?'checked':''}> ${appLang==='en'?'All':'Hepsi'}
   </label>`+facetChecklistHtml(vals,validSet,selected,'ordersDimChk');
   panel.querySelector('.ordersDimAll')?.addEventListener('change',e=>{
@@ -10148,8 +10175,8 @@ function showSubmfrDrop(input){
   if(!_submfrDrop){ _submfrDrop = document.createElement('div'); _submfrDrop.className='submfrDrop'; document.body.appendChild(_submfrDrop); }
   const rect = input.getBoundingClientRect();
   // Modal içindeki üretici seçicisinde de aynı Sub-Mfr öneri listesini kullanıyoruz.
-  // Overlay z-index'i 400 olduğu için açılır liste modal üzerinde kalmalıdır.
-  _submfrDrop.style.zIndex = input.closest('.warnOverlay') ? '450' : '90';
+  // Portalled suggestions use the shared modal-menu band.
+  _submfrDrop.style.zIndex = input.closest('.warnOverlay') ? 'var(--ui-z-modal-menu)' : 'var(--ui-z-popover)';
   _submfrDrop.style.left = rect.left+'px'; _submfrDrop.style.top = (rect.bottom+3)+'px'; _submfrDrop.style.width = Math.max(rect.width,140)+'px';
   _submfrDrop.innerHTML = matches.map(v=>`<div class="submfrDropItem">${escapeHtml(v)}</div>`).join('');
   _submfrDrop.querySelectorAll('.submfrDropItem').forEach(item=>{
@@ -10187,7 +10214,7 @@ function showLicenseDrop(input){
   if(!_licenseDrop){ _licenseDrop=document.createElement('div'); _licenseDrop.className='submfrDrop'; document.body.appendChild(_licenseDrop); }
   const rect=input.getBoundingClientRect();
   const width=Math.max(rect.width,150), left=Math.min(rect.left,window.innerWidth-width-8);
-  _licenseDrop.style.zIndex = input.closest('.warnOverlay') ? '450' : '90';
+  _licenseDrop.style.zIndex = input.closest('.warnOverlay') ? 'var(--ui-z-modal-menu)' : 'var(--ui-z-popover)';
   _licenseDrop.style.left=Math.max(8,left)+'px'; _licenseDrop.style.top=(rect.bottom+3)+'px'; _licenseDrop.style.width=width+'px';
   _licenseDrop.innerHTML=matches.map(v=>`<div class="submfrDropItem">${escapeHtml(v)}</div>`).join('');
   _licenseDrop.querySelectorAll('.submfrDropItem').forEach(item=>item.addEventListener('mousedown',ev=>{
@@ -10450,7 +10477,7 @@ function updateOvFilterBadge(scope){
   });
   const label = appLang==='en' ? 'FILTERS' : 'Aktif Filtreler';
   const clearLabel = appLang==='en' ? 'Clear' : 'Temizle';
-  badge.innerHTML = `${label} — ${escapeHtml(parts.join(' · '))} <button type="button" class="ovFilterBadgeClear" data-scope="${scope}" style="margin-left:8px;border:none;background:none;color:var(--acc-ink);text-decoration:underline;cursor:pointer;font:inherit;">${clearLabel}</button>`;
+  badge.innerHTML = `${label} — ${escapeHtml(parts.join(' · '))} <button type="button" class="ovFilterBadgeClear" data-scope="${scope}" style="margin-left:8px;border:none;background:none;color:var(--ui-selected-ink);text-decoration:underline;cursor:pointer;font:inherit;">${clearLabel}</button>`;
   badge.style.display='block';
   badge.querySelector('.ovFilterBadgeClear')?.addEventListener('click', ()=>{
     ovSetStateFor(scope, {}); saveOvDimFilters(scope); updateOvFilterBadge(scope); renderOverview();
@@ -10524,7 +10551,9 @@ function renderOvFilterPopover(scope){
     wireGrid();
   }
   wireGrid();
-  const close = ()=>{ saveOvDimFilters(scope); updateOvFilterBadge(scope); renderOverview(); modal.remove(); };
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard(); saveOvDimFilters(scope); updateOvFilterBadge(scope); renderOverview(); modal.remove(); };
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   modal.querySelector('.ovFilterClose').addEventListener('click', close);
   modal.querySelector('#ovFilterApplyClose').addEventListener('click', close);
   modal.querySelector('#ovFilterResetAll').addEventListener('click', ()=>{
@@ -10972,7 +11001,7 @@ function renderOverviewNow(){
     const priorityHeaders=actionPriorityCodes().map(code=>`<th style="text-align:right">${escapeHtml(priorityDisplay(code))}</th>`).join('');
     tblSeason.innerHTML = `<tr><th>${appLang==='en'?'SEASON':'Sezon'}</th><th style="text-align:right">${appLang==='en'?'ORDER':'Sipariş'}</th>${priorityHeaders}<th style="text-align:right">${appLang==='en'?'TOTAL QUANTITY':'Toplam Adet'}</th></tr>` +
       seasonRows.map(([season,data])=>{
-        const cell = (val, pri, color) => `<td class="ovDrill" data-ov-season="${escapeHtml(season)}"${pri?` data-ov-pri="${pri}"`:''} style="text-align:right;font-family:var(--mono);${color?`color:${color};`:''}cursor:pointer;" title="CP'de göster">${val}</td>`;
+        const cell = (val, pri, color) => `<td class="ovDrill" data-ov-season="${escapeHtml(season)}"${pri?` data-ov-pri="${pri}"`:''} style="text-align:right;font-family:var(--ui-font-mono);${color?`color:${color};`:''}cursor:pointer;" title="CP'de göster">${val}</td>`;
         const priorityCells=actionPriorityCodes().map(code=>cell(data.priorities[code]||0,code,'')).join('');
         return `<tr><td>${escapeHtml(season)}</td>${cell(data.count,'','')}${priorityCells}${cell(data.qty.toLocaleString('tr-TR'),'','')}</tr>`;
       }).join('')+`<tr><td class="quantityTotalLabel">${appLang==='en'?'Total':'Toplam'}</td><td colspan="${1+actionPriorityCodes().length}"></td><td class="quantityTotalValue">${formatQuantityTotal(seasonQtyTotal)}</td></tr>`;
@@ -11024,12 +11053,12 @@ function renderOverviewNow(){
     tblBG.innerHTML = `<tr><th>${appLang==='en'?'Buying Group':'Buying Grup'}</th><th style="text-align:right">${appLang==='en'?'Active':'Aktif'}</th><th style="text-align:right">${appLang==='en'?'Total Orders':'Toplam Sipariş Sayısı'}</th><th style="text-align:right">${appLang==='en'?'Remaining Quantity':'Kalan Adet'}</th><th style="text-align:right">${appLang==='en'?'Total Quantity':'Toplam Adet Sayısı'}</th><th style="text-align:right">${appLang==='en'?'Active Total FOB':'Aktif Toplam FOB'}</th><th style="text-align:right">${appLang==='en'?'Total FOB':'Toplam FOB'}</th></tr>` +
       bgRows.map(([bg,d])=>`<tr>
         <td>${escapeHtml(bg)}</td>
-        <td style="text-align:right;font-family:var(--mono);color:var(--green-lite)">${d.active}</td>
-        <td style="text-align:right;font-family:var(--mono)">${d.total}</td>
-        <td style="text-align:right;font-family:var(--mono)">${d.remaining.toLocaleString('tr-TR')}</td>
-        <td style="text-align:right;font-family:var(--mono)">${d.totalQty.toLocaleString('tr-TR')}</td>
-        <td style="text-align:right;font-family:var(--mono)">$${Math.round(d.fobValueUsd).toLocaleString('tr-TR')}${d.fobValueTry?` + ${Math.round(d.fobValueTry).toLocaleString('tr-TR')} ₺`:''}</td>
-        <td style="text-align:right;font-family:var(--mono)">$${Math.round(d.totalFobValueUsd).toLocaleString('tr-TR')}${d.totalFobValueTry?` + ${Math.round(d.totalFobValueTry).toLocaleString('tr-TR')} ₺`:''}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono);color:var(--ui-success)">${d.active}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">${d.total}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">${d.remaining.toLocaleString('tr-TR')}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">${d.totalQty.toLocaleString('tr-TR')}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">$${Math.round(d.fobValueUsd).toLocaleString('tr-TR')}${d.fobValueTry?` + ${Math.round(d.fobValueTry).toLocaleString('tr-TR')} ₺`:''}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">$${Math.round(d.totalFobValueUsd).toLocaleString('tr-TR')}${d.totalFobValueTry?` + ${Math.round(d.totalFobValueTry).toLocaleString('tr-TR')} ₺`:''}</td>
       </tr>`).join('')+`<tr><td class="quantityTotalLabel">${appLang==='en'?'Total':'Toplam'}</td><td></td><td></td><td class="quantityTotalValue">${formatQuantityTotal(bgRemainingTotal)}</td><td class="quantityTotalValue">${formatQuantityTotal(bgQtyTotal)}</td><td></td><td></td></tr>`;
   } else {
     document.getElementById('kpiOrders').innerHTML='';
@@ -11044,7 +11073,7 @@ function groupCount(rows,key){
 function fillMiniTable(id, entries){
   const el = document.getElementById(id);
   el.innerHTML = `<tr><th>${appLang==='en'?'NAME':'Ad'}</th><th style="text-align:right">${appLang==='en'?'ORDER':'Sipariş'}</th></tr>` +
-    entries.map(([k,v])=>`<tr><td>${escapeHtml(k)}</td><td style="text-align:right;font-family:var(--mono)">${v}</td></tr>`).join('');
+    entries.map(([k,v])=>`<tr><td>${escapeHtml(k)}</td><td style="text-align:right;font-family:var(--ui-font-mono)">${v}</td></tr>`).join('');
 }
 // ================= ASAS + ANTREPO INTEGRATION ENGINE =================
 const LICMAP = {};
@@ -12855,8 +12884,8 @@ function showWarnDetails(){
   document.getElementById('warnOverlay')?.remove();
   const ov = document.createElement('div');
   ov.id='warnOverlay'; ov.className='warnOverlay';ov.dataset.uiMigrated='dialog';
-  ov.innerHTML = `<div class="modalCard warningListCard">
-    <div class="modalTitle warningListTitle">${escapeHtml(appLang==='en'?`Warnings (${appWarnings.length})`:`Uyarılar (${appWarnings.length})`)}
+  ov.innerHTML = `<div class="modalCard warningListCard" role="dialog" aria-modal="true" aria-labelledby="warningListTitle">
+    <div class="modalTitle warningListTitle" id="warningListTitle">${escapeHtml(appLang==='en'?`Warnings (${appWarnings.length})`:`Uyarılar (${appWarnings.length})`)}
       <button type="button" class="warnClose" aria-label="${escapeHtml(appLang==='en'?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <ol class="warningList">
       ${appWarnings.map((w,index)=>{
@@ -12865,7 +12894,10 @@ function showWarnDetails(){
       }).join('')}
     </ol>
   </div>`;
-  ov.addEventListener('click', e=>{ if(e.target===ov || e.target.closest('.warnClose')) ov.remove(); });
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();ov.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(ov,{onEscape:close})||(()=>{});
+  ov.addEventListener('click', e=>{ if(e.target===ov || e.target.closest('.warnClose')) close(); });
   ov.addEventListener('dblclick',e=>{
     const item=e.target.closest('.warningList li.hasDetail');if(!item)return;
     const message=appWarnings[Number(item.dataset.warningIndex)];
@@ -14018,7 +14050,7 @@ function showSourceRefreshFailureModal(detail,repairAction=null,diagnosis=null){
   const modal=document.createElement('div');
   modal.id='sourceRefreshFailureModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard refreshFailureCard" role="alertdialog" aria-modal="true">
-    <div class="modalTitle" style="margin:0;padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <div class="modalTitle" style="margin:0;padding:16px 20px;border-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <span>${escapeHtml(title)}</span>
       <button type="button" class="tbtn" data-refresh-failure-close aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
@@ -14036,7 +14068,9 @@ function showSourceRefreshFailureModal(detail,repairAction=null,diagnosis=null){
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
-  const close=()=>modal.remove();
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   modal.querySelectorAll('[data-refresh-failure-close]').forEach(btn=>btn.addEventListener('click',close));
   modal.querySelector('[data-refresh-repair]')?.addEventListener('click',()=>{
     close();
@@ -15441,7 +15475,9 @@ async function openBrowserDebugSettingsModal(){
     renderProfiles();
   };
   render();
-  const close=()=>modal.remove();modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));modal.addEventListener('click',e=>{if(e.target===modal)close();});browser.addEventListener('change',async()=>{const active=currentBrowser();if(active==='edge'||active==='chrome'){try{const response=await fetch(`/api/browser-debug/profiles?browser=${encodeURIComponent(active)}`,{credentials:'same-origin'});const data=await response.json();payload.status.profiles=data.profiles||[];}catch(_){}}if(modal.isConnected)render();});
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));modal.addEventListener('click',e=>{if(e.target===modal)close();});browser.addEventListener('change',async()=>{const active=currentBrowser();if(active==='edge'||active==='chrome'){try{const response=await fetch(`/api/browser-debug/profiles?browser=${encodeURIComponent(active)}`,{credentials:'same-origin'});const data=await response.json();payload.status.profiles=data.profiles||[];}catch(_){}}if(modal.isConnected)render();});
   const body=()=>({preferredBrowser:browser.value,selectedEdgeProfileDirectory:profile.value||'',preferredPort:port.value?Number(port.value):null});
   /* "Cannot set properties of null (setting 'disabled')" HATASININ KAYNAĞI.
      Düğme işleyicileri finally bloğunda currentTarget üzerinden disabled
@@ -15620,7 +15656,7 @@ async function openSyncLocalDataModal(){
   const s=payload.settings||{}, en=appLang==='en', moderator=Boolean(window.BLIsModerator&&window.BLIsModerator());
   const modal=document.createElement('div');modal.id='_syncLocalDataModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const label=(tr,eng)=>en?eng:tr;
-  modal.innerHTML=`<div class="modalCard" role="dialog" aria-modal="true" style="width:min(92vw,620px);padding:20px"><div style="display:flex;justify-content:space-between;align-items:center"><div class="modalTitle">Sync &amp; Local Data</div><button type="button" class="pricingRuleIconBtn" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><label style="display:block;margin:16px 0 8px">${label('Shared Sync Folder','Shared Sync Folder')}<div style="display:flex;gap:8px;margin-top:6px"><input id="_syncFolder" type="text" value="${escapeHtml(s.sharedSyncRoot||'')}" style="flex:1"><button type="button" class="tbtn" data-browse>${label('Browse','Browse')}</button><button type="button" class="tbtn" data-test>${label('Test Connection','Test Connection')}</button></div></label><div style="color:var(--ui-text-muted);font-size:var(--ui-font-xs);margin-bottom:12px">${label('Yerel DB','Local DB')}: <code>${escapeHtml(payload.localDbPath||'—')}</code></div><div id="_syncStatus" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;color:var(--ui-text-muted);font-size:var(--ui-font-sm)"></div><div id="_syncError" style="min-height:20px;color:var(--danger);margin-top:8px"></div>${moderator?`<div id="_syncHubInit" hidden style="margin-top:8px;padding:10px;border:0;background:var(--paper)"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><strong>${label('Shared Hub gerekli','Shared Hub required')}</strong><div style="margin-top:3px;color:var(--ui-text-muted);font-size:var(--ui-font-2xs)">${label('Seçili boş klasörü Buyer Log ortak alanı olarak başlat.','Initialize the selected empty folder as the Buyer Log shared workspace.')}</div></div><button type="button" class="tbtn primary" data-init-hub>${label('Shared Hub Oluştur','Create Shared Hub')}</button></div></div>`:''}<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button type="button" class="tbtn" data-close>${label('Kapat','Close')}</button><button type="button" class="tbtn" data-save>${label('Kaydet','Save')}</button><button type="button" class="tbtn primary" data-now>${label('Sync Now','Sync Now')}</button></div></div>`;
+  modal.innerHTML=`<div class="modalCard" role="dialog" aria-modal="true" style="width:min(92vw,620px);padding:20px"><div style="display:flex;justify-content:space-between;align-items:center"><div class="modalTitle">Sync &amp; Local Data</div><button type="button" class="pricingRuleIconBtn" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><label style="display:block;margin:16px 0 8px">${label('Shared Sync Folder','Shared Sync Folder')}<div style="display:flex;gap:8px;margin-top:6px"><input id="_syncFolder" type="text" value="${escapeHtml(s.sharedSyncRoot||'')}" style="flex:1"><button type="button" class="tbtn" data-browse>${label('Browse','Browse')}</button><button type="button" class="tbtn" data-test>${label('Test Connection','Test Connection')}</button></div></label><div style="color:var(--ui-text-muted);font-size:var(--ui-font-xs);margin-bottom:12px">${label('Yerel DB','Local DB')}: <code>${escapeHtml(payload.localDbPath||'—')}</code></div><div id="_syncStatus" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;color:var(--ui-text-muted);font-size:var(--ui-font-sm)"></div><div id="_syncError" style="min-height:20px;color:var(--ui-danger);margin-top:8px"></div>${moderator?`<div id="_syncHubInit" hidden style="margin-top:8px;padding:10px;border:0;background:var(--ui-canvas)"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><strong>${label('Shared Hub gerekli','Shared Hub required')}</strong><div style="margin-top:3px;color:var(--ui-text-muted);font-size:var(--ui-font-2xs)">${label('Seçili boş klasörü Buyer Log ortak alanı olarak başlat.','Initialize the selected empty folder as the Buyer Log shared workspace.')}</div></div><button type="button" class="tbtn primary" data-init-hub>${label('Shared Hub Oluştur','Create Shared Hub')}</button></div></div>`:''}<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button type="button" class="tbtn" data-close>${label('Kapat','Close')}</button><button type="button" class="tbtn" data-save>${label('Kaydet','Save')}</button><button type="button" class="tbtn primary" data-now>${label('Sync Now','Sync Now')}</button></div></div>`;
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
@@ -15750,7 +15786,9 @@ async function openSyncStatusModal(){
     });
   }
 
-  const close=()=>{syncStatusModalRenderer=null;if(syncStatusPollTimer){clearInterval(syncStatusPollTimer);syncStatusPollTimer=0;}modal.remove();};
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();syncStatusModalRenderer=null;if(syncStatusPollTimer){clearInterval(syncStatusPollTimer);syncStatusPollTimer=0;}modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));modal.addEventListener('click',event=>{if(event.target===modal)close();});
   // Pencere başka bir yoldan DOM'dan kaldırıldıysa (ör. katman temizliği) canlı
   // sync olayı kaybolan elemana yazmaya çalışmasın; dinleyici ve zamanlayıcı kapatılır.
@@ -16893,7 +16931,9 @@ function openBacklogExportColumns(){
     <div class="backlogColPane"><div class="backlogColPaneHead"><span>${escapeHtml(tr('Columns in Excel','Excel’de yer alacak sütunlar'))}</span><span class="backlogColCount" data-col-count></span></div><div class="backlogColList" data-col-selected></div></div>
   </div></div><div class="backlogExportColumnsGroup"><h3>${escapeHtml(tr('Formula cells','Formül hücreleri'))}</h3><div class="backlogExportFormulaList" data-formula-list></div></div></div><div class="verHistFoot"><span style="flex:1"></span><button type="button" class="tbtn" data-close>${escapeHtml(tr('Cancel','İptal'))}</button><button type="button" class="tbtn primary" data-save>${escapeHtml(tr('Apply','Uygula'))}</button></div></div>`;
   document.body.appendChild(modal);
-  const close=()=>modal.remove();
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));
   modal.addEventListener('click',event=>{if(event.target===modal)close();});
   const availableEl=modal.querySelector('[data-col-available]');
@@ -16920,7 +16960,7 @@ function openBacklogExportColumns(){
       const item=catalog.get(id);
       const label=item?item.display:id;
       const tag=item&&item.group!=='field'?backlogColumnGroupTag(item.group):'';
-      return `<div class="backlogColRow navSortableItem" draggable="true" data-col-id="${escapeHtml(id)}"><input type="checkbox" data-sel-id="${escapeHtml(id)}" ${selectedChecked.has(id)?'checked':''}><span class="navDragGrip" aria-hidden="true">⋮⋮</span><span class="backlogColRowNum">${index+1}.</span><span class="backlogColRowLabel"${item?'':' style="font-style:italic;color:var(--muted)"'}>${escapeHtml(label)}</span>${tag?`<span class="backlogColTag">${escapeHtml(tag)}</span>`:''}<button type="button" class="backlogColRowBtn" data-col-up="${escapeHtml(id)}" title="${escapeHtml(tr('Move up','Yukarı taşı'))}" ${index===0?'disabled':''}><svg class="ic"><use href="#i-chevron-up"/></svg></button><button type="button" class="backlogColRowBtn" data-col-down="${escapeHtml(id)}" title="${escapeHtml(tr('Move down','Aşağı taşı'))}" ${index===workingSelected.length-1?'disabled':''}><svg class="ic"><use href="#i-chevron-down"/></svg></button><button type="button" class="backlogColRemove" data-col-remove="${escapeHtml(id)}" title="${escapeHtml(tr('Remove','Çıkar'))}">×</button></div>`;
+      return `<div class="backlogColRow navSortableItem" draggable="true" data-col-id="${escapeHtml(id)}"><input type="checkbox" data-sel-id="${escapeHtml(id)}" ${selectedChecked.has(id)?'checked':''}><span class="navDragGrip" aria-hidden="true">⋮⋮</span><span class="backlogColRowNum">${index+1}.</span><span class="backlogColRowLabel"${item?'':' style="font-style:italic;color:var(--ui-text-muted)"'}>${escapeHtml(label)}</span>${tag?`<span class="backlogColTag">${escapeHtml(tag)}</span>`:''}<button type="button" class="backlogColRowBtn" data-col-up="${escapeHtml(id)}" title="${escapeHtml(tr('Move up','Yukarı taşı'))}" ${index===0?'disabled':''}><svg class="ic"><use href="#i-chevron-up"/></svg></button><button type="button" class="backlogColRowBtn" data-col-down="${escapeHtml(id)}" title="${escapeHtml(tr('Move down','Aşağı taşı'))}" ${index===workingSelected.length-1?'disabled':''}><svg class="ic"><use href="#i-chevron-down"/></svg></button><button type="button" class="backlogColRemove" data-col-remove="${escapeHtml(id)}" title="${escapeHtml(tr('Remove','Çıkar'))}">×</button></div>`;
     }).join('');
   }
   function currentFormulaHeaders(){
@@ -17262,7 +17302,9 @@ function openBacklogAddDimensionDialog(){
   };
   fillHeaders();
   sourceSelect.addEventListener('change',fillHeaders);
-  const close=()=>overlay.remove();
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();overlay.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(overlay,{onEscape:close})||(()=>{});
   overlay.querySelector('[data-close]').addEventListener('click',close);
   overlay.querySelector('[data-cancel]').addEventListener('click',close);
   let pressedOnBackdrop=false;
@@ -17618,17 +17660,17 @@ function renderBacklogHeader(){
   const colgroup = table.querySelector('colgroup');
   const theadRow = table.querySelector('thead tr');
   const rowsLabel = (backlogGroupBy && backlogGroupBy.length) ? backlogGroupBy.map(d=>BACKLOG_DIM_LABELS_FE[d]).join(' → ') : 'Grup';
-  const th = (txt, extra) => `<th style="padding:8px;background:var(--thead-bg);color:var(--thead-ink);white-space:nowrap;position:relative;${extra||''}">${txt}</th>`;
+  const th = (txt, extra) => `<th style="padding:8px;background:var(--ui-header-bg);color:var(--ui-header-ink);white-space:nowrap;position:relative;${extra||''}">${txt}</th>`;
   if(backlogPivotCols.length){
     colgroup.innerHTML = `<col id="backlogColGroup">` + backlogPivotCols.map(()=>'<col style="width:110px;">').join('') + `<col id="backlogColQty"><col id="backlogColOrders"><col style="width:56px;">`;
-    theadRow.innerHTML = `<th style="padding:8px;background:var(--thead-bg);color:var(--thead-ink);text-align:left;position:relative;" id="backlogTreeHeaderLabel">${escapeHtml(rowsLabel)}</th>`
-      + backlogPivotCols.map(k=>th(escapeHtml(k)+' <span style="font-weight:400;color:var(--muted);">Adet</span>','text-align:right;')).join('')
+    theadRow.innerHTML = `<th style="padding:8px;background:var(--ui-header-bg);color:var(--ui-header-ink);text-align:left;position:relative;" id="backlogTreeHeaderLabel">${escapeHtml(rowsLabel)}</th>`
+      + backlogPivotCols.map(k=>th(escapeHtml(k)+' <span style="font-weight:400;color:var(--ui-text-muted);">Adet</span>','text-align:right;')).join('')
       + th('Toplam Adet','text-align:right;').replace('<th ','<th id="backlogThQty" ')
       + th('Sipariş','text-align:right;').replace('<th ','<th id="backlogThOrders" ')
       + th('','');
   } else {
     colgroup.innerHTML = `<col id="backlogColGroup"><col id="backlogColQty"><col id="backlogColOrders"><col style="width:56px;">`;
-    theadRow.innerHTML = `<th style="padding:8px;background:var(--thead-bg);color:var(--thead-ink);text-align:left;position:relative;" id="backlogTreeHeaderLabel">${escapeHtml(rowsLabel)}</th>`
+    theadRow.innerHTML = `<th style="padding:8px;background:var(--ui-header-bg);color:var(--ui-header-ink);text-align:left;position:relative;" id="backlogTreeHeaderLabel">${escapeHtml(rowsLabel)}</th>`
       + th('Adet','text-align:right;').replace('<th ','<th id="backlogThQty" ')
       + th('Sipariş Sayısı','text-align:right;').replace('<th ','<th id="backlogThOrders" ')
       + th('','');
@@ -17667,7 +17709,7 @@ function renderBacklog(data){
   const body = document.getElementById('backlogTreeBody');
   if(!data.tree){
     renderBacklogHeader();
-    body.innerHTML = `<tr><td colspan="4" style="padding:14px;color:var(--muted);text-align:center;">Bir gruplama boyutu seç (yukarıdaki kutucuklardan).</td></tr>`;
+    body.innerHTML = `<tr><td colspan="4" style="padding:14px;color:var(--ui-text-muted);text-align:center;">Bir gruplama boyutu seç (yukarıdaki kutucuklardan).</td></tr>`;
     document.getElementById('backlogTreeTable')?.tFoot?.remove();
     return;
   }
@@ -17729,14 +17771,14 @@ function renderBacklogFlatRows(flat){
     const pivotCells = backlogPivotCols.length
       ? backlogPivotCols.map(k=>{
           const c = r.colTotals && r.colTotals[k];
-          return `<td style="padding:6px 8px;text-align:right;font-family:var(--mono);${c?'':'color:var(--muted);'}">${c?fmtQty(c.qty):'·'}</td>`;
+          return `<td style="padding:6px 8px;text-align:right;font-family:var(--ui-font-mono);${c?'':'color:var(--ui-text-muted);'}">${c?fmtQty(c.qty):'·'}</td>`;
         }).join('')
       : '';
     return `<tr class="backlogRow depth-${r.depth}" data-path="${r.path}" data-depth="${r.depth}" style="${r.visible?'':'display:none;'}">
         <td class="backlogTreeCell" style="padding-left:${10 + r.depth*22}px;">${arrow}<span class="backlogTreeLabel">${escapeHtml(String(r.label))}</span></td>
         ${pivotCells}
-        <td style="padding:6px 8px;text-align:right;font-family:var(--mono);font-weight:${r.depth===0?'650':'400'};">${fmtQty(r.qty)}</td>
-        <td style="padding:6px 8px;text-align:right;font-family:var(--mono);">${fmtQty(r.orders)}</td>
+        <td style="padding:6px 8px;text-align:right;font-family:var(--ui-font-mono);font-weight:${r.depth===0?'650':'400'};">${fmtQty(r.qty)}</td>
+        <td style="padding:6px 8px;text-align:right;font-family:var(--ui-font-mono);">${fmtQty(r.orders)}</td>
         <td style="padding:4px 8px;text-align:center;">${r.rows?`<button class="backlogDetailBtn" data-path="${r.path}" title="Bu gruptaki siparişlerin detayını göster" aria-label="Bu gruptaki siparişlerin detayını göster"><svg class="ic"><use href="#i-search"/></svg></button>`:''}</td>
       </tr>`;
   }).join('');
@@ -19225,7 +19267,7 @@ function beginThemeSwapCurtain(label){
   curtain.id='_themeSwapCurtain';
   curtain.setAttribute('role','status');
   curtain.setAttribute('aria-live','polite');
-  curtain.style.cssText='position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;font:500 14px/1.45 system-ui,-apple-system,sans-serif;';
+  curtain.style.cssText='position:fixed;inset:0;z-index:var(--ui-z-boot);display:flex;align-items:center;justify-content:center;font:500 var(--ui-font-base)/1.45 var(--ui-font-body);';
   curtain.style.background=cs.backgroundColor||'#fff';
   curtain.style.color=cs.color||'#000';
   curtain.textContent=String(label||'');
@@ -21229,8 +21271,6 @@ function applyTheme(name,options){
   try{localStorage.setItem('buyerlog.ui.appearance',JSON.stringify({theme:resolved,step:Number(document.documentElement.dataset.fontStep)||0}));}catch(_){}
   const root = document.documentElement;
   const use=document.querySelector('#railThemeBtn use');
-  // Finish a previous requested palette before comparing the live root state.
-  window.BLThemeTransition?.cancel();
   try{void window.buyerLogDesktop?.workspace?.setTheme?.(resolved);}catch(_){}
   if(root.dataset.theme===resolved){
     if(use)use.setAttribute('href',THEMES[resolved].icon);
@@ -21246,7 +21286,6 @@ function applyTheme(name,options){
     syncThemeButtonTitle();
   };
   if(typeof _themeSwitchRelease==='function')_themeSwitchRelease(true);
-  if(options&&options.animate&&window.BLThemeTransition?.start(update))return;
   const release=beginFastThemeSwitch();
   update();
   if(release)release(false);
@@ -23904,7 +23943,7 @@ function positionKolCatalogDrop(){
   if(rect.bottom<=0||rect.top>=window.innerHeight||rect.right<=0||rect.left>=window.innerWidth){closeKolCatalogDrop();return;}
   const viewportWidth=Math.max(240,window.innerWidth),width=Math.min(Math.max(rect.width,220),Math.max(220,viewportWidth-16));
   const left=Math.max(8,Math.min(rect.left+(rect.width-width)/2,viewportWidth-width-8));
-  drop.style.zIndex='220';drop.style.left=left+'px';drop.style.width=width+'px';
+  drop.style.zIndex='var(--ui-z-popover)';drop.style.left=left+'px';drop.style.width=width+'px';
   const panelHeight=Math.min(310,Math.max(36,drop.offsetHeight||36));
   const desiredTop=rect.bottom+3;
   drop.style.top=((desiredTop+panelHeight<=window.innerHeight-8)?desiredTop:Math.max(8,rect.top-panelHeight-3))+'px';
@@ -25792,7 +25831,7 @@ function kolShowImgPopup(src, evt){
   if(!pop){
     pop = document.createElement('div');
     pop.id = 'kolImgPopup';
-    pop.style.cssText = 'position:fixed;left:0;top:0;z-index:54990;pointer-events:none;background:var(--ui-surface);border:0;border-radius:var(--ui-radius);box-shadow:var(--shadow-3);padding:6px;display:none;will-change:transform;contain:layout paint style;';
+    pop.style.cssText = 'position:fixed;left:0;top:0;z-index:var(--ui-z-tooltip);pointer-events:none;background:var(--ui-surface);border:0;border-radius:var(--ui-radius);box-shadow:var(--ui-shadow-overlay);padding:6px;display:none;will-change:transform;contain:layout paint style;';
     pop.innerHTML = '<img id="kolImgPopupImg" style="display:block;max-width:360px;max-height:420px;border-radius:var(--ui-radius);">';
     document.body.appendChild(pop);
     pop.querySelector('#kolImgPopupImg')?.addEventListener('load',()=>{
@@ -27138,7 +27177,9 @@ function openKolQuickFiltersEditor(anchor){
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
-  const close=()=>modal.remove();modal.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',close));
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});modal.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',close));
   modal.addEventListener('click',e=>{if(e.target===modal)close();});
   modal.querySelector('[data-apply]')?.addEventListener('click',()=>{const keys=[...modal.querySelectorAll('[data-kol-quick-dim]:checked')].map(input=>input.dataset.kolQuickDim);try{BLStorage.setItem(KOL_QUICK_DIMS_KEY,JSON.stringify(keys));}catch(_){}close();renderKolQuickFilters();});
   if(anchor&&anchor.getBoundingClientRect) anchor.setAttribute('aria-expanded','true');
@@ -27239,8 +27280,8 @@ function kolOpenPricingPreflightDialog(initial,recheck){
   return new Promise(resolve=>{
     document.getElementById('kolPricingPreflightModal')?.remove();
     const modal=document.createElement('div');modal.id='kolPricingPreflightModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
-    let report=initial,busy=false,settled=false;
-    const finish=result=>{if(settled)return;settled=true;modal.remove();resolve(result);};
+    let report=initial,busy=false,settled=false,releaseKeyboard=()=>{};
+    const finish=result=>{if(settled)return;settled=true;releaseKeyboard();modal.remove();resolve(result);};
     const render=()=>{
       const hasTarget=report.items.some(item=>item.targetPriceMissing),hasFetch=report.fetchRows.length>0;
       modal.innerHTML=`<div class="modalCard pricingPreflightCard" role="dialog" aria-modal="true"><div class="verHistTop"><div><h2>Pricing kontrolü</h2><p class="verHistSub">Target Price ve Tech Pack durumları birbirinden bağımsız değerlendirilir.</p></div><button type="button" class="verHistClose" data-pricing-preflight="cancel" title="Kapat"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="pricingPreflightList">${kolPricingPreflightRowsHtml(report)}</div><div class="verHistFoot"><button type="button" class="tbtn" data-pricing-preflight="cancel" ${busy?'disabled':''}>Geri dön</button><span style="flex:1"></span>${hasFetch?`<button type="button" class="tbtn" data-pricing-preflight="fetch" ${busy?'disabled':''}>${busy?'Tech Pack’ler alınıyor…':'Tech Pack’leri Tamamla'}</button>`:''}<button type="button" class="tbtn primary" data-pricing-preflight="continue" ${busy?'disabled':''}>${hasTarget?'Target Price olmadan devam et':'Devam et'}</button></div></div>`;
@@ -27259,6 +27300,7 @@ function kolOpenPricingPreflightDialog(initial,recheck){
       }
     });
     document.body.appendChild(modal);render();
+    releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:()=>{if(!busy)finish({proceed:false});}})||(()=>{});
   });
 }
 async function kolPricingPreflight(rows){
@@ -31638,7 +31680,9 @@ async function openCoreNectumApiSettings({required=false}={}){
       document.body.appendChild(modal);
       const message=modal.querySelector('[data-plm-api-message]'),badge=modal.querySelector('[data-plm-api-status]'),connect=modal.querySelector('[data-plm-api-connect]');
       const refreshBadge=()=>{if(badge)badge.textContent=statusText();if(connect)connect.textContent=status.configured?(en?'Renew automatically':'Otomatik yenile'):(en?'Connect automatically':'Otomatik bağlan');};
-      const close=()=>{modal.remove();resolve(Boolean(status.configured));};
+      let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();resolve(Boolean(status.configured));};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
       modal.querySelectorAll('[data-plm-api-close]').forEach(button=>button.addEventListener('click',close));
       modal.addEventListener('click',event=>{if(event.target===modal&&!required)close();});
       modal.querySelector('[data-plm-api-clear]')?.addEventListener('click',async()=>{try{message.textContent=en?'Clearing…':'Temizleniyor…';if(window.buyerLogDesktop?.clearCoreNectumAuth)await window.buyerLogDesktop.clearCoreNectumAuth();try{await coreNectumApiRaw('/api/corenectum-api/token',{method:'DELETE'});}catch(_){}status={configured:false,source:'none',automatic:false};message.textContent=en?'PLM session cleared.':'PLM oturumu temizlendi.';refreshBadge();}catch(error){message.textContent=String(error&&error.message||error);}});
@@ -34063,7 +34107,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
   catalog.forEach(entry=>{
     const group=document.createElement('section');group.className='mailTopicFieldGroup';
     group.dataset.mailFieldGroup=entry.group;
-    group.style.setProperty('--grp-accent',GROUP_ACCENTS[entry.group]||'var(--acc)');
+    group.style.setProperty('--grp-accent',GROUP_ACCENTS[entry.group]||'var(--ui-accent)');
     group.innerHTML='<div class="mailTopicFieldGroupHead">'+
       '<button type="button" class="mailTopicFieldGroupToggle" data-mail-field-toggle="'+escapeHtml(entry.group)+'" aria-expanded="false">'+
       '<span class="mailTopicFieldChevron" aria-hidden="true">›</span><b>'+escapeHtml(entry.label)+'</b>'+
@@ -34276,7 +34320,9 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
   modal.querySelectorAll('[data-topic-subject-key],[data-topic-subject-manufacturer]').forEach(btn=>btn.addEventListener('click',()=>{setToggle(btn,btn.getAttribute('aria-pressed')!=='true');refresh();}));
   modal.querySelector('#mailTopicColsAll').addEventListener('click',()=>{boxes().forEach(x=>x.checked=true);refresh();});
   modal.querySelector('#mailTopicColsNone').addEventListener('click',()=>{boxes().forEach(x=>x.checked=false);refresh();});
-  const close=()=>{modal.remove();if(typeof onClose==='function')onClose();};
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();if(typeof onClose==='function')onClose();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   modal.querySelectorAll('.topicEditorClose').forEach(btn=>btn.addEventListener('click',close));
   modal.addEventListener('click',e=>{if(e.target===modal)close();});
   modal.querySelector('#mailTopicEditorSave').addEventListener('click',()=>{
@@ -35326,23 +35372,25 @@ function kolShowPricingDraftResults(results,previewWarning='',resultTitle){
   // tarayıcı bunu "birden fazla dosya indirme" izniyle engelleyebilir; kullanıcı
   // her linke tek tek tıklaması gerektiğini burada net görsün.
   const multiDownloadNote=unopenedCount>1
-    ?`<div style="padding:9px 11px;margin-bottom:10px;border:1px solid var(--warning,#d9a321);border-radius:var(--ui-radius);color:var(--ui-text);font-size:var(--ui-font-xs);">${escapeHtml(appLang==='en'?`${unopenedCount} draft e-mails were downloaded automatically. If your browser blocked some of them, click the links below one by one.`:`${unopenedCount} taslak e-posta otomatik indirildi. Tarayıcınız bir kısmını engellediyse aşağıdaki bağlantılara tek tek tıklayın.`)}</div>`
+    ?`<div style="padding:9px 11px;margin-bottom:10px;border:0;background:var(--ui-warning-bg);border-radius:var(--ui-radius);color:var(--ui-text);font-size:var(--ui-font-xs);">${escapeHtml(appLang==='en'?`${unopenedCount} draft e-mails were downloaded automatically. If your browser blocked some of them, click the links below one by one.`:`${unopenedCount} taslak e-posta otomatik indirildi. Tarayıcınız bir kısmını engellediyse aşağıdaki bağlantılara tek tek tıklayın.`)}</div>`
     :'';
   const rows=results.map((r,resultIndex)=>{ const resized=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.compressed&&!x.archive).length:0; const archived=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.archive).length:0; const attachNote=r.ok&&r.attachmentPlan?`${pricingFormatBytes(r.attachmentPlan.totalBytes)}${r.attachmentPlan.multiPart?` · ${(appLang==='en'?'part':'parça')} ${r.attachmentPlan.partIndex}/${r.attachmentPlan.partCount}`:''} · ${r.attachmentPlan.included.length} ${appLang==='en'?'attachment(s) included':'dosya eki dahil'}${resized?` · ${resized} ${appLang==='en'?'resized':'yeniden boyutlandırıldı'}`:''}${archived?` · ${archived} ${appLang==='en'?'losslessly compressed':'kayıpsız sıkıştırıldı'}`:''}`:''; const reopenLink=r.ok&&r.draftId?`<button type="button" class="tbtn" data-reopen-pricing-draft="${resultIndex}"><svg class="ic"><use href="#i-mail-send"/></svg>${escapeHtml(appLang==='en'?'Re-open Draft E-Mail':'Taslak E-Postayı Yeniden Aç')}</button>`:''; const emlLink=r.ok&&r.emlUrl?`<a class="tbtn" href="${escapeHtml(r.emlUrl)}" download="${escapeHtml(r.emlFilename||'Pricing_Draft.eml')}"><svg class="ic"><use href="#i-mail-send"/></svg> E-Posta Taslağı</a>`:''; const excelLink=r.ok&&r.excelUrl?`<a class="tbtn" href="${escapeHtml(r.excelUrl)}" download="${escapeHtml(r.excelFilename||'Quotation_Request.xlsx')}"><svg class="ic"><use href="#i-file-export"/></svg> Excel</a>`:''; return `<div style="display:grid;grid-template-columns:minmax(120px,1fr) auto;gap:10px;align-items:center;padding:10px 0;border:0;">
-    <div><div style="font-weight:700;color:var(--ui-text);">${escapeHtml(r.manufacturer)}</div><div style="font-size:var(--ui-font-xs);color:${r.ok?'var(--success, #177a4c)':'var(--danger, #c0392b)'};margin-top:2px;">${escapeHtml(r.ok?(r.opened?'Taslak e-posta açıldı; geçici dosya otomatik silinecek.':'Taslak sunucuda saklanmadı; geçici bağlantı aşağıdadır.'):(r.error||'Oluşturulamadı.'))}</div>${attachNote?`<div style="font-size:var(--ui-font-2xs);color:var(--ui-text-muted);margin-top:3px;">${escapeHtml(attachNote)}</div>`:''}</div>
+    <div><div style="font-weight:700;color:var(--ui-text);">${escapeHtml(r.manufacturer)}</div><div style="font-size:var(--ui-font-xs);color:${r.ok?'var(--ui-success, #177a4c)':'var(--ui-danger, #c0392b)'};margin-top:2px;">${escapeHtml(r.ok?(r.opened?'Taslak e-posta açıldı; geçici dosya otomatik silinecek.':'Taslak sunucuda saklanmadı; geçici bağlantı aşağıdadır.'):(r.error||'Oluşturulamadı.'))}</div>${attachNote?`<div style="font-size:var(--ui-font-2xs);color:var(--ui-text-muted);margin-top:3px;">${escapeHtml(attachNote)}</div>`:''}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">${reopenLink}${emlLink}${excelLink}</div>
   </div>`; }).join('');
   const modal=document.createElement('div'); modal.id='kolPricingResultModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard" style="max-width:650px;width:94%;max-height:82vh;display:flex;flex-direction:column;padding:0;">
     <div class="modalTitle" style="margin:0;padding:16px 20px;border:0;display:flex;align-items:center;justify-content:space-between;"><span>${escapeHtml(resultTitle||(appLang==='en'?'Prepaire E-Mail Result':'E-Posta Hazırlama Sonucu'))}</span><button type="button" class="tbtn" data-close-pricing-result aria-label="Kapat"><svg class="ic"><use href="#i-x"/></svg></button></div>
-    <div style="padding:14px 20px;overflow:auto;">${multiDownloadNote}${previewWarning?`<div style="padding:9px 11px;margin-bottom:10px;border:1px solid var(--warning,#d9a321);border-radius:var(--ui-radius);color:var(--ui-text);font-size:var(--ui-font-xs);">Tablo görseli hazırlanamadı; Excel eki ve e-posta taslağı yine oluşturuldu. ${escapeHtml(previewWarning)}</div>`:''}${rows}</div>
+    <div style="padding:14px 20px;overflow:auto;">${multiDownloadNote}${previewWarning?`<div style="padding:9px 11px;margin-bottom:10px;border:0;background:var(--ui-warning-bg);border-radius:var(--ui-radius);color:var(--ui-text);font-size:var(--ui-font-xs);">Tablo görseli hazırlanamadı; Excel eki ve e-posta taslağı yine oluşturuldu. ${escapeHtml(previewWarning)}</div>`:''}${rows}</div>
     <div style="padding:12px 20px;border:0;display:flex;align-items:center;justify-content:space-between;gap:12px;"><span style="font-size:var(--ui-font-xs);color:var(--ui-text-muted);">${ok.length} başarılı${failed.length?`, ${failed.length} başarısız`:''}</span><div style="display:flex;gap:6px;">${pricingResult&&ok.length?`<button type="button" class="navActionBtn pri" data-open-pricing-quotations>${escapeHtml(appLang==='en'?'Open Quotations':'Quotations Aç')}</button>`:''}<button type="button" class="navActionBtn${pricingResult&&ok.length?'':' pri'}" data-close-pricing-result>Kapat</button></div></div>
   </div>`;
   modal._transientUrls=results.flatMap(r=>r.cleanupUrls||[]);
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
-  const close=()=>{ kolRevokeTransientUrls(modal._transientUrls||[]); modal._transientUrls=[]; modal.remove(); }; modal.querySelectorAll('[data-close-pricing-result]').forEach(b=>b.addEventListener('click',close)); modal.querySelector('[data-open-pricing-quotations]')?.addEventListener('click',()=>{close();if(typeof switchTab==='function')switchTab('quotations');}); modal.addEventListener('click',e=>{if(e.target===modal) close();});
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard(); kolRevokeTransientUrls(modal._transientUrls||[]); modal._transientUrls=[]; modal.remove(); };
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{}); modal.querySelectorAll('[data-close-pricing-result]').forEach(b=>b.addEventListener('click',close)); modal.querySelector('[data-open-pricing-quotations]')?.addEventListener('click',()=>{close();if(typeof switchTab==='function')switchTab('quotations');}); modal.addEventListener('click',e=>{if(e.target===modal) close();});
 }
 
 // Teklifler sayfası tüm üreticileri kapsar, görünümdeki katlama dışa aktarımı etkilemez.
@@ -36023,12 +36071,14 @@ function openKolModelFilesModal(){
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   ['modelFilesStatusFilter','modelFilesSort'].forEach(id=>window.buildProfilePicker?.(modal.querySelector(`#${id}`)));
-  modal.querySelector('#modelFilesClose').addEventListener('click',()=>modal.remove());
+  const close=()=>{window.BLLayerSystem?.closeDialog(modal);modal.remove();};
+  window.BLLayerSystem?.openDialog(modal,{onClose:close});
+  modal.querySelector('#modelFilesClose').addEventListener('click',close);
   modal.querySelector('#modelFilesSearch').addEventListener('input',e=>{searchText=e.currentTarget.value||'';render();});
   modal.querySelector('#modelFilesStatusFilter').addEventListener('change',e=>{statusFilter=e.currentTarget.value||'all';render();});
   modal.querySelector('#modelFilesSort').addEventListener('change',e=>{sortMode=e.currentTarget.value||'name-asc';render();});
   modal.addEventListener('click',async e=>{
-    if(e.target===modal){modal.remove();return;}
+    if(e.target===modal){close();return;}
     const nav=e.target.closest('[data-model-file-row]');
     if(nav){activeId=Number(nav.dataset.modelFileRow);render();return;}
     const del=e.target.closest('[data-model-file-delete]');
@@ -37535,7 +37585,7 @@ function todoToolbar(){
   const commands=[['bold','B',t.bold],['italic','I',t.italic],['underline','U',t.underline],['strikeThrough','S',t.strike],['insertUnorderedList','•',t.bullets],['insertOrderedList','1.',t.numbered],['undo','↶',t.undo],['redo','↷',t.redo],['removeFormat','Tx',t.clear]];
   const buttons=commands.map(([cmd,label,title])=>`<button type="button" class="tbtn" data-todo-command="${cmd}" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}">${label}</button>`).join('');
   return `<div class="todoToolbar" role="toolbar" aria-label="${escapeHtml(t.format)}">${buttons}
-    <select data-todo-format="fontName" aria-label="${escapeHtml(t.font)}"><option value="var(--sans)">${escapeHtml(t.font)}</option><option value="var(--mono)">${escapeHtml(t.mono)}</option><option value="serif">Serif</option></select>
+    <select data-todo-format="fontName" aria-label="${escapeHtml(t.font)}"><option value="var(--ui-font-body)">${escapeHtml(t.font)}</option><option value="var(--ui-font-mono)">${escapeHtml(t.mono)}</option><option value="serif">Serif</option></select>
     <select data-todo-format="fontSize" aria-label="${escapeHtml(t.size)}"><option value="3">${escapeHtml(t.normal)}</option><option value="2">${escapeHtml(t.small)}</option><option value="5">${escapeHtml(t.large)}</option><option value="6">${escapeHtml(t.heading)}</option></select>
     <label title="${escapeHtml(t.color)}">${escapeHtml(t.color)} <input type="color" data-todo-format="foreColor" aria-label="${escapeHtml(t.color)}"></label>
     <label title="${escapeHtml(t.highlight)}">${escapeHtml(t.highlight)} <input type="color" data-todo-format="hiliteColor" aria-label="${escapeHtml(t.highlight)}"></label>
@@ -37720,7 +37770,7 @@ function bindTodoEditor(){
     toolbar.addEventListener('click',e=>{const button=e.target.closest('[data-todo-command]');if(button)command(button.dataset.todoCommand);});
     toolbar.querySelectorAll('[data-todo-format]').forEach(control=>{
       if(control.type==='color'){
-        const probe=document.createElement('span');probe.style.color=control.dataset.todoFormat==='hiliteColor'?'var(--yellow)':'var(--ink)';toolbar.appendChild(probe);
+        const probe=document.createElement('span');probe.style.color=control.dataset.todoFormat==='hiliteColor'?'var(--ui-warning)':'var(--ui-text)';toolbar.appendChild(probe);
         const rgb=getComputedStyle(probe).color.match(/\d+/g);probe.remove();
         if(rgb?.length>=3)control.value='#'+rgb.slice(0,3).map(n=>Number(n).toString(16).padStart(2,'0')).join('');
       }

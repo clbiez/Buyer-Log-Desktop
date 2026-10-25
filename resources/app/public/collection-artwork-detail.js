@@ -181,7 +181,7 @@
     const style = document.createElement('style');
     style.id = 'blCollectionArtworkStyle';
     style.textContent = `
-      #kolTable td[data-key="${ART_KEY}"].kolArtworkNeedsReview .editCell{color:var(--orange);font-weight:650}
+      #kolTable td[data-key="${ART_KEY}"].kolArtworkNeedsReview .editCell{color:var(--ui-warning);font-weight:650}
       #kolTable td[data-key="${ART_KEY}"] .editCell{white-space:pre-line}
     `;
     document.head.appendChild(style);

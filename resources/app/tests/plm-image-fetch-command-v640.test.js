@@ -17,7 +17,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'design-butunluk.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')();
 
 function bodyOf(source, name) {
   const start = source.indexOf(`function ${name}(`);

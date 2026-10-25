@@ -9,7 +9,7 @@ const { extractFunction } = require('./helpers/app-main-functions');
 
 const ROOT = path.join(__dirname, '..');
 const INDEX = (fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8'));
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const QUOT = fs.readFileSync(path.join(ROOT, 'public', 'quotations.js'), 'utf8');
 const QUOT_STORE = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'quotations-store.js'), 'utf8');
 const PARSE = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'parse.js'), 'utf8');
@@ -99,8 +99,8 @@ test('v4.78 freeze picker uses a single laser boundary and freezes its left side
   assert.match(INDEX, /line\.className='freezeLaser'/);
   assert.match(INDEX, /const count=pick\.hoverIndex\+1;\s*setFreeze\(pick\.tableKey,count\)/);
   assert.doesNotMatch(INDEX, /freezeRenderBar|_freezePick\.second|freezeClosed|freezeOpen/);
-  assert.match(CSS, /\.freezeLaser\{[^}]*background:linear-gradient/s);
-  assert.match(CSS, /\.navActionBtn\.freezeOn,\.lflCpTableTool\.freezeOn/);
+  assert.match(CSS, /\.freezeLaser\{background:var\(--ui-accent\)/);
+  for(const selector of [".navActionBtn.freezeOn",".lflCpTableTool.freezeOn"]) assert.ok(CSS.includes(selector));
 });
 
 test('v4.76 freeze offsets are recalculated after resizing and grouped headers freeze too', () => {

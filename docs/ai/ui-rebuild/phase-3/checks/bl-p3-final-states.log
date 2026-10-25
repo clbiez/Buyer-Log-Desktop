@@ -1,0 +1,107 @@
+rail-collapsed-light-standard-1440
+rail-collapsed-light-standard-1280
+rail-collapsed-light-large-1440
+rail-collapsed-light-large-1280
+rail-collapsed-light-xl-1440
+rail-collapsed-light-xl-1280
+rail-collapsed-light-compact-1440
+rail-collapsed-light-compact-1280
+rail-collapsed-grey-standard-1440
+rail-collapsed-grey-standard-1280
+rail-collapsed-grey-large-1440
+rail-collapsed-grey-large-1280
+rail-collapsed-grey-xl-1440
+rail-collapsed-grey-xl-1280
+rail-collapsed-grey-compact-1440
+rail-collapsed-grey-compact-1280
+rail-collapsed-dark-standard-1440
+rail-collapsed-dark-standard-1280
+rail-collapsed-dark-large-1440
+rail-collapsed-dark-large-1280
+rail-collapsed-dark-xl-1440
+rail-collapsed-dark-xl-1280
+rail-collapsed-dark-compact-1440
+rail-collapsed-dark-compact-1280
+rail-collapsed-expanded-light-standard-1440
+rail-collapsed-expanded-light-standard-1280
+rail-collapsed-expanded-light-large-1440
+rail-collapsed-expanded-light-large-1280
+rail-collapsed-expanded-light-xl-1440
+rail-collapsed-expanded-light-xl-1280
+rail-collapsed-expanded-light-compact-1440
+rail-collapsed-expanded-light-compact-1280
+rail-collapsed-expanded-grey-standard-1440
+rail-collapsed-expanded-grey-standard-1280
+rail-collapsed-expanded-grey-large-1440
+rail-collapsed-expanded-grey-large-1280
+rail-collapsed-expanded-grey-xl-1440
+rail-collapsed-expanded-grey-xl-1280
+rail-collapsed-expanded-grey-compact-1440
+rail-collapsed-expanded-grey-compact-1280
+rail-collapsed-expanded-dark-standard-1440
+rail-collapsed-expanded-dark-standard-1280
+rail-collapsed-expanded-dark-large-1440
+rail-collapsed-expanded-dark-large-1280
+rail-collapsed-expanded-dark-xl-1440
+rail-collapsed-expanded-dark-xl-1280
+rail-collapsed-expanded-dark-compact-1440
+rail-collapsed-expanded-dark-compact-1280
+RULE TEMPLATE Öncelik Kuralları
+Bir siparişin neden Kritik ya da aksiyonluk olduğunu belirleyen koşulları yönetin.
+
+Kurallar önceliği yalnız YÜKSELTİR; hiçbir kural bir siparişi listeden düşüremez. Checklist durumları ve diğer kurallar koşul olarak seçilebilir.
+
+AI rehberi (.md)
++ Öncelik kuralı
+Nereden başlayalım?
+Yükleme yakın, kontrol onaysız
+14 gün içinde yüklenecek ve "PPS onayı" onaylanmamış.
+Kontrol reddedildi
+"PPS onayı" reddedilen siparişi Bugün Aksiyon'a taşır.
+Yükleme tarihi geçti
+Yükleme tarihi geçmiş ve hâlâ üretimdeki siparişler.
+Boş kural
+Koşulları kendiniz seçin.
+Moderatör yayını: 0 kural tüm kullanıcılara uygulanıyor. Yayın Master kural sürümüyle dağılır; kullanıcıların kendi kurallarına dokunulmaz.
+Kritik
+Yükleme geçti ve Retail tarihine yetişmiyor
+Yüklemeye kalan gün · küçüktür · 0 · +1 koşul
+2 koşul · Hepsi
+YERLEŞİK
+Tüm kullanıcılara uygula
+Tüm kullanıcılardan sil
+Bu Hafta Aksiyon
+Gelecek hafta yüklenecek, üretici teyidi yok
+Yüklemeye kalan gün · büyük veya eşittir · 0 · +2 koşul
+3 koşul · Hepsi
+YERLEŞİK
+Tüm kullanıcılara uygula
+Tüm kullanıcılardan sil
+Bu Hafta Aksiyon
+Gelecek hafta yüklenecek, numune onayı işaretlenmemiş
+Yüklemeye kalan gün · büyük veya eşittir · 0 · +2 koşul
+3 koşul · Hepsi
+YERLEŞİK
+Tüm kullanıcılara uygula
+Tüm kullanıcılardan sil
+Bu Hafta Aksiyon
+Ex-factory'ye 21 gün kala PPS onayı yok
+Yüklemeye kalan gün · büyük veya eşittir · 0 · +2 koşul
+3 koşul · Hepsi
+YERLEŞİK
+Tüm kullanıcılara uygula
+Tüm kullanıcılardan sil
+Bu Hafta Aksiyon
+Gelecek hafta yüklenecek, test onayı işaretlenmemiş
+Yüklemeye kalan gün · büyük veya eşittir · 0 · +2 koşul
+3 koşul · Hepsi
+YERLEŞİK
+Tüm kullanıcılara uygula
+Tüm kullanıcılardan sil
+5 kişisel öncelik kuralı · Ön Ayar Paylaşımı ile paylaşılabilir
+Kapat
+locator.click: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('[data-cpa-add-priority]')[22m
+
+    at /workspace/buyerlog-rebuild/docs/ai/ui-rebuild/tools/matrix-final-states.cjs:5:226

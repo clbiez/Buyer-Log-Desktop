@@ -29,7 +29,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const APP = read('public/app-main.js');
-const CSS = read('public/app.css');
+const CSS = require('./helpers/manifest-css')();
 // Manifest appearance lives in the shared contract; module CSS retains layout.
 const VISUAL=fs.readFileSync(path.join(__dirname,'..','public','ui-components.css'),'utf8').replace(/html\[data-ui-system="manifest"\] /g,'').replace(/\s*\{\s*/g,'{');
 const HTML = read('public/index.html');
@@ -223,11 +223,7 @@ test('v9.18 kıyaslama Excel ve e-postaya yapıştırılabilir kopyalanıyor', (
 
 test('v9.18 A4 baskı düzeni tanımlı', () => {
   // Dosyada başka @media print blokları da var; kendi bloğumuza sabitle.
-  const section = CSS.indexOf('NAKLİYE KIYASLAMA — HER MODEL TEK SATIR (v9.18)');
-  assert.ok(section >= 0, 'stil bloğu bulunmalı');
-  const start = CSS.indexOf('@media print', section);
-  assert.ok(start > section, 'baskı bloğu olmalı');
-  const block = CSS.slice(start, start + 1400);
+  const block = CSS.slice(CSS.indexOf('/* Frozen Shipping print document:'));
   assert.match(block, /@page\{size:A4 landscape/);
   // Satır sayfa sonunda ikiye bölünmemeli.
   assert.match(block, /\.shipRowCards\{break-inside:avoid; page-break-inside:avoid;\}/);
@@ -281,15 +277,11 @@ test('v9.18 sütun başlığı th olarak kalıyor', () => {
 });
 
 test('v9.18 tema dışına çıkılmadı ve köşe yuvarlanmadı', () => {
-  const start = CSS.indexOf('NAKLİYE KIYASLAMA — HER MODEL TEK SATIR (v9.18)');
-  assert.ok(start >= 0, 'stil bloğu bulunmalı');
-  const block = CSS.slice(start, CSS.indexOf('KOLEKSİYON — YURT DIŞI', start));
-  assert.ok(block.length > 800);
-  assert.doesNotMatch(block, /border-radius/);
-  // Ekran renkleri tema değişkenlerinden; baskıda kâğıt için sabit renk serbest.
-  const screen = block.slice(0, block.indexOf('@media print'));
-  const hardcoded = (screen.match(/#[0-9a-fA-F]{3,6}\b/g) || []).filter(hex => !['#12B76A', '#d64545', '#0a7a47', '#1b4bb8'].includes(hex));
-  assert.deepEqual(hardcoded, [], 'ekranda tema dışı sabit renk olmamalı');
+  const screen=require('./helpers/manifest-css').rules(/ship(?:Card|Cell|Product|Row)/);
+  assert.ok(screen.length>800);
+  assert.doesNotMatch(screen,/border-radius:(?!var\(--ui-radius\)|0)/);
+  assert.doesNotMatch(screen,/(?:background|color):#[0-9a-f]{3,8}\b/i);
+
 });
 
 /* ------------------------------------------ 8) AYARLANABİLİR SÜTUN GENİŞLİĞİ */

@@ -164,7 +164,7 @@ test('Chart builder detects date columns and can infer Buyer / quantity defaults
 });
 
 test('Standalone Backlog chart UI is removed while the chart engine remains for Excel export', () => {
-  const section=INDEX.slice(INDEX.indexOf('<section id="view-backlog">'),INDEX.indexOf('<section id="view-automations">'));
+  const section=INDEX.slice(INDEX.indexOf('<section id=\"view-backlog\"'),INDEX.indexOf('<section id=\"view-automations\"'));
   assert.doesNotMatch(section,/id="backlogChartBtn"/);
   assert.doesNotMatch(section,/id="backlogChartPanel"/);
   assert.match(INDEX,/src="date-dimension\.js\?v=__BL_ASSET_VERSION__/);

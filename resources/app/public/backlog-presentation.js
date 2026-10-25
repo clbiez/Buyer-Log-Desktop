@@ -111,7 +111,7 @@
     for(const [selector,value] of [['.blpTimeStart',bounds?.start],['.blpTimeEnd',bounds?.end]])time.querySelector(selector).setAttribute('aria-valuetext',value?periodLabel(value,'date'):L('Tarih yok','No date'));
     const max=Math.max(1,domain.count-1),track=time.querySelector('.blpTimeTrack');
     track.style.setProperty('--blp-from',(lo/max*100)+'%');track.style.setProperty('--blp-to',(hi/max*100)+'%');
-    time.querySelector('.blpTimeStart').style.zIndex=lo===domain.count-1?'3':'1';
+    time.querySelector('.blpTimeStart').style.zIndex=lo===domain.count-1?'var(--ui-z-raised)':'var(--ui-z-data)';
     time.querySelector('[data-blp="reset"]').disabled=all;
     const count=current.items.length.toLocaleString(isEn()?'en-US':'tr-TR'),total=current.sourceItems.length.toLocaleString(isEn()?'en-US':'tr-TR');
     overlay.querySelector('#blpMeta').textContent=L(`${count} / ${total} satır · ${current.created}`,`${count} / ${total} rows · ${current.created}`);

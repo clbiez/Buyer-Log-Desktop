@@ -6,7 +6,7 @@ const fs = require('node:fs');
 
 const INDEX = fs.readFileSync('public/index.html', 'utf8');
 const APP = fs.readFileSync('public/app-main.js', 'utf8');
-const CSS = fs.readFileSync('public/app.css', 'utf8');
+const CSS = require('./helpers/manifest-css')();
 const GRID = fs.readFileSync('public/grid-clipboard.js', 'utf8');
 const KOL = fs.readFileSync('public/collection-spreadsheet.js', 'utf8');
 
@@ -45,7 +45,7 @@ test('görünüm bağlamı açıklama metni üretmeden preset durumunu erişileb
   assert.doesNotMatch(render, /Arrow keys move cells|Ok tuşları hücrelerde ilerler|TableViewStatus|columns':'sütun/);
   assert.match(render, /aria-pressed/);
   assert.match(CSS, /\.tableViewActions\{/);
-  assert.match(CSS, /\.tableViewPreset:focus-visible/);
+  require('./helpers/manifest-css').assertFocus();
   assert.doesNotMatch(CSS.match(/\/\* v10\.34[\s\S]*?(?=\/\* =====================|$)/)?.[0] || '', /#[0-9a-f]{3,8}/i);
 });
 
