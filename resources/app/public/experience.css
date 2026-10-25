@@ -136,11 +136,6 @@ main{padding-top:16px;}
 @media(min-width:1180px){
   #view-cp{position:relative;}
   #view-orders{position:relative;}
-  #view-cp>#cpHorizonBadge,#view-orders>#ordersHorizonBadge{
-    position:absolute;top:0;right:44px;height:28px;margin:0;padding:0 10px;
-    max-width:min(420px,34vw);overflow:hidden;white-space:nowrap;
-  }
-  #view-cp>#cpHorizonBadge:not([hidden])~#cpContent>.kpirow,#view-orders>#ordersHorizonBadge:not([hidden])~#ordersContent>.kpirow{padding-right:min(440px,36vw);}
 }
 thead tr.groupRow th.draggableGroup{text-align:left;padding-left:12px;}
 .tableActionToolbar :is(.tbtn,.navActionBtn):not(.primary):not(.tableSearchHelpButton):not(.toolbarMoreMenu *):not(.toolbarOverflowSlot *):has(>svg.ic){gap:0;width:var(--ui-control-height);min-width:var(--ui-control-height);padding:0;justify-content:center;

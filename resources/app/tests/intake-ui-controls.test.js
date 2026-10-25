@@ -25,7 +25,7 @@ test('INTAKE Overview yüzeyi kendi kontrolleri ve lazy loader ile bağlıdır',
   assert.match(ui, /if \(state\.metadataLoading\) return state\.metadataPromise \|\| Promise\.resolve\(\)/);
   assert.match(ui, /state\.metadataPromise = \(async \(\) =>/);
   assert.match(html, /data-overview-widget="intake"/);
-  const intakeHeader = html.slice(html.indexOf('<div class="intakeHeader">'), html.indexOf('<div id="intakeHorizonBadge"'));
+  const intakeHeader = html.slice(html.indexOf('<div class="intakeHeader">'), html.indexOf('<div id="intakeStatus"'));
   // Ana ekran widget'ında daraltma oku yoktur; pivot kalemi başlığın son eylemidir.
   const expandPos = intakeHeader.indexOf('id="intakeExpandAllBtn"');
   const settingsPos = intakeHeader.indexOf('id="intakeFieldsBtn"');

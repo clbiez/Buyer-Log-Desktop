@@ -72,7 +72,7 @@ test('lowest/high price özetleri kullanıcı limitine kadar veri sağlayabilir'
   assert.equal(result.insights.lowest.length,14);
 });
 
-test('Price & Supplier Analysis Horizon kaynağını ve kendine ait horizon rozetini tanımlar',()=>{
+test('Price & Supplier Analysis Horizon veri kapsamını korur, sayfa rozetini göstermez',()=>{
   const html=read('public/index.html');
   const app=read('public/app-main.js')+read('public/price-supplier-insights-engine.js');
   const ui=read('public/price-supplier-analysis.js');
@@ -81,7 +81,7 @@ test('Price & Supplier Analysis Horizon kaynağını ve kendine ait horizon roze
   const server=read('server/server.js');
   assert.match(ui,/horizon\s*:\s*['"]Horizon['"]/);
   assert.match(app,/priceanalysis\s*:\s*['"]priceAnalysisHorizonBadge['"]/);
-  assert.match(html,/id="priceAnalysisHorizonBadge"/);
+  assert.doesNotMatch(html,/id="priceAnalysisHorizonBadge"/);
   /* v7.81 — rozet eşlemesi artık app-main.js'teki HORIZON_BADGE_IDS'te;
      horizon-editor.js silindi (kişisel ufuk kaldırıldı). */
   assert.match(app,/priceanalysis\s*:\s*['"]priceAnalysisHorizonBadge['"]/);
