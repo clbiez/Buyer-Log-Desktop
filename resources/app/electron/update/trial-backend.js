@@ -42,6 +42,7 @@ function waitForTrialBackend({ env = process.env, pid = process.pid, parentPid =
 }
 function createTrialWritePolicy({env=process.env}={}){
   const token=String(env.BUYER_LOG_UPDATE_HEALTH_TOKEN||'');let confirmed=!token;
+  const legacyLauncher=/^1\.0\.\d+$/.test(String(env.BUYER_LOG_UPDATER_VERSION||''));
   function isConfirmed(){
     if(confirmed)return true;
     try{
@@ -50,6 +51,11 @@ function createTrialWritePolicy({env=process.env}={}){
       const state=JSON.parse(fs.readFileSync(file,'utf8').replace(/^\uFEFF/,'')),completion=state.lastConfirmedTrial;
       confirmed=state.schemaVersion===1&&state.activation===null&&completion?.token===token&&completion.version===env.BUYER_LOG_ACTIVE_VERSION
         &&typeof completion.appCoreRoot==='string'&&Boolean(env.BUYER_LOG_ACTIVE_APP_CORE)&&path.resolve(completion.appCoreRoot)===path.resolve(env.BUYER_LOG_ACTIVE_APP_CORE);
+      // Eski 1.0.x launcher onay kaydı (lastConfirmedTrial) yazmaz. Bu denemeyi
+      // yalnız o launcher'ın confirmHealth sonucu kapatabilir: activation boşalır
+      // ve son sağlam sürüm çalışan sürüm olur (geri almada önceki sürüm yazılır).
+      if(!confirmed&&legacyLauncher)confirmed=state.schemaVersion===1&&state.activation===null&&state.state!=='ROLLBACK'
+        &&Boolean(env.BUYER_LOG_ACTIVE_VERSION)&&state.currentVersion===env.BUYER_LOG_ACTIVE_VERSION&&state.lastKnownGoodVersion===env.BUYER_LOG_ACTIVE_VERSION&&typeof state.lastHealthAt==='string';
     }catch(_){return false;}
     return confirmed;
   }

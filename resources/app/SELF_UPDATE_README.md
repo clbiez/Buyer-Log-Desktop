@@ -109,6 +109,7 @@ kendi anahtar dosyası dikkate alınmaz.
 4. Anahtar rotasyonu: yeni public key'i listeye ekleyin, bir sürüm boyunca iki
    anahtarı birlikte taşıyın, sonra secret'ı değiştirip eski anahtarı çıkarın.
 
-Persistent launcher v1 normal app-core sürümlerini günceller; launcher'ın kendi
-binary/protocol yükseltmeleri `minimumUpdaterVersion` ile bloke edilip ayrı
-bootstrap-upgrade mekanizması gerektirir.
+Launcher (updater altyapısı) 1.2.0 ile kendini de günceller. Doğrulanmış release
+çekirdeğinden yönetilen launcher kurulur ve stage-0 host bunu atomik pointer ile
+seçer. Eski 1.0/1.1 kurulumlar ilk sağlıklı açılışta otomatik geçer. Ayrıntı:
+`docs/SELF_UPDATING_LAUNCHER.md`.

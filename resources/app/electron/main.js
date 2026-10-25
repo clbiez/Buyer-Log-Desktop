@@ -52,6 +52,7 @@ const { BackendProcess, probeOrigin, ensureConfig, ensureDataTree } = require('.
 const { runFirstRunMigration, healPortableSettings, readMigrationState } = require('./first-run-migration');
 const { inspectPortOwner, closePortOwner } = require('./port-owner');
 const { BuyerLogUpdater } = require('./update/updater');
+const { createLauncherHost } = require('./update/launcher-host');
 const { runInstallRepair, readRepairReport } = require('./install-repair');
 const { createOabAuthLifecycle } = require('./oab-auth-lifecycle');
 const { createWorkspaceManager } = require('./workspace-manager');
@@ -504,13 +505,38 @@ function confirmLauncherHealth(attempt = 0) {
       rendererReady: true,
     }) === true;
   } catch (error) { log('Updater health ready bildirimi başarısız: ' + error.message); }
-  if (ok) { launcherHealthConfirmed = true; log('Updater health onaylandı: ' + appVersion()); return; }
+  if (ok) { launcherHealthConfirmed = true; log('Updater health onaylandı: ' + appVersion()); scheduleLauncherInfrastructureSync(); return; }
   if (attempt < HEALTH_CONFIRM_MAX_ATTEMPTS) {
     const timer = setTimeout(() => confirmLauncherHealth(attempt + 1), HEALTH_CONFIRM_RETRY_MS);
     if (timer && timer.unref) timer.unref();
     return;
   }
   log('Updater health onaylanamadı (backend/DB hazır değil): ' + appVersion());
+}
+
+/* Güncelleme altyapısı (launcher) yalnız sağlığı kanıtlanmış ve bütünlüğü
+ * doğrulanmış çekirdekten, deneme (trial) bittikten sonra eşitlenir. Eski 1.0/1.1
+ * kurulumlar burada bir kez stage-0 host'a geçer; sonraki açılışta yeni
+ * launcher etkinleşir. Başarısızlık açılışı etkilemez, güncelleme panelinde görünür. */
+let launcherHost = null;
+let launcherSyncTimer = null;
+function scheduleLauncherInfrastructureSync(delayMs = 5000) {
+  if (!launcherHost || !app.isPackaged || launcherSyncTimer) return;
+  launcherSyncTimer = setTimeout(() => {
+    launcherSyncTimer = null;
+    try {
+      if (updater && updater.state().activation) return;
+      const result = launcherHost.install({ sourceCore: APP_CORE_ROOT, sourceVersion: appVersion() });
+      if (result.changed) {
+        log('Güncelleme altyapısı hazırlandı: launcher ' + result.version + ' (sonraki açılışta etkin).');
+        updateStatusFor('').then(emitUpdateStatus).catch(() => {});
+      }
+    } catch (error) {
+      log('Güncelleme altyapısı yükseltilemedi: ' + (error.code || '') + ' ' + error.message);
+      updateStatusFor('').then(emitUpdateStatus).catch(() => {});
+    }
+  }, delayMs);
+  if (launcherSyncTimer.unref) launcherSyncTimer.unref();
 }
 
 function updaterBaseConfig() {
@@ -2753,7 +2779,17 @@ function bootstrap() {
   }));
 
   try {
+    launcherHost = app.isPackaged ? createLauncherHost({
+      bootstrapCore: String(process.env.BUYER_LOG_BOOTSTRAP_APP_CORE || APP_CORE_ROOT),
+      portableRoot: paths.portableRoot,
+    }) : null;
+  } catch (error) {
+    launcherHost = null;
+    log('Güncelleme altyapısı yöneticisi hazırlanamadı: ' + error.message);
+  }
+  try {
     updater = new BuyerLogUpdater({
+      launcherHost,
       currentVersion: appVersion(),
       updaterVersion: String(process.env.BUYER_LOG_UPDATER_VERSION || '1.0.0'),
       appCoreRoot: APP_CORE_ROOT,
@@ -2860,6 +2896,8 @@ function bootstrap() {
     // giriş ekranını görmeden önce bile STABLE manifest kontrolü başlamış olur.
     scheduleUpdateChecks();
     scheduleShortcutIconSync();
+    // Etkin deneme varken eşitleme atlanır ve sağlık onayından sonra yeniden planlanır.
+    scheduleLauncherInfrastructureSync(15000);
 
     const started = await startBuyerLog();
     if (!started) log('Başlatma tamamlanamadı; hata ekranı gösteriliyor.');

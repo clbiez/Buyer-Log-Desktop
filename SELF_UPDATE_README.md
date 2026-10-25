@@ -80,4 +80,4 @@ BuyerLog-Releases/
 
 ## Güvenlik sınırı
 
-İlk sürümde artifact integrity SHA-256 ile, erişim güvenliği kurumsal release klasörü izinleriyle sağlanır. Public-key manifest/artifact signing P2 olarak bırakılmıştır; private signing key repo/client/Shared Hub içine konulmamıştır. Persistent launcher v1 normal app-core sürümlerini günceller; launcher'ın kendi binary/protocol yükseltmeleri `minimumUpdaterVersion` ile bloke edilip ayrı bootstrap-upgrade mekanizması gerektirir.
+İlk sürümde artifact integrity SHA-256 ile, erişim güvenliği kurumsal release klasörü izinleriyle sağlanır. Public-key manifest/artifact signing P2 olarak bırakılmıştır; private signing key repo/client/Shared Hub içine konulmamıştır. Launcher (updater altyapısı) 1.2.0 ile kendini de günceller. Doğrulanmış release çekirdeğinden yönetilen launcher kurulur ve stage-0 host bunu atomik pointer ile seçer. Eski 1.0/1.1 kurulumlar ilk sağlıklı açılışta otomatik geçer. Ayrıntı: `docs/SELF_UPDATING_LAUNCHER.md`.
