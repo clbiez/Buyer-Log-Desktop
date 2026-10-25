@@ -1,0 +1,10 @@
+/* Motion+ is owned by the shared UI system. No module palette, geometry or borders. */
+:root{--ui-motion-page:340ms;--ui-motion-card:360ms;--ui-motion-table:390ms;--ui-motion-overlay:240ms;}
+/* Supports consumers that opt into the motion contract; never animates hidden data. */
+@keyframes blMotionEnter{from{opacity:.55;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blMotionOverlay{from{opacity:.55;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+:root:not([data-bl-motion="off"]) .blMotionEnter:not([hidden]){animation:blMotionEnter var(--ui-motion-page) var(--ui-ease) both;}
+:root:not([data-bl-motion="off"]) .blMotionOverlay:not([hidden]){animation:blMotionOverlay var(--ui-motion-overlay) var(--ui-ease) both;}
+@media(prefers-reduced-motion:reduce){
+  .blMotionEnter,.blMotionOverlay{animation:none!important;transition:none!important;}
+}
