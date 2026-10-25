@@ -64,10 +64,14 @@ test('favicon, PWA manifest ve Electron pencereleri aynı simgeyi gösterir', ()
   assert.match(workspace, /window\.setAppDetails\(appDetails\)/);
 });
 
-test('Manifest girişte tipografik BL işareti kullanır; paket simgeleri ve masaüstü yolları korunur', () => {
+test('Manifest giriş gerçek uygulama logosunu kullanır; paket simgeleri ve masaüstü yolları korunur', () => {
   const login = read('public/select-user.html').toString('utf8');
-  assert.match(login, /class="logoMark logoMark--image"[^>]*><span>BL<\/span>/);
-  assert.match(read('public/giris.css').toString('utf8'), /\.logoMark--image\{width:64px;height:76px/);
+  assert.match(login, /class="logoMark logoMark--image"[^>]*>\s*<img src="\/icons\/icon-mark\.png" alt="" width="64" height="64"/);
+  assert.doesNotMatch(login, /class="logoMark logoMark--image"[^>]*><span>BL<\/span>/);
+  const css = read('public/giris.css').toString('utf8');
+  assert.match(css, /\.logoMark--image\{width:64px;height:64px/);
+  assert.match(css, /\.logoMark--image img\{display:block;width:100%;height:100%;object-fit:contain\}/);
+  assert.match(css, /\.logoMark--image\{grid-row:1 \/ span 2;width:64px;height:64px\}/);
   const index = read('public/index.html').toString('utf8');
   assert.match(index, /<img class="brandMarkImage" src="icons\/icon-mark\.png/);
   const shell = read('electron/workspace.html').toString('utf8');
