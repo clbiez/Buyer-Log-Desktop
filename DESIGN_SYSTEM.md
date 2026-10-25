@@ -11,6 +11,9 @@ LCW AI aynı ürün dilini kullanır. Ayrı bir AI rengi, küresi veya sohbet ba
   boşluk, hareket, yüzey ve katman tanımları. Giriş ve boot da bu dosyayı okur.
 - `ui-components.css`: ortak görünüm ve mevcut JS sınıflarına bağlanan bileşen
   sözleşmeleri. Eski sınıf adları davranış kancasıdır; ayrı tema sistemi değildir.
+- `ui-motion.css` ve `motion-plus.js`: Manifest'e bağlı **Motion+** hareket
+  katmanı. Yalnız hareket/zamanlama ve giriş koordinasyonu; yeni palet veya
+  ayrı bileşen sistemi oluşturmaz.
 - `ui-startup.css`, `giris.css`: aynı tokenlarla açılış/giriş bileşenleri.
 - `app.css`, `design.css`, `experience.css` ve modül CSS’leri: yerleşim, ölçülen
   veri geometrisi, responsive düzen ve scroll davranışı. Görünüm tanımlamazlar.
@@ -136,9 +139,30 @@ aynı tokenları kullanır. Modül CSS’i bu durumlara ayrı renk/çerçeve ica
 `BLLayerSystem` çocuk dialog için 201–299 aralığında tek adım yükseltebilir;
 300 tavanının altında kalır. Modüller sayısal z-index tanımlamaz.
 
-Hareket yalnız transform/opacity, 100ms veya 140ms. `prefers-reduced-motion`
-animasyon/geçişleri kapatır. Tema değişimi anlıktır; snapshot dalgası,
-clip-path animasyonu, sürekli canvas küresi ve süs hareketi yoktur.
+**Motion+ zorunlu hareket sözleşmesidir.** Yeni veya revize edilen her kullanıcı
+arayüzü önce `motion-plus.js` içindeki ortak `BLMotionPlus.play('card'|'overlay', element)`
+API'sini veya `blMotionEnter` / `blMotionOverlay` sınıfını kullanır; modül başına
+ayrı keyframe, tema rengi, animasyon motoru veya sonsuz döngü eklenmez.
+Hareket paleti yalnız `ui-tokens.css` üzerinden gelir: 100/140 ms temel kontrol,
+240 ms overlay, 340 ms sayfa, 360 ms kart, 390 ms tablo, 440 ms grafik.
+Easing ortak cubic-bezier ile izlenir. Hareket içerik, geometri ve iş verisi
+üzerinde kalıcı değişiklik yapmaz. Tema değişimi anlıktır; otomatik parıltı,
+snapshot dalgası, clip-path geçişi, sürekli canvas/süs döngüleri yoktur.
+
+**Sol üstten dalga:** Aktif tablodaki sadece ilk iki görünür gridin en fazla
+9 satır × 12 sütununda tek giriş efekti uygulanır. Hücreler diagonal gecikmeyle
+`--ui-selected` renginden özgün görünümüne döner; yatay/dikey kaydırma, seçim,
+hücre düzenleme, veri değişimi ve export tetiklemez. Aktif/seçilmiş/düzenlenen
+hücreler atlanır. Yeni sayfa aktivasyonunda tekrar çalışabilir; scroll,
+filtre seçimi veya her veri yaması bir dalga başlatmaz.
+
+**Erişilebilirlik/performans:** `prefers-reduced-motion`, görünmeyen sekme ve
+`data-bl-motion='off'` tüm hareketi devre dışı bırakır. Hareketler sayfa
+geçişinde iptal edilir; `opacity/transform` tercih edilir. Yalnız tablo girişinde
+kısa süreli token tabanlı `backgroundColor` WAAPI istisnası vardır. Grafik ve
+kartlar görünürlükle sınırlı, en çok 14/16 öğe üzerinden animasyon alır.
+Aynı yeni görünür işlevin TR/EN karşılığı, 3 tema × 4 boyut, reduced-motion,
+klavye/scroll ve veri doğruluğu regresyonları teslim koşuludur.
 
 ## 7. Guard ve erişilebilirlik
 
