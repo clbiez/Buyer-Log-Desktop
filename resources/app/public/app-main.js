@@ -4332,11 +4332,6 @@ function renderTableViewContext(tableKey){
     BLTableDensity.mount(root,tableKey,appLang);
     const table=tableImageSizeTable(tableKey);if(table)table.dataset.tableDensity=BLTableDensity.get(tableKey);
   }
-  if(['cp','orders','koleksiyon'].includes(tableKey)){
-    let commandsButton=root.querySelector('[data-table-command-palette]');
-    if(!commandsButton){commandsButton=document.createElement('button');commandsButton.type='button';commandsButton.className='tableViewPreset';commandsButton.dataset.tableCommandPalette=tableKey;commandsButton.addEventListener('click',()=>window.BLCommandPalette?.open());root.appendChild(commandsButton);}
-    commandsButton.textContent=appLang==='en'?'Actions':'İşlemler';commandsButton.title=appLang==='en'?'Selected record actions · Ctrl+Shift+K':'Seçili kayıt işlemleri · Ctrl+Shift+K';
-  }
   const preset=tableViewPresetState(tableKey);
   root.setAttribute('aria-label',appLang==='en'?'Table view':'Tablo görünümü');
   root.querySelectorAll('[data-table-view-preset]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.tableViewPreset===preset)));
