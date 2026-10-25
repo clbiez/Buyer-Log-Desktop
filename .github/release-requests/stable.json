@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.265",
-  "commit_sha": "fed7554576550add8461d75dfe157b6d0623e248",
-  "release_notes": "Buyer Log 7.0.265 STABLE: CP/Orders Original Ex-F. sütunu ASAS Dates tablosundaki ilk tarihten okunuyor ve Ex-factory revizyonundan bağımsız. Kullanılmayan kod temizliği (61 fonksiyon, geri dönüş yedeğiyle). PR #453, #454, #455 ve TEST build+sign+remote verification başarılı.",
-  "request_id": "7.0.265-stable-r1"
+  "version": "7.0.295",
+  "commit_sha": "b7bd46e45b53553a59badda24064a8295e09e5d5",
+  "release_notes": "Buyer Log 7.0.295 STABLE — promote the exact TEST 7.0.295 artifact only after all release gates pass; all code merged through b7bd46e45b53. Draft PRs #694 and #721 remain excluded.",
+  "request_id": "7.0.295-stable-after-test-20261025"
 }
