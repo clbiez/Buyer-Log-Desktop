@@ -385,7 +385,7 @@
       "id": "focus",
       "module": "views",
       "visual": "view",
-      "selector": "[data-table-view-preset=\"focus\"][data-table-key=\"cp\"]",
+      "selector": "#cpTableViewActions [data-bl-view-trigger]",
       "title": {
         "tr": "Focus: günlük işinize odaklanın",
         "en": "Focus: concentrate on daily work"
@@ -428,7 +428,7 @@
       "id": "extended",
       "module": "views",
       "visual": "view",
-      "selector": "[data-table-view-preset=\"extended\"][data-table-key=\"cp\"]",
+      "selector": "#cpTableViewActions [data-bl-view-trigger]",
       "title": {
         "tr": "Extended: daha fazla operasyonel ayrıntı",
         "en": "Extended: more operational detail"
@@ -471,7 +471,7 @@
       "id": "all",
       "module": "views",
       "visual": "view",
-      "selector": "[data-table-view-preset=\"all\"][data-table-key=\"cp\"]",
+      "selector": "#cpTableViewActions [data-bl-view-trigger]",
       "title": {
         "tr": "All: eksik sütunu bulun",
         "en": "All: find a missing column"
@@ -556,7 +556,7 @@
       "id": "columns",
       "module": "views",
       "visual": "column",
-      "selector": "[data-table-fields]",
+      "selector": "#cpTableViewActions [data-bl-view-trigger]",
       "title": {
         "tr": "Alanlar: sütunları gösterin, sıralayın, adlandırın",
         "en": "Fields: show, order and name columns"
