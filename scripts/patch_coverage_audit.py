@@ -42,6 +42,10 @@ def classification(status, name):
     if not name.startswith("resources/app/"):
         return "repo_only"
     rel = name[len("resources/app/"):]
+    # Test fixtures, local build tooling and source-only scripts are not shipped
+    # as runtime in the official desktop application artifact.
+    if rel.startswith(("tests/", "scripts/", "test/", "docs/", "fixtures/")):
+        return "repo_only"
     if rel.startswith("public/release-notes/"):
         return "release_notes"
     if not rel.startswith(("public/", "server/")):
