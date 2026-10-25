@@ -731,6 +731,8 @@
     ask: askAuthed, askWithFiles: options => withDesktopAuth(() => askWithFiles(options)), uploadFile: uploadAuthed, cancel, getStatus, onStatus, connect, disconnect,
     chat: chatAuthed, createConversation, continueConversation, openChat,
     openOutput, revealOutput, listOutputs, getDraft, renderDraft, draftSkeleton, outputTemplates,
+    createStudio: async body => (await jsonPost('/api/lcwai/output-studio', body)).draft,
+    saveStudioImages: (id, images) => jsonPost(`/api/lcwai/output-studio/${encodeURIComponent(id)}/images`, images),
     finalizeOutput:(result,onProgress=()=>{},endpoints={})=>result.output?.pending==='pdf'?finalizePdf(result,onProgress,endpoints):Promise.resolve(result),
     registerContextProvider, getAvailableContext, buildContext,
     mountAssistant, openPanel, openConnectionDialog, statusBadge, pickField,
