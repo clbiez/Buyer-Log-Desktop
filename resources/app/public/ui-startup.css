@@ -45,3 +45,9 @@ html[data-ui-system="manifest"] #blBootGuard .blTriviaCopy .blGuideEyebrow{color
 html[data-ui-system="manifest"] #blBootGuard .blTriviaBtn{background:var(--ui-surface-strong)!important;color:var(--ui-text-secondary)!important;}
 html[data-ui-system="manifest"] #blBootGuard .blTriviaBtn--next,html[data-ui-system="manifest"] #blBootGuard .blTriviaBtn[aria-pressed="true"]{background:var(--ui-accent)!important;color:var(--ui-on-accent)!important;}
 html[data-ui-system="manifest"] #blErrBox{position:fixed;left:8px;bottom:8px;z-index:var(--ui-z-boot);max-width:60vw;background:var(--ui-danger-bg);color:var(--ui-danger);font:400 var(--ui-font-xs)/1.5 var(--ui-font-mono);padding:8px 12px;white-space:pre-wrap;}
+
+/* v7.0.300 regression: fine header-only dividers; the body remains grid-free. */
+html[data-ui-system="manifest"] .tablewrap > table thead tr:not(.groupRow) > th + th{border-inline-start:1px solid var(--ui-row-divider)!important;}
+/* Group cells keep their normal colspan, drag and freeze behavior; only text follows view. */
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable) thead tr.groupRow th[data-grp]{text-align:center!important;}
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable) thead tr.groupRow .blGroupFollowLabel{display:inline-block;max-width:calc(100% - 12px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;pointer-events:none;}
