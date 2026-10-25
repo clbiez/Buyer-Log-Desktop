@@ -1,0 +1,18 @@
+{
+  "workflowFamilies": 6,
+  "currentWorkflowCases": 144,
+  "workflowFindings": 0,
+  "runtimeErrors": [],
+  "avatarCases": 24,
+  "avatarScreens": 48,
+  "matrix": "3 themes × 4 sizes × 2 viewports",
+  "supersedingGroup": "workflow-reduced-motion",
+  "history": "Earlier bulk/progress screenshots caught the opening fade despite reduced motion. Their 48 corrected images assert opacity=1 and no active animations. All other family images remain valid.",
+  "manualReview": [
+    "avatar-menu-light-standard-1440.png",
+    "price-lineage-dark-xl.png",
+    "cp-density-grey-xl.png",
+    "workflow-matrix/command-context-grey-xl-1280.png",
+    "workflow-reduced-motion/bulk-preview-dark-xl-1280.png"
+  ]
+}

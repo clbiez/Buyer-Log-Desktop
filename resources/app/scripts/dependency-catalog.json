@@ -175,7 +175,23 @@
       "source": "https://github.com/google/fonts/tree/main/ofl/barlow",
       "versionEvidence": "Existing named WOFF2 subsets; no upstream version stamp was recorded. Per-file hashes identify the exact distribution; source equivalence is not claimed.",
       "patterns": [
-        "public/vendor/fonts/"
+        "public/vendor/fonts/barlow-",
+        "public/vendor/fonts/Barlow-OFL.txt",
+        "public/vendor/fonts/OFL-Barlow"
+      ]
+    },
+    {
+      "id": "ibm-plex-fonts",
+      "name": "IBM Plex Sans and IBM Plex Mono WOFF2",
+      "version": "unversioned bundled WOFF2",
+      "type": "library",
+      "license": "OFL-1.1",
+      "owner": "Buyer Log UI maintainers",
+      "updateMethod": "Replace packaged Plex fonts together with their OFL notices; verify Turkish coverage, offline loading and all four UI scales.",
+      "source": "https://github.com/IBM/plex",
+      "versionEvidence": "Packaged WOFF2 files and adjacent IBM Plex OFL notices; no upstream version stamp was recorded. Exact per-file SHA-256 identifies this source distribution; upstream byte equivalence is not claimed.",
+      "patterns": [
+        "public/vendor/fonts/IBMPlex"
       ]
     }
   ]

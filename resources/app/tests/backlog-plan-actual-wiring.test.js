@@ -11,6 +11,8 @@ const SERVER=read('server/server.js');
 const HTML=read('public/index.html');
 const UI=read('public/backlog-plan-actual.js');
 const CSS=read('public/backlog-plan-actual.css');
+// Manifest appearance lives in the shared contract; module CSS retains layout.
+const VISUAL=fs.readFileSync(path.join(__dirname,'..','public','ui-components.css'),'utf8').replace(/html\[data-ui-system="manifest"\] /g,'').replace(/\s*\{\s*/g,'{');
 const STORAGE=read('public/user-storage.js');
 
 test('plan actual API is Backlog-authorized and snapshots the Backlog target',()=>{
@@ -58,10 +60,9 @@ test('panel preferences are user scoped and synced like existing Backlog analysi
 
 
 test('plan actual module uses shared theme tokens without light-theme fallbacks',()=>{
-  assert.match(CSS,/\.bpaModule\{[^}]*background:var\(--card\);color:var\(--ink\)/);
-  assert.match(CSS,/\.bpaModuleHead\{[^}]*background:var\(--card2\)/);
-  assert.match(CSS,/background:var\(--paper,var\(--card2\)\)/);
-  assert.doesNotMatch(CSS,/#fff|#f8fafc|#111827/);
+  assert.match(VISUAL,/\.bpaModule\{[^}]*background:var\(--ui-surface\)[^}]*color:var\(--ui-text\)/);
+  assert.match(VISUAL,/\.bpaModuleHead\{[^}]*background:var\(--ui-surface-soft\)/);
+  assert.doesNotMatch(CSS,/#fff|#f8fafc|#111827|var\(--(?:card|ink|paper)\b/);
 });
 
 test('plan realisation view: plan window, grouped bars with tooltip + drawer, Excel export',()=>{
@@ -81,13 +82,13 @@ test('plan realisation view: plan window, grouped bars with tooltip + drawer, Ex
   assert.doesNotMatch(CSS,/var\(--bad\)|var\(--ok\)|var\(--warn\)/,'undefined tone tokens must not be used');
 });
 
-test('ring percentage is centered inside its SVG in Backlog Overview and Plan Actual',()=>{
+test('Backlog completion measures use linear bars and keep percentage labels',()=>{
   const OVERVIEW=read('public/backlog-overview.js');
-  assert.match(OVERVIEW,/class="bpaRing">/);
-  assert.match(UI,/class="bpaRing">/);
-  assert.match(CSS,/\.bpaRing\{[^}]*display:grid/);
-  assert.match(CSS,/\.bpaRing svg\{[^}]*grid-area:1\/1/);
-  assert.match(CSS,/\.bpaRingText\{[^}]*grid-area:1\/1[^}]*align-self:stretch[^}]*justify-self:stretch/);
-  assert.match(CSS,/\.bpaRingSub\{[^}]*grid-area:2\/1/);
-  assert.doesNotMatch(CSS,/\.bpaRingText\{[^}]*position:absolute/);
+  for(const source of [OVERVIEW,UI]){
+    assert.match(source,/class="uiMeasure" aria-hidden="true"/);
+    assert.match(source,/transform:scaleX\(/);
+    assert.match(source,/class="bpaRingText"/);
+    assert.doesNotMatch(source,/<circle\b/);
+  }
+  assert.match(VISUAL,/\.uiMeasure>i\{[^}]*transform-origin:left/);
 });

@@ -1,0 +1,192 @@
+{
+  "screens": [
+    {
+      "name": "open-costing-section-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 96,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 149,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-scenario-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 233,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 149,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-scenario-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 239,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 149,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "lfl-scenario-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 217,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "collection-images-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 88,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "manufacturers-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 141,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "priceanalysis-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "collection-images-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 88,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "manufacturers-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 141,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "priceanalysis-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "collection-images-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 88,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "priceanalysis-en",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "open-costing-en",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 90,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "manufacturers-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 136,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "priceanalysis-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 118,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    }
+  ],
+  "keyboard": {
+    "tab": true,
+    "shiftTab": true,
+    "escape": true,
+    "visibleScenarioFields": true,
+    "spaceTogglesScenarioScope": true
+  },
+  "errors": []
+}

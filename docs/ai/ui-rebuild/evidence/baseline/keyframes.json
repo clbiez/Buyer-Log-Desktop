@@ -1,0 +1,502 @@
+[
+  {
+    "file": "resources/app/public/app.css",
+    "line": 265,
+    "value": "@keyframes syncCloudPulse"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 814,
+    "value": "@keyframes jumpFlash"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 862,
+    "value": "@keyframes delTypeDrop"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 863,
+    "value": "@keyframes delTypeRise"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1015,
+    "value": "@keyframes updateTestPulse"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1165,
+    "value": "@keyframes spinIc"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1822,
+    "value": "@keyframes globalSearchPulse"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2040,
+    "value": "@keyframes refreshErrorPulse"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2495,
+    "value": "@keyframes sourceBackdropIn"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3130,
+    "value": "@keyframes buyerLogRefreshSpin"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3131,
+    "value": "@keyframes buyerLogRefreshPulse"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3287,
+    "value": "@keyframes cpThumbFlashPulse"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3531,
+    "value": "@keyframes prepareEmailSpin"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3532,
+    "value": "@keyframes prepareEmailOperationSweep"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4142,
+    "value": "@keyframes refreshCompactDot"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4143,
+    "value": "@keyframes refreshCompactSweep"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4300,
+    "value": "@keyframes qtxColourPulse"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4498,
+    "value": "@keyframes blRemoteChangedFade"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4657,
+    "value": "@keyframes oabActivitySpin"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4658,
+    "value": "@keyframes oabActivityDot"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5344,
+    "value": "@keyframes kolPeriodBackdropIn"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5345,
+    "value": "@keyframes kolPeriodSlide"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5741,
+    "value": "@keyframes trxSpin"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 144,
+    "value": "@keyframes bpaSpin"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 445,
+    "value": "@keyframes drift"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 445,
+    "value": "@keyframes stripe"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 445,
+    "value": "@keyframes flowdash"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 446,
+    "value": "@keyframes pulse"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 447,
+    "value": "@keyframes growX"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 447,
+    "value": "@keyframes growY"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 447,
+    "value": "@keyframes draw"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 447,
+    "value": "@keyframes arc"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 447,
+    "value": "@keyframes pop"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 447,
+    "value": "@keyframes rise"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 43,
+    "value": "@keyframes blGuideRoute"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 122,
+    "value": "@keyframes blTriviaIn"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 123,
+    "value": "@keyframes blTriviaPop"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 124,
+    "value": "@keyframes blTriviaFade"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 125,
+    "value": "@keyframes blTriviaTwinkle"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 126,
+    "value": "@keyframes blTriviaSpin"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 127,
+    "value": "@keyframes blTriviaWave"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 128,
+    "value": "@keyframes blTriviaRise"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 129,
+    "value": "@keyframes blTriviaSwim"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 130,
+    "value": "@keyframes blTriviaSway"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 131,
+    "value": "@keyframes blTriviaGrow"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 132,
+    "value": "@keyframes blTriviaDraw"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 133,
+    "value": "@keyframes blTriviaBeat"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 134,
+    "value": "@keyframes blTriviaFloat"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 135,
+    "value": "@keyframes blTriviaSteam"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 136,
+    "value": "@keyframes blTriviaPulse"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 137,
+    "value": "@keyframes blTriviaGlobe"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 188,
+    "value": "@keyframes blTriviaHoldIn"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 398,
+    "value": "@keyframes updateTestPulse"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 664,
+    "value": "@keyframes endeksmatikImportSpin"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 261,
+    "value": "@keyframes blViewIn"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 262,
+    "value": "@keyframes blPopoverIn"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 263,
+    "value": "@keyframes blDialogIn"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 264,
+    "value": "@keyframes blDrawerIn"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 532,
+    "value": "@keyframes blOrbFlow"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 533,
+    "value": "@keyframes blOrbBreath"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 534,
+    "value": "@keyframes blOrbHalo"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 553,
+    "value": "@keyframes blCopyPulse"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 559,
+    "value": "@keyframes blActionSpin"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 560,
+    "value": "@keyframes blActionDonePulse"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 160,
+    "value": "@keyframes loginSpin"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 32,
+    "value": "@keyframes blBootSpin"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 41,
+    "value": "@keyframes blBootBgIn"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 42,
+    "value": "@keyframes blBootCardIn"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "@keyframes rise"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "@keyframes bob"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "@keyframes float"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "@keyframes spin"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "@keyframes fade"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "@keyframes draw"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 355,
+    "value": "@keyframes treeReveal"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 355,
+    "value": "@keyframes branchIn"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 50,
+    "value": "@keyframes lcRowIn"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 51,
+    "value": "@keyframes lcSaved"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 111,
+    "value": "@keyframes lcOpen"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 149,
+    "value": "@keyframes lcShimmer"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 159,
+    "value": "@keyframes lmFade"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 160,
+    "value": "@keyframes lmSlide"
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 114,
+    "value": "@keyframes in"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 91,
+    "value": "@keyframes gfEarthProgress"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 51,
+    "value": "@keyframes ovHomeSlideNext"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 52,
+    "value": "@keyframes ovHomeSlidePrev"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 54,
+    "value": "@keyframes ovHomePulse"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 474,
+    "value": "@keyframes ovHorizonGrow"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 475,
+    "value": "@keyframes ovMetricGrow"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 300,
+    "value": "@keyframes pdFlash"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 301,
+    "value": "@keyframes pdPop"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 302,
+    "value": "@keyframes pdSlideIn"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 303,
+    "value": "@keyframes pdFadeUp"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 304,
+    "value": "@keyframes pdFadeIn"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 305,
+    "value": "@keyframes pdDraw"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 306,
+    "value": "@keyframes pdGrow"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 307,
+    "value": "@keyframes pdToastIn"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 308,
+    "value": "@keyframes pdToastOut"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 74,
+    "value": "@keyframes blRnFocusIn"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 96,
+    "value": "@keyframes umSpin"
+  }
+]

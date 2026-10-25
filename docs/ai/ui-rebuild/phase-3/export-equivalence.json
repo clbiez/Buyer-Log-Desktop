@@ -1,0 +1,300 @@
+{
+  "reference": "docs/ai/ui-rebuild/phase-2-remaining/export-after",
+  "files": 46,
+  "equal": 46,
+  "columnState": "Orders uses the same 51 visible canonical columns as the frozen reference. Existing asynchronous checklist/model column registration can add seven columns before export; the fixture sets their visibility explicitly. No exported bytes are normalized and no production column/business logic was changed. Initial mismatches are retained in export-initial-comparison.json and export-initial/. Additional 58-column current outputs are retained separately, not claimed equivalent.",
+  "checks": [
+    {
+      "file": "collection-dark-html.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "64982edb9b8cb5ad363d4bc64cf525a4588e3c8c26f610dd4d8d6e25e122a112"
+    },
+    {
+      "file": "collection-dark-plain.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "2b3f5ff3593e767a475ae26ce5eeb24111138f6dfd855fb6510dd258cba48861"
+    },
+    {
+      "file": "collection-dark.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 17,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "collection-grey-html.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "64982edb9b8cb5ad363d4bc64cf525a4588e3c8c26f610dd4d8d6e25e122a112"
+    },
+    {
+      "file": "collection-grey-plain.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "2b3f5ff3593e767a475ae26ce5eeb24111138f6dfd855fb6510dd258cba48861"
+    },
+    {
+      "file": "collection-grey.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 17,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "collection-light-html.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "64982edb9b8cb5ad363d4bc64cf525a4588e3c8c26f610dd4d8d6e25e122a112"
+    },
+    {
+      "file": "collection-light-plain.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "2b3f5ff3593e767a475ae26ce5eeb24111138f6dfd855fb6510dd258cba48861"
+    },
+    {
+      "file": "collection-light.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 17,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "cp-copy-dark.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "ee8a10948bc31eb99d5cc08ba2f1b26ed7a91bced94a722add01efceecc7e80f"
+    },
+    {
+      "file": "cp-copy-dark.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "f65e5523f0124a48f59e34619722d1708245ee0650847caa8d03d262be1574d1"
+    },
+    {
+      "file": "cp-copy-grey.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "ee8a10948bc31eb99d5cc08ba2f1b26ed7a91bced94a722add01efceecc7e80f"
+    },
+    {
+      "file": "cp-copy-grey.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "f65e5523f0124a48f59e34619722d1708245ee0650847caa8d03d262be1574d1"
+    },
+    {
+      "file": "cp-copy-light.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "ee8a10948bc31eb99d5cc08ba2f1b26ed7a91bced94a722add01efceecc7e80f"
+    },
+    {
+      "file": "cp-copy-light.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "f65e5523f0124a48f59e34619722d1708245ee0650847caa8d03d262be1574d1"
+    },
+    {
+      "file": "cp-export-dark.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 10,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "cp-export-grey.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 10,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "cp-export-light.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 10,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "open-costing.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 7,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "orders-dark-html.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "371ace6976fb1d8a7a466afe21121a45e1e9b532ce217993aba88d9b4b5e00c8"
+    },
+    {
+      "file": "orders-dark-plain.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "b8d81172bff2b891eea8c01b25927a8ed7eab0634d5710d30e08c37892d9f115"
+    },
+    {
+      "file": "orders-generic-dark.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 10,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "orders-generic-grey.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 10,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "orders-generic-light.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 10,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "orders-grey-html.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "371ace6976fb1d8a7a466afe21121a45e1e9b532ce217993aba88d9b4b5e00c8"
+    },
+    {
+      "file": "orders-grey-plain.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "b8d81172bff2b891eea8c01b25927a8ed7eab0634d5710d30e08c37892d9f115"
+    },
+    {
+      "file": "orders-light-html.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "371ace6976fb1d8a7a466afe21121a45e1e9b532ce217993aba88d9b4b5e00c8"
+    },
+    {
+      "file": "orders-light-plain.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "b8d81172bff2b891eea8c01b25927a8ed7eab0634d5710d30e08c37892d9f115"
+    },
+    {
+      "file": "shipping-dark-flatHtml.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "3d4fd73cb07f4a2eccb6a918c8b85104d222e42ad2430da75211474b1522c135"
+    },
+    {
+      "file": "shipping-dark-flatPlain.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "1f00714c458877f583fa2f7cce60875ea1ee60ff2c621a2c5ab7be2ed172acfa"
+    },
+    {
+      "file": "shipping-dark-html.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "3b837a3fdae8db05c63372c1adbc1cbc78fb88f8bd7e52fc3d882cd4573ca58f"
+    },
+    {
+      "file": "shipping-dark-plain.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "6e2b6a888d91442529cd0e79ec780f401e842e7fc2aaf0f736d4623721b726d7"
+    },
+    {
+      "file": "shipping-dark.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 6,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "shipping-generic-dark.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 10,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "shipping-generic-grey.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 10,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "shipping-generic-light.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 10,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "shipping-grey-flatHtml.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "3d4fd73cb07f4a2eccb6a918c8b85104d222e42ad2430da75211474b1522c135"
+    },
+    {
+      "file": "shipping-grey-flatPlain.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "1f00714c458877f583fa2f7cce60875ea1ee60ff2c621a2c5ab7be2ed172acfa"
+    },
+    {
+      "file": "shipping-grey-html.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "3b837a3fdae8db05c63372c1adbc1cbc78fb88f8bd7e52fc3d882cd4573ca58f"
+    },
+    {
+      "file": "shipping-grey-plain.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "6e2b6a888d91442529cd0e79ec780f401e842e7fc2aaf0f736d4623721b726d7"
+    },
+    {
+      "file": "shipping-grey.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 6,
+      "equal": true,
+      "differentParts": []
+    },
+    {
+      "file": "shipping-light-flatHtml.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "3d4fd73cb07f4a2eccb6a918c8b85104d222e42ad2430da75211474b1522c135"
+    },
+    {
+      "file": "shipping-light-flatPlain.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "1f00714c458877f583fa2f7cce60875ea1ee60ff2c621a2c5ab7be2ed172acfa"
+    },
+    {
+      "file": "shipping-light-html.html",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "3b837a3fdae8db05c63372c1adbc1cbc78fb88f8bd7e52fc3d882cd4573ca58f"
+    },
+    {
+      "file": "shipping-light-plain.tsv",
+      "method": "file byte equality",
+      "equal": true,
+      "sha256": "6e2b6a888d91442529cd0e79ec780f401e842e7fc2aaf0f736d4623721b726d7"
+    },
+    {
+      "file": "shipping-light.xlsx",
+      "method": "all xl/ ZIP members byte-equal",
+      "parts": 6,
+      "equal": true,
+      "differentParts": []
+    }
+  ]
+}

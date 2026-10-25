@@ -549,7 +549,7 @@
   }
   function mount(){
     modal=document.createElement('div');
-    modal.className='layoutControlOverlay';
+    modal.className='layoutControlOverlay';modal.dataset.uiMigrated='remaining';
     modal.innerHTML=[
       '<div class="layoutControlModal" role="dialog" aria-modal="true" aria-labelledby="layoutControlTitle">',
       '<header class="layoutControlHead"><div><span class="layoutEyebrow">LCW AI · '+template().VERSION+'</span><h2 id="layoutControlTitle">'+esc(L('Layout Kontrolü','Layout Control'))+'</h2><p>'+esc(L('Buyer Log siparişleri eşler; LCW AI standartlar ve CP bilgileriyle yorumlar. Onay buyer’a aittir; sonuçlar CP’ye yazılmaz.','Buyer Log links orders; LCW AI reviews with the standards and CP facts. Approval belongs to the buyer; results are not written to CP.'))+'</p></div><button type="button" class="layoutIconBtn" data-layout-close aria-label="'+esc(L('Kapat','Close'))+'">×</button></header>',
@@ -566,13 +566,14 @@
       '</div>'
     ].join('');
     document.body.appendChild(modal);
+    root.BLLayerSystem?.openDialog(modal,{onClose:close});
     bind();paint();refreshHistory();
     modal.addEventListener('click',event=>{if(event.target===modal)close();});
     return true;
   }
   function refreshLanguage(){
     if(!modal)return;
-    modal.remove();modal=null;renderedPage='';mount();
+    root.BLLayerSystem?.closeDialog(modal,{restoreFocus:false});modal.remove();modal=null;renderedPage='';mount();
     const select=modal.querySelector('[data-layout-queue]');select.innerHTML=queuedFiles.map((f,i)=>'<option value="'+i+'">'+esc(f.name)+'</option>').join('');select.hidden=queuedFiles.length<2;
     setBusy(busy);paint();
     setStage(busy?L('Kontrol sürüyor…','Review in progress…'):L('Layout kontrolü · CP’ye yazılmaz','Layout review · no CP writes'),busy?'busy':'');
@@ -584,7 +585,7 @@
     if(activeAbort) activeAbort.abort();
     if(activeRequestId&&AI()) AI().cancel(activeRequestId);
     new Set([...sessions.keys(),...identitySessions.keys(),...queuedFiles,currentFile].filter(Boolean)).forEach(file=>reader().release(file));sessions.clear();identitySessions.clear();commentDrafts.clear();expandedChecks.clear();queuedFiles=[];pdfDocument=null;renderedPage='';reviewSaving=false;
-    activeAbort=null;activeRequestId='';modal.remove();modal=null;currentFile=null;currentReport=null;busy=false;
+    activeAbort=null;activeRequestId='';root.BLLayerSystem?.closeDialog(modal);modal.remove();modal=null;currentFile=null;currentReport=null;busy=false;
     const callback=onCloseCallback;onCloseCallback=null;if(callback)Promise.resolve().then(callback);
   }
 

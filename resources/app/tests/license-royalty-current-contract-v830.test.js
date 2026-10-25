@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = fs.readFileSync(path.join(ROOT, 'public', 'ui-components.css'), 'utf8');
 
 function pricingHelpers() {
   const start = APP.indexOf('function pricingRuleIsExpired(');
@@ -43,4 +43,5 @@ test('Fiyat Kontrolü süresi geçmiş seçenekleri tabloyla aynı kırmızı du
   assert.match(APP, /pricingRuleCheckSelectionState/);
   assert.match(CSS, /\.pricingRuleCheckRuleField select option\.pricingRuleExpired/);
   assert.match(CSS, /\.pricingRuleCheckRuleField select\.pricingRuleExpired/);
+  assert.match(CSS, /\.pricingRuleCheckRuleField select\.pricingRuleExpired[^}]*color:var\(--ui-danger\)/);
 });

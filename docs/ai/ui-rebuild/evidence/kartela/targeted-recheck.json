@@ -1,0 +1,77 @@
+{
+  "contrast": [
+    {
+      "theme": "light",
+      "tab": "cp",
+      "checked": 186,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "overview",
+      "checked": 119,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "cp",
+      "checked": 186,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "dark",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    }
+  ],
+  "sizes": [
+    {
+      "width": 1440,
+      "theme": "light",
+      "scale": "compact",
+      "rootOverflow": false,
+      "overflow": []
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "scale": "large",
+      "rootOverflow": false,
+      "overflow": []
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "scale": "xl",
+      "rootOverflow": false,
+      "overflow": []
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "scale": "xl",
+      "rootOverflow": false,
+      "overflow": []
+    },
+    {
+      "width": 1280,
+      "theme": "grey",
+      "scale": "xl",
+      "rootOverflow": false,
+      "overflow": []
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "scale": "xl",
+      "rootOverflow": false,
+      "overflow": []
+    }
+  ],
+  "geometryReview": "ovClockStripDot is a business-hours status dot, explicitly permitted by the task. No other >2px geometry was found in visible pilot controls."
+}

@@ -1,0 +1,196 @@
+✔ ortak tarih takvimi her hafta satırında LCW / GLB çiftini gösterir (0.946667ms)
+✔ Koleksiyon MB hafta/ay paneli merch haftanın yanında GLB haftayı gösterir (1.076693ms)
+✔ dateCalendarWeekPair merch takvimi yokken LCW için tire, GLB için ISO hafta döner (2.041577ms)
+✔ takma adlar yüksek güvenli öneri üretir (4.016644ms)
+✔ belirsiz/zayıf öneri gözden geçirme ister ve tek başına plana giremez (1.311027ms)
+✔ aynı hedefe iki kaynak sütun eşlenemez (0.375836ms)
+✔ otomatik eşleme aynı hedefi iki kez rezerve etmez (0.514014ms)
+✔ bir kaynak sütun birden çok anlamsal alanı açık kural olmadan süremez (0.330358ms)
+✔ yeni sütun eşlemesi ad ister ve mevcut alan adıyla çakışamaz (0.385411ms)
+✔ yazılamayan alan yalnız eşleşme için kullanılabilir (0.281104ms)
+✔ eşleşme kuralı zorunludur ve eşlenmemiş alanla kurulamaz (0.241784ms)
+✔ tip sezgisi öneridir ve baştaki sıfır kimliği ele verir (1.376174ms)
+✔ kimlik alanı sayı değildir: baştaki sıfır anlamlıdır (0.526214ms)
+✔ bileşik anahtarda eksik parça kimliği geçersiz kılar (0.173622ms)
+✔ exact / none / ambiguous / invalid doğru sınıflanır ve ilk sonuç seçilmez (0.610109ms)
+✔ Excel içindeki tekrar eden anahtarlar bildirilir (0.851794ms)
+✔ farklı anahtarlı iki satır tek hedefe düşerse ters tekrar raporlanır (0.202225ms)
+✔ benzerlik yalnız ÖNERİ üretir, kesin eşleşme üretmez (0.236346ms)
+✔ profil kullanıcıya ve modüle aittir (1.627413ms)
+✔ profilde yalnız yapılandırma saklanır, çalışma kitabı verisi saklanmaz (0.479553ms)
+✔ aynı şema birebir eşleşir, değişen şema gözden geçirme ister (0.47767ms)
+✔ profil deposu kullanıcı senkron listesine kayıtlıdır (0.339231ms)
+✔ CP ve Koleksiyon aynı motoru ve aynı sihirbazı kullanır (3.09844ms)
+✔ CP adaptörü satır oluşturamaz ve bunu açıkça bildirir (1.158867ms)
+✔ sihirbaz onaydan önce yazmaz ve uygulama anında planı yeniden doğrular (0.752995ms)
+✔ önizleme ve uygulama aynı planı kullanır; girdi değişince plan çöpe atılır (2.867042ms)
+✔ Koleksiyon içe aktarımı atomik partiyi ister ve başarısızlıkta belleği geri alır (1.749157ms)
+✔ özel sütunlar Buyer Log'un mevcut sistemlerini kullanır (2.908824ms)
+✔ denetim kaydı sınırlıdır ve çalışma kitabı verisi taşımaz (0.970693ms)
+✔ PPTX: uzun tablo kesilmez, devam slaytlarına bölünür; uzun kumaş metni tam kalır (23.532441ms)
+✔ taslak: her çıktı düzenlenebilir taslak bırakır; düzenleme yeniden doğrulanıp YENİ dosya olur; sahip izolasyonu (20.923819ms)
+✔ taslak: rapor düzenlemesi yeniden temizlenir; görseller taslakta saklanıp tekrar istenmez; PDF kaydı taslağa bağlıdır (10.474468ms)
+✔ taslak deposu: kullanıcı başına üst sınır, bozuk kimlik reddi (5.232908ms)
+✔ şablon iskeleti iş verisi taşımaz; talimat yapıyı, tam alanları ve ek talimatı taşır (3.046532ms)
+✔ servis: kullanıcı şablonu sözleşmenin sonuna eklenir; etiket şablon adıdır (5.356043ms)
+✔ routes: şablon kaydet/paylaş/kopyala/sil; ekip şablonunu yalnız sahibi ya da moderatör siler; sohbet şablonu depodan okur (145.80234ms)
+✔ db: çıktı şablonları kişisel ve ortak (senkronlu) profil deposunda; ayrı tür (129.53434ms)
+✔ arayüz: düzenleyici tembel yüklenir; rapor iframe’i betiksiz + CSP; Düzenle/Şablonlar/şablon seçici; TR/EN (2.684467ms)
+✔ TSV yapıştırma ayrıştırıcısı: sekme/satır, tırnaklı çok satırlı hücre (3.948712ms)
+✔ License Royalty v2 ülkeye göre Royalty + yüzde komisyon uygular (1.813724ms)
+✔ eski TR / Non-TR çiftleri efektif oranları kaybetmeden tek kayda migrate olur (1.533331ms)
+✔ tek taraflı eski kayıt diğer ülkeye yanlışlıkla uygulanmaz (0.203978ms)
+✔ arayüz ülke satırını kaldırır, TR/YD komisyon ve çift Final FOB gösterir (0.293152ms)
+✔ sunucu yeni komisyon alanlarını saklar ve countryGroup zorunluluğunu kaldırır (0.583239ms)
+✔ db okuma migrasyonu ve Supp FOB metadata komisyon detaylarını korur (0.157668ms)
+✔ Koleksiyon: Non-DTR + eşleşen kural yok → eksik sayılır (3.061665ms)
+✔ Koleksiyon: DTR modelinde kural aranmaz — yanlış alarm yok (0.711082ms)
+✔ Koleksiyon: kural varsa uyarı yok (0.547735ms)
+✔ Koleksiyon: Non-DTR + kural yok → FOB HESAPLANMAZ (0.763151ms)
+✔ Koleksiyon: DTR + kural yok → FOB hesaplanmaya devam eder (0.885925ms)
+✔ Koleksiyon: Non-DTR + kural VAR → FOB royalty ile hesaplanır (0.65695ms)
+✔ CP/Siparişler: Non-DTR + kural yok → eksik sayılır (0.418491ms)
+✔ CP/Siparişler: DTR satırında uyarı yok (0.450589ms)
+✔ CP/Siparişler: elle girilmiş Supp. FOB uyarı üretmez (0.315486ms)
+✔ CP/Siparişler: kural varsa uyarı yok (0.406964ms)
+✖ Koleksiyon royalty hücresi uyarıyı gösteriyor (1.276905ms)
+✔ CP/Siparişler Supp. FOB hücresi uyarıyı gösteriyor (0.235414ms)
+✔ uyarı metinleri iki dilde ve tek yerden geliyor (1.283986ms)
+✔ kolLicenseRuleMissingText eksik alanı adıyla söylüyor (0.748579ms)
+✖ royalty hücresi şablonu uyarı durumunda ⚠ ve turuncu rengi BASIYOR (6.901583ms)
+✔ royalty hücresi şablonu normal durumda uyarı BASMIYOR (7.11859ms)
+✖ Supp. FOB hücresi şablonu uyarı durumunda birim yerine ⚠ gösteriyor (5.089742ms)
+✔ TR Landed: Non-DTR + TR kuralı yok → yalnız TR HESAPLANMAZ, TR kuralı varsa hesaplanır (1.968628ms)
+✔ Overseas Landed: Non-DTR + kural yok → HESAPLANMAZ (0.612133ms)
+✔ DTR satırında landed hesabı ruleMissing hep false döndürür (0.635628ms)
+✔ kolLandedPriceWithCosts kural yoksa null döner (tek gerçek kaynak) (0.974088ms)
+✖ TR Landed hücre şablonu uyarı sınıfını, ⚠ işaretini ve turuncu rengi taşıyor (0.760326ms)
+✖ Overseas Landed hücre şablonu uyarı sınıfını, ⚠ işaretini ve turuncu rengi taşıyor (0.572493ms)
+✔ varsayılan ana ekran: iki sayfa, her widget tek kez, çakışmasız ve ızgara içinde (2.292606ms)
+✔ normalize bilinmeyen widget'ı atar, boyutu sözleşmeye kıstırır, bozuk çakışmayı çözer (0.428616ms)
+✔ kaldırılan widget gizli kalır; sonradan eklenen yeni widget ilk sayfaya kendiliğinden gelir (0.998114ms)
+✔ taşıma: komşu widget önce aynı satırda yana kayarak yer açar, yer yoksa aşağı itilir (0.502558ms)
+✔ boyutlandırma min/max sözleşmesine uyar ve çakışanları iter (0.359502ms)
+✔ ilk uygun yer, boşluk kapatma ve boyut sınıfı (0.246732ms)
+✔ sayfalar: widget başka sayfaya gönderilir, dolu sayfa silinmez, boş sayfa silinir, en fazla MAX_PAGES (0.897252ms)
+✔ v1 kaydı tek sayfaya akış sırası ve genişlik/yükseklikle taşınır (0.632874ms)
+✔ ana ekran DOM kancaları ve denetleyici sözleşmesi (1.162622ms)
+✔ widget'lar boyutlarına uyar: boyut kapsayıcısı, kaydırılan gövde ve dar pencere düzeni (0.290227ms)
+✔ senkron düzen kaydı yüklemede damgalanmaz; sunucudan gelen düzen yeniden okunur (11.809111ms)
+✔ sayfa kenarı taşıması hareketsiz bırakılsa da korunur; iptal başlangıç sayfasına döner; pointercancel uzun basmayı iptal eder (0.202966ms)
+✔ Manifest has one token source; migrated owners never consume legacy appearance aliases (17.178293ms)
+✔ Manifest prohibits frames, rounded controls, gradients and raw overlay levels (7.600306ms)
+✔ Manifest fonts scale and only transform/opacity may animate (5.634453ms)
+✔ Main column separators cover both header tiers and never the table body (0.920037ms)
+✔ Shared button contract covers interaction states and restricts explicit variants (23.128121ms)
+✔ Notes dialog keeps canonical behavior hooks, labelled field and keyboard focus containment (11.460154ms)
+✔ Unauthenticated asset serving is a fixed UI-only list before auth gates (2.468801ms)
+✔ Migrated Plan and Execute module styles contain only layout and data geometry (6.032913ms)
+✔ Commercial module CSS owns layout only; charts use square marks (10.794901ms)
+✔ Operations module CSS owns layout only; loading avoids decorative canvas (10.198983ms)
+ℹ tests 90
+ℹ suites 0
+ℹ pass 85
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 579.515428
+
+✖ failing tests:
+
+test at tests/license-royalty-missing-warning-v781.test.js:185:1
+✖ Koleksiyon royalty hücresi uyarıyı gösteriyor (1.276905ms)
+  AssertionError [ERR_ASSERTION]: uyarı rengi inline koşulda değil
+      at TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/license-royalty-missing-warning-v781.test.js:196:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'const ruleMissing=c.k===\'royalty\'&&kolLicenseRuleMissing(r);\n        const cellTitle=ruleMissing?kolLicenseRuleMissingText(r):title;\n        let display=\'—\';\n        if(c.percent&&val!==\'\') display=kolFormatPercentDisplay(val);\n        else if(c.hologram&&val!==\'\') display=kolFormatHologramDisplay(val);\n        else if(c.money&&val!==\'\') display=\'$\'+kolFormatMoneyDisplay(val);\n        html+=`<td class="num kolRuleReadonly${fobFallback?\' kolFobFallback\':\'\'}${ruleMissing?\' kolRuleMissing\':\'\'}"${rc} title="${escapeHtml(cellTitle)}" style="text-align:right;font-family:var(--ui-font-mono);background:var(--ui-surface-soft);color:${ruleMissing?\'var(--ui-warning)\':(fobFallback?\'var(--ui-text-muted)\':\'var(--ui-text-secondary)\')};">${ruleMissing?\'<span class="kolRuleMissingMark" aria-hidden="true">⚠</span> \':\'\'}${escapeHtml(display)}</td>`;\n      }else if(c.status){\n        const statusEntries=kolStatusEntries(),statusValue=kolStatusCanonicalName(val),statusColor=kolStatusColor(statusValue);\n        html+=`<td class="editTd kolStatusTd"${rc} style="--kol-status-color:${escapeHtml(statusColor)}"><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusEntries.map(entry=>`<option value="${escapeHtml(entry.name)}" ${statusValue===entry.name?\'selected\':\'\'}>${escapeHtml(kolStatusDisplayLabel(entry.name))}</option',
+    expected: /ruleMissing\?'var\(--orange\)'/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/license-royalty-missing-warning-v781.test.js:252:1
+✖ royalty hücresi şablonu uyarı durumunda ⚠ ve turuncu rengi BASIYOR (6.901583ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /color:var\(--orange\)/. Input:
+  
+  '<td class="num kolRuleReadonly kolRuleMissing" data-key="royalty" title="Kural yok" style="text-align:right;font-family:var(--ui-font-mono);background:var(--ui-surface-soft);color:var(--ui-warning);"><span class="kolRuleMissingMark" aria-hidden="true">⚠</span> —</td>'
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/license-royalty-missing-warning-v781.test.js:262:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<td class="num kolRuleReadonly kolRuleMissing" data-key="royalty" title="Kural yok" style="text-align:right;font-family:var(--ui-font-mono);background:var(--ui-surface-soft);color:var(--ui-warning);"><span class="kolRuleMissingMark" aria-hidden="true">⚠</span> —</td>',
+    expected: /color:var\(--orange\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/license-royalty-missing-warning-v781.test.js:280:1
+✖ Supp. FOB hücresi şablonu uyarı durumunda birim yerine ⚠ gösteriyor (5.089742ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /color:var\(--orange\)/. Input:
+  
+  '<td class="editTd money suppFobRuleMissing" title="Kural yok"><div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--ui-warning);font-size:var(--ui-font-2xs);flex-shrink:0;">⚠</span><input class="editCell money" type="text" inputmode="decimal" value="" data-id="42" data-key="Supp. FOB" data-kind="suppfob" placeholder="—" style="flex:1;min-width:0;"></div></td>'
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/license-royalty-missing-warning-v781.test.js:290:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<td class="editTd money suppFobRuleMissing" title="Kural yok"><div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--ui-warning);font-size:var(--ui-font-2xs);flex-shrink:0;">⚠</span><input class="editCell money" type="text" inputmode="decimal" value="" data-id="42" data-key="Supp. FOB" data-kind="suppfob" placeholder="—" style="flex:1;min-width:0;"></div></td>',
+    expected: /color:var\(--orange\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/license-royalty-missing-warning-v781.test.js:371:1
+✖ TR Landed hücre şablonu uyarı sınıfını, ⚠ işaretini ve turuncu rengi taşıyor (0.760326ms)
+  AssertionError [ERR_ASSERTION]: TR Landed rengi TR kuralı eksikken turuncu değil
+      at TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/license-royalty-missing-warning-v781.test.js:379:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'const trCostTitle=k.trRuleMissing\n          ? kolTrLicenseRuleMissingText(r)\n          : (k.nonDtr&&k.trBaseUsd!=null\n            ? `${L(\'TR landed\')} · TR Royalty: ($${kolMoney2(k.trBaseUsd)} ÷ (1 − %${k.trRoyaltyPct.toLocaleString(appLang===\'en\'?\'en-GB\':\'tr-TR\',{maximumFractionDigits:3})})) + $${kolMoney2(k.trHologramCost)} = $${kolMoney2(k.trCostedUsd)}`\n            : L(\'TR landed\'));\n        const trMultState=k.trMultIsManual?(appLang===\'en\'?\'Manual\':\'Manuel\'):(appLang===\'en\'?\'Default\':\'Varsayılan\');\n        // Hücrede TL fiyat / çarpan / kur girdileri var; kopyalama DOM\'daki İLK\n        // input\'u (TL fiyat) alıp landed sonucu yerine onu yazıyordu. Kopyaya\n        // Excel dışa aktarımındaki gibi hesaplanan landed SAYISI verilir.\n        html+=`<td class="kolLandedTd${k.trRuleMissing?\' kolRuleMissing\':\'\'}"${rc}${kolLandedCopyAttrs(k.trLanded)}><div class="kolLandedCard">\n          <b class="kolLandedVal" title="${escapeHtml(trCostTitle)}" style="${k.trRuleMissing?\'color:var(--ui-warning);\':\'\'}">${k.trRuleMissing?\'⚠\':(k.trLanded==null?\'—\':\'$\'+kolMoney2(k.trLanded))}</b>\n          <div class="kolLandedMeta">\n            <span class="kolLandedInputGroup" title="${escapeHtml(L(\'Türkiye fiyatı (TL)\'))}"><i aria-hidden="true">₺</i><input type="text" inputmode="decimal" class="editCell kolLandedInput" data-id="${r.id}" data-k="trPrice" value="${escapeHtml(String(kolEffectiveValue(r,\'trPrice\')||\'\'))}" placeholder="0,00"></span>\n            <span class="kolLandedInputGroup" title="${escapeHtml((appLang===\'en\'?\'Landed multiplier\':\'Landed çarpanı\')+\' · \'+trMultState)}"><i aria-hidden="true">×</i><input type="text" inputmode="decimal" class="editCell kolLandedInput isMult${k.trMultIsManual?\' isManual\':\'\'}" data-id="${r.id}" data-k="trLandedMult" value="${escapeHtml(String(kolEffectiveValue(r,\'trLandedMult\')||\'\'))}" placeholder="${escapeHtml(landedMultiplierInputValue(k.defaultTrMult))}"></span>\n            <span class="kolLandedInputGroup" title="${escapeHtml(fxTitle)}"><i aria-hidden="true">$</i><input type="text" inputmode="decimal" class="editCell kolLandedInput${k.fxIsManual?\' isManual\':\'\'}" data-id="${r.id}" data-k="trFx" value="${escapeHtml(String(kolEffectiveValue(r,\'trFx\')||\'\'))}" placeholder="${k.fxAuto==null?\'—\':kolMoney2(k.fxAuto)}"></span>\n          </div>\n        </div></td>`;\n      ',
+    expected: /style="\$\{k\.trRuleMissing\?'color:var\(--orange\);':''\}"/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/license-royalty-missing-warning-v781.test.js:385:1
+✖ Overseas Landed hücre şablonu uyarı sınıfını, ⚠ işaretini ve turuncu rengi taşıyor (0.572493ms)
+  AssertionError [ERR_ASSERTION]: Overseas Landed rengi uyarıda turuncu değil
+      at TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/license-royalty-missing-warning-v781.test.js:393:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'const ydCostTitle=k.ruleMissing\n          ? kolLicenseRuleMissingText(r)\n          : (k.nonDtr&&k.ydBaseFob!=null\n            ? `${L(\'Overseas landed\')} · ${L(\'Non-DTR\')}: ($${kolMoney2(k.ydBaseFob)} ÷ (1 − %${k.royaltyPct.toLocaleString(appLang===\'en\'?\'en-GB\':\'tr-TR\',{maximumFractionDigits:3})})) + $${kolMoney2(k.hologramCost)} = $${kolMoney2(k.ydCostedFob)}`\n            : L(\'Overseas landed\'));\n        const ydMultState=k.ydMultIsManual?(appLang===\'en\'?\'Manual\':\'Manuel\'):(appLang===\'en\'?\'Default\':\'Varsayılan\');\n        html+=`<td class="kolLandedTd${k.ruleMissing?\' kolRuleMissing\':\'\'}"${rc}${kolLandedCopyAttrs(k.ydLanded,profit)}><div class="kolLandedCard">\n          ${profit==null?\'\':`<em class="kolProfit ${profitCls}" title="${escapeHtml(appLang===\'en\'?\'Overseas Landed price advantage versus TR Landed: (TR Landed − Overseas Landed) / TR Landed\':\'Overseas Landed fiyat avantajı: (TR Landed − Overseas Landed) / TR Landed\')}">${(profit>0?\'+\':\'\')+profit.toLocaleString(appLang===\'en\'?\'en-GB\':\'tr-TR\',{maximumFractionDigits:1})}%</em>`}\n          <b class="kolLandedVal" title="${escapeHtml(ydCostTitle)}" style="${k.ruleMissing?\'color:var(--ui-warning);\':\'\'}">${k.ruleMissing?\'⚠\':(k.ydLanded==null?\'—\':\'$\'+kolMoney2(k.ydLanded))}</b>\n          <div class="kolLandedMeta">\n            <span class="kolLandedInputGroup" title="${escapeHtml((appLang===\'en\'?\'Landed multiplier\':\'Landed çarpanı\')+\' · \'+ydMultState)}"><i aria-hidden="true">×</i><input type="text" inputmode="decimal" class="editCell kolLandedInput isMult${k.ydMultIsManual?\' isManual\':\'\'}" data-id="${r.id}" data-k="ydLandedMult" value="${escapeHtml(String(kolEffectiveValue(r,\'ydLandedMult\')||\'\'))}" placeholder="${escapeHtml(landedMultiplierInputValue(k.defaultYdMult))}"></span>\n          </div>\n        </div></td>`;\n      ',
+    expected: /style="\$\{k\.ruleMissing\?'color:var\(--orange\);':''\}"/,
+    operator: 'match',
+    diff: 'simple'
+  }

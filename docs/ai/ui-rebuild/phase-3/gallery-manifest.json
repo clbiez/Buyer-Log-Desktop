@@ -1,0 +1,452 @@
+[
+  {
+    "family": "overview",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/overview-light-standard-1440.png",
+    "sha256": "157fa3a798fcbf0416a6edd845dc41c46cc175856ad4d7489ab9243d83f72ddf"
+  },
+  {
+    "family": "cp",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/cp-light-standard-1440.png",
+    "sha256": "a715218fe65780cfe553381faa5b49cdf3162e17715ca9ec5b74631aa2f7ba32"
+  },
+  {
+    "family": "orders",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/orders-light-standard-1440.png",
+    "sha256": "531252ac6796af286ce38a9c35c74d03780690c4d651e8696ecfacd4d84d9a2b"
+  },
+  {
+    "family": "backlog",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/backlog-light-standard-1440.png",
+    "sha256": "adb8b329ed44ad16251f1f7fa96d890fb1b6c25c10e7d6be5e64b2af356e5928"
+  },
+  {
+    "family": "shipping",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/shipping-light-standard-1440.png",
+    "sha256": "14058f04225bf98e1f4a42843611552852d6c64d3c330193aff2d460ea8e061a"
+  },
+  {
+    "family": "koleksiyon",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/koleksiyon-light-standard-1440.png",
+    "sha256": "157ee6454dd54e58268c913ff5bc0f1a3bd6944d0966598556b7a68b4e854569"
+  },
+  {
+    "family": "quotations",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/quotations-light-standard-1440.png",
+    "sha256": "405e64d817b71b02d55098ad8f6bd5a9d8de1f55752f692d5d63b8b8b9f0105e"
+  },
+  {
+    "family": "priceanalysis",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/priceanalysis-light-standard-1440.png",
+    "sha256": "73df739201d10e60ea59888c00ed8310a16e7417d8fcf1f9e656328311a0574e"
+  },
+  {
+    "family": "manufacturers",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/manufacturers-light-standard-1440.png",
+    "sha256": "95df0a737fb4b8c0f06dca1ed3182ed6a3d01dcdd8615e111794fb03dc7165a4"
+  },
+  {
+    "family": "licensecards",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/licensecards-light-standard-1440.png",
+    "sha256": "ffa4511aa3b7fad0b0e0b291f5282ac43787ffd6f7fb03ada29036f98dd1355f"
+  },
+  {
+    "family": "lfl",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/lfl-light-standard-1440.png",
+    "sha256": "0f0d2092bf95425ee242587594b5e9f23561b3856afc8cea6f8a3c8daf36c384"
+  },
+  {
+    "family": "opencosting",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/opencosting-light-standard-1440.png",
+    "sha256": "b64f688a82dd69a4e9b46c7c09f2a4448122da9104fb1572078577e64e001ff3"
+  },
+  {
+    "family": "source",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/source-light-standard-1440.png",
+    "sha256": "ac44429d876334a06db82bc12210db46d16175b142aa26799299f6319d38894c"
+  },
+  {
+    "family": "automations",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/automations-light-standard-1440.png",
+    "sha256": "6f70adf8fe9afca0f0904a8215ef80af0d72e1d313de218cfa5c68ea1d4033d6"
+  },
+  {
+    "family": "lcwai",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/lcwai-light-standard-1440.png",
+    "sha256": "400802284c8692325ea002956925d2023e15b37d890b1c517d5ee6cd3ecf9453"
+  },
+  {
+    "family": "cp-checklist-settings",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/revision/cp-checklist-settings-light-standard-1440.png",
+    "sha256": "d4d1572e749dfddc392e988dc9dcc591fc34ee2d74885568d2fd591b025000e1"
+  },
+  {
+    "family": "mail-topic",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/dialog-layout-revision/mail-topic-light-standard-1440.png",
+    "sha256": "26e2b1d69080c95b84ff613c48916cc5e50efeff8ba0af7fcbb04adb5c984e8e"
+  },
+  {
+    "family": "user-create",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/user-create-final/user-create-light-standard-1440.png",
+    "sha256": "c8ce5abac2caab71812b06f55fcacff71240b3f7de52e5d75ae3db5caaa16ba1"
+  },
+  {
+    "family": "rail-collapsed",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/rail-final/rail-collapsed-light-standard-1440.png",
+    "sha256": "d479a61b9956f5fdd31b3a88f17b4ec130ef74430bf2f9b01c9d2c7e46d7ce83"
+  },
+  {
+    "family": "price-history-approved",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/state-final/price-history-approved-light-standard-1440.png",
+    "sha256": "5035de3505b0ebfe8a10b14b39a6e77ed15be01dbb15a2470aaaa31d7c24ad24"
+  },
+  {
+    "family": "cp-rule-invalid",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/state-final/cp-rule-invalid-light-standard-1440.png",
+    "sha256": "e6ac8e5ad0e4aeca9a708a367fcf48d6a19877fb7766c5607246ec27d8abd230"
+  },
+  {
+    "family": "earth-offline",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/earth-marker-revision/earth-offline-light-standard-1440.png",
+    "sha256": "2c77d0eaaf53b6c36c5f53bf5c86b60902849bacfd74311c0cec9acaae159f05"
+  },
+  {
+    "family": "earth-settings",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/earth-final/earth-settings-light-standard-1440.png",
+    "sha256": "2af8ade1928fdfb41ef9500bd908a686002ded982a670fa16abaa36c11d2d1c9"
+  },
+  {
+    "family": "login",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/entry/login-light-standard-1440.png",
+    "sha256": "e75476b5d26ed40bc574d152dd6d9d62062b1f0360a20e5e74fc0fb14ea04caf"
+  },
+  {
+    "family": "startup-ready",
+    "theme": "light",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/entry/startup-ready-light-standard-1440.png",
+    "sha256": "baeeea4c15e6f4b5538a4ae170402b5b33c918575cc2e2b470ded035f4a27355"
+  },
+  {
+    "family": "overview",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/overview-grey-standard-1440.png",
+    "sha256": "71990b9e2e3e518bc6617f62de7e721330a92bab08d83f11aa6d1b0b2b1f1fde"
+  },
+  {
+    "family": "cp",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/cp-grey-standard-1440.png",
+    "sha256": "c77451b1c3e302bfc0343df6e7b048cfbd6d3afc67a971a18a636bb9a29ca807"
+  },
+  {
+    "family": "orders",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/orders-grey-standard-1440.png",
+    "sha256": "e22e7e0ffba7ffbc36c64775fb88f098bd9efcca3f8e55f45a259931e94e1c69"
+  },
+  {
+    "family": "backlog",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/backlog-grey-standard-1440.png",
+    "sha256": "61073f77295c3241cf08abad19e3d310b7a336b2da174cb08bcf06788ada7ec7"
+  },
+  {
+    "family": "shipping",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/shipping-grey-standard-1440.png",
+    "sha256": "9d87141a64282a57e198be20052701f107509dfe5c3a93e31dc09ea4730de0b5"
+  },
+  {
+    "family": "koleksiyon",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/koleksiyon-grey-standard-1440.png",
+    "sha256": "21673dab26e5eb102fd273633ab71bf76e635cc382576ef31dc50d83810d42a6"
+  },
+  {
+    "family": "quotations",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/quotations-grey-standard-1440.png",
+    "sha256": "b21c87165492e2b012d923bf1710e239aee9e0426f304800ae7f06c689950a76"
+  },
+  {
+    "family": "priceanalysis",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/priceanalysis-grey-standard-1440.png",
+    "sha256": "7f8096f64fd226369bbaa66d07482f299b67e9f4c8fbe02c4a0aeccd795e210c"
+  },
+  {
+    "family": "manufacturers",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/manufacturers-grey-standard-1440.png",
+    "sha256": "ed105f848e693c1a28eaa704802db87c39ac907afae64073ca2b83f99fa03547"
+  },
+  {
+    "family": "licensecards",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/licensecards-grey-standard-1440.png",
+    "sha256": "25c033271c392666b0006a41c8dc602783b1c9d37fbf7930d787a8e50147932a"
+  },
+  {
+    "family": "lfl",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/lfl-grey-standard-1440.png",
+    "sha256": "1345b6d8d3d73356e55c85dbd4bac09c569e6989ff956170def470d2fa0c6296"
+  },
+  {
+    "family": "opencosting",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/opencosting-grey-standard-1440.png",
+    "sha256": "6d9b3f98009ea0bd56f7648d485c11817c89d9300371b302edfae0d030c044b5"
+  },
+  {
+    "family": "source",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/source-grey-standard-1440.png",
+    "sha256": "0e15bc1a3853d64805822d9f6422dace581f6880f21cc1c034db4df050ef8d62"
+  },
+  {
+    "family": "automations",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/automations-grey-standard-1440.png",
+    "sha256": "89060ee1c2ab66f201b535127bdeb399ba2bfd1ac2b783853de9ad3aba128d8f"
+  },
+  {
+    "family": "lcwai",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/lcwai-grey-standard-1440.png",
+    "sha256": "b9cc58905127dce8b9e2f87d6ed96eb17a05d353b0b1ced0b9ab337fbab78f2a"
+  },
+  {
+    "family": "cp-checklist-settings",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/revision/cp-checklist-settings-grey-standard-1440.png",
+    "sha256": "eced0bc55f125558017e6757ec17b30a8a28a53010fa5d6d1df41705d2831637"
+  },
+  {
+    "family": "mail-topic",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/dialog-layout-revision/mail-topic-grey-standard-1440.png",
+    "sha256": "14b0d0df86b10d05289614b7d716b640428c0ff239de33c2aae55485110174d2"
+  },
+  {
+    "family": "user-create",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/user-create-final/user-create-grey-standard-1440.png",
+    "sha256": "b8bf6e0679e4c8eadbec717abe10a561b47eded9d2888ccd0e7a64cd53230d58"
+  },
+  {
+    "family": "rail-collapsed",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/rail-final/rail-collapsed-grey-standard-1440.png",
+    "sha256": "73fd92315d6d2b5fd2064eb4a115ed5a6c0b093ac23a39965d3efa8cc7c2f017"
+  },
+  {
+    "family": "price-history-approved",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/state-final/price-history-approved-grey-standard-1440.png",
+    "sha256": "849fad7525c428c93d85a073f21bf2498e8ab0bf3975dcfe303475d1c2ccbc02"
+  },
+  {
+    "family": "cp-rule-invalid",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/state-final/cp-rule-invalid-grey-standard-1440.png",
+    "sha256": "c9d844d53aba8b5f9ff3cf987da8c8b3da8c8d21a662b0055d25606dd06eecb4"
+  },
+  {
+    "family": "earth-offline",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/earth-marker-revision/earth-offline-grey-standard-1440.png",
+    "sha256": "ddc0f31eb4fdf4f0c1d3d3d6ad5a3d7c355cc49d7e504e6b7d0fa3a18649dd67"
+  },
+  {
+    "family": "earth-settings",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/earth-final/earth-settings-grey-standard-1440.png",
+    "sha256": "7ca6a4fc769698e05cd789e1548348189c5a31840e542e3a6b15efd5f9eedcba"
+  },
+  {
+    "family": "login",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/entry/login-grey-standard-1440.png",
+    "sha256": "756323c8d84a49e430147a37821209ae339cd5ac3738fae1942c17f508f35084"
+  },
+  {
+    "family": "startup-ready",
+    "theme": "grey",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/entry/startup-ready-grey-standard-1440.png",
+    "sha256": "167a50cab455d1ea84ce35c4854864cdc1a679b496071b3230360639e6685f1d"
+  },
+  {
+    "family": "overview",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/overview-dark-standard-1440.png",
+    "sha256": "ff0a426a5e6fabc0bab5a22c1901fd6f9e1abaa9d0d63ac37efc9bf97ffdc0f5"
+  },
+  {
+    "family": "cp",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/cp-dark-standard-1440.png",
+    "sha256": "820dca708bd2128f914c5c7ff4b302d383ea32f691ff1e4fd3e7f73cf0302f43"
+  },
+  {
+    "family": "orders",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/orders-dark-standard-1440.png",
+    "sha256": "58ba74e0be9edf8d5fb2c652d7f211e856c7bdb6b3bb6a7cba49a40eb4a72fe0"
+  },
+  {
+    "family": "backlog",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/backlog-dark-standard-1440.png",
+    "sha256": "91da28206307f8ba421951aca3c80197192f0a5a84a399271e0285b08171a6bb"
+  },
+  {
+    "family": "shipping",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/shipping-dark-standard-1440.png",
+    "sha256": "aa3baa6ac22eead6185f5718403d181bef1954a54e20270803745fdab6b8329e"
+  },
+  {
+    "family": "koleksiyon",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/koleksiyon-dark-standard-1440.png",
+    "sha256": "cce00ff07ae7d08e3d759983997d61a9946388db38e2d6f20a1a01456a1d27ae"
+  },
+  {
+    "family": "quotations",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/quotations-dark-standard-1440.png",
+    "sha256": "8603ea74efa56881b2e66586b3fecc28425a030d41a7e3cdfd482aa66d6ac808"
+  },
+  {
+    "family": "priceanalysis",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/priceanalysis-dark-standard-1440.png",
+    "sha256": "e4be9b341c40d2db46986bd94d91d5d93f8495d6f8b3beb8a1b1c6860271a7ce"
+  },
+  {
+    "family": "manufacturers",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/manufacturers-dark-standard-1440.png",
+    "sha256": "16b39410b65fe09d21cba1a76d5513d53c9a373bd1e915e3dcbba255bcdc6c0f"
+  },
+  {
+    "family": "licensecards",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/licensecards-dark-standard-1440.png",
+    "sha256": "688701fca8c849f39926ea001f2d614c66d44ce599fbbea9fe8ea4b66477c41b"
+  },
+  {
+    "family": "lfl",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/lfl-dark-standard-1440.png",
+    "sha256": "5bde3434ac50e5a4a1db953f4f30be93d9473e3d396681f89e982831be1e9de9"
+  },
+  {
+    "family": "opencosting",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/opencosting-dark-standard-1440.png",
+    "sha256": "826c8f5f27eaa195984f4ee74d316cea1d2354de4b50b863eecace0707cdc73a"
+  },
+  {
+    "family": "source",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/source-dark-standard-1440.png",
+    "sha256": "65cf6477cec53a889d277e7b87caea7a2afe917aa0b8491404f560d1a82bd701"
+  },
+  {
+    "family": "automations",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/automations-dark-standard-1440.png",
+    "sha256": "790ac210d93c5c07c9a5765263ce737726bf361d10add243fff22753574711a2"
+  },
+  {
+    "family": "lcwai",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/main/lcwai-dark-standard-1440.png",
+    "sha256": "29b7d1e4b22f1666a7da1ccd3f3c95125d0acca13e89e5fc6b015c5a8523d398"
+  },
+  {
+    "family": "cp-checklist-settings",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/revision/cp-checklist-settings-dark-standard-1440.png",
+    "sha256": "1e1ea57ae8a9cc459c52fdfb0b365b4a247eb6239173e358d5b1b524aa4769db"
+  },
+  {
+    "family": "mail-topic",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/dialog-layout-revision/mail-topic-dark-standard-1440.png",
+    "sha256": "255e7f8ef7d199215a0154c1c7089570beb53bcb6b8a4550bb60cd9d33e01d24"
+  },
+  {
+    "family": "user-create",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/user-create-final/user-create-dark-standard-1440.png",
+    "sha256": "5825f034ee41070e1e28ad7e6c475e896d10c387602456443fd6e162c5fc3eb3"
+  },
+  {
+    "family": "rail-collapsed",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/rail-final/rail-collapsed-dark-standard-1440.png",
+    "sha256": "28656d00662e019d075f44b5b4473eb95be03cf8b8b3a9dbffe9aa50920399e8"
+  },
+  {
+    "family": "price-history-approved",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/state-final/price-history-approved-dark-standard-1440.png",
+    "sha256": "5f791357eb54ebc8a68c90c8c66aaccad01d2b41c9c1d862073db70ec09b590c"
+  },
+  {
+    "family": "cp-rule-invalid",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/state-final/cp-rule-invalid-dark-standard-1440.png",
+    "sha256": "041a7407dde33b10e412944cd08f061701ca78ed43a0c9c360842482fbab0a0d"
+  },
+  {
+    "family": "earth-offline",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/earth-marker-revision/earth-offline-dark-standard-1440.png",
+    "sha256": "f6c58e54a9d9c8dfbbbecae160dd2b2ef7fe7e253c620ad511ad31a4c37a84ab"
+  },
+  {
+    "family": "earth-settings",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/earth-final/earth-settings-dark-standard-1440.png",
+    "sha256": "9fb1b32e84f7cce5c16cbeb32d1e782cea00603696ec90bf5395cd9c86092795"
+  },
+  {
+    "family": "login",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/entry/login-dark-standard-1440.png",
+    "sha256": "312a7fe6b8fff5aa078a956ff21a3ae5e1332db4fb17bd98be1bf0e28ade74ee"
+  },
+  {
+    "family": "startup-ready",
+    "theme": "dark",
+    "source": "docs/ai/ui-rebuild/phase-3/matrix/entry/startup-ready-dark-standard-1440.png",
+    "sha256": "398ad18f9dbe438c8140cf85bfffcb94ace56070529f53d852506073e62bbcb7"
+  }
+]

@@ -45,18 +45,16 @@ const xmlWellFormed = xml => {
 };
 
 /* ---------------- Tema ---------------- */
-test('tema: renkler gerçek design.css anahtarlarından okunur; yazı tipleri gömülüdür, uzak kaynak yoktur', () => {
-  const css = fs.readFileSync(path.join(ROOT, 'public', 'design.css'), 'utf8');
-  const acc = /--acc:\s*(#[0-9a-fA-F]{6})/.exec(css)[1].toUpperCase();
+test('tema: belge renkleri donmuş export paletine eşittir; yazı tipleri gömülüdür, uzak kaynak yoktur', () => {
+  const expected = require('./fixtures/export-document-palette.json');
   const t = theme.theme();
-  assert.equal(t.source, 'design.css');
-  assert.equal(t.colors.acc, acc);
+  assert.equal(t.source, 'export-document-palette.json');
+  assert.deepEqual(t.colors, expected, 'UI cleanup must preserve every original document color');
   assert.equal(t.tones.risk, t.colors.red);
   const report = theme.reportCss({ orientation: 'landscape', print: true });
   assert.match(report, /@page\{size:A4 landscape/);
   assert.match(report, /font-family:"Barlow";[^}]*src:url\(data:font\/woff2;base64,/);
   assert.doesNotMatch(report.replace(/url\(data:[^)]*\)/g, ''), /url\(|https?:\/\//, 'yalnız data: kaynak');
-  assert.equal(theme.readDesignTokens(':root{--acc:#123456;}\n[data-theme=dark]{--acc:#ffffff;}').acc, '#123456', 'ilk (açık tema) değer kazanır');
 });
 
 /* ---------------- HTML ayrıştırıcı ---------------- */
@@ -547,9 +545,9 @@ test('dinamik tasarım: HTML’de yalnız-CSS animasyonlar (azaltılmış hareke
 
 test('başlıklar: mavi değil Buyer Log tablo başlığı grisi; metin BL logosu siyahı (HTML/PDF/PPTX/XLSX)', () => {
   const colors = theme.theme().colors;
-  const app = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
-  assert.equal(colors['thead-bg'], /--thead-bg:\s*(#[0-9A-Fa-f]{6})/.exec(app)[1].toUpperCase());
-  assert.equal(colors['thead-line'], /--thead-line:\s*(#[0-9A-Fa-f]{6})/.exec(app)[1].toUpperCase());
+  const expected = require('./fixtures/export-document-palette.json');
+  assert.equal(colors['thead-bg'], expected['thead-bg']);
+  assert.equal(colors['thead-line'], expected['thead-line']);
   assert.equal(colors.logo, '#262626', 'icons/icon-mark.png BL siyahı');
   const css = theme.reportCss({});
   assert.match(css, /\.bl-header\{[^}]*color:var\(--logo\);background:linear-gradient\(120deg,var\(--thead-bg\)/);

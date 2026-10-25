@@ -1084,10 +1084,9 @@
     panel.hidden = !next;
     button.setAttribute('aria-expanded', next ? 'true' : 'false');
     if (next) {
-      const sectionRect = section.getBoundingClientRect();
       const buttonRect = button.getBoundingClientRect();
-      panel.style.top = `${Math.max(44, buttonRect.bottom - sectionRect.top + 6)}px`;
-      panel.style.right = `${Math.max(8, sectionRect.right - buttonRect.right)}px`;
+      panel.style.top = `${Math.max(16, Math.min(buttonRect.bottom + 6, innerHeight - panel.offsetHeight - 16))}px`;
+      panel.style.right = `${Math.max(16, Math.min(innerWidth - buttonRect.right, innerWidth - panel.offsetWidth - 16))}px`;
     }
   }
 

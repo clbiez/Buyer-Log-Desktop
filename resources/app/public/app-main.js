@@ -1650,7 +1650,7 @@ function openHorizonTextInput(options={}){
   document.getElementById('_horizonTextInputModal')?.remove();
   const modal=document.createElement('div');
   modal.id='_horizonTextInputModal';
-  modal.className='warnOverlay horizonTextInputOverlay';
+  modal.className='warnOverlay horizonTextInputOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard horizonTextInputCard" role="dialog" aria-modal="true" aria-labelledby="_horizonTextInputTitle">
     <div class="modelConnHead"><div><div class="modalTitle" id="_horizonTextInputTitle">${escapeHtml(title)}</div></div>
       <button type="button" class="pricingRuleIconBtn" data-horizon-text-cancel aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button>
@@ -1828,7 +1828,7 @@ function showSourceFilterRequiredNotice(status,message){
   const preferredTarget=targets[0]||'cp';
   document.getElementById('_sourceFilterRequiredModal')?.remove();
   const modal=document.createElement('div');
-  modal.id='_sourceFilterRequiredModal';modal.className='warnOverlay';
+  modal.id='_sourceFilterRequiredModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard sourceFilterRequiredCard" role="alertdialog" aria-modal="true" aria-labelledby="_sourceFilterRequiredTitle">
     <div class="sourceFilterRequiredIcon"><svg class="ic" aria-hidden="true"><use href="#i-binary-tree-2"/></svg></div>
     <div><div class="modalTitle" id="_sourceFilterRequiredTitle">${escapeHtml(text.title)}</div><p>${escapeHtml(text.detail)}</p></div>
@@ -1837,7 +1837,9 @@ function showSourceFilterRequiredNotice(status,message){
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
-  const close=()=>modal.remove();
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   modal.querySelectorAll('[data-source-filter-close]').forEach(btn=>btn.addEventListener('click',close));
   modal.querySelector('[data-source-filter-open]')?.addEventListener('click',()=>{close();openDataSourceAndFilters({target:preferredTarget});});
   modal.addEventListener('click',e=>{if(e.target===modal)close();});
@@ -2505,7 +2507,9 @@ function openClipboardDiagnostics(){
   const entries=window.BLGridClipboard?.diagnostics?.list?.()||[],overlay=document.createElement('div');overlay.className='kolSpreadsheetPasteOverlay gridClipboardDiagnosticsOverlay';
   const rows=entries.length?entries.slice().reverse().map(item=>`<tr><td>${escapeHtml(item.at||'')}</td><td>${escapeHtml(item.module||'')}</td><td>${escapeHtml(item.operation||'')}</td><td>${escapeHtml(item.selection?`${item.selection.rows}×${item.selection.columns}`:'—')}</td><td>${item.ok?'✓':'×'}</td><td>${escapeHtml(item.error||'')}</td></tr>`).join(''):`<tr><td colspan="6">${appLang==='en'?'No clipboard events recorded.':'Kaydedilmiş pano olayı yok.'}</td></tr>`;
   overlay.innerHTML=`<div class="kolSpreadsheetPasteCard gridClipboardDiagnosticsCard" role="dialog" aria-modal="true" aria-labelledby="gridClipboardDiagnosticsTitle" tabindex="-1"><div class="kolSpreadsheetPasteHead"><b id="gridClipboardDiagnosticsTitle">${appLang==='en'?'Clipboard diagnostics':'Pano hata teşhisi'}</b><span>${appLang==='en'?'Metadata only; copied values are never recorded.':'Yalnız metadata; kopyalanan değerler kaydedilmez.'}</span></div><div class="kolSpreadsheetPasteBody"><table class="gridClipboardDiagnosticsTable"><thead><tr><th>${appLang==='en'?'Time':'Zaman'}</th><th>${appLang==='en'?'Module':'Modül'}</th><th>${appLang==='en'?'Action':'İşlem'}</th><th>${appLang==='en'?'Range':'Alan'}</th><th>${appLang==='en'?'OK':'Başarılı'}</th><th>${appLang==='en'?'Error':'Hata'}</th></tr></thead><tbody>${rows}</tbody></table></div><div class="kolSpreadsheetPasteFoot"><button class="tbtn" data-clear>${appLang==='en'?'Clear':'Temizle'}</button><button class="tbtn primary" data-close>${appLang==='en'?'Close':'Kapat'}</button></div></div>`;
-  const close=()=>overlay.remove();overlay.querySelector('[data-close]').onclick=close;overlay.querySelector('[data-clear]').onclick=()=>{window.BLGridClipboard?.diagnostics?.clear?.();close();showToast(appLang==='en'?'Clipboard diagnostics cleared.':'Pano tanılama kayıtları temizlendi.');};overlay.addEventListener('click',event=>{if(event.target===overlay)close();});document.body.appendChild(overlay);overlay.querySelector('.gridClipboardDiagnosticsCard')?.focus();
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();overlay.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(overlay,{onEscape:close})||(()=>{});overlay.querySelector('[data-close]').onclick=close;overlay.querySelector('[data-clear]').onclick=()=>{window.BLGridClipboard?.diagnostics?.clear?.();close();showToast(appLang==='en'?'Clipboard diagnostics cleared.':'Pano tanılama kayıtları temizlendi.');};overlay.addEventListener('click',event=>{if(event.target===overlay)close();});document.body.appendChild(overlay);overlay.querySelector('.gridClipboardDiagnosticsCard')?.focus();
 }
 document.getElementById('navCopyMenuBtn')?.addEventListener('click',event=>{
   event.stopPropagation();closeGridClipboardMenu();const button=event.currentTarget,rect=button.getBoundingClientRect(),menu=document.createElement('div');menu.id='gridClipboardMenu';menu.className='kolSpreadsheetContextMenu';menu.setAttribute('role','menu');
@@ -2638,6 +2642,26 @@ document.addEventListener('keydown', event=>{
   event.preventDefault(); event.stopPropagation();
 }, true);
 
+// Unregistered older overlays share the same Tab boundary. The bubble phase
+// leaves local handlers and native modal dialogs in control. Only a key press
+// queries visible layers; no observer or background module render is needed.
+document.addEventListener('keydown', event=>{
+  if(event.key!=='Tab'||event.defaultPrevented)return;
+  const candidates=[...document.querySelectorAll(BL_OVERLAY_SELECTOR+', [aria-modal="true"]')]
+    .filter(el=>el.checkVisibility()&&!el.closest('[inert]'));
+  let top=null,topZ=-Infinity;
+  for(const el of candidates){
+    let z=0;
+    for(let node=el;node&&node!==document.body;node=node.parentElement){
+      const value=Number.parseInt(getComputedStyle(node).zIndex,10);
+      if(Number.isFinite(value)){z=value;break;}
+    }
+    if(z>=topZ){top=el;topZ=z;}
+  }
+  if(!top||top.matches('dialog:modal')||top.closest('dialog:modal'))return;
+  window.BLLayerSystem?.trapDialogTab(top,event);
+});
+
 // Kaydırma zinciri: olayın hedefinden pencereye kadar çıkıp gerçekten
 // kaydırılabilecek bir alan var mı diye bakılır. Yoksa olay burada biter.
 function _blScrollableAncestor(node, root, deltaY){
@@ -2679,7 +2703,7 @@ function closeAllColumnPanels(except=null){
 function positionColumnPanelAtAnchor(panel,anchor){
   if(!panel||!anchor||!panel.classList.contains('show')) return;
   panel.classList.add('viewportFloating');
-  panel.style.position='fixed'; panel.style.right='auto'; panel.style.bottom='auto'; panel.style.zIndex='260';
+  panel.style.position='fixed'; panel.style.right='auto'; panel.style.bottom='auto'; panel.style.zIndex='var(--ui-z-popover)';
   panel.style.display='block'; panel.style.visibility='hidden';
   const rect=anchor.getBoundingClientRect();
   const width=Math.min(Math.max(panel.offsetWidth||210,210),Math.max(210,window.innerWidth-16));
@@ -3069,7 +3093,7 @@ function cpRowsForImageIdentity(plmId,colourCode){
 }
 function cpImagePlaceholder(){
   try{return kolImagePlaceholderSvg();}catch(_){
-    return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="8" fill="#EEF0F3"/><path d="M15 60l18-22 13 14 12-17 8 25" stroke="#98A2B3" stroke-width="4" fill="none"/><circle cx="29" cy="24" r="6" fill="#98A2B3"/></svg>');
+    return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#EEF0F3"/><path d="M20 24h40M20 36h40M20 48h24" stroke="#98A2B3" stroke-width="4" fill="none"/></svg>');
   }
 }
 function modelImageCacheKey(modelId,colourCode){
@@ -3658,7 +3682,7 @@ function cpPlmDetailsSync(){
 /* Grup bantları artık doygun renk + beyaz yazı yerine, tabloyla aynı sakin
    yüzey rengini kullanır; ayrım rengi ince bir ÜST ÇİZGİ ile verilir (yazı
    okunurluğu bozulmaz). Renkler CSS'te .groupRow th[data-grp] ile uygulanır. */
-const GROUP_ACCENTS = {'Öncelik':'var(--red,var(--acc))','PLM Numune':'var(--teal)','Marka Detayları':'var(--acc)','Model Detayları':'var(--acc)','Sipariş Detayları':'var(--green)','Lisans Detayları':'var(--purple)','Tarihler':'var(--teal)','Tarihler & Sevkiyat':'var(--teal)','Kumaş Detayları':'var(--orange)','Lojistik':'var(--purple)','Notlar':'var(--ink2)','Checklist':'var(--green)','Fiyatlandırma':'var(--green)','Endeksmatik & Avantaj':'var(--orange)','Hesaplanan':'var(--chart-5)'}; // i18n-ignore — sütun grubu anahtarları (veri)
+const GROUP_ACCENTS = {'Öncelik':'var(--ui-danger,var(--ui-accent))','PLM Numune':'var(--ui-chart-3)','Marka Detayları':'var(--ui-accent)','Model Detayları':'var(--ui-accent)','Sipariş Detayları':'var(--ui-success)','Lisans Detayları':'var(--ui-chart-4)','Tarihler':'var(--ui-chart-3)','Tarihler & Sevkiyat':'var(--ui-chart-3)','Kumaş Detayları':'var(--ui-warning)','Lojistik':'var(--ui-chart-4)','Notlar':'var(--ui-text-secondary)','Checklist':'var(--ui-success)','Fiyatlandırma':'var(--ui-success)','Endeksmatik & Avantaj':'var(--ui-warning)','Hesaplanan':'var(--ui-chart-5)'}; // i18n-ignore — sütun grubu anahtarları (veri)
 /* Tablo ana başlıklarının (sütun grubu) görünen TR/EN adları. `group` değeri
    kimliktir; ekranda daima aktif dile göre bu katalogdan okunur. */
 const TABLE_COLUMN_GROUP_LABELS = Object.freeze({
@@ -4514,7 +4538,7 @@ function renderTableFieldsMenu(menu,tableKey){
       const draggable=!meta.fixed&&entry.keys.length>1;
       return `<div class="tableFieldsColumn${hidden.has(key)?' isHiddenNow':''}${meta.userLabel?' hasUserLabel':''}" data-table-fields-col="${escapeHtml(key)}" data-group="${escapeHtml(entry.group)}"${draggable?' draggable="true"':''}><span class="tableFieldsDrag${draggable?'':' isDisabled'}" aria-hidden="true">⋮⋮</span><span class="tableFieldsColumnName" title="${escapeHtml(meta.label)}">${escapeHtml(meta.label)}</span><span class="tableFieldsActions">${actions}</span><span class="tableFieldsChecks">${checks}</span></div>`;
     }).join(''):'';
-    return `<div class="tableFieldsGroup is-${mode}${open?' isOpen':''}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--acc)'}"><div class="tableFieldsGroupRow"><button type="button" class="tableFieldsGroupToggle" data-table-fields-toggle="${escapeHtml(entry.group)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b>${escapeHtml(entry.label)}</b><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button><button type="button" class="tableFieldsModeBtn is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(modeTitle)}">${escapeHtml(modeLabel)}</button><span class="tableFieldsChecks">${groupChecks}</span></div>${columns?`<div class="tableFieldsColumns">${columns}</div>`:''}</div>`;
+    return `<div class="tableFieldsGroup is-${mode}${open?' isOpen':''}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--ui-accent)'}"><div class="tableFieldsGroupRow"><button type="button" class="tableFieldsGroupToggle" data-table-fields-toggle="${escapeHtml(entry.group)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b>${escapeHtml(entry.label)}</b><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button><button type="button" class="tableFieldsModeBtn is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(modeTitle)}">${escapeHtml(modeLabel)}</button><span class="tableFieldsChecks">${groupChecks}</span></div>${columns?`<div class="tableFieldsColumns">${columns}</div>`:''}</div>`;
   }).join('');
   const addButtons=[];
   if(tableKey==='cp'||tableKey==='orders'){
@@ -4593,7 +4617,7 @@ function openTableFieldsMenu(button){
   const tableKey=button.dataset.tableFields,existing=document.getElementById('_tableFieldsMenu');
   if(existing&&existing.dataset.tableKey===tableKey){closeTableFieldsMenu();return;}
   closeTableFieldsMenu();
-  const menu=document.createElement('aside');menu.id='_tableFieldsMenu';menu.className='tableFieldsMenu tableFieldsDrawer';menu.dataset.tableKey=tableKey;
+  const menu=document.createElement('aside');menu.id='_tableFieldsMenu';menu.className='tableFieldsMenu tableFieldsDrawer';menu.dataset.uiMigrated='table-fields';menu.dataset.tableKey=tableKey;
   menu.setAttribute('role','dialog');menu.setAttribute('aria-label',appLang==='en'?'Fields':'Alanlar');
   document.body.appendChild(menu);renderTableFieldsMenu(menu,tableKey);
   button.setAttribute('aria-expanded','true');
@@ -5162,7 +5186,7 @@ function openColumnNameDialog(options={}){
   document.getElementById('_columnNameModal')?.remove();
   const modal=document.createElement('div');
   modal.id='_columnNameModal';
-  modal.className='warnOverlay horizonTextInputOverlay';
+  modal.className='warnOverlay horizonTextInputOverlay';modal.dataset.uiMigrated='dialog';
   const field=(lang,label)=>`<label for="_columnName_${lang}">${escapeHtml(label)}</label><input id="_columnName_${lang}" data-column-name="${lang}" type="text" maxlength="${maxLength}" autocomplete="off" value="${escapeHtml(initial[lang]||'')}" placeholder="${escapeHtml(defaults[lang]||'')}">`;
   const sourceHtml=sourceRows.length?`<div class="columnNameSource" data-column-name-source><div class="columnNameSourceTitle"><svg class="ic"><use href="#i-database-import"/></svg>${escapeHtml(msg('Veri nereden geliyor?','Where does the data come from?'))}</div>${sourceRows.map(row=>`<div class="columnNameSourceRow"><span>${escapeHtml(row.label)}</span>${row.code?`<code>${escapeHtml(row.value)}</code>`:`<b>${escapeHtml(row.value)}</b>`}</div>`).join('')}</div>`:'';
   const hint=options.hint?`<p class="columnNameHint">${escapeHtml(options.hint)}</p>`:'';
@@ -5412,7 +5436,7 @@ async function openCpModelColumnModal(editId,rerenderFn){
   const currentGroup=String((existing&&existing.group)||'').trim()||DEFAULT_MODEL_COLUMN_GROUP;
   const groupIsNew=!groupChoices.some(g=>groupKey(g)===groupKey(currentGroup));
   const groupFieldHtml=`<label>${escapeHtml(appLang==='en'?'Heading group':'Üst başlık (grup)')}<select id="_cpModelGroup">${groupChoices.map(g=>`<option value="${escapeHtml(g)}"${groupKey(g)===groupKey(currentGroup)?' selected':''}>${escapeHtml(g)}</option>`).join('')}<option value="${NEW_GROUP_OPTION}"${groupIsNew?' selected':''}>${escapeHtml(appLang==='en'?'＋ Create a new heading…':'＋ Yeni başlık oluştur…')}</option></select></label><label id="_cpModelGroupNewWrap"${groupIsNew?'':' hidden'}>${escapeHtml(appLang==='en'?'New heading name':'Yeni başlık adı')}<input id="_cpModelGroupNew" maxlength="40" value="${escapeHtml(groupIsNew?currentGroup:'')}" placeholder="${escapeHtml(appLang==='en'?'e.g. Production':'Örn. Üretim Takibi')}" autocomplete="off"></label>`;
-  const modal=document.createElement('div'); modal.id='_cpModelColumnModal'; modal.className='warnOverlay';
+  const modal=document.createElement('div'); modal.id='_cpModelColumnModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard cpModelColumnCard" role="dialog" aria-modal="true"><div class="modelConnHead"><div><div class="modalTitle">${escapeHtml(appLang==='en'?(existing?'Edit Database Column':'Add Database Column'):(existing?'Veri Tabanı Sütununu Düzenle':'Veri Tabanından Sütun Ekle'))}</div><p>${escapeHtml(appLang==='en'?'Set the visible header, then search and select a source table column from ASAS or IAS. Shared by CP and Orders.':'Görünecek başlığı yazın; ardından ASAS veya IAS içindeki tablo sütununu arayıp seçin. CP ve Siparişler ile paylaşılır.')}</p></div><button type="button" class="pricingRuleIconBtn cpModelClose"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="cpModelColumnBody"><label>${escapeHtml(appLang==='en'?'English heading (EN)':'İngilizce başlık (EN)')}<input id="_cpModelLabelEn" value="${escapeHtml(existingLabels.en)}" maxlength="80" autocomplete="off"></label><label>${escapeHtml(appLang==='en'?'Turkish heading (TR)':'Türkçe başlık (TR)')}<input id="_cpModelLabelTr" value="${escapeHtml(existingLabels.tr)}" maxlength="80" autocomplete="off"></label>${groupFieldHtml}<label>${escapeHtml(appLang==='en'?'Data source':'Veri kaynağı')}<select id="_cpModelConnection">${connections.map(c=>`<option value="${escapeHtml(c.id)}"${c.id===selectedConnectionId?' selected':''}>${escapeHtml((c.role==='antrepo'?'IAS · ':'ASAS · ')+(c.name||c.catalog||c.server))}</option>`).join('')}</select></label><label class="cpModelWide">${escapeHtml(appLang==='en'?'Search source columns':'Kaynak sütunlarda ara')}<input id="_cpModelSearch" type="search" placeholder="${escapeHtml(appLang==='en'?'Table or column name…':'Tablo veya sütun adı…')}" autocomplete="off"></label><div class="cpModelColumnList" id="_cpModelColumnList"><div class="modelConnHint">${escapeHtml(appLang==='en'?'Loading columns…':'Sütunlar yükleniyor…')}</div></div></div><div class="modelConnFoot"><span id="_cpModelStatus"></span><span style="flex:1"></span><button type="button" class="tbtn cpModelClose">${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="navActionBtn" id="_cpModelSave"><svg class="ic"><use href="#i-device-floppy"/></svg>${escapeHtml(appLang==='en'?'Save column':'Sütunu Kaydet')}</button></div></div>`;
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
@@ -5425,7 +5449,10 @@ async function openCpModelColumnModal(editId,rerenderFn){
   const groupSelect=modal.querySelector('#_cpModelGroup'), groupNew=modal.querySelector('#_cpModelGroupNew'), groupNewWrap=modal.querySelector('#_cpModelGroupNewWrap');
   const chosenGroup=()=>(groupSelect.value===NEW_GROUP_OPTION?groupNew.value:groupSelect.value).replace(/\s+/g,' ').trim();
   groupSelect.addEventListener('change',()=>{const wantsNew=groupSelect.value===NEW_GROUP_OPTION;groupNewWrap.hidden=!wantsNew;if(wantsNew)groupNew.focus();});
-  modal.querySelectorAll('.cpModelClose').forEach(btn=>btn.addEventListener('click',()=>modal.remove()));modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
+  modal.querySelectorAll('.cpModelClose').forEach(btn=>btn.addEventListener('click',()=>close()));modal.addEventListener('click',e=>{if(e.target===modal)close();});
   modal.querySelector('#_cpModelSave').addEventListener('click',async e=>{const labelEn=modal.querySelector('#_cpModelLabelEn').value.replace(/\s+/g,' ').trim(),labelTr=modal.querySelector('#_cpModelLabelTr').value.replace(/\s+/g,' ').trim(),label=labelTr||labelEn;if(!label){status.textContent=appLang==='en'?'Enter a column heading.':'Sütun başlığı girin.';return;}if(!selectedField){status.textContent=appLang==='en'?'Select a source column.':'Bir kaynak sütun seçin.';return;}const group=chosenGroup();if(groupSelect.value===NEW_GROUP_OPTION&&!group){status.textContent=appLang==='en'?'Enter a new heading name.':'Yeni başlık adı girin.';groupNew.focus();return;}const btn=e.currentTarget;btn.disabled=true;status.textContent=appLang==='en'?'Saving…':'Kaydediliyor…';try{
       /* Sütunu BAŞKA bir kaynağa taşımak iki yazma gerektirir. SIRA ÖNEMLİ:
          ÖNCE EKLE, SONRA KALDIR. Ters sırada, ekleme başarısız olursa sütun
@@ -5441,7 +5468,7 @@ async function openCpModelColumnModal(editId,rerenderFn){
         ?await writeCpModelColumn(selectedConnectionId,{op:'add',label,labelEn,labelTr,group,entry})
         :await writeCpModelColumn(selectedConnectionId,{op:'update',id:editId,label,labelEn,labelTr,group,entry});
       if(movingSource)await writeCpModelColumn(previous.connectionId,{op:'remove',id:editId});
-      syncCpModelColumns(cpModelColumnDefinitionsFromConnections(saved));modal.remove();if(typeof rerenderFn==='function')rerenderFn();else renderCP();showToast(appLang==='en'?'Column saved. Refresh CP to load its values.':'Sütun kaydedildi. Değerlerini almak için CP’yi yenileyin.');}catch(err){btn.disabled=false;status.textContent=err.message||String(err);}});
+      syncCpModelColumns(cpModelColumnDefinitionsFromConnections(saved));close();if(typeof rerenderFn==='function')rerenderFn();else renderCP();showToast(appLang==='en'?'Column saved. Refresh CP to load its values.':'Sütun kaydedildi. Değerlerini almak için CP’yi yenileyin.');}catch(err){btn.disabled=false;status.textContent=err.message||String(err);}});
   loadSchema(); setTimeout(()=>modal.querySelector(appLang==='en'?'#_cpModelLabelEn':'#_cpModelLabelTr').focus(),0);
 }
 /* v7.33 — Hesaplanan sütun penceresi de bu pencereyi açar (ASAS / IAS-Antrepo
@@ -5856,7 +5883,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
       const cls = '';
       const n = toNum(v);
       const unit = isTurkeyCountry(r.Country) ? '₺' : '$';
-      const valHtml = n==null ? '' : `<span style="color:var(--muted);font-size:10.5px;margin-right:2px;">${unit}</span>${n.toFixed(2)}`;
+      const valHtml = n==null ? '' : `<span style="color:var(--ui-text-muted);font-size:var(--ui-font-2xs);margin-right:2px;">${unit}</span>${n.toFixed(2)}`;
       const hoverText = c.k==='Supp. FOB' ? suppFobHoverText(r) : '';
       const autoClass = c.k==='Supp. FOB' && isSuppFobAutoCalculated(r) ? ' suppFobAuto' : '';
       return `<td class="money ${cls}${autoClass}"${hoverText?` title="${escapeHtml(hoverText)}"`:''}>${valHtml}</td>`;
@@ -5872,7 +5899,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
       const tt = hoverText ? ` title="${escapeHtml(hoverText)}"` : '';
       const autoSource = isSuppFobAutoCalculated(r);
       const unit = isTurkeyCountry(r.Country) ? '₺' : '$';
-      return `<td class="editTd money${autoSource?' suppFobAuto':''}${ruleMissing?' suppFobRuleMissing':''}"${tt}><div style="display:flex;align-items:center;gap:3px;"><span style="color:${ruleMissing?'var(--orange)':'var(--muted)'};font-size:10.5px;flex-shrink:0;">${ruleMissing?'⚠':unit}</span><input class="editCell money" type="text" inputmode="decimal" value="${cur}" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="suppfob" placeholder="—" style="flex:1;min-width:0;"></div></td>`;
+      return `<td class="editTd money${autoSource?' suppFobAuto':''}${ruleMissing?' suppFobRuleMissing':''}"${tt}><div style="display:flex;align-items:center;gap:3px;"><span style="color:${ruleMissing?'var(--ui-warning)':'var(--ui-text-muted)'};font-size:var(--ui-font-2xs);flex-shrink:0;">${ruleMissing?'⚠':unit}</span><input class="editCell money" type="text" inputmode="decimal" value="${cur}" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="suppfob" placeholder="—" style="flex:1;min-width:0;"></div></td>`;
     }
     case 'int': return `<td class="num">${fmtInt(v)}</td>`;
     case 'plm': return `<td class="num">${escapeHtml(fmtOC(v))}</td>`;
@@ -7564,7 +7591,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
       else{cur={group:g,span:1,start:index,end:index};runs.push(cur);}
     });
     theadHtml+='<tr class="groupRow">'+(withChk?'<th class="groupSpacer"></th>':'')+
-      runs.map((r,i)=>`<th colspan="${r.span}" class="${i>0?'groupDivider':''}" data-grp="${escapeHtml(r.group)}" data-start="${r.start}" data-end="${r.end}" style="--grp-accent:${GROUP_ACCENTS[r.group]||'var(--acc)'}">${escapeHtml(tableColumnGroupLabel(r.group))}</th>`).join('')+'</tr>';
+      runs.map((r,i)=>`<th colspan="${r.span}" class="${i>0?'groupDivider':''}" data-grp="${escapeHtml(r.group)}" data-start="${r.start}" data-end="${r.end}" style="--grp-accent:${GROUP_ACCENTS[r.group]||'var(--ui-accent)'}">${escapeHtml(tableColumnGroupLabel(r.group))}</th>`).join('')+'</tr>';
   }
   const checkFilterActive = !!normalizeCheckFilterMode(state.checkFilter[tableKey]);
   const checkFilterLabel=appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele';
@@ -8665,7 +8692,7 @@ function renderCpDimPanel(dim){
   const validSet = computeValidValueSet(base, otherEntries, meta.col);
   const vals = sortWithFacet(allVals, validSet);
   const selected = cpDimFilters[dim] || new Set();
-  panel.innerHTML = `<label style="display:flex;align-items:center;gap:6px;padding:4px 2px;font-weight:600;border-bottom:1px solid var(--line);margin-bottom:4px;">
+  panel.innerHTML = `<label style="display:flex;align-items:center;gap:6px;padding:4px 2px;font-weight:600;border-bottom:0;margin-bottom:4px;">
     <input type="checkbox" class="cpDimAll" ${selected.size===0?'checked':''}> Hepsi
   </label>` + facetChecklistHtml(vals, validSet, selected, 'cpDimChk');
   panel.querySelector('.cpDimAll').addEventListener('change', e=>{
@@ -8753,7 +8780,7 @@ function renderOrdersDimPanel(dim){
   const otherEntries=Object.keys(ORDERS_DIM_META).filter(d=>d!==dim).map(d=>[ordersDimFilters[d],ORDERS_DIM_META[d].col]);
   const validSet=computeValidValueSet(base,otherEntries,meta.col);
   const vals=sortWithFacet(allVals,validSet),selected=ordersDimFilters[dim]||new Set();
-  panel.innerHTML=`<label style="display:flex;align-items:center;gap:6px;padding:4px 2px;font-weight:600;border-bottom:1px solid var(--line);margin-bottom:4px;">
+  panel.innerHTML=`<label style="display:flex;align-items:center;gap:6px;padding:4px 2px;font-weight:600;border-bottom:0;margin-bottom:4px;">
     <input type="checkbox" class="ordersDimAll" ${selected.size===0?'checked':''}> ${appLang==='en'?'All':'Hepsi'}
   </label>`+facetChecklistHtml(vals,validSet,selected,'ordersDimChk');
   panel.querySelector('.ordersDimAll')?.addEventListener('change',e=>{
@@ -9994,25 +10021,26 @@ function openNotesEditor(id, key, options={}){
   const previousFocus = document.activeElement;
   const modal = document.createElement('div');
   modal.id = '_notesEditorModal';
-  modal.className = 'warnOverlay';
+  modal.className = 'warnOverlay';modal.dataset.uiMigrated='dialog';
+  modal.dataset.uiMigrated='note-editor';
   const orderCode = norm(row['Order Code']);
   const modelName = norm(row['Model Name']);
   const subtitle = [orderCode ? fmtOC(orderCode) : '', modelName].filter(Boolean).join(' · ');
   modal.innerHTML = `<div class="modalCard noteEditorCard" role="dialog" aria-modal="true" aria-labelledby="_notesEditorTitle">
-    <div style="padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+    <div class="uiDialogHead">
       <div style="min-width:0;">
         <div class="modalTitle" id="_notesEditorTitle">${escapeHtml(key==='Ek Not' ? L('Ek Not') : L('Sipariş Notu'))}</div>
-        ${subtitle?`<div style="margin-top:3px;color:var(--muted);font-size:var(--fs-xs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(subtitle)}</div>`:''}
+        ${subtitle?`<div class="uiDialogSub">${escapeHtml(subtitle)}</div>`:''}
       </div>
-      <button type="button" class="notesEditorClose" title="${escapeHtml(L('Kapat'))}" style="border:none;background:none;color:var(--muted);cursor:pointer;padding:4px;"><svg class="ic"><use href="#i-x"/></svg></button>
+      <button type="button" class="notesEditorClose" title="${escapeHtml(L('Kapat'))}"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
     <div class="noteEditorBody">
-      <textarea class="noteEditorArea" spellcheck="true" placeholder="${escapeHtml(L('Notunuzu buraya yazın…'))}">${escapeHtml(initialValue)}</textarea>
+      <textarea class="noteEditorArea" aria-labelledby="_notesEditorTitle" spellcheck="true" placeholder="${escapeHtml(L('Notunuzu buraya yazın…'))}">${escapeHtml(initialValue)}</textarea>
       <div class="noteEditorHint">${escapeHtml(orderCount>1?(appLang==='en'?`This edit applies to ${orderCount} orders in this note group. Ctrl+Enter to save.`:`Bu düzenleme not grubundaki ${orderCount} siparişe uygulanır. Ctrl+Enter ile kaydedebilirsiniz.`):L('Ctrl+Enter ile kaydedebilirsiniz.'))}</div>
     </div>
-    <div style="padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;">
-      <button type="button" class="tbtn notesEditorCancel">${escapeHtml(L('Vazgeç'))}</button>
-      <button type="button" class="navActionBtn pri notesEditorSave" style="background:var(--acc);border-color:var(--acc);color:var(--on-acc);"><svg class="ic"><use href="#i-device-floppy"/></svg> ${escapeHtml(L('Notu Kaydet'))}</button>
+    <div class="uiDialogFoot">
+      <button type="button" class="tbtn notesEditorCancel" data-ui-variant="quiet">${escapeHtml(L('Vazgeç'))}</button>
+      <button type="button" class="navActionBtn pri notesEditorSave" data-ui-variant="primary"><svg class="ic"><use href="#i-device-floppy"/></svg> ${escapeHtml(L('Notu Kaydet'))}</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
@@ -10039,7 +10067,13 @@ function openNotesEditor(id, key, options={}){
   modal.querySelector('.notesEditorSave').addEventListener('click', save);
   modal.addEventListener('click', e=>{ if(e.target===modal) close(); });
   modal.addEventListener('keydown', e=>{
-    if(e.key==='Escape'){ e.preventDefault(); close(); }
+    if(e.key==='Tab'){
+      const controls=[...modal.querySelectorAll('button:not(:disabled),textarea:not(:disabled)')];
+      const first=controls[0],last=controls[controls.length-1];
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+    }
+    else if(e.key==='Escape'){ e.preventDefault(); close(); }
     else if(e.key==='Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); save(); }
   });
   setTimeout(()=>{ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); },0);
@@ -10339,8 +10373,8 @@ function showSubmfrDrop(input){
   if(!_submfrDrop){ _submfrDrop = document.createElement('div'); _submfrDrop.className='submfrDrop'; document.body.appendChild(_submfrDrop); }
   const rect = input.getBoundingClientRect();
   // Modal içindeki üretici seçicisinde de aynı Sub-Mfr öneri listesini kullanıyoruz.
-  // Overlay z-index'i 400 olduğu için açılır liste modal üzerinde kalmalıdır.
-  _submfrDrop.style.zIndex = input.closest('.warnOverlay') ? '450' : '90';
+  // Portalled suggestions use the shared modal-menu band.
+  _submfrDrop.style.zIndex = input.closest('.warnOverlay') ? 'var(--ui-z-modal-menu)' : 'var(--ui-z-popover)';
   _submfrDrop.style.left = rect.left+'px'; _submfrDrop.style.top = (rect.bottom+3)+'px'; _submfrDrop.style.width = Math.max(rect.width,140)+'px';
   _submfrDrop.innerHTML = matches.map(v=>`<div class="submfrDropItem">${escapeHtml(v)}</div>`).join('');
   _submfrDrop.querySelectorAll('.submfrDropItem').forEach(item=>{
@@ -10378,7 +10412,7 @@ function showLicenseDrop(input){
   if(!_licenseDrop){ _licenseDrop=document.createElement('div'); _licenseDrop.className='submfrDrop'; document.body.appendChild(_licenseDrop); }
   const rect=input.getBoundingClientRect();
   const width=Math.max(rect.width,150), left=Math.min(rect.left,window.innerWidth-width-8);
-  _licenseDrop.style.zIndex = input.closest('.warnOverlay') ? '450' : '90';
+  _licenseDrop.style.zIndex = input.closest('.warnOverlay') ? 'var(--ui-z-modal-menu)' : 'var(--ui-z-popover)';
   _licenseDrop.style.left=Math.max(8,left)+'px'; _licenseDrop.style.top=(rect.bottom+3)+'px'; _licenseDrop.style.width=width+'px';
   _licenseDrop.innerHTML=matches.map(v=>`<div class="submfrDropItem">${escapeHtml(v)}</div>`).join('');
   _licenseDrop.querySelectorAll('.submfrDropItem').forEach(item=>item.addEventListener('mousedown',ev=>{
@@ -10642,7 +10676,7 @@ function updateOvFilterBadge(scope){
   });
   const label = appLang==='en' ? 'FILTERS' : 'Aktif Filtreler';
   const clearLabel = appLang==='en' ? 'Clear' : 'Temizle';
-  badge.innerHTML = `${label} — ${escapeHtml(parts.join(' · '))} <button type="button" class="ovFilterBadgeClear" data-scope="${scope}" style="margin-left:8px;border:none;background:none;color:var(--acc-ink);text-decoration:underline;cursor:pointer;font:inherit;">${clearLabel}</button>`;
+  badge.innerHTML = `${label} — ${escapeHtml(parts.join(' · '))} <button type="button" class="ovFilterBadgeClear" data-scope="${scope}" style="margin-left:8px;border:none;background:none;color:var(--ui-selected-ink);text-decoration:underline;cursor:pointer;font:inherit;">${clearLabel}</button>`;
   badge.style.display='block';
   badge.querySelector('.ovFilterBadgeClear')?.addEventListener('click', ()=>{
     ovSetStateFor(scope, {}); saveOvDimFilters(scope); updateOvFilterBadge(scope); renderOverview();
@@ -10654,7 +10688,7 @@ function renderOvFilterPopover(scope){
   const orderRows = overviewSummaryRows();
   const src = ovStateFor(scope);
   modal = document.createElement('div');
-  modal.id = 'ovFilterModal'; modal.className = 'warnOverlay';
+  modal.id = 'ovFilterModal'; modal.className = 'warnOverlay';modal.dataset.uiMigrated='dialog';
   // Çapraz filtre ipucu: bir boyutu seçince diğer boyutların listesinde o seçimle
   // birlikte var olan değerler üste/normal, olmayanlar alta/soluk gelir.
   const section = (dim) => {
@@ -10677,18 +10711,18 @@ function renderOvFilterPopover(scope){
   const titleText = appLang==='en' ? 'FILTERS' : 'Filtreler';
   const gridHtml = () => Object.keys(OV_DIM_META).map(section).join('');
   modal.innerHTML = `<div class="modalCard" style="max-width:640px;width:92%;max-height:82vh;display:flex;flex-direction:column;padding:0;">
-    <div class="modalTitle" style="margin:0;padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;">
+    <div class="modalTitle" style="margin:0;padding:16px 20px;border:0;display:flex;align-items:center;justify-content:space-between;">
       ${escapeHtml(titleText)}
-      <button type="button" class="ovFilterClose" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:15px;"><svg class="ic"><use href="#i-x"/></svg></button>
+      <button type="button" class="ovFilterClose" style="border:none;background:none;cursor:pointer;color:var(--ui-text-muted);font-size:var(--ui-font-md);"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
     <div id="ovFilterGrid" style="padding:14px 20px;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
       ${gridHtml()}
     </div>
-    <div style="padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:11px;color:var(--muted);">${appLang==='en' ? 'If no selection is made, all data in ASAS and Antrepo will be summarized.' : "Hiçbir seçim yapılmazsa ASAS+Antrepo'daki tüm veri özetlenir."}</span>
+    <div style="padding:12px 20px;border:0;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:var(--ui-font-2xs);color:var(--ui-text-muted);">${appLang==='en' ? 'If no selection is made, all data in ASAS and Antrepo will be summarized.' : "Hiçbir seçim yapılmazsa ASAS+Antrepo'daki tüm veri özetlenir."}</span>
       <div style="display:flex;gap:8px;">
         <button type="button" class="tbtn" id="ovFilterResetAll"><svg class="ic"><use href="#i-checklist"/></svg>${appLang==='en' ? 'Clear All' : 'Tümünü Temizle'}</button>
-        <button type="button" class="navActionBtn pri" id="ovFilterApplyClose" style="background:var(--acc);border-color:var(--acc);color:var(--on-acc);"><svg class="ic"><use href="#i-checklist"/></svg>${appLang==='en' ? 'Apply and Close' : 'Uygula ve Kapat'}</button>
+        <button type="button" class="navActionBtn pri" id="ovFilterApplyClose" style="background:var(--ui-accent);border-color:var(--ui-accent);color:var(--ui-on-accent);"><svg class="ic"><use href="#i-checklist"/></svg>${appLang==='en' ? 'Apply and Close' : 'Uygula ve Kapat'}</button>
       </div>
     </div>
   </div>`;
@@ -10716,7 +10750,9 @@ function renderOvFilterPopover(scope){
     wireGrid();
   }
   wireGrid();
-  const close = ()=>{ saveOvDimFilters(scope); updateOvFilterBadge(scope); renderOverview(); modal.remove(); };
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard(); saveOvDimFilters(scope); updateOvFilterBadge(scope); renderOverview(); modal.remove(); };
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   modal.querySelector('.ovFilterClose').addEventListener('click', close);
   modal.querySelector('#ovFilterApplyClose').addEventListener('click', close);
   modal.querySelector('#ovFilterResetAll').addEventListener('click', ()=>{
@@ -11191,7 +11227,7 @@ function renderOverviewNow(){
     const priorityHeaders=actionPriorityCodes().map(code=>`<th style="text-align:right">${escapeHtml(priorityDisplay(code))}</th>`).join('');
     tblSeason.innerHTML = `<tr><th>${appLang==='en'?'SEASON':'Sezon'}</th><th style="text-align:right">${appLang==='en'?'ORDER':'Sipariş'}</th>${priorityHeaders}<th style="text-align:right">${appLang==='en'?'TOTAL QUANTITY':'Toplam Adet'}</th></tr>` +
       seasonRows.map(([season,data])=>{
-        const cell = (val, pri, color) => `<td class="ovDrill" data-ov-season="${escapeHtml(season)}"${pri?` data-ov-pri="${pri}"`:''} style="text-align:right;font-family:var(--mono);${color?`color:${color};`:''}cursor:pointer;" title="CP'de göster">${val}</td>`;
+        const cell = (val, pri, color) => `<td class="ovDrill" data-ov-season="${escapeHtml(season)}"${pri?` data-ov-pri="${pri}"`:''} style="text-align:right;font-family:var(--ui-font-mono);${color?`color:${color};`:''}cursor:pointer;" title="CP'de göster">${val}</td>`;
         const priorityCells=actionPriorityCodes().map(code=>cell(data.priorities[code]||0,code,'')).join('');
         return `<tr><td>${escapeHtml(season)}</td>${cell(data.count,'','')}${priorityCells}${cell(data.qty.toLocaleString('tr-TR'),'','')}</tr>`;
       }).join('')+`<tr><td class="quantityTotalLabel">${appLang==='en'?'Total':'Toplam'}</td><td colspan="${1+actionPriorityCodes().length}"></td><td class="quantityTotalValue">${formatQuantityTotal(seasonQtyTotal)}</td></tr>`;
@@ -11243,12 +11279,12 @@ function renderOverviewNow(){
     tblBG.innerHTML = `<tr><th>${appLang==='en'?'Buying Group':'Buying Grup'}</th><th style="text-align:right">${appLang==='en'?'Active':'Aktif'}</th><th style="text-align:right">${appLang==='en'?'Total Orders':'Toplam Sipariş Sayısı'}</th><th style="text-align:right">${appLang==='en'?'Remaining Quantity':'Kalan Adet'}</th><th style="text-align:right">${appLang==='en'?'Total Quantity':'Toplam Adet Sayısı'}</th><th style="text-align:right">${appLang==='en'?'Active Total FOB':'Aktif Toplam FOB'}</th><th style="text-align:right">${appLang==='en'?'Total FOB':'Toplam FOB'}</th></tr>` +
       bgRows.map(([bg,d])=>`<tr>
         <td>${escapeHtml(bg)}</td>
-        <td style="text-align:right;font-family:var(--mono);color:var(--green-lite)">${d.active}</td>
-        <td style="text-align:right;font-family:var(--mono)">${d.total}</td>
-        <td style="text-align:right;font-family:var(--mono)">${d.remaining.toLocaleString('tr-TR')}</td>
-        <td style="text-align:right;font-family:var(--mono)">${d.totalQty.toLocaleString('tr-TR')}</td>
-        <td style="text-align:right;font-family:var(--mono)">$${Math.round(d.fobValueUsd).toLocaleString('tr-TR')}${d.fobValueTry?` + ${Math.round(d.fobValueTry).toLocaleString('tr-TR')} ₺`:''}</td>
-        <td style="text-align:right;font-family:var(--mono)">$${Math.round(d.totalFobValueUsd).toLocaleString('tr-TR')}${d.totalFobValueTry?` + ${Math.round(d.totalFobValueTry).toLocaleString('tr-TR')} ₺`:''}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono);color:var(--ui-success)">${d.active}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">${d.total}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">${d.remaining.toLocaleString('tr-TR')}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">${d.totalQty.toLocaleString('tr-TR')}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">$${Math.round(d.fobValueUsd).toLocaleString('tr-TR')}${d.fobValueTry?` + ${Math.round(d.fobValueTry).toLocaleString('tr-TR')} ₺`:''}</td>
+        <td style="text-align:right;font-family:var(--ui-font-mono)">$${Math.round(d.totalFobValueUsd).toLocaleString('tr-TR')}${d.totalFobValueTry?` + ${Math.round(d.totalFobValueTry).toLocaleString('tr-TR')} ₺`:''}</td>
       </tr>`).join('')+`<tr><td class="quantityTotalLabel">${appLang==='en'?'Total':'Toplam'}</td><td></td><td></td><td class="quantityTotalValue">${formatQuantityTotal(bgRemainingTotal)}</td><td class="quantityTotalValue">${formatQuantityTotal(bgQtyTotal)}</td><td></td><td></td></tr>`;
   } else {
     document.getElementById('kpiOrders').innerHTML='';
@@ -11263,7 +11299,7 @@ function groupCount(rows,key){
 function fillMiniTable(id, entries){
   const el = document.getElementById(id);
   el.innerHTML = `<tr><th>${appLang==='en'?'NAME':'Ad'}</th><th style="text-align:right">${appLang==='en'?'ORDER':'Sipariş'}</th></tr>` +
-    entries.map(([k,v])=>`<tr><td>${escapeHtml(k)}</td><td style="text-align:right;font-family:var(--mono)">${v}</td></tr>`).join('');
+    entries.map(([k,v])=>`<tr><td>${escapeHtml(k)}</td><td style="text-align:right;font-family:var(--ui-font-mono)">${v}</td></tr>`).join('');
 }
 // ================= ASAS + ANTREPO INTEGRATION ENGINE =================
 const LICMAP = {};
@@ -11795,10 +11831,10 @@ function openSuppFobRulesModal(){
   const licensors=[...new Set(cpRows.map(r=>norm(r.Licensor)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
   const licenses=[...new Set(cpRows.map(r=>norm(r.License)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
   const seasonOptions=[...new Set([...cpRows.map(r=>norm(r.Season)),...orderRows.map(r=>norm(r.Season)),...asasRows.map(r=>norm(r.season)),...working.flatMap(r=>r.seasons||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
-  const modal=document.createElement('div'); modal.id='_suppFobRulesModal'; modal.className='warnOverlay';
+  const modal=document.createElement('div'); modal.id='_suppFobRulesModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="_suppFobRulesTitle" style="width:min(97vw,1340px);max-height:92vh;display:flex;flex-direction:column;padding:0;">
-    <div style="padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
-      <div><div class="modalTitle" id="_suppFobRulesTitle">License Royalty Calculations</div><div style="margin-top:4px;color:var(--muted);font-size:11.5px;">Her hesap OPD tarih aralığı + sezon + üretim ülkesi + Licensor + License eşleşmesine uygulanır. Başlıklara tıklayarak sıralayabilir, alt satırdan sütun bazlı filtreleyebilirsiniz.</div></div>
+    <div style="padding:16px 20px;border:0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+      <div><div class="modalTitle" id="_suppFobRulesTitle">License Royalty Calculations</div><div style="margin-top:4px;color:var(--ui-text-muted);font-size:var(--ui-font-xs);">Her hesap OPD tarih aralığı + sezon + üretim ülkesi + Licensor + License eşleşmesine uygulanır. Başlıklara tıklayarak sıralayabilir, alt satırdan sütun bazlı filtreleyebilirsiniz.</div></div>
       <button type="button" class="pricingRuleBtn ghost iconOnly _rulesClose" title="Kapat" aria-label="Kapat"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
     <div style="padding:16px 20px;overflow:auto;display:flex;flex-direction:column;gap:14px;">
@@ -11818,9 +11854,9 @@ function openSuppFobRulesModal(){
         <div class="pricingRuleCheckOut" id="_ruleCheckOut"></div>
       </div>
       <div class="pricingRuleGrid">
-        <div class="pricingRuleField"><label>OPD Başlangıç <span style="font-weight:400;color:var(--muted);">(boş = −∞)</span></label><input id="_ruleOpdStart" type="date"></div>
-        <div class="pricingRuleField"><label>OPD Bitiş <span style="font-weight:400;color:var(--muted);">(boş = +∞)</span></label><input id="_ruleOpdEnd" type="date"></div>
-        <div class="pricingRuleField"><label>Sezon <span style="font-weight:400;color:var(--muted);">(çoklu seçim)</span></label><div class="pricingRuleSeasonPicker"><button type="button" class="pricingRuleSeasonBtn" id="_ruleSeasonBtn"><span>Tüm Sezonlar</span><span>▾</span></button><div class="pricingRuleSeasonPanel" id="_ruleSeasonPanel"></div></div></div>
+        <div class="pricingRuleField"><label>OPD Başlangıç <span style="font-weight:400;color:var(--ui-text-muted);">(boş = −∞)</span></label><input id="_ruleOpdStart" type="date"></div>
+        <div class="pricingRuleField"><label>OPD Bitiş <span style="font-weight:400;color:var(--ui-text-muted);">(boş = +∞)</span></label><input id="_ruleOpdEnd" type="date"></div>
+        <div class="pricingRuleField"><label>Sezon <span style="font-weight:400;color:var(--ui-text-muted);">(çoklu seçim)</span></label><div class="pricingRuleSeasonPicker"><button type="button" class="pricingRuleSeasonBtn" id="_ruleSeasonBtn"><span>Tüm Sezonlar</span><span>▾</span></button><div class="pricingRuleSeasonPanel" id="_ruleSeasonPanel"></div></div></div>
         <div class="pricingRuleField"><label>Üretim Ülkesi</label><select id="_ruleCountry"><option value="Non-TR">Non-TR</option><option value="TR">TR</option></select></div>
         <div class="pricingRuleField"><label>Licensor</label><input id="_ruleLicensor" list="_ruleLicensorList" autocomplete="off" placeholder="Licensor seçin"><datalist id="_ruleLicensorList">${licensors.map(v=>`<option value="${escapeHtml(v)}">`).join('')}</datalist></div>
         <div class="pricingRuleField"><label>License</label><input id="_ruleLicense" list="_ruleLicenseList" autocomplete="off" placeholder="Örn. Marvel"><datalist id="_ruleLicenseList">${licenses.map(v=>`<option value="${escapeHtml(v)}">`).join('')}</datalist></div>
@@ -11860,10 +11896,10 @@ function openSuppFobRulesModal(){
           <tbody id="_rulesBody"></tbody>
         </table>
       </div>
-      <div id="_rulesEmpty" style="display:none;padding:18px;text-align:center;color:var(--muted);">Henüz License Royalty hesabı eklenmedi.</div>
+      <div id="_rulesEmpty" style="display:none;padding:18px;text-align:center;color:var(--ui-text-muted);">Henüz License Royalty hesabı eklenmedi.</div>
     </div>
     <div class="pricingRuleFooter">
-      <span id="_rulesStatus" style="font-size:11.5px;color:var(--muted);"></span><span class="pricingRuleFooterSpacer" style="flex:1"></span>
+      <span id="_rulesStatus" style="font-size:var(--ui-font-xs);color:var(--ui-text-muted);"></span><span class="pricingRuleFooterSpacer" style="flex:1"></span>
       <button type="button" class="pricingRuleBtn tonal" id="_rulesApplyAll" title="Tüm kayıtlı kuralları eşleşen lisanslı siparişlere uygular ve mevcut Supp. FOB değerlerinin üzerine yazar"><svg class="ic"><use href="#i-refresh"/></svg> Tümüne Uygula</button>
       <button type="button" class="pricingRuleBtn ghost _rulesClose">Vazgeç</button>
       <button type="button" class="pricingRuleBtn primary" id="_rulesSave"><svg class="ic"><use href="#i-device-floppy"/></svg> Kuralları Kaydet</button>
@@ -11876,7 +11912,7 @@ function openSuppFobRulesModal(){
   const opdStart=$('_ruleOpdStart'),opdEnd=$('_ruleOpdEnd'),seasonBtn=$('_ruleSeasonBtn'),seasonPanel=$('_ruleSeasonPanel'),country=$('_ruleCountry'),licensor=$('_ruleLicensor'),license=$('_ruleLicense'),royalty=$('_ruleRoyalty'),hologram=$('_ruleHologram');
   function renderSeasonPicker(){
     const options=[...new Set([...seasonOptions,...selectedSeasons])].sort((a,b)=>a.localeCompare(b,'tr'));
-    seasonPanel.innerHTML=options.length?options.map(v=>`<label class="pricingRuleSeasonOption"><input type="checkbox" value="${escapeHtml(v)}" ${selectedSeasons.has(v)?'checked':''}> <span>${escapeHtml(v)}</span></label>`).join(''):'<div style="padding:8px;color:var(--muted);font-size:11.5px;">Sezon verisi bulunamadı. Boş seçim tüm sezonlara uygulanır.</div>';
+    seasonPanel.innerHTML=options.length?options.map(v=>`<label class="pricingRuleSeasonOption"><input type="checkbox" value="${escapeHtml(v)}" ${selectedSeasons.has(v)?'checked':''}> <span>${escapeHtml(v)}</span></label>`).join(''):'<div style="padding:8px;color:var(--ui-text-muted);font-size:var(--ui-font-xs);">Sezon verisi bulunamadı. Boş seçim tüm sezonlara uygulanır.</div>';
     seasonPanel.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{ if(inp.checked) selectedSeasons.add(inp.value); else selectedSeasons.delete(inp.value); updateSeasonButton(); }));
     updateSeasonButton();
   }
@@ -12129,7 +12165,7 @@ function openLandedMultipliersModal(){
   document.getElementById('_landedMultipliersModal')?.remove();
 
   const en=appLang==='en',current=kolDefaultLandedMultipliers();
-  const modal=document.createElement('div');modal.id='_landedMultipliersModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_landedMultipliersModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard landedMultiplierCard" role="dialog" aria-modal="true" aria-labelledby="_landedMultiplierTitle">
     <div class="landedMultiplierHead"><div><div class="modalTitle" id="_landedMultiplierTitle">${escapeHtml(en?'Landed Multipliers':'Landed Çarpanları')}</div><p>${escapeHtml(en?'Set the shared default multipliers used by Collection. A value entered manually inside a model’s Landed cell always overrides these defaults for that model.':'Koleksiyon’da kullanılan ortak varsayılan çarpanları belirleyin. Bir modelin Landed hücresine elle girilen değer, o model için her zaman bu varsayılanın önüne geçer.')}</p></div><button type="button" class="pricingRuleIconBtn _landedMultiplierClose" title="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="landedMultiplierBody">
@@ -12393,7 +12429,7 @@ function openTransitRulesModal(){
   const cpRows=(state.cp&&state.cp.rows)||[],orderRows=overviewSummaryRows(),asasRows=state.asasOrders||[];
   const seasonOptions=[...new Set([...cpRows.map(r=>norm(r.Season)),...orderRows.map(r=>norm(r.Season)),...asasRows.map(r=>norm(r.season)),...working.flatMap(r=>r.seasons||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
   const countryOptions=()=>[...new Set([...cpRows.map(r=>norm(r.Country)),...orderRows.map(r=>norm(r.Country)),...asasRows.map(r=>norm(countryEN(r.countryRaw))),...working.flatMap(r=>r.countries||[]),...(window.BLTransitAnalysisUI?.knownCountries?.()||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
-  const modal=document.createElement('div');modal.id='_transitRulesModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_transitRulesModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard trxModal" role="dialog" aria-modal="true" aria-labelledby="_transitRulesTitle">
     <header class="trxModalHead">
       <div><div class="modalTitle" id="_transitRulesTitle">${tl('Nakliye Tipine Göre Ülke Bazlı Yol Süreleri','Transit Times by Country and Shipping Type')}</div>
@@ -12426,7 +12462,7 @@ function openTransitRulesModal(){
           <div id="_transitEmpty" class="trxEmpty" style="display:none;"></div></div>
       </section>
     </div>
-    <footer class="trxModalFoot"><span id="_transitStatus" class="trxMeta"></span><span class="trxGrow"></span><button type="button" class="tbtn _transitClose">${tl('Vazgeç','Cancel')}</button><button type="button" class="navActionBtn" id="_transitSave" style="background:var(--acc);border-color:var(--acc);color:var(--on-acc);"><svg class="ic"><use href="#i-device-floppy"/></svg> ${tl('Kuralları Kaydet','Save Rules')}</button></footer>
+    <footer class="trxModalFoot"><span id="_transitStatus" class="trxMeta"></span><span class="trxGrow"></span><button type="button" class="tbtn _transitClose">${tl('Vazgeç','Cancel')}</button><button type="button" class="navActionBtn" id="_transitSave" style="background:var(--ui-accent);border-color:var(--ui-accent);color:var(--ui-on-accent);"><svg class="ic"><use href="#i-device-floppy"/></svg> ${tl('Kuralları Kaydet','Save Rules')}</button></footer>
   </div>`;
   document.body.appendChild(modal);
   const $=id=>modal.querySelector('#'+id),start=$('_transitStart'),end=$('_transitEnd'),days=$('_transitDays');
@@ -12520,10 +12556,10 @@ function openTransitRulesModal(){
   });
   days.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('_transitAdd').click();}});
   $('_transitClear').addEventListener('click',clearForm);
-  modal.querySelectorAll('._transitClose').forEach(btn=>btn.addEventListener('click',()=>modal.remove()));
-  modal.addEventListener('click',e=>{if(!e.target.closest('.trxPick'))closePickers();if(e.target===modal)modal.remove();});
-  modal.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();if(modal.querySelector('.trxPick.open'))closePickers();else modal.remove();}});
-  $('_transitSave').addEventListener('click',async()=>{const btn=$('_transitSave');btn.disabled=true;$('_transitStatus').textContent=tl('Kaydediliyor ve hesaplamalar yenileniyor…','Saving and refreshing calculations…');try{const clean=await persistTransitRules(working);modal.remove();showToast(tl(`${clean.length} nakliye yol süresi kuralı kaydedildi.`,`${clean.length} transit time rule(s) saved.`));}catch(err){btn.disabled=false;$('_transitStatus').textContent=tl('Kaydedilemedi: ','Could not save: ')+err.message;}});
+  modal.querySelectorAll('._transitClose').forEach(btn=>btn.addEventListener('click',()=>{window.BLLayerSystem?.closeDialog(modal);modal.remove();}));
+  modal.addEventListener('click',e=>{if(!e.target.closest('.trxPick'))closePickers();if(e.target===modal){window.BLLayerSystem?.closeDialog(modal);modal.remove();}});
+  window.BLLayerSystem?.openDialog(modal,{onClose:()=>{if(modal.querySelector('.trxPick.open')){closePickers();return;}window.BLLayerSystem?.closeDialog(modal);modal.remove();}});
+  $('_transitSave').addEventListener('click',async()=>{const btn=$('_transitSave');btn.disabled=true;$('_transitStatus').textContent=tl('Kaydediliyor ve hesaplamalar yenileniyor…','Saving and refreshing calculations…');try{const clean=await persistTransitRules(working);window.BLLayerSystem?.closeDialog(modal);modal.remove();showToast(tl(`${clean.length} nakliye yol süresi kuralı kaydedildi.`,`${clean.length} transit time rule(s) saved.`));}catch(err){btn.disabled=false;$('_transitStatus').textContent=tl('Kaydedilemedi: ','Could not save: ')+err.message;}});
   clearForm();
   // İthalat Yol Süresi Analizi paneli lazy yüklenir; öneriler yalnız bu
   // penceredeki çalışma listesine aktarılır, kalıcılık "Kuralları Kaydet" ile.
@@ -13068,7 +13104,7 @@ function showWarningDetailTable(detail){
     ? detail.columns
     : [...new Set(rows.flatMap(row=>Object.keys(row||{})))].map(key=>({key,label:key}));
   const ov=document.createElement('div');
-  ov.id='warningDetailOverlay';ov.className='warnOverlay warningDetailOverlay';
+  ov.id='warningDetailOverlay';ov.className='warnOverlay warningDetailOverlay';ov.dataset.uiMigrated='dialog';
   const total=Number(detail.totalRows)||rows.length;
   const trunc=detail.truncated&&total>rows.length;
   ov.innerHTML=`<section class="modalCard warningDetailCard" role="dialog" aria-modal="true">
@@ -13087,9 +13123,9 @@ function showWarningDetailTable(detail){
 function showWarnDetails(){
   document.getElementById('warnOverlay')?.remove();
   const ov = document.createElement('div');
-  ov.id='warnOverlay'; ov.className='warnOverlay';
-  ov.innerHTML = `<div class="modalCard warningListCard">
-    <div class="modalTitle warningListTitle">${escapeHtml(appLang==='en'?`Warnings (${appWarnings.length})`:`Uyarılar (${appWarnings.length})`)}
+  ov.id='warnOverlay'; ov.className='warnOverlay';ov.dataset.uiMigrated='dialog';
+  ov.innerHTML = `<div class="modalCard warningListCard" role="dialog" aria-modal="true" aria-labelledby="warningListTitle">
+    <div class="modalTitle warningListTitle" id="warningListTitle">${escapeHtml(appLang==='en'?`Warnings (${appWarnings.length})`:`Uyarılar (${appWarnings.length})`)}
       <button type="button" class="warnClose" aria-label="${escapeHtml(appLang==='en'?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <ol class="warningList">
       ${appWarnings.map((w,index)=>{
@@ -13098,7 +13134,10 @@ function showWarnDetails(){
       }).join('')}
     </ol>
   </div>`;
-  ov.addEventListener('click', e=>{ if(e.target===ov || e.target.closest('.warnClose')) ov.remove(); });
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();ov.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(ov,{onEscape:close})||(()=>{});
+  ov.addEventListener('click', e=>{ if(e.target===ov || e.target.closest('.warnClose')) close(); });
   ov.addEventListener('dblclick',e=>{
     const item=e.target.closest('.warningList li.hasDetail');if(!item)return;
     const message=appWarnings[Number(item.dataset.warningIndex)];
@@ -13482,7 +13521,7 @@ function renderSourceRefreshHistoryModal(items,selectedId,revision=0){
   if(state&&state.storeRevisions)state.storeRevisions.refreshHistory=_sourceRefreshHistoryState.revision;
   _sourceRefreshHistoryState.deleting=false;
   document.getElementById('_refreshSummaryModal')?.remove();
-  const modal=document.createElement('div'); modal.id='_refreshSummaryModal'; modal.className='warnOverlay';
+  const modal=document.createElement('div'); modal.id='_refreshSummaryModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard verHistCard sourceRefreshHistCard" role="dialog" aria-modal="true" aria-labelledby="sourceRefreshHistTitle">
     <div class="verHistTop"><div><h2 id="sourceRefreshHistTitle">${escapeHtml(t.title)}</h2><p class="verHistSub">${escapeHtml(t.sub)}</p></div>
       <button type="button" class="verHistClose" title="${escapeHtml(t.close)}" aria-label="${escapeHtml(t.close)}"><svg class="ic"><use href="#i-x"/></svg></button></div>
@@ -13626,7 +13665,7 @@ function notificationHistoryAdd(message,kind='toast'){const text=String(message=
 function notificationHistoryDate(value){const date=new Date(value);if(Number.isNaN(date.getTime()))return'';return new Intl.DateTimeFormat(appLang==='en'?'en-GB':'tr-TR',{dateStyle:'medium',timeStyle:'short'}).format(date);}
 function renderNotificationHistoryList(query=''){const host=document.getElementById('notificationHistoryList'),countEl=document.getElementById('notificationHistoryCount');if(!host)return;const t=notificationHistoryText(),all=notificationHistoryLoad().items,q=String(query||'').trim().toLocaleLowerCase('tr-TR'),items=q?all.filter(item=>item.message.toLocaleLowerCase('tr-TR').includes(q)):all;if(countEl)countEl.textContent=t.count(items.length);if(!items.length){host.innerHTML=`<div class="verHistEmpty">${escapeHtml(all.length?t.noMatch:t.empty)}</div>`;return;}host.innerHTML=items.map(item=>`<article class="notificationHistoryItem${item.read?'':' isUnread'}" data-notification-id="${escapeHtml(item.id)}"><span class="notificationHistoryMarker" aria-hidden="true"></span><div class="notificationHistoryCopy"><div class="notificationHistoryMeta"><span>${escapeHtml(item.kind==='center'?t.center:t.toast)}</span><time datetime="${escapeHtml(item.createdAt||'')}">${escapeHtml(notificationHistoryDate(item.createdAt))}</time></div><p>${escapeHtml(item.message)}</p></div><button type="button" class="notificationHistoryRemove" data-notification-remove="${escapeHtml(item.id)}" title="${escapeHtml(t.remove)}" aria-label="${escapeHtml(t.remove)}"><svg class="ic"><use href="#i-trash"/></svg></button></article>`).join('');}
 function notificationHistoryMarkAllRead(){const state=notificationHistoryLoad();let changed=false;state.items.forEach(item=>{if(!item.read){item.read=true;changed=true;}});if(changed)notificationHistorySave();notificationHistoryUpdateBadge();}
-function openNotificationHistory(){const t=notificationHistoryText();document.getElementById('notificationHistoryModal')?.remove();notificationHistoryMarkAllRead();const modal=document.createElement('div');modal.id='notificationHistoryModal';modal.className='warnOverlay';modal.innerHTML=`<div class="modalCard verHistCard notificationHistoryCard" role="dialog" aria-modal="true" aria-labelledby="notificationHistoryTitle"><div class="verHistTop"><div><h2 id="notificationHistoryTitle">${escapeHtml(t.title)}</h2><p class="verHistSub">${escapeHtml(t.sub)}</p></div><button type="button" class="verHistClose" data-notification-close title="${escapeHtml(t.close)}" aria-label="${escapeHtml(t.close)}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="verHistTools"><input type="search" id="notificationHistorySearch" placeholder="${escapeHtml(t.search)}" autocomplete="off"><span class="verHistCount" id="notificationHistoryCount"></span><button type="button" class="tbtn" id="notificationUpdateHistoryBtn"><svg class="ic"><use href="#i-reload"/></svg>${escapeHtml(appLang==='en'?'Update history':'Güncelleme geçmişi')}</button><button type="button" class="notificationHistoryClear" id="notificationHistoryClear"><svg class="ic"><use href="#i-trash"/></svg>${escapeHtml(t.clear)}</button></div><div class="notificationHistoryList" id="notificationHistoryList"></div><div class="verHistFoot"><button type="button" class="tbtn" data-notification-close>${escapeHtml(t.close)}</button></div></div>`;document.body.appendChild(modal);renderNotificationHistoryList('');const close=()=>{modal.remove();document.removeEventListener('keydown',onKey);},onKey=event=>{if(event.key==='Escape')close();};document.addEventListener('keydown',onKey);modal.addEventListener('click',event=>{if(event.target===modal){close();return;}if(event.target.closest('[data-notification-close]')){close();return;}const remove=event.target.closest('[data-notification-remove]');if(remove){const state=notificationHistoryLoad();state.items=state.items.filter(item=>item.id!==remove.dataset.notificationRemove);notificationHistorySave();renderNotificationHistoryList(modal.querySelector('#notificationHistorySearch')?.value||'');notificationHistoryUpdateBadge();}});// v7.26 — "Güncelleme geçmişi" artık Kaynak Veri şeridinde değil, bildirim
+function openNotificationHistory(){const t=notificationHistoryText();document.getElementById('notificationHistoryModal')?.remove();notificationHistoryMarkAllRead();const modal=document.createElement('div');modal.id='notificationHistoryModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';modal.innerHTML=`<div class="modalCard verHistCard notificationHistoryCard" role="dialog" aria-modal="true" aria-labelledby="notificationHistoryTitle"><div class="verHistTop"><div><h2 id="notificationHistoryTitle">${escapeHtml(t.title)}</h2><p class="verHistSub">${escapeHtml(t.sub)}</p></div><button type="button" class="verHistClose" data-notification-close title="${escapeHtml(t.close)}" aria-label="${escapeHtml(t.close)}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="verHistTools"><input type="search" id="notificationHistorySearch" placeholder="${escapeHtml(t.search)}" autocomplete="off"><span class="verHistCount" id="notificationHistoryCount"></span><button type="button" class="tbtn" id="notificationUpdateHistoryBtn"><svg class="ic"><use href="#i-reload"/></svg>${escapeHtml(appLang==='en'?'Update history':'Güncelleme geçmişi')}</button><button type="button" class="notificationHistoryClear" id="notificationHistoryClear"><svg class="ic"><use href="#i-trash"/></svg>${escapeHtml(t.clear)}</button></div><div class="notificationHistoryList" id="notificationHistoryList"></div><div class="verHistFoot"><button type="button" class="tbtn" data-notification-close>${escapeHtml(t.close)}</button></div></div>`;document.body.appendChild(modal);renderNotificationHistoryList('');const close=()=>{window.BLLayerSystem?.closeDialog(modal);modal.remove();};window.BLLayerSystem?.openDialog(modal,{onClose:close});modal.addEventListener('click',event=>{if(event.target===modal){close();return;}if(event.target.closest('[data-notification-close]')){close();return;}const remove=event.target.closest('[data-notification-remove]');if(remove){const state=notificationHistoryLoad();state.items=state.items.filter(item=>item.id!==remove.dataset.notificationRemove);notificationHistorySave();renderNotificationHistoryList(modal.querySelector('#notificationHistorySearch')?.value||'');notificationHistoryUpdateBadge();}});// v7.26 — "Güncelleme geçmişi" artık Kaynak Veri şeridinde değil, bildirim
 // penceresinin içinde: iki ayrı yerde iki ayrı geçmiş aramak yerine tek yer.
 modal.querySelector('#notificationUpdateHistoryBtn')?.addEventListener('click',()=>{close();openSourceRefreshHistory();});
 modal.querySelector('#notificationHistorySearch').addEventListener('input',event=>renderNotificationHistoryList(event.target.value));modal.querySelector('#notificationHistoryClear').addEventListener('click',()=>{if(!notificationHistoryLoad().items.length||!confirm(t.confirm))return;notificationHistoryLoad().items=[];notificationHistorySave();renderNotificationHistoryList('');notificationHistoryUpdateBadge();});setTimeout(()=>modal.querySelector('#notificationHistorySearch')?.focus(),0);}
@@ -14289,9 +14328,9 @@ function showSourceRefreshFailureModal(detail,repairAction=null,diagnosis=null){
     errorCode?`${en?'Code':'Kod'}: ${errorCode}`:'',
   ].filter(Boolean).join(' · ');
   const modal=document.createElement('div');
-  modal.id='sourceRefreshFailureModal';modal.className='warnOverlay';
+  modal.id='sourceRefreshFailureModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard refreshFailureCard" role="alertdialog" aria-modal="true">
-    <div class="modalTitle" style="margin:0;padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <div class="modalTitle" style="margin:0;padding:16px 20px;border-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <span>${escapeHtml(title)}</span>
       <button type="button" class="tbtn" data-refresh-failure-close aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
@@ -14309,7 +14348,9 @@ function showSourceRefreshFailureModal(detail,repairAction=null,diagnosis=null){
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
-  const close=()=>modal.remove();
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   modal.querySelectorAll('[data-refresh-failure-close]').forEach(btn=>btn.addEventListener('click',close));
   modal.querySelector('[data-refresh-repair]')?.addEventListener('click',()=>{
     close();
@@ -14819,7 +14860,7 @@ async function waitForRefreshJob(expectedJob=null){
         warnDetails.push(...data.fabricHeaderInfo.warningDetails);
       }
       setWarnings(warnList,warnDetails);
-      if(warnList.length) showToast(`${warnList.length} uyarı var — detay için durum satırındaki "⚠" sayacına tıklayın.`);
+      if(warnList.length) showToast(appLang==='en'?`${warnList.length} warnings — click the warning counter in the status bar for details.`:`${warnList.length} uyarı var — detay için durum satırındaki uyarı sayacına tıklayın.`);
     }
     // Sunucu hedefleri filtre bağının GERÇEK üyeleriyle genişletir; istemcinin
     // tahmini eskiyse (grup yeni düzenlendiyse) sunucunun listesi esas alınır.
@@ -15644,7 +15685,7 @@ async function openBrowserDebugSettingsModal(){
   const en=appLang==='en', label=(tr,eng)=>en?eng:tr;
   let payload={status:{configuration:{preferredBrowser:'system',selectedEdgeProfileDirectory:'',preferredPort:null,enabled:false},resolved:{},installedBrowsers:[],profiles:[],policy:null}};
   try{const response=await fetch('/api/browser-debug/status',{credentials:'same-origin'});payload=await response.json();if(!response.ok)throw new Error(payload.error||response.statusText);}catch(error){showToast(error.message||label('Browser ayarları okunamadı.','Browser settings could not be loaded.'));return;}
-  const modal=document.createElement('div');modal.id='_browserDebugSettingsModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_browserDebugSettingsModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard browserDebugCard" role="dialog" aria-modal="true" aria-labelledby="_browserDebugTitle"><div class="browserDebugHead"><div><div class="modalTitle" id="_browserDebugTitle">${label('Browser ve Remote Debugging','Browser & Remote Debugging')}</div><p>${label('Kurumsal sitelerdeki mevcut oturumlarınızı kullanmak için Buyer Log tarayıcı bağlantısını yönetin.','Manage the Buyer Log browser connection for authenticated corporate sites.')}</p></div><button type="button" class="pricingRuleIconBtn" data-close aria-label="${label('Kapat','Close')}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="browserDebugGrid"><label>${label('Browser','Browser')}<select id="_browserDebugBrowser"><option value="system">${label('System Default (Recommended)','System Default (Recommended)')}</option><option value="edge">Microsoft Edge</option><option value="chrome">Google Chrome</option></select></label><label>${label('Detected Browser','Detected Browser')}<output id="_browserDebugDetected">—</output></label><label>${label('Profile','Profile')}<select id="_browserDebugProfile"></select></label><label>${label('Policy','Policy')}<output id="_browserDebugPolicy">—</output></label><label>${label('Port','Port')}<input id="_browserDebugPort" type="number" min="1024" max="65535" step="1"></label><label>${label('Connection','Connection')}<output id="_browserDebugConnection">—</output></label></div><p id="_browserDebugHelper" class="browserDebugHelper"></p><div id="_browserDebugDetails" class="browserDebugDetails" role="status" aria-live="polite"></div><div class="modalFoot"><button type="button" class="tbtn" data-close>${label('Kapat','Close')}</button><button type="button" class="tbtn" data-test>${label('Test Connection','Test Connection')}</button><button type="button" class="tbtn" data-disable>${label('Disable','Disable')}</button><button type="button" class="tbtn" data-restart>${label('Tarayıcıyı yeniden başlat','Restart browser')}</button><button type="button" class="tbtn primary" data-enable>${label('Enable & Launch','Enable & Launch')}</button></div></div>`;
   document.body.appendChild(modal);
   let config=payload.status.configuration||{}; const browser=modal.querySelector('#_browserDebugBrowser'), profile=modal.querySelector('#_browserDebugProfile'), port=modal.querySelector('#_browserDebugPort'), detected=modal.querySelector('#_browserDebugDetected'), policy=modal.querySelector('#_browserDebugPolicy'), connection=modal.querySelector('#_browserDebugConnection'), helper=modal.querySelector('#_browserDebugHelper'), details=modal.querySelector('#_browserDebugDetails');
@@ -15714,7 +15755,9 @@ async function openBrowserDebugSettingsModal(){
     renderProfiles();
   };
   render();
-  const close=()=>modal.remove();modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));modal.addEventListener('click',e=>{if(e.target===modal)close();});browser.addEventListener('change',async()=>{const active=currentBrowser();if(active==='edge'||active==='chrome'){try{const response=await fetch(`/api/browser-debug/profiles?browser=${encodeURIComponent(active)}`,{credentials:'same-origin'});const data=await response.json();payload.status.profiles=data.profiles||[];}catch(_){}}if(modal.isConnected)render();});
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));modal.addEventListener('click',e=>{if(e.target===modal)close();});browser.addEventListener('change',async()=>{const active=currentBrowser();if(active==='edge'||active==='chrome'){try{const response=await fetch(`/api/browser-debug/profiles?browser=${encodeURIComponent(active)}`,{credentials:'same-origin'});const data=await response.json();payload.status.profiles=data.profiles||[];}catch(_){}}if(modal.isConnected)render();});
   const body=()=>({preferredBrowser:browser.value,selectedEdgeProfileDirectory:profile.value||'',preferredPort:port.value?Number(port.value):null});
   /* "Cannot set properties of null (setting 'disabled')" HATASININ KAYNAĞI.
      Düğme işleyicileri finally bloğunda currentTarget üzerinden disabled
@@ -15861,7 +15904,7 @@ async function openModelImageLimitModal(){
   document.getElementById('_modelImageLimitModal')?.remove();
 
   const current=await loadModelImageSettings();
-  const modal=document.createElement('div');modal.id='_modelImageLimitModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_modelImageLimitModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const title=appLang==='en'?'Image Size Limit':'Görsel Boyut Limiti',help=appLang==='en'?'Enter the maximum size in KB. New PLM/manual images use this limit; existing larger images are optimized once in the background.':'Maksimum boyutu KB olarak girin. Yeni PLM/manuel görseller bu sınırı kullanır; daha büyük mevcut görseller arka planda bir kez optimize edilir.';
   const maxKb=Math.min(1024,Math.max(1,Number(current.maxKb)||5));
   modal.innerHTML=`<div class="modalCard modelImageLimitCard" role="dialog" aria-modal="true" aria-labelledby="_modelImageLimitTitle"><div class="modelImageLimitHead"><div><div class="modalTitle" id="_modelImageLimitTitle">${escapeHtml(title)}</div><p class="modelImageLimitHelp">${escapeHtml(help)}</p></div><button type="button" class="pricingRuleIconBtn" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><div class="modelImageLimitGrid"><div class="modelImageLimitControl"><label for="_modelImageLimitRange">${escapeHtml(appLang==='en'?'Maximum file size':'Maksimum dosya boyutu')}</label><div class="modelImageLimitValue"><input id="_modelImageLimitRange" type="range" min="1" max="1024" step="1" value="${maxKb}"><output id="_modelImageLimitOutput">${maxKb} KB</output></div><input id="_modelImageLimitInput" type="number" min="1" max="1024" step="1" value="${maxKb}"></div><div class="modelImageSample"><svg viewBox="0 0 120 120" role="img" aria-hidden="true" style="opacity:${Math.min(1,.45+maxKb/1800)}"><path d="M36 25 50 18h20l14 7 16 12-12 18-10-7v45H42V48l-10 7-16-18 20-12Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="M50 18c1 12 19 12 20 0" fill="none" stroke="currentColor" stroke-width="4"/></svg><span>${escapeHtml(appLang==='en'?'Sample quality':'Örnek kalite')}</span></div></div><div class="modelImageLimitDanger"><button type="button" class="tbtn danger" data-delete-all>${escapeHtml(appLang==='en'?'Delete all images':'Tüm görselleri sil')}</button><span>${escapeHtml(appLang==='en'?'Deletes stored model images after confirmation.':'Kayıtlı model görsellerini onaydan sonra siler.')}</span></div><div id="_modelImageLimitStatus" class="modelImageLimitStatus"></div><div class="modalFoot"><button type="button" class="tbtn" data-plm-image-package-open><svg class="ic"><use href="#i-picture"/></svg><span>${escapeHtml(appLang==='en'?'Import PLM Image Package':'PLM Görsel Paketini İçe Aktar')}</span></button><span style="flex:1"></span><button type="button" class="tbtn" data-close>${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-save>${escapeHtml(appLang==='en'?'Save':'Kaydet')}</button></div></div>`;
@@ -15891,13 +15934,14 @@ async function openSyncLocalDataModal(){
 
   let payload={settings:{},localDbPath:'—'};try{payload=await fetchJSON('/api/sync-settings');}catch(_){ }
   const s=payload.settings||{}, en=appLang==='en', moderator=Boolean(window.BLIsModerator&&window.BLIsModerator());
-  const modal=document.createElement('div');modal.id='_syncLocalDataModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_syncLocalDataModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const label=(tr,eng)=>en?eng:tr;
-  modal.innerHTML=`<div class="modalCard" role="dialog" aria-modal="true" style="width:min(92vw,620px);padding:20px"><div style="display:flex;justify-content:space-between;align-items:center"><div class="modalTitle">Sync &amp; Local Data</div><button type="button" class="pricingRuleIconBtn" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><label style="display:block;margin:16px 0 8px">${label('Shared Sync Folder','Shared Sync Folder')}<div style="display:flex;gap:8px;margin-top:6px"><input id="_syncFolder" type="text" value="${escapeHtml(s.sharedSyncRoot||'')}" style="flex:1"><button type="button" class="tbtn" data-browse>${label('Browse','Browse')}</button><button type="button" class="tbtn" data-test>${label('Test Connection','Test Connection')}</button></div></label><div style="color:var(--muted);font-size:12px;margin-bottom:12px">${label('Yerel DB','Local DB')}: <code>${escapeHtml(payload.localDbPath||'—')}</code></div><div id="_syncStatus" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;color:var(--muted);font-size:13px"></div><div id="_syncError" style="min-height:20px;color:var(--danger);margin-top:8px"></div>${moderator?`<div id="_syncHubInit" hidden style="margin-top:8px;padding:10px;border:1px solid var(--hair);background:var(--paper)"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><strong>${label('Shared Hub gerekli','Shared Hub required')}</strong><div style="margin-top:3px;color:var(--muted);font-size:11px">${label('Seçili boş klasörü Buyer Log ortak alanı olarak başlat.','Initialize the selected empty folder as the Buyer Log shared workspace.')}</div></div><button type="button" class="tbtn primary" data-init-hub>${label('Shared Hub Oluştur','Create Shared Hub')}</button></div></div>`:''}<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button type="button" class="tbtn" data-close>${label('Kapat','Close')}</button><button type="button" class="tbtn" data-save>${label('Kaydet','Save')}</button><button type="button" class="tbtn primary" data-now>${label('Sync Now','Sync Now')}</button></div></div>`;
+  modal.innerHTML=`<div class="modalCard" role="dialog" aria-modal="true" style="width:min(92vw,620px);padding:20px"><div style="display:flex;justify-content:space-between;align-items:center"><div class="modalTitle">Sync &amp; Local Data</div><button type="button" class="pricingRuleIconBtn" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><label style="display:block;margin:16px 0 8px">${label('Shared Sync Folder','Shared Sync Folder')}<div style="display:flex;gap:8px;margin-top:6px"><input id="_syncFolder" type="text" value="${escapeHtml(s.sharedSyncRoot||'')}" style="flex:1"><button type="button" class="tbtn" data-browse>${label('Browse','Browse')}</button><button type="button" class="tbtn" data-test>${label('Test Connection','Test Connection')}</button></div></label><div style="color:var(--ui-text-muted);font-size:var(--ui-font-xs);margin-bottom:12px">${label('Yerel DB','Local DB')}: <code>${escapeHtml(payload.localDbPath||'—')}</code></div><div id="_syncStatus" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;color:var(--ui-text-muted);font-size:var(--ui-font-sm)"></div><div id="_syncError" style="min-height:20px;color:var(--ui-danger);margin-top:8px"></div>${moderator?`<div id="_syncHubInit" hidden style="margin-top:8px;padding:10px;border:0;background:var(--ui-canvas)"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><strong>${label('Shared Hub gerekli','Shared Hub required')}</strong><div style="margin-top:3px;color:var(--ui-text-muted);font-size:var(--ui-font-2xs)">${label('Seçili boş klasörü Buyer Log ortak alanı olarak başlat.','Initialize the selected empty folder as the Buyer Log shared workspace.')}</div></div><button type="button" class="tbtn primary" data-init-hub>${label('Shared Hub Oluştur','Create Shared Hub')}</button></div></div>`:''}<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button type="button" class="tbtn" data-close>${label('Kapat','Close')}</button><button type="button" class="tbtn" data-save>${label('Kaydet','Save')}</button><button type="button" class="tbtn primary" data-now>${label('Sync Now','Sync Now')}</button></div></div>`;
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
-  const close=()=>modal.remove(), folder=()=>modal.querySelector('#_syncFolder');
+  const close=()=>{window.BLLayerSystem?.closeDialog(modal);modal.remove();}, folder=()=>modal.querySelector('#_syncFolder');
+  window.BLLayerSystem?.openDialog(modal,{onClose:close});
   modal.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',close));
   const render=(x)=>{const q=x||{};modal.querySelector('#_syncStatus').innerHTML=[
     [label('Yerel DB durumu','Local DB status'),q.localSnapshotDate?label('Hazır','Ready'):label('Bekleniyor','Waiting')],
@@ -15995,7 +16039,7 @@ function syncStatusNetwork(q,tx){const online=Boolean(q&&q.online),active=Boolea
 async function openSyncStatusModal(){
   document.getElementById('_syncStatusModal')?.remove();syncStatusModalRenderer=null;if(syncStatusPollTimer){clearInterval(syncStatusPollTimer);syncStatusPollTimer=0;}
   let payload={status:{}};try{payload=await fetchJSON('/api/sync-status');}catch(_){ }
-  const modal=document.createElement('div');modal.id='_syncStatusModal';modal.className='warnOverlay';const initial=payload.status||{},en=appLang==='en',tx=(tr,eng)=>appLang==='en'?eng:tr;
+  const modal=document.createElement('div');modal.id='_syncStatusModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';const initial=payload.status||{},en=appLang==='en',tx=(tr,eng)=>appLang==='en'?eng:tr;
   modal.innerHTML=`<div class="modalCard syncStatusModalCard" role="dialog" aria-modal="true" aria-labelledby="_syncStatusTitle"><div class="syncStatusModalHead"><div><div class="modalTitle" id="_syncStatusTitle">${tx('Sync durumu','Sync Status')}</div><p class="syncStatusModalSub">${tx('Yerel değişiklikleri ve ortak klasör durumunu tek görünümde izleyin.','Monitor local changes and the shared folder in one view.')}</p></div><button type="button" class="pricingRuleIconBtn" data-close aria-label="${tx('Kapat','Close')}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="syncStatusHero"><div class="syncStatusHeroMain"><span class="syncStatusDot" aria-hidden="true"></span><div><div class="syncStatusHeroTitle" data-sync-status role="status" aria-live="polite">—</div><div class="syncStatusHeroSub" data-sync-last-success>—</div></div></div><div class="syncStatusHeroSide"><div data-sync-network></div><label class="syncPeriodControl"><span>${tx('Sync','Sync')}</span><select data-period aria-label="${tx('Sync periyodu','Sync period')}"><option value="1">1 ${tx('dk','min')}</option><option value="2">2 ${tx('dk','min')}</option><option value="5">5 ${tx('dk','min')}</option><option value="10">10 ${tx('dk','min')}</option><option value="15">15 ${tx('dk','min')}</option><option value="manual">${tx('Manuel','Manual')}</option></select></label><label class="syncPeriodControl"><span>${tx('Paketleri sakla','Keep packages')}</span><select data-retention aria-label="${tx('Eski paketlerin silinme süresi','Package retention')}"><option value="7">7 ${tx('gün','days')}</option><option value="14">14 ${tx('gün','days')}</option><option value="30">30 ${tx('gün','days')}</option><option value="60">60 ${tx('gün','days')}</option><option value="90">90 ${tx('gün','days')}</option><option value="180">180 ${tx('gün','days')}</option><option value="365">365 ${tx('gün','days')}</option><option value="0">${tx('Süresiz','Never')}</option></select></label></div></div><section class="syncTransferGrid" aria-label="${tx('Transferler','Transfers')}"><div data-sync-upload></div><div data-sync-download></div></section><section class="syncStatusSource"><div class="syncStatusSourceHead"><b>${tx('Shared folder','Shared folder')}</b><span data-sync-network></span></div><div class="syncStatusSourcePath" data-sync-folder>—</div></section><section class="syncStatusFacts"><div><span>${tx('Last successful sync','Last successful sync')}</span><b data-sync-last-success>—</b></div><div><span>${tx('Last check','Last check')}</span><b data-sync-last-check>—</b></div><div><span>${tx('Next automatic sync','Next automatic sync')}</span><b data-sync-next>—</b></div><div><span>${tx('Last duration','Last duration')}</span><b data-sync-duration>—</b></div></section><section class="syncStatusLocal"><div><span class="syncSectionEyebrow">${tx('Local data','Local data')}</span><b data-sync-local-db>—</b></div><span data-sync-local-state>—</span></section><div class="syncStatusError" data-sync-error hidden><div><b data-sync-error-title>${tx('Shared folder unavailable','Shared folder unavailable')}</b><span data-sync-error-detail></span></div><button type="button" class="tbtn" data-test>${tx('Test connection','Test connection')}</button></div><details class="syncAdvancedDetails"><summary>${tx('Advanced details','Advanced details')}</summary><div class="syncAdvancedGrid"><div><span>Device ID</span><b data-sync-device>—</b></div><div><span>${tx('Period','Period')}</span><b data-sync-period>—</b></div><div><span>${tx('Local snapshot date','Local snapshot date')}</span><b data-sync-snapshot>—</b></div><div class="syncAdvancedWide"><span>${tx('Local DB path','Local DB path')}</span><b data-sync-local-db-path>—</b></div><div><span>Checkpoint</span><b data-sync-checkpoint>—</b></div><div><span>${tx('Conflict / Retry','Conflict / Retry')}</span><b data-sync-conflict>—</b></div><div><span>${tx('Corrupt packages','Corrupt packages')}</span><b data-sync-corrupt>—</b></div><div><span>${tx('Temizlenen paket','Pruned packages')}</span><b data-sync-pruned>—</b></div><div><span>${tx('Onay bekleyen olay','Awaiting peer ack')}</span><b data-sync-pending-ack>—</b></div><div><span>${tx('Downloaded / uploaded events','Downloaded / uploaded events')}</span><b data-sync-events>—</b></div><div><span>${tx('Downloaded / uploaded packages','Downloaded / uploaded packages')}</span><b data-sync-packages>—</b></div><div><span>${tx('Sync protocol','Sync protocol')}</span><b data-sync-protocol>—</b></div><div><span>${tx('Network traffic','Network traffic')}</span><b data-sync-traffic>—</b></div><div class="syncAdvancedWide"><span>Progress</span><b data-sync-progress>—</b></div></div></details><div class="syncConflictPanel" data-sync-conflicts-panel hidden aria-live="polite"></div><div class="syncStatusActions"><button type="button" class="tbtn" data-refresh>${tx('Refresh Status','Refresh Status')}</button><button type="button" class="tbtn" data-retry>${tx('Retry Failed','Retry Failed')}</button><button type="button" class="tbtn" data-conflicts>${tx('View Conflicts','View Conflicts')}</button><button type="button" class="tbtn primary" data-sync-now>${tx('Sync Now','Sync Now')}</button></div></div>`;document.body.appendChild(modal);
   const period=modal.querySelector('[data-period]'),retention=modal.querySelector('[data-retention]'),nowButton=modal.querySelector('[data-sync-now]');let syncRequest=null,latestStatus={...initial};
   const ruleStatus=document.createElement('p');ruleStatus.className='syncStatusHeroSub';ruleStatus.dataset.syncMasterRelease='';
@@ -16022,7 +16066,9 @@ async function openSyncStatusModal(){
     });
   }
 
-  const close=()=>{syncStatusModalRenderer=null;if(syncStatusPollTimer){clearInterval(syncStatusPollTimer);syncStatusPollTimer=0;}modal.remove();};
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();syncStatusModalRenderer=null;if(syncStatusPollTimer){clearInterval(syncStatusPollTimer);syncStatusPollTimer=0;}modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));modal.addEventListener('click',event=>{if(event.target===modal)close();});
   // Pencere başka bir yoldan DOM'dan kaldırıldıysa (ör. katman temizliği) canlı
   // sync olayı kaybolan elemana yazmaya çalışmasın; dinleyici ve zamanlayıcı kapatılır.
@@ -16116,7 +16162,7 @@ async function openDataMaintenanceModal(host=null){
       else if(kind==='safe'||kind==='browser'||kind==='legacy'){
         const scope=kind==='browser'?'browser':kind==='legacy'?'legacy':'all';const preview=await request('/api/data-maintenance/clean',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({apply:false,scope})});const plan=preview.result;
         const planLabel=scope==='legacy'?(en?'byte-identical inactive duplicate files':'byte-identical inactive duplicate dosya'):(en?'verified rebuildable files':'doğrulanmış yeniden üretilebilir dosya');
-        content.innerHTML=`<div class="blDataMaintSection"><div class="blDataMaintSectionHead">${escapeHtml(en?'Safe Clean Preview':'Safe Clean Önizleme')}</div><div style="padding:12px;font-size:12px">${Number(plan.fileCount)||0} ${escapeHtml(planLabel)} · <strong>${escapeHtml(blDataMaintBytes(plan.estimatedBytes))}</strong><br><span class="muted">${escapeHtml((plan.categories||[]).join(' · ')||'—')}</span></div></div>`;
+        content.innerHTML=`<div class="blDataMaintSection"><div class="blDataMaintSectionHead">${escapeHtml(en?'Safe Clean Preview':'Safe Clean Önizleme')}</div><div style="padding:12px;font-size:var(--ui-font-xs)">${Number(plan.fileCount)||0} ${escapeHtml(planLabel)} · <strong>${escapeHtml(blDataMaintBytes(plan.estimatedBytes))}</strong><br><span class="muted">${escapeHtml((plan.categories||[]).join(' · ')||'—')}</span></div></div>`;
         setStatus(en?'Preview only — nothing has been deleted.':'Yalnız önizleme — hiçbir şey silinmedi.');
         const confirmText=scope==='legacy'?(en?`Delete ${plan.fileCount} byte-identical files from verified inactive legacy roots (${blDataMaintBytes(plan.estimatedBytes)})? Active copies stay untouched.`:`Doğrulanmış inactive legacy root içindeki ${plan.fileCount} byte-identical dosya (${blDataMaintBytes(plan.estimatedBytes)}) silinsin mi? Aktif kopyalara dokunulmaz.`):(en?`Delete ${plan.fileCount} verified safe files (${blDataMaintBytes(plan.estimatedBytes)})? Business data and browser session/auth are excluded.`:`${plan.fileCount} doğrulanmış güvenli dosya (${blDataMaintBytes(plan.estimatedBytes)}) silinsin mi? İş verisi ve browser session/auth kapsam dışıdır.`);
         if(plan.fileCount&&confirm(confirmText)){
@@ -17216,7 +17262,7 @@ function openBacklogExportColumns(){
   const availableChecked=new Set(),selectedChecked=new Set();
   let searchQuery='';
   const tr=(en,tk)=>appLang==='en'?en:tk;
-  const modal=document.createElement('div');modal.id='backlogExportColumnsModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='backlogExportColumnsModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard backlogExportColumnsCard" role="dialog" aria-modal="true" aria-labelledby="backlogExportColumnsTitle"><div class="backlogDetailHead"><div class="backlogDetailHeadText"><div class="modalTitle" id="backlogExportColumnsTitle">${escapeHtml(tr('Excel options','Excel seçenekleri'))}</div><div class="backlogDetailMeta">${escapeHtml(tr('Manage exported columns and edit formula cells. Use {row} for the current Excel row.','Aktarılacak sütunları yönetin ve formül hücrelerini düzenleyin. Güncel Excel satırı için {row} kullanın.'))}</div></div><button type="button" class="backlogDetailClose" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><div class="backlogExportColumnsBody"><div class="backlogExportColumnsGroup"><h3>${escapeHtml(tr('Columns','Sütunlar'))}</h3><div class="backlogColManager">
     <div class="backlogColPane"><div class="backlogColPaneHead"><span>${escapeHtml(tr('Available columns','Kullanılabilir sütunlar'))}</span></div><input type="text" class="backlogColSearch" data-col-search placeholder="${escapeHtml(tr('Search…','Ara…'))}"><div class="backlogColList" data-col-available></div></div>
     <div class="backlogColManagerActions">
@@ -17229,7 +17275,9 @@ function openBacklogExportColumns(){
     <div class="backlogColPane"><div class="backlogColPaneHead"><span>${escapeHtml(tr('Columns in Excel','Excel’de yer alacak sütunlar'))}</span><span class="backlogColCount" data-col-count></span></div><div class="backlogColList" data-col-selected></div></div>
   </div></div><div class="backlogExportColumnsGroup"><h3>${escapeHtml(tr('Formula cells','Formül hücreleri'))}</h3><div class="backlogExportFormulaList" data-formula-list></div></div></div><div class="verHistFoot"><span style="flex:1"></span><button type="button" class="tbtn" data-close>${escapeHtml(tr('Cancel','İptal'))}</button><button type="button" class="tbtn primary" data-save>${escapeHtml(tr('Apply','Uygula'))}</button></div></div>`;
   document.body.appendChild(modal);
-  const close=()=>modal.remove();
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));
   modal.addEventListener('click',event=>{if(event.target===modal)close();});
   const availableEl=modal.querySelector('[data-col-available]');
@@ -17256,7 +17304,7 @@ function openBacklogExportColumns(){
       const item=catalog.get(id);
       const label=item?item.display:id;
       const tag=item&&item.group!=='field'?backlogColumnGroupTag(item.group):'';
-      return `<div class="backlogColRow navSortableItem" draggable="true" data-col-id="${escapeHtml(id)}"><input type="checkbox" data-sel-id="${escapeHtml(id)}" ${selectedChecked.has(id)?'checked':''}><span class="navDragGrip" aria-hidden="true">⋮⋮</span><span class="backlogColRowNum">${index+1}.</span><span class="backlogColRowLabel"${item?'':' style="font-style:italic;color:var(--muted)"'}>${escapeHtml(label)}</span>${tag?`<span class="backlogColTag">${escapeHtml(tag)}</span>`:''}<button type="button" class="backlogColRowBtn" data-col-up="${escapeHtml(id)}" title="${escapeHtml(tr('Move up','Yukarı taşı'))}" ${index===0?'disabled':''}><svg class="ic"><use href="#i-chevron-up"/></svg></button><button type="button" class="backlogColRowBtn" data-col-down="${escapeHtml(id)}" title="${escapeHtml(tr('Move down','Aşağı taşı'))}" ${index===workingSelected.length-1?'disabled':''}><svg class="ic"><use href="#i-chevron-down"/></svg></button><button type="button" class="backlogColRemove" data-col-remove="${escapeHtml(id)}" title="${escapeHtml(tr('Remove','Çıkar'))}">×</button></div>`;
+      return `<div class="backlogColRow navSortableItem" draggable="true" data-col-id="${escapeHtml(id)}"><input type="checkbox" data-sel-id="${escapeHtml(id)}" ${selectedChecked.has(id)?'checked':''}><span class="navDragGrip" aria-hidden="true">⋮⋮</span><span class="backlogColRowNum">${index+1}.</span><span class="backlogColRowLabel"${item?'':' style="font-style:italic;color:var(--ui-text-muted)"'}>${escapeHtml(label)}</span>${tag?`<span class="backlogColTag">${escapeHtml(tag)}</span>`:''}<button type="button" class="backlogColRowBtn" data-col-up="${escapeHtml(id)}" title="${escapeHtml(tr('Move up','Yukarı taşı'))}" ${index===0?'disabled':''}><svg class="ic"><use href="#i-chevron-up"/></svg></button><button type="button" class="backlogColRowBtn" data-col-down="${escapeHtml(id)}" title="${escapeHtml(tr('Move down','Aşağı taşı'))}" ${index===workingSelected.length-1?'disabled':''}><svg class="ic"><use href="#i-chevron-down"/></svg></button><button type="button" class="backlogColRemove" data-col-remove="${escapeHtml(id)}" title="${escapeHtml(tr('Remove','Çıkar'))}">×</button></div>`;
     }).join('');
   }
   function currentFormulaHeaders(){
@@ -17598,7 +17646,9 @@ function openBacklogAddDimensionDialog(){
   };
   fillHeaders();
   sourceSelect.addEventListener('change',fillHeaders);
-  const close=()=>overlay.remove();
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();overlay.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(overlay,{onEscape:close})||(()=>{});
   overlay.querySelector('[data-close]').addEventListener('click',close);
   overlay.querySelector('[data-cancel]').addEventListener('click',close);
   let pressedOnBackdrop=false;
@@ -17627,27 +17677,27 @@ function renderBacklogDimOrder(){
     // hariç; onun kendi tarih aralığı var). Üst çubuktaki kısayollar aynı seçimi
     // düzenler, iki ayrı durum yoktur.
     const canFilter = true;
-    const filterBtn = canFilter ? `<button class="backlogDimFilterBtn" data-dim="${dim}" title="${appLang==='en'?'Filter values for this dimension':'Bu boyut için değer filtrele'}" style="border:1px solid var(--line);background:${fCount?'var(--acc)':'none'};color:${fCount?'var(--on-acc)':'inherit'};border-radius:5px;cursor:pointer;font-size:11px;padding:2px 6px;">▾${fCount?' '+fCount:''}</button>` : '';
+    const filterBtn = canFilter ? `<button class="backlogDimFilterBtn" data-dim="${dim}" title="${appLang==='en'?'Filter values for this dimension':'Bu boyut için değer filtrele'}" style="border:0;background:${fCount?'var(--ui-accent)':'none'};color:${fCount?'var(--ui-on-accent)':'inherit'};border-radius:var(--ui-radius);cursor:pointer;font-size:var(--ui-font-2xs);padding:2px 6px;">▾${fCount?' '+fCount:''}</button>` : '';
     const moveBtn = area==='row'
-      ? `<button class="backlogToCol" data-dim="${dim}" title="${appLang==='en'?'Move to column area':'Sütun alanına taşı'}" style="border:1px solid var(--line);background:none;border-radius:5px;cursor:pointer;font-size:10.5px;padding:2px 6px;color:var(--acc-ink);white-space:nowrap;">${appLang==='en'?'To columns':'Sütun yap'}</button>`
-      : `<button class="backlogToRow" data-dim="${dim}" title="${appLang==='en'?'Move to row area':'Satır alanına taşı'}" style="border:1px solid var(--line);background:none;border-radius:5px;cursor:pointer;font-size:10.5px;padding:2px 6px;color:var(--acc-ink);white-space:nowrap;">${appLang==='en'?'To rows':'Satır yap'}</button>`;
-    return `<div style="display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--line);border-radius:6px;padding:4px 8px;">
-      <span style="min-width:16px;color:var(--muted);">${i+1}.</span>
+      ? `<button class="backlogToCol" data-dim="${dim}" title="${appLang==='en'?'Move to column area':'Sütun alanına taşı'}" style="border:0;background:none;border-radius:var(--ui-radius);cursor:pointer;font-size:var(--ui-font-2xs);padding:2px 6px;color:var(--ui-selected-ink);white-space:nowrap;">${appLang==='en'?'To columns':'Sütun yap'}</button>`
+      : `<button class="backlogToRow" data-dim="${dim}" title="${appLang==='en'?'Move to row area':'Satır alanına taşı'}" style="border:0;background:none;border-radius:var(--ui-radius);cursor:pointer;font-size:var(--ui-font-2xs);padding:2px 6px;color:var(--ui-selected-ink);white-space:nowrap;">${appLang==='en'?'To rows':'Satır yap'}</button>`;
+    return `<div style="display:flex;align-items:center;gap:6px;background:var(--ui-surface-soft);border:0;border-radius:var(--ui-radius);padding:4px 8px;">
+      <span style="min-width:16px;color:var(--ui-text-muted);">${i+1}.</span>
       <span style="flex:1;">${escapeHtml(backlogDimLabelUI(dim))}</span>
       ${filterBtn}
       ${moveBtn}
-      <button class="backlogDimUp" data-area="${area}" data-dim="${dim}" title="${appLang==='en'?'Move up':'Yukarı taşı'}" ${i===0?'disabled':''} style="border:none;background:none;cursor:pointer;padding:0 2px;color:var(--ink2);"><svg class="ic"><use href="#i-chevron-up"/></svg></button>
-      <button class="backlogDimDown" data-area="${area}" data-dim="${dim}" title="${appLang==='en'?'Move down':'Aşağı taşı'}" ${i===arr.length-1?'disabled':''} style="border:none;background:none;cursor:pointer;padding:0 2px;color:var(--ink2);"><svg class="ic"><use href="#i-chevron-down"/></svg></button>
+      <button class="backlogDimUp" data-area="${area}" data-dim="${dim}" title="${appLang==='en'?'Move up':'Yukarı taşı'}" ${i===0?'disabled':''} style="border:none;background:none;cursor:pointer;padding:0 2px;color:var(--ui-text-secondary);"><svg class="ic"><use href="#i-chevron-up"/></svg></button>
+      <button class="backlogDimDown" data-area="${area}" data-dim="${dim}" title="${appLang==='en'?'Move down':'Aşağı taşı'}" ${i===arr.length-1?'disabled':''} style="border:none;background:none;cursor:pointer;padding:0 2px;color:var(--ui-text-secondary);"><svg class="ic"><use href="#i-chevron-down"/></svg></button>
     </div>`;
   };
-  let html = `<div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:2px 0 4px;font-weight:700;">${appLang==='en'?'Rows':'Satırlar'}</div>`;
+  let html = `<div style="font-size:var(--ui-font-2xs);color:var(--ui-text-muted);text-transform:uppercase;letter-spacing:.5px;margin:2px 0 4px;font-weight:700;">${appLang==='en'?'Rows':'Satırlar'}</div>`;
   html += backlogGroupBy.length
     ? backlogGroupBy.map((d,i)=>chip(d,i,'row',backlogGroupBy)).join('')
-    : `<span style="color:var(--muted);">${appLang==='en'?'No dimension selected yet.':'Henüz bir boyut seçilmedi.'}</span>`;
-  html += `<div style="font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 4px;font-weight:700;">${appLang==='en'?'Columns':'Sütunlar'}</div>`;
+    : `<span style="color:var(--ui-text-muted);">${appLang==='en'?'No dimension selected yet.':'Henüz bir boyut seçilmedi.'}</span>`;
+  html += `<div style="font-size:var(--ui-font-2xs);color:var(--ui-text-muted);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 4px;font-weight:700;">${appLang==='en'?'Columns':'Sütunlar'}</div>`;
   html += backlogColBy.length
     ? backlogColBy.map((d,i)=>chip(d,i,'col',backlogColBy)).join('')
-    : `<span style="color:var(--muted);font-size:11.5px;">${appLang==='en'?'Empty — move a dimension here with "To columns".':'Boş — bir boyutu "Sütun yap" ile buraya taşıyabilirsin.'}</span>`;
+    : `<span style="color:var(--ui-text-muted);font-size:var(--ui-font-xs);">${appLang==='en'?'Empty — move a dimension here with "To columns".':'Boş — bir boyutu "Sütun yap" ile buraya taşıyabilirsin.'}</span>`;
   wrap.innerHTML = html;
   const refresh = ()=>{ renderBacklogDimOrder(); backlogExpanded.clear(); saveBacklogAutoState(); fetchCurrentBacklog(); };
   wrap.querySelectorAll('.backlogDimUp').forEach(b=> b.addEventListener('click', ()=>{
@@ -17765,10 +17815,10 @@ function openBacklogPivotSettings(){
   const fields=backlogSettingsFieldPool();
   const draft=backlogSettingsDraft();
   const modal=document.createElement('div');
-  modal.id='_backlogPivotSettingsModal';modal.className='autoModalOverlay';
+  modal.id='_backlogPivotSettingsModal';modal.className='autoModalOverlay';modal.dataset.uiMigrated='dialog';
   const dateLevelLabel={year:appLang==='en'?'Year':'Yıl',month:appLang==='en'?'Month':'Ay',week:appLang==='en'?'Week':'Hafta',day:appLang==='en'?'Day':'Gün'};
-  modal.innerHTML='<div class="autoModal oabSettingsModal backlogPivotSettingsModal">'
-    +'<header><h3>'+escapeHtml(appLang==='en'?'Backlog Pivot Settings':'Backlog Pivot Ayarları')+'</h3><button type="button" data-backlog-settings-close>×</button></header>'
+  modal.innerHTML='<div class="autoModal oabSettingsModal backlogPivotSettingsModal" role="dialog" aria-modal="true" aria-labelledby="backlogPivotSettingsTitle">'
+    +'<header><h3 id="backlogPivotSettingsTitle">'+escapeHtml(appLang==='en'?'Backlog Pivot Settings':'Backlog Pivot Ayarları')+'</h3><button type="button" data-backlog-settings-close>×</button></header>'
     +'<div class="autoModalBody backlogPivotSettingsBody">'
       +'<div class="oabSettingsSection"><div class="oabSettingsSectionHead"><span>'+escapeHtml(appLang==='en'?'Report Pre-Filters':'Rapor Ön Filtreleri')+'</span></div>'
         +'<div class="backlogSettingsDateGrid">'
@@ -17798,7 +17848,9 @@ function openBacklogPivotSettings(){
   const renderAxes=()=>{rowsList.innerHTML=draft.rows.map(dim=>backlogSettingsAxisRowHtml(dim,'rows',fields)).join('');colsList.innerHTML=draft.columns.map(dim=>backlogSettingsAxisRowHtml(dim,'columns',fields)).join('');backlogSettingsRefreshOrderButtons(rowsList);backlogSettingsRefreshOrderButtons(colsList);};
   const renderFilters=()=>{filtersList.innerHTML=draft.filterDims.map(dim=>backlogSettingsFilterRowHtml(dim,fields,draft)).join('');};
   const syncDraftAxes=()=>{draft.rows=[...rowsList.querySelectorAll('.backlogPivotAxisField')].map(el=>el.value).filter(Boolean);draft.columns=[...colsList.querySelectorAll('.backlogPivotAxisField')].map(el=>el.value).filter(Boolean);};
-  const close=()=>{if(typeof closeHeaderFilter==='function')closeHeaderFilter();modal.remove();};
+  let releaseKeyboard=()=>{};
+  const close=()=>{if(typeof closeHeaderFilter==='function')closeHeaderFilter();modal.remove();releaseKeyboard();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   renderAxes();renderFilters();
   modal.querySelectorAll('[data-backlog-settings-close]').forEach(btn=>btn.addEventListener('click',close));
   let pressedOnBackdrop=false;
@@ -17952,17 +18004,17 @@ function renderBacklogHeader(){
   const colgroup = table.querySelector('colgroup');
   const theadRow = table.querySelector('thead tr');
   const rowsLabel = (backlogGroupBy && backlogGroupBy.length) ? backlogGroupBy.map(d=>BACKLOG_DIM_LABELS_FE[d]).join(' → ') : 'Grup';
-  const th = (txt, extra) => `<th style="padding:8px;background:var(--thead-bg);color:var(--thead-ink);white-space:nowrap;position:relative;${extra||''}">${txt}</th>`;
+  const th = (txt, extra) => `<th style="padding:8px;background:var(--ui-header-bg);color:var(--ui-header-ink);white-space:nowrap;position:relative;${extra||''}">${txt}</th>`;
   if(backlogPivotCols.length){
     colgroup.innerHTML = `<col id="backlogColGroup">` + backlogPivotCols.map(()=>'<col style="width:110px;">').join('') + `<col id="backlogColQty"><col id="backlogColOrders"><col style="width:56px;">`;
-    theadRow.innerHTML = `<th style="padding:8px;background:var(--thead-bg);color:var(--thead-ink);text-align:left;position:relative;" id="backlogTreeHeaderLabel">${escapeHtml(rowsLabel)}</th>`
-      + backlogPivotCols.map(k=>th(escapeHtml(k)+' <span style="font-weight:400;color:var(--muted);">Adet</span>','text-align:right;')).join('')
+    theadRow.innerHTML = `<th style="padding:8px;background:var(--ui-header-bg);color:var(--ui-header-ink);text-align:left;position:relative;" id="backlogTreeHeaderLabel">${escapeHtml(rowsLabel)}</th>`
+      + backlogPivotCols.map(k=>th(escapeHtml(k)+' <span style="font-weight:400;color:var(--ui-text-muted);">Adet</span>','text-align:right;')).join('')
       + th('Toplam Adet','text-align:right;').replace('<th ','<th id="backlogThQty" ')
       + th('Sipariş','text-align:right;').replace('<th ','<th id="backlogThOrders" ')
       + th('','');
   } else {
     colgroup.innerHTML = `<col id="backlogColGroup"><col id="backlogColQty"><col id="backlogColOrders"><col style="width:56px;">`;
-    theadRow.innerHTML = `<th style="padding:8px;background:var(--thead-bg);color:var(--thead-ink);text-align:left;position:relative;" id="backlogTreeHeaderLabel">${escapeHtml(rowsLabel)}</th>`
+    theadRow.innerHTML = `<th style="padding:8px;background:var(--ui-header-bg);color:var(--ui-header-ink);text-align:left;position:relative;" id="backlogTreeHeaderLabel">${escapeHtml(rowsLabel)}</th>`
       + th('Adet','text-align:right;').replace('<th ','<th id="backlogThQty" ')
       + th('Sipariş Sayısı','text-align:right;').replace('<th ','<th id="backlogThOrders" ')
       + th('','');
@@ -18001,7 +18053,7 @@ function renderBacklog(data){
   const body = document.getElementById('backlogTreeBody');
   if(!data.tree){
     renderBacklogHeader();
-    body.innerHTML = `<tr><td colspan="4" style="padding:14px;color:var(--muted);text-align:center;">Bir gruplama boyutu seç (yukarıdaki kutucuklardan).</td></tr>`;
+    body.innerHTML = `<tr><td colspan="4" style="padding:14px;color:var(--ui-text-muted);text-align:center;">Bir gruplama boyutu seç (yukarıdaki kutucuklardan).</td></tr>`;
     document.getElementById('backlogTreeTable')?.tFoot?.remove();
     return;
   }
@@ -18063,14 +18115,14 @@ function renderBacklogFlatRows(flat){
     const pivotCells = backlogPivotCols.length
       ? backlogPivotCols.map(k=>{
           const c = r.colTotals && r.colTotals[k];
-          return `<td style="padding:6px 8px;text-align:right;font-family:var(--mono);${c?'':'color:var(--muted);'}">${c?fmtQty(c.qty):'·'}</td>`;
+          return `<td style="padding:6px 8px;text-align:right;font-family:var(--ui-font-mono);${c?'':'color:var(--ui-text-muted);'}">${c?fmtQty(c.qty):'·'}</td>`;
         }).join('')
       : '';
     return `<tr class="backlogRow depth-${r.depth}" data-path="${r.path}" data-depth="${r.depth}" style="${r.visible?'':'display:none;'}">
         <td class="backlogTreeCell" style="padding-left:${10 + r.depth*22}px;">${arrow}<span class="backlogTreeLabel">${escapeHtml(String(r.label))}</span></td>
         ${pivotCells}
-        <td style="padding:6px 8px;text-align:right;font-family:var(--mono);font-weight:${r.depth===0?'650':'400'};">${fmtQty(r.qty)}</td>
-        <td style="padding:6px 8px;text-align:right;font-family:var(--mono);">${fmtQty(r.orders)}</td>
+        <td style="padding:6px 8px;text-align:right;font-family:var(--ui-font-mono);font-weight:${r.depth===0?'650':'400'};">${fmtQty(r.qty)}</td>
+        <td style="padding:6px 8px;text-align:right;font-family:var(--ui-font-mono);">${fmtQty(r.orders)}</td>
         <td style="padding:4px 8px;text-align:center;">${r.rows?`<button class="backlogDetailBtn" data-path="${r.path}" title="Bu gruptaki siparişlerin detayını göster" aria-label="Bu gruptaki siparişlerin detayını göster"><svg class="ic"><use href="#i-search"/></svg></button>`:''}</td>
       </tr>`;
   }).join('');
@@ -19559,7 +19611,7 @@ function beginThemeSwapCurtain(label){
   curtain.id='_themeSwapCurtain';
   curtain.setAttribute('role','status');
   curtain.setAttribute('aria-live','polite');
-  curtain.style.cssText='position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;font:500 14px/1.45 system-ui,-apple-system,sans-serif;';
+  curtain.style.cssText='position:fixed;inset:0;z-index:var(--ui-z-boot);display:flex;align-items:center;justify-content:center;font:500 var(--ui-font-base)/1.45 var(--ui-font-body);';
   curtain.style.background=cs.backgroundColor||'#fff';
   curtain.style.color=cs.color||'#000';
   curtain.textContent=String(label||'');
@@ -20527,10 +20579,9 @@ function renderShipTable(){
   const table = document.getElementById('shipTable');
   buildColgroup(table, 'ship', true);
   const thead = table.querySelector('thead');
-  thead.innerHTML = '<tr><th style="padding:8px;background:var(--navy-deep);color:#fff;"><input type="checkbox" id="shipChkAll"></th>' +
+  thead.innerHTML = '<tr><th style="padding:8px;background:var(--ui-header-bg);color:var(--ui-header-ink);"><input type="checkbox" id="shipChkAll"></th>' +
     cols.map(c=>{
-      const bg = SHIP_HEADER_COLORS[c.k] || '#00B0F0';
-      return `<th data-k="${c.k}" style="padding:6px 8px;background:${bg};color:#000;text-align:left;font-weight:700;font-size:10.5px;">${escapeHtml(c.label)}</th>`;
+      return `<th data-k="${c.k}" style="padding:6px 8px;background:var(--ui-header-bg);color:var(--ui-header-ink);text-align:left;font-weight:700;font-size:var(--ui-font-2xs);">${escapeHtml(c.label)}</th>`;
     }).join('') + '</tr>';
   thead.querySelectorAll('th[data-k]').forEach(th=>{
     const key = th.dataset.k;
@@ -20542,8 +20593,8 @@ function renderShipTable(){
     const editable = c => row._canEdit!==false && (c.type==='manual' || c.type==='manual-num' || c.type==='manual-date' || c.type==='auto' || c.type==='auto-num' || c.type==='auto-date');
     const tds = cols.map(c=>{
       if(!editable(c)){
-        const lock=row._canEdit===false&&c.type!=='formula'&&c.type!=='formula-date'?'<span class="viewOnlyLock" aria-hidden="true">🔒</span> ':'';
-        return `<td class="${row._canEdit===false?'viewOnlyCell':''}" style="padding:4px 8px;color:var(--muted);font-family:var(--mono);white-space:nowrap;">${lock}${escapeHtml(shipCellDisplay(c,row))}</td>`;
+        const lock=row._canEdit===false&&c.type!=='formula'&&c.type!=='formula-date'?'<span class="viewOnlyLock" aria-hidden="true">⊟</span> ':'';
+        return `<td class="${row._canEdit===false?'viewOnlyCell':''}" style="padding:4px 8px;color:var(--ui-text-muted);font-family:var(--ui-font-mono);white-space:nowrap;">${lock}${escapeHtml(shipCellDisplay(c,row))}</td>`;
       }
       const isDate = c.type.endsWith('date');
       const isNum = c.type.endsWith('num');
@@ -20555,7 +20606,7 @@ function renderShipTable(){
           ? (appLang==='en'?'Manually edited FX rate':'Elle güncellenmiş kur')
           : (row._kurResolvedMonth ? `${appLang==='en'?'FX month':'Kur ayı'}: ${row._kurResolvedMonth}${row._kurExact?'':` (${appLang==='en'?'nearest available':'en yakın mevcut'})`}` : (appLang==='en'?'Editable; Update FX uses Ex-Factory month':'Düzenlenebilir; Kur Güncelle Ex-Factory ayını kullanır')))
         : '';
-      return `<td style="padding:2px 4px;"><input type="${inputType}" ${isNum?'inputmode="decimal"':''} class="shipEditCell" data-shipid="${row._shipId}" data-key="${c.k}" value="${escapeHtml(String(dispVal))}" ${fxTitle?`title="${escapeHtml(fxTitle)}"`:''} style="width:100%;border:1px solid transparent;background:transparent;font-size:11.5px;padding:3px 5px;border-radius:var(--r-xs);color:var(--table-ink);"></td>`;
+      return `<td style="padding:2px 4px;"><input type="${inputType}" ${isNum?'inputmode="decimal"':''} class="shipEditCell" data-shipid="${row._shipId}" data-key="${c.k}" value="${escapeHtml(String(dispVal))}" ${fxTitle?`title="${escapeHtml(fxTitle)}"`:''} style="width:100%;border:0;background:transparent;font-size:var(--ui-font-xs);padding:3px 5px;border-radius:var(--ui-radius);color:var(--ui-text);"></td>`;
     }).join('');
     return `<tr data-shipid="${row._shipId}" class="${row._canEdit===false?'rowViewOnly':''}"><td style="padding:4px 8px;"><input type="checkbox" class="shipRowChk" data-shipid="${row._shipId}" ${shipSelected.has(row._shipId)?'checked':''}></td>${tds}</tr>`;
   }).join('');
@@ -20766,7 +20817,7 @@ function openFreightModal(rows){
   let activeKey = entries[0].key;
 
   const modal = document.createElement('div');
-  modal.id='_freightModal'; modal.className='warnOverlay';
+  modal.id='_freightModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const who = multi
     ? (en?`${list.length} orders — each calculated with its own quantity and price`:`${list.length} sipariş — her biri kendi adedi ve fiyatıyla hesaplanır`)
     : (entries[0].row ? entries[0].label : (en?'Standalone calculation — no row is updated':'Serbest hesap — hiçbir satır güncellenmez'));
@@ -21180,6 +21231,19 @@ function _xlsArgbFromHex(hex){
   if(/^[0-9A-F]{6}$/.test(raw))return 'FF'+raw;
   return null;
 }
+// Frozen pre-Manifest body palette for the generic Shipping workbook. The
+// dedicated Shipping workbook/clipboard already has its own fixed palette.
+function shipDomExportPalette(td){
+  const theme=document.documentElement.dataset.theme;
+  const tones=theme==='dark'?{body:'#f0f3f6',muted:'#a0adba'}
+    :theme==='grey'?{body:'#101820',muted:'#414e5a'}:{body:'#16212d',muted:'#627184'};
+  const calculated=!td.querySelector('input')&&td.cellIndex>0;
+  return {bg:null,color:calculated?tones.muted:tones.body,bold:false};
+}
+function shipDomExportRowHeight(){
+  // Original four-size row geometry, independent of the live control font.
+  return [32,36,40,28][normalizeUiFontStep(document.documentElement.dataset.fontStep)]*72/96;
+}
 function _xlsCellFromTd(td,options){
   options=options||{};
   // Hücre metni: rozet varsa rozetten, input/select varsa değerinden, yoksa düz metinden.
@@ -21424,7 +21488,7 @@ async function exportStyledDomTable(tableSel, opts){
       if(td.classList.contains('chkCell'))continue;
       const fieldKey=td.dataset.key||leafHeaders[col-1];
       const column=columnByKey.get(String(td.dataset.key||''))||null;
-      const palette=record?exportSemanticPalette(column,record,cf):null;
+      const palette=record?exportSemanticPalette(column,record,cf):(table.id==='shipTable'?shipDomExportPalette(td):null);
       const thumb=td.querySelector('img.kolThumb');
       // Görsel hücresi kayıttan tanınır: satırın ekranda çizilmiş/yüklenmiş
       // olması gerekmez.
@@ -21446,7 +21510,7 @@ async function exportStyledDomTable(tableSel, opts){
       }
       col++;maxCol=Math.max(maxCol,col-1);
     }
-    ws.getRow(excelRow).height=Math.max(18,Math.ceil(tr.getBoundingClientRect().height||(managedRecords?cpOrdersImageDims(opts.tableKey).row:19)))*72/96;
+    ws.getRow(excelRow).height=table.id==='shipTable'?shipDomExportRowHeight():Math.max(18,Math.ceil(tr.getBoundingClientRect().height||(managedRecords?cpOrdersImageDims(opts.tableKey).row:19)))*72/96;
     excelRow++;exported++;
     if(managedRecords&&exported%100===0){operation.checkpoint(exported,appLang==='en'?'Preparing rows':'Satırlar hazırlanıyor');await operation.yield();}
   }
@@ -21570,10 +21634,10 @@ function beginFastThemeSwitch(){
 function applyTheme(name,options){
   const resolved = THEMES[name] ? name : systemTheme();
   _themeRequested=resolved;
+  // Persist only theme/scale for the unauthenticated sign-in shell.
+  try{localStorage.setItem('buyerlog.ui.appearance',JSON.stringify({theme:resolved,step:Number(document.documentElement.dataset.fontStep)||0}));}catch(_){}
   const root = document.documentElement;
   const use=document.querySelector('#railThemeBtn use');
-  // Finish a previous requested palette before comparing the live root state.
-  window.BLThemeTransition?.cancel();
   try{void window.buyerLogDesktop?.workspace?.setTheme?.(resolved);}catch(_){}
   if(root.dataset.theme===resolved){
     if(use)use.setAttribute('href',THEMES[resolved].icon);
@@ -21589,7 +21653,6 @@ function applyTheme(name,options){
     syncThemeButtonTitle();
   };
   if(typeof _themeSwitchRelease==='function')_themeSwitchRelease(true);
-  if(options&&options.animate&&window.BLThemeTransition?.start(update))return;
   const release=beginFastThemeSwitch();
   update();
   if(release)release(false);
@@ -21630,6 +21693,7 @@ function applyUiFontStep(value,{persist=true}={}){
   const step=normalizeUiFontStep(value),preset=UI_SCALE_PRESETS[step];
   document.documentElement.dataset.fontStep=String(step);
   document.documentElement.dataset.uiScale=preset.key;
+  window.BLUIAppearance?.remember();
   if(typeof BLTableDensity!=='undefined'){BLTableDensity.setTextScale(preset.key);cpApplyImageSizeVars();}
   const btn=document.getElementById('railFontSizeBtn'),label=document.getElementById('railFontSizeLabel');
   const text=appLang==='en'?`Interface: ${preset.en}`:`Arayüz: ${preset.tr}`;
@@ -23015,18 +23079,18 @@ function openKolPricingExcelColumnsModal(){
   let modal=document.getElementById('kolPricingExcelColsModal'); if(modal) modal.remove();
   const selected=new Set(kolPricingExcelColKeys);
   const ordered=kolAllOrderedCols();
-  modal=document.createElement('div'); modal.id='kolPricingExcelColsModal'; modal.className='warnOverlay';
+  modal=document.createElement('div'); modal.id='kolPricingExcelColsModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard" style="max-width:680px;width:94%;max-height:84vh;display:flex;flex-direction:column;padding:0;">
-    <div class="modalTitle" style="margin:0;padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+    <div class="modalTitle" style="margin:0;padding:16px 20px;border:0;display:flex;align-items:center;justify-content:space-between;gap:10px;">
       <span>Pricing Excel Columns</span>
       <button type="button" class="pricingColsClose pricingRuleIconBtn" title="Kapat"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
     <div style="padding:14px 20px;overflow:auto;display:flex;flex-direction:column;gap:12px;">
-      <div style="font-size:12px;color:var(--ink2);line-height:1.5;"><strong>Görsel</strong> sütunu her zaman eklenir. Aşağıdaki seçimler Send to Pricing ile oluşturulan tüm Excel dosyalarında kullanılır ve kaydedilir.</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="tbtn" id="kolPricingColsAll">Tümünü Seç</button><button type="button" class="tbtn" id="kolPricingColsNone">Tümünü Kaldır</button><span id="kolPricingColsCount" style="margin-left:auto;align-self:center;font-size:11.5px;color:var(--muted);"></span></div>
+      <div style="font-size:var(--ui-font-xs);color:var(--ui-text-secondary);line-height:1.5;"><strong>Görsel</strong> sütunu her zaman eklenir. Aşağıdaki seçimler Send to Pricing ile oluşturulan tüm Excel dosyalarında kullanılır ve kaydedilir.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="tbtn" id="kolPricingColsAll">Tümünü Seç</button><button type="button" class="tbtn" id="kolPricingColsNone">Tümünü Kaldır</button><span id="kolPricingColsCount" style="margin-left:auto;align-self:center;font-size:var(--ui-font-xs);color:var(--ui-text-muted);"></span></div>
       <div class="pricingExcelColsGrid" id="kolPricingColsGrid">${ordered.map(c=>`<label class="pricingExcelColItem"><input type="checkbox" data-key="${escapeHtml(c.k)}" ${selected.has(c.k)?'checked':''}> <span>${escapeHtml(L(c.label))}</span></label>`).join('')}</div>
     </div>
-    <div style="padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;"><button type="button" class="tbtn pricingColsClose">Vazgeç</button><button type="button" class="navActionBtn" id="kolPricingColsSave" style="background:var(--acc);border-color:var(--acc);color:var(--on-acc);"><svg class="ic"><use href="#i-device-floppy"/></svg> Kaydet</button></div>
+    <div style="padding:12px 20px;border:0;display:flex;justify-content:flex-end;gap:8px;"><button type="button" class="tbtn pricingColsClose">Vazgeç</button><button type="button" class="navActionBtn" id="kolPricingColsSave" style="background:var(--ui-accent);border-color:var(--ui-accent);color:var(--ui-on-accent);"><svg class="ic"><use href="#i-device-floppy"/></svg> Kaydet</button></div>
   </div>`;
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
@@ -23511,7 +23575,7 @@ async function openEndeksmatikModal({mode='collection',row}={}){
   const savedSetId=ctx.setId&&endeksmatikSetById(ctx.setId)?ctx.setId:'';
   let selectedSet=endeksmatikSetById(savedSetId||status.activeSetId)||endeksmatikSetById(status.setId)||null;
   const retailDepot='RETAIL Depo';
-  const overlay=document.createElement('div');overlay.id='_endeksmatikModal';overlay.className='warnOverlay endeksmatikOverlay';
+  const overlay=document.createElement('div');overlay.id='_endeksmatikModal';overlay.className='warnOverlay endeksmatikOverlay';overlay.dataset.uiMigrated='dialog';
   const pickerMin=endeksmatikMonthPickerValue(status.firstMonth),pickerMax=endeksmatikMonthPickerValue(status.lastMonth);
   const calendarSvg='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v3M17 2v3M3.5 9h17M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V6A1.5 1.5 0 0 1 5 4.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
   const monthField=(name,label,value,help='')=>`<label class="endeksmatikField" data-em-month-wrap="${name}"><span>${escapeHtml(label)}</span><div class="endeksmatikMonthControl"><input type="text" autocomplete="off" data-em-field="${name}" value="${endeksmatikInputValue(kolMonthDisplay(value)||value)}" placeholder="${escapeHtml(en?'e.g. JULY 2026 / 202607':'örn. TEMMUZ 2026 / 202607')}"><button type="button" class="endeksmatikMonthPickerBtn" data-em-picker-button="${name}" title="${escapeHtml(en?'Choose month and year':'Ay ve yıl seç')}">${calendarSvg}</button><input type="month" class="endeksmatikNativeMonthPicker" data-em-picker="${name}" value="${endeksmatikMonthPickerValue(value)}"${pickerMin?` min="${pickerMin}"`:''}${pickerMax?` max="${pickerMax}"`:''} tabindex="-1" aria-hidden="true"></div>${help?`<small>${escapeHtml(help)}</small>`:''}</label>`;
@@ -23943,7 +24007,7 @@ async function openEndeksmatikSetManager(){
   const status=await refreshEndeksmatikStatus({silent:false});if(!status)return;
   const canManage=typeof window.BLHasPermission==='function'?window.BLHasPermission('manageModelConnections'):true;
   document.getElementById('_endeksmatikSetsModal')?.remove();
-  const overlay=document.createElement('div');overlay.id='_endeksmatikSetsModal';overlay.className='warnOverlay endeksmatikOverlay';
+  const overlay=document.createElement('div');overlay.id='_endeksmatikSetsModal';overlay.className='warnOverlay endeksmatikOverlay';overlay.dataset.uiMigrated='dialog';
   const sets=endeksmatikSets();
   const rowHtml=set=>{
     const active=set.id===status.activeSetId,usd=endeksmatikIsUsdModel(set),knownTl=set.calculationContract==='endeksmatik-tl-workbook/v1',v=set.validation||{};
@@ -24270,7 +24334,7 @@ function positionKolCatalogDrop(){
   if(rect.bottom<=0||rect.top>=window.innerHeight||rect.right<=0||rect.left>=window.innerWidth){closeKolCatalogDrop();return;}
   const viewportWidth=Math.max(240,window.innerWidth),width=Math.min(Math.max(rect.width,220),Math.max(220,viewportWidth-16));
   const left=Math.max(8,Math.min(rect.left+(rect.width-width)/2,viewportWidth-width-8));
-  drop.style.zIndex='220';drop.style.left=left+'px';drop.style.width=width+'px';
+  drop.style.zIndex='var(--ui-z-popover)';drop.style.left=left+'px';drop.style.width=width+'px';
   const panelHeight=Math.min(310,Math.max(36,drop.offsetHeight||36));
   const desiredTop=rect.bottom+3;
   drop.style.top=((desiredTop+panelHeight<=window.innerHeight-8)?desiredTop:Math.max(8,rect.top-panelHeight-3))+'px';
@@ -26163,7 +26227,7 @@ function updateKolUndoRedoButtons(){
 document.getElementById('kolUndoBtn')?.addEventListener('click', kolUndo);
 document.getElementById('kolRedoBtn')?.addEventListener('click', kolRedo);
 function kolImagePlaceholderSvg(){
-  return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100"><rect width="80" height="100" fill="#EEF0F3"/><path d="M20 70l12-16 10 12 10-14 8 10" stroke="#B7BEC9" stroke-width="3" fill="none"/><circle cx="30" cy="34" r="6" fill="#B7BEC9"/></svg>');
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100"><rect width="80" height="100" fill="#EEF0F3"/><path d="M20 30h40M20 44h40M20 58h24" stroke="#B7BEC9" stroke-width="3" fill="none"/></svg>');
 }
 // ---- Görsel büyük önizleme (hover popup) ----
 // v6.63 — Bu popup Koleksiyon, CP, Orders, Quotations, Open Costing, LFL, OAB ve
@@ -26212,8 +26276,8 @@ function kolShowImgPopup(src, evt){
   if(!pop){
     pop = document.createElement('div');
     pop.id = 'kolImgPopup';
-    pop.style.cssText = 'position:fixed;left:0;top:0;z-index:54990;pointer-events:none;background:var(--card);border:1px solid var(--line2);border-radius:10px;box-shadow:var(--shadow-3);padding:6px;display:none;will-change:transform;contain:layout paint style;';
-    pop.innerHTML = '<img id="kolImgPopupImg" style="display:block;max-width:360px;max-height:420px;border-radius:6px;">';
+    pop.style.cssText = 'position:fixed;left:0;top:0;z-index:var(--ui-z-tooltip);pointer-events:none;background:var(--ui-surface);border:0;border-radius:var(--ui-radius);box-shadow:var(--ui-shadow-overlay);padding:6px;display:none;will-change:transform;contain:layout paint style;';
+    pop.innerHTML = '<img id="kolImgPopupImg" style="display:block;max-width:360px;max-height:420px;border-radius:var(--ui-radius);">';
     document.body.appendChild(pop);
     pop.querySelector('#kolImgPopupImg')?.addEventListener('load',()=>{
       kolMeasureImgPopup(pop);
@@ -26732,7 +26796,7 @@ async function openKolManualPriceModal(row,{confirm=false}={}){
   const best=kolBestPricing(row);
   const manualManufacturers=kolManualManufacturerSuggestions();
   const modal=document.createElement('div');
-  modal.id='_kolManualPrice'; modal.className='warnOverlay';
+  modal.id='_kolManualPrice'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const title=confirm?(en?'Set confirmed manufacturer':'Onaylı üreticiyi belirle'):(en?'Enter price manually':'Elle fiyat gir');
   modal.innerHTML=`<div class="modalCard kolManualCard" role="dialog" aria-modal="true" aria-labelledby="_kolManualTitle">
     <div class="kolManualHead">
@@ -27564,13 +27628,15 @@ function loadKolQuickDims(){
 }
 function openKolQuickFiltersEditor(anchor){
   document.getElementById('_kolQuickFiltersModal')?.remove();
-  const modal=document.createElement('div');modal.id='_kolQuickFiltersModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_kolQuickFiltersModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const selected=new Set(loadKolQuickDims().map(dim=>dim.key));
   modal.innerHTML=`<div class="modalCard quickFilterEditorCard" role="dialog" aria-modal="true"><div class="modalTitle">${escapeHtml(appLang==='en'?'Quick filters':'Hızlı filtreler')}</div><div class="muted quickFilterEditorHelp">${escapeHtml(appLang==='en'?'Choose the filter groups shown above the table.':'Tablonun üstünde gösterilecek filtre gruplarını seçin.')}</div><div class="quickFilterEditorList">${currentKolQuickDims().map(dim=>`<label class="quickFilterEditorItem"><input type="checkbox" data-kol-quick-dim="${dim.key}" ${selected.has(dim.key)?'checked':''}> <span>${escapeHtml(L(dim.label))}</span></label>`).join('')}</div><div class="modalFoot"><span></span><button type="button" class="tbtn" data-close>${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-apply>${escapeHtml(appLang==='en'?'Apply':'Uygula')}</button></div></div>`;
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
-  const close=()=>modal.remove();modal.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',close));
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});modal.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',close));
   modal.addEventListener('click',e=>{if(e.target===modal)close();});
   modal.querySelector('[data-apply]')?.addEventListener('click',()=>{const keys=[...modal.querySelectorAll('[data-kol-quick-dim]:checked')].map(input=>input.dataset.kolQuickDim);try{BLStorage.setItem(KOL_QUICK_DIMS_KEY,JSON.stringify(keys));}catch(_){}close();renderKolQuickFilters();});
   if(anchor&&anchor.getBoundingClientRect) anchor.setAttribute('aria-expanded','true');
@@ -27670,9 +27736,9 @@ function kolPricingPreflightRowsHtml(report){
 function kolOpenPricingPreflightDialog(initial,recheck){
   return new Promise(resolve=>{
     document.getElementById('kolPricingPreflightModal')?.remove();
-    const modal=document.createElement('div');modal.id='kolPricingPreflightModal';modal.className='warnOverlay';
-    let report=initial,busy=false,settled=false;
-    const finish=result=>{if(settled)return;settled=true;modal.remove();resolve(result);};
+    const modal=document.createElement('div');modal.id='kolPricingPreflightModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
+    let report=initial,busy=false,settled=false,releaseKeyboard=()=>{};
+    const finish=result=>{if(settled)return;settled=true;releaseKeyboard();modal.remove();resolve(result);};
     const render=()=>{
       const hasTarget=report.items.some(item=>item.targetPriceMissing),hasFetch=report.fetchRows.length>0;
       modal.innerHTML=`<div class="modalCard pricingPreflightCard" role="dialog" aria-modal="true"><div class="verHistTop"><div><h2>Pricing kontrolü</h2><p class="verHistSub">Target Price ve Tech Pack durumları birbirinden bağımsız değerlendirilir.</p></div><button type="button" class="verHistClose" data-pricing-preflight="cancel" title="Kapat"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="pricingPreflightList">${kolPricingPreflightRowsHtml(report)}</div><div class="verHistFoot"><button type="button" class="tbtn" data-pricing-preflight="cancel" ${busy?'disabled':''}>Geri dön</button><span style="flex:1"></span>${hasFetch?`<button type="button" class="tbtn" data-pricing-preflight="fetch" ${busy?'disabled':''}>${busy?'Tech Pack’ler alınıyor…':'Tech Pack’leri Tamamla'}</button>`:''}<button type="button" class="tbtn primary" data-pricing-preflight="continue" ${busy?'disabled':''}>${hasTarget?'Target Price olmadan devam et':'Devam et'}</button></div></div>`;
@@ -27691,6 +27757,7 @@ function kolOpenPricingPreflightDialog(initial,recheck){
       }
     });
     document.body.appendChild(modal);render();
+    releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:()=>{if(!busy)finish({proceed:false});}})||(()=>{});
   });
 }
 async function kolPricingPreflight(rows){
@@ -28126,10 +28193,12 @@ function renderKol(){
     if(last&&last.group===group&&at!==kolFreezeLeft){last.span++;last.end=at;}
     else kolGroupRuns.push({group,span:1,start:at,end:at});
   });
-  const kolGroupRowHtml=`<tr class="groupRow kolGroupRow" data-freeze-left="${kolFreezeLeft}"><th class="groupSpacer"></th>${pictureVisible?'<th class="groupSpacer kolPicGroupSpacer" data-start="0" data-end="0"></th>':''}${kolGroupRuns.map((run,index)=>`<th colspan="${run.span}" class="${index>0||pictureVisible?'groupDivider':''}" data-grp="${escapeHtml(run.group)}" data-start="${run.start}" data-end="${run.end}" style="--grp-accent:${GROUP_ACCENTS[run.group]||'var(--acc)'}">${escapeHtml(tableColumnGroupLabel(run.group))}</th>`).join('')}</tr>`;
+  const kolGroupRowHtml=`<tr class="groupRow kolGroupRow" data-freeze-left="${kolFreezeLeft}"><th class="groupSpacer"></th>${pictureVisible?'<th class="groupSpacer kolPicGroupSpacer" data-start="0" data-end="0"></th>':''}${kolGroupRuns.map((run,index)=>`<th colspan="${run.span}" class="${index>0||pictureVisible?'groupDivider':''}" data-grp="${escapeHtml(run.group)}" data-start="${run.start}" data-end="${run.end}" style="--grp-accent:${GROUP_ACCENTS[run.group]||'var(--ui-accent)'}">${escapeHtml(tableColumnGroupLabel(run.group))}</th>`).join('')}</tr>`;
   thead.classList.add('kolHasGroups');
   thead.innerHTML=kolGroupRowHtml+`<tr class="colRow"><th class="chkTh${kolCheckActive?' columnFilterActive':''}"><input type="checkbox" id="kolSelAll"><button type="button" class="thFilterBtn kolChkFilterBtn${kolCheckActive?' filterActive':''}" title="${escapeHtml(appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele')}" aria-label="${escapeHtml(appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele')}">▾</button></th>${pictureVisible?`<th id="kolPicTh" class="kolPicTh" title="${escapeHtml(L('Görsel boyutunu değiştir'))}">${L('Picture')}</th>`:''}${headers}</tr>`;
+  const kolHeaderBoundaries=new Set(kolGroupRuns.filter((run,index)=>index>0||pictureVisible).map(run=>descriptors[run.start-kolPicOffset]?.k));
   thead.querySelectorAll('th[data-kcol]').forEach(th=>{
+    th.classList.toggle('groupBoundary',kolHeaderBoundaries.has(th.dataset.kcol));
     const key=th.dataset.kcol,descriptor=descriptors.find(d=>d.k===key),viewColumn=Boolean(KOL_PRICE_VIEW_COLS[key]||descriptor?.kind==='priceDetail');
     // Görünüm sütunları kalıcı sıraya ait değildir; sürüklenmez, kaynak sütunların yerinde durur.
     if(!viewColumn)attachKolColDrag(th,key);
@@ -28215,7 +28284,7 @@ function renderKol(){
         ? 'Click: select paste target · Double-click: choose image · Right-click: remove or fetch from PLM'
         : 'Tek tık: yapıştırma hedefi · Çift tık: görsel seç · Sağ tık: kaldır veya PLM\'den çağır';
       const collectionModelId=r.plmId||r.modelKod||r.id,collectionColourCode=r.colourCode||'';
-      html+=`<td class="kolPictureCell" data-r="${ri}" data-c="1" data-key="__picture__" data-kol-image-id="${r.id}"><img src="${escapeHtml(collectionImageKnown?collectionImageUrl:kolImagePlaceholderSvg())}" data-src="${escapeHtml(collectionImageUrl)}" data-image-key="${escapeHtml(modelImageCacheKey(collectionModelId,collectionColourCode))}" data-model-id="${escapeHtml(collectionModelId)}" data-colour-code="${escapeHtml(collectionColourCode)}" data-id="${r.id}" data-has-image="${hasCollectionImage?'1':'0'}" ${collectionImageKnown==='loaded'?'loading="eager" fetchpriority="auto" data-bl-image-loaded="1"':collectionImageKnown==='prior'?'loading="eager" fetchpriority="auto" data-bl-image-prior="1"':'loading="lazy" decoding="async" fetchpriority="low"'} class="kolThumb${kolActiveImgRowId===r.id?' kolThumbActive':''}" aria-label="${escapeHtml(collectionImageTitle)}" style="max-width:${hasCollectionImage?_imgDim.w:22}px;max-height:${hasCollectionImage?_imgDim.h:22}px;opacity:${hasCollectionImage?1:.55};border-radius:6px;border:1px solid ${kolActiveImgRowId===r.id?'var(--acc)':'var(--line)'};cursor:pointer;object-fit:contain;background:var(--card2);"></td>`;
+      html+=`<td class="kolPictureCell" data-r="${ri}" data-c="1" data-key="__picture__" data-kol-image-id="${r.id}"><img src="${escapeHtml(collectionImageKnown?collectionImageUrl:kolImagePlaceholderSvg())}" data-src="${escapeHtml(collectionImageUrl)}" data-image-key="${escapeHtml(modelImageCacheKey(collectionModelId,collectionColourCode))}" data-model-id="${escapeHtml(collectionModelId)}" data-colour-code="${escapeHtml(collectionColourCode)}" data-id="${r.id}" data-has-image="${hasCollectionImage?'1':'0'}" ${collectionImageKnown==='loaded'?'loading="eager" fetchpriority="auto" data-bl-image-loaded="1"':collectionImageKnown==='prior'?'loading="eager" fetchpriority="auto" data-bl-image-prior="1"':'loading="lazy" decoding="async" fetchpriority="low"'} class="kolThumb${kolActiveImgRowId===r.id?' kolThumbActive':''}" aria-label="${escapeHtml(collectionImageTitle)}" style="max-width:${hasCollectionImage?_imgDim.w:22}px;max-height:${hasCollectionImage?_imgDim.h:22}px;opacity:${hasCollectionImage?1:.55};cursor:pointer;object-fit:contain;"></td>`;
     }
     const confirmed=kolConfirmedPricing(r),confirmedDisplay=kolConfirmedDisplay(r);
     const effectivePricing=kolEffectivePricing(r),validPrices=kolManufacturers.map(m=>kolParseMoneyNum(effectivePricing&&effectivePricing[m.name])).filter(n=>Number.isFinite(n)&&n>0);
@@ -28235,25 +28304,25 @@ function renderKol(){
         const historyHint=appLang==='en'?'Double-click to open this model’s Pricing History.':'Bu modelin Fiyat Geçmişini açmak için çift tıklayın.';
         const tip=(best?(appLang==='en'?`Manufacturer: ${best.name}${bestMfr&&bestMfr.email?`\nEmail: ${bestMfr.email}`:''}${delta?`\nTarget Price: $${kolFormatMoneyDisplay(String(delta.target))}\nDifference: ${delta.text}`:''}`:`Üretici: ${best.name}${bestMfr&&bestMfr.email?`\nE-posta: ${bestMfr.email}`:''}${delta?`\nTarget Price: $${kolFormatMoneyDisplay(String(delta.target))}\nFark: ${delta.text}`:''}`):(appLang==='en'?'No valid quotation yet':'Henüz geçerli teklif yok'))+`\n${historyHint}`;
         const deltaHtml=delta?`<span class="kolBestDelta ${delta.meetsTarget?'isAtOrBelowTarget':'isAboveTarget'}">${escapeHtml(delta.text)}</span>`:'';
-        html+=`<td class="kolBestCell kolBestValueCell kolBestHistoryCell${meetsTarget?' kolBestTargetMet':''}" data-kol-price-history-id="${r.id}"${rc} title="${escapeHtml(tip)}" style="cursor:pointer;">${best?`${deltaHtml}<span class="kolBestPrice">$${kolFormatMoneyDisplay(String(best.price))}</span>`:'<span style="color:var(--muted);font-weight:400;">—</span>'}<button type="button" class="kolManualBtn" data-kol-manual="${r.id}" title="${escapeHtml(appLang==='en'?'Enter price manually':'Elle fiyat gir')}">✎</button></td>`;return;
+        html+=`<td class="kolBestCell kolBestValueCell kolBestHistoryCell${meetsTarget?' kolBestTargetMet':''}" data-kol-price-history-id="${r.id}"${rc} title="${escapeHtml(tip)}" style="cursor:pointer;">${best?`${deltaHtml}<span class="kolBestPrice">$${kolFormatMoneyDisplay(String(best.price))}</span>`:'<span style="color:var(--ui-text-muted);font-weight:400;">—</span>'}<button type="button" class="kolManualBtn" data-kol-manual="${r.id}" title="${escapeHtml(appLang==='en'?'Enter price manually':'Elle fiyat gir')}">✎</button></td>`;return;
       }
       if(d.kind==='confirmedName'){
         const fallback=!!confirmedDisplay?.isFallback;
         const tip=!confirmedDisplay?'':(fallback?(appLang==='en'?'No approval yet; Best Price manufacturer is shown as reference.':'Henüz onay yok; Best Price üreticisi referans olarak gösteriliyor.'):(appLang==='en'?'Confirmed Manufacturer':'Onaylı Üretici'));
-        html+=`<td class="kolBestCell${fallback?' kolConfirmedFallback':''}"${rc} title="${escapeHtml(tip)}" style="padding:6px 10px;position:relative;font-weight:${fallback?600:700};color:${fallback?'var(--muted)':'var(--green-lite,var(--green))'};background:${confirmed?'hsla(150,70%,45%,.10)':''};">${confirmedDisplay?escapeHtml(confirmedDisplay.name):'<span style="color:var(--muted);font-weight:400;">—</span>'}<button type="button" class="kolManualBtn" data-kol-manual="${r.id}" data-kol-manual-confirm="1" title="${escapeHtml(appLang==='en'?'Set confirmed manufacturer':'Onaylı üreticiyi belirle')}">✎</button></td>`;return;
+        html+=`<td class="kolBestCell${fallback?' kolConfirmedFallback':''}"${rc} title="${escapeHtml(tip)}" style="padding:6px 10px;position:relative;font-weight:${fallback?600:700};color:${fallback?'var(--ui-text-muted)':'var(--ui-success)'};background:${confirmed?'var(--ui-success-bg)':''};">${confirmedDisplay?escapeHtml(confirmedDisplay.name):'<span style="color:var(--ui-text-muted);font-weight:400;">—</span>'}<button type="button" class="kolManualBtn" data-kol-manual="${r.id}" data-kol-manual-confirm="1" title="${escapeHtml(appLang==='en'?'Set confirmed manufacturer':'Onaylı üreticiyi belirle')}">✎</button></td>`;return;
       }
       if(d.kind==='confirmedPrice'){
         const fallback=!!confirmedDisplay?.isFallback;
         const delta=confirmedDisplay?kolPriceTargetDelta(r,confirmedDisplay.price):null;
         const deltaHtml=delta?`<span class="kolBestDelta kolConfirmedDelta ${delta.meetsTarget?'isAtOrBelowTarget':'isAboveTarget'}">${escapeHtml(delta.text)}</span>`:'';
         const tip=!confirmedDisplay?'':(fallback?(appLang==='en'?`No approval yet; Best Price is shown as reference.${delta?`\nTarget Price: $${kolFormatMoneyDisplay(String(delta.target))}\nDifference: ${delta.text}`:''}`:`Henüz onay yok; Best Price referans olarak gösteriliyor.${delta?`\nTarget Price: $${kolFormatMoneyDisplay(String(delta.target))}\nFark: ${delta.text}`:''}`):(delta?(appLang==='en'?`Target Price: $${kolFormatMoneyDisplay(String(delta.target))}\nDifference: ${delta.text}`:`Target Price: $${kolFormatMoneyDisplay(String(delta.target))}\nFark: ${delta.text}`):''));
-        html+=`<td class="kolBestCell kolConfirmedPriceCell${fallback?' kolConfirmedFallback':''}"${rc} title="${escapeHtml(tip)}" style="padding:6px 10px;font-weight:${fallback?600:700};font-family:var(--mono);text-align:right;color:${fallback?'var(--muted)':'var(--green-lite,var(--green))'};background:${confirmed?'hsla(150,70%,45%,.10)':''};">${confirmedDisplay?`${deltaHtml}<span class="kolConfirmedPrice">$${kolFormatMoneyDisplay(String(confirmedDisplay.price))}</span>`:'<span style="color:var(--muted);font-weight:400;">—</span>'}</td>`;return;
+        html+=`<td class="kolBestCell kolConfirmedPriceCell${fallback?' kolConfirmedFallback':''}"${rc} title="${escapeHtml(tip)}" style="padding:6px 10px;font-weight:${fallback?600:700};font-family:var(--ui-font-mono);text-align:right;color:${fallback?'var(--ui-text-muted)':'var(--ui-success)'};background:${confirmed?'var(--ui-success-bg)':''};">${confirmedDisplay?`${deltaHtml}<span class="kolConfirmedPrice">$${kolFormatMoneyDisplay(String(confirmedDisplay.price))}</span>`:'<span style="color:var(--ui-text-muted);font-weight:400;">—</span>'}</td>`;return;
       }
       if(d.kind==='price'){
         const m=d.manufacturer,pricing=kolEffectivePricing(r),v=pricing[m]!=null?pricing[m]:'',n=kolParseMoneyNum(v),isNumeric=Number.isFinite(n);
         let bg='';if(v!=='0'&&v!=='0,00'&&isNumeric&&n>0)bg=kolPriceGradient(n,validPrices);
         const display=isNumeric?kolFormatMoneyDisplay(v):v,approved=norm(r.confirmedManufacturer)===norm(m);
-        html+=`<td class="editTd money"${rc} style="${bg?`background:${bg};`:''}${approved?'box-shadow:inset 0 0 0 2px var(--green-lite,var(--green));':''}"><div style="display:flex;align-items:center;gap:4px;"><button type="button" class="kolPriceApprove" data-id="${r.id}" data-mfr="${escapeHtml(m)}" aria-pressed="${approved?'true':'false'}" title="${approved?L('Üretici onayını kaldır'):L('Bu üreticiyi ve fiyatı onayla')}" style="width:20px;height:20px;flex:0 0 20px;display:grid;place-items:center;border-radius:5px;border:1px solid ${approved?'var(--green-lite,var(--green))':'var(--line2)'};background:${approved?'var(--green-lite,var(--green))':'var(--card)'};color:${approved?'#fff':'var(--muted)'};cursor:pointer;font-size:12px;font-weight:800;line-height:1;padding:0;">✓</button><span style="color:var(--muted);font-size:10.5px;flex-shrink:0;">${isNumeric&&v!==''?'$':''}</span><input type="text" inputmode="decimal" class="kolPriceCell editCell" data-id="${r.id}" data-mfr="${escapeHtml(m)}" value="${escapeHtml(display)}" placeholder="—" style="flex:1;min-width:0;background:transparent;"></div></td>`;return;
+        html+=`<td class="editTd money"${rc} style="${bg?`background:${bg};`:''}"><div style="display:flex;align-items:center;gap:4px;"><button type="button" class="kolPriceApprove" data-id="${r.id}" data-mfr="${escapeHtml(m)}" aria-pressed="${approved?'true':'false'}" title="${approved?L('Üretici onayını kaldır'):L('Bu üreticiyi ve fiyatı onayla')}" style="width:20px;height:20px;flex:0 0 20px;display:grid;place-items:center;border-radius:var(--ui-radius);border:0;background:${approved?'var(--ui-selected)':'var(--ui-surface-soft)'};color:${approved?'var(--ui-selected-ink)':'var(--ui-text-muted)'};cursor:pointer;font-size:var(--ui-font-xs);font-weight:800;line-height:1;padding:0;">✓</button><span style="color:var(--ui-text-muted);font-size:var(--ui-font-2xs);flex-shrink:0;">${isNumeric&&v!==''?'$':''}</span><input type="text" inputmode="decimal" class="kolPriceCell editCell" data-id="${r.id}" data-mfr="${escapeHtml(m)}" value="${escapeHtml(display)}" placeholder="—" style="flex:1;min-width:0;background:transparent;"></div></td>`;return;
       }
       const c=d.col,rawCellValue=(c.ruleReadonly||c.formulaReadonly)?r[c.k]:kolEffectiveValue(r,c.k),val=rawCellValue==null?'':rawCellValue;
       if(c.ruleReadonly||c.formulaReadonly){
@@ -28271,7 +28340,7 @@ function renderKol(){
         if(c.percent&&val!=='') display=kolFormatPercentDisplay(val);
         else if(c.hologram&&val!=='') display=kolFormatHologramDisplay(val);
         else if(c.money&&val!=='') display='$'+kolFormatMoneyDisplay(val);
-        html+=`<td class="num kolRuleReadonly${fobFallback?' kolFobFallback':''}${ruleMissing?' kolRuleMissing':''}"${rc} title="${escapeHtml(cellTitle)}" style="text-align:right;font-family:var(--mono);background:var(--card2);color:${ruleMissing?'var(--orange)':(fobFallback?'var(--muted)':'var(--ink2)')};">${ruleMissing?'<span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ':''}${escapeHtml(display)}</td>`;
+        html+=`<td class="num kolRuleReadonly${fobFallback?' kolFobFallback':''}${ruleMissing?' kolRuleMissing':''}"${rc} title="${escapeHtml(cellTitle)}" style="text-align:right;font-family:var(--ui-font-mono);background:var(--ui-surface-soft);color:${ruleMissing?'var(--ui-warning)':(fobFallback?'var(--ui-text-muted)':'var(--ui-text-secondary)')};">${ruleMissing?'<span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ':''}${escapeHtml(display)}</td>`;
       }else if(c.status){
         const statusEntries=kolStatusEntries(),statusValue=kolStatusCanonicalName(val),statusColor=kolStatusColor(statusValue);
         html+=`<td class="editTd kolStatusTd"${rc} style="--kol-status-color:${escapeHtml(statusColor)}"><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusEntries.map(entry=>`<option value="${escapeHtml(entry.name)}" ${statusValue===entry.name?'selected':''}>${escapeHtml(kolStatusDisplayLabel(entry.name))}</option>`).join('')}</select></td>`;
@@ -28281,7 +28350,7 @@ function renderKol(){
         const days=kolExToRetailDays(r);
         const exToRetailTitle=appLang==='en'?'Calculated automatically (Retail − Ex-Factory)':'Otomatik hesaplanır (Retail − Ex-Factory)';
         const exToRetailDisplay=days===''?'—':days+(appLang==='en'?' d.':' g.');
-        html+=`<td class="num"${rc} style="text-align:right;font-family:var(--mono);color:var(--muted);" title="${escapeHtml(exToRetailTitle)}">${exToRetailDisplay}</td>`;
+        html+=`<td class="num"${rc} style="text-align:right;font-family:var(--ui-font-mono);color:var(--ui-text-muted);" title="${escapeHtml(exToRetailTitle)}">${exToRetailDisplay}</td>`;
       }else if(c.endeksmatik){
         // Endeksmatik görünümü de diğer inherited alanlar gibi effective storage
         // değerini okur; child override yoksa parent'ın benchmark nesnesi görünür.
@@ -28301,7 +28370,7 @@ function renderKol(){
         // input'u (TL fiyat) alıp landed sonucu yerine onu yazıyordu. Kopyaya
         // Excel dışa aktarımındaki gibi hesaplanan landed SAYISI verilir.
         html+=`<td class="kolLandedTd${k.trRuleMissing?' kolRuleMissing':''}"${rc}${kolLandedCopyAttrs(k.trLanded)}><div class="kolLandedCard">
-          <b class="kolLandedVal" title="${escapeHtml(trCostTitle)}" style="${k.trRuleMissing?'color:var(--orange);':''}">${k.trRuleMissing?'⚠':(k.trLanded==null?'—':'$'+kolMoney2(k.trLanded))}</b>
+          <b class="kolLandedVal" title="${escapeHtml(trCostTitle)}" style="${k.trRuleMissing?'color:var(--ui-warning);':''}">${k.trRuleMissing?'⚠':(k.trLanded==null?'—':'$'+kolMoney2(k.trLanded))}</b>
           <div class="kolLandedMeta">
             <span class="kolLandedInputGroup" title="${escapeHtml(L('Türkiye fiyatı (TL)'))}"><i aria-hidden="true">₺</i><input type="text" inputmode="decimal" class="editCell kolLandedInput" data-id="${r.id}" data-k="trPrice" value="${escapeHtml(String(kolEffectiveValue(r,'trPrice')||''))}" placeholder="0,00"></span>
             <span class="kolLandedInputGroup" title="${escapeHtml((appLang==='en'?'Landed multiplier':'Landed çarpanı')+' · '+trMultState)}"><i aria-hidden="true">×</i><input type="text" inputmode="decimal" class="editCell kolLandedInput isMult${k.trMultIsManual?' isManual':''}" data-id="${r.id}" data-k="trLandedMult" value="${escapeHtml(String(kolEffectiveValue(r,'trLandedMult')||''))}" placeholder="${escapeHtml(landedMultiplierInputValue(k.defaultTrMult))}"></span>
@@ -28321,7 +28390,7 @@ function renderKol(){
         const ydMultState=k.ydMultIsManual?(appLang==='en'?'Manual':'Manuel'):(appLang==='en'?'Default':'Varsayılan');
         html+=`<td class="kolLandedTd${k.ruleMissing?' kolRuleMissing':''}"${rc}${kolLandedCopyAttrs(k.ydLanded,profit)}><div class="kolLandedCard">
           ${profit==null?'':`<em class="kolProfit ${profitCls}" title="${escapeHtml(appLang==='en'?'Overseas Landed price advantage versus TR Landed: (TR Landed − Overseas Landed) / TR Landed':'Overseas Landed fiyat avantajı: (TR Landed − Overseas Landed) / TR Landed')}">${(profit>0?'+':'')+profit.toLocaleString(appLang==='en'?'en-GB':'tr-TR',{maximumFractionDigits:1})}%</em>`}
-          <b class="kolLandedVal" title="${escapeHtml(ydCostTitle)}" style="${k.ruleMissing?'color:var(--orange);':''}">${k.ruleMissing?'⚠':(k.ydLanded==null?'—':'$'+kolMoney2(k.ydLanded))}</b>
+          <b class="kolLandedVal" title="${escapeHtml(ydCostTitle)}" style="${k.ruleMissing?'color:var(--ui-warning);':''}">${k.ruleMissing?'⚠':(k.ydLanded==null?'—':'$'+kolMoney2(k.ydLanded))}</b>
           <div class="kolLandedMeta">
             <span class="kolLandedInputGroup" title="${escapeHtml((appLang==='en'?'Landed multiplier':'Landed çarpanı')+' · '+ydMultState)}"><i aria-hidden="true">×</i><input type="text" inputmode="decimal" class="editCell kolLandedInput isMult${k.ydMultIsManual?' isManual':''}" data-id="${r.id}" data-k="ydLandedMult" value="${escapeHtml(String(kolEffectiveValue(r,'ydLandedMult')||''))}" placeholder="${escapeHtml(landedMultiplierInputValue(k.defaultYdMult))}"></span>
           </div>
@@ -28376,7 +28445,7 @@ function renderKol(){
           :`<td class="editTd${cur?' submfr-fill':''}"${rc}>${suggestInput}</td>`;
       }else if(c.date){html+=`<td class="kolDateTd"${rc}><span class="exfDisplay kolDateDisplay" tabindex="0" data-id="${r.id}" data-k="${c.k}" title="${escapeHtml(L('Tarihi düzenle'))}">${escapeHtml(fmtDate(val)||'—')}</span></td>`;
       }else if(c.qty){html+=`<td class="editTd num"${rc}><input type="text" inputmode="numeric" class="editCell kolQtyCell" data-id="${r.id}" data-k="${c.k}" value="${escapeHtml(kolFormatQuantityDisplay(val))}" style="text-align:right;"></td>`;
-      }else if(c.money){html+=`<td class="editTd money"${rc}><div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--muted);font-size:10.5px;flex-shrink:0;">$</span><input type="text" inputmode="decimal" class="editCell kolMoneyCell" data-id="${r.id}" data-k="${c.k}" value="${escapeHtml(kolFormatMoneyDisplay(val))}" placeholder="0,00" style="flex:1;min-width:0;"></div></td>`;
+      }else if(c.money){html+=`<td class="editTd money"${rc}><div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--ui-text-muted);font-size:var(--ui-font-2xs);flex-shrink:0;">$</span><input type="text" inputmode="decimal" class="editCell kolMoneyCell" data-id="${r.id}" data-k="${c.k}" value="${escapeHtml(kolFormatMoneyDisplay(val))}" placeholder="0,00" style="flex:1;min-width:0;"></div></td>`;
       }else if(c.k==='inStoreMonth'){html+=`<td class="editTd"${rc}><input type="text" class="editCell kolMonthCell" data-id="${r.id}" data-k="${c.k}" value="${escapeHtml(kolMonthDisplay(val))}" placeholder=""></td>`;
       }else if(c.checklist){html+=kolChecklistCellHtml(r,c,val,rc);
       }else if(c.custom){
@@ -29444,7 +29513,7 @@ window.BLCollectionAnalyticsBridge={
       return;
     }
     const unique=[...new Map((rows||[]).map(row=>[row.id,row])).values()];document.getElementById('_collectionAnalyticsDrill')?.remove();
-    const overlay=document.createElement('div');overlay.id='_collectionAnalyticsDrill';overlay.className='warnOverlay';
+    const overlay=document.createElement('div');overlay.id='_collectionAnalyticsDrill';overlay.className='warnOverlay';overlay.dataset.uiMigrated='dialog';
     const label=title||'Collection Detayı';
     /* Görsel hücresi ORTAK katmandan üretilir (detailImageThumbHtml): aynı
        lazy-load/hover davranışı, aynı kanonik kimlik ve — görseli olmayan
@@ -29563,7 +29632,7 @@ window.BLPriceSupplierAnalysisBridge={
     const labels=appLang==='en'?{title:'Details',records:'records',order:'Order',model:'Model',supplier:'Supplier',country:'Country',buyer:'Buyer',season:'Season',price:'Price',currency:'Currency',quantity:'Quantity',close:'Close'}:{title:'Detay',records:'kayıt',order:'Sipariş',model:'Model',supplier:'Üretici',country:'Ülke',buyer:'Buyer',season:'Sezon',price:'Fiyat',currency:'Para Birimi',quantity:'Adet',close:'Kapat'};
     if(source==='collection')return window.BLCollectionAnalyticsBridge.openDrilldown(items,title);
     if(source==='lfl'&&window.BLPriceSupplierLFLBridge?.openDrilldown)return window.BLPriceSupplierLFLBridge.openDrilldown(observations,title);
-    document.getElementById('_priceAnalysisDrill')?.remove();const overlay=document.createElement('div');overlay.id='_priceAnalysisDrill';overlay.className='warnOverlay';
+    document.getElementById('_priceAnalysisDrill')?.remove();const overlay=document.createElement('div');overlay.id='_priceAnalysisDrill';overlay.className='warnOverlay';overlay.dataset.uiMigrated='dialog';
     const label=title||labels.title,list=observations||[];
     /* Model kimliği kanonik alanlardan gelir (plmId + renk kodu); model ADI
        PLM ID sanılmaz. Görsel hücresi ortak katmandandır, böylece bu rapor da
@@ -29667,7 +29736,7 @@ function openKolSelectedActionConfirmation(action,snapshot){
     ['Season',row=>row.season],
   ];
   const modal=document.createElement('div');
-  modal.id='_kolSelectedActionConfirm'; modal.className='warnOverlay'; modal.tabIndex=-1;
+  modal.id='_kolSelectedActionConfirm'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog'; modal.tabIndex=-1;
   modal.innerHTML=`<div class="modalCard verHistCard" role="dialog" aria-modal="true" aria-labelledby="_kolSelectedActionTitle">
     <div class="verHistHead"><div><div class="modalTitle" id="_kolSelectedActionTitle">${escapeHtml(kolSelectedActionLabel(action))}</div><p>${escapeHtml(en?`${rows.length} model(s) selected. Review the records before continuing.`:`${rows.length} model seçildi. Devam etmeden önce kayıtları kontrol edin.`)}</p></div><button type="button" class="pricingRuleIconBtn" data-cancel aria-label="${escapeHtml(en?'Cancel':'Vazgeç')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="plmImportTableWrap" style="max-height:48vh;overflow:auto"><table class="plmImportTable"><thead><tr>${fields.map(([label])=>`<th>${escapeHtml(label)}</th>`).join('')}</tr></thead><tbody>${rows.map(row=>`<tr>${fields.map(([,get])=>`<td>${escapeHtml(norm(get(row))||'—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
@@ -29862,7 +29931,7 @@ function showKolImportPlanModal(plan){
     const t=kolImportPlanText();
     document.getElementById('_kolImportPlanModal')?.remove();
     const modal=document.createElement('div');
-    modal.id='_kolImportPlanModal'; modal.className='warnOverlay';
+    modal.id='_kolImportPlanModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const nothing=!plan.updates.length && !plan.creates.length;
     const rowTitle=r=>`${norm(r.plmId)||'—'} · ${norm(r.modelKod)||'—'}`;
     const updateBlocks=plan.updates.map(u=>`<div class="kolPlanItem">
@@ -30143,7 +30212,7 @@ function showKolPlmTranslationReview(questions){
   const en=appLang==='en',fieldsInReview=[...new Set(list.map(item=>item.field))];
   return new Promise(resolve=>{
     document.getElementById('_kolPlmTranslationReview')?.remove();
-    const modal=document.createElement('div');modal.id='_kolPlmTranslationReview';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_kolPlmTranslationReview';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const dataLists=Object.keys(KOL_PLM_TRANSLATION_FIELD_META).map(field=>{
       const values=kolPlmAsasCatalogForField(field);return `<datalist id="_plmAsas_${field}">${values.map(value=>`<option value="${escapeHtml(value)}"></option>`).join('')}</datalist>`;
     }).join('');
@@ -30487,7 +30556,7 @@ function showKolPlmImportPreview(plan,parsedInfo,translationInfo,imageCount,sour
   }).join(''):`<tr><td colspan="4" class="muted">${escapeHtml(en?'No translation suggestion could be produced from the currently loaded ASAS data.':'Yüklü ASAS verisinden çeviri önerisi üretilemedi.')}</td></tr>`;
   return new Promise(resolve=>{
     document.getElementById('_kolPlmImportModal')?.remove();
-    const modal=document.createElement('div');modal.id='_kolPlmImportModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_kolPlmImportModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     modal.innerHTML=`<div class="modalCard verHistCard plmImportCard">
        <div class="verHistHead"><div><strong>${escapeHtml(sourceLabel||(en?'Import from PLM Excel':'PLM Excelinden Aktar'))}</strong><div class="muted">${escapeHtml(en?'Detected mappings are shown below. Category / Line / License values are converted to the Buyer Log ASAS vocabulary. Exact ASAS matches take priority; approved PLM→ASAS rules are also used when the PLM model does not exist in ASAS. Conflicts are never guessed.':'Bulunan eşleşmeler aşağıda. Category / Line / License değerleri Buyer Log ASAS diline çevrilir. Kesin ASAS eşleşmeleri önceliklidir; PLM modeli ASAS içinde yoksa kullanıcıyla teyit edilmiş PLM→ASAS kuralları da uygulanır. Çelişkili değerler tahmin edilmez.')}</div></div></div>
       <div class="kolPlanStats">
@@ -30538,7 +30607,7 @@ function showKolPlmExistingDecision(item,index,total){
     : `Buyer Log kullanıcı verileri korunacak: Fiyatlama Geçmişi, notlar, Confirmed Supplier/FOB, Target Price ve PLM aktarımının getirmediği tüm alanlar.${protectedLabels.length?` Mevcut kullanıcı verisi: ${protectedLabels.join(', ')}.`:''}`;
   return new Promise(resolve=>{
     document.getElementById('_kolPlmExistingDecision')?.remove();
-    const modal=document.createElement('div');modal.id='_kolPlmExistingDecision';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_kolPlmExistingDecision';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     modal.innerHTML=`<div class="modalCard verHistCard plmDecisionCard" role="dialog" aria-modal="true">
       <div class="verHistHead"><div><strong>${escapeHtml(en?'Existing Collection model':'Koleksiyon modelinde mevcut')}</strong><div class="muted">${escapeHtml(`${index+1} / ${total}`)}</div></div></div>
       <div class="plmDecisionBody">
@@ -30992,7 +31061,7 @@ function showKolFabricBatchPreview(items,analysis){
   const en=appLang==='en';
   return new Promise(resolve=>{
     document.getElementById('_kolFabricBatchModal')?.remove();
-    const modal=document.createElement('div');modal.id='_kolFabricBatchModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_kolFabricBatchModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const rows=items.map((item,index)=>{
       const card=analysis.cards[item.code]||kolFabricApi().ruleCard(item.raw);
       return `<tr><td><input type="checkbox" data-fabric-pick="${index}" checked aria-label="${escapeHtml(en?`Create card ${item.code}`:`${item.code} kartını oluştur`)}"></td><td class="kolFabricBatchCode">${escapeHtml(item.code)}</td><td><input type="text" class="kolFabricBatchSummary" data-fabric-summary="${index}" lang="tr" aria-label="${escapeHtml(en?`Turkish summary ${item.code}`:`${item.code} Türkçe özet`)}" value="${escapeHtml(card.summary)}"></td><td><input type="text" class="kolFabricBatchSummary" data-fabric-summary-en="${index}" lang="en" aria-label="${escapeHtml(en?`English summary ${item.code}`:`${item.code} İngilizce özet`)}" value="${escapeHtml(card.summaryEn||'')}"></td><td><span class="kolFabricSource is-${escapeHtml(card.summarySource)}" data-fabric-source="${index}">${escapeHtml(kolFabricSourceLabel(card.summarySource))}</span></td><td class="kolFabricBatchRaw" title="${escapeHtml(item.raw)}">${escapeHtml(item.raw)}</td></tr>`;
@@ -31133,7 +31202,7 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
   const canEdit=Boolean(kolWorkspaceCanEdit);
   let source=draft.summarySource,deleteArmed=false;
   document.getElementById('_kolFabricCardModal')?.remove();
-  const modal=document.createElement('div');modal.id='_kolFabricCardModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_kolFabricCardModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const dis=canEdit?'':' disabled';
   const detailSnapshots={};
   const displayDetail=(key,card)=>{
@@ -31262,7 +31331,7 @@ function showKolPlmListImportDialog({initialIds=[],trigger=null}={}){
   const api=kolPlmListApi(),en=appLang==='en',options=kolPlmListLoadOptions();
   return new Promise(resolve=>{
     document.getElementById('_kolPlmListModal')?.remove();
-    const modal=document.createElement('div');modal.id='_kolPlmListModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_kolPlmListModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const opt=(value,label,current)=>`<option value="${value}"${value===current?' selected':''}>${escapeHtml(label)}</option>`;
     modal.innerHTML=`<div class="modalCard verHistCard plmImportCard plmListCard" role="dialog" aria-modal="true" aria-labelledby="_kolPlmListTitle">
       <div class="verHistHead"><div><strong id="_kolPlmListTitle">${escapeHtml(en?'Add from PLM ID List':'PLM ID Listesinden Ekle')}</strong>
@@ -31430,7 +31499,7 @@ function showKolPlmListImportReport(report){
   const en=appLang==='en';
   return new Promise(resolve=>{
     document.getElementById('_kolPlmListReport')?.remove();
-    const modal=document.createElement('div');modal.id='_kolPlmListReport';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_kolPlmListReport';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const stat=(label,value)=>`<div class="kolPlanStat"><span>${escapeHtml(label)}</span><strong>${value}</strong></div>`;
     const notFound=report.notFound||[];
     modal.innerHTML=`<div class="modalCard verHistCard plmImportCard plmListReportCard" role="dialog" aria-modal="true" aria-labelledby="_kolPlmListReportTitle">
@@ -31653,7 +31722,7 @@ function showPlmSyncColumnChooser(mode,stats){
   const en=appLang==='en';
   return new Promise(resolve=>{
     document.getElementById('_plmSyncColumnModal')?.remove();
-    const modal=document.createElement('div');modal.id='_plmSyncColumnModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_plmSyncColumnModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     // Hatırlanan şey, kullanıcının BİLİNÇLİ OLARAK KAPATTIĞI sütunlardır —
     // açtıkları değil. Böylece PLM ileride yeni bir alan döndürmeye başlarsa
     // o alan varsayılan olarak AÇIK gelir ve sessizce atlanmaz.
@@ -31713,7 +31782,7 @@ function showPlmSyncPreview(mode,summary){
   const en=appLang==='en';
   return new Promise(resolve=>{
     document.getElementById('_plmSyncPreviewModal')?.remove();
-    const modal=document.createElement('div');modal.id='_plmSyncPreviewModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_plmSyncPreviewModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const modelRows=summary.changed.map(item=>`
       <div class="plmSyncModelBlock">
         <div class="plmSyncModelHead"><strong>PLM ${escapeHtml(item.target.plmId||'—')}</strong><span class="muted">${escapeHtml(item.target.modelKod||'')}</span></div>
@@ -32142,7 +32211,7 @@ async function openCoreNectumApiSettings({required=false}={}){
     return await new Promise(resolve=>{
       document.getElementById('_coreNectumApiSettings')?.remove();
       const en=appLang==='en',modal=document.createElement('div');
-      modal.id='_coreNectumApiSettings';modal.className='warnOverlay';
+      modal.id='_coreNectumApiSettings';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
       const statusText=()=>status.configured
         ?(status.source==='desktop-sso'
           ?(en?'Ready · automatic Buyer Log corporate session':'Hazır · Buyer Log otomatik kurumsal oturumu')
@@ -32161,7 +32230,9 @@ async function openCoreNectumApiSettings({required=false}={}){
       document.body.appendChild(modal);
       const message=modal.querySelector('[data-plm-api-message]'),badge=modal.querySelector('[data-plm-api-status]'),connect=modal.querySelector('[data-plm-api-connect]');
       const refreshBadge=()=>{if(badge)badge.textContent=statusText();if(connect)connect.textContent=status.configured?(en?'Renew automatically':'Otomatik yenile'):(en?'Connect automatically':'Otomatik bağlan');};
-      const close=()=>{modal.remove();resolve(Boolean(status.configured));};
+      let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();resolve(Boolean(status.configured));};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
       modal.querySelectorAll('[data-plm-api-close]').forEach(button=>button.addEventListener('click',close));
       modal.addEventListener('click',event=>{if(event.target===modal&&!required)close();});
       modal.querySelector('[data-plm-api-clear]')?.addEventListener('click',async()=>{try{message.textContent=en?'Clearing…':'Temizleniyor…';if(window.buyerLogDesktop?.clearCoreNectumAuth)await window.buyerLogDesktop.clearCoreNectumAuth();try{await coreNectumApiRaw('/api/corenectum-api/token',{method:'DELETE'});}catch(_){}status={configured:false,source:'none',automatic:false};message.textContent=en?'PLM session cleared.':'PLM oturumu temizlendi.';refreshBadge();}catch(error){message.textContent=String(error&&error.message||error);}});
@@ -32902,7 +32973,7 @@ function openModelImageSourceChooser(button){
     return;
   }
   document.getElementById('_modelImageUpdateModal')?.remove();
-  const modal=document.createElement('div');modal.id='_modelImageUpdateModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_modelImageUpdateModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const missing=scope.identities.filter(modelAssetIdentityMissing).length;
   const selected=scope.selectedIdentities.length;
   modal.innerHTML=`<div class="modalCard modelImageUpdateCard" role="dialog" aria-modal="true">
@@ -32960,7 +33031,7 @@ function showPlmSyncLanguageChooser({trigger=null,title=''}={}){
   const en=appLang==='en';
   return new Promise(resolve=>{
     document.getElementById('_plmSyncLangModal')?.remove();
-    const modal=document.createElement('div');modal.id='_plmSyncLangModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_plmSyncLangModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     modal.innerHTML=`<div class="modalCard modelImageUpdateCard" role="dialog" aria-modal="true" aria-labelledby="_plmSyncLangTitle">
       <div class="modelImageUpdateHead"><div class="modalTitle" id="_plmSyncLangTitle">${escapeHtml(title||(en?'Language Selection':'Dil Seçimi'))}</div><button type="button" class="pricingRuleIconBtn" data-plmlang="cancel" aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
       <div class="modelImageUpdateIntro">${escapeHtml(en?'Choose the language for model details and model files in this run. Images are language-independent.':'Bu çalıştırmada model detayları ve model dosyaları için kullanılacak dili seçin. Görseller dilden bağımsızdır.')}</div>
@@ -33074,7 +33145,7 @@ function plmSyncScopeActions(scope,{collection=false}={}){
 function plmSyncActionModal({id='_plmSyncActionModal',title,intro='',actions=[],trigger=null,onBack=null,confirmSelection=false,confirmLabel=''}={}){
   return new Promise(resolve=>{
     document.getElementById(id)?.remove();
-    const en=appLang==='en',modal=document.createElement('div');modal.id=id;modal.className='warnOverlay';
+    const en=appLang==='en',modal=document.createElement('div');modal.id=id;modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const buttons=actions.map(item=>`<button type="button" class="tbtn modelImageUpdateChoice plmSyncOptionCard${item.primary?' primary':''}" data-plmflow="${escapeHtml(item.id)}" aria-pressed="false"${item.disabled?' disabled aria-disabled="true"':''}>${item.icon?`<span class="plmSyncOptionIcon"><svg class="ic" aria-hidden="true" focusable="false"><use href="#${escapeHtml(item.icon)}"/></svg></span>`:''}<span class="plmSyncActionCopy"><strong>${escapeHtml(item.label)}</strong>${item.description?`<small>${escapeHtml(item.description)}</small>`:''}</span><span class="plmSyncSelectedMark" aria-hidden="true">✓</span></button>`).join('');
     const backButton=onBack?`<button type="button" class="tbtn plmSyncBackBtn" data-plmflow="back">${escapeHtml(en?'Back':'Geri')}</button>`:'';
     const continueButton=confirmSelection?`<button type="button" class="tbtn primary plmSyncContinueBtn" data-plmflow="continue" disabled>${escapeHtml(confirmLabel||(en?'Continue':'Devam'))}<span aria-hidden="true">→</span></button>`:'';
@@ -33131,7 +33202,7 @@ function showPlmSyncPropertyChooser({page='kol',trigger=null}={}){
   ];
   return new Promise(resolve=>{
     document.getElementById('_plmSyncPropertyModal')?.remove();
-    const modal=document.createElement('div');modal.id='_plmSyncPropertyModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_plmSyncPropertyModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     modal.innerHTML=`<div class="modalCard modelImageUpdateCard plmSyncModalCard" role="dialog" aria-modal="true" aria-labelledby="_plmSyncPropertyTitle">
       <div class="modelImageUpdateHead plmSyncModalHead"><div class="plmSyncHeading"><div class="modalTitle" id="_plmSyncPropertyTitle">${escapeHtml(en?'What do you want to update?':'Neleri güncellemek istiyorsunuz?')}</div><div class="modelImageUpdateIntro plmSyncModalIntro">${escapeHtml(en?'Select one or more PLM assets':'Bir veya daha fazla PLM varlığı seçin')}</div></div><button type="button" class="pricingRuleIconBtn plmSyncCloseBtn" data-plmprop-action="cancel" aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
       <div class="modelImageUpdateChoices modelImageUpdateModes plmSyncPropertyList">${definitions.map(item=>`<label class="tbtn modelImageUpdateChoice plmSyncOptionCard plmSyncPropertyCard"><input type="checkbox" data-plmprop="${escapeHtml(item.key)}"><span class="plmSyncCheck" aria-hidden="true"></span><span class="plmSyncActionCopy"><strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(item.description)}</small></span></label>`).join('')}</div>
@@ -33761,7 +33832,7 @@ async function openKolRecycleBin(){
   const en=appLang==='en';
   document.getElementById('_kolBinModal')?.remove();
   const modal=document.createElement('div');
-  modal.id='_kolBinModal'; modal.className='warnOverlay';
+  modal.id='_kolBinModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard kolBinCard" role="dialog" aria-modal="true" aria-labelledby="_kolBinTitle">
     <div class="kolBinHead">
       <div>
@@ -34536,7 +34607,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
   const pricingHint=kind==='pricing'
     ?(en?'The Quotation Excel attachment and the table below the message use the columns selected here. You can switch each option off independently. Add TPs includes the stored model files.':'Quotation Excel eki ve mesajın altındaki tablo burada seçilen sütunları kullanır. Her seçeneği ayrı ayrı kapatabilirsiniz. TP’leri ekle, kayıtlı model dosyalarını dahil eder.')
     :'';
-  modal.id='mailTopicEditorModal';modal.className='warnOverlay';
+  modal.id='mailTopicEditorModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard mailTopicColumnsCard mailTopicEditorCard">
     <div class="modalTitle mailTopicColumnsTitle">
       <span>${escapeHtml(en?'Edit e-mail subject':'E-posta başlığını düzenle')} · ${escapeHtml(topic.name||t.untitled)}</span>
@@ -34586,7 +34657,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
   catalog.forEach(entry=>{
     const group=document.createElement('section');group.className='mailTopicFieldGroup';
     group.dataset.mailFieldGroup=entry.group;
-    group.style.setProperty('--grp-accent',GROUP_ACCENTS[entry.group]||'var(--acc)');
+    group.style.setProperty('--grp-accent',GROUP_ACCENTS[entry.group]||'var(--ui-accent)');
     group.innerHTML='<div class="mailTopicFieldGroupHead">'+
       '<button type="button" class="mailTopicFieldGroupToggle" data-mail-field-toggle="'+escapeHtml(entry.group)+'" aria-expanded="false">'+
       '<span class="mailTopicFieldChevron" aria-hidden="true">›</span><b>'+escapeHtml(entry.label)+'</b>'+
@@ -34799,7 +34870,9 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
   modal.querySelectorAll('[data-topic-subject-key],[data-topic-subject-manufacturer]').forEach(btn=>btn.addEventListener('click',()=>{setToggle(btn,btn.getAttribute('aria-pressed')!=='true');refresh();}));
   modal.querySelector('#mailTopicColsAll').addEventListener('click',()=>{boxes().forEach(x=>x.checked=true);refresh();});
   modal.querySelector('#mailTopicColsNone').addEventListener('click',()=>{boxes().forEach(x=>x.checked=false);refresh();});
-  const close=()=>{modal.remove();if(typeof onClose==='function')onClose();};
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard();modal.remove();if(typeof onClose==='function')onClose();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   modal.querySelectorAll('.topicEditorClose').forEach(btn=>btn.addEventListener('click',close));
   modal.addEventListener('click',e=>{if(e.target===modal)close();});
   modal.querySelector('#mailTopicEditorSave').addEventListener('click',()=>{
@@ -35849,23 +35922,25 @@ function kolShowPricingDraftResults(results,previewWarning='',resultTitle){
   // tarayıcı bunu "birden fazla dosya indirme" izniyle engelleyebilir; kullanıcı
   // her linke tek tek tıklaması gerektiğini burada net görsün.
   const multiDownloadNote=unopenedCount>1
-    ?`<div style="padding:9px 11px;margin-bottom:10px;border:1px solid var(--warning,#d9a321);border-radius:8px;color:var(--ink);font-size:12px;">${escapeHtml(appLang==='en'?`${unopenedCount} draft e-mails were downloaded automatically. If your browser blocked some of them, click the links below one by one.`:`${unopenedCount} taslak e-posta otomatik indirildi. Tarayıcınız bir kısmını engellediyse aşağıdaki bağlantılara tek tek tıklayın.`)}</div>`
+    ?`<div style="padding:9px 11px;margin-bottom:10px;border:0;background:var(--ui-warning-bg);border-radius:var(--ui-radius);color:var(--ui-text);font-size:var(--ui-font-xs);">${escapeHtml(appLang==='en'?`${unopenedCount} draft e-mails were downloaded automatically. If your browser blocked some of them, click the links below one by one.`:`${unopenedCount} taslak e-posta otomatik indirildi. Tarayıcınız bir kısmını engellediyse aşağıdaki bağlantılara tek tek tıklayın.`)}</div>`
     :'';
-  const rows=results.map((r,resultIndex)=>{ const resized=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.compressed&&!x.archive).length:0; const archived=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.archive).length:0; const attachNote=r.ok&&r.attachmentPlan?`${pricingFormatBytes(r.attachmentPlan.totalBytes)}${r.attachmentPlan.multiPart?` · ${(appLang==='en'?'part':'parça')} ${r.attachmentPlan.partIndex}/${r.attachmentPlan.partCount}`:''} · ${r.attachmentPlan.included.length} ${appLang==='en'?'attachment(s) included':'dosya eki dahil'}${resized?` · ${resized} ${appLang==='en'?'resized':'yeniden boyutlandırıldı'}`:''}${archived?` · ${archived} ${appLang==='en'?'losslessly compressed':'kayıpsız sıkıştırıldı'}`:''}`:''; const reopenLink=r.ok&&r.draftId?`<button type="button" class="tbtn" data-reopen-pricing-draft="${resultIndex}"><svg class="ic"><use href="#i-mail-send"/></svg>${escapeHtml(appLang==='en'?'Re-open Draft E-Mail':'Taslak E-Postayı Yeniden Aç')}</button>`:''; const emlLink=r.ok&&r.emlUrl?`<a class="tbtn" href="${escapeHtml(r.emlUrl)}" download="${escapeHtml(r.emlFilename||'Pricing_Draft.eml')}"><svg class="ic"><use href="#i-mail-send"/></svg> E-Posta Taslağı</a>`:''; const excelLink=r.ok&&r.excelUrl?`<a class="tbtn" href="${escapeHtml(r.excelUrl)}" download="${escapeHtml(r.excelFilename||'Quotation_Request.xlsx')}"><svg class="ic"><use href="#i-file-export"/></svg> Excel</a>`:''; return `<div style="display:grid;grid-template-columns:minmax(120px,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
-    <div><div style="font-weight:700;color:var(--ink);">${escapeHtml(r.manufacturer)}</div><div style="font-size:11.5px;color:${r.ok?'var(--success, #177a4c)':'var(--danger, #c0392b)'};margin-top:2px;">${escapeHtml(r.ok?(r.opened?'Taslak e-posta açıldı; geçici dosya otomatik silinecek.':'Taslak sunucuda saklanmadı; geçici bağlantı aşağıdadır.'):(r.error||'Oluşturulamadı.'))}</div>${attachNote?`<div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${escapeHtml(attachNote)}</div>`:''}</div>
+  const rows=results.map((r,resultIndex)=>{ const resized=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.compressed&&!x.archive).length:0; const archived=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.archive).length:0; const attachNote=r.ok&&r.attachmentPlan?`${pricingFormatBytes(r.attachmentPlan.totalBytes)}${r.attachmentPlan.multiPart?` · ${(appLang==='en'?'part':'parça')} ${r.attachmentPlan.partIndex}/${r.attachmentPlan.partCount}`:''} · ${r.attachmentPlan.included.length} ${appLang==='en'?'attachment(s) included':'dosya eki dahil'}${resized?` · ${resized} ${appLang==='en'?'resized':'yeniden boyutlandırıldı'}`:''}${archived?` · ${archived} ${appLang==='en'?'losslessly compressed':'kayıpsız sıkıştırıldı'}`:''}`:''; const reopenLink=r.ok&&r.draftId?`<button type="button" class="tbtn" data-reopen-pricing-draft="${resultIndex}"><svg class="ic"><use href="#i-mail-send"/></svg>${escapeHtml(appLang==='en'?'Re-open Draft E-Mail':'Taslak E-Postayı Yeniden Aç')}</button>`:''; const emlLink=r.ok&&r.emlUrl?`<a class="tbtn" href="${escapeHtml(r.emlUrl)}" download="${escapeHtml(r.emlFilename||'Pricing_Draft.eml')}"><svg class="ic"><use href="#i-mail-send"/></svg> E-Posta Taslağı</a>`:''; const excelLink=r.ok&&r.excelUrl?`<a class="tbtn" href="${escapeHtml(r.excelUrl)}" download="${escapeHtml(r.excelFilename||'Quotation_Request.xlsx')}"><svg class="ic"><use href="#i-file-export"/></svg> Excel</a>`:''; return `<div style="display:grid;grid-template-columns:minmax(120px,1fr) auto;gap:10px;align-items:center;padding:10px 0;border:0;">
+    <div><div style="font-weight:700;color:var(--ui-text);">${escapeHtml(r.manufacturer)}</div><div style="font-size:var(--ui-font-xs);color:${r.ok?'var(--ui-success, #177a4c)':'var(--ui-danger, #c0392b)'};margin-top:2px;">${escapeHtml(r.ok?(r.opened?'Taslak e-posta açıldı; geçici dosya otomatik silinecek.':'Taslak sunucuda saklanmadı; geçici bağlantı aşağıdadır.'):(r.error||'Oluşturulamadı.'))}</div>${attachNote?`<div style="font-size:var(--ui-font-2xs);color:var(--ui-text-muted);margin-top:3px;">${escapeHtml(attachNote)}</div>`:''}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">${reopenLink}${emlLink}${excelLink}</div>
   </div>`; }).join('');
-  const modal=document.createElement('div'); modal.id='kolPricingResultModal'; modal.className='warnOverlay';
+  const modal=document.createElement('div'); modal.id='kolPricingResultModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard" style="max-width:650px;width:94%;max-height:82vh;display:flex;flex-direction:column;padding:0;">
-    <div class="modalTitle" style="margin:0;padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;"><span>${escapeHtml(resultTitle||(appLang==='en'?'Prepaire E-Mail Result':'E-Posta Hazırlama Sonucu'))}</span><button type="button" class="tbtn" data-close-pricing-result aria-label="Kapat"><svg class="ic"><use href="#i-x"/></svg></button></div>
-    <div style="padding:14px 20px;overflow:auto;">${multiDownloadNote}${previewWarning?`<div style="padding:9px 11px;margin-bottom:10px;border:1px solid var(--warning,#d9a321);border-radius:8px;color:var(--ink);font-size:12px;">Tablo görseli hazırlanamadı; Excel eki ve e-posta taslağı yine oluşturuldu. ${escapeHtml(previewWarning)}</div>`:''}${rows}</div>
-    <div style="padding:12px 20px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;"><span style="font-size:12px;color:var(--muted);">${ok.length} başarılı${failed.length?`, ${failed.length} başarısız`:''}</span><div style="display:flex;gap:6px;">${pricingResult&&ok.length?`<button type="button" class="navActionBtn pri" data-open-pricing-quotations>${escapeHtml(appLang==='en'?'Open Quotations':'Quotations Aç')}</button>`:''}<button type="button" class="navActionBtn${pricingResult&&ok.length?'':' pri'}" data-close-pricing-result>Kapat</button></div></div>
+    <div class="modalTitle" style="margin:0;padding:16px 20px;border:0;display:flex;align-items:center;justify-content:space-between;"><span>${escapeHtml(resultTitle||(appLang==='en'?'Prepaire E-Mail Result':'E-Posta Hazırlama Sonucu'))}</span><button type="button" class="tbtn" data-close-pricing-result aria-label="Kapat"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div style="padding:14px 20px;overflow:auto;">${multiDownloadNote}${previewWarning?`<div style="padding:9px 11px;margin-bottom:10px;border:0;background:var(--ui-warning-bg);border-radius:var(--ui-radius);color:var(--ui-text);font-size:var(--ui-font-xs);">Tablo görseli hazırlanamadı; Excel eki ve e-posta taslağı yine oluşturuldu. ${escapeHtml(previewWarning)}</div>`:''}${rows}</div>
+    <div style="padding:12px 20px;border:0;display:flex;align-items:center;justify-content:space-between;gap:12px;"><span style="font-size:var(--ui-font-xs);color:var(--ui-text-muted);">${ok.length} başarılı${failed.length?`, ${failed.length} başarısız`:''}</span><div style="display:flex;gap:6px;">${pricingResult&&ok.length?`<button type="button" class="navActionBtn pri" data-open-pricing-quotations>${escapeHtml(appLang==='en'?'Open Quotations':'Quotations Aç')}</button>`:''}<button type="button" class="navActionBtn${pricingResult&&ok.length?'':' pri'}" data-close-pricing-result>Kapat</button></div></div>
   </div>`;
   modal._transientUrls=results.flatMap(r=>r.cleanupUrls||[]);
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const reopen=event.target.closest('[data-reopen-pricing-draft]');if(reopen){event.preventDefault();const row=results[Number(reopen.dataset.reopenPricingDraft)];if(row?.draftId)void prepareEmailReopenSingleDraft({draftId:row.draftId,manufacturer:row.manufacturer,filename:row.emlFilename,reopenUntil:row.reopenUntil},row.quotationRequestId||'',reopen);return;}const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
-  const close=()=>{ kolRevokeTransientUrls(modal._transientUrls||[]); modal._transientUrls=[]; modal.remove(); }; modal.querySelectorAll('[data-close-pricing-result]').forEach(b=>b.addEventListener('click',close)); modal.querySelector('[data-open-pricing-quotations]')?.addEventListener('click',()=>{close();if(typeof switchTab==='function')switchTab('quotations');}); modal.addEventListener('click',e=>{if(e.target===modal) close();});
+  let releaseKeyboard=()=>{};
+  const close=()=>{releaseKeyboard(); kolRevokeTransientUrls(modal._transientUrls||[]); modal._transientUrls=[]; modal.remove(); };
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{}); modal.querySelectorAll('[data-close-pricing-result]').forEach(b=>b.addEventListener('click',close)); modal.querySelector('[data-open-pricing-quotations]')?.addEventListener('click',()=>{close();if(typeof switchTab==='function')switchTab('quotations');}); modal.addEventListener('click',e=>{if(e.target===modal) close();});
 }
 
 // Teklifler sayfası tüm üreticileri kapsar, görünümdeki katlama dışa aktarımı etkilemez.
@@ -36466,7 +36541,7 @@ function openKolModelFilesModal(){
   if(!rows.length){ showToast(appLang==='en'?'There are no Collection models to show.':'Gösterilecek Koleksiyon modeli bulunmuyor.'); return; }
   document.getElementById('kolModelFilesModal')?.remove();
   let activeId=rows[0].id, files=[], busy=false, searchText='', statusFilter='all', sortMode='name-asc';
-  const modal=document.createElement('div'); modal.id='kolModelFilesModal'; modal.className='warnOverlay';
+  const modal=document.createElement('div'); modal.id='kolModelFilesModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const filesFor=row=>files.filter(file=>kolStoredModelFileMatchesRow(file,row));
   const hasFiles=row=>filesFor(row).length>0;
   const rowLabel=row=>kolModelFileLabel(row);
@@ -36546,12 +36621,14 @@ function openKolModelFilesModal(){
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   ['modelFilesStatusFilter','modelFilesSort'].forEach(id=>window.buildProfilePicker?.(modal.querySelector(`#${id}`)));
-  modal.querySelector('#modelFilesClose').addEventListener('click',()=>modal.remove());
+  const close=()=>{window.BLLayerSystem?.closeDialog(modal);modal.remove();};
+  window.BLLayerSystem?.openDialog(modal,{onClose:close});
+  modal.querySelector('#modelFilesClose').addEventListener('click',close);
   modal.querySelector('#modelFilesSearch').addEventListener('input',e=>{searchText=e.currentTarget.value||'';render();});
   modal.querySelector('#modelFilesStatusFilter').addEventListener('change',e=>{statusFilter=e.currentTarget.value||'all';render();});
   modal.querySelector('#modelFilesSort').addEventListener('change',e=>{sortMode=e.currentTarget.value||'name-asc';render();});
   modal.addEventListener('click',async e=>{
-    if(e.target===modal){modal.remove();return;}
+    if(e.target===modal){close();return;}
     const nav=e.target.closest('[data-model-file-row]');
     if(nav){activeId=Number(nav.dataset.modelFileRow);render();return;}
     const del=e.target.closest('[data-model-file-delete]');
@@ -36867,7 +36944,7 @@ function renderKolMfrModal(ctx){
   let modal = document.getElementById('kolMfrModal');
   if(modal) modal.remove();
   modal = document.createElement('div');
-  modal.id = 'kolMfrModal'; modal.className = 'warnOverlay';
+  modal.id = 'kolMfrModal'; modal.className = 'warnOverlay';modal.dataset.uiMigrated='dialog';
   // Sol sütun: üretici listesi. Seçim kutusunun hemen altındaki kalem,
   // üretici adı ve e-posta bilgisini ayrı pencere açmadan aynı kartta düzenler.
   let editingMfrIndex = -1;
@@ -38058,7 +38135,7 @@ function todoToolbar(){
   const commands=[['bold','B',t.bold],['italic','I',t.italic],['underline','U',t.underline],['strikeThrough','S',t.strike],['insertUnorderedList','•',t.bullets],['insertOrderedList','1.',t.numbered],['undo','↶',t.undo],['redo','↷',t.redo],['removeFormat','Tx',t.clear]];
   const buttons=commands.map(([cmd,label,title])=>`<button type="button" class="tbtn" data-todo-command="${cmd}" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}">${label}</button>`).join('');
   return `<div class="todoToolbar" role="toolbar" aria-label="${escapeHtml(t.format)}">${buttons}
-    <select data-todo-format="fontName" aria-label="${escapeHtml(t.font)}"><option value="var(--sans)">${escapeHtml(t.font)}</option><option value="var(--mono)">${escapeHtml(t.mono)}</option><option value="serif">Serif</option></select>
+    <select data-todo-format="fontName" aria-label="${escapeHtml(t.font)}"><option value="var(--ui-font-body)">${escapeHtml(t.font)}</option><option value="var(--ui-font-mono)">${escapeHtml(t.mono)}</option><option value="serif">Serif</option></select>
     <select data-todo-format="fontSize" aria-label="${escapeHtml(t.size)}"><option value="3">${escapeHtml(t.normal)}</option><option value="2">${escapeHtml(t.small)}</option><option value="5">${escapeHtml(t.large)}</option><option value="6">${escapeHtml(t.heading)}</option></select>
     <label title="${escapeHtml(t.color)}">${escapeHtml(t.color)} <input type="color" data-todo-format="foreColor" aria-label="${escapeHtml(t.color)}"></label>
     <label title="${escapeHtml(t.highlight)}">${escapeHtml(t.highlight)} <input type="color" data-todo-format="hiliteColor" aria-label="${escapeHtml(t.highlight)}"></label>
@@ -38243,7 +38320,7 @@ function bindTodoEditor(){
     toolbar.addEventListener('click',e=>{const button=e.target.closest('[data-todo-command]');if(button)command(button.dataset.todoCommand);});
     toolbar.querySelectorAll('[data-todo-format]').forEach(control=>{
       if(control.type==='color'){
-        const probe=document.createElement('span');probe.style.color=control.dataset.todoFormat==='hiliteColor'?'var(--yellow)':'var(--ink)';toolbar.appendChild(probe);
+        const probe=document.createElement('span');probe.style.color=control.dataset.todoFormat==='hiliteColor'?'var(--ui-warning)':'var(--ui-text)';toolbar.appendChild(probe);
         const rgb=getComputedStyle(probe).color.match(/\d+/g);probe.remove();
         if(rgb?.length>=3)control.value='#'+rgb.slice(0,3).map(n=>Number(n).toString(16).padStart(2,'0')).join('');
       }
@@ -38332,7 +38409,7 @@ function renderTodoModal(){
   if(modal){modal.__todoDispose?.();modal.remove();}
   todoLoad();
   modal = document.createElement('div');
-  modal.id = 'todoModal'; modal.className = 'warnOverlay';
+  modal.id = 'todoModal'; modal.className = 'warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML = `<div class="modalCard verHistCard todoCard" role="dialog" aria-modal="true" aria-labelledby="todoTitle">
     <div class="verHistTop">
       <div>
@@ -39180,7 +39257,7 @@ function renderVersionHistoryModal(){
   let modal = document.getElementById('verHistModal');
   if(modal) modal.remove();
   modal = document.createElement('div');
-  modal.id = 'verHistModal'; modal.className = 'warnOverlay';
+  modal.id = 'verHistModal'; modal.className = 'warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML = `<div class="modalCard verHistCard" role="dialog" aria-modal="true" aria-labelledby="verHistTitle">
     <div class="verHistTop">
       <div>

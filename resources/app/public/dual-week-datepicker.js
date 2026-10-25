@@ -41,7 +41,7 @@
   function ensureHost() {
     if (host) return host;
     host = document.createElement('div');
-    host.className = 'blDualDatePicker';
+    host.className = 'blDualDatePicker';host.dataset.uiMigrated='remaining';
     host.hidden = true;
     host.setAttribute('role', 'dialog');
     host.setAttribute('aria-modal', 'false');

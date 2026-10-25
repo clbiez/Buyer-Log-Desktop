@@ -22,7 +22,7 @@ const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const SYNC = fs.readFileSync(path.join(ROOT, 'public', 'override-sync.js'), 'utf8');
 const HTML = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'design-butunluk.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')();
 const QUOTES = fs.readFileSync(path.join(ROOT, 'public', 'quotations.js'), 'utf8');
 
 /* DİKKAT: gövdenin açılış süslü parantezi, parametre listesi bittikten SONRA

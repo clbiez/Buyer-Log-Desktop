@@ -1,0 +1,251 @@
+{
+  "screens": [
+    {
+      "name": "cp-light",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 191,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "notes-light",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 196,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "cp-grey",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 191,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "notes-grey",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 196,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "cp-dark",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 191,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "notes-dark",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 196,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "legacy-orders-light",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 206,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "legacy-source-light",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 92,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "overview-light",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 115,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "login-light",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 12,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "login-error-light",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 14,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "overview-grey",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 115,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "login-grey",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 12,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "overview-dark",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 115,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "login-dark",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 12,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "legacy-koleksiyon-light",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 75,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "startup-light",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 112,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "startup-grey",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 132,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "startup-dark",
+      "issues": [],
+      "overflow": false,
+      "scale": "standard",
+      "contrast": {
+        "checked": 132,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    }
+  ],
+  "modalKeyboard": [
+    {
+      "theme": "light",
+      "forward": true,
+      "backward": true,
+      "escape": true,
+      "noSave": true
+    },
+    {
+      "theme": "grey",
+      "forward": true,
+      "backward": true,
+      "escape": true,
+      "restoredFocus": true,
+      "noSave": true
+    },
+    {
+      "theme": "dark",
+      "forward": true,
+      "backward": true,
+      "escape": true,
+      "restoredFocus": true,
+      "noSave": true
+    }
+  ],
+  "login": [
+    {
+      "autocomplete": true,
+      "keyboardSelection": true,
+      "wrongPasswordInlineError": true
+    },
+    {
+      "autocomplete": true,
+      "keyboardSelection": true,
+      "wrongPasswordInlineError": true
+    }
+  ],
+  "errors": []
+}

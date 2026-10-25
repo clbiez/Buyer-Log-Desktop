@@ -1,0 +1,31 @@
+✔ Koleksiyon: Non-DTR + eşleşen kural yok → eksik sayılır (2.351526ms)
+✔ Koleksiyon: DTR modelinde kural aranmaz — yanlış alarm yok (0.597301ms)
+✔ Koleksiyon: kural varsa uyarı yok (0.532603ms)
+✔ Koleksiyon: Non-DTR + kural yok → FOB HESAPLANMAZ (0.832885ms)
+✔ Koleksiyon: DTR + kural yok → FOB hesaplanmaya devam eder (0.917633ms)
+✔ Koleksiyon: Non-DTR + kural VAR → FOB royalty ile hesaplanır (0.672323ms)
+✔ CP/Siparişler: Non-DTR + kural yok → eksik sayılır (0.347754ms)
+✔ CP/Siparişler: DTR satırında uyarı yok (0.333543ms)
+✔ CP/Siparişler: elle girilmiş Supp. FOB uyarı üretmez (0.323117ms)
+✔ CP/Siparişler: kural varsa uyarı yok (0.376338ms)
+✔ Koleksiyon royalty hücresi uyarıyı gösteriyor (0.757832ms)
+✔ CP/Siparişler Supp. FOB hücresi uyarıyı gösteriyor (0.230258ms)
+✔ uyarı metinleri iki dilde ve tek yerden geliyor (1.834576ms)
+✔ kolLicenseRuleMissingText eksik alanı adıyla söylüyor (0.629539ms)
+✔ royalty hücresi şablonu uyarı durumunda ⚠ ve turuncu rengi BASIYOR (6.586419ms)
+✔ royalty hücresi şablonu normal durumda uyarı BASMIYOR (6.295972ms)
+✔ Supp. FOB hücresi şablonu uyarı durumunda birim yerine ⚠ gösteriyor (5.551018ms)
+✔ TR Landed: Non-DTR + TR kuralı yok → yalnız TR HESAPLANMAZ, TR kuralı varsa hesaplanır (2.00957ms)
+✔ Overseas Landed: Non-DTR + kural yok → HESAPLANMAZ (0.659755ms)
+✔ DTR satırında landed hesabı ruleMissing hep false döndürür (0.699515ms)
+✔ kolLandedPriceWithCosts kural yoksa null döner (tek gerçek kaynak) (0.57739ms)
+✔ TR Landed hücre şablonu uyarı sınıfını, ⚠ işaretini ve turuncu rengi taşıyor (0.506914ms)
+✔ Overseas Landed hücre şablonu uyarı sınıfını, ⚠ işaretini ve turuncu rengi taşıyor (0.541046ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 101.531568

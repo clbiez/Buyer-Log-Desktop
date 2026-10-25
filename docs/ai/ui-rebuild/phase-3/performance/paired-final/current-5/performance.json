@@ -1,0 +1,571 @@
+{
+  "method": "1 fresh browser contexts, same warm server/process and fixed synthetic dataset; no CPU throttling. Startup is BLPerf firstUsableInteractionMs, excluding reading the boot guide. CP 5000 in-memory canonical rows, normal pagination; two animation frames included. Not a Windows/Electron or cold-disk benchmark.",
+  "browser": "154.0.8037.57",
+  "node": "v24.19.0",
+  "summary": {
+    "startupMs": 1068.7000000029802,
+    "cpNavigationMs": 925,
+    "cp5000RenderMs": 3020.099999997765,
+    "domRows": [
+      50
+    ]
+  },
+  "runs": [
+    {
+      "run": 1,
+      "start": {
+        "metrics": {
+          "longTaskMs": {
+            "count": 5,
+            "totalMs": 363,
+            "maxMs": 85,
+            "lastMs": 56,
+            "avgMs": 72.6
+          },
+          "bootstrapFetchMs": {
+            "count": 1,
+            "totalMs": 103.19999999925494,
+            "maxMs": 103.19999999925494,
+            "lastMs": 103.19999999925494,
+            "avgMs": 103.19999999925494
+          },
+          "bootstrapJsonParseMs": {
+            "count": 1,
+            "totalMs": 12.800000000745058,
+            "maxMs": 12.800000000745058,
+            "lastMs": 12.800000000745058,
+            "avgMs": 12.800000000745058
+          },
+          "CACHE_LOAD": {
+            "count": 1,
+            "totalMs": 116.19999999925494,
+            "maxMs": 116.19999999925494,
+            "lastMs": 116.19999999925494,
+            "avgMs": 116.19999999925494
+          },
+          "DATASOURCE_PREPARATION": {
+            "count": 1,
+            "totalMs": 5,
+            "maxMs": 5,
+            "lastMs": 5,
+            "avgMs": 5
+          },
+          "filterInitializationMs": {
+            "count": 1,
+            "totalMs": 0.10000000149011612,
+            "maxMs": 0.10000000149011612,
+            "lastMs": 0.10000000149011612,
+            "avgMs": 0.10000000149011612
+          },
+          "FILTER_PIVOT_INIT": {
+            "count": 1,
+            "totalMs": 0.10000000149011612,
+            "maxMs": 0.10000000149011612,
+            "lastMs": 0.10000000149011612,
+            "avgMs": 0.10000000149011612
+          },
+          "IMAGE_THUMBNAIL_INIT": {
+            "count": 1,
+            "totalMs": 0,
+            "maxMs": 0,
+            "lastMs": 0,
+            "avgMs": 0
+          },
+          "firstRenderMs": {
+            "count": 1,
+            "totalMs": 2.199999999254942,
+            "maxMs": 2.199999999254942,
+            "lastMs": 2.199999999254942,
+            "avgMs": 2.199999999254942
+          },
+          "TABLE_RENDER": {
+            "count": 1,
+            "totalMs": 2.199999999254942,
+            "maxMs": 2.199999999254942,
+            "lastMs": 2.199999999254942,
+            "avgMs": 2.199999999254942
+          },
+          "ACTIVE_MODULE_INIT": {
+            "count": 1,
+            "totalMs": 2.199999999254942,
+            "maxMs": 2.199999999254942,
+            "lastMs": 2.199999999254942,
+            "avgMs": 2.199999999254942
+          },
+          "stateHydrateMs": {
+            "count": 1,
+            "totalMs": 7.400000002235174,
+            "maxMs": 7.400000002235174,
+            "lastMs": 7.400000002235174,
+            "avgMs": 7.400000002235174
+          },
+          "overview.jsonParseMs": {
+            "count": 1,
+            "totalMs": 44.600000001490116,
+            "maxMs": 44.600000001490116,
+            "lastMs": 44.600000001490116,
+            "avgMs": 44.600000001490116
+          },
+          "firstUsableInteractionMs": {
+            "count": 1,
+            "totalMs": 1068.7000000029802,
+            "maxMs": 1068.7000000029802,
+            "lastMs": 1068.7000000029802,
+            "avgMs": 1068.7000000029802
+          },
+          "cp.jsonParseMs": {
+            "count": 1,
+            "totalMs": 30.199999999254942,
+            "maxMs": 30.199999999254942,
+            "lastMs": 30.199999999254942,
+            "avgMs": 30.199999999254942
+          }
+        },
+        "timeline": [
+          {
+            "name": "APP_BOOT_START",
+            "atMs": 87.30000000074506,
+            "detail": null
+          },
+          {
+            "name": "FRONTEND_BOOT_START",
+            "atMs": 87.30000000074506,
+            "detail": null
+          },
+          {
+            "name": "FRONTEND_BOOTSTRAP_START",
+            "atMs": 87.40000000223517,
+            "detail": null
+          },
+          {
+            "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_START",
+            "atMs": 87.60000000149012,
+            "detail": null
+          },
+          {
+            "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY",
+            "atMs": 184.5,
+            "detail": null
+          },
+          {
+            "name": "PRE_FRONTEND_STEP_XLSX_DEFERRED",
+            "atMs": 202.90000000223517,
+            "detail": null
+          },
+          {
+            "name": "PRE_FRONTEND_STEP_CORE_RESOURCES_READY",
+            "atMs": 209.70000000298023,
+            "detail": null
+          },
+          {
+            "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_START",
+            "atMs": 498.5,
+            "detail": null
+          },
+          {
+            "name": "PRE_FRONTEND_STEP_APP_MAIN_START",
+            "atMs": 498.5,
+            "detail": null
+          },
+          {
+            "name": "LOCAL_CONFIG_READY",
+            "atMs": 505.9000000022352,
+            "detail": null
+          },
+          {
+            "name": "PRE_FRONTEND_STEP_APP_MAIN_READY",
+            "atMs": 657.4000000022352,
+            "detail": null
+          },
+          {
+            "name": "PRE_FRONTEND_STEP_UI_SHELL_READY",
+            "atMs": 661,
+            "detail": null
+          },
+          {
+            "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_READY",
+            "atMs": 661.1000000014901,
+            "detail": null
+          },
+          {
+            "name": "FRONTEND_BOOTSTRAP_READY",
+            "atMs": 661.2000000029802,
+            "detail": null
+          },
+          {
+            "name": "DOM_CREATION_READY",
+            "atMs": 713.1000000014901,
+            "detail": null
+          },
+          {
+            "name": "CACHE_LOAD_START",
+            "atMs": 718.1000000014901,
+            "detail": null
+          },
+          {
+            "name": "LOCAL_DB_READY",
+            "atMs": 821.4000000022352,
+            "detail": null
+          },
+          {
+            "name": "CACHE_LOAD_READY",
+            "atMs": 834.3000000007451,
+            "detail": {
+              "pageCache": {
+                "hit": false,
+                "readMs": 0,
+                "generation": null
+              },
+              "durationMs": 116.19999999925494
+            }
+          },
+          {
+            "name": "DATASOURCE_PREPARATION_START",
+            "atMs": 834.5,
+            "detail": null
+          },
+          {
+            "name": "UNIFIED_PRIORITY_INVALIDATED",
+            "atMs": 835.4000000022352,
+            "detail": {
+              "reason": "server-transit-rules-hydrated",
+              "revision": 2
+            }
+          },
+          {
+            "name": "UNIFIED_PRIORITY_INVALIDATED",
+            "atMs": 837.7000000029802,
+            "detail": {
+              "reason": "server-cp-deferred",
+              "revision": 3
+            }
+          },
+          {
+            "name": "DATASOURCE_PREPARATION_READY",
+            "atMs": 839.5,
+            "detail": {
+              "durationMs": 5
+            }
+          },
+          {
+            "name": "FILTER_PIVOT_INIT_START",
+            "atMs": 839.5,
+            "detail": null
+          },
+          {
+            "name": "FILTER_PIVOT_INIT_READY",
+            "atMs": 839.6000000014901,
+            "detail": {
+              "durationMs": 0.10000000149011612
+            }
+          },
+          {
+            "name": "IMAGE_THUMBNAIL_INIT_START",
+            "atMs": 839.6000000014901,
+            "detail": null
+          },
+          {
+            "name": "IMAGE_THUMBNAIL_INIT_READY",
+            "atMs": 839.6000000014901,
+            "detail": {
+              "mode": "lazy",
+              "durationMs": 0
+            }
+          },
+          {
+            "name": "ACTIVE_MODULE_INIT_START",
+            "atMs": 839.6000000014901,
+            "detail": null
+          },
+          {
+            "name": "TABLE_RENDER_START",
+            "atMs": 839.6000000014901,
+            "detail": null
+          },
+          {
+            "name": "TABLE_RENDER_READY",
+            "atMs": 841.8000000007451,
+            "detail": {
+              "module": "overview",
+              "durationMs": 2.199999999254942
+            }
+          },
+          {
+            "name": "ACTIVE_MODULE_INIT_READY",
+            "atMs": 841.8000000007451,
+            "detail": {
+              "module": "overview",
+              "durationMs": 2.199999999254942
+            }
+          },
+          {
+            "name": "UI_FIRST_RENDER",
+            "atMs": 841.8000000007451,
+            "detail": null
+          },
+          {
+            "name": "UI_READY",
+            "atMs": 1068.6000000014901,
+            "detail": null
+          },
+          {
+            "name": "CP_LOAD_START",
+            "atMs": 1070.800000000745,
+            "detail": {
+              "reason": "overview"
+            }
+          },
+          {
+            "name": "OVERVIEW_MODULE_LOAD_START",
+            "atMs": 1073.800000000745,
+            "detail": {
+              "module": "oab",
+              "mode": "after-ui"
+            }
+          },
+          {
+            "name": "OVERVIEW_MODULE_LOAD_START",
+            "atMs": 1074.9000000022352,
+            "detail": {
+              "module": "intake",
+              "mode": "after-ui"
+            }
+          },
+          {
+            "name": "AUTH_USER_LOAD_START",
+            "atMs": 1085.4000000022352,
+            "detail": {
+              "mode": "after-ui"
+            }
+          },
+          {
+            "name": "EXCEL_ENGINE_LOAD_START",
+            "atMs": 1085.4000000022352,
+            "detail": {
+              "mode": "after-ui"
+            }
+          },
+          {
+            "name": "UNIFIED_PRIORITY_INVALIDATED",
+            "atMs": 1088.4000000022352,
+            "detail": {
+              "reason": "personal-decision-context",
+              "revision": 4
+            }
+          },
+          {
+            "name": "OVERVIEW_INVALIDATED",
+            "atMs": 1088.4000000022352,
+            "detail": {
+              "reason": "personal-decision-context"
+            }
+          },
+          {
+            "name": "UNIFIED_PRIORITY_INVALIDATED",
+            "atMs": 1089.7000000029802,
+            "detail": {
+              "reason": "personal-decision-context",
+              "revision": 5
+            }
+          },
+          {
+            "name": "OVERVIEW_INVALIDATED",
+            "atMs": 1089.800000000745,
+            "detail": {
+              "reason": "personal-decision-context"
+            }
+          },
+          {
+            "name": "OVERVIEW_MODULE_LOAD_READY",
+            "atMs": 1147.5,
+            "detail": {
+              "module": "intake",
+              "mode": "after-ui"
+            }
+          },
+          {
+            "name": "OVERVIEW_MODULE_LOAD_READY",
+            "atMs": 1159,
+            "detail": {
+              "module": "oab",
+              "mode": "after-ui"
+            }
+          },
+          {
+            "name": "AUTH_USER_LOAD_READY",
+            "atMs": 1169,
+            "detail": {
+              "mode": "after-ui",
+              "applied": 1,
+              "pushed": 10
+            }
+          },
+          {
+            "name": "AUTH_READY",
+            "atMs": 1169,
+            "detail": {
+              "mode": "after-ui"
+            }
+          }
+        ],
+        "loaded": [
+          [
+            "lfl",
+            false
+          ],
+          [
+            "openCosting",
+            false
+          ],
+          [
+            "manufacturers",
+            false
+          ],
+          [
+            "licensecards",
+            false
+          ],
+          [
+            "automations",
+            false
+          ]
+        ],
+        "tables": [
+          {
+            "id": "cpTable",
+            "rows": 0
+          },
+          {
+            "id": "ordersTable",
+            "rows": 0
+          }
+        ]
+      },
+      "large": {
+        "dataRows": 5000,
+        "domRows": 50,
+        "metrics": {
+          "longTaskMs": {
+            "count": 12,
+            "totalMs": 3159,
+            "maxMs": 1489,
+            "lastMs": 154,
+            "avgMs": 263.25
+          },
+          "bootstrapFetchMs": {
+            "count": 1,
+            "totalMs": 103.19999999925494,
+            "maxMs": 103.19999999925494,
+            "lastMs": 103.19999999925494,
+            "avgMs": 103.19999999925494
+          },
+          "bootstrapJsonParseMs": {
+            "count": 1,
+            "totalMs": 12.800000000745058,
+            "maxMs": 12.800000000745058,
+            "lastMs": 12.800000000745058,
+            "avgMs": 12.800000000745058
+          },
+          "CACHE_LOAD": {
+            "count": 1,
+            "totalMs": 116.19999999925494,
+            "maxMs": 116.19999999925494,
+            "lastMs": 116.19999999925494,
+            "avgMs": 116.19999999925494
+          },
+          "DATASOURCE_PREPARATION": {
+            "count": 1,
+            "totalMs": 5,
+            "maxMs": 5,
+            "lastMs": 5,
+            "avgMs": 5
+          },
+          "filterInitializationMs": {
+            "count": 1,
+            "totalMs": 0.10000000149011612,
+            "maxMs": 0.10000000149011612,
+            "lastMs": 0.10000000149011612,
+            "avgMs": 0.10000000149011612
+          },
+          "FILTER_PIVOT_INIT": {
+            "count": 1,
+            "totalMs": 0.10000000149011612,
+            "maxMs": 0.10000000149011612,
+            "lastMs": 0.10000000149011612,
+            "avgMs": 0.10000000149011612
+          },
+          "IMAGE_THUMBNAIL_INIT": {
+            "count": 1,
+            "totalMs": 0,
+            "maxMs": 0,
+            "lastMs": 0,
+            "avgMs": 0
+          },
+          "firstRenderMs": {
+            "count": 1,
+            "totalMs": 2.199999999254942,
+            "maxMs": 2.199999999254942,
+            "lastMs": 2.199999999254942,
+            "avgMs": 2.199999999254942
+          },
+          "TABLE_RENDER": {
+            "count": 1,
+            "totalMs": 2.199999999254942,
+            "maxMs": 2.199999999254942,
+            "lastMs": 2.199999999254942,
+            "avgMs": 2.199999999254942
+          },
+          "ACTIVE_MODULE_INIT": {
+            "count": 1,
+            "totalMs": 2.199999999254942,
+            "maxMs": 2.199999999254942,
+            "lastMs": 2.199999999254942,
+            "avgMs": 2.199999999254942
+          },
+          "stateHydrateMs": {
+            "count": 1,
+            "totalMs": 7.400000002235174,
+            "maxMs": 7.400000002235174,
+            "lastMs": 7.400000002235174,
+            "avgMs": 7.400000002235174
+          },
+          "overview.jsonParseMs": {
+            "count": 1,
+            "totalMs": 44.600000001490116,
+            "maxMs": 44.600000001490116,
+            "lastMs": 44.600000001490116,
+            "avgMs": 44.600000001490116
+          },
+          "firstUsableInteractionMs": {
+            "count": 1,
+            "totalMs": 1068.7000000029802,
+            "maxMs": 1068.7000000029802,
+            "lastMs": 1068.7000000029802,
+            "avgMs": 1068.7000000029802
+          },
+          "cp.jsonParseMs": {
+            "count": 1,
+            "totalMs": 30.199999999254942,
+            "maxMs": 30.199999999254942,
+            "lastMs": 30.199999999254942,
+            "avgMs": 30.199999999254942
+          },
+          "auditFirstCPNavigationMs": {
+            "count": 1,
+            "totalMs": 925,
+            "maxMs": 925,
+            "lastMs": 925,
+            "avgMs": 925
+          },
+          "auditCP5000RenderMs": {
+            "count": 1,
+            "totalMs": 3020.099999997765,
+            "maxMs": 3020.099999997765,
+            "lastMs": 3020.099999997765,
+            "avgMs": 3020.099999997765
+          }
+        }
+      }
+    }
+  ]
+}

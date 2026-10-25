@@ -1,0 +1,578 @@
+{
+  "contrast": [
+    {
+      "theme": "light",
+      "tab": "overview",
+      "checked": 116,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "light",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "overview",
+      "checked": 116,
+      "failures": [
+        {
+          "text": "Version 7.294",
+          "id": "appVersionBtn",
+          "cls": "appVersionBtn",
+          "fg": "rgb(64, 89, 91)",
+          "bg": [
+            184,
+            197,
+            196,
+            1
+          ],
+          "ratio": 4.23
+        },
+        {
+          "text": "Ana Sayfa",
+          "id": "",
+          "cls": "railGroupLabel",
+          "fg": "rgb(64, 89, 91)",
+          "bg": [
+            184,
+            197,
+            196,
+            1
+          ],
+          "ratio": 4.23
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [
+        {
+          "text": "Version 7.294",
+          "id": "appVersionBtn",
+          "cls": "appVersionBtn",
+          "fg": "rgb(64, 89, 91)",
+          "bg": [
+            184,
+            197,
+            196,
+            1
+          ],
+          "ratio": 4.23
+        },
+        {
+          "text": "Ana Sayfa",
+          "id": "",
+          "cls": "railGroupLabel",
+          "fg": "rgb(64, 89, 91)",
+          "bg": [
+            184,
+            197,
+            196,
+            1
+          ],
+          "ratio": 4.23
+        },
+        {
+          "text": "▾",
+          "id": "",
+          "cls": "thFilterBtn chkFilterBtn",
+          "fg": "rgb(64, 89, 91)",
+          "bg": [
+            181,
+            200,
+            194,
+            1
+          ],
+          "ratio": 4.29
+        },
+        {
+          "text": "▾",
+          "id": "",
+          "cls": "thFilterBtn",
+          "fg": "rgb(64, 89, 91)",
+          "bg": [
+            181,
+            200,
+            194,
+            1
+          ],
+          "ratio": 4.29
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "dark",
+      "tab": "overview",
+      "checked": 116,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "dark",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [
+        {
+          "text": "▾",
+          "id": "",
+          "cls": "thFilterBtn chkFilterBtn",
+          "fg": "rgb(165, 186, 180)",
+          "bg": [
+            56,
+            80,
+            86,
+            1
+          ],
+          "ratio": 4.2
+        },
+        {
+          "text": "▾",
+          "id": "",
+          "cls": "thFilterBtn",
+          "fg": "rgb(165, 186, 180)",
+          "bg": [
+            56,
+            80,
+            86,
+            1
+          ],
+          "ratio": 4.2
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    }
+  ],
+  "geometry": [
+    {
+      "theme": "light",
+      "tab": "overview",
+      "rounded": [
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "tab": "cp",
+      "rounded": []
+    },
+    {
+      "theme": "grey",
+      "tab": "overview",
+      "rounded": [
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        }
+      ]
+    },
+    {
+      "theme": "grey",
+      "tab": "cp",
+      "rounded": []
+    },
+    {
+      "theme": "dark",
+      "tab": "overview",
+      "rounded": [
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "tab": "cp",
+      "rounded": []
+    }
+  ],
+  "scales": [
+    {
+      "theme": "light",
+      "tab": "overview",
+      "viewport": 1440,
+      "scale": "compact",
+      "fontAdd": "-1px",
+      "font": "29px",
+      "overflow": false,
+      "toolbars": [
+        {
+          "cls": "appTop",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "globalFlowControls",
+          "id": "globalFlowControls",
+          "overflow": false
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "tab": "cp",
+      "viewport": 1440,
+      "scale": "compact",
+      "fontAdd": "-1px",
+      "font": "29px",
+      "overflow": false,
+      "toolbars": [
+        {
+          "cls": "appTop",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "workspaceContextBar",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "toolbar tableActionToolbar",
+          "id": "cpTableToolbar",
+          "overflow": false
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "tab": "overview",
+      "viewport": 1440,
+      "scale": "large",
+      "fontAdd": "1.5px",
+      "font": "31.5px",
+      "overflow": false,
+      "toolbars": [
+        {
+          "cls": "appTop",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "globalFlowControls",
+          "id": "globalFlowControls",
+          "overflow": false
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "tab": "cp",
+      "viewport": 1440,
+      "scale": "large",
+      "fontAdd": "1.5px",
+      "font": "31.5px",
+      "overflow": false,
+      "toolbars": [
+        {
+          "cls": "appTop",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "workspaceContextBar",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "toolbar tableActionToolbar",
+          "id": "cpTableToolbar",
+          "overflow": false
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "tab": "overview",
+      "viewport": 1440,
+      "scale": "xl",
+      "fontAdd": "3px",
+      "font": "33px",
+      "overflow": false,
+      "toolbars": [
+        {
+          "cls": "appTop",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "globalFlowControls",
+          "id": "globalFlowControls",
+          "overflow": false
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "tab": "cp",
+      "viewport": 1440,
+      "scale": "xl",
+      "fontAdd": "3px",
+      "font": "33px",
+      "overflow": false,
+      "toolbars": [
+        {
+          "cls": "appTop",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "workspaceContextBar",
+          "id": "",
+          "overflow": true
+        },
+        {
+          "cls": "toolbar tableActionToolbar",
+          "id": "cpTableToolbar",
+          "overflow": false
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "tab": "overview",
+      "viewport": 1280,
+      "scale": "xl",
+      "fontAdd": "3px",
+      "font": "33px",
+      "overflow": false,
+      "toolbars": [
+        {
+          "cls": "appTop",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "globalFlowControls",
+          "id": "globalFlowControls",
+          "overflow": false
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "tab": "cp",
+      "viewport": 1280,
+      "scale": "xl",
+      "fontAdd": "3px",
+      "font": "33px",
+      "overflow": false,
+      "toolbars": [
+        {
+          "cls": "appTop",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "workspaceContextBar",
+          "id": "",
+          "overflow": true
+        },
+        {
+          "cls": "toolbar tableActionToolbar",
+          "id": "cpTableToolbar",
+          "overflow": false
+        }
+      ]
+    },
+    {
+      "theme": "grey",
+      "tab": "overview",
+      "viewport": 1280,
+      "scale": "xl",
+      "fontAdd": "3px",
+      "font": "33px",
+      "overflow": false,
+      "toolbars": [
+        {
+          "cls": "appTop",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "globalFlowControls",
+          "id": "globalFlowControls",
+          "overflow": false
+        }
+      ]
+    },
+    {
+      "theme": "grey",
+      "tab": "cp",
+      "viewport": 1280,
+      "scale": "xl",
+      "fontAdd": "3px",
+      "font": "33px",
+      "overflow": false,
+      "toolbars": [
+        {
+          "cls": "appTop",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "workspaceContextBar",
+          "id": "",
+          "overflow": true
+        },
+        {
+          "cls": "toolbar tableActionToolbar",
+          "id": "cpTableToolbar",
+          "overflow": false
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "tab": "overview",
+      "viewport": 1280,
+      "scale": "xl",
+      "fontAdd": "3px",
+      "font": "33px",
+      "overflow": false,
+      "toolbars": [
+        {
+          "cls": "appTop",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "globalFlowControls",
+          "id": "globalFlowControls",
+          "overflow": false
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "tab": "cp",
+      "viewport": 1280,
+      "scale": "xl",
+      "fontAdd": "3px",
+      "font": "33px",
+      "overflow": false,
+      "toolbars": [
+        {
+          "cls": "appTop",
+          "id": "",
+          "overflow": false
+        },
+        {
+          "cls": "workspaceContextBar",
+          "id": "",
+          "overflow": true
+        },
+        {
+          "cls": "toolbar tableActionToolbar",
+          "id": "cpTableToolbar",
+          "overflow": false
+        }
+      ]
+    }
+  ],
+  "behavior": [
+    "Ctrl+K focuses the existing CP search",
+    "Search BARBIE: 17 / 191 records",
+    "One-row checkbox selection and real clipboard copy work",
+    "Fields popover opens through the visible control",
+    {
+      "shortcut": "Ctrl+Shift+K",
+      "focus": "Modül veya komut ara…",
+      "insideDialog": true
+    }
+  ],
+  "fonts": [
+    {
+      "family": "BL Plex Mono",
+      "status": "loaded",
+      "weight": "400"
+    },
+    {
+      "family": "BL Plex Sans",
+      "status": "loaded",
+      "weight": "100 900"
+    }
+  ],
+  "focus": {
+    "id": "cpSearch",
+    "outline": "rgb(34, 94, 98) solid 2px"
+  },
+  "reducedMotion": {
+    "enabled": true,
+    "activeAnimations": 0
+  }
+}

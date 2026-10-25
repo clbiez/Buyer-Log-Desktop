@@ -1,0 +1,1413 @@
+{
+  "overlays": [
+    {
+      "name": "command-palette",
+      "theme": "light",
+      "focus": [
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(22, 33, 45) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(22, 33, 45) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(22, 33, 45) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(22, 33, 45) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(22, 33, 45) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(22, 33, 45) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        }
+      ]
+    },
+    {
+      "name": "guide",
+      "theme": "light",
+      "focus": [
+        {
+          "tag": "SELECT",
+          "id": "",
+          "cls": "",
+          "text": "Tüm modüllerGenel kullanımGörünümler ve sütunlarKopyala",
+          "outline": "rgb(22, 33, 45) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Araçlar: önce kapsam, sonra işlemGenel kullanım",
+          "outline": "rgb(53, 106, 150) solid 2px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Aramada hangi alanlar taranır?Genel kullanım",
+          "outline": "rgb(53, 106, 150) solid 2px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Filtreler birlikte çalışırGenel kullanım",
+          "outline": "rgb(53, 106, 150) solid 2px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Görünüm ve filtre profilleriGenel kullanım",
+          "outline": "rgb(53, 106, 150) solid 2px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Dil, tema ve ekran yoğunluğuGenel kullanım",
+          "outline": "rgb(53, 106, 150) solid 2px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        }
+      ]
+    },
+    {
+      "name": "release-notes",
+      "theme": "light",
+      "focus": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow is-active",
+          "text": "v7.0.2942026-10-23Fiyat Masası, Kompakt Koleksiyon fiya",
+          "outline": "rgb(22, 33, 45) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2932026-10-21Lisans Atlası: birleşik detaylar ve t",
+          "outline": "rgb(22, 33, 45) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2882026-10-20Backlog sunum raporu zaman filtresi",
+          "outline": "rgb(22, 33, 45) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2872026-10-20Lisans Atlası, LCW standartları ve ar",
+          "outline": "rgb(22, 33, 45) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2862026-10-19Genel Bakış ve e-posta tablo düzeni",
+          "outline": "rgb(22, 33, 45) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2842026-10-18Buyer Log görünümünü koruyan tema dal",
+          "outline": "rgb(22, 33, 45) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "theme": "light",
+      "focus": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "umTopClose",
+          "text": "×",
+          "outline": "rgb(98, 113, 132) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "umNavItem isActive",
+          "text": "Kullanıcılar\n        1",
+          "outline": "rgb(36, 85, 120) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "umNavItem",
+          "text": "Roller & Yetkiler",
+          "outline": "rgb(55, 68, 84) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "umNavItem",
+          "text": "Ek Roller",
+          "outline": "rgb(55, 68, 84) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "umNavItem",
+          "text": "Workspace Şablonları",
+          "outline": "rgb(55, 68, 84) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "umNavItem",
+          "text": "Organizasyon",
+          "outline": "rgb(55, 68, 84) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        }
+      ]
+    },
+    {
+      "name": "notifications",
+      "theme": "light",
+      "focus": [
+        {
+          "tag": "BUTTON",
+          "id": "notificationUpdateHistoryBtn",
+          "cls": "tbtn",
+          "text": "Güncelleme geçmişi",
+          "outline": "rgb(55, 68, 84) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "notificationHistoryClear",
+          "cls": "notificationHistoryClear",
+          "text": "Tümünü temizle",
+          "outline": "rgb(55, 68, 84) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "notificationHistoryRemove",
+          "text": "",
+          "outline": "rgb(98, 113, 132) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "notificationHistoryRemove",
+          "text": "",
+          "outline": "rgb(98, 113, 132) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "notificationHistoryRemove",
+          "text": "",
+          "outline": "rgb(98, 113, 132) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "notificationHistoryRemove",
+          "text": "",
+          "outline": "rgb(98, 113, 132) none 3px",
+          "shadow": "color(srgb 0.207843 0.415686 0.588235 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        }
+      ]
+    },
+    {
+      "name": "cp-columns",
+      "theme": "light",
+      "error": "locator.click: Timeout 12000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#navColsBtn')\u001b[22m\n\u001b[2m    - locator resolved to <button id=\"navColsBtn\" class=\"navActionBtn\" aria-haspopup=\"true\" aria-"
+    },
+    {
+      "name": "cp-more",
+      "theme": "light"
+    },
+    {
+      "name": "command-palette",
+      "theme": "grey",
+      "focus": [
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(16, 24, 32) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(16, 24, 32) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(16, 24, 32) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(16, 24, 32) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(16, 24, 32) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(16, 24, 32) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        }
+      ]
+    },
+    {
+      "name": "guide",
+      "theme": "grey",
+      "focus": [
+        {
+          "tag": "SELECT",
+          "id": "",
+          "cls": "",
+          "text": "Tüm modüllerGenel kullanımGörünümler ve sütunlarKopyala",
+          "outline": "rgb(16, 24, 32) none 3px",
+          "shadow": "color(srgb 0.14902 0.309804 0.45098 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Araçlar: önce kapsam, sonra işlemGenel kullanım",
+          "outline": "rgb(38, 79, 115) solid 2px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Aramada hangi alanlar taranır?Genel kullanım",
+          "outline": "rgb(38, 79, 115) solid 2px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Filtreler birlikte çalışırGenel kullanım",
+          "outline": "rgb(38, 79, 115) solid 2px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Görünüm ve filtre profilleriGenel kullanım",
+          "outline": "rgb(38, 79, 115) solid 2px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Dil, tema ve ekran yoğunluğuGenel kullanım",
+          "outline": "rgb(38, 79, 115) solid 2px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        }
+      ]
+    },
+    {
+      "name": "release-notes",
+      "theme": "grey",
+      "focus": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow is-active",
+          "text": "v7.0.2942026-10-23Fiyat Masası, Kompakt Koleksiyon fiya",
+          "outline": "rgb(16, 24, 32) none 3px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2932026-10-21Lisans Atlası: birleşik detaylar ve t",
+          "outline": "rgb(16, 24, 32) none 3px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2882026-10-20Backlog sunum raporu zaman filtresi",
+          "outline": "rgb(16, 24, 32) none 3px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2872026-10-20Lisans Atlası, LCW standartları ve ar",
+          "outline": "rgb(16, 24, 32) none 3px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2862026-10-19Genel Bakış ve e-posta tablo düzeni",
+          "outline": "rgb(16, 24, 32) none 3px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2842026-10-18Buyer Log görünümünü koruyan tema dal",
+          "outline": "rgb(16, 24, 32) none 3px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "theme": "grey",
+      "focus": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "LCW AI",
+          "outline": "rgb(43, 57, 71) none 3px",
+          "shadow": "color(srgb 0.14902 0.309804 0.45098 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "CP Tracker",
+          "outline": "rgb(43, 57, 71) none 3px",
+          "shadow": "color(srgb 0.14902 0.309804 0.45098 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Siparişler",
+          "outline": "rgb(43, 57, 71) none 3px",
+          "shadow": "color(srgb 0.14902 0.309804 0.45098 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Backlog",
+          "outline": "rgb(43, 57, 71) none 3px",
+          "shadow": "color(srgb 0.14902 0.309804 0.45098 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Nakliye Kıyaslama",
+          "outline": "rgb(43, 57, 71) none 3px",
+          "shadow": "color(srgb 0.14902 0.309804 0.45098 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Koleksiyon",
+          "outline": "rgb(43, 57, 71) none 3px",
+          "shadow": "color(srgb 0.14902 0.309804 0.45098 / 0.27) 0px 0px 0px 3px",
+          "insideDialog": false
+        }
+      ]
+    },
+    {
+      "name": "notifications",
+      "theme": "grey",
+      "focus": [
+        {
+          "tag": "BUTTON",
+          "id": "notificationUpdateHistoryBtn",
+          "cls": "tbtn",
+          "text": "Güncelleme geçmişi",
+          "outline": "rgb(43, 57, 71) none 3px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "notificationHistoryClear",
+          "cls": "notificationHistoryClear",
+          "text": "Tümünü temizle",
+          "outline": "rgb(43, 57, 71) none 3px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "notificationHistoryRemove",
+          "text": "",
+          "outline": "rgb(65, 78, 90) none 3px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "notificationHistoryRemove",
+          "text": "",
+          "outline": "rgb(65, 78, 90) none 3px",
+          "shadow": "oklab(0.415513 -0.0293272 -0.0702101 / 0.0510846) 0px 0px 0px 0.567607px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "notificationHistoryRemove",
+          "text": "",
+          "outline": "rgb(65, 78, 90) none 3px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "notificationHistoryRemove",
+          "text": "",
+          "outline": "rgb(65, 78, 90) none 3px",
+          "shadow": "oklab(0 0 0 / 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        }
+      ]
+    },
+    {
+      "name": "cp-columns",
+      "theme": "grey",
+      "error": "locator.click: Timeout 12000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#navColsBtn')\u001b[22m\n\u001b[2m    - locator resolved to <button id=\"navColsBtn\" class=\"navActionBtn\" aria-haspopup=\"true\" aria-"
+    },
+    {
+      "name": "cp-more",
+      "theme": "grey"
+    },
+    {
+      "name": "command-palette",
+      "theme": "dark",
+      "focus": [
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(240, 243, 246) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(240, 243, 246) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(240, 243, 246) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(240, 243, 246) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(240, 243, 246) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        },
+        {
+          "tag": "INPUT",
+          "id": "",
+          "cls": "blCmdInput",
+          "text": "",
+          "outline": "rgb(240, 243, 246) none 3px",
+          "shadow": "none",
+          "insideDialog": true
+        }
+      ]
+    },
+    {
+      "name": "guide",
+      "theme": "dark",
+      "focus": [
+        {
+          "tag": "SELECT",
+          "id": "",
+          "cls": "",
+          "text": "Tüm modüllerGenel kullanımGörünümler ve sütunlarKopyala",
+          "outline": "rgb(240, 243, 246) none 3px",
+          "shadow": "rgba(143, 191, 232, 0.43) 0px 0px 0px 3px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Araçlar: önce kapsam, sonra işlemGenel kullanım",
+          "outline": "rgb(143, 191, 232) solid 2px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Aramada hangi alanlar taranır?Genel kullanım",
+          "outline": "rgb(143, 191, 232) solid 2px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Filtreler birlikte çalışırGenel kullanım",
+          "outline": "rgb(143, 191, 232) solid 2px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Görünüm ve filtre profilleriGenel kullanım",
+          "outline": "rgb(143, 191, 232) solid 2px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Dil, tema ve ekran yoğunluğuGenel kullanım",
+          "outline": "rgb(143, 191, 232) solid 2px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        }
+      ]
+    },
+    {
+      "name": "release-notes",
+      "theme": "dark",
+      "focus": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow is-active",
+          "text": "v7.0.2942026-10-23Fiyat Masası, Kompakt Koleksiyon fiya",
+          "outline": "rgb(240, 243, 246) none 3px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2932026-10-21Lisans Atlası: birleşik detaylar ve t",
+          "outline": "rgb(240, 243, 246) none 3px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2882026-10-20Backlog sunum raporu zaman filtresi",
+          "outline": "rgb(240, 243, 246) none 3px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2872026-10-20Lisans Atlası, LCW standartları ve ar",
+          "outline": "rgb(240, 243, 246) none 3px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2862026-10-19Genel Bakış ve e-posta tablo düzeni",
+          "outline": "rgb(240, 243, 246) none 3px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "blRnReleaseRow",
+          "text": "v7.0.2842026-10-18Buyer Log görünümünü koruyan tema dal",
+          "outline": "rgb(240, 243, 246) none 3px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "theme": "dark",
+      "focus": [
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "LCW AI",
+          "outline": "rgb(189, 200, 212) none 3px",
+          "shadow": "rgba(143, 191, 232, 0.43) 0px 0px 0px 3px",
+          "insideDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "CP Tracker",
+          "outline": "rgb(189, 200, 212) none 3px",
+          "shadow": "rgba(143, 191, 232, 0.43) 0px 0px 0px 3px",
+          "insideDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Siparişler",
+          "outline": "rgb(189, 200, 212) none 3px",
+          "shadow": "rgba(143, 191, 232, 0.43) 0px 0px 0px 3px",
+          "insideDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Backlog",
+          "outline": "rgb(189, 200, 212) none 3px",
+          "shadow": "rgba(143, 191, 232, 0.43) 0px 0px 0px 3px",
+          "insideDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Nakliye Kıyaslama",
+          "outline": "rgb(189, 200, 212) none 3px",
+          "shadow": "rgba(143, 191, 232, 0.43) 0px 0px 0px 3px",
+          "insideDialog": false
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "",
+          "text": "Koleksiyon",
+          "outline": "rgb(189, 200, 212) none 3px",
+          "shadow": "rgba(143, 191, 232, 0.43) 0px 0px 0px 3px",
+          "insideDialog": false
+        }
+      ]
+    },
+    {
+      "name": "notifications",
+      "theme": "dark",
+      "focus": [
+        {
+          "tag": "BUTTON",
+          "id": "notificationUpdateHistoryBtn",
+          "cls": "tbtn",
+          "text": "Güncelleme geçmişi",
+          "outline": "rgb(189, 200, 212) none 3px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "notificationHistoryClear",
+          "cls": "notificationHistoryClear",
+          "text": "Tümünü temizle",
+          "outline": "rgb(189, 200, 212) none 3px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "notificationHistoryRemove",
+          "text": "",
+          "outline": "rgb(160, 173, 186) none 3px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "notificationHistoryRemove",
+          "text": "",
+          "outline": "rgb(160, 173, 186) none 3px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "notificationHistoryRemove",
+          "text": "",
+          "outline": "rgb(160, 173, 186) none 3px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        },
+        {
+          "tag": "BUTTON",
+          "id": "",
+          "cls": "notificationHistoryRemove",
+          "text": "",
+          "outline": "rgb(160, 173, 186) none 3px",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "insideDialog": true
+        }
+      ]
+    },
+    {
+      "name": "cp-columns",
+      "theme": "dark",
+      "error": "locator.click: Timeout 12000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#navColsBtn')\u001b[22m\n\u001b[2m    - locator resolved to <button id=\"navColsBtn\" class=\"navActionBtn\" aria-haspopup=\"true\" aria-"
+    },
+    {
+      "name": "cp-more",
+      "theme": "dark"
+    }
+  ],
+  "export": [
+    {
+      "theme": "light",
+      "copyCount": 12,
+      "visual": {
+        "thead": [
+          "#F2F4F7",
+          "#54595F"
+        ],
+        "headers": [
+          {
+            "text": "",
+            "bg": "rgb(242, 244, 247)",
+            "fg": "rgb(71, 84, 103)"
+          },
+          {
+            "text": "Öncelik",
+            "bg": "rgb(242, 244, 247)",
+            "fg": "rgb(71, 84, 103)"
+          },
+          {
+            "text": "PLM Numune",
+            "bg": "rgb(242, 244, 247)",
+            "fg": "rgb(71, 84, 103)"
+          },
+          {
+            "text": "Marka Detayları",
+            "bg": "rgb(242, 244, 247)",
+            "fg": "rgb(71, 84, 103)"
+          },
+          {
+            "text": "Model Detayları",
+            "bg": "rgb(242, 244, 247)",
+            "fg": "rgb(71, 84, 103)"
+          },
+          {
+            "text": "Sipariş Detayları",
+            "bg": "rgb(242, 244, 247)",
+            "fg": "rgb(71, 84, 103)"
+          }
+        ],
+        "badge": [
+          {
+            "text": "Yolunda",
+            "bg": "rgb(227, 237, 230)",
+            "fg": "rgb(63, 119, 87)"
+          },
+          {
+            "text": "Üretimde",
+            "bg": "rgb(237, 239, 241)",
+            "fg": "rgb(55, 68, 84)"
+          },
+          {
+            "text": "Yolunda",
+            "bg": "rgb(227, 237, 230)",
+            "fg": "rgb(63, 119, 87)"
+          },
+          {
+            "text": "Üretimde",
+            "bg": "rgb(237, 239, 241)",
+            "fg": "rgb(55, 68, 84)"
+          },
+          {
+            "text": "Yolunda",
+            "bg": "rgb(227, 237, 230)",
+            "fg": "rgb(63, 119, 87)"
+          },
+          {
+            "text": "Üretimde",
+            "bg": "rgb(237, 239, 241)",
+            "fg": "rgb(55, 68, 84)"
+          }
+        ]
+      }
+    },
+    {
+      "theme": "grey",
+      "copyCount": 12,
+      "visual": {
+        "thead": [
+          "#cfd5dc",
+          "#2b3947"
+        ],
+        "headers": [
+          {
+            "text": "",
+            "bg": "rgb(232, 233, 236)",
+            "fg": "rgb(86, 90, 94)"
+          },
+          {
+            "text": "Öncelik",
+            "bg": "rgb(232, 233, 236)",
+            "fg": "rgb(86, 90, 94)"
+          },
+          {
+            "text": "PLM Numune",
+            "bg": "rgb(232, 233, 236)",
+            "fg": "rgb(86, 90, 94)"
+          },
+          {
+            "text": "Marka Detayları",
+            "bg": "rgb(232, 233, 236)",
+            "fg": "rgb(86, 90, 94)"
+          },
+          {
+            "text": "Model Detayları",
+            "bg": "rgb(232, 233, 236)",
+            "fg": "rgb(86, 90, 94)"
+          },
+          {
+            "text": "Sipariş Detayları",
+            "bg": "rgb(232, 233, 236)",
+            "fg": "rgb(86, 90, 94)"
+          }
+        ],
+        "badge": [
+          {
+            "text": "Yolunda",
+            "bg": "rgb(195, 216, 203)",
+            "fg": "rgb(15, 102, 64)"
+          },
+          {
+            "text": "Üretimde",
+            "bg": "rgb(232, 233, 236)",
+            "fg": "rgb(43, 57, 71)"
+          },
+          {
+            "text": "Yolunda",
+            "bg": "rgb(195, 216, 203)",
+            "fg": "rgb(15, 102, 64)"
+          },
+          {
+            "text": "Üretimde",
+            "bg": "rgb(232, 233, 236)",
+            "fg": "rgb(43, 57, 71)"
+          },
+          {
+            "text": "Yolunda",
+            "bg": "rgb(195, 216, 203)",
+            "fg": "rgb(15, 102, 64)"
+          },
+          {
+            "text": "Üretimde",
+            "bg": "rgb(232, 233, 236)",
+            "fg": "rgb(43, 57, 71)"
+          }
+        ]
+      }
+    },
+    {
+      "theme": "dark",
+      "copyCount": 12,
+      "visual": {
+        "thead": [
+          "#252d36",
+          "#bdc8d4"
+        ],
+        "headers": [
+          {
+            "text": "",
+            "bg": "rgb(48, 58, 70)",
+            "fg": "rgb(189, 200, 212)"
+          },
+          {
+            "text": "Öncelik",
+            "bg": "rgb(48, 58, 70)",
+            "fg": "rgb(189, 200, 212)"
+          },
+          {
+            "text": "PLM Numune",
+            "bg": "rgb(48, 58, 70)",
+            "fg": "rgb(189, 200, 212)"
+          },
+          {
+            "text": "Marka Detayları",
+            "bg": "rgb(48, 58, 70)",
+            "fg": "rgb(189, 200, 212)"
+          },
+          {
+            "text": "Model Detayları",
+            "bg": "rgb(48, 58, 70)",
+            "fg": "rgb(189, 200, 212)"
+          },
+          {
+            "text": "Sipariş Detayları",
+            "bg": "rgb(48, 58, 70)",
+            "fg": "rgb(189, 200, 212)"
+          }
+        ],
+        "badge": [
+          {
+            "text": "Yolunda",
+            "bg": "rgba(147, 199, 168, 0.12)",
+            "fg": "rgb(147, 199, 168)"
+          },
+          {
+            "text": "Üretimde",
+            "bg": "rgba(167, 173, 182, 0.09)",
+            "fg": "rgb(189, 200, 212)"
+          },
+          {
+            "text": "Yolunda",
+            "bg": "rgba(147, 199, 168, 0.12)",
+            "fg": "rgb(147, 199, 168)"
+          },
+          {
+            "text": "Üretimde",
+            "bg": "rgba(167, 173, 182, 0.09)",
+            "fg": "rgb(189, 200, 212)"
+          },
+          {
+            "text": "Yolunda",
+            "bg": "rgba(147, 199, 168, 0.12)",
+            "fg": "rgb(147, 199, 168)"
+          },
+          {
+            "text": "Üretimde",
+            "bg": "rgba(167, 173, 182, 0.09)",
+            "fg": "rgb(189, 200, 212)"
+          }
+        ]
+      }
+    }
+  ],
+  "a11y": [
+    {
+      "theme": "light",
+      "tab": "cp",
+      "checked": 175,
+      "failures": [
+        {
+          "text": "Version 7.294",
+          "id": "appVersionBtn",
+          "cls": "appVersionBtn",
+          "fg": "rgb(98, 113, 132)",
+          "bg": [
+            240,
+            243,
+            246,
+            1
+          ],
+          "ratio": 4.47
+        },
+        {
+          "text": "Ana Sayfa",
+          "id": "",
+          "cls": "railGroupLabel",
+          "fg": "rgb(98, 113, 132)",
+          "bg": [
+            240,
+            243,
+            246,
+            1
+          ],
+          "ratio": 4.47
+        },
+        {
+          "text": "Moderatör",
+          "id": "accessModeBadge",
+          "cls": "accessModeBadge isModerator",
+          "fg": "rgb(63, 119, 87)",
+          "bg": [
+            227,
+            237,
+            230,
+            1
+          ],
+          "ratio": 4.39
+        },
+        {
+          "text": "G",
+          "id": "currentUserInitials",
+          "cls": "blSteelInitials",
+          "fg": "rgba(0, 0, 0, 0)",
+          "bg": [
+            230,
+            233,
+            236,
+            1
+          ],
+          "ratio": 1
+        },
+        {
+          "text": "Yolunda",
+          "id": "",
+          "cls": "badge b-green",
+          "fg": "rgb(63, 119, 87)",
+          "bg": [
+            227,
+            237,
+            230,
+            1
+          ],
+          "ratio": 4.39
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "light",
+      "tab": "overview",
+      "checked": 112,
+      "failures": [
+        {
+          "text": "Version 7.294",
+          "id": "appVersionBtn",
+          "cls": "appVersionBtn",
+          "fg": "rgb(98, 113, 132)",
+          "bg": [
+            240,
+            243,
+            246,
+            1
+          ],
+          "ratio": 4.47
+        },
+        {
+          "text": "Ana Sayfa",
+          "id": "",
+          "cls": "railGroupLabel",
+          "fg": "rgb(98, 113, 132)",
+          "bg": [
+            240,
+            243,
+            246,
+            1
+          ],
+          "ratio": 4.47
+        },
+        {
+          "text": "Moderatör",
+          "id": "accessModeBadge",
+          "cls": "accessModeBadge isModerator",
+          "fg": "rgb(63, 119, 87)",
+          "bg": [
+            227,
+            237,
+            230,
+            1
+          ],
+          "ratio": 4.39
+        },
+        {
+          "text": "G",
+          "id": "currentUserInitials",
+          "cls": "blSteelInitials",
+          "fg": "rgba(0, 0, 0, 0)",
+          "bg": [
+            230,
+            233,
+            236,
+            1
+          ],
+          "ratio": 1
+        },
+        {
+          "text": "Takip etmeniz gereken kendi notunuz yok. Diğer kullanıcıların yazdığı notlar CP ",
+          "id": "",
+          "cls": "ovPriorityEmpty success",
+          "fg": "rgb(63, 119, 87)",
+          "bg": [
+            227,
+            237,
+            230,
+            1
+          ],
+          "ratio": 4.39
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "cp",
+      "checked": 175,
+      "failures": [
+        {
+          "text": "G",
+          "id": "currentUserInitials",
+          "cls": "blSteelInitials",
+          "fg": "rgba(0, 0, 0, 0)",
+          "bg": [
+            230,
+            233,
+            236,
+            1
+          ],
+          "ratio": 1
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "overview",
+      "checked": 112,
+      "failures": [
+        {
+          "text": "G",
+          "id": "currentUserInitials",
+          "cls": "blSteelInitials",
+          "fg": "rgba(0, 0, 0, 0)",
+          "bg": [
+            230,
+            233,
+            236,
+            1
+          ],
+          "ratio": 1
+        },
+        {
+          "text": "28.220",
+          "id": "",
+          "cls": "",
+          "fg": "rgb(124, 92, 224)",
+          "bg": [
+            216.01960784313724,
+            221.11764705882354,
+            227.2156862745098,
+            1
+          ],
+          "ratio": 3.45
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "dark",
+      "tab": "cp",
+      "checked": 175,
+      "failures": [
+        {
+          "text": "G",
+          "id": "currentUserInitials",
+          "cls": "blSteelInitials",
+          "fg": "rgba(0, 0, 0, 0)",
+          "bg": [
+            230,
+            233,
+            236,
+            1
+          ],
+          "ratio": 1
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "dark",
+      "tab": "overview",
+      "checked": 112,
+      "failures": [
+        {
+          "text": "G",
+          "id": "currentUserInitials",
+          "cls": "blSteelInitials",
+          "fg": "rgba(0, 0, 0, 0)",
+          "bg": [
+            230,
+            233,
+            236,
+            1
+          ],
+          "ratio": 1
+        },
+        {
+          "text": "28.220",
+          "id": "",
+          "cls": "",
+          "fg": "rgb(124, 92, 224)",
+          "bg": [
+            32.490196078431374,
+            38.68627450980392,
+            45.882352941176464,
+            1
+          ],
+          "ratio": 3.22
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    }
+  ]
+}

@@ -5,7 +5,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
 test('v6.10 CP and Orders render PLM ID as plain text and Model Name as the bridge', () => {
   assert.match(APP, /case 'plm': return `<td class="num">\$\{escapeHtml\(fmtOC\(v\)\)\}<\/td>`/);

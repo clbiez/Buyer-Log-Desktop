@@ -1,0 +1,2432 @@
+[
+  {
+    "file": "resources/app/public/app.css",
+    "line": 183,
+    "value": "transition:padding-left .15s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 191,
+    "value": "transition:none!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 191,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 201,
+    "value": "transition:width .15s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 215,
+    "value": "transition:background .12s var(--ease),color .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 238,
+    "value": "transition-delay:.18s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 245,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 259,
+    "value": "transition:border-color .12s var(--ease),background .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 266,
+    "value": "animation:syncCloudPulse .9s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 289,
+    "value": "transition:border-color .12s var(--ease),background .12s var(--ease),color .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 308,
+    "value": "transition:border-color .12s var(--ease),background .12s var(--ease),color .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 353,
+    "value": "transition:border-color .12s var(--ease),background .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 443,
+    "value": "transition:background-color var(--bl-motion-fast),border-color var(--bl-motion-fast),box-shadow var(--bl-motion-fast),color var(--bl-motion-fast)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 519,
+    "value": "transition:border-color .12s var(--ease),background .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 524,
+    "value": "transition:border-color .12s var(--ease),color .12s var(--ease),background .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 749,
+    "value": "transition:transform .15s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 793,
+    "value": "transition:background .12s var(--ease),opacity .12s var(--ease),box-shadow .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 800,
+    "value": "transition:transform .18s cubic-bezier(.22,.8,.24,1),opacity .12s var(--ease),background-color .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 805,
+    "value": "transition:transform .055s linear"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 813,
+    "value": "animation:jumpFlash 1.6s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 858,
+    "value": "transition:transform .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 860,
+    "value": "animation:delTypeDrop .1s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 861,
+    "value": "animation:delTypeRise .1s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1014,
+    "value": "animation:updateTestPulse 1.05s ease-in-out infinite alternate"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1066,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1066,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1134,
+    "value": "transition:transform .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1166,
+    "value": "animation: spinIc .7s linear infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1173,
+    "value": "transition:border-color .12s var(--ease),box-shadow .12s var(--ease),background .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1197,
+    "value": "transition:border-color .12s var(--ease),background .12s var(--ease),color .12s var(--ease),transform .12s var(--ease),box-shadow .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1219,
+    "value": "transition:border-color .12s var(--ease),box-shadow .12s var(--ease),background .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1364,
+    "value": "transition:background .12s,color .12s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1397,
+    "value": "transition:background .12s,border-color .12s,color .12s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1429,
+    "value": "transition:background .12s,border-color .12s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1438,
+    "value": "transition:background .12s,border-color .12s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1821,
+    "value": "animation:globalSearchPulse 1s ease-in-out 3!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1862,
+    "value": "transition:border-color .15s var(--ease),background .15s var(--ease),box-shadow .15s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1960,
+    "value": "animation:spin .75s linear infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1971,
+    "value": "transition:background .12s var(--ease),opacity .12s var(--ease),box-shadow .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2044,
+    "value": "animation:refreshErrorPulse .82s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2064,
+    "value": "transition:background .15s var(--ease),border-color .15s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2160,
+    "value": "animation:buyerLogRefreshSpin .78s linear infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2162,
+    "value": "animation-duration:1.8s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2235,
+    "value": "transition:background .14s var(--ease),border-color .14s var(--ease),color .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2246,
+    "value": "transition:color .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2250,
+    "value": "transition:background .14s var(--ease),box-shadow .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2396,
+    "value": "transition:opacity .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2412,
+    "value": "transition:color .12s var(--ease),opacity .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2468,
+    "value": "animation:sourceBackdropIn .12s ease both"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2575,
+    "value": "transition:opacity .16s ease,transform .16s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2580,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2588,
+    "value": "transition:opacity .12s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "transition:.15s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "transition:transform .15s,border-color .15s,box-shadow .15s,opacity .15s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3053,
+    "value": "transition:border-color .12s ease,box-shadow .12s ease,background .12s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3095,
+    "value": "transition:background-color .12s var(--ease),color .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3098,
+    "value": "transition:background .16s var(--ease),color .16s var(--ease),box-shadow .16s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3134,
+    "value": "animation:buyerLogRefreshSpin .72s linear infinite!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3135,
+    "value": "animation:buyerLogRefreshPulse 1.05s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3147,
+    "value": "animation:buyerLogRefreshSpin .78s linear infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3179,
+    "value": "transition:border-color .16s var(--ease),background .16s var(--ease),box-shadow .16s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3218,
+    "value": "transition:background .14s var(--ease),border-color .14s var(--ease),transform .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3285,
+    "value": "transition:box-shadow .16s ease,border-color .16s ease,transform .16s ease,opacity .16s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3288,
+    "value": "animation:cpThumbFlashPulse .32s ease-out both"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3341,
+    "value": "animation:refreshErrorPulse 1s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3528,
+    "value": "animation:prepareEmailSpin .75s linear infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3530,
+    "value": "animation:prepareEmailOperationSweep 1.1s var(--ease) infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3712,
+    "value": "transition:transform .12s ease,box-shadow .12s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3825,
+    "value": "transition:border-color .12s ease,box-shadow .12s ease,background-color .12s ease,color .12s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3844,
+    "value": "transition:border-color .12s ease,box-shadow .12s ease,background .12s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4124,
+    "value": "transition:background .2s var(--ease),opacity .2s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4133,
+    "value": "animation:refreshCompactSweep 1.65s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4135,
+    "value": "animation:refreshCompactDot 1.05s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4136,
+    "value": "animation-delay:.14s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4136,
+    "value": "animation-delay:.28s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4223,
+    "value": "transition:opacity .12s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4255,
+    "value": "transition:opacity .12s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4299,
+    "value": "animation:qtxColourPulse .8s ease-in-out infinite alternate"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4445,
+    "value": "transition:background .14s var(--ease),border-color .14s var(--ease),color .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4497,
+    "value": "animation:blRemoteChangedFade 5s ease-out 1"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4504,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4551,
+    "value": "transition:opacity .12s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4618,
+    "value": "transition:width .3s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4635,
+    "value": "animation:oabActivitySpin .9s linear infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4636,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4637,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4639,
+    "value": "animation:oabActivityDot 1.15s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4640,
+    "value": "animation-delay:.16s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4640,
+    "value": "animation-delay:.32s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4660,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4829,
+    "value": "transition:box-shadow .25s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5041,
+    "value": "transition:width .15s linear"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5123,
+    "value": "transition:width .25s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5342,
+    "value": "animation:kolPeriodBackdropIn .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5343,
+    "value": "animation:kolPeriodSlide .16s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5349,
+    "value": "transition:background .12s var(--ease),border-color .12s var(--ease),color .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5359,
+    "value": "transition:background .12s var(--ease),border-color .12s var(--ease),color .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5380,
+    "value": "transition:none!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5381,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5383,
+    "value": "animation:spinIc 1.8s linear infinite!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5384,
+    "value": "animation:spinIc 1.8s linear infinite!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5385,
+    "value": "animation:buyerLogRefreshSpin 1.8s linear infinite!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5386,
+    "value": "animation:spin 1.8s linear infinite!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5387,
+    "value": "animation:prepareEmailSpin 1.8s linear infinite!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5388,
+    "value": "animation:outlookSpin 1.8s linear infinite!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5389,
+    "value": "animation:umSpin 1.8s linear infinite!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5419,
+    "value": "transition:border-color .14s ease,transform .14s ease,box-shadow .14s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5435,
+    "value": "transition:filter .14s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5576,
+    "value": "transition:r .08s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5576,
+    "value": "transition:opacity .1s ease"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5740,
+    "value": "animation:trxSpin 1s linear infinite"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5853,
+    "value": "transition:transform .32s cubic-bezier(.2,.8,.2,1)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5855,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5867,
+    "value": "transition:filter .12s"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5885,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5962,
+    "value": "transition:transform .15s ease"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 19,
+    "value": "transition: transform .16s ease"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 38,
+    "value": "transition:height .4s var(--ease),filter .12s var(--ease),transform .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 40,
+    "value": "transition:height .4s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 41,
+    "value": "transition:filter .12s var(--ease),transform .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 61,
+    "value": "transition:height .4s var(--ease),filter .12s var(--ease),transform .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 66,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 117,
+    "value": "transition:opacity .16s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 118,
+    "value": "transition:transform .16s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 50,
+    "value": "transition:stroke-dasharray .6s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 56,
+    "value": "transition:transform .15s var(--ease),box-shadow .15s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 86,
+    "value": "transition:width .4s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 87,
+    "value": "transition:filter .12s,transform .12s"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 98,
+    "value": "transition:height .4s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 111,
+    "value": "transition:width .4s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 143,
+    "value": "animation:bpaSpin .8s linear infinite"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 159,
+    "value": "transition:opacity .2s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 160,
+    "value": "transition:transform .25s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 176,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 176,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 405,
+    "value": "animation:drift 18s ease-in-out infinite alternate"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 421,
+    "value": "animation:stripe 2s linear infinite"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 424,
+    "value": "animation:flowdash 1.6s linear infinite"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 425,
+    "value": "animation:pulse 2.4s ease-out infinite"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 425,
+    "value": "animation-delay:calc(var(--i,0)*.3s)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 448,
+    "value": "animation:growX .9s cubic-bezier(.2,.9,.2,1) both"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 448,
+    "value": "animation-delay:calc(var(--i,0)*60ms)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 449,
+    "value": "animation:growY .9s cubic-bezier(.2,.9,.25,1.1) both"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 449,
+    "value": "animation-delay:calc(var(--i,0)*40ms)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 450,
+    "value": "animation:draw 1.8s cubic-bezier(.4,.1,.2,1) both"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 450,
+    "value": "animation-delay:calc(var(--i,0)*160ms)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 451,
+    "value": "animation:arc 1.3s cubic-bezier(.5,0,.2,1) both"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 451,
+    "value": "animation-delay:calc(var(--i,0)*110ms)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 452,
+    "value": "animation:pop .5s cubic-bezier(.3,1.5,.5,1) both"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 452,
+    "value": "animation-delay:calc(var(--i,0)*6ms)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 453,
+    "value": "animation:rise .6s cubic-bezier(.2,.8,.2,1) both"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 453,
+    "value": "animation-delay:calc(var(--i,0)*60ms)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 455,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 457,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation.css",
+    "line": 4,
+    "value": "animation:blDialogIn var(--bl-motion-enter,190ms) var(--bl-ease,ease) both"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation.css",
+    "line": 33,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 40,
+    "value": "animation:blGuideRoute 3s linear infinite"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 76,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 85,
+    "value": "animation:blTriviaIn .5s ease-out both"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 94,
+    "value": "animation:blTriviaPop .6s .15s cubic-bezier(.2,1.4,.4,1) both"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 97,
+    "value": "animation:blTriviaIn .5s .08s ease-out both"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 102,
+    "value": "animation:blTriviaTwinkle 2.6s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 103,
+    "value": "animation:blTriviaSpin 9s linear infinite"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 104,
+    "value": "animation-duration:40s"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 105,
+    "value": "animation:blTriviaWave 6s linear infinite"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 106,
+    "value": "animation-duration:10s"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 107,
+    "value": "animation:blTriviaRise 6s ease-in infinite"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 108,
+    "value": "animation:blTriviaSwim 7s ease-in-out infinite alternate"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 109,
+    "value": "animation:blTriviaSway 4s ease-in-out infinite alternate"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 110,
+    "value": "animation:blTriviaFade .5s ease-out both"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 111,
+    "value": "animation:blTriviaGrow .7s ease-out both"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 112,
+    "value": "animation:blTriviaDraw 2.4s ease-out forwards"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 113,
+    "value": "animation:blTriviaDraw 2.4s linear infinite"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 114,
+    "value": "animation:blTriviaBeat 1.1s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 115,
+    "value": "animation:blTriviaFloat 4s ease-in-out infinite alternate"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 116,
+    "value": "animation:blTriviaFloat 1.6s ease-in-out infinite alternate"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 117,
+    "value": "animation:blTriviaSteam 3s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 118,
+    "value": "animation:blTriviaPulse 3.2s linear infinite"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 119,
+    "value": "animation:blTriviaTwinkle 4s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 120,
+    "value": "animation:blTriviaFade .4s ease-out both"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 121,
+    "value": "animation:blTriviaGlobe 6s ease-in-out infinite alternate"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 146,
+    "value": "transition:transform .25s linear"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 149,
+    "value": "transition:background .15s,border-color .15s,color .15s,transform .15s"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 168,
+    "value": "animation:blTriviaPop .5s cubic-bezier(.2,1.4,.4,1) both"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 173,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 173,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 175,
+    "value": "animation:blTriviaHoldIn .25s ease-out both"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 177,
+    "value": "transition:opacity .3s ease"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 185,
+    "value": "animation:blTriviaPop .5s cubic-bezier(.2,1.4,.4,1) both"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 189,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 189,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 22,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 27,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 27,
+    "value": "animation-duration:$"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 28,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 29,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 33,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 38,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 50,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 54,
+    "value": "animation-duration:$"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 55,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 69,
+    "value": "animation-delay:.8s"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 69,
+    "value": "animation-delay:1.6s"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 72,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 79,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 85,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/buyerlog-trivia.js",
+    "line": 96,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 25,
+    "value": "transition:border-color .12s var(--ease),background .12s var(--ease),color .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 45,
+    "value": "transition:border-color .12s var(--ease),background .12s var(--ease),color .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 99,
+    "value": "transition:transform .18s ease"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 105,
+    "value": "transition:background .12s var(--ease),border-color .12s var(--ease),color .12s var(--ease),transform .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/command-palette.css",
+    "line": 4,
+    "value": "animation:blDialogIn var(--bl-motion-enter,190ms) var(--bl-ease,ease) both"
+  },
+  {
+    "file": "resources/app/public/command-palette.css",
+    "line": 19,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 183,
+    "value": "transition:background .12s var(--ease),border-color .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 184,
+    "value": "transition:transform .12s var(--ease),background .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 201,
+    "value": "transition:transform .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 533,
+    "value": "transition:background var(--bl-motion-fast) var(--bl-ease),transform var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 533,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 533,
+    "value": "animation-delay:var(--check-delay,0ms)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 545,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 545,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 546,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 546,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/design-butunluk.css",
+    "line": 448,
+    "value": "transition:none!important"
+  },
+  {
+    "file": "resources/app/public/design-butunluk.css",
+    "line": 449,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/design-butunluk.css",
+    "line": 452,
+    "value": "animation:blBootSpin 1.8s linear infinite!important"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 397,
+    "value": "animation:updateTestPulse 1.05s ease-in-out infinite alternate"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 526,
+    "value": "transition:transform .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 565,
+    "value": "transition:transform .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 622,
+    "value": "transition:opacity .16s var(--ease),transform .16s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 631,
+    "value": "animation:buyerLogRefreshSpin .78s linear infinite"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 643,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 643,
+    "value": "animation-duration:1.8s"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 652,
+    "value": "animation:endeksmatikImportSpin .8s linear infinite"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 653,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 665,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 4,
+    "value": "transition:opacity .2s ease"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 6,
+    "value": "transition:transform .22s ease,visibility 0s linear .22s"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 7,
+    "value": "transition:background .15s ease"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 9,
+    "value": "transition:transform .22s ease"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 106,
+    "value": "transition:padding-left var(--bl-motion-standard) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 107,
+    "value": "transition:width var(--bl-motion-standard) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 119,
+    "value": "transition:background-color var(--bl-motion-fast),color var(--bl-motion-fast)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 153,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 180,
+    "value": "transition:background-color var(--bl-motion-fast),border-color var(--bl-motion-fast),color var(--bl-motion-fast),box-shadow var(--bl-motion-fast)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 218,
+    "value": "animation:blPopoverIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 239,
+    "value": "animation:blDialogIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 240,
+    "value": "animation:blDrawerIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 281,
+    "value": "animation-duration:.01ms!important"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 281,
+    "value": "transition-duration:.01ms!important"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 282,
+    "value": "animation-duration:1.8s!important"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 286,
+    "value": "transition:none!important"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 288,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 289,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 376,
+    "value": "transition:transform var(--bl-motion-fast) var(--bl-ease),color var(--bl-motion-fast)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 468,
+    "value": "transition:opacity var(--bl-motion-fast) var(--bl-ease),transform var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 509,
+    "value": "animation:blOrbFlow 9s linear infinite,blOrbBreath 5s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 514,
+    "value": "animation:blOrbHalo 5s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 516,
+    "value": "animation-duration:2.4s,1.6s"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 517,
+    "value": "animation-duration:1.6s"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 521,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 523,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 535,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 549,
+    "value": "transition:bottom .16s var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 554,
+    "value": "animation:blCopyPulse .7s var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 568,
+    "value": "animation:blActionSpin .72s linear infinite"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 571,
+    "value": "animation:blActionDonePulse .7s var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 575,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 587,
+    "value": "animation:blPopoverIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 606,
+    "value": "transition:transform var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 609,
+    "value": "animation:blPopoverIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 646,
+    "value": "transition:opacity var(--bl-motion-fast)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 680,
+    "value": "transition:color var(--bl-motion-fast),border-color var(--bl-motion-fast),background-color var(--bl-motion-fast)"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 88,
+    "value": "transition:border-color .14s ease,background-color .14s ease,color .14s ease"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 102,
+    "value": "transition:border-color .14s ease,background-color .14s ease"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 113,
+    "value": "transition:background-color .14s ease,color .14s ease"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 142,
+    "value": "animation:loginSpin .72s linear infinite"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 153,
+    "value": "transition:background-color .14s ease,border-color .14s ease,box-shadow .14s ease"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 159,
+    "value": "animation:loginSpin .72s linear infinite"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 200,
+    "value": "transition:none!important"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 201,
+    "value": "animation-duration:1.4s"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 245,
+    "value": "transition:background-color .28s ease"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 246,
+    "value": "transition:opacity .28s ease,transform .28s ease"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 247,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 38,
+    "value": "animation:blBootBgIn .5s ease-out both"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 39,
+    "value": "animation:blBootCardIn .55s .08s cubic-bezier(.2,.7,.2,1) both"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 40,
+    "value": "transition:opacity .32s ease"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 43,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 43,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 8,
+    "value": "transition:.14s ease"
+  },
+  {
+    "file": "resources/app/public/lcwai-output-editor.js",
+    "line": 414,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/lcwai-output-editor.js",
+    "line": 414,
+    "value": "transition:none!important"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 18,
+    "value": "transition:background .14s var(--ease),border-color .14s var(--ease),color .14s var(--ease),box-shadow .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 49,
+    "value": "transition:border-color .14s var(--ease),box-shadow .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 61,
+    "value": "transition:background .14s var(--ease),border-color .14s var(--ease),box-shadow .14s var(--ease),color .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 68,
+    "value": "transition:transform .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 90,
+    "value": "transition:background .12s var(--ease),border-color .12s var(--ease),color .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 135,
+    "value": "transition:background .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 235,
+    "value": "transition:border-color .14s var(--ease),box-shadow .14s var(--ease),background .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 460,
+    "value": "transition:background .14s var(--ease),width .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 505,
+    "value": "transition:border-color .16s var(--ease),box-shadow .16s var(--ease),transform .16s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 513,
+    "value": "transition:background .14s var(--ease),color .14s var(--ease),border-color .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 543,
+    "value": "transition:background .15s"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 543,
+    "value": "transition:transform .15s"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 572,
+    "value": "transition:background .16s ease,color .16s ease,border-color .16s ease"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 808,
+    "value": "transition:border-color .12s var(--ease),box-shadow .12s var(--ease),transform .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "transition:transform .2s,box-shadow .2s,background .2s,border-color .2s"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "animation:rise .48s var(--smooth) both"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "animation:float 7s ease-in-out infinite alternate"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "animation:bob 5s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "animation:spin 14s linear infinite"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "transition:transform .28s var(--smooth),box-shadow .28s"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "animation:rise .45s var(--smooth) both"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "transition:transform .5s var(--smooth)"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "transition:transform .24s,border .24s,box-shadow .24s"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "animation:rise .3s ease both"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "animation:fade .18s ease"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "animation:draw .32s var(--smooth) both"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "transition:background .2s"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "transition:transform .2s"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 13,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 13,
+    "value": "transition:none!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 14,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 17,
+    "value": "transition:transform .24s cubic-bezier(.2,.7,.2,1)"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 19,
+    "value": "transition:color .24s"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 117,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 121,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 126,
+    "value": "transition:border-color .17s,box-shadow .17s,transform .17s"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 330,
+    "value": "transition:zoom .22s ease"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 334,
+    "value": "animation:branchIn .42s ease both"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 335,
+    "value": "transition:border-color .22s,box-shadow .25s,transform .25s"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 345,
+    "value": "animation:treeReveal .36s ease both"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 359,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 389,
+    "value": "transition:none!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 449,
+    "value": "transition:transform .18s ease"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 451,
+    "value": "transition:background .18s,border-color .18s,box-shadow .18s"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 636,
+    "value": "transition: transform .42s cubic-bezier(.2,.75,.25,1)"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 648,
+    "value": "transition: none !important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 679,
+    "value": "transition: transform .42s cubic-bezier(.2,.75,.25,1)"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 684,
+    "value": "transition: none"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 786,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 2,
+    "value": "animation:rise .4s var(--smooth) both"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 23,
+    "value": "animation:rise .25s var(--smooth) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 16,
+    "value": "transition:background var(--bl-motion-fast) var(--bl-ease),border-color var(--bl-motion-fast) var(--bl-ease),color var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 20,
+    "value": "transition:background var(--bl-motion-fast) var(--bl-ease),border-color var(--bl-motion-fast) var(--bl-ease),color var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 27,
+    "value": "transition:background var(--bl-motion-fast) var(--bl-ease),color var(--bl-motion-fast) var(--bl-ease),border-color var(--bl-motion-fast) var(--bl-ease),transform var(--bl-motion-standard) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 33,
+    "value": "animation:blActionSpin .9s linear infinite"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 34,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 42,
+    "value": "transition:background var(--bl-motion-fast) var(--bl-ease),box-shadow var(--bl-motion-standard) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 48,
+    "value": "animation:lcSaved 1.2s var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 49,
+    "value": "animation:lcRowIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 49,
+    "value": "animation-delay:calc(var(--i,0) * 18ms)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 54,
+    "value": "transition:transform var(--bl-motion-standard) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 62,
+    "value": "transition:border-color var(--bl-motion-fast) var(--bl-ease),background-color var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 75,
+    "value": "transition:border-color var(--bl-motion-fast) var(--bl-ease),background var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 90,
+    "value": "transition:border-color var(--bl-motion-fast) var(--bl-ease),background var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 95,
+    "value": "transition:transform var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 103,
+    "value": "animation:blPopoverIn var(--bl-motion-fast) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 105,
+    "value": "transition:transform var(--bl-motion-standard) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 107,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 110,
+    "value": "animation:lcOpen var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 125,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 131,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 139,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 147,
+    "value": "animation:lcShimmer 1.2s linear infinite"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 151,
+    "value": "transition:transform var(--bl-motion-enter) var(--bl-ease),opacity var(--bl-motion-enter) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 156,
+    "value": "animation:lmFade var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 157,
+    "value": "animation:lmFade var(--bl-motion-standard) var(--bl-ease) reverse both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 158,
+    "value": "animation:lmSlide var(--bl-motion-standard) var(--bl-ease) reverse both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 161,
+    "value": "animation:lmSlide var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 168,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 175,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 175,
+    "value": "transition:border-color var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 185,
+    "value": "transition:transform var(--bl-motion-standard) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 186,
+    "value": "transition:grid-template-rows var(--bl-motion-enter) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 201,
+    "value": "animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 203,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 215,
+    "value": "animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 218,
+    "value": "animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 223,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 226,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 226,
+    "value": "transition:background-color var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 236,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 236,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 239,
+    "value": "animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 244,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 247,
+    "value": "transition:background-color var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 250,
+    "value": "animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 253,
+    "value": "transition:background-color var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 271,
+    "value": "transition:opacity var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 273,
+    "value": "animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 274,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 275,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 275,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 71,
+    "value": "animation:in .3s cubic-bezier(.2,.75,.25,1) both"
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 72,
+    "value": "transition:background-color .15s"
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 77,
+    "value": "transition:transform .25s cubic-bezier(.2,.75,.25,1)"
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 80,
+    "value": "transition:block-size .3s cubic-bezier(.2,.75,.25,1),content-visibility .3s allow-discrete"
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 96,
+    "value": "transition:transform .2s"
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 115,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 115,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 118,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 134,
+    "value": "animation-delay:$"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 5,
+    "value": "transition:background .14s var(--ease),border-color .14s var(--ease),color .14s var(--ease),transform .08s var(--ease),box-shadow .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 28,
+    "value": "transition:border-color .14s var(--ease),background .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 31,
+    "value": "transition:background .14s var(--ease),border-color .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 44,
+    "value": "transition:border-color .14s var(--ease),box-shadow .14s var(--ease),transform .08s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 50,
+    "value": "transition:opacity .14s var(--ease),transform .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 60,
+    "value": "transition:border-color .14s var(--ease),box-shadow .14s var(--ease),background .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 70,
+    "value": "transition:transform .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 86,
+    "value": "transition:background .14s var(--ease),border-color .14s var(--ease),color .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 90,
+    "value": "transition:background .14s var(--ease),border-color .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 136,
+    "value": "transition:border-color .12s var(--ease),background .12s var(--ease),color .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 24,
+    "value": "transition:transform .22s ease"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 35,
+    "value": "transition:opacity .16s ease"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 90,
+    "value": "animation:gfEarthProgress 1.1s ease-in-out infinite"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 92,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 31,
+    "value": "transition:width .18s ease,background .18s ease"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 49,
+    "value": "animation:ovHomeSlideNext .24s cubic-bezier(.2,.8,.2,1)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 50,
+    "value": "animation:ovHomeSlidePrev .24s cubic-bezier(.2,.8,.2,1)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 53,
+    "value": "animation:ovHomePulse 1.2s ease"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 72,
+    "value": "transition:border-color .15s ease,background .15s ease"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 99,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 105,
+    "value": "transition:background .15s ease"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 111,
+    "value": "transition:opacity .18s ease"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 113,
+    "value": "transition:transform .22s cubic-bezier(.2,.8,.2,1)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 321,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 322,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 360,
+    "value": "animation:ovHorizonGrow 600ms var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 360,
+    "value": "animation-delay:var(--ov-delay)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 368,
+    "value": "transition:transform var(--bl-motion-enter) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 416,
+    "value": "animation:ovMetricGrow 500ms var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 444,
+    "value": "transition:transform var(--bl-motion-enter) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 473,
+    "value": "animation:ovMetricGrow 500ms var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 489,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 490,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 492,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 492,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 7,
+    "value": "transition:color var(--bl-motion-fast) var(--bl-ease),border-color var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 15,
+    "value": "animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 24,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 45,
+    "value": "transition:background var(--bl-motion-enter) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 55,
+    "value": "transition:background var(--bl-motion-fast) var(--bl-ease),color var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 60,
+    "value": "transition:box-shadow var(--bl-motion-standard) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 70,
+    "value": "animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 105,
+    "value": "transition:background var(--bl-motion-standard) var(--bl-ease),box-shadow var(--bl-motion-standard) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 115,
+    "value": "animation:pdPop var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 116,
+    "value": "animation:pdSlideIn 320ms var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 121,
+    "value": "transition:background var(--bl-motion-standard) var(--bl-ease),color var(--bl-motion-standard) var(--bl-ease),border-color var(--bl-motion-standard) var(--bl-ease),transform var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 124,
+    "value": "animation:pdPop var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 143,
+    "value": "animation:pdFlash 900ms var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 146,
+    "value": "animation:pdToastIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 147,
+    "value": "animation:pdToastOut var(--bl-motion-standard) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 162,
+    "value": "transition:border-color var(--bl-motion-fast) var(--bl-ease),box-shadow var(--bl-motion-fast) var(--bl-ease),transform var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 162,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 178,
+    "value": "animation:blDrawerIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 212,
+    "value": "animation:pdFadeUp var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 212,
+    "value": "animation-delay:var(--pd-delay,0ms)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 212,
+    "value": "transition:border-color var(--bl-motion-fast) var(--bl-ease),box-shadow var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 222,
+    "value": "animation:pdDraw 700ms var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 238,
+    "value": "animation:blDrawerIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 255,
+    "value": "animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 268,
+    "value": "transition:background var(--bl-motion-standard) var(--bl-ease),box-shadow var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 268,
+    "value": "animation:pdFadeIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 293,
+    "value": "animation:pdGrow var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 310,
+    "value": "animation:none!important"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 310,
+    "value": "transition:none!important"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 335,
+    "value": "transition:left var(--bl-motion-standard) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 351,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 354,
+    "value": "transition:border-color var(--bl-motion-fast) var(--bl-ease),background var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 371,
+    "value": "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 378,
+    "value": "transition:border-color var(--bl-motion-fast) var(--bl-ease),background var(--bl-motion-fast) var(--bl-ease)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 412,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 412,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 35,
+    "value": "animation:blTriviaIn .45s ease-out both"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 37,
+    "value": "transition:transform .18s ease"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 41,
+    "value": "animation:blRnFocusIn .35s ease-out both"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 49,
+    "value": "transition:transform .25s linear"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 54,
+    "value": "transition:background .15s,border-color .15s,color .15s,transform .15s"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 77,
+    "value": "animation:none"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 77,
+    "value": "transition:none"
+  },
+  {
+    "file": "resources/app/public/table-search-help.css",
+    "line": 2,
+    "value": "transition:flex-basis .14s var(--ease),width .14s var(--ease),max-width .14s var(--ease),box-shadow .14s var(--ease),background .14s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/table-search-help.css",
+    "line": 34,
+    "value": "transition:border-color .12s var(--ease),background .12s var(--ease),color .12s var(--ease),transform .12s var(--ease)"
+  },
+  {
+    "file": "resources/app/public/theme-transition.js",
+    "line": 37,
+    "value": "transition:null,animation:null,"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 95,
+    "value": "animation:umSpin .8s linear infinite"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 269,
+    "value": "transition:transform .12s ease"
+  }
+]

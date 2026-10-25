@@ -1,0 +1,1598 @@
+[
+  {
+    "theme": "light",
+    "tokens": {
+      "paper": "#f5f7f9",
+      "rail-bg": "#f0f3f6",
+      "card": "#fff",
+      "card2": "#fafbfc",
+      "card2-strong": "#e9edf1",
+      "ink": "#16212d",
+      "ink2": "#374454",
+      "muted": "#627184",
+      "acc": "#356a96",
+      "acc-hover": "#275779",
+      "acc-bg": "#eaf2f8",
+      "acc-ink": "#245578",
+      "on-acc": "#fff",
+      "green": "#3F7757",
+      "green-bg": "#E3EDE6",
+      "red": "#A8453A",
+      "red-bg": "#F4E7E4",
+      "orange": "#8C6A1F",
+      "orange-bg": "#F2EAD6",
+      "thead-bg": "#F2F4F7",
+      "thead-ink": "#54595F"
+    },
+    "headers": [
+      {
+        "text": "",
+        "style": null,
+        "class": "groupSpacer",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Öncelik",
+        "style": "--grp-accent:var(--red,var(--acc))",
+        "class": "draggableGroup",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "PLM Numune",
+        "style": "--grp-accent:var(--teal)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Marka Detayları",
+        "style": "--grp-accent:var(--acc)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Model Detayları",
+        "style": "--grp-accent:var(--acc)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Sipariş Detayları",
+        "style": "--grp-accent:var(--green)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Lisans Detayları",
+        "style": "--grp-accent:var(--purple)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Tarihler",
+        "style": "--grp-accent:var(--teal)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Kumaş Detayları",
+        "style": "--grp-accent:var(--orange)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Lojistik",
+        "style": "--grp-accent:var(--purple)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Notlar",
+        "style": "--grp-accent:var(--ink2)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Kontrol Listesi",
+        "style": "--grp-accent:var(--green)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "▾",
+        "style": "top: 30px;",
+        "class": "chkTh",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Öncelik▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "PLM Numune▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "MMYG▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "MAG▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Buying Grup▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Buyer▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Görsel",
+        "style": "top: 30px;",
+        "class": "cpPictureTh groupBoundary",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Line▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Ürün Tanımı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Kategori▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "PLM ID▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Model Adı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Artwork Detayı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Fabric (PLM)▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Renk Kodu▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Renk▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Özel Kod▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Sezon▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Ülke▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Üretici▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Alt Üretici▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Sipariş▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Önem Etiketi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "FOB▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Alt Üretici FOB▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Sipariş Adeti▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Yükleme Adet▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Kalan▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "%▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Lisansör▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Lisans▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Original Ex-F.▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Sipariş Tarihi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Yükleme Termin▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Ür. Sür.▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Retail Tarihi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Sevk→Perakende▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Model Bütçe▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Kumaş Tipi▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Kumaş Kategorisi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Kumaşçı Ülkesi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Kumaşçı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Karışım▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "İplik No▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Gramaj▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Yükleme Tipi▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Durum▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Yükleme Onayı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Nakliye Depo Teslim▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Antrepo Varış▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Notlar▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Ek Notlar▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "PPS onayı▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "S/Off onayı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Artwork onayı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Testler▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Kumaş hazırlığı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Aksesuar hazırlığı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      },
+      {
+        "text": "Üretici yükleme teyidi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(242, 244, 247)",
+        "color": "rgb(71, 84, 103)"
+      }
+    ]
+  },
+  {
+    "theme": "grey",
+    "tokens": {
+      "paper": "#c3cad2",
+      "rail-bg": "#bcc4cd",
+      "card": "#d9dee4",
+      "card2": "#cfd5dc",
+      "card2-strong": "#bec6cf",
+      "ink": "#101820",
+      "ink2": "#2b3947",
+      "muted": "#414e5a",
+      "acc": "#264f73",
+      "acc-hover": "#1c3e5b",
+      "acc-bg": "#bccfe0",
+      "acc-ink": "#183a57",
+      "on-acc": "#f6f6f7",
+      "green": "#0f6640",
+      "green-bg": "#c3d8cb",
+      "red": "#a01d14",
+      "red-bg": "#e3c7c4",
+      "orange": "#7a5000",
+      "orange-bg": "#ddd0b0",
+      "thead-bg": "#cfd5dc",
+      "thead-ink": "#2b3947"
+    },
+    "headers": [
+      {
+        "text": "",
+        "style": null,
+        "class": "groupSpacer",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Öncelik",
+        "style": "--grp-accent:var(--red,var(--acc))",
+        "class": "draggableGroup",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "PLM Numune",
+        "style": "--grp-accent:var(--teal)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Marka Detayları",
+        "style": "--grp-accent:var(--acc)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Model Detayları",
+        "style": "--grp-accent:var(--acc)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Sipariş Detayları",
+        "style": "--grp-accent:var(--green)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Lisans Detayları",
+        "style": "--grp-accent:var(--purple)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Tarihler",
+        "style": "--grp-accent:var(--teal)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Kumaş Detayları",
+        "style": "--grp-accent:var(--orange)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Lojistik",
+        "style": "--grp-accent:var(--purple)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Notlar",
+        "style": "--grp-accent:var(--ink2)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Kontrol Listesi",
+        "style": "--grp-accent:var(--green)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "▾",
+        "style": "top: 30px;",
+        "class": "chkTh",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Öncelik▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "PLM Numune▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "MMYG▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "MAG▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Buying Grup▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Buyer▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Görsel",
+        "style": "top: 30px;",
+        "class": "cpPictureTh groupBoundary",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Line▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Ürün Tanımı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Kategori▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "PLM ID▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Model Adı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Artwork Detayı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Fabric (PLM)▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Renk Kodu▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Renk▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Özel Kod▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Sezon▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Ülke▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Üretici▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Alt Üretici▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Sipariş▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Önem Etiketi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "FOB▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Alt Üretici FOB▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Sipariş Adeti▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Yükleme Adet▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Kalan▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "%▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Lisansör▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Lisans▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Original Ex-F.▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Sipariş Tarihi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Yükleme Termin▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Ür. Sür.▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Retail Tarihi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Sevk→Perakende▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Model Bütçe▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Kumaş Tipi▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Kumaş Kategorisi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Kumaşçı Ülkesi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Kumaşçı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Karışım▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "İplik No▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Gramaj▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Yükleme Tipi▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Durum▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Yükleme Onayı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Nakliye Depo Teslim▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Antrepo Varış▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Notlar▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Ek Notlar▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "PPS onayı▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "S/Off onayı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Artwork onayı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Testler▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Kumaş hazırlığı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Aksesuar hazırlığı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      },
+      {
+        "text": "Üretici yükleme teyidi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(232, 233, 236)",
+        "color": "rgb(86, 90, 94)"
+      }
+    ]
+  },
+  {
+    "theme": "dark",
+    "tokens": {
+      "paper": "#171c22",
+      "rail-bg": "#14191f",
+      "card": "#20262e",
+      "card2": "#252d36",
+      "card2-strong": "#303a46",
+      "ink": "#f0f3f6",
+      "ink2": "#bdc8d4",
+      "muted": "#a0adba",
+      "acc": "#8fbfe8",
+      "acc-hover": "#acd0ed",
+      "acc-bg": "#294056",
+      "acc-ink": "#d5eafd",
+      "on-acc": "#14202a",
+      "green": "#93C7A8",
+      "green-bg": "rgba(147,199,168,.12)",
+      "red": "#E39B94",
+      "red-bg": "rgba(227,155,148,.12)",
+      "orange": "#D9BA7E",
+      "orange-bg": "rgba(217,186,126,.12)",
+      "thead-bg": "#252d36",
+      "thead-ink": "#bdc8d4"
+    },
+    "headers": [
+      {
+        "text": "",
+        "style": null,
+        "class": "groupSpacer",
+        "bg": "rgb(48, 58, 70)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Öncelik",
+        "style": "--grp-accent:var(--red,var(--acc))",
+        "class": "draggableGroup",
+        "bg": "rgb(48, 58, 70)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "PLM Numune",
+        "style": "--grp-accent:var(--teal)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(48, 58, 70)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Marka Detayları",
+        "style": "--grp-accent:var(--acc)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(48, 58, 70)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Model Detayları",
+        "style": "--grp-accent:var(--acc)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(48, 58, 70)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Sipariş Detayları",
+        "style": "--grp-accent:var(--green)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(48, 58, 70)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Lisans Detayları",
+        "style": "--grp-accent:var(--purple)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(48, 58, 70)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Tarihler",
+        "style": "--grp-accent:var(--teal)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(48, 58, 70)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Kumaş Detayları",
+        "style": "--grp-accent:var(--orange)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(48, 58, 70)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Lojistik",
+        "style": "--grp-accent:var(--purple)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(48, 58, 70)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Notlar",
+        "style": "--grp-accent:var(--ink2)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(48, 58, 70)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Kontrol Listesi",
+        "style": "--grp-accent:var(--green)",
+        "class": "groupDivider draggableGroup",
+        "bg": "rgb(48, 58, 70)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "▾",
+        "style": "top: 30px;",
+        "class": "chkTh",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Öncelik▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "PLM Numune▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "MMYG▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "MAG▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Buying Grup▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Buyer▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Görsel",
+        "style": "top: 30px;",
+        "class": "cpPictureTh groupBoundary",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Line▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Ürün Tanımı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Kategori▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "PLM ID▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Model Adı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Artwork Detayı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Fabric (PLM)▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Renk Kodu▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Renk▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Özel Kod▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Sezon▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Ülke▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Üretici▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Alt Üretici▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Sipariş▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Önem Etiketi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "FOB▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Alt Üretici FOB▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Sipariş Adeti▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Yükleme Adet▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Kalan▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "%▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Lisansör▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Lisans▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Original Ex-F.▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Sipariş Tarihi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Yükleme Termin▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Ür. Sür.▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Retail Tarihi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Sevk→Perakende▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Model Bütçe▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Kumaş Tipi▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Kumaş Kategorisi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Kumaşçı Ülkesi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Kumaşçı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Karışım▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "İplik No▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Gramaj▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Yükleme Tipi▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Durum▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Yükleme Onayı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Nakliye Depo Teslim▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Antrepo Varış▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Notlar▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Ek Notlar▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "PPS onayı▾",
+        "style": "top: 30px;",
+        "class": "groupBoundary",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "S/Off onayı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Artwork onayı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Testler▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Kumaş hazırlığı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Aksesuar hazırlığı▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      },
+      {
+        "text": "Üretici yükleme teyidi▾",
+        "style": "top: 30px;",
+        "class": "",
+        "bg": "rgb(37, 45, 54)",
+        "color": "rgb(189, 200, 212)"
+      }
+    ]
+  }
+]

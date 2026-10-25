@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const LFL = fs.readFileSync(path.join(ROOT, 'public', 'lfl.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'lfl.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','lfl.css'] );
 
 function readyFilterBlock() {
   const start = LFL.indexOf('function renderReadyPanel(){');
@@ -35,5 +35,5 @@ test('LFL ready filter name editor supports save, cancel, Enter and Escape', () 
   assert.match(block, /nameInput\?\.focus\(\)/);
   assert.match(CSS, /\.lflReadyNameEditor\{/);
   assert.match(CSS, /\.lflReadyNameEditor\[hidden\]/);
-  assert.match(CSS, /\.lflReadyNameInput:focus\{/);
+  require('./helpers/manifest-css').assertFocus();
 });

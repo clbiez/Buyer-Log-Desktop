@@ -1,0 +1,36 @@
+{
+  "method": "Served on loopback HTTP; managed Chromium disallows file:// navigation.",
+  "errors": [],
+  "rows": [
+    {
+      "theme": "light",
+      "view": "overview",
+      "images": 2
+    },
+    {
+      "theme": "light",
+      "view": "cp",
+      "images": 2
+    },
+    {
+      "theme": "grey",
+      "view": "overview",
+      "images": 2
+    },
+    {
+      "theme": "grey",
+      "view": "cp",
+      "images": 2
+    },
+    {
+      "theme": "dark",
+      "view": "overview",
+      "images": 2
+    },
+    {
+      "theme": "dark",
+      "view": "cp",
+      "images": 2
+    }
+  ]
+}

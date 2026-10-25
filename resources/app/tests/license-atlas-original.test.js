@@ -39,20 +39,20 @@ test('Process Studio metadata and source-note visibility survive normalization',
  data.license.color='red;position:fixed';assert.throws(()=>A.normalize(data),{code:'LICENSE_ATLAS_INVALID'});
 });
 test('uploaded presentation and complete workflow code remain byte-for-byte intact',()=>{
- const html=fs.readFileSync(path.join(__dirname,'../public/license-atlas/index.html'),'utf8');
+ const html=fs.readFileSync(path.join(__dirname,'./fixtures/retired-ui/license-atlas/index.html'),'utf8');
  const digest=text=>crypto.createHash('sha256').update(text).digest('hex');
  const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
  const styles=[...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map(m=>m[1]);
  assert.equal(digest(scripts.join('\n')),'9f2a6c2124468bd50fc22a08ebdfff06e039a3a3c83d71ce6213ed67ccfcdf2f');assert.equal(digest(styles.join('\n')),'688c6395bea4ca92fea5440aad8339a08ff4cb20a2cb44bd4175c295733e1784');
  assert.deepEqual(JSON.parse(html.match(/<script id="seed" type="application\/json">([\s\S]*?)<\/script>/)[1]).licenses,[]);
- const shell=fs.readFileSync(path.join(__dirname,'../public/license-atlas-shell.js'),'utf8');assert.ok(!shell.includes('allow-same-origin'));assert.match(shell,/event.source!==frame.contentWindow/);
+ const shell=fs.readFileSync(path.join(__dirname,'./fixtures/retired-ui/license-atlas-shell.js'),'utf8');assert.ok(!shell.includes('allow-same-origin'));assert.match(shell,/event.source!==frame.contentWindow/);
 });
 test('an explicit source-note opt-out overrides the legacy sharing flag',()=>{
  const a=atlas();a.license.stages[0].supplierShowNotes=true;a.license.stages[0].supplierShowSourceNote=false;
  assert.equal(A.project({processAtlas:a}).stages[0].note,'');delete a.license.stages[0].supplierShowSourceNote;assert.equal(A.project({processAtlas:a}).stages[0].note,'SECRET');
 });
 test('legacy independent asset and address libraries merge without identity collisions or loss on subsequent saves',()=>{
- const W=require('../public/license-atlas-workspace');
+ const W=require('./fixtures/retired-ui/license-atlas-workspace');
  const make=(id,data,text)=>({id,license:id,processAtlas:{...atlas(),visualLibrary:[{id:'guide',name:'Visual',data}],sharedAddresses:[{id:'address',label:'Office',text,manufacturerVisible:true}],customSelectOptions:{recipientType:[{value:'custom',label:text,side:id==='One'?'left':'right'}]}}});
  const a=make('One','data:image/png;base64,AAAA','Office One'),b=make('Two','data:image/png;base64,BBBB','Office Two');
  for(const c of [a,b]){c.processAtlas.license.stages[0].visualGuideId='guide';c.processAtlas.license.stages[0].submissions[0].addressId='address';c.processAtlas.license.stages[0].submissions[0].recipientType='custom';}
@@ -66,7 +66,7 @@ test('producer projection respects private local address precedence and excludes
  const out=A.project({processAtlas:data});assert.equal(out.stages[0].submissions[0].addressId,'');assert.deepEqual(out.addresses,[]);assert.ok(!JSON.stringify(out).includes('SECRET'));
 });
 test('independent large asset libraries keep their own card budget when one tree changes',()=>{
- const W=require('../public/license-atlas-workspace');
+ const W=require('./fixtures/retired-ui/license-atlas-workspace');
  const originals=['One','Two','Three'].map((id,index)=>({id,license:id,processAtlas:{...atlas(),visualLibrary:[{id:'visual',name:id,data:'data:image/png;base64,'+String(index+1).repeat(700000)}]}}));
  for(const c of originals)c.processAtlas.license.stages[0].visualGuideId='visual';
  const db=W.merge(originals);assert.equal(db.visualLibrary.length,3);

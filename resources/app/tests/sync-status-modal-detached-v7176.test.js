@@ -12,5 +12,5 @@ test('v7.176 Sync durum penceresi DOM dışına alındıysa canlı olay kaybolan
   const guard = APP.slice(start, start + 140);
   assert.match(guard, /if\(!modal\.isConnected\|\|!modal\.querySelector\('\[data-sync-status\]'\)\)\{close\(\);return;\}/);
   // close() dinleyiciyi ve zamanlayıcıyı birlikte bırakır.
-  assert.match(APP, /const close=\(\)=>\{syncStatusModalRenderer=null;if\(syncStatusPollTimer\)\{clearInterval\(syncStatusPollTimer\);syncStatusPollTimer=0;\}modal\.remove\(\);\};/);
+  assert.match(APP, /const close=\(\)=>\{releaseKeyboard\(\);syncStatusModalRenderer=null;if\(syncStatusPollTimer\)\{clearInterval\(syncStatusPollTimer\);syncStatusPollTimer=0;\}modal\.remove\(\);\};/);
 });

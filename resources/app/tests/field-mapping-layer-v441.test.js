@@ -6,7 +6,7 @@ const path = require('node:path');
 
 const root = path.join(__dirname, '..');
 const html = (fs.readFileSync(path.join(root, 'public', 'index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'public', 'app-main.js'), 'utf8'));
-const css = fs.readFileSync(path.join(root, 'public', 'app.css'), 'utf8');
+const css = require('./helpers/manifest-css')();
 
 test('v4.41 modal içinden açılan ortak seçim panelini modal katmanına taşır', () => {
   assert.ok(
@@ -29,8 +29,9 @@ test('v4.41 Field Mapping ortak seçim panelini kullanmaya devam eder', () => {
   assert.ok(!/function\s+\w*[Pp]icker/.test(mapping), 'düzenleyici kendi seçicisini yazmamalı');
 });
 
-test('v4.41 modal seçim paneli blur ve yüksek z-index kullanan katmanların önündedir', () => {
-  const match = css.match(/\.colFilterPanel\.colFilterPanelModal\{z-index:(\d+)!important;\}/);
-  assert.ok(match, 'modal paneli için açık bir z-index kuralı bulunmalı');
-  assert.ok(Number(match[1]) > 54010, 'modal seçim paneli mevcut modal ve overlay katmanlarından yüksek olmalı');
+test('v4.41 modal seçim paneli ortak modal bandının önündedir', () => {
+  const panel = require('./helpers/manifest-css').rules(/\.colFilterPanel\.colFilterPanelModal/);
+  assert.match(panel, /z-index:var\(--ui-z-modal-menu\)/);
+  const token = name => Number(css.match(new RegExp('--ui-z-'+name+':\\s*(\\d+)'))[1]);
+  assert.ok(token('modal-menu') > token('modal'), 'modal seçici parent overlay üzerinde kalmalı');
 });

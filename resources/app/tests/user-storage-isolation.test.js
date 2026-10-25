@@ -155,6 +155,10 @@ test('BLStorage ile okunan her ön ek ya kullanıcıya ayrılır ya da bilinçli
     while ((match = pattern.exec(source))) {
       const key = match[1];
       if (SHARED_ON_PURPOSE.some(prefix => key.startsWith(prefix))) continue;
+      // Exact unauthenticated-shell cache, not a shared user preference namespace.
+      // ui-appearance-storage.test.js executes the writer/reader and locks its
+      // payload to theme + scale only; authenticated lcw_* preferences stay scoped.
+      if (key === 'buyerlog.ui.appearance') continue;
       if (!storage.isUserScoped(key)) offenders.add(`${name}: ${key}`);
     }
   });

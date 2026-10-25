@@ -1,0 +1,47 @@
+{
+  "equalAcrossThemes": true,
+  "hashes": {
+    "light": {
+      "xl/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xl/_rels/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xl/_rels/workbook.xml.rels": "db152538ca9d0a12609bf550b2577971a880d45d8ba0799dfe277871531bb3b1",
+      "xl/worksheets/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xl/worksheets/sheet1.xml": "68bc4a2f9b724e688efbd47b7830a2971a550ce4de4c15a732f899e07c5b3ddf",
+      "xl/sharedStrings.xml": "5e7d2c3c9178a09123e093533ff31e7b5fb8df3bf3ab4aaf431b4b8f9ee0985e",
+      "xl/theme/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xl/theme/theme1.xml": "f857ef82e4c0e273a16e5efcf5cb12ff7a9943851cbdbd992cd2722616b271ed",
+      "xl/styles.xml": "8092df324c4f0fc36a8164f6049b37b4316047ac268dafe8e68c9f9f35cdb255",
+      "xl/workbook.xml": "deae7f173f0a3938e0aecbedaed6ea71dd7ab59023731a4de2a0a8bf681f6e23",
+      "copyHTML": "ee8a10948bc31eb99d5cc08ba2f1b26ed7a91bced94a722add01efceecc7e80f",
+      "copyTSV": "f65e5523f0124a48f59e34619722d1708245ee0650847caa8d03d262be1574d1"
+    },
+    "grey": {
+      "xl/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xl/_rels/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xl/_rels/workbook.xml.rels": "db152538ca9d0a12609bf550b2577971a880d45d8ba0799dfe277871531bb3b1",
+      "xl/worksheets/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xl/worksheets/sheet1.xml": "68bc4a2f9b724e688efbd47b7830a2971a550ce4de4c15a732f899e07c5b3ddf",
+      "xl/sharedStrings.xml": "5e7d2c3c9178a09123e093533ff31e7b5fb8df3bf3ab4aaf431b4b8f9ee0985e",
+      "xl/theme/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xl/theme/theme1.xml": "f857ef82e4c0e273a16e5efcf5cb12ff7a9943851cbdbd992cd2722616b271ed",
+      "xl/styles.xml": "8092df324c4f0fc36a8164f6049b37b4316047ac268dafe8e68c9f9f35cdb255",
+      "xl/workbook.xml": "deae7f173f0a3938e0aecbedaed6ea71dd7ab59023731a4de2a0a8bf681f6e23",
+      "copyHTML": "ee8a10948bc31eb99d5cc08ba2f1b26ed7a91bced94a722add01efceecc7e80f",
+      "copyTSV": "f65e5523f0124a48f59e34619722d1708245ee0650847caa8d03d262be1574d1"
+    },
+    "dark": {
+      "xl/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xl/_rels/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xl/_rels/workbook.xml.rels": "db152538ca9d0a12609bf550b2577971a880d45d8ba0799dfe277871531bb3b1",
+      "xl/worksheets/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xl/worksheets/sheet1.xml": "68bc4a2f9b724e688efbd47b7830a2971a550ce4de4c15a732f899e07c5b3ddf",
+      "xl/sharedStrings.xml": "5e7d2c3c9178a09123e093533ff31e7b5fb8df3bf3ab4aaf431b4b8f9ee0985e",
+      "xl/theme/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "xl/theme/theme1.xml": "f857ef82e4c0e273a16e5efcf5cb12ff7a9943851cbdbd992cd2722616b271ed",
+      "xl/styles.xml": "8092df324c4f0fc36a8164f6049b37b4316047ac268dafe8e68c9f9f35cdb255",
+      "xl/workbook.xml": "deae7f173f0a3938e0aecbedaed6ea71dd7ab59023731a4de2a0a8bf681f6e23",
+      "copyHTML": "ee8a10948bc31eb99d5cc08ba2f1b26ed7a91bced94a722add01efceecc7e80f",
+      "copyTSV": "f65e5523f0124a48f59e34619722d1708245ee0650847caa8d03d262be1574d1"
+    }
+  }
+}

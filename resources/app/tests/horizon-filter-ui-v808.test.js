@@ -7,17 +7,13 @@ const { test } = require('node:test');
 
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
 test('v7.81 filtre grupları ayrı yüzeyler olarak stillenir', () => {
-  /* Korunan kusur: koşul grupları düz bir listede birbirine karışıyor,
-     hangi koşulun hangi gruba ait olduğu okunmuyordu. Ekran silinen
-     modaldan iki yere taşındı; kural ikisinde de geçerli — bir grup
-     KENDİ ÇERÇEVESİ olan bir yüzeydir, çıplak bir satır yığını değil. */
-  // Kişisel ufuk düzenleyicisinin stili app.css içinde (.hz* ailesi).
-  assert.match(CSS, /\.hzGroup\{[^}]*border:/, 'kişisel ufuk: grup kendi çerçevesini taşımalı');
-  const DM = fs.readFileSync(path.join(ROOT, 'public', 'data-management.css'), 'utf8');
-  assert.match(DM, /\.dmfGroup\s*\{[^}]*border:/, 'ortak filtre: grup kendi çerçevesini taşımalı');
+  // Personal Horizon editor was removed; shared dmf filters retain their group surface.
+  assert.doesNotMatch(CSS,/\.hz[A-Z]/,'retired personal editor styles must not ship');
+  const DM = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','data-management.css'] );
+  assert.match(DM, /\.dmfGroup\s*\{[^}]*background:\s*var\(--ui-surface\)/, 'ortak filtre: grup kendi yüzey tonunu taşımalı');
 });
 
 test('v7.81 AND metni gösterilmez, VEYA gösterilir', () => {

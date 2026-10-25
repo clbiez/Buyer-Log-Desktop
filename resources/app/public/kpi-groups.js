@@ -185,7 +185,7 @@ try{
      GÖRÜNTÜ PENCERESİNE sabitlenir (position:fixed) ve etiketin altına
      konumlandırılır. Böylece hiçbir kırpma kutusuna bağlı kalmaz.
      ================================================================ */
-  const FLT_MENU_Z='260';
+  const FLT_MENU_Z='var(--ui-z-popover)';
   function positionFltMenu(group){
     const menu=group.querySelector(':scope > .fltGroupMenu'), head=group.querySelector(':scope > .tbGroupHead');
     if(!menu||!head) return;

@@ -8,7 +8,7 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const APP = read('public/app-main.js');
-const CSS = read('public/app.css');
+const CSS = require('./helpers/manifest-css')();
 const INDEX = read('public/index.html');
 
 function sliceBetween(source, start, end) {
@@ -51,9 +51,9 @@ test('v10.32 çalışma alanı meta bilgisi her çizimde gerçek satır kapsamı
 
 test('v10.32 ortak eylem rolleri token tabanlı, odak görünür ve küçük ekranda erişilebilirdir', () => {
   assert.match(CSS, /\.workspaceContextBar\{/);
-  assert.match(CSS, /\.toolbar\.tableActionToolbar :is\(button,label\)\.tbtn\[data-action-role="primary"\]\{[^}]*background:var\(--acc\)/);
-  assert.match(CSS, /\.toolbar\.tableActionToolbar :is\(button,label\)\.tbtn\[data-action-role="danger"\]\{[^}]*color:var\(--danger\)/);
-  assert.match(CSS, /\.tableActionToolbar :is\(button,label\):focus-visible/);
+  assert.match(CSS,/\.toolbar\.tableActionToolbar button\.tbtn\[data-action-role="primary"\],[^{]*\{[^}]*background:var\(--ui-accent\)/);
+  assert.match(CSS,/\.toolbar\.tableActionToolbar button\.tbtn\[data-action-role="danger"\],[^{]*\{[^}]*color:var\(--ui-danger\)/);
+  require('./helpers/manifest-css').assertFocus();
   assert.match(CSS, /@media\(max-width:900px\)[^{]*\{[^}]*\.workspaceContextBar/s);
   assert.doesNotMatch(CSS.match(/\/\* v10\.32[\s\S]*?(?=\/\* =====================|$)/)?.[0]||'', /#[0-9a-f]{3,8}/i);
 });

@@ -5,13 +5,13 @@ const fs=require('node:fs');
 const path=require('node:path');
 const root=path.join(__dirname,'..');
 const APP=fs.readFileSync(path.join(root,'public','app-main.js'),'utf8');
-const CSS=fs.readFileSync(path.join(root,'public','app.css'),'utf8');
+const CSS=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const INDEX=fs.readFileSync(path.join(root,'public','index.html'),'utf8');
 
 test('v5.62 Collection cells are vertically centered and use consistent typography with requested exceptions',()=>{
-  assert.match(CSS,/#kolTable tbody td\{vertical-align:middle!important;font-size:var\(--kol-cell-fs\);\}/);
-  assert.match(CSS,/td:not\(\.endeksmatikTd\).*font-size:var\(--kol-cell-fs\)!important/);
-  assert.match(CSS,/\.kolLandedMeta[\s\S]*font-size:var\(--fs-2xs\)!important/);
+  assert.match(CSS,/#kolTable tbody td\{vertical-align:middle!important/); assert.match(CSS,/#kolTable tbody td\{font-size:var\(--ui-font-xs\)/);
+  assert.match(CSS,/td:not\(\.endeksmatikTd\).*font-size:var\(--ui-font-xs\)!important/);
+  assert.match(CSS,/\.kolLandedMeta[\s\S]*font-size:var\(--ui-font-2xs\)!important/);
 });
 
 test('v5.62 truncated Collection text gets a hover preview',()=>{
@@ -61,5 +61,5 @@ test('v5.62 transient menus are mutually exclusive and text size cycles 0..3 und
   assert.match(APP,/function cycleUiFontStep\(\)/);
   assert.match(APP,/\(cur\+1\)%4/);
   assert.match(INDEX,/lcw_font_step/);
-  assert.match(CSS,/html\[data-font-step="3"\]\{--ui-font-add:3px;\}/);
+  assert.match(CSS,/:root\[data-ui-scale="xl"\]\{[^}]*--ui-font-add:3px/); assert.match(CSS,/:root\[data-ui-scale="compact"\]\{[^}]*--ui-font-add:-1px/);
 });

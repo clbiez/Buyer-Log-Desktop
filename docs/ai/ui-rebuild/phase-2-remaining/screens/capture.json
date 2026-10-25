@@ -1,0 +1,358 @@
+{
+  "screens": [
+    {
+      "name": "command-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "search-help-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 202,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "excel-import-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 201,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "excel-templates-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 214,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "date-picker-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 290,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "layout-control-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 209,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "output-templates-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 198,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "overview-widgets-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 199,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "command-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "search-help-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 202,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "excel-import-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 201,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "excel-templates-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 214,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "date-picker-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 290,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "layout-control-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 202,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "output-templates-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 191,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "overview-widgets-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 199,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "command-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 189,
+        "failures": [
+          {
+            "text": "1",
+            "id": "notificationUnreadBadge",
+            "cls": "notificationUnreadBadge",
+            "fg": "rgb(227, 155, 148)",
+            "bg": [
+              63.976470588235294,
+              75.1843137254902,
+              93.53725490196078,
+              1
+            ],
+            "ratio": 3.93
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "search-help-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 202,
+        "failures": [
+          {
+            "text": "1",
+            "id": "notificationUnreadBadge",
+            "cls": "notificationUnreadBadge",
+            "fg": "rgb(227, 155, 148)",
+            "bg": [
+              63.976470588235294,
+              75.1843137254902,
+              93.53725490196078,
+              1
+            ],
+            "ratio": 3.93
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "excel-import-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 201,
+        "failures": [
+          {
+            "text": "1",
+            "id": "notificationUnreadBadge",
+            "cls": "notificationUnreadBadge",
+            "fg": "rgb(227, 155, 148)",
+            "bg": [
+              63.976470588235294,
+              75.1843137254902,
+              93.53725490196078,
+              1
+            ],
+            "ratio": 3.93
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "excel-templates-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 214,
+        "failures": [
+          {
+            "text": "1",
+            "id": "notificationUnreadBadge",
+            "cls": "notificationUnreadBadge",
+            "fg": "rgb(227, 155, 148)",
+            "bg": [
+              63.976470588235294,
+              75.1843137254902,
+              93.53725490196078,
+              1
+            ],
+            "ratio": 3.93
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "date-picker-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 290,
+        "failures": [
+          {
+            "text": "1",
+            "id": "notificationUnreadBadge",
+            "cls": "notificationUnreadBadge",
+            "fg": "rgb(227, 155, 148)",
+            "bg": [
+              63.976470588235294,
+              75.1843137254902,
+              93.53725490196078,
+              1
+            ],
+            "ratio": 3.93
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "layout-control-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 202,
+        "failures": [
+          {
+            "text": "1",
+            "id": "notificationUnreadBadge",
+            "cls": "notificationUnreadBadge",
+            "fg": "rgb(227, 155, 148)",
+            "bg": [
+              63.976470588235294,
+              75.1843137254902,
+              93.53725490196078,
+              1
+            ],
+            "ratio": 3.93
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "output-templates-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 191,
+        "failures": [
+          {
+            "text": "1",
+            "id": "notificationUnreadBadge",
+            "cls": "notificationUnreadBadge",
+            "fg": "rgb(227, 155, 148)",
+            "bg": [
+              63.976470588235294,
+              75.1843137254902,
+              93.53725490196078,
+              1
+            ],
+            "ratio": 3.93
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "overview-widgets-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 199,
+        "failures": [
+          {
+            "text": "1",
+            "id": "notificationUnreadBadge",
+            "cls": "notificationUnreadBadge",
+            "fg": "rgb(227, 155, 148)",
+            "bg": [
+              63.976470588235294,
+              75.1843137254902,
+              93.53725490196078,
+              1
+            ],
+            "ratio": 3.93
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    }
+  ],
+  "keyboard": [],
+  "errors": []
+}

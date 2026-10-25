@@ -8,7 +8,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const ROOT=path.join(__dirname,'..');
 const html=fs.readFileSync(path.join(ROOT,'public','index.html'),'utf8');
-const css=fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
+const css=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const perf=fs.readFileSync(path.join(ROOT,'public','perf-runtime.js'),'utf8');
 
 test('v6.66 LFL analiz modülü genel section görünürlük kuralına takılmaz',()=>{
@@ -20,7 +20,7 @@ test('v6.66 LFL analiz modülü genel section görünürlük kuralına takılmaz
 
 test('v7.64 fiyat ve üretici analizi bağımsız ana navigasyon modülüdür',()=>{
   assert.match(html,/data-tab="priceanalysis"/);
-  assert.match(html,/<section id="view-priceanalysis">/);
+  assert.match(html,/<section id="view-priceanalysis"[^>]*>/);
   assert.doesNotMatch(html,/id="collectionAnalytics"/);
 });
 

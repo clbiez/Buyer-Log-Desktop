@@ -1,0 +1,78 @@
+{
+  "mainBaseline": "4a70aa152d1b4eb3279ddebda19679ca2639b372",
+  "authorization": "User explicitly requested avatar check and merging the whole project to main. Normal PR Actions are authorized; TEST/STABLE publication is not requested.",
+  "fullTest": {
+    "command": "npm test",
+    "cwd": "resources/app",
+    "exitCode": 0,
+    "files": 1103,
+    "durationSeconds": 102.5,
+    "tests": 7826,
+    "pass": 7761,
+    "fail": 0,
+    "skipped": 65,
+    "log": "bl-ui-main-full-final.log",
+    "skipReasons": "64 existing Windows-only checks and one opt-in soak. Existing default sync simulations ran."
+  },
+  "targeted": {
+    "tests": 39,
+    "failures": 0,
+    "log": "bl-ui-main-targeted-final.log"
+  },
+  "motionRegression": "48 modal PNGs assert opaque background, opacity=1 and no active animations; corrected after visual review caught the reduced-motion opening fade. Final full suite ran after that CSS change.",
+  "visual": "visual-summary.json",
+  "i18n": {
+    "newMissing": 0,
+    "baseline": 0,
+    "log": "bl-ui-main-i18n.log"
+  },
+  "releaseNotes": {
+    "entries": 109,
+    "log": "bl-ui-main-release.log"
+  },
+  "version": {
+    "version": "7.0.294",
+    "log": "bl-ui-main-version.log"
+  },
+  "dependencies": "npm ci --ignore-scripts installed the current main lock. Unchanged inventory generator regenerated exact distribution hashes; Plex has its own OFL ownership group.",
+  "shippingExport": {
+    "matched": 18,
+    "total": 18,
+    "report": "shipping-export-comparison.json"
+  },
+  "performance": "performance/comparison.json",
+  "sourceSHA256": {
+    "resources/app/public/ui-components.css": "ac5162cdc14c6de78fac11f8f804f587d0649404cf1e476194b2220dcdd2ca04",
+    "resources/app/public/ui-tokens.css": "0711f2a3d66ec90a095962b5a5cb77bf9a5f6b48e078b274dbe6922314b8f8db",
+    "resources/app/public/app-main.js": "e07808861cc5b2de9d8bacd56ae20d9bccfd49e119eccda01e009f5ca8c63443",
+    "resources/app/public/ui-primitives.js": "b20203864da65fc1da8559c533524d9a3a38193476625310c6efd69e93406970",
+    "resources/app/public/release-notes/next.json": "29c3afc03426f66efc5f1e88f69b84959ba0de35bd90ad783bfcc1c4ab57b15a",
+    "resources/app/scripts/dependency-catalog.json": "5242f9daf047ad4641a20b5dd515782420beca63fcd933951c582bb870448640",
+    "docs/dependencies/sbom.cdx.json": "72295e4d6db9f7c3e95ad230897ee5b7a29e18e94261910719383e33358af76a",
+    "resources/app/tests/pricing-draft-reopen.test.js": "0b1e1a5d8f644a42a3e5843592851944a03b4684a84e25fb1bd420c5cf7198ec"
+  },
+  "failedOrSupersededFullRuns": [
+    {
+      "log": "bl-ui-main-full-1.log",
+      "reason": "New dependency inventory was stale after packaged fonts and retired asset changes; actual inventory/catalog updated, guard unchanged."
+    },
+    {
+      "log": "bl-ui-main-full-2.log",
+      "reason": "New modal runtime test stub omitted DOM dataset and shared keyboard API. Stub fixed; reopen behavior checks retained and keyboard binding assertions added."
+    },
+    {
+      "log": "bl-ui-main-full-3.log",
+      "reason": "Passed on pre-motion-fix code; subsequent real visual finding justified rerunning full suite after the final reduced-motion CSS change."
+    }
+  ],
+  "remoteProtection": {
+    "mainBranchProtected": false,
+    "requiredStatusChecksEnforcement": "off",
+    "source": "GitHub branches/main API; full protection/rules endpoints unavailable to integration. PR checks are still required by our workflow before merge."
+  },
+  "phasePRs": "phase-prs.json (creation-time snapshot; final merge state is verified on GitHub and in the final delivery report)",
+  "publication": {
+    "TEST": "not requested / not published",
+    "STABLE": "not requested / not published"
+  }
+}

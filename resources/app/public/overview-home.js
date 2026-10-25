@@ -404,6 +404,7 @@
       <button type="button" class="ovHomeDrawerClose" data-home-drawer-close aria-label="${esc(T('Kapat','Close'))}">×</button></header>
       <div class="ovHomeDrawerBody" data-home-drawer-list></div></div>`;
     document.body.appendChild(overlay);
+    window.BLLayerSystem?.openDialog(overlay,{onClose:closeDrawer});
     const draw=()=>{
       const q=String(overlay.querySelector('[data-home-drawer-search]').value||'').toLocaleLowerCase(lang()==='en'?'en':'tr');
       const groups=[['operations',T('Operasyon','Operations')],['today',T('Bugün','Today')],['commercial',T('Ticari','Commercial')]];
@@ -438,7 +439,7 @@
     overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.stopPropagation();closeDrawer();}});
     requestAnimationFrame(()=>{overlay.classList.add('isOpen');overlay.querySelector('[data-home-drawer-search]')?.focus();});
   }
-  function closeDrawer(){document.querySelectorAll('.ovHomeDrawerOverlay').forEach(el=>el.remove());}
+  function closeDrawer(){document.querySelectorAll('.ovHomeDrawerOverlay').forEach(el=>{window.BLLayerSystem?.closeDialog(el);el.remove();});}
 
   /* ------------------------------------------------------------- bağlama */
   function bind(){

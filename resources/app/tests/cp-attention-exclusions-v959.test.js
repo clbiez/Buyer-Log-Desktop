@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const VIEW = fs.readFileSync(path.join(ROOT, 'public', 'cp-overview-assistant.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'cp-overview-assistant.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','cp-overview-assistant.css'] );
 
 test('v9.59 Attention exclusion tek birleşik modeldir ve kullanıcı tercihine kaydedilir', () => {
   assert.match(VIEW, /attentionExclusions:\s*\[\]/);
@@ -54,6 +54,6 @@ test('v9.59 her Attention satırında Exclude aksiyonu, süre/kapsam modalı ve 
 test('v9.59 Excluded görünümü ve modal Buyer Log tasarım primitive/tokenlarını kullanır', () => {
   assert.match(CSS, /\.cpaAttentionExcludeModal\{/);
   assert.match(CSS, /\.cpaAttentionExcludedModal\{/);
-  assert.match(CSS, /\.cpaExcludeChoice\{[^}]*border:1px solid var\(--line\)[^}]*background:var\(--card\)/);
-  assert.match(CSS, /\.cpaExcludeApply\{[^}]*background:var\(--acc\)[^}]*color:var\(--on-acc\)/);
+  assert.match(CSS, /\.cpaExcludeChoice\{background:var\(--ui-surface\)/);
+  assert.match(CSS, /\.cpaExcludeApply\{[^}]*background:var\(--ui-accent\)[^}]*color:var\(--ui-on-accent\)/);
 });

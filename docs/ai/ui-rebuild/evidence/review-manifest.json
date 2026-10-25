@@ -1,0 +1,69 @@
+{
+  "baselineSource": "0a5d9fbb",
+  "auditCommit": "8941425f",
+  "concepts": {
+    "kartela": {
+      "branch": "ui-rebuild/concept-kartela",
+      "commit": "2119e8a18cd995413d655691f4eac4032ee901d5",
+      "worktree": "/workspace/buyerlog-concept-kartela",
+      "pngs": {
+        "cp-dark-xl-1280.png": "398607aeeacdf37c0d060e236689cca5a6c3b765324d7406e20db9378152298e",
+        "cp-dark.png": "8d3c04598b0207660d21b1b8f616fe58d1afe092a98031673c8103c66fe97fbb",
+        "cp-en-light.png": "677decee39aeeec8f8fdada4f03a09201997ce0cba1e39e5ba04599b51960bbf",
+        "cp-fields-light.png": "b08fa136ee1ba53d68070659d2eb114722cf68ac377a172904943eb277f8d26f",
+        "cp-focus-light.png": "718e36b1b7589129c0219fc844125b1a18602f4b29f2df302bae7647c5acc2e8",
+        "cp-grey-xl-1280.png": "85f7ec0b97d149a3aa58865d86a3a3818084a52c8e1a872dc143ff9b19149e2c",
+        "cp-grey.png": "e0b0af7bcd4633d966f5935f1742728690f2bd9013d00354c0dcc27517a1cad5",
+        "cp-light-compact-1440.png": "129cecf2d4167bdf496d5035f222ade66203057f651a9edac73119dc70faf6c2",
+        "cp-light-large-1440.png": "a6e36515e4a8b4682d73cdd32aae4f8f760e15ff77016ee9d304ed66be2831bb",
+        "cp-light-xl-1280.png": "e41ff189cf68aebe59a601035ed5984b6796caf1672fa74f032a04bb0eb47a69",
+        "cp-light-xl-1440.png": "042d799fa54bc4803be70509379e06f3c5ee9c8b887b8d444aaa54282448224c",
+        "cp-light.png": "20fb471daa8229c635a2899712faa81375770dc43ea6c53c126c3fcefca469a6",
+        "overview-dark-xl-1280.png": "1281d574efe9a8fb33e106f1e6e01aa930ae99717983ff95e01ede1aaf1187e8",
+        "overview-dark.png": "86541eac21d7fdf5d6352cca28b876e4e3bd923c85721e81d5e4be2d072a0091",
+        "overview-en-light.png": "22f8f9224a44e26371042dce74e1c5fb4130beba54980d464f6eb28b6c50cf09",
+        "overview-grey-xl-1280.png": "5c6403b56c4ebafb38f6e50755e496d091ebcaddce7b46377302acc5bce28bcc",
+        "overview-grey.png": "82ed355a5c0d507d892e7d5884c0ebc275f7e345d3f4d7467913f119d6fc8c42",
+        "overview-light-compact-1440.png": "cc929461f4be14ad73da9ea9b2349713c2d434add49d03d77f6188b06f7d9afa",
+        "overview-light-large-1440.png": "6db9bf473e0658dc5c61f4649dd67301d081fd9dbbccc153222575245bbea9b3",
+        "overview-light-xl-1280.png": "23611defbbc4b72983fa9b25273318a87a6df0b27e5a8a07c4402fc199b5d2bc",
+        "overview-light-xl-1440.png": "5a20b46219749f74404bfa96eca8935f24213130e1b980a1311e21c0a189ef56",
+        "overview-light.png": "36131be1e5270383d97243160ff423e40232a9f133e2869b69372d7ba3e51d04"
+      }
+    },
+    "manifest": {
+      "branch": "ui-rebuild/concept-manifest",
+      "commit": "7f3b5c198daececcf01fcbef02cc55e8cdae43fb",
+      "worktree": "/workspace/buyerlog-concept-manifest",
+      "pngs": {
+        "cp-dark-xl-1280.png": "174c0514a91341fd725a486e16a7c322aba544e21d2b427e8451a2980bf15ff9",
+        "cp-dark.png": "c77ca0ee6b10a87cd93ca2ac06009f99bbaf1d7ca10100c6072b6a28926c485f",
+        "cp-en-light.png": "5286ab4791c3ad56aa3299e11d51e16f582345d5552c86969690b212896d9f18",
+        "cp-fields-light.png": "3f81630b93498b5b93a79060af26cabe8f3b43f717c9357ee32351cd31056139",
+        "cp-focus-light.png": "31d9278cda4971f50699cc1e534fc127f08ee18706266395c199db1395ca2e92",
+        "cp-grey-xl-1280.png": "90eeb32c7295f65e76b88b7887f413ca69e87e73efe0722c8236c3aad6699226",
+        "cp-grey.png": "bf86a4ed1110f133e5acc2183ed58082ad1177a491b5d3e9c79a2f06716e6fce",
+        "cp-light-compact-1440.png": "56170ede5523765c88f1988a3761a393bcd7c4604662f9ffa71d746e8723f735",
+        "cp-light-large-1440.png": "3e94dd629dc1bc9733bffb151771a24269c5aeeb87eacf956a58204ed5eef833",
+        "cp-light-xl-1280.png": "e11e6d07d315fd05b7c3c4a9b9b2246e183466e7b6ad696f4f2e1c7a6a1ae4ae",
+        "cp-light-xl-1440.png": "7c0e6de4215a69d80ef792218f4408e464728104d84df2e67865bc6a3a2ddad3",
+        "cp-light.png": "85f44e8055b749e470c91bf308c5fe37df81689a2376a5d159fa2d894c9e5a19",
+        "overview-dark-xl-1280.png": "78a8fe765c778185813d3cf00c29ced8632b1dc00c3e735d8d7c35bcd8cffed4",
+        "overview-dark.png": "eea3c9c92502f7960013648cf88a9be2fb8a6bdb8633d5ea9cd8d92592b1d9ad",
+        "overview-en-light.png": "f639453ea310c036871e40eb7c008f63a74c4e41834577f24ee53654a85dc330",
+        "overview-grey-xl-1280.png": "06b4f47bc11ad62d9d9067298bfd63510a2d699b1b0bfc5e9507a8f87331c0da",
+        "overview-grey.png": "316eeb9fcabd5c8675aee529df0b504fb57b3aa90bb9f736f33afb68d649d5c2",
+        "overview-light-compact-1440.png": "6921ea214ff68bf66bceff3bd94dddb0c1e687bfbca6dc916d21ee6128d5722b",
+        "overview-light-large-1440.png": "821e7b6f3067fe145af9e4545a6ae7f83cb35970ed0835128f7a36c417ab126a",
+        "overview-light-xl-1280.png": "7c382d5df54d47ed9f7419836a79347452aeff6db8869293fbd75fa6bda96266",
+        "overview-light-xl-1440.png": "f58d26f391b560149e15e48c5c04cc9972df497cf4ec9ba99a5d9f84484cb15a",
+        "overview-light.png": "e46fe97eca73b8f27264c3b8e8294ab80fa1001670d5f54deb4140087750c508"
+      }
+    }
+  },
+  "actions": "not triggered",
+  "merge": "not performed",
+  "TEST": "not published",
+  "STABLE": "not published",
+  "gate": "User concept selection required before Phase 1"
+}

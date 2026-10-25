@@ -1,0 +1,125 @@
+{
+  "screens": [
+    {
+      "name": "orders-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 208,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "backlog-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 117,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "shipping-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 137,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "orders-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 206,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "backlog-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 117,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "shipping-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 135,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "orders-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 206,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "backlog-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 117,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "shipping-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 135,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "backlog-filter-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 152,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "backlog-plan-actual-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 113,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "cp-fields-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 225,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    }
+  ],
+  "errors": []
+}

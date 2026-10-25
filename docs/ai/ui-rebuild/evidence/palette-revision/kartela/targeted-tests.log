@@ -1,0 +1,26 @@
+✔ Ortak ölçek token'ları tanımlı ve kullanıcının yazı boyutu ayarına bağlı (3.210179ms)
+✔ Hiçbir stil dosyası sabit px yazı boyutu kullanmaz (80.656034ms)
+✔ Köşe yarıçapı yalnız --r-* token'larından gelir (106.194408ms)
+✔ Yazı ailesi yalnız --sans, --head veya --mono token'ından gelir (78.894409ms)
+✔ Ham renk kodu sayısı dosya başına dondurulmuş tavanı aşamaz; yeni dosya ham renk taşımaz (97.134477ms)
+✔ Kullanılan her CSS değişkeni bir yerde tanımlıdır (hayalet token yok) (80.215109ms)
+✔ managed Excel rows are lazy and contain the full source even when only 50 rows are visible (46.715144ms)
+✔ move and size anchors retain fitted image ratio, stay within their cell and serialize an aspect lock (45.957892ms)
+✔ v4.82 theme changes suspend the active heavy view while the palette is swapped (5.198225ms)
+✔ v4.82 table copy no longer switches theme or rerenders the source table (1.011605ms)
+✔ v4.82 copy reuses styles, parallelizes image cells and avoids finishing unrelated rows (0.460444ms)
+✔ Küçük kontrol yüksekliği ana ölçekten türetilir ve arayüz boyutuyla büyür (0.785424ms)
+✔ Düğme L ve S tek yükseklik, tek yazı ölçüsü kullanır (0.265159ms)
+✔ Segment bileşenleri tek görünüm ve tek aktif durum paylaşır (0.412973ms)
+✔ Filtre çipi ve sayfa sekmesi ayrı, tutarlı iki dil kullanır (0.160272ms)
+✔ KPI etiket, değer ve alt satırı her modülde aynı tipografiyle çizilir (0.184498ms)
+✔ Sayfa başlığı üst çubukta bir kez yazılır (4.634706ms)
+✔ hidden özelliği taşıyan öğeyi sınıfının display değeri görünür bırakmaz (128.097573ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 511.35503

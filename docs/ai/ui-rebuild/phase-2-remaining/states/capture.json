@@ -1,0 +1,548 @@
+{
+  "screens": [
+    {
+      "name": "excel-import-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 201,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "excel-templates-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 214,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "output-template-form-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 211,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "excel-import-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 201,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "excel-templates-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 214,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "output-template-form-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 204,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "excel-import-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 201,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "excel-templates-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 214,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "output-template-form-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 204,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "royalty-light",
+      "failures": [
+        {
+          "id": "",
+          "cls": "",
+          "kind": "borderBottom",
+          "value": "1px"
+        }
+      ],
+      "overflow": false,
+      "contrast": {
+        "checked": 227,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "transit-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 229,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "image-settings-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 195,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "sync-settings-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 219,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "calendar-native-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 288,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "output-editor-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 225,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "output-layout-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 243,
+        "failures": [
+          {
+            "text": "Aa",
+            "id": "",
+            "cls": "",
+            "fg": "rgb(55, 68, 84)",
+            "bg": [
+              53,
+              106,
+              150,
+              1
+            ],
+            "ratio": 1.73
+          }
+        ],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "import-en-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 187,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    }
+  ],
+  "keyboard": [
+    {
+      "name": "import-light",
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "excel-templates-light",
+      "count": 23,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "layout-light",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "template-form-light",
+      "count": 7,
+      "forward": false,
+      "backward": false,
+      "closed": true
+    },
+    {
+      "name": "import-light",
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "excel-templates-light",
+      "count": 23,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "layout-light",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "template-form-light",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "templates-light",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "widgets-light",
+      "count": 14,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "import-grey",
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "excel-templates-grey",
+      "count": 23,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "layout-grey",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "template-form-grey",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "templates-grey",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "widgets-grey",
+      "count": 14,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "import-dark",
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "excel-templates-dark",
+      "count": 23,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "layout-dark",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "template-form-dark",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "templates-dark",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "widgets-dark",
+      "count": 14,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "royalty",
+      "count": 44,
+      "forward": false,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "transit",
+      "count": 26,
+      "forward": false,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "image-settings",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "sync-settings",
+      "count": 7,
+      "forward": false,
+      "backward": true,
+      "closed": false
+    },
+    {
+      "name": "import-light",
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "excel-templates-light",
+      "count": 23,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "layout-light",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "template-form-light",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "templates-light",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "widgets-light",
+      "count": 14,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "import-grey",
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "excel-templates-grey",
+      "count": 23,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "layout-grey",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "template-form-grey",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "templates-grey",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "widgets-grey",
+      "count": 14,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "import-dark",
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "excel-templates-dark",
+      "count": 23,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "layout-dark",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "template-form-dark",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "templates-dark",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "widgets-dark",
+      "count": 14,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "royalty",
+      "count": 44,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "transit",
+      "count": 26,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "image-settings",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "sync-settings",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "output-editor",
+      "count": 16,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "import-en",
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    }
+  ],
+  "errors": []
+}

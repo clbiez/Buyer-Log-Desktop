@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const ROOT = path.join(__dirname, '..');
 const LFL = fs.readFileSync(path.join(ROOT, 'public', 'lfl.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'lfl.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','lfl.css'] );
 
 function loadReorderHelper() {
   const start = LFL.indexOf('function reorderComparisonScenarios');
@@ -21,7 +21,8 @@ test('saved LFL comparison cards expose a draggable title area and drop wiring',
   assert.match(LFL, /host\.ondrop=event=>/);
   assert.match(LFL, /commitComparisonScenarioOrderFromDom\(a\)/);
   assert.match(CSS, /\.lflScenarioCardDrag\{[^}]*cursor:grab/);
-  assert.match(CSS, /\.lflScenarioCard\.isDragTarget\{/);
+  const shared=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
+  assert.match(shared,/\.lflScenarioCard\.isDragTarget\{[^}]*background:var\(--ui-selected\)/);
 });
 
 test('scenario reorder follows DOM ids without dropping unknown or omitted saved scenarios', () => {

@@ -17,7 +17,7 @@ const nf=new Intl.NumberFormat('tr-TR',{maximumFractionDigits:0});
 const pf=new Intl.NumberFormat('tr-TR',{maximumFractionDigits:1});
 /* Kategorik grafik paleti tema token'larından okunur (app.css --chart-1…8); tema değişince yeniden çizimde güncellenir. */
 const CHART_FALLBACK=['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#6250d6','#e34948'];
-function chartColors(){try{const cs=getComputedStyle(document.documentElement);const out=[];for(let i=1;i<=8;i++){const v=cs.getPropertyValue('--chart-'+i).trim();if(v)out.push(v);}return out.length===8?out:CHART_FALLBACK;}catch(_){return CHART_FALLBACK;}}
+function chartColors(){try{const cs=getComputedStyle(document.documentElement);const out=[];for(let i=1;i<=8;i++){const v=cs.getPropertyValue('--ui-chart-'+i).trim();if(v)out.push(v);}return out.length===8?out:CHART_FALLBACK;}catch(_){return CHART_FALLBACK;}}
 const n=v=>nf.format(Number(v)||0);
 const pct=v=>v==null||!Number.isFinite(v)?'—':'%'+pf.format(v*100);
 const R=()=>window.BLBacklogV3Report;
@@ -184,8 +184,8 @@ function opener(spec){const id='o'+(++seq);openers.set(id,spec);return id}
 function tipHtml(title,lines,hint){return `<div class="bpaTipTitle">${esc(title)}</div>${lines.map(([k,v,stage])=>`<div class="bpaTipLine"><span>${esc(k)}</span><b${stage?` data-stage="${stage}" class="blvTipVal"`:''}>${esc(v)}</b></div>`).join('')}${hint?`<div class="bpaTipHint">${esc(hint)}</div>`:''}`}
 function stageLabel(key){return R().stageLabel(key,lang())}
 function ring(value){
-  const v=Math.max(0,Math.min(1,Number(value)||0)),r=42,c=2*Math.PI*r;
-  return `<svg viewBox="0 0 100 100" aria-hidden="true"><circle class="bpaRingTrack" cx="50" cy="50" r="${r}"/><circle class="bpaRingValue" cx="50" cy="50" r="${r}" stroke-dasharray="${(c*v).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 50 50)"/></svg>`;
+  const v=Math.max(0,Math.min(1,Number(value)||0));
+  return `<div class="uiMeasure" aria-hidden="true"><i style="transform:scaleX(${v})"></i></div>`;
 }
 function hero(s){
   const st=s.stages;
@@ -274,12 +274,12 @@ function timelineDimensionTipHtml(title,bucket,dimension,names){
   const grouped=R().groupBy(bucket&&bucket.items||[],dimension,{blank:L('(boş)','(blank)')}),byName=new Map(grouped.map(g=>[g.name,g]));
   const rows=(names||[]).map((name,index)=>{
     const g=byName.get(name);if(!g||!g.qty)return '';
-    return `<span><i style="--seg:${timelineGroupColor(index)}"></i><b>${esc(name)}</b><em>${esc(n(g.qty))}</em></span>`;
+    return `<span><i style="--ui-series-color:${timelineGroupColor(index)}"></i><b>${esc(name)}</b><em>${esc(n(g.qty))}</em></span>`;
   }).join('');
   return `<strong>${esc(title)}</strong>${rows}<span class="backlogChartTooltipTotal"><i></i><b>${esc(L('Dönem toplamı','Period total'))}</b><em>${esc(n(bucket&&bucket.qty||0))}</em></span>`;
 }
 function timelineDimensionLegend(names,label){
-  return `<div class="blvTimelineLegend blvTimelineLegend--dimension"><span class="blvTimelineLegendLabel">${esc(label)}</span><div class="bpaLegend blvBuyerLegend">${(names||[]).map((name,index)=>`<span title="${esc(name)}"><i class="bpaDot" style="--seg:${timelineGroupColor(index)}"></i>${esc(name)}</span>`).join('')}</div></div>`;
+  return `<div class="blvTimelineLegend blvTimelineLegend--dimension"><span class="blvTimelineLegendLabel">${esc(label)}</span><div class="bpaLegend blvBuyerLegend">${(names||[]).map((name,index)=>`<span title="${esc(name)}"><i class="bpaDot" style="--ui-series-color:${timelineGroupColor(index)}"></i>${esc(name)}</span>`).join('')}</div></div>`;
 }
 function flowCard(){
   const fields=R().TIMELINE_FIELDS,field=fields.find(f=>f.key===state.timeField)||fields[0];
@@ -334,12 +334,12 @@ function flowCard(){
     if(chartMode==='grouped'){
       const bars=dimensionEntries.map(({name,index,g,o})=>{
         const height=dimensionMax?Math.max(2,g.qty/dimensionMax*100):0;
-        return `<span class="blvBuyerBar" style="height:${height.toFixed(1)}%;--seg:${timelineGroupColor(index)}" data-blv-open="${o}" title="${esc(name+': '+n(g.qty))}"></span>`;
+        return `<span class="blvBuyerBar" style="height:${height.toFixed(1)}%;--ui-series-color:${timelineGroupColor(index)}" data-blv-open="${o}" title="${esc(name+': '+n(g.qty))}"></span>`;
       }).join('');
       dimensionChart=`<div class="blvBuyerBars is-grouped">${bars}</div>`;
     }else{
       const stackHeight=max?Math.max(3,b.qty/max*100):0;
-      const segs=dimensionEntries.map(({name,index,g,o})=>`<span class="blvBuyerStackSeg" style="flex-grow:${g.qty};--seg:${timelineGroupColor(index)}" data-blv-open="${o}" title="${esc(name+': '+n(g.qty))}"></span>`).join('');
+      const segs=dimensionEntries.map(({name,index,g,o})=>`<span class="blvBuyerStackSeg" style="flex-grow:${g.qty};--ui-series-color:${timelineGroupColor(index)}" data-blv-open="${o}" title="${esc(name+': '+n(g.qty))}"></span>`).join('');
       dimensionChart=`<div class="blvBuyerBars is-stacked"><div class="blvBuyerStack" style="height:${stackHeight.toFixed(1)}%">${segs}</div></div>`;
     }
     return `<div class="${columnClass} ${chartMode==='grouped'?'blvGroupedCol':''}" ${commonAttrs}>${todayMarker}<div class="bpaColValue">${value}</div><div class="bpaColTrack blvLogisticsTrack ${chartMode==='grouped'?'blvGroupTrack':''}">${logistics}</div><div class="blvBandDivider"></div><div class="blvBuyerTrack" data-blv-tip="${groupTip}" data-blv-tip-style="chart">${dimensionChart}</div><div class="bpaColLabel">${esc(b.label)}</div></div>`;
@@ -398,7 +398,7 @@ async function ensureFilterCatalog(){
 function filterRoot(){
   let root=$('blvFilterRoot');
   if(root)return root;
-  root=document.createElement('div');root.id='blvFilterRoot';root.className='blvFilterRoot';root.hidden=true;
+  root=document.createElement('div');root.id='blvFilterRoot';root.className='blvFilterRoot';root.dataset.uiMigrated='plan-execute';root.hidden=true;
   root.innerHTML='<div class="blvFilterScrim" data-blvf-close></div><aside class="blvFilterDrawer" role="dialog" aria-modal="true" aria-labelledby="blvFilterTitle"><div class="blvFilterMount"></div></aside>';
   document.body.appendChild(root);
   root.addEventListener('click',e=>{
@@ -530,7 +530,7 @@ function render(){
 }
 
 /* --------------------------------------------------------- tooltip/panel */
-function tipEl(){let el=$('blvTip');if(!el){el=document.createElement('div');el.id='blvTip';el.className='bpaTip blvTipBox';el.hidden=true;el.setAttribute('role','tooltip');document.body.appendChild(el);}return el}
+function tipEl(){let el=$('blvTip');if(!el){el=document.createElement('div');el.id='blvTip';el.className='bpaTip blvTipBox';el.dataset.uiMigrated='plan-execute';el.hidden=true;el.setAttribute('role','tooltip');document.body.appendChild(el);}return el}
 function hideTip(){const el=$('blvTip');if(el)el.hidden=true}
 function moveTip(e){
   const target=e.target&&e.target.closest?e.target.closest('[data-blv-tip]'):null;
@@ -594,7 +594,7 @@ function registerDrawerModelImages(aside,list,spec){
 function drawerEl(){
   let el=$('blvDrawer');
   if(!el){
-    el=document.createElement('div');el.id='blvDrawer';el.className='bpaDrawerRoot blvDrawerRoot';el.hidden=true;
+    el=document.createElement('div');el.id='blvDrawer';el.className='bpaDrawerRoot blvDrawerRoot';el.dataset.uiMigrated='plan-execute';el.hidden=true;
     el.innerHTML='<div class="bpaDrawerScrim" data-blv-close></div><aside class="bpaDrawer" role="dialog" aria-modal="true" aria-labelledby="blvDrawerTitle"></aside>';
     document.body.appendChild(el);
     el.addEventListener('click',e=>{if(e.target.closest('[data-blv-close]'))closeDrawer();});

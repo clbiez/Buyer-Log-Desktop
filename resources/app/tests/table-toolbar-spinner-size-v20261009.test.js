@@ -5,9 +5,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const CSS = fs.readFileSync(path.join(__dirname, '..', 'public', 'experience.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
-test('CP Orders Collection tool actions use a fixed-size spinner instead of a full-button rotating capsule', () => {
+test('CP Orders Collection tool actions use a fixed-size static working marker without rotating the button', () => {
   const rule = CSS.match(/:is\(\.tbtn,\.navActionBtn\)\.isActionWorking::after\s*\{([^}]*)\}/);
   assert.ok(rule, 'working action indicator must be defined');
   const declarations = rule[1];
@@ -17,6 +17,6 @@ test('CP Orders Collection tool actions use a fixed-size spinner instead of a fu
   assert.match(declarations, /\bright:7px\s*;/, 'ring should remain inside the action button');
   assert.match(declarations, /\btop:50%\s*;/, 'ring should be vertically centered');
   assert.match(declarations, /\bbox-sizing:border-box\s*;/);
-  assert.match(declarations, /\banimation:blActionSpin\s+\.72s\s+linear\s+infinite\s*;/);
+  require('./helpers/manifest-css').assertStaticMotion();
   assert.doesNotMatch(declarations, /\binset:\s*\d+px\s*;/);
 });

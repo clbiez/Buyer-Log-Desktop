@@ -334,7 +334,7 @@
     root.document.getElementById('_lcwaiConnection')?.remove();
     const modal = root.document.createElement('div');
     modal.id = '_lcwaiConnection';
-    modal.className = 'warnOverlay';
+    modal.className = 'warnOverlay';modal.dataset.uiMigrated='operations';
     modal.innerHTML = `<div class="modalCard verHistCard lcwaiConnCard" role="dialog" aria-modal="true" aria-labelledby="lcwaiConnTitle">
         <div class="verHistTop"><div><h2 id="lcwaiConnTitle">${esc(L('LCW AI Girişi', 'LCW AI Sign-In'))}</h2><p class="verHistSub">${esc(L('Kurumsal LCW AI oturumu · model', 'Corporate LCW AI session · model'))} ${esc(modelLabel)}</p></div><button type="button" class="verHistClose" data-lcwai-close aria-label="${esc(L('Kapat', 'Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div>
         <div class="lcwaiConnBody">
@@ -356,7 +356,8 @@
       connectBtn.disabled = Boolean(status && status.loginInProgress);
     };
     const unsubscribe = onStatus(paint);
-    const close = () => { unsubscribe(); modal.remove(); };
+    const close = () => { unsubscribe(); root.BLLayerSystem?.closeDialog(modal); modal.remove(); };
+    root.BLLayerSystem?.openDialog(modal, {onClose: close});
     modal.querySelectorAll('[data-lcwai-close]').forEach(button => button.addEventListener('click', close));
     modal.addEventListener('click', event => { if (event.target === modal) close(); });
     connectBtn.addEventListener('click', () => { connect().catch(() => {}); });
@@ -383,11 +384,11 @@
     const state = { request: String(options.initialRequest || ''), busy: false, requestId: '', interpreted: null, destroyed: false };
     const label = value => textOf(value);
     host.innerHTML = `<section class="lcwaiAssist" data-lcwai-assist data-lcwai-source="${esc(options.source || '')}">
-        <header class="lcwaiHead"><span class="lcwaiMark" aria-hidden="true">✦</span><b>${esc(L('LCW AI’dan Destek Al', 'Get help from LCW AI'))}</b><small class="lcwaiModel" data-lcwai-model>${esc(modelLabel)}</small><span class="lcwaiConnPill" data-lcwai-conn hidden></span></header>
+        <header class="lcwaiHead"><span class="lcwaiMark" aria-hidden="true"><svg class="ic"><use href="#i-notebook"/></svg></span><b>${esc(L('LCW AI’dan Destek Al', 'Get help from LCW AI'))}</b><small class="lcwaiModel" data-lcwai-model>${esc(modelLabel)}</small><span class="lcwaiConnPill" data-lcwai-conn hidden></span></header>
         <label class="lcwaiField"><span>${esc(L('İsteğiniz', 'Your request'))}</span>
           <textarea data-lcwai-request rows="3" maxlength="4000" placeholder="${esc(label(options.placeholder) || L('Ne istediğinizi kendi cümlenizle yazın.', 'Describe what you want in your own words.'))}">${esc(state.request)}</textarea></label>
         <div class="lcwaiRow">
-          <button type="button" class="lcwaiBtn is-primary" data-lcwai-ask>✦ ${esc(L('LCW AI’dan Destek Al', 'Get help from LCW AI'))}</button>
+          <button type="button" class="lcwaiBtn is-primary" data-lcwai-ask>${esc(L('LCW AI’dan Destek Al', 'Get help from LCW AI'))}</button>
           <button type="button" class="lcwaiBtn" data-lcwai-cancel hidden>${esc(L('İptal', 'Cancel'))}</button>
           <span class="lcwaiStatus" data-lcwai-status aria-live="polite"></span>
         </div>
@@ -529,11 +530,12 @@
     root.document.getElementById('_lcwaiPanel')?.remove();
     const modal = root.document.createElement('div');
     modal.id = '_lcwaiPanel';
-    modal.className = 'warnOverlay';
+    modal.className = 'warnOverlay';modal.dataset.uiMigrated='operations';
     modal.innerHTML = `<div class="modalCard verHistCard lcwaiPanelCard" role="dialog" aria-modal="true" aria-label="${esc(L('LCW AI’dan Destek Al', 'Get help from LCW AI'))}"><div class="verHistTop"><div><h2>${esc(textOf(options.title) || L('LCW AI’dan Destek Al', 'Get help from LCW AI'))}</h2></div><button type="button" class="verHistClose" data-lcwai-panel-close aria-label="${esc(L('Kapat', 'Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="lcwaiPanelBody" data-lcwai-panel-host></div></div>`;
     root.document.body.appendChild(modal);
     let mounted = null;
-    const close = () => { if (mounted) mounted.destroy(); modal.remove(); };
+    const close = () => { if (mounted) mounted.destroy(); root.BLLayerSystem?.closeDialog(modal); modal.remove(); };
+    root.BLLayerSystem?.openDialog(modal, {onClose: close});
     mounted = mountAssistant(modal.querySelector('[data-lcwai-panel-host]'), { ...options, onApply: (value, interpreted) => { options.onApply(value, interpreted); close(); } });
     modal.querySelector('[data-lcwai-panel-close]').addEventListener('click', close);
     modal.addEventListener('click', event => { if (event.target === modal) close(); });

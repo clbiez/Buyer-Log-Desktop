@@ -1,0 +1,149 @@
+{
+  "screens": [
+    {
+      "name": "royalty-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 227,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "output-layout-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 240,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "import-dark-size--1",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 148,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "import-dark-size-0",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 148,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "import-dark-size-1.5",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 146,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "import-dark-size-3",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 157,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "import-sheet-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 234,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "import-columns-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 215,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "import-match-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 210,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "import-review-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 241,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "import-dark-xl",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px"
+      },
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 136,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    }
+  ],
+  "checks": [
+    {
+      "name": "native-square-slider-keyboard",
+      "before": "16",
+      "after": "17",
+      "thumb": {
+        "radius": "0px"
+      }
+    },
+    {
+      "name": "native-square-slider-keyboard",
+      "before": "16",
+      "after": "17",
+      "thumb": {
+        "radius": "0px"
+      }
+    },
+    {
+      "name": "file-picker-keyboard",
+      "opened": true
+    },
+    {
+      "name": "nested-form-after-format-rerender",
+      "forward": true,
+      "backward": true,
+      "childClosed": true,
+      "parentOpen": true
+    }
+  ],
+  "errors": []
+}

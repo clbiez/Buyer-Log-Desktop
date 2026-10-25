@@ -1,0 +1,53 @@
+{
+  "scope": "Phase 0B palette revision; concept choice still pending",
+  "concepts": {
+    "kartela": {
+      "branch": "ui-rebuild/concept-kartela",
+      "commit": "22e8ec8eddabb5118ad730e92e26b538675e47f9",
+      "sourceFiles": [
+        "resources/app/public/ui-concept.css",
+        "resources/app/public/overview-global-flow.js"
+      ],
+      "PNG_SHA256": {
+        "cp-dark.png": "a97a23baaf31106972c16e767e37a2db2752d046eb7ff5d4301ab01174caf6f0",
+        "cp-graphite-xl-1280.png": "f0848247c71ca645ec294ad1bb51e6f8567364019a8cc6bda7d9d444b53c679a",
+        "cp-graphite.png": "4c6ebd5e8110cb3b207b21a0e1aa72540bce2d416e2d5b18c7ee7f6aedba1527",
+        "cp-grey-xl-1280.png": "b1e55c9cbfb0a3461de524ae747df1394f5a926109a46d8c66e4776139b8d824",
+        "cp-grey.png": "78d493443a1f551ae5518f0dbd188d88b596da102b390e6fdcb6e4d98eae3d0c",
+        "cp-light.png": "81bccd1246770d93ebe1f78ee7ee0dddecbbc776162703096b28bc37a3e4ff11",
+        "overview-dark.png": "f6a4963d48dcf5f49f617439277c1bf24f9817c722c1d903e3aa89c823995c4d",
+        "overview-graphite-xl-1280.png": "43a941b78e6f948dd7696a62425605489a872e2fb992701d5c1b97b5ff12a62b",
+        "overview-graphite.png": "c1d751d167f1f4214b04b4864bc83192e32bcd529fdda425424419b1bbe3a148",
+        "overview-grey-xl-1280.png": "90926f67ff3642ca396a81681577938ce726a2f4102a4d2b78726c0cd0722bb6",
+        "overview-grey.png": "749c16d33fab25e771338aeae6668a9090491edc592c8919d8af9687a0a14af4",
+        "overview-light.png": "764ef7699e9eceb7cad7cd78abec737c17ce73927ea22a676718c8049fbd7c73"
+      }
+    },
+    "manifest": {
+      "branch": "ui-rebuild/concept-manifest",
+      "commit": "540bd95b6b58464cddf386e33473a50a135bb78e",
+      "sourceFiles": [
+        "resources/app/public/ui-concept.css",
+        "resources/app/public/overview-global-flow.js"
+      ],
+      "PNG_SHA256": {
+        "cp-dark.png": "4c747adea6c5d39fec282e3e7590307790ce7fed78981b294bf5f5f372562c02",
+        "cp-graphite-xl-1280.png": "6272093fe417d2cc3b6bce87b3a663dfce5f2d65ebfceb44b8abb260f2e63d2f",
+        "cp-graphite.png": "5e21761c88abcd3193ce45e8ba9266416e8349766373c6c2f3764aa982cb0d1d",
+        "cp-grey-xl-1280.png": "77ebb67402a13c4d06fdddb69d2490705040a175ec5eed94e5bc4ece5570a7a6",
+        "cp-grey.png": "391098cdbc07e299b465c1516d9068b325f5bc0797b166a797a19854c127f0e8",
+        "cp-light.png": "65939d083e54c1867c13869640a51a1368f3fc882ec2f86a6d10ff7cba4d2c54",
+        "overview-dark.png": "5916f60d0a2123ea064a783da82582e16dae5eb4d8b4fa8c7ef5dd6258a8d18e",
+        "overview-graphite-xl-1280.png": "84da93d3fc75d671f2849ccc894155488c367e149ed53e34bd0dbc1ce09a54e3",
+        "overview-graphite.png": "cb94fb9a74ea4edfd2e433b7f0a066e355dfb8e23cb9d5bcd751d255de557cfb",
+        "overview-grey-xl-1280.png": "ee3ba9dd46a981af32ef7b2c080ea2226ac7eeaa9fb9f49812e744bd0d6b7aee",
+        "overview-grey.png": "2674db2e6d9fc41b1631ee8ae08f9c810b7913b15efda59847e86f668f6ceddf",
+        "overview-light.png": "e6d0dca4e8196fd414c276e91f07907b0f8b2cc2a99a302b911045d7612f9141"
+      }
+    }
+  },
+  "CI": "not run",
+  "merge": "not performed",
+  "TEST": "not published",
+  "STABLE": "not published"
+}

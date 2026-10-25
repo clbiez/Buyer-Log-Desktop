@@ -29,14 +29,13 @@ test('CP tab revisits reuse the checklist runtime instead of re-downloading and 
   assert.match(sync, /if \(sharedSignature !== state\.sharedViewSignature\)/);
 });
 
-test('the map loading orb only animates while its overlay is visible and does not measure layout per frame', () => {
+test('map loading uses a static marker with no animation frame or layout measurement', () => {
   const flow = read('public/overview-global-flow.js');
-  assert.match(flow, /function syncLoadingOrb\(busy\)/);
+  const loading=flow.slice(flow.indexOf('function syncLoadingOrb(busy)'),flow.indexOf('function syncLoadingOverlay()'));
+  assert.match(loading,/marker\.dataset\.state=busy\?'thinking':'idle'/);
   assert.match(flow, /syncLoadingOrb\(busy\);/);
-  assert.match(flow, /state\.orbHandle\.stop\(\)/);
-  const orb = read('public/thinking-orb-working.js');
-  assert.match(orb, /function resize\(\)\{if\(!measured\)measured=measureSize\(\);return measured;\}/);
-  assert.match(orb, /if\(!canvas\.isConnected\)\{running=false;/);
+  assert.doesNotMatch(loading,/requestAnimationFrame|getBoundingClientRect|BLThinkingOrb/);
+  assert.match(flow, /id="globalFlowWorkingOrb" class="blOrb"/);
 });
 
 test('working orb stops by itself once its canvas leaves the document', () => {
@@ -51,7 +50,7 @@ test('working orb stops by itself once its canvas leaves the document', () => {
   };
   const context = { window, getComputedStyle: () => ({ getPropertyValue: () => '#123456' }) };
   context.document = window.document;
-  vm.runInNewContext(read('public/thinking-orb-working.js'), context);
+  vm.runInNewContext(read('tests/fixtures/retired-ui/thinking-orb-working.js'), context);
   window.BLThinkingOrb.attach(canvas);
   for (let i = 0; i < 5; i++) { const fn = callbacks.shift(); if (fn) { frames++; fn(16 * (i + 1)); } }
   assert.equal(rects, 1, 'size is measured once, not every frame');

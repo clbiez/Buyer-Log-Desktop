@@ -26,6 +26,8 @@ const HTML = read('public/index.html');
 const PERF = read('public/perf-runtime.js');
 const STORAGE = read('public/user-storage.js');
 const CSS = read('public/cp-overview-assistant.css');
+// Manifest appearance lives in the shared contract; module CSS retains layout.
+const VISUAL=fs.readFileSync(path.join(__dirname,'..','public','ui-components.css'),'utf8').replace(/html\[data-ui-system="manifest"\] /g,'').replace(/\s*\{\s*/g,'{');
 
 test('v9.48 panel KENDİ filtresini kurmaz: Genel Bakış\'ın satır kümesini alır', () => {
   // Kanca ovFilteredCpRows çıktısını (yetki+filtre uygulanmış) geçirir.
@@ -202,13 +204,13 @@ test('v9.48 stil mevcut token\'ları kullanır, yeni renk uydurmaz', () => {
   const hexColours = CSS.match(/#[0-9a-fA-F]{3,8}\b/g) || [];
   assert.deepEqual(hexColours.filter(value => value.toLowerCase() !== '#fff'), [],
     `token dışı renk kullanılmış: ${hexColours.join(', ')}`);
-  assert.match(CSS, /var\(--acc\)/);
-  assert.match(CSS, /var\(--line\)/);
+  assert.match(VISUAL, /var\(--ui-accent\)/);
+  assert.doesNotMatch(CSS, /var\(--(?:acc|line)\)/);
 });
 
 /* KULLANICI BİLDİRİMİ (v9.48): "modülün yazıları aşırı küçük".
    Sebep: panel sabit px yazı boyutlarıyla (7.8–9px) çizilmişti. Tasarım
-   sistemindeki en küçük token --fs-xs bile 11px'tir ve TÜM token'lar
+   sistemindeki en küçük token --ui-font-xs bile 11px'tir ve TÜM token'lar
    calc(... + var(--ui-font-add)) ile tanımlıdır — yani kullanıcının yazı
    boyutu ayarıyla büyürler. Sabit px yazan bir kural o ayarı sessizce yok
    sayar ve ekranın geri kalanından küçük görünür. */
@@ -219,17 +221,17 @@ test('v9.48 yazı boyutları TOKEN\'dan gelir: sabit px yok, kullanıcı ayarı 
   const shorthand = CSS.match(/[^-]font:\s*[^;]*[0-9.]+px/g) || [];
   assert.deepEqual(shorthand, [], `font kısayolunda sabit boyut var: ${shorthand.join(', ')}`);
   // Ölçek gerçekten kullanılıyor mu?
-  for (const token of ['--fs-xs', '--fs-sm', '--fs-md', '--fs-lg', '--fs-xl']) {
-    assert.ok(CSS.includes(`var(${token})`), `${token} kullanılmalı`);
+  for (const token of ['--ui-font-xs', '--ui-font-sm', '--ui-font-md', '--ui-font-lg', '--ui-font-xl']) {
+    assert.ok(VISUAL.includes(`var(${token})`), `${token} kullanılmalı`);
   }
   // Ön koşul: token'lar gerçekten kullanıcı ayarına bağlı.
-  assert.match(read('public/app.css'), /--fs-xs:calc\(11px \+ var\(--ui-font-add\)\)/);
+  assert.match(read('public/ui-tokens.css'), /--ui-font-xs:calc\(12px \+ var\(--ui-font-add\)\)/);
 });
 
 test('v9.48 köşe yarıçapı token\'dan gelir (uygulama kare köşe kullanır)', () => {
   const hardcoded = CSS.match(/border-radius:\s*[0-9.]+px/g) || [];
   assert.deepEqual(hardcoded, [], `sabit yarıçap görsel kimliği bozar: ${hardcoded.join(', ')}`);
-  assert.match(read('public/app.css'), /--r-sm:0/, 'ön koşul: yarıçap token\'ları 0');
+  assert.match(require('./helpers/manifest-css')(), /--ui-radius:0/, 'ön koşul: yarıçap token\'ları 0');
 });
 
 test('v9.48 <section> tuzağı: panel kartları görünür bir kurala sahip', () => {
@@ -257,7 +259,7 @@ test('v9.50 kural penceresi geniş ve tek-açık accordion kullanır; v7.221 Rul
   assert.match(VIEW, /let expandedRuleId = null/);
   assert.match(VIEW, /expandedRuleId = expandedRuleId === id \? null : id/);
   assert.match(VIEW, /visible\.map\(rule => ruleBlock\(rule, view\)\)/);
-  assert.match(CSS, /\.cpaRulesModal\{[^}]*width:min\(1500px,96vw\)[^}]*height:auto[^}]*max-height:calc\(100vh\s*-\s*2\s*\*\s*var\(--sp-5\)\)/);
+  assert.match(CSS, /\.cpaRulesModal\{[^}]*width:min\(1500px,96vw\)[^}]*height:auto[^}]*max-height:calc\(100vh\s*-\s*2\s*\*\s*var\(--ui-space-5\)\)/);
   assert.match(CSS, /\.cpaRulesBody\{[^}]*overflow:hidden/);
 });
 
@@ -352,7 +354,8 @@ test('Rules Value picker body portal ile viewport-aware floating layer olarak a�
   assert.match(VIEW, /window\.addEventListener\('resize', onValueViewportChange\)/);
   assert.match(VIEW, /activeValueMenu === menu/);
   assert.match(VIEW, /aria-expanded/);
-  assert.match(CSS, /\.cpaValueMenu\{position:fixed;z-index:120;/);
+  assert.match(CSS, /\.cpaValueMenu\{position:fixed;/);
+  assert.match(VISUAL, /\.cpaValueMenu\{z-index:var\(--ui-z-modal-menu\)/);
   assert.match(CSS, /--cpa-value-options-max-height/);
   assert.doesNotMatch(CSS, /\.cpaValueMenu\{position:absolute/);
   assert.doesNotMatch(CSS, /999999/);

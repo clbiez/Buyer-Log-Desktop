@@ -64,10 +64,10 @@ test('favicon, PWA manifest ve Electron pencereleri aynı simgeyi gösterir', ()
   assert.match(workspace, /window\.setAppDetails\(appDetails\)/);
 });
 
-test('giriş ekranı büyük simgeyi, sol menü küçük boyut simgesini gösterir ve sekme çubuğu logosuzdur', () => {
+test('Manifest girişte tipografik BL işareti kullanır; paket simgeleri ve masaüstü yolları korunur', () => {
   const login = read('public/select-user.html').toString('utf8');
-  assert.match(login, /class="logoMark logoMark--image"[^>]*><img src="\/icons\/icon-512\.png" alt="" width="112" height="112"/);
-  assert.match(read('public/giris.css').toString('utf8'), /\.logoMark--image\{width:112px;height:112px/);
+  assert.match(login, /class="logoMark logoMark--image"[^>]*><span>BL<\/span>/);
+  assert.match(read('public/giris.css').toString('utf8'), /\.logoMark--image\{width:64px;height:76px/);
   const index = read('public/index.html').toString('utf8');
   assert.match(index, /<img class="brandMarkImage" src="icons\/icon-mark\.png/);
   const shell = read('electron/workspace.html').toString('utf8');
@@ -79,15 +79,18 @@ test('giriş ekranı büyük simgeyi, sol menü küçük boyut simgesini göster
   assert.ok(route > 0 && route < server.indexOf('createStaticGzip('), 'simge rotası statik katmandan önce olmalı');
 });
 
-test('sağ üst kullanıcı avatarı uygulama simgesiyle aynı malzemede (çelik plaka), adın baş harfleriyle', () => {
+test('kullanıcı avatarı Manifest yüzeyi ve okunur baş harfleri kullanır', () => {
   const index = read('public/index.html').toString('utf8');
   assert.match(index, /<span id="currentUserInitials" class="blSteelInitials">/);
   const ui = read('public/user-access-ui.js').toString('utf8');
   assert.match(ui, /avatar\.textContent = initials\(profile\.displayName\)/);
   assert.match(ui, /<span class="userMenuAvatar"><span class="blSteelInitials">\$\{esc\(initials\(profile\.displayName\)\)\}<\/span><\/span>/);
-  const css = read('public/experience.css').toString('utf8');
-  assert.match(css, /\.userAvatarBtn,\[data-theme\] \.userAvatarBtn,\.userMenuAvatar,\[data-theme\] \.userMenuAvatar\{\s*background:#e6e9ec url\("icons\/avatar-patch\.png"\)/);
-  assert.match(css, /\.blSteelInitials\{[^}]*background-clip:text;color:transparent;/);
+  const css = require('./helpers/manifest-css')().toString('utf8');
+  const initials=require('./helpers/manifest-css').rules(/blSteelInitials/);
+  assert.match(initials,/background:var\(--ui-surface-strong\)/);
+  assert.match(initials,/color:var\(--ui-text\)/);
+  assert.doesNotMatch(initials,/color:transparent|gradient\(/);
+
 });
 
 function fixture() {

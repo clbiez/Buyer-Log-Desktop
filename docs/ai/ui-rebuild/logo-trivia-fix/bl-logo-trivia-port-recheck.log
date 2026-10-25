@@ -1,0 +1,22 @@
+✔ v5.88 birden çok Edge profil klasörü aranıyor (1.03496ms)
+✔ v5.88 aday listesi tekrarsız ve elle verilen klasör en önde (0.250307ms)
+✔ v5.88 dosya bulunamazsa yaygın portlar da deneniyor (0.129005ms)
+✔ v5.88 tanılama dört adımı da raporluyor (8.608357ms)
+✔ v5.88 bağlantı yokken tanılama başarısız ama ÇÖKMEDEN döner (1.460732ms)
+✔ v5.88 tanılama Otomasyonlar uç noktasına bağlı (0.274253ms)
+✔ v5.88 arayüzde tanılamayı çalıştıran düğme var (0.188404ms)
+✔ v5.88 kurulum sayfası doğrudan Remote debugging bölümünü açıyor (0.169886ms)
+✔ v5.88b port sondası üç arıza durumunu ayırt ediyor (46.047044ms)
+✔ v5.88b tanılama bayat DevToolsActivePort dosyasını ayırt ediyor (1.644899ms)
+✔ v5.91 DevTools olmayan bir sunucu "bağlandı" sayılmaz (5.615265ms)
+✔ v5.91 gerçek DevTools yanıtı tanınıyor (2.585007ms)
+✔ v5.91 HTTP uçları kapalıysa tarayıcı WebSocket adresi deneniyor (2.691547ms)
+✔ v5.91 ws yoluyla kurulan bağlantı ws:// adresi döndürüyor (0.951394ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 181.10482

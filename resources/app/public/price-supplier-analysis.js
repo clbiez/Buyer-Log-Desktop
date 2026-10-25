@@ -302,10 +302,10 @@
   function countryChart(){
     const list=model.countries.filter(c=>c.records>0),head=list.slice(0,5),rest=list.slice(5),total=model.totals.volume||1;
     const slices=[...head.map((c,index)=>({name:c.name,share:c.share,shareChange:c.shareChange,cls:`psaC${index}`,key:c.key})),...(rest.length?[{name:t('other'),share:rest.reduce((s,c)=>s+c.volume,0)/total*100,shareChange:null,cls:'psaCother',key:''}]:[])];
-    const r=46,circ=2*Math.PI*r;let offset=0;
-    const arcs=slices.map(slice=>{const len=Math.max(0,slice.share/100*circ);const arc=`<circle class="${slice.cls}" r="${r}" cx="60" cy="60" stroke-dasharray="${len.toFixed(2)} ${(circ-len).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}"><title>${esc(slice.name)} ${esc(fmtShare(slice.share))}</title></circle>`;offset+=len;return arc;}).join('');
+    let offset=0;
+    const arcs=slices.map(slice=>{const width=Math.max(0,slice.share);const mark=`<rect class="${slice.cls}" x="${offset.toFixed(2)}" y="0" width="${width.toFixed(2)}" height="10"><title>${esc(slice.name)} ${esc(fmtShare(slice.share))}</title></rect>`;offset+=width;return mark;}).join('');
     return `<div class="psaCard"><div class="psaCardHead"><h3>${esc(t('countryMix'))}</h3></div><div class="psaDonutWrap">
-      <svg class="psaDonut" viewBox="0 0 120 120" role="img" aria-label="${esc(t('countryMix'))}"><g transform="rotate(-90 60 60)">${arcs}</g><text x="60" y="57" text-anchor="middle" class="psaDonutValue">${esc(fmtInt(list.length))}</text><text x="60" y="72" text-anchor="middle" class="psaDonutLabel">${esc(t('country').toLocaleLowerCase(locale()))}</text></svg>
+      <div class="psaCountryMeasure"><strong>${esc(fmtInt(list.length))}</strong><span>${esc(t('country'))}</span><svg class="psaDonut" viewBox="0 0 100 10" preserveAspectRatio="none" role="img" aria-label="${esc(t('countryMix'))}">${arcs}</svg></div>
       <ul class="psaLegendList">${slices.map(slice=>`<li${slice.key?` data-ps-drill="c:${dk(slice.key)}" title="${esc(t('drillHint'))}"`:''}><i class="${slice.cls}"></i><span>${esc(slice.name)}</span><b>${esc(fmtShare(slice.share))}</b>${slice.shareChange!=null?`<small class="${slice.shareChange>0?'isUp':slice.shareChange<0?'isDown':''}">${slice.shareChange>=0?'+':'−'}${esc(fmtOne(slice.shareChange))} ${esc(t('pts'))}</small>`:''}</li>`).join('')}</ul>
     </div></div>`;
   }

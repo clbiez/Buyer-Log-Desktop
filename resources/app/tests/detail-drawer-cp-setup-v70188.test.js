@@ -9,6 +9,8 @@ const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
 const FLOW=fs.readFileSync(path.join(ROOT,'public','overview-global-flow.js'),'utf8');
 const DRAWER=fs.readFileSync(path.join(ROOT,'public','detail-drawer.js'),'utf8');
 const CSS=fs.readFileSync(path.join(ROOT,'public','detail-drawer.css'),'utf8');
+// Manifest appearance lives in the shared contract; module CSS retains layout.
+const VISUAL=fs.readFileSync(path.join(__dirname,'..','public','ui-components.css'),'utf8').replace(/html\[data-ui-system="manifest"\] /g,'').replace(/\s*\{\s*/g,'{');
 
 test('Global Flow details request the CP table setup',()=>{
   assert.ok(FLOW.includes("tableSetup:'cp'"));
@@ -41,6 +43,6 @@ test('shared detail drawer keeps the CP catalog but applies its own report layou
   assert.ok(DRAWER.includes('...setupColumns,...contextColumns')); 
   assert.ok(DRAWER.includes('BLDetailReportLayout.project'));
   assert.ok(DRAWER.includes('data-bl-detail-stats'));
-  assert.ok(CSS.includes('.blDetailViewPreset[aria-pressed="true"]'));
-  assert.ok(CSS.includes('.blDetailGroupRow'));
+  assert.ok(VISUAL.includes('.blDetailViewPreset[aria-pressed="true"]'));
+  assert.ok((CSS+VISUAL).includes('.blDetailGroupRow'));
 });

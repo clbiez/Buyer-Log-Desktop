@@ -135,6 +135,6 @@ test('completed cell edits clear edit styling without losing clipboard selection
 });
 
 test('new Collection CSS is namespaced and uses Buyer Log accent rather than Excel green branding',()=>{
-  assert.match(css,/#view-koleksiyon\.kolSpreadsheetWorkspace/);assert.match(css,/var\(--acc\)/);assert.doesNotMatch(css,/#217346/i);
+  assert.match(css,/#view-koleksiyon\.kolSpreadsheetWorkspace/);assert.match(fs.readFileSync(path.join(__dirname,'../public/ui-components.css'),'utf8'),/#view-koleksiyon\.kolSpreadsheetWorkspace[^}]*var\(--ui-accent\)/);assert.doesNotMatch(css,/#217346/i);
   assert.doesNotMatch(css,/(^|\n)\s*(table|td|th|input|button)\s*\{/);
 });

@@ -1,0 +1,26 @@
+{
+  "scope": "Phase3 actual PNG review, anonymous data. Earlier contact sheets reviewed during migration; final full-size checks listed below.",
+  "inspectedFinalImages": [
+    "matrix/earth-marker-revision/earth-offline-dark-standard-1440.png",
+    "matrix/rail-final/rail-collapsed-grey-xl-1280.png",
+    "matrix/state-final/cp-rule-invalid-light-standard-1440.png",
+    "matrix/state-final/shipping-drag-target-grey-xl-1280.png",
+    "matrix/state-final/price-history-approved-grey-xl-1280.png",
+    "matrix/state-final/price-history-approved-matrix-dark-xl-1280.png"
+  ],
+  "findingsResolved": [
+    "CPA XL title overlap",
+    "Mail topic options narrowed by checkbox grid positioning",
+    "INTAKE popover clipping",
+    "Status dialog padding/width",
+    "Backlog strong-surface label and costing FX contrast",
+    "Collapsed rail content offset",
+    "Approval/error/drag state visibility"
+  ],
+  "history": "state-revision images with a test-generated DataTransfer error banner are historical only; final images were recaptured and inspected. Original rail-collapsed images actually showed hover expansion; rail-final supersedes them.",
+  "finalMatrix": "matrix-summary.json",
+  "galleryPreview": {
+    "path": "gallery-preview.png",
+    "review": "Actual rendered HTML preview inspected; readable heading, neutral surfaces, visible keyboard focus and embedded CP table. All 75 images decoded in offline browser validation."
+  }
+}

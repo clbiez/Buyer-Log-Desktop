@@ -31,7 +31,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const UM = read('public/user-management.js');
-const CSS = read('public/user-management.css');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','user-management.css']);
 const PARSE = read('server/lib/parse.js');
 const ACCESS = read('server/lib/user-access.js');
 

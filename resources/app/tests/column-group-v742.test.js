@@ -310,7 +310,7 @@ test('v7.42 · başlık adı serbest metin olduğu için kaçışlı yazılır',
 });
 
 test('v7.42 · bilinmeyen başlık rengi varsayılana düşer (çizim bozulmaz)', () => {
-  assert.match(APP, /GROUP_ACCENTS\[r\.group\]\|\|'var\(--acc\)'/);
+  assert.match(APP, /GROUP_ACCENTS\[r\.group\]\|\|'var\(--ui-accent\)'/);
 });
 
 /* ------------------------------------------------------------------ */
@@ -320,7 +320,7 @@ test('v7.42 · bilinmeyen başlık rengi varsayılana düşer (çizim bozulmaz)'
 test('v7.42 · "yeni başlık adı" kutusu gerçekten gizlenir', () => {
   /* Ölçüldü: display:flex kuralı [hidden] özniteliğinin display:none'unu
      yeniyordu; kutu kapalıyken bile ekranda duruyordu. */
-  const css = read('public/app.css');
+  const css = require('./helpers/manifest-css')();
   assert.match(css, /\.fcField\[hidden\]\{display:none;\}/);
   assert.match(css, /\.cpModelColumnBody>label\[hidden\]\{display:none;\}/);
 });
@@ -328,7 +328,7 @@ test('v7.42 · "yeni başlık adı" kutusu gerçekten gizlenir', () => {
 test('v7.42 · veri tabanı penceresinde tam genişlik alan SIRAYLA değil adıyla seçilir', () => {
   /* Pencereye üst başlık alanı eklenince nth-child(3) arama kutusundan
      kayıyor, arama kutusu yarım genişliğe düşüyordu. */
-  const css = read('public/app.css');
+  const css = require('./helpers/manifest-css')();
   assert.match(css, /\.cpModelColumnBody>label\.cpModelWide\{grid-column:1\/-1;\}/);
   assert.doesNotMatch(css, /\.cpModelColumnBody>label:nth-child\(3\)/, 'sıraya bağlı kural kalmamalı');
   assert.match(APP, /<label class="cpModelWide">\$\{escapeHtml\(appLang==='en'\?'Search source columns'/);

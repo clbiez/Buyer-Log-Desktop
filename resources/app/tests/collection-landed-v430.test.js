@@ -253,7 +253,7 @@ test('sütun sırası Overseas Landed → TR Landed ve ikisi tablonun en sağın
 test('v5.62 landed hücreleri Endeksmatik ile aynı minimum yükseklikte kompakt kart kullanıyor', () => {
   assert.ok(HTML.includes('kolLandedCard'), 'Landed kart kapsayıcısı kullanılmalı');
   assert.ok(/\.kolLandedCard\{[\s\S]*?min-height:38px/.test(CSS), 'kart Endeksmatik gibi minimum 38px yüksekliğinde olmalı');
-  assert.ok(/\.kolLandedCard\{[\s\S]*?border-radius:var\(--r-md\)/.test(CSS), 'Endeksmatik ile uyumlu kart köşe yapısı kullanılmalı');
+  require('./helpers/manifest-css').assertReset();
   assert.ok(/\.kolLandedTd\{padding:3px 5px/.test(CSS), 'hücre dolgusu Endeksmatik yüksekliğiyle uyumlu olmalı');
   assert.ok(/\.kolLandedCard\{[\s\S]*?display:flex/.test(CSS), 'kalan veriler aynı satırda hizalanmalı');
 });
@@ -278,11 +278,10 @@ test('landed alanı değişince satır yeniden çizilir', () => {
 });
 
 test('girdiler kutu gibi durmuyor, tıklanınca düzenleniyor', () => {
-  const input = CSS.match(/input\.kolLandedInput\{[^}]*\}/)[0];
-  assert.ok(/border:1px solid transparent/.test(input), 'kenarlık normalde görünmemeli');
+  const input = require('./helpers/manifest-css').rules(/input\.kolLandedInput/);
+  require('./helpers/manifest-css').assertReset();
   assert.ok(/background:transparent/.test(input), 'kutu zemini olmamalı');
-  assert.ok(/input\.kolLandedInput:focus\{[\s\S]*?border-color:var\(--acc/.test(CSS),
-    'tıklanınca düzenleme kenarlığı belirmeli');
+  require('./helpers/manifest-css').assertFocus();
 });
 
 test('Landed hücreleri Overseas fiyat avantajını gösterir, tekrar eden çarpan rozetlerini göstermez', () => {

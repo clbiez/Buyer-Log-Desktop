@@ -1,0 +1,536 @@
+[
+  {
+    "title": "not ok 6 - v10.35 filtre bağlamı token tabanlı, odak görünür ve dar ekranda taşmadan sarılır",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/active-filter-context-v1035.test.js:71:1",
+    "error": "|-\n    The input did not match the regular expression /\\.activeFilterToken:focus-visible/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/active-filter-context-v1035.test.js:74:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 8 - v7.64 fiyat ve üretici analizi bağımsız ana navigasyon modülüdür",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/analytics-visibility-v666.test.js:21:1",
+    "error": "|-\n    The input did not match the regular expression /<section id=\"view-priceanalysis\">/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/analytics-visibility-v666.test.js:23:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 172 - Collection defines one Buying Sample column with manufacturer input and approval tick",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/buying-sample-nondtr-suggest-v288.test.js:14:1",
+    "error": "|-\n    The input did not match the regular expression /#kolTable \\.kolBuyingSampleApprove\\[aria-pressed=\"true\"\\]/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/buying-sample-nondtr-suggest-v288.test.js:30:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 182 - v4.89 Collection grid supports Excel-style navigation, active-cell focus and matrix paste",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-asas-excel-grid-v489.test.js:67:1",
+    "error": "|-\n    The input did not match the regular expression /#kolTable tbody td\\.kolActiveGridCell/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-asas-excel-grid-v489.test.js:74:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 184 - Collection editors share left-aligned text geometry",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-cell-alignment-v70106.test.js:17:1",
+    "error": "|-\n    The input did not match the regular expression /#view-koleksiyon\\.kolSpreadsheetWorkspace #kolTable tbody :is\\(input\\.editCell,select\\.editCell\\)\\{[\\s\\S]*?line-height:18px!important;[\\s\\S]*?\\}/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-cell-alignment-v70106.test.js:22:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 185 - Collection textarea-backed cells center single-line text instead of sitting high",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-cell-alignment-v70106.test.js:28:1",
+    "error": "|-\n    The input did not match the regular expression /#view-koleksiyon\\.kolSpreadsheetWorkspace #kolTable tbody textarea\\.editCell\\{[\\s\\S]*?min-height:calc\\(var\\(--kol-text-lh\\) \\+ 4px\\)!important;[\\s\\S]*?line-height:var\\(--kol-text-lh\\)!important;[\\s\\S]*?padding-top:2px!important;[\\s\\S]*?padding-bottom:2px!important;[\\s\\S]*?margin:0!important;[\\s\\S]*?\\}/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-cell-alignment-v70106.test.js:29:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 212 - Buying Sample approval colours only the tick, not the whole cell",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-confirmed-filter-v290.test.js:36:1",
+    "error": "|-\n    The input did not match the regular expression /#kolTable \\.kolBuyingSampleApprove\\[aria-pressed=\"true\"\\][^{]*\\{[^}]*background:var\\(--green-lite,var\\(--green\\)\\)/s. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-confirmed-filter-v290.test.js:37:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 214 - v4.91 Collection uses one Excel-like active-cell frame without a second input box",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-editor-popup-v491.test.js:35:1",
+    "error": "|-\n    The input did not match the regular expression /#kolTable tbody \\.editCell:focus\\{background:transparent!important;outline:none!important;\\}/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-editor-popup-v491.test.js:36:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 230 - Collection izin kontrolü üst başlıkta, tablo akışının dışında durur",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-header-layout.test.js:13:1",
+    "error": "|-\n    The input did not match the regular expression /<h1 id=\"pageTitle\"[\\s\\S]*<div class=\"kolScopeBar\" id=\"kolScopeBar\"/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-header-layout.test.js:16:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 238 - v5.62 yüzde avantajı sade metin olarak Endeksmatik yüksekliğindeki Landed kartta kalır",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-landed-profit-v553.test.js:19:1",
+    "error": "|-\n    The input did not match the regular expression /\\.kolProfit\\{[\\s\\S]*?line-height:18px[\\s\\S]*?padding:0;[\\s\\S]*?background:transparent/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-landed-profit-v553.test.js:20:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 244 - v5.51 Landed hücreleri kompakt tek satır düzeninde gereksiz rozetleri kaldırır",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-landed-settings-v549.test.js:56:1",
+    "error": "'.kolLandedTd:hover missing'",
+    "stack": "|-\n    between (/workspace/buyerlog-rebuild/resources/app/tests/collection-landed-settings-v549.test.js:11:143)\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-landed-settings-v549.test.js:57:16)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 262 - v5.62 landed hücreleri Endeksmatik ile aynı minimum yükseklikte kompakt kart kullanıyor",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-landed-v430.test.js:253:1",
+    "error": "'Endeksmatik ile uyumlu kart köşe yapısı kullanılmalı'",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-landed-v430.test.js:256:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 264 - girdiler kutu gibi durmuyor, tıklanınca düzenleniyor",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-landed-v430.test.js:280:1",
+    "error": "'kenarlık normalde görünmemeli'",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-landed-v430.test.js:282:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 274 - kapı 3 — çizim bağlı hücrenin düzenleyicisini kapatıyor",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-linked-cell-lock-v781.test.js:121:1",
+    "error": "|-\n    The input did not match the regular expression /\\.kolLinkedCell\\{/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-linked-cell-lock-v781.test.js:125:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 293 - row-gutter colour hierarchy is theme-safe and visually explicit",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-model-group-enhancements-v1014.test.js:93:1",
+    "error": "|-\n    The input did not match the regular expression /border-left:2px solid color-mix/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-model-group-enhancements-v1014.test.js:97:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 297 - v5.69 Overseas Landed footer shows quantity-weighted percentage change versus TR Landed",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-overseas-weighted-change-v569.test.js:10:1",
+    "error": "|-\n    The input did not match the regular expression /collectionWeightedChangeLine strong\\.isPositive\\{color:var\\(--green\\);\\}/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-overseas-weighted-change-v569.test.js:17:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 302 - v10.49 Collection quick filters are keyboard-operable toggle buttons with a clear state",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-quick-filter-button-v1049.test.js:13:1",
+    "error": "|-\n    The input did not match the regular expression /\\.kpi:is\\(button\\)\\{[^}]*font:inherit[^}]*color:inherit/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-quick-filter-button-v1049.test.js:20:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 309 - Collection Status keeps native select lifecycle while rendering shared catalog pill semantics",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-row-height.test.js:94:1",
+    "error": "|-\n    The input did not match the regular expression /--kol-status-color/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-row-height.test.js:104:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 310 - v7.14 Collection View/Scope bar is a compact single-row ERP toolbar",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-scope-toolbar-v714.test.js:10:1",
+    "error": "|-\n    The input did not match the regular expression /\\.kolScopeBar\\{[\\s\\S]*background:var\\(--card\\);box-shadow:none/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-scope-toolbar-v714.test.js:12:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 311 - v7.14 Collection preset buttons use the same compact pill language as quick filters",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-scope-toolbar-v714.test.js:16:1",
+    "error": "|-\n    The input did not match the regular expression /\\.kolScopePresets \\.tbtn\\{[\\s\\S]*height:25px[\\s\\S]*padding:3px 9px[\\s\\S]*border:1px solid var\\(--hair,var\\(--line\\)\\)[\\s\\S]*border-radius:var\\(--r-full,999px\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-scope-toolbar-v714.test.js:17:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 312 - v7.14 Collection scope dimension chips match preset height and active state",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-scope-toolbar-v714.test.js:22:1",
+    "error": "|-\n    The input did not match the regular expression /\\.kolScopeDim>summary\\{[\\s\\S]*height:25px[\\s\\S]*border-radius:var\\(--r-full,999px\\)[\\s\\S]*padding:3px 9px/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-scope-toolbar-v714.test.js:23:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 313 - v7.14 nested preset card styling is removed and dropdown stays compact",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-scope-toolbar-v714.test.js:28:1",
+    "error": "|-\n    The input did not match the regular expression /\\.kolScopePresets\\{padding:0;border:0;border-radius:0;background:transparent\\}/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-scope-toolbar-v714.test.js:29:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 368 - v10.42 Collection selected-row actions stay compact without a redundant Selected Models label",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-toolbar-compact-actions-v1042.test.js:19:1",
+    "error": "|-\n    The input did not match the regular expression /#kolTableActions>:is\\(#kolCopySelectedBtn,#kolDuplicateBtn,#kolDropSelectedBtn,#kolDelRowBtn\\)\\{[\\s\\S]*width:var\\(--ctl-h\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-toolbar-compact-actions-v1042.test.js:21:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 370 - v5.62 Collection cells are vertically centered and use consistent typography with requested exceptions",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-usability-v562.test.js:11:1",
+    "error": "|-\n    The input did not match the regular expression /#kolTable tbody td\\{vertical-align:middle!important;font-size:var\\(--kol-cell-fs\\);\\}/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-usability-v562.test.js:12:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 373 - v5.62 Landed cards match Endeksmatik height and Overseas advantage is plain leftmost text",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-usability-v562.test.js:30:1",
+    "error": "|-\n    The input did not match the regular expression /\\.kolProfit\\{[\\s\\S]*background:transparent/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-usability-v562.test.js:32:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 376 - v5.62 transient menus are mutually exclusive and text size cycles 0..3 under Theme",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/collection-usability-v562.test.js:53:1",
+    "error": "|-\n    The input did not match the regular expression /html\\[data-font-step=\"3\"\\]\\{--ui-font-add:3px;\\}/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/collection-usability-v562.test.js:64:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 407 - Dar ray üzerine gelince tam genişlikte, içeriği itmeden açılır",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/command-palette-motion-v20261015.test.js:52:1",
+    "error": "|-\n    The input did not match the regular expression /html\\[data-rail=\"min\"\\] \\.rail:is\\(:hover,:focus-within\\)\\{width:var\\(--rail-full-w\\);/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/command-palette-motion-v20261015.test.js:53:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 432 - v9.59 Excluded görünümü ve modal Buyer Log tasarım primitive/tokenlarını kullanır",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/cp-attention-exclusions-v959.test.js:54:1",
+    "error": "|-\n    The input did not match the regular expression /\\.cpaExcludeChoice\\{[^}]*border:1px solid var\\(--line\\)[^}]*background:var\\(--card\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/cp-attention-exclusions-v959.test.js:57:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 437 - v4.63 CP table saves and removes images for rows sharing PLM ID + Colour Code only",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/cp-images-v457.test.js:98:1",
+    "error": "|-\n    The input did not match the regular expression /#cpTable \\.cpThumbFlash/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/cp-images-v457.test.js:114:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 447 - v4.43 CP arayüzünde açılır parsiyel detay yapısı ve üç öncelik açıklaması bulunur",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/cp-logistic-v443.test.js:181:1",
+    "error": "|-\n    The input did not match the regular expression /CP LOGISTIC PARSİYEL AKIŞI \\(v4\\.43\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/cp-logistic-v443.test.js:187:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 508 - v9.62 Rules UI Priority Rule editöründe iki dilli reason alanlarını ve yeni kural doğrulamasını içerir",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/cp-priority-rule-reasons-v962.test.js:32:1",
+    "error": "|-\n    The input did not match the regular expression /\\.cpaRuleReasonField input\\.is-invalid\\{/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/cp-priority-rule-reasons-v962.test.js:41:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 514 - rules modal grows with its content until the viewport, then remains bounded",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/cpa-rules-modal-fit-v1020.test.js:21:1",
+    "error": "|-\n    The input did not match the regular expression /\\.cpaRulesModal\\{[^}]*max-height:\\s*calc\\(100vh\\s*-\\s*2\\s*\\*\\s*var\\(--sp-5\\)\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/cpa-rules-modal-fit-v1020.test.js:23:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 517 - Model Bütçe Ayı/Hafta picker hard-coded dark surface yerine aktif tema tokenlarını kullanır",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/current-ui-regressions-v20260920.test.js:34:1",
+    "error": "|-\n    The input did not match the regular expression /border-left:0/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/current-ui-regressions-v20260920.test.js:38:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 597 - v7.81 araç satırı açılır menü DEĞİL — kırpılacak bir kapsayıcı yok",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/data-management-ui-v781.test.js:567:1",
+    "error": "|-\n    The input did not match the regular expression /\\.dmToolList \\{[^}]*border: ?0/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/data-management-ui-v781.test.js:573:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 676 - e-mail Operation Center card reuses PLM visual language and busy-button styling",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/email-progress-v505.test.js:44:1",
+    "error": "|-\n    The input did not match the regular expression /#cpProdStatusBtn\\.prepareEmailBusy,#kolSendPricingBtn\\.prepareEmailBusy/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/email-progress-v505.test.js:51:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 681 - editor includes practical field search, ordering and theme-compatible controls",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/email-template-order-images-20261013.test.js:80:1",
+    "error": "|-\n    The input did not match the regular expression /background:var\\(--card2\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/email-template-order-images-20261013.test.js:89:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 682 - mail field chooser reuses CP heading groups without modifying CP preferences",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/email-template-order-images-20261013.test.js:93:1",
+    "error": "|-\n    The input did not match the regular expression /--grp-accent/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/email-template-order-images-20261013.test.js:119:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 942 - v7.81 filtre grupları ayrı yüzeyler olarak stillenir",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/horizon-filter-ui-v808.test.js:12:1",
+    "error": "'kişisel ufuk: grup kendi çerçevesini taşımalı'",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/horizon-filter-ui-v808.test.js:18:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 1036 - layout-control visual theme uses canonical square corners throughout the modal",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/layout-control-v1101.test.js:217:1",
+    "error": "|-\n    The input did not match the regular expression /\\.layoutControlModal \\* \\{border-radius:var\\(--ui-radius\\)!important/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/layout-control-v1101.test.js:221:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1039 - LCW AI accepts external files through the same intake path used by file picker",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/lcwai-download-history-dnd.test.js:101:1",
+    "error": "|-\n    The input did not match the regular expression /\\.lcwaiChatPage\\.is-file-drag \\.lcwaiComposer/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/lcwai-download-history-dnd.test.js:114:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1067 - LFL ready filter name editor supports save, cancel, Enter and Escape",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/lfl-ready-filter-save.test.js:29:1",
+    "error": "|-\n    The input did not match the regular expression /\\.lflReadyNameInput:focus\\{/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/lfl-ready-filter-save.test.js:38:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 1068 - saved LFL comparison cards expose a draggable title area and drop wiring",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/lfl-scenario-drag-order-v20260927.test.js:18:1",
+    "error": "|-\n    The input did not match the regular expression /\\.lflScenarioCard\\.isDragTarget\\{[^}]*outline:2px solid var\\(--ui-accent\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/lfl-scenario-drag-order-v20260927.test.js:25:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 1077 - v6.50 sürükleme tutamacı DOM'da ve \"kibar\" görsel tasarımda",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/lfl-split-handle-regression-v650.test.js:110:1",
+    "error": "'yumuşak köşeli'",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/lfl-split-handle-regression-v650.test.js:115:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1095 - list module: inline edits, selection export, map button and Buyer Log contracts",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/license-cards-list-v20261022.test.js:161:1",
+    "error": "|-\n    The input did not match the regular expression /\\.lcwaiSeg,\\.dmViewToggle,\\.lcSeg\\)>button:is\\(/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/license-cards-list-v20261022.test.js:173:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1099 - v7.72 geçerlilik tarihi geçmiş kurallar soft kırmızı satır olarak işaretlenir",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/license-royalty-search-expiry-v772.test.js:20:1",
+    "error": "|-\n    The input did not match the regular expression /\\.pricingRulesTable tbody tr\\.pricingRuleExpired td/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/license-royalty-search-expiry-v772.test.js:24:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 1118 - v7.19 değişen satır görünür kılınır ama yerleşimi bozmaz",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/live-sync-no-lock-v719.test.js:294:1",
+    "error": "|-\n    The input did not match the regular expression /animation:blRemoteChangedFade/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/live-sync-no-lock-v719.test.js:297:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1136 - clickable summary controls preserve keyboard focus and hover affordance",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/manufacturers-order-drilldown-v20261005.test.js:41:1",
+    "error": "|-\n    The input did not match the regular expression /\\.mfpTile\\.isDrill:focus-visible/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/manufacturers-order-drilldown-v20261005.test.js:42:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1158 - Veri Yönetimi Merch Calendar upload/değiştir/kaldır akışını taşır ve köşeler kare kalır",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/merch-calendar-v20261007.test.js:83:1",
+    "error": "|-\n    The input did not match the regular expression /\\.dmMerchPanel[^{]*\\{[^}]*border-radius:0!important/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/merch-calendar-v20261007.test.js:96:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1162 - v4.93 quotations and pricing history use nearly the full viewport",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/modal-workspace-size-v493.test.js:11:1",
+    "error": "'v4.93 modal sizing rules should exist'",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/modal-workspace-size-v493.test.js:13:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 1163 - v4.93 large data modals retain safe mobile viewport margins",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/modal-workspace-size-v493.test.js:23:1",
+    "error": "|-\n    The input did not match the regular expression /@media\\(max-width:760px\\)[\\s\\S]*?width:calc\\(100vw - 12px\\);[\\s\\S]*?height:calc\\(100vh - 12px\\);/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/modal-workspace-size-v493.test.js:26:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 1165 - Collection PLM ID editable kalır; hücre içi PLM ikonu yerine context-menu bridge kullanılır",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/model-name-only-plm-link-v610.test.js:17:1",
+    "error": "|-\n    The input did not match the regular expression /\\.plmEditInput\\{[^}]*color:inherit/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/model-name-only-plm-link-v610.test.js:28:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 1322 - v10.43 Orders actions compact before the desktop toolbar needs horizontal scrolling",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/orders-toolbar-compact-actions-v1043.test.js:22:1",
+    "error": "|-\n    The input did not match the regular expression /#ordersTableToolbar>#ordersRefreshBtn,[\\s\\S]*#ordersTableToolbar>:is\\(#ordersPlmSyncWrap,#ordersToolsWrap,#ordersMoreWrap\\)>\\.tbtn\\{[\\s\\S]*width:var\\(--ctl-h\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/orders-toolbar-compact-actions-v1043.test.js:24:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 1327 - Overview Collection summary renders a 3-row revolver of month rows",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/overview-collection-month-revolver-v20261007.test.js:49:1",
+    "error": "|-\n    The input did not match the regular expression /prefers-reduced-motion[^}]*\\.ovCollectionMonthRow/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/overview-collection-month-revolver-v20261007.test.js:72:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1381 - Premium ritim katmanı araç çubuğu dışı .tbtn için sıfır özgüllüklü ortak taban tanımlar",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/overview-launchpad-v20260925.test.js:129:1",
+    "error": "|-\n    The input did not match the regular expression /:where\\(button,input,select,textarea,optgroup\\)\\{font-family:inherit;\\}/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/overview-launchpad-v20260925.test.js:131:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1384 - v7.75 Overview düzen çubuğu tek hizalı denetim grubudur",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/overview-layout-toolbar-style-v775.test.js:10:1",
+    "error": "|-\n    The input did not match the regular expression /#ovLayoutEditBtn\\.active\\{[^}]*background:var\\(--acc-bg\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/overview-layout-toolbar-style-v775.test.js:12:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 1391 - Collection Summary filter is angular and its value picker supports multiple values",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/overview-summary-settings-style-v774.test.js:19:1",
+    "error": "|-\n    The input did not match the regular expression /\\.ovCollectionKpiCard,[\\s\\S]*\\.ovCollectionStatusCard\\{border-radius:0!important\\}/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/overview-summary-settings-style-v774.test.js:20:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 1392 - Collection Summary value picker is portaled to the viewport so widget overflow cannot clip it",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/overview-summary-settings-style-v774.test.js:27:1",
+    "error": "|-\n    The input did not match the regular expression /pop\\.style\\.zIndex='560'/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/overview-summary-settings-style-v774.test.js:31:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1393 - v10.54 CP ve Siparişler Sayfa Filtreleri başlığı klavyeyle açılıp kapanabilen bir düğmedir",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/page-filter-group-accessibility-v1054.test.js:13:1",
+    "error": "|-\n    The input did not match the regular expression /\\.pageTitleFilters \\.fltGroup>\\.tbGroupHead\\{[^}]*border:0[^}]*background:transparent[^}]*font:inherit/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/page-filter-group-accessibility-v1054.test.js:19:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 1433 - v5.92 başlık bloğunun taban kuralı var",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/plm-modal-endeksmatik-year-v592.test.js:31:1",
+    "error": "|-\n    The input did not match the regular expression /\\.verHistCard > \\.verHistHead\\{[^}]*border-bottom:1px solid var\\(--line\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/plm-modal-endeksmatik-year-v592.test.js:35:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 1461 - PLM Sync modalı Buyer Log design tokenlarını kullanır ve hard-coded tema yüzeyi üretmez",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/plm-sync-two-stage-v1112.test.js:97:1",
+    "error": "'PLM Sync modal CSS bloğu bulunamadı'",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/plm-sync-two-stage-v1112.test.js:101:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1490 - üç madalya rozeti de tanımlı ve onay şeridi duruyor",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/price-history-ranks-v423.test.js:81:1",
+    "error": "'qhMedal1 tanımlı olmalı'",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/price-history-ranks-v423.test.js:83:12)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1534 - Quotations workspace preserves core business actions without KPI strip or decision panel",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/pricing-workspace-v2.test.js:35:1",
+    "error": "|-\n    The input did not match the regular expression /\\.quotationWorkspaceShell \\.quotationApproveBtn\\s*\\{[^}]*border-radius:var\\(--ui-radius\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/pricing-workspace-v2.test.js:39:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1560 - v6.55 Colour Code hücreleri VARSAYILAN olarak sade, yalnız kayıtlı olan kalın+mavi",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/qtx-persistent-store-v655.test.js:237:1",
+    "error": "|-\n    The input did not match the regular expression /td\\.qtxSavedColourCell\\[data-key=\"C\\.Code\"\\],#ordersTable td\\.qtxSavedColourCell\\[data-key=\"C\\.Code\"\\],#kolTable td\\.qtxSavedColourCell\\[data-key=\"colourCode\"\\]\\{color:var\\(--acc\\);font-weight:700/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/qtx-persistent-store-v655.test.js:241:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1588 - v10.67 hızlı filtre seçenekleri okunabilir metin ölçeğini kullanır",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/quick-filter-menu-readability-v1067.test.js:11:1",
+    "error": "'açılır menü etiketleri normal metin ölçeğinin altında kalmamalı'",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/quick-filter-menu-readability-v1067.test.js:13:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 1589 - v10.67 hızlı filtre satırları standart kontrol yüksekliğinde tıklanabilir kalır",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/quick-filter-menu-readability-v1067.test.js:19:1",
+    "error": "'menü satırları dar bir metin şeridine dönüşmemeli'",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/quick-filter-menu-readability-v1067.test.js:21:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 1619 - dar/yatay kısa pencerede sol ray etiketleri ve modüller üst üste binmez",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/rail-responsive-overlap-v20261003.test.js:10:1",
+    "error": "|-\n    The input did not match the regular expression /nav\\.tabs button\\{[^}]*min-height:var\\(--rail-item-h\\);[^}]*flex:0 0 var\\(--rail-item-h\\);/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/rail-responsive-overlap-v20261003.test.js:13:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 1622 - compact refresh UI uses the Buyer Log card language and animated active state",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/refresh-compact-progress-v20261003.test.js:28:1",
+    "error": "|-\n    The input did not match the regular expression /@keyframes refreshCompactDot/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/refresh-compact-progress-v20261003.test.js:31:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1625 - v7.0.253 başarısız adım dönen nokta yerine başarısız durumla çizilir",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/refresh-failed-step-v253.test.js:44:1",
+    "error": "|-\n    The input did not match the regular expression /\\.refreshCompactStep\\.is-failed/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/refresh-failed-step-v253.test.js:49:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1695 - TPs profil menüleri modalın üzerinde açılır",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/revision-v431.test.js:51:1",
+    "error": "|-\n    The input did not match the regular expression /\\.profileSelectMenu\\.profileSelectMenuModal\\{z-index:54010;\\}/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/revision-v431.test.js:53:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1697 - dondurma seçiminde tek sütun sınırı lazerle gösterilir ve buton kırmızı vurgulanır",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/revision-v431.test.js:63:1",
+    "error": "|-\n    The input did not match the regular expression /\\.navActionBtn\\.freezeOn,\\.lflCpTableTool\\.freezeOn/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/revision-v431.test.js:65:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1710 - v4.78 freeze picker uses a single laser boundary and freezes its left side",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/revision-v476.test.js:96:1",
+    "error": "|-\n    The input did not match the regular expression /\\.freezeLaser\\{[^}]*background:linear-gradient/s. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/revision-v476.test.js:102:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1716 - v4.77 CP image click gives temporary feedback and never remains selected",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/revision-v477.test.js:54:1",
+    "error": "|-\n    The input did not match the regular expression /cpThumbFlashPulse/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/revision-v477.test.js:58:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1718 - v4.77 Data Model Connection uses large non-blurred workspaces",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/revision-v477.test.js:68:1",
+    "error": "|-\n    The input did not match the regular expression /\\.warnOverlay\\{[^}]*backdrop-filter:none/s. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/revision-v477.test.js:74:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1719 - v4.77 zorunlu alan eşlemesi eksikse Yenile bunu belli eder",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/revision-v477.test.js:80:1",
+    "error": "|-\n    The input did not match the regular expression /#topRefreshBtn\\.fieldMappingError/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/revision-v477.test.js:85:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1823 - sürükleme görsel geri bildirimi tema değişkenleriyle tanımlı",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/shipping-row-management-v1082.test.js:132:1",
+    "error": "|-\n    The input did not match the regular expression /\\.shipRowCards\\.isDragOver\\{/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/shipping-row-management-v1082.test.js:134:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1831 - v4.38 UI contains source-filter routing, timer and refresh animation hooks",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/source-filter-readiness-v438.test.js:65:1",
+    "error": "|-\n    The input did not match the regular expression /buyerLogRefreshSpin/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/source-filter-readiness-v438.test.js:74:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1870 - LFL and Backlog show the shared loading state on first load instead of an unready screen",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/startup-trivia-v20261001.test.js:183:1",
+    "error": "|-\n    The input did not match the regular expression /<section id=\"view-lfl\">\\s*<div id=\"lflLoadingState\" class=\"lflLoadingState\" hidden><\\/div>/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/startup-trivia-v20261001.test.js:185:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1871 - startup Continue button centers its label consistently",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/startup-trivia-v20261001.test.js:194:1",
+    "error": "|-\n    The input did not match the regular expression /\\.blBootContinue\\{[^}]*display:inline-flex;[^}]*align-items:center;[^}]*justify-content:center;[^}]*text-align:center;[^}]*line-height:1\\.2/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/startup-trivia-v20261001.test.js:195:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1872 - trivia scripts load before the guide and motion respects reduced-motion",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/startup-trivia-v20261001.test.js:198:1",
+    "error": "|-\n    The input did not match the regular expression /@media\\(prefers-reduced-motion:reduce\\)\\{\\.blTriviaVisual,\\.blTriviaVisual \\*/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/startup-trivia-v20261001.test.js:201:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1886 - üst uygulama barı viewport scrollunda görünür kalır",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/sticky-topbar-v20261004.test.js:10:1",
+    "error": "|-\n    The input did not match the regular expression /\\.appTop\\{position:sticky;top:0;z-index:(?:[3-9]\\d\\d|\\d{4,});[^}]*height:var\\(--topbar-h\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/sticky-topbar-v20261004.test.js:13:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 1891 - sync status header uses the shared compact line-icon pattern",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/sync-status-icon.test.js:13:1",
+    "error": "|-\n    The input did not match the regular expression /\\.syncStatusBadge\\.is-offline/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/sync-status-icon.test.js:23:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 1924 - Kopyala ve Excel export CP Orders Collection üzerinde ikon-only olur",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/table-toolbar-action-cleanup-v1113.test.js:27:1",
+    "error": "|-\n    The input did not match the regular expression /\\.tableActionIconOnly\\{[\\s\\S]*?width:var\\(--ctl-h\\)!important;/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/table-toolbar-action-cleanup-v1113.test.js:31:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1935 - v10.32 ortak eylem rolleri token tabanlı, odak görünür ve küçük ekranda erişilebilirdir",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/table-toolbar-hierarchy-v1032.test.js:52:1",
+    "error": "|-\n    The input did not match the regular expression /\\.toolbar\\.tableActionToolbar :is\\(button,label\\)\\.tbtn\\[data-action-role=\"primary\"\\]\\{[^}]*background:var\\(--ui-accent\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/table-toolbar-hierarchy-v1032.test.js:54:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1936 - CP Orders Collection tool actions use a fixed-size spinner instead of a full-button rotating capsule",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/table-toolbar-spinner-size-v20261009.test.js:10:1",
+    "error": "|-\n    The input did not match the regular expression /\\banimation:blActionSpin\\s+\\.72s\\s+linear\\s+infinite\\s*;/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/table-toolbar-spinner-size-v20261009.test.js:20:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.start (node:internal/test_runner/test:1242:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "title": "not ok 1940 - görünüm bağlamı açıklama metni üretmeden preset durumunu erişilebilir biçimde günceller",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/table-view-context-v1034.test.js:41:1",
+    "error": "|-\n    The input did not match the regular expression /\\.tableViewPreset:focus-visible/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/table-view-context-v1034.test.js:48:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 1988 - v10.70 komuta merkezi kaldırılırken kullanılmayan stiller de bırakılmaz",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/ui-command-center-v1031.test.js:50:1",
+    "error": "|-\n    The input did not match the regular expression /\\.uiState:focus-within/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/ui-command-center-v1031.test.js:53:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 2067 - v7.60 · Sync Status gerçek DB dosyasını salt okunur gösterir ve ayar kaynağı kanoniktir",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/ui-v758.test.js:27:1",
+    "error": "|-\n    The input did not match the regular expression /\\.horizonBadge\\{[^}]*border-radius:var\\(--ui-radius\\)/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/ui-v758.test.js:37:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"
+  },
+  {
+    "title": "not ok 2074 - Update Test modal CSS keeps the dialog visible above the dimmed overlay",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/update-test-ui-v7086.test.js:56:1",
+    "error": "|-\n    The input did not match the regular expression /\\.updateTestCard\\{[\\s\\S]*?width:min\\(540px[\\s\\S]*?background:var\\(--card\\)[\\s\\S]*?color:var\\(--ink\\)[\\s\\S]*?display:block/. Input:",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/update-test-ui-v7086.test.js:58:10)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "title": "not ok 2128 - v7.37 · çip biçimi tanımlı",
+    "location": "/workspace/buyerlog-rebuild/resources/app/tests/user-scope-multiselect-v737.test.js:200:1",
+    "error": "'.umChipEmpty{ tanımlı olmalı'",
+    "stack": "|-\n    TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/user-scope-multiselect-v737.test.js:202:12)\n    Test.runInAsyncScope (node:async_hooks:227:14)\n    Test.run (node:internal/test_runner/test:1382:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n    Test.postRun (node:internal/test_runner/test:1522:19)\n    Test.run (node:internal/test_runner/test:1447:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  }
+]

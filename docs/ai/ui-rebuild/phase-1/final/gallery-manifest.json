@@ -1,0 +1,77 @@
+[
+  {
+    "file": "cp-light.png",
+    "sha256": "f124a5430949dd844ad4b4804f51d3c645237f6adeef58f81fef074e9319f29e",
+    "bytes": 130565
+  },
+  {
+    "file": "overview-light.png",
+    "sha256": "6c3ea638a43d86c11645cbcc2af42e010d318824a346e53cc5c787a90e60daa9",
+    "bytes": 165528
+  },
+  {
+    "file": "notes-light.png",
+    "sha256": "106c70b8899b539823cd20b7e17ccaa377e4f349515680fdff355f20cfa0af84",
+    "bytes": 127134
+  },
+  {
+    "file": "login-light.png",
+    "sha256": "38129044e4937c6aa5e90a450761168cc9ef79988366ecd9299c0f148c1e68e1",
+    "bytes": 45440
+  },
+  {
+    "file": "startup-light.png",
+    "sha256": "1183ce90684847c51454280f378177c139099a5a8865a1208dfaa7046c75e33e",
+    "bytes": 46611
+  },
+  {
+    "file": "cp-grey.png",
+    "sha256": "c8d07978d471fa1a74062efcf1e009e5385c047267e0ab69eae6bc61c9f01780",
+    "bytes": 131220
+  },
+  {
+    "file": "overview-grey.png",
+    "sha256": "27c1a387151385a416899495c884daa2ab55de395e63f28406235e3dc93c336d",
+    "bytes": 165136
+  },
+  {
+    "file": "notes-grey.png",
+    "sha256": "c36964c947c40ff49c2b102ecc1b9d16de139be63b1981b93b0bb26e24d6c79b",
+    "bytes": 126393
+  },
+  {
+    "file": "login-grey.png",
+    "sha256": "3a9b2158ca975a048fc0b25612a0b18e521effecdd918e0c10ab60276c1723ba",
+    "bytes": 45890
+  },
+  {
+    "file": "startup-grey.png",
+    "sha256": "12f73cc4cd6861b6f618447c1b67a2de88f458378f2594e44ecd1ce019a5b538",
+    "bytes": 43350
+  },
+  {
+    "file": "cp-dark.png",
+    "sha256": "20a3d25096e5cd283b680a4fcfa4bd6161cde8b72bb0f981d49db6d2a9d24d83",
+    "bytes": 131774
+  },
+  {
+    "file": "overview-dark.png",
+    "sha256": "92bfc167b66a4e765fd207d584929a93b73cfcc846c302c4ff3a4ec2955eba06",
+    "bytes": 165267
+  },
+  {
+    "file": "notes-dark.png",
+    "sha256": "823f1bd7beb82823bffc4e8bac512d3f89568498c0c142727a0f6188a79ff626",
+    "bytes": 128878
+  },
+  {
+    "file": "login-dark.png",
+    "sha256": "aa5a1c18d187f32006047d9ca4639ef08393e5806f60ce32d83aff7cd15da50d",
+    "bytes": 45737
+  },
+  {
+    "file": "startup-dark.png",
+    "sha256": "d49fb232d0876d8116f1343ffe4f044efd371fe0fbba2ac39fda6d900eb00e84",
+    "bytes": 43139
+  }
+]

@@ -1,0 +1,18 @@
+✔ Manifest has one token source; migrated owners never consume legacy appearance aliases (11.574686ms)
+✔ Manifest prohibits frames, rounded controls, gradients and raw overlay levels (3.227325ms)
+✔ Manifest fonts scale and only transform/opacity may animate (4.306873ms)
+✔ Main column separators cover both header tiers and never the table body (0.638863ms)
+✔ Shared button contract covers interaction states and restricts explicit variants (15.177227ms)
+✔ Notes dialog keeps canonical behavior hooks, labelled field and keyboard focus containment (9.596235ms)
+✔ Unauthenticated asset serving is a fixed UI-only list before auth gates (3.515259ms)
+✔ Migrated Plan and Execute module styles contain only layout and data geometry (5.583967ms)
+✔ Commercial module CSS owns layout only; charts use square marks (6.829825ms)
+✔ Operations module CSS owns layout only; loading avoids decorative canvas (5.346129ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 166.907026

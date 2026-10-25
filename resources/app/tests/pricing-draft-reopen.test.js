@@ -33,8 +33,10 @@ test('Send to Pricing result offers one-click Re-open Draft E-Mail per generated
 
 test('the actual pricing result modal binds its own reopen button to the matching draft', () => {
   const vm=require('node:vm'),start=APP.indexOf('function kolShowPricingDraftResults('),end=APP.indexOf('\n}',start)+2,calls=[],listeners={};
-  const modal={addEventListener:(name,handler)=>{(listeners[name]||=[]).push(handler);},querySelectorAll:()=>[],querySelector:()=>null},ctx={appLang:'en',document:{getElementById:()=>null,createElement:()=>modal,body:{appendChild:()=>{}}},escapeHtml:String,prepareEmailReopenSingleDraft:(...args)=>calls.push(args)};
+  const keyboardBindings=[];
+  const modal={dataset:{},addEventListener:(name,handler)=>{(listeners[name]||=[]).push(handler);},querySelectorAll:()=>[],querySelector:()=>null},ctx={window:{BLUI:{bindDialogKeyboard:(node,options)=>{keyboardBindings.push({node,options});return()=>{};}}},appLang:'en',document:{getElementById:()=>null,createElement:()=>modal,body:{appendChild:()=>{}}},escapeHtml:String,prepareEmailReopenSingleDraft:(...args)=>calls.push(args)};
   vm.createContext(ctx);vm.runInContext(APP.slice(start,end),ctx);ctx.kolShowPricingDraftResults([{ok:true,manufacturer:'Demo',draftId:'a'.repeat(32),quotationRequestId:'q1'}]);
+  assert.equal(keyboardBindings.length,1);assert.equal(keyboardBindings[0].node,modal);assert.equal(typeof keyboardBindings[0].options.onEscape,'function');
   const button={dataset:{reopenPricingDraft:'0'}},event={target:{closest:selector=>selector==='[data-reopen-pricing-draft]'?button:null},preventDefault:()=>{}};listeners.click.forEach(handler=>handler(event));
   assert.equal(calls.length,1);assert.equal(calls[0][0].draftId,'a'.repeat(32));assert.equal(calls[0][1],'q1');assert.equal(calls[0][2],button);
 });

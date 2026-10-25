@@ -1,0 +1,513 @@
+{
+  "checks": [
+    {
+      "name": "source-required",
+      "step": 0,
+      "count": 2,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "warning-list",
+      "step": 0,
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "refresh-error",
+      "step": 0,
+      "count": 2,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "browser-settings",
+      "step": 0,
+      "count": 8,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "sync-status",
+      "step": 0,
+      "count": 8,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "backlog-export-fields",
+      "step": 0,
+      "count": 222,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "collection-quick-filters",
+      "step": 0,
+      "count": 38,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "pricing-results",
+      "step": 0,
+      "count": 2,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "model-files",
+      "step": 0,
+      "count": 18,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "source-required",
+      "step": 1,
+      "count": 2,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "warning-list",
+      "step": 1,
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "refresh-error",
+      "step": 1,
+      "count": 2,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "browser-settings",
+      "step": 1,
+      "count": 8,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "sync-status",
+      "step": 1,
+      "count": 8,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "backlog-export-fields",
+      "step": 1,
+      "count": 222,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "collection-quick-filters",
+      "step": 1,
+      "count": 38,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "pricing-results",
+      "step": 1,
+      "count": 2,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "model-files",
+      "step": 1,
+      "count": 18,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "source-required",
+      "step": 2,
+      "count": 2,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "warning-list",
+      "step": 2,
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "refresh-error",
+      "step": 2,
+      "count": 2,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "browser-settings",
+      "step": 2,
+      "count": 8,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "sync-status",
+      "step": 2,
+      "count": 8,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "backlog-export-fields",
+      "step": 2,
+      "count": 222,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "collection-quick-filters",
+      "step": 2,
+      "count": 38,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "pricing-results",
+      "step": 2,
+      "count": 2,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "model-files",
+      "step": 2,
+      "count": 18,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "source-required",
+      "step": 3,
+      "count": 2,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "warning-list",
+      "step": 3,
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "refresh-error",
+      "step": 3,
+      "count": 2,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "browser-settings",
+      "step": 3,
+      "count": 8,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "sync-status",
+      "step": 3,
+      "count": 8,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "backlog-export-fields",
+      "step": 3,
+      "count": 222,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "collection-quick-filters",
+      "step": 3,
+      "count": 38,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "pricing-results",
+      "step": 3,
+      "count": 2,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    },
+    {
+      "name": "model-files",
+      "step": 3,
+      "count": 18,
+      "forward": true,
+      "backward": true,
+      "closed": true,
+      "returned": true,
+      "focus": {
+        "style": "solid",
+        "width": "2px",
+        "color": "rgb(49, 94, 131)"
+      }
+    }
+  ],
+  "errors": [],
+  "reducedMotion": {
+    "matches": true,
+    "activeAnimations": []
+  }
+}

@@ -1,12 +1,11 @@
 /* Row spacing uses the existing typography, controls and theme tokens. The
    default selector adds no row overrides, preserving existing user layouts. */
-.tableDensityControl{display:inline-flex;align-items:center;gap:var(--sp-1);max-inline-size:100%;font:600 var(--fs-xs)/1.3 var(--sans);color:var(--ink2);}
-.tableDensityControl select{max-inline-size:100%;min-inline-size:0;min-height:var(--ctl-h-sm);padding:var(--sp-1);border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font:600 var(--fs-xs)/1.3 var(--sans);}
-.tableDensityControl select:focus-visible{box-shadow:var(--focus-ring);}
+.tableDensityControl{display:inline-flex;align-items:center;gap:var(--ui-space-1);max-inline-size:100%;}
+.tableDensityControl select{max-inline-size:100%;min-inline-size:0;min-height:var(--ui-control-height-small);padding:var(--ui-space-1);}
 .tableViewActions{flex-wrap:wrap;}
-:is(#cpTable,#ordersTable,#kolTable)[data-table-density="compact"]{--table-cell-pad-y:1px;--table-edit-pad-y:1px;}
-:is(#cpTable,#ordersTable,#kolTable)[data-table-density="standard"]{--table-cell-pad-y:3px;--table-edit-pad-y:2px;}
-:is(#cpTable,#ordersTable,#kolTable)[data-table-density="comfortable"]{--table-cell-pad-y:7px;--table-edit-pad-y:4px;}
+:is(#cpTable,#ordersTable,#kolTable)[data-table-density="compact"]{--ui-table-cell-padding:1px;--ui-table-edit-padding:1px;}
+:is(#cpTable,#ordersTable,#kolTable)[data-table-density="standard"]{--ui-table-cell-padding:3px;--ui-table-edit-padding:2px;}
+:is(#cpTable,#ordersTable,#kolTable)[data-table-density="comfortable"]{--ui-table-cell-padding:7px;--ui-table-edit-padding:4px;}
 :is(#cpTable,#ordersTable,#kolTable)[data-table-density="compact"]>tbody>tr:not(.tableDetailRow):not(.cpLogisticDetailRow)>td:not(.editTd){padding-block:1px;}
 :is(#cpTable,#ordersTable,#kolTable)[data-table-density="standard"]>tbody>tr:not(.tableDetailRow):not(.cpLogisticDetailRow)>td:not(.editTd){padding-block:3px;}
 :is(#cpTable,#ordersTable,#kolTable)[data-table-density="comfortable"]>tbody>tr:not(.tableDetailRow):not(.cpLogisticDetailRow)>td:not(.editTd){padding-block:7px;}

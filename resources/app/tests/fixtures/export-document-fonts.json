@@ -1,0 +1,42 @@
+[
+  {
+    "src": "vendor/fonts/barlow-400-latin-ext.woff2",
+    "sha256": "122b24bc2a90b0abe189f5229768bf2e9ba641324fe2459b48850079625934f1"
+  },
+  {
+    "src": "vendor/fonts/barlow-400-latin.woff2",
+    "sha256": "b0a8ad37ac45f5fb22ced461576db72e44e295107aad7a9c8a7a4bad728fd03b"
+  },
+  {
+    "src": "vendor/fonts/barlow-500-latin-ext.woff2",
+    "sha256": "3facdf66b60778c7e64693013be7799e6686b2488dad65525b4036e211ab03e0"
+  },
+  {
+    "src": "vendor/fonts/barlow-500-latin.woff2",
+    "sha256": "cd759df8ef9efc98fee14307b4eb5ba27f08b1f8f2f3ad2872432e25c89907a8"
+  },
+  {
+    "src": "vendor/fonts/barlow-700-latin-ext.woff2",
+    "sha256": "88c786d5fa8700a201615bc7b8ede09d209ec5d08cc3dd0a30ea1c4baff3476f"
+  },
+  {
+    "src": "vendor/fonts/barlow-700-latin.woff2",
+    "sha256": "2d797dd8b35dcb3413e1af9d7052b3f4f8c341a147cdcb01f4f06af80db53289"
+  },
+  {
+    "src": "vendor/fonts/barlow-condensed-400-latin-ext.woff2",
+    "sha256": "1eb62753e2922d13801bed22f0a35af396035da04958d4d7fcead522fbaae4ea"
+  },
+  {
+    "src": "vendor/fonts/barlow-condensed-400-latin.woff2",
+    "sha256": "7fff1bb22e5773f0d1a55d3093068b6dac4539e8bb3ac23fb9f0a729df2c7bb4"
+  },
+  {
+    "src": "vendor/fonts/barlow-condensed-600-latin-ext.woff2",
+    "sha256": "aef7edf54f79a5329fbca9c065b56dcec3852c680d58cf89a9ef2db6940ca4b3"
+  },
+  {
+    "src": "vendor/fonts/barlow-condensed-600-latin.woff2",
+    "sha256": "215a93c696f442034a46fbb382958f753fda60e30490683aeea6b235fcbb2b66"
+  }
+]

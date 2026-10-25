@@ -15,7 +15,7 @@ const ROOT = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const TOOLBAR = require(path.join(ROOT, 'public', 'toolbar-responsive.js'));
 const SOURCE = read('public/toolbar-responsive.js');
-const CSS = read('public/app.css');
+const CSS = require('./helpers/manifest-css')();
 const INDEX = read('public/index.html');
 const APP = read('public/app-main.js');
 
@@ -230,8 +230,12 @@ test('v11.11 kompakt ikon kuralı taşma menüsündeki eylemlere uygulanmaz', ()
 test('v11.11 ortak deseni kullanmayan modül eylem kümeleri de sıkışma koruması taşır', () => {
   /* Bu kümeler Koleksiyon hatasını üretmiyor; korunan şey aynı mekanizmanın
      (nowrap + varsayılan shrink) onlarda da başlayamaması. */
-  assert.match(CSS, /\.intakeFilterActions,\.oabConfigActions,\.oabMultiActions\{flex-wrap:wrap;min-width:0;\}/);
-  assert.match(CSS, /\.intakeFilterActions>\*,\.oabConfigActions>\*,\.oabMultiActions>\*\{flex:0 0 auto;\}/);
+  const rules=require('./helpers/manifest-css').rules;
+  for(const name of ['intakeFilterActions','oabConfigActions','oabMultiActions']){
+    assert.match(rules(new RegExp('\\.'+name+'(?:,|$)')),/flex-wrap:wrap;min-width:0/);
+    assert.match(rules(new RegExp('\\.'+name+'>\\*')),/flex:0 0 auto/);
+  }
+
 });
 
 test('v11.11 sarma kademesi tabloyu örtmez, araç çubuğunu yükseltir', () => {

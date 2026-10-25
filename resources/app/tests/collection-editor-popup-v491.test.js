@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const INDEX = (fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8'));
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
 function between(source, start, end) {
   const a = source.indexOf(start);
@@ -33,7 +33,7 @@ test('v4.94 quick suggestion dropdowns close when the table or page scrolls', ()
 });
 
 test('v4.91 Collection uses one Excel-like active-cell frame without a second input box', () => {
-  assert.match(CSS, /#kolTable tbody \.editCell:focus\{background:transparent!important;outline:none!important;\}/);
-  assert.match(CSS, /#kolTable tbody td\.kolActiveGridCell \.editCell,[\s\S]*?background:transparent!important;[\s\S]*?border:0!important;[\s\S]*?box-shadow:none!important;/);
-  assert.match(CSS, /#kolTable tbody td\.kolActiveGridCell\{[\s\S]*?0 0 0 2px #217346/);
+  assert.match(CSS, /#kolTable tbody \.editCell:focus\{background:transparent!important/);
+  assert.match(CSS, /#kolTable tbody td\.kolActiveGridCell \.editCell,[^{]*\{[^}]*background:transparent!important;[^}]*border:0!important;[^}]*outline:0/);
+  assert.match(CSS, /#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable tbody \.kolActiveGridCell,[^{]*\{outline:2px solid var\(--ui-accent\);outline-offset:-2px/);
 });

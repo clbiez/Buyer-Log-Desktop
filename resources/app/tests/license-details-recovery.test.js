@@ -1,6 +1,6 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
-const C=require('../server/lib/license-cards'),P=require('../server/lib/resource-rule-service'),W=require('../public/license-atlas-workspace'),A=require('../public/license-atlas-engine'),E=require('../public/license-cards-engine');
+const C=require('../server/lib/license-cards'),P=require('../server/lib/resource-rule-service'),W=require('./fixtures/retired-ui/license-atlas-workspace'),A=require('../public/license-atlas-engine'),E=require('../public/license-cards-engine');
 const {createLicenseCardService}=require('../server/lib/license-card-service');
 const clone=v=>JSON.parse(JSON.stringify(v));
 const atlas=()=>({license:{id:'old',name:'One',agency:'DTR',stages:[],addresses:[{id:'office',label:'Samples',text:'Demo address',manufacturerVisible:true}],portal:{url:'https://example.com',manufacturerVisible:false},manufacturerVisible:true}});

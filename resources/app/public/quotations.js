@@ -1229,7 +1229,7 @@
     const values=[...new Set(universe.map(item=>qFilterValue(req,item,key)))].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true,sensitivity:'base'}));
     const current=tableState.filters[key];
     const orderedValues=values.slice().sort((a,b)=>Number(Boolean(current?.has(b)))-Number(Boolean(current?.has(a))));
-    const panel=document.createElement('div'); panel.className='colFilterPanel quotationColFilterPanel';
+    const panel=document.createElement('div'); panel.className='colFilterPanel quotationColFilterPanel';panel.dataset.uiMigrated='commercial';
     const rect=anchor.getBoundingClientRect();
     panel.style.left=Math.max(6,Math.min(window.innerWidth-306,rect.right-286))+'px';
     panel.style.top=Math.max(6,Math.min(window.innerHeight-370,rect.bottom+4))+'px';
@@ -1315,7 +1315,7 @@
     if(!req||!qCanManageAccess(req)){qViewOnlyNotice(req);return;}
     document.getElementById('quotationAccessModal')?.remove();
     const candidates=qProfiles.filter(profile=>profile.id&&profile.id!==req.ownerId);
-    const overlay=document.createElement('div');overlay.id='quotationAccessModal';overlay.className='warnOverlay quotationAccessOverlay';
+    const overlay=document.createElement('div');overlay.id='quotationAccessModal';overlay.className='warnOverlay quotationAccessOverlay';overlay.dataset.uiMigrated='commercial';
     const rows=candidates.map(profile=>`<label class="quotationAccessUser" data-access-user-row data-search="${qEsc(`${profile.displayName||''} ${profile.username||''}`.toLocaleLowerCase('tr-TR'))}"><input type="checkbox" value="${qEsc(profile.id)}" ${req.editorIds.includes(profile.id)?'checked':''}><span class="quotationAccessAvatar">${qEsc(String(profile.displayName||profile.username||'?').trim().split(/\s+/).slice(0,2).map(v=>v[0]).join('').toLocaleUpperCase('tr-TR'))}</span><span><strong>${qEsc(profile.displayName||profile.username||profile.id)}</strong><small>${qEsc(profile.username||profile.role||'')}</small></span></label>`).join('');
     overlay.innerHTML=`<div class="modalCard quotationAccessCard" role="dialog" aria-modal="true" aria-labelledby="quotationAccessTitle">
       <div class="verHistTop"><div><h2 id="quotationAccessTitle">${qEsc(qLang('Düzenleme Yetkisi','Editing Permission'))}</h2><p class="verHistSub">${qEsc(qLang(`Kayıt sahibi: ${qOwnerLabel(req)}. Seçilen kullanıcılar bu quotation içeriğini düzenleyebilir.`,`Owner: ${qOwnerLabel(req)}. Selected users can edit this quotation.`))}</p></div><button type="button" class="verHistClose" data-access-close><svg class="ic"><use href="#i-x"/></svg></button></div>
@@ -1324,7 +1324,9 @@
       <div class="verHistFoot"><button type="button" class="tbtn" data-access-close>${qEsc(qLang('Vazgeç','Cancel'))}</button><span style="flex:1"></span><button type="button" class="tbtn primary" data-access-save>${qEsc(qLang('Yetkileri Kaydet','Save Permissions'))}</button></div>
     </div>`;
     document.body.appendChild(overlay);
-    const close=()=>overlay.remove();
+    let releaseKeyboard=()=>{};
+    const close=()=>{releaseKeyboard();overlay.remove();};
+    releaseKeyboard=window.BLUI?.bindDialogKeyboard(overlay,{onEscape:close})||(()=>{});
     overlay.querySelectorAll('[data-access-close]').forEach(button=>button.addEventListener('click',close));
     overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
     overlay.querySelector('[data-access-clear]')?.addEventListener('click',()=>overlay.querySelectorAll('input[type="checkbox"]').forEach(input=>{input.checked=false;}));
@@ -1348,7 +1350,7 @@
     const editable=qCanEditRequest(req);
     const overlay=document.createElement('div');
     overlay.id='quotationNoteModal';
-    overlay.className='warnOverlay quotationNoteOverlay';
+    overlay.className='warnOverlay quotationNoteOverlay';overlay.dataset.uiMigrated='commercial';
     overlay.innerHTML=`<div class="modalCard quotationNoteCard" role="dialog" aria-modal="true" aria-labelledby="quotationNoteTitle">
       <div class="verHistTop"><div><h2 id="quotationNoteTitle">${qEsc(qLang('Quotation Notu','Quotation Note'))}</h2><p class="verHistSub">${qEsc(qRequestTitle(req))}</p></div><button type="button" class="verHistClose" data-qnote-close aria-label="${qEsc(qLang('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div>
       <div class="quotationNoteBody">
@@ -1359,7 +1361,9 @@
     </div>`;
     document.body.appendChild(overlay);
     const area=overlay.querySelector('[data-qnote-area]');
-    const close=()=>overlay.remove();
+    let releaseKeyboard=()=>{};
+    const close=()=>{releaseKeyboard();overlay.remove();};
+    releaseKeyboard=window.BLUI?.bindDialogKeyboard(overlay,{onEscape:close})||(()=>{});
     overlay.querySelectorAll('[data-qnote-close]').forEach(btn=>btn.addEventListener('click',close));
     overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
     area?.addEventListener('input',()=>{const count=overlay.querySelector('[data-qnote-count]');if(count)count.textContent=String(area.value.length);});
@@ -1693,7 +1697,7 @@
     const sourceRequests=qVisibleRequests(qActiveSource,'');
     if(!sourceRequests.some(r=>r.id===qActiveId))qActiveId=sourceRequests[0]?.id||null;
     document.getElementById('quotationModal')?.remove();
-    const modal=document.createElement('div');modal.id='quotationModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='quotationModal';modal.className='warnOverlay';modal.dataset.uiMigrated='commercial';
     modal.innerHTML=`<div class="modalCard verHistCard todoCard quotationCard" role="dialog" aria-modal="true" aria-labelledby="quotationTitle">
       <div class="verHistTop"><div><h2 id="quotationTitle">${qEsc(qLang('Fiyat Çalışmaları','Quotations'))}</h2><p class="verHistSub">${qEsc(qActiveSource==='cp'?qLang('Tüm kullanıcıların CP quotation kayıtları','CP quotations from all users'):qLang('Tüm kullanıcıların Koleksiyon quotation kayıtları','Collection quotations from all users'))}</p></div><button type="button" class="verHistClose" data-close-quotation title="${qEsc(qLang('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div>
       <div class="quotationStatusTabs" id="quotationStatusTabs" role="group" aria-label="${qEsc(qLang('Quotation durumu','Quotation status'))}">
@@ -2370,7 +2374,7 @@
     const pivot0=qhPivot(data), models=pivot0.models, manufacturers=pivot0.manufacturers;
     document.getElementById('_priceHistoryModal')?.remove();
     const modal=document.createElement('div');
-    modal.id='_priceHistoryModal'; modal.className='warnOverlay';
+    modal.id='_priceHistoryModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='commercial';
     modal.innerHTML=`<div class="modalCard qhCard" role="dialog" aria-modal="true" aria-labelledby="qhTitle">
       <div class="verHistTop">
         <div>
@@ -2477,7 +2481,7 @@
           priceCells=Array.from({length:orderedColumnCount},(_,i)=>{
             const c=offers[i];if(!c)return '<td class="isNum qhEmpty">—</td>';
             const cls=c.deltaPct==null?'':(c.meetsTarget?'qhGood':'qhBad');
-            return `<td class="isNum qhOrderCell qhEditable${c.approved?' qhApproved':''}" data-qh-req="${qhEsc(c.requestId||'')}" data-qh-item="${qhEsc(c.itemId||'')}" data-qh-price="${qhEsc(String(c.price))}" title="${qhEsc(en?'Double-click to edit':'Düzenlemek için çift tıklayın')}"><span class="qhOrderPrice">${qhCapacityMarkup(c)}${qhEsc(qhMoney(c.price))}</span><span class="qhOrderMfr" title="${qhEsc(c.manufacturer)}">${qhEsc(c.manufacturer)}</span><span class="qhDelta ${cls}">${qhEsc(c.deltaText)}</span><button type="button" class="qhCellDrop" data-qh-drop aria-label="${qhEsc(en?'Delete price':'Fiyatı sil')}" title="${qhEsc(en?'Delete price':'Fiyatı sil')}">×</button></td>`;
+            return `<td class="isNum qhOrderCell qhEditable${c.approved?' qhApproved':''}" data-qh-req="${qhEsc(c.requestId||'')}" data-qh-item="${qhEsc(c.itemId||'')}" data-qh-price="${qhEsc(String(c.price))}" title="${qhEsc(en?'Double-click to edit':'Düzenlemek için çift tıklayın')}"><span class="qhOrderPrice">${qhCapacityMarkup(c)}${qhEsc(qhMoney(c.price))}</span>${c.approved?`<span class="qhApprovalMark">${qhEsc(en?'Approved':'Onaylı')}</span>`:''}<span class="qhOrderMfr" title="${qhEsc(c.manufacturer)}">${qhEsc(c.manufacturer)}</span><span class="qhDelta ${cls}">${qhEsc(c.deltaText)}</span><button type="button" class="qhCellDrop" data-qh-drop aria-label="${qhEsc(en?'Delete price':'Fiyatı sil')}" title="${qhEsc(en?'Delete price':'Fiyatı sil')}">×</button></td>`;
           }).join('');
         }else{
           const rankFor=qhPriceRanks(m,manufacturers);
@@ -2489,7 +2493,7 @@
             const rank=rankFor(c.price);
             const rankLabel=rank?(en?['Best price','2nd best price','3rd best price'][rank-1]:['En iyi fiyat','En iyi ikinci fiyat','En iyi üçüncü fiyat'][rank-1]):'';
             const medal=rank?`<i class="qhMedal qhMedal${rank}" title="${qhEsc(rankLabel)}" aria-label="${qhEsc(rankLabel)}">${rank}</i>`:'';
-            return `<td class="isNum qhEditable${c.approved?' qhApproved':''}" data-qh-req="${qhEsc(c.requestId||'')}" data-qh-item="${qhEsc(c.itemId||'')}" data-qh-price="${qhEsc(String(c.price))}" title="${qhEsc(en?'Double-click to edit':'Düzenlemek için çift tıklayın')}"><span class="qhPrice">${medal}${qhCapacityMarkup(c)}${qhEsc(qhMoney(c.price))}</span><span class="qhDelta ${cls}">${qhEsc(c.deltaText)}</span>${extra}<button type="button" class="qhCellDrop" data-qh-drop aria-label="${qhEsc(en?'Delete price':'Fiyatı sil')}" title="${qhEsc(en?'Delete price':'Fiyatı sil')}">×</button></td>`;
+            return `<td class="isNum qhEditable${c.approved?' qhApproved':''}" data-qh-req="${qhEsc(c.requestId||'')}" data-qh-item="${qhEsc(c.itemId||'')}" data-qh-price="${qhEsc(String(c.price))}" title="${qhEsc(en?'Double-click to edit':'Düzenlemek için çift tıklayın')}"><span class="qhPrice">${medal}${qhCapacityMarkup(c)}${qhEsc(qhMoney(c.price))}</span>${c.approved?`<span class="qhApprovalMark">${qhEsc(en?'Approved':'Onaylı')}</span>`:''}<span class="qhDelta ${cls}">${qhEsc(c.deltaText)}</span>${extra}<button type="button" class="qhCellDrop" data-qh-drop aria-label="${qhEsc(en?'Delete price':'Fiyatı sil')}" title="${qhEsc(en?'Delete price':'Fiyatı sil')}">×</button></td>`;
           }).join('');
         }
         return `<tr>

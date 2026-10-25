@@ -1,0 +1,376 @@
+{
+  "sourceFilesChecked": 609,
+  "method": "All removed hz* class names absent from public/server JS and HTML after excluding embedded base64 images. No personal Horizon editor entry point exists. Active data-management filter dmf* remains.",
+  "removed": [
+    {
+      "file": "app.css",
+      "selector": ".hzOverlay",
+      "declarations": 1
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzCard",
+      "declarations": 8
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzHead",
+      "declarations": 5
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzSub",
+      "declarations": 1
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzBody",
+      "declarations": 6
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzFoot",
+      "declarations": 4
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzNote",
+      "declarations": 1
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzError",
+      "declarations": 2
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzToolbar",
+      "declarations": 5
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzToolField",
+      "declarations": 3
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzToolField select",
+      "declarations": 2
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzBtn",
+      "declarations": 3
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzGroups",
+      "declarations": 3
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzGroup",
+      "declarations": 4
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzOr",
+      "declarations": 1
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzRow",
+      "declarations": 4
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzRow select,.hzRow input",
+      "declarations": 2
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzField",
+      "declarations": 2
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzOp",
+      "declarations": 2
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzValues",
+      "declarations": 10
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzChevron",
+      "declarations": 2
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzRange",
+      "declarations": 4
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzRange input",
+      "declarations": 2
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzNoValue",
+      "declarations": 1
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzRemove",
+      "declarations": 3
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzGroupActions",
+      "declarations": 2
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzLink",
+      "declarations": 2
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzEmpty",
+      "declarations": 1
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzGroupsFoot",
+      "declarations": 1
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzPreview",
+      "declarations": 4
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzPicker",
+      "declarations": 5
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzPickerHead",
+      "declarations": 4
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzPickerSearch,.hzPickerManual",
+      "declarations": 2
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzPickerActions",
+      "declarations": 2
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzPickerActions button",
+      "declarations": 3
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzPickerList",
+      "declarations": 3
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzPickItem",
+      "declarations": 5
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzPickEmpty",
+      "declarations": 2
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzPickerFoot",
+      "declarations": 3
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzPickerFoot .hzPickerManual",
+      "declarations": 2
+    },
+    {
+      "file": "app.css",
+      "selector": ".hzPickerFoot button",
+      "declarations": 3
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzSub",
+      "declarations": 2
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzFoot",
+      "declarations": 1
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzNote",
+      "declarations": 3
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzError",
+      "declarations": 3
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzToolbar",
+      "declarations": 1
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzToolField",
+      "declarations": 3
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzToolField select",
+      "declarations": 3
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzBtn",
+      "declarations": 4
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzBtn:hover",
+      "declarations": 1
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzBtn.hzPrimary",
+      "declarations": 2
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzBtn.hzPrimaryGhost",
+      "declarations": 1
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzBtn.hzDanger",
+      "declarations": 1
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzGroup",
+      "declarations": 1
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzOr",
+      "declarations": 4
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzRow select,html[data-ui-system=\"manifest\"] .hzRow input",
+      "declarations": 3
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzValues",
+      "declarations": 3
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzValues.hasValue",
+      "declarations": 2
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzChevron",
+      "declarations": 1
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzNoValue",
+      "declarations": 2
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzRemove",
+      "declarations": 3
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzRemove:hover",
+      "declarations": 1
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzLink",
+      "declarations": 5
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzLink.hzDanger",
+      "declarations": 1
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzEmpty",
+      "declarations": 2
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzPreview",
+      "declarations": 2
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzPreviewSummary",
+      "declarations": 2
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzPicker",
+      "declarations": 2
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzPickerSearch,html[data-ui-system=\"manifest\"] .hzPickerManual",
+      "declarations": 3
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzPickerActions button",
+      "declarations": 3
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzPickItem",
+      "declarations": 2
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzPickItem:hover",
+      "declarations": 1
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzPickEmpty",
+      "declarations": 3
+    },
+    {
+      "file": "ui-components.css",
+      "selector": "html[data-ui-system=\"manifest\"] .hzPickerFoot button",
+      "declarations": 3
+    }
+  ]
+}

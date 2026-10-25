@@ -230,7 +230,7 @@
     const open = state.folds[key] !== false;
     return `<div class="bdaSection bdaFold${extraClass ? ` ${extraClass}` : ''}${open ? ' is-open' : ''}" data-fold="${esc(key)}">
       <button type="button" class="bdaFoldHead" data-fold-toggle="${esc(key)}" aria-expanded="${open ? 'true' : 'false'}">
-        <span class="bdaH">${esc(title)}</span>${summary ? `<span class="bdaFoldSummary">${esc(summary)}</span>` : ''}<span class="bdaFoldChevron" aria-hidden="true"></span>
+        <span class="bdaH">${esc(title)}</span>${summary ? `<span class="bdaFoldSummary">${esc(summary)}</span>` : ''}<svg class="ic bdaFoldChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
       </button><div class="bdaFoldBody">`;
   }
 

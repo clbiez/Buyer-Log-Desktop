@@ -1,0 +1,159 @@
+{
+  "recordedAt": "2026-10-25T10:02:56.159292+00:00",
+  "scope": "Final local Phase 3 code; no production/test changes after successful full run. Later edits are documentation/evidence only.",
+  "branch": "ui-rebuild/phase-3-consolidation",
+  "parent": "05951638",
+  "fullTest": {
+    "command": "npm test",
+    "cwd": "resources/app",
+    "exitCode": 0,
+    "fileCount": 1060,
+    "batches": 5,
+    "durationSeconds": 89.1,
+    "tests": 7594,
+    "pass": 7529,
+    "fail": 0,
+    "skipped": 65,
+    "log": "checks/bl-p3-npm-test-full-5.log",
+    "sha256": "e7d141fdee7a5d7a00428c95f2700c351386349a21cbb635e4c14e8818d4f6ab",
+    "skipReasons": [
+      {
+        "count": 64,
+        "reason": "Existing win32-gated browser ownership, desktop-host paths and real Edge tests on Linux"
+      },
+      {
+        "count": 1,
+        "reason": "Existing opt-in OneDrive 20,000-operation soak; BUYERLOG_SYNC_SOAK was not enabled. Default isolated sync simulations passed."
+      }
+    ],
+    "failedAttempts": [
+      {
+        "attempt": 1,
+        "log": "checks/bl-p3-npm-test-full-1.log",
+        "failures": 3,
+        "resolution": [
+          "CP section anchors accept preserved id with new data attributes",
+          "Shipping export asserts its fixed palette"
+        ],
+        "followUp": "checks/bl-p3-full-1-targeted-fix.log"
+      },
+      {
+        "attempt": 2,
+        "log": "checks/bl-p3-npm-test-full-2.log",
+        "failures": 2,
+        "resolution": [
+          "LCW AI labels no longer contain decorative star; existing engine/application checks retained"
+        ],
+        "followUp": "checks/bl-p3-full-2-targeted-fix.log"
+      },
+      {
+        "attempt": 3,
+        "log": "checks/bl-p3-npm-test-full-3.log",
+        "failures": 1,
+        "resolution": [
+          "Tooltip uses canonical layer token",
+          "Removed 74 unreachable Horizon CSS rules; active dmf filters remain"
+        ],
+        "followUp": "checks/bl-p3-full-3-targeted-fix.log"
+      },
+      {
+        "attempt": 4,
+        "log": "checks/bl-p3-npm-test-full-4.log",
+        "failures": 4,
+        "resolution": [
+          "Modal close still clears timer/renderer after releasing keyboard binding",
+          "Exact two-row group-header selector accepts specificity-preserving prefilters",
+          "Version history VM stub exposes real DOM dataset",
+          "Exact pre-auth appearance-cache key classified; runtime schema/user-isolation tests added"
+        ],
+        "followUp": "checks/bl-p3-full-4-targeted-fix.log"
+      }
+    ],
+    "repeatedAfterSuccess": false
+  },
+  "contracts": {
+    "i18n": {
+      "command": "npm run i18n:check",
+      "exitCode": 0,
+      "newMissing": 0,
+      "baseline": 0,
+      "log": "checks/bl-p3-i18n-final.log"
+    },
+    "releaseNotes": {
+      "command": "npm run release:notes:validate",
+      "exitCode": 0,
+      "entries": 76,
+      "log": "checks/bl-p3-release-final.log"
+    },
+    "version": {
+      "command": "npm run version:assert",
+      "exitCode": 0,
+      "version": "7.0.294",
+      "log": "checks/bl-p3-version-final.log"
+    },
+    "guards": "Design token, empty color baseline, component, Manifest and inline contracts included in successful full test; no new skips or enlarged design/i18n baselines. Appearance storage exact-key classification is documented in test-contract-migration.md."
+  },
+  "visual": {
+    "summary": "matrix-summary.json",
+    "currentCases": 3936,
+    "families": 164,
+    "storedPng": 4464,
+    "currentFindings": 0,
+    "manualReview": "manual-review.json",
+    "keyboard": "keyboard-final.json",
+    "indicators": "indicator-contrast.json"
+  },
+  "exports": {
+    "general": "export-equivalence.json",
+    "generalMatched": 46,
+    "shippingFinal": "export-shipping-final-comparison.json",
+    "shippingMatched": 18,
+    "lcwDocument": "lcwai-export-equivalence.json",
+    "fontHashes": "../../../../resources/app/tests/fixtures/export-document-fonts.json"
+  },
+  "performance": {
+    "report": "performance/paired-final/comparison.json",
+    "pairedRuns": 5,
+    "startupDeltaPercent": -7.3,
+    "cpDeltaPercent": 1.7,
+    "largeTableDeltaPercent": 5.3,
+    "domRows": 50,
+    "hiddenModulesEager": false,
+    "limitation": "Linux/Chromium warm-server medians, not Windows/Electron or cold disk. Large-table samples overlap but median increase is retained as a risk."
+  },
+  "gallery": {
+    "validation": "gallery-validation.json",
+    "images": 75,
+    "broken": 0,
+    "offline": true,
+    "source": "../manifest-final.html",
+    "transportNote": "Managed Chromium rejects file: navigation. Identical local file bytes were rendered with setContent while offline, without policy changes. No external request or runtime error."
+  },
+  "diffCheck": {
+    "command": "git diff --check -- . ':!*.tsv'",
+    "exitCode": 0,
+    "reasonForExclusion": "Reference TSV retains intentional CRLF and trailing tab cells.",
+    "log": "checks/bl-p3-diff-check-final.log"
+  },
+  "sourceManifest": "tested-source-sha256.json",
+  "delivery": {
+    "pr": "not opened; local drafts ready",
+    "ci": "not run",
+    "merge": "not merged",
+    "TEST": "not published",
+    "STABLE": "not published"
+  },
+  "unverified": [
+    "Windows/Electron OS dialogs and win32-only tests",
+    "Real company PLM/LCW AI sessions",
+    "Native Excel pivot refresh",
+    "Opt-in 20,000-operation sync soak",
+    "Remote branch-protection status and all release workflows"
+  ],
+  "stagedDiffCheck": {
+    "command": "git diff --cached --check -- . ':!*.tsv' ':!*.log'",
+    "exitCode": 0,
+    "reasonForExclusion": "TSV exact reference bytes and verbatim test logs are evidence, not source whitespace; neither is rewritten.",
+    "log": "checks/bl-p3-staged-diff-check.log"
+  }
+}

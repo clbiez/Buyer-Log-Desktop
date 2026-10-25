@@ -1,149 +1,221 @@
-# Buyer Log tasarım sistemi
+# Buyer Log — Manifest
 
-> Kanonik görsel dil. Yeni ekran, modül veya stil değişikliği bu dosyaya uyar.
-> Uygulama koduyla çelişirse kodu esas al ve bu dosyayı aynı PR'da düzelt.
-> Bekçi: `tests/design-token-guard.test.js` (`npm test` içinde koşar).
+Manifest, Buyer Log’un tüm arayüzünün ortak tasarım sistemidir. Ürün etiketi,
+sevkiyat manifestosu ve teknik föyün okunaklı hiyerarşisini kullanır: numara,
+tarih ve miktar önce gelir; başlıklar kısa, yüzeyler sakin ve kontroller köşelidir.
+LCW AI aynı ürün dilini kullanır. Ayrı bir AI rengi, küresi veya sohbet balonu yoktur.
 
-## 0 · İlke
+## 1. Kaynak ve sahiplik
 
-**Refined Industry.** Açık ve sakin bir çalışma zemini, tek çelik mavisi vurgu,
-saç teli çerçeveler, köşeli geometri, yoğun ama okunur veri. Görsel karar
-modülde verilmez, token'da verilir. Bir modülün "kendi stili" yoktur.
+- `resources/app/public/ui-tokens.css`: tek UI paleti, yerel fontlar, ölçek,
+  boşluk, hareket, yüzey ve katman tanımları. Giriş ve boot da bu dosyayı okur.
+- `ui-components.css`: ortak görünüm ve mevcut JS sınıflarına bağlanan bileşen
+  sözleşmeleri. Eski sınıf adları davranış kancasıdır; ayrı tema sistemi değildir.
+- `ui-startup.css`, `giris.css`: aynı tokenlarla açılış/giriş bileşenleri.
+- `app.css`, `design.css`, `experience.css` ve modül CSS’leri: yerleşim, ölçülen
+  veri geometrisi, responsive düzen ve scroll davranışı. Görünüm tanımlamazlar.
+- `ui-primitives.js`, `layer-system.js`, `tab-system.js`: klavye, odak ve katman
+  yaşam döngüsü. İş kuralı veya kayıt değiştirmezler.
 
-## 1 · Katmanlar ve yükleme sırası
+`design-butunluk.css` ve `ui-legacy-bridge.css` kaldırıldı. Eski `--acc`, `--ink`,
+`--card`, `--fs-*`, `--sans`, `--r-*` UI takma adları kullanılmaz. Yeni bir modül
+ortak bileşene bağlanır; ayrı palet veya görünüm override dosyası oluşturmaz.
 
-| Katman | Dosya | Görev |
-| --- | --- | --- |
-| Temel | `public/app.css` | Ölçek token'ları (`--fs-*`, `--r-*`, `--sp-*`, `--ctl-h`), kabuk ve ortak bileşenler |
-| Modül | `public/<modül>.css` | Yalnız düzen. Renk, yazı boyutu, köşe ve aile **token'dan** gelir |
-| Tema | `public/design.css` | Industry paleti, tipografi, tablo başlığı (`--thead-*`) ve rozet renkleri |
-| Uyum yaması | `public/design-butunluk.css` | Eski modülleri tema diline çeken geçici eşleme; büyütülmez |
-| Deneyim | `public/experience.css` | Primitive → semantic → component token'ları (`--bl-*`), hareket, odak, yüzey |
+## 2. Tema ve yüzey
 
-Kurallar:
-- Yeni bir "katman" veya tema dosyası açılmaz. Yeni modül CSS'i token tüketir, token tanımlamaz.
-- Renk paleti yalnız `design.css` / `experience.css` içinde (açık, `grey`, `dark`) tanımlanır.
-- Giriş sayfası (`select-user.html` → `giris.css`) app.css'i yüklemez; ölçeği `giris.css` içinde aynı değerlerle tanımlar.
+Üç tema vardır: `light`, `grey`, `dark`. Açık ve karanlık temanın eski nötr
+ailesi ile tablo başlığı renkleri korunur. Grey, serin mat gri bir çalışma
+zeminidir. Tema rengi yalnız `data-theme` üzerinden değişir.
 
-## 2 · Yazı ölçeği
+| Token | Light | Grey | Kullanım |
+| --- | --- | --- | --- |
+| `--ui-canvas` | `#f5f7f9` | `#d4d5d7` | çalışma zemini |
+| `--ui-surface` | `#ffffff` | `#e9eaec` | veri yüzeyi |
+| `--ui-surface-soft` | `#fafbfc` | `#dfe1e4` | ikincil yüzey |
+| `--ui-text` | `#16212d` | `#19222c` | ana metin |
+| `--ui-text-muted` | `#5f6f80` | `#414e5a` | açıklama |
+| `--ui-accent` | `#356a96` | `#315e83` | eylem ve odak |
 
-Tüm boyutlar `calc(Npx + var(--ui-font-add))` biçimindedir; böylece
-**Arayüz boyutu** ayarı (Kompakt / Standart / Büyük / Çok Büyük) ekrandaki her
-metni aynı oranda değiştirir. Sabit `px` yazı boyutu yasaktır.
+Karanlık değerlerin ve durum renklerinin kanonik kaynağı `ui-tokens.css`’tir.
+Renk literal’leri yalnız bu kaynakta tanımlanır; custom property ve var fallback değerleri de guard kapsamındadır. `design-color-baseline.json`
+boştur; UI CSS dosyalarında ham renk borcu yoktur.
 
-| Token | Standart | Kullanım |
-| --- | --- | --- |
-| `--fs-2xs` | 10.5px | Tablo başlığı, sayaç, mikro etiket |
-| `--fs-xs` | 11.5px | Yardımcı metin, rozet, form etiketi |
-| `--fs-sm` | 12.5px | Tablo hücresi, düğme |
-| `--fs-base` | 13px | Gövde metni |
-| `--fs-md` | 14.5px | Kart başlığı |
-| `--fs-lg` | 16px | Bölüm başlığı |
-| `--fs-xl` | 20px | Sayfa başlığı, KPI değeri |
-| `--fs-2xl` | 24px | Büyük KPI |
-| `--fs-3xl` | 30px | Sayfa içi kahraman başlık |
-| `--fs-4xl` | 40px | Tek odak sayı (ör. halka grafiğin merkezi) |
+Kartları çerçevelemez, yüzey tonu ve boşlukla ayırırız. Gölge yalnız geçici,
+üstte duran yüzey için `--ui-shadow-overlay` değeridir. Her karta gölge yoktur.
+Mor/indigo, neon, gradyan yazı, glassmorphism ve süs ışıması kullanılmaz.
+Durumlar renk yanında metin, simge veya sayıyla açıklanır.
 
-`font:` kısayolu da token kullanır: `font:600 var(--fs-sm)/1.2 var(--sans)`.
+## 3. Tipografi ve dört boyut
 
-## 3 · Köşe
+Yerel/paketli OFL fontlar: **IBM Plex Sans** gövde, **Barlow Condensed** başlık,
+**IBM Plex Mono** referans/kod. Latin-ext ve Türkçe karakterler paketlidir.
+Ağ fontu veya varsayılan Inter/system-ui görünümü kullanılmaz.
 
-Industry dili köşelidir: `--r-xs … --r-xl` ve `--r-full` değerleri **0**'dır.
-Köşe kararı tek yerden değişir; modül sabit `px` yarıçap yazmaz.
+`--ui-font-{2xs,xs,sm,base,md,lg,xl,2xl,3xl,4xl}` sırasıyla
+11/12/13/14/15/18/24/30/36/44 px tabana `--ui-font-add` ekler. Bileşenler
+bu tokenı kullanır; doğrudan `font-size:14px` yazılmaz. Sayısal verilerde
+`font-variant-numeric:tabular-nums` kullanılır.
 
-Bilinçli istisnalar:
-- `--r-pill` (999px): kapsül tutamak, anahtar (toggle), kaydırıcı başlığı, sürükleme tutamağı.
-- `--r-round` / `50%`: avatar, durum noktası, dairesel ikon düğmesi.
+| API indeksi | `data-ui-scale` | `--ui-font-add` | kontrol | üst çubuk |
+| --- | --- | --- | --- | --- |
+| 0 | standard | 0px | 34px | 52px |
+| 1 | large | 1.5px | 38px | 58px |
+| 2 | xl | 3px | 42px | 64px |
+| 3 | compact | -1px | 30px | 48px |
 
-Çip, rozet, düğme, sekme ve kart istisna değildir; köşelidir.
+`applyUiFontStep` **indeks** alır; font ekleme değeri almaz. Giriş ölçeği de
+`buyerlog.ui.appearance` üzerinden aynı dört değeri kullanır. Küçük kontrol
+`--ui-control-height-small` = ana kontrol −4px. Veri satırının kullanıcı
+ölçüsü, görsel sütunu ve otomatik metin yüksekliği ayrı veri geometrisidir.
 
-## 4 · Yazı ailesi
+## 4. Geometri, tablolar ve grafikler
 
-| Token | Kullanım |
-| --- | --- |
-| `--sans` (Barlow) | Tüm arayüz metni |
-| `--head` | Başlıklar. Refined Industry'de `--sans` ile aynıdır (experience.css) |
-| `--mono` (Cascadia Code) | Kod, sipariş/PLM kimliği, hizalı sayı sütunu |
+Köşeler `--ui-radius:0`; hiçbir kontrol/kart/çip/sekme 2px’i aşmaz. Daire yalnız
+avatar veya durum noktası içindir. Radyo, slider tutamağı, yükleme işareti ve
+grafik noktaları köşelidir. İkonun içindeki mercek ya da coğrafi kürenin dünya
+izdüşümü bir kontrolün hitbox’ı veya veri işaretçisi değildir.
 
-Aile listesi (`"Barlow Condensed",…`) yalnız token tanımında ve `@font-face` içinde yazılır.
-`--font` ve `--heading` eski takma adlardır; yeni kodda kullanılmaz.
+İzin verilen çizgiler dar kapsamlıdır:
 
-## 5 · Renk
+1. Klavye odağı: 2px opak `--ui-accent` outline; ≥3:1 gösterge kontrastı.
+   Spreadsheet’in aktif hücresi klavye imlecidir ve aynı outline kullanır;
+   seçilen aralığın geri kalanı yüzey tonuyla gösterilir. Drag hedefi, hata
+   ve kılavuz vurguları çerçeve oluşturmaz.
+2. Yoğun tablonun gövdesi: hücre altında tek düşük kontrastlı yatay
+   `--ui-row-divider`. Dikey gövde ızgarası yoktur.
+3. Kullanıcının açık seçimi: CP, Siparişler ve Koleksiyon’da ana sütun grupları
+   arasında **1px `--ui-group-divider`**, hem `.groupRow th.groupDivider` hem
+   `.colRow th.groupBoundary` üzerinde. Satır gövdesine taşınmaz.
+4. Grafik eksen/kılavuzları veri okumak içindir; `--ui-chart-grid` kullanır.
+5. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
 
-- Yüzey: `--paper` (sayfa), `--card` (kart), `--card2` (ikincil), `--pop` (açılır yüzey).
-- Metin: `--ink`, `--ink2`, `--muted`. Çizgi: `--line`, `--line2`, `--hair`.
-- Vurgu: `--acc`, `--acc-bg`, `--acc-ink`, `--on-acc`, `--acc-hover`.
-- Durum: `--red`, `--orange`, `--yellow`, `--green` ve `*-bg` eşleri. Durum rengi vurgu değildir.
-- Doygun dolgu üzerindeki yazı `--on-solid`; modal/katman perdesi `--scrim`; gölge yalnız `--shadow-1|2|3`.
-- Grafik: kategorik `--chart-1 … --chart-8` (açık + karanlık değerler). Palet dataviz
-  doğrulayıcısından geçmiştir (renk körlüğü ΔE ≥ 8, normal görüş ΔE ≥ 15); sıra sabittir,
-  JS grafikleri değeri `getComputedStyle` ile okur. Backlog aşama renkleri ayrı ve anlamsaldır
-  (`BLBacklogV3Report.STAGES`).
-- **Dokunulmaz:** `--thead-bg`, `--thead-ink` ve rozet renkleri. Excel'e Aktar / Kopyala
-  hücre rengini canlı DOM'dan okur; bu değerleri değiştirmek dışa aktarılan dosyayı değiştirir.
-  Excel yeşili (`#217346`), baskı stilleri, e-posta HTML'i ve pano/Excel HTML'i de bilinçli
-  olarak ham renk kullanır (Outlook ve Excel CSS değişkeni okumaz).
-- Yeni ham renk kodu (`#hex`, `rgb()`, `hsl()`) eklenmez. Mevcut ham renkler dosya başına
-  `tests/fixtures/design-color-baseline.json` tavanıyla dondurulmuştur; tavan yalnız düşer.
-- Kullanılan her `var(--x)` tanımlı olmalıdır (CSS'te ya da JS `setProperty` ile). Tanımsız
-  değişken geçersiz değer üretir: zemin şeffaf kalır, fallback her temada aynı renge düşer.
-  `--bg`, `--surface`, `--warn`, `--ok`, `--accent` gibi takma adlar kullanılmaz.
+Tablo başlıkları `--ui-header-*`, ana grup bandı `--ui-group-header-*` kullanır.
+Seçili satır `--ui-selected` / `--ui-selected-ink`; hover `--ui-row-hover`.
+Filtre, sıralama, sticky başlık, kopyala/yapıştır ve canonical alan bağları
+CSS tasarımı için yeniden uygulanmaz.
 
-## 6 · Tema
+Grafikler `--ui-chart-1…8` kategorilerini, kare işaretleri, doğrusal ilerleme
+şeritlerini ve okunaklı eksenleri kullanır. Seriler etiket/legend taşır. Grafik
+SVG/canvas metin ölçüsü ekrandaki ortak fonttan okunur. Grafikler ve görünmeyen
+modüller `perf-runtime` lazy sözleşmesine uyar.
 
-Üç tema aynı token adlarını yeniden tanımlar: açık (varsayılan), `html[data-theme="grey"]`
-(Kurşun), `html[data-theme="dark"]`. Bileşen kuralı tema seçicisi içinde renk yazmaz;
-yalnız token kullanır. Yeni bileşen üç temada da ekran görüntüsüyle doğrulanır.
+## 5. Bileşen sözleşmeleri
 
-## 7 · Bileşen sözleşmeleri
+- Eylem: ortak yükseklik, font ve odak. Açık varyantlar `primary` ve `quiet`.
+  Mevcut `.tbtn`, `.navActionBtn`, `.cpaBtn`, `.mfpBtn`, `.lcBtn` gibi davranış
+  kancaları korunur, ortak bileşen görünümüne bağlanır.
+- Segment ve sekme: köşeli, seçili yüzey ve `aria-selected`/`aria-pressed`.
+  Ortak Tab/ok tuşu davranışı korunur. Filtre etiketi durum metnini taşır.
+- Alan: yüzeyle ayrılır; görünür label, placeholder, disabled ve hata durumu.
+  `aria-invalid` yalnız renk dışında hata açıklamasıyla birlikte kullanılır.
+- KPI: küçük açıklama, tabular sayısal değer ve alt bağlam. Her KPI ayrı
+  çerçeveli/gölgeli kart değildir.
+- Boş/hata/bekleme: kısa başlık, neyin eksik olduğunu anlatan metin, uygun
+  eylem. Yükleme için sabit kare durum işareti; emoji ve dekoratif spinner yok.
+- Modal/çekmece: adlandırılmış dialog, ilk odak, Tab/Shift+Tab sınırı, Escape
+  ve tetikleyiciye odak dönüşü. İç içe pencerede yalnız üst katman kapanır.
+- Popover/menü: ortak yüzey; ok/Home/End, disabled öğe atlama ve Escape.
 
-Eşdeğer modül bileşenleri `experience.css` sonundaki **BİLEŞEN SÖZLEŞMELERİ** bölümünde tek
-kuralda toplanır (`tests/ui-component-contract-v20261015.test.js`). Modül CSS'i bu bileşenlerin
-yüksekliğini, yazısını, çerçevesini ve aktif durumunu yeniden tanımlamaz; yeni bir eşdeğer
-bileşen sözleşme seçicisine eklenir.
+Hover, focus, active, selected, disabled, loading, empty ve error durumları
+aynı tokenları kullanır. Modül CSS’i bu durumlara ayrı renk/çerçeve icat etmez.
 
-| Bileşen | Sözleşme |
-| --- | --- |
-| Düğme L | Ana eylem: `--ctl-h`, `--fs-xs` 600. Birincil = dolu `--acc` (ekranda tek). |
-| Düğme S | Kart içi eylem: `--ctl-h-sm` (= `--ctl-h` − 8px, arayüz boyutuyla büyür). |
-| Segment | Tek seçim: saç teli kap, S yükseklik, aktif seçenek dolu `--acc` / `--on-acc`. |
-| Filtre çipi | Çoklu seçim / süzgeç: köşeli, S yükseklik, aktif = `--acc-bg` + `--acc` çerçeve. |
-| Sayfa sekmesi | Sayfa içi gezinme: alt çizgi, zemin yok, aktif = `--acc` alt çizgi. |
-| KPI kartı | Etiket `--fs-xs` 600 `--ink2`; değer `--fs-2xl` 700 `--sans` `tabular-nums`; alt satır `--fs-xs` `--muted`. Değer rengi yalnız durum taşıyorsa değişir. |
-| Sayfa başlığı | Yalnız üst çubukta (`#pageTitle`); sayfa içinde tekrar yazılmaz. |
-| Boş durum | Tek ikon + başlık + tek cümle + en fazla bir eylem. |
-| Tablo | Başlık `--thead-*`, satır `--table-row-h`, sayılar sağa hizalı ve `tabular-nums`. |
-| Gizli öğe | Sınıfı `display` tanımlıyorsa `.sınıf[hidden]{display:none}` de tanımlanır. |
+## 6. Katmanlar ve hareket
 
-## 8 · Hareket ve erişilebilirlik
+| Token | Seviye | Amaç |
+| --- | ---: | --- |
+| `--ui-z-below/base/data/raised` | -1 / 0 / 1 / 2 | yerel veri geometrisi |
+| `--ui-z-sticky` | 30 | sabit tablo başlığı |
+| `--ui-z-sticky-column` | 31 | dondurulmuş başlık sütunu |
+| `--ui-z-chrome` | 40 | uygulama rayı/üst çubuk |
+| `--ui-z-popover` | 100 | normal menü |
+| `--ui-z-modal` | 200 | pencere/çekmece |
+| `--ui-z-modal-menu` | 300 | pencere üzerindeki menü |
+| `--ui-z-tooltip` | 400 | ipucu/bildirim |
+| `--ui-z-boot` | 500 | açılış/engelleyici perde |
 
-- Süreler `--bl-motion-fast|standard|enter`, eğri `--bl-ease`. Kullanıcının tema
-  seçimindeki dalga `--bl-motion-theme` süresini kullanır; `theme-transition.js`
-  mevcut üç paleti yerel View Transitions görüntüleriyle değiştirir. Başlangıçta,
-  azaltılmış harekette ve API yoksa mevcut hızlı geçiş yolu kullanılır. Sayfa, açılır yüzey, diyalog ve çekmece
-  ortak `blViewIn / blPopoverIn / blDialogIn / blDrawerIn` animasyonlarını kullanır.
-- `prefers-reduced-motion` her yeni animasyonda desteklenir.
-- Odak halkası `--focus-ring`; `outline:none` yalnız eşdeğer bir odak göstergesiyle.
-- Her görünen metin TR/EN çiftidir (CLAUDE.md §4.1). Kod, ülke kodu, kimlik gibi çevrilmeyecek
-  metin `data-no-i18n` taşır.
+`BLLayerSystem` çocuk dialog için 201–299 aralığında tek adım yükseltebilir;
+300 tavanının altında kalır. Modüller sayısal z-index tanımlamaz.
 
-## 9 · Uygulama düzeyi desenler
+Hareket yalnız transform/opacity, 100ms veya 140ms. `prefers-reduced-motion`
+animasyon/geçişleri kapatır. Tema değişimi anlıktır; snapshot dalgası,
+clip-path animasyonu, sürekli canvas küresi ve süs hareketi yoktur.
 
-- **Komut paleti** (`command-palette.js`): Ctrl+Shift+K. Ctrl+K mevcut "CP Tracker'da ara"
-  kısayoludur. Başlıkta görünür arama kutusu yoktur (v7.26 kullanıcı kararı).
-- **Kompakt ray:** dar modda üzerine gelince/odaklanınca etiketler içeriği itmeden açılır
-  (`--rail-full-w`); genişleyen ray üst çubuğun önündedir (`z-index:301`).
-- **KPI sayacı** (`kpi-motion.js`): modül açılışında sayar, sonunda özgün metne döner.
-- **Sunum raporu** (`backlog-presentation-report.js`): saf üretici; JS kapalıyken tam, katı CSP,
-  dış kaynak yok. Uygulamada `allow-same-origin` olmadan iframe'de; PDF `buyerlog:render-pdf`.
+## 7. Guard ve erişilebilirlik
 
-## 10 · Bilinen borç (2026-10-16)
+- `design-token-guard.test.js`: ortak ölçek/font, tanımsız değişken, sıfır ham
+  renk baseline’ı. Bir başarısızlığı gizlemek için baseline büyütülmez.
+- `ui-component-contract-v20261015.test.js`: ortak eylem, segment, sekme, KPI
+  ve hidden durumları; artık geçici köprüye bağımlı değildir.
+- `ui-manifest-contract.test.js`: bütün aktif üst düzey CSS, köşe/çizgi,
+  animasyon/katman ve modülün yalnız yerleşime sahip olması.
+- `ui-inline-contract.test.js`: UI JS/HTML’de sabit px font, çerçeve, köşe,
+  ham z-index, tanımsız UI tokenı ve kaldırılmış dosyalara dönüş.
 
-- **z-index:** 98 farklı değer. Katmanların (menü, modal, bildirim, kilit perdesi) üst üste
-  açılma sırası davranış testiyle doğrulanmadan kademeye sıkıştırılmadı. Önerilen kademeler:
-  içerik 1–10 · yapışkan 30 · ray 60 · üst çubuk 300 · açılır 1000 · modal 10000 · bildirim 12000+.
-- **Bileşen kopyaları:** sözleşme görünümü tekleştirdi, ama modül sınıfları (133 düğme,
-  81 çip/rozet sınıfı) hâlâ ayrı. Yeni ekranlar mevcut sınıfları kullanmalı.
-- **Veri gösterimi:** ülke adları kaynaktaki gibi (TURKIYE / Georgia) karışık yazımda.
-- **LFL Üretici Sipariş Hacimleri:** dar bölmede sütun başlıkları harf harf kırılıyor (CP tablo motoru).
-- **Ham renk:** `app.css` 48, `giris.css` 68 (bağımsız giriş sayfası paleti) — tavanlı.
+Veriye bağlı değişkenler yalnız ölçü/yerleşim özelliğinde kullanılabilir.
+Kullanıcının yazdığı durum rengi yalnız ilgili durum swatch/hücresine aittir;
+bu veri çıktıda da korunur. Belge üretici istisnaları testte isimli, dar
+fonksiyon aralıklarıdır; bütün app-main.js muaf değildir.
+
+Metin ≥4.5:1; gerekli kontrol/odak göstergesi ≥3:1. Güçlü açık yüzeylerde açıklama için `--ui-text-secondary` kullanılır. Gerçek PNG, computed
+kontrast, klavye ve reduced-motion kontrolleri birlikte değerlendirilir.
+Otomatik piksel/DOM örneklemi tek başına WCAG sertifikası sayılmaz.
+TR/EN çiftleri aynı değişiklikte yazılır; canonical ID ve tek LCW AI yolu korunur.
+
+## 8. Ekrandan bağımsız çıktılar
+
+UI yeniden tasarımı Excel/clipboard hücre renklerini veya belge fontlarını
+ değiştirmez. Çıktı stilinin ekran ölçeğine bağlanması yasaktır.
+
+- CP/Sipariş/Koleksiyon: `EXPORT_LIGHT_*`, `exportSemanticPalette` ve
+  `table-export.js` kayıt tabanlı sabit palet/ölçüler.
+- Nakliye DOM export: sabit export paleti; UI computed renkleri yerine açık
+  belge değerleri. Dört boyut için çıktı satır yüksekliği korunur.
+- Backlog: `CHART_FALLBACK` sabit workbook serileri; ekran `--ui-chart-*` okur.
+- LCW AI: `export-document-palette.json`; server `output-theme.js` artık UI
+  CSS’ini ayrıştırmaz. HTML/PDF/PPTX/XLSX font ve renkleri referansla korunur.
+- Tedarikçi atlas HTML: `license-supplier-atlas.js` içindeki yerel belge font
+  listesi; UI stylesheet’indeki font-face kurallarına bağımlı değildir.
+- Shipping print: yalnız `@media print` içindeki isimli tablo/ürün seçicileri,
+  `--ui-print-*` sabit paleti ve pt ölçüleri.
+- LCW çıktı editörünün iframe’i ve belge önizlemesi: belge koordinatlarını
+  temsil eder, ana arayüzün font/palet alanından ayrıdır. CSP temizleme ve
+  ağ engeli korunur; belge betiği ana DOM’a eklenmez.
+
+HTML/TSV byte eşitliği ve XLSX `xl/` parçaları karşılaştırılır; ZIP zaman damgası
+stil/veri eşdeğerliğinin parçası değildir. Üretilen belge CSS’i ayrıca dondurulmuş
+referansla karşılaştırılır. Paketli Barlow dosyaları çıktı kullanımı sürdüğü için
+silinmez.
+
+## 9. Ortak CSS maliyeti
+
+Sıfır kenarlık/köşe/gölge tanımları her bileşende yinelenmez; tek `:where(body,body *)`
+sıfırlamasından gelir. Tabloya özel sıfır çizgi tanımları, yoğun tablo ayırıcılarını
+bilinçli olarak bastırdığı yerlerde korunur. Bu, export iframe’inin içine uygulanmaz.
+
+Eşit özgüllüğe sahip basit `:is()` listeleri aynı seçicilerin virgüllü listesine
+açılabilir. Karma özgüllük korunur. Kompleks seçicilerde özgün `:is()` koşulu
+yerinde kalır; sağ uç sınıf/etiket için sıfır özgüllüklü `:where()` ön filtresi
+eklenebilir. Bu dalların birleşimi aynı öğeleri seçmelidir. Kural
+sırası, değer, `!important` ve tema koşulu değişmez. Geçişte 21 gerçek ekran/tema
+bağlamında görünür öğelerin computed renk, ölçü, font ve odak değerleri eşleşti.
+
+Earth 3D, yerel doku ve aynı UI paletini kullanır; işaretçiler/badge/kümeler
+köşelidir. Canvas etiketleri yerel Mono fontu ve `--ui-font-add` ile ölçülür.
+Yıldız fonu, atmosfer ışıması ve sürekli shader rota hareketi yoktur. Coğrafi
+kürenin şekli, veri geometrisidir. Kamera ve rota hesapları değiştirilmez.
+
+Eski modal çağrıları da ortak `trapDialogTab` davranışını kullanır. Escape
+pencerenin kendi kapatma yoluna bağlanır; kaydetme/iptal iş kuralını değiştirmez.
+Nonmodal filtreler Tab sırasını hapsetmez.
+
+## Kullanıcı işareti ve güncel iş akışları
+
+Kullanıcı avatarı `icons/avatar-patch.png` paketli saten plakayı, uygulama logosu
+`icons/icon-mark.png` dosyasını kullanır. Plaka bütün temalarda açık olduğu için
+baş harfler `--ui-avatar-ink`, yedek zemin `--ui-avatar-paper` ile sabittir.
+Baş harf üstüne ayrı bir yüzey kapatılmaz; ad/baş harf üretimi değişmez.
+Metin gradyanı, ışıma veya yeni avatar çerçevesi eklenmez.
+
+Satır sıklığı, istisna kutusu, fiyat kaynağı, toplu işlem ve kayıt/ilerleme
+yüzeyleri de `ui-components.css` sahibidir; modül CSS dosyaları yalnız ölçü ve
+yerleşim taşır. Kullanıcıya bağlı sıklık ayarı yazı ölçeğinden bağımsızdır.

@@ -9,7 +9,7 @@ const ROOT = path.join(__dirname, '..');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const APP = read('public/app-main.js');
 const INDEX = read('public/index.html');
-const EXP = read('public/experience.css');
+const EXP = require('./helpers/manifest-css')();
 const TIP = read('public/ui-tooltip.js');
 const BDA = read('public/backlog-delivery-analysis.js');
 const UM = read('public/user-management.js');
@@ -45,12 +45,13 @@ test('Her modülün kendine ait simgesi var; üç analiz modülü aynı grafiği
   assert.match(INDEX, /fill:var\(--ic-tint,currentColor\)/);
 });
 
-test('Thinking Orb bileşeni durum değerini doğrular ve yükleme durumunda kullanılır', () => {
+test('Ortak durum işareti eski kancaları doğrular ve yükleme durumunda kullanılır', () => {
   assert.match(UI.orbHtml('thinking'), /class="blOrb" data-state="thinking"/);
   assert.match(UI.orbHtml('bogus', 'lg'), /class="blOrb blOrb--lg" data-state="idle"/);
   assert.match(UI.stateView({ kind: 'loading', title: 'x' }), /blOrb uiStateOrb/);
-  assert.match(EXP, /@property --orb-angle/);
-  assert.match(EXP, /@media\(prefers-reduced-motion:reduce\)\{\.blOrb,\.blOrb::after\{animation:none!important;\}\}/);
+  const shared=read('public/ui-components.css');
+  assert.doesNotMatch(EXP, /@property --orb-angle|@keyframes blOrb/);
+  assert.match(shared, /@media\(prefers-reduced-motion:reduce\)\{[^}]*\.blOrb::after\{animation:none!important;transition:none!important/);
 });
 
 test('Teslimat riski analizi bölümleri açılır/kapanır ve tercih saklanır', () => {
@@ -75,6 +76,7 @@ test('Backlog detay kompakt görünümü türetilmiş tarih parçalarını gizle
 });
 
 function luminance(hex) {
+  if(hex.length===4)hex='#'+hex.slice(1).split('').map(c=>c+c).join('');
   const [r, g, b] = [0, 2, 4].map(i => parseInt(hex.slice(1 + i, 3 + i), 16) / 255)
     .map(c => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
@@ -85,8 +87,8 @@ function contrast(a, b) {
 }
 
 test('Kurşun tema koyulaştı ve metin/zemin çiftleri WCAG AA (≥4.5) sağlar', () => {
-  const block = EXP.match(/html\[data-theme="grey"\]\{([\s\S]*?)\n\}/)[1];
-  const token = name => block.match(new RegExp(`--${name}:(#[0-9a-f]{6})`, 'i'))[1];
+  const block = read('public/ui-tokens.css').match(/:root\[data-theme="grey"\]\{([\s\S]*?)\n\}/)[1];
+  const token = name => block.match(new RegExp(`--ui-${({paper:'canvas',ink:'text',ink2:'text-secondary',muted:'text-muted',card:'surface',card2:'surface-soft','rail-bg':'rail','acc-ink':'selected-ink','acc-bg':'selected','on-acc':'on-accent',acc:'accent',green:'success',orange:'warning',red:'danger'})[name]}:(#[0-9a-f]{3,6})`, 'i'))[1];
   assert.ok(luminance(token('paper')) < luminance('#e9ecf0'), 'kurşun kağıt açık temadan koyu olmalı');
   for (const [fg, bg] of [['ink', 'card'], ['ink2', 'card'], ['muted', 'card'], ['muted', 'card2'], ['muted', 'paper'],
     ['muted', 'rail-bg'], ['acc-ink', 'acc-bg'], ['on-acc', 'acc'], ['green', 'card2'], ['orange', 'card2'], ['red', 'card2']]) {

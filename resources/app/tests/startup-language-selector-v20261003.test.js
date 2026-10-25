@@ -23,7 +23,10 @@ test('startup language selection uses the canonical app language path with a saf
 });
 
 test('startup language control is styled for light and dark startup themes',()=>{
-  assert.match(INDEX,/#blBootGuard \.blBootLanguage\{/);
-  assert.match(INDEX,/html\[data-theme="dark"\] #blBootGuard \.blBootLanguage\{/);
-  assert.match(INDEX,/\.blBootLanguage button\[aria-pressed="true"\]/);
+  const css=fs.readFileSync(path.join(__dirname,'..','public','ui-startup.css'),'utf8');
+  const tokens=fs.readFileSync(path.join(__dirname,'..','public','ui-tokens.css'),'utf8');
+  assert.match(css,/#blBootGuard \.blBootLanguage\{/);
+  assert.match(css,/background:var\(--ui-accent\);color:var\(--ui-on-accent\)/);
+  assert.match(tokens,/:root\[data-theme="dark"\]/);
+  assert.match(css,/button\[aria-pressed="true"\]/);
 });

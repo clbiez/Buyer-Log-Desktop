@@ -9,7 +9,7 @@ const ROOT = path.join(__dirname, '..');
 const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8');
 const INDEX = read('public/index.html');
 const APP = read('public/app-main.js');
-const DESIGN = read('public/design.css');
+const DESIGN = require('./helpers/manifest-css')();
 const TAB_PATH = path.join(ROOT, 'public', 'tab-system.js');
 const TAB_SOURCE = fs.existsSync(TAB_PATH) ? fs.readFileSync(TAB_PATH, 'utf8') : '';
 const TAB_MODULE = fs.existsSync(TAB_PATH) ? require(TAB_PATH) : {};
@@ -110,12 +110,10 @@ test('v10.36 sekme panelleri klavyeyle ulaşılabilir ve seçili sekmeyle ilişk
 });
 
 test('v10.36 ortak sekme yüzeyi token tabanlı, odak görünür ve dar alanda taşmadan kayar', () => {
-  const start = DESIGN.indexOf('/* v10.36 — SEKME SİSTEMİ */');
-  const block = DESIGN.slice(start);
-  assert.ok(start >= 0);
+  const block = require('./helpers/manifest-css').rules(/data-bl-tabs|data-bl-choicebar/);
   assert.match(block, /\[data-bl-tabs\]/);
   assert.match(block, /overflow-x:auto/);
-  assert.match(block, /var\(--focus-ring\)/);
+  assert.match(block, /var\(--ui-accent\)/);
   assert.match(block, /\[aria-selected="true"\]/);
   assert.match(block, /\[data-bl-choicebar\]/);
   assert.match(block, /\[aria-pressed="true"\]/);

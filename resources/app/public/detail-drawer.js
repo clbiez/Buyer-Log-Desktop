@@ -158,6 +158,7 @@ function ensureHost(){
   host=document.createElement('aside');
   host.id='blSharedDetailDrawer';
   host.className='blDetailDrawer';
+  host.dataset.uiMigrated='detail-drawer';
   host.setAttribute('aria-hidden','true');
   document.body.appendChild(host);
   return host;

@@ -1,0 +1,14 @@
+✔ Ortak ölçek token'ları tanımlı ve kullanıcının yazı boyutu ayarına bağlı (12.262194ms)
+✔ Hiçbir stil dosyası sabit px yazı boyutu kullanmaz (151.643202ms)
+✔ Köşe yarıçapı yalnız --r-* token'larından gelir (70.220968ms)
+✔ Yazı ailesi yalnız --sans, --head veya --mono token'ından gelir (93.917548ms)
+✔ Ham renk kodu sayısı dosya başına dondurulmuş tavanı aşamaz; yeni dosya ham renk taşımaz (71.698125ms)
+✔ Kullanılan her CSS değişkeni bir yerde tanımlıdır (hayalet token yok) (75.681971ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 591.009056

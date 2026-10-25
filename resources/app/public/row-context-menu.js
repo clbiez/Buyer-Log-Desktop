@@ -152,7 +152,7 @@
     const items = managedClipboardEntries(config, table, cell);
     if (!items.length) return false;
     event.preventDefault();
-    render(items, event.clientX, event.clientY, T('Kopyalama', 'Copy'), config.module === 'detail' ? { zIndex: 53100 } : {});
+    render(items, event.clientX, event.clientY, T('Kopyalama', 'Copy'), config.module === 'detail' ? { zIndex: 'var(--ui-z-modal-menu)' } : {});
     return true;
   }
 

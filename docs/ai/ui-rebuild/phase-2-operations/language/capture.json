@@ -1,0 +1,38 @@
+{
+  "screens": [
+    {
+      "name": "automation-create-en-1280-xl",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 66,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      },
+      "language": "en"
+    },
+    {
+      "name": "lcwai-en-1280-xl",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 50,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      },
+      "language": "en"
+    },
+    {
+      "name": "users-en-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 98,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      },
+      "language": "en"
+    }
+  ],
+  "historyNote": "Chat history is kept for this user on this device."
+}

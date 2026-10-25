@@ -18,7 +18,7 @@ const ROOT = path.join(__dirname, '..');
 const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8');
 
 const APP_MAIN = read('public/app-main.js');
-const DESIGN = read('public/design.css');
+const DESIGN = require('./helpers/manifest-css')();
 const MAIN_SOURCE = read('electron/main.js');
 const PRELOAD_SOURCE = read('electron/preload.js');
 
@@ -78,8 +78,7 @@ function UI_SOURCE() { return read('public/ui-primitives.js'); }
 /* --------------------------------------------------------------- design.css */
 
 test('design.css: dosya-hazır kartının ek satırları da token tabanlı, hex renk yok', () => {
-  const start = DESIGN.indexOf('/* v10.38 — DURUM VE GERİ BİLDİRİM SİSTEMİ */');
-  const block = DESIGN.slice(start);
+  const block = require('./helpers/manifest-css').rules(/uiFeedback/);
   assert.match(block, /\.uiFeedbackDetail\{/);
   assert.match(block, /\.uiFeedbackActions\{/);
   assert.doesNotMatch(block, /#[0-9a-f]{3,8}\b/i);

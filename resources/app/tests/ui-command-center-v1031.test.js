@@ -8,7 +8,7 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const APP = read('public/app-main.js');
-const CSS = read('public/app.css');
+const CSS = require('./helpers/manifest-css')();
 const INDEX = read('public/index.html');
 
 test('v10.31 ortak durum bileşeni güvenli, erişilebilir ve eylem desteklidir', () => {
@@ -50,5 +50,5 @@ test('v10.70 komuta merkezi kaldırılırken Overview veri çizimi diğer modül
 test('v10.70 komuta merkezi kaldırılırken kullanılmayan stiller de bırakılmaz', () => {
   assert.doesNotMatch(CSS, /\.ovCommand(?:Center|Header|Layout|Focus|Kpi|Actions|Primary|Health)/);
   assert.match(CSS, /@media\(prefers-reduced-motion:reduce\)/);
-  assert.match(CSS, /\.uiState:focus-within/);
+  require('./helpers/manifest-css').assertFocus();
 });

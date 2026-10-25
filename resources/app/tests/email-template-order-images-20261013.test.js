@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const APP=fs.readFileSync(path.join(__dirname,'..','public','app-main.js'),'utf8');
-const CSS=fs.readFileSync(path.join(__dirname,'..','public','app.css'),'utf8');
+const CSS=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 function between(start,end){
   const i=APP.indexOf(start),j=APP.indexOf(end,i+start.length);
   assert.ok(i>=0&&j>i,'Missing email editor section: '+start);
@@ -86,7 +86,7 @@ test('editor includes practical field search, ordering and theme-compatible cont
   assert.match(editor,/mailTopicSeparatorCustom/);
   assert.match(editor,/topic\.subjectOrder\[sourceKind\]=subjectArrange\.slice\(\)/);
   assert.match(CSS,/\.mailTopicSubjectArrange\{/);
-  assert.match(CSS,/background:var\(--card2\)/);
+  assert.match(CSS,/background:var\(--ui-surface-soft\)/);
 });
 
 
@@ -116,5 +116,5 @@ test('mail field chooser reuses CP heading groups without modifying CP preferenc
   assert.match(editor,/subjectCheck\.indeterminate=/);
   assert.doesNotMatch(editor,/saveAutoTableColumnState\(/);
   assert.match(CSS,/\.mailTopicEditorCard \.mailTopicFieldGroup\{/);
-  assert.match(CSS,/--grp-accent/);
+  assert.match(CSS,/\.mailTopicEditorCard \.mailTopicFieldGroup\{background:var\(--ui-surface-soft\)/);
 });

@@ -1,0 +1,266 @@
+{
+  "contrast": [
+    {
+      "theme": "light",
+      "tab": "overview",
+      "checked": 119,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "light",
+      "tab": "cp",
+      "checked": 186,
+      "failures": [
+        {
+          "text": "▾",
+          "id": "",
+          "cls": "thFilterBtn chkFilterBtn",
+          "fg": "rgb(92, 101, 88)",
+          "bg": [
+            225,
+            221,
+            207,
+            1
+          ],
+          "ratio": 4.47
+        },
+        {
+          "text": "▾",
+          "id": "",
+          "cls": "thFilterBtn",
+          "fg": "rgb(92, 101, 88)",
+          "bg": [
+            225,
+            221,
+            207,
+            1
+          ],
+          "ratio": 4.47
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "overview",
+      "checked": 119,
+      "failures": [
+        {
+          "text": "Version 7.294",
+          "id": "appVersionBtn",
+          "cls": "appVersionBtn",
+          "fg": "rgb(79, 91, 72)",
+          "bg": [
+            198,
+            198,
+            185,
+            1
+          ],
+          "ratio": 4.17
+        },
+        {
+          "text": "Ana Sayfa",
+          "id": "",
+          "cls": "railGroupLabel",
+          "fg": "rgb(79, 91, 72)",
+          "bg": [
+            198,
+            198,
+            185,
+            1
+          ],
+          "ratio": 4.17
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "cp",
+      "checked": 186,
+      "failures": [
+        {
+          "text": "Version 7.294",
+          "id": "appVersionBtn",
+          "cls": "appVersionBtn",
+          "fg": "rgb(79, 91, 72)",
+          "bg": [
+            198,
+            198,
+            185,
+            1
+          ],
+          "ratio": 4.17
+        },
+        {
+          "text": "Ana Sayfa",
+          "id": "",
+          "cls": "railGroupLabel",
+          "fg": "rgb(79, 91, 72)",
+          "bg": [
+            198,
+            198,
+            185,
+            1
+          ],
+          "ratio": 4.17
+        },
+        {
+          "text": "▾",
+          "id": "",
+          "cls": "thFilterBtn chkFilterBtn",
+          "fg": "rgb(79, 91, 72)",
+          "bg": [
+            196,
+            200,
+            186,
+            1
+          ],
+          "ratio": 4.21
+        },
+        {
+          "text": "▾",
+          "id": "",
+          "cls": "thFilterBtn",
+          "fg": "rgb(79, 91, 72)",
+          "bg": [
+            196,
+            200,
+            186,
+            1
+          ],
+          "ratio": 4.21
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "dark",
+      "tab": "overview",
+      "checked": 119,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "dark",
+      "tab": "cp",
+      "checked": 186,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    }
+  ],
+  "geometry": [
+    {
+      "theme": "light",
+      "tab": "overview",
+      "rounded": [
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "tab": "cp",
+      "rounded": []
+    },
+    {
+      "theme": "grey",
+      "tab": "overview",
+      "rounded": [
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        }
+      ]
+    },
+    {
+      "theme": "grey",
+      "tab": "cp",
+      "rounded": []
+    },
+    {
+      "theme": "dark",
+      "tab": "overview",
+      "rounded": [
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "tab": "cp",
+      "rounded": []
+    }
+  ],
+  "scales": [],
+  "behavior": [],
+  "fonts": []
+}

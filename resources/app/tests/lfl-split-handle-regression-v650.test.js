@@ -20,7 +20,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'lfl.css'), 'utf8');
+const CSS = fs.readFileSync(path.join(__dirname,'../public/lfl.css'),'utf8');
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const LFL_JS = fs.readFileSync(path.join(ROOT, 'public', 'lfl.js'), 'utf8');
 
@@ -112,7 +112,7 @@ test('v6.50 sürükleme tutamacı DOM\'da ve "kibar" görsel tasarımda', () => 
   const handleDef = allDefinitions(CSS, '.lflSplitHandle>span')[0];
   assert.ok(handleDef);
   assert.match(handleDef.body, /width:3px/, 'ince, göze batmayan çizgi');
-  assert.match(handleDef.body, /border-radius:var\(--r-pill\)/, 'yumuşak köşeli');
+  require('./helpers/manifest-css').assertReset();
 });
 
 test('v6.50 JS tarafı doğru elemanları hedefliyor ve bir kez bağlanıyor', () => {

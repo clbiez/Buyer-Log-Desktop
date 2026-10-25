@@ -1,0 +1,87 @@
+/* Manifest — canonical UI source for app, sign-in and boot. Export is independent. */
+@font-face{font-family:"BL Plex Sans";src:url("vendor/fonts/IBMPlexSans.woff2") format("woff2");font-style:normal;font-weight:100 900;font-display:swap;}
+@font-face{font-family:"BL Plex Mono";src:url("vendor/fonts/IBMPlexMono.woff2") format("woff2");font-style:normal;font-weight:400;font-display:swap;}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:400;font-display:swap;
+  src:url("vendor/fonts/barlow-condensed-400-latin-ext.woff2") format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:400;font-display:swap;
+  src:url("vendor/fonts/barlow-condensed-400-latin.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:600;font-display:swap;
+  src:url("vendor/fonts/barlow-condensed-600-latin-ext.woff2") format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-weight:600;font-display:swap;
+  src:url("vendor/fonts/barlow-condensed-600-latin.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+:root{
+ --ui-font-body:"BL Plex Sans",sans-serif;--ui-font-heading:"Barlow Condensed",sans-serif;--ui-font-mono:"BL Plex Mono",monospace;
+ --ui-font-add:0px;--ui-topbar-height:52px;--ui-scale:1;--ui-control-height:34px;
+ --ui-font-2xs:calc(11px + var(--ui-font-add));
+ --ui-font-xs:calc(12px + var(--ui-font-add));
+ --ui-font-sm:calc(13px + var(--ui-font-add));
+ --ui-font-base:calc(14px + var(--ui-font-add));
+ --ui-font-md:calc(15px + var(--ui-font-add));
+ --ui-font-lg:calc(18px + var(--ui-font-add));
+ --ui-font-xl:calc(24px + var(--ui-font-add));
+ --ui-font-2xl:calc(30px + var(--ui-font-add));
+ --ui-font-3xl:calc(36px + var(--ui-font-add));
+ --ui-font-4xl:calc(44px + var(--ui-font-add));
+ --ui-feedback-tone:var(--ui-accent);--ui-feedback-surface:var(--ui-surface);
+ --ui-radius:0;--ui-radius-avatar:50%;
+ --ui-space-1:4px;--ui-space-2:8px;--ui-space-3:12px;--ui-space-4:16px;--ui-space-5:24px;--ui-space-6:32px;
+ --ui-motion-fast:100ms;--ui-motion-enter:140ms;--ui-ease:cubic-bezier(.2,.7,.3,1);
+ --ui-shadow-overlay:0 16px 46px color-mix(in srgb,var(--ui-text) 18%,transparent);
+ --ui-scrim:rgba(8,12,18,.48);
+ /* Shared stack bands. Nested dialogs use 201–299; menus and notices stay above. */
+ --ui-z-sticky:30;--ui-z-sticky-column:31;--ui-z-chrome:40;--ui-z-popover:100;--ui-z-modal:200;--ui-z-boot:500;
+ --ui-z-below:-1;--ui-z-base:0;--ui-z-data:1;--ui-z-raised:2;--ui-z-modal-menu:300;--ui-z-tooltip:400;
+ /* Ink colors used by all categorical charts; labels carry category meaning. */
+ --ui-chart-1:var(--ui-accent);--ui-chart-2:var(--ui-warning);--ui-chart-3:#376f73;--ui-chart-4:#81523e;
+ --ui-chart-5:#665b35;--ui-chart-6:var(--ui-success);--ui-chart-7:var(--ui-danger);--ui-chart-8:#536478;
+ --ui-table-row-height:32px;--ui-table-group-height:29px;--ui-table-head-padding:8px;--ui-table-cell-padding:7px;
+ --ui-status-default:#667085;--ui-series-color:var(--ui-accent);--ui-metric-color:var(--ui-text);
+ --ui-canvas:#f5f7f9;--ui-rail:#f0f3f6;--ui-surface:#fff;--ui-surface-soft:#fafbfc;--ui-surface-strong:#e9edf1;
+ --ui-text:#16212d;--ui-text-secondary:#374454;--ui-text-muted:#5f6f80;
+ --ui-accent:#356a96;--ui-accent-hover:#275779;--ui-selected:#eaf2f8;--ui-selected-ink:#245578;--ui-on-accent:#fff;
+ --ui-success:#386e4f;--ui-success-bg:#e3ede6;--ui-danger:#a8453a;--ui-danger-bg:#f4e7e4;--ui-warning:#805f18;--ui-warning-bg:#f2ead6;
+ --ui-header-bg:#f2f4f7;--ui-header-ink:#475467;--ui-group-header-bg:var(--ui-header-bg);--ui-group-header-ink:var(--ui-header-ink);
+ --ui-check-idle:#728193;--ui-row-divider:#e6e9ed;--ui-group-divider:#cbd1d9;
+ --ui-row-hover:color-mix(in srgb,var(--ui-accent) 6%,var(--ui-surface));
+ --ui-chart-grid:color-mix(in srgb,var(--ui-text) 16%,var(--ui-surface));
+}
+:root[data-theme="grey"]{
+ --ui-canvas:#d4d5d7;--ui-rail:#cbccce;--ui-surface:#e9eaec;--ui-surface-soft:#dfe1e4;--ui-surface-strong:#c9cdd2;
+ --ui-text:#19222c;--ui-text-secondary:#394652;--ui-text-muted:#414e5a;
+ --ui-accent:#315e83;--ui-accent-hover:#244b6b;--ui-selected:#c9d9e6;--ui-selected-ink:#234865;--ui-on-accent:#fff;
+ --ui-success:#0f6640;--ui-success-bg:#c3d8cb;--ui-danger:#a01d14;--ui-danger-bg:#e3c7c4;--ui-warning:#7a5000;--ui-warning-bg:#ddd0b0;
+ --ui-header-bg:#e8e9ec;--ui-header-ink:#565a5e;--ui-check-idle:#667381;--ui-row-divider:#cfd3d8;--ui-group-divider:#bcc1c8;
+}
+:root[data-theme="dark"]{
+ color-scheme:dark;
+ --ui-canvas:#171c22;--ui-rail:#14191f;--ui-surface:#20262e;--ui-surface-soft:#252d36;--ui-surface-strong:#303a46;
+ --ui-text:#f0f3f6;--ui-text-secondary:#bdc8d4;--ui-text-muted:#a0adba;
+ --ui-accent:#8fbfe8;--ui-accent-hover:#acd0ed;--ui-selected:#294056;--ui-selected-ink:#d5eafd;--ui-on-accent:#14202a;
+ --ui-success:#93c7a8;--ui-success-bg:rgba(147,199,168,.12);--ui-danger:#e39b94;--ui-danger-bg:rgba(227,155,148,.12);--ui-warning:#d9ba7e;--ui-warning-bg:rgba(217,186,126,.12);
+ --ui-header-bg:#252d36;--ui-header-ink:#bdc8d4;--ui-group-header-bg:#303a46;--ui-group-header-ink:#bdc8d4;
+ --ui-check-idle:#8594a5;--ui-row-divider:#343e49;--ui-group-divider:#505c6a;
+ --ui-chart-3:#9fc6c4;--ui-chart-4:#d5b493;--ui-chart-5:#c9c39a;--ui-chart-8:#b2c0d2;
+}
+:root[data-ui-scale="compact"]{--ui-topbar-height:48px;--ui-scale:.9;--ui-font-add:-1px;--ui-control-height:30px;--ui-table-row-height:28px;--ui-table-group-height:25px;--ui-table-head-padding:6px;--ui-table-cell-padding:5px;}
+:root[data-ui-scale="standard"]{--ui-scale:1;--ui-font-add:0px;--ui-control-height:34px;}
+:root[data-ui-scale="large"]{--ui-topbar-height:58px;--ui-scale:1.125;--ui-font-add:1.5px;--ui-control-height:38px;--ui-table-row-height:36px;--ui-table-group-height:33px;--ui-table-head-padding:9px;--ui-table-cell-padding:8px;}
+:root[data-ui-scale="xl"]{--ui-topbar-height:64px;--ui-scale:1.25;--ui-font-add:3px;--ui-control-height:42px;--ui-table-row-height:40px;--ui-table-group-height:37px;--ui-table-head-padding:10px;--ui-table-cell-padding:9px;}
+
+/* Shared interaction geometry; four canonical presets. */
+:root{--ui-print-header:#f2f4f7;--ui-print-ink:#000;--ui-print-paper:#fff;--ui-print-rule:#d0d5dd;
+ --ui-space-7:40px;--ui-no-filter:none;--ui-no-shadow:none;color-scheme:light;}
+:root[data-ui-scale="standard"]{--ui-rail-width:208px;--ui-rail-collapsed-width:66px;--ui-rail-expanded-width:208px;--ui-rail-item-height:calc(35px * 1);--ui-rail-footer-height:34px;--ui-rail-control-size:30px;--ui-icon-control-size:34px;--ui-control-height-large:calc(34px + 6px);--ui-page-padding:20.4px;--ui-section-gap:13.6px;--ui-panel-padding:13.6px;--ui-table-edit-padding:2px;--ui-control-height-small:calc(var(--ui-control-height) - 4px);}
+:root[data-ui-scale="large"]{--ui-rail-width:224px;--ui-rail-collapsed-width:72px;--ui-rail-expanded-width:224px;--ui-rail-item-height:calc(35px * 1.125);--ui-rail-footer-height:38px;--ui-rail-control-size:34px;--ui-icon-control-size:38px;--ui-control-height-large:calc(38px + 6px);--ui-page-padding:23px;--ui-section-gap:18px;--ui-panel-padding:18px;--ui-table-edit-padding:3px;--ui-control-height-small:calc(var(--ui-control-height) - 4px);}
+:root[data-ui-scale="xl"]{--ui-rail-width:240px;--ui-rail-collapsed-width:78px;--ui-rail-expanded-width:240px;--ui-rail-item-height:calc(35px * 1.25);--ui-rail-footer-height:42px;--ui-rail-control-size:38px;--ui-icon-control-size:42px;--ui-control-height-large:calc(42px + 6px);--ui-page-padding:25px;--ui-section-gap:20px;--ui-panel-padding:20px;--ui-table-edit-padding:4px;--ui-control-height-small:calc(var(--ui-control-height) - 4px);}
+:root[data-ui-scale="compact"]{--ui-rail-width:196px;--ui-rail-collapsed-width:60px;--ui-rail-expanded-width:196px;--ui-rail-item-height:calc(35px * .9);--ui-rail-footer-height:32px;--ui-rail-control-size:28px;--ui-icon-control-size:32px;--ui-control-height-large:calc(30px + 6px);--ui-page-padding:18px;--ui-section-gap:14px;--ui-panel-padding:14px;--ui-table-edit-padding:1px;--ui-control-height-small:calc(var(--ui-control-height) - 4px);}
+:root[data-theme="dark"]{color-scheme:dark;}
+
+/* Collapsed navigation keeps the content offset at its narrow width. */
+:root[data-ui-scale][data-rail="min"]{--ui-rail-width:var(--ui-rail-collapsed-width);}
+
+/* Packaged satin avatar patch is light in every theme. */
+:root{--ui-avatar-ink:#23272c;--ui-avatar-paper:#e6e9ec;}

@@ -1,0 +1,85 @@
+{
+  "scope": "Phase 2.3 Operations/Settings; local only",
+  "runs": [
+    {
+      "run": "initial-targeted",
+      "log": "checks/initial-targeted.txt",
+      "note": "Seven old source-owner/markup assertions were updated without dropping behavior coverage.",
+      "tests": 170,
+      "pass": 163,
+      "fail": 7
+    },
+    {
+      "run": "owner-followup",
+      "log": "checks/owner-followup.txt",
+      "note": "Two source-owner assertions still needed exact canonical selectors.",
+      "tests": 120,
+      "pass": 118,
+      "fail": 2
+    },
+    {
+      "run": "owner-final",
+      "log": "checks/owner-final.txt",
+      "note": "Correct canonical owner and unchanged tool-list layout verified.",
+      "tests": 60,
+      "pass": 60,
+      "fail": 0
+    },
+    {
+      "run": "manifest-contract",
+      "log": "checks/manifest-contract.txt",
+      "note": "Ten Manifest checks; a mistyped extra filename did not run the layer tests in this invocation.",
+      "tests": 10,
+      "pass": 10,
+      "fail": 0
+    },
+    {
+      "run": "keyboard-tests",
+      "log": "checks/keyboard-tests.txt",
+      "note": "38 actual layer, component, LCW AI, sync-guide and report-column tests.",
+      "tests": 38,
+      "pass": 38,
+      "fail": 0
+    },
+    {
+      "run": "final-targeted",
+      "log": "checks/final-targeted.txt",
+      "note": "One loading test assumed the section had no data attribute; corrected the locator.",
+      "tests": 77,
+      "pass": 76,
+      "fail": 1
+    },
+    {
+      "run": "last-targeted",
+      "log": "checks/last-targeted.txt",
+      "note": "43 targeted checks passed after final visible changes.",
+      "tests": 43,
+      "pass": 43,
+      "fail": 0
+    },
+    {
+      "run": "i18n-final",
+      "log": "checks/i18n-final.txt",
+      "note": "0 missing TR/EN strings; baseline remains empty."
+    },
+    {
+      "run": "release-notes",
+      "changes": 63,
+      "status": "passed",
+      "log": "checks/release-notes.txt"
+    }
+  ],
+  "fullNpmTest": "Not run: reserved for the end of Phase 3",
+  "ci": "not run",
+  "pr": "local draft only",
+  "runtime": {
+    "mainPNGs": 30,
+    "statesPNGs": 20,
+    "lastPNGs": 14,
+    "languagePNGs": 3,
+    "keyboardScenarios": 15,
+    "sampledGeometryContrastOverflowFailures": 0,
+    "note": "last/ supersedes matching earlier names; language/ supersedes all earlier EN samples. The initial screen PNGs were removed; failure JSON remains."
+  },
+  "performance": "performance-comparison.json"
+}

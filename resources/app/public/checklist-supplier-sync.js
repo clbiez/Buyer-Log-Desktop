@@ -2617,7 +2617,7 @@
       ? '<button type="button" class="delTypeOption clStatusOption" data-cl-evidence>'
         + '<span aria-hidden="true">📎</span><span>' + T('Checklist Detayları / Bileşenler / Ekler', 'Checklist Details / Components / Attachments') + '</span></button>'
         + elementMenuHtml(menuAnswer)
-        + '<div style="height:1px;background:var(--line);margin:5px 4px"></div>'
+        + '<div style="height:1px;background:var(--ui-row-divider);margin:5px 4px"></div>'
       : '') + statusOptions;
     // ROS/Lab Dip is a single CP checklist cell: on click, show all
     // colour decisions beneath the existing status actions, not new columns.

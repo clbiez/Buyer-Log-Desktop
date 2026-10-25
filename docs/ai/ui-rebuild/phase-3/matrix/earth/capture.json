@@ -1,0 +1,3411 @@
+{
+  "screens": [
+    {
+      "name": "flow-map-light-standard-1440",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-light-standard-1280",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 94,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-light-large-1440",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 112,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-light-large-1280",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 93,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-light-xl-1440",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 107,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-light-xl-1280",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 87,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-light-compact-1440",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 115,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-light-compact-1280",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 97,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-grey-standard-1440",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-grey-standard-1280",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 94,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-grey-large-1440",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 112,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-grey-large-1280",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 93,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-grey-xl-1440",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 107,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-grey-xl-1280",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 87,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-grey-compact-1440",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 115,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-grey-compact-1280",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 97,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-dark-standard-1440",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-dark-standard-1280",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 94,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-dark-large-1440",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 112,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-dark-large-1280",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 93,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-dark-xl-1440",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 107,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-dark-xl-1280",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 87,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-dark-compact-1440",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 115,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-map-dark-compact-1280",
+      "family": "flow-map",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 97,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-light-standard-1440",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 140,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-light-standard-1280",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 120,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-light-large-1440",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 138,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-light-large-1280",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 119,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-light-xl-1440",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 133,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-light-xl-1280",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 113,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-light-compact-1440",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 141,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-light-compact-1280",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 123,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-grey-standard-1440",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 140,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-grey-standard-1280",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 120,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-grey-large-1440",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 138,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-grey-large-1280",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 119,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-grey-xl-1440",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 133,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-grey-xl-1280",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 113,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-grey-compact-1440",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 141,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-grey-compact-1280",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 123,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-dark-standard-1440",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 140,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-dark-standard-1280",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 120,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-dark-large-1440",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 138,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-dark-large-1280",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 119,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-dark-xl-1440",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 133,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-dark-xl-1280",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 113,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-dark-compact-1440",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 141,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-filters-dark-compact-1280",
+      "family": "flow-filters",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 123,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-light-standard-1440",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-light-standard-1280",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 94,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-light-large-1440",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 112,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-light-large-1280",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 93,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-light-xl-1440",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 107,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-light-xl-1280",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 87,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-light-compact-1440",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 115,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-light-compact-1280",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 97,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-grey-standard-1440",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-grey-standard-1280",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 94,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-grey-large-1440",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 112,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-grey-large-1280",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 93,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-grey-xl-1440",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 107,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-grey-xl-1280",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 87,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-grey-compact-1440",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 115,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-grey-compact-1280",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 97,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-dark-standard-1440",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-dark-standard-1280",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 94,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-dark-large-1440",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 112,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-dark-large-1280",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 93,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-dark-xl-1440",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 107,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-dark-xl-1280",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 87,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-dark-compact-1440",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 115,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "flow-globe-dark-compact-1280",
+      "family": "flow-globe",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 97,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-light-standard-1440",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 112,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-light-standard-1280",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 92,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-light-large-1440",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 110,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-light-large-1280",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 91,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-light-xl-1440",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 105,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-light-xl-1280",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 85,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-light-compact-1440",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 113,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-light-compact-1280",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 95,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-grey-standard-1440",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 112,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-grey-standard-1280",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 92,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-grey-large-1440",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 110,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-grey-large-1280",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 91,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-grey-xl-1440",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 105,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-grey-xl-1280",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 85,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-grey-compact-1440",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 113,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-grey-compact-1280",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 95,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-dark-standard-1440",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 112,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-dark-standard-1280",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 92,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-dark-large-1440",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 110,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-dark-large-1280",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 91,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-dark-xl-1440",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 105,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-dark-xl-1280",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 85,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-dark-compact-1440",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 113,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-offline-dark-compact-1280",
+      "family": "earth-offline",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 95,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-light-standard-1440",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 131,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-light-standard-1280",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 111,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-light-large-1440",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 129,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-light-large-1280",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 110,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-light-xl-1440",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 124,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-light-xl-1280",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 104,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-light-compact-1440",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 132,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-light-compact-1280",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-grey-standard-1440",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 131,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-grey-standard-1280",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 111,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-grey-large-1440",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 129,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-grey-large-1280",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 110,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-grey-xl-1440",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 124,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-grey-xl-1280",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 104,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-grey-compact-1440",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 132,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-grey-compact-1280",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-dark-standard-1440",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 131,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-dark-standard-1280",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 111,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-dark-large-1440",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 129,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-dark-large-1280",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 110,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-dark-xl-1440",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 124,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-dark-xl-1280",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 104,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-dark-compact-1440",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 132,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-view-dark-compact-1280",
+      "family": "earth-view",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-light-standard-1440",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 126,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-light-standard-1280",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 106,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-light-large-1440",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 124,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-light-large-1280",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 105,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-light-xl-1440",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 119,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-light-xl-1280",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 99,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-light-compact-1440",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 127,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-light-compact-1280",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 109,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-grey-standard-1440",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 126,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-grey-standard-1280",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 106,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-grey-large-1440",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 124,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-grey-large-1280",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 105,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-grey-xl-1440",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 119,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-grey-xl-1280",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 99,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-grey-compact-1440",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 127,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-grey-compact-1280",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 109,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-dark-standard-1440",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 126,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-dark-standard-1280",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 106,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-dark-large-1440",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 124,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-dark-large-1280",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 105,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-dark-xl-1440",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 119,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-dark-xl-1280",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 99,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-dark-compact-1440",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 127,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-layers-dark-compact-1280",
+      "family": "earth-layers",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 109,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-light-standard-1440",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 126,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-light-standard-1280",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "light",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 106,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-light-large-1440",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 124,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-light-large-1280",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "light",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 105,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-light-xl-1440",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 119,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-light-xl-1280",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "light",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 99,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-light-compact-1440",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 127,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-light-compact-1280",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "light",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 109,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-grey-standard-1440",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 126,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-grey-standard-1280",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "grey",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 106,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-grey-large-1440",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 124,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-grey-large-1280",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "grey",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 105,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-grey-xl-1440",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 119,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-grey-xl-1280",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "grey",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 99,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-grey-compact-1440",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 127,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-grey-compact-1280",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "grey",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 109,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-dark-standard-1440",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 126,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-dark-standard-1280",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "dark",
+        "scale": "standard",
+        "fontAdd": "0px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 106,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-dark-large-1440",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 124,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-dark-large-1280",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "dark",
+        "scale": "large",
+        "fontAdd": "1.5px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 105,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-dark-xl-1440",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 119,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-dark-xl-1280",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "dark",
+        "scale": "xl",
+        "fontAdd": "3px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 99,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-dark-compact-1440",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1440,
+        "height": 900,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 127,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "earth-settings-dark-compact-1280",
+      "family": "earth-settings",
+      "appearance": {
+        "theme": "dark",
+        "scale": "compact",
+        "fontAdd": "-1px",
+        "width": 1280,
+        "height": 720,
+        "lang": "tr"
+      },
+      "styleHash": "098310a4716b69cfc41071f70ca88c4183e1f7f2f8706ca6ad186bb4e5ca844c",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 109,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    }
+  ],
+  "errors": [],
+  "checks": [
+    {
+      "engine": {
+        "engine": "earth",
+        "selection": "",
+        "earth": {
+          "paused": false,
+          "destroyed": false,
+          "animating": false,
+          "quality": "balanced",
+          "vehicles": 5,
+          "routes": 47,
+          "clusters": 2,
+          "provider": "offline",
+          "providerStatus": "ok",
+          "tileProgress": 0
+        },
+        "earthError": "",
+        "earthLoading": false,
+        "view": "3d",
+        "panX": 0,
+        "panY": 0,
+        "zoom2d": 1,
+        "rotLon": 18,
+        "rotLat": -12,
+        "zoom3d": 1,
+        "filtered": 273,
+        "quickActive": [],
+        "filters": {
+          "search": "",
+          "season": [],
+          "mag": [],
+          "mmyg": [],
+          "buyer": [],
+          "buyingGroup": [],
+          "manufacturer": [],
+          "country": [],
+          "line": [],
+          "category": [],
+          "license": [],
+          "mode": [],
+          "status": []
+        }
+      }
+    }
+  ]
+}

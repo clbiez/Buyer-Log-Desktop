@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const SELECTED_IDS = ['kolCopySelectedBtn', 'kolDuplicateBtn', 'kolDropSelectedBtn', 'kolDelRowBtn'];
 
@@ -18,7 +18,7 @@ function openingButton(id) {
 
 test('v10.42 Collection selected-row actions stay compact without a redundant Selected Models label', () => {
   assert.doesNotMatch(INDEX, /kolSelectedGroupLabel/);
-  assert.match(CSS, /#kolTableActions>:is\(#kolCopySelectedBtn,#kolDuplicateBtn,#kolDropSelectedBtn,#kolDelRowBtn\)\{[\s\S]*width:var\(--ctl-h\)/);
+  assert.match(CSS, /#kolTableActions>:is\(#kolCopySelectedBtn,#kolDuplicateBtn,#kolDropSelectedBtn,#kolDelRowBtn\)\{[\s\S]*width:var\(--ui-control-height\)/);
   assert.match(CSS, /#kolTableActions>:is\(#kolCopySelectedBtn,#kolDuplicateBtn,#kolDropSelectedBtn,#kolDelRowBtn\)>span\{display:none!important;\}/);
 });
 

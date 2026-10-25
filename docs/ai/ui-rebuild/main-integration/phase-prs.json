@@ -1,0 +1,47 @@
+[
+  {
+    "phase": "1",
+    "number": 715,
+    "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/715",
+    "head": "ui-rebuild/phase-1-manifest",
+    "head_sha": "2324ba7c322958eb8b3627c1431cc40d54d7a846",
+    "state": "open",
+    "mergeable": false
+  },
+  {
+    "phase": "2.1",
+    "number": 716,
+    "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/716",
+    "head": "ui-rebuild/phase-2-plan-execute",
+    "head_sha": "cc36116f4632c99c6e76338e25ae89924fa0ae69",
+    "state": "open",
+    "mergeable": false
+  },
+  {
+    "phase": "2.2",
+    "number": 717,
+    "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/717",
+    "head": "ui-rebuild/phase-2-commercial",
+    "head_sha": "b42b410c62ee8573a44400c4a890e69f5c061d33",
+    "state": "open",
+    "mergeable": false
+  },
+  {
+    "phase": "2.3",
+    "number": 718,
+    "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/718",
+    "head": "ui-rebuild/phase-2-operations",
+    "head_sha": "555a1b48f9398324a6fb7efc3839b65ae6d8e307",
+    "state": "open",
+    "mergeable": false
+  },
+  {
+    "phase": "2.4",
+    "number": 719,
+    "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/719",
+    "head": "ui-rebuild/phase-2-remaining",
+    "head_sha": "05951638e195fc8c82c19376c80230f2f69856ab",
+    "state": "open",
+    "mergeable": false
+  }
+]

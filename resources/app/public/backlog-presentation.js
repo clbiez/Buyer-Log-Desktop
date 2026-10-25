@@ -44,7 +44,7 @@
 
   function ensureOverlay(){
     if(overlay)return overlay;
-    overlay=doc.createElement('div');overlay.className='blpOverlay';overlay.hidden=true;
+    overlay=doc.createElement('div');overlay.className='blpOverlay';overlay.dataset.uiMigrated='presentation';overlay.hidden=true;
     overlay.innerHTML='<div class="blpDialog" role="dialog" aria-modal="true" aria-labelledby="blpTitle"><header class="blpHead"><div class="blpTitleBox"><h2 id="blpTitle"></h2><span class="blpMeta" id="blpMeta"></span></div><div class="blpActions"><button type="button" class="tbtn" data-blp="html"><svg class="ic"><use href="#i-download"/></svg><span></span></button><button type="button" class="tbtn" data-blp="pdf"><svg class="ic"><use href="#i-file-export"/></svg><span></span></button><button type="button" class="tbtn" data-blp="excel"><svg class="ic"><use href="#i-chart-bar"/></svg><span></span></button><button type="button" class="tbtn blpClose" data-blp="close"><svg class="ic"><use href="#i-x"/></svg><span></span></button></div></header><div class="blpBody"><iframe class="blpFrame" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe><div class="blpState" hidden></div></div></div>';
     doc.body.appendChild(overlay);
     const time=doc.createElement('div');time.className='blpTime';time.hidden=true;
@@ -111,7 +111,7 @@
     for(const [selector,value] of [['.blpTimeStart',bounds?.start],['.blpTimeEnd',bounds?.end]])time.querySelector(selector).setAttribute('aria-valuetext',value?periodLabel(value,'date'):L('Tarih yok','No date'));
     const max=Math.max(1,domain.count-1),track=time.querySelector('.blpTimeTrack');
     track.style.setProperty('--blp-from',(lo/max*100)+'%');track.style.setProperty('--blp-to',(hi/max*100)+'%');
-    time.querySelector('.blpTimeStart').style.zIndex=lo===domain.count-1?'3':'1';
+    time.querySelector('.blpTimeStart').style.zIndex=lo===domain.count-1?'var(--ui-z-raised)':'var(--ui-z-data)';
     time.querySelector('[data-blp="reset"]').disabled=all;
     const count=current.items.length.toLocaleString(isEn()?'en-US':'tr-TR'),total=current.sourceItems.length.toLocaleString(isEn()?'en-US':'tr-TR');
     overlay.querySelector('#blpMeta').textContent=L(`${count} / ${total} satır · ${current.created}`,`${count} / ${total} rows · ${current.created}`);

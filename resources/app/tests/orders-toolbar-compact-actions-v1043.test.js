@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const COMPACT_IDS = [
   'ordersRefreshBtn', 'undoBtn', 'redoBtn', 'navCopy', 'navCopyMenuBtn',
@@ -21,8 +21,8 @@ function openingButton(id) {
 
 test('v10.43 Orders actions compact before the desktop toolbar needs horizontal scrolling', () => {
   assert.match(CSS, /@media\(max-width:1000px\)\{[\s\S]*#ordersTableToolbar\{overflow-x:visible;/);
-  assert.match(CSS, /#ordersTableToolbar>#ordersRefreshBtn,[\s\S]*#ordersTableToolbar>:is\(#ordersPlmSyncWrap,#ordersToolsWrap,#ordersMoreWrap\)>\.tbtn\{[\s\S]*width:var\(--ctl-h\)/);
-  assert.match(CSS, /#ordersTableActions>:is\(#undoBtn,#redoBtn,#navCopy,#navCopyMenuBtn,#navExcelBtn\)\{[\s\S]*width:var\(--ctl-h\)/);
+  assert.match(CSS, /#ordersTableToolbar>#ordersRefreshBtn,[\s\S]*#ordersTableToolbar>:is\(#ordersPlmSyncWrap,#ordersToolsWrap,#ordersMoreWrap\)>\.tbtn\{[\s\S]*width:var\(--ui-control-height\)/);
+  assert.match(CSS, /#ordersTableActions>:is\(#undoBtn,#redoBtn,#navCopy,#navCopyMenuBtn,#navExcelBtn\)\{[\s\S]*width:var\(--ui-control-height\)/);
   assert.match(CSS, /#ordersTableToolbar>#ordersRefreshBtn>span,[\s\S]*#ordersTableToolbar>:is\(#ordersPlmSyncWrap,#ordersToolsWrap\)>\.tbtn>span,[\s\S]*#ordersTableActions>:is\(#undoBtn,#redoBtn,#navCopy,#navExcelBtn\)>span\{display:none!important;\}/);
 });
 

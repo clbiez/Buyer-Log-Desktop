@@ -1,0 +1,605 @@
+{
+  "rows": [
+    {
+      "theme": "light",
+      "step": 0,
+      "width": 1440,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1385,
+          "y": 10.5,
+          "width": 31,
+          "height": 31,
+          "top": 10.5,
+          "right": 1416,
+          "bottom": 41.5,
+          "left": 1385
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "light",
+      "step": 0,
+      "width": 1280,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1225,
+          "y": 10.5,
+          "width": 31,
+          "height": 31,
+          "top": 10.5,
+          "right": 1256,
+          "bottom": 41.5,
+          "left": 1225
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "light",
+      "step": 1,
+      "width": 1440,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1385,
+          "y": 13.5,
+          "width": 31,
+          "height": 31,
+          "top": 13.5,
+          "right": 1416,
+          "bottom": 44.5,
+          "left": 1385
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "light",
+      "step": 1,
+      "width": 1280,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1225,
+          "y": 13.5,
+          "width": 31,
+          "height": 31,
+          "top": 13.5,
+          "right": 1256,
+          "bottom": 44.5,
+          "left": 1225
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "light",
+      "step": 2,
+      "width": 1440,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1385,
+          "y": 16.5,
+          "width": 31,
+          "height": 31,
+          "top": 16.5,
+          "right": 1416,
+          "bottom": 47.5,
+          "left": 1385
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "light",
+      "step": 2,
+      "width": 1280,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1225,
+          "y": 16.5,
+          "width": 31,
+          "height": 31,
+          "top": 16.5,
+          "right": 1256,
+          "bottom": 47.5,
+          "left": 1225
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "light",
+      "step": 3,
+      "width": 1440,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1385,
+          "y": 8.5,
+          "width": 31,
+          "height": 31,
+          "top": 8.5,
+          "right": 1416,
+          "bottom": 39.5,
+          "left": 1385
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "light",
+      "step": 3,
+      "width": 1280,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1225,
+          "y": 8.5,
+          "width": 31,
+          "height": 31,
+          "top": 8.5,
+          "right": 1256,
+          "bottom": 39.5,
+          "left": 1225
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "grey",
+      "step": 0,
+      "width": 1440,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1385,
+          "y": 10.5,
+          "width": 31,
+          "height": 31,
+          "top": 10.5,
+          "right": 1416,
+          "bottom": 41.5,
+          "left": 1385
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "grey",
+      "step": 0,
+      "width": 1280,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1225,
+          "y": 10.5,
+          "width": 31,
+          "height": 31,
+          "top": 10.5,
+          "right": 1256,
+          "bottom": 41.5,
+          "left": 1225
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "grey",
+      "step": 1,
+      "width": 1440,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1385,
+          "y": 13.5,
+          "width": 31,
+          "height": 31,
+          "top": 13.5,
+          "right": 1416,
+          "bottom": 44.5,
+          "left": 1385
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "grey",
+      "step": 1,
+      "width": 1280,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1225,
+          "y": 13.5,
+          "width": 31,
+          "height": 31,
+          "top": 13.5,
+          "right": 1256,
+          "bottom": 44.5,
+          "left": 1225
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "grey",
+      "step": 2,
+      "width": 1440,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1385,
+          "y": 16.5,
+          "width": 31,
+          "height": 31,
+          "top": 16.5,
+          "right": 1416,
+          "bottom": 47.5,
+          "left": 1385
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "grey",
+      "step": 2,
+      "width": 1280,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1225,
+          "y": 16.5,
+          "width": 31,
+          "height": 31,
+          "top": 16.5,
+          "right": 1256,
+          "bottom": 47.5,
+          "left": 1225
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "grey",
+      "step": 3,
+      "width": 1440,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1385,
+          "y": 8.5,
+          "width": 31,
+          "height": 31,
+          "top": 8.5,
+          "right": 1416,
+          "bottom": 39.5,
+          "left": 1385
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "grey",
+      "step": 3,
+      "width": 1280,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1225,
+          "y": 8.5,
+          "width": 31,
+          "height": 31,
+          "top": 8.5,
+          "right": 1256,
+          "bottom": 39.5,
+          "left": 1225
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "dark",
+      "step": 0,
+      "width": 1440,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1385,
+          "y": 10.5,
+          "width": 31,
+          "height": 31,
+          "top": 10.5,
+          "right": 1416,
+          "bottom": 41.5,
+          "left": 1385
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "dark",
+      "step": 0,
+      "width": 1280,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1225,
+          "y": 10.5,
+          "width": 31,
+          "height": 31,
+          "top": 10.5,
+          "right": 1256,
+          "bottom": 41.5,
+          "left": 1225
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "dark",
+      "step": 1,
+      "width": 1440,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1385,
+          "y": 13.5,
+          "width": 31,
+          "height": 31,
+          "top": 13.5,
+          "right": 1416,
+          "bottom": 44.5,
+          "left": 1385
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "dark",
+      "step": 1,
+      "width": 1280,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1225,
+          "y": 13.5,
+          "width": 31,
+          "height": 31,
+          "top": 13.5,
+          "right": 1256,
+          "bottom": 44.5,
+          "left": 1225
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "dark",
+      "step": 2,
+      "width": 1440,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1385,
+          "y": 16.5,
+          "width": 31,
+          "height": 31,
+          "top": 16.5,
+          "right": 1416,
+          "bottom": 47.5,
+          "left": 1385
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "dark",
+      "step": 2,
+      "width": 1280,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1225,
+          "y": 16.5,
+          "width": 31,
+          "height": 31,
+          "top": 16.5,
+          "right": 1256,
+          "bottom": 47.5,
+          "left": 1225
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "dark",
+      "step": 3,
+      "width": 1440,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1385,
+          "y": 8.5,
+          "width": 31,
+          "height": 31,
+          "top": 8.5,
+          "right": 1416,
+          "bottom": 39.5,
+          "left": 1385
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    },
+    {
+      "theme": "dark",
+      "step": 3,
+      "width": 1280,
+      "avatar": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)",
+        "textBackground": "rgba(0, 0, 0, 0)",
+        "initials": "DK",
+        "box": {
+          "x": 1225,
+          "y": 8.5,
+          "width": 31,
+          "height": 31,
+          "top": 8.5,
+          "right": 1256,
+          "bottom": 39.5,
+          "left": 1225
+        }
+      },
+      "menu": {
+        "background": "url(\"http://127.0.0.1:6476/icons/avatar-patch.png\")",
+        "ink": "rgb(35, 39, 44)"
+      }
+    }
+  ],
+  "errors": []
+}

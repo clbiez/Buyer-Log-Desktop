@@ -468,11 +468,20 @@ app.post('/api/logout', auth.logoutHandler);
 app.get('/api/auth-status', auth.statusHandler);
 // Giriş ekranının ortak stili, dış parola veya kullanıcı oturumu kurulmadan önce de
 // erişilebilir olmalıdır. Statik dosya katmanı güvenlik geçitlerinden sonra yer aldığı
-// için bu tek dosyayı açık bir rota üzerinden güvenli biçimde sunuyoruz.
-app.get('/giris.css', (_req, res) => {
-  res.set('Cache-Control', 'no-cache');
-  res.type('text/css').sendFile(path.join(__dirname, '..', 'public', 'giris.css'));
-});
+// için yalnız belirli UI dosyalarını açık rotalar üzerinden sunuyoruz.
+// Fixed UI-only allowlist. No wildcard and no user data is exposed here.
+for (const file of ['giris.css', 'ui-tokens.css', 'ui-components.css', 'ui-appearance.js']) {
+  app.get('/' + file, (_req, res) => {
+    res.set('Cache-Control', 'no-cache');
+    res.type(file.endsWith('.css') ? 'text/css' : 'application/javascript').sendFile(path.join(__dirname, '..', 'public', file));
+  });
+}
+for (const file of ['IBMPlexSans.woff2', 'IBMPlexMono.woff2', 'barlow-condensed-400-latin.woff2', 'barlow-condensed-400-latin-ext.woff2', 'barlow-condensed-600-latin.woff2', 'barlow-condensed-600-latin-ext.woff2']) {
+  app.get('/vendor/fonts/' + file, (_req, res) => {
+    res.set('Cache-Control', 'no-cache');
+    res.type('font/woff2').sendFile(path.join(__dirname, '..', 'public', 'vendor', 'fonts', file));
+  });
+}
 // Kullanıcı seçimi ekranı da TR/EN dil bütünlüğü katmanını kullanır (sunucudan gelen
 // Shared Sync / giriş mesajları seçili dilde gösterilir). Yalnız arayüz sözlüğü ve
 // çeviri motorudur; iş verisi taşımaz.

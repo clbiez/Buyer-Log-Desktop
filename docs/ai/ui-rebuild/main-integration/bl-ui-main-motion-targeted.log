@@ -1,0 +1,25 @@
+✔ UI JS and HTML cannot reintroduce literal font sizes, rounded controls or frames (66.26235ms)
+✔ UI layer assignments use canonical bands; only shared dialog stack computes a bounded level (62.09637ms)
+✔ all canonical UI references are defined in the single token source (42.765532ms)
+✔ retired UI files and the compatibility layer are absent from the served app (0.428716ms)
+✔ Manifest has one token source; migrated owners never consume legacy appearance aliases (17.708563ms)
+✔ Manifest prohibits frames, rounded controls, gradients and raw overlay levels (9.837629ms)
+✔ Manifest fonts scale and only transform/opacity may animate (8.741577ms)
+✔ Main column separators cover both header tiers and never the table body (1.362193ms)
+✔ Shared button contract covers interaction states and restricts explicit variants (44.426766ms)
+✔ Notes dialog keeps canonical behavior hooks, labelled field and keyboard focus containment (9.396594ms)
+✔ Unauthenticated asset serving is a fixed UI-only list before auth gates (2.662864ms)
+✔ Migrated Plan and Execute module styles contain only layout and data geometry (3.305032ms)
+✔ Commercial module CSS owns layout only; charts use square marks (5.669386ms)
+✔ Operations module CSS owns layout only; loading avoids decorative canvas (7.223348ms)
+✔ Remaining module CSS owns layout only; nested output forms use the shared dialog stack (4.176726ms)
+✔ every module and shell layout file is free of private appearance definitions (31.22711ms)
+✔ Earth markers share square geometry, local scaled fonts and static route emphasis (0.631652ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 286.343638

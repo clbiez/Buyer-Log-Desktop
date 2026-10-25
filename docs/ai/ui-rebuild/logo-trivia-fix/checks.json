@@ -1,0 +1,40 @@
+{
+  "runtimeCombinations": 24,
+  "actualPngs": 48,
+  "runtime": "runtime-check.json",
+  "html": "html-check.json",
+  "targetedTests": {
+    "passed": 32,
+    "failed": 0
+  },
+  "releaseNotes": 78,
+  "fullTest": {
+    "tests": 7594,
+    "pass": 7529,
+    "fail": 0,
+    "skipped": 65,
+    "exitCode": 0,
+    "durationSeconds": 89.3,
+    "log": "bl-logo-trivia-full-final.log"
+  },
+  "initialFullFailure": {
+    "log": "bl-logo-trivia-full.log",
+    "cause": "Visual inspection Chromium occupied port 9231, which edge-connection-diagnose-v588.test.js requires to be closed. Inspection session was stopped; no product or test code changed.",
+    "relatedRetest": {
+      "passed": 14,
+      "log": "bl-logo-trivia-port-recheck.log"
+    }
+  },
+  "sourceSHA256": {
+    "resources/app/public/ui-components.css": "ab26600b9592eb7b28c7434dc15cc2ae41564997e026d95d0470f5da1103441e",
+    "resources/app/public/ui-startup.css": "08e6234c39166e65075a9e3e323a5f298cd82fac68e1c622e59f4204e777f89c",
+    "resources/app/public/release-notes/next.json": "2600f755daf086c5ebd7c90476ab8f0229dc98eb762bbc4ac905be5b331992d4"
+  },
+  "delivery": {
+    "PR": "not opened",
+    "CI": "not run",
+    "merge": "not done",
+    "TEST": "not published",
+    "STABLE": "not published"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "screens": [
+    {
+      "name": "cp-rules-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 248,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "cp-detail-columns-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 643,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "backlog-pivot-line-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 106,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    }
+  ],
+  "keyboard": [
+    {
+      "name": "cp-rules",
+      "forward": true,
+      "backward": true
+    },
+    {
+      "name": "shared-detail",
+      "forward": true,
+      "backward": true
+    },
+    {
+      "name": "backlog-pivot",
+      "forward": true,
+      "backward": true
+    }
+  ],
+  "errors": []
+}

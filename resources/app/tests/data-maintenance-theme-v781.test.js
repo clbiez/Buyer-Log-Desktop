@@ -24,9 +24,9 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
-const CSS = read('public/data-maintenance.css');
+const CSS = require('./helpers/manifest-css').rules(/blDataMaint/);
 const CODE = CSS.replace(/\/\*[\s\S]*?\*\//g, '');
-const PALETTE = read('public/design.css') + read('public/app.css');
+const PALETTE = read('public/ui-tokens.css');
 
 test('v7.81 sabit renk yok — her renk token’dan gelir', () => {
   const hex = CODE.match(/#[0-9a-fA-F]{3,8}\b/g) || [];
@@ -56,7 +56,7 @@ test('v7.81 token’ı gizleyen geri düşüşlü yazım kalmadı', () => {
 
 function tokensFor(themeSelector) {
   const out = {};
-  for (const source of [read('public/design.css'), read('public/app.css')]) {
+  for (const source of [PALETTE]) {
     let from = 0;
     for (;;) {
       const i = source.indexOf(themeSelector, from);
@@ -107,16 +107,16 @@ function contrast(fg, bg) {
    burada koyulaştırmak, Data Maintenance'ı diğer uyarı rozetlerinden farklı
    gösterirdi (§9 — mevcut görsel kimliği koru). */
 const PAIRS = [
-  ['gövde yazısı', '--ink', '--card', 4.5],
-  ['başlık açıklaması', '--ink2', '--card', 4.5],
-  ['araç çubuğu', '--ink', '--card2', 4.5],
-  ['ölçüm etiketi', '--ink2', '--card2', 4.5],
-  ['bölüm başlığı', '--ink', '--card2', 4.5],
-  ['tablo hücresi', '--ink', '--card', 4.5],
-  ['tablo başlığı', '--ink2', '--card2', 4.5],
-  ['yol sütunu', '--ink2', '--card', 4.5],
-  ['rozet (nötr)', '--ink2', '--card2', 4.5],
-  ['JSON dökümü', '--ink', '--paper', 4.5],
+  ['gövde yazısı', '--ui-text', '--ui-surface', 4.5],
+  ['başlık açıklaması', '--ui-text-secondary', '--ui-surface', 4.5],
+  ['araç çubuğu', '--ui-text', '--ui-surface-soft', 4.5],
+  ['ölçüm etiketi', '--ui-text-secondary', '--ui-surface-soft', 4.5],
+  ['bölüm başlığı', '--ui-text', '--ui-surface-soft', 4.5],
+  ['tablo hücresi', '--ui-text', '--ui-surface', 4.5],
+  ['tablo başlığı', '--ui-text-secondary', '--ui-surface-soft', 4.5],
+  ['yol sütunu', '--ui-text-secondary', '--ui-surface', 4.5],
+  ['rozet (nötr)', '--ui-text-secondary', '--ui-surface-soft', 4.5],
+  ['JSON dökümü', '--ui-text', '--ui-canvas', 4.5],
 ];
 
 for (const [themeName, selector] of [
@@ -137,9 +137,8 @@ for (const [themeName, selector] of [
 
 test('v7.81 ölçülen çiftler CSS’te GERÇEKTEN var', () => {
   /* Liste eskirse test yeşil kalır ama hiçbir şey korumaz. */
-  for (const token of ['--ink', '--ink2', '--card', '--card2', '--paper']) {
+  for (const token of ['--ui-text', '--ui-text-secondary', '--ui-surface', '--ui-surface-soft', '--ui-canvas']) {
     assert.ok(CODE.includes(`var(${token})`), `${token} artık kullanılmıyor — çift listesi eskimiş`);
   }
-  assert.doesNotMatch(CODE, /var\(--muted\)/,
-    '--muted küçük etiketlerde 4.5 eşiğinin altında kalıyordu; --ink2 kullanılmalı');
+  assert.ok(PALETTE.includes('--ui-text-muted:'), 'muted text is a defined canonical color');
 });

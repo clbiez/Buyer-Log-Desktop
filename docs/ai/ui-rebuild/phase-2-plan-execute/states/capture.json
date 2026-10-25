@@ -1,0 +1,125 @@
+{
+  "screens": [
+    {
+      "name": "cp-rules-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 232,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "cp-checklist-settings-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 267,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "cp-detail-columns-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 518,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "orders-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 190,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "orders-grey",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 188,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "orders-dark",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 188,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "backlog-pivot-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 151,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "shipping-freight-light",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 175,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "orders-size-3",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 215,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "orders-size-1",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 196,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    },
+    {
+      "name": "orders-size-2",
+      "failures": [],
+      "overflow": false,
+      "contrast": {
+        "checked": 133,
+        "failures": [],
+        "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+      }
+    }
+  ],
+  "keyboard": [
+    {
+      "name": "cp-rules-escape",
+      "closed": true
+    },
+    {
+      "name": "detail-escape",
+      "closed": true
+    }
+  ],
+  "errors": []
+}

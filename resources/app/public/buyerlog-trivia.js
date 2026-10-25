@@ -190,7 +190,7 @@
       const set=(sel,label)=>{const b=q(sel);if(b){b.setAttribute('aria-label',label);b.title=label;}};
       set('[data-trivia-prev]',tt('Önceki bilgi','Previous fact'));set('[data-trivia-next]',tt('Sonraki bilgi','Next fact'));
       set('[data-trivia-pause]',paused?tt('Otomatik geçişi sürdür','Resume auto-advance'):tt('Otomatik geçişi duraklat','Pause auto-advance'));
-      const pause=q('[data-trivia-pause]');if(pause){pause.textContent=paused?'▶':'❚❚';pause.setAttribute('aria-pressed',String(paused));}
+      const pause=q('[data-trivia-pause]');if(pause){pause.innerHTML=paused?'<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M4 2l9 6-9 6z"/></svg>':'<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M3 2h4v12H3zM9 2h4v12H9z"/></svg>'; pause.setAttribute('aria-pressed',String(paused));}
       const head=q('[data-trivia-heading]');if(head)head.textContent=typeof options.heading==='function'?options.heading():tt('BEKLERKEN · BİLİYOR MUYDUNUZ?','WHILE YOU WAIT · DID YOU KNOW?');
       const prev=q('[data-trivia-prev]');if(prev)prev.disabled=index<=0;
     }

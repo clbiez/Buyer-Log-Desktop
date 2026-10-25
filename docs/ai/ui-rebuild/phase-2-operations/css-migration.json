@@ -1,0 +1,76 @@
+{
+  "base": "b42b410c",
+  "group": "operations",
+  "modules": [
+    "automations-fields.css",
+    "data-maintenance.css",
+    "user-management.css",
+    "lcwai-assistant.css",
+    "plm-sync-guide.css",
+    "buyerlog-guide.css",
+    "data-management.css",
+    "release-notes.css"
+  ],
+  "stats": [
+    {
+      "file": "automations-fields.css",
+      "rules": 52,
+      "declarations": 126
+    },
+    {
+      "file": "data-maintenance.css",
+      "rules": 27,
+      "declarations": 71
+    },
+    {
+      "file": "user-management.css",
+      "rules": 191,
+      "declarations": 491
+    },
+    {
+      "file": "lcwai-assistant.css",
+      "rules": 269,
+      "declarations": 601
+    },
+    {
+      "file": "plm-sync-guide.css",
+      "rules": 39,
+      "declarations": 93
+    },
+    {
+      "file": "buyerlog-guide.css",
+      "rules": 136,
+      "declarations": 283
+    },
+    {
+      "file": "data-management.css",
+      "rules": 332,
+      "declarations": 767
+    },
+    {
+      "file": "release-notes.css",
+      "rules": 56,
+      "declarations": 153
+    },
+    {
+      "file": "app.css",
+      "rules": 313,
+      "declarations": 817
+    },
+    {
+      "file": "design.css",
+      "rules": 22,
+      "declarations": 67
+    },
+    {
+      "file": "experience.css",
+      "rules": 46,
+      "declarations": 112
+    },
+    {
+      "file": "design-butunluk.css",
+      "rules": 20,
+      "declarations": 35
+    }
+  ]
+}

@@ -234,7 +234,7 @@
   }
   function supplierHeadHtml(card){
     const coverage=L(`${card.models}/${card.total} model, ${card.wins} kazanma`,`${card.models}/${card.total} models, ${card.wins} wins`);
-    return `<b title="${esc(card.name)}">${esc(card.name)}</b><small title="${esc(coverage)}" aria-label="${esc(coverage)}">${card.models}/${card.total} · ${card.wins} 🏆</small><small class="${toneOf(card.modelIndex)}" title="${esc(L('Aynı modelin teklif ortalamasına göre fark','Difference to the same model’s average offer'))}">${esc(pctText(card.modelIndex))}</small>`;
+    return `<b title="${esc(card.name)}">${esc(card.name)}</b><small title="${esc(coverage)}" aria-label="${esc(coverage)}">${card.models}/${card.total} · ${card.wins} ${esc(L('en iyi','best'))}</small><small class="${toneOf(card.modelIndex)}" title="${esc(L('Aynı modelin teklif ortalamasına göre fark','Difference to the same model’s average offer'))}">${esc(pctText(card.modelIndex))}</small>`;
   }
   function renderMatrix(host,req){
     const api=Q();if(!host||!req||!api)return;
@@ -713,7 +713,7 @@
     const lines=model.series.map((entry,index)=>{
       const cls=SERIES_CLASSES[index%SERIES_CLASSES.length],pts=entry.points.map(point=>`${x(point.at).toFixed(1)},${y(point.value).toFixed(1)}`).join(' ');
       const last=entry.points[entry.points.length-1];
-      return `<polyline class="pdSeries ${cls}" points="${pts}"/>${entry.points.map(point=>`<circle class="pdDot ${cls}" cx="${x(point.at).toFixed(1)}" cy="${y(point.value).toFixed(1)}" r="${point===last?3.4:2.2}"><title>${esc(`${entry.manufacturer} · ${dateText(point.at)} · ${money(point.value)} · ${L('Tur','Round')} ${point.round}`)}</title></circle>`).join('')}`;
+      return `<polyline class="pdSeries ${cls}" points="${pts}"/>${entry.points.map(point=>`<rect class="pdDot ${cls}" x="${(x(point.at)-(point===last?3.4:2.2)).toFixed(1)}" y="${(y(point.value)-(point===last?3.4:2.2)).toFixed(1)}" width="${point===last?6.8:4.4}" height="${point===last?6.8:4.4}"><title>${esc(`${entry.manufacturer} · ${dateText(point.at)} · ${money(point.value)} · ${L('Tur','Round')} ${point.round}`)}</title></rect>`).join('')}`;
     }).join('');
     const target=model.target!=null?`<line class="pdTargetLine" x1="0" x2="${W}" y1="${y(model.target).toFixed(1)}" y2="${y(model.target).toFixed(1)}"/>`:'';
     return `<svg class="pdChart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(L(`${model.model} fiyat trendi`,`${model.model} price trend`))}">${target}${lines}</svg>`;

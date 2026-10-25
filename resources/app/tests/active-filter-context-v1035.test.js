@@ -9,7 +9,7 @@ const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const INDEX = read('public/index.html');
 const APP = read('public/app-main.js');
-const CSS = read('public/app.css');
+const CSS = require('./helpers/manifest-css')();
 
 function sliceBetween(source, start, end) {
   const from = source.indexOf(start);
@@ -69,10 +69,10 @@ test('v10.35 aktif filtre özeti her Orders ve Collection çiziminde güncelleni
 });
 
 test('v10.35 filtre bağlamı token tabanlı, odak görünür ve dar ekranda taşmadan sarılır', () => {
-  const block = CSS.match(/\/\* v10\.35[\s\S]*?(?=\/\* =====================|$)/)?.[0] || '';
+  const block = require('./helpers/manifest-css').rules(/activeFilter/);
   assert.match(block, /\.activeFilterBar\{/);
-  assert.match(block, /\.activeFilterToken:focus-visible/);
-  assert.match(block, /@media\(max-width:900px\)/);
+  require('./helpers/manifest-css').assertFocus();
+  assert.match(CSS, /@media\s*\(max-width:900px\)/);
   assert.match(block, /flex-wrap:wrap/);
   assert.doesNotMatch(block, /#[0-9a-f]{3,8}/i);
 });

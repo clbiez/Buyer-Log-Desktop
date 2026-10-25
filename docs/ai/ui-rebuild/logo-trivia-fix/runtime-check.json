@@ -1,0 +1,386 @@
+[
+  {
+    "theme": "light",
+    "step": 0,
+    "width": 1440,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "light",
+    "step": 0,
+    "width": 1280,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "light",
+    "step": 1,
+    "width": 1440,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "light",
+    "step": 1,
+    "width": 1280,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "light",
+    "step": 2,
+    "width": 1440,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "light",
+    "step": 2,
+    "width": 1280,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "light",
+    "step": 3,
+    "width": 1440,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "light",
+    "step": 3,
+    "width": 1280,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "grey",
+    "step": 0,
+    "width": 1440,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "grey",
+    "step": 0,
+    "width": 1280,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "grey",
+    "step": 1,
+    "width": 1440,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "grey",
+    "step": 1,
+    "width": 1280,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "grey",
+    "step": 2,
+    "width": 1440,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "grey",
+    "step": 2,
+    "width": 1280,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "grey",
+    "step": 3,
+    "width": 1440,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "grey",
+    "step": 3,
+    "width": 1280,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "dark",
+    "step": 0,
+    "width": 1440,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "dark",
+    "step": 0,
+    "width": 1280,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "dark",
+    "step": 1,
+    "width": 1440,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "dark",
+    "step": 1,
+    "width": 1280,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "dark",
+    "step": 2,
+    "width": 1440,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "dark",
+    "step": 2,
+    "width": 1280,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "dark",
+    "step": 3,
+    "width": 1440,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  },
+  {
+    "theme": "dark",
+    "step": 3,
+    "width": 1280,
+    "artWidth": 456.9375,
+    "artHeight": 228.46875,
+    "overflow": false,
+    "animations": 0,
+    "logo": {
+      "naturalWidth": 128,
+      "opacity": "1",
+      "width": 34,
+      "height": 34,
+      "pseudo": "none"
+    }
+  }
+]

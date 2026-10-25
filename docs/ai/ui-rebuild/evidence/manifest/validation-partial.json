@@ -1,0 +1,266 @@
+{
+  "contrast": [
+    {
+      "theme": "light",
+      "tab": "overview",
+      "checked": 116,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "light",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "overview",
+      "checked": 116,
+      "failures": [
+        {
+          "text": "Version 7.294",
+          "id": "appVersionBtn",
+          "cls": "appVersionBtn",
+          "fg": "rgb(64, 89, 91)",
+          "bg": [
+            184,
+            197,
+            196,
+            1
+          ],
+          "ratio": 4.23
+        },
+        {
+          "text": "Ana Sayfa",
+          "id": "",
+          "cls": "railGroupLabel",
+          "fg": "rgb(64, 89, 91)",
+          "bg": [
+            184,
+            197,
+            196,
+            1
+          ],
+          "ratio": 4.23
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [
+        {
+          "text": "Version 7.294",
+          "id": "appVersionBtn",
+          "cls": "appVersionBtn",
+          "fg": "rgb(64, 89, 91)",
+          "bg": [
+            184,
+            197,
+            196,
+            1
+          ],
+          "ratio": 4.23
+        },
+        {
+          "text": "Ana Sayfa",
+          "id": "",
+          "cls": "railGroupLabel",
+          "fg": "rgb(64, 89, 91)",
+          "bg": [
+            184,
+            197,
+            196,
+            1
+          ],
+          "ratio": 4.23
+        },
+        {
+          "text": "▾",
+          "id": "",
+          "cls": "thFilterBtn chkFilterBtn",
+          "fg": "rgb(64, 89, 91)",
+          "bg": [
+            181,
+            200,
+            194,
+            1
+          ],
+          "ratio": 4.29
+        },
+        {
+          "text": "▾",
+          "id": "",
+          "cls": "thFilterBtn",
+          "fg": "rgb(64, 89, 91)",
+          "bg": [
+            181,
+            200,
+            194,
+            1
+          ],
+          "ratio": 4.29
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "dark",
+      "tab": "overview",
+      "checked": 116,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "dark",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [
+        {
+          "text": "▾",
+          "id": "",
+          "cls": "thFilterBtn chkFilterBtn",
+          "fg": "rgb(165, 186, 180)",
+          "bg": [
+            56,
+            80,
+            86,
+            1
+          ],
+          "ratio": 4.2
+        },
+        {
+          "text": "▾",
+          "id": "",
+          "cls": "thFilterBtn",
+          "fg": "rgb(165, 186, 180)",
+          "bg": [
+            56,
+            80,
+            86,
+            1
+          ],
+          "ratio": 4.2
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    }
+  ],
+  "geometry": [
+    {
+      "theme": "light",
+      "tab": "overview",
+      "rounded": [
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "tab": "cp",
+      "rounded": []
+    },
+    {
+      "theme": "grey",
+      "tab": "overview",
+      "rounded": [
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        }
+      ]
+    },
+    {
+      "theme": "grey",
+      "tab": "cp",
+      "rounded": []
+    },
+    {
+      "theme": "dark",
+      "tab": "overview",
+      "rounded": [
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "tab": "cp",
+      "rounded": []
+    }
+  ],
+  "scales": [],
+  "behavior": [],
+  "fonts": []
+}

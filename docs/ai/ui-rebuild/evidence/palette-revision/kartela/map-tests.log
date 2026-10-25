@@ -1,0 +1,25 @@
+✔ Global Flow taşıma tiplerini ayırır (2.360278ms)
+✔ operasyon durumları üretim, loading, transit ve İstanbul aşamalarını ayırır (0.633685ms)
+✔ satır adaptörü sevkiyat dosyası, handover ve PLM kimliğini korur (1.865822ms)
+✔ Combined önceliği Backlog > Orders > CP (0.281304ms)
+✔ ülke merkezi ve grup toplaması rota metasını üretir (0.996662ms)
+✔ Bangladesh deniz rotası Suez ve Çanakkale koridorundan İstanbul’a gelir (0.585363ms)
+✔ araç ilerlemesi Handover + yol süresi kuralından hesaplanır (0.641517ms)
+✔ rota hit testi örnekleme noktaları arasındaki tüm segmentte çalışır (0.249376ms)
+✔ rota hover ortak koridorda yalnız segmenti değil ilişkili tam güzergâhı vurgular (1.050814ms)
+✔ Natural Earth TopoJSON decoder gerçek polygon üretir (6.478335ms)
+✔ Global Flow accurate world, working orb ve ortak detay çekmecesi ile bağlıdır (0.76276ms)
+✔ Global Flow widget global section hidden kuralını override eder (0.17924ms)
+✔ 2D dünya görünümü ekran oranından bağımsız 2:1 en/boy oranını korur (3.449875ms)
+✔ 2D ve 3D yakınlaştırma sınırları detay incelemeye izin verir (0.125609ms)
+✔ aydınlık harita paleti kara, deniz ve sınırları daha belirgin ayırır (0.111478ms)
+✔ 3D globe sürükleme bırakıldıktan sonra inertia ile akıcı devam eder (0.22543ms)
+✔ 3D globe fare sürüklemesi yüzeyi tutup çekiyormuş gibi yatay yönde hareket eder (0.129456ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 104.737936

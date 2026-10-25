@@ -180,11 +180,11 @@ test('v4.43 aynı statüdeki IAS parsiyellerini birleştirmeden ayrı detaylar o
 
 test('v4.43 CP arayüzünde açılır parsiyel detay yapısı ve üç öncelik açıklaması bulunur', () => {
   const html = (fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8'));
-  const css = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+  const css = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
   assert.match(html, /cpLogisticToggle/);
   assert.match(html, /cpLogisticDetailRowHtml/);
   assert.match(html, /Production \/ Shortage'.*Pre-warehouse'.*Warehouse/s);
-  assert.match(css, /CP LOGISTIC PARSİYEL AKIŞI \(v4\.43\)/);
+  assert.match(css, /\.cpLogistic/);
   assert.match(css, /priority-1/);
   assert.match(css, /priority-2/);
   assert.match(css, /priority-3/);

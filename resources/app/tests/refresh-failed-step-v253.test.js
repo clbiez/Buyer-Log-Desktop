@@ -19,7 +19,7 @@ const { diagnoseRefreshError } = require('../server/lib/refresh-error-diagnostic
 
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const source = APP.slice(APP.indexOf('function refreshCompactConnectionKind'), APP.indexOf('function refreshCompactStepHtml'));
 const ctx = {};
 vm.runInNewContext(`${source};this.stageIndex=refreshCompactStageIndex;`, ctx);

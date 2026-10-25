@@ -256,8 +256,8 @@ function tip(html){const id='t'+(++seq);tips.set(id,html);return id}
 function opener(spec){const id='o'+(++seq);openers.set(id,spec);return id}
 function tipHtml(title,lines){return `<div class="bpaTipTitle">${esc(title)}</div>${lines.map(([k,v,tone])=>`<div class="bpaTipLine"><span>${esc(k)}</span><b${tone?` class="is-${tone}"`:''}>${esc(v)}</b></div>`).join('')}`}
 function ring(value,label,sub){
-  const v=Math.max(0,Math.min(1,Number(value)||0)),r=42,c=2*Math.PI*r;
-  return `<div class="bpaRing"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="bpaRingTrack" cx="50" cy="50" r="${r}"/><circle class="bpaRingValue" cx="50" cy="50" r="${r}" stroke-dasharray="${(c*v).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 50 50)"/></svg><div class="bpaRingText"><b>${esc(value==null?'—':pct(value))}</b><span>${esc(label)}</span></div><div class="bpaRingSub">${sub}</div></div>`;
+  const v=Math.max(0,Math.min(1,Number(value)||0));
+  return `<div class="bpaRing"><div class="uiMeasure" aria-hidden="true"><i style="transform:scaleX(${v})"></i></div><div class="bpaRingText"><b>${esc(value==null?'—':pct(value))}</b><span>${esc(label)}</span></div><div class="bpaRingSub">${sub}</div></div>`;
 }
 function hero(planRows,changes){
   const R=Report(),s=R.summarize(planRows),c=changeSummary(changes);
@@ -468,7 +468,7 @@ function render(){
 /* ---------------------------------------------------------------- tooltip */
 function tipEl(){
   let el=$('bpaTip');
-  if(!el){el=document.createElement('div');el.id='bpaTip';el.className='bpaTip';el.hidden=true;el.setAttribute('role','tooltip');document.body.appendChild(el);}
+  if(!el){el=document.createElement('div');el.id='bpaTip';el.className='bpaTip';el.dataset.uiMigrated='plan-execute';el.hidden=true;el.setAttribute('role','tooltip');document.body.appendChild(el);}
   return el;
 }
 function hideTip(){const el=$('bpaTip');if(el)el.hidden=true}
@@ -489,14 +489,14 @@ function moveTip(e){
 function drawerEl(){
   let el=$('bpaDrawer');
   if(!el){
-    el=document.createElement('div');el.id='bpaDrawer';el.className='bpaDrawerRoot';el.hidden=true;
+    el=document.createElement('div');el.id='bpaDrawer';el.className='bpaDrawerRoot';el.dataset.uiMigrated='plan-execute';el.hidden=true;
     el.innerHTML='<div class="bpaDrawerScrim" data-bpa-close></div><aside class="bpaDrawer" role="dialog" aria-modal="true" aria-labelledby="bpaDrawerTitle"></aside>';
     document.body.appendChild(el);
     el.addEventListener('click',e=>{if(e.target.closest('[data-bpa-close]'))closeDrawer();});
   }
   return el;
 }
-function closeDrawer(){const el=$('bpaDrawer');if(el&&!el.hidden){el.hidden=true;el.classList.remove('is-open');}}
+function closeDrawer(){const el=$('bpaDrawer');if(el&&!el.hidden){window.BLLayerSystem?.closeDialog(el);el.hidden=true;el.classList.remove('is-open');}}
 function openDrawer(spec){
   if(!spec)return;
   hideTip();
@@ -521,6 +521,7 @@ function openDrawer(spec){
   const seg=spec.segment?R.SEGMENTS.find(x=>x.key===spec.segment):null;
   aside.innerHTML=`<header class="bpaDrawerHead"><div><div class="bpaDrawerKicker">${seg?`<i class="bpaDot" data-seg="${seg.key}"></i>`:''}${esc(spec.subtitle||'')}</div><h3 id="bpaDrawerTitle">${esc(spec.title||'')}</h3></div><button type="button" class="tbtn bpaMoveBtn" data-bpa-close title="${esc(L('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></header>${summary}${content}`;
   root.hidden=false;
+  window.BLLayerSystem?.openDialog(root,{onClose:closeDrawer});
   requestAnimationFrame(()=>root.classList.add('is-open'));
   aside.querySelector('[data-bpa-close]')?.focus();
 }

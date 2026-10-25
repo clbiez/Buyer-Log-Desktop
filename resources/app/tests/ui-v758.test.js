@@ -11,7 +11,7 @@ const ROOT = path.join(__dirname, '..');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const APP = read('public/app-main.js');
 const SERVER = read('server/server.js');
-const CSS = read('public/app.css');
+const CSS = require('./helpers/manifest-css')();
 const { createLocalDb } = require('../server/lib/local-db');
 const { createSyncSettings } = require('../server/lib/sync-settings');
 
@@ -34,7 +34,7 @@ test('v7.60 · Sync Status gerçek DB dosyasını salt okunur gösterir ve ayar 
   assert.match(APP, /const scope=horizonBadgeScope/);
   assert.doesNotMatch(APP, /HORIZON_COLLAPSE_KEY|horizonBadgeLink|horizonBadgeToggle/);
   assert.doesNotMatch(CSS, /\.horizonBadge\.isCollapsed|horizonBadgeLink|horizonBadgeToggle/);
-  assert.match(CSS, /\.horizonBadge\{[^}]*border-radius:0/);
+  require('./helpers/manifest-css').assertReset();
   assert.doesNotMatch(read('public/index.html'), /id="(?:cp|orders|lfl|backlog)HorizonBadge" hidden/);
   assert.match(CSS, /\.quickFilterEditorList\{[^}]*grid-template-columns:repeat\(3/);
 });

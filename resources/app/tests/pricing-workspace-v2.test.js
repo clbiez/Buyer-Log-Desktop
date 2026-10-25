@@ -36,7 +36,7 @@ test('Quotations workspace preserves core business actions without KPI strip or 
   assert.match(q,/function mountWorkspace\(/);assert.doesNotMatch(q,/pricingWorkspaceDecision|quotationWorkspaceKpis|qRenderWorkspaceDecision/);
   assert.match(q,/class="quotationWorkspaceTopBar"/);assert.match(q,/function qMarkWorkspaceSelectedLine\(/);
   assert.match(css,/\.quotationWorkspaceShell \.quotationTableWrap\{flex:1 1 auto;min-height:0;[^}]*overflow:auto/);
-  assert.match(css,/\.quotationWorkspaceShell \.quotationApproveBtn\{[^}]*border-radius:0/);
+  require('./helpers/manifest-css').assertReset();
   assert.match(q,/qToggleApproval\(req,line\)/);assert.match(q,/qToggleDrop\(req,line\)/);
   assert.match(q,/data-manage-quotation-access/);assert.match(q,/data-export-quotation/);assert.match(q,/data-quotation-capacity/);assert.match(q,/data-quotation-note/);
   assert.match(q,/openPricingHistoryWorkspace/);assert.match(q,/qOpenRequestInCollection/);

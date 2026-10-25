@@ -1,0 +1,15 @@
+{
+  "javascript": false,
+  "offline": true,
+  "images": 19,
+  "exactPNGBytes": true,
+  "paletteScreenPairs": 8,
+  "baselineReferences": 3,
+  "unexpectedRequests": [],
+  "mobileOverflow": false,
+  "fullSize": true,
+  "keyboard": true,
+  "finalHTMLSha256": "20ece70ee97818ef239bc258f0bc278412ccc483859fb25317714f3b00ac12a5",
+  "finalEmbeddedPNGsMatch": true,
+  "followup": "After the Graphite map observer fix, only its two Overview PNGs were replaced. Final embedded image hashes rechecked; gallery controls unchanged."
+}

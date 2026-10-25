@@ -24,7 +24,7 @@ const DM = read('public/data-management.js');
 
 test('Manufacturers is a left-menu page with its own lazy section', () => {
   assert.match(INDEX, /<button data-tab="manufacturers"[^>]*data-i18n-title-en="Manufacturers"/);
-  assert.match(INDEX, /<section id="view-manufacturers">\s*<div class="manufacturersPage" id="manufacturersPage"/);
+  assert.match(INDEX, /<section id="view-manufacturers" data-ui-migrated="commercial">\s*<div class="manufacturersPage" id="manufacturersPage"/);
   assert.match(INDEX, /manufacturers\.css\?v=/);
   assert.match(APP, /manufacturers:\{tr:'Üreticiler',en:'Manufacturers',group:'commercial'\}/);
   assert.match(APP, /ensureFeature\('manufacturers'\)\.then\(\(\)=>\{\s*if\(currentActiveTab\(\)==='manufacturers'\)return window\.initManufacturersPage\?\.\(\);/);

@@ -1,0 +1,25 @@
+✔ Ortak ölçek token'ları tanımlı ve kullanıcının yazı boyutu ayarına bağlı (6.205283ms)
+✔ Hiçbir stil dosyası sabit px yazı boyutu kullanmaz (71.712857ms)
+✔ Köşe yarıçapı yalnız --r-* token'larından gelir (88.456676ms)
+✔ Yazı ailesi yalnız --sans, --head veya --mono token'ından gelir (106.463438ms)
+✖ Ham renk kodu sayısı dosya başına dondurulmuş tavanı aşamaz; yeni dosya ham renk taşımaz (63.260406ms)
+✔ Kullanılan her CSS değişkeni bir yerde tanımlıdır (hayalet token yok) (74.231343ms)
+✔ Manifest has one token source; migrated owners never consume legacy appearance aliases (9.687423ms)
+✔ Manifest prohibits frames, rounded controls, gradients and raw overlay levels (8.673213ms)
+✔ Manifest fonts scale and only transform/opacity may animate (6.81367ms)
+✔ Main column separators cover both header tiers and never the table body (0.958535ms)
+✔ Shared button contract covers interaction states and restricts explicit variants (45.340716ms)
+✔ Notes dialog keeps canonical behavior hooks, labelled field and keyboard focus containment (23.403317ms)
+✔ Unauthenticated asset serving is a fixed UI-only list before auth gates (7.66228ms)
+✔ Migrated Plan and Execute module styles contain only layout and data geometry (10.31693ms)
+✔ Commercial module CSS owns layout only; charts use square marks (20.496526ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 14
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 501.344657
+✖ failing tests:
+✖ Ham renk kodu sayısı dosya başına dondurulmuş tavanı aşamaz; yeni dosya ham renk taşımaz (63.260406ms)

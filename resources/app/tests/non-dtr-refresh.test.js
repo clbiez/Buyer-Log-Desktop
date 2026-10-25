@@ -91,7 +91,7 @@ test('UI exposes Non-DTR management, non-blocking Refresh Stages and non-blockin
   assert.match(lfl, /lflRefreshBtn'\)\?\.addEventListener\('click',\(\)=>\{void refreshLinked\(\);\}\)/);
   assert.doesNotMatch(lfl, /showAppBlockingOperation\('lfl'\)/);
   assert.doesNotMatch(lfl, /Processing may take longer depending on the file size and complexity\. Continue\?/);
-  const css = fs.readFileSync(path.join(__dirname, '../public/app.css'), 'utf8');
-  assert.match(css, /#_toast\{z-index:50000/);
-  assert.match(css, /\.refreshStagesOverlay\{[^}]*z-index:49000/);
+  const css = require('./helpers/manifest-css')();
+  assert.match(css, /#_toast\{z-index:var\(--ui-z-tooltip\)/);
+  assert.match(css, /\.refreshStagesOverlay\{[^}]*z-index:var\(--ui-z-modal\)/);
 });

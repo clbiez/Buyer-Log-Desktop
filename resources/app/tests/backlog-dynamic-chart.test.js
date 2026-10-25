@@ -140,7 +140,8 @@ test('Backlog chart average follows the visible window and subtotal is a togglea
   const svg=chart.svgChart(visible,{today:new Date(2030,0,1)});
   assert.match(svg,/backlogChartSubtotalLine/);
   assert.match(svg,/backlogChartPanLayer/);
-  assert.match(svg,/backlogChartPlotMask/);
+  assert.match(svg,/clip-path="url\(#backlogChartPlotClip\)"/);
+  assert.doesNotMatch(svg,/linearGradient|backlogChartPlotMask/,'plot clipping remains; decorative edge fading is removed');
   assert.match(svg,/(?:Ort\.|Avg\.) 11/);
   assert.ok(chart.chartMetrics(visible).max>=22);
 });
@@ -163,7 +164,7 @@ test('Chart builder detects date columns and can infer Buyer / quantity defaults
 });
 
 test('Standalone Backlog chart UI is removed while the chart engine remains for Excel export', () => {
-  const section=INDEX.slice(INDEX.indexOf('<section id="view-backlog">'),INDEX.indexOf('<section id="view-automations">'));
+  const section=INDEX.slice(INDEX.indexOf('<section id=\"view-backlog\"'),INDEX.indexOf('<section id=\"view-automations\"'));
   assert.doesNotMatch(section,/id="backlogChartBtn"/);
   assert.doesNotMatch(section,/id="backlogChartPanel"/);
   assert.match(INDEX,/src="date-dimension\.js\?v=__BL_ASSET_VERSION__/);

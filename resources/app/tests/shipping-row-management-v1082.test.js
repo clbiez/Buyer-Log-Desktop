@@ -17,7 +17,9 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const APP = read('public/app-main.js');
-const CSS = read('public/app.css');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css']);
+// Manifest appearance lives in the shared contract; module CSS retains layout.
+const VISUAL=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] ).replace(/html\[data-ui-system="manifest"\] /g,'').replace(/\s*\{\s*/g,'{');
 const HTML = read('public/index.html');
 const ROWMENU = read('public/row-context-menu.js');
 
@@ -129,5 +131,5 @@ test('gizli satır sayısı rozeti güncelleniyor', () => {
 
 test('sürükleme görsel geri bildirimi tema değişkenleriyle tanımlı', () => {
   assert.match(CSS, /\.shipRowCards\.isDragging\{opacity:\.4;\}/);
-  assert.match(CSS, /\.shipRowCards\.isDragOver\{/);
+  assert.match(VISUAL, /\.shipRowCards\.isDragOver\{/);
 });

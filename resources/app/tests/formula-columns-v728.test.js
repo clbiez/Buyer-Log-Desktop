@@ -339,7 +339,7 @@ test('kaydedince tablo yeni sütuna kaydırılır (46+ sütunlu tabloda sağda k
   const body = formulaColumns.slice(start, start + 900);
   assert.match(body, /scrollTo|scrollLeft/);
   assert.match(body, /fcJustAdded/);
-  assert.match(read('public/app.css'), /th\.fcJustAdded/);
+  assert.match(require('./helpers/manifest-css')(), /th\.fcJustAdded/);
 });
 
 /* ------------------------------------------------------------------ */
@@ -520,7 +520,7 @@ test('kurucu ile Gelişmiş kip arasında geçişte kurulan formül taşınır',
 test('üretilen formül kullanıcıya AÇIKÇA gösterilir', () => {
   assert.match(formulaColumns, /function renderFormulaEcho\(/);
   assert.match(formulaColumns, /data-fc-echo/);
-  assert.match(read('public/app.css'), /\.fcEcho/);
+  assert.match(require('./helpers/manifest-css')(), /\.fcEcho/);
 });
 
 test('kurucu ile formül tek yürütücüden geçer — ikinci bir hesaplama yolu yok', () => {

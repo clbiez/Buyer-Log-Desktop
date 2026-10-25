@@ -37,7 +37,7 @@ function guideHarness(profile=null){
 test('core markup and data wait for the authenticated profile but not a slow page projection',()=>{
   const h=guardHarness();h.win.BLBootGuard.ready();h.win.BLBootGuard.ready('data');
   assert.ok(h.nodes.has('blBootGuard'));assert.equal(h.nodes.get('blBootGuard').dataset.ready,undefined);
-  h.profile();assert.equal(h.stops,1);assert.equal(h.timers.size,0);
+  h.profile();assert.equal(h.stops,0);assert.equal(h.timers.size,0);
   // A delayed Overview/CP/Orders projection is no longer a hard startup gate.
   const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.ready,'1');assert.equal(g.message.textContent,'Buyer Log hazır');
   h.win.BLBootGuard.ready('ui');assert.equal(g.dataset.ready,'1');
@@ -55,7 +55,7 @@ test('hard startup gates work regardless of arrival order and UI readiness is in
     const h=guardHarness();
     h.win.BLBootGuard.ready('ui');assert.equal(h.nodes.get('blBootGuard').dataset.ready,undefined);
     order.forEach((key,i)=>{if(key==='profile')h.profile();else h.win.BLBootGuard.ready(key==='core'?undefined:key);assert.equal(h.nodes.get('blBootGuard').dataset.ready,i<2?undefined:'1');});
-    h.win.BLBootGuard.ready('ui');h.win.BLBootGuard.ready();assert.equal(h.stops,1);
+    h.win.BLBootGuard.ready('ui');h.win.BLBootGuard.ready();assert.equal(h.stops,0);
     assert.equal(h.nodes.get('blBootGuard').card.children.filter(c=>c.dataset.bootContinue).length,1);h.win.BLBootGuard.continue();finishFade(h);assert.ok(!h.nodes.has('blBootGuard'));
   }
 });
@@ -113,7 +113,7 @@ test('opening screen projection and failure gate are awaited, while background f
   // The curtain is the first thing in <body>: nothing of the app can paint before it.
   const bodyAt=INDEX.indexOf('<body'),mountAt=INDEX.indexOf('<script>window.BLBootGuard?.mount();</script>');
   assert.ok(mountAt>bodyAt&&mountAt<INDEX.indexOf('<svg',bodyAt)&&mountAt<INDEX.indexOf('<aside'));
-  assert.match(INDEX,/#blBootGuard\{animation:blBootBgIn[^}]+\}/);assert.match(INDEX,/@media\(prefers-reduced-motion:reduce\)\{#blBootGuard,#blBootGuard \.blBootCard\{animation:none\}/);assert.match(APP,/'#buyerLogGuide\[open\]', '#blBootGuard'/);
+  assert.match(INDEX,/href="ui-startup\.css/);const startupCss=fs.readFileSync(path.join(__dirname,'../public/ui-startup.css'),'utf8');assert.match(startupCss,/prefers-reduced-motion:reduce/);assert.match(startupCss,/transition:opacity var\(--ui-motion-enter\)/);assert.doesNotMatch(startupCss,/background-color.*animation|blBootBgIn/);assert.match(APP,/'#buyerLogGuide\[open\]', '#blBootGuard'/);
 });
 test('guide keys are isolated at capture phase before legacy mutation shortcuts',()=>{
   assert.match(GUIDE,/document\.addEventListener\('keydown',ev=>\{if\(dialog\?\.open\)\{ev\.stopImmediatePropagation\(\)/);assert.match(GUIDE,/\}\},true\);/);

@@ -1,0 +1,50 @@
+[
+  {
+    "file": "collection-dark-html.html",
+    "equal": true
+  },
+  {
+    "file": "collection-dark-plain.tsv",
+    "equal": true
+  },
+  {
+    "file": "collection-dark.xlsx",
+    "xlParts": 17,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "collection-grey-html.html",
+    "equal": true
+  },
+  {
+    "file": "collection-grey-plain.tsv",
+    "equal": true
+  },
+  {
+    "file": "collection-grey.xlsx",
+    "xlParts": 17,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "collection-light-html.html",
+    "equal": true
+  },
+  {
+    "file": "collection-light-plain.tsv",
+    "equal": true
+  },
+  {
+    "file": "collection-light.xlsx",
+    "xlParts": 17,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "open-costing.xlsx",
+    "xlParts": 7,
+    "different": [],
+    "equal": true
+  }
+]

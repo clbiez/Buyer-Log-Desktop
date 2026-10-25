@@ -8,7 +8,7 @@ const path=require('node:path');
 const ROOT=path.join(__dirname,'..');
 const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
 const UI=fs.readFileSync(path.join(ROOT,'public','collection-status-ui.js'),'utf8');
-const CSS=fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
+const CSS=require('./helpers/manifest-css')();
 
 function fn(marker){
   const start=APP.indexOf(marker);
@@ -66,12 +66,12 @@ test('Excel status validation and colors resolve from the canonical catalog',()=
 
 test('status pill/dashboard styling is theme-token based and uses status color only as semantic accent',()=>{
   assert.match(CSS,/#kolTable select\.kolStatusNoArrow/);
-  assert.match(CSS,/background-color:color-mix\(in srgb,var\(--kol-status-color\) 11%,var\(--card\)\)/);
-  assert.match(CSS,/color:var\(--ink\)/);
+  assert.match(CSS,/background-color:color-mix\(in srgb,var\(--kol-status-color\) 11%,var\(--ui-surface\)\)/);
+  assert.match(CSS,/color:var\(--ui-text\)/);
   assert.match(CSS,/\.ovCollectionStatusCard/);
-  assert.match(CSS,/color-mix\(in srgb,var\(--status-color\) 7%,var\(--card\)\)/);
+  assert.match(CSS,/color-mix\(in srgb,var\(--ui-series-color\) 7%,var\(--ui-surface\)\)/);
   assert.match(CSS,/#kolTable td\.kolStatusTd/);
-  assert.match(CSS,/background-color:color-mix\(in srgb,var\(--kol-status-color\) 18%,var\(--card\)\)/);
+  assert.match(CSS,/background-color:color-mix\(in srgb,var\(--kol-status-color\) 18%,var\(--ui-surface\)\)/);
   const tdStart=CSS.indexOf('#kolTable td.kolStatusTd{');
   const tdBlock=CSS.slice(tdStart,CSS.indexOf('}',tdStart)+1);
   const selectStart=CSS.indexOf('#kolTable select.kolStatusNoArrow{');

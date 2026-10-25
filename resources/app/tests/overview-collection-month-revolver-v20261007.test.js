@@ -8,7 +8,7 @@ const ROOT=path.join(__dirname,'..');
 const INDEX=fs.readFileSync(path.join(ROOT,'public','index.html'),'utf8');
 const DASH=fs.readFileSync(path.join(ROOT,'public','overview-collection-dashboard.js'),'utf8');
 const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
-const CSS=fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
+const CSS=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
 const rows=[
   {modelKod:'M-1',inStoreMonth:'2027-03',durum:'Fiyatlamada',quantity:'1.200',img:'a.png'},

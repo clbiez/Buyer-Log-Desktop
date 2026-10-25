@@ -1,100 +1,80 @@
 /* Buyer Log shared detail drawer */
-.blDetailDrawer{position:fixed;inset:0;z-index:53000;pointer-events:none;color:var(--ink)}
+.blDetailDrawer{position:fixed;inset:0;pointer-events:none}
 .blDetailDrawer.is-open{pointer-events:auto}
-.blDetailDrawerBackdrop{position:absolute;inset:0;background:rgba(3,10,18,.18);opacity:0;transition:opacity .2s ease}
+.blDetailDrawerBackdrop{position:absolute;inset:0;opacity:0}
 .blDetailDrawer.is-open .blDetailDrawerBackdrop{opacity:1}
-.blDetailDrawerPanel{position:absolute;top:0;right:0;width:min(980px,96vw);height:100vh;display:flex;flex-direction:column;background:var(--card);border-left:1px solid var(--line);box-shadow:var(--shadow-3);transform:translateX(102%);visibility:hidden;transition:transform .22s ease,visibility 0s linear .22s}
-.blDetailResizeHandle{position:absolute;z-index:8;left:-5px;top:0;width:10px;height:100%;cursor:ew-resize;touch-action:none}.blDetailResizeHandle::after{content:"";position:absolute;left:4px;top:0;width:1px;height:100%;background:transparent;transition:background .15s ease}.blDetailResizeHandle:hover::after,.blDetailResizing .blDetailResizeHandle::after{background:var(--acc)}.blDetailResizing{user-select:none;cursor:ew-resize!important}
+.blDetailDrawerPanel{position:absolute;top:0;right:0;width:min(980px,96vw);height:100vh;display:flex;flex-direction:column;transform:translateX(102%);visibility:hidden}
+.blDetailResizeHandle{position:absolute;left:-5px;top:0;width:10px;height:100%;cursor:ew-resize;touch-action:none}.blDetailResizeHandle::after{content:"";position:absolute;left:4px;top:0;width:1px;height:100%}.blDetailResizing{user-select:none;cursor:ew-resize!important}
 /* Kapalı panel DOM'da kalır: görünmez olmalı ki açık pencere sanılmasın ve odak almasın. */
-.blDetailDrawer.is-open .blDetailDrawerPanel{transform:translateX(0);visibility:visible;transition:transform .22s ease}
-.blDetailDrawerHead{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--card2)}
-.blDetailDrawerTitle{display:grid;gap:3px;min-width:180px;flex:1}.blDetailDrawerTitle b{font-size:var(--fs-base)}.blDetailDrawerTitle span{font-size:var(--fs-2xs);color:var(--muted)}
+.blDetailDrawer.is-open .blDetailDrawerPanel{transform:translateX(0);visibility:visible}
+.blDetailDrawerHead{display:flex;align-items:flex-start;gap:12px;padding:12px 14px}
+.blDetailDrawerTitle{display:grid;gap:3px;min-width:180px;flex:1}
 .blDetailDrawerActions,.blDetailExtraActions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.blDetailDrawerActions{position:relative}
-.blDetailTool,.blDetailClose{height:30px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink2);font:700 var(--fs-2xs) var(--sans);padding:0 9px;cursor:pointer}
-.blDetailTool:hover,.blDetailTool[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink)}
-.blDetailClose{width:30px;padding:0;font-size:var(--fs-xl);color:var(--ink)}
-.blDetailExportMenu{position:absolute;z-index:9;right:36px;top:34px;min-width:178px;padding:5px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);box-shadow:var(--shadow-2)}.blDetailExportMenu[hidden]{display:none}.blDetailExportMenu button{display:block;width:100%;border:0;border-radius:var(--r-sm);background:transparent;color:var(--ink2);padding:8px 9px;text-align:left;font:700 var(--fs-2xs) var(--sans);cursor:pointer}.blDetailExportMenu button:hover{background:var(--acc-bg);color:var(--acc-ink)}
-.blDetailDrawerSubbar{position:relative;display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--card)}
-.blDetailDrawerSubbar>input{width:min(340px,45%);height:30px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);color:var(--ink);padding:0 9px;font:var(--fs-2xs) var(--sans)}
+.blDetailTool,.blDetailClose{height:30px;padding:0 9px;cursor:pointer}
+.blDetailClose{width:30px;padding:0}
+.blDetailExportMenu{position:absolute;right:36px;top:34px;min-width:178px;padding:5px}.blDetailExportMenu[hidden]{display:none}.blDetailExportMenu button{display:block;width:100%;padding:8px 9px;text-align:left;cursor:pointer}
+.blDetailDrawerSubbar{position:relative;display:flex;align-items:center;gap:8px;padding:8px 12px}
+.blDetailDrawerSubbar>input{width:min(340px,45%);height:30px;padding:0 9px}
 .blDetailExtraActions{margin-left:auto}
-.blDetailDrawerNote{padding:7px 12px;border-bottom:1px solid var(--line);background:var(--card2);color:var(--muted);font-size:var(--fs-2xs)}
-.blDetailColumnPanel{position:absolute;z-index:4;right:12px;top:44px;width:min(340px,88vw);max-height:60vh;overflow:auto;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);box-shadow:var(--shadow-2);padding:8px}
-.blDetailColumnPanel[hidden]{display:none}.blDetailColumnPanelHead{display:flex;align-items:center;justify-content:space-between;padding:2px 3px 7px}.blDetailColumnPanelHead b{font-size:var(--fs-2xs)}.blDetailColumnPanelHead button{border:0;background:transparent;color:var(--acc-ink);font:700 var(--fs-2xs) var(--sans);cursor:pointer}
-.blDetailColumnList{display:grid;grid-template-columns:1fr 1fr;gap:3px}.blDetailColumnList label{display:flex;align-items:center;gap:6px;min-width:0;padding:5px;border-radius:var(--r-sm);font-size:var(--fs-2xs);cursor:pointer}.blDetailColumnList label:hover{background:var(--card2)}.blDetailColumnList span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.blDetailColumnList input{accent-color:var(--acc)}
+.blDetailDrawerNote{padding:7px 12px}
+.blDetailColumnPanel{position:absolute;right:12px;top:44px;width:min(340px,88vw);max-height:60vh;overflow:auto;padding:8px}
+.blDetailColumnPanel[hidden]{display:none}.blDetailColumnPanelHead{display:flex;align-items:center;justify-content:space-between;padding:2px 3px 7px}.blDetailColumnPanelHead button{cursor:pointer}
+.blDetailColumnList{display:grid;grid-template-columns:1fr 1fr;gap:3px}.blDetailColumnList label{display:flex;align-items:center;gap:6px;min-width:0;padding:5px;cursor:pointer}.blDetailColumnList span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Tablo CP ana tablosuyla aynı token'ları kullanır (thead/table/hover/yoğunluk).
    table-layout:fixed + colgroup: genişliği başlık değil kullanıcı/Sığdır belirler. */
-.blDetailTableWrap{min-height:0;flex:1;overflow:auto;background:var(--table-bg)}
-.blDetailTable{min-width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:var(--fs-sm);background:var(--table-bg);color:var(--table-ink)}
-.blDetailTable thead th{position:sticky;top:0;z-index:5;padding:var(--table-head-pad-y) 12px var(--table-head-pad-y) 10px;border-bottom:1px solid var(--line2);background:var(--thead-bg);background-clip:padding-box;color:var(--thead-ink);text-align:left;vertical-align:bottom;font-size:var(--fs-xs);font-weight:600;letter-spacing:.1px;line-height:1.25;white-space:normal;user-select:none}
+.blDetailTableWrap{min-height:0;flex:1;overflow:auto}
+.blDetailTable{min-width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0}
+.blDetailTable thead th{position:sticky;top:0;padding:var(--ui-table-head-padding) 12px var(--ui-table-head-padding) 10px;text-align:left;vertical-align:bottom;white-space:normal;user-select:none}
 /* Uzun başlık kelime sınırından alt satıra geçer; sütunu genişletmez. */
 .blDetailTable thead th .thInner{align-items:flex-end}
 .blDetailTable thead th .thLabel{cursor:default;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:break-word;word-break:normal;hyphens:none}
 .blDetailTable thead th .thFilterBtn{flex:0 0 auto;align-self:flex-end;margin-left:auto}
 .blDetailTable thead th .colResizer{right:0;width:8px}
-.blDetailTable tbody tr{height:var(--table-row-h)}
-.blDetailTable td{padding:var(--table-cell-pad-y) 10px;border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
-.blDetailTable tbody tr:hover td{background:var(--table-hover)}
-.blDetailImageHead,.blDetailImageCell{width:74px;min-width:74px;text-align:center!important}.blDetailImageCell{padding:3px 5px!important}.blDetailImageCell img{display:block;max-width:66px;max-height:40px;margin:auto;object-fit:contain}.blDetailNoImage,.blDetailEmpty{color:var(--muted)}
+.blDetailTable tbody tr{height:var(--ui-table-row-height)}
+.blDetailTable td{padding:var(--ui-table-cell-padding) 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+.blDetailImageHead,.blDetailImageCell{width:74px;min-width:74px;text-align:center!important}.blDetailImageCell{padding:3px 5px!important}.blDetailImageCell img{display:block;max-width:66px;max-height:40px;margin:auto;object-fit:contain}
 @media(max-width:760px){.blDetailDrawerPanel{width:100vw!important}.blDetailResizeHandle{display:none}.blDetailDrawerHead{display:grid}.blDetailDrawerActions{justify-content:flex-start}.blDetailDrawerSubbar{align-items:flex-start;flex-wrap:wrap}.blDetailDrawerSubbar>input{width:100%}.blDetailExtraActions{margin-left:0}.blDetailColumnList{grid-template-columns:1fr}}
-.blDetailTable td.blDetailMore{padding:8px;text-align:center;background:var(--card2)}
+.blDetailTable td.blDetailMore{padding:8px;text-align:center}
 
 /* v7.0.188 — Shared detail drawers mirror CP table view controls. */
-.blDetailViewActions{display:flex;align-items:center;gap:3px;flex:0 0 auto;padding-right:4px;border-right:1px solid var(--line)}
-.blDetailViewLabel{padding:0 5px;color:var(--muted);font:700 var(--fs-2xs) var(--sans);letter-spacing:.04em}
-.blDetailViewPreset{height:26px;border:1px solid transparent;border-radius:var(--r-sm);background:transparent;color:var(--muted);padding:0 8px;font:700 var(--fs-2xs) var(--sans);cursor:pointer}
-.blDetailViewPreset:hover{background:var(--card2);color:var(--ink)}
-.blDetailViewPreset[aria-pressed="true"]{border-color:var(--line);background:var(--acc-bg);color:var(--acc-ink)}
+.blDetailViewActions{display:flex;align-items:center;gap:3px;flex:0 0 auto;padding-right:4px}
+.blDetailViewLabel{padding:0 5px}
+.blDetailViewPreset{height:26px;padding:0 8px;cursor:pointer}
 .blDetailTable col{min-width:56px}
-.blDetailTable .blDetailGroupRow th{top:0;z-index:6;height:var(--table-group-head-h,25px);padding:4px 8px;background:var(--card2-strong);color:var(--ink2);text-align:center;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--fs-2xs);font-weight:650;letter-spacing:.4px;border-bottom:1px solid var(--line2);box-shadow:inset 0 2px 0 var(--acc)}
-.blDetailTable .blDetailGroupRow+.blDetailColumnRow th{top:var(--table-group-head-h,25px)}
-@media(max-width:760px){.blDetailViewActions{width:100%;overflow-x:auto;border-right:0;padding-right:0}.blDetailViewLabel{position:sticky;left:0;background:var(--card);z-index:1}}
+.blDetailTable .blDetailGroupRow th{top:0;height:var(--ui-table-group-height,25px);padding:4px 8px;text-align:center;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blDetailTable .blDetailGroupRow+.blDetailColumnRow th{top:var(--ui-table-group-height,25px)}
+@media(max-width:760px){.blDetailViewActions{width:100%;overflow-x:auto;padding-right:0}.blDetailViewLabel{position:sticky;left:0}}
 
 /* Backlog report language: summary cards, stacked identities and readable rows.
    Independent of CP density and inherited column widths. */
-.blDetailDrawerPanel{width:min(1600px,96vw);box-shadow:var(--shadow-3)}
+.blDetailDrawerPanel{width:min(1600px,96vw)}
 .blDetailDrawerHead{padding:16px 18px 12px}
-.blDetailDrawerTitle b{font:700 var(--fs-xl)/1.15 var(--head)}
-.blDetailDrawerTitle span{font-size:var(--fs-xs)}
 .blDetailDrawerSubbar{flex-wrap:wrap;padding:8px 18px}
 .blDetailReportStats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;padding:12px 18px 8px;flex:none}
-.blDetailReportStats>div{padding:8px 10px;border:1px solid var(--line);background:var(--card2)}
-.blDetailReportStats b{display:block;font:700 var(--fs-xl)/1.1 var(--head);font-variant-numeric:tabular-nums}
-.blDetailReportStats span{font-size:var(--fs-xs);color:var(--muted)}
-.blDetailReportAccent{height:6px;margin:0 18px 10px;background:var(--acc);flex:none}
-.blDetailDrawer .blDetailTable{font:var(--fs-xs)/1.4 var(--sans);background:var(--card);color:var(--ink)}
-.blDetailDrawer .blDetailTable:focus{outline:none}
-.blDetailDrawer .blDetailTable td.blGridRangeCell{box-shadow:inset 0 0 0 999px color-mix(in srgb,var(--acc) 10%,transparent)}
-.blDetailDrawer .blDetailTable td.blGridRangeEdge{outline:1px solid color-mix(in srgb,var(--acc) 45%,transparent);outline-offset:-1px}
-.blDetailDrawer .blDetailTable td.blGridActiveCell{outline:2px solid var(--acc);outline-offset:-2px}
-.blDetailDrawer .blDetailTable thead th{padding:9px 8px;background:var(--card2);color:var(--ink2);vertical-align:middle;font-size:var(--fs-2xs);font-weight:700;line-height:1.35;word-break:normal;overflow-wrap:normal}
+.blDetailReportStats>div{padding:8px 10px}
+.blDetailReportStats b{display:block}
+.blDetailReportAccent{height:6px;margin:0 18px 10px;flex:none}
+.blDetailDrawer .blDetailTable thead th{padding:9px 8px;vertical-align:middle;word-break:normal;overflow-wrap:normal}
 .blDetailDrawer .blDetailTable tbody tr{height:auto}
-.blDetailDrawer .blDetailTable td{padding:8px;border-bottom:1px solid var(--line);white-space:normal;overflow:visible;vertical-align:top;line-height:1.4}
+.blDetailDrawer .blDetailTable td{padding:8px;white-space:normal;overflow:visible;vertical-align:top}
 .blDetailReportHeading{display:flex;align-items:center;gap:5px}
 .blDetailReportHeading>span{flex:1;min-width:0}
 .blDetailReportPrimary,.blDetailReportSub{overflow-wrap:break-word;word-break:normal}
-.blDetailReportPrimary{font-weight:600}
-.blDetailReportSub{margin-top:2px;font-size:var(--fs-2xs);color:var(--muted)}
-.blDetailReportSub a{color:inherit}
-.blDetailReportBadge{display:inline-block;padding:2px 6px;border-left:2px solid var(--acc);background:var(--acc-bg);color:var(--acc-ink);font-size:var(--fs-2xs);font-weight:700}
-.blDetailNumeric{text-align:right!important;font-variant-numeric:tabular-nums}
-.blDetailReportFilter{position:relative;flex:none;font-weight:400}
-.blDetailReportFilter>summary{cursor:pointer;padding:2px 5px;color:var(--muted);list-style:none}
+.blDetailReportSub{margin-top:2px}
+.blDetailReportBadge{display:inline-block;padding:2px 6px}
+.blDetailNumeric{text-align:right!important}
+.blDetailReportFilter{position:relative;flex:none}
+.blDetailReportFilter>summary{cursor:pointer;padding:2px 5px;list-style:none}
 .blDetailReportFilter>summary::-webkit-details-marker{display:none}
-.blDetailReportFilter[open]>summary,.columnFilterActive .blDetailReportFilter>summary{color:var(--acc-ink);background:var(--acc-bg)}
-.blDetailReportFilter>div{position:absolute;top:100%;right:0;z-index:10;min-width:180px;max-height:250px;overflow:auto;padding:5px;border:1px solid var(--line);background:var(--card);box-shadow:var(--shadow-2)}
-.blDetailReportFilter button{display:block;width:100%;padding:7px 8px;border:0;background:transparent;color:var(--ink);font:var(--fs-xs) var(--sans);text-align:left;cursor:pointer}
-.blDetailReportFilter button:hover,.blDetailReportFilter button.filterActive{background:var(--acc-bg);color:var(--acc-ink)}
+.blDetailReportFilter>div{position:absolute;top:100%;right:0;min-width:180px;max-height:250px;overflow:auto;padding:5px}
+.blDetailReportFilter button{display:block;width:100%;padding:7px 8px;text-align:left;cursor:pointer}
 .blDetailDrawer .blDetailTable .colResizer{position:absolute;right:0;top:0;width:7px;height:100%;cursor:ew-resize;touch-action:none}
 .blDetailDrawer .blDetailImageCell{vertical-align:middle}
 .blDetailDrawer .blDetailImageCell img{max-height:48px}
-@media(max-width:760px){.blDetailReportStats{grid-template-columns:repeat(2,minmax(0,1fr))}.blDetailDrawerTitle b{font-size:var(--fs-xl)}.blDetailDrawerSubbar>input{width:100%}.blDetailReportFilter>div{min-width:150px}}
+@media(max-width:760px){.blDetailReportStats{grid-template-columns:repeat(2,minmax(0,1fr))}.blDetailDrawerSubbar>input{width:100%}.blDetailReportFilter>div{min-width:150px}}
 
 /* Toolbar popovers share the drawer with sticky table headings. Keep them in
    an explicit layer above the scroll region, including its grouped headers.
    Header/export popovers outrank the subbar/Columns popover. */
-.blDetailDrawerHead{position:relative;z-index:30}
-.blDetailDrawerSubbar{z-index:20}
-.blDetailTableWrap{position:relative;z-index:0}
-.blDetailDrawerBackdrop{transition:opacity var(--bl-motion-fast) var(--bl-ease)}
-.blDetailDrawerPanel,.blDetailDrawer.is-open .blDetailDrawerPanel{transition:transform var(--bl-motion-enter) var(--bl-ease),visibility 0s}
-@media(prefers-reduced-motion:reduce){.blDetailDrawerBackdrop,.blDetailDrawerPanel,.blDetailDrawer.is-open .blDetailDrawerPanel{transition:none!important;transform:none!important}}
+.blDetailDrawerHead{position:relative}
+.blDetailTableWrap{position:relative}

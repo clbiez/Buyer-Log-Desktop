@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const APP=fs.readFileSync(path.join(__dirname,'..','public','app-main.js'),'utf8');
 const HTML=fs.readFileSync(path.join(__dirname,'..','public','index.html'),'utf8');
-const CSS=fs.readFileSync(path.join(__dirname,'..','public','app.css'),'utf8');
+const CSS=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const DB=fs.readFileSync(path.join(__dirname,'..','server','db.js'),'utf8');
 const SERVER=fs.readFileSync(path.join(__dirname,'..','server','server.js'),'utf8');
 function between(source,start,end){const a=source.indexOf(start),b=source.indexOf(end,a+start.length);assert.ok(a>=0,start+' missing');assert.ok(b>a,end+' missing');return source.slice(a,b);}
@@ -54,8 +54,8 @@ test('v5.49 server store Landed çarpanlarını revision ile kalıcı tutar',()=
 });
 
 test('v5.51 Landed hücreleri kompakt tek satır düzeninde gereksiz rozetleri kaldırır',()=>{
-  const landed=between(CSS,'.kolLandedCard{','.kolLandedTd:hover');
-  for(const token of ['min-height:38px','border:1px solid var(--line)','border-radius:var(--r-md)','background:var(--card2)','display:flex','padding:5px 7px']){
+  const landed=require('./helpers/manifest-css').rules(/kolLandedCard/);
+  for(const token of ['min-height:38px','background:var(--ui-surface-soft)','display:flex','padding:5px 7px']){
     assert.ok(landed.includes(token),`Landed ${token}`);
   }
   assert.match(APP,/class="kolLandedMeta"/);

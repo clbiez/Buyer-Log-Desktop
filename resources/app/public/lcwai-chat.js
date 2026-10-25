@@ -1,7 +1,7 @@
 /* ===================================================================
    LCW AI — Genel çalışma alanı (sol menü › LCW AI, üst çubuk › LCW AI)
 
-   ChatGPT benzeri, Buyer Log'un her yerinden açılan genel kurumsal asistan.
+   Buyer Log'un her yerinden açılan ortak kurumsal çalışma alanı.
    Calculated Column / Kurallar / Otomasyon içindeki "LCW AI'dan Destek Al"
    alanlarının YERİNE GEÇMEZ; onlar bağlama özel yardımcıdır. İkisi de aynı
    motoru kullanır: window.BuyerLogAI (public/lcwai-assistant.js) →
@@ -686,8 +686,8 @@
 
   function messageHtml(message, index, conv) {
     if (message.role === 'user') {
-      const meta = [...(message.contextLabels || []).map(label => `◆ ${label}`), ...(message.fileNames || []).map(name => `📎 ${name}`), ...(message.output && message.output.format ? [`⇩ ${formatLabel(message.output.format)}${message.output.templateName ? ` · ${message.output.templateName}` : ''}`] : [])];
-      return `<div class="lcwaiMsg is-user"><div class="lcwaiMsgBody">${esc(message.text).replace(/\n/g, '<br>')}</div>${meta.length ? `<div class="lcwaiMsgMeta">${meta.map(esc).join(' · ')}</div>` : ''}</div>`;
+      const meta = [...(message.contextLabels || []).map(label => `◆ ${label}`), ...(message.fileNames || []).map(name => `${L('Dosya', 'File')}: ${name}`), ...(message.output && message.output.format ? [`⇩ ${formatLabel(message.output.format)}${message.output.templateName ? ` · ${message.output.templateName}` : ''}`] : [])];
+      return `<div class="lcwaiMsg is-user"><div class="lcwaiMsgWho">${esc(L('Siz', 'You'))}</div><div class="lcwaiMsgBody">${esc(message.text).replace(/\n/g, '<br>')}</div>${meta.length ? `<div class="lcwaiMsgMeta">${meta.map(esc).join(' · ')}</div>` : ''}</div>`;
     }
     const last = index === conv.messages.length - 1;
     const body = message.error

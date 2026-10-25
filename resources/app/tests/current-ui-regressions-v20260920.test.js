@@ -11,7 +11,7 @@ const SERVER = require('./helpers/server-source')();
 const PICKER = read('server/lib/ChooseFolder.ps1');
 const CP_ASSIST = read('public/cp-overview-assistant.js');
 const APP = read('public/app-main.js');
-const CSS = read('public/app.css');
+const CSS = require('./helpers/manifest-css')();
 const INDEX = read('public/index.html');
 
 test('Kaynak klasör seçiminde eski FolderBrowserDialog yerine Sync ile aynı modern Shell picker modu kullanılır', () => {
@@ -32,13 +32,13 @@ test('Bugünün Üretim Öncelikleri kalıcı Buyer görünümünde ve Kırılı
 });
 
 test('Model Bütçe Ayı/Hafta picker hard-coded dark surface yerine aktif tema tokenlarını kullanır', () => {
-  const start = CSS.indexOf('.kolPeriodDrawerBackdrop');
-  const end = CSS.indexOf('/*', start + 1);
-  const block = CSS.slice(start, end > start ? end : start + 8000);
-  assert.match(block, /\.kolPeriodDrawer\{[^}]*background:var\(--card\)[^}]*color:var\(--ink\)[^}]*border-left:1px solid var\(--line\)/s);
-  assert.match(block, /\.kolPeriodOption\.isSelected\{[^}]*border-color:var\(--acc\)[^}]*background:var\(--acc-bg\)/s);
-  assert.match(block, /scrollbar-color:var\(--line2\) transparent/);
-  assert.doesNotMatch(block, /background:\s*#[0-9a-f]{3,8}|color:\s*#[0-9a-f]{3,8}/i);
+  const block=require('./helpers/manifest-css').rules(/kolPeriodDrawer|kolPeriodOption/);
+  assert.match(block,/background:var\(--ui-surface\)/);
+  assert.match(block,/color:var\(--ui-text\)/);
+  require('./helpers/manifest-css').assertReset();
+  assert.match(block,/\.kolPeriodOption\.isSelected\{[^}]*background:var\(--ui-selected\)/);
+  assert.match(block,/scrollbar-color:var\(--ui-group-divider\) transparent/);
+  assert.doesNotMatch(block,/background:\s*#[0-9a-f]{3,8}|color:\s*#[0-9a-f]{3,8}/i);
   assert.match(APP, /backdrop\.className='kolPeriodDrawerBackdrop'/);
   assert.match(APP, /panel\.className='kolPeriodDrawer'/);
 });

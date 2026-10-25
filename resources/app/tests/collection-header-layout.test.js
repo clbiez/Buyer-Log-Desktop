@@ -7,12 +7,12 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const HTML = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const UI = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 
 test('Collection izin kontrolü üst başlıkta, tablo akışının dışında durur', () => {
-  const appTop = HTML.slice(HTML.indexOf('<header class="appTop">'), HTML.indexOf('</header>', HTML.indexOf('<header class="appTop">')));
-  const collection = HTML.slice(HTML.indexOf('<section id="view-koleksiyon">'), HTML.indexOf('</section>', HTML.indexOf('<section id="view-koleksiyon">')));
+  const appTop = HTML.slice(HTML.search(/<header class="appTop"[^>]*>/), HTML.indexOf('</header>', HTML.search(/<header class="appTop"[^>]*>/)));
+  const collection = HTML.slice(HTML.search(/<section id="view-koleksiyon"[^>]*>/), HTML.indexOf('</section>', HTML.search(/<section id="view-koleksiyon"[^>]*>/)));
   assert.match(appTop, /<h1 id="pageTitle"[\s\S]*<div class="kolScopeBar" id="kolScopeBar"/);
   assert.doesNotMatch(collection, /id="kolScopeBar"/);
 });

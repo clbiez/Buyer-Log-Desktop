@@ -1,0 +1,20 @@
+✔ varsayılan ana ekran: iki sayfa, her widget tek kez, çakışmasız ve ızgara içinde (2.019844ms)
+✔ normalize bilinmeyen widget'ı atar, boyutu sözleşmeye kıstırır, bozuk çakışmayı çözer (0.384259ms)
+✔ kaldırılan widget gizli kalır; sonradan eklenen yeni widget ilk sayfaya kendiliğinden gelir (1.494212ms)
+✔ taşıma: komşu widget önce aynı satırda yana kayarak yer açar, yer yoksa aşağı itilir (0.502177ms)
+✔ boyutlandırma min/max sözleşmesine uyar ve çakışanları iter (0.379793ms)
+✔ ilk uygun yer, boşluk kapatma ve boyut sınıfı (0.246191ms)
+✔ sayfalar: widget başka sayfaya gönderilir, dolu sayfa silinmez, boş sayfa silinir, en fazla MAX_PAGES (0.691983ms)
+✔ v1 kaydı tek sayfaya akış sırası ve genişlik/yükseklikle taşınır (0.647827ms)
+✔ ana ekran DOM kancaları ve denetleyici sözleşmesi (1.025295ms)
+✔ widget'lar boyutlarına uyar: boyut kapsayıcısı, kaydırılan gövde ve dar pencere düzeni (0.358961ms)
+✔ senkron düzen kaydı yüklemede damgalanmaz; sunucudan gelen düzen yeniden okunur (10.777323ms)
+✔ sayfa kenarı taşıması hareketsiz bırakılsa da korunur; iptal başlangıç sayfasına döner; pointercancel uzun basmayı iptal eder (0.181594ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 92.642105

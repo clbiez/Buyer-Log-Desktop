@@ -1,0 +1,448 @@
+[
+  {
+    "name": "reference-51",
+    "columns": [
+      {
+        "key": "Merch Marka Yaş Grup Kod",
+        "checklist": false
+      },
+      {
+        "key": "Merch Alt Grup Kod",
+        "checklist": false
+      },
+      {
+        "key": "Buyer Grup (TR)",
+        "checklist": false
+      },
+      {
+        "key": "Buyer",
+        "checklist": false
+      },
+      {
+        "key": "__picture",
+        "checklist": false
+      },
+      {
+        "key": "Line",
+        "checklist": false
+      },
+      {
+        "key": "Ürün Tanım",
+        "checklist": false
+      },
+      {
+        "key": "Category",
+        "checklist": false
+      },
+      {
+        "key": "PLM ID",
+        "checklist": false
+      },
+      {
+        "key": "Model Name",
+        "checklist": false
+      },
+      {
+        "key": "Artwork Detail",
+        "checklist": false
+      },
+      {
+        "key": "Fabric (PLM)",
+        "checklist": false
+      },
+      {
+        "key": "C.Code",
+        "checklist": false
+      },
+      {
+        "key": "Colour",
+        "checklist": false
+      },
+      {
+        "key": "Special Code",
+        "checklist": false
+      },
+      {
+        "key": "Active/Inactive",
+        "checklist": false
+      },
+      {
+        "key": "Season",
+        "checklist": false
+      },
+      {
+        "key": "Country",
+        "checklist": false
+      },
+      {
+        "key": "Manufacturer",
+        "checklist": false
+      },
+      {
+        "key": "Sub-Manufacturer",
+        "checklist": false
+      },
+      {
+        "key": "Order Code",
+        "checklist": false
+      },
+      {
+        "key": "Importance",
+        "checklist": false
+      },
+      {
+        "key": "FOB ($)",
+        "checklist": false
+      },
+      {
+        "key": "Supp. FOB",
+        "checklist": false
+      },
+      {
+        "key": "Order Quantity",
+        "checklist": false
+      },
+      {
+        "key": "Shipment Quantity",
+        "checklist": false
+      },
+      {
+        "key": "Remaining Units",
+        "checklist": false
+      },
+      {
+        "key": "%",
+        "checklist": false
+      },
+      {
+        "key": "Licensor",
+        "checklist": false
+      },
+      {
+        "key": "License",
+        "checklist": false
+      },
+      {
+        "key": "Original Ex-factory",
+        "checklist": false
+      },
+      {
+        "key": "OPD",
+        "checklist": false
+      },
+      {
+        "key": "Ex-factory",
+        "checklist": false
+      },
+      {
+        "key": "LT",
+        "checklist": false
+      },
+      {
+        "key": "Retail Date",
+        "checklist": false
+      },
+      {
+        "key": "Ex→Retail",
+        "checklist": false
+      },
+      {
+        "key": "In-Store (Model Budget)",
+        "checklist": false
+      },
+      {
+        "key": "Kumaş Tipi",
+        "checklist": false
+      },
+      {
+        "key": "Kumaş Kategorisi",
+        "checklist": false
+      },
+      {
+        "key": "Kumaşçı Ülkesi",
+        "checklist": false
+      },
+      {
+        "key": "Kumaşçı",
+        "checklist": false
+      },
+      {
+        "key": "Karışım",
+        "checklist": false
+      },
+      {
+        "key": "İplik No",
+        "checklist": false
+      },
+      {
+        "key": "Gramaj",
+        "checklist": false
+      },
+      {
+        "key": "Del. Type",
+        "checklist": false
+      },
+      {
+        "key": "STATUS",
+        "checklist": false
+      },
+      {
+        "key": "Buying Son Onay Tarihi",
+        "checklist": false
+      },
+      {
+        "key": "HANDOVER Tarihi",
+        "checklist": false
+      },
+      {
+        "key": "Ant. Arrival",
+        "checklist": false
+      },
+      {
+        "key": "Notes",
+        "checklist": false
+      },
+      {
+        "key": "Ek Not",
+        "checklist": false
+      }
+    ]
+  },
+  {
+    "name": "checklist-ready",
+    "columns": [
+      {
+        "key": "Merch Marka Yaş Grup Kod",
+        "checklist": false
+      },
+      {
+        "key": "Merch Alt Grup Kod",
+        "checklist": false
+      },
+      {
+        "key": "Buyer Grup (TR)",
+        "checklist": false
+      },
+      {
+        "key": "Buyer",
+        "checklist": false
+      },
+      {
+        "key": "__picture",
+        "checklist": false
+      },
+      {
+        "key": "Line",
+        "checklist": false
+      },
+      {
+        "key": "Ürün Tanım",
+        "checklist": false
+      },
+      {
+        "key": "Category",
+        "checklist": false
+      },
+      {
+        "key": "PLM ID",
+        "checklist": false
+      },
+      {
+        "key": "Model Name",
+        "checklist": false
+      },
+      {
+        "key": "Artwork Detail",
+        "checklist": false
+      },
+      {
+        "key": "Fabric (PLM)",
+        "checklist": false
+      },
+      {
+        "key": "C.Code",
+        "checklist": false
+      },
+      {
+        "key": "Colour",
+        "checklist": false
+      },
+      {
+        "key": "Special Code",
+        "checklist": false
+      },
+      {
+        "key": "Active/Inactive",
+        "checklist": false
+      },
+      {
+        "key": "Season",
+        "checklist": false
+      },
+      {
+        "key": "Country",
+        "checklist": false
+      },
+      {
+        "key": "Manufacturer",
+        "checklist": false
+      },
+      {
+        "key": "Sub-Manufacturer",
+        "checklist": false
+      },
+      {
+        "key": "Order Code",
+        "checklist": false
+      },
+      {
+        "key": "Importance",
+        "checklist": false
+      },
+      {
+        "key": "FOB ($)",
+        "checklist": false
+      },
+      {
+        "key": "Supp. FOB",
+        "checklist": false
+      },
+      {
+        "key": "Order Quantity",
+        "checklist": false
+      },
+      {
+        "key": "Shipment Quantity",
+        "checklist": false
+      },
+      {
+        "key": "Remaining Units",
+        "checklist": false
+      },
+      {
+        "key": "%",
+        "checklist": false
+      },
+      {
+        "key": "Licensor",
+        "checklist": false
+      },
+      {
+        "key": "License",
+        "checklist": false
+      },
+      {
+        "key": "Original Ex-factory",
+        "checklist": false
+      },
+      {
+        "key": "OPD",
+        "checklist": false
+      },
+      {
+        "key": "Ex-factory",
+        "checklist": false
+      },
+      {
+        "key": "LT",
+        "checklist": false
+      },
+      {
+        "key": "Retail Date",
+        "checklist": false
+      },
+      {
+        "key": "Ex→Retail",
+        "checklist": false
+      },
+      {
+        "key": "In-Store (Model Budget)",
+        "checklist": false
+      },
+      {
+        "key": "Kumaş Tipi",
+        "checklist": false
+      },
+      {
+        "key": "Kumaş Kategorisi",
+        "checklist": false
+      },
+      {
+        "key": "Kumaşçı Ülkesi",
+        "checklist": false
+      },
+      {
+        "key": "Kumaşçı",
+        "checklist": false
+      },
+      {
+        "key": "Karışım",
+        "checklist": false
+      },
+      {
+        "key": "İplik No",
+        "checklist": false
+      },
+      {
+        "key": "Gramaj",
+        "checklist": false
+      },
+      {
+        "key": "Del. Type",
+        "checklist": false
+      },
+      {
+        "key": "STATUS",
+        "checklist": false
+      },
+      {
+        "key": "Buying Son Onay Tarihi",
+        "checklist": false
+      },
+      {
+        "key": "HANDOVER Tarihi",
+        "checklist": false
+      },
+      {
+        "key": "Ant. Arrival",
+        "checklist": false
+      },
+      {
+        "key": "Notes",
+        "checklist": false
+      },
+      {
+        "key": "Ek Not",
+        "checklist": false
+      },
+      {
+        "key": "__checklist__pps",
+        "checklist": true
+      },
+      {
+        "key": "__checklist__soff",
+        "checklist": true
+      },
+      {
+        "key": "__checklist__artwork",
+        "checklist": true
+      },
+      {
+        "key": "__checklist__tests",
+        "checklist": true
+      },
+      {
+        "key": "__checklist__fabric",
+        "checklist": true
+      },
+      {
+        "key": "__checklist__accessories",
+        "checklist": true
+      },
+      {
+        "key": "__checklist__supplierConfirmation",
+        "checklist": true
+      }
+    ]
+  }
+]

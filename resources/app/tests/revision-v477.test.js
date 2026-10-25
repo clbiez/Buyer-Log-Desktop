@@ -8,7 +8,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const rules = require(path.join(ROOT, 'public', 'business-rules.js'));
 const html = (fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8'));
-const css = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const css = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
 test('v4.77 delivery-delay fact survives as a structured signal after legacy CP Priority removal', () => {
   const result = rules.computePriorityFlags({
@@ -55,7 +55,8 @@ test('v4.77 CP image click gives temporary feedback and never remains selected',
   assert.match(html, /cpThumbFlash/);
   assert.match(html, /setTimeout\(\(\)=>img\.classList\.remove\('cpThumbFlash'\),320\)/);
   assert.doesNotMatch(html, /cpThumbActive/);
-  assert.match(css, /cpThumbFlashPulse/);
+  assert.match(css, /\.cpThumbFlash\{opacity:\.65/);
+  require('./helpers/manifest-css').assertStaticMotion();
 });
 
 test('v4.77 filter and selection popups center on their trigger and ignore internal scrolling', () => {
@@ -71,8 +72,8 @@ test('v4.77 Data Model Connection uses large non-blurred workspaces', () => {
   // şemasından kendiliğinden kurulup onarılıyor. Testin pencere düzenine
   // ilişkin AMACI korunur, kaldırılan ekrana ait beklentiler düşürülür.
   assert.match(css, /\.modelConnCard\{width:min\(1500px/);
-  assert.match(css, /\.warnOverlay\{[^}]*backdrop-filter:none/s);
-  assert.match(css, /\.sourceBackdrop\{[^}]*backdrop-filter:none/s);
+  assert.doesNotMatch(require("./helpers/manifest-css").rules(/warnOverlay/), /backdrop-filter:(?!none)/);
+  assert.doesNotMatch(require("./helpers/manifest-css").rules(/sourceBackdrop/), /backdrop-filter:(?!none)/);
   assert.doesNotMatch(html, /id="_mcPreviewBox"/);
   assert.doesNotMatch(html, /data-scope-preview=/);
 });

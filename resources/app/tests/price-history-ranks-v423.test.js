@@ -17,7 +17,7 @@ const fs = require('fs');
 const path = require('path');
 
 const SRC = fs.readFileSync(path.join(__dirname, '..', 'public', 'quotations.js'), 'utf-8');
-const CSS = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.css'), 'utf-8');
+const CSS = require('./helpers/manifest-css')();
 
 function loadRanker() {
   const match = SRC.match(/function qhPriceRanks\(model,mfrs\)\{[\s\S]*?\n  \}/);
@@ -69,6 +69,8 @@ test('fiyatı olmayan hücre madalya almaz', () => {
 test('madalya bir rozet olarak basılıyor', () => {
   assert.ok(/qhMedal qhMedal\$\{rank\}/.test(SRC), 'rozet sınıfı üretilmeli');
   assert.ok(SRC.includes("c.approved?' qhApproved':''"), 'onay sınıfı korunmalı');
+  assert.equal((SRC.match(/class="qhApprovalMark"/g)||[]).length,2,'ranked and manufacturer views expose a text approval label');
+  assert.match(SRC,/en\?'Approved':'Onaylı'/);
 });
 
 test('hücre arka planı ve fiyat metni boyanmıyor', () => {
@@ -78,11 +80,11 @@ test('hücre arka planı ve fiyat metni boyanmıyor', () => {
   assert.ok(!/\.qhPivot td\.qhApproved \.qhPrice\{color/.test(CSS), 'fiyat metni boyanmamalı');
 });
 
-test('üç madalya rozeti de tanımlı ve onay şeridi duruyor', () => {
+test('üç sıra rozeti tanımlı ve onay yüzeyi görünür', () => {
   for (const cls of ['qhMedal1', 'qhMedal2', 'qhMedal3']) {
     assert.ok(CSS.includes(`.${cls}{`), `${cls} tanımlı olmalı`);
   }
-  assert.ok(CSS.includes('.qhPivot td.qhApproved{box-shadow:inset'), 'onayın yeşil şeridi korunmalı');
+  assert.match(CSS,/\.qhPivot td\.qhApproved\{background:var\(--ui-success-bg\)/,'approved price retains an explicit success surface');
 });
 
 test('rozet fiyatın önünde, aynı satırda duruyor', () => {

@@ -1,0 +1,77 @@
+[
+  {
+    "theme": "light",
+    "checks": [
+      {
+        "indicator": "check-idle",
+        "background": "surface",
+        "ratio": 3.97960843417797
+      },
+      {
+        "indicator": "accent",
+        "background": "surface",
+        "ratio": 5.748082689455164
+      },
+      {
+        "indicator": "check-idle",
+        "background": "canvas",
+        "ratio": 3.705718862160861
+      },
+      {
+        "indicator": "accent",
+        "background": "canvas",
+        "ratio": 5.352480977936773
+      }
+    ]
+  },
+  {
+    "theme": "grey",
+    "checks": [
+      {
+        "indicator": "check-idle",
+        "background": "surface",
+        "ratio": 4.024940688807584
+      },
+      {
+        "indicator": "accent",
+        "background": "surface",
+        "ratio": 5.702099277098715
+      },
+      {
+        "indicator": "check-idle",
+        "background": "canvas",
+        "ratio": 3.298929227708101
+      },
+      {
+        "indicator": "accent",
+        "background": "canvas",
+        "ratio": 4.673565008503769
+      }
+    ]
+  },
+  {
+    "theme": "dark",
+    "checks": [
+      {
+        "indicator": "check-idle",
+        "background": "surface",
+        "ratio": 4.917302794352207
+      },
+      {
+        "indicator": "accent",
+        "background": "surface",
+        "ratio": 7.826278703401976
+      },
+      {
+        "indicator": "check-idle",
+        "background": "canvas",
+        "ratio": 5.529061014847347
+      },
+      {
+        "indicator": "accent",
+        "background": "canvas",
+        "ratio": 8.799940593450977
+      }
+    ]
+  }
+]

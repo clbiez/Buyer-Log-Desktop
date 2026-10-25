@@ -1,0 +1,187 @@
+{
+  "contrast": [
+    {
+      "theme": "light",
+      "tab": "overview",
+      "checked": 115,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "light",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "overview",
+      "checked": 115,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "grey",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "dark",
+      "tab": "overview",
+      "checked": 115,
+      "failures": [
+        {
+          "text": "3",
+          "id": "notificationUnreadBadge",
+          "cls": "notificationUnreadBadge",
+          "fg": "rgb(255, 255, 255)",
+          "bg": [
+            227,
+            155,
+            148,
+            1
+          ],
+          "ratio": 2.24
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    },
+    {
+      "theme": "dark",
+      "tab": "cp",
+      "checked": 184,
+      "failures": [
+        {
+          "text": "3",
+          "id": "notificationUnreadBadge",
+          "cls": "notificationUnreadBadge",
+          "fg": "rgb(255, 255, 255)",
+          "bg": [
+            227,
+            155,
+            148,
+            1
+          ],
+          "ratio": 2.24
+        }
+      ],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    }
+  ],
+  "geometry": [
+    {
+      "theme": "light",
+      "tab": "overview",
+      "rounded": [
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        }
+      ]
+    },
+    {
+      "theme": "light",
+      "tab": "cp",
+      "rounded": []
+    },
+    {
+      "theme": "grey",
+      "tab": "overview",
+      "rounded": [
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        }
+      ]
+    },
+    {
+      "theme": "grey",
+      "tab": "cp",
+      "rounded": []
+    },
+    {
+      "theme": "dark",
+      "tab": "overview",
+      "rounded": [
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        },
+        {
+          "id": "",
+          "cls": "ovClockStripDot",
+          "radius": "50%"
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "tab": "cp",
+      "rounded": []
+    }
+  ],
+  "scales": [],
+  "behavior": [],
+  "fonts": []
+}

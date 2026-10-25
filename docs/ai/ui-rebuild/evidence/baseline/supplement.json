@@ -1,0 +1,41 @@
+[
+  {
+    "theme": "light",
+    "columns": "visible fields trigger",
+    "drawer": "real edit drawer"
+  },
+  {
+    "theme": "grey",
+    "columns": "visible fields trigger",
+    "drawer": "real edit drawer"
+  },
+  {
+    "theme": "dark",
+    "columns": "visible fields trigger",
+    "drawer": "real edit drawer"
+  },
+  {
+    "theme": "light",
+    "signIn": {
+      "theme": "light",
+      "opacity": "1",
+      "display": "grid"
+    }
+  },
+  {
+    "theme": "grey",
+    "signIn": {
+      "theme": "grey",
+      "opacity": "1",
+      "display": "grid"
+    }
+  },
+  {
+    "theme": "dark",
+    "signIn": {
+      "theme": "dark",
+      "opacity": "1",
+      "display": "grid"
+    }
+  }
+]

@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const GROUPS = fs.readFileSync(path.join(ROOT, 'public', 'kpi-groups.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 
 test('v10.54 CP ve Siparişler Sayfa Filtreleri başlığı klavyeyle açılıp kapanabilen bir düğmedir', () => {
@@ -16,7 +16,8 @@ test('v10.54 CP ve Siparişler Sayfa Filtreleri başlığı klavyeyle açılıp 
   assert.match(GROUPS, /head\.setAttribute\('aria-controls',menu\.id\)/);
   assert.match(GROUPS, /lbl\.setAttribute\('aria-expanded',String\(willOpen\)\)/);
   assert.match(GROUPS, /querySelector\(':scope > \.tbGroupHead'\)\?\.setAttribute\('aria-expanded','false'\)/);
-  assert.match(CSS, /\.pageTitleFilters \.fltGroup>\.tbGroupHead\{[^}]*border:0[^}]*background:transparent[^}]*font:inherit/);
+  assert.match(CSS, /\.pageTitleFilters \.fltGroup>\.tbGroupHead\{background:transparent[^}]*font:inherit/);
+  require('./helpers/manifest-css').assertReset();
 });
 
 

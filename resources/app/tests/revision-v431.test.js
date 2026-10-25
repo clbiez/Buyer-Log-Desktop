@@ -6,7 +6,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const INDEX = (fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8'));
 const QUOT = fs.readFileSync(path.join(ROOT, 'public', 'quotations.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 
 test('CP kopyalama yalnız yaprak sütun başlıklarını kullanır', () => {
   assert.match(INDEX, /leafHeadersOnly:info\.tableKey==='cp'/);
@@ -50,7 +50,7 @@ test('fiyat sırası hücresi fiyatı ve üretici adını aynı hücrede göster
 
 test('TPs profil menüleri modalın üzerinde açılır', () => {
   assert.match(INDEX, /select\.closest\('\.warnOverlay'\).*profileSelectMenuModal/);
-  assert.match(CSS, /\.profileSelectMenu\.profileSelectMenuModal\{z-index:54010;\}/);
+  assert.match(CSS, /\.profileSelectMenu\.profileSelectMenuModal\{z-index:var\(--ui-z-modal-menu\)/);
 });
 
 test('Koleksiyon dondurma fiziksel yaprak başlıklarını kullanır ve her çizimde uygulanır', () => {
@@ -62,7 +62,7 @@ test('Koleksiyon dondurma fiziksel yaprak başlıklarını kullanır ve her çiz
 
 test('dondurma seçiminde tek sütun sınırı lazerle gösterilir ve buton kırmızı vurgulanır', () => {
   assert.match(CSS, /\.freezeLaser\{[^}]*width:2px/s);
-  assert.match(CSS, /\.navActionBtn\.freezeOn,\.lflCpTableTool\.freezeOn/);
+  for(const selector of [".navActionBtn.freezeOn",".lflCpTableTool.freezeOn"]) assert.ok(CSS.includes(selector));
   assert.match(INDEX, /freezeColumnAtX\(table,event\.clientX\)/);
   assert.match(INDEX, /setFreeze\(pick\.tableKey,count\)/);
   assert.doesNotMatch(CSS, /freezeClosed|freezeOpen|freezeBar/);

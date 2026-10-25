@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-23",
+  "publishedAt": "2026-10-25",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Veri bütünlüğü, performans ve çalışma akışı iyileştirmeleri",
-    "en": "Data integrity, performance and workflow improvements"
+    "tr": "Manifest arayüzü, veri güvenliği ve çalışma akışı",
+    "en": "Manifest interface, data integrity and workflow"
   },
   "summary": {
-    "tr": "Güvenli kayıt ve güncelleme sınırları; büyük veri performansı; görünümler, toplu işlem önizlemesi, fiyat kaynakları ve kayıtlı istisnalar.",
-    "en": "Safer persistence and update boundaries; large-data performance; views, bulk previews, price lineage and confirmed exceptions."
+    "tr": "Ortak Manifest arayüzü; güvenli kayıt ve güncelleme, büyük veri performansı, toplu işlemler ve fiyat kaynakları.",
+    "en": "Shared Manifest interface; safe persistence and updates, large-data performance, bulk operations and price lineage."
   },
   "changes": [
     {
@@ -1951,6 +1951,1224 @@
         "caption": {
           "tr": "300 demo model; Türkçe ve İngilizce yerleşim doğrulandı.",
           "en": "300 synthetic models; Turkish and English layouts verified."
+        }
+      }
+    },
+    {
+      "id": "manifest-cp-pilot",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker · Ortak Arayüz",
+        "en": "CP Tracker · Shared interface"
+      },
+      "title": {
+        "tr": "Manifest: tanıdık başlık renkleri, daha sakin tablo",
+        "en": "Manifest: familiar header colors, calmer tables"
+      },
+      "body": {
+        "tr": "Ana sütun grupları ince çizgilerle ayrılır; eski başlık renkleri korunur. Köşeli kontroller ve yerel Plex tipografi açık, gri ve koyu temalarda ortak kullanılır. Dört arayüz boyutu ve Kopyala/Excel çıktıları korunur.",
+        "en": "Main column groups use subtle separators while retaining their original header colors. Angular controls and locally bundled Plex typography are shared across light, grey and dark themes. All four interface sizes and Copy/Excel outputs are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-cp-pilot.png",
+        "alt": {
+          "tr": "Manifest: tanıdık başlık renkleri, daha sakin tablo — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Manifest: familiar header colors, calmer tables — real Buyer Log screen with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 1 pilotu; değişiklik sonrası gerçek 1440×900 PNG, anonim demo veri.",
+          "en": "Manifest Phase 1 pilot; actual post-change 1440×900 PNG with anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "manifest-overview-pilot",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Manifest düzeni ve okunur grafik hiyerarşisi",
+        "en": "Manifest layout and readable chart hierarchy"
+      },
+      "body": {
+        "tr": "Varsayılan Genel Bakış düzeni terminleri, operasyon sayılarını ve akış haritasını öne çıkarır. Grafik işaretçileri köşelidir; süs animasyonları kaldırılmıştır. Kişisel yerleşimler korunur; Termin Ufku dar alanda kendi içinde kayar.",
+        "en": "The default Overview layout emphasizes deadlines, operational counts and the flow map. Chart markers are angular and decorative animations are removed. Personal layouts are preserved; Delivery Horizon scrolls within its space when needed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-overview-pilot.png",
+        "alt": {
+          "tr": "Manifest düzeni ve okunur grafik hiyerarşisi — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Manifest layout and readable chart hierarchy — real Buyer Log screen with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 1 pilotu; değişiklik sonrası gerçek 1440×900 PNG, anonim demo veri.",
+          "en": "Manifest Phase 1 pilot; actual post-change 1440×900 PNG with anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "manifest-notes-dialog",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker · Sipariş Notu",
+        "en": "CP Tracker · Order notes"
+      },
+      "title": {
+        "tr": "Not düzenleyicide ortak görünüm ve klavye odağı",
+        "en": "Shared styling and keyboard focus in the note editor"
+      },
+      "body": {
+        "tr": "Not penceresi Manifest yüzeylerini ve görünür odağı kullanır. Tab ve Shift+Tab odağı pencere içinde tutar; Escape kapatır ve önceki odağa döner. Ctrl+Enter ile kaydetme ve mevcut not kayıt yolu korunur.",
+        "en": "The note dialog uses Manifest surfaces and visible focus. Tab and Shift+Tab keep focus inside the dialog; Escape closes it and restores the previous focus. Ctrl+Enter saving and the existing note persistence path are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-notes-dialog.png",
+        "alt": {
+          "tr": "Not düzenleyicide ortak görünüm ve klavye odağı — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Shared styling and keyboard focus in the note editor — real Buyer Log screen with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 1 pilotu; değişiklik sonrası gerçek 1440×900 PNG, anonim demo veri.",
+          "en": "Manifest Phase 1 pilot; actual post-change 1440×900 PNG with anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "manifest-login-shell",
+      "type": "improvement",
+      "module": {
+        "tr": "Giriş",
+        "en": "Sign-in"
+      },
+      "title": {
+        "tr": "Giriş ekranı uygulamayla aynı temayı kullanır",
+        "en": "Sign-in shares the application theme"
+      },
+      "body": {
+        "tr": "Giriş ekranı açık, gri ve koyu tema ile son arayüz boyutunu ortak kaynaktan kullanır. Fontlar çevrimdışı paketlidir; kullanıcı seçimi, şifre alanı ve bağlantı ayarları mevcut akışla çalışır.",
+        "en": "Sign-in uses the shared light, grey and dark theme tokens and the latest interface size. Fonts are bundled for offline use; user selection, password input and connection settings retain their existing workflow."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-login-shell.png",
+        "alt": {
+          "tr": "Giriş ekranı uygulamayla aynı temayı kullanır — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Sign-in shares the application theme — real Buyer Log screen with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 1 pilotu; değişiklik sonrası gerçek 1440×900 PNG, anonim demo veri.",
+          "en": "Manifest Phase 1 pilot; actual post-change 1440×900 PNG with anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "manifest-startup-shell",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Hazırlık aşamaları ortak Manifest yüzeylerinde",
+        "en": "Readiness stages on shared Manifest surfaces"
+      },
+      "body": {
+        "tr": "Açılış ekranı aynı tema ve yazı ölçeğini kullanır. Hazırlık aşamaları metin ve kare durum işaretleriyle gösterilir; dekoratif küre kaldırılmıştır. Hazır olma koşulları, TR/EN seçimi ve Devam eylemi korunur.",
+        "en": "The startup screen uses the same theme and type scale. Readiness stages use text and square status indicators; the decorative orb is removed. Readiness gates, TR/EN selection and the Continue action are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-startup-shell.png",
+        "alt": {
+          "tr": "Hazırlık aşamaları ortak Manifest yüzeylerinde — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Readiness stages on shared Manifest surfaces — real Buyer Log screen with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 1 pilotu; değişiklik sonrası gerçek 1440×900 PNG, anonim demo veri.",
+          "en": "Manifest Phase 1 pilot; actual post-change 1440×900 PNG with anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "manifest-orders",
+      "type": "improvement",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Siparişler ortak tablo düzeninde",
+        "en": "Orders uses the shared table layout"
+      },
+      "body": {
+        "tr": "Siparişler tablosu, araç çubuğu ve görünüm seçimleri Manifest tipografisi ve yüzeylerini kullanır. Ana sütun grupları her iki başlık satırında ince çizgilerle ayrılır; satırlarda dikey çizgi kullanılmaz.",
+        "en": "The Orders table, toolbar and view controls use Manifest typography and surfaces. Subtle dividers separate main column groups across both header rows; body rows have no vertical grid."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-orders.png",
+        "alt": {
+          "tr": "Siparişler ortak tablo düzeninde — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Orders uses the shared table layout — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Planla & Yürüt grubu; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Plan & Execute group; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-backlog",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Backlog analizleri ortak ölçü ve grafik diliyle",
+        "en": "Shared measures and charts for Backlog"
+      },
+      "body": {
+        "tr": "Tamamlanma oranları doğrusal ölçülerle, analiz işaretçileri kare biçimde gösterilir. Tarih aralığı, filtreler, pivot ve plan/gerçek panelleri aynı yüzey ve yazı ölçeğini kullanır. Hesaplamalar ve rapor verileri korunur.",
+        "en": "Completion rates use linear measures and chart markers are square. Date ranges, filters, pivot and planned/actual panels share surface and type scales. Calculations and report data are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-backlog.png",
+        "alt": {
+          "tr": "Backlog analizleri ortak ölçü ve grafik diliyle — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Shared measures and charts for Backlog — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Planla & Yürüt grubu; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Plan & Execute group; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-shipping",
+      "type": "improvement",
+      "module": {
+        "tr": "Nakliye",
+        "en": "Shipping"
+      },
+      "title": {
+        "tr": "Nakliye kıyası ve navlun penceresi Manifest düzeninde",
+        "en": "Manifest layout for shipping comparison and freight"
+      },
+      "body": {
+        "tr": "Karşılaştırma tablosu ve navlun hesaplama penceresi ortak kontrolleri kullanır. Excel ve kopyalama paletleri ekran renklerinden ayrılmıştır; eski çıktı biçimleri ve hücre renkleri korunur.",
+        "en": "The comparison table and freight calculator use shared controls. Excel and clipboard palettes are independent of screen colors, preserving existing output formats and cell colors."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-shipping.png",
+        "alt": {
+          "tr": "Nakliye kıyası ve navlun penceresi Manifest düzeninde — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Manifest layout for shipping comparison and freight — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Planla & Yürüt grubu; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Plan & Execute group; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-cp-rules",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Kural pencerelerinde ortak kontroller ve klavye odağı",
+        "en": "Shared controls and keyboard focus in rule dialogs"
+      },
+      "body": {
+        "tr": "Öncelik ve kontrol listesi pencereleri Manifest bileşenlerini kullanır. Tab ve Shift+Tab odağı pencerede tutar; Escape mevcut doğrulama ve kapatma yolunu kullanır. LCW AI desteği aynı ürün diliyle gösterilir.",
+        "en": "Priority and checklist dialogs use Manifest components. Tab and Shift+Tab retain focus inside the dialog; Escape uses the existing validation and close path. LCW AI assistance uses the same product language."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-cp-rules.png",
+        "alt": {
+          "tr": "Kural pencerelerinde ortak kontroller ve klavye odağı — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Shared controls and keyboard focus in rule dialogs — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Planla & Yürüt grubu; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Plan & Execute group; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-detail-drawer",
+      "type": "improvement",
+      "module": {
+        "tr": "Sipariş detayları",
+        "en": "Order details"
+      },
+      "title": {
+        "tr": "Ayrıntı tabloları ve alan seçimi aynı düzende",
+        "en": "Consistent detail tables and field selection"
+      },
+      "body": {
+        "tr": "Ortak ayrıntı çekmecesi, alan seçimi, metin hiyerarşisi ve tablolar Manifest sistemine taşındı. Sütun menüsü sabit başlıkların üzerinde açılır; klavye odağı çekmecede kalır ve kapanınca önceki kontrole döner.",
+        "en": "The shared detail drawer, field selection, text hierarchy and tables use Manifest. The column menu opens above sticky headers; keyboard focus stays in the drawer and returns to the previous control on close."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-detail-drawer.png",
+        "alt": {
+          "tr": "Ayrıntı tabloları ve alan seçimi aynı düzende — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Consistent detail tables and field selection — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Planla & Yürüt grubu; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Plan & Execute group; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-collection",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Koleksiyon tablosunda ortak başlık ve kontrol dili",
+        "en": "Shared headers and controls in Collection"
+      },
+      "body": {
+        "tr": "Koleksiyon araçları, durumlar ve fiyat çekmecesi Manifest sistemine taşındı. Ana sütun grupları iki başlık satırında ince çizgilerle ayrılır; tablo düzenleme ve Excel çıktıları korunur.",
+        "en": "Collection tools, states and the price drawer use Manifest. Thin separators span both header tiers of each main column group; spreadsheet editing and Excel output are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-collection.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda ortak başlık ve kontrol dili — anonim veriyle gerçek Buyer Log",
+          "en": "Shared headers and controls in Collection — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-pricing",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Teklif masası, turlar ve geçmiş aynı düzende",
+        "en": "Consistent quotations, rounds and history"
+      },
+      "body": {
+        "tr": "Teklif matrisi, turlar, geçmiş ve analiz ortak yüzey ve kontrolleri kullanır. İlerleme ölçüleri doğrusal, grafik işaretçileri karedir; fiyat, onay ve tur hesapları değişmedi.",
+        "en": "The quotation matrix, rounds, history and analysis share surfaces and controls. Progress measures are linear and chart markers are square; pricing, approval and round calculations are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-pricing.png",
+        "alt": {
+          "tr": "Teklif masası, turlar ve geçmiş aynı düzende — anonim veriyle gerçek Buyer Log",
+          "en": "Consistent quotations, rounds and history — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-price-analysis",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat & Üretici Analizi",
+        "en": "Price & Supplier Analysis"
+      },
+      "title": {
+        "tr": "Ülke dağılımı ve karşılaştırmalar daha okunabilir",
+        "en": "Clearer country mix and comparisons"
+      },
+      "body": {
+        "tr": "Ülke dağılımı etiketli düz ölçüye taşındı. Karşılaştırma serileri, özetler, filtreler ve tablolar ortak Manifest dilinde; analiz ve kaynak seçimleri korunur.",
+        "en": "Country mix uses a labelled linear measure. Comparison series, summaries, filters and tables share Manifest; analysis and source selections are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-price-analysis.png",
+        "alt": {
+          "tr": "Ülke dağılımı ve karşılaştırmalar daha okunabilir — anonim veriyle gerçek Buyer Log",
+          "en": "Clearer country mix and comparisons — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-manufacturers",
+      "type": "improvement",
+      "module": {
+        "tr": "Üreticiler",
+        "en": "Manufacturers"
+      },
+      "title": {
+        "tr": "Üretici kartlarında ortak hiyerarşi",
+        "en": "Shared hierarchy in manufacturer records"
+      },
+      "body": {
+        "tr": "Liste, üretici kartı, performans ölçüleri ve durum etiketleri ortak yüzey ve tipografiyi kullanır. Tekrarlanan sayfa başlığı kaldırıldı; uyarılar ve grafik serileri daha okunabilir.",
+        "en": "The list, manufacturer record, performance measures and status labels share surfaces and typography. The repeated page title is removed; warnings and chart series are easier to read."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-manufacturers.png",
+        "alt": {
+          "tr": "Üretici kartlarında ortak hiyerarşi — anonim veriyle gerçek Buyer Log",
+          "en": "Shared hierarchy in manufacturer records — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-license-cards",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisans listesi ve onay haritasında tutarlı kontroller",
+        "en": "Consistent license list and approval map controls"
+      },
+      "body": {
+        "tr": "Lisans satırları, sözleşme durumları ve harita çekmecesi aynı köşeli dili kullanır. Harita penceresinde Tab odağı içeride kalır; kapatırken mevcut kaydetme uyarıları korunur.",
+        "en": "License rows, contract states and the map drawer share the same square controls. Tab focus stays in the map dialog; existing unsaved-change prompts remain on close."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-license-cards.png",
+        "alt": {
+          "tr": "Lisans listesi ve onay haritasında tutarlı kontroller — anonim veriyle gerçek Buyer Log",
+          "en": "Consistent license list and approval map controls — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-lfl",
+      "type": "improvement",
+      "module": {
+        "tr": "LFL",
+        "en": "LFL"
+      },
+      "title": {
+        "tr": "LFL tabloları ve senaryo formu ortak sistemde",
+        "en": "LFL tables and scenario form share the design system"
+      },
+      "body": {
+        "tr": "LFL tabloları, portföyler ve senaryolar Manifest sistemine taşındı. Senaryo penceresinin gizlenen dönem ve portföy alanları görünür; klavye odağı içeride kalır ve filtre anahtarı Space ile kullanılabilir.",
+        "en": "LFL tables, portfolios and scenarios use Manifest. Previously hidden period and portfolio fields are visible in the scenario dialog; keyboard focus stays inside and Space operates the scope checkbox."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-lfl.png",
+        "alt": {
+          "tr": "LFL tabloları ve senaryo formu ortak sistemde — anonim veriyle gerçek Buyer Log",
+          "en": "LFL tables and scenario form share the design system — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-costing",
+      "type": "improvement",
+      "module": {
+        "tr": "Ön Maliyet",
+        "en": "Preliminary Costing"
+      },
+      "title": {
+        "tr": "Maliyet föyünde ortak alanlar ve durumlar",
+        "en": "Shared fields and states in costing sheets"
+      },
+      "body": {
+        "tr": "Maliyet bilgileri, bölüm tabloları ve özet aynı yüzey, tipografi ve kontrolleri kullanır. Üç tema ve arayüz ölçeği korunur; Excel formülleri, veri ve hücre biçimleri değişmedi.",
+        "en": "Costing details, section tables and summary share surfaces, typography and controls. Three themes and interface scaling are preserved; Excel formulas, data and cell formatting are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-costing.png",
+        "alt": {
+          "tr": "Maliyet föyünde ortak alanlar ve durumlar — anonim veriyle gerçek Buyer Log",
+          "en": "Shared fields and states in costing sheets — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-data-management",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Veri kaynakları ve denetim aşamalarında Manifest",
+        "en": "Manifest for data sources and inspection stages"
+      },
+      "body": {
+        "tr": "Kaynaklar, laboratuvar sekmeleri ve veri denetçisi ortak yüzey, tipografi ve alanları kullanır. Denetim adımları numaralı bir akışla ayrılır. Bağlantı ve veri işleme yolları korunur.",
+        "en": "Sources, lab tabs and the data inspector share surfaces, typography and fields. Inspection steps use a numbered flow. Connection and data processing paths are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-data-management.png",
+        "alt": {
+          "tr": "Veri kaynakları ve denetim aşamalarında Manifest — anonim veriyle gerçek Buyer Log",
+          "en": "Manifest for data sources and inspection stages — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-users",
+      "type": "improvement",
+      "module": {
+        "tr": "Kullanıcılar",
+        "en": "Users"
+      },
+      "title": {
+        "tr": "Kullanıcı ve yetki tablolarında ortak düzen",
+        "en": "Shared layout for users and permissions"
+      },
+      "body": {
+        "tr": "Kullanıcılar, roller ve çalışma alanı ayarları aynı tablo, sekme ve pencere diline taşındı. Pencere içinde Tab dolaşımı ve Esc ile kapanış ortak katman sisteminden gelir.",
+        "en": "Users, roles and workspace settings share tables, tabs and dialogs. Tab containment and Escape closing use the shared layer system."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-users.png",
+        "alt": {
+          "tr": "Kullanıcı ve yetki tablolarında ortak düzen — anonim veriyle gerçek Buyer Log",
+          "en": "Shared layout for users and permissions — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-automations",
+      "type": "improvement",
+      "module": {
+        "tr": "Otomasyonlar",
+        "en": "Automations"
+      },
+      "title": {
+        "tr": "Numaralı otomasyon kataloğu ve tutarlı düzenleyici",
+        "en": "Numbered automation catalogue and consistent editor"
+      },
+      "body": {
+        "tr": "Şablonlar numaralı katalog düzeninde sunulur. Oluşturma, ayarlar ve rapor sütunu pencereleri ortak kontrolleri ve klavye davranışını kullanır; çalıştırma ve kaydetme yolları korunur.",
+        "en": "Templates use a numbered catalogue. Creation, settings and report column dialogs share controls and keyboard behavior; execution and save paths are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-automations.png",
+        "alt": {
+          "tr": "Numaralı otomasyon kataloğu ve tutarlı düzenleyici — anonim veriyle gerçek Buyer Log",
+          "en": "Numbered automation catalogue and consistent editor — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-lcwai",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI aynı ürün dilinde bir çalışma kaydı",
+        "en": "LCW AI uses the same product language"
+      },
+      "body": {
+        "tr": "Mesajlar yazarı belirli, aynı hizada kayıtlar olarak gösterilir. Sohbet balonları ve yıldız işaretleri kaldırıldı; giriş ve yardımcı pencereleri ortak kontrolleri kullanır. Tek LCW AI motoru ve gönderim yolu korunur.",
+        "en": "Messages appear as aligned records with named authors. Chat bubbles and star ornaments are removed; sign-in and assistant dialogs share controls. The single LCW AI engine and send path are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-lcwai.png",
+        "alt": {
+          "tr": "LCW AI aynı ürün dilinde bir çalışma kaydı — anonim veriyle gerçek Buyer Log",
+          "en": "LCW AI uses the same product language — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-guide",
+      "type": "improvement",
+      "module": {
+        "tr": "Rehber",
+        "en": "Guide"
+      },
+      "title": {
+        "tr": "Rehberde ortak tipografi ve seçili durum",
+        "en": "Shared typography and selected states in the guide"
+      },
+      "body": {
+        "tr": "Rehberin gezinmesi, adımları ve işlevsel diyagramları Manifest sistemine taşındı. Seçili başlıklar üç temada okunur; mevcut arama ve ekrana git eylemleri korunur.",
+        "en": "Guide navigation, steps and functional diagrams use Manifest. Selected titles are readable in all three themes; search and screen navigation actions are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-guide.png",
+        "alt": {
+          "tr": "Rehberde ortak tipografi ve seçili durum — anonim veriyle gerçek Buyer Log",
+          "en": "Shared typography and selected states in the guide — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-sync-guide",
+      "type": "improvement",
+      "module": {
+        "tr": "PLM / ASAS",
+        "en": "PLM / ASAS"
+      },
+      "title": {
+        "tr": "Tarayıcı bağlantı rehberinde ortak durum dili",
+        "en": "Shared status language in the browser connection guide"
+      },
+      "body": {
+        "tr": "Tarayıcı bağlantı durumu, numaralı adımlar ve kurulum kontrolleri ortak sistemle gösterilir. Pencere klavye odağını korur; bağlantı açma ve doğrulama işlemleri değişmedi.",
+        "en": "Browser connection status, numbered steps and setup controls share the design system. The dialog contains keyboard focus; connection and verification behavior is unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-sync-guide.png",
+        "alt": {
+          "tr": "Tarayıcı bağlantı rehberinde ortak durum dili — anonim veriyle gerçek Buyer Log",
+          "en": "Shared status language in the browser connection guide — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-release-notes",
+      "type": "improvement",
+      "module": {
+        "tr": "Sürüm Notları",
+        "en": "Release Notes"
+      },
+      "title": {
+        "tr": "Sürüm arşivi Manifest görünümünde",
+        "en": "Release archive in Manifest"
+      },
+      "body": {
+        "tr": "Sürüm listesi, açıklamalar ve görsel büyütme ortak yüzey ve tipografiyi kullanır. Arşiv sırası, görülme kaydı ve geçmiş sürümlerin gerçek ekran görüntüleri korunur.",
+        "en": "The release list, descriptions and image zoom share surfaces and typography. Archive order, seen tracking and historical screenshots are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-release-notes.png",
+        "alt": {
+          "tr": "Sürüm arşivi Manifest görünümünde — anonim veriyle gerçek Buyer Log",
+          "en": "Release archive in Manifest — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-feedback",
+      "type": "improvement",
+      "module": {
+        "tr": "Bildirimler",
+        "en": "Notifications"
+      },
+      "title": {
+        "tr": "Bildirim ve yükleme durumlarında ortak işaretler",
+        "en": "Shared markers for notifications and loading states"
+      },
+      "body": {
+        "tr": "Bildirim geçmişi ortak pencere ve arama alanını kullanır; Tab ve Esc erişimi korunur. Yükleme küreleri yerine durum metnine eşlik eden sabit kare işaret kullanılır; arka planda süren küre animasyonu kaldırıldı.",
+        "en": "Notification history shares dialog and search controls with Tab and Escape access. Loading uses a static square beside status text; background orb animation is removed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-feedback.png",
+        "alt": {
+          "tr": "Bildirim ve yükleme durumlarında ortak işaretler — anonim veriyle gerçek Buyer Log",
+          "en": "Shared markers for notifications and loading states — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-search-calendar",
+      "type": "improvement",
+      "module": {
+        "tr": "Arama ve tarih kontrolleri",
+        "en": "Search and date controls"
+      },
+      "title": {
+        "tr": "Komut, arama yardımı ve takvim aynı dili kullanır",
+        "en": "Commands, search help and calendars share one design"
+      },
+      "body": {
+        "tr": "Komut paleti, tablo arama yardımı ve çift hafta takvimi ortak yüzey, tipografi ve köşeli kontrollerle yenilendi. Mevcut arama ve tarih davranışı korunur.",
+        "en": "The command palette, table search help and dual-week calendar use shared surfaces, type and square controls. Existing search and date behavior is preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-search-calendar.png",
+        "alt": {
+          "tr": "Komut, arama yardımı ve takvim aynı dili kullanır — anonim veriyle gerçek Buyer Log",
+          "en": "Commands, search help and calendars share one design — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, kalan ekranlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, remaining screens; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-excel-tools",
+      "type": "improvement",
+      "module": {
+        "tr": "Excel araçları",
+        "en": "Excel tools"
+      },
+      "title": {
+        "tr": "İçe aktarma ve şablonlarda ortak kontroller",
+        "en": "Shared controls for imports and templates"
+      },
+      "body": {
+        "tr": "İçe aktarma adımları ile Excel şablon alanları ortak temayı kullanır. Dosya seçimine klavyeyle erişilir; eşleştirme ve aktarım önizlemesi korunur.",
+        "en": "Import steps and Excel template fields share the product theme. File selection is keyboard accessible; mapping and import preview are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-excel-tools.png",
+        "alt": {
+          "tr": "İçe aktarma ve şablonlarda ortak kontroller — anonim veriyle gerçek Buyer Log",
+          "en": "Shared controls for imports and templates — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, kalan ekranlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, remaining screens; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-output-tools",
+      "type": "improvement",
+      "module": {
+        "tr": "Çıktı ve yerleşim",
+        "en": "Output and layout"
+      },
+      "title": {
+        "tr": "Çıktı düzenleyici ve yerleşim pencereleri yenilendi",
+        "en": "Refreshed output editor and layout dialogs"
+      },
+      "body": {
+        "tr": "Çıktı düzenleyici, şablonlar ve Layout Kontrolü ortak pencere dilini kullanır. Kare aralık tutamaçları klavyeyle çalışır; iç içe şablonlarda Tab ve Esc yalnız etkin pencereyi yönetir.",
+        "en": "The output editor, templates and Layout Control share dialog styling. Square range handles support keyboard control; Tab and Escape operate on the active nested template dialog."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-output-tools.png",
+        "alt": {
+          "tr": "Çıktı düzenleyici ve yerleşim pencereleri yenilendi — anonim veriyle gerçek Buyer Log",
+          "en": "Refreshed output editor and layout dialogs — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, kalan ekranlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, remaining screens; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-overview-layout",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Widget kataloğu ve harita işaretleri sadeleşti",
+        "en": "Simpler widget catalogue and map markers"
+      },
+      "body": {
+        "tr": "Widget kataloğu ortak yüzeylerle düzenlendi. Harita hedef ve rota işaretleri kare dile taşındı; düzenleme ve widget ekleme davranışları korunur.",
+        "en": "The widget catalogue uses shared surfaces. Map targets and route markers use square shapes; layout editing and widget actions are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-overview-layout.png",
+        "alt": {
+          "tr": "Widget kataloğu ve harita işaretleri sadeleşti — anonim veriyle gerçek Buyer Log",
+          "en": "Simpler widget catalogue and map markers — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, kalan ekranlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, remaining screens; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-remaining-dialogs",
+      "type": "improvement",
+      "module": {
+        "tr": "Ayar pencereleri",
+        "en": "Settings dialogs"
+      },
+      "title": {
+        "tr": "Kalan ayar pencereleri ortak sisteme taşındı",
+        "en": "Remaining settings dialogs use the shared system"
+      },
+      "body": {
+        "tr": "Royalty, yol süresi, görsel ve sync ayarları ortak kontrolleri kullanır. Modal odağı, Esc ve kaydedilmemiş değişiklik onayı korunur. Hücre içi metin ölçeği ortak yazı tokenlarına bağlandı.",
+        "en": "Royalty, transit time, image and sync settings use shared controls. Dialog focus, Escape and unsaved-change confirmation are preserved. Inline cell text follows shared type tokens."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-remaining-dialogs.png",
+        "alt": {
+          "tr": "Kalan ayar pencereleri ortak sisteme taşındı — anonim veriyle gerçek Buyer Log",
+          "en": "Remaining settings dialogs use the shared system — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, kalan ekranlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, remaining screens; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-dialog-keyboard",
+      "type": "improvement",
+      "module": {
+        "tr": "Pencereler",
+        "en": "Dialogs"
+      },
+      "title": {
+        "tr": "Pencerelerde tutarlı klavye kullanımı",
+        "en": "Consistent keyboard navigation in dialogs"
+      },
+      "body": {
+        "tr": "Tab ve Shift+Tab açık pencerede kalır. Escape desteklenen pencereleri kapatır ve odağı önceki kontrole döndürür. İç içe durum ve kullanıcı pencereleri ortak katman sırasını izler.",
+        "en": "Tab and Shift+Tab stay within the open dialog. Escape closes supported dialogs and returns focus to the previous control. Nested status and user dialogs follow the shared layer order."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-dialog-keyboard.png",
+        "alt": {
+          "tr": "Pencerelerde tutarlı klavye kullanımı — anonim veriyle gerçek Buyer Log",
+          "en": "Consistent keyboard navigation in dialogs — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-dense-readability",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Büyük yazıda kontrol ayarları daha okunaklı",
+        "en": "More readable control settings at larger text sizes"
+      },
+      "body": {
+        "tr": "Kural adı ve türü büyük yazıda çakışmaz; işlemler ayrı satırda yer alır. Sabit tablo sütunları doğru katmanda kalır ve ana başlıkların ince grup çizgileri korunur.",
+        "en": "Rule names and types no longer overlap at larger text sizes; actions occupy a separate row. Frozen table columns retain the correct stacking order and main headers keep their subtle group separators."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-dense-readability.png",
+        "alt": {
+          "tr": "Büyük yazıda kontrol ayarları daha okunaklı — anonim veriyle gerçek Buyer Log",
+          "en": "More readable control settings at larger text sizes — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-filter-placement",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "INTAKE filtresi kesilmeden açılır",
+        "en": "INTAKE filters open without clipping"
+      },
+      "body": {
+        "tr": "Filtre paneli widget sınırlarında kesilmez; alan adları ve seçimler ekranda görünür kalır. Escape ve filtre işlemleri korunur.",
+        "en": "The filter panel is no longer clipped by the widget; field names and selections remain visible. Escape and filter actions are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-filter-placement.png",
+        "alt": {
+          "tr": "INTAKE filtresi kesilmeden açılır — anonim veriyle gerçek Buyer Log",
+          "en": "INTAKE filters open without clipping — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-mail-option-layout",
+      "type": "improvement",
+      "module": {
+        "tr": "E-posta ayarları",
+        "en": "Email settings"
+      },
+      "title": {
+        "tr": "E-posta seçeneklerinde dengeli yerleşim",
+        "en": "Balanced email option layout"
+      },
+      "body": {
+        "tr": "Excel, tablo ve TP seçenekleri ortak köşeli onay kutularını kullanır. Açıklamalar geniş metin alanında okunur; klavye odağı görünür kalır.",
+        "en": "Excel, table and TP options use shared square checkboxes. Descriptions have room to wrap and keyboard focus remains visible."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-mail-option-layout.png",
+        "alt": {
+          "tr": "E-posta seçeneklerinde dengeli yerleşim — anonim veriyle gerçek Buyer Log",
+          "en": "Balanced email option layout — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-control-contrast",
+      "type": "improvement",
+      "module": {
+        "tr": "Ortak kontroller",
+        "en": "Shared controls"
+      },
+      "title": {
+        "tr": "Yoğun seçim alanlarında daha net metin",
+        "en": "Clearer text in dense selection panels"
+      },
+      "body": {
+        "tr": "Backlog Excel sütun seçicisi ve döviz kuru dosyası seçimi, güçlü yüzeylerde okunaklı ortak metin renklerini kullanır. Durum silme penceresi açıklama ve işlemlere yeterli boşluk ayırır.",
+        "en": "The Backlog Excel column picker and exchange-rate file selector use readable shared text colors on stronger surfaces. The status deletion dialog provides room for its explanation and actions."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-control-contrast.png",
+        "alt": {
+          "tr": "Yoğun seçim alanlarında daha net metin — anonim veriyle gerçek Buyer Log",
+          "en": "Clearer text in dense selection panels — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-earth-map",
+      "type": "improvement",
+      "module": {
+        "tr": "Küresel Akış Haritası",
+        "en": "Global Flow Map"
+      },
+      "title": {
+        "tr": "Earth haritası ortak görsel dili kullanır",
+        "en": "Earth maps use the shared visual language"
+      },
+      "body": {
+        "tr": "Araç, küme ve sevkiyat işaretçileri köşelidir; harita etiketleri yerel fontlarla arayüz boyutuna uyar. Dekoratif ışıma ve sürekli rota animasyonu kaldırıldı. Rota, seçim ve yakınlaştırma davranışı korunur.",
+        "en": "Vehicle, cluster and shipment markers are square; map labels use local fonts and follow interface size. Decorative glow and continuous route animation were removed. Routes, selection and zoom behavior are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-earth-map.png",
+        "alt": {
+          "tr": "Ortak Manifest kontrolleriyle çevrimdışı Earth haritası",
+          "en": "Offline Earth map with shared Manifest controls"
+        },
+        "caption": {
+          "tr": "Anonim demo verisi; yerel harita dokusuyla değişiklik sonrası gerçek PNG.",
+          "en": "Anonymous demo data; actual post-change PNG with local map imagery."
+        }
+      }
+    },
+    {
+      "id": "manifest-state-feedback",
+      "type": "improvement",
+      "module": {
+        "tr": "Ortak durumlar",
+        "en": "Shared states"
+      },
+      "title": {
+        "tr": "Onay, hata ve sürükleme durumu daha belirgin",
+        "en": "Clearer approval, error and drag states"
+      },
+      "body": {
+        "tr": "Fiyat geçmişinde onay metinle de gösterilir. Eksik kural sebebi ortak hata yüzeyini ve erişilebilir hata bilgisini kullanır; sürükleme hedefi ve görsel geri bildirimi ortak durum diliyle belirginleşir.",
+        "en": "Pricing history includes an approval label. Missing rule reasons use the shared error surface and accessible invalid state; drag targets and image feedback use the common state language."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-state-feedback.png",
+        "alt": {
+          "tr": "Onay, hata ve sürükleme durumu daha belirgin — anonim Buyer Log verisi",
+          "en": "Clearer approval, error and drag states — anonymous Buyer Log data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-collapsed-navigation",
+      "type": "improvement",
+      "module": {
+        "tr": "Gezinme",
+        "en": "Navigation"
+      },
+      "title": {
+        "tr": "Dar menü çalışma alanını geri kazandırır",
+        "en": "Collapsed navigation returns space to the workspace"
+      },
+      "body": {
+        "tr": "Menü daraltıldığında içerik dört boyutta dar menü genişliğine oturur. Menüye odaklanınca veya üzerine gelince açılan gezinme, içeriği yerinden oynatmaz.",
+        "en": "When collapsed, the menu leaves the correct narrow content offset in all four sizes. Navigation expands on hover or keyboard focus without moving the content."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-collapsed-navigation.png",
+        "alt": {
+          "tr": "Dar menü çalışma alanını geri kazandırır — anonim Buyer Log verisi",
+          "en": "Collapsed navigation returns space to the workspace — anonymous Buyer Log data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 3; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 3; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-logo-restored",
+      "type": "fix",
+      "module": {
+        "tr": "Gezinme",
+        "en": "Navigation"
+      },
+      "title": {
+        "tr": "Buyer Log logosu üç temada görünür",
+        "en": "Buyer Log logo is visible in all three themes"
+      },
+      "body": {
+        "tr": "Sol üstteki paketli logo görselini gizleyen stil kaldırıldı; metin taklidi yerine orijinal logo gösterilir.",
+        "en": "Removed the style hiding the packaged upper-left logo; the original image is displayed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-logo-restored.png",
+        "alt": {
+          "tr": "Buyer Log logosu üç temada görünür",
+          "en": "Buyer Log logo is visible in all three themes"
+        },
+        "caption": {
+          "tr": "Anonim verilerle değişiklik sonrası gerçek Buyer Log görüntüsü.",
+          "en": "Actual post-change Buyer Log screenshot with anonymous data."
+        }
+      }
+    },
+    {
+      "id": "manifest-trivia-art-restored",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Genel kültür görselleri geri geldi",
+        "en": "Trivia illustrations are restored"
+      },
+      "body": {
+        "tr": "Açılıştaki yerel kategori SVG görselleri yeniden görünür. Tema renkleri ve azaltılmış hareket desteği korunur.",
+        "en": "Local category SVG illustrations are visible again at startup, using theme colors and reduced motion support."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-trivia-art-restored.png",
+        "alt": {
+          "tr": "Genel kültür görselleri geri geldi",
+          "en": "Trivia illustrations are restored"
+        },
+        "caption": {
+          "tr": "Anonim verilerle değişiklik sonrası gerçek Buyer Log görüntüsü.",
+          "en": "Actual post-change Buyer Log screenshot with anonymous data."
+        }
+      }
+    },
+    {
+      "id": "manifest-user-avatar-restored",
+      "type": "fix",
+      "module": {
+        "tr": "Ortak arayüz",
+        "en": "Shared interface"
+      },
+      "title": {
+        "tr": "Kullanıcı simgesinin çelik zemini geri geldi",
+        "en": "The user badge satin plate is restored"
+      },
+      "body": {
+        "tr": "Üst sağdaki kullanıcı baş harfleri ve açılır menü avatarı, Buyer Log logosuna eşlik eden paketli saten çelik zeminde görünür. Üç temada koyu baş harfler okunur kalır.",
+        "en": "Upper-right initials and the menu avatar use the packaged satin plate accompanying the Buyer Log logo. Dark initials remain readable in all three themes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-user-avatar-restored.png",
+        "alt": {
+          "tr": "Kullanıcı simgesinin çelik zemini geri geldi",
+          "en": "The user badge satin plate is restored"
+        },
+        "caption": {
+          "tr": "Anonim verilerle değişiklik sonrası gerçek Buyer Log görüntüsü.",
+          "en": "Actual post-change Buyer Log screenshot with anonymous data."
+        }
+      }
+    },
+    {
+      "id": "manifest-workflow-integration",
+      "type": "improvement",
+      "module": {
+        "tr": "Ortak arayüz",
+        "en": "Shared interface"
+      },
+      "title": {
+        "tr": "Güncel iş akışları ortak görünümü kullanır",
+        "en": "Current workflows use the shared interface"
+      },
+      "body": {
+        "tr": "Satır sıklığı, istisna kutusu, fiyat kaynağı, toplu işlem ve ilerleme bileşenleri güncel veri güvenliği davranışlarını koruyarak ortak Manifest tokenlarına taşındı.",
+        "en": "Row density, exception inbox, price lineage, bulk actions and progress components use shared Manifest tokens while retaining current data integrity behavior."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-workflow-integration.png",
+        "alt": {
+          "tr": "Güncel iş akışları ortak görünümü kullanır",
+          "en": "Current workflows use the shared interface"
+        },
+        "caption": {
+          "tr": "Anonim verilerle değişiklik sonrası gerçek Buyer Log görüntüsü.",
+          "en": "Actual post-change Buyer Log screenshot with anonymous data."
         }
       }
     }

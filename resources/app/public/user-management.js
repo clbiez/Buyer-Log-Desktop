@@ -276,7 +276,7 @@
   function open() {
     if (overlay) return;
     overlay = document.createElement('div');
-    overlay.className = 'umOverlay';
+    overlay.className = 'umOverlay';overlay.dataset.uiMigrated='operations';
     overlay.innerHTML = `
       <div class="umShell" role="dialog" aria-modal="true" aria-label="${esc(T('Kullanıcı ve Yetki Yönetimi', 'User and Authorization Management'))}">
         <header class="umTop">
@@ -293,6 +293,7 @@
       </div>`;
     document.body.appendChild(overlay);
     shell = overlay.querySelector('.umShell');
+    window.BLLayerSystem?.openDialog(overlay, {onClose: close});
     shell.addEventListener('click', onClick);
     shell.addEventListener('input', onInput);
     shell.addEventListener('change', onChange);
@@ -312,6 +313,7 @@
     if (!overlay) return;
     if (store.roleDirty && !confirm(T('Rol yetkilerinde kaydedilmemiş değişiklikler var. Kapatılsın mı?', 'Role permissions have unsaved changes. Close anyway?'))) return;
     closeDialog();
+    window.BLLayerSystem?.closeDialog(overlay);
     overlay.remove(); overlay = null; shell = null;
     store.roleDirty = false;
   }
@@ -1714,7 +1716,7 @@
     const returnTarget = document.activeElement || null;
     closeDialog({ restoreFocus: false });
     dialog = document.createElement('div');
-    dialog.className = 'umDialogOverlay';
+    dialog.className = 'umDialogOverlay';dialog.dataset.uiMigrated='operations';
     dialog.innerHTML = `<div class="umDialog" role="dialog" aria-modal="true" aria-labelledby="umDialogTitle">
       <header><h3 id="umDialogTitle">${esc(title)}</h3><button type="button" class="umDrawerClose" data-act="dialogClose" aria-label="${esc(T('Kapat', 'Close'))}">×</button></header>
       <form class="umDialogBody" data-um-dialog>${bodyHtml}
@@ -2585,7 +2587,7 @@
       if (window.BLLayerSystem) return;
       closeDialog(); event.stopPropagation(); return;
     }
-    if (overlay) { close(); event.stopPropagation(); }
+    if (overlay) { if (window.BLLayerSystem) return; close(); event.stopPropagation(); }
   }, true);
 
   window.addEventListener('beforeunload', event => {

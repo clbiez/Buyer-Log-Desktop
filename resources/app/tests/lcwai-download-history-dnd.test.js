@@ -111,7 +111,7 @@ test('LCW AI accepts external files through the same intake path used by file pi
   assert.match(source, /addEventListener\('dragover'/);
   assert.match(source, /addEventListener\('drop'/);
   assert.match(source, /event\.dataTransfer && event\.dataTransfer\.files/);
-  assert.match(read('public/lcwai-assistant.css'), /\.lcwaiChatPage\.is-file-drag \.lcwaiComposer/);
+  assert.match(require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','lcwai-assistant.css']), /\.lcwaiChatPage\.is-file-drag \.lcwaiComposer/);
 });
 
 test('LCW AI history storage is user-scoped but deliberately not synced through user-preferences', () => {

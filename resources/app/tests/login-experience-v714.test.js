@@ -155,12 +155,11 @@ test('Shared Sync ayrıntıları ilk açılışta gizlidir ve yalnız Ayarlar il
 });
 
 test('v7.14 visual language is restrained ERP styling and responsive', () => {
-  // Giriş ekranının vurgu rengi kendi tek seferlik değeri (#416b91) yerine
-  // tasarım sisteminin --acc değerine hizalandı. İddia sabit bir hex'i değil,
-  // bu hizalanmayı çiviliyor: design.css değişirse giriş ekranı da değişmeli.
-  const accent = fs.readFileSync(path.join(ROOT, 'public', 'design.css'), 'utf8').match(/--acc:(#[0-9a-f]{6})/i);
-  assert.ok(accent, 'tasarım sisteminde --acc tanımlı olmalı');
-  assert.match(CSS, new RegExp(`--login-brand:${accent[1]}`, 'i'));
+  const tokens=fs.readFileSync(path.join(ROOT,'public','ui-tokens.css'),'utf8');
+  assert.match(tokens,/--ui-accent:/);
+  assert.match(LOGIN,/href="\/ui-tokens\.css"/);
+  assert.match(CSS,/background:var\(--ui-accent\)/);
+  assert.doesNotMatch(CSS,/--login-brand:/);
   assert.match(CSS, /max-width:440px/);
   assert.match(CSS, /\.suggestionAvatar/);
   assert.match(CSS, /@media\(max-width:820px\)/);

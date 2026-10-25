@@ -222,8 +222,8 @@
     if(!row)return false;
     const binding=global.BLPriceLineageBridge.binding(row,module);
     if(state){state.rowId=row.id??row._id;state.module=module;state.binding=binding;render();return true;}
-    const overlay=document.createElement('div');overlay.className='kolPeriodDrawerBackdrop cpdBackdrop';
-    const panel=document.createElement('aside');panel.className='kolPeriodDrawer cpdDrawer';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',T('Fiyat çekmecesi','Price drawer'));
+    const overlay=document.createElement('div');overlay.className='kolPeriodDrawerBackdrop cpdBackdrop';overlay.dataset.uiMigrated='commercial';
+    const panel=document.createElement('aside');panel.className='kolPeriodDrawer cpdDrawer';panel.dataset.uiMigrated='commercial';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',T('Fiyat çekmecesi','Price drawer'));
     overlay.appendChild(panel);document.body.appendChild(overlay);
     state={rowId:row.id??row._id,module,binding,overlay,panel,body:null,backdropDown:null,backdropTap:false};
     overlay.addEventListener('pointerdown',event=>{

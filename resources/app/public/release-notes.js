@@ -50,7 +50,7 @@ function shortSummary(value){
 }
 function ensureDialog(){
   if(dialog?.isConnected)return dialog;
-  dialog=document.createElement('dialog');dialog.className='blRnDialog';dialog.setAttribute('aria-labelledby','blRnTitle');
+  dialog=document.createElement('dialog');dialog.className='blRnDialog';dialog.dataset.uiMigrated='operations';dialog.setAttribute('aria-labelledby','blRnTitle');
   dialog.innerHTML='<header class="blRnHeader"><div><div class="blGuideEyebrow" data-rn-eyebrow></div><h1 id="blRnTitle" data-rn-title></h1><p data-rn-subtitle></p></div><button type="button" class="blRnClose" data-rn-close>×</button></header><div class="blRnLayout"><aside class="blRnArchive" data-rn-archive><div class="blRnArchiveHead" data-rn-archive-head></div><nav data-rn-list></nav></aside><main class="blRnMain"><div class="blRnStage" data-rn-stage></div></main></div>';
   document.body.appendChild(dialog);
   dialog.querySelector('[data-rn-close]').addEventListener('click',()=>dialog.close());
@@ -65,7 +65,7 @@ function ensureDialog(){
 }
 function ensureLightbox(){
   if(lightbox?.isConnected)return lightbox;
-  lightbox=document.createElement('dialog');lightbox.className='blRnLightbox';lightbox.setAttribute('aria-modal','true');
+  lightbox=document.createElement('dialog');lightbox.className='blRnLightbox';lightbox.dataset.uiMigrated='operations';lightbox.setAttribute('aria-modal','true');
   lightbox.innerHTML='<button type="button" class="blRnLightboxClose" data-rn-lightbox-close>×</button><div class="blRnLightboxBody"><img data-rn-lightbox-img alt=""><div class="blRnLightboxCaption" data-rn-lightbox-caption></div></div>';
   document.body.appendChild(lightbox);
   const close=lightbox.querySelector('[data-rn-lightbox-close]');

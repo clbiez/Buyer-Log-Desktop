@@ -1,0 +1,7 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),Module=require('node:module');
+let s=fs.readFileSync(path.join(__dirname,'performance.cjs'),'utf8').replace('i<5','i<1');
+s=s.replace("await p.evaluate(()=>window.__auditNav", "const profileSession=await ctx.newCDPSession(p);await profileSession.send('Performance.enable');await profileSession.send('Profiler.enable');await profileSession.send('Profiler.start');const metricsBefore=await profileSession.send('Performance.getMetrics');await p.evaluate(()=>window.__auditNav");
+s=s.replace('  const large=await p.evaluate',"  const metricsNav=await profileSession.send('Performance.getMetrics');const large=await p.evaluate");
+s=s.replace('  runs.push({run:i+1,start,large});',"  const metricsLarge=await profileSession.send('Performance.getMetrics'),cpu=await profileSession.send('Profiler.stop');runs.push({run:i+1,start,large,metricsBefore,metricsNav,metricsLarge});const samples=new Map();for(const id of cpu.profile.samples||[])samples.set(id,(samples.get(id)||0)+1);fs.writeFileSync(path.join(out,'profile.json'),JSON.stringify({top:cpu.profile.nodes.map(n=>({fn:n.callFrame.functionName,file:n.callFrame.url.split('/').at(-1),line:n.callFrame.lineNumber,samples:samples.get(n.id)||0})).filter(n=>n.samples).sort((a,b)=>b.samples-a.samples).slice(0,55),metricsBefore,metricsNav,metricsLarge},null,2)+'\\n');");
+const m=new Module(path.join(__dirname,'profile-generated.cjs'),module);m.filename=path.join(__dirname,'profile-generated.cjs');m.paths=module.paths;m._compile(s,m.filename);

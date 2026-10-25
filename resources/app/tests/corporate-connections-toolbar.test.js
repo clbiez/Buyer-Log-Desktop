@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const html = fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8');
-const css = fs.readFileSync(path.join(__dirname, '../public/experience.css'), 'utf8');
+const css = require('./helpers/manifest-css')();
 const code = fs.readFileSync(path.join(__dirname, '../public/corporate-connections-toolbar.js'), 'utf8');
 
 function mount(states = {}, bridge = {}) {
@@ -55,7 +55,7 @@ test('top bar has exactly three icon-free session buttons and retains F1 guide',
   assert.match(html, /corporate-connections-toolbar\.js/);
   assert.match(html, /if\(ev\.key==='F1'\)/);
   assert.match(css, /\.corporateConnection\[data-state="connected"\]/);
-  assert.match(css, /border-radius:0/);
+  assert.match(css, /border-radius:var\(--ui-radius\)/);
 });
 
 test('independent statuses: only connected sessions are green; disconnected are grey', async () => {

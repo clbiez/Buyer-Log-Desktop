@@ -159,7 +159,7 @@ test('supplier download is guarded by final Blob size and transparent error hand
 });
 
 test('list module: inline edits, selection export, map button and Buyer Log contracts', () => {
-  const ui=read('public/license-cards.js'),map=read('public/license-map-editor.js'),css=read('public/license-cards.css'),perf=read('public/perf-runtime.js');
+  const ui=read('public/license-cards.js'),map=read('public/license-map-editor.js'),css=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','license-cards.css']),perf=read('public/perf-runtime.js');
   assert.match(ui,/data-lc-rate="\$\{key\}"/);
   assert.match(ui,/if\(e\.key==='Enter'&&el\.tagName!=='TEXTAREA'\)\{e\.preventDefault\(\);el\.blur\(\);save\(id\);\}/);
   assert.match(ui,/const cards=\(S\.data\?\.cards\|\|\[\]\)\.filter\(c=>S\.selected\.has\(c\.id\)\)/);
@@ -170,5 +170,5 @@ test('list module: inline edits, selection export, map button and Buyer Log cont
   assert.match(perf,/licensecards:\['license-cards-engine\.js\?rev=4','license-atlas-engine\.js\?rev=2','license-supplier-atlas\.js\?rev=3','license-map-editor\.js\?rev=1','license-cards\.js\?rev=7'\]/);
   assert.doesNotMatch(perf,/license-atlas-shell/,'the legacy iframe atlas is no longer loaded');
   assert.match(css,/@media \(prefers-reduced-motion:reduce\)/);
-  assert.match(read('public/experience.css'),/\.lcwaiSeg,\.dmViewToggle,\.lcSeg\)>button:is\(/);
+  const common=require('./helpers/manifest-css')(); for(const selector of ['.lcwaiSeg>button.active','.dmViewToggle>button.active','.lcSeg>button.active']) assert.ok(common.includes(selector),selector);
 });
