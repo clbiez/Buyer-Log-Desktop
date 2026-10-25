@@ -2,12 +2,12 @@
 
 ## Güven sınırı / Trust boundary
 
-Kalıcı Electron başlatıcısı 1.1.0, v3 yama doğrulayıcısını tam kurulumun
+Kalıcı Electron başlatıcısı (1.1.0 ve üstü), v3 yama doğrulayıcısını tam kurulumun
 korumalı `electron/` ağacından çalıştırır. İndirilen ZIP'ten kod, anahtar veya
 kurulum betiği çalıştırmaz. Ed25519 anahtarları mevcut resmi yayıncıya aittir;
 v3, normal sürüm imzasından ayrı `buyer-log-manual-patch/v3` alanını kullanır.
 
-The persistent Electron 1.1.0 launcher runs the v3 verifier from the protected
+The persistent Electron launcher (1.1.0 and later) runs the v3 verifier from the protected
 full installation. It never executes an installer or imports keys from a patch.
 The existing official publisher keys authorize the separate v3 signature domain.
 
@@ -24,16 +24,22 @@ kernel and trial writer protocol also require a full installation.
 
 ## Bir defalık geçiş / One-time migration
 
-Eski 1.0 başlatıcı, kendi doğrulama kodunu indirilen bir yamayla değiştirmez.
-Önce resmi imzalı uygulama artifact'i ve repodaki SHA ile sabitlenmiş Electron
-çalışma zamanından üretilen **tam 1.1 kurulum** kabul edilmelidir. Normal yeni
-artifact'lerin `minimumUpdaterVersion` değeri 1.1.0 olur. Eski istemciler bu
-gereksinimi hata olarak gösterir; kendi başlatıcılarını sessizce yükseltmez.
+Eski 1.0 başlatıcı kendi doğrulama kodunu indirilen bir yamayla değiştirmez.
+Bu kural geçerliliğini korur: imzalı manuel yama `public/` ve `server/`
+dışındaki dosyalara dokunamaz. Başlatıcı yükseltmesi yalnız tam ve imzalı bir
+release çekirdeğinden yapılır (`docs/SELF_UPDATING_LAUNCHER.md`). Release
+manifestlerinin `minimumUpdaterVersion` değeri artık manuel yama alanının
+`BOOTSTRAP_VERSION` değerine bağlı değildir. Değer, etkinleştirme tabanıdır
+(1.0.0). Eski istemciler yeni sürümü kurar ve ilk sağlıklı açılışta güncel
+başlatıcıya otomatik geçer. v3 yamalarının güven kökü çalışan başlatıcının
+kendi dosyalarıdır (`trustRoot`).
 
-Accept a full 1.1 bootstrap built from the official signed app artifact and
-SHA-pinned Electron runtime before using v3 patches. The 1.0 launcher cannot
-securely replace its own trust boundary through an app-core patch. Future app
-artifacts require updater 1.1.0. Legacy clients report that requirement.
+The 1.0 launcher still never replaces its trust boundary through a manual
+patch. Launcher upgrades come only from a full signed release core. The
+manifest floor is decoupled from the manual-patch `BOOTSTRAP_VERSION` (1.0.0),
+so legacy clients install the next release and migrate automatically after its
+first healthy start. v3 patches are verified against the running launcher's own
+files.
 
 Geçişten önce eski başlatıcının devam eden denemesi tamamlanmalı veya kendi
 doğru kurtarma koduyla kurtarılmalıdır. Yazıcı kimliği doğrulanamayan eski

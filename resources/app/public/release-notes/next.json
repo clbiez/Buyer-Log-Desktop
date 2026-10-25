@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-25",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Kendini güncelleyen güncelleme altyapısı",
+    "en": "Self-updating update infrastructure"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Eski kurulumlar “updater altyapısı yetersiz” hatası olmadan güncellenir; güncelleme altyapısı bundan sonra imzalı sürümlerle birlikte kendini güvenle yükseltir.",
+    "en": "Older installations update without the “updater infrastructure too old” error; from now on the update infrastructure upgrades itself safely together with signed releases."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "update-infrastructure-self-upgrade",
+      "type": "fix",
+      "module": {
+        "tr": "Güncelleme",
+        "en": "Updates"
+      },
+      "title": {
+        "tr": "Güncelleme altyapısı artık kendini de güncelliyor",
+        "en": "The update infrastructure now updates itself"
+      },
+      "body": {
+        "tr": "Eski kurulumlar (updater 1.0.0 / 1.1.0) “daha yeni updater altyapısı gerekiyor” hatasında takılmadan yeni sürümü kurar. Sürümün ilk sağlıklı açılışında, imzalı ve doğrulanmış paketteki güncelleme altyapısı otomatik hazırlanır; bir sonraki açılışta etkinleşir. Yönetici yetkisi ya da elle kurulum gerekmez. Yeni altyapı açılamazsa önceki altyapıya otomatik dönülür. Kurulum dosyaları değiştirilmişse veya klasör yazılamıyorsa yükseltme yapılmaz; Güncellemeleri Kontrol Et penceresi nedenini gösterir.",
+        "en": "Older installations (updater 1.0.0 / 1.1.0) install the new version instead of stopping at “requires newer updater infrastructure”. On the version’s first healthy start, the update infrastructure from the signed, verified package is prepared automatically and activates on the next start. No administrator rights or manual installation are needed. If the new infrastructure cannot start, the previous one is restored automatically. When installation files were modified or the folder is not writable, the upgrade is skipped and Check for Updates shows the reason."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "update-infrastructure-self-upgrade.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Güncellemeleri Kontrol Et penceresi: güncelleme altyapısı 1.0.0 → 1.2.0 hazır, demo veri",
+          "en": "Real Buyer Log Check for Updates window: update infrastructure 1.0.0 → 1.2.0 ready, demo data"
+        },
+        "caption": {
+          "tr": "Güncelleme altyapısı otomatik yükseltildi",
+          "en": "Update infrastructure upgraded automatically"
+        }
+      }
+    }
+  ]
 }

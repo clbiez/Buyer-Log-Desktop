@@ -58,7 +58,7 @@ function assertPackage(stage,version){
   const files=walk(stage);
   const leaked=files.filter(file=>FORBIDDEN.some(rule=>rule.test(file)));
   if(leaked.length)fail('Kurulum paketine kullanıcı/cihaz verisi sızdı: '+leaked.slice(0,10).join(', '),'INSTALLER_DATA_LEAK');
-  for(const required of ['BuyerLog.exe','manifest.json','resources/app/package.json','resources/app/electron/launcher.js','resources/app/electron/main.js','resources/app/server/server.js','resources/app/public/index.html'])
+  for(const required of ['BuyerLog.exe','manifest.json','resources/app/package.json','resources/app/electron/launcher.js','resources/app/electron/launcher-core.js','resources/app/electron/update/launcher-version.json','resources/app/electron/main.js','resources/app/server/server.js','resources/app/public/index.html'])
     if(!fs.existsSync(path.join(stage,...required.split('/'))))fail('Kurulum paketi eksik: '+required,'INSTALLER_INCOMPLETE');
   const appRoot=path.join(stage,'resources','app');
   const pkg=JSON.parse(fs.readFileSync(path.join(appRoot,'package.json'),'utf8'));

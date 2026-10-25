@@ -23,6 +23,8 @@ class BuyerLogUpdater{
     this.currentVersion=String(options.currentVersion||''); this.updaterVersion=String(options.updaterVersion||'1.0.0');
     this.appCoreRoot=path.resolve(options.appCoreRoot); this.portableRoot=path.resolve(options.portableRoot); this.localDataRoot=path.resolve(options.localDataRoot);
     this.packaged=options.packaged===true; this.log=typeof options.log==='function'?options.log:()=>{}; this.running=null; this.runningKey='';
+    // Launcher (updater altyapısı) yükseltici; yoksa eski davranış: yetersiz altyapıda durulur.
+    this.launcherHost=options.launcherHost||null;
     this.opsRoot=path.join(this.portableRoot,'.buyerlog-updater'); this.versionsRoot=path.join(this.portableRoot,'.buyerlog-versions');
     this.localRoot=path.join(this.localDataRoot,'updater'); this.configFile=path.join(this.localRoot,'config.json'); this.stateFile=path.join(this.localRoot,'state.json');
     this.currentFile=path.join(this.localRoot,'current.json'); this.logFile=path.join(this.localRoot,'updater.log'); this.cacheRoot=path.join(this.opsRoot,'cache'); this.stagingRoot=path.join(this.opsRoot,'staging');
@@ -56,7 +58,20 @@ class BuyerLogUpdater{
   }
   status(base={},effectiveChannel=''){
     const config=this.config(base),state=this.state();
-    return {enabled:config.enabled,configured:Boolean(config.releaseSource),releaseSource:config.releaseSource,channel:effectiveChannel||config.channel,currentVersion:this.currentVersion,updaterVersion:this.updaterVersion,state:state.state,lastSuccessfulCheck:state.lastSuccessfulCheck,lastCheck:state.lastCheck,latestVersion:state.latestVersion,pendingVersion:state.pending&&state.pending.version||null,pendingManualPatchSequence:state.pending?.manualPatch?.sequence||null,pendingReady:Boolean(state.pending&&state.pending.ready),mandatory:Boolean(state.pending&&state.pending.mandatory),releaseNotes:state.pending&&state.pending.releaseNotes||'',lastError:state.lastError||null,failedVersions:state.failedVersions||{}};
+    return {enabled:config.enabled,configured:Boolean(config.releaseSource),releaseSource:config.releaseSource,channel:effectiveChannel||config.channel,currentVersion:this.currentVersion,updaterVersion:this.updaterVersion,launcher:this.launcherStatus(),state:state.state,lastSuccessfulCheck:state.lastSuccessfulCheck,lastCheck:state.lastCheck,latestVersion:state.latestVersion,pendingVersion:state.pending&&state.pending.version||null,pendingManualPatchSequence:state.pending?.manualPatch?.sequence||null,pendingReady:Boolean(state.pending&&state.pending.ready),mandatory:Boolean(state.pending&&state.pending.mandatory),releaseNotes:state.pending&&state.pending.releaseNotes||'',lastError:state.lastError||null,failedVersions:state.failedVersions||{}};
+  }
+  launcherStatus(){try{return this.launcherHost&&typeof this.launcherHost.status==='function'?this.launcherHost.status():null;}catch(_){return null;}}
+  launcherTooOld(required){return updaterError('Bu sürüm daha yeni güncelleme altyapısı ('+required+') gerektiriyor ve altyapı otomatik yükseltilemedi. / This version requires newer update infrastructure ('+required+') and it could not be upgraded automatically.','UPDATE_UPDATER_TOO_OLD',{required,installed:this.updaterVersion});}
+  /* Yeni sürüm daha yeni launcher protokolü isterse launcher, aynı imzalı ve
+   * SHA-256 doğrulanmış release çekirdeğinden kurulur (prepare içinde, pending
+   * yazılmadan önce). Böylece eski altyapı yeni sürümü hiçbir zaman etkinleştirmez
+   * ve kullanıcıdan elle kurulum istenmez. */
+  launcherUpgradeRequired(required){
+    if(compareSemver(this.updaterVersion,required)>=0)return false;
+    let effective=this.updaterVersion;try{effective=this.launcherHost?.effectiveVersion?.()||effective;}catch(_){}
+    if(compareSemver(effective,required)>=0)return false;
+    if(!this.launcherHost)throw this.launcherTooOld(required);
+    return true;
   }
   async _run(fn,key){while(this.running){if(this.runningKey===key)return this.running;await this.running.catch(()=>{});}this.runningKey=key;this.running=(async()=>{try{return await fn();}finally{this.running=null;this.runningKey='';}})();return this.running;}
   async checkAndStage(options={}){const config=this.config(options.baseConfig||{}),key=JSON.stringify([config.releaseSource,config.enabled,options.channel||config.channel,options.manual===true,options.allowDevelopment===true,options.retryFailed===true,options.retryVersion||'',options.retrySha256||'',options.retryChannel||'']);return this._run(()=>this._checkAndStage(options),key);}
@@ -78,16 +93,16 @@ class BuyerLogUpdater{
       const signature=verifyManifestSignature(manifest,this.trustedKeys());
       await options.assertCheckAuthority?.();
       this.appendLog(signature.verified?'signature-ok':'signature-not-enforced',{version:manifest.version,keyId:signature.keyId||''});
-      if(compareSemver(this.updaterVersion,manifest.minimumUpdaterVersion)<0)throw updaterError('Bu release daha yeni updater altyapısı gerektiriyor.','UPDATE_UPDATER_TOO_OLD',{required:manifest.minimumUpdaterVersion});
       const cmp=compareSemver(manifest.version,this.currentVersion),now=new Date().toISOString();
       if(cmp<=0){this.saveState({state:STATES.IDLE,lastSuccessfulCheck:now,latestVersion:manifest.version,lastError:null});this.appendLog('check-current',{channel,discoveredVersion:manifest.version});return {ok:true,current:true,manifest,...this.status(base,channel)};}
       const state=this.state(),failed=state.failedVersions&&state.failedVersions[manifest.version];
       if(options.retryFailed&&(options.manual!==true||options.retryVersion!==manifest.version||options.retrySha256!==manifest.sha256||options.retryChannel!==channel||!failed||failed.sha256!==manifest.sha256))throw updaterError('Yeniden denenecek sürüm veya kanal değişti. Güncel paketi kontrol edip yeniden seçin.','UPDATE_RETRY_TARGET_CHANGED');
       const staged=state.pending?.ready===true&&state.pending.version===manifest.version&&state.pending.sha256===manifest.sha256;
       if(failed&&failed.sha256===manifest.sha256&&!options.retryFailed&&!staged){this.saveState({state:STATES.FAILED,lastSuccessfulCheck:now,latestVersion:manifest.version,lastError:{code:'UPDATE_FAILED_VERSION_BLOCKED',message:'Bu sürüm önceki health check sırasında başarısız oldu.'}});return {ok:false,blocked:true,manifest,...this.status(base,channel)};}
+      const launcherUpgrade=this.launcherUpgradeRequired(manifest.minimumUpdaterVersion);
       this.saveState({state:STATES.UPDATE_AVAILABLE,lastSuccessfulCheck:now,latestVersion:manifest.version,lastError:null});
       this.appendLog('update-available',{channel,discoveredVersion:manifest.version});
-      await this.prepare(provider,manifest,options);
+      await this.prepare(provider,manifest,{...options,launcherUpgrade});
       return {ok:true,available:true,manifest,...this.status(base,channel)};
     }catch(error){
       const cause=error&&error.cause||null;
@@ -135,6 +150,14 @@ class BuyerLogUpdater{
       try{extractZipSafe(cacheFile,stage,{maxFiles:30000,maxBytes:1024*1024*1024});const appDir=path.join(stage,'app'),pkg=readJson(path.join(appDir,'package.json'),null);if(!pkg||pkg.version!==manifest.version)throw updaterError('Artifact package.json version manifest ile eşleşmiyor.','UPDATE_PACKAGE_VERSION_MISMATCH');for(const required of ['electron/main.js','server/server.js','public/index.html'])if(!fs.existsSync(path.join(appDir,...required.split('/'))))throw updaterError('Update paketi eksik: '+required,'UPDATE_PACKAGE_INCOMPLETE');ensureDir(this.versionsRoot);fs.renameSync(stage,versionRoot);atomicWriteJson(releaseFile,manifest);}catch(error){rmSafe(stage);throw error;}
     }
     await options.assertCheckAuthority?.();
+    if(options.launcherUpgrade){
+      // Gereken launcher'ı sağlamayan artifact'ten hiçbir şey kurulmaz.
+      const offered=this.launcherHost.readLauncherInfo(appTarget);
+      if(!offered||compareSemver(offered.launcherVersion,manifest.minimumUpdaterVersion)<0)throw this.launcherTooOld(manifest.minimumUpdaterVersion);
+      const result=this.launcherHost.install({sourceCore:appTarget,sourceVersion:manifest.version,ignoreRecentFailure:true});
+      if(compareSemver(this.launcherHost.effectiveVersion(),manifest.minimumUpdaterVersion)<0)throw this.launcherTooOld(manifest.minimumUpdaterVersion);
+      this.appendLog('launcher-upgrade-staged',{version:manifest.version,launcherVersion:result.version||'',changed:result.changed===true});
+    }
     const pending={version:manifest.version,sha256:manifest.sha256,channel:manifest.channel,mandatory:manifest.mandatory,releaseNotes:manifest.releaseNotes,ready:true,versionRoot,appCoreRoot:appTarget,preparedAt:new Date().toISOString()};
     this.saveState({state:STATES.READY_TO_INSTALL,pending,lastError:null});this.appendLog('ready-to-install',{version:manifest.version});this.cleanup();return pending;
   }

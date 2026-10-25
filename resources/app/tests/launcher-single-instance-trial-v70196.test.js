@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 
 const ROOT=path.join(__dirname,'..');
-const LAUNCHER=fs.readFileSync(path.join(ROOT,'electron','launcher.js'),'utf8');
+const LAUNCHER=fs.readFileSync(path.join(ROOT,'electron','launcher-core.js'),'utf8');
 const MAIN=fs.readFileSync(path.join(ROOT,'electron','main.js'),'utf8');
 const UPDATE_UI=fs.readFileSync(path.join(ROOT,'public','update-test-ui.js'),'utf8');
 
@@ -48,10 +48,11 @@ test('canlı: kilidi alamayan ikinci kopya trial rollback/aktivasyon çalıştı
     relaunch:()=>calls.push(['relaunch']),
   };
   const statePath=require.resolve('../electron/update/launcher-state');
-  const launcherPath=require.resolve('../electron/launcher.js');
+  const launcherPath=require.resolve('../electron/launcher-core.js');
+  const hostPath=require.resolve('../electron/launcher.js');
   const originalLoad=Module._load;
   const originalExecPath=process.execPath;
-  delete require.cache[launcherPath];
+  delete require.cache[launcherPath];delete require.cache[hostPath];
   Module._load=function(request,parent,isMain){
     if(request==='electron')return {app:fakeApp};
     if(parent&&parent.filename===launcherPath&&Module._resolveFilename(request,parent)===statePath){
@@ -61,11 +62,11 @@ test('canlı: kilidi alamayan ikinci kopya trial rollback/aktivasyon çalıştı
   };
   Object.defineProperty(process,'execPath',{value:path.join(tmp,'BuyerLog.exe'),configurable:true,writable:true});
   try{
-    require(launcherPath);
+    require(hostPath);
   }finally{
     Module._load=originalLoad;
     Object.defineProperty(process,'execPath',{value:originalExecPath,configurable:true,writable:true});
-    delete require.cache[launcherPath];
+    delete require.cache[launcherPath];delete require.cache[hostPath];delete global.__buyerLogLauncherHost;
   }
   assert.deepEqual(calls.map(c=>c[0]),['setPath','lock','exit']);
   assert.equal(calls[0][2],path.join(tmp,'data','electron-profile'));

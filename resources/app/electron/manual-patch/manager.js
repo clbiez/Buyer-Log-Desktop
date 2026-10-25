@@ -9,13 +9,15 @@ const {listZipEntries,extractZipSafe}=require('../update/zip');
 const INTEGRITY='electron/app-integrity.json';
 function manifestHash(m){return F.sha(Buffer.from(JSON.stringify([S.signedPayload(m).toString('base64'),m.signature])));}
 function mismatch(code='PATCH_BASE_MISMATCH'){S.fail(code,'Yama kurulu sürümle uyuşmuyor; güncel imzalı paketi seçin.','The patch does not match this installation; select a current signed package.');}
-function createInstalledManager({bootstrapCore,portableRoot,onTransition=()=>{},beforeCommit=null}){
- bootstrapCore=path.resolve(bootstrapCore);portableRoot=path.resolve(portableRoot);
+function createInstalledManager({bootstrapCore,trustRoot=bootstrapCore,portableRoot,onTransition=()=>{},beforeCommit=null}){
+ // trustRoot: imza anahtarları, bootstrap.json ve doğrulayıcı dosyaları (çalışan launcher);
+ // bootstrapCore: kurulum kökü (sürüm pointer'ı ve geri dönüş çekirdeği).
+ bootstrapCore=path.resolve(bootstrapCore);trustRoot=path.resolve(trustRoot);portableRoot=path.resolve(portableRoot);
  const versionsRoot=path.join(portableRoot,'.buyerlog-versions'),stateFile=path.join(portableRoot,'data/local/updater/state.json');
  function readState(){try{return readStateFile(stateFile);}catch(_){mismatch('PATCH_STATE_INVALID');}}
  function authenticate(m){
-  S.verifyManifest(m,loadTrustedKeys(bootstrapCore));F.readBootstrap(bootstrapCore);
-  if(compareSemver(S.BOOTSTRAP_VERSION,m.minimumBootstrapVersion)<0||F.bootstrapHash(bootstrapCore)!==m.bootstrapSha256)mismatch('PATCH_BOOTSTRAP_REQUIRED');
+  S.verifyManifest(m,loadTrustedKeys(trustRoot));F.readBootstrap(trustRoot);
+  if(compareSemver(S.BOOTSTRAP_VERSION,m.minimumBootstrapVersion)<0||F.bootstrapHash(trustRoot)!==m.bootstrapSha256)mismatch('PATCH_BOOTSTRAP_REQUIRED');
  }
  function managedCore(core){
   const relative=path.relative(versionsRoot,path.resolve(core)),parts=relative.split(path.sep);
@@ -56,7 +58,7 @@ function createInstalledManager({bootstrapCore,portableRoot,onTransition=()=>{},
  function preview(m){const state=context(m);return {sequence:m.sequence,baseVersion:m.baseVersion,sourceCommit:m.sourceCommit,releaseNotes:m.releaseNotes,changes:m.changes.length,alreadyPrepared:state.alreadyPrepared===true};}
  function apply(m,archiveFile){
   context(m); // Signature and installed trust boundary precede any archive read.
-  const kernel=require(path.join(bootstrapCore,'electron/manual-patch/kernel/shared-file-transaction.js'));
+  const kernel=require(path.join(trustRoot,'electron/manual-patch/kernel/shared-file-transaction.js'));
   return kernel.withFileLeaseSync(stateFile,()=>{
    const c=context(m);if(c.alreadyPrepared)return {ok:true,alreadyPrepared:true,pending:c.pending};
    const sourceCore=c.current.appCoreRoot,files=new Map(m.files.map(file=>[file.path,file]));

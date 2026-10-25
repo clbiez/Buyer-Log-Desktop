@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const {BOOTSTRAP_VERSION,PRODUCT,IMMUTABLE_RUNTIME,filePath,fail}=require('./signature');
 const {atomicWriteJson}=require('../update/json-store');
 const ANCHOR='electron/manual-patch/bootstrap.json',RECEIPT='electron/manual-patch-receipt.json';
-const BOOTSTRAP_FILES=['electron/launcher.js','electron/portable-paths.js',
+const BOOTSTRAP_FILES=['electron/launcher.js','electron/launcher-core.js','electron/portable-paths.js','electron/update/launcher-version.json',
  'electron/manual-patch/signature.js','electron/manual-patch/files.js','electron/manual-patch/manager.js','electron/manual-patch/desktop.js','electron/manual-patch/core-verification.js',
  'electron/update/json-store.js','electron/update/launcher-state.js','electron/update/semver.js',
  'electron/update/signature.js','electron/update/release-signing-keys.json','electron/update/zip.js','electron/update/integrity.js','electron/update/trial-backend.js',
