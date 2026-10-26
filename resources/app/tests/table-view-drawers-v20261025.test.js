@@ -9,6 +9,7 @@ const read=name=>fs.readFileSync('public/'+name,'utf8');
 const html=read('index.html');
 const script=read('table-view-drawers.js');
 const css=read('table-view-drawers.css');
+const ui=read('ui-components.css');
 const guide=read('buyerlog-guide-data.js');
 
 function block(id,next){
@@ -59,7 +60,8 @@ test('Menu tracks existing aria states and keeps keyboard/outside-close behavior
   assert.match(script,/addEventListener\('pointerdown'/);
   assert.match(script,/\.focus\(\{preventScroll:true\}\)/);
   assert.match(css,/\.blViewPickerMenu\[hidden\]\{display:none!important;/);
-  assert.match(css,/--ui-z-popover/);
+  assert.match(ui,/\.blViewPickerMenu\{[\s\S]*?z-index:var\(--ui-z-popover\)/);
+  assert.doesNotMatch(css,/z-index\s*:/);
   assert.doesNotMatch(css,/#[0-9a-f]{3,8}/i);
 });
 test('Guide anchors visible picker triggers and resources load at app startup',()=>{
