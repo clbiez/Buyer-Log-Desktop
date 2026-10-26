@@ -283,6 +283,16 @@ async function calculate(session, id) {
   await p.evaluate(() => BLCollectionPriceDrawer.close());
   return { ...out, elapsedMs: Date.now() - start };
 }
+async function recoverAccepted(session,record=()=>{}){
+  const p=session.page;await p.locator('#kolTable').focus();let state=await settle(session);
+  const button=p.locator('[data-kol-server-recovery]');
+  if(!await button.isVisible())return {attempted:false,...state};
+  const accept=dialog=>dialog.accept();p.once('dialog',accept);
+  try{await button.click();await p.waitForFunction(()=>!kolWorkspaceRecoveryOwnerId,null,{timeout:35000});}
+  finally{p.off('dialog',accept);}
+  state=await settle(session);record({type:'explicit-server-recovery',user:session.account.id,sessionId:session.id,parentOperationId:session.currentOp?.id,result:state});
+  return {attempted:true,...state};
+}
 module.exports = {
   cookie,
   onceRoute,
@@ -293,4 +303,5 @@ module.exports = {
   settle,
   snapshot,
   calculate,
+  recoverAccepted,
 };

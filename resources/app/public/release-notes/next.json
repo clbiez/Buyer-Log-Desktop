@@ -532,6 +532,35 @@
           "en": "The draft is preserved without overwriting the accepted server record"
         }
       }
+    },
+    {
+      "id": "collection-explicit-server-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Reddedilen taslaktan güvenli biçimde çıkış",
+        "en": "Safe recovery from a rejected draft"
+      },
+      "body": {
+        "tr": "Çakışma veya kayıt hatasında Sunucudakini yükle eylemi, açık onayınızla bu cihazın sunucusunda kabul edilmiş kopyayı alır. Taslak yalnız başarılı ve hâlâ güncel okuma sonrasında bırakılır; iptal, ağ hatası veya araya giren yeni düzenleme taslağı silmez. Paylaşıma teslim durumu ayrıca gösterilir.",
+        "en": "After a conflict or save error, Load accepted server data uses your explicit confirmation to read this device’s accepted server copy. The draft is discarded only after a successful read that is still current. Cancellation, network errors and intervening edits preserve the draft. Shared delivery status is shown separately."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-explicit-server-recovery.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Çakışma sonrası Sunucudakini yükle düğmesi",
+          "en": "Real Buyer Log: Load accepted server data after a conflict"
+        },
+        "caption": {
+          "tr": "Yerel taslak kullanıcı onayına ve başarılı okumaya kadar korunur",
+          "en": "The draft remains until user confirmation and a successful read"
+        }
+      }
     }
   ]
 }

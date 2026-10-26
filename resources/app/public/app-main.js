@@ -22257,6 +22257,7 @@ const KOL_SCOPE_PREF_KEY='lcw.koleksiyon.scope.v1';
 let kolPermissionState=null;
 let kolScopeOutsideClickBound=false;
 let kolWorkspaceSaveTimer=null;
+let kolWorkspaceRecoveryOwnerId='';
 let kolWorkspaceSaving=false;
 let kolWorkspacePending=false;
 let kolWorkspaceSavePromise=null;
@@ -22270,8 +22271,53 @@ function kolRenderSaveFeedback(){
   const target=document.getElementById('kolSaveState'),value=kolSaveFeedbackByOwner.get(kolWorkspaceOwnerId);
   if(!target)return;
   target.hidden=!value||!kolWorkspaceCanEdit;
-  if(value&&window.BLUI?.persistenceView)target.innerHTML=window.BLUI.persistenceView(value.status,{language:appLang,detail:value.detail});
+  if(value&&window.BLUI?.persistenceView){
+    target.innerHTML=window.BLUI.persistenceView(value.status,{language:appLang,detail:value.detail});
+    if(kolWorkspaceCanEdit&&kolWorkspaceMode==='single'&&['conflict','failed'].includes(value.status)){
+      const busy=kolWorkspaceRecoveryOwnerId===kolWorkspaceOwnerId;
+      target.insertAdjacentHTML('beforeend',` <button type="button" class="tbtn" data-kol-server-recovery${busy?' disabled':''}>${busy?(appLang==='en'?'Loading…':'Yükleniyor…'):(appLang==='en'?'Load accepted server data':'Sunucudakini yükle')}</button>`);
+    }
+  }
 }
+async function kolLoadAcceptedWorkspaceAfterConflict(){
+  const ownerId=kolWorkspaceOwnerId;
+  if(!ownerId||kolWorkspaceMode!=='single'||!kolWorkspaceCanEdit||kolWorkspaceRecoveryOwnerId===ownerId)return false;
+  if(kolWorkspaceSaving||kolWorkspaceSaveTimer||kolWorkspacePending){
+    showToast(appLang==='en'?'Wait for the current save to finish, then retry.':'Geçerli kayıt tamamlansın, ardından yeniden deneyin.');return false;
+  }
+  if(!confirm(appLang==='en'
+    ?'Discard the unsaved local draft for this Collection and load the data accepted by this device’s server? Shared delivery status is shown separately. Accepted server records are not undone.'
+    :'Bu Koleksiyon için kaydedilmemiş yerel taslaktan vazgeçip bu cihazın sunucusunda kabul edilmiş veriyi yüklemek istiyor musunuz? Paylaşıma teslim durumu ayrıca gösterilir. Kabul edilmiş sunucu kayıtları geri alınmaz.'))return false;
+  const readRevision=kolWorkspaceRevision,readBaseline=kolBaseline,readChange=JSON.stringify(kolCollectChanges());
+  kolWorkspaceRecoveryOwnerId=ownerId;kolRenderSaveFeedback();
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
+  try{
+    const res=await fetch(`/api/collection-workspaces/${encodeURIComponent(ownerId)}`,{cache:'no-store',signal:controller.signal});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok)throw new Error(data.error||res.statusText);
+    if(kolWorkspaceOwnerId!==ownerId||kolWorkspaceRevision!==readRevision||kolBaseline!==readBaseline||kolWorkspaceSaving||kolWorkspaceSaveTimer||kolWorkspacePending||JSON.stringify(kolCollectChanges())!==readChange||document.activeElement?.dataset?.kolUncommitted==='1'){
+      showToast(appLang==='en'?'The view changed while loading. Your draft is preserved; review and retry.':'Yükleme sırasında görünüm değişti. Taslağınız korundu; kontrol edip yeniden deneyin.');return false;
+    }
+    // Clear only after the real read succeeds. No event can recreate the rejected
+    // draft between this clear and the synchronous application of that response.
+    kolClearPendingWorkspace(ownerId);
+    kolApplyWorkspace(data.workspace,data.access);
+    kolReportReplication(data.replication);
+    if(!kolHasDirtyWorkspace())kolSetSaveFeedback(kolReplicationFeedback(data.replication),'',ownerId);
+    return true;
+  }catch(error){
+    showToast((appLang==='en'?'Server data could not be loaded; your draft is preserved: ':'Sunucu verisi yüklenemedi; taslağınız korundu: ')+(error.message||error));return false;
+  }finally{
+    clearTimeout(timeout);
+    if(kolWorkspaceRecoveryOwnerId===ownerId)kolWorkspaceRecoveryOwnerId='';
+    kolRenderSaveFeedback();
+  }
+}
+document.addEventListener('click',event=>{
+  if(!event.target?.closest?.('[data-kol-server-recovery]'))return;
+  event.preventDefault();void kolLoadAcceptedWorkspaceAfterConflict();
+});
+
 function kolReplicationFeedback(replication){
   if(Number(replication?.mergeConflicts)>0||replication?.state==='conflict')return 'conflict';
   return replication?.ok===false||replication?.state==='error'?'pending':'local';

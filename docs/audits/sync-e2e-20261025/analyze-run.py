@@ -10,16 +10,37 @@ submitted=collections.defaultdict(list); responses=collections.defaultdict(list)
 for x in data:
  if x['type']=='submitted':submitted[x['operationId']].append(x)
  if x['type'] in ('server-response','upstream-acceptance'):responses[x.get('operationId')].append(x)
+request_by_id={x['requestId']:x for x in data if x['type']=='submitted'}
+def intent_request(request,intent):
+ if intent['kind'] in ('edit','controlled-conflict'):
+  value=intent.get('expectedValue',intent['id'])
+  return any(str(row.get('id'))==str(intent.get('rowId')) and row.get(intent.get('field'))==value for row in request.get('body',{}).get('upserts',[]))
+ if intent['kind']=='create-delete':return True
+ return False
 accounting=[]
 for id,i in intents.items():
- r=responses[id]; accepted=[x for x in r if x.get('status')==200 and x.get('data',{}).get('applied')]
- rejected=[x for x in r if x.get('status',0)>=400 or x.get('data',{}).get('conflicts')]
+ r=responses[id];sent=[x for x in submitted[id] if intent_request(x,i)]
+ def matched(response):
+  req=request_by_id.get(response.get('requestId'))
+  if req:return intent_request(req,i)
+  # Suppressed upstream ACKs in earlier drivers did not include requestId.
+  # Match only a unique compatible submitted request; otherwise stay uncertain.
+  candidates=[x for x in sent if x['at']<=response['at']]
+  return len(candidates)==1
+ def target_applied(response):
+  items=response.get('data',{}).get('applied',[])
+  return bool(items) if i['kind']=='create-delete' else any(str(v.get('id'))==str(i.get('rowId')) for v in items)
+ def target_conflict(response):
+  items=response.get('data',{}).get('conflicts',[])
+  return bool(items) if i['kind']=='create-delete' else any(str(v.get('id'))==str(i.get('rowId')) for v in items)
+ accepted=[x for x in r if matched(x) and x.get('status')==200 and target_applied(x)]
+ rejected=[x for x in r if matched(x) and (x.get('status',0)>=400 or target_conflict(x))]
  rule_responses=[x for x in data if x['type']=='rule-response' and x.get('user')==i['user'] and i['sentAt']<=x['at']<=ui.get(id,{}).get('finishedAt',i['sentAt'])]
- if not accepted and i['kind'].startswith('moderator-') and any(x.get('status')==200 for x in rule_responses):accepted=rule_responses
- if not rejected and i['kind'].startswith('moderator-') and any(x.get('status',0)>=400 for x in rule_responses):rejected=rule_responses
- status='accepted' if accepted else 'explicitly-rejected' if rejected else 'acceptance-uncertain' if submitted[id] else 'not-submitted'
- if not accepted and not rejected and not submitted[id] and id in ui and not ui[id].get('error'):status='completed-non-collection-write' if i['kind']!='edit' else 'not-submitted'
- accounting.append({'operationId':id,'kind':i['kind'],'user':i['user'],'sentAt':i['sentAt'],'phase':i.get('phase'),'status':status,'submittedRequestIds':[s.get('requestId') for s in submitted[id]],'acceptedResponses':len(accepted),'replicationReceipts':[x.get('data',{}).get('replication') for x in r if x.get('data',{}).get('replication')],'rejectedResponses':len(rejected),'ui':ui.get(id,{}).get('result'),'error':ui.get(id,{}).get('error')})
+ if i['kind'].startswith('moderator-'):
+  accepted=[x for x in rule_responses if x.get('status')==200];rejected=[x for x in rule_responses if x.get('status',0)>=400]
+ status='accepted' if accepted else 'explicitly-rejected' if rejected else 'acceptance-uncertain' if sent else 'not-submitted'
+ if not accepted and not rejected and not sent and id in ui and not ui[id].get('error') and i['kind'] not in ('edit','controlled-conflict','create-delete'):status='completed-non-collection-write'
+ accounting.append({'operationId':id,'kind':i['kind'],'user':i['user'],'sentAt':i['sentAt'],'phase':i.get('phase'),'status':status,'submittedRequestIds':[x.get('requestId') for x in sent],'associatedRequestIds':[x.get('requestId') for x in submitted[id]],'acceptedResponses':len(accepted),'replicationReceipts':[x.get('data',{}).get('replication') for x in r if x.get('data',{}).get('replication')],'rejectedResponses':len(rejected),'ui':ui.get(id,{}).get('result'),'error':ui.get(id,{}).get('error')})
 measured=[x for x in accounting if start and start<=x['sentAt']<end]
 conflicts=[]
 for x in data:

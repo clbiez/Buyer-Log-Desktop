@@ -121,6 +121,11 @@ async function captureUiDiagnostic(s,op,stage){
 async function stopCpuDiagnostic(s,label){
   if(!s.cpuDiagnostic)return;
   const cpu=s.cpuDiagnostic;s.cpuDiagnostic=null;
+  if(/failure|fatal/.test(label)){
+    // Forensics only AFTER a recorded failure. Pause the unresponsive renderer
+    // to retain its real stack/profile; never resume this run as a success.
+    try{const paused=new Promise(resolve=>cpu.once('Debugger.paused',resolve));await R.deadline(cpu.send('Debugger.pause'),'forensic pause command',2000);const detail=await R.deadline(paused,'forensic paused stack',2000);R.fs.writeFileSync(R.path.join(root,label+'-stack.json'),JSON.stringify(detail,null,2));write({type:'forensic-renderer-paused',user:s.account.id,afterFailure:true});}catch(error){write({type:'forensic-pause-unavailable',error:error.message});}
+  }
   try{const {profile}=await R.deadline(cpu.send('Profiler.stop'),"CPU diagnostic stop",5000);R.fs.writeFileSync(R.path.join(root,label+'.cpuprofile'),JSON.stringify(profile));}catch(error){write({type:"cpu-diagnostic-unavailable",user:s.account.id,error:error.message});}
 }
 async function action(s, kind, fn, expected = {}) {
@@ -154,11 +159,7 @@ async function action(s, kind, fn, expected = {}) {
           choice: "adopt server; do not retry rejected intent",
           draft: result.pending,
         });
-        await s.page.locator("#kolTable").focus();
-        await s.page.evaluate(async (owner) => {
-          kolClearPendingWorkspace(owner);
-          await kolLoadWorkspace(owner);
-        }, s.owner);
+        await B.recoverAccepted(s,write);
       } else
         throw Error("UI remains dirty: " + JSON.stringify(result.feedback));
     }
@@ -398,7 +399,7 @@ async function daily(s) {
         });
       }
       turn++;
-      await R.delay(10000 + Math.floor(random() * 10000));
+      await R.delay(Number(args["think-min-ms"]??10000)+Math.floor(random()*Number(args["think-range-ms"]??10000)));
     } catch (e) {
       s.failed = e.message;
       write({ type: "session-stopped", user: s.account.id, error: e.message });
@@ -600,11 +601,7 @@ async function controlledRace() {
       durableWinner: valueA,
     });
     for (const s of [a, b]) {
-      await s.page.locator("#kolTable").focus();
-      await s.page.evaluate(async (owner) => {
-        kolClearPendingWorkspace(owner);
-        await kolLoadWorkspace(owner);
-      }, owner);
+      await B.recoverAccepted(s,write);
     }
   } finally {
     a.paused = b.paused = false;
@@ -953,7 +950,7 @@ async function reconcile() {
         trace: account.index === 0,
       });
       s.cookie = await B.cookie(s);
-      if(args.diagnostics&&account.index===1){s.cpuDiagnostic=await s.context.newCDPSession(s.page);await s.cpuDiagnostic.send('Profiler.enable');await s.cpuDiagnostic.send('Profiler.setSamplingInterval',{interval:10000});await s.cpuDiagnostic.send('Profiler.start');}
+      if(args.diagnostics&&account.index===1){s.cpuDiagnostic=await s.context.newCDPSession(s.page);await s.cpuDiagnostic.send('Debugger.enable');await s.cpuDiagnostic.send('Profiler.enable');await s.cpuDiagnostic.send('Profiler.setSamplingInterval',{interval:10000});await s.cpuDiagnostic.send('Profiler.start');}
       sessions.push(s);
       B.instrument(s, write);
       loopPromises.push(daily(s));
@@ -1039,13 +1036,17 @@ async function reconcile() {
       if (turn === 4) sessions[Math.min(2, users - 1)].nextFault = "offline";
       if (sessions.some((s) => s.failed))
         throw Error("Active session failed; preserve failed run");
-      await R.delay(Math.min(45000, Math.max(0, endAt - Date.now())));
+      await R.delay(Math.min(Number(args["moderator-interval-ms"]??45000), Math.max(0, endAt - Date.now())));
     }
     stopping = true;
     await Promise.all(loopPromises);
     for (const session of sessions) {
       await session.page.locator("#kolTable").focus();
       await B.settle(session);
+      for(let attempt=0;attempt<2;attempt++){
+        const state=await B.recoverAccepted(session,write);
+        if(!state.dirty)break;
+      }
     }
     write({
       type: "quiescence",

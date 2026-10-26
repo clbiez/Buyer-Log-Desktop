@@ -3,6 +3,7 @@ const root = process.argv[2] || "/workspace/scratch/bl-final-50",
   out = R.path.join(root, "recovery-evidence");
 R.fs.mkdirSync(out, { recursive: true });
 (async () => {
+  const flags=Object.fromEntries(process.argv.slice(3).map(x=>x.replace(/^--/,'').split('=')));
   const m = JSON.parse(R.fs.readFileSync(R.path.join(root, "manifest.json"))),
     f = JSON.parse(R.fs.readFileSync(R.path.join(root, "failure.json"))),
     ds = R.fs
@@ -15,7 +16,10 @@ R.fs.mkdirSync(out, { recursive: true });
     ),
     requests = new Map(ds.filter(x=>x.type==='submitted').map(x=>[x.requestId,x])),
     expected = new Map();
-  if(R.fs.existsSync(R.path.join(root,'pre-recovery-device-0.json')))throw Error('Recovery evidence already exists; preserve it and use the read-only audit-intents.py instead.');
+  if(R.fs.existsSync(R.path.join(root,'failed-run-recovery.json')))throw Error('Completed recovery evidence already exists; preserve it and use the read-only audit-intents.py instead.');
+  const resume=R.fs.existsSync(R.path.join(root,'pre-recovery-device-0.json'));
+  if(resume&&!flags.resume)throw Error('Incomplete recovery snapshots exist; explicit --resume=1 preserves and reuses them.');
+  const recoveryPortBase=Number(flags.port||m.port);
   for (const x of ds.filter(
     (x) => x.type === "server-response" && x.status === 200,
   )) {
@@ -37,11 +41,9 @@ R.fs.mkdirSync(out, { recursive: true });
         "device-" + i,
         "server/collection-workspaces/" + m.owner + ".json",
       ),
-      w = JSON.parse(R.fs.readFileSync(p));
-    R.fs.writeFileSync(
-      R.path.join(root, "pre-recovery-device-" + i + ".json"),
-      JSON.stringify(w, null, 2),
-    );
+      snapshot=R.path.join(root,"pre-recovery-device-"+i+".json"),
+      w = JSON.parse(R.fs.readFileSync(resume?snapshot:p));
+    if(!resume)R.fs.writeFileSync(snapshot,JSON.stringify(w,null,2));
     before.push({ index: i, workspace: w });
   }
   const ownMissing = [];
@@ -65,7 +67,7 @@ R.fs.mkdirSync(out, { recursive: true });
     try {
       s = await R.startServer(
         R.path.join(root, "device-" + i),
-        m.port + i,
+        recoveryPortBase + i,
         m.hub,
       );
       const cookie = await R.login(s, m.accounts[i].id);
@@ -111,6 +113,8 @@ R.fs.mkdirSync(out, { recursive: true });
     rejectedOperation27: op27?.data.conflicts,
     serverCount: cold.length,
     runSource: m.source,
+    recoveryPortBase,
+    reusedOriginalPreRecoverySnapshots: resume,
     readMethod:
       "actual restarted native server GET, independent durable snapshots retained",
     source: require("child_process")
