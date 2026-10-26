@@ -1,0 +1,9 @@
+{
+  "startedAt": "2026-10-26T01:09:18.204683+00:00",
+  "source": "f5e5f21b3c9b6e5cfd4d8fa880862e7d55fe5a98",
+  "applicationTree": "ea80c83eb80d2f076cfff3175ea9b4137bd58975",
+  "command": "cd resources/app && npm test",
+  "concurrency": 4,
+  "loadRunning": false,
+  "mainIntegrated": "94df09447834c82adc964e772360614344472313"
+}

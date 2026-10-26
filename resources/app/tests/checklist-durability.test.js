@@ -268,6 +268,7 @@ test('Collection Checklist selections are journalled immediately and restored af
   };
   const saved=new Map();let started=0;
   const ctx={Date,JSON,Set,localStorage:{setItem:(k,v)=>saved.set(k,v),getItem:k=>saved.get(k)||null},
+    kolBaseline:{ownerId:'buyer',rows:new Map([['1',{id:1}]]),structure:JSON.stringify({columns:[{k:'check',checklist:true}],manufacturers:[],statusCatalog:[],order:['1']})},kolRowKey:r=>String(r.id),
     BLStorage:{setItem:(k,v)=>saved.set(k,v)},kolRows:[{id:1}],kolCustomCols:[{k:'check',checklist:true}],
     KOL_CHECKLIST_STATUSES:['open','approved','rejected','notRequired'],KOL_STORAGE_KEY:'rows',
     kolWorkspaceCanEdit:true,kolBulkPreparing:false,kolWorkspaceOwnerId:'buyer',kolWorkspaceRevision:1,kolNextId:2,
@@ -281,7 +282,7 @@ test('Collection Checklist selections are journalled immediately and restored af
     kolHasDirtyWorkspace:()=>true,kolSetSaveFeedback:()=>{},showToast:()=>{},
   };
   vm.createContext(ctx);
-  for(const name of ['kolChecklistStatus','kolSetChecklistStatus','kolWorkspaceLocalKey','kolWorkspacePendingKey','kolPersistPendingWorkspace','kolReadPendingWorkspace','kolClearPendingWorkspace','kolRestorePendingWorkspace','saveKolRows'])vm.runInContext(fn(name),ctx);
+  for(const name of ['kolChecklistStatus','kolSetChecklistStatus','kolWorkspaceLocalKey','kolWorkspacePendingKey','kolPersistPendingWorkspace','kolReadPendingWorkspace','kolClearPendingWorkspace','kolValueEqual','kolRowChangedFromBase','kolCloneConflictValue','kolMergeLocalRowDelta','kolMergePendingWorkspace','kolRestorePendingWorkspace','saveKolRows'])vm.runInContext(fn(name),ctx);
   for(const status of ['rejected','approved','notRequired','open']) {
     assert.equal(ctx.kolSetChecklistStatus(1,'check',status),true);
     assert.equal(ctx.kolChecklistStatus(JSON.parse(saved.get('bl.collection.pending.buyer.v1')).rows[0].check),status);
