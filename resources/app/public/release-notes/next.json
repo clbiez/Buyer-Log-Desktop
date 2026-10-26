@@ -271,6 +271,35 @@
           "en": "Focused editors avoid unnecessary reloads"
         }
       }
+    },
+    {
+      "id": "collection-draft-acceptance-feedback",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Taslak ve sunucu kaydı ayrı gösterilir",
+        "en": "Drafts and server saves have distinct states"
+      },
+      "body": {
+        "tr": "Tarayıcıdaki güvenli taslak artık sunucuya kaydedilmiş gibi gösterilmez. Sunucunun reddettiği değişiklikte çatışma veya hata rozeti, uzak güncelleme bildirimi geldiğinde de korunur. Kalıcı kabul ve paylaşım durumu ayrı kalır.",
+        "en": "A secured browser draft is no longer presented as saved to the server. A conflict or error badge remains visible after a remote update notification when the server rejected the change. Durable acceptance and sharing remain distinct."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-draft-acceptance-feedback.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: uzak bildirimden sonra da açık kalan kayıt çatışması",
+          "en": "Real Buyer Log: save conflict remains visible after a remote notification"
+        },
+        "caption": {
+          "tr": "Taslak ve sunucu kaydı ayrı gösterilir",
+          "en": "Drafts and server saves have distinct states"
+        }
+      }
     }
   ]
 }

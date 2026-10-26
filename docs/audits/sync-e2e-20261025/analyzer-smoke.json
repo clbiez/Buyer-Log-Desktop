@@ -1,0 +1,57 @@
+{
+  "root": "/workspace/scratch/bl-main-updated-smoke",
+  "logicalOperationCount": 9,
+  "measuredLogicalOperationCount": 5,
+  "outcomesAll": {
+    "accepted": 4,
+    "completed-non-collection-write": 4,
+    "explicitly-rejected": 1
+  },
+  "outcomesMeasured": {
+    "explicitly-rejected": 1,
+    "accepted": 2,
+    "completed-non-collection-write": 2
+  },
+  "measuredKinds": {
+    "moderator-royalty": 1,
+    "edit": 2,
+    "list-filter": 2
+  },
+  "peakOutstandingBrowserCollectionRequests": 0,
+  "outstandingBrowserCollectionRequestsAtEnd": 0,
+  "duplicateJournalRequestIds": 0,
+  "nativeBackgroundWrites": 0,
+  "resources": {
+    "driver": {
+      "peakAggregateRssBytes": 152510464,
+      "cpuSecondsBetweenSamples": 0.36,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 12288,
+      "sampledProcessCount": 1
+    },
+    "backend": {
+      "peakAggregateRssBytes": 524263424,
+      "cpuSecondsBetweenSamples": 1.26,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 1363968,
+      "sampledProcessCount": 2
+    },
+    "application-renderer": {
+      "peakAggregateRssBytes": 1454063616,
+      "cpuSecondsBetweenSamples": 2.9299999999999997,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 0,
+      "sampledProcessCount": 7
+    },
+    "browser-driver": {
+      "peakAggregateRssBytes": 522903552,
+      "cpuSecondsBetweenSamples": 1.34,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 0,
+      "sampledProcessCount": 8
+    }
+  },
+  "containerPeakMemoryBytes": 2334711808,
+  "resourceSamples": 11,
+  "sourceSamplingNote": "Linux USER_HZ=100; aggregate RSS can double-count shared pages; CPU/disk deltas omit work outside observed process lifetime. Network is completed browser HTTP only, excluding open SSE and setup. No per-process network or internal queue instrumentation is claimed."
+}

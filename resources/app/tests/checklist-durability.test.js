@@ -279,7 +279,7 @@ test('Collection Checklist selections are journalled immediately and restored af
     kolManufacturersForPersistence:()=>[],kolStatusEntries:()=>[],kolQueueWorkspaceSave:()=>{},
     kolSaveWorkspaceNow:async()=>{started++;return {ok:false,pending:true};},renderKol:()=>{},scheduleOverviewCollectionSummaryRender:()=>{},
     migrateKolRow:r=>({...r}),kolNormalizeStatusCatalog:()=>[],kolNormalizeCustomCols:c=>c,refreshSubmfrList:()=>{},loadKolColState:()=>{},
-    kolHasDirtyWorkspace:()=>true,kolSetSaveFeedback:()=>{},showToast:()=>{},
+    kolHasDirtyWorkspace:()=>true,kolSaveFeedbackByOwner:new Map(),kolSetSaveFeedback:()=>{},showToast:()=>{},
   };
   vm.createContext(ctx);
   for(const name of ['kolChecklistStatus','kolSetChecklistStatus','kolWorkspaceLocalKey','kolWorkspacePendingKey','kolPersistPendingWorkspace','kolReadPendingWorkspace','kolClearPendingWorkspace','kolValueEqual','kolRowChangedFromBase','kolCloneConflictValue','kolMergeLocalRowDelta','kolMergePendingWorkspace','kolRestorePendingWorkspace','saveKolRows'])vm.runInContext(fn(name),ctx);

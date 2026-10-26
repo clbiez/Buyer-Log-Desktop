@@ -1,0 +1,16 @@
+{
+  "tests": 7908,
+  "pass": 7843,
+  "fail": 0,
+  "cancelled": 0,
+  "skipped": 65,
+  "todo": 0,
+  "status": "passed",
+  "files": 1118,
+  "source": "fac88b0fa83e75755cd3261cf0aa6b23adbe181a",
+  "applicationTree": "d11a81cced54e70ae8e7b4dcda79e87c394aaed7",
+  "startedAt": "2026-10-26T01:15:54.890335+00:00",
+  "finishedAt": "2026-10-26T01:20:57.485843+00:00",
+  "command": "cd resources/app && npm test",
+  "durationSeconds": 273.4
+}

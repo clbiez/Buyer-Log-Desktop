@@ -118,7 +118,22 @@ async function scenario(name, fn) {
         }),
       ).workspace;
       assert.equal(current.rows.find((r) => r.id === 1).modelKod, "RACE-A");
-      return { bodies, rejected };
+      // Replay a legitimate remote reload notification after the rejection.
+      // No server acceptance or calculation response is fabricated.
+      await b.page.evaluate(
+        (owner) => kolHandleRemoteChange(owner, { mode: "reload" }),
+        m.owner,
+      );
+      const afterRemote = await B.settle(b);
+      assert.equal(afterRemote.feedback.status, "conflict");
+      assert.doesNotMatch(
+        afterRemote.ui,
+        /Bu cihazda kaydedildi|Saved on this device/,
+      );
+      await b.page.screenshot({
+        path: R.path.join(root, "rejected-save-not-saved.png"),
+      });
+      return { bodies, rejected, afterRemote };
     });
     await scenario("different-fields-same-row-CAS", async () => {
       const ga = await barrier(a),

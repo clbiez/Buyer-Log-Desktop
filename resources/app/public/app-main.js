@@ -22189,7 +22189,9 @@ function kolPersistPendingWorkspace(status='pending'){
       rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturers,customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,
       updatedAt:new Date().toISOString(),
     }));
-    kolSetSaveFeedback(status==='conflict'?'conflict':status==='save-failed'?'failed':status==='saving'||status==='rebasing'?'sending':'local');
+    const prior=kolSaveFeedbackByOwner.get(kolWorkspaceOwnerId);
+    if(status==='remote-change'&&['conflict','failed'].includes(prior?.status))kolSetSaveFeedback(prior.status,prior.detail);
+    else kolSetSaveFeedback(status==='conflict'?'conflict':status==='save-failed'?'failed':['saving','rebasing','rebased'].includes(status)?'sending':'draft');
     return true;
   }catch(err){kolSetSaveFeedback('failed',String(err.message||err));showToast((appLang==='en'?'Pending Collection change could not be secured on this device: ':'Bekleyen Koleksiyon değişikliği bu cihazda güvenli hale getirilemedi: ')+(err.message||err));return false;}
 }
