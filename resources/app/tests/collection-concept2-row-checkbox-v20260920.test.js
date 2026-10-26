@@ -24,7 +24,8 @@ test('Concept 2 gutter hem hierarchy toggle hem görünür row checkbox taşır'
     'Collection header checkbox gutter must use the wider Collection override');
   assert.ok(CSS.includes('#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetRowGutter{width:72px!important;min-width:72px!important}'),
     'Collection gutter width must override the shared 64px checkbox-column width');
-  assert.match(INDEX, /collection-spreadsheet\.css\?v=__BL_ASSET_VERSION__&rev=7/);
+  // Stylesheet rev 8 includes post-7.0.300 checkbox and gutter adjustments.
+  assert.match(INDEX, /collection-spreadsheet\.css\?v=__BL_ASSET_VERSION__&rev=8/);
 });
 
 test('Concept 2 checkbox yeni veri sütunu eklemez ve seçim olayı gerçek row id üzerinde kalır', () => {
