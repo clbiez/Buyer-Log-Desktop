@@ -204,6 +204,7 @@
   function sourceFor(table,column){
     var c=column||{};
     if(c.modelCustom)return {kind:'database',table:c.sourceTable||'',field:c.sourceName||'',role:c.role||'',connection:c.connectionName||'',header:c.k};
+    if(c.personalNote)return buyerlog({tr:'Yalnız size ait kişisel sipariş notu; diğer kullanıcılarla paylaşılmaz',en:'Personal order note owned by you; not shared with other users'});
     if(c.noteCustom)return buyerlog({tr:'Buyer Log not sütunu (ortak, kullanıcılar girer)',en:'Buyer Log note column (shared, entered by users)'});
     if(c.formulaCustom)return {kind:'formula',formula:(c.formulaDef&&c.formulaDef.formula)||''};
     if(table==='koleksiyon'){
