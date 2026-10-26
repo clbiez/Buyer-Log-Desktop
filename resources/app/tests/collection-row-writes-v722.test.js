@@ -251,7 +251,7 @@ test('v7.22 istemci yalnız değişen satırları gönderiyor', () => {
   assert.match(collect, /upserts\.push/);
   assert.match(collect, /deletes\.push/);
   assert.match(collect, /change\.structure=/, 'yapısal değişiklik ayrı taşınmalı');
-  assert.match(collect, /change\.baseRevision=kolWorkspaceRevision/);
+  assert.match(collect, /change\.baseRevision=kolBaseline\.structureBaseRevision\?\?kolWorkspaceRevision/);
   const save = APP.slice(APP.indexOf('async function kolSaveWorkspaceNow'), APP.indexOf('function kolQueueWorkspaceSave'));
   assert.match(save, /method:rowMode\?'PATCH':'PUT'/);
 });

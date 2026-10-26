@@ -56,6 +56,14 @@ parentPort.on('message', async task => {
   const id = task && task.id;
   try {
     const payload = JSON.parse(Buffer.from(task.body).toString('utf8'));
+    const assertNativeAuthority = () => {
+      if (!task.actorGuard) return;
+      const access = accessForAgent(task.actorGuard), profile = access.profileById(task.actorGuard.actorId);
+      if (!profile || profile.enabled === false || profile.status !== 'ACTIVE' || (profile.credentialRevision || 1) !== task.actorGuard.credentialRevision)
+        throw Object.assign(new Error('Koleksiyon düzenleme yetkisi değişti. / Collection edit permission changed.'), { code:'COLLECTION_EDIT_DENIED', statusCode:403 });
+      try { require('./lib/collection-authority').assertCollectionAccess(access, profile, task.ownerId, true); }
+      catch (_) { throw Object.assign(new Error('Koleksiyon erişimi reddedildi. / Collection access denied.'), { code:'COLLECTION_EDIT_DENIED', statusCode:403 }); }
+    };
     // v7.22 — iki yazma biçimi: 'rows' (satır bazlı, yeni yol) ve tam sayfa
     // (eski yol). Eski yol bilerek korunuyor: Excel/PLM içe aktarma gibi
     // sayfanın tamamını değiştiren akışlar hâlâ onu kullanıyor.
@@ -67,7 +75,7 @@ parentPort.on('message', async task => {
       const refresh=async()=>{if(delta?.isAuthoritative){const hydrated=await delta.hydrate();if(!hydrated.ok)throw Object.assign(new Error('Authoritative source unavailable.'),{code:'DATA_INTEGRITY_ERROR',statusCode:503});}};
       let capturedSource='';const currentWorkspace=()=>{const raw=documents.read(store.documentId(task.ownerId));return raw?store.normalizeWorkspace(task.ownerId,raw):store.loadWorkspace(task.ownerId);},sourceHash=value=>require('node:crypto').createHash('sha256').update(JSON.stringify(value)).digest('hex');
       const assertActor=()=>{if(!task.authorization)return;const access=accessForAgent(task.authorization),profile=access.profileById(task.authorization.actorId);if(!profile||JSON.stringify(access.publicProfile(profile))!==task.authorization.stamp)throw Object.assign(new Error('Collection authority changed.'),{code:'COLLECTION_EDIT_DENIED',statusCode:403});require('./lib/collection-authority').assertCollectionAccess(access,profile,task.ownerId,true);};
-      const assertAuthority=async()=>{await refresh();if(capturedSource&&sourceHash(currentWorkspace())!==capturedSource)throw Object.assign(new Error('Collection source changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});if(!task.authorization)return;if(task.authorization.quotationRevision!=null&&(documents.read('quotations.json')||require('./lib/quotations-store').loadStore())._revision!==task.authorization.quotationRevision)throw Object.assign(new Error('Quotation changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});if(task.authorization.translationRevision!=null&&require('./lib/plm-translations').loadPlmTranslations()._revision!==task.authorization.translationRevision)throw Object.assign(new Error('Translation changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});assertActor();};
+      const assertAuthority=async()=>{assertNativeAuthority();await refresh();if(capturedSource&&sourceHash(currentWorkspace())!==capturedSource)throw Object.assign(new Error('Collection source changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});if(!task.authorization)return;if(task.authorization.quotationRevision!=null&&(documents.read('quotations.json')||require('./lib/quotations-store').loadStore())._revision!==task.authorization.quotationRevision)throw Object.assign(new Error('Quotation changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});if(task.authorization.translationRevision!=null&&require('./lib/plm-translations').loadPlmTranslations()._revision!==task.authorization.translationRevision)throw Object.assign(new Error('Translation changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});assertActor();};
       const result = await store.applyRowChangesAsync(task.ownerId, payload,{expectedRevision:task.expectedRevision,assertAuthority,...(delta?{readCurrent:async()=>{await refresh();const current=currentWorkspace();capturedSource=sourceHash(current);return current;},commitSaved:async(saved,writeLegacy)=>{if(!documents.exists(store.documentId(task.ownerId))){await assertAuthority();return writeLegacy();}const guardDocumentIds=[...(task.authorization.quotationRevision!=null?['quotations.json']:[]),...(task.authorization.translationRevision!=null?['plm-translations.json']:[])],receipt=await documents.mirror(store.documentId(task.ownerId),saved,{guardSource:true,assertAuthority:assertActor,guardDocumentIds});if(!receipt.ok)throw receipt.error||Object.assign(new Error('Collection journal write failed.'),{code:'COLLECTION_SAVE_FAILED'});await writeLegacy();}}:{})});
       parentPort.postMessage({
         id, ok: true,
@@ -86,7 +94,7 @@ parentPort.on('message', async task => {
       return;
     }
     const revision = task.expectedRevision != null ? task.expectedRevision : (payload && payload.expectedRevision);
-    const { saved, rowPatches } = await store.saveWorkspaceAsync(task.ownerId, payload, revision);
+    const { saved, rowPatches } = await store.saveWorkspaceAsync(task.ownerId, payload, revision, { assertAuthority:assertNativeAuthority });
     // Ana iş parçacığına 18 MB geri göndermek kazandığımızı geri verirdi.
     // İstemci yanıttan yalnız revizyonu kullanıyor.
     parentPort.postMessage({

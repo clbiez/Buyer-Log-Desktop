@@ -164,6 +164,17 @@ function stableJson(value) {
   return JSON.stringify(value === undefined ? null : value);
 }
 function sameValue(a, b) { return stableJson(a) === stableJson(b); }
+const canonicalFields = require('./canonical-fields');
+const emptyTextKeys = new Set(canonicalFields.moduleFields('collection')
+  .filter(id => ['text', 'code'].includes(canonicalFields.field(id).type))
+  .map(id => canonicalFields.bindingFor('collection', id).keys[0]));
+function sameRowField(key, a, b) {
+  // Renderer hydration fills absent optional text with ''. That normalization
+  // is not a competing edit. Financial/manual and nested override intent keep
+  // their existing exact comparison semantics.
+  if (emptyTextKeys.has(key) && (a == null || a === '') && (b == null || b === '')) return true;
+  return sameValue(a, b);
+}
 function mergeRowKey(row) { const id = row && row.id; return id == null || id === '' ? '' : String(id); }
 function mergeRowRevision(row) { return Math.max(0, Number(row && row._rev) || 0); }
 function rowContent(row) { const out = { ...(row || {}) }; delete out._rev; return out; }
@@ -179,8 +190,8 @@ function mergeRowFields(base, local, remote, rowId, conflicts) {
     const l = local[key], r = remote[key], b = base ? base[key] : undefined;
     let value;
     if (!base && (l === undefined || r === undefined)) value = l === undefined ? r : l;
-    else if (sameValue(l, r) || (base && sameValue(l, b))) value = r;
-    else if (base && sameValue(r, b)) value = l;
+    else if (sameRowField(key, l, r) || (base && sameRowField(key, l, b))) value = r;
+    else if (base && sameRowField(key, r, b)) value = l;
     else { value = r; conflicts.push({ rowId, field: key, current: r === undefined ? null : r, incoming: l === undefined ? null : l }); }
     if (value !== undefined) out[key] = value;
   }

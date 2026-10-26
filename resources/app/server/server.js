@@ -3746,6 +3746,7 @@ app.put('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
     if (!body.length) return res.status(400).json({ error: 'Koleksiyon sayfası gövdesi boş.', code: 'COLLECTION_BODY_EMPTY' });
     const result = await collectionSaveWorker.runCollectionSave({
       ownerId, body, expectedRevision: null,
+      actorGuard: { actorId:req.currentUser.id, credentialRevision:req.currentUser.credentialRevision || 1, centralIamEnabled:userAccess.centralIamHealth().enabled },
       env: {
         BUYER_LOG_SERVER_DATA_ROOT: process.env.BUYER_LOG_SERVER_DATA_ROOT,
         BUYER_LOG_DATA_ROOT: process.env.BUYER_LOG_DATA_ROOT,
