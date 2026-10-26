@@ -1,12 +1,11 @@
 {
-  "startedAt": "2026-10-26T01:15:54.890335+00:00",
-  "source": "fac88b0fa83e75755cd3261cf0aa6b23adbe181a",
-  "applicationTree": "d11a81cced54e70ae8e7b4dcda79e87c394aaed7",
+  "startedAt": "2026-10-26T01:30:03.655540+00:00",
+  "source": "313007a792a85425802f6b23b4ca82c9eb0e85dc",
+  "applicationTree": "954b78ff6c95d7c82b32de30b9c16ef929f64f1f",
   "command": "cd resources/app && npm test",
   "concurrency": 4,
   "loadRunning": false,
   "mainIntegrated": "94df09447834c82adc964e772360614344472313",
-  "repeatReason": "Installed node_modules had XLSX 0.18.5 contrary to lock. npm ci installed pinned 0.20.3, SHA matches browser reader. 15/15 focused dependency/parser/FX checks passed. Source unchanged.",
   "xlsx": "0.20.3",
-  "readerSha256": "cc015130aa8521e7f088f88898eba949ccdcbfb38df0bd129b44b7273c3a6f41"
+  "repeatReason": "First 50-user ramp exposed false saved badge after explicit rejection. Shared persistence UI primitive changed. Real small UI reproduction and 63 targeted checks passed; final package must certify corrected source."
 }

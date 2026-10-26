@@ -249,7 +249,7 @@ async function setup(
         cookie: moderator,
         body: {
           rows,
-          manufacturers: ["Demo Supplier"],
+          manufacturers: [{name:"Demo Supplier",email:""}],
           customColumns: [],
           nextId: 1000,
           expectedRevision: 0,

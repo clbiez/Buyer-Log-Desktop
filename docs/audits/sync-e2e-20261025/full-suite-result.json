@@ -1,16 +1,21 @@
 {
-  "tests": 7908,
-  "pass": 7843,
+  "tests": 7911,
+  "pass": 7846,
   "fail": 0,
   "cancelled": 0,
   "skipped": 65,
   "todo": 0,
   "status": "passed",
-  "files": 1118,
-  "source": "fac88b0fa83e75755cd3261cf0aa6b23adbe181a",
-  "applicationTree": "d11a81cced54e70ae8e7b4dcda79e87c394aaed7",
-  "startedAt": "2026-10-26T01:15:54.890335+00:00",
-  "finishedAt": "2026-10-26T01:20:57.485843+00:00",
+  "files": 1119,
+  "source": "313007a792a85425802f6b23b4ca82c9eb0e85dc",
+  "applicationTree": "954b78ff6c95d7c82b32de30b9c16ef929f64f1f",
+  "productionTestTrees": {
+    "server": "398d4746f5d0115e14f10bc8a4375b169063fd7c",
+    "public": "d629b96d8d353b664cae72536714bae0332d2e38",
+    "tests": "8a000c56f29a099d72700bd6ddf0c6f66ca2f28f"
+  },
+  "startedAt": "2026-10-26T01:30:03.655540+00:00",
+  "finishedAt": "2026-10-26T01:35:36.065295+00:00",
   "command": "cd resources/app && npm test",
-  "durationSeconds": 273.4
+  "durationSeconds": 312.7
 }
