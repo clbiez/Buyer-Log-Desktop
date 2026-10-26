@@ -165,7 +165,13 @@ test('kaynak kataloğu CP sistem sütunlarının tamamını kapsar', () => {
   const block = APP.slice(APP.indexOf('const CP_COLS = ['), APP.indexOf('const ORDERS_COLS'));
   const keys = [...block.matchAll(/\{k:'([^']+)'/g)].map(match => match[1]);
   assert.ok(keys.length > 40);
-  keys.concat(['Active/Inactive']).forEach(key => assert.ok(names.CP_SOURCES[key], `${key} için kaynak tanımı yok`));
+  keys.filter(key => key !== '__personalOrderNote').concat(['Active/Inactive']).forEach(key => assert.ok(names.CP_SOURCES[key], `${key} için kaynak tanımı yok`));
+  // Private notes are virtual/account-private fields, not an ASAS source mapping.
+  // Protect both the classification and bilingual privacy explanation instead.
+  const personal = names.sourceFor('cp', { k: '__personalOrderNote', personalNote: true });
+  assert.equal(personal.kind, 'buyerlog');
+  assert.match(personal.note.tr, /kişisel|size ait/i);
+  assert.match(personal.note.en, /personal|owned by you/i);
 });
 
 /* ----------------------------------------- 4) ARAYÜZ BAĞLANTILARI */
