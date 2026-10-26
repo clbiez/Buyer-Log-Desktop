@@ -561,6 +561,64 @@
           "en": "The draft remains until user confirmation and a successful read"
         }
       }
+    },
+    {
+      "id": "collection-status-render-once",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Eşzamanlı tablo yenilemelerinde daha az bekleme",
+        "en": "Less waiting during concurrent table refreshes"
+      },
+      "body": {
+        "tr": "Durum seçenekleri her hücre ve seçenek için bütün çalışma alanı yeniden taranarak hazırlanmaz. Her tablo çizimi aynı güncel durum kataloğunu kullanır; özel durumlar, renkler ve Türkçe/İngilizce etiketler korunur.",
+        "en": "Status options no longer rescan the entire workspace for every cell and option. Each table paint shares the current status catalog; custom statuses, colors and Turkish/English labels are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-status-render-once.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: 50 sentetik satırda filtreleme sonrası güncel durum seçeneklerini koruyan Koleksiyon tablosu",
+          "en": "Real Buyer Log: Collection with 50 synthetic rows and current status options after filtering"
+        },
+        "caption": {
+          "tr": "50 sentetik modelde filtre temizlendikten sonra güncel durum seçenekleri korunur.",
+          "en": "Current status options are preserved after clearing the filter across 50 synthetic models."
+        }
+      }
+    },
+    {
+      "id": "feedback-closing-queue-progress",
+      "type": "fix",
+      "module": {
+        "tr": "Bildirimler",
+        "en": "Notifications"
+      },
+      "title": {
+        "tr": "Yoğun bildirimlerde arayüz kilitlenmesi giderildi",
+        "en": "Fixed UI freeze during notification bursts"
+      },
+      "body": {
+        "tr": "Kapanma animasyonu süren eski bir bildirim varken yeni bildirimler geldiğinde arayüz artık sonsuz tahliye döngüsüne girmez. Yığın dört öğeyle sınırlı kalır; kayıt ve bağlantı uyarılarından sonra düzenlemeye devam edebilirsiniz.",
+        "en": "New notifications no longer trap the UI in an endless eviction loop while an older notification is leaving. The stack remains limited to four items, and editing continues after save or connection warnings."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "feedback-closing-queue-progress.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: kapanmakta olan bildirim tahliye edildikten sonra dört sentetik bildirim ve sunucuda kabul edilmiş yeni model adı",
+          "en": "Real Buyer Log: four synthetic notifications after evicting a closing item, with a newly accepted model name"
+        },
+        "caption": {
+          "tr": "Bildirim yarışından sonra gerçek UI düzenlemesi sunucuda kabul edildi.",
+          "en": "A real UI edit was accepted by the server after the notification race."
+        }
+      }
     }
   ]
 }

@@ -21,9 +21,15 @@ R.fs.mkdirSync(out, { recursive: true });
   if(resume&&!flags.resume)throw Error('Incomplete recovery snapshots exist; explicit --resume=1 preserves and reuses them.');
   const recoveryPortBase=Number(flags.port||m.port);
   for (const x of ds.filter(
-    (x) => x.type === "server-response" && x.status === 200,
+    (x) => ["server-response","upstream-acceptance"].includes(x.type) && x.status === 200,
   )) {
-    const i = intents.get(x.operationId), request=requests.get(x.requestId), sent=request?.body?.upserts?.find(row=>String(row.id)===String(i?.rowId));
+    const i = intents.get(x.operationId);
+    let request=requests.get(x.requestId);
+    if(!request&&x.type==='upstream-acceptance'){
+      const candidates=[...requests.values()].filter(r=>r.operationId===x.operationId&&r.user===x.user&&r.body?.upserts?.some(row=>String(row.id)===String(i?.rowId)&&row[i?.field]===i?.id));
+      if(candidates.length===1)request=candidates[0];
+    }
+    const sent=request?.body?.upserts?.find(row=>String(row.id)===String(i?.rowId));
     if (
       request?.url==='/api/collection-workspaces/'+m.owner && sent?.[i?.field]===i?.id && i?.kind === "edit" &&
       x.data.applied?.some((a) => String(a.id) === String(i.rowId))

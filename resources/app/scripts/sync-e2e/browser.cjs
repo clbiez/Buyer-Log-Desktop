@@ -68,6 +68,9 @@ async function open(
     { owner },
   );
   const page = await context.newPage();
+  // Playwright evaluate has no default timeout; keep every UI read bounded too.
+  const nativeEvaluate=page.evaluate.bind(page);
+  page.evaluate=(...args)=>R.deadline(nativeEvaluate(...args),"native browser evaluation",30000);
   page.setDefaultTimeout(30000);
   await page.goto(server.base, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => typeof switchTab === "function", null, {

@@ -124,7 +124,7 @@ async function stopCpuDiagnostic(s,label){
   if(/failure/.test(label)||Boolean(s.failed)){
     // Forensics only AFTER a recorded failure. Pause the unresponsive renderer
     // to retain its real stack/profile; never resume this run as a success.
-    try{const paused=new Promise(resolve=>cpu.once('Debugger.paused',resolve));await R.deadline(cpu.send('Debugger.pause'),'forensic pause command',2000);const detail=await R.deadline(paused,'forensic paused stack',2000);R.fs.writeFileSync(R.path.join(root,label+'-stack.json'),JSON.stringify(detail,null,2));try{const shot=await R.deadline(cpu.send('Page.captureScreenshot',{format:'png'}),'paused screenshot',3000);R.fs.writeFileSync(R.path.join(root,label+'-paused.png'),Buffer.from(shot.data,'base64'));}catch{}write({type:'forensic-renderer-paused',user:s.account.id,afterFailure:true});}catch(error){write({type:'forensic-pause-unavailable',error:error.message});}
+    try{const paused=new Promise(resolve=>cpu.once('Debugger.paused',resolve));await R.deadline(cpu.send('Debugger.pause'),'forensic pause command',2000);const detail=await R.deadline(paused,'forensic paused stack',2000);const sources=new Map();for(const frame of detail.callFrames.slice(0,6)){try{const id=frame.location.scriptId;if(!sources.has(id))sources.set(id,(await R.deadline(cpu.send('Debugger.getScriptSource',{scriptId:id}),'forensic source',2000)).scriptSource.split(String.fromCharCode(10)));frame.sourceAtPause=sources.get(id).slice(Math.max(0,frame.location.lineNumber-3),frame.location.lineNumber+4)}catch{}}R.fs.writeFileSync(R.path.join(root,label+'-stack.json'),JSON.stringify(detail,null,2));try{const shot=await R.deadline(cpu.send('Page.captureScreenshot',{format:'png'}),'paused screenshot',3000);R.fs.writeFileSync(R.path.join(root,label+'-paused.png'),Buffer.from(shot.data,'base64'));}catch{}write({type:'forensic-renderer-paused',user:s.account.id,afterFailure:true});}catch(error){write({type:'forensic-pause-unavailable',error:error.message});}
   }
   if(!hadProfile)return;
   try{const {profile}=await R.deadline(cpu.send('Profiler.stop'),"CPU diagnostic stop",5000);R.fs.writeFileSync(R.path.join(root,label+'.cpuprofile'),JSON.stringify(profile));}catch(error){write({type:"cpu-diagnostic-unavailable",user:s.account.id,error:error.message});}
@@ -145,7 +145,7 @@ async function action(s, kind, fn, expected = {}) {
   write({ type: "intent", ...op });
   try {
     if(args.diagnostics)await captureUiDiagnostic(s,op,'before');
-    const result = await fn(op);
+    const result = await R.deadline(fn(op),kind+" whole UI action",60000);
     op.elapsedMs = Date.now() - op.sentAt;
     op.result = result;
     op.finishedAt = Date.now();
@@ -258,9 +258,12 @@ async function daily(s) {
             if (route.request().method() !== "PATCH") return route.continue();
             const response = await route.fetch();
             const accepted = await response.json();
+            assert.ok(route.request().__requestId,"suppressed native ACK must retain its actual request ID");
             write({
               type: "upstream-acceptance",
-              operationId: s.currentOp?.id,
+              operationId: route.request().__operationId,
+              requestId: route.request().__requestId,
+              sessionId: s.id,
               user: s.account.id,
               status: response.status(),
               data: accepted,
@@ -608,8 +611,20 @@ async function controlledRace() {
     a.paused = b.paused = false;
   }
 }
+const originBeforeFinalImports=new Map();
+function captureBeforeFinalImports(){
+  if(originBeforeFinalImports.size)return;
+  for(const server of runtime.servers){
+    const index=server.port-runtime.manifest.port,file=R.path.join(server.root,'server/collection-workspaces/'+runtime.manifest.owner+'.json');
+    const workspace=R.fs.existsSync(file)?JSON.parse(R.fs.readFileSync(file,'utf8')):{missingBeforeFinalImport:true};
+    originBeforeFinalImports.set(server.port,workspace);
+    R.fs.writeFileSync(R.path.join(root,'pre-quiescence-device-'+index+'.json'),JSON.stringify(workspace,null,2));
+  }
+  write({type:'pre-quiescence-durable-capture',backends:originBeforeFinalImports.size,detail:'Before final UI recovery or GET imports can repair a local replica'});
+}
 async function reconcile() {
   phase = "reconciliation";
+  captureBeforeFinalImports();
   await observe();
   const m = runtime.manifest,
     states = [];
@@ -656,10 +671,16 @@ async function reconcile() {
       expected.set(String(intent.rowId), {
         value: intent.id,
         operationId: intent.id,
+        backend:request.backend,
+        requestId:x.requestId,
         at: x.at,
       });
   }
   const mismatches = [];
+  for(const [id,expect] of expected){
+    const actual=originBeforeFinalImports.get(expect.backend)?.rows?.find(row=>String(row.id)===id)?.modelKod;
+    if(actual!==expect.value)mismatches.push({kind:'origin-before-final-import',backend:expect.backend,rowId:id,expected:expect.value,actual});
+  }
   for (const state of states) {
     const ids = new Set();
     for (const row of state.workspace.rows) {
@@ -1015,6 +1036,7 @@ async function reconcile() {
         ).length,
         failed: s.failed || null,
       }));
+      if(minute>Math.floor(seconds/60))return;
       write({
         type: "minute-activity",
         minute,
@@ -1044,6 +1066,7 @@ async function reconcile() {
     }
     stopping = true;
     await Promise.all(loopPromises);
+    captureBeforeFinalImports();
     for (const session of sessions) {
       await session.page.locator("#kolTable").focus();
       await B.settle(session);
@@ -1081,15 +1104,17 @@ async function reconcile() {
         .map((o) => o.elapsedMs);
     const measuredIds = new Set(measured.map((o) => o.id)),
       observed = observations.filter((x) => measuredIds.has(x.operationId)),
-      activity = ledger.filter(
-        (x) =>
-          x.type === "minute-activity" && x.minute <= Math.floor(seconds / 60),
-      ),
+      activity = Array.from({length:Math.floor(seconds/60)},(_,index)=>{
+        const minute=index+1,windowStart=measurementAt+index*60000,windowEnd=windowStart+60000;
+        const counts=sessions.map(s=>({user:s.account.id,completedUiOperations:s.operations.filter(o=>o.finishedAt>=windowStart&&o.finishedAt<windowEnd).length,failed:s.failed||null}));
+        return {type:'minute-activity',minute,windowStart,windowEnd,active:counts.filter(c=>c.completedUiOperations>0).length,counts};
+      }),
       activityComplete =
         activity.length === Math.floor(seconds / 60) &&
         activity.every((x) => x.active === users);
     const result = {
       activityComplete,
+      activitySource:"completed native UI operations reconciled in half-open per-minute windows; periodic timer telemetry retained separately",
       activity,
       status:
         capacityLimit ||

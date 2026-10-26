@@ -156,7 +156,9 @@
       if(!host.children.length)host.remove();
     };
     const close=({immediate=false}={})=>{
-      if(closed)return;
+      // An animated close is still in the DOM. Queue eviction must be able
+      // to finish that close synchronously instead of spinning on this item.
+      if(closed){if(immediate)remove();return;}
       closed=true;
       clearTimeout(timer);
       document.removeEventListener('keydown',onDocumentKeydown);
@@ -208,6 +210,8 @@
       if(oldest===item)break;
       if(typeof oldest._uiFeedbackClose==='function')oldest._uiFeedbackClose({immediate:true});
       else oldest.remove();
+      // A stale/no-op close hook must never leave this loop without progress.
+      if(oldest.parentElement===host)oldest.remove();
     }
     const update=(nextMessage,nextOptions={})=>{
       if(closed)return close;

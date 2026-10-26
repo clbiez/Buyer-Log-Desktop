@@ -23049,6 +23049,22 @@ const KOL_STATUS_API=window.BLCollectionStatusCatalog;
 let kolStatusCatalog=KOL_STATUS_API?KOL_STATUS_API.seed():[];
 function kolNormalizeStatusCatalog(value,rows){return KOL_STATUS_API?KOL_STATUS_API.normalize(value,{rowStatuses:(Array.isArray(rows)?rows:[]).map(row=>row&&row.durum)}):(Array.isArray(value)?value:[]);}
 function kolStatusEntries(){return KOL_STATUS_API?KOL_STATUS_API.normalize(kolStatusCatalog,{rowStatuses:(Array.isArray(kolRows)?kolRows:[]).map(row=>row&&row.durum)}):[];}
+// A paint shares one normalized catalog. Looking it up for every option used
+// to rescan every workspace row and normalize the catalog again.
+function kolStatusRenderSnapshot(){
+  const entries=kolStatusEntries(),key=name=>KOL_STATUS_API?KOL_STATUS_API.key(name):String(name||'');
+  const colors=new Map(entries.map(entry=>[key(entry.name),entry.color]));
+  const options=entries.map(entry=>({name:entry.name,value:escapeHtml(entry.name),label:escapeHtml(entry.builtin?(KOL_STATUS_API?.label?KOL_STATUS_API.label(entry.name,appLang):L(entry.name)):entry.name)}));
+  const htmlBySelection=new Map();
+  return {
+    color:name=>colors.get(key(name))||'#667085',
+    options:name=>{
+      const selected=kolStatusCanonicalName(name);
+      if(!htmlBySelection.has(selected))htmlBySelection.set(selected,options.map(entry=>`<option value="${entry.value}" ${selected===entry.name?'selected':''}>${entry.label}</option>`).join(''));
+      return htmlBySelection.get(selected);
+    },
+  };
+}
 function kolStatusCanonicalName(name){return KOL_STATUS_API?.canonicalName?KOL_STATUS_API.canonicalName(name):String(name||'').trim();}
 function kolStatusEntry(name){return KOL_STATUS_API?KOL_STATUS_API.find(kolStatusEntries(),kolStatusCanonicalName(name)):null;}
 function kolStatusColor(name){return KOL_STATUS_API?KOL_STATUS_API.color(kolStatusEntries(),kolStatusCanonicalName(name)):'#667085';}
@@ -28489,6 +28505,7 @@ function renderKol(){
   const groupMembersById=kolGroupMembersIndex(kolRows);
   const collapsedSummaryCache=new Map();
   const logicalIds=new Set(logicalRows.map(row=>String(row.id)));
+  const statusRender=kolStatusRenderSnapshot();
   visibleRows.forEach((r,ri)=>{
     const tr=document.createElement('tr'),groupMembers=groupMembersById.get(String(r.modelGroupId||''))||[],isGrouped=groupMembers.length>1,isParent=isGrouped&&(r.modelGroupRole==='parent'||groupMembers[0]===r);
     const groupParent=isGrouped?(groupMembers.find(item=>item.modelGroupRole==='parent')||groupMembers[0]):null;
@@ -28577,8 +28594,8 @@ function renderKol(){
         else if(c.money&&val!=='') display='$'+kolFormatMoneyDisplay(val);
         html+=`<td class="num kolRuleReadonly${fobFallback?' kolFobFallback':''}${ruleMissing?' kolRuleMissing':''}"${rc} title="${escapeHtml(cellTitle)}" style="text-align:right;font-family:var(--ui-font-mono);background:var(--ui-surface-soft);color:${ruleMissing?'var(--ui-warning)':(fobFallback?'var(--ui-text-muted)':'var(--ui-text-secondary)')};">${ruleMissing?'<span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ':''}${escapeHtml(display)}</td>`;
       }else if(c.status){
-        const statusEntries=kolStatusEntries(),statusValue=kolStatusCanonicalName(val),statusColor=kolStatusColor(statusValue);
-        html+=`<td class="editTd kolStatusTd"${rc} style="--kol-status-color:${escapeHtml(statusColor)}"><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusEntries.map(entry=>`<option value="${escapeHtml(entry.name)}" ${statusValue===entry.name?'selected':''}>${escapeHtml(kolStatusDisplayLabel(entry.name))}</option>`).join('')}</select></td>`;
+        const statusValue=kolStatusCanonicalName(val),statusColor=statusRender.color(statusValue);
+        html+=`<td class="editTd kolStatusTd"${rc} style="--kol-status-color:${escapeHtml(statusColor)}"><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusRender.options(statusValue)}</select></td>`;
       }else if(c.select){
         html+=`<td class="editTd"${rc}><select class="editCell" data-id="${r.id}" data-k="${c.k}">${c.select.map(opt=>`<option value="${escapeHtml(opt)}" ${val===opt?'selected':''}>${escapeHtml(c.k==='delType'?transitDelTypeDisplay(opt):L(opt))}</option>`).join('')}</select></td>`;
       }else if(c.exToRetail){
