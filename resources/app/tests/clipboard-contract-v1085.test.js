@@ -51,12 +51,14 @@ test('navCopy: Orders artık CP ile aynı şekilde yalnız gerçek sütun başl�
 
 test('kolRecordImageCopyCell: görsel DOM değil KAYITTAN çözülür, CP ile aynı dönüştürücüyü kullanır', () => {
   const fn = extractFunction(APP, 'kolRecordImageCopyCell');
-  assert.match(fn, /canonicalModelImageSource\(row\.plmId,row\.colourCode,row\.colour\)/);
-  assert.match(fn, /row\.img\|\|\(row\.imgRef\?`\$\{COLLECTION_IMAGE_API\}/);
+  // Koleksiyon birden fazla kayıt-kaynaklı görseli sırayla dener;
+  // eskimiş URL başarısız olsa bile geçerli PLM görseline düşebilmelidir.
+  assert.match(fn, /for\(const source of kolModelImageSources\(row\)\)/);
   assert.match(fn, /_copyImageDataUrlFor\(\{modelId,colourCode,source,fallbackSource:source\}\)/);
-  // Eksik görsel kopyayı DURDURMAZ: null döner, satır atılmaz.
-  assert.match(fn, /if\(!source\) return null;/);
-  assert.match(fn, /if\(!dataUrl\|\|!\/\^data:image\\\/\/i\.test\(dataUrl\)\) return null;/);
+  assert.match(fn, /if\(\/\^data:image/);
+  assert.match(fn, /dataUrl='';/);
+  // Hiçbir kaynak resme dönüştürülemezse kopyalama devam eder, görsel hücresi boş kalır.
+  assert.match(fn, /if\(!dataUrl\)return null;/);
 });
 
 test('_copyImageDataUrlFor: CP (DOM) ve Koleksiyon (kayıt) AYNI dönüştürücüyü paylaşıyor', () => {
