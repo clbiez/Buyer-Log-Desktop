@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "3c0eb22e2e4c7bbee9e2b935e37e12395955d2ae",
-  "release_notes": "TR: Buyer Log 7.0.302 — 7.0.300 sonrası birleştirilen Motion+ / Thinking Orbs, CP ve Orders kişisel not alanları, kopyalama-yapıştırma, Koleksiyon görünümü, tablolar ve güncelleme altyapısı iyileştirmeleri; Windows tam regresyonunda tespit edilen dört engelin düzeltmesi.\nEN: Buyer Log 7.0.302 — improvements merged since 7.0.300 to Motion+ / Thinking Orbs, private CP and Orders notes, copy and paste, Collection, tables and the updater; fixes for four full Windows regression blockers.",
-  "request_id": "7.0.302-test-after-full-regression-fixes-20261026"
+  "commit_sha": "50c9cf204d8d30bbada16cc41f8b316a1c8bf95d",
+  "release_notes": "TR: Buyer Log 7.0.303 — 7.0.300 sonrasındaki Motion+ ve Thinking Orbs, CP ve Orders kişisel notları, çoklu kopyalama/yapıştırma, Koleksiyon ve tablo görünümü, güncelleme altyapısı iyileştirmeleri. Tam Windows regresyonunu engelleyen eski test sözleşmeleri güncel davranışa uyarlandı; kişisel not kaynak tanımı tamamlandı.\nEN: Buyer Log 7.0.303 — post-7.0.300 Motion+ and Thinking Orbs, private CP and Orders notes, multi-cell copy/paste, Collection and table UI, and updater improvements. Legacy regression assertions were aligned with the current behavior and the personal-note source catalogue was completed.",
+  "request_id": "7.0.303-test-after-windows-regression-fixes-20261026"
 }
