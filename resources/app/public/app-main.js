@@ -1823,7 +1823,7 @@ function showSourceFilterRequiredNotice(status,message){
   // Bu uyarı kullanıcıyı yenilemeden alıkoyan bir engeldir; toast ve merkez
   // bildirimleri gibi geçmişe de yazılır, yoksa modal kapatıldıktan sonra
   // "neden veri gelmedi?" sorusunun izi hiçbir yerde kalmıyordu (v6.14).
-  notificationHistoryAdd(`${text.title}: ${text.detail}`,'toast');
+  notificationHistoryAdd(`${text.title}: ${text.detail}`,'toast',{severity:'warning',scope:'source-filter-required'});
   const targets=Array.isArray(status&&status.missingTargets)?status.missingTargets:[];
   const preferredTarget=targets[0]||'cp';
   document.getElementById('_sourceFilterRequiredModal')?.remove();
@@ -13120,17 +13120,18 @@ function showWarningDetailTable(detail){
   ov.addEventListener('click',e=>{if(e.target===ov||e.target.closest('.warningDetailClose'))ov.remove();});
   document.body.appendChild(ov);
 }
-function showWarnDetails(){
+function showWarnDetails(warnings=appWarnings){
+  const visibleWarnings=Array.isArray(warnings)?warnings:appWarnings;
   document.getElementById('warnOverlay')?.remove();
   const ov = document.createElement('div');
   ov.id='warnOverlay'; ov.className='warnOverlay';ov.dataset.uiMigrated='dialog';
   ov.innerHTML = `<div class="modalCard warningListCard" role="dialog" aria-modal="true" aria-labelledby="warningListTitle">
-    <div class="modalTitle warningListTitle" id="warningListTitle">${escapeHtml(appLang==='en'?`Warnings (${appWarnings.length})`:`Uyarılar (${appWarnings.length})`)}
+    <div class="modalTitle warningListTitle" id="warningListTitle">${escapeHtml(appLang==='en'?`Warnings (${visibleWarnings.length})`:`Uyarılar (${visibleWarnings.length})`)}
       <button type="button" class="warnClose" aria-label="${escapeHtml(appLang==='en'?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <ol class="warningList">
-      ${appWarnings.map((w,index)=>{
+      ${visibleWarnings.map((w,index)=>{
         const hasDetail=appWarningDetails.has(warningDetailKey(w));
-        return `<li data-warning-index="${index}" class="${hasDetail?'hasDetail':''}"${hasDetail?` title="${escapeHtml(appLang==='en'?'Double-click to view the related rows':'İlgili satırları görmek için çift tıkla')}"`:''}><span>${escapeHtml(w)}</span>${hasDetail?`<small>${escapeHtml(appLang==='en'?'Double-click for details':'Detay için çift tıkla')}</small>`:''}</li>`;
+        return `<li data-warning-index="${index}" class="${hasDetail?'hasDetail':''}"${hasDetail?` role="button" tabindex="0" title="${escapeHtml(appLang==='en'?'Click to view the related rows':'İlgili satırları görmek için tıkla')}"`:''}><span>${escapeHtml(w)}</span>${hasDetail?`<small>${escapeHtml(appLang==='en'?'Click for details':'Detay için tıkla')}</small>`:''}</li>`;
       }).join('')}
     </ol>
   </div>`;
@@ -13138,11 +13139,15 @@ function showWarnDetails(){
   const close=()=>{releaseKeyboard();ov.remove();};
   releaseKeyboard=window.BLUI?.bindDialogKeyboard(ov,{onEscape:close})||(()=>{});
   ov.addEventListener('click', e=>{ if(e.target===ov || e.target.closest('.warnClose')) close(); });
-  ov.addEventListener('dblclick',e=>{
+  ov.addEventListener('click',e=>{
     const item=e.target.closest('.warningList li.hasDetail');if(!item)return;
-    const message=appWarnings[Number(item.dataset.warningIndex)];
+    const message=visibleWarnings[Number(item.dataset.warningIndex)];
     const detail=appWarningDetails.get(warningDetailKey(message));
-    if(detail){e.preventDefault();e.stopPropagation();showWarningDetailTable(detail);}
+    if(detail){e.preventDefault();e.stopPropagation();close();showWarningDetailTable(detail);}
+  });
+  ov.addEventListener('keydown',e=>{
+    const item=e.target.closest('.warningList li.hasDetail');
+    if(item&&(e.key==='Enter'||e.key===' ')){e.preventDefault();item.click();}
   });
   document.body.appendChild(ov);
 }
@@ -13657,16 +13662,32 @@ document.getElementById('sourceUpdateNotesBtn')?.addEventListener('click',()=>op
 const NOTIFICATION_HISTORY_KEY='lcw.notifications.history.v1';
 const NOTIFICATION_HISTORY_LIMIT=250;
 let _notificationHistoryState=null;
-function notificationHistoryText(){const en=appLang==='en';return{title:en?'Notification History':'Bildirim Geçmişi',sub:en?'Recent messages shown by Buyer Log':'Buyer Log tarafından gösterilen son mesajlar',search:en?'Search notifications…':'Bildirimlerde ara…',empty:en?'No notifications yet.':'Henüz bildirim yok.',noMatch:en?'No matching notifications.':'Eşleşen bildirim yok.',clear:en?'Clear all':'Tümünü temizle',confirm:en?'Clear the entire notification history?':'Tüm bildirim geçmişi temizlensin mi?',close:en?'Close':'Kapat',count:n=>en?`${n} notification(s)`:`${n} bildirim`,toast:en?'Quick notification':'Kısa bildirim',center:en?'Important notification':'Önemli bildirim',remove:en?'Remove notification':'Bildirimi kaldır'};}
+function notificationHistoryText(){const en=appLang==='en';return{title:en?'Notification History':'Bildirim Geçmişi',sub:en?'Important alerts and warnings':'Önemli bildirimler ve uyarılar',search:en?'Search notifications…':'Bildirimlerde ara…',empty:en?'No important notifications.':'Önemli bildirim bulunmuyor.',noMatch:en?'No matching notifications.':'Eşleşen bildirim yok.',clear:en?'Clear all':'Tümünü temizle',confirm:en?'Clear the entire notification history?':'Tüm bildirim geçmişi temizlensin mi?',close:en?'Close':'Kapat',count:n=>en?`${n} notification(s)`:`${n} bildirim`,toast:en?'Notification':'Bildirim',center:en?'Important notification':'Önemli bildirim',remove:en?'Remove notification':'Bildirimi kaldır'};}
 function notificationHistoryLoad(){if(_notificationHistoryState)return _notificationHistoryState;let state=null;try{state=JSON.parse(BLStorage.getItem(NOTIFICATION_HISTORY_KEY)||'null');}catch(_){}if(!state||!Array.isArray(state.items))state={items:[]};state.items=state.items.filter(item=>item&&item.message).slice(0,NOTIFICATION_HISTORY_LIMIT).map(item=>({...item,read:item.read===true}));_notificationHistoryState=state;return state;}
 function notificationHistorySave(){try{BLStorage.setItem(NOTIFICATION_HISTORY_KEY,JSON.stringify(notificationHistoryLoad()));return true;}catch(_){return false;}}
 function notificationHistoryUnread(){return notificationHistoryLoad().items.reduce((count,item)=>count+(item.read?0:1),0);}
 function notificationHistoryUpdateBadge(){const button=document.getElementById('notificationsBtn'),badge=document.getElementById('notificationUnreadBadge'),count=notificationHistoryUnread(),t=notificationHistoryText();if(badge){badge.hidden=!count;badge.textContent=count>99?'99+':String(count);}if(button){button.classList.toggle('hasUnread',count>0);button.setAttribute('aria-label',count?`${t.title} (${count})`:t.title);}}
-function notificationHistoryAdd(message,kind='toast'){const text=String(message==null?'':message).replace(/\s+/g,' ').trim().slice(0,5000);if(!text)return;const state=notificationHistoryLoad();state.items.unshift({id:`notification-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`,message:text,kind:kind==='center'?'center':'toast',createdAt:new Date().toISOString(),read:false});if(state.items.length>NOTIFICATION_HISTORY_LIMIT)state.items.length=NOTIFICATION_HISTORY_LIMIT;notificationHistorySave();notificationHistoryUpdateBadge();}
+function notificationHistoryAdd(message,kind='toast',options={}){
+  const requested=String(options.severity||'info');
+  const severity=requested==='info'&&/(?:\b(?:failed|failure|error|unable to|could not)\b|hata|başarısız|kaydedilemedi|yüklenemedi|açılamadı|silinemedi|oluşturulamadı)/i.test(String(message))?'error':requested;
+  // Routine success/info toasts must not fill the durable notification history.
+  if(options.persist===false||(!['warning','error'].includes(severity)&&options.persist!==true))return false;
+  const text=String(message==null?'':message).replace(/\s+/g,' ').trim().slice(0,5000);if(!text)return false;
+  const warnings=Array.isArray(options.warnings)?[...new Set(options.warnings.map(w=>String(w||'').trim().slice(0,1000)).filter(Boolean))].slice(0,250):[];
+  const scope=String(options.scope||'').slice(0,80);
+  const fingerprint=scope?JSON.stringify([severity,warnings.length?warnings:text]):'';
+  const state=notificationHistoryLoad();
+  if(scope&&state.items.some(item=>item.scope===scope&&item.fingerprint===fingerprint))return false;
+  const entry={id:'notification-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7),message:text,kind:kind==='center'?'center':'toast',severity,createdAt:new Date().toISOString(),read:false};
+  if(warnings.length)entry.warnings=warnings;
+  if(scope){entry.scope=scope;entry.fingerprint=fingerprint;}
+  state.items.unshift(entry);if(state.items.length>NOTIFICATION_HISTORY_LIMIT)state.items.length=NOTIFICATION_HISTORY_LIMIT;
+  notificationHistorySave();notificationHistoryUpdateBadge();return true;
+}
 function notificationHistoryDate(value){const date=new Date(value);if(Number.isNaN(date.getTime()))return'';return new Intl.DateTimeFormat(appLang==='en'?'en-GB':'tr-TR',{dateStyle:'medium',timeStyle:'short'}).format(date);}
-function renderNotificationHistoryList(query=''){const host=document.getElementById('notificationHistoryList'),countEl=document.getElementById('notificationHistoryCount');if(!host)return;const t=notificationHistoryText(),all=notificationHistoryLoad().items,q=String(query||'').trim().toLocaleLowerCase('tr-TR'),items=q?all.filter(item=>item.message.toLocaleLowerCase('tr-TR').includes(q)):all;if(countEl)countEl.textContent=t.count(items.length);if(!items.length){host.innerHTML=`<div class="verHistEmpty">${escapeHtml(all.length?t.noMatch:t.empty)}</div>`;return;}host.innerHTML=items.map(item=>`<article class="notificationHistoryItem${item.read?'':' isUnread'}" data-notification-id="${escapeHtml(item.id)}"><span class="notificationHistoryMarker" aria-hidden="true"></span><div class="notificationHistoryCopy"><div class="notificationHistoryMeta"><span>${escapeHtml(item.kind==='center'?t.center:t.toast)}</span><time datetime="${escapeHtml(item.createdAt||'')}">${escapeHtml(notificationHistoryDate(item.createdAt))}</time></div><p>${escapeHtml(item.message)}</p></div><button type="button" class="notificationHistoryRemove" data-notification-remove="${escapeHtml(item.id)}" title="${escapeHtml(t.remove)}" aria-label="${escapeHtml(t.remove)}"><svg class="ic"><use href="#i-trash"/></svg></button></article>`).join('');}
+function renderNotificationHistoryList(query=''){const host=document.getElementById('notificationHistoryList'),countEl=document.getElementById('notificationHistoryCount');if(!host)return;const t=notificationHistoryText(),all=notificationHistoryLoad().items,q=String(query||'').trim().toLocaleLowerCase('tr-TR'),items=q?all.filter(item=>(item.message+' '+(Array.isArray(item.warnings)?item.warnings.join(' '):'')).toLocaleLowerCase('tr-TR').includes(q)):all;if(countEl)countEl.textContent=t.count(items.length);if(!items.length){host.innerHTML=`<div class="verHistEmpty">${escapeHtml(all.length?t.noMatch:t.empty)}</div>`;return;}host.innerHTML=items.map(item=>`<article class="notificationHistoryItem${item.read?'':' isUnread'}" data-notification-id="${escapeHtml(item.id)}"><span class="notificationHistoryMarker" aria-hidden="true"></span><div class="notificationHistoryCopy"><div class="notificationHistoryMeta"><span>${escapeHtml(item.kind==='center'?t.center:t.toast)}</span><time datetime="${escapeHtml(item.createdAt||'')}">${escapeHtml(notificationHistoryDate(item.createdAt))}</time></div>${(item.severity==='warning'||(Array.isArray(item.warnings)&&item.warnings.length>0)||/\b(?:warnings?|uyar[ıi])\b/i.test(item.message))?'<button type="button" class="notificationHistoryOpen" data-notification-open="'+escapeHtml(item.id)+'" title="'+escapeHtml(appLang==='en'?'View warning details':'Uyarı detaylarını göster')+'">'+escapeHtml(item.message)+'</button>':'<p>'+escapeHtml(item.message)+'</p>'}</div><button type="button" class="notificationHistoryRemove" data-notification-remove="${escapeHtml(item.id)}" title="${escapeHtml(t.remove)}" aria-label="${escapeHtml(t.remove)}"><svg class="ic"><use href="#i-trash"/></svg></button></article>`).join('');}
 function notificationHistoryMarkAllRead(){const state=notificationHistoryLoad();let changed=false;state.items.forEach(item=>{if(!item.read){item.read=true;changed=true;}});if(changed)notificationHistorySave();notificationHistoryUpdateBadge();}
-function openNotificationHistory(){const t=notificationHistoryText();document.getElementById('notificationHistoryModal')?.remove();notificationHistoryMarkAllRead();const modal=document.createElement('div');modal.id='notificationHistoryModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';modal.innerHTML=`<div class="modalCard verHistCard notificationHistoryCard" role="dialog" aria-modal="true" aria-labelledby="notificationHistoryTitle"><div class="verHistTop"><div><h2 id="notificationHistoryTitle">${escapeHtml(t.title)}</h2><p class="verHistSub">${escapeHtml(t.sub)}</p></div><button type="button" class="verHistClose" data-notification-close title="${escapeHtml(t.close)}" aria-label="${escapeHtml(t.close)}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="verHistTools"><input type="search" id="notificationHistorySearch" placeholder="${escapeHtml(t.search)}" autocomplete="off"><span class="verHistCount" id="notificationHistoryCount"></span><button type="button" class="tbtn" id="notificationUpdateHistoryBtn"><svg class="ic"><use href="#i-reload"/></svg>${escapeHtml(appLang==='en'?'Update history':'Güncelleme geçmişi')}</button><button type="button" class="notificationHistoryClear" id="notificationHistoryClear"><svg class="ic"><use href="#i-trash"/></svg>${escapeHtml(t.clear)}</button></div><div class="notificationHistoryList" id="notificationHistoryList"></div><div class="verHistFoot"><button type="button" class="tbtn" data-notification-close>${escapeHtml(t.close)}</button></div></div>`;document.body.appendChild(modal);renderNotificationHistoryList('');const close=()=>{window.BLLayerSystem?.closeDialog(modal);modal.remove();};window.BLLayerSystem?.openDialog(modal,{onClose:close});modal.addEventListener('click',event=>{if(event.target===modal){close();return;}if(event.target.closest('[data-notification-close]')){close();return;}const remove=event.target.closest('[data-notification-remove]');if(remove){const state=notificationHistoryLoad();state.items=state.items.filter(item=>item.id!==remove.dataset.notificationRemove);notificationHistorySave();renderNotificationHistoryList(modal.querySelector('#notificationHistorySearch')?.value||'');notificationHistoryUpdateBadge();}});// v7.26 — "Güncelleme geçmişi" artık Kaynak Veri şeridinde değil, bildirim
+function openNotificationHistory(){const t=notificationHistoryText();document.getElementById('notificationHistoryModal')?.remove();notificationHistoryMarkAllRead();const modal=document.createElement('div');modal.id='notificationHistoryModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';modal.innerHTML=`<div class="modalCard verHistCard notificationHistoryCard" role="dialog" aria-modal="true" aria-labelledby="notificationHistoryTitle"><div class="verHistTop"><div><h2 id="notificationHistoryTitle">${escapeHtml(t.title)}</h2><p class="verHistSub">${escapeHtml(t.sub)}</p></div><button type="button" class="verHistClose" data-notification-close title="${escapeHtml(t.close)}" aria-label="${escapeHtml(t.close)}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="verHistTools"><input type="search" id="notificationHistorySearch" placeholder="${escapeHtml(t.search)}" autocomplete="off"><span class="verHistCount" id="notificationHistoryCount"></span><button type="button" class="tbtn" id="notificationUpdateHistoryBtn"><svg class="ic"><use href="#i-reload"/></svg>${escapeHtml(appLang==='en'?'Update history':'Güncelleme geçmişi')}</button><button type="button" class="notificationHistoryClear" id="notificationHistoryClear"><svg class="ic"><use href="#i-trash"/></svg>${escapeHtml(t.clear)}</button></div><div class="notificationHistoryList" id="notificationHistoryList"></div><div class="verHistFoot"><button type="button" class="tbtn" data-notification-close>${escapeHtml(t.close)}</button></div></div>`;document.body.appendChild(modal);renderNotificationHistoryList('');const close=()=>{window.BLLayerSystem?.closeDialog(modal);modal.remove();};window.BLLayerSystem?.openDialog(modal,{onClose:close});modal.addEventListener('click',event=>{if(event.target===modal){close();return;}if(event.target.closest('[data-notification-close]')){close();return;}const remove=event.target.closest('[data-notification-remove]');if(remove){const state=notificationHistoryLoad();state.items=state.items.filter(item=>item.id!==remove.dataset.notificationRemove);notificationHistorySave();renderNotificationHistoryList(modal.querySelector('#notificationHistorySearch')?.value||'');notificationHistoryUpdateBadge();return;}const open=event.target.closest('[data-notification-open]');if(open){const item=notificationHistoryLoad().items.find(x=>x.id===open.dataset.notificationOpen);if(item){const warnings=Array.isArray(item.warnings)&&item.warnings.length?item.warnings:(/^\s*\d+\s+(?:warnings?|uyar[ıi])/i.test(item.message)&&appWarnings.length?appWarnings:[item.message]);close();showWarnDetails(warnings);}}});// v7.26 — "Güncelleme geçmişi" artık Kaynak Veri şeridinde değil, bildirim
 // penceresinin içinde: iki ayrı yerde iki ayrı geçmiş aramak yerine tek yer.
 modal.querySelector('#notificationUpdateHistoryBtn')?.addEventListener('click',()=>{close();openSourceRefreshHistory();});
 modal.querySelector('#notificationHistorySearch').addEventListener('input',event=>renderNotificationHistoryList(event.target.value));modal.querySelector('#notificationHistoryClear').addEventListener('click',()=>{if(!notificationHistoryLoad().items.length||!confirm(t.confirm))return;notificationHistoryLoad().items=[];notificationHistorySave();renderNotificationHistoryList('');notificationHistoryUpdateBadge();});setTimeout(()=>modal.querySelector('#notificationHistorySearch')?.focus(),0);}
@@ -13677,7 +13698,7 @@ notificationHistoryUpdateBadge();
 // kendiliginden kapanir ve tiklama/Esc ile de kapatilabilir.
 function showCenterNotice(msg, opts){
   const o=opts||{};
-  notificationHistoryAdd(msg,'center');
+  notificationHistoryAdd(msg,'center',{severity:o.kind||(o.icon===false?'info':'success'),persist:o.persist});
   const notify=window.BLUI?.notify;
   if(typeof notify==='function'){
     // Bir modal/overlay açıkken merkez bildirim onun üzerine/içine düşüyordu;
@@ -13712,7 +13733,7 @@ function showCenterNotice(msg, opts){
 }
 function showToast(msg,opts){
   const o=opts||{};
-  notificationHistoryAdd(msg,'toast');
+  notificationHistoryAdd(msg,'toast',{severity:o.kind||'info',persist:o.persist});
   const notify=window.BLUI?.notify;
   if(typeof notify==='function')return notify(msg,{...o,placement:'edge',kind:o.kind||'info',language:appLang});
   let el = document.getElementById('_toast');
@@ -13731,7 +13752,6 @@ function notifyFileReady({filename, path, mode='created', onOpen, onReveal}={}){
   const en=appLang==='en';
   const label=mode==='downloaded'?(en?'File downloaded':'Dosya indirildi'):(en?'File created':'Dosya oluşturuldu');
   const text=String(filename||'');
-  notificationHistoryAdd(`${label}: ${text}`,'toast');
   const notify=window.BLUI?.notify;
   if(typeof notify!=='function'){showToast(`${label}: ${text}`);return()=>{};}
   const actions=[];
@@ -14861,7 +14881,7 @@ async function waitForRefreshJob(expectedJob=null){
         warnDetails.push(...data.fabricHeaderInfo.warningDetails);
       }
       setWarnings(warnList,warnDetails);
-      if(warnList.length) showToast(appLang==='en'?`${warnList.length} warnings — click the warning counter in the status bar for details.`:`${warnList.length} uyarı var — detay için durum satırındaki uyarı sayacına tıklayın.`);
+      if(warnList.length){const message=appLang==='en'?`${warnList.length} warnings — click the notification to view details.`:`${warnList.length} uyarı — detayları görmek için bildirime tıklayın.`;notificationHistoryAdd(message,'toast',{severity:'warning',scope:'refresh-warnings',warnings:warnList});showToast(message,{kind:'warning',persist:false});}
     }
     // Sunucu hedefleri filtre bağının GERÇEK üyeleriyle genişletir; istemcinin
     // tahmini eskiyse (grup yeni düzenlendiyse) sunucunun listesi esas alınır.

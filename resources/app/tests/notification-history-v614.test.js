@@ -18,12 +18,12 @@ test('v6.14 places Notification History immediately left of Notebook', () => {
   assert.match(INDEX, /id="i-bell"/);
 });
 
-test('v6.14 records both transient toast and centre notices', () => {
+test('History classifies toast and centre notices by severity', () => {
   const toast = APP.slice(APP.indexOf('function showToast'), APP.indexOf('const TABLE_META'));
   const center = APP.slice(APP.indexOf('function showCenterNotice'), APP.indexOf('function showToast'));
-  assert.match(toast, /notificationHistoryAdd\(msg,'toast'\)/);
-  assert.match(center, /notificationHistoryAdd\(msg,'center'\)/);
-  assert.match(APP, /notificationHistoryAdd\(`\$\{text\.title\}: \$\{text\.detail\}`,'toast'\)/);
+  assert.match(toast, /notificationHistoryAdd\(msg,'toast',\{severity:o\.kind/);
+  assert.match(center, /notificationHistoryAdd\(msg,'center',\{severity:o\.kind/);
+  assert.match(APP, /scope:'source-filter-required'/);
   assert.match(APP, /NOTIFICATION_HISTORY_LIMIT=250/);
 });
 
