@@ -242,14 +242,24 @@
     event?.preventDefault?.();
     event?.stopImmediatePropagation?.();
     const result=await entry.config.applyPaste(plan,data.range,entry.state);
-    // Excel gibi: yapıştırılan alan seçili kalır.
+    // 7.0.300 toplu işlem önizlemesi asenkrondur. İptal/ret sonrasında
+    // seçimi ve düzenleyici odağını değiştirmek bir sonraki Ctrl+C/V'yi bozar.
+    if(result===false||result?.ok===false)return false;
+    // Excel gibi: başarıyla yapıştırılan alan seçili kalır.
     const target=plan.target;
     const first=target&&cellAt(entry,target.startRow,target.startColumn);
     const last=target&&cellAt(entry,target.endRow,target.endColumn);
     if(first&&last){entry.state.selectionAnchor=entry.state.activeCell=first;entry.state.selectionFocus=last;}
     afterRender(entry.tableId);
-    root.document?.getElementById?.(entry.tableId)?.focus?.({preventScroll:true});
-    return result!==false&&result?.ok!==false;
+    const table=root.document?.getElementById?.(entry.tableId);
+    const focused=root.document?.activeElement;
+    // Onay makbuzu hâlâ açıkken veya kullanıcı başka alana geçmişken,
+    // tabloya focus vermek modal/yerel metin kopyalama davranışını bozmasın.
+    const bulkDialogOpen=Boolean(root.document?.querySelector?.('.blBulkOverlay,.kolSpreadsheetPasteOverlay'));
+    if(!bulkDialogOpen&&entryIsActive(entry)&&(!focused||focused===root.document?.body||focused===table||table?.contains?.(focused))){
+      table?.focus?.({preventScroll:true});
+    }
+    return true;
   }
 
   function clipboardText(event){
@@ -318,9 +328,13 @@
     root.document.addEventListener('pointerup',()=>{dragging=null;},true);
     // Ctrl+V: yalnız applyPaste tanımlayan tablolar (ör. CP) yapıştırma alır.
     root.document.addEventListener('paste',event=>{
+      if(event.defaultPrevented)return;
       const text=clipboardText(event);if(!text)return;
       const target=event.target;
       if(nativeEditingTarget(target)){
+        // Serbest metin/not textarea'sındaki satır sonu ve TAB karakterleri
+        // hücre sınırı değildir; tarayıcının yerel yapıştırmasını koru.
+        if(String(target?.tagName||'').toUpperCase()==='TEXTAREA')return;
         // Hücre düzenleyicisinde tek değer yerel olarak yapıştırılır; sekme veya
         // satır sonu içeren (Excel'den çoklu hücre) metin bu hücreden başlayarak dağıtılır.
         if(!isMultiCellText(text))return;
@@ -330,7 +344,10 @@
         setFocus(entry,cell,{focus:false});
         void pasteEntry(entry,event,text);return;
       }
-      const entry=activeEntry();
+      // Birden çok tabloda aralık tutulabilir: olayın geldiği tablo,
+      // arkada kalmış en son aktif aralıktan önce gelir.
+      const direct=tableEntryFromCell(target?.closest?.('tbody td[data-key]'));
+      const entry=direct&&entryIsActive(direct)&&direct.state.activeCell?direct:activeEntry();
       if(!entry||typeof entry.config.applyPaste!=='function')return;
       const table=root.document.getElementById(entry.tableId);
       if(target!==table&&!table?.contains?.(target)&&target!==root.document.body)return;
