@@ -148,7 +148,8 @@ test('Operations module CSS owns layout only; loading avoids decorative canvas',
   if(/var\(--(?:acc|card|ink|line|muted|fs-|sans|head|mono|r-)/.test(d.value))failures.push({file,...d});
  }
  assert.deepEqual(failures,[]);
- assert.doesNotMatch(read('index.html'),/<script[^>]*thinking-orb-/);
+ assert.match(read('index.html'),/<script[^>]*thinking-orb-breathing\.js/);
+ assert.match(read('index.html'),/<script[^>]*thinking-orb-working\.js/);
  for(const file of ['automations.js','lcwai-assistant.js','user-management.js','plm-sync-guide.js'])assert.match(read(file),/BLLayerSystem\?\.openDialog/);
  assert.match(read('lcwai-chat.js'),/lcwaiMsg is-user[^]*?lcwaiMsgWho/);
 });
@@ -172,7 +173,7 @@ test('Remaining module CSS owns layout only; nested output forms use the shared 
 });
 
 test('every module and shell layout file is free of private appearance definitions',()=>{
- const owners=new Set(['ui-tokens.css','ui-components.css','ui-startup.css','giris.css','ui-motion.css']);const failures=[];
+ const owners=new Set(['ui-tokens.css','ui-components.css','ui-startup.css','giris.css','ui-motion.css','thinking-orbs.css']);const failures=[];
  for(const file of OWNERS.filter(f=>!owners.has(f)))for(const d of declarations(read(file))){
   // Concurrent header-tracking change: permit only the approved header-only divider.
   if(file==='table-header-tracking.css'&&d.prop==='border-inline-end'&&
