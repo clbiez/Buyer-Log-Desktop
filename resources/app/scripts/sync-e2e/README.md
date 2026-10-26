@@ -20,7 +20,8 @@ module and Chromium; do not install them into the application release bundle.
 In the recorded cloud environment:
 
 ```bash
-export BUYER_LOG_PLAYWRIGHT_MODULE=/opt/codex/cua_node/lib/node_modules/playwright
+npm install --prefix /workspace/scratch/bl-playwright-aligned --no-audit --no-fund playwright@1.62.0
+export BUYER_LOG_PLAYWRIGHT_MODULE=/workspace/scratch/bl-playwright-aligned/node_modules/playwright
 export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 # From resources/app. Each --root must be NEW; existing evidence is never reset.
 node scripts/sync-e2e/run.cjs --users=3 --backends=3 --seconds=65 --seed=20261025 --root=/tmp/bl-short-new
@@ -93,3 +94,7 @@ is introduced. No TEST/STABLE publisher, production user data, COM repair or
 external corporate source is used.
 
 Collection has its own five-second remote-file poll for recently active users, even when the bulk SYNC schedule is manual. The load driver additionally invokes real manual SYNC rounds after moderator changes. GET imports notify SSE at the actual application boundary. Both pull CAS and the normal workspace lease are used so an intervening local write cannot be overwritten by a higher remote revision. No global calculation snapshot policy is added.
+
+Final driver checks the Chromium major/minor/build branch against Playwright metadata before use. The cloud browser is 151.0.7922.173; Playwright 1.62.0 targets 151.0.7922.34 (same branch, different security patch). Earlier 1.57/151 runs are retained as failed or scoped evidence, not silently reclassified. Matching 143 browser download was denied by enforced network policy; no bypass was used. The final driver was installed from the permitted NPM registry.
+
+Rejected shared drafts can be explicitly discarded using the real bilingual recovery button and native confirmation. The driver logs these simulated user choices separately; it does not replace server acceptance or reset internal state to manufacture convergence.

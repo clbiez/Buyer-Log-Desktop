@@ -22310,8 +22310,8 @@ async function kolLoadAcceptedWorkspaceAfterConflict(){
     showToast(appLang==='en'?'Wait for the current save to finish, then retry.':'Geçerli kayıt tamamlansın, ardından yeniden deneyin.');return false;
   }
   if(!confirm(appLang==='en'
-    ?'Discard the unsaved local draft for this Collection and load the data accepted by this device’s server? Shared delivery status is shown separately. Accepted server records are not undone.'
-    :'Bu Koleksiyon için kaydedilmemiş yerel taslaktan vazgeçip bu cihazın sunucusunda kabul edilmiş veriyi yüklemek istiyor musunuz? Paylaşıma teslim durumu ayrıca gösterilir. Kabul edilmiş sunucu kayıtları geri alınmaz.'))return false;
+    ?'Discard the unsaved local draft for this Collection and load the data accepted by this device’s server? Shared delivery status is shown separately. Saved server records are not deleted.'
+    :'Bu Koleksiyon için kaydedilmemiş yerel taslaktan vazgeçip bu cihazın sunucusunda kabul edilmiş veriyi yüklemek istiyor musunuz? Paylaşıma teslim durumu ayrıca gösterilir. Kaydedilmiş sunucu kayıtları silinmez.'))return false;
   const readRevision=kolWorkspaceRevision,readBaseline=kolBaseline,readChange=JSON.stringify(kolCollectChanges());
   kolWorkspaceRecoveryOwnerId=ownerId;kolRenderSaveFeedback();
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
@@ -22319,6 +22319,7 @@ async function kolLoadAcceptedWorkspaceAfterConflict(){
     const res=await fetch(`/api/collection-workspaces/${encodeURIComponent(ownerId)}`,{cache:'no-store',signal:controller.signal});
     const data=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(data.error||res.statusText);
+    if(!data.workspace||String(data.workspace.ownerId)!==String(ownerId)||!Array.isArray(data.workspace.rows)||!Array.isArray(data.workspace.manufacturers)||!Array.isArray(data.workspace.customColumns)||!Number.isSafeInteger(data.workspace._revision)||data.workspace._revision<0||!data.access||typeof data.access!=='object')throw new Error(appLang==='en'?'The server response does not contain a valid accepted workspace.':'Sunucu yanıtı geçerli bir kabul edilmiş çalışma alanı içermiyor.');
     if(kolWorkspaceOwnerId!==ownerId||kolWorkspaceRevision!==readRevision||kolBaseline!==readBaseline||kolWorkspaceSaving||kolWorkspaceSaveTimer||kolWorkspacePending||JSON.stringify(kolCollectChanges())!==readChange||document.activeElement?.dataset?.kolUncommitted==='1'){
       showToast(appLang==='en'?'The view changed while loading. Your draft is preserved; review and retry.':'Yükleme sırasında görünüm değişti. Taslağınız korundu; kontrol edip yeniden deneyin.');return false;
     }

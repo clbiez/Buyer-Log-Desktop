@@ -114,18 +114,19 @@ async function observe() {
 }
 async function captureUiDiagnostic(s,op,stage){
   try{
-    const state=await R.deadline(s.page.evaluate(()=>({url:location.href,owner:typeof kolWorkspaceOwnerId==='undefined'?null:kolWorkspaceOwnerId,active:document.activeElement?.outerHTML.slice(0,250),search:document.getElementById('kolSearch')?.value,rows:typeof kolRows==='undefined'?null:kolRows.map(r=>({id:r.id,model:r.modelKod})),editors:[...document.querySelectorAll('#kolTable .editCell[data-k="modelKod"]')].map(e=>({id:e.dataset.id,value:e.value})),dirty:typeof kolHasDirtyWorkspace==='function'?kolHasDirtyWorkspace():null,renderPending:typeof kolRemoteRenderPendingOwner==='undefined'?null:kolRemoteRenderPendingOwner})),"UI diagnostic",1500);
+    const state=await R.deadline(s.page.evaluate(()=>({url:location.href,owner:typeof kolWorkspaceOwnerId==='undefined'?null:kolWorkspaceOwnerId,active:document.activeElement?.outerHTML.slice(0,250),search:document.getElementById('kolSearch')?.value,rows:typeof kolRows==='undefined'?null:kolRows.map(r=>({id:r.id,model:r.modelKod})),editors:[...document.querySelectorAll('#kolTable .editCell[data-k="modelKod"]')].map(e=>({id:e.dataset.id,value:e.value})),dirty:typeof kolHasDirtyWorkspace==='function'?kolHasDirtyWorkspace():null,renderPending:typeof kolRemoteRenderPendingOwner==='undefined'?null:kolRemoteRenderPendingOwner,saving:typeof kolWorkspaceSaving==='undefined'?null:kolWorkspaceSaving,pending:typeof kolWorkspacePending==='undefined'?null:kolWorkspacePending,saveTimer:typeof kolWorkspaceSaveTimer==='undefined'?null:Boolean(kolWorkspaceSaveTimer),hasSavePromise:typeof kolWorkspaceSavePromise==='undefined'?null:Boolean(kolWorkspaceSavePromise),deferredPatches:typeof kolDeferredPatches==='undefined'?null:kolDeferredPatches.length})),"UI diagnostic",1500);
     write({type:"ui-diagnostic",operationId:op.id,user:s.account.id,stage,state});
   }catch(error){write({type:"ui-diagnostic-unavailable",operationId:op.id,user:s.account.id,stage,error:error.message});}
 }
 async function stopCpuDiagnostic(s,label){
-  if(!s.cpuDiagnostic)return;
-  const cpu=s.cpuDiagnostic;s.cpuDiagnostic=null;
-  if(/failure|fatal/.test(label)){
+  if(!s.cpuDiagnostic&&!s.debugDiagnostic)return;
+  const hadProfile=Boolean(s.cpuDiagnostic),cpu=s.cpuDiagnostic||s.debugDiagnostic;s.cpuDiagnostic=null;s.debugDiagnostic=null;
+  if(/failure/.test(label)||Boolean(s.failed)){
     // Forensics only AFTER a recorded failure. Pause the unresponsive renderer
     // to retain its real stack/profile; never resume this run as a success.
-    try{const paused=new Promise(resolve=>cpu.once('Debugger.paused',resolve));await R.deadline(cpu.send('Debugger.pause'),'forensic pause command',2000);const detail=await R.deadline(paused,'forensic paused stack',2000);R.fs.writeFileSync(R.path.join(root,label+'-stack.json'),JSON.stringify(detail,null,2));write({type:'forensic-renderer-paused',user:s.account.id,afterFailure:true});}catch(error){write({type:'forensic-pause-unavailable',error:error.message});}
+    try{const paused=new Promise(resolve=>cpu.once('Debugger.paused',resolve));await R.deadline(cpu.send('Debugger.pause'),'forensic pause command',2000);const detail=await R.deadline(paused,'forensic paused stack',2000);R.fs.writeFileSync(R.path.join(root,label+'-stack.json'),JSON.stringify(detail,null,2));try{const shot=await R.deadline(cpu.send('Page.captureScreenshot',{format:'png'}),'paused screenshot',3000);R.fs.writeFileSync(R.path.join(root,label+'-paused.png'),Buffer.from(shot.data,'base64'));}catch{}write({type:'forensic-renderer-paused',user:s.account.id,afterFailure:true});}catch(error){write({type:'forensic-pause-unavailable',error:error.message});}
   }
+  if(!hadProfile)return;
   try{const {profile}=await R.deadline(cpu.send('Profiler.stop'),"CPU diagnostic stop",5000);R.fs.writeFileSync(R.path.join(root,label+'.cpuprofile'),JSON.stringify(profile));}catch(error){write({type:"cpu-diagnostic-unavailable",user:s.account.id,error:error.message});}
 }
 async function action(s, kind, fn, expected = {}) {
@@ -894,6 +895,8 @@ async function reconcile() {
       },
     });
     browser = await B.launch();
+    R.fs.writeFileSync(R.path.join(root,'browser-environment.json'),JSON.stringify(browser.__buyerLogToolchain,null,2));
+    write({type:'browser-environment',...browser.__buyerLogToolchain});
     phase = "ramp";
     monitor = setInterval(() => {
       const data = sample(process.pid, runtime.servers);
@@ -950,7 +953,7 @@ async function reconcile() {
         trace: account.index === 0,
       });
       s.cookie = await B.cookie(s);
-      if(args.diagnostics&&account.index===1){s.cpuDiagnostic=await s.context.newCDPSession(s.page);await s.cpuDiagnostic.send('Debugger.enable');await s.cpuDiagnostic.send('Profiler.enable');await s.cpuDiagnostic.send('Profiler.setSamplingInterval',{interval:10000});await s.cpuDiagnostic.send('Profiler.start');}
+      if(args.diagnostics){s.debugDiagnostic=await s.context.newCDPSession(s.page);await s.debugDiagnostic.send('Debugger.enable');if(account.index===1){s.cpuDiagnostic=s.debugDiagnostic;await s.cpuDiagnostic.send('Profiler.enable');await s.cpuDiagnostic.send('Profiler.setSamplingInterval',{interval:10000});await s.cpuDiagnostic.send('Profiler.start');}}
       sessions.push(s);
       B.instrument(s, write);
       loopPromises.push(daily(s));

@@ -9,7 +9,7 @@ async function cookie(session) {
     .join("; ");
 }
 async function launch() {
-  return chromium.launch({
+  const browser=await chromium.launch({
     headless: true,
     executablePath:
       process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || "/usr/bin/chromium",
@@ -21,6 +21,15 @@ async function launch() {
       "--disable-backgrounding-occluded-windows",
     ],
   });
+  const fs=require('node:fs'),path=require('node:path'),moduleName=process.env.BUYER_LOG_PLAYWRIGHT_MODULE||'playwright';
+  const packageFile=require.resolve(moduleName+'/package.json'),driver=JSON.parse(fs.readFileSync(packageFile,'utf8'));
+  const coreFile=require.resolve('playwright-core/package.json',{paths:[path.dirname(packageFile)]});
+  const expected=JSON.parse(fs.readFileSync(path.join(path.dirname(coreFile),'browsers.json'),'utf8')).browsers.find(x=>x.name==='chromium').browserVersion;
+  const actual=browser.version(),branch=x=>String(x).split('.').slice(0,3).join('.');
+  const metadata={playwright:driver.version,browser:actual,expectedChromium:expected,matchingBranch:branch(actual)===branch(expected),exactPatch:actual===expected,executable:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH||'/usr/bin/chromium'};
+  if(!metadata.matchingBranch){await browser.close();throw Error('Test browser/tool mismatch: '+JSON.stringify(metadata)+'. Select a matching Playwright module using BUYER_LOG_PLAYWRIGHT_MODULE.');}
+  browser.__buyerLogToolchain=metadata;process.stdout.write('BROWSER_TOOLCHAIN '+JSON.stringify(metadata)+'\n');
+  return browser;
 }
 async function open(
   browser,
