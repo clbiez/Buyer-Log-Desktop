@@ -5881,7 +5881,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
     const owner=String(window.BL_USER_CONTEXT?.id||'');
     const hint=appLang==='en'?'Private note; only you can see and edit it.':'Kişisel not; yalnız siz görebilir ve düzenleyebilirsiniz.';
     return line&&owner
-      ? `<td class="editTd blPersonalOrderNoteCell" title="${escapeHtml(hint)}"><input class="blPersonalOrderNote" type="text" maxlength="4000" autocomplete="off" data-personal-note-id="${escapeHtml(c.k)}" data-personal-note-line="${escapeHtml(line)}" data-personal-note-owner="${escapeHtml(owner)}" value="${escapeHtml(cur)}" aria-label="${escapeHtml(tableColumnLabel(tableKey,c))}" title="${escapeHtml(cur||hint)}" placeholder="${escapeHtml(appLang==='en'?'Your note…':'Notunuz…')}"></td>`
+      ? `<td class="editTd blPersonalOrderNoteCell" title="${escapeHtml(hint)}"><input class="editCell blPersonalOrderNote" type="text" maxlength="4000" autocomplete="off" data-personal-note-id="${escapeHtml(c.k)}" data-personal-note-line="${escapeHtml(line)}" data-personal-note-owner="${escapeHtml(owner)}" value="${escapeHtml(cur)}" aria-label="${escapeHtml(tableColumnLabel(tableKey,c))}" title="${escapeHtml(cur||hint)}" placeholder="${escapeHtml(appLang==='en'?'Your note…':'Notunuz…')}"></td>`
       : `<td class="viewOnlyCell">—</td>`;
   }
   const schema = columnSchemaFor(c);
