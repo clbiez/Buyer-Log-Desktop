@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "92e5b85b83ed71a2fd0608c274f851acf950ce11",
-  "release_notes": "TR: Buyer Log 7.0.307 — 7.0.300 sonrası birleştirilen Motion+ ve Thinking Orbs animasyonları, kişisel CP/Sipariş notları, çoklu hücre kopyala/yapıştır, tablo ve Koleksiyon iyileştirmeleri, PLM görsellerinin yeniden açıldığında korunması ve dışa aktarımlara eklenmesi, güncelleyici düzeltmeleri. Windows regresyonundaki CP Notlar sütun sırası testi düzeltildi.\nEN: Buyer Log 7.0.307 — merged post-7.0.300 Motion+ and Thinking Orbs animations, private CP/Orders notes, multi-cell copy/paste, table and Collection improvements, persistent PLM images across restart and image-aware exports, updater fixes. Corrected the Windows CP Notes column ordering regression test.",
-  "request_id": "7.0.307-test-after-cp-notes-windows-regression-20261027"
+  "commit_sha": "11de1d9bdd745b0863ab71c69bf327da11b79420",
+  "release_notes": "TR: Buyer Log 7.0.308 — 7.0.300 sonrası Motion+ ve Thinking Orbs, kişisel sipariş notları, çoklu hücre kopyalama/yapıştırma, Koleksiyon/tablolar ve güncelleyici düzeltmeleri. PLM model görselleri yeniden açıldığında korunur ve Excel/dışa aktarıma eklenir. CP kişisel Notlar ve Koleksiyon görsel kopyalama regresyon testleri güncel uygulama davranışıyla doğrulanır.\nEN: Buyer Log 7.0.308 — post-7.0.300 Motion+ and Thinking Orbs, private order notes, multi-cell copy/paste, Collection/tables and updater fixes. PLM images persist across restarts and are included in Excel/exports. CP private Notes and Collection image clipboard regression contracts now validate the current implementation.",
+  "request_id": "7.0.308-test-after-collection-image-fallback-regression-20261027"
 }
