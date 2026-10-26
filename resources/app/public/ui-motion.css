@@ -7,14 +7,3 @@
 @media(prefers-reduced-motion:reduce){
   :root:not([data-bl-motion="off"]) .blMotionEnter:not([hidden]),:root:not([data-bl-motion="off"]) .blMotionOverlay:not([hidden]){animation:none!important;transition:none!important;}
 }
-
-/* Refresh + SYNC activity uses the same finite Motion+ WAAPI engine.
-   Keep a visible active state after the entrance motion completes. */
-:root:not([data-bl-motion="off"]) :is(#topRefreshBtn,#serverRefreshBtn).spinning,
-:root:not([data-bl-motion="off"]) .syncStatusBadge.is-syncing{color:var(--ui-accent);}
-:root:not([data-bl-motion="off"]) :is(
-  #topRefreshBtn,#serverRefreshBtn,#cpRefreshBtn,#ordersRefreshBtn,
-  #lflRefreshBtn,#intakeRefreshBtn,#backlogOverviewRefresh,
-  #syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,
-  [data-plm-sync-category]
-) .ic{transform-origin:center;transform-box:fill-box;}
