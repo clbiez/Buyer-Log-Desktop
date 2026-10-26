@@ -1,0 +1,61 @@
+{
+  "status": "failed-before-50-active-measurement",
+  "source": "941a42f17b06ef4c886e0ad2490b21159d880a5e",
+  "requestedUsers": 50,
+  "requestedBackendInstances": 50,
+  "requestedMeasurementSeconds": 1800,
+  "browserUserContextsOpened": 7,
+  "usersWithCompletedUiOperations": 6,
+  "moderatorBrowserContextsOpened": 0,
+  "backendInstances": 7,
+  "independentDataRoots": 7,
+  "persistedOwnerReplicas": 7,
+  "measurementStarted": false,
+  "measured50UserSeconds": 0,
+  "firstFailure": {
+    "operationId": "op-20261025-32",
+    "user": "e4c6e661-8e58-4957-b8df-bd07a3aafe79",
+    "error": "locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#kolSearch')\u001b[22m\n"
+  },
+  "memoryGuardTriggered": false,
+  "newOomKills": 0,
+  "cpuQuota": 2,
+  "peakContainerMemoryBytes": 5448732672,
+  "resources": {
+    "driver": {
+      "peakAggregateRssBytes": 235917312,
+      "cpuSecondsBetweenSamples": 10.23,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 1036288,
+      "sampledProcessCount": 1
+    },
+    "backend": {
+      "peakAggregateRssBytes": 1854468096,
+      "cpuSecondsBetweenSamples": 81.68,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 60633088,
+      "sampledProcessCount": 7
+    },
+    "application-renderer": {
+      "peakAggregateRssBytes": 3482644480,
+      "cpuSecondsBetweenSamples": 250.16,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 0,
+      "sampledProcessCount": 21
+    },
+    "browser-driver": {
+      "peakAggregateRssBytes": 649555968,
+      "cpuSecondsBetweenSamples": 43.1,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 0,
+      "sampledProcessCount": 8
+    }
+  },
+  "nativeColdReconciliation": "passed",
+  "singleContext50RowFilterControlMs": {
+    "fill": 42,
+    "clear": 47
+  },
+  "conclusion": "50-user active run not demonstrated. UI clear timed out under saturated colocated 2-CPU workload. No claim of a seven-user product limit or memory-limit stop. No 30-minute measurement began.",
+  "evidenceRoot": "/workspace/scratch/bl-final-50-4"
+}

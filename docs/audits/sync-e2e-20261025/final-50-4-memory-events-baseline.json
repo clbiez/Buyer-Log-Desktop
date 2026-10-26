@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-26T09:26:33.236710+00:00",
+  "note": "Captured during ramp with 2 users; cumulative earlier XLSX mismatch OOM counters are not new load failures.",
+  "counters": {
+    "low": "0",
+    "high": "0",
+    "max": "2081",
+    "oom": "12",
+    "oom_kill": "2",
+    "oom_group_kill": "0"
+  }
+}
