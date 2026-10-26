@@ -27,6 +27,8 @@ jobs:
         run: node --test tests/agent-instructions.test.js tests/i18n-coverage-guard.test.js tests/visual-release-notes-v70211.test.js tests/page-horizon-badges-removal-v20261025.test.js
       - name: Motion+ diagonal wave, reduced-motion and Manifest contracts
         run: node --test tests/motion-plus-contract-v20261025.test.js tests/motion-plus-refresh-sync-v20261026.test.js tests/ui-manifest-contract.test.js tests/ui-inline-contract.test.js tests/design-token-guard.test.js
+      - name: Thinking Orbs startup and navigation regression
+        run: node --test tests/boot-thinking-orb-v20260929.test.js tests/startup-guide-v20260930.test.js tests/navigation-revisit-perf-v250.test.js
       - name: Release version, lock, SBOM and artifact bytes
         run: |
           node --test tests/dependency-inventory-metadata.test.js
