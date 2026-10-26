@@ -8,7 +8,7 @@ jobs:
   capture:
     if: github.event.pull_request.number == 736
     runs-on: ubuntu-latest
-    timeout-minutes: 14
+    timeout-minutes: 9
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -51,8 +51,12 @@ jobs:
             const page=context.pages()[0];
             assert.ok(page);
             await page.waitForLoadState('domcontentloaded');
+            const intro=page.getByText("Buyer Log'a devam et",{exact:false});
+            if(await intro.isVisible().catch(()=>false)) await intro.click({timeout:30000});
+            await page.waitForFunction(()=>!document.getElementById('blBootGuard'),null,{timeout:60000});
+            await page.locator('[data-rn-close]').first().click({timeout:800}).catch(()=>{});
             for(const tab of ['cp','orders','koleksiyon']){
-              await page.locator('nav.tabs button[data-tab="'+tab+'"]').click();
+              await page.locator('nav.tabs button[data-tab="'+tab+'"]').click({timeout:15000});
               await page.waitForTimeout(850);
               const v=await page.evaluate(key=>{
                 const pre=key==='koleksiyon'?'kol':key;
@@ -81,7 +85,7 @@ jobs:
             console.log('PR736_PNG_BASE64_END');
             console.log('Screenshot bytes '+img.length);
             await browser.close();
-          })().catch(e=>{console.error(e);process.exitCode=1;});
+          })().catch(e=>{console.error(e);process.exit(1);});
           NODE
       - name: Archive UI proof
         if: always()
