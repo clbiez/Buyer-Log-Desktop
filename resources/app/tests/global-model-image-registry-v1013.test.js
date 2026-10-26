@@ -50,7 +50,7 @@ test('Collection upload and removal retain the colour name when a colour code is
   assert.match(APP, /const items=\[\{plmId,colourCode,colour,imageRef:imageRef==null\?'':imageRef\}\];/);
   assert.match(APP, /const canonicalImageSource=canonicalModelImageSource\(r\.plmId,r\.colourCode,r\.colour\);/);
   assert.match(APP, /const collectionImageSource=kolModelImageSource\(r\)/);
-  assert.match(APP, /function kolModelImageSources\(row\)\{[\s\S]*?row\._sharedCollectionImageUrl,[\s\S]*?canonicalModelImageSource\(row\.plmId,row\.colourCode,row\.colour\),[\s\S]*?row\.img,/);
+  assert.match(APP, /function kolModelImageSources\(row\)\{[\s\S]*?row\._sharedCollectionImageUrl,[\s\S]*?canonicalModelImageSource\(row\.plmId,row\.colourCode,row\.colour\),[\s\S]*?row\._serverPlmImageUrl,[\s\S]*?row\.img,[\s\S]*?row\.imgRef\?modelImageRefUrl\(row\.imgRef\)/);
   assert.match(APP, /if\(canonical\)await kolPlmLinkImageEverywhere\(row,''\);/);
   // Renk adı da geçilir; kanonik kayıt plm:X|colour:Y|name:Z anahtarını tutar.
   assert.match(QUOTATIONS, /resolveRegistrySource\?\.\(plmId,colourCode,'\/api\/collection-images',colourName\)/);
