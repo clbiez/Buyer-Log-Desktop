@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-25",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Kendini güncelleyen güncelleme altyapısı ve Shared Hub kullanıcı dizini",
-    "en": "Self-updating update infrastructure and Shared Hub user directory"
+    "tr": "Kendini güncelleyen güncelleme altyapısı ve Shared Hub kullanıcı dizini ve Thinking Orbs",
+    "en": "Self-updating update infrastructure and Shared Hub user directory and Thinking Orbs"
   },
   "summary": {
-    "tr": "Eski kurulumlar “updater altyapısı yetersiz” hatası olmadan güncellenir; güncelleme altyapısı bundan sonra imzalı sürümlerle birlikte kendini güvenle yükseltir; yeni kurulum eksik denetim kaydına takılmadan Shared Hub kullanıcılarını yükler.",
-    "en": "Older installations update without the “updater infrastructure too old” error; from now on the update infrastructure upgrades itself safely together with signed releases; a new installation loads Shared Hub users without stalling on a missing audit record."
+    "tr": "Eski kurulumlar “updater altyapısı yetersiz” hatası olmadan güncellenir; güncelleme altyapısı bundan sonra imzalı sürümlerle birlikte kendini güvenle yükseltir; yeni kurulum eksik denetim kaydına takılmadan Shared Hub kullanıcılarını yükler. Açılış ve işlem bekleme göstergelerindeki özgün Thinking Orbs animasyonları geri getirildi.",
+    "en": "Older installations update without the “updater infrastructure too old” error; from now on the update infrastructure upgrades itself safely together with signed releases; a new installation loads Shared Hub users without stalling on a missing audit record. The original Thinking Orbs animations have returned to startup and busy indicators."
   },
   "changes": [
     {
@@ -95,6 +95,35 @@
         "caption": {
           "tr": "Gerçek Buyer Log ekranında 23 demo model; setler çift yükseklikte, kaynak bilgileri korunur.",
           "en": "23 demo models in the actual Buyer Log screen; sets use double-height cards and source details are preserved."
+        }
+      }
+    },
+    {
+      "id": "thinking-orbs-loading-restored",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış · Bekleme · Global Flow",
+        "en": "Startup · Loading · Global Flow"
+      },
+      "title": {
+        "tr": "Thinking Orbs animasyonları geri döndü",
+        "en": "Thinking Orbs animations are back"
+      },
+      "body": {
+        "tr": "Açılıştaki Breathing Orb, ekran ve işlem beklemelerindeki noktalı Thinking Orb ve Global Flow haritasındaki Working Orb yeniden etkinleştirildi. Yükleme tamamlandığında animasyon durur; görünmeyen ekran, sekme ve azaltılmış hareket tercihlerine saygı gösterilir. Eski yükleme davranışına veya verilere müdahale edilmez.",
+        "en": "The startup Breathing Orb, dotted Thinking Orb in loading states, and the Global Flow Working Orb are restored. Animation stops when loading completes and respects hidden screens, tabs, and reduced-motion preferences. Startup/data behavior remains unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "thinking-orbs-loading-restored.png",
+        "alt": {
+          "tr": "Yeni kodla çalışan gerçek Buyer Log açılış ekranı; noktalı Breathing Orb ve aşama göstergeleri",
+          "en": "Real Buyer Log startup with the updated code, dotted Breathing Orb and loading stages"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log: Breathing Orb yükleme sırasında etkin",
+          "en": "Real Buyer Log: Breathing Orb active during startup"
         }
       }
     }
