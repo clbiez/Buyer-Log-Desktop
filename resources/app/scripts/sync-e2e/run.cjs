@@ -627,6 +627,7 @@ async function reconcile() {
     });
   }
   const expected = new Map();
+  const submittedByRequest=new Map(ledger.filter(x=>x.type==="submitted").map(x=>[x.requestId,x]));
   for (const x of ledger.filter(
     (x) =>
       ["server-response", "upstream-acceptance"].includes(x.type) &&
@@ -636,7 +637,11 @@ async function reconcile() {
     const intent = operations.find((o) => o.id === x.operationId);
     if (!intent || intent.kind !== "edit") continue;
     const applied = x.data.applied || [];
-    if (applied.some((a) => String(a.id) === String(intent.rowId)))
+    const request=submittedByRequest.get(x.requestId);
+    const sent=request?.body?.upserts?.find(row=>String(row.id)===String(intent.rowId));
+    // An automatic pricing write can run during an edit intent. It is not proof
+    // that the intent's new model value was submitted or accepted.
+    if (request?.url==="/api/collection-workspaces/"+m.owner && sent?.[intent.field]===intent.id && applied.some((a) => String(a.id) === String(intent.rowId)))
       expected.set(String(intent.rowId), {
         value: intent.id,
         operationId: intent.id,

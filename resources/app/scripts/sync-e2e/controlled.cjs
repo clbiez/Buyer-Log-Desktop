@@ -135,7 +135,15 @@ async function scenario(name, fn) {
       await b.page.screenshot({
         path: R.path.join(root, "rejected-save-not-saved.png"),
       });
-      return { bodies, rejected, afterRemote };
+      const beforeRules=R.check(await R.api(s0,"/api/pricing-rules",{cookie:mod}));
+      const rules=beforeRules.rules.map(r=>({...r,royalty:Number(r.royalty)+1}));
+      R.check(await R.api(s0,"/api/pricing-rules",{method:"PUT",cookie:mod,body:{rules}}));
+      await b.page.waitForFunction(expected=>Number(state.overrides.pricingRules.find(r=>r.id==="e2e-rule")?.royalty)===expected,rules.find(r=>r.id==="e2e-rule").royalty);
+      await B.settle(b);
+      const afterPricing=R.check(await R.api(s0,"/api/collection-workspaces/"+m.owner,{cookie:mod})).workspace;
+      await b.page.screenshot({path:R.path.join(root,"rejected-draft-after-pricing.png")});
+      assert.equal(afterPricing.rows.find(r=>r.id===1).modelKod,"RACE-A","automatic pricing must not retry rejected shared-row fields with a fresh CAS token");
+      return { bodies, rejected, afterRemote, afterPricing };
     });
     await scenario("different-fields-same-row-CAS", async () => {
       const ga = await barrier(a),

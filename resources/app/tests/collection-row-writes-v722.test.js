@@ -356,3 +356,13 @@ test('v7.0.111 düzenlenen Koleksiyon satırını bekleyen uzak yama ezemez', ()
     'uzak yama yerel kayıt tamamlanmadan uygulanmamalı',
   );
 });
+
+test('a shared-row rejection keeps its original CAS token, so background pricing cannot silently retry stale fields', () => {
+  const report=APP.slice(APP.indexOf('function kolReportConflicts'),APP.indexOf('function kolWorkspaceSetReadonly'));
+  const original={id:1,_rev:3,modelKod:'old',fob:'4'};
+  const ctx={kolIsOwnWorkspace:()=>false,migrateKolRow:r=>r,kolBaseline:{rows:new Map([['1',original]])},kolRows:[{...original,modelKod:'rejected-draft'}],kolRowIndexById:()=>0,kolPersistPendingWorkspace:()=>{},showToast:()=>{},appLang:'en'};
+  require('node:vm').createContext(ctx);require('node:vm').runInContext(report,ctx);
+  assert.equal(ctx.kolReportConflicts([{id:1,current:{...original,_rev:4,modelKod:'accepted-peer'}}]),false);
+  assert.equal(ctx.kolBaseline.rows.get('1')._rev,3,'rejected local data must not acquire the remote acceptance token');
+  assert.equal(ctx.kolRows[0].modelKod,'rejected-draft','draft remains available for an explicit user decision');
+});
