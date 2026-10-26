@@ -1,0 +1,85 @@
+name: Buyer Log Public Main Status (metadata only)
+on:
+  push:
+    branches: [main, tools/public-main-status-safe-updater-20261026]
+    paths:
+      - resources/app/public/**
+      - resources/app/server/**
+      - resources/app/electron/**
+      - resources/app/package.json
+      - .github/workflows/buyerlog-public-main-status.yml
+  pull_request_target:
+    types: [closed]
+  schedule:
+    - cron: '11,41 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: buyerlog-public-main-status
+  cancel-in-progress: false
+jobs:
+  publish-status:
+    # No fork or PR-head checkout. Publication is metadata ONLY.
+    if: github.event_name != 'pull_request_target' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout trusted main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Construct versioned, non-authoritative source status
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p status-out
+          python3 - <<'PY'
+          import datetime,json,pathlib,subprocess
+          main=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          version=json.loads(pathlib.Path('resources/app/package.json').read_text())['version']
+          payload={'schema':1,'kind':'buyerlog-main-status','source_commit':main,'source_version':version,'published_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'note':'UNSIGNED STATUS METADATA ONLY. Not a release or installation authorization.'}
+          pathlib.Path('status-out/latest.json').write_text(json.dumps(payload,indent=2)+'\n')
+          print('main',main,'source version',version)
+          PY
+      - name: Verify main remains pinned before metadata publication
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          EXPECTED="$(python3 -c "import json;print(json.load(open('status-out/latest.json'))['source_commit'])")"
+          CURRENT="$(gh api "repos/$REPO/branches/main" --jq '.commit.sha')"
+          test "$EXPECTED" = "$CURRENT"
+      - name: Checkout public release-only repository
+        if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request_target'
+        uses: actions/checkout@v4
+        with:
+          repository: clbiez/Buyer-Log-Releases
+          ref: main
+          path: release-repo
+          token: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
+          persist-credentials: true
+      - name: Publish only source-status/latest.json, never app files
+        if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request_target'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          TARGET="$(python3 -c "import json;print(json.load(open('status-out/latest.json'))['source_commit'])")"
+          CURRENT="$(gh api "repos/$REPO/branches/main" --jq '.commit.sha')"
+          test "$TARGET" = "$CURRENT"
+          mkdir -p release-repo/source-status
+          cp status-out/latest.json release-repo/source-status/latest.json
+          git -C release-repo config user.name "Buyer Log Main Status"
+          git -C release-repo config user.email "buyer-log-status@users.noreply.github.com"
+          git -C release-repo add source-status/latest.json
+          if ! git -C release-repo diff --cached --quiet; then
+            git -C release-repo commit -m "Publish read-only main SHA status $TARGET"
+            git -C release-repo push origin HEAD:main
+          fi
+          echo "Read-only metadata published. No signed release, updater, or app bytes changed."
