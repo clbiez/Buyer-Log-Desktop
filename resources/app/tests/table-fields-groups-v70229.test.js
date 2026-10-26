@@ -61,7 +61,7 @@ test('CP ana başlıkları ve varsayılan sıra kullanıcı düzeniyle birebir',
     ['Original Ex-factory', 'Tarihler'], ['OPD', 'Tarihler'], ['Ex-factory', 'Tarihler'], ['LT', 'Tarihler'], ['Retail Date', 'Tarihler'], ['Ex→Retail', 'Tarihler'], ['In-Store (Model Budget)', 'Tarihler'],
     ['Kumaş Tipi', 'Kumaş Detayları'], ['Kumaş Kategorisi', 'Kumaş Detayları'], ['Kumaşçı Ülkesi', 'Kumaş Detayları'], ['Kumaşçı', 'Kumaş Detayları'], ['Karışım', 'Kumaş Detayları'], ['İplik No', 'Kumaş Detayları'], ['Gramaj', 'Kumaş Detayları'],
     ['Del. Type', 'Lojistik'], ['STATUS', 'Lojistik'], ['Buying Son Onay Tarihi', 'Lojistik'], ['HANDOVER Tarihi', 'Lojistik'], ['Ant. Arrival', 'Lojistik'],
-    ['Notes', 'Notlar'], ['Ek Not', 'Notlar'],
+    ['Notes', 'Notlar'], ['Ek Not', 'Notlar'], ['__personalOrderNote', 'Notlar'],
   ]);
   // Original Ex-F. ayrı ASAS Dates alanıdır; iki satır üreticisi de kullanır.
   assert.equal((APP.match(/'Original Ex-factory':o\.originalExFactoryDate\|\|null, 'Ex-factory':o\.ex/g) || []).length, 2);
