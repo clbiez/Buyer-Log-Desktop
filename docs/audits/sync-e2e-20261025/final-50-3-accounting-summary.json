@@ -1,0 +1,139 @@
+{
+  "root": "/workspace/scratch/bl-final-50-3",
+  "financialEvidenceCount": 12,
+  "financialEvidenceMapping": [
+    {
+      "at": 1793002652084,
+      "user": "f81d7a5b-8652-4df4-8b86-fe1237cedd47",
+      "rowId": 1,
+      "operationId": "op-20261025-2",
+      "candidateCount": 1
+    },
+    {
+      "at": 1793002685265,
+      "user": "6a008ab4-b393-4484-8e9e-835a1e0ff9aa",
+      "rowId": 2,
+      "operationId": "op-20261025-5",
+      "candidateCount": 1
+    },
+    {
+      "at": 1793002688585,
+      "user": "03f4975b-620a-4cef-acce-2bb28feb95b1",
+      "rowId": 3,
+      "operationId": "op-20261025-8",
+      "candidateCount": 1
+    },
+    {
+      "at": 1793002715640,
+      "user": "ac7f05c8-eaa5-4467-8d31-7215d93ff7e6",
+      "rowId": 4,
+      "operationId": "op-20261025-13",
+      "candidateCount": 1
+    },
+    {
+      "at": 1793002772050,
+      "user": "daa92bf3-3335-42be-960b-80e8fc0e6faa",
+      "rowId": 5,
+      "operationId": "op-20261025-23",
+      "candidateCount": 1
+    },
+    {
+      "at": 1793002780593,
+      "user": "513250ed-6aff-4420-8e69-4b05d54211cc",
+      "rowId": 6,
+      "operationId": "op-20261025-29",
+      "candidateCount": 1
+    },
+    {
+      "at": 1793002782052,
+      "user": "6a008ab4-b393-4484-8e9e-835a1e0ff9aa",
+      "rowId": 2,
+      "operationId": "op-20261025-25",
+      "candidateCount": 1
+    },
+    {
+      "at": 1793002788647,
+      "user": "f81d7a5b-8652-4df4-8b86-fe1237cedd47",
+      "rowId": 1,
+      "operationId": "op-20261025-18",
+      "candidateCount": 1
+    },
+    {
+      "at": 1793002802363,
+      "user": "03f4975b-620a-4cef-acce-2bb28feb95b1",
+      "rowId": 3,
+      "operationId": "op-20261025-31",
+      "candidateCount": 1
+    },
+    {
+      "at": 1793002826387,
+      "user": "ac7f05c8-eaa5-4467-8d31-7215d93ff7e6",
+      "rowId": 4,
+      "operationId": "op-20261025-38",
+      "candidateCount": 1
+    },
+    {
+      "at": 1793002861760,
+      "user": "2d41bf1f-eca4-4657-81d3-0482bbc0d345",
+      "rowId": 7,
+      "operationId": "op-20261025-45",
+      "candidateCount": 1
+    },
+    {
+      "at": 1793002893383,
+      "user": "c4356955-4861-4188-991a-c4c10327f172",
+      "rowId": 8,
+      "operationId": "op-20261025-55",
+      "candidateCount": 1
+    }
+  ],
+  "financialSamplesWithoutBothArithmeticChecks": [],
+  "failedFinancialChecks": [],
+  "logicalOperationCount": 63,
+  "measuredLogicalOperationCount": 0,
+  "outcomesAll": {
+    "accepted": 29,
+    "completed-non-collection-write": 20,
+    "explicitly-rejected": 5,
+    "not-submitted": 9
+  },
+  "outcomesMeasured": {},
+  "measuredKinds": {},
+  "peakOutstandingBrowserCollectionRequests": 2,
+  "outstandingBrowserCollectionRequestsAtEnd": 0,
+  "duplicateJournalRequestIds": 0,
+  "nativeBackgroundWrites": 0,
+  "resources": {
+    "driver": {
+      "peakAggregateRssBytes": 266125312,
+      "cpuSecondsBetweenSamples": 14.38,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 2199552,
+      "sampledProcessCount": 1
+    },
+    "backend": {
+      "peakAggregateRssBytes": 2228690944,
+      "cpuSecondsBetweenSamples": 100.15,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 89886720,
+      "sampledProcessCount": 9
+    },
+    "application-renderer": {
+      "peakAggregateRssBytes": 4759232512,
+      "cpuSecondsBetweenSamples": 372.12,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 0,
+      "sampledProcessCount": 27
+    },
+    "browser-driver": {
+      "peakAggregateRssBytes": 723116032,
+      "cpuSecondsBetweenSamples": 49.690000000000005,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 0,
+      "sampledProcessCount": 8
+    }
+  },
+  "containerPeakMemoryBytes": 6672957440,
+  "resourceSamples": 59,
+  "sourceSamplingNote": "Linux USER_HZ=100; aggregate RSS can double-count shared pages; CPU/disk deltas omit work outside observed process lifetime. Network is completed browser HTTP only, excluding open SSE and setup. No per-process network or internal queue instrumentation is claimed."
+}

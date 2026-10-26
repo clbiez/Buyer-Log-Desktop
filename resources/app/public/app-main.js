@@ -22148,6 +22148,7 @@ const KOLEKSIYON_SEED_ROWS = [
 // CP ile aynı görsel dilde ama lojistik/onay alanları olmadan; tüm hücreler elle
 // düzenlenebilir. Sunucudaki ASAS/Antrepo verisinden bağımsızdır — tarayıcıda saklanır.
 const KOL_STORAGE_KEY = 'lcw.koleksiyon.rows.v1';
+let kolPointerActive=false;
 let kolWorkspaceOwnerId=String(window.BL_USER_CONTEXT&&window.BL_USER_CONTEXT.id||'moderator');
 let kolWorkspaceRevision=0,kolBulkPreparing=false;
 let kolWorkspaceCanEdit=true;
@@ -37651,7 +37652,7 @@ function kolEditingRowIds(){
   return new Set(id===''||id==null?[]:[String(id)]);
 }
 function kolHasActiveRowEditor(){
-  return Boolean(document.activeElement?.matches?.('#kolTable .editCell, #kolTable select, #kolTable [contenteditable="true"]'));
+  return kolPointerActive||Boolean(document.activeElement?.matches?.('#kolTable .editCell, #kolTable select, #kolTable [contenteditable="true"]'));
 }
 // Raw input is not a secured draft until the existing change handler commits it.
 document.addEventListener('input',event=>{
@@ -37662,7 +37663,7 @@ document.addEventListener('change',event=>{
   if(event.target?.dataset?.kolUncommitted==='1')delete event.target.dataset.kolUncommitted;
 },true);
 function kolHasActiveWorkspaceEditor(){
-  return Boolean(kolEditingRowIds()?.size||document.activeElement?.matches?.('#kolSearch, #view-koleksiyon input, #view-koleksiyon textarea, #view-koleksiyon select, #view-koleksiyon [contenteditable="true"]'));
+  return kolPointerActive||Boolean(kolEditingRowIds()?.size||document.activeElement?.matches?.('#kolSearch, #view-koleksiyon input, #view-koleksiyon textarea, #view-koleksiyon select, #view-koleksiyon [contenteditable="true"]'));
 }
 function kolDirtyRowIds(){
   const change=kolCollectChanges();
@@ -37740,11 +37741,14 @@ function kolHighlightRemoteRows(ids){
   });
 }
 // Ertelenen yamalar, kullanıcı düzenlemeyi bitirir bitirmez uygulanır.
-document.addEventListener('focusout',()=>{
+function kolResumeDeferredRemoteChanges(){
   if(!kolDeferredPatches.length&&!kolRemoteReloadPendingOwner&&!kolRemoteRenderPendingOwner)return;
   setTimeout(async()=>{
-    // Finish the editor save before consuming deferred remote changes.
+    // Pointerdown blurs the editor before click. Keep its button attached until
+    // pointerup has dispatched the click, then flush the coalesced projection.
+    if(kolPointerActive)return;
     await kolSettlePendingSave();
+    if(kolPointerActive)return;
     const pending=kolDeferredPatches;kolDeferredPatches=[];
     if(pending.length)kolApplyRemotePatches(pending);
     const owner=kolRemoteReloadPendingOwner;kolRemoteReloadPendingOwner='';
@@ -37754,7 +37758,18 @@ document.addEventListener('focusout',()=>{
       kolRemoteRenderPendingOwner='';renderKol();
     }
   },0);
+}
+document.addEventListener('focusout',kolResumeDeferredRemoteChanges,true);
+document.addEventListener('pointerdown',event=>{
+  if(event.target?.closest?.('#view-koleksiyon'))kolPointerActive=true;
 },true);
+function kolReleasePointer(){
+  // The timer runs after the native click handler, including drawer activation.
+  setTimeout(()=>{kolPointerActive=false;kolResumeDeferredRemoteChanges();},0);
+}
+document.addEventListener('pointerup',kolReleasePointer,true);
+document.addEventListener('pointercancel',kolReleasePointer,true);
+window.addEventListener('blur',kolReleasePointer);
 /* Kirli-workspace uyarısı epizot başına bir kezdir. Uzak olay akışı sürerken
    bayrak açık kalır; workspace temize döndüğünde sıfırlanır ve bir sonraki
    epizot yeniden uyarabilir. */

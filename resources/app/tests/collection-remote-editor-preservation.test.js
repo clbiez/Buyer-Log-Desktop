@@ -98,3 +98,18 @@ test("background render recalculates the model but leaves the active editor DOM 
   assert.equal(recalculated, 1);
   assert.equal(ctx.kolRemoteRenderPendingOwner, "owner");
 });
+
+test('deferred focusout refresh waits for pointer release before replacing its click target', async () => {
+  const a=source.indexOf('function kolResumeDeferredRemoteChanges('), b=source.indexOf('/* Kirli-workspace uyarısı',a);
+  let renders=0;const timers=[],events={},ctx={
+    kolPointerActive:false,kolDeferredPatches:[],kolRemoteReloadPendingOwner:'',kolRemoteRenderPendingOwner:'owner',kolWorkspaceOwnerId:'owner',
+    setTimeout:fn=>timers.push(fn),kolSettlePendingSave:async()=>{},kolApplyRemotePatches:()=>{},kolHandleRemoteChange:()=>{},
+    kolHasActiveWorkspaceEditor:()=>ctx.kolPointerActive,renderKol:()=>renders++,
+    document:{addEventListener:(name,fn)=>events[name]=fn},window:{addEventListener:()=>{}},
+  };vm.createContext(ctx);vm.runInContext(source.slice(a,b),ctx);
+  events.pointerdown({target:{closest:()=>true}});events.focusout();await timers.shift()();
+  assert.equal(renders,0);assert.equal(ctx.kolRemoteRenderPendingOwner,'owner');
+  events.pointerup();assert.equal(renders,0,'native click runs before the release timer');
+  await timers.shift()();await timers.shift()();
+  assert.equal(renders,1);assert.equal(ctx.kolRemoteRenderPendingOwner,'');
+});

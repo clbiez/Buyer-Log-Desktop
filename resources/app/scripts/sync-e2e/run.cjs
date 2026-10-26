@@ -953,10 +953,11 @@ async function reconcile() {
     B.instrument(moderator, write);
     modCookie = await B.cookie(moderator);
     await R.until(
-      () =>
-        sessions.every(
-          (s) => s.operations.some((o) => o.kind === "edit") && !s.failed,
-        ),
+      () => {
+        const failed=sessions.find(s=>s.failed);
+        if(failed)throw Error("UI session failed during ramp: "+failed.account.id+": "+failed.failed);
+        return sessions.every(s=>s.operations.some(o=>o.kind==="edit"));
+      },
       { ms: 60000, label: "all users completed UI edit" },
     );
     for (const session of [...sessions, moderator])

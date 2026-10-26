@@ -387,6 +387,64 @@
           "en": "Stale pulls preserve newly accepted writes"
         }
       }
+    },
+    {
+      "id": "collection-pointer-preserved",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Bekleyen yenileme tıklamayı kesmez",
+        "en": "Pending refreshes preserve clicks"
+      },
+      "body": {
+        "tr": "Hücreden bir düğmeye geçerken bekleyen görsel yenileme, pointer bırakılıp tıklama işlendikten sonra uygulanır. Fiyat çekmecesi gibi işlemler arada kaybolan düğmeler yüzünden iptal olmaz.",
+        "en": "When moving from a cell to a button, a pending visual refresh waits until pointer release and click handling. Actions such as opening the price drawer are no longer interrupted by detached buttons."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-pointer-preserved.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Bekleyen yenileme tıklamayı kesmez",
+          "en": "Real Buyer Log: Pending refreshes preserve clicks"
+        },
+        "caption": {
+          "tr": "Bekleyen yenileme tıklamayı kesmez",
+          "en": "Pending refreshes preserve clicks"
+        }
+      }
+    },
+    {
+      "id": "collection-owner-sync-queue",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Senkron tabanı eşzamanlı işlemlerde korunur",
+        "en": "Concurrent sync keeps its merge base consistent"
+      },
+      "body": {
+        "tr": "Aynı Koleksiyon sahibinin uzak okuma ve yayın işlemleri sıralanır; eski bir okuma, yeni kabul edilmiş alanları güncel tabanla karşılaştırıp geri alamaz. Diğer sahiplerin kayıtları bağımsız ilerler.",
+        "en": "Remote reads and publications for one Collection owner run in order. An older read cannot use a newly advanced base to roll back accepted fields. Other owners continue independently."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-owner-sync-queue.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Senkron tabanı eşzamanlı işlemlerde korunur",
+          "en": "Real Buyer Log: Concurrent sync keeps its merge base consistent"
+        },
+        "caption": {
+          "tr": "Senkron tabanı eşzamanlı işlemlerde korunur",
+          "en": "Concurrent sync keeps its merge base consistent"
+        }
+      }
     }
   ]
 }

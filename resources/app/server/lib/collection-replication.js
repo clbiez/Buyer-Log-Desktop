@@ -268,6 +268,19 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
   let volatileState = { version: REPLICATION_STATE_VERSION, owners: {} };
   const volatileBases = new Map();
   const remoteStamps = new Map();
+  // A remote envelope and its local merge base belong to one operation. Without
+  // this owner-local queue a concurrent publisher can advance the base while an
+  // older pull is suspended, making new accepted fields look unchanged.
+  const ownerOperations = new Map();
+  function withOwnerOperation(ownerId, operation) {
+    const key = clean(ownerId);
+    const previous = ownerOperations.get(key) || Promise.resolve();
+    const result = previous.then(operation, operation);
+    const tail = result.catch(() => {});
+    ownerOperations.set(key, tail);
+    void tail.then(() => { if (ownerOperations.get(key) === tail) ownerOperations.delete(key); });
+    return result;
+  }
   function normalizeState(raw) {
     return {
       version: REPLICATION_STATE_VERSION,
@@ -423,7 +436,10 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       published: Boolean(publication && publication.published), reason: publishError ? publishError.code || 'PUBLISH_FAILED' : 'MERGED',
     };
   }
-  async function publishOwner(ownerId) {
+  function publishOwner(ownerId) {
+    return withOwnerOperation(ownerId, () => publishOwnerInternal(ownerId));
+  }
+  async function publishOwnerInternal(ownerId) {
     trialPolicy.assertConfirmed();
     try { return await publishOwnerCas(ownerId); }
     catch (error) {
@@ -527,7 +543,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
         // A previous process may have committed locally and crashed before the
         // remote publish. The CAS base proves this is a real descendant, so a
         // normal GET/sync can safely finish the interrupted publication.
-        const publication = await publishOwner(owner);
+        const publication = await publishOwnerInternal(owner);
         return { synced: Boolean(publication.merged), ...(publication.merged ? { merged:true } : {}), published: Boolean(publication.published), ownerId: owner, revision: Number(publication.revision) || localRevision, reason: publication.reason || 'LOCAL_NEWER_PUBLISHED' };
       }
       const merged = await reconcile(owner, envelope, { readOnly });
@@ -559,7 +575,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     return { synced: Boolean(result.applied), ownerId: owner, revision: result.workspace && result.workspace._revision, reason: result.reason || null, conflict: result.reason === 'LOCAL_NEWER' || result.reason === 'LOCAL_CHANGED' };
   }
   async function syncOwner(userId, ownerId) {
-    const result = await syncOwnerInternal(userId, ownerId);
+    const result = await withOwnerOperation(ownerId, () => syncOwnerInternal(userId, ownerId));
     // Reads can import a replica before the periodic poll sees its stamp.
     // Notify at the actual application boundary, whichever caller imported it.
     if (typeof onApplied === 'function' && result && (result.synced || result.merged)) await onApplied(result);

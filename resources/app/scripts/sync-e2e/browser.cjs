@@ -263,7 +263,11 @@ async function snapshot(session, id) {
 async function calculate(session, id) {
   const start = Date.now(),
     p = session.page;
-  await p.locator(`[data-kol-drawer-open="${id}"]`).first().click();
+  const trigger=p.locator(`[data-kol-drawer-open="${id}"]`).first();
+  // Center the row in the actual scroll viewport: native nearest scrolling can
+  // leave a bottom row underneath the table's sticky totals/footer.
+  await trigger.evaluate(el=>el.scrollIntoView({block:"center",inline:"center"}));
+  await trigger.click();
   await p.locator(".cpdDrawer").waitFor();
   const out = await p.evaluate((id) => {
     const row = kolRows.find((r) => String(r.id) === String(id));

@@ -174,3 +174,19 @@ test('izleyici cihazın ayrışmış kopyası birleştirilip yayımlanmaz; uzak 
 test('replica imported by a read notifies open clients once, before the poll can consume its change',async t=>{const {device}=await hub(t),events=[],owner=device('notify-owner'),peer=device('notify-peer',event=>events.push({...event,rows:peer.local.rows.map(r=>r.id)}));owner.local=ws(1,[{id:1,modelKod:'base',_rev:1}]);peer.local=ws(0,[],{initialized:false});await owner.replication.publishOwner('owner-a');await peer.replication.syncOwner('user-b','owner-a');assert.equal(events.length,1);assert.deepEqual(events[0].rows,[1]);owner.local=ws(2,[{id:1,modelKod:'base',_rev:1},{id:2,modelKod:'new',_rev:2}]);await owner.replication.publishOwner('owner-a');await peer.replication.syncOwner('user-b','owner-a');assert.equal(events.length,2);assert.deepEqual(events[1].rows,[1,2]);await peer.replication.pollOwners('user-b',['owner-a']);assert.equal(events.length,2,'poll must not duplicate an already notified imported read');await assert.rejects(peer.replication.syncOwner('unknown','owner-a'),{code:'COLLECTION_ACCESS_DENIED'});assert.equal(events.length,2);});
 
 test('a pull rechecks the local content at commit and polling retries an interrupted import',async t=>{const {device}=await hub(t),owner=device('pull-owner');let armed=false;const peer=device('pull-peer',null,box=>{if(armed){armed=false;box.local=ws(2,[{id:1,modelKod:'local-new',_rev:2},{id:2,not:'old',_rev:1}]);}});owner.local=ws(1,[{id:1,modelKod:'old',_rev:1},{id:2,not:'old',_rev:1}]);peer.local=ws(0,[],{initialized:false});await owner.replication.publishOwner('owner-a');await peer.replication.syncOwner('user-b','owner-a');owner.local=ws(2,[{id:1,modelKod:'old',_rev:1},{id:2,not:'remote-new',_rev:2}]);await owner.replication.publishOwner('owner-a');armed=true;const first=await peer.replication.pollOwners('user-b',['owner-a']);assert.equal(peer.local.rows[0].modelKod,'local-new','intervening local commit must survive the stale pull');assert.equal(first.length,0);const next=await peer.replication.pollOwners('user-b',['owner-a']);assert.equal(next.length,1,'unchanged remote stamp must still retry the interrupted import');assert.equal(peer.local.rows[0].modelKod,'local-new');assert.equal(peer.local.rows[1].not,'remote-new');});
+
+test('owner replication operations serialize their remote/base pair; another owner is not blocked', async t => {
+  const root=await fsp.mkdtemp(path.join(os.tmpdir(),'buyerlog-owner-queue-'));
+  t.after(()=>fsp.rm(root,{recursive:true,force:true}));
+  let release,entered;const gate=new Promise(r=>release=r),ready=new Promise(r=>entered=r);let calls=0,armed=false;
+  const rep=createCollectionReplication({
+    workspaces:{loadWorkspace:owner=>({...ws(1,[{id:1,modelKod:'accepted'}]),ownerId:owner}),replaceWorkspaceReplica:async()=>({applied:false})},
+    permissions:{accessLevel:()=> 'edit'},
+    getSharedSyncRoot:async()=>{calls++;if(armed&&calls===1){entered();await gate;}return root;},
+  });
+  armed=true;const pull=rep.syncOwner('owner-a','owner-a');await ready;
+  const publication=rep.publishOwner('owner-a');
+  await Promise.resolve();await Promise.resolve();assert.equal(calls,1,'same-owner publication waits before reading its envelope/base');
+  const other=await rep.publishOwner('owner-b');assert.equal(other.published,true,'different owner remains independent');
+  release();await pull;assert.equal((await publication).published,true);
+});

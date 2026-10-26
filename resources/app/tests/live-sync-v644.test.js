@@ -201,7 +201,10 @@ test('v6.44 Koleksiyon uzak değişikliği kullanıcının yazdığını kaybett
   assert.match(apply, /busy&&busy\.has\(id\)/, 'düzenlenen satır ezilmemeli');
   assert.match(apply, /deferred\.push\(item\)/, 'atlanan yama kaybolmamalı');
   assert.match(APP, /kolDeferredPatches=deferred/);
-  assert.match(APP, /addEventListener\('focusout'[\s\S]{0,400}kolApplyRemotePatches\(pending\)/);
+  assert.match(APP, /addEventListener\('focusout',kolResumeDeferredRemoteChanges,true\)/);
+  const resume = bodyOf(APP, 'kolResumeDeferredRemoteChanges');
+  assert.match(resume, /if\(kolPointerActive\)return/);
+  assert.match(resume, /await kolSettlePendingSave\(\)[\s\S]*kolApplyRemotePatches\(pending\)/);
 });
 
 test('v6.44 Koleksiyon uzak değişikliği yalnız açık workspace eşleşirse çalışıyor', () => {

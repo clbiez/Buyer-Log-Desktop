@@ -322,6 +322,8 @@ async function setup(
         cwd: app,
         encoding: "utf8",
       }).trim(),
+      sourceDirty: Boolean(execFileSync("git", ["status", "--porcelain"], {cwd:app,encoding:"utf8"}).trim()),
+      trackedDiffSha256: require("node:crypto").createHash("sha256").update(execFileSync("git", ["diff", "HEAD", "--binary"], {cwd:app})).digest("hex"),
       createdAt: new Date().toISOString(),
     };
     fs.writeFileSync(
