@@ -1856,7 +1856,6 @@ input.kolLandedInput::placeholder{opacity:.62;}
 #serverRefreshBtn.spinning{cursor:wait;}
 /* 7.0.294 Refresh + SYNC motion feedback: theme state and SVG pivot.
    Finite action frames are exclusively owned by the shared Motion+ controller. */
-:is(#topRefreshBtn,#serverRefreshBtn).spinning,.syncStatusBadge.is-syncing{color:var(--ui-accent);}
 :is(#topRefreshBtn,#serverRefreshBtn,#cpRefreshBtn,#ordersRefreshBtn,
   #lflRefreshBtn,#intakeRefreshBtn,#backlogOverviewRefresh,
   #syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,
