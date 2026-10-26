@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "68f93bc244d2549f8d732cb0cb2fcb40ca7912dc",
-  "release_notes": "TR: Buyer Log 7.0.301 — 7.0.300 sonrasında main dalına birleşen düzenlemeler: Motion+ ve Thinking Orbs animasyonları, tabloda seçim/kopyalama-yapıştırma, kullanıcıya özel notlar, Koleksiyon görünümü, butonlar ve güncelleme altyapısı düzeltmeleri. Windows tam regresyon ve imzalı TEST yayın kontrolü zorunludur.\nEN: Buyer Log 7.0.301 — updates merged into main after 7.0.300: Motion+ and Thinking Orbs animations, spreadsheet selection and copy/paste, private personal notes, Collection layout, controls, and update infrastructure fixes. Windows full regression and signed TEST release checks remain mandatory.",
-  "request_id": "7.0.301-test-signed-full-regression-20261026"
+  "commit_sha": "3c0eb22e2e4c7bbee9e2b935e37e12395955d2ae",
+  "release_notes": "TR: Buyer Log 7.0.302 — 7.0.300 sonrası birleştirilen Motion+ / Thinking Orbs, CP ve Orders kişisel not alanları, kopyalama-yapıştırma, Koleksiyon görünümü, tablolar ve güncelleme altyapısı iyileştirmeleri; Windows tam regresyonunda tespit edilen dört engelin düzeltmesi.\nEN: Buyer Log 7.0.302 — improvements merged since 7.0.300 to Motion+ / Thinking Orbs, private CP and Orders notes, copy and paste, Collection, tables and the updater; fixes for four full Windows regression blockers.",
+  "request_id": "7.0.302-test-after-full-regression-fixes-20261026"
 }
