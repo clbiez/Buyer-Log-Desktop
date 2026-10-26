@@ -1,4 +1,6 @@
 /* Collection spreadsheet interaction layer — Buyer Log theme, no Excel branding. */
+/* Data Health is a redundant Collection-only summary; retain its DOM host for legacy render callers but never allocate screen space. */
+#view-koleksiyon #kolHealthBar{display:none!important}
 #view-koleksiyon.kolSpreadsheetWorkspace .panel{width:100%;min-width:0}
 #view-koleksiyon.kolSpreadsheetWorkspace .tablewrap{width:100%;max-width:100%;min-height:0;position:relative}
 .kolEmptyState{display:grid;place-items:center;min-height:220px;padding:var(--ui-space-4)}
@@ -17,10 +19,6 @@
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetReadonly:hover::after{content:attr(data-kol-formula-tip);position:absolute;left:8px;top:calc(100% + 4px);max-width:280px;padding:5px 7px;white-space:normal;pointer-events:none}
 .kolSpreadsheetHelper{display:flex;align-items:center;min-height:25px;padding:2px 7px;min-width:0}
 .kolSpreadsheetBusinessSelection{flex:0 0 auto;min-width:92px;white-space:nowrap}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow{height:18px}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th{height:18px!important;min-height:18px!important;padding:0 4px!important;text-align:center!important;user-select:none}
-/* Sütun harfine tık = sütunun tamamını seç; sürükleyerek aralık seçerken metin seçimi boyanmaz. */
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.kolSpreadsheetLetter{cursor:s-resize}
 #view-koleksiyon.kolSpreadsheetDragSelecting #kolTable{user-select:none;-webkit-user-select:none}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable .chkTh,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetRowGutter{width:72px!important;min-width:72px!important}
 .kolSpreadsheetRowGutter{padding:0 3px!important;white-space:nowrap;text-align:center}
@@ -40,10 +38,6 @@
 .kolSpreadsheetPasteIssues{grid-column:1/-1;max-height:110px;overflow:auto}
 .kolSpreadsheetPasteFoot{display:flex;justify-content:flex-end;gap:6px;padding:9px 14px}
 @media(max-width:620px){.kolEmptyState{min-height:180px;padding:var(--ui-space-3)}.kolEmptyState .uiState{width:100%}}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead:not(.isLettersHidden) tr.colRow th{top:18px!important}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead:not(.isLettersHidden) tr.kolGroupRow th{top:18px!important}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead.kolHasGroups:not(.isLettersHidden) tr.colRow th{top:40px!important}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th{position:sticky;top:0!important}
 
 .kolSpreadsheetFilterSort{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:5px}
 .kolSpreadsheetFilterSort button{min-height:27px;padding:4px 7px;cursor:pointer;text-align:left}
