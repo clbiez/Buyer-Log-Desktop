@@ -86,7 +86,7 @@ test('çoklu hücre metni ayrımı: sekme/satır sonu yoksa yerel yapıştırma 
   assert.equal(GridClipboard.isMultiCellText('a\tb'), true);
 });
 
-function loadGridWithDocument() {
+function loadGridWithDocument({ applyResult = { ok: true }, modal = false } = {}) {
   const listeners = {};
   const makeTd = (rowId, key, r, c) => {
     const tr = { dataset: { id: String(rowId) } };
@@ -102,8 +102,9 @@ function loadGridWithDocument() {
     };
     return td;
   };
+  let focusCalls = 0;
   const table = {
-    id: 'cpTable', setAttribute() {}, removeAttribute() {}, focus() {},
+    id: 'cpTable', setAttribute() {}, removeAttribute() {}, focus() { focusCalls += 1; },
     contains(node) { return node === input || node === table; },
     querySelectorAll(selector) { return selector.includes('td[data-key]') ? tds : []; },
     _blRenderedRows: rows, _blRenderedColumns: columns,
@@ -119,6 +120,7 @@ function loadGridWithDocument() {
   const document = {
     addEventListener(name, cb) { (listeners[name] = listeners[name] || []).push(cb); },
     getElementById(id) { return id === 'cpTable' ? table : null; },
+    querySelector(selector) { return modal && selector.includes('.blBulkOverlay') ? {} : null; },
     body: {},
   };
   const previous = globalThis.document;
@@ -131,7 +133,7 @@ function loadGridWithDocument() {
   grid.register('cpTable', {
     rowId: row => row._id, columnId: column => column.k,
     pasteTarget: target,
-    applyPaste: plan => { applied.push(cells(plan)); return { ok: true }; },
+    applyPaste: plan => { applied.push(cells(plan)); return applyResult; },
   });
   const paste = (eventTarget, text) => {
     const event = {
@@ -143,7 +145,7 @@ function loadGridWithDocument() {
     return event;
   };
   const restore = () => { globalThis.document = previous; };
-  return { paste, input, table, applied, restore };
+  return { paste, input, table, grid, applied, restore, focusCalls: () => focusCalls };
 }
 
 test('hücre düzenleyicisinde tek değer yerel kalır, Excel çoklu hücresi o hücreden dağıtılır', async () => {
@@ -217,4 +219,65 @@ test('partial-view peers share one canonical bulk target per field',()=>{
  const unique=new Function('lineKeyOfRow',`${extractFunction(APP,'cpBulkUniqueOperations')};return cpBulkUniqueOperations;`)(row=>row.canonical);
  const first={row:{_id:1,canonical:'order|model|colour'},column:{k:'Supp. FOB'},value:'4'},duplicate={row:{_id:7,canonical:'order|model|colour'},column:{k:'Supp. FOB'},value:'5'},other={row:{_id:8,canonical:'other'},column:{k:'Supp. FOB'},value:'6'};
  assert.deepEqual(unique([first,duplicate,other]),[first,other]);
+});
+
+
+test('iptal edilen toplu yapıştırma aktif seçim aralığını ve odağı değiştirmez', async () => {
+  const h = loadGridWithDocument({ applyResult: { ok: false } });
+  try {
+    assert.equal(h.grid.restoreActive('cpTable', { rowId: '2', columnId: 'b' }), true);
+    const paste = h.paste(h.table, 'X\\nY'.replace('\\n', '\n'));
+    assert.equal(paste.prevented, true);
+    await new Promise(resolve => setImmediate(resolve));
+    const state = h.grid.state('cpTable');
+    assert.deepEqual(state.selectionFocus, { rowId: '2', columnId: 'b' });
+    assert.equal(h.focusCalls(), 0, 'dismissed preview must not steal focus');
+  } finally { h.restore(); }
+});
+
+test('başarılı matris yapıştırması seçilen alanı korur ve açık makbuz penceresinin odağını çalmaz', async () => {
+  for (const modal of [false, true]) {
+    const h = loadGridWithDocument({ modal });
+    try {
+      h.grid.restoreActive('cpTable', { rowId: '2', columnId: 'b' });
+      h.paste(h.table, 'X\\nY'.replace('\\n', '\n'));
+      await new Promise(resolve => setImmediate(resolve));
+      const state = h.grid.state('cpTable');
+      assert.deepEqual(state.selectionAnchor, { rowId: '2', columnId: 'b' });
+      assert.deepEqual(state.selectionFocus, { rowId: '3', columnId: 'b' });
+      assert.equal(h.focusCalls(), modal ? 0 : 1);
+    } finally { h.restore(); }
+  }
+});
+
+test('not düzenleyicisinde çok satırlı veya sekmeli metin doğal şekilde yapıştırılır', () => {
+  const h = loadGridWithDocument();
+  try {
+    const textarea = {
+      tagName: 'TEXTAREA',
+      closest(selector) {
+        if (selector.includes('input,textarea')) return this;
+        if (selector.includes('td[data-key]')) return h.input.closest(selector);
+        return null;
+      },
+    };
+    const event = h.paste(textarea, 'note\\ttext\\nnext'.replace('\\t', '\t').replace('\\n', '\n'));
+    assert.equal(event.prevented, false);
+    assert.deepEqual(h.applied, []);
+  } finally { h.restore(); }
+});
+
+
+test('önizleme sırasında daha yeni seçimi, asenkron yapıştırma yanıtı ezmez', async () => {
+  let finish;
+  const deferred = new Promise(resolve => { finish = resolve; });
+  const h = loadGridWithDocument({ applyResult: deferred });
+  try {
+    h.grid.restoreActive('cpTable', { rowId: '2', columnId: 'b' });
+    h.paste(h.table, 'X\\nY'.replace('\\n', '\n'));
+    h.grid.restoreActive('cpTable', { rowId: '4', columnId: 'a' });
+    finish({ ok: true });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(h.grid.state('cpTable').selectionFocus, { rowId: '4', columnId: 'a' });
+  } finally { h.restore(); }
 });
