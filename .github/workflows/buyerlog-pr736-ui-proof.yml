@@ -54,8 +54,10 @@ jobs:
             const intro=page.getByText("Buyer Log'a devam et",{exact:false});
             if(await intro.isVisible().catch(()=>false)) await intro.click({timeout:30000});
             await page.waitForFunction(()=>!document.getElementById('blBootGuard'),null,{timeout:60000});
-            await page.locator('[data-rn-close]').first().click({timeout:800}).catch(()=>{});
+            await page.waitForTimeout(1400);
+            await page.evaluate(()=>document.querySelector('.blRnDialog[open]')?.close());
             for(const tab of ['cp','orders','koleksiyon']){
+              await page.evaluate(()=>document.querySelector('.blRnDialog[open]')?.close());
               await page.locator('nav.tabs button[data-tab="'+tab+'"]').click({timeout:15000});
               await page.waitForTimeout(850);
               const v=await page.evaluate(key=>{
@@ -75,7 +77,8 @@ jobs:
             await page.keyboard.press('Control+Shift+k');
             await page.locator('.blCmdOverlay:not([hidden])').waitFor({timeout:8000});
             await page.keyboard.press('Escape');
-            await page.locator('nav.tabs button[data-tab="cp"]').click();
+            await page.evaluate(()=>document.querySelector('.blRnDialog[open]')?.close());
+            await page.locator('nav.tabs button[data-tab="cp"]').click({timeout:15000});
             await page.waitForTimeout(900);
             fs.mkdirSync('resources/app/public/release-notes/next-assets',{recursive:true});
             await page.screenshot({path:'resources/app/public/release-notes/next-assets/table-compact-no-extra-controls.png',animations:'disabled'});
