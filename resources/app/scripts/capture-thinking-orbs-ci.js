@@ -39,7 +39,7 @@ async function run(){
   await page.goto(base+'/',{waitUntil:'domcontentloaded',timeout:45000});
   const orb=page.locator('#blBootGuard canvas.blBootOrb');
   await orb.waitFor({state:'visible',timeout:15000});
-  await page.waitForTimeout(300);
+  // Capture the first painted loading frame before fast demo startup completes.
   const rendered=await page.evaluate(()=>{
     const canvas=document.querySelector('#blBootGuard canvas.blBootOrb');
     if(!canvas)return {found:false};
