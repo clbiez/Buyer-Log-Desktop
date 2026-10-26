@@ -307,6 +307,7 @@
 <link rel="stylesheet" href="detail-drawer.css?v=__BL_ASSET_VERSION__&rev=6">
 <link rel="stylesheet" href="command-palette.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="backlog-presentation.css?v=__BL_ASSET_VERSION__&rev=2">
+<link rel="stylesheet" href="table-view-drawers.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="ui-components.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="ui-motion.css?v=__BL_ASSET_VERSION__">
 <link id="blBootGuardStyle" rel="stylesheet" href="ui-startup.css?v=__BL_ASSET_VERSION__">
@@ -846,11 +847,17 @@
           <span class="workspaceContextMeta" id="cpWorkspaceMeta">—</span>
           <div class="tableViewActions" id="cpTableViewActions" role="group" aria-label="Table view">
 <button type="button" class="tableViewPreset" data-bulk-receipts aria-haspopup="dialog"><span data-i18n-tr="İşlem kayıtları" data-i18n-en="Receipts">İşlem kayıtları</span></button>
-            <span class="tableViewLabel" data-i18n-tr="GÖRÜNÜM" data-i18n-en="VIEW">GÖRÜNÜM</span>
-            <button type="button" class="tableViewPreset" data-table-view-preset="focus" data-table-key="cp" aria-pressed="false"><span data-i18n-tr="Odak" data-i18n-en="Focus">Odak</span></button>
+            <div class="blViewPicker" data-bl-view-picker="cp">
+              <button type="button" class="tableViewPreset blViewPickerTrigger" data-bl-view-trigger aria-haspopup="true" aria-expanded="false" aria-controls="cpViewPickerMenu" aria-label="Tablo görünümü" data-i18n-aria-label-tr="Tablo görünümü" data-i18n-aria-label-en="Table view">
+                <span data-bl-view-current>Odak</span><svg class="ic blViewPickerChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+              </button>
+              <div class="blViewPickerMenu" id="cpViewPickerMenu" role="group" aria-label="Görünüm seçenekleri" data-i18n-aria-label-tr="Görünüm seçenekleri" data-i18n-aria-label-en="View options" hidden>
+                <button type="button" class="tableViewPreset" data-table-view-preset="focus" data-table-key="cp" aria-pressed="false"><span data-i18n-tr="Odak" data-i18n-en="Focus">Odak</span></button>
             <button type="button" class="tableViewPreset" data-table-view-preset="extended" data-table-key="cp" aria-pressed="false"><span data-i18n-tr="Genişletilmiş" data-i18n-en="Extended">Genişletilmiş</span></button>
             <button type="button" class="tableViewPreset" data-table-view-preset="all" data-table-key="cp" aria-pressed="false"><span data-i18n-tr="Tümü" data-i18n-en="All">Tümü</span></button>
             <button type="button" class="tableViewPreset tableFieldsBtn" data-table-fields="cp" aria-haspopup="dialog" aria-expanded="false" title="Ana başlıkları aç / kapat (görünüm ayarını değiştirmez)" data-i18n-title-tr="Ana başlıkları aç / kapat (görünüm ayarını değiştirmez)" data-i18n-title-en="Show / hide column headings (does not change the view preset)"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg><span data-i18n-tr="Alanlar" data-i18n-en="Fields">Alanlar</span><span class="tableFieldsBadge" hidden></span></button>
+              </div>
+            </div>
             <button type="button" class="tableViewPreset tablePartialViewToggle" data-partial-view-toggle="cp" aria-pressed="false" title="Status etiketlerini ayrı satırlarda göster" data-i18n-title-tr="Status etiketlerini ayrı satırlarda göster" data-i18n-title-en="Show each status label on a separate row"><span>Partial View</span></button>
           </div>
         </div>
@@ -914,11 +921,17 @@
         <div class="workspaceContextBar" aria-label="Orders workspace context">
           <span class="workspaceContextMeta" id="ordersWorkspaceMeta">—</span>
           <div class="tableViewActions" id="ordersTableViewActions" role="group" aria-label="Table view">
-            <span class="tableViewLabel" data-i18n-tr="GÖRÜNÜM" data-i18n-en="VIEW">GÖRÜNÜM</span>
-            <button type="button" class="tableViewPreset" data-table-view-preset="focus" data-table-key="orders" aria-pressed="false"><span data-i18n-tr="Odak" data-i18n-en="Focus">Odak</span></button>
+            <div class="blViewPicker" data-bl-view-picker="orders">
+              <button type="button" class="tableViewPreset blViewPickerTrigger" data-bl-view-trigger aria-haspopup="true" aria-expanded="false" aria-controls="ordersViewPickerMenu" aria-label="Tablo görünümü" data-i18n-aria-label-tr="Tablo görünümü" data-i18n-aria-label-en="Table view">
+                <span data-bl-view-current>Odak</span><svg class="ic blViewPickerChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+              </button>
+              <div class="blViewPickerMenu" id="ordersViewPickerMenu" role="group" aria-label="Görünüm seçenekleri" data-i18n-aria-label-tr="Görünüm seçenekleri" data-i18n-aria-label-en="View options" hidden>
+                <button type="button" class="tableViewPreset" data-table-view-preset="focus" data-table-key="orders" aria-pressed="false"><span data-i18n-tr="Odak" data-i18n-en="Focus">Odak</span></button>
             <button type="button" class="tableViewPreset" data-table-view-preset="extended" data-table-key="orders" aria-pressed="false"><span data-i18n-tr="Genişletilmiş" data-i18n-en="Extended">Genişletilmiş</span></button>
             <button type="button" class="tableViewPreset" data-table-view-preset="all" data-table-key="orders" aria-pressed="false"><span data-i18n-tr="Tümü" data-i18n-en="All">Tümü</span></button>
             <button type="button" class="tableViewPreset tableFieldsBtn" data-table-fields="orders" aria-haspopup="dialog" aria-expanded="false" title="Ana başlıkları aç / kapat (görünüm ayarını değiştirmez)" data-i18n-title-tr="Ana başlıkları aç / kapat (görünüm ayarını değiştirmez)" data-i18n-title-en="Show / hide column headings (does not change the view preset)"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg><span data-i18n-tr="Alanlar" data-i18n-en="Fields">Alanlar</span><span class="tableFieldsBadge" hidden></span></button>
+              </div>
+            </div>
             <button type="button" class="tableViewPreset tablePartialViewToggle" data-partial-view-toggle="orders" aria-pressed="false" title="Status etiketlerini ayrı satırlarda göster" data-i18n-title-tr="Status etiketlerini ayrı satırlarda göster" data-i18n-title-en="Show each status label on a separate row"><span>Partial View</span></button>
           </div>
         </div>
@@ -975,18 +988,30 @@
         <span class="workspaceContextMeta" id="kolWorkspaceMeta">—</span>
         <div class="tableViewActions" id="kolTableViewActions" role="group" aria-label="Table view">
 <button type="button" class="tableViewPreset" data-bulk-receipts aria-haspopup="dialog"><span data-i18n-tr="İşlem kayıtları" data-i18n-en="Receipts">İşlem kayıtları</span></button>
-          <span class="tableViewLabel" data-i18n-tr="GÖRÜNÜM" data-i18n-en="VIEW">GÖRÜNÜM</span>
-          <button type="button" class="tableViewPreset" data-table-view-preset="focus" data-table-key="koleksiyon" aria-pressed="false"><span data-i18n-tr="Odak" data-i18n-en="Focus">Odak</span></button>
+          <div class="blViewPicker" data-bl-view-picker="koleksiyon">
+              <button type="button" class="tableViewPreset blViewPickerTrigger" data-bl-view-trigger aria-haspopup="true" aria-expanded="false" aria-controls="kolViewPickerMenu" aria-label="Tablo görünümü" data-i18n-aria-label-tr="Tablo görünümü" data-i18n-aria-label-en="Table view">
+                <span data-bl-view-current>Odak</span><svg class="ic blViewPickerChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+              </button>
+              <div class="blViewPickerMenu" id="kolViewPickerMenu" role="group" aria-label="Görünüm seçenekleri" data-i18n-aria-label-tr="Görünüm seçenekleri" data-i18n-aria-label-en="View options" hidden>
+                <button type="button" class="tableViewPreset" data-table-view-preset="focus" data-table-key="koleksiyon" aria-pressed="false"><span data-i18n-tr="Odak" data-i18n-en="Focus">Odak</span></button>
           <button type="button" class="tableViewPreset" data-table-view-preset="extended" data-table-key="koleksiyon" aria-pressed="false"><span data-i18n-tr="Genişletilmiş" data-i18n-en="Extended">Genişletilmiş</span></button>
           <button type="button" class="tableViewPreset" data-table-view-preset="all" data-table-key="koleksiyon" aria-pressed="false"><span data-i18n-tr="Tümü" data-i18n-en="All">Tümü</span></button>
           <button type="button" class="tableViewPreset tableFieldsBtn" data-table-fields="koleksiyon" aria-haspopup="dialog" aria-expanded="false" title="Ana başlıkları aç / kapat (görünüm ayarını değiştirmez)" data-i18n-title-tr="Ana başlıkları aç / kapat (görünüm ayarını değiştirmez)" data-i18n-title-en="Show / hide column headings (does not change the view preset)"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg><span data-i18n-tr="Alanlar" data-i18n-en="Fields">Alanlar</span><span class="tableFieldsBadge" hidden></span></button>
-          <button type="button" class="tableViewPreset kolAllVariantsToggle" id="kolAllVariantsToggle" aria-pressed="true" title="Tüm alt renkleri gizle" aria-label="Tüm alt renkleri gizle"><svg class="ic" aria-hidden="true"><use href="#i-arrows-down-up"/></svg></button>
+              </div>
+            </div>
+          <button type="button" class="tableViewPreset kolAllVariantsToggle" id="kolAllVariantsToggle" aria-pressed="true" title="Opsiyonları daralt" data-i18n-title-tr="Opsiyonları daralt" data-i18n-title-en="Collapse options" aria-label="Opsiyonları daralt" data-i18n-aria-label-tr="Opsiyonları daralt" data-i18n-aria-label-en="Collapse options"><span data-bl-variant-label data-i18n-tr="Opsiyonları daralt" data-i18n-en="Collapse options">Opsiyonları daralt</span></button>
         </div>
         <div class="tableViewActions kolPriceViewActions" id="kolPriceViewActions" role="group" aria-label="Fiyat görünümü" data-i18n-aria-label-tr="Fiyat görünümü" data-i18n-aria-label-en="Price view">
-          <span class="tableViewLabel" data-i18n-tr="FİYAT" data-i18n-en="PRICE">FİYAT</span>
-          <button type="button" class="tableViewPreset" data-kol-price-view="compact" aria-pressed="true" title="Teklif & Onay şeridi ve Landed Özeti" data-i18n-title-tr="Teklif & Onay şeridi ve Landed Özeti" data-i18n-title-en="Quotes & Approval strip and Landed Summary"><span data-i18n-tr="Kompakt" data-i18n-en="Compact">Kompakt</span></button>
+          <div class="blViewPicker blPriceViewPicker" data-bl-price-picker="1">
+            <button type="button" class="tableViewPreset blViewPickerTrigger" data-bl-view-trigger aria-haspopup="true" aria-expanded="false" aria-controls="kolPricePickerMenu" aria-label="Fiyat görünümü" data-i18n-aria-label-tr="Fiyat görünümü" data-i18n-aria-label-en="Price view">
+              <svg class="ic blViewPriceIcon" aria-hidden="true"><use href="#i-coins"/></svg><span data-bl-view-current>Kompakt</span><svg class="ic blViewPickerChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+            </button>
+            <div class="blViewPickerMenu" id="kolPricePickerMenu" role="group" aria-label="Fiyat görünümü seçenekleri" data-i18n-aria-label-tr="Fiyat görünümü seçenekleri" data-i18n-aria-label-en="Price view options" hidden>
+              <button type="button" class="tableViewPreset" data-kol-price-view="compact" aria-pressed="true" title="Teklif & Onay şeridi ve Landed Özeti" data-i18n-title-tr="Teklif & Onay şeridi ve Landed Özeti" data-i18n-title-en="Quotes & Approval strip and Landed Summary"><span data-i18n-tr="Kompakt" data-i18n-en="Compact">Kompakt</span></button>
           <button type="button" class="tableViewPreset" data-kol-price-view="detail" aria-pressed="false" title="Best Price, onaylı üretici/fiyat, FOB ve landed ayrı sütunlarda" data-i18n-title-tr="Best Price, onaylı üretici/fiyat, FOB ve landed ayrı sütunlarda" data-i18n-title-en="Best Price, approved manufacturer/price, FOB and landed in separate columns"><span data-i18n-tr="Detay" data-i18n-en="Detail">Detay</span></button>
           <button type="button" class="tableViewPreset" data-kol-price-view="cost" aria-pressed="false" title="Teklif şeridi + FOB, Royalty, Hologram ve landed maliyet sütunları" data-i18n-title-tr="Teklif şeridi + FOB, Royalty, Hologram ve landed maliyet sütunları" data-i18n-title-en="Quote strip + FOB, Royalty, Hologram and landed cost columns"><span data-i18n-tr="Maliyet" data-i18n-en="Cost">Maliyet</span></button>
+            </div>
+          </div>
         </div>
       </div>
       <div id="kolSaveState" class="uiPersistenceRegion" hidden></div>
@@ -1483,6 +1508,7 @@
 <script src="price-lineage.js?v=__BL_ASSET_VERSION__"></script>
 <script src="bulk-operations.js?v=__BL_ASSET_VERSION__"></script>
 <script src="app-main.js?v=__BL_ASSET_VERSION__&rev=20261024-notebook-rich-editor"></script>
+<script src="table-view-drawers.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="collection-artwork-detail.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="checklist-answer-merge-engine.js?v=__BL_ASSET_VERSION__"></script>
 <script src="cp-plm-details.js?v=__BL_ASSET_VERSION__&rev=1"></script>
