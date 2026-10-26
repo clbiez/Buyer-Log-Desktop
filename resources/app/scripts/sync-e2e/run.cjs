@@ -899,7 +899,7 @@ async function reconcile() {
 }
 (async () => {
   try {
-    runtime = await R.setup(root, { users, backends, startBackends: 1 });
+    runtime = await R.setup(root, { users, backends, port:Number(args.port||7320), startBackends: 1 });
     write({
       type: "manifest",
       ...runtime.manifest,

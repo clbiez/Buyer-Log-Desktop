@@ -107,7 +107,12 @@ async function startServer(root, port, hub, entry = "server/server.js") {
       try {
         const res = await fetch(server.base + "/api/auth-status");
         if (res.status === 200) return server;
-      } catch {}
+      } catch (error) {
+        if(String(error?.cause?.message||'').includes('bad port')){
+          await stopServer(server);
+          throw Object.assign(new Error('Native Fetch blocks configured test HTTP port '+port+'; choose an allowed HTTP port range.'),{code:'TEST_HTTP_UNSAFE_PORT'});
+        }
+      }
     }
     await delay(100);
   }
@@ -168,7 +173,7 @@ function check(r, expected = 200) {
 }
 async function setup(
   root,
-  { users = 50, backends = 3, port = 6520, startBackends = backends } = {},
+  { users = 50, backends = 3, port = 7320, startBackends = backends } = {},
 ) {
   if (fs.existsSync(path.join(root, "device-0")))
     throw Error(

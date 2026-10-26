@@ -31,7 +31,7 @@ node scripts/sync-e2e/transit.cjs /tmp/bl-transit-new
 
 `BL_E2E_SCENARIOS` selects controlled scenarios by regular expression, allowing a
 new targeted check without repeating unrelated scenarios. `BL_E2E_PORT` selects
-the first controlled backend port (default 6530). Daily-load ports start at 6520;
+the first controlled backend port (default 6530). Daily-load ports start at 7320 (`--port` overrides the base);
 transit acceptance uses 6550. Do not overlap tests on the same ports. Readiness
 requires the **new process's** SERVER_READY log, rather than accepting an existing
 listener as the test backend.
@@ -102,3 +102,5 @@ Rejected shared drafts can be explicitly discarded using the real bilingual reco
 Long-load tracing defaults to `events`: action/network events remain, continuous DOM snapshots/screenshots are disabled to avoid charging tracing traversal/rendering to application CPU. Explicit screenshots on failure, independent operation/UI-state journal and diagnostics remain. `--trace-mode=snapshots` restores the earlier heavy mode for a focused diagnosis; original failed heavy-trace attempts are retained. This does not increase operation timeouts or retry the test framework. A trace-overhead hypothesis is not a proven root cause of previous timeouts.
 
 Native suppressed ACK records retain the original request UUID/session, so final reconciliation includes accepted writes whose response never reached the UI. Before any final UI recovery/GET imports, raw durable workspace snapshots are retained and each latest accepted intent is checked on its origin backend. Final per-minute counts derive from actual completed UI timestamps; periodic timer callbacks are separate telemetry. UI evaluation is bounded by 30 seconds and each complete action has a 60-second forensic watchdog; neither is an invented product SLO.
+
+The default fifty-backend range 7320–7369 avoids native Fetch/browser unsafe ports. The old 6520 range would cross 6566 at device 47; an auxiliary recovery range crossed 6697 at device 8. Unsafe-port configuration now fails explicitly instead of misreporting backend startup readiness. Selecting ordinary local HTTP ports does not bypass any environment network policy.
