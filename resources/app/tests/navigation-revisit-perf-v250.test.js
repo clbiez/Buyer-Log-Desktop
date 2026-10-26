@@ -29,13 +29,18 @@ test('CP tab revisits reuse the checklist runtime instead of re-downloading and 
   assert.match(sync, /if \(sharedSignature !== state\.sharedViewSignature\)/);
 });
 
-test('map loading uses a static marker with no animation frame or layout measurement', () => {
-  const flow = read('public/overview-global-flow.js');
+test('map loading uses the Working orb only while the operation is active',()=>{
+  const flow=read('public/overview-global-flow.js');
   const loading=flow.slice(flow.indexOf('function syncLoadingOrb(busy)'),flow.indexOf('function syncLoadingOverlay()'));
-  assert.match(loading,/marker\.dataset\.state=busy\?'thinking':'idle'/);
-  assert.match(flow, /syncLoadingOrb\(busy\);/);
-  assert.doesNotMatch(loading,/requestAnimationFrame|getBoundingClientRect|BLThinkingOrb/);
-  assert.match(flow, /id="globalFlowWorkingOrb" class="blOrb"/);
+  assert.match(flow,/id="globalFlowWorkingOrb" width="64" height="64"/);
+  assert.match(loading,/window\.BLThinkingOrb\.attach/);
+  assert.match(loading,/state\.orbHandle\.stop\(\)/);
+  assert.match(flow,/syncLoadingOrb\(busy\);/);
+  const worker=read('public/thinking-orb-working.js');
+  assert.match(worker,/IntersectionObserver/);
+  assert.match(worker,/visibilitychange/);
+  assert.match(worker,/prefers-reduced-motion: reduce/);
+  assert.doesNotMatch(loading,/requestAnimationFrame|getBoundingClientRect/);
 });
 
 test('working orb stops by itself once its canvas leaves the document', () => {
@@ -44,13 +49,13 @@ test('working orb stops by itself once its canvas leaves the document', () => {
   const ctx = { setTransform() {}, clearRect() {}, beginPath() {}, arc() {}, fill() {}, globalAlpha: 1, fillStyle: '' };
   const canvas = { isConnected: true, width: 64, height: 64, getContext: () => ctx, getBoundingClientRect: () => { rects++; return { width: 64, height: 64 }; } };
   const window = {
-    document: { documentElement: {} }, devicePixelRatio: 1,
+    document: { documentElement: {},addEventListener(){},removeEventListener(){} }, devicePixelRatio: 1,
     addEventListener() {}, removeEventListener() {},
     requestAnimationFrame: fn => { callbacks.push(fn); return callbacks.length; }, cancelAnimationFrame() {},
   };
   const context = { window, getComputedStyle: () => ({ getPropertyValue: () => '#123456' }) };
   context.document = window.document;
-  vm.runInNewContext(read('tests/fixtures/retired-ui/thinking-orb-working.js'), context);
+  vm.runInNewContext(read('public/thinking-orb-working.js'), context);
   window.BLThinkingOrb.attach(canvas);
   for (let i = 0; i < 5; i++) { const fn = callbacks.shift(); if (fn) { frames++; fn(16 * (i + 1)); } }
   assert.equal(rects, 1, 'size is measured once, not every frame');
