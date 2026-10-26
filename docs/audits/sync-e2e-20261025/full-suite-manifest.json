@@ -1,11 +1,11 @@
 {
-  "startedAt": "2026-10-26T01:30:03.655540+00:00",
-  "source": "313007a792a85425802f6b23b4ca82c9eb0e85dc",
-  "applicationTree": "954b78ff6c95d7c82b32de30b9c16ef929f64f1f",
+  "startedAt": "2026-10-26T02:15:06.909690+00:00",
+  "source": "2a3de62964d4661b17a9f21b8edfbd1b93428004",
+  "applicationTree": "acca928275d1f2bc96ec703cc87b775ec5956034",
   "command": "cd resources/app && npm test",
   "concurrency": 4,
   "loadRunning": false,
   "mainIntegrated": "94df09447834c82adc964e772360614344472313",
   "xlsx": "0.20.3",
-  "repeatReason": "First 50-user ramp exposed false saved badge after explicit rejection. Shared persistence UI primitive changed. Real small UI reproduction and 63 targeted checks passed; final package must certify corrected source."
+  "repeatReason": "Second final ramp exposed accepted-write loss and editor churn; real minimal backend/UI reproductions, import-notification regression, strict DOM smoke and 68 targeted checks passed. Core replication/server/public/test trees changed, so full suite is required."
 }

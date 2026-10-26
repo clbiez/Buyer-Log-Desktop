@@ -1,65 +1,65 @@
-﹣ PORT_ENDPOINT_OWNERSHIP · profilin DevToolsActivePort GUID’i eşleşince uç nokta sahiplenilir (1.898926ms) # SKIP
-﹣ PORT_ENDPOINT_OWNERSHIP · aynı portta BAŞKA bir tarayıcı süreci varsa devralınmaz (0.261188ms) # SKIP
-﹣ PORT_ENDPOINT_OWNERSHIP · seçili profil BAŞKA portta açıksa, cevap veren yabancı port sahiplenilmez (0.37855ms) # SKIP
-﹣ PORT_ENDPOINT_OWNERSHIP · CDP konuşan yabancı bir Chromium (Chrome) Edge yerine geçmez (0.128411ms) # SKIP
-﹣ PORT_ENDPOINT_OWNERSHIP · Buyer Log’un KENDİ başlattığı port sahiplik kanıtıdır (0.153435ms) # SKIP
-﹣ PORT_ENDPOINT_OWNERSHIP · sahipliği kanıtlanamayan port DOLU sayılır, başka port hazırlanır (0.100284ms) # SKIP
-﹣ NO_SILENT_PROFILE_FALLBACK · bu makinede olmayan seçim listenin ilk profiline DÜŞMEZ (0.092567ms) # SKIP
-﹣ NO_SILENT_PROFILE_FALLBACK · birden çok profil varken seçimsiz başlatılmaz (0.276562ms) # SKIP
-﹣ NO_SILENT_PROFILE_FALLBACK · TEK profil varsa seçim kendiliğinden yapılabilir (0.55641ms) # SKIP
-﹣ NO_SILENT_PROFILE_FALLBACK · durum ekranı da eksik profili bildirir (3.618086ms) # SKIP
-﹣ PORTABLE_MACHINE_REBIND · kaynak makinenin profili/portu hedefte kullanılmaz (0.190699ms) # SKIP
-﹣ PORTABLE_MACHINE_REBIND · kullanıcı tercihi (tarayıcı) korunur, keşif hedefte yeniden yapılır (0.339411ms) # SKIP
-﹣ MULTI_PROFILE_PROFILE_AFFINITY · bağlama hazır değilken eski keşfe DÜŞÜLMEZ (0.072557ms) # SKIP
-﹣ MULTI_PROFILE_PROFILE_AFFINITY · her engelleyici durum için uygulanabilir bir mesaj vardır (0.694453ms) # SKIP
-﹣ MULTI_PROFILE_PROFILE_AFFINITY · sabitlenen bağlam kimliği bağlamaya bildirilir (0.088684ms) # SKIP
-﹣ MULTI_PROFILE_PROFILE_AFFINITY · arayüz eksik profil yerine BAŞKASINI seçili göstermez (0.05893ms) # SKIP
-﹣ MULTI_PROFILE_PROFILE_AFFINITY · tanı çıktısı sır taşımaz (2.12218ms) # SKIP
-﹣ MULTI_PROFILE_PROFILE_AFFINITY · sabitlenmiş bağlam başka profile aitse READY verilmez (0.080328ms) # SKIP
-﹣ MULTI_PROFILE_PROFILE_AFFINITY · bağlam seçili profille aynıysa READY korunur (0.06492ms) # SKIP
-﹣ ENABLE_AND_LAUNCH · kalıcı profil, kullanıcının açık Edge’i yüzünden bloke edilmez (0.179638ms) # SKIP
-﹣ ENABLE_AND_LAUNCH · gerçek kullanıcı profilinde singleton koruması KORUNUR (0.272123ms) # SKIP
-﹣ ENDPOINT_RECORD · sunucu yeniden başlasa da kendi tarayıcısı yeniden başlatılmaz (0.131951ms) # SKIP
-﹣ ENDPOINT_RECORD · kayıt cihazla mühürlüdür: kopyalanan paket onu kullanamaz (0.057347ms) # SKIP
-﹣ ENDPOINT_RECORD · port aynı ama süreç değiştiyse sahiplik düşer (0.046535ms) # SKIP
-﹣ EDGE_LABEL · gerçek Edge yanıtı ("Edg/153.0.4234.32") geçerli sayılır (0.056846ms) # SKIP
-﹣ EDGE_LABEL · "Edg/" etiketli uç nokta seçili profile bağlanabilir (0.050321ms) # SKIP
-﹣ EDGE_INSPECT_RUNTIME · Edge 154 inspect anahtarı açıksa PLM preflight bağlantıyı yeniden açtırmaz (0.047736ms) # SKIP
-﹣ LISTENING_PROCESS · portu dinleyen süreç BAŞKA klasör açtıysa bağlanılmaz (0.050903ms) # SKIP
-﹣ LISTENING_PROCESS · netstat ve komut satırı ayrıştırıcıları gerçek çıktıyı okur (0.045098ms) # SKIP
-﹣ browser preference defaults to system and explicit overrides are preserved (1.764615ms) # SKIP
-﹣ system default resolver maps HTTPS/HTTP UserChoice ProgIds without writing Windows state (0.270174ms) # SKIP
-﹣ policy normalization treats explicit zero as an organization block (0.134134ms) # SKIP
-﹣ Chrome and Edge launch arguments are loopback-safe and profile validated (0.527091ms) # SKIP
-﹣ Edge Local State profile metadata keeps friendly name separate from directory id (0.217568ms) # SKIP
-﹣ CDP version validator rejects foreign HTTP services and non-loopback endpoints (0.122296ms) # SKIP
-﹣ configuration keeps browser runtime settings local and validates port (0.205644ms) # SKIP
-﹣ CDP verifier only accepts a real loopback /json/version payload (0.154839ms) # SKIP
-﹣ system preference re-resolves the effective browser while explicit preference wins (0.208161ms) # SKIP
-﹣ portable host hand-off keeps browser profiles outside the redirected package data root (0.4957ms) # SKIP
-﹣ explicit organization policy blocks launch before browser spawn (0.151273ms) # SKIP
-﹣ a foreign service on the preferred port is rejected and an alternate loopback port is chosen (0.09998ms) # SKIP
-﹣ registry output, Edge profiles and policy sources are normalized without secret-store access (0.694675ms) # SKIP
-﹣ CDP verifier reports invalid clients, invalid JSON and transport failures safely (0.103182ms) # SKIP
-﹣ when every preferred port is occupied, the service allocates a free loopback port (0.569849ms) # SKIP
-﹣ enable and launch uses one stable Chrome profile and only spawns after policy/endpoint checks (0.133922ms) # SKIP
-﹣ v7.83 settings file lives under the canonical writable Buyer Log root, not the device-local browser root (0.396494ms) # SKIP
-﹣ v7.83 a settings file left in the old location is migrated once into the canonical path (0.21083ms) # SKIP
-﹣ v7.83 the existing Edge profile is launched with its own user-data-dir so Chromium cannot hand off and exit (0.05851ms) # SKIP
-﹣ v7.83 a second setup call reuses the verified endpoint instead of restarting the browser (0.061707ms) # SKIP
-﹣ v7.83 a running browser without CDP stops at a bounded ERROR instead of looping launch/close (0.053079ms) # SKIP
-﹣ v7.83 an explicit restart closes the browser once, without /F, and then launches the same profile (0.044896ms) # SKIP
-﹣ v7.83 parallel setup requests share one canonical operation (0.096409ms) # SKIP
-﹣ v7.83 a foreign Chromium on the default port is not adopted as the resolved browser endpoint (0.049369ms) # SKIP
-﹣ v7.83 modal buttons capture the trigger synchronously so closing the modal cannot null-deref disabled (0.118986ms) # SKIP
-﹣ sürüm, kurulum klasöründen okunur (--version stdout BOŞ olsa bile) (1.406021ms) # SKIP
-﹣ Edge 136+ gerçek profile bağlanmayı DENEMEZ, kendi kalıcı profiline geçer (0.198969ms) # SKIP
-﹣ 136 ALTINDA mevcut profil davranışı aynen korunur (0.12137ms) # SKIP
-﹣ eşik tam 136'dır (0.279766ms) # SKIP
-﹣ kalıcı profil modunda da --user-data-dir ve port zorunludur (0.393145ms) # SKIP
-﹣ bağlanamayınca kullanıcıya NE YAPACAĞI söylenir, döngüde bırakılmaz (0.172656ms) # SKIP
-﹣ portable kök paketlenmiş çalıştırmada EXE klasörüdür — kullanıcı verisi EXE ile aynı yerde durur (5.928351ms) # SKIP
-﹣ geliştirme çalıştırması depoya data\ yazmaz — ayrı .desktop-dev kökü kullanır (0.200295ms) # SKIP
-﹣ yol düzeni START-BUYER-LOG.cmd ile aynı — iki başlatıcı aynı veriyi görmeli, iki ayrı evren üretmemeli (0.176493ms) # SKIP
-﹣ v9.56 gerçek Edge oturumu portable ortamında da bulunuyor (0.185678ms) # SKIP
-﹣ OneDrive simulation soak: 10 devices, 20,000 operations (0.560374ms) # SKIP
+﹣ PORT_ENDPOINT_OWNERSHIP · profilin DevToolsActivePort GUID’i eşleşince uç nokta sahiplenilir (1.083428ms) # SKIP
+﹣ PORT_ENDPOINT_OWNERSHIP · aynı portta BAŞKA bir tarayıcı süreci varsa devralınmaz (0.123415ms) # SKIP
+﹣ PORT_ENDPOINT_OWNERSHIP · seçili profil BAŞKA portta açıksa, cevap veren yabancı port sahiplenilmez (0.116857ms) # SKIP
+﹣ PORT_ENDPOINT_OWNERSHIP · CDP konuşan yabancı bir Chromium (Chrome) Edge yerine geçmez (0.089147ms) # SKIP
+﹣ PORT_ENDPOINT_OWNERSHIP · Buyer Log’un KENDİ başlattığı port sahiplik kanıtıdır (0.171423ms) # SKIP
+﹣ PORT_ENDPOINT_OWNERSHIP · sahipliği kanıtlanamayan port DOLU sayılır, başka port hazırlanır (0.219129ms) # SKIP
+﹣ NO_SILENT_PROFILE_FALLBACK · bu makinede olmayan seçim listenin ilk profiline DÜŞMEZ (0.095629ms) # SKIP
+﹣ NO_SILENT_PROFILE_FALLBACK · birden çok profil varken seçimsiz başlatılmaz (0.093868ms) # SKIP
+﹣ NO_SILENT_PROFILE_FALLBACK · TEK profil varsa seçim kendiliğinden yapılabilir (0.120263ms) # SKIP
+﹣ NO_SILENT_PROFILE_FALLBACK · durum ekranı da eksik profili bildirir (0.153119ms) # SKIP
+﹣ PORTABLE_MACHINE_REBIND · kaynak makinenin profili/portu hedefte kullanılmaz (1.882829ms) # SKIP
+﹣ PORTABLE_MACHINE_REBIND · kullanıcı tercihi (tarayıcı) korunur, keşif hedefte yeniden yapılır (0.109243ms) # SKIP
+﹣ MULTI_PROFILE_PROFILE_AFFINITY · bağlama hazır değilken eski keşfe DÜŞÜLMEZ (0.047328ms) # SKIP
+﹣ MULTI_PROFILE_PROFILE_AFFINITY · her engelleyici durum için uygulanabilir bir mesaj vardır (0.05966ms) # SKIP
+﹣ MULTI_PROFILE_PROFILE_AFFINITY · sabitlenen bağlam kimliği bağlamaya bildirilir (0.034842ms) # SKIP
+﹣ MULTI_PROFILE_PROFILE_AFFINITY · arayüz eksik profil yerine BAŞKASINI seçili göstermez (0.036792ms) # SKIP
+﹣ MULTI_PROFILE_PROFILE_AFFINITY · tanı çıktısı sır taşımaz (0.08015ms) # SKIP
+﹣ MULTI_PROFILE_PROFILE_AFFINITY · sabitlenmiş bağlam başka profile aitse READY verilmez (0.031773ms) # SKIP
+﹣ MULTI_PROFILE_PROFILE_AFFINITY · bağlam seçili profille aynıysa READY korunur (0.038448ms) # SKIP
+﹣ ENABLE_AND_LAUNCH · kalıcı profil, kullanıcının açık Edge’i yüzünden bloke edilmez (0.028288ms) # SKIP
+﹣ ENABLE_AND_LAUNCH · gerçek kullanıcı profilinde singleton koruması KORUNUR (0.172616ms) # SKIP
+﹣ ENDPOINT_RECORD · sunucu yeniden başlasa da kendi tarayıcısı yeniden başlatılmaz (0.044098ms) # SKIP
+﹣ ENDPOINT_RECORD · kayıt cihazla mühürlüdür: kopyalanan paket onu kullanamaz (0.03077ms) # SKIP
+﹣ ENDPOINT_RECORD · port aynı ama süreç değiştiyse sahiplik düşer (0.026534ms) # SKIP
+﹣ EDGE_LABEL · gerçek Edge yanıtı ("Edg/153.0.4234.32") geçerli sayılır (0.033798ms) # SKIP
+﹣ EDGE_LABEL · "Edg/" etiketli uç nokta seçili profile bağlanabilir (0.037492ms) # SKIP
+﹣ EDGE_INSPECT_RUNTIME · Edge 154 inspect anahtarı açıksa PLM preflight bağlantıyı yeniden açtırmaz (0.037578ms) # SKIP
+﹣ LISTENING_PROCESS · portu dinleyen süreç BAŞKA klasör açtıysa bağlanılmaz (0.059174ms) # SKIP
+﹣ LISTENING_PROCESS · netstat ve komut satırı ayrıştırıcıları gerçek çıktıyı okur (0.034113ms) # SKIP
+﹣ browser preference defaults to system and explicit overrides are preserved (1.883991ms) # SKIP
+﹣ system default resolver maps HTTPS/HTTP UserChoice ProgIds without writing Windows state (0.19724ms) # SKIP
+﹣ policy normalization treats explicit zero as an organization block (0.136094ms) # SKIP
+﹣ Chrome and Edge launch arguments are loopback-safe and profile validated (0.382048ms) # SKIP
+﹣ Edge Local State profile metadata keeps friendly name separate from directory id (0.292088ms) # SKIP
+﹣ CDP version validator rejects foreign HTTP services and non-loopback endpoints (0.189737ms) # SKIP
+﹣ configuration keeps browser runtime settings local and validates port (0.31681ms) # SKIP
+﹣ CDP verifier only accepts a real loopback /json/version payload (0.367102ms) # SKIP
+﹣ system preference re-resolves the effective browser while explicit preference wins (1.642547ms) # SKIP
+﹣ portable host hand-off keeps browser profiles outside the redirected package data root (0.506584ms) # SKIP
+﹣ explicit organization policy blocks launch before browser spawn (1.034563ms) # SKIP
+﹣ a foreign service on the preferred port is rejected and an alternate loopback port is chosen (0.124806ms) # SKIP
+﹣ registry output, Edge profiles and policy sources are normalized without secret-store access (0.989074ms) # SKIP
+﹣ CDP verifier reports invalid clients, invalid JSON and transport failures safely (0.098761ms) # SKIP
+﹣ when every preferred port is occupied, the service allocates a free loopback port (0.633062ms) # SKIP
+﹣ enable and launch uses one stable Chrome profile and only spawns after policy/endpoint checks (0.148248ms) # SKIP
+﹣ v7.83 settings file lives under the canonical writable Buyer Log root, not the device-local browser root (0.515134ms) # SKIP
+﹣ v7.83 a settings file left in the old location is migrated once into the canonical path (0.078213ms) # SKIP
+﹣ v7.83 the existing Edge profile is launched with its own user-data-dir so Chromium cannot hand off and exit (0.050762ms) # SKIP
+﹣ v7.83 a second setup call reuses the verified endpoint instead of restarting the browser (0.047917ms) # SKIP
+﹣ v7.83 a running browser without CDP stops at a bounded ERROR instead of looping launch/close (0.046788ms) # SKIP
+﹣ v7.83 an explicit restart closes the browser once, without /F, and then launches the same profile (0.040373ms) # SKIP
+﹣ v7.83 parallel setup requests share one canonical operation (0.04011ms) # SKIP
+﹣ v7.83 a foreign Chromium on the default port is not adopted as the resolved browser endpoint (0.039133ms) # SKIP
+﹣ v7.83 modal buttons capture the trigger synchronously so closing the modal cannot null-deref disabled (0.040549ms) # SKIP
+﹣ sürüm, kurulum klasöründen okunur (--version stdout BOŞ olsa bile) (1.541876ms) # SKIP
+﹣ Edge 136+ gerçek profile bağlanmayı DENEMEZ, kendi kalıcı profiline geçer (0.201139ms) # SKIP
+﹣ 136 ALTINDA mevcut profil davranışı aynen korunur (0.140654ms) # SKIP
+﹣ eşik tam 136'dır (0.203667ms) # SKIP
+﹣ kalıcı profil modunda da --user-data-dir ve port zorunludur (0.193926ms) # SKIP
+﹣ bağlanamayınca kullanıcıya NE YAPACAĞI söylenir, döngüde bırakılmaz (0.098946ms) # SKIP
+﹣ portable kök paketlenmiş çalıştırmada EXE klasörüdür — kullanıcı verisi EXE ile aynı yerde durur (1.777361ms) # SKIP
+﹣ geliştirme çalıştırması depoya data\ yazmaz — ayrı .desktop-dev kökü kullanır (0.193271ms) # SKIP
+﹣ yol düzeni START-BUYER-LOG.cmd ile aynı — iki başlatıcı aynı veriyi görmeli, iki ayrı evren üretmemeli (0.160159ms) # SKIP
+﹣ v9.56 gerçek Edge oturumu portable ortamında da bulunuyor (0.171804ms) # SKIP
+﹣ OneDrive simulation soak: 10 devices, 20,000 operations (0.951939ms) # SKIP

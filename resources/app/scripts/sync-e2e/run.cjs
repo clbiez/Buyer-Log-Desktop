@@ -142,6 +142,7 @@ async function action(s, kind, fn, expected = {}) {
           choice: "adopt server; do not retry rejected intent",
           draft: result.pending,
         });
+        await s.page.locator("#kolTable").focus();
         await s.page.evaluate(async (owner) => {
           kolClearPendingWorkspace(owner);
           await kolLoadWorkspace(owner);
@@ -585,11 +586,13 @@ async function controlledRace() {
       responses,
       durableWinner: valueA,
     });
-    for (const s of [a, b])
+    for (const s of [a, b]) {
+      await s.page.locator("#kolTable").focus();
       await s.page.evaluate(async (owner) => {
         kolClearPendingWorkspace(owner);
         await kolLoadWorkspace(owner);
       }, owner);
+    }
   } finally {
     a.paused = b.paused = false;
   }
@@ -726,15 +729,30 @@ async function reconcile() {
     try {
       await R.until(
         async () => {
-          const snap = await s.page.evaluate(() =>
-            Array.from(
-              document.querySelectorAll(
-                '#kolTable .editCell[data-k="modelKod"]',
-              ),
-            ).map((e) => [String(e.dataset.id), e.value]),
+          const snap = await s.page.evaluate(
+            (race) => ({
+              values: Array.from(
+                document.querySelectorAll(
+                  '#kolTable .editCell[data-k="modelKod"]',
+                ),
+              ).map((e) => [String(e.dataset.id), e.value]),
+              controlled: race
+                ? Array.from(
+                    document.querySelectorAll("#kolTable .editCell[data-id]"),
+                  ).find(
+                    (e) =>
+                      String(e.dataset.id) === String(race.rowId) &&
+                      e.dataset.k === race.field,
+                  )?.value
+                : null,
+            }),
+            raceExpected,
           );
-          const map = new Map(snap);
-          return [...expected].every(([id, x]) => map.get(id) === x.value);
+          const map = new Map(snap.values);
+          return (
+            [...expected].every(([id, x]) => map.get(id) === x.value) &&
+            (!raceExpected || snap.controlled === raceExpected.value)
+          );
         },
         { ms: 30000, label: "final UI convergence" },
       );
@@ -753,6 +771,13 @@ async function reconcile() {
           feedback: kolSaveFeedbackByOwner.get(kolWorkspaceOwnerId),
           deferred: kolDeferredPatches,
           pending: kolReadPendingWorkspace(kolWorkspaceOwnerId),
+          renderedEditors: Array.from(
+            document.querySelectorAll("#kolTable .editCell[data-id]"),
+          ).map((e) => ({
+            id: e.dataset.id,
+            field: e.dataset.k,
+            value: e.value,
+          })),
         })),
       });
     }
