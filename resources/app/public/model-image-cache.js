@@ -54,14 +54,21 @@
     const fallback=canonicalImageKey(modelId,colourCode);
     if(fallback&&map&&Object.prototype.hasOwnProperty.call(map,fallback))return clean(map[fallback]);
     const entries=namedColourEntries(map,modelId,colourCode,index);
-    if(!entries.length)return '';
-    const refs=[...new Set(entries.map(item=>item.ref))];
-    return refs.length===1?refs[0]:'';
+    if(entries.length){
+      const refs=[...new Set(entries.map(item=>item.ref))];
+      return refs.length===1?refs[0]:'';
+    }
+    // PLM ingest explicitly stores code-less models under plm:<id>.
+    // Never borrow this key for a row with a colour code.
+    const legacy=!normalizeColourCode(colourCode)&&normalizeModelId(modelId)?`plm:${normalizeModelId(modelId)}`:'';
+    return legacy&&map&&Object.prototype.hasOwnProperty.call(map,legacy)?clean(map[legacy]):'';
   };
   const hasImageKey=(map,modelId,colourCode,colourName='',index)=>{
     const key=canonicalImageKey(modelId,colourCode,colourName),fallback=canonicalImageKey(modelId,colourCode);
     if(map&&((key&&Object.prototype.hasOwnProperty.call(map,key))||(fallback&&Object.prototype.hasOwnProperty.call(map,fallback))))return true;
-    return namedColourEntries(map,modelId,colourCode,index).length>0;
+    if(namedColourEntries(map,modelId,colourCode,index).length)return true;
+    const legacy=!normalizeColourCode(colourCode)&&normalizeModelId(modelId)?`plm:${normalizeModelId(modelId)}`:'';
+    return Boolean(legacy&&map&&Object.prototype.hasOwnProperty.call(map,legacy));
   };
   let registryMap={},registryNamed=new Map();
   // Rebuild on every registry publication, including mutations of the same map.
