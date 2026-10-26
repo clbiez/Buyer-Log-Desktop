@@ -3,7 +3,7 @@ const R=require('../../../resources/app/scripts/sync-e2e/runtime.cjs'),B=require
 const root=process.argv[2]||'/workspace/scratch/bl-shared-conflict-recovery';let rt,browser,release;
 (async()=>{try{
  rt=await R.setup(root,{users:2,backends:1,port:6680});browser=await B.launch();const m=rt.manifest,server=rt.servers[0],a=await B.open(browser,server,m.accounts[0],m.owner),b=await B.open(browser,server,m.accounts[1],m.owner,{trace:true});
- 
+
  const journal=x=>R.fs.appendFileSync(R.path.join(root,'operations.jsonl'),JSON.stringify({at:Date.now(),...x})+'\n');for(const s of [a,b])B.instrument(s,journal);
  let enter;const entered=new Promise(r=>enter=r),gate=new Promise(r=>release=r);
  await B.onceRoute(b.page,'**/api/collection-workspaces/*',async route=>{enter(route.request().postDataJSON());await gate;await route.continue()});

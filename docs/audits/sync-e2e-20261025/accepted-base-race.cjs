@@ -96,7 +96,7 @@ let rt, peer;
   } finally {
     if (peer) {
       R.fs.writeFileSync(R.path.join(peer.root, "state-release"), "1");
-  
+
     }
     if (rt) for (const s of rt.servers) if (s) await R.stopServer(s);
   }

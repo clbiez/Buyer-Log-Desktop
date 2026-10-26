@@ -51,12 +51,17 @@ test('navCopy: Orders artık CP ile aynı şekilde yalnız gerçek sütun başl�
 
 test('kolRecordImageCopyCell: görsel DOM değil KAYITTAN çözülür, CP ile aynı dönüştürücüyü kullanır', () => {
   const fn = extractFunction(APP, 'kolRecordImageCopyCell');
-  assert.match(fn, /canonicalModelImageSource\(row\.plmId,row\.colourCode,row\.colour\)/);
-  assert.match(fn, /row\.img\|\|\(row\.imgRef\?`\$\{COLLECTION_IMAGE_API\}/);
+  // The record resolver now enumerates durable/shared/cache candidates before
+  // trying the same CP converter. Preserve that chain and the empty-cell rule.
+  const sources = extractFunction(APP, 'kolModelImageSources');
+  assert.match(sources, /canonicalModelImageSource\(row\.plmId,row\.colourCode,row\.colour\)/);
+  assert.match(sources, /row\.img/);
+  assert.match(sources, /row\.imgRef\?modelImageRefUrl\(row\.imgRef\)/);
+  assert.match(fn, /for\(const source of kolModelImageSources\(row\)\)/);
   assert.match(fn, /_copyImageDataUrlFor\(\{modelId,colourCode,source,fallbackSource:source\}\)/);
-  // Eksik görsel kopyayı DURDURMAZ: null döner, satır atılmaz.
-  assert.match(fn, /if\(!source\) return null;/);
-  assert.match(fn, /if\(!dataUrl\|\|!\/\^data:image\\\/\/i\.test\(dataUrl\)\) return null;/);
+  assert.match(fn, /if\(!row\)return null;/);
+  assert.ok(fn.includes("if(/^data:image\\/(?:png|jpeg|webp|gif);base64,/i.test(dataUrl))break;"));
+  assert.match(fn, /if\(!dataUrl\)return null;/);
 });
 
 test('_copyImageDataUrlFor: CP (DOM) ve Koleksiyon (kayıt) AYNI dönüştürücüyü paylaşıyor', () => {
