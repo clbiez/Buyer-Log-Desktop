@@ -171,6 +171,9 @@ test('Pricing workbook keeps image aspect ratio and appends approved quotation c
   };
   vm.createContext(context);
   vm.runInContext(html.slice(start, end), context);
+  // Bu VM kesiti workbook geometrisini test eder; görsel adaylarını başka testler doğrular.
+  // Kayıt tabanlı yardımcıyı testin gerçek Excel dönüştürücüsüne bağla.
+  vm.runInContext('async function kolPrepareModelExcelImage(row){ return row && row.img ? kolPrepareExcelImage(row.img) : null; }', context);
   const bridge = context.window.BL_KOL_PRICING_EXCEL;
 
   const landscape = bridge.anchorBox(1600, 900, 159, 145, 6);
