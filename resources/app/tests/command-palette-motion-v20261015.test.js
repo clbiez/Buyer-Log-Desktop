@@ -61,7 +61,8 @@ test('Dar ray üzerine gelince tam genişlikte, içeriği itmeden açılır', ()
 });
 
 test('KPI sayacı özgün metne döner, yeniden çizimde durur ve azaltılmış harekete uyar', () => {
-  assert.match(MOTION, /if\(t>=1\)\{el\.textContent=original;return;\}/);
+  assert.match(MOTION, /if\(t>=1\)\{el\.textContent=original;running\.delete\(el\);return;\}/, 'completed animations must restore the original text and clear the in-flight guard');
+  assert.match(MOTION, /if\(running\.has\(el\)\)return;/, 'a second tab/motion hook must not overlap an in-flight counter');
   assert.match(MOTION, /if\(last!==null&&el\.textContent!==last\)return;/);
   assert.match(MOTION, /prefers-reduced-motion: reduce/);
   const parseSrc = MOTION.slice(MOTION.indexOf('function parse'), MOTION.indexOf('function animate'));
