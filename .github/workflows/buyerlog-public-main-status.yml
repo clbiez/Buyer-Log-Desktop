@@ -73,6 +73,22 @@ jobs:
           TARGET="$(python3 -c "import json;print(json.load(open('status-out/latest.json'))['source_commit'])")"
           CURRENT="$(gh api "repos/$REPO/branches/main" --jq '.commit.sha')"
           test "$TARGET" = "$CURRENT"
+          # Do not create a new commit each half-hour when main has not changed.
+          if [[ -f release-repo/source-status/latest.json ]] && \
+             python3 - "$TARGET" <<'PY'
+import json,sys
+try:
+    saved=json.load(open('release-repo/source-status/latest.json'))
+    assert saved.get('schema')==1
+    assert saved.get('kind')=='buyerlog-main-status'
+    assert saved.get('source_commit')==sys.argv[1]
+except Exception:
+    sys.exit(1)
+PY
+          then
+            echo 'Main SHA is unchanged; no public metadata update needed.'
+            exit 0
+          fi
           mkdir -p release-repo/source-status
           cp status-out/latest.json release-repo/source-status/latest.json
           git -C release-repo config user.name "Buyer Log Main Status"
