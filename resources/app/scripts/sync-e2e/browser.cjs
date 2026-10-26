@@ -95,6 +95,7 @@ async function open(
   }, owner);
   await page.waitForFunction((owner) => kolWorkspaceOwnerId === owner, owner);
   return {
+    id: require("node:crypto").randomUUID(),
     context,
     page,
     server,
@@ -154,7 +155,9 @@ function instrument(session, write) {
       } catch {}
       const entry = {
         type: "submitted",
-        operationId: op?.id || null,
+        requestId:require("node:crypto").randomUUID(),
+        sessionId:session.id,
+        operationId: op?.id || "native-"+require("node:crypto").randomUUID(),
         user: session.account.id,
         backend: session.server.port,
         url: new URL(request.url()).pathname,
@@ -164,6 +167,7 @@ function instrument(session, write) {
       };
       write(entry);
       request.__operationId = entry.operationId;
+      request.__requestId = entry.requestId;
     }
   });
   page.on("response", async (response) => {
@@ -181,6 +185,7 @@ function instrument(session, write) {
       const entry = {
         type: "server-response",
         operationId: request.__operationId,
+        requestId:request.__requestId,sessionId:session.id,
         user: session.account.id,
         status: response.status(),
         data,
@@ -195,6 +200,7 @@ function instrument(session, write) {
       write({
         type: "transport-failed",
         operationId: request.__operationId,
+        requestId:request.__requestId,sessionId:session.id,
         error: request.failure()?.errorText,
         at: Date.now(),
       });
