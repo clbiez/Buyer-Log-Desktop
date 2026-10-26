@@ -4371,15 +4371,32 @@ function collectionWorkspaceWithLocalImages(ownerId, workspace = null) {
   const owner = String(ownerId || '').trim();
   const source = workspace || loadWorkspace(owner);
   const cache = readCollectionSharedImageCache();
+  // Startup /api/data excludes imagemap. Hydrate ONLY models in this authorised
+  // Collection workspace, not the full cross-user registry. No PLM network call.
+  const imagemap = loadOverrides().imagemap || {};
+  const availability = new Map();
+  const localImageExists = ref => {
+    if (!ref) return false;
+    if (!availability.has(ref)) availability.set(ref, Boolean(getCollectionImage(ref)));
+    return availability.get(ref);
+  };
   let changed = false;
   const rows = (Array.isArray(source && source.rows) ? source.rows : []).map(row => {
+    if (!row || typeof row !== 'object') return row;
     const item = collectionImageSyncPolicy.rowSharedImageIdentity(row);
-    if (!item) return row;
-    const cached = cache.entries[collectionImageCacheKey(owner, item)];
-    const ref = String(cached && cached.imageRef || '').trim();
-    if (!ref || !getCollectionImage(ref)) return row;
+    const cached = item && cache.entries[collectionImageCacheKey(owner, item)];
+    const sharedRef = String(cached && cached.imageRef || '').trim();
+    const plmRef = String(parseLib.plmImageRef(imagemap, {
+      plm: row.plmId, ccode: row.colourCode, colour: row.colour,
+    }) || '').trim();
+    const sharedUrl = localImageExists(sharedRef) ? '/api/collection-images/' + encodeURIComponent(sharedRef) : '';
+    const plmUrl = localImageExists(plmRef) ? '/api/collection-images/' + encodeURIComponent(plmRef) : '';
+    if (!sharedUrl && !plmUrl) return row;
     changed = true;
-    return { ...row, _sharedCollectionImageUrl:'/api/collection-images/' + encodeURIComponent(ref) };
+    return { ...row,
+      ...(sharedUrl ? { _sharedCollectionImageUrl: sharedUrl } : {}),
+      ...(plmUrl ? { _serverPlmImageUrl: plmUrl } : {}),
+    };
   });
   return changed ? { ...source, rows } : source;
 }
