@@ -156,9 +156,12 @@ jobs:
         working-directory: resources/app
         env:
           BUYER_LOG_GITHUB_RELEASE_REPO: ${{ vars.BUYER_LOG_RELEASE_REPO }}
-          # CP/Orders görsel dönüşü gerçek sunucu + Chromium ile ölçülür; kabul
-          # ölçütü sağlanmazsa TEST yayını üretilmez.
+          # Gerçek Chromium görsel kabul testi daima çalışır.
+          # Eksik/geç yüklenen model görselleri ürün kararıyla yayın engeli değil:
+          # sonuç uyarı olarak raporlanır; Windows regresyonu, imza ve SHA
+          # doğrulamalarını atlamaz.
           BUYER_LOG_REQUIRE_IMAGE_ACCEPTANCE: '1'
+          BUYER_LOG_ALLOW_IMAGE_ACCEPTANCE_FAILURE: '1'
         run: npm run release:build -- --allow-dirty --notes "$RELEASE_NOTES"
       - name: Sign release manifest (Ed25519)
         working-directory: resources/app

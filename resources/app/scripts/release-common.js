@@ -115,7 +115,7 @@ function runSmokeTests(){
 }
 /* Model görseli dönüş kabulü (gerçek sunucu + Chromium). Playwright bir
    bağımlılık değildir: kurulu değilse yerelde uyarıyla atlanır; TEST yayın
-   iş akışı BUYER_LOG_REQUIRE_IMAGE_ACCEPTANCE=1 ile zorunlu çalıştırır. */
+   iş akışı BUYER_LOG_REQUIRE_IMAGE_ACCEPTANCE=1 ile zorunlu çalıştırır.\n   Explicit opt-in allows image-only acceptance failures as warnings, never skipping execution. */
 function playwrightAvailable(){try{require.resolve(process.env.PLAYWRIGHT_MODULE||'playwright',{paths:[APP_ROOT]});return true;}catch(_){return false;}}
 function runImageReturnAcceptance(){
   const required=process.env.BUYER_LOG_REQUIRE_IMAGE_ACCEPTANCE==='1';
@@ -125,7 +125,15 @@ function runImageReturnAcceptance(){
     return false;
   }
   try{childProcess.execFileSync(process.execPath,[path.join(APP_ROOT,'scripts','model-image-return-acceptance.js')],{cwd:APP_ROOT,stdio:'inherit',env:process.env});}
-  catch(_){fail('Model görseli dönüş kabulü başarısız; yayın durduruldu.','RELEASE_IMAGE_ACCEPTANCE_FAILED');}
+  catch(_){
+    // Görsellerin geç yüklenmesi ürün sahibinin kararıyla yayın engeli değildir.
+    // Kabul testi yine gerçek Chromium üzerinde koşar ve hatası görünür kalır.
+    if(process.env.BUYER_LOG_ALLOW_IMAGE_ACCEPTANCE_FAILURE==='1'){
+      console.warn('::warning title=Buyer Log image acceptance::Model images did not meet the Chromium return acceptance criteria; TEST/STABLE release continues by explicit product policy. / Görsel kabulü başarısız; ürün kararıyla yayın devam ediyor.');
+      return false;
+    }
+    fail('Model görseli dönüş kabulü başarısız; yayın durduruldu.','RELEASE_IMAGE_ACCEPTANCE_FAILED');
+  }
   return true;
 }
 function nextVersion(kind){const current=readPackage().version;return bumpSemver(current,kind);}
