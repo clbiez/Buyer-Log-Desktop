@@ -8382,19 +8382,43 @@ function _copyEnsureRequiredRowsRendered(table,selSet,idAttr){
 // öncelik sırası (canonicalModelImageSource → r.img → r.imgRef) kullanılır;
 // bkz. renderKol'daki kolPictureCell üretimi. Eksik görsel kopyayı
 // DURDURMAZ — hücre yalnız boş kalır.
+// One persisted identity, used for painting, rich clipboard, XLSX and email.
+// A stale/missing preferred source must not hide a valid local ref below it.
+function kolModelImageSources(row){
+  if(!row||typeof row!=='object')return [];
+  const values=[
+    row._sharedCollectionImageUrl,
+    canonicalModelImageSource(row.plmId,row.colourCode,row.colour),
+    row._serverPlmImageUrl,
+    row.img,
+    row.imgRef?modelImageRefUrl(row.imgRef):'',
+  ];
+  return [...new Set(values.map(value=>modelImageUrl(value)).filter(value=>value&&!/^data:image\/svg\+xml/i.test(value)))];
+}
+function kolModelImageSource(row){return kolModelImageSources(row)[0]||'';}
+async function kolPrepareModelExcelImage(row){
+  for(const source of kolModelImageSources(row)){
+    const prepared=await kolPrepareExcelImage(source);
+    if(prepared)return prepared;
+  }
+  return null;
+}
 async function kolRecordImageCopyCell(record){
   const row=kolCollectionProjectionSource(record);
-  const canonicalImageSource=canonicalModelImageSource(row.plmId,row.colourCode,row.colour);
-  const sharedCollectionImageSource=String(row&&row._sharedCollectionImageUrl||'');
-  const source=sharedCollectionImageSource||canonicalImageSource||row.img||(row.imgRef?`${COLLECTION_IMAGE_API}/${encodeURIComponent(row.imgRef)}`:'');
-  if(!source) return null;
-  const modelId=row.plmId||row.modelKod||row.id, colourCode=row.colourCode||'';
-  const dataUrl=await _copyImageDataUrlFor({modelId,colourCode,source,fallbackSource:source});
-  if(!dataUrl||!/^data:image\//i.test(dataUrl)) return null;
+  if(!row)return null;
+  const modelId=row.plmId||row.modelKod||row.id,colourCode=row.colourCode||'';
+  let dataUrl='';
+  for(const source of kolModelImageSources(row)){
+    dataUrl=await _copyImageDataUrlFor({modelId,colourCode,source,fallbackSource:source});
+    if(/^data:image\/(?:png|jpeg|webp|gif);base64,/i.test(dataUrl))break;
+    dataUrl='';
+  }
+  if(!dataUrl)return null;
   const dims=kolImgDims();
+  // A single inline image avoids Office creating an extra physical row.
   return {
-    html:`<div style="display:block;width:100%;height:100%;overflow:hidden;text-align:center;line-height:0;mso-data-placement:same-cell;"><img src="${escapeHtml(dataUrl)}" width="${dims.w}" height="${dims.h}" style="display:block;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;margin:auto;"></div>`,
-    style:`border:1px solid #B4B8BD;padding:2px;vertical-align:middle;text-align:center;width:${dims.w+8}px;height:${dims.h+8}px;overflow:hidden;`,
+    html:`<img src="${escapeHtml(dataUrl)}" width="${dims.w}" height="${dims.h}" style="width:${dims.w}px;height:${dims.h}px;border:0;object-fit:contain;">`,
+    style:`border:1px solid #B4B8BD;padding:2px;vertical-align:middle;text-align:center;width:${dims.w+8}px;height:${dims.h+8}px;`,
   };
 }
 async function buildCollectionStyledCopy(selSet){
@@ -22392,8 +22416,11 @@ function kolRestorePendingWorkspace(){
 function kolRequireWorkspaceEdit(){if(kolWorkspaceCanEdit)return true;showToast(appLang==='en'?'This Collection page is view-only.':'Bu Koleksiyon sayfası yalnız görüntülenebilir.');return false;}
 function kolPersistableRow(row){
   if(!row||typeof row!=='object')return row;
-  if(!Object.prototype.hasOwnProperty.call(row,'_sharedCollectionImageUrl'))return {...row};
-  const next={...row};delete next._sharedCollectionImageUrl;return next;
+  const next={...row};
+  // Transient local/shared image URLs are projections, never owner workspace data.
+  delete next._sharedCollectionImageUrl;
+  delete next._serverPlmImageUrl;
+  return next;
 }
 function kolWorkspacePayload(){return {rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,expectedRevision:kolWorkspaceRevision};}
 
@@ -28483,8 +28510,8 @@ function renderKol(){
     if(pictureVisible){
       const canonicalImageSource=canonicalModelImageSource(r.plmId,r.colourCode,r.colour);
       const sharedCollectionImageSource=String(r&&r._sharedCollectionImageUrl||'');
-      const hasCollectionImage=Boolean(sharedCollectionImageSource||canonicalImageSource||r.img||r.imgRef);
-      const collectionImageSource=sharedCollectionImageSource||canonicalImageSource||r.img||(r.imgRef?`${COLLECTION_IMAGE_API}/${encodeURIComponent(r.imgRef)}`:'');
+      const collectionImageSource=kolModelImageSource(r);
+      const hasCollectionImage=Boolean(collectionImageSource);
       // Tek URL: Koleksiyon'un eski ?v= / cp-images adresleri CP ile aynı biçime iner.
       const collectionImageUrl=modelImageUrl(collectionImageSource),collectionImageKnown=hasCollectionImage?BLImageRuntime.loadState(collectionImageUrl):'';
       const collectionImageTitle=appLang==='en'
@@ -34221,7 +34248,7 @@ function buildKolStyledSheet(rows){
   headers.forEach((h,ci)=> put(0,ci,{v:h,t:'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF475467'}},fill:{fgColor:{rgb:'FFF2F4F7'}},alignment:{horizontal:'center',vertical:'center',wrapText:true}}}));
   rows.forEach((record,ri)=>{
     const r=kolCollectionProjectionSource(record),summary=kolCollectionProjectionSummary(record);
-    if(withImg) put(ri+1,0,{v:r.img?'Uygulamada görsel mevcut':'Görsel yok',t:'s',s:{border:bd,font:{sz:9,italic:true,color:{rgb:'FF98A2B3'}}}});
+    if(withImg) put(ri+1,0,{v:kolModelImageSource(r)?'Uygulamada görsel mevcut':'Görsel yok',t:'s',s:{border:bd,font:{sz:9,italic:true,color:{rgb:'FF98A2B3'}}}});
     exportCols.forEach((c,ci)=>{
       const summaryEntry=summary?.get?.(c.k);
       if(summaryEntry){
@@ -34385,7 +34412,13 @@ async function kolBuildPricingPreviewImages(rows){
   const maxWidth=1900, scale=Math.min(1,maxWidth/rawWidth), width=Math.max(720,Math.round(rawWidth*scale));
   const headerH=Math.round(44*scale), rowH=Math.max(58,Math.round(86*scale));
   const maxRowsPerImage=Math.max(12,Math.min(38,Math.floor((5600-headerH)/rowH)));
-  const loadedImages=await Promise.all(rows.map(r=>kolLoadPricingImage(r.img)));
+  const loadedImages=await Promise.all(rows.map(async r=>{
+    for(const source of kolModelImageSources(r)){
+      const image=await kolLoadPricingImage(source);
+      if(image)return image;
+    }
+    return null;
+  }));
   const previews=[];
   for(let offset=0;offset<rows.length;offset+=maxRowsPerImage){
     const chunkRows=rows.slice(offset,offset+maxRowsPerImage), chunkImgs=loadedImages.slice(offset,offset+maxRowsPerImage);
@@ -35704,7 +35737,7 @@ async function kolBuildPricingRequestWorkbook(rows,mfrName,options={}){
     ...exportCols.map(c=>({header:c.label,width:Math.max(11,Math.round(kolColWidth(c)/7))})),
     ...extraColumns.map(c=>({header:c.label,width:Math.max(16,Number(c.width)||22)})),
   ];
-  const preparedImages=await Promise.all(rows.map(r=>kolPrepareExcelImage(r.img)));
+  const preparedImages=await Promise.all(rows.map(kolPrepareModelExcelImage));
   const headerRow=ws.getRow(1); headerRow.height=22;
   headerRow.eachCell(c=>{ c.font={bold:true,size:10,color:{argb:'FF475467'}}; c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F4F7'}}; c.alignment={horizontal:'center',vertical:'middle',wrapText:true}; c.border={top:{style:'thin',color:{argb:'FFD0D5DD'}},bottom:{style:'thin',color:{argb:'FFD0D5DD'}},left:{style:'thin',color:{argb:'FFD0D5DD'}},right:{style:'thin',color:{argb:'FFD0D5DD'}}}; });
   const thin={style:'thin',color:{argb:'FFD0D5DD'}}, border={top:thin,bottom:thin,left:thin,right:thin};
@@ -35793,7 +35826,7 @@ function prepareEmailColumnIsPicture(column){return String(column?.k||'')==='__p
 function prepareEmailImageSource(row,sourceKind){
   // CP e-mail and Excel use the same canonical identity as the visible CP picture.
   if(sourceKind==='cp')return String(tableRowImageSource(row)?.source||'');
-  return String(row?.img||(row?.imgRef?`/api/collection-images/${encodeURIComponent(row.imgRef)}`:'')||'');
+  return kolModelImageSource(row);
 }
 function prepareEmailImageDims(sourceKind){return sourceKind==='cp'?cpImageDims():kolImgDims();}
 async function prepareEmailInlineAsset(row,column,rowIndex){
@@ -35802,7 +35835,8 @@ async function prepareEmailInlineAsset(row,column,rowIndex){
   // picture through the same canonical cache as CP clipboard/Excel exports.
   let canonical='';
   if(sourceKind==='cp')canonical=await cpOrdersRowImageDataUrl(row);
-  const prepared=await kolPrepareExcelImage(canonical||src);if(!prepared)return null;
+  const prepared=sourceKind==='cp'?await kolPrepareExcelImage(canonical||src):await kolPrepareModelExcelImage(row);
+  if(!prepared)return null;
   const dims=prepareEmailImageDims(sourceKind),fit=kolFitImageDimensions(prepared.width,prepared.height,dims.w,dims.h);
   const width=Math.max(1,Math.round(fit.width)),height=Math.max(1,Math.round(fit.height));
   let dataUrl=prepared.dataUrl,mimeType=prepared.extension==='jpeg'?'image/jpeg':'image/png';
@@ -35966,7 +36000,7 @@ async function prepareEmailBuildTopicTableWorkbook(rows,columns,topicName,manufa
       const cell=excelRow.getCell(ci+1);cell.border=border;
       if(prepareEmailColumnIsPicture(column)){
         const src=prepareEmailImageSource(row,column.sourceKind||'collection');cell.value='';cell.alignment={horizontal:'center',vertical:'middle'};
-        if(src)imageJobs.push({src,rowNum,columnIndex:ci+1,column});return;
+        if(src)imageJobs.push({src,row,rowNum,columnIndex:ci+1,column});return;
       }
       const out=prepareEmailTopicCell(row,column);
       if(out.date){const d=coerceDateLoose(column.sourceKind==='cp'?row[column.k]:kolEffectiveValue(row,column.k));if(d){cell.value=d;cell.numFmt='dd.mm.yy';}else cell.value=out.display;}
@@ -35979,7 +36013,8 @@ async function prepareEmailBuildTopicTableWorkbook(rows,columns,topicName,manufa
       keyCell.value=String(row&&(row._collectionSourceId??row.id)||'');keyCell.numFmt='@';
     }
   });
-  const prepared=await Promise.all(imageJobs.map(job=>kolPrepareExcelImage(job.src)));
+  const prepared=await Promise.all(imageJobs.map(job=>job.column.sourceKind==='cp'
+    ? kolPrepareExcelImage(job.src) : kolPrepareModelExcelImage(job.row)));
   imageJobs.forEach((job,index)=>{const image=prepared[index];if(!image)return;try{
     const dims=prepareEmailImageDims(job.column.sourceKind||'collection'),imgId=wb.addImage({base64:image.dataUrl,extension:image.extension||'png'});
     const cellWidth=kolExcelColumnWidthPx(ws.getColumn(job.columnIndex).width),cellHeight=(Number(ws.getRow(job.rowNum).height)||dims.row*72/96)*96/72;
@@ -36189,7 +36224,7 @@ async function kolExportWithImages(rows,fileBase){
   const sourceRows=(rows||[]).map(kolCollectionProjectionSource);
   const headers=[appLang==='en'?'Picture':'Görsel',...descriptors.map(d=>d.label)];
   ws.columns=headers.map((h,i)=>({header:h,width:i===0?kolExcelImageMetrics().colChars:Math.max(11,Math.round(kolDescriptorWidth(descriptors[i-1])/7))}));
-  const preparedImages=await Promise.all((rows||[]).map(record=>kolPrepareExcelImage(kolCollectionProjectionSource(record)?.img)));
+  const preparedImages=await Promise.all((rows||[]).map(record=>kolPrepareModelExcelImage(kolCollectionProjectionSource(record))));
   const headerRow=ws.getRow(1);headerRow.height=22;
   headerRow.eachCell(c=>{c.font={bold:true,size:10,color:{argb:'FF475467'}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F4F7'}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.border={top:{style:'thin',color:{argb:'FFD0D5DD'}},bottom:{style:'thin',color:{argb:'FFD0D5DD'}},left:{style:'thin',color:{argb:'FFD0D5DD'}},right:{style:'thin',color:{argb:'FFD0D5DD'}}};});
   const thin={style:'thin',color:{argb:'FFD0D5DD'}},border={top:thin,bottom:thin,left:thin,right:thin};
