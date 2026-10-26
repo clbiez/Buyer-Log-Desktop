@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "50c9cf204d8d30bbada16cc41f8b316a1c8bf95d",
-  "release_notes": "TR: Buyer Log 7.0.303 — 7.0.300 sonrasındaki Motion+ ve Thinking Orbs, CP ve Orders kişisel notları, çoklu kopyalama/yapıştırma, Koleksiyon ve tablo görünümü, güncelleme altyapısı iyileştirmeleri. Tam Windows regresyonunu engelleyen eski test sözleşmeleri güncel davranışa uyarlandı; kişisel not kaynak tanımı tamamlandı.\nEN: Buyer Log 7.0.303 — post-7.0.300 Motion+ and Thinking Orbs, private CP and Orders notes, multi-cell copy/paste, Collection and table UI, and updater improvements. Legacy regression assertions were aligned with the current behavior and the personal-note source catalogue was completed.",
-  "request_id": "7.0.303-test-after-windows-regression-fixes-20261026"
+  "commit_sha": "ea92ebc9f3190f4b5ba8bc5ed859ea9f38f52ffb",
+  "release_notes": "TR: Buyer Log 7.0.304 — 7.0.300 sonrasındaki Motion+ / Thinking Orbs, CP ve Orders kişisel notları, çoklu kopyalama/yapıştırma, Koleksiyon, tablo ve güncelleme altyapısı iyileştirmeleri. Tam Windows regresyonundaki önceki sözleşme hataları ve lisans kartı görsel dağıtım testinin asenkron zamanlama sorunu düzeltildi.\nEN: Buyer Log 7.0.304 — post-7.0.300 Motion+ / Thinking Orbs, private CP and Orders notes, multi-cell copy/paste, Collection, tables and update infrastructure improvements. Legacy Windows regression assertions and the asynchronous license card image distribution test timing were corrected.",
+  "request_id": "7.0.304-test-after-license-asset-regression-20261026"
 }
