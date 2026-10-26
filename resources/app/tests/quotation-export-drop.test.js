@@ -150,6 +150,9 @@ test('Pricing workbook keeps image aspect ratio and appends approved quotation c
     columnSchemaFor: () => null,
     kolColWidth: col => col.w || 100,
     kolReadFileAsDataUrl: async () => '',
+    canonicalModelImageSource: () => '', // This fixture has only a local bitmap.
+    modelImageRefUrl: ref => '/api/collection-images/' + ref,
+    modelImageUrl: value => String(value || ''),
     kolLoadPricingImage: async source => source ? { naturalWidth: 1600, naturalHeight: 900, width: 1600, height: 900 } : null,
     kolExToRetailDays: () => '',
     kolEffectiveValue: (row,key) => row && row[key] != null ? row[key] : '',
@@ -170,6 +173,8 @@ test('Pricing workbook keeps image aspect ratio and appends approved quotation c
     kolDownloadBuffer() {},
   };
   vm.createContext(context);
+  // Include the real durable-source/fallback helper introduced upstream.
+  vm.runInContext(html.slice(html.indexOf('function kolModelImageSources('), html.indexOf('async function kolRecordImageCopyCell(')), context);
   vm.runInContext(html.slice(start, end), context);
   const bridge = context.window.BL_KOL_PRICING_EXCEL;
 
