@@ -39,7 +39,7 @@ jobs:
         run: |
           node --test --test-name-pattern="OneDrive simulation: 10 devices|HLC simulation" tests/sync-simulation-v20261009.test.js
       - name: Personal order notes and edit-authority isolation
-        run: node --test tests/private-order-notes-v20261026.test.js
+        run: node --test tests/private-order-notes-v20261026.test.js tests/personal-order-note-columns-v20261026.test.js
       - name: Validate nonempty pending release notes
         run: |
           node -e "const n=require('./public/release-notes/next.json');if(n.changes?.length)require('./scripts/release-notes').validateNext();else if(n.publishedAt)throw Error('Empty pending notes must have blank publishedAt')"
