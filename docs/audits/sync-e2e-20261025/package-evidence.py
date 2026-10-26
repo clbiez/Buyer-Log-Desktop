@@ -3,7 +3,7 @@
 import hashlib,json,pathlib,subprocess,zipfile
 repo=pathlib.Path(__file__).resolve().parents[3]; audit=pathlib.Path(__file__).resolve().parent
 out=pathlib.Path('/workspace/deliverables');out.mkdir(exist_ok=True)
-patch=out/'buyer-log-sync-fixes.patch';patch.write_bytes(subprocess.check_output(['git','diff','--binary','3958d7436347de69f1465705b9ba24625adb2941','HEAD'],cwd=repo))
+patch=out/'buyer-log-sync-fixes.patch';patch.write_bytes(subprocess.check_output(['git','diff','--binary','3dc7723f1db4cfdb55648c3c19983eab6416e0c9','HEAD'],cwd=repo))
 archive=out/'buyer-log-sync-audit-evidence.zip';manifest=[]
 with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as z:
  def add(p,name):

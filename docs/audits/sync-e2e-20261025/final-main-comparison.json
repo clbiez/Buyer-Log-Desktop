@@ -1,8 +1,8 @@
 {
   "referenceMain": "4a70aa152d1b4eb3279ddebda19679ca2639b372",
   "inheritedRegressionSource": "62e9f4a7b65d6eae3b6e2fc85d48c194db6972c9",
-  "lastIntegratedMain": "3958d7436347de69f1465705b9ba24625adb2941",
-  "sourceBeforeMeasuredLoad": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+  "lastIntegratedMain": "3dc7723f1db4cfdb55648c3c19983eab6416e0c9",
+  "sourceBeforeMeasuredLoad": "6c57c863b02896cbcdf322246f2badeb1d85f9e5",
   "mainChangedPathsFromReference": [
     ".gitattributes",
     ".github/release-requests/stable.json",
@@ -6236,6 +6236,7 @@
     "resources/app/tests/backlog-radar-layout-v20260926.test.js",
     "resources/app/tests/boot-thinking-orb-v20260929.test.js",
     "resources/app/tests/buying-sample-nondtr-suggest-v288.test.js",
+    "resources/app/tests/clipboard-contract-v1085.test.js",
     "resources/app/tests/collection-active-filter-layout-v1066.test.js",
     "resources/app/tests/collection-asas-excel-grid-v489.test.js",
     "resources/app/tests/collection-cell-alignment-v70106.test.js",
@@ -6445,5 +6446,6 @@
     "observedVia": "GET /repos/clbiez/Buyer-Log-Desktop/branches/main",
     "protected": false
   },
-  "scope": "Read inheritance.json and source-scope-final-comparison.json. Historical certification is not a new 50-user result."
+  "scope": "Read inheritance.json and source-scope-final-comparison.json. Historical certification is not a new 50-user result.",
+  "postFullIntegration": "a98c55a8"
 }
