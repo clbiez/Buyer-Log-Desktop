@@ -14,7 +14,8 @@ function functionSource(source, name) {
   assert.ok(start >= 0, name + ' not found');
   const next = source.indexOf('\n}', start);
   assert.ok(next > start, name + ' closing brace not found');
-  return source.slice(start, next + 2);
+  const asyncStart = source.slice(Math.max(0, start - 6), start) === 'async ' ? start - 6 : start;
+  return source.slice(asyncStart, next + 2);
 }
 
 function modelHelpers({ registry = '', server = '', img = '', ref = '' } = {}) {
