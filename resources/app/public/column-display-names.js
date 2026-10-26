@@ -135,6 +135,7 @@
   function buyerlog(note){return {kind:'buyerlog',note:note};}
   var CP_SOURCES={
     'Active/Inactive':computed({tr:'ASAS "Kalan Alım Sipariş Miktarı" > 0 ise Active',en:'Active when ASAS "Kalan Alım Sipariş Miktarı" > 0'}),
+    '__personalOrderNote':buyerlog({tr:'Yalnız size ait kişisel sipariş notu; diğer kullanıcılarla paylaşılmaz',en:'Personal order note owned by you; not shared with other users'}),
     '__picture':buyerlog({tr:'Buyer Log görsel kütüphanesi (PLM + renk kodu); yoksa ASAS "Teknik Görsel"',en:'Buyer Log image library (PLM + colour code); falls back to ASAS "Teknik Görsel"'}),
     'PLM Numune':computed({tr:'PLM numune talepleri (PLM ID + renk); her okumada yeniden hesaplanır, kaydedilmez',en:'PLM sample requests (PLM ID + colour); recomputed on every read, never stored'}),
     'Artwork Detail':buyerlog({tr:'PLM ID ile eşlenen mevcut PLM BOM deposundan baskı ve Artwork özeti; Koleksiyon ile aynı kaynak kullanılır',en:'Print and Artwork summary from the existing PLM BOM store matched by PLM ID; shares the Collection source'}),

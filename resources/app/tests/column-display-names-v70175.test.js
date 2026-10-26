@@ -174,7 +174,7 @@ test('CP/Orders başlığı kişisel adı ve sonradan eklenen sütunun EN/TR ad�
   const label = extractFunction(APP, 'tableColumnLabel');
   assert.match(label, /BLColumnNames\.resolve\(tableKey,c\.k,appLang,fallback\)/);
   const defaults = extractFunction(APP, 'tableColumnDefaultLabel');
-  assert.match(defaults, /c\.modelCustom\|\|c\.noteCustom\|\|c\.formulaCustom/);
+  assert.match(defaults, /c\.modelCustom\|\|c\.noteCustom\|\|c\.personalNote\|\|c\.formulaCustom/);
   assert.match(defaults, /BLColumnNames\.definitionLabel\(def,appLang\)/);
 });
 
