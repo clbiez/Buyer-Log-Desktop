@@ -44,6 +44,7 @@ jobs:
           print('main',main,'source version',version)
           PY
       - name: Verify main remains pinned before metadata publication
+        if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request_target'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
