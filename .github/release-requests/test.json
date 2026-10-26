@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "2cdb0380fcd95e018c1303b9a249db6761bca935",
-  "release_notes": "TR: Buyer Log 7.0.309 — Motion+ ve Thinking Orbs animasyonları, kişisel sipariş notları, çoklu hücre kopyalama/yapıştırma, Koleksiyon/tablolar ve güncelleyici iyileştirmeleri. PLM model görselleri yeniden açılınca korunur; Koleksiyon, pano, Excel ve e-posta çıktılarında kalıcı kayıt önceliği ve yedek kaynaklar uygulanır. Windows testleri yeni görsel çözümleyici ve kişisel Notlar davranışıyla uyumlu.\nEN: Buyer Log 7.0.309 — Motion+ and Thinking Orbs animations, private order notes, multi-cell copy/paste, Collection/tables and updater enhancements. PLM model images persist after restart, with record-scoped precedence and fallbacks in Collection, clipboard, Excel and email exports. Windows contracts align with image resolution and private Notes behavior.",
-  "request_id": "7.0.309-test-after-collection-registry-email-contracts-20261027"
+  "commit_sha": "7f5d9850933fdf76e2bb43e23a12564ea11293da",
+  "release_notes": "TR: Buyer Log 7.0.310 — 7.0.300 sonrası birleşen Motion+ ve Thinking Orbs, kişisel CP/Sipariş notları, çoklu hücre kopyala/yapıştır, Koleksiyon/tablo/güncelleyici iyileştirmeleri; PLM görsellerinin kalıcılığı ve Excel/e-posta/kopyalama çıktılarına eklenmesi. Windows regresyonunda görsel dönüşüm test altyapısı güncellendi.\nEN: Buyer Log 7.0.310 — post-7.0.300 Motion+ and Thinking Orbs, private CP/Orders notes, multi-cell copy/paste, Collection/table/updater enhancements; persistent PLM model pictures in Excel, email and clipboard exports. Windows image conversion regression fixtures updated.",
+  "request_id": "7.0.310-test-after-isolated-pricing-workbook-vm-20261027"
 }
