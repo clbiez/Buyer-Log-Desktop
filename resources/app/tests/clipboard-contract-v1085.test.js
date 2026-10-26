@@ -61,6 +61,7 @@ test('kolRecordImageCopyCell: görsel DOM değil KAYITTAN çözülür, CP ile ay
   assert.match(fn, /_copyImageDataUrlFor\(\{modelId,colourCode,source,fallbackSource:source\}\)/);
   assert.match(fn, /if\(!row\)return null;/);
   assert.ok(fn.includes("if(/^data:image\\/(?:png|jpeg|webp|gif);base64,/i.test(dataUrl))break;"));
+  assert.match(fn, /dataUrl='';/); // Keep main's invalid-source clearing regression too.
   assert.match(fn, /if\(!dataUrl\)return null;/);
 });
 
