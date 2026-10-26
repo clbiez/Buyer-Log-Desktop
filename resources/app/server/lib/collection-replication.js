@@ -443,6 +443,9 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     trialPolicy.assertConfirmed();
     try { return await publishOwnerCas(ownerId); }
     catch (error) {
+      // Local acceptance can precede a failed publish. Restoring the exact old
+      // envelope need not change its stamp: the next live poll must still retry.
+      remoteStamps.delete(clean(ownerId));
       if (Number(error && error.statusCode) !== 409) throw error;
       const owner = clean(ownerId), sharedRoot = await root();
       const envelope = sharedRoot ? await readEnvelope(remoteWorkspaceFile(sharedRoot, owner), owner) : null;
@@ -578,7 +581,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     const result = await withOwnerOperation(ownerId, () => syncOwnerInternal(userId, ownerId));
     // Reads can import a replica before the periodic poll sees its stamp.
     // Notify at the actual application boundary, whichever caller imported it.
-    if (typeof onApplied === 'function' && result && (result.synced || result.merged)) await onApplied(result);
+    if (typeof onApplied === 'function' && result && (result.synced || result.merged || result.published)) await onApplied(result);
     return result;
   }
   /* Canlı görünürlük: uzak kopya dosyası değişmediyse (mtime+boyut) okunmaz;

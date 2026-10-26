@@ -619,6 +619,35 @@
           "en": "A real UI edit was accepted by the server after the notification race."
         }
       }
+    },
+    {
+      "id": "collection-sharing-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Paylaşım geri geldiğinde bekleyen kayıtlar yeniden gönderilir",
+        "en": "Pending records are published when sharing recovers"
+      },
+      "body": {
+        "tr": "Bu cihazda kabul edilen bir kayıt paylaşım hatası nedeniyle gönderilemediyse, aynı paylaşım dosyası geri geldiğinde canlı eşitleme yeniden dener. Yerel kayıt korunur; paylaşım tamamlandığında kayıt durumu güncellenir.",
+        "en": "When a record accepted on this device could not be published because sharing failed, live sync retries even when the same shared file returns. The local record is preserved, and its save status updates after publication."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-sharing-recovery.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: paylaşım hatası giderildikten sonra kabul edilmiş sentetik model ve güncellenmiş kayıt durumu",
+          "en": "Real Buyer Log: an accepted synthetic model and updated save status after sharing recovers"
+        },
+        "caption": {
+          "tr": "Gerçek dosya hatası giderildikten sonra diğer cihaz güncellendi ve Paylaşım bekliyor durumu kapandı.",
+          "en": "After the real file error cleared, the peer updated and the Sharing pending state cleared."
+        }
+      }
     }
   ]
 }

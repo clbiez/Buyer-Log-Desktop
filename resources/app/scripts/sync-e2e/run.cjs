@@ -114,7 +114,7 @@ async function observe() {
 }
 async function captureUiDiagnostic(s,op,stage){
   try{
-    const state=await R.deadline(s.page.evaluate(()=>({url:location.href,owner:typeof kolWorkspaceOwnerId==='undefined'?null:kolWorkspaceOwnerId,active:document.activeElement?.outerHTML.slice(0,250),search:document.getElementById('kolSearch')?.value,rows:typeof kolRows==='undefined'?null:kolRows.map(r=>({id:r.id,model:r.modelKod})),editors:[...document.querySelectorAll('#kolTable .editCell[data-k="modelKod"]')].map(e=>({id:e.dataset.id,value:e.value})),dirty:typeof kolHasDirtyWorkspace==='function'?kolHasDirtyWorkspace():null,renderPending:typeof kolRemoteRenderPendingOwner==='undefined'?null:kolRemoteRenderPendingOwner,saving:typeof kolWorkspaceSaving==='undefined'?null:kolWorkspaceSaving,pending:typeof kolWorkspacePending==='undefined'?null:kolWorkspacePending,saveTimer:typeof kolWorkspaceSaveTimer==='undefined'?null:Boolean(kolWorkspaceSaveTimer),hasSavePromise:typeof kolWorkspaceSavePromise==='undefined'?null:Boolean(kolWorkspaceSavePromise),deferredPatches:typeof kolDeferredPatches==='undefined'?null:kolDeferredPatches.length})),"UI diagnostic",1500);
+    const state=await R.deadline(s.page.evaluate(()=>({url:location.href,owner:typeof kolWorkspaceOwnerId==='undefined'?null:kolWorkspaceOwnerId,active:document.activeElement?.outerHTML.slice(0,250),search:document.getElementById('kolSearch')?.value,rows:typeof kolRows==='undefined'?null:kolRows.map(r=>({id:r.id,model:r.modelKod})),editors:[...document.querySelectorAll('#kolTable .editCell[data-k="modelKod"]')].map(e=>({id:e.dataset.id,value:e.value})),dirty:typeof kolHasDirtyWorkspace==='function'?kolHasDirtyWorkspace():null,renderPending:typeof kolRemoteRenderPendingOwner==='undefined'?null:kolRemoteRenderPendingOwner,saving:typeof kolWorkspaceSaving==='undefined'?null:kolWorkspaceSaving,pending:typeof kolWorkspacePending==='undefined'?null:kolWorkspacePending,saveTimer:typeof kolWorkspaceSaveTimer==='undefined'?null:Boolean(kolWorkspaceSaveTimer),hasSavePromise:typeof kolWorkspaceSavePromise==='undefined'?null:Boolean(kolWorkspaceSavePromise),drawerTrace:window.__blDrawerTrace||null,deferredPatches:typeof kolDeferredPatches==='undefined'?null:kolDeferredPatches.length})),"UI diagnostic",1500);
     write({type:"ui-diagnostic",operationId:op.id,user:s.account.id,stage,state});
   }catch(error){write({type:"ui-diagnostic-unavailable",operationId:op.id,user:s.account.id,stage,error:error.message});}
 }
@@ -308,12 +308,16 @@ async function daily(s) {
           operationId: op.id,
           workspace: durable.workspace,
         });
+        // Retain the originating intent while the real application retries.
+        s.currentOp=op;
+        try {
         const retry = await s.page.evaluate(async () => {
           const r = await kolSaveWorkspaceNow();
           return { ok: r.ok, pending: r.pending, revision: r.revision };
         });
         write({ type: "application-retry", operationId: op.id, result: retry });
         await B.settle(s);
+        } finally { s.currentOp=null; }
         s.plannedFault = false;
       }
       if (turn % 3 === 0) {
@@ -975,7 +979,7 @@ async function reconcile() {
         trace: account.index === 0 ? (args['trace-mode'] || 'events') : false,
       });
       s.cookie = await B.cookie(s);
-      if(args.diagnostics){s.debugDiagnostic=await s.context.newCDPSession(s.page);await s.debugDiagnostic.send('Debugger.enable');if(account.index===1){s.cpuDiagnostic=s.debugDiagnostic;await s.cpuDiagnostic.send('Profiler.enable');await s.cpuDiagnostic.send('Profiler.setSamplingInterval',{interval:10000});await s.cpuDiagnostic.send('Profiler.start');}}
+      if(args.diagnostics){await require('./drawer-diagnostic.cjs').install(s,write);s.debugDiagnostic=await s.context.newCDPSession(s.page);await s.debugDiagnostic.send('Debugger.enable');if(account.index===1){s.cpuDiagnostic=s.debugDiagnostic;await s.cpuDiagnostic.send('Profiler.enable');await s.cpuDiagnostic.send('Profiler.setSamplingInterval',{interval:10000});await s.cpuDiagnostic.send('Profiler.start');}}
       sessions.push(s);
       B.instrument(s, write);
       loopPromises.push(daily(s));

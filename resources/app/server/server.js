@@ -744,7 +744,7 @@ const collectionReplication = createCollectionReplication({
   getSharedSyncRoot: async () => (await syncSettings.read()).sharedSyncRoot,
   stateFile: path.join(LOCAL_DATA_ROOT, 'collection-replication-state.json'),
   onTrace: markStartup,
-  onApplied: item => liveEvents.notifyChange('collection', null, { ownerId:item.ownerId, revision:item.revision, source:'shared-hub-import' }),
+  onApplied: item => liveEvents.notifyChange('collection', null, { ownerId:item.ownerId, revision:item.revision, source:item.published&&!item.synced&&!item.merged?'shared-hub-publish':'shared-hub-import' }),
 });
 const collectionPermissionsReady = new Promise(resolve=>trialWritePolicy.whenConfirmed(resolve)).then(async () => {
   await collectionPermissions.ensure();

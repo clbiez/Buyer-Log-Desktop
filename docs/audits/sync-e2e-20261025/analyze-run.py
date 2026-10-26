@@ -19,7 +19,18 @@ def intent_request(request,intent):
  return False
 accounting=[]
 for id,i in intents.items():
- r=responses[id];sent=[x for x in submitted[id] if intent_request(x,i)]
+ r=list(responses[id]);sent=[x for x in submitted[id] if intent_request(x,i)]
+ linked_background=[]
+ if i['kind'] in ('edit','controlled-conflict'):
+  for response in data:
+   if response['type'] not in ('server-response','upstream-acceptance'):continue
+   req=request_by_id.get(response.get('requestId'))
+   if not req or not req.get('operationId','').startswith('native-'):continue
+   if req.get('user')!=i['user'] or req['at']<i['sentAt'] or req.get('url')!='/api/collection-workspaces/'+data[0]['owner']:continue
+   candidates=[j for j in intents.values() if j['kind'] in ('edit','controlled-conflict') and j['user']==i['user'] and j['sentAt']<=req['at'] and intent_request(req,j)]
+   # Unique original field/value intent, actual request UUID and native receipt.
+   if len(candidates)==1 and candidates[0]['id']==id:
+    r.append(response);sent.append(req);linked_background.append(req['requestId'])
  def matched(response):
   req=request_by_id.get(response.get('requestId'))
   if req:return intent_request(req,i)
@@ -40,7 +51,7 @@ for id,i in intents.items():
   accepted=[x for x in rule_responses if x.get('status')==200];rejected=[x for x in rule_responses if x.get('status',0)>=400]
  status='accepted' if accepted else 'explicitly-rejected' if rejected else 'acceptance-uncertain' if sent else 'not-submitted'
  if not accepted and not rejected and not sent and id in ui and not ui[id].get('error') and i['kind'] not in ('edit','controlled-conflict','create-delete'):status='completed-non-collection-write'
- accounting.append({'operationId':id,'kind':i['kind'],'user':i['user'],'sentAt':i['sentAt'],'phase':i.get('phase'),'status':status,'submittedRequestIds':[x.get('requestId') for x in sent],'associatedRequestIds':[x.get('requestId') for x in submitted[id]],'acceptedResponses':len(accepted),'replicationReceipts':[x.get('data',{}).get('replication') for x in r if x.get('data',{}).get('replication')],'rejectedResponses':len(rejected),'ui':ui.get(id,{}).get('result'),'error':ui.get(id,{}).get('error')})
+ accounting.append({'operationId':id,'kind':i['kind'],'user':i['user'],'sentAt':i['sentAt'],'phase':i.get('phase'),'status':status,'linkedBackgroundRequestIds':linked_background,'submittedRequestIds':list(dict.fromkeys(x.get('requestId') for x in sent)),'associatedRequestIds':[x.get('requestId') for x in submitted[id]],'acceptedResponses':len(accepted),'replicationReceipts':[x.get('data',{}).get('replication') for x in r if x.get('data',{}).get('replication')],'rejectedResponses':len(rejected),'ui':ui.get(id,{}).get('result'),'error':ui.get(id,{}).get('error')})
 measured=[x for x in accounting if start and start<=x['sentAt']<end]
 conflicts=[]
 for x in data:

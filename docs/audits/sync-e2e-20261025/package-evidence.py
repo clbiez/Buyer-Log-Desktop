@@ -13,12 +13,14 @@ with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as z:
   if p.is_file():add(p,'audit/'+str(p.relative_to(audit)))
  for root in sorted(pathlib.Path('/workspace/scratch').glob('bl-*')):
   if not root.is_dir():continue
+  for value in (root/'hub/BUYER_LOG_SYNC/collection-workspaces/v1').glob('*.json'):
+   if value.is_file():add(value,'runs/'+root.name+'/hub/collection-workspaces/v1/'+value.name)
   for p in root.iterdir():
    if p.is_file() and p.suffix in ('.json','.jsonl','.png','.zip','.log','.xlsx','.cpuprofile'):
     add(p,'runs/'+root.name+'/'+p.name)
    if p.is_dir() and p.name.startswith('device-'):
     for log in p.glob('*.log'):add(log,'runs/'+root.name+'/'+p.name+'/'+log.name)
-    for rel in ['server/collection-workspaces','local/collection-replication-state.json.bases']:
+    for rel in ['server/collection-workspaces','server/collection-recycle-bin','local/collection-replication-state.json.bases']:
      for value in (p/rel).glob('*.json'):
       add(value,'runs/'+root.name+'/'+p.name+'/'+rel+'/'+value.name)
     state=p/'local/collection-replication-state.json'

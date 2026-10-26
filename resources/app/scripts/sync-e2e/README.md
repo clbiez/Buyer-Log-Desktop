@@ -81,9 +81,9 @@ An active editor defers visual refreshes while incoming unrelated data and its b
 At final quiescence users focus the non-editing table (not the search input), then actual rendered DOM convergence is checked without
 forcing a data reload. Automatic stale-read rejection schedules a fresh read.
 Failed runs and driver corrections are retained in the audit; no automatic test
-rerun hides them. Real twelve-hour signed-session expiry is not accelerated;
-short browser-cookie expiration/removal and ordinary session guards are separate
-from that unexecuted long-expiry boundary.
+rerun hides them. The focused session-expiry fixture advances the existing verifier clock by 13 hours
+and checks real signed-session rejection and SSE reconnect; it is not a 12-hour
+wall-clock run. Browser-cookie loss is a separate scenario.
 
 Business policy remains unchanged. Existing license-card peer records have an
 explicit precedence contract over a stale Master profile/contract. The audit
@@ -104,3 +104,9 @@ Long-load tracing defaults to `events`: action/network events remain, continuous
 Native suppressed ACK records retain the original request UUID/session, so final reconciliation includes accepted writes whose response never reached the UI. Before any final UI recovery/GET imports, raw durable workspace snapshots are retained and each latest accepted intent is checked on its origin backend. Final per-minute counts derive from actual completed UI timestamps; periodic timer callbacks are separate telemetry. UI evaluation is bounded by 30 seconds and each complete action has a 60-second forensic watchdog; neither is an invented product SLO.
 
 The default fifty-backend range 7320–7369 avoids native Fetch/browser unsafe ports. The old 6520 range would cross 6566 at device 47; an auxiliary recovery range crossed 6697 at device 8. Unsafe-port configuration now fails explicitly instead of misreporting backend startup readiness. Selecting ordinary local HTTP ports does not bypass any environment network policy.
+
+`--diagnostics=1` adds a bounded (300-event) per-renderer pointer/drawer trace and
+post-failure paused stacks/screenshots. These transparent spies delegate real
+methods and never retry clicks or replace acceptance. Explicit application retry
+requests retain their parent operation ID. Driver timeouts are diagnostic bounds,
+not product SLOs. A terminated driver with no result remains interrupted.
