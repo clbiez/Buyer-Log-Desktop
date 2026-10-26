@@ -13,13 +13,15 @@ R.fs.mkdirSync(out, { recursive: true });
     intents = new Map(
       ds.filter((x) => x.type === "intent").map((x) => [x.id, x]),
     ),
+    requests = new Map(ds.filter(x=>x.type==='submitted').map(x=>[x.requestId,x])),
     expected = new Map();
+  if(R.fs.existsSync(R.path.join(root,'pre-recovery-device-0.json')))throw Error('Recovery evidence already exists; preserve it and use the read-only audit-intents.py instead.');
   for (const x of ds.filter(
     (x) => x.type === "server-response" && x.status === 200,
   )) {
-    const i = intents.get(x.operationId);
+    const i = intents.get(x.operationId), request=requests.get(x.requestId), sent=request?.body?.upserts?.find(row=>String(row.id)===String(i?.rowId));
     if (
-      i?.kind === "edit" &&
+      request?.url==='/api/collection-workspaces/'+m.owner && sent?.[i?.field]===i?.id && i?.kind === "edit" &&
       x.data.applied?.some((a) => String(a.id) === String(i.rowId))
     )
       expected.set(String(i.rowId), {
@@ -108,6 +110,7 @@ R.fs.mkdirSync(out, { recursive: true });
     coldMissing,
     rejectedOperation27: op27?.data.conflicts,
     serverCount: cold.length,
+    runSource: m.source,
     readMethod:
       "actual restarted native server GET, independent durable snapshots retained",
     source: require("child_process")

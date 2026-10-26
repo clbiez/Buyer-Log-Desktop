@@ -22482,9 +22482,12 @@ function kolReportConflicts(conflicts){
     // uzaktaki güncel satır üzerine yalnız yerel farkı taşı ve otomatik tekrar dene.
     if(own&&base&&local&&!kolBaseline.expectedNewIds?.has(key)){
       kolRows[index]=kolMergeLocalRowDelta(base,local,remote);
+      kolBaseline.rows.set(key,{...remote});
       rebased=true;
     }
-    if(kolBaseline&&!kolBaseline.expectedNewIds?.has(key))kolBaseline.rows.set(key,{...remote});
+    // A shared-row rejection retains its original CAS base. Advancing only the
+    // baseline would give the rejected local snapshot a fresh token: a later
+    // automatic pricing save could then overwrite unrelated accepted fields.
   }
   kolPersistPendingWorkspace(rebased?'rebased':'conflict');
   if(!rebased){

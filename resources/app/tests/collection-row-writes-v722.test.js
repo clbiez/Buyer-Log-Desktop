@@ -347,7 +347,7 @@ test('v7.0.111 düzenlenen Koleksiyon satırını bekleyen uzak yama ezemez', ()
   assert.doesNotMatch(apply, /kolBaseline\.structure=kolStructureSignature\(\)/,
     'satır yaması yerel yapısal değişikliği kaydedilmiş saymamalı');
 
-  const deferredStart = APP.indexOf("document.addEventListener('focusout',()=>{", APP.indexOf('let kolDeferredPatches=[]'));
+  const deferredStart = APP.indexOf('function kolResumeDeferredRemoteChanges(', APP.indexOf('let kolDeferredPatches=[]'));
   const deferredEnd = APP.indexOf('/* Kirli-workspace', deferredStart);
   const deferred = APP.slice(deferredStart, deferredEnd);
   assert.match(deferred, /await kolSettlePendingSave\(\)/, 'focusout önce yerel kaydı tamamlamalı');

@@ -503,6 +503,35 @@
           "en": "Concurrent sync keeps its merge base consistent"
         }
       }
+    },
+    {
+      "id": "collection-rejected-draft-token",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Reddedilen taslak otomatik olarak kabul edilmiş sayılmaz",
+        "en": "Rejected drafts cannot silently become accepted"
+      },
+      "body": {
+        "tr": "Paylaşılan satırın kaydı reddedildiğinde özgün sürüm beklentisi ve yerel taslak korunur. Sonraki otomatik fiyat yenilemesi eski alanları yeni sürümle gönderip başka kullanıcının kaydını ezemez. Kendi Koleksiyonunuzun mevcut yeniden tabanlama davranışı korunur.",
+        "en": "A rejected shared-row save retains its original revision expectation and local draft. A later automatic pricing refresh cannot submit stale fields with a fresh revision and overwrite another user’s save. Existing rebasing behavior in your own Collection is preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-rejected-draft-token.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Fiyat yenilemesi sonrasında reddedilen taslak çakışma durumunda kalır",
+          "en": "Real Buyer Log: A rejected draft remains in conflict after pricing refresh"
+        },
+        "caption": {
+          "tr": "Yerel taslak korunur, sunucudaki kabul edilmiş kayıt ezilmez",
+          "en": "The draft is preserved without overwriting the accepted server record"
+        }
+      }
     }
   ]
 }
