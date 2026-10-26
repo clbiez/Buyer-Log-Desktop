@@ -1,52 +1,37 @@
-/* Compact view and price selectors — canonical UI token palette. */
+/* View and price picker geometry; shared visual states live in ui-components.css. */
 .blViewPicker{position:relative;display:inline-flex;align-items:center;min-width:0;flex:0 0 auto;}
 .blViewPicker .blViewPickerTrigger{
   display:inline-flex;align-items:center;justify-content:space-between;
-  min-width:110px;gap:var(--ui-space-2);font-weight:600;white-space:nowrap;
-  color:var(--ui-text);background:var(--ui-surface-soft);
-  border:1px solid var(--ui-group-divider);border-radius:var(--ui-radius);
+  min-width:110px;gap:var(--ui-space-2);white-space:nowrap;
 }
-.blViewPicker .blViewPickerTrigger:hover,.blViewPicker.isOpen .blViewPickerTrigger{
-  background:var(--ui-selected);border-color:var(--ui-accent);
-}
-.blViewPicker .blViewPickerTrigger:focus-visible,.blViewPickerMenu button:focus-visible{
-  outline:2px solid var(--ui-accent);outline-offset:2px;
-}
-.blViewPicker .blViewPickerChevron{width:13px;height:13px;flex:0 0 auto;opacity:.7;transition:transform var(--ui-motion-fast) var(--ui-ease);}
+.blViewPicker .blViewPickerChevron{width:13px;height:13px;flex:0 0 auto;opacity:.7;}
 .blViewPicker.isOpen .blViewPickerChevron{transform:rotate(180deg);}
 .blViewPickerMenu{
-  position:fixed;z-index:var(--ui-z-popover);
+  position:fixed;
   display:flex;flex-direction:column;gap:2px;
   width:max-content;min-width:174px;max-width:calc(100vw - 16px);
   max-height:min(420px,calc(100vh - 16px));overflow-y:auto;
-  padding:var(--ui-space-1);border:1px solid var(--ui-group-divider);
-  border-radius:var(--ui-radius);background:var(--ui-surface);
-  box-shadow:var(--ui-shadow-overlay);
+  padding:var(--ui-space-1);
 }
 .blViewPickerMenu[hidden]{display:none!important;}
 .blViewPickerMenu .tableViewPreset{
   display:flex;align-items:center;justify-content:flex-start;
   width:100%;min-height:var(--ui-control-height);
   margin:0;padding:0 var(--ui-space-3);
-  color:var(--ui-text);background:transparent;border:0;
-  border-radius:var(--ui-radius);white-space:nowrap;text-align:left;
-}
-.blViewPickerMenu .tableViewPreset:hover{background:var(--ui-row-hover);}
-.blViewPickerMenu .tableViewPreset[aria-pressed="true"]{
-  color:var(--ui-selected-ink);background:var(--ui-selected);font-weight:650;
+  white-space:nowrap;text-align:left;
 }
 .blViewPickerMenu .tableViewPreset[aria-pressed="true"]::after{
-  content:"✓";margin-left:auto;padding-left:var(--ui-space-3);color:var(--ui-accent);
+  content:"✓";margin-left:auto;padding-left:var(--ui-space-3);
 }
 .blViewPickerMenu .tableFieldsBtn{
-  border-top:1px solid var(--ui-group-divider);margin-top:var(--ui-space-1);padding-top:var(--ui-space-1);
+  margin-top:var(--ui-space-1);padding-top:var(--ui-space-1);
 }
 .blPriceViewPicker .blViewPickerTrigger{min-width:125px;}
-.blViewPriceIcon{width:15px;height:15px;flex:0 0 auto;color:var(--ui-accent);}
+.blViewPriceIcon{width:15px;height:15px;flex:0 0 auto;}
 #kolAllVariantsToggle{
   display:inline-flex;align-items:center;justify-content:center;
   width:auto;min-width:max-content;padding:0 var(--ui-space-3)!important;
-  font-size:var(--ui-font-xs);font-weight:600;white-space:nowrap;
+  white-space:nowrap;
 }
 #kolAllVariantsToggle[disabled]{opacity:.48;}
 @media(max-width:600px){
