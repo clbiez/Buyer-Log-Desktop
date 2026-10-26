@@ -165,7 +165,12 @@ test('kaynak kataloğu CP sistem sütunlarının tamamını kapsar', () => {
   const block = APP.slice(APP.indexOf('const CP_COLS = ['), APP.indexOf('const ORDERS_COLS'));
   const keys = [...block.matchAll(/\{k:'([^']+)'/g)].map(match => match[1]);
   assert.ok(keys.length > 40);
-  keys.concat(['Active/Inactive']).forEach(key => assert.ok(names.CP_SOURCES[key], `${key} için kaynak tanımı yok`));
+  keys.filter(key => key !== '__personalOrderNote').concat(['Active/Inactive']).forEach(key => assert.ok(names.CP_SOURCES[key], `${key} için kaynak tanımı yok`));
+  // Personal notes are account-private and use a computed source descriptor, not an ASAS/system field.
+  const personal = names.sourceFor('cp', { k: '__personalOrderNote', personalNote: true });
+  assert.equal(personal.kind, 'buyerlog');
+  assert.match(personal.note.tr, /kişisel|size ait/i);
+  assert.match(personal.note.en, /personal|owned by you/i);
 });
 
 /* ----------------------------------------- 4) ARAYÜZ BAĞLANTILARI */
@@ -174,7 +179,7 @@ test('CP/Orders başlığı kişisel adı ve sonradan eklenen sütunun EN/TR ad�
   const label = extractFunction(APP, 'tableColumnLabel');
   assert.match(label, /BLColumnNames\.resolve\(tableKey,c\.k,appLang,fallback\)/);
   const defaults = extractFunction(APP, 'tableColumnDefaultLabel');
-  assert.match(defaults, /c\.modelCustom\|\|c\.noteCustom\|\|c\.formulaCustom/);
+  assert.match(defaults, /c\.modelCustom\|\|c\.noteCustom\|\|c\.personalNote\|\|c\.formulaCustom/);
   assert.match(defaults, /BLColumnNames\.definitionLabel\(def,appLang\)/);
 });
 
