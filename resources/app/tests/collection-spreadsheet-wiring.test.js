@@ -141,7 +141,7 @@ test('new Collection CSS is namespaced and uses Buyer Log accent rather than Exc
 
 
 test('paste sonrası yeniden çizim çoklu/aralık seçimini tek hücreye düşürmez',()=>{
-  const declaration=sheet.split(/\\r?\\n/).find(line=>line.includes('function restoreActiveAfterRender()'));
+  const declaration=sheet.split(String.fromCharCode(10)).find(line=>line.includes('function restoreActiveAfterRender()'));
   assert.ok(declaration, 'restore helper exists');
   let repaints=0;
   const state={
