@@ -3,7 +3,7 @@
 import collections, json, math, pathlib, sys
 root=pathlib.Path(sys.argv[1]); data=[json.loads(l) for l in (root/'operations.jsonl').read_text().splitlines() if l.strip()]
 result=json.loads((root/'result.json').read_text()) if (root/'result.json').exists() else json.loads((root/'failure.json').read_text())
-start=result.get('measurementAt'); end=result.get('endAt') or (start+result.get('requestedSeconds',0)*1000 if start else None)
+start=result.get('measurementAt'); fatal=next((x['at'] for x in data if x['type']=='fatal'),None); end=result.get('endAt') or fatal or (start+result.get('requestedSeconds',0)*1000 if start else None)
 intents={x['id']:x for x in data if x['type']=='intent'}
 ui={x['id']:x for x in data if x['type'] in ('ui-result','operation-error')}
 submitted=collections.defaultdict(list); responses=collections.defaultdict(list)

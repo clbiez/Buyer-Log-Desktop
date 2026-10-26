@@ -112,6 +112,17 @@ async function observe() {
     } catch {}
   }
 }
+async function captureUiDiagnostic(s,op,stage){
+  try{
+    const state=await R.deadline(s.page.evaluate(()=>({url:location.href,owner:typeof kolWorkspaceOwnerId==='undefined'?null:kolWorkspaceOwnerId,active:document.activeElement?.outerHTML.slice(0,250),search:document.getElementById('kolSearch')?.value,rows:typeof kolRows==='undefined'?null:kolRows.map(r=>({id:r.id,model:r.modelKod})),editors:[...document.querySelectorAll('#kolTable .editCell[data-k="modelKod"]')].map(e=>({id:e.dataset.id,value:e.value})),dirty:typeof kolHasDirtyWorkspace==='function'?kolHasDirtyWorkspace():null,renderPending:typeof kolRemoteRenderPendingOwner==='undefined'?null:kolRemoteRenderPendingOwner})),"UI diagnostic",1500);
+    write({type:"ui-diagnostic",operationId:op.id,user:s.account.id,stage,state});
+  }catch(error){write({type:"ui-diagnostic-unavailable",operationId:op.id,user:s.account.id,stage,error:error.message});}
+}
+async function stopCpuDiagnostic(s,label){
+  if(!s.cpuDiagnostic)return;
+  const cpu=s.cpuDiagnostic;s.cpuDiagnostic=null;
+  try{const {profile}=await R.deadline(cpu.send('Profiler.stop'),"CPU diagnostic stop",5000);R.fs.writeFileSync(R.path.join(root,label+'.cpuprofile'),JSON.stringify(profile));}catch(error){write({type:"cpu-diagnostic-unavailable",user:s.account.id,error:error.message});}
+}
 async function action(s, kind, fn, expected = {}) {
   const op = {
     id: `op-${seed}-${++serial}`,
@@ -127,6 +138,7 @@ async function action(s, kind, fn, expected = {}) {
   operations.push(op);
   write({ type: "intent", ...op });
   try {
+    if(args.diagnostics)await captureUiDiagnostic(s,op,'before');
     const result = await fn(op);
     op.elapsedMs = Date.now() - op.sentAt;
     op.result = result;
@@ -158,6 +170,7 @@ async function action(s, kind, fn, expected = {}) {
     op.outcome = "driver-or-product-failure";
     write({ type: "operation-error", ...op });
     failures.push({ operationId: op.id, user: s.account.id, error: e.message });
+    if(args.diagnostics){await captureUiDiagnostic(s,op,'failure');await stopCpuDiagnostic(s,op.id+'-failure');}
     await s.page
       .screenshot({ path: R.path.join(root, op.id + "-failed.png") })
       .catch(() => {});
@@ -873,6 +886,8 @@ async function reconcile() {
       ...runtime.manifest,
       seed,
       seconds,
+      diagnostics: Boolean(args.diagnostics),
+      cpuProfilerUserIndex: args.diagnostics ? 1 : null,
       environment: {
         node: process.version,
         platform: process.platform,
@@ -938,6 +953,7 @@ async function reconcile() {
         trace: account.index === 0,
       });
       s.cookie = await B.cookie(s);
+      if(args.diagnostics&&account.index===1){s.cpuDiagnostic=await s.context.newCDPSession(s.page);await s.cpuDiagnostic.send('Profiler.enable');await s.cpuDiagnostic.send('Profiler.setSamplingInterval',{interval:10000});await s.cpuDiagnostic.send('Profiler.start');}
       sessions.push(s);
       B.instrument(s, write);
       loopPromises.push(daily(s));
@@ -1047,6 +1063,7 @@ async function reconcile() {
       path: R.path.join(root, "trace-user-0.zip"),
     });
     traceStopped = true;
+    for(const s of sessions)await stopCpuDiagnostic(s,'user-'+s.account.index+'-completed');
     const reconciliation = await reconcile();
     const measured = operations.filter(
       (o) => o.sentAt >= measurementAt && o.sentAt < endAt,
@@ -1189,6 +1206,8 @@ async function reconcile() {
         write({ type: "capacity-reconciliation-error", error: error.stack });
       }
     }
+    for(const s of sessions)await stopCpuDiagnostic(s,'user-'+s.account.index+'-fatal');
+    if(!traceStopped&&sessions[0]){await R.deadline(sessions[0].context.tracing.stop({path:R.path.join(root,'trace-failed.zip')}),'failure trace',10000).catch(error=>write({type:'trace-unavailable',error:error.message}));traceStopped=true;}
     console.error(e);
     process.exitCode = 1;
   } finally {

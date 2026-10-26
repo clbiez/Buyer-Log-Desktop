@@ -14,7 +14,7 @@ with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as z:
  for root in sorted(pathlib.Path('/workspace/scratch').glob('bl-*')):
   if not root.is_dir():continue
   for p in root.iterdir():
-   if p.is_file() and p.suffix in ('.json','.jsonl','.png','.zip','.log','.xlsx'):
+   if p.is_file() and p.suffix in ('.json','.jsonl','.png','.zip','.log','.xlsx','.cpuprofile'):
     add(p,'runs/'+root.name+'/'+p.name)
    if p.is_dir() and p.name.startswith('device-'):
     for log in p.glob('*.log'):add(log,'runs/'+root.name+'/'+p.name+'/'+log.name)
