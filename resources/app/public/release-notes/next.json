@@ -648,6 +648,35 @@
           "en": "After the real file error cleared, the peer updated and the Sharing pending state cleared."
         }
       }
+    },
+    {
+      "id": "collection-deferred-rule-projection",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Düzenleme sırasında fiyat çekmecesi güncel otomatik kuralı kullanır",
+        "en": "The price drawer uses the current automatic rule while editing"
+      },
+      "body": {
+        "tr": "Eski kuralı görmüş başka bir kullanıcının kaydı geldiğinde, aktif editör korunurken otomatik royalty ve maliyet alanları güncellenir. Çekmece artık güncel kural kimliğiyle eski royalty sonucunu birlikte göstermez; manuel fiyat ve kur tercihleriniz korunur.",
+        "en": "When a save arrives from a peer that observed an older rule, automatic royalty and cost fields update while your active editor stays attached. The drawer no longer combines the current rule identity with an old royalty result; manual prices and FX choices are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-deferred-rule-projection.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: bekletilmiş gerçek kural yanıtı yarışından sonra güncel yüzde 25 toplam royalty ve 5,93 maliyet",
+          "en": "Real Buyer Log: current 25 percent total royalty and 5.93 cost after a held genuine rule-response race"
+        },
+        "caption": {
+          "tr": "Eski otomatik alanlar geldiğinde editör yerinde kalır; çekmece güncel kuralla 5,93 gösterir.",
+          "en": "The editor stays attached when older automatic fields arrive; the drawer shows 5.93 using the current rule."
+        }
+      }
     }
   ]
 }

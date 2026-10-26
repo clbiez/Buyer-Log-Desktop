@@ -20,6 +20,10 @@ function fixture({ editor = true, rowEditor = true } = {}) {
       kolRows: rows,
       kolSelected: new Set(),
       kolWorkspaceOwnerId: "owner",
+      kolWorkspaceCanEdit: true,
+      kolSyncLicensorsFromRules: () => 0,
+      kolSyncRulePricing: () => 0,
+      saveKolRows: () => {},
       kolWorkspaceRevision: 1,
       kolBaseline: {
         ownerId: "owner",
@@ -112,4 +116,16 @@ test('deferred focusout refresh waits for pointer release before replacing its c
   events.pointerup();assert.equal(renders,0,'native click runs before the release timer');
   await timers.shift()();await timers.shift()();
   assert.equal(renders,1);assert.equal(ctx.kolRemoteRenderPendingOwner,'');
+});
+
+test('deferred remote paint still refreshes automatic rule fields before another calculation can open',()=>{
+ const f=fixture({editor:true,rowEditor:false});let saves=0;
+ f.ctx.kolWorkspaceCanEdit=true;
+ f.ctx.kolSyncLicensorsFromRules=()=>0;
+ f.ctx.kolSyncRulePricing=options=>{assert.equal(options.save,true);f.ctx.kolRows[1].royalty='25,00%';saves++;return 1};
+ f.ctx.saveKolRows=()=>{throw Error('the existing pricing synchronizer already queued the save')};
+ f.ctx.kolApplyRemotePatches([{kind:'changed',row:{id:2,modelKod:'peer-2',_rev:2,royalty:'27,00%'}}]);
+ assert.equal(f.ctx.kolRows[1].royalty,'25,00%','current loaded automatic rule must already be projected');
+ assert.equal(f.ctx.kolBaseline.rows.get('2').royalty,'27,00%','keep actual accepted incoming baseline/CAS distinct from derived projection');
+ assert.equal(saves,1);assert.equal(f.renders(),0,'the focused editor DOM must remain attached');
 });

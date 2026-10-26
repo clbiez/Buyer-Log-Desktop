@@ -1,0 +1,261 @@
+{
+  "lineage": {
+    "schemaVersion": 1,
+    "module": "collection",
+    "record": "op-20261025-211 · SYN-0",
+    "capturedAt": "2026-10-26T23:12:03.374Z",
+    "source": {
+      "kind": "confirmed",
+      "name": "Demo Supplier",
+      "amount": 4,
+      "origin": "",
+      "at": null,
+      "requestId": "",
+      "lineId": "",
+      "ageDays": null
+    },
+    "values": {
+      "suppFob": 4,
+      "overseasLanded": 5.9311,
+      "trLanded": 11.770500000000002
+    },
+    "rule": {
+      "id": "e2e-rule",
+      "opdStart": "2026-01-01",
+      "opdEnd": "",
+      "countryGroup": null,
+      "licensor": "E2E LICENSOR",
+      "license": "E2E LICENSE",
+      "seasons": [],
+      "royalty": 22,
+      "hologramCost": 0.01
+    },
+    "trRule": {
+      "id": "e2e-rule",
+      "opdStart": "2026-01-01",
+      "opdEnd": "",
+      "countryGroup": null,
+      "licensor": "E2E LICENSOR",
+      "license": "E2E LICENSE",
+      "seasons": [],
+      "royalty": 22,
+      "hologramCost": 0.01
+    },
+    "fx": {
+      "rate": 47,
+      "requestedMonth": "2026-10",
+      "resolvedMonth": "2026-10",
+      "exact": true,
+      "revision": 3,
+      "sourceFile": "fx-update-5.xlsx",
+      "sourceModifiedAt": "2026-10-26T23:11:00.139Z",
+      "updatedAt": "2026-10-26T23:11:00.647Z",
+      "manual": false,
+      "ageDays": 0,
+      "fallback": false
+    },
+    "revisions": {
+      "collection": 115,
+      "row": 39,
+      "pricingRules": 20
+    },
+    "blockers": [],
+    "precedence": "confirmed > best > target"
+  },
+  "landed": {
+    "trPrice": 400,
+    "trMult": 1.05,
+    "trMultIsManual": false,
+    "defaultTrMult": 1.05,
+    "fx": 47,
+    "fxAuto": 47,
+    "fxIsManual": false,
+    "trBaseUsd": 8.51063829787234,
+    "trRule": {
+      "id": "e2e-rule",
+      "opdStart": "2026-01-01",
+      "opdEnd": "",
+      "seasons": [],
+      "licensor": "E2E LICENSOR",
+      "license": "E2E LICENSE",
+      "royalty": 22,
+      "trCommission": 2,
+      "ydCommission": 3,
+      "hologramCost": 0.01
+    },
+    "trRuleMissing": false,
+    "trRuleInvalid": false,
+    "trCostedUsd": 11.21,
+    "trLanded": 11.770500000000002,
+    "trRoyaltyPct": 24,
+    "trHologramCost": 0.01,
+    "supp": {
+      "price": 4,
+      "source": "confirmed",
+      "name": "Demo Supplier"
+    },
+    "ydBaseFob": 4,
+    "ydCostedFob": 5.343333333333333,
+    "ydMult": 1.11,
+    "ydMultIsManual": false,
+    "defaultYdMult": 1.11,
+    "ydLanded": 5.9311,
+    "nonDtr": true,
+    "royaltyPct": 25,
+    "hologramCost": 0.01,
+    "profitPct": 49.61046684507881,
+    "ruleMissing": false,
+    "ruleInvalid": false
+  },
+  "pricingRules": [
+    {
+      "id": "e2e-rule",
+      "opdStart": "2026-01-01",
+      "opdEnd": "",
+      "seasons": [],
+      "licensor": "E2E LICENSOR",
+      "license": "E2E LICENSE",
+      "royalty": 22,
+      "trCommission": 2,
+      "ydCommission": 3,
+      "hologramCost": 0.01
+    }
+  ],
+  "pricingRevision": 20,
+  "fx": {
+    "base": "USD",
+    "currencies": [
+      "EUR",
+      "GBP",
+      "TRY"
+    ],
+    "months": {
+      "2026-09": {
+        "TRY": 40
+      },
+      "2026-10": {
+        "TRY": 47,
+        "EUR": 0.9,
+        "GBP": 0.8
+      }
+    },
+    "updatedAt": "2026-10-26T23:11:00.647Z",
+    "sourceFile": "fx-update-5.xlsx",
+    "sourceType": "UPLOAD",
+    "sourceModifiedAt": "2026-10-26T23:11:00.139Z",
+    "_revision": 3,
+    "reportMonth": "2026-10",
+    "sourceFingerprint": "311d78f8ab10369d0bfa37bdffd392344a6c2b32564e146e7d7134489bf42317",
+    "parser": "deterministic",
+    "folderSync": null
+  },
+  "displayedLineage": [
+    {
+      "label": "Fiyat kaynağı",
+      "value": "Onaylı teklif"
+    },
+    {
+      "label": "Supp. FOB",
+      "value": "4"
+    },
+    {
+      "label": "Kural kimliği",
+      "value": "e2e-rule"
+    },
+    {
+      "label": "Kur türü",
+      "value": "Otomatik"
+    },
+    {
+      "label": "İstenen kur ayı",
+      "value": "2026-10"
+    },
+    {
+      "label": "Uygulanan kur ayı",
+      "value": "2026-10"
+    },
+    {
+      "label": "Kayıt",
+      "value": "op-20261025-211 · SYN-0"
+    },
+    {
+      "label": "Üretici",
+      "value": "Demo Supplier"
+    },
+    {
+      "label": "Kaynak önceliği",
+      "value": "Onaylı → En iyi → Hedef"
+    },
+    {
+      "label": "Fiyat kaynağı tarihi",
+      "value": "Bildirilmemiş"
+    },
+    {
+      "label": "Fiyat kaynağı yaşı (gün)",
+      "value": "Bildirilmemiş"
+    },
+    {
+      "label": "TR kural kimliği",
+      "value": "e2e-rule"
+    },
+    {
+      "label": "USD → TRY",
+      "value": "47"
+    },
+    {
+      "label": "Önceki/ilk mevcut aya dönüş",
+      "value": "Hayır"
+    },
+    {
+      "label": "Kur kaynak dosyası",
+      "value": "fx-update-5.xlsx"
+    },
+    {
+      "label": "Kur kaynağı tarihi",
+      "value": "26.10.2026 23:11:00"
+    },
+    {
+      "label": "Kur kaynağı yaşı (gün)",
+      "value": "0"
+    },
+    {
+      "label": "Kur kaynak sürümü",
+      "value": "3"
+    },
+    {
+      "label": "Yurt Dışı Landed",
+      "value": "6,09"
+    },
+    {
+      "label": "TR Landed",
+      "value": "11,77"
+    },
+    {
+      "label": "Koleksiyon sürümü",
+      "value": "115"
+    },
+    {
+      "label": "Satır sürümü",
+      "value": "39"
+    },
+    {
+      "label": "Fiyat kuralı sürümü",
+      "value": "20"
+    },
+    {
+      "label": "Açıklamanın alındığı an",
+      "value": "2026-10-26T23:12:01.674Z"
+    }
+  ],
+  "displayedWaterfall": [
+    {
+      "label": "Yurt Dışı Landed",
+      "total": "$6,09"
+    },
+    {
+      "label": "TR Landed",
+      "total": "$11,77"
+    }
+  ],
+  "displayLanguage": "tr"
+}

@@ -234,6 +234,21 @@ function verifyCalculation(calc) {
       ok: Math.abs(tr - l.values.trLanded) < 1e-9,
     });
   }
+  const facts=new Map((calc.displayedLineage||[]).map(item=>[String(item.label||'').toLowerCase(),item.value]));
+  const fact=(tr,en)=>facts.get(tr.toLowerCase())??facts.get(en.toLowerCase());
+  const displayed={pricing:fact('Fiyat kuralı sürümü','Pricing rules revision'),fx:fact('Kur kaynak sürümü','FX source revision'),row:fact('Satır sürümü','Row revision')};
+  const sampled={pricing:l.revisions.pricingRules,fx:l.fx.revision,row:l.revisions.row};
+  const comparable=Object.keys(sampled).every(key=>displayed[key]!=null&&String(displayed[key])===String(sampled[key]));
+  calc.visibleComparison={status:comparable?'compared':'different-observed-source-version',displayed,sampled};
+  if(comparable){
+    for(const [index,name] of ['overseas-landed','tr-landed'].entries()){
+      const independent=checks.find(check=>check.name===name);
+      const text=String(calc.displayedWaterfall?.[index]?.total||'').replace(/[^0-9,.-]/g,'');
+      const number=Number(calc.displayLanguage==='en'?text.replace(/,/g,''):text.replace(/\./g,'').replace(',','.'));
+      const expected=independent?Number(new Intl.NumberFormat('en-US',{useGrouping:false,minimumFractionDigits:2,maximumFractionDigits:2}).format(independent.expected)):null;
+      checks.push({name:'visible-'+name,expected,actual:text?number:null,ok:expected!=null&&text!==''&&number===expected});
+    }
+  }
   return checks;
 }
 async function daily(s) {

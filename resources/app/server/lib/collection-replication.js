@@ -434,6 +434,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     return {
       synced: true, merged: true, ownerId: owner, revision: workspace._revision, conflicts: conflicts.length,
       published: Boolean(publication && publication.published), reason: publishError ? publishError.code || 'PUBLISH_FAILED' : 'MERGED',
+      ...(publishError ? { ok:false, publicationPending:true, state:'error', code:publishError.code || 'PUBLISH_FAILED', message:publishError.message } : {}),
     };
   }
   function publishOwner(ownerId) {
@@ -599,7 +600,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       if (remoteStamps.get(owner) === stamp) continue;
       try {
         const result = await syncOwner(userId, owner);
-        if (result && ['LOCAL_CHANGED','LOCAL_NEWER','LOCAL_CHANGED_DURING_MERGE'].includes(result.reason)) continue;
+        if (result && (result.publicationPending || ['LOCAL_CHANGED','LOCAL_NEWER','LOCAL_CHANGED_DURING_MERGE'].includes(result.reason))) continue;
         remoteStamps.set(owner, stamp);
         if (result && (result.synced || result.merged)) changed.push({ ownerId: owner, revision: result.revision });
       } catch (error) { trace('COLLECTION_REPLICA_POLL_FAILED', { ownerId: owner, error: error && (error.code || error.message) }); }

@@ -1,0 +1,7 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const code=fs.readFileSync(path.join(__dirname,'../scripts/sync-e2e/run.cjs'),'utf8'),start=code.indexOf('function verifyCalculation('),end=code.indexOf('\nasync function daily(s)',start),context=vm.createContext({Intl});vm.runInContext(code.slice(start,end),context);
+const sample=require('./fixtures/sync-visible-cost-race.json');
+test('native long-run stale drawer total fails even when sampled raw calculation matches',()=>{const checks=context.verifyCalculation(structuredClone(sample));assert.equal(checks.find(v=>v.name==='overseas-landed').ok,true);assert.equal(checks.find(v=>v.name==='visible-overseas-landed').ok,false)});
+test('real displayed value must match the independent financial result at two decimals',()=>{const copy=structuredClone(sample);copy.displayedWaterfall[0].total='$5,93';assert.ok(context.verifyCalculation(copy).every(v=>v.ok))});
+test('different observed row versions remain a traceability comparison instead of a false arithmetic failure',()=>{const copy=structuredClone(sample);copy.lineage.revisions.row++;const checks=context.verifyCalculation(copy);assert.ok(checks.every(v=>v.ok));assert.equal(copy.visibleComparison.status,'different-observed-source-version');assert.equal(checks.some(v=>v.name.startsWith('visible-')),false)});

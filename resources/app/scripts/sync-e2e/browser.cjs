@@ -272,7 +272,7 @@ async function snapshot(session, id) {
     };
   }, id);
 }
-async function calculate(session, id) {
+async function calculate(session, id, { keepOpen = false } = {}) {
   const start = Date.now(),
     p = session.page;
   const trigger=p.locator(`[data-kol-drawer-open="${id}"]`).first();
@@ -295,7 +295,7 @@ async function calculate(session, id) {
       displayLanguage: appLang,
     };
   }, id);
-  await p.evaluate(() => BLCollectionPriceDrawer.close());
+  if (!keepOpen) await p.evaluate(() => BLCollectionPriceDrawer.close());
   return { ...out, elapsedMs: Date.now() - start };
 }
 async function recoverAccepted(session,record=()=>{}){

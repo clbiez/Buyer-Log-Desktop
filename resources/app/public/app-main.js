@@ -37917,8 +37917,17 @@ function kolApplyRemotePatches(rowPatches){
     // An unrelated row must not replace the DOM underneath a focused editor.
     // Data/baseline still advance immediately; coalesce the visual refresh until
     // the user leaves the editor. No backend write or other client is locked.
-    if(kolHasActiveWorkspaceEditor())kolRemoteRenderPendingOwner=kolWorkspaceOwnerId;
-    else {kolRemoteRenderPendingOwner='';renderKol();kolHighlightRemoteRows(touched);}
+    if(kolHasActiveWorkspaceEditor()){
+      // Deferring the DOM must not defer automatic pricing. A peer may have
+      // saved with an older loaded rule; the drawer uses our current rule.
+      // Keep the incoming baseline/CAS, and save derived changes as usual.
+      if(kolWorkspaceCanEdit&&kolBaseline?.ownerId===kolWorkspaceOwnerId){
+        const licensorChanged=kolSyncLicensorsFromRules({save:false});
+        const pricingChanged=kolSyncRulePricing({save:true});
+        if(licensorChanged&&!pricingChanged)saveKolRows();
+      }
+      kolRemoteRenderPendingOwner=kolWorkspaceOwnerId;
+    }else {kolRemoteRenderPendingOwner='';renderKol();kolHighlightRemoteRows(touched);}
     scheduleOverviewCollectionSummaryRender();
     try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows,manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
   }
