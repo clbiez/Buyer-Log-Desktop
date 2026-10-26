@@ -241,15 +241,24 @@
     if(!plan.ops.length&&clipboardHasImage(event))return false;
     event?.preventDefault?.();
     event?.stopImmediatePropagation?.();
+    // Önizleme açıkken kullanıcının başka bir hücre/alan seçmesi yeni bir
+    // niyettir; async yanıt o yeni seçimin üzerine yazmamalıdır.
+    const selectionBefore={
+      anchor:entry.state.selectionAnchor&&{...entry.state.selectionAnchor},
+      focus:entry.state.selectionFocus&&{...entry.state.selectionFocus},
+    };
     const result=await entry.config.applyPaste(plan,data.range,entry.state);
     // 7.0.300 toplu işlem önizlemesi asenkrondur. İptal/ret sonrasında
     // seçimi ve düzenleyici odağını değiştirmek bir sonraki Ctrl+C/V'yi bozar.
     if(result===false||result?.ok===false)return false;
-    // Excel gibi: başarıyla yapıştırılan alan seçili kalır.
+    // Excel gibi: başarıyla yapıştırılan alan seçili kalır; kullanıcı
+    // bu sırada başka bir seçim yaptıysa onun en son niyeti korunur.
+    const sameCell=(a,b)=>Boolean(a&&b&&a.rowId===b.rowId&&a.columnId===b.columnId);
+    const selectionStillCurrent=sameCell(entry.state.selectionAnchor,selectionBefore.anchor)&&sameCell(entry.state.selectionFocus,selectionBefore.focus);
     const target=plan.target;
     const first=target&&cellAt(entry,target.startRow,target.startColumn);
     const last=target&&cellAt(entry,target.endRow,target.endColumn);
-    if(first&&last){entry.state.selectionAnchor=entry.state.activeCell=first;entry.state.selectionFocus=last;}
+    if(selectionStillCurrent&&first&&last){entry.state.selectionAnchor=entry.state.activeCell=first;entry.state.selectionFocus=last;}
     afterRender(entry.tableId);
     const table=root.document?.getElementById?.(entry.tableId);
     const focused=root.document?.activeElement;
