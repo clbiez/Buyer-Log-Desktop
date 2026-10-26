@@ -1226,15 +1226,20 @@ function renderMeta(){
 function ensureLoadingOverlay(){
   const wrap=$('globalFlowCanvasWrap');if(!wrap)return null;let overlay=$('globalFlowLoadingOverlay');if(overlay)return overlay;
   overlay=document.createElement('div');overlay.id='globalFlowLoadingOverlay';overlay.className='globalFlowLoadingOverlay';
-  overlay.innerHTML='<div class="gfWorkingCard"><i id="globalFlowWorkingOrb" class="blOrb" data-state="thinking" aria-hidden="true"></i><b>'+esc(L('Harita hazırlanıyor','Preparing map'))+'</b><span>'+esc(L('Sevkiyatlar ve coğrafi katmanlar eşleştiriliyor…','Matching shipments and geographic layers…'))+'</span></div>';
+  overlay.innerHTML='<div class="gfWorkingCard"><canvas id="globalFlowWorkingOrb" width="64" height="64" aria-hidden="true"></canvas><b>'+esc(L('Harita hazırlanıyor','Preparing map'))+'</b><span>'+esc(L('Sevkiyatlar ve coğrafi katmanlar eşleştiriliyor…','Matching shipments and geographic layers…'))+'</span></div>';
   wrap.appendChild(overlay);
   return overlay;
 }
-/* A static square marker shares the global loading contract. No canvas loop
-   or layout measurement continues after the overlay is hidden. */
+/* Working Orb is scoped to the real map-loading operation. The controller
+   also pauses when the overlay leaves the viewport or the tab is hidden. */
 function syncLoadingOrb(busy){
-  const marker=$('globalFlowWorkingOrb');
-  if(marker)marker.dataset.state=busy?'thinking':'idle';
+  const canvas=$('globalFlowWorkingOrb');
+  if(busy&&canvas&&!state.orbHandle&&window.BLThinkingOrb?.attach){
+    state.orbHandle=window.BLThinkingOrb.attach(canvas,{state:'working'});
+  }else if(!busy&&state.orbHandle){
+    try{state.orbHandle.stop();}catch(_){}
+    state.orbHandle=null;
+  }
 }
 function syncLoadingOverlay(){
   const overlay=ensureLoadingOverlay();if(!overlay)return;const earth=Boolean(state.earthLoading&&state.engine==='earth'),busy=Boolean(state.loading||state.worldLoading||earth);

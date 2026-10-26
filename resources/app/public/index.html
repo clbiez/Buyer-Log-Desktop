@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Buyer Log</title>
 <link rel="stylesheet" href="ui-tokens.css?v=__BL_ASSET_VERSION__">
+<script src="thinking-orb-breathing.js?v=__BL_ASSET_VERSION__&rev=3"></script>
 <script src="ui-appearance.js?v=__BL_ASSET_VERSION__"></script>
 <script>window.BL_APP_VERSION="__BL_CANONICAL_VERSION__";window.BL_DISPLAY_VERSION="__BL_DISPLAY_VERSION__";window.BL_ASSET_VERSION="__BL_ASSET_VERSION__";window.__BL_DOCUMENT_BOOT_AT=(window.performance&&performance.now)?performance.now():Date.now();</script>
 <link rel="stylesheet" href="buyerlog-guide.css?v=__BL_ASSET_VERSION__&rev=4">
@@ -28,13 +29,14 @@
   function ensureGuard(){
     if(finished||guard()||!document.body)return;
     var el=document.createElement('div');el.id='blBootGuard';el.dataset.uiMigrated='startup';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','blBootTitle');el.tabIndex=-1;
-    el.innerHTML='<div class="blBootCard"><span class="blBootOrb" aria-hidden="true"></span><div id="blBootTitle" data-boot-message role="status" aria-live="polite">Buyer Log hazırlanıyor…</div></div>';
+    el.innerHTML='<div class="blBootCard"><canvas class="blBootOrb" width="64" height="64" aria-hidden="true"></canvas><div id="blBootTitle" data-boot-message role="status" aria-live="polite">Buyer Log hazırlanıyor…</div></div>';
     document.body.appendChild(el);
     window.BLGuide?.mountStartup(el);
     mountLanguageChooser(el);
     Object.keys(gates).forEach(function(key){if(gates[key])window.BLGuide?.stage(key);});
     el.focus({preventScroll:true});
-    // Readiness is expressed by stage labels; no decorative canvas animation.
+    // A semantic waiting indicator; stages remain the readiness authority.
+    try{if(window.BLThinkingOrbBreathing)orb=window.BLThinkingOrbBreathing.attach(el.querySelector('.blBootOrb'));}catch(_){}
   }
   function stopOrb(){if(orb){try{orb.stop();}catch(_){}orb=null;}}
   function message(text,failed){
@@ -310,6 +312,7 @@
 <link rel="stylesheet" href="table-view-drawers.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="ui-components.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="ui-motion.css?v=__BL_ASSET_VERSION__">
+<link rel="stylesheet" href="thinking-orbs.css?v=__BL_ASSET_VERSION__&rev=1">
 <link id="blBootGuardStyle" rel="stylesheet" href="ui-startup.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="table-header-tracking.css?v=__BL_ASSET_VERSION__&rev=1">
 </head>
@@ -1484,6 +1487,7 @@
 <script src="detail-report-layout.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="detail-drawer.js?v=__BL_ASSET_VERSION__&rev=20261019"></script>
 <script src="overview-flow-routes.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="thinking-orb-working.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="overview-global-flow.js?v=__BL_ASSET_VERSION__&rev=20261018"></script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_SCRIPTS_START');</script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_MAIN_START');</script>

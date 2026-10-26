@@ -151,7 +151,12 @@ Hareket paleti yalnız `ui-tokens.css` üzerinden gelir: 100/140 ms temel kontro
 240 ms overlay, 340 ms sayfa, 360 ms kart, 390 ms tablo, 440 ms grafik.
 Easing ortak cubic-bezier ile izlenir. Hareket içerik, geometri ve iş verisi
 üzerinde kalıcı değişiklik yapmaz. Tema değişimi anlıktır; otomatik parıltı,
-snapshot dalgası, clip-path geçişi, sürekli canvas/süs döngüleri yoktur.
+snapshot dalgası veya clip-path geçişi yoktur. **Thinking Orbs istisnası:**
+7.0.294'ten gelen Breathing (açılış/bekleme) ve Working (harita yüklemesi)
+canvas bileşenleri yalnız gerçekten çalışan `thinking`/loading durumu boyunca
+semantik işlem göstergesi olarak kullanılabilir. Her orb görünmez sekme, ekran
+dışı kalma, işlem sonu ve reduced-motion için duraklama/durdurma ya da tek kare
+uygulamalıdır. Sürekli dekoratif canvas hareketi hâlâ yasaktır.
 
 **Sol üstten dalga:** Aktif tablodaki sadece ilk iki görünür gridin en fazla
 9 satır × 12 sütununda tek giriş efekti uygulanır. Hücreler diagonal gecikmeyle

@@ -37,7 +37,7 @@ function guideHarness(profile=null){
 test('core markup and data wait for the authenticated profile but not a slow page projection',()=>{
   const h=guardHarness();h.win.BLBootGuard.ready();h.win.BLBootGuard.ready('data');
   assert.ok(h.nodes.has('blBootGuard'));assert.equal(h.nodes.get('blBootGuard').dataset.ready,undefined);
-  h.profile();assert.equal(h.stops,0);assert.equal(h.timers.size,0);
+  h.profile();assert.equal(h.stops,1);assert.equal(h.timers.size,0);
   // A delayed Overview/CP/Orders projection is no longer a hard startup gate.
   const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.ready,'1');assert.equal(g.message.textContent,'Buyer Log hazır');
   h.win.BLBootGuard.ready('ui');assert.equal(g.dataset.ready,'1');
@@ -55,7 +55,7 @@ test('hard startup gates work regardless of arrival order and UI readiness is in
     const h=guardHarness();
     h.win.BLBootGuard.ready('ui');assert.equal(h.nodes.get('blBootGuard').dataset.ready,undefined);
     order.forEach((key,i)=>{if(key==='profile')h.profile();else h.win.BLBootGuard.ready(key==='core'?undefined:key);assert.equal(h.nodes.get('blBootGuard').dataset.ready,i<2?undefined:'1');});
-    h.win.BLBootGuard.ready('ui');h.win.BLBootGuard.ready();assert.equal(h.stops,0);
+    h.win.BLBootGuard.ready('ui');h.win.BLBootGuard.ready();assert.equal(h.stops,1,'startup orb stops once after all hard gates finish');
     assert.equal(h.nodes.get('blBootGuard').card.children.filter(c=>c.dataset.bootContinue).length,1);h.win.BLBootGuard.continue();finishFade(h);assert.ok(!h.nodes.has('blBootGuard'));
   }
 });
