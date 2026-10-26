@@ -1,0 +1,62 @@
+{
+  "source": "5c9c14c89350ee07268e11dac81ab819bc9c78d1",
+  "sourceDirty": false,
+  "productionTestTrees": {
+    "server": "19fb9fdc16062c470df219bba955d1781cc003d1",
+    "public": "a92777ac02760aa9d3db5b1581c0d0512fa942b7",
+    "tests": "2e767960c3ae5211c0f726afe91e9a72b0effffa"
+  },
+  "command": "cd resources/app && BUYER_LOG_TEST_CONCURRENCY=2 npm test",
+  "startedAt": "2026-10-26T15:47:35.897786+00:00",
+  "files": 1127,
+  "concurrency": 2,
+  "loadRunningAlongside": false,
+  "automaticRetries": 0,
+  "finishedAt": "2026-10-26T15:49:21.553209+00:00",
+  "exitCode": 1,
+  "status": "failed",
+  "summaryByBatch": [
+    {
+      "metric": "tests",
+      "batches": [
+        2003
+      ]
+    },
+    {
+      "metric": "pass",
+      "batches": [
+        1942
+      ]
+    },
+    {
+      "metric": "fail",
+      "batches": [
+        1
+      ]
+    },
+    {
+      "metric": "cancelled",
+      "batches": [
+        0
+      ]
+    },
+    {
+      "metric": "skipped",
+      "batches": [
+        60
+      ]
+    },
+    {
+      "metric": "todo",
+      "batches": [
+        0
+      ]
+    }
+  ],
+  "tests": 2003,
+  "pass": 1942,
+  "fail": 1,
+  "cancelled": 0,
+  "skipped": 60,
+  "todo": 0
+}
