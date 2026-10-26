@@ -5077,7 +5077,8 @@ const CP_EN_HEADER_LABELS = {
   'Del. Type':'Del. Type',
   'Importance':'Importance',
   'Notes':'Notes',
-  'Ek Not':'Notes 2'
+  'Ek Not':'Notes 2',
+  '__personalOrderNote':'Private Note'
 };
 
 // CP sütunlarının Türkçe görünümde kullanılacak onaylı başlıkları.
@@ -5131,7 +5132,8 @@ const CP_TR_HEADER_LABELS = {
   'Ant. Arrival':'Antrepo Varış',
   'Del. Type':'Yükleme Tipi',
   'Notes':'Notlar',
-  'Ek Not':'Ek Notlar'
+  'Ek Not':'Ek Notlar',
+  '__personalOrderNote':'Kişisel Not'
 };
 /* Sütunun kullanıcı adı verilmemiş (sistem / ortak tanım) etiketi. Sonradan
    eklenen DB, not ve hesaplanan sütunlar ortak tanımdaki labelEn/labelTr'yi
