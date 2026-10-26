@@ -1854,6 +1854,14 @@ input.kolLandedInput::placeholder{opacity:.62;}
 #topRefreshBtn.spinning::after{content:"";position:absolute;inset:-3px;pointer-events:none;}
 #topRefreshBtn.spinning:disabled{opacity:1;cursor:wait;}
 #serverRefreshBtn.spinning{cursor:wait;}
+/* 7.0.294 Refresh + SYNC motion feedback: theme state and SVG pivot.
+   Finite action frames are exclusively owned by the shared Motion+ controller. */
+:is(#topRefreshBtn,#serverRefreshBtn).spinning,.syncStatusBadge.is-syncing{color:var(--ui-accent);}
+:is(#topRefreshBtn,#serverRefreshBtn,#cpRefreshBtn,#ordersRefreshBtn,
+  #lflRefreshBtn,#intakeRefreshBtn,#backlogOverviewRefresh,
+  #syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,
+  [data-plm-sync-category]) .ic{transform-origin:center;transform-box:fill-box;}
+
 
 .overviewDataNotice{width:min(680px,calc(100vw - 56px));display:flex;align-items:flex-start;gap:14px;text-align:left;margin:auto;padding:18px 20px;}
 .overviewDataNotice>.ic{width:28px;height:28px;flex:0 0 28px;margin-top:1px;}
