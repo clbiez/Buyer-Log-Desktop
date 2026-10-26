@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "8eb9bdf5cecbdcf41d82822579998fe6c508083b",
-  "release_notes": "TR: Buyer Log 7.0.305 — 7.0.300 sonrasındaki Motion+ / Thinking Orbs, CP ve Orders kişisel notları, çoklu kopyalama/yapıştırma, Koleksiyon, tablo ve güncelleme altyapısı iyileştirmeleri. Windows regresyonu için OAB gerçek HTTP testi izole edildi; Thinking Orbs ve kullanıcı tercihleri yeniden yükleme kontrolleri güncellendi.\nEN: Buyer Log 7.0.305 — post-7.0.300 Motion+ / Thinking Orbs, private CP and Orders notes, multi-cell copy/paste, Collection, tables and updater improvements. Isolated real HTTP OAB regression from heavy parallel tests and aligned restored Thinking Orb and user-preference hydration checks.",
-  "request_id": "7.0.305-test-after-isolated-OAB-20261026"
+  "commit_sha": "d79e2c79a25fe28c272356485be8fcf82440948f",
+  "release_notes": "TR: Buyer Log 7.0.306 — 7.0.300 sonrası birleşen Motion+ ve Thinking Orbs animasyonları, kişisel CP/Orders notları, çoklu kopyala/yapıştır, Koleksiyon ve tablo düzenlemeleri, updater iyileştirmeleri; Windows tam regresyonu için Global Flow Working Orb canvas yaşam döngüsü testi düzeltildi.\nEN: Buyer Log 7.0.306 — merged post-7.0.300 Motion+ and Thinking Orbs animation, private CP/Orders notes, multi-cell copy/paste, Collection and table improvements, updater fixes; corrected Global Flow Working Orb canvas lifecycle regression test.",
+  "request_id": "7.0.306-test-after-global-flow-canvas-regression-20261026"
 }
