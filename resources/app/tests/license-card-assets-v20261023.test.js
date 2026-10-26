@@ -6,6 +6,16 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const assets=require('../server/lib/license-card-assets'),cards=require('../server/lib/license-cards'),sync=require('../server/lib/license-card-sync'),A=require('../public/license-atlas-engine'),E=require('../public/license-cards-engine');
 const PNG='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLttAAAAABJRU5ErkJggg==';
 const tmp=()=>fs.mkdtempSync(path.join(os.tmpdir(),'bl-license-assets-'));
+// Distribution intentionally runs asynchronously. On busy Windows runners a fixed
+// 50 ms pause races the filesystem; wait for the actual immutable shared copy.
+async function waitForSharedAsset(file){
+  const deadline=Date.now()+5000;
+  while(Date.now()<deadline){
+    if(fs.existsSync(file))return;
+    await new Promise(resolve=>setTimeout(resolve,50));
+  }
+  assert.ok(fs.existsSync(file),'distributed to the shared folder');
+}
 const atlasWith=(cover,guide)=>({version:1,license:{id:'c',name:'L',cover,stages:[{id:'s',title:'S',visualGuideId:'g',submissions:[]}],addresses:[],portal:{url:'',notes:''}},sharedAddresses:[],visualLibrary:[{id:'g',name:'g',data:guide}]});
 
 test('unconfigured (tests/tools): data URLs pass through unchanged', () => {
@@ -25,14 +35,14 @@ test('images become content-addressed files; the same bytes always get the same 
     const profile=cards.normalizeProfile({processAtlas:atlasWith(PNG,PNG),symbolDataUrl:PNG});
     assert.equal(profile.processAtlas.license.cover,url);assert.equal(profile.processAtlas.visualLibrary[0].data,url);assert.equal(profile.symbolDataUrl,url);
     assert.equal(cards.normalizeProfile(profile).processAtlas.license.cover,url,'stored URLs validate again');
-    await new Promise(r=>setTimeout(r,50));
-    assert.ok(fs.existsSync(path.join(shared,'BUYER_LOG_SYNC','license-card-assets',assets.nameOf(url))),'distributed to the shared folder');
+    await waitForSharedAsset(path.join(shared,'BUYER_LOG_SYNC','license-card-assets',assets.nameOf(url)));
   }finally{assets.configure({});}
 });
 
 test('another user’s image is fetched once from the shared folder and verified', async () => {
   const mine=tmp(),theirs=tmp(),shared=tmp();
-  assets.configure({dir:theirs,getSharedSyncRoot:async()=>shared});const url=assets.externalizeImage(PNG);await new Promise(r=>setTimeout(r,50));
+  assets.configure({dir:theirs,getSharedSyncRoot:async()=>shared});const url=assets.externalizeImage(PNG);
+  await waitForSharedAsset(path.join(shared,'BUYER_LOG_SYNC','license-card-assets',assets.nameOf(url)));
   assets.configure({dir:mine,getSharedSyncRoot:async()=>shared});
   try{
     const got=await assets.read(assets.nameOf(url));assert.ok(got);assert.ok(fs.existsSync(path.join(mine,assets.nameOf(url))),'cached locally');

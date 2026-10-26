@@ -62,7 +62,10 @@ test('Dar ray üzerine gelince tam genişlikte, içeriği itmeden açılır', ()
 
 test('KPI sayacı özgün metne döner, yeniden çizimde durur ve azaltılmış harekete uyar', () => {
   assert.match(MOTION, /if\(t>=1\)\{el\.textContent=original;running\.delete\(el\);return;\}/);
-  assert.match(MOTION, /if\(\(last===null&&el\.textContent!==original\)\|\|\(last!==null&&el\.textContent!==last\)\)\{\s*running\.delete\(el\);return;/);
+  assert.match(MOTION, /if\(\(last===null&&el\.textContent!==original\)\|\|\(last!==null&&el\.textContent!==last\)\)\{/,
+    'the redraw guard must detect external edits both before and after the first animation frame');
+  assert.match(MOTION, /running\.delete\(el\);return; \/\/ modül yeniden çizdi: bırak/,
+    'a redraw must release the in-flight motion guard without overwriting the new text');
   assert.match(MOTION, /prefers-reduced-motion: reduce/);
   const parseSrc = MOTION.slice(MOTION.indexOf('function parse'), MOTION.indexOf('function animate'));
   const { parse, format } = vm.runInNewContext(`${parseSrc};({parse,format})`, {});

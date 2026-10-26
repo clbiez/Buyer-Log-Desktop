@@ -18,6 +18,11 @@
   const CARDS='.bpaTile,.pricingMetric,.ovPulseKpi,.ovMetricRow,.ovCollectionCard,.kolModelCard,.kolCard,.lcCard,.mfrCard,.psaKpi,.cpaCard,.ovWidget';
   const BARS='.ovMetricBars em,.bpaBarFill,.bpaProgressFill,.ovPulseMini i';
   const OVERLAYS='dialog[open],[role="dialog"][aria-hidden="false"],.colPanel.show,.vfMenu.show,.toolbarMoreMenu:not([hidden]),.userMenu:not([hidden])';
+  // Short, state-driven control motion replaces the removed 7.0.294 refresh
+  // rotation / SYNC pulse without introducing perpetual animation loops.
+  const REFRESH_CONTROLS='#topRefreshBtn,#serverRefreshBtn,#cpRefreshBtn,#ordersRefreshBtn,#lflRefreshBtn,#intakeRefreshBtn,#backlogOverviewRefresh';
+  const SYNC_CONTROLS='#syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,[data-plm-sync-category]';
+  const activityAnimations=new Map();
   let generation=0,activeTab='',lastWave=-1,overlays=new WeakMap();
   const pending=new Set(),animations=new Set();
   const visible=el=>{
@@ -41,6 +46,7 @@
     pending.clear();
     for(const a of animations){try{a.cancel();}catch(_){}}
     animations.clear();
+    activityAnimations.clear();
   }
   function later(fn,ms){
     const id=root.setTimeout(()=>{pending.delete(id);fn();},ms);
@@ -123,24 +129,83 @@
     if(!element||!enabled())return null;
     if(kind==='card')return animate(element,[{opacity:.6,transform:'translate3d(-5px,-3px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('card')});
     if(kind==='overlay')return animate(element,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('overlay')});
+    if(kind==='refresh'||kind==='refresh-active')return animate(element,
+      [{transform:'rotate(0deg)'},{transform:'rotate(360deg)'}],
+      {duration:duration('card')*2,iterations:kind==='refresh-active'?8:2});
+    if(kind==='sync'||kind==='sync-active')return animate(element,
+      [{opacity:1,transform:'scale(1)'},{opacity:.48,transform:'scale(1.08)'},{opacity:1,transform:'scale(1)'}],
+      {duration:duration('card')*2,iterations:kind==='sync-active'?8:2});
     return null;
+  }
+  function updateActivity(control,activeClass,kind){
+    const old=activityAnimations.get(control);
+    if(!enabled()||!control.classList?.contains(activeClass)){
+      if(old){try{old.animation.cancel();}catch(_){} activityAnimations.delete(control);}
+      return;
+    }
+    const icon=control.querySelector?.('.ic')||control;
+    if(old&&old.target===icon)return;
+    if(old){try{old.animation.cancel();}catch(_){}}
+    const animation=play(kind+'-active',icon);
+    if(animation)activityAnimations.set(control,{animation,target:icon});
+    else activityAnimations.delete(control);
+  }
+  function bindActivityControls(){
+    for(const [id,activeClass,kind] of [
+      ['topRefreshBtn','spinning','refresh'],['serverRefreshBtn','spinning','refresh'],
+      ['syncStatusBadge','is-syncing','sync']
+    ]){
+      const control=doc.getElementById?.(id);
+      if(!control)continue;
+      const update=()=>updateActivity(control,activeClass,kind);
+      if(typeof root.MutationObserver==='function'){
+        new root.MutationObserver(update).observe(control,{attributes:true,attributeFilter:['class']});
+      }
+      update();
+    }
   }
   function setEnabled(value){
     html.dataset.blMotion=value?'on':'off';
     if(!value)cancelPending();
-    else activate(true);
+    else {
+      activate(true);
+      for(const [id,state,kind] of [
+        ['topRefreshBtn','spinning','refresh'],['serverRefreshBtn','spinning','refresh'],
+        ['syncStatusBadge','is-syncing','sync']
+      ]){
+        const el=doc.getElementById?.(id);
+        if(el)updateActivity(el,state,kind);
+      }
+    }
   }
   function mount(){
+    bindActivityControls();
     doc.addEventListener('click',ev=>{
       if(ev.target.closest?.('nav.tabs button[data-tab]'))later(()=>activate(true),45);
       else if(ev.target.closest?.('button,[role="button"]'))later(enterOverlay,65);
+      const refresh=ev.target.closest?.(REFRESH_CONTROLS);
+      const sync=ev.target.closest?.(SYNC_CONTROLS);
+      const button=refresh||sync;
+      if(button&&!button.disabled){
+        const icon=button.querySelector?.('.ic')||button;
+        play(refresh?'refresh':'sync',icon);
+      }
     },true);
     if(typeof root.MutationObserver==='function'&&doc.body){
       new root.MutationObserver(()=>activate(false)).observe(doc.body,{attributes:true,attributeFilter:['data-active-tab']});
     }
     root.addEventListener?.('bl:startup-complete',()=>activate(true));
     root.addEventListener?.('bl:overview-motion-changed',()=>{if(enabled())activate(true);else cancelPending();});
-    doc.addEventListener('visibilitychange',()=>{if(doc.visibilityState==='hidden')cancelPending();});
+    doc.addEventListener('visibilitychange',()=>{
+      if(doc.visibilityState==='hidden')cancelPending();
+      else for(const [id,state,kind] of [
+        ['topRefreshBtn','spinning','refresh'],['serverRefreshBtn','spinning','refresh'],
+        ['syncStatusBadge','is-syncing','sync']
+      ]){
+        const el=doc.getElementById?.(id);
+        if(el)updateActivity(el,state,kind);
+      }
+    });
     const media=root.matchMedia?.('(prefers-reduced-motion: reduce)');
     media?.addEventListener?.('change',()=>{if(reduce())cancelPending();});
     activate(true);

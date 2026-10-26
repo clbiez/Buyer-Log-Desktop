@@ -48,7 +48,10 @@ test('Focus / Extended / All üçlüsü CP, Orders ve Collection için aynı sı
     const prefix = tableKey === 'koleksiyon' ? 'kol' : tableKey;
     const start = INDEX.indexOf(`id="${prefix}TableViewActions"`);
     assert.ok(start >= 0, `${tableKey} view actions bulunmalı`);
-    const block = INDEX.slice(start, start + 1400);
+    // Menü açılır yapıya taşınınca seçenekler üst satırda 1400 karaktere sığmak zorunda değil.
+    const fields = INDEX.indexOf(`data-table-fields="${tableKey}"`, start);
+    assert.ok(fields > start, `${tableKey}: Alanlar aynı görünüm menüsünde bulunmalı`);
+    const block = INDEX.slice(start, fields);
     const focus = block.indexOf('data-table-view-preset="focus"');
     const extended = block.indexOf('data-table-view-preset="extended"');
     const all = block.indexOf('data-table-view-preset="all"');

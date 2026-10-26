@@ -14899,3 +14899,91 @@ html[data-ui-system="manifest"] .lcwaiStudioThumb i{background:var(--ui-selected
 html[data-ui-system="manifest"] .lcwaiStudioThumb i::before{background:var(--ui-accent)}
 html[data-ui-system="manifest"] .lcwaiStudioHandle,html[data-ui-system="manifest"] .lcwaiStudioCardGrip{background:var(--ui-selected);color:var(--ui-accent);font:600 var(--ui-font-xs)/1 var(--ui-font-body);z-index:var(--ui-z-raised)}
 html[data-ui-system="manifest"] .lcwaiStudioHandle:focus-visible,html[data-ui-system="manifest"] .lcwaiStudioCardGrip:focus-visible,html[data-ui-system="manifest"] [data-studio-card]:focus-visible{outline:2px solid var(--ui-accent);outline-offset:2px}
+
+/* Theme-aware selection controls for the leading column of tables. */
+html[data-ui-system="manifest"] [data-ui-migrated] table :is(th:first-child,td:first-child) input[type="checkbox"],
+html[data-ui-system="manifest"] [data-ui-migrated] .lcCheck input[type="checkbox"]{
+  appearance:none!important;
+  box-sizing:border-box;
+  position:relative;
+  width:14px!important;
+  height:14px!important;
+  min-width:14px;
+  margin:0;
+  vertical-align:middle;
+  border:0!important;
+  border-radius:var(--ui-radius)!important;
+  background:var(--ui-check-idle)!important;
+  cursor:pointer;
+}
+html[data-ui-system="manifest"] [data-ui-migrated] table :is(th:first-child,td:first-child) input[type="checkbox"]:not(:checked):not(:indeterminate)::before,
+html[data-ui-system="manifest"] [data-ui-migrated] .lcCheck input[type="checkbox"]:not(:checked):not(:indeterminate)::before{
+  content:'';
+  position:absolute;
+  inset:2px;
+  background:var(--ui-surface);
+}
+html[data-ui-system="manifest"] [data-ui-migrated] table thead th:first-child input[type="checkbox"]:not(:checked):not(:indeterminate)::before{
+  background:var(--ui-header-bg);
+}
+html[data-ui-system="manifest"] [data-ui-migrated] table :is(th:first-child,td:first-child) input[type="checkbox"]:is(:checked,:indeterminate),
+html[data-ui-system="manifest"] [data-ui-migrated] .lcCheck input[type="checkbox"]:is(:checked,:indeterminate){
+  background:var(--ui-accent)!important;
+}
+html[data-ui-system="manifest"] [data-ui-migrated] table :is(th:first-child,td:first-child) input[type="checkbox"]:is(:checked,:indeterminate)::before,
+html[data-ui-system="manifest"] [data-ui-migrated] .lcCheck input[type="checkbox"]:is(:checked,:indeterminate)::before{
+  content:none;
+}
+html[data-ui-system="manifest"] [data-ui-migrated] table :is(th:first-child,td:first-child) input[type="checkbox"]:indeterminate::after,
+html[data-ui-system="manifest"] [data-ui-migrated] .lcCheck input[type="checkbox"]:indeterminate::after{
+  content:'';
+  position:absolute;
+  inset:6px 3px;
+  background:var(--ui-on-accent);
+  clip-path:none;
+}
+html[data-ui-system="manifest"] [data-ui-migrated] table :is(th:first-child,td:first-child) input[type="checkbox"]:focus-visible,
+html[data-ui-system="manifest"] [data-ui-migrated] .lcCheck input[type="checkbox"]:focus-visible{
+  outline:2px solid var(--ui-accent);
+  outline-offset:2px;
+}
+html[data-ui-system="manifest"] [data-ui-migrated] table :is(th:first-child,td:first-child) input[type="checkbox"]:disabled,
+html[data-ui-system="manifest"] [data-ui-migrated] .lcCheck input[type="checkbox"]:disabled{
+  opacity:.45;
+  cursor:default;
+}
+
+/* Shared visual states for compact view and price pickers. */
+html[data-ui-system="manifest"] .blViewPicker .blViewPickerTrigger{
+  font-weight:600;color:var(--ui-text);background:var(--ui-surface-soft);
+  border:0;border-radius:var(--ui-radius);
+}
+html[data-ui-system="manifest"] .blViewPicker .blViewPickerTrigger:hover,
+html[data-ui-system="manifest"] .blViewPicker.isOpen .blViewPickerTrigger{
+  background:var(--ui-selected);
+}
+html[data-ui-system="manifest"] .blViewPicker .blViewPickerTrigger:focus-visible,
+html[data-ui-system="manifest"] .blViewPickerMenu button:focus-visible{
+  outline:2px solid var(--ui-accent);outline-offset:2px;
+}
+html[data-ui-system="manifest"] .blViewPicker .blViewPickerChevron{
+  transition:transform var(--ui-motion-fast) var(--ui-ease);
+}
+html[data-ui-system="manifest"] .blViewPickerMenu{
+  z-index:var(--ui-z-popover);border:0;border-radius:var(--ui-radius);
+  background:var(--ui-surface);box-shadow:var(--ui-shadow-overlay);
+}
+html[data-ui-system="manifest"] .blViewPickerMenu .tableViewPreset{
+  color:var(--ui-text);background:transparent;border:0;border-radius:var(--ui-radius);
+}
+html[data-ui-system="manifest"] .blViewPickerMenu .tableViewPreset:hover{background:var(--ui-row-hover);}
+html[data-ui-system="manifest"] .blViewPickerMenu .tableViewPreset[aria-pressed="true"]{
+  color:var(--ui-selected-ink);background:var(--ui-selected);font-weight:650;
+}
+html[data-ui-system="manifest"] .blViewPickerMenu .tableViewPreset[aria-pressed="true"]::after{
+  color:var(--ui-accent);
+}
+html[data-ui-system="manifest"] .blViewPriceIcon{color:var(--ui-accent);}
+html[data-ui-system="manifest"] #kolAllVariantsToggle{
+  font-size:var(--ui-font-xs);font-weight:600;
+}

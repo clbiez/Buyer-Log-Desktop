@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "5150c389d3846f37efa0657c79b71b12d242766e",
-  "release_notes": "TR: Buyer Log 7.0.300 — 5150c389d384 commitine kadar main dalına alınan güncellemeler ve Windows regresyon düzeltmeleri. Henüz merge edilmemiş #694/#721 bildirim taslakları hariç.\nEN: Buyer Log 7.0.300 — all updates merged through 5150c389d384 and Windows regression corrections. Unmerged notification drafts #694/#721 remain excluded.",
-  "request_id": "7.0.300-test-independent-seed-deadlines-20261025"
+  "commit_sha": "d79e2c79a25fe28c272356485be8fcf82440948f",
+  "release_notes": "TR: Buyer Log 7.0.306 — 7.0.300 sonrası birleşen Motion+ ve Thinking Orbs animasyonları, kişisel CP/Orders notları, çoklu kopyala/yapıştır, Koleksiyon ve tablo düzenlemeleri, updater iyileştirmeleri; Windows tam regresyonu için Global Flow Working Orb canvas yaşam döngüsü testi düzeltildi.\nEN: Buyer Log 7.0.306 — merged post-7.0.300 Motion+ and Thinking Orbs animation, private CP/Orders notes, multi-cell copy/paste, Collection and table improvements, updater fixes; corrected Global Flow Working Orb canvas lifecycle regression test.",
+  "request_id": "7.0.306-test-after-global-flow-canvas-regression-20261026"
 }

@@ -37,7 +37,10 @@ if (!tests.length) {
 // the same test files, test concurrency and failure gates are preserved.
 // The ten-device filesystem simulation keeps its own deadlines by running
 // without competing file workers. Every seed and assertion still runs.
-const isolatedTests = tests.filter(file => path.basename(file) === 'sync-simulation-v20261009.test.js');
+const isolatedNames = new Set(['sync-simulation-v20261009.test.js', 'oab-batch-integration-v720.test.js']);
+// OAB runs a real HTTP server, cancellation and intentionally delayed mock PASS
+// requests; isolate it from CPU/file contention in the parallel Windows suite.
+const isolatedTests = tests.filter(file => isolatedNames.has(path.basename(file)));
 const parallelTests = tests.filter(file => !isolatedTests.includes(file));
 const batches = [];
 let batch = [];

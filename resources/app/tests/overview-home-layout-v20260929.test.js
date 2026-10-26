@@ -160,7 +160,7 @@ test('senkron düzen kaydı yüklemede damgalanmaz; sunucudan gelen düzen yenid
   const init = HOME.slice(HOME.indexOf('function init(){'), HOME.indexOf('function reload(){'));
   assert.doesNotMatch(init, /persist\(\)/);
   assert.match(HOME, /reload,\n/);
-  assert.match(APP, /if\(sync&&Number\(sync\.applied\)>0\)\{\n\s*window\.BLOverviewHome\?\.reload\?\.\(\);/);
+  assert.match(APP, /if\(sync&&Number\(sync\.applied\)>0\)\{\s*(?:\/\/[^\n]*\n\s*)?refreshPersonalOrderNoteColumns\(\);\s*window\.BLOverviewHome\?\.reload\?\.\(\);/);
   // Widget kabuğu flex'tir; satır içi display:block gövde kaydırmasını bozar.
   assert.doesNotMatch(APP, /getElementById\('ovCollectionSummary'\)[\s\S]{0,200}root\.style\.display='block'/);
 });

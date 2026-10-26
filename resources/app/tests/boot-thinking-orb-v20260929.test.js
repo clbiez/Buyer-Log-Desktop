@@ -3,23 +3,22 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const orb=require('./fixtures/retired-ui/thinking-orb-breathing.js');
+const orb=require('../public/thinking-orb-breathing.js');
 const ROOT=path.join(__dirname,'..');
 const INDEX=fs.readFileSync(path.join(ROOT,'public','index.html'),'utf8');
 const EXP=fs.readFileSync(path.join(ROOT,'public','experience.css'),'utf8');
-const ORB_SRC=fs.readFileSync(path.join(ROOT,'tests','fixtures','retired-ui','thinking-orb-breathing.js'),'utf8');
+const ORB_SRC=fs.readFileSync(path.join(ROOT,'public','thinking-orb-breathing.js'),'utf8');
 
-test('Manifest açılışı kare durum işareti ve açık Devam eylemi kullanır',()=>{
+test('7.0.294 Breathing orb is present at boot and stops at readiness',()=>{
   const head=INDEX.slice(0,INDEX.indexOf('</head>'));
   const startup=fs.readFileSync(path.join(ROOT,'public','ui-startup.css'),'utf8');
-  assert.match(head,/id="blBootGuardStyle"[^>]+href="ui-startup\.css/);
-  assert.match(head,/<span class="blBootOrb" aria-hidden="true"><\/span>/);
-  assert.doesNotMatch(head,/BLThinkingOrbBreathing\.attach/);
+  assert.match(head,/thinking-orb-breathing\.js/);
+  assert.match(head,/<canvas class="blBootOrb" width="64" height="64" aria-hidden="true"><\/canvas>/);
+  assert.match(head,/BLThinkingOrbBreathing\.attach\(el\.querySelector\('\.blBootOrb'\)\)/);
   assert.match(startup,/#blBootGuard\[data-ready="1"\] \.blBootOrb/);
-  assert.match(startup,/background:var\(--ui-accent\)/);
   assert.match(startup,/prefers-reduced-motion:reduce/);
   assert.match(head,/function ready\(stage\)\{[\s\S]*?stopOrb\(\);var el=guard\(\);/);
-  assert.match(head,/function dismiss\(\)\{[\s\S]*?var el=guard\(\);[\s\S]*?el\.dataset\.leaving='1';[\s\S]*?el\.remove\(\)/);
+  assert.match(head,/function dismiss\(\)\{[\s\S]*?el\.dataset\.leaving='1';[\s\S]*?el\.remove\(\)/);
 });
 
 test('breathing orb geometrisi upstream golden vektörleriyle eşleşir',()=>{
@@ -32,12 +31,14 @@ test('breathing orb geometrisi upstream golden vektörleriyle eşleşir',()=>{
 });
 
 
-test('waiting notices use the shared square marker without eager canvas observers',()=>{
-  const shared=fs.readFileSync(path.join(ROOT,'public','ui-components.css'),'utf8');
-  assert.doesNotMatch(INDEX,/<script[^>]*thinking-orb-/);
-  assert.match(shared,/\.blOrb \{[^}]*background:var\(--ui-accent\)[^}]*animation:none/);
-  assert.match(shared,/\.blOrb\[data-state="warn"\]/);
-  assert.match(shared,/\.blOrb\[data-state="done"\]/);
+test('waiting notices use the original breathing orb with a scoped canvas',()=>{
+  const css=fs.readFileSync(path.join(ROOT,'public','thinking-orbs.css'),'utf8');
+  assert.match(INDEX,/thinking-orbs\.css/);
+  assert.match(INDEX,/thinking-orb-breathing\.js/);
+  assert.match(ORB_SRC,/\.blOrb\[data-state="thinking"\]/);
+  assert.match(ORB_SRC,/querySelectorAll\(/);
+  assert.match(css,/\.blOrb--thinkingCanvas \.blOrbCanvas/);
+  assert.match(css,/prefers-reduced-motion:reduce/);
 });
 
 test('inline Thinking orb 20px upstream presetini kullanır',()=>{
