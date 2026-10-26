@@ -138,3 +138,30 @@ test('new Collection CSS is namespaced and uses Buyer Log accent rather than Exc
   assert.match(css,/#view-koleksiyon\.kolSpreadsheetWorkspace/);assert.match(fs.readFileSync(path.join(__dirname,'../public/ui-components.css'),'utf8'),/#view-koleksiyon\.kolSpreadsheetWorkspace[^}]*var\(--ui-accent\)/);assert.doesNotMatch(css,/#217346/i);
   assert.doesNotMatch(css,/(^|\n)\s*(table|td|th|input|button)\s*\{/);
 });
+
+
+test('paste sonrası yeniden çizim çoklu/aralık seçimini tek hücreye düşürmez',()=>{
+  const declaration=sheet.split(/\\r?\\n/).find(line=>line.includes('function restoreActiveAfterRender()'));
+  assert.ok(declaration, 'restore helper exists');
+  let repaints=0;
+  const state={
+    active:{rowId:'r2',key:'b'},
+    anchor:{rowId:'r1',key:'a'},
+    focus:{rowId:'r3',key:'c'},
+    multiCells:new Set(['r1\\u0000a','r3\\u0000c']),
+  };
+  const fn=new Function('state','remapCoord','paint','setTimeout',
+    declaration+';return restoreActiveAfterRender;')(
+      state,
+      identity=>identity?{...identity,remapped:true}:null,
+      ()=>{repaints++;},
+      callback=>callback(),
+    );
+  fn();
+  assert.equal(repaints,1);
+  assert.equal(state.anchor.rowId,'r1');
+  assert.equal(state.focus.rowId,'r3');
+  assert.equal(state.active.rowId,'r2');
+  assert.equal(state.multiCells.size,2);
+  assert.equal(state.anchor.remapped,true);
+});
