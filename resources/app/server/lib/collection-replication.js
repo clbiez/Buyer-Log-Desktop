@@ -260,7 +260,7 @@ function mergeCollectionWorkspaces(base, local, remote) {
   return { workspace, conflicts };
 }
 
-function createCollectionReplication({ workspaces, permissions, getSharedSyncRoot = async () => '', stateFile = '', onTrace = null, trialPolicy = require('./update-trial-backend').createTrialWritePolicy() } = {}) {
+function createCollectionReplication({ workspaces, permissions, getSharedSyncRoot = async () => '', stateFile = '', onTrace = null, onApplied = null, trialPolicy = require('./update-trial-backend').createTrialWritePolicy() } = {}) {
   if (!workspaces || typeof workspaces.loadWorkspace !== 'function' || typeof workspaces.replaceWorkspaceReplica !== 'function') throw new Error('Collection workspace store is required.');
   if (!permissions || typeof permissions.accessLevel !== 'function') throw new Error('Collection permission store is required.');
   const trace = (event, detail) => { try { if (typeof onTrace === 'function') onTrace(event, detail); } catch (_) {} };
@@ -489,7 +489,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     trace('COLLECTION_REPLICA_PUBLISHED', { ownerId: owner, revision: localRevision });
     return { published: true, ownerId: owner, revision: localRevision, sha256: envelopeIdentity(publishedEnvelope), parentSha256: publishedEnvelope.parentSha256 };
   }
-  async function syncOwner(userId, ownerId) {
+  async function syncOwnerInternal(userId, ownerId) {
     const user = clean(userId), owner = clean(ownerId);
     const level = permissions.accessLevel(user, owner);
     const readOnly = user !== owner && level !== 'edit';
@@ -528,7 +528,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
         // remote publish. The CAS base proves this is a real descendant, so a
         // normal GET/sync can safely finish the interrupted publication.
         const publication = await publishOwner(owner);
-        return { synced: false, published: Boolean(publication.published), ownerId: owner, revision: localRevision, reason: publication.reason || 'LOCAL_NEWER_PUBLISHED' };
+        return { synced: Boolean(publication.merged), ...(publication.merged ? { merged:true } : {}), published: Boolean(publication.published), ownerId: owner, revision: Number(publication.revision) || localRevision, reason: publication.reason || 'LOCAL_NEWER_PUBLISHED' };
       }
       const merged = await reconcile(owner, envelope, { readOnly });
       if (merged) return merged;
@@ -547,14 +547,23 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       await recordConflict(owner, error, { localRevision, remoteRevision });
       return { synced: false, ownerId: owner, revision: localRevision, reason: 'REMOTE_NEWER_LOCAL_DIRTY', conflict: true };
     }
-    const result = await workspaces.replaceWorkspaceReplica(owner, envelope.workspace);
+    // The local file can change while the pull awaits its lease. Revision alone
+    // cannot protect that newer write when the remote revision is equal/higher.
+    const result = await workspaces.replaceWorkspaceReplica(owner, envelope.workspace, { expectedSha256: localWorkspaceSha256 });
     if (result.applied) await recordBase(owner, envelope);
-    else if (result.reason === 'LOCAL_NEWER') {
+    else if (result.reason === 'LOCAL_NEWER' || result.reason === 'LOCAL_CHANGED') {
       const error = conflictError('COLLECTION_REPLICA_CONCURRENT_CHANGE', 'Koleksiyon senkronizasyonu sırasında yerel kopya değişti.');
       await recordConflict(owner, error, { localRevision: Number(result.workspace && result.workspace._revision) || localRevision, remoteRevision });
     }
     trace('COLLECTION_REPLICA_SYNCED', { ownerId: owner, userId: user, applied: result.applied, reason: result.reason || null });
-    return { synced: Boolean(result.applied), ownerId: owner, revision: result.workspace && result.workspace._revision, reason: result.reason || null, conflict: result.reason === 'LOCAL_NEWER' };
+    return { synced: Boolean(result.applied), ownerId: owner, revision: result.workspace && result.workspace._revision, reason: result.reason || null, conflict: result.reason === 'LOCAL_NEWER' || result.reason === 'LOCAL_CHANGED' };
+  }
+  async function syncOwner(userId, ownerId) {
+    const result = await syncOwnerInternal(userId, ownerId);
+    // Reads can import a replica before the periodic poll sees its stamp.
+    // Notify at the actual application boundary, whichever caller imported it.
+    if (typeof onApplied === 'function' && result && (result.synced || result.merged)) await onApplied(result);
+    return result;
   }
   /* Canlı görünürlük: uzak kopya dosyası değişmediyse (mtime+boyut) okunmaz;
      değiştiyse eşitlenir. Uygulanan/birleşen sahipler döner. */
@@ -571,6 +580,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       if (remoteStamps.get(owner) === stamp) continue;
       try {
         const result = await syncOwner(userId, owner);
+        if (result && ['LOCAL_CHANGED','LOCAL_NEWER','LOCAL_CHANGED_DURING_MERGE'].includes(result.reason)) continue;
         remoteStamps.set(owner, stamp);
         if (result && (result.synced || result.merged)) changed.push({ ownerId: owner, revision: result.revision });
       } catch (error) { trace('COLLECTION_REPLICA_POLL_FAILED', { ownerId: owner, error: error && (error.code || error.message) }); }

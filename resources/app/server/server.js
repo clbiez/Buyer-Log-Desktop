@@ -744,6 +744,7 @@ const collectionReplication = createCollectionReplication({
   getSharedSyncRoot: async () => (await syncSettings.read()).sharedSyncRoot,
   stateFile: path.join(LOCAL_DATA_ROOT, 'collection-replication-state.json'),
   onTrace: markStartup,
+  onApplied: item => liveEvents.notifyChange('collection', null, { ownerId:item.ownerId, revision:item.revision, source:'shared-hub-import' }),
 });
 const collectionPermissionsReady = new Promise(resolve=>trialWritePolicy.whenConfirmed(resolve)).then(async () => {
   await collectionPermissions.ensure();
@@ -3516,7 +3517,7 @@ async function pollCollectionReplicas() {
       for (const item of await collectionReplication.pollOwners(userId, ownerIds)) {
         changed.push(item);
         if (String(item.ownerId) !== String(userId)) void syncCollectionWorkspaceImagesForUser(userId, item.ownerId).catch(error => logRuntimeFailure('collectionLiveImageSync', error));
-        liveEvents.notifyChange('collection', null, { ownerId:item.ownerId, revision:item.revision, source:'shared-hub' });
+        // The replication service already notified clients at the import boundary.
       }
     }
     return changed;

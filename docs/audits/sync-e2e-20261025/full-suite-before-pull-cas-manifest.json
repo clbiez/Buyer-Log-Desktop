@@ -1,0 +1,11 @@
+{
+  "startedAt": "2026-10-26T01:30:03.655540+00:00",
+  "source": "313007a792a85425802f6b23b4ca82c9eb0e85dc",
+  "applicationTree": "954b78ff6c95d7c82b32de30b9c16ef929f64f1f",
+  "command": "cd resources/app && npm test",
+  "concurrency": 4,
+  "loadRunning": false,
+  "mainIntegrated": "94df09447834c82adc964e772360614344472313",
+  "xlsx": "0.20.3",
+  "repeatReason": "First 50-user ramp exposed false saved badge after explicit rejection. Shared persistence UI primitive changed. Real small UI reproduction and 63 targeted checks passed; final package must certify corrected source."
+}

@@ -64,3 +64,28 @@ test("in-flight save remains distinct from an idle local draft", () => {
   f.ctx.kolPersistPendingWorkspace("saving");
   assert.equal(f.ctx.kolSaveFeedbackByOwner.get("owner").status, "sending");
 });
+
+test("an uncommitted DOM editor cannot inherit a background save acknowledgement", () => {
+  const a = source.indexOf("function kolSetSaveFeedback("),
+    b = source.indexOf("\nfunction kolRenderSaveFeedback", a),
+    ctx = {
+      kolWorkspaceOwnerId: "owner",
+      kolSaveFeedbackByOwner: new Map(),
+      document: { activeElement: { dataset: { kolUncommitted: "1" } } },
+      kolRenderSaveFeedback: () => {},
+    };
+  vm.createContext(ctx);
+  vm.runInContext(source.slice(a, b), ctx);
+  ctx.kolSetSaveFeedback("local");
+  assert.equal(ctx.kolSaveFeedbackByOwner.get("owner").status, "editing");
+  for (const language of ["tr", "en"])
+    assert.doesNotMatch(
+      UI.persistenceView("editing", { language }),
+      /Bu cihazda kaydedildi|Saved on this device/,
+    );
+  ctx.kolSetSaveFeedback("conflict");
+  assert.equal(ctx.kolSaveFeedbackByOwner.get("owner").status, "conflict");
+  delete ctx.document.activeElement.dataset.kolUncommitted;
+  ctx.kolSetSaveFeedback("local");
+  assert.equal(ctx.kolSaveFeedbackByOwner.get("owner").status, "local");
+});

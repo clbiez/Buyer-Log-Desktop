@@ -37,6 +37,8 @@ async function barrier(s) {
   return { entered: entered.promise, release: release.resolve };
 }
 async function reset(s) {
+  await s.page.locator("#kolTable").focus();
+  await B.settle(s);
   await s.page.evaluate(async (owner) => {
     kolClearPendingWorkspace(owner);
     await kolLoadWorkspace(owner);
@@ -450,7 +452,7 @@ async function scenario(name, fn) {
       );
       await R.delay(1100);
       assert.equal(reads, 0, "focused editor must not poll the full workspace");
-      await a.page.locator("#kolSearch").focus();
+      await a.page.locator("#kolTable").focus();
       await R.until(() => reads > 0, {
         ms: 10000,
         label: "focusout resumes one deferred reload",
@@ -545,8 +547,8 @@ async function scenario(name, fn) {
         },
         { ms: 30000, label: "field merge across actual backends" },
       );
-      await a.page.locator("#kolSearch").focus();
-      await c.page.locator("#kolSearch").focus();
+      await a.page.locator("#kolTable").focus();
+      await c.page.locator("#kolTable").focus();
       await R.until(
         async () => {
           const row = (await B.snapshot(c, 1)).row;
@@ -850,7 +852,7 @@ async function scenario(name, fn) {
       );
       release.resolve();
       await pending;
-      await c.page.locator("#kolSearch").focus();
+      await c.page.locator("#kolTable").focus();
       await R.until(
         async () => {
           const r = (await B.snapshot(c, 2)).row;

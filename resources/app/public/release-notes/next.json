@@ -300,6 +300,93 @@
           "en": "Drafts and server saves have distinct states"
         }
       }
+    },
+    {
+      "id": "collection-editor-preserved",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Uzak güncelleme yazmayı kesmez",
+        "en": "Remote updates preserve active editing"
+      },
+      "body": {
+        "tr": "Arka plan güncellemeleri ve fiyat yenilemeleri açık hücreyi DOM’dan çıkarmaz. Hesaplama verisi güncel tutulur; görsel yenileme düzenleyiciden çıkışta uygulanır. Henüz gönderilmemiş metin ayrı gösterilir.",
+        "en": "Background updates and pricing refreshes no longer detach the active cell. Calculation data stays current; visual refreshes resume when the user leaves the editor. Unsubmitted text has a distinct state."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-editor-preserved.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Uzak güncelleme yazmayı kesmez",
+          "en": "Real Buyer Log: Remote updates preserve active editing"
+        },
+        "caption": {
+          "tr": "Uzak güncelleme yazmayı kesmez",
+          "en": "Remote updates preserve active editing"
+        }
+      }
+    },
+    {
+      "id": "collection-import-live-notification",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Alınan kayıt açık ekranlara bildirilir",
+        "en": "Imported records notify open views"
+      },
+      "body": {
+        "tr": "Bir okuma uzak kopyayı önce almış olsa da değişiklik bildirimi kaybolmaz. Yeni kayıt ve silmeler yetkili açık ekranlara ulaşır; periyodik kontrol aynı aktarımı ikinci kez bildirmez.",
+        "en": "An update notification is no longer missed when a read imports the remote copy first. New records and deletions reach authorized open views, without the periodic poll announcing the same import again."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-import-live-notification.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Alınan kayıt açık ekranlara bildirilir",
+          "en": "Real Buyer Log: Imported records notify open views"
+        },
+        "caption": {
+          "tr": "Alınan kayıt açık ekranlara bildirilir",
+          "en": "Imported records notify open views"
+        }
+      }
+    },
+    {
+      "id": "collection-pull-preserves-accepted-write",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Eski uzak kopya yeni yerel kaydı ezemez",
+        "en": "Stale pulls preserve newly accepted writes"
+      },
+      "body": {
+        "tr": "Uzak kopya uygulanmadan önce yerel içeriğin değişmediği yeniden doğrulanır. Araya giren yeni kayıt, uzak sürüm numarası daha büyük olsa da korunur. Kesintiye uğrayan aktarım sonraki kontrolde yeniden değerlendirilir.",
+        "en": "Local content is rechecked before a remote copy is applied. A newly committed write is preserved even when the remote revision is larger. An interrupted import is reconsidered by the next poll."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-pull-preserves-accepted-write.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Eski uzak kopya yeni yerel kaydı ezemez",
+          "en": "Real Buyer Log: Stale pulls preserve newly accepted writes"
+        },
+        "caption": {
+          "tr": "Eski uzak kopya yeni yerel kaydı ezemez",
+          "en": "Stale pulls preserve newly accepted writes"
+        }
+      }
     }
   ]
 }

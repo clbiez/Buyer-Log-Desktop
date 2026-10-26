@@ -76,8 +76,8 @@ and a three-way field merge between replicas. A focused two-moderator HTTP CAS
 check uses two authenticated BrowserContext request clients; it is labelled as a
 focused HTTP check, rather than UI-click coverage.
 
-An edited row can deliberately defer remote events while the editor has focus.
-At final quiescence users leave that row, then convergence is checked without
+An active editor defers visual refreshes while incoming unrelated data and its baseline still advance. Unsubmitted typing, secured browser drafts and server acceptance have distinct states.
+At final quiescence users focus the non-editing table (not the search input), then actual rendered DOM convergence is checked without
 forcing a data reload. Automatic stale-read rejection schedules a fresh read.
 Failed runs and driver corrections are retained in the audit; no automatic test
 rerun hides them. Real twelve-hour signed-session expiry is not accelerated;
@@ -91,3 +91,5 @@ manual SYNC convergence; changing that priority requires a product decision.
 No global calculation transaction, tenant model, SQL pool or WebSocket service
 is introduced. No TEST/STABLE publisher, production user data, COM repair or
 external corporate source is used.
+
+Collection has its own five-second remote-file poll for recently active users, even when the bulk SYNC schedule is manual. The load driver additionally invokes real manual SYNC rounds after moderator changes. GET imports notify SSE at the actual application boundary. Both pull CAS and the normal workspace lease are used so an intervening local write cannot be overwritten by a higher remote revision. No global calculation snapshot policy is added.

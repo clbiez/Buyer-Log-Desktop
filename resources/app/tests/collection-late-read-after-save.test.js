@@ -24,6 +24,7 @@ function fixture() {
     dirty: false,
     kolHasDirtyWorkspace: () => ctx.dirty,
     kolEditingRowIds: () => new Set(),
+    kolHasActiveWorkspaceEditor: () => false,
     kolReportReplication: () => {},
     kolApplyWorkspace: (workspace) => {
       applied.push(workspace);
@@ -111,6 +112,7 @@ test("a read discarded after a local edit schedules a fresh bounded-delay reload
     kolWorkspaceSaveTimer: null,
     kolHasDirtyWorkspace: () => false,
     kolEditingRowIds: () => new Set(),
+    kolHasActiveWorkspaceEditor: () => false,
     kolSelected: new Set(),
     kolLoadWorkspace: async () => false,
     document: { getElementById: () => null },
@@ -138,6 +140,7 @@ test("a clean focused editor defers reload without polling full workspace HTTP",
     kolRemoteReloadPendingOwner: "",
     kolHasDirtyWorkspace: () => false,
     kolEditingRowIds: () => new Set(["1"]),
+    kolHasActiveWorkspaceEditor: () => true,
     kolSelected: new Set(),
     kolLoadWorkspace: async () => {
       reads++;

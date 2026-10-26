@@ -52,7 +52,7 @@
 
   function persistenceView(status,options={}){
     const en=options.language==='en';
-    const labels={draft:en?'Draft secured locally · not saved to server':'Yerel taslak korundu · sunucuya kaydedilmedi',local:en?'Saved on this device':'Bu cihazda kaydedildi',sending:en?'Local edit secured · saving':'Yerel giriş korundu · kaydediliyor',pending:en?'Saved on this device · Sharing pending':'Bu cihazda kaydedildi · Paylaşım bekliyor',conflict:en?'Conflict · local edit preserved':'Çakışma · yerel giriş korundu',failed:en?'Save failed · retry required':'Kayıt başarısız · yeniden deneyin'};
+    const labels={editing:en?'Editing · not submitted':'Düzenleniyor · henüz gönderilmedi',draft:en?'Draft secured locally · not saved to server':'Yerel taslak korundu · sunucuya kaydedilmedi',local:en?'Saved on this device':'Bu cihazda kaydedildi',sending:en?'Local edit secured · saving':'Yerel giriş korundu · kaydediliyor',pending:en?'Saved on this device · Sharing pending':'Bu cihazda kaydedildi · Paylaşım bekliyor',conflict:en?'Conflict · local edit preserved':'Çakışma · yerel giriş korundu',failed:en?'Save failed · retry required':'Kayıt başarısız · yeniden deneyin'};
     const kind=status==='failed'?'error':status==='conflict'?'warning':'info';
     return `<span class="uiPersistence uiPersistence--${kind}" role="${kind==='error'?'alert':'status'}" aria-live="${kind==='error'?'assertive':'polite'}" data-persistence-state="${escapeHtml(status)}"><b>${escapeHtml(labels[status]||labels.pending)}</b>${options.detail?`<span>${escapeHtml(options.detail)}</span>`:''}</span>`;
   }

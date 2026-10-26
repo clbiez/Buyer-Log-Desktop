@@ -22164,6 +22164,7 @@ let kolWorkspacePending=false;
 let kolWorkspaceSavePromise=null;
 const kolSaveFeedbackByOwner=new Map();
 function kolSetSaveFeedback(status,detail='',ownerId=kolWorkspaceOwnerId){
+  if(ownerId===kolWorkspaceOwnerId&&typeof document!=='undefined'&&document.activeElement?.dataset?.kolUncommitted==='1'&&!['conflict','failed'].includes(status))status='editing';
   kolSaveFeedbackByOwner.set(ownerId,{status,detail});
   try{kolRenderSaveFeedback();}catch(_){/* Presentation cannot fail a successful save. */}
 }
@@ -22629,7 +22630,7 @@ async function kolLoadWorkspace(ownerId,options={}){
   const res=await fetch(`/api/collection-workspaces/${encodeURIComponent(ownerId)}`);const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||res.statusText);
   // A reload can start while clean and finish after an edit or its ACK. Never
   // replace that newer local state with the earlier response.
-  if(options.preserveLocal&&(kolWorkspaceOwnerId!==ownerId||kolWorkspaceRevision!==readRevision||kolBaseline!==readBaseline||kolWorkspaceSaving||kolWorkspaceSaveTimer||kolHasDirtyWorkspace()||kolEditingRowIds()?.size))return false;
+  if(options.preserveLocal&&(kolWorkspaceOwnerId!==ownerId||kolWorkspaceRevision!==readRevision||kolBaseline!==readBaseline||kolWorkspaceSaving||kolWorkspaceSaveTimer||kolHasDirtyWorkspace()||kolHasActiveWorkspaceEditor()))return false;
   kolReportReplication(data.replication);
   kolWorkspaceOwnerId=ownerId;kolApplyWorkspace(data.workspace,data.access);const select=document.getElementById('kolWorkspaceSelect');if(select)select.value=ownerId;
   return true;
@@ -28180,6 +28181,9 @@ function renderKol(){
     const pricingChanged=kolSyncRulePricing({save:true});
     if(licensorChanged&&!pricingChanged)saveKolRows();
   }
+  // Background pricing and source events may render too. Keep the actual editor
+  // attached after recalculating the model; refresh its projection on focusout.
+  if(kolHasActiveRowEditor()){kolRemoteRenderPendingOwner=kolWorkspaceOwnerId;return;}
   renderKolQuickFilters();
   renderKolScopeFilters();
   updateKolSendBtnState();
@@ -37632,6 +37636,7 @@ async function kolSettlePendingSave(){
    =================================================================== */
 let kolDeferredPatches=[];
 let kolRemoteReloadPendingOwner='';
+let kolRemoteRenderPendingOwner='';
 function kolRowIndexById(id){
   const key=String(id);
   return kolRows.findIndex(row=>String(row&&row.id)===key);
@@ -37644,6 +37649,20 @@ function kolEditingRowIds(){
   const host=active.closest('[data-id]')||active;
   const id=host&&host.dataset?host.dataset.id:'';
   return new Set(id===''||id==null?[]:[String(id)]);
+}
+function kolHasActiveRowEditor(){
+  return Boolean(document.activeElement?.matches?.('#kolTable .editCell, #kolTable select, #kolTable [contenteditable="true"]'));
+}
+// Raw input is not a secured draft until the existing change handler commits it.
+document.addEventListener('input',event=>{
+  if(!kolWorkspaceCanEdit||!event.target?.matches?.('#kolTable .editCell, #kolTable select, #kolTable [contenteditable="true"]'))return;
+  event.target.dataset.kolUncommitted='1';kolSetSaveFeedback('editing');
+},true);
+document.addEventListener('change',event=>{
+  if(event.target?.dataset?.kolUncommitted==='1')delete event.target.dataset.kolUncommitted;
+},true);
+function kolHasActiveWorkspaceEditor(){
+  return Boolean(kolEditingRowIds()?.size||document.activeElement?.matches?.('#kolSearch, #view-koleksiyon input, #view-koleksiyon textarea, #view-koleksiyon select, #view-koleksiyon [contenteditable="true"]'));
 }
 function kolDirtyRowIds(){
   const change=kolCollectChanges();
@@ -37695,8 +37714,11 @@ function kolApplyRemotePatches(rowPatches){
   }
   if(applied){
     kolNextId=Math.max(kolNextId,1+kolRows.reduce((max,row)=>Math.max(max,Number(row&&row.id)||0),0));
-    renderKol();
-    kolHighlightRemoteRows(touched);
+    // An unrelated row must not replace the DOM underneath a focused editor.
+    // Data/baseline still advance immediately; coalesce the visual refresh until
+    // the user leaves the editor. No backend write or other client is locked.
+    if(kolHasActiveWorkspaceEditor())kolRemoteRenderPendingOwner=kolWorkspaceOwnerId;
+    else {kolRemoteRenderPendingOwner='';renderKol();kolHighlightRemoteRows(touched);}
     scheduleOverviewCollectionSummaryRender();
     try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows,manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
   }
@@ -37719,15 +37741,18 @@ function kolHighlightRemoteRows(ids){
 }
 // Ertelenen yamalar, kullanıcı düzenlemeyi bitirir bitirmez uygulanır.
 document.addEventListener('focusout',()=>{
-  if(!kolDeferredPatches.length&&!kolRemoteReloadPendingOwner)return;
+  if(!kolDeferredPatches.length&&!kolRemoteReloadPendingOwner&&!kolRemoteRenderPendingOwner)return;
   setTimeout(async()=>{
-    // Önce kullanıcının hücreden çıkarken oluşan yerel kaydını tamamla.
-    // Sonra bekleyen yama uygulanır; yerel kayıt daha yeniyse stale yama düşer.
+    // Finish the editor save before consuming deferred remote changes.
     await kolSettlePendingSave();
     const pending=kolDeferredPatches;kolDeferredPatches=[];
     if(pending.length)kolApplyRemotePatches(pending);
     const owner=kolRemoteReloadPendingOwner;kolRemoteReloadPendingOwner='';
     if(owner)void kolHandleRemoteChange(owner,{mode:'reload'});
+    if(kolRemoteRenderPendingOwner&&kolRemoteRenderPendingOwner!==kolWorkspaceOwnerId)kolRemoteRenderPendingOwner='';
+    if(kolRemoteRenderPendingOwner===kolWorkspaceOwnerId&&!kolHasActiveWorkspaceEditor()){
+      kolRemoteRenderPendingOwner='';renderKol();
+    }
   },0);
 },true);
 /* Kirli-workspace uyarısı epizot başına bir kezdir. Uzak olay akışı sürerken
@@ -37758,7 +37783,7 @@ async function kolHandleRemoteChange(ownerId,payload){
     }
     return;
   }
-  if(kolEditingRowIds()?.size){kolRemoteReloadPendingOwner=ownerId;return;}
+  if(kolHasActiveWorkspaceEditor()){kolRemoteReloadPendingOwner=ownerId;return;}
   kolRemoteReloadPendingOwner='';
   // Temiz duruma dönüldü: bir sonraki kirli epizot yeniden uyarabilsin.
   kolRemoteChangeNoticeShown=false;

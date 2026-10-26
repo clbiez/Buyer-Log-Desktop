@@ -82,7 +82,9 @@ async function observe() {
     try {
       const state = await s.page.evaluate(() => ({
         owner: kolWorkspaceOwnerId,
-        values: kolRows.map((r) => [String(r.id), r.modelKod]),
+        values: Array.from(
+          document.querySelectorAll('#kolTable .editCell[data-k="modelKod"]'),
+        ).map((e) => [String(e.dataset.id), e.value]),
         dirty: kolHasDirtyWorkspace(),
       }));
       if (state.owner !== runtime.manifest.owner) continue;
@@ -725,7 +727,11 @@ async function reconcile() {
       await R.until(
         async () => {
           const snap = await s.page.evaluate(() =>
-            kolRows.map((r) => [String(r.id), r.modelKod]),
+            Array.from(
+              document.querySelectorAll(
+                '#kolTable .editCell[data-k="modelKod"]',
+              ),
+            ).map((e) => [String(e.dataset.id), e.value]),
           );
           const map = new Map(snap);
           return [...expected].every(([id, x]) => map.get(id) === x.value);
@@ -991,7 +997,7 @@ async function reconcile() {
     stopping = true;
     await Promise.all(loopPromises);
     for (const session of sessions) {
-      await session.page.locator("#kolSearch").focus();
+      await session.page.locator("#kolTable").focus();
       await B.settle(session);
     }
     write({
@@ -1140,7 +1146,7 @@ async function reconcile() {
       try {
         await Promise.all(loopPromises);
         for (const session of sessions) {
-          await session.page.locator("#kolSearch").focus();
+          await session.page.locator("#kolTable").focus();
           await B.settle(session);
         }
         const reconciliation = await reconcile();
