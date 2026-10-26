@@ -90,8 +90,11 @@ test('v5.18 email Picture cells use bounded CID previews without stretching',()=
   assert.match(asset,/maxSide=480/);
   assert.match(asset,/kolFitImageDimensions\(prepared\.width,prepared\.height,dims\.w,dims\.h\)/);
   assert.match(APP,/inlineImages:\(inlineImages\|\|\[\]\)\.map/);
-  assert.match(APP,/imageJobs\.push\(\{src,rowNum,columnIndex:ci\+1,column\}\)/);
+  assert.match(APP,/imageJobs\.push\(\{src,row,rowNum,columnIndex:ci\+1,column\}\)/);
   const workbook=between('async function prepareEmailBuildTopicTableWorkbook','function prepareEmailWorkbookFileEntry');
+  // Koleksiyon e-posta çalışma kitabı görseli gerçek kayıt üzerinden çözer; CP yolu korunur.
+  assert.match(workbook, /imageJobs\.map\(job=>job\.column\.sourceKind==='cp'/);
+  assert.match(workbook, /kolPrepareModelExcelImage\(job\.row\)/);
   assert.match(workbook,/kolExcelImageTwoCellPlacement\(image,job\.rowNum,cellWidth,cellHeight,job\.columnIndex,2\)/);
   assert.doesNotMatch(APP,/editAs:'oneCell'/);
   assert.match(APP,/width:\$\{a\.width\}px;height:\$\{a\.height\}px/);
