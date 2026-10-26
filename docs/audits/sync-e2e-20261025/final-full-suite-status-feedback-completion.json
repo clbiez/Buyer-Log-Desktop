@@ -1,0 +1,36 @@
+{
+  "status": "completed-with-targeted-source-contract-correction",
+  "firstStandardCommandStatus": "failed",
+  "productionSource": "af9ee418821a9e84269b3f094ee4871af18a8e69",
+  "finalTestSource": "af18a3a79af93b4497635c50e716945f07aecf52",
+  "files": 1129,
+  "uniqueTests": 7965,
+  "effectivePass": 7900,
+  "skipped": 65,
+  "unresolvedFailures": 0,
+  "concurrency": 2,
+  "loadRunningAlongside": false,
+  "automaticRetries": 0,
+  "parts": [
+    {
+      "log": "final-full-suite-status-feedback.log",
+      "tests": 1990,
+      "pass": 1929,
+      "fail": 1,
+      "skipped": 60,
+      "cancelled": 0
+    },
+    {
+      "log": "final-full-suite-status-feedback-remaining.log",
+      "tests": 5975,
+      "pass": 5970,
+      "fail": 0,
+      "skipped": 5,
+      "cancelled": 0
+    }
+  ],
+  "correctedFixture": "collection-row-height.test.js:100 now asserts statusRender.color(statusValue); lifecycle and CSS assertions preserved",
+  "targetedProof": "final-status-row-fixture-fixed.log (9/9)",
+  "productionUnchangedFromFirstCommand": true,
+  "note": "All 1129 files reached by the unchanged standard runner. First 300 stopped on one obsolete literal source contract; affected file checked after correction, then remaining 829 completed. Original failure retained; not a clean one-shot standard command."
+}
