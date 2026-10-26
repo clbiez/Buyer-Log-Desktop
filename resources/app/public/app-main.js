@@ -3655,7 +3655,6 @@ const CP_COLS = [
   {k:'Ant. Arrival', label:'Ant. Arrival', type:'date', weight:8, group:'Lojistik'},
   {k:'Notes', label:'Notes', type:'text', weight:16, group:'Notlar'},
   {k:'Ek Not', label:'Ek Notlar', type:'text', weight:16, group:'Notlar'},
-  // Private account data: never becomes an ASAS field or shared override.
   {k:'__personalOrderNote', label:'Kişisel Not', labelTr:'Kişisel Not', labelEn:'Private Note', type:'privateNote', weight:16, group:'Notlar', privatePersonal:true},
 ];
 const ORDERS_STATUS_COL = {k:'Active/Inactive', label:'Order Status', type:'active', weight:8, group:'Sipariş Detayları'};
@@ -3827,9 +3826,10 @@ let CP_NOTE_COLUMN_DEFS=[];
 let CP_NOTE_COLUMN_DEFS_REVISION=0;
 function syncCpNoteColumns(defs){
   CP_NOTE_COLUMN_DEFS=(Array.isArray(defs)?defs:[]).filter(d=>d&&d.id&&d.label).map(d=>({...d}));
-  const base=CP_COLS.filter(c=>!c.noteCustom);
+  const base=CP_COLS.filter(c=>!c.noteCustom&&!c.personalNote);
   const dynamic=CP_NOTE_COLUMN_DEFS.map(d=>({k:d.id,label:d.label,labelEn:d.labelEn||'',labelTr:d.labelTr||'',type:'text',weight:12,group:canonicalColumnGroup(d.group)||'Notlar',noteCustom:true,noteColumnId:d.id}));
-  CP_COLS.splice(0,CP_COLS.length,...base,...dynamic);
+  const privateDynamic=(window.BLPersonalNoteColumns?.definitions?.()||[]).map(d=>({k:d.id,label:d.label,labelTr:d.labelTr,labelEn:d.labelEn,type:'text',weight:12,group:'Notlar',personalNote:true}));
+  CP_COLS.splice(0,CP_COLS.length,...base,...dynamic,...privateDynamic);
   invalidateColumnIndex('cp');
   const cs=colmgr.cp; const valid=CP_COLS.map(c=>c.k);
   restoreLateManagedColumnState('cp');
@@ -3850,6 +3850,77 @@ async function saveCpNoteColumnDefs(nextDefs){
   if(removed.length){forgetPersistedColumnKeys('cp',removed);forgetPersistedColumnKeys('orders',removed);}
   syncCpNoteColumns(savedDefs);
 }
+
+/* Kişisel sütunlar iş verisi değil, giriş yapan kullanıcının kendi notlarıdır.
+   Sipariş düzenleme izni olmayan bir satıra yazmak, /api/overrides'e gitmez. */
+function readPrivateOrderNote(row,key){
+  // ÖNEMLİ: Kişisel notu ASLA ortak row nesnesine kopyalama.
+  // Kullanıcıya ait BLStorage'dan yalnız UI/filtre/kopya için okunur.
+  const line=lineKeyOfRow(row);
+  return line?(window.BLPersonalNoteColumns?.readValue?.(key,line)||''):'';
+}
+function refreshPersonalOrderNoteColumns(rerenderFn){
+  syncCpNoteColumns(CP_NOTE_COLUMN_DEFS);
+  if(typeof rerenderFn==='function')rerenderFn();else{if(state.cp)renderCP();if(state.orders)renderOrders();}
+}
+async function addPersonalOrderNoteColumn(rerenderFn){
+  const notes=window.BLPersonalNoteColumns;if(!notes)return;
+  const pair=await promptBilingualColumnName({title:appLang==='en'?'Add personal note column':'Kişisel not sütunu ekle',confirmLabel:appLang==='en'?'Add':'Ekle',validate:value=>cpNoteColumnNameClash(value,null)});
+  if(!pair)return;
+  const id='personal_note_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  try{
+    const def=BLColumnNames.withDefinitionLabels({id},pair);
+    notes.setDefinitions([...notes.definitions(),def]);
+    refreshPersonalOrderNoteColumns(rerenderFn);
+    showToast(appLang==='en'?'Private note column added. Only you can see its values.':'Kişisel not sütunu eklendi. İçeriğini yalnız siz görürsünüz.');
+  }catch(err){showToast((appLang==='en'?'Personal column could not be added: ':'Kişisel sütun eklenemedi: ')+(err.message||err));}
+}
+async function renamePersonalOrderNoteColumn(id,rerenderFn){
+  const notes=window.BLPersonalNoteColumns,defs=notes?.definitions?.()||[];
+  const def=defs.find(d=>d.id===id);if(!def)return;
+  const pair=await promptBilingualColumnName({title:appLang==='en'?'Rename personal note column':'Kişisel not sütununu yeniden adlandır',confirmLabel:appLang==='en'?'Save':'Kaydet',definition:def,validate:value=>cpNoteColumnNameClash(value,id)});
+  if(!pair)return;
+  try{
+    notes.setDefinitions(defs.map(d=>d.id===id?BLColumnNames.withDefinitionLabels(d,pair):d));
+    refreshPersonalOrderNoteColumns(rerenderFn);
+  }catch(err){showToast((appLang==='en'?'Could not rename private column: ':'Kişisel sütun yeniden adlandırılamadı: ')+(err.message||err));}
+}
+function removePersonalOrderNoteColumn(id,rerenderFn){
+  const notes=window.BLPersonalNoteColumns,def=notes?.definitions?.().find(d=>d.id===id);
+  if(!def)return;
+  if(!confirm(appLang==='en'?`Remove private note column "${def.label}" and its saved values?`:`"${def.label}" kişisel not sütunu ve kaydedilmiş notlar silinsin mi?`))return;
+  try{
+    notes.removeDefinition(id);
+    forgetPersistedColumnKeys('cp',[id]);forgetPersistedColumnKeys('orders',[id]);
+    refreshPersonalOrderNoteColumns(rerenderFn);
+    showToast(appLang==='en'?'Private column removed.':'Kişisel sütun kaldırıldı.');
+  }catch(err){showToast((appLang==='en'?'Could not remove private column: ':'Kişisel sütun kaldırılamadı: ')+(err.message||err));}
+}
+function bindPersonalOrderNoteHandlers(tableId){
+  const table=document.getElementById(tableId);
+  if(!table||table.dataset.personalOrderNotesBound==='1')return;
+  table.dataset.personalOrderNotesBound='1';
+  const save=e=>{
+    const t=e.target;
+    if(!t?.matches?.('input.blPersonalOrderNote'))return;
+    const id=t.dataset.personalNoteId,key=t.dataset.personalNoteLine,owner=t.dataset.personalNoteOwner;
+    const notes=window.BLPersonalNoteColumns;
+    if(!notes||!id||!key)return;
+    const old=notes.readValue(id,key);
+    if(t.value===old)return;
+    if(!owner||owner!==String(window.BL_USER_CONTEXT?.id||'')){
+      t.value=old;showToast(appLang==='en'?'Your session changed. Please reopen the note.':'Oturum değişti. Notu yeniden açın.');return;
+    }
+    try{
+      const next=notes.writeValue(id,key,t.value);
+      // Sadece kişisel depoya yaz; ortak CP/Orders satırı asla değişmez.
+      t.value=next;
+    }catch(err){t.value=old;showToast((appLang==='en'?'Personal note could not be saved: ':'Kişisel not kaydedilemedi: ')+(err.message||err));}
+  };
+  table.addEventListener('change',save);
+  table.addEventListener('blur',save,true);
+}
+
 // Not sütunu adı: EN/TR iki dilde; kimlik olan `label` diğer sütunlarla çakışmamalı.
 function cpNoteColumnNameClash(pair,exceptKey){
   const label=(pair.tr||pair.en||'').toLocaleLowerCase('tr');
@@ -4069,8 +4140,8 @@ function migrateCpOrdersColumnLayout(saved){
 function regroupDynamicColumnsAfterLayoutReset(tableKey){
   if(!COLUMN_LAYOUT_REGROUP.has(tableKey))return;
   const cols=COLS_BY_TABLE[tableKey]||[];
-  const baseGroups=new Set(cols.filter(c=>!c.modelCustom&&!c.noteCustom&&!c.formulaCustom&&!c.checklistSupplierColumn).map(c=>groupKey(c.group)));
-  cols.filter(c=>(c.modelCustom||c.noteCustom)&&baseGroups.has(groupKey(c.group))).forEach(c=>placeColumnInGroup(tableKey,c.k,c.group));
+  const baseGroups=new Set(cols.filter(c=>!c.modelCustom&&!c.noteCustom&&!c.personalNote&&!c.formulaCustom&&!c.checklistSupplierColumn).map(c=>groupKey(c.group)));
+  cols.filter(c=>(c.modelCustom||c.noteCustom||c.personalNote)&&baseGroups.has(groupKey(c.group))).forEach(c=>placeColumnInGroup(tableKey,c.k,c.group));
 }
 function loadAutoTableColumnState(){
   try{
@@ -4181,7 +4252,7 @@ function tableViewDefaultExtendedKeys(tableKey){
     }
     // Dinamik Database / Notes / Formula sütunları kullanıcı isterse editörden eklenir;
     // yeni veya kaldırılmış özel sütunlar default Extended'ı kendiliğinden değiştirmez.
-    return !meta.modelCustom&&!meta.noteCustom&&!meta.formulaCustom&&meta.tableViewSystem!==true;
+    return !meta.modelCustom&&!meta.noteCustom&&!meta.personalNote&&!meta.formulaCustom&&meta.tableViewSystem!==true;
   };
   const candidates=all.filter(key=>!focusSet.has(key)&&eligible(key));
   if(!candidates.length)return focus.slice();
@@ -4447,9 +4518,9 @@ function tableFieldsColumn(tableKey,key){
     return {key,col,label:kolColumnLabel(col),kind:custom?(col.checklist?'checklist':'custom'):'system',canRename:custom?kolWorkspaceCanEdit:true,canDelete:custom&&kolWorkspaceCanEdit,userLabel:!custom&&kolColumnHasUserLabel(col)};
   }
   const col=(COLS_BY_TABLE[tableKey]||[]).find(c=>c.k===key);if(!col)return {key,label:key,kind:'unknown'};
-  const kind=col.formulaCustom?'formula':col.modelCustom?'model':col.noteCustom?'note':col.checklistSupplierColumn?'cpChecklist':'system';
+  const kind=col.formulaCustom?'formula':col.modelCustom?'model':col.personalNote?'personalNote':col.noteCustom?'note':col.checklistSupplierColumn?'cpChecklist':'system';
   const labelEditable=!!window.BLColumnNames&&BLColumnNames.TABLES.includes(tableKey);
-  return {key,col,label:tableColumnLabel(tableKey,col),kind,fixed:col.type==='cpImage',canRename:kind==='system'?labelEditable:kind!=='cpChecklist',canDelete:['formula','model','note'].includes(kind),userLabel:kind==='system'&&tableColumnHasUserLabel(tableKey,col)};
+  return {key,col,label:tableColumnLabel(tableKey,col),kind,fixed:col.type==='cpImage',canRename:kind==='system'?labelEditable:kind!=='cpChecklist',canDelete:['formula','model','note','personalNote'].includes(kind),userLabel:kind==='system'&&tableColumnHasUserLabel(tableKey,col)};
 }
 function tableFieldsRenameColumn(tableKey,key){
   const meta=tableFieldsColumn(tableKey,key),done=()=>tableFieldsRerender(tableKey);
@@ -4462,6 +4533,7 @@ function tableFieldsRenameColumn(tableKey,key){
   if(meta.kind==='formula'){window.BLFormulaColumns?.open(tableKey,meta.col.formulaId,done);return;}
   if(meta.kind==='model'){openCpModelColumnModal(meta.col.modelColumnId,done);return;}
   if(meta.kind==='note'){void renameCpNoteColumn(meta.col.noteColumnId,done);return;}
+  if(meta.kind==='personalNote'){void renamePersonalOrderNoteColumn(meta.col.k,done);return;}
   void editSystemColumnLabel(tableKey,meta.col,{onChange:done});
 }
 function tableFieldsDeleteColumn(tableKey,key){
@@ -4471,6 +4543,7 @@ function tableFieldsDeleteColumn(tableKey,key){
   if(meta.kind==='formula')removeFormulaColumn(tableKey,meta.col.formulaId,done);
   else if(meta.kind==='model')void removeCpModelColumn(meta.col.modelColumnId,done);
   else if(meta.kind==='note')void removeCpNoteColumn(meta.col.noteColumnId,done);
+  else if(meta.kind==='personalNote')removePersonalOrderNoteColumn(meta.col.k,done);
 }
 // Sütun yalnız kendi başlığı içinde taşınır; bant bölünmez.
 function tableFieldsMoveColumn(tableKey,key,targetKey,after){
@@ -4533,7 +4606,7 @@ function renderTableFieldsMenu(menu,tableKey){
       ].join('');
       const checks=TABLE_FIELDS_PRESETS.map(preset=>tableFieldsCheckbox(`data-table-fields-preset="${preset}" data-key="${escapeHtml(key)}"`,presetSets[preset].has(key)?'all':'none',`${meta.label} · ${tableViewPresetName(preset)}`)).join('');
       const draggable=!meta.fixed&&entry.keys.length>1;
-      return `<div class="tableFieldsColumn${hidden.has(key)?' isHiddenNow':''}${meta.userLabel?' hasUserLabel':''}" data-table-fields-col="${escapeHtml(key)}" data-group="${escapeHtml(entry.group)}"${draggable?' draggable="true"':''}><span class="tableFieldsDrag${draggable?'':' isDisabled'}" aria-hidden="true">⋮⋮</span><span class="tableFieldsColumnName" title="${escapeHtml(meta.label)}">${escapeHtml(meta.label)}</span><span class="tableFieldsActions">${actions}</span><span class="tableFieldsChecks">${checks}</span></div>`;
+      return `<div class="tableFieldsColumn${hidden.has(key)?' isHiddenNow':''}${meta.userLabel?' hasUserLabel':''}" data-table-fields-col="${escapeHtml(key)}" data-group="${escapeHtml(entry.group)}"${draggable?' draggable="true"':''}><span class="tableFieldsDrag${draggable?'':' isDisabled'}" aria-hidden="true">⋮⋮</span><span class="tableFieldsColumnName" title="${escapeHtml(meta.label)}">${meta.kind==='personalNote'?'🔒 ':''}${escapeHtml(meta.label)}</span><span class="tableFieldsActions">${actions}</span><span class="tableFieldsChecks">${checks}</span></div>`;
     }).join(''):'';
     return `<div class="tableFieldsGroup is-${mode}${open?' isOpen':''}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--ui-accent)'}"><div class="tableFieldsGroupRow"><button type="button" class="tableFieldsGroupToggle" data-table-fields-toggle="${escapeHtml(entry.group)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b>${escapeHtml(entry.label)}</b><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button><button type="button" class="tableFieldsModeBtn is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(modeTitle)}">${escapeHtml(modeLabel)}</button><span class="tableFieldsChecks">${groupChecks}</span></div>${columns?`<div class="tableFieldsColumns">${columns}</div>`:''}</div>`;
   }).join('');
@@ -4542,6 +4615,7 @@ function renderTableFieldsMenu(menu,tableKey){
     addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="column">+ ${escapeHtml(en?'Add Column':'Sütun Ekle')}</button>`);
     if(FORMULA_COLUMN_TABLES.has(tableKey))addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="calc">+ ${escapeHtml(en?'Add Calculated Column':'Hesaplanan Sütun Ekle')}</button>`);
     addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="note">+ ${escapeHtml(en?'Add Note Column':'Not Sütunu Ekle')}</button>`);
+    addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="personal-note">+ ${escapeHtml(en?'Personal Note Column':'Kişisel Not Sütunu')}</button>`);
   }else if(tableKey==='koleksiyon'&&kolWorkspaceCanEdit){
     addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="column">+ ${escapeHtml(en?'Add Column':'Sütun Ekle')}</button>`);
     addButtons.push(`<button type="button" class="tbtn" data-table-fields-checklist>+ ${escapeHtml(en?'Add checklist item':'Checklist maddesi ekle')}</button>`);
@@ -4597,6 +4671,7 @@ function renderTableFieldsMenu(menu,tableKey){
     if(tableKey==='koleksiyon'){void kolAddCustomColumn(null).then(()=>done());return;}
     if(action==='column')openCpModelColumnModal(null,done);
     else if(action==='note')void addCpNoteColumn(done);
+    else if(action==='personal-note')void addPersonalOrderNoteColumn(done);
     else if(action==='calc'){
       const fc=window.BLFormulaColumns;
       if(!fc){showToast(en?'Calculated columns are still loading.':'Hesaplanan sütunlar henüz yükleniyor.');return;}
@@ -5140,7 +5215,7 @@ const CP_TR_HEADER_LABELS = {
    kullanır; `label` bunların geriye dönük kimliğidir. */
 function tableColumnDefaultLabel(tableKey,c){
   if(tableKey==='cp'||tableKey==='orders'){
-    if(c.modelCustom||c.noteCustom||c.formulaCustom){
+    if(c.modelCustom||c.noteCustom||c.personalNote||c.formulaCustom){
       const def=c.formulaCustom?(c.formulaDef||c):c;
       return window.BLColumnNames?BLColumnNames.definitionLabel(def,appLang)||c.k:(c.label||c.k);
     }
@@ -5161,7 +5236,7 @@ function tableColumnHasUserLabel(tableKey,c){
   if(!c||!window.BLColumnNames)return false;
   if(BLColumnNames.has(tableKey,c.k))return true;
   const def=c.formulaCustom?(c.formulaDef||c):c;
-  return !!((c.modelCustom||c.noteCustom||c.formulaCustom||c.custom)&&(def.labelEn||def.labelTr));
+  return !!((c.modelCustom||c.noteCustom||c.personalNote||c.formulaCustom||c.custom)&&(def.labelEn||def.labelTr));
 }
 /* Aynı etiket fonksiyonunu diğer dil için çalıştırır (diyalogdaki EN/TR
    varsayılanları). appLang yalnız senkron çağrı süresince değişir. */
@@ -5346,6 +5421,7 @@ function renderColPanel(tableKey, panelEl, rerenderFn){
     // syncOrdersColumnsFromCp); DB-bağlı özel sütunlar da aynı yoldan miras
     // kalır. Bu yüzden düzenle/kaldır aynı panel deneyimini Orders'ta da açar.
     if((tableKey==='cp'||tableKey==='orders')&&c.modelCustom) return `<div class="colPanelItem isCustomCol"><input type="checkbox" data-key="${escapeHtml(c.k)}" ${cs.hidden.has(c.k)?'':'checked'}><button type="button" class="colPanelName cpModelColEdit" data-cp-model-edit="${escapeHtml(c.modelColumnId)}" title="${escapeHtml(appLang==='en'?'Edit column':'Sütunu düzenle')}">${escapeHtml(tableColumnLabel(tableKey,c))}</button><button type="button" class="colPanelDrop" data-cp-model-drop="${escapeHtml(c.modelColumnId)}" title="${escapeHtml(appLang==='en'?'Remove column':'Sütunu kaldır')}">×</button></div>`;
+    if((tableKey==='cp'||tableKey==='orders')&&c.personalNote) return `<div class="colPanelItem isCustomCol"><input type="checkbox" data-key="${escapeHtml(c.k)}" ${cs.hidden.has(c.k)?'':'checked'}><button type="button" class="colPanelName" data-personal-note-edit="${escapeHtml(c.k)}" title="${escapeHtml(appLang==='en'?'Private to your account':'Yalnız size özel')}">🔒 ${escapeHtml(tableColumnLabel(tableKey,c))}</button><button type="button" class="colPanelDrop" data-personal-note-drop="${escapeHtml(c.k)}" title="${escapeHtml(appLang==='en'?'Remove private column':'Kişisel sütunu kaldır')}">×</button></div>`;
     // v10.9 — kullanıcı tanımlı boş not sütunu: rename/delete aynı desende.
     if((tableKey==='cp'||tableKey==='orders')&&c.noteCustom) return `<div class="colPanelItem isCustomCol"><input type="checkbox" data-key="${escapeHtml(c.k)}" ${cs.hidden.has(c.k)?'':'checked'}><button type="button" class="colPanelName" data-note-col-edit="${escapeHtml(c.noteColumnId)}" title="${escapeHtml(appLang==='en'?'Rename column':'Sütunu yeniden adlandır')}">${escapeHtml(tableColumnLabel(tableKey,c))}</button><button type="button" class="colPanelDrop" data-note-col-drop="${escapeHtml(c.noteColumnId)}" title="${escapeHtml(appLang==='en'?'Remove column':'Sütunu kaldır')}">×</button></div>`;
     // Sistem sütunu: kalem düğmesi kişisel EN/TR adı ve veri kaynağını açar.
@@ -5354,6 +5430,7 @@ function renderColPanel(tableKey, panelEl, rerenderFn){
   }).join('')
     +((tableKey==='cp'||tableKey==='orders')?`<button type="button" class="colPanelAdd" id="cpAddModelColumnBtn">+ ${escapeHtml(appLang==='en'?'Add Column':'Sütun Ekle')}</button>`:'')
     +((tableKey==='cp'||tableKey==='orders')?`<button type="button" class="colPanelAdd" id="cpAddNoteColumnBtn">+ ${escapeHtml(appLang==='en'?'Add Note Column':'Not Sütunu Ekle')}</button>`:'')
+    +((tableKey==='cp'||tableKey==='orders')?`<button type="button" class="colPanelAdd" id="cpAddPersonalNoteColumnBtn">+ ${escapeHtml(appLang==='en'?'Personal Note Column':'Kişisel Not Sütunu')}</button>`:'')
     +(formulaTable?`<button type="button" class="colPanelAdd colPanelAddFormula" id="addFormulaColumnBtn_${escapeHtml(tableKey)}" data-formula-add="${escapeHtml(tableKey)}">+ ${escapeHtml(appLang==='en'?'Calculated Column':'Hesaplanan Sütun')}</button>`:'');
   panelEl.querySelectorAll('input[data-key]').forEach(inp=>{
     inp.addEventListener('change', ()=>{
@@ -5369,8 +5446,11 @@ function renderColPanel(tableKey, panelEl, rerenderFn){
   panelEl.querySelectorAll('[data-cp-model-edit]').forEach(btn=>btn.addEventListener('click',()=>openCpModelColumnModal(btn.dataset.cpModelEdit,refreshCpPanel)));
   panelEl.querySelectorAll('[data-cp-model-drop]').forEach(btn=>btn.addEventListener('click',()=>removeCpModelColumn(btn.dataset.cpModelDrop,refreshCpPanel)));
   panelEl.querySelector('#cpAddNoteColumnBtn')?.addEventListener('click',()=>void addCpNoteColumn(refreshCpPanel));
+  panelEl.querySelector('#cpAddPersonalNoteColumnBtn')?.addEventListener('click',()=>void addPersonalOrderNoteColumn(refreshCpPanel));
   panelEl.querySelectorAll('[data-note-col-edit]').forEach(btn=>btn.addEventListener('click',()=>void renameCpNoteColumn(btn.dataset.noteColEdit,refreshCpPanel)));
   panelEl.querySelectorAll('[data-note-col-drop]').forEach(btn=>btn.addEventListener('click',()=>void removeCpNoteColumn(btn.dataset.noteColDrop,refreshCpPanel)));
+  panelEl.querySelectorAll('[data-personal-note-edit]').forEach(btn=>btn.addEventListener('click',()=>void renamePersonalOrderNoteColumn(btn.dataset.personalNoteEdit,refreshCpPanel)));
+  panelEl.querySelectorAll('[data-personal-note-drop]').forEach(btn=>btn.addEventListener('click',()=>removePersonalOrderNoteColumn(btn.dataset.personalNoteDrop,refreshCpPanel)));
   panelEl.querySelectorAll('[data-col-label-edit]').forEach(btn=>btn.addEventListener('click',event=>{
     event.preventDefault(); event.stopPropagation();
     const c=cols.find(x=>x.k===btn.dataset.colLabelEdit); if(!c)return;
@@ -5795,6 +5875,15 @@ function cellHtml(c,r,cf,tableKey='cp'){
   const editorIdentity=tableKey==='cp'?cpEditorIdentityAttributes(r):'';
   const sharedField = ['exfactory','retailEdit','instoreEdit','submfr'].includes(c.type) || (c.type==='moneyEdit' && c.k==='Supp. FOB');
   const canEdit = r._canEdit !== false && (!sharedField || r._canEditShared !== false);
+  if(c.personalNote){
+    const line=lineKeyOfRow(r);
+    const cur=readPrivateOrderNote(r,c.k);
+    const owner=String(window.BL_USER_CONTEXT?.id||'');
+    const hint=appLang==='en'?'Private note; only you can see and edit it.':'Kişisel not; yalnız siz görebilir ve düzenleyebilirsiniz.';
+    return line&&owner
+      ? `<td class="editTd blPersonalOrderNoteCell" title="${escapeHtml(hint)}"><input class="blPersonalOrderNote" type="text" maxlength="4000" autocomplete="off" data-personal-note-id="${escapeHtml(c.k)}" data-personal-note-line="${escapeHtml(line)}" data-personal-note-owner="${escapeHtml(owner)}" value="${escapeHtml(cur)}" aria-label="${escapeHtml(tableColumnLabel(tableKey,c))}" title="${escapeHtml(cur||hint)}" placeholder="${escapeHtml(appLang==='en'?'Your note…':'Notunuz…')}"></td>`
+      : `<td class="viewOnlyCell">—</td>`;
+  }
   const schema = columnSchemaFor(c);
   // Model bağlantılarından gelen sütunlar başlangıçta type:'ro' olur. Bu
   // dal onları kaynağın metadata'sı veya güvenli örnek çözümlemesiyle
@@ -5976,6 +6065,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
   }
 }
 function cellPlainText(c,r,cf){
+  if(c.personalNote)return readPrivateOrderNote(r,c.k);
   const v = c.k==='Sub-Manufacturer' ? cpSubManufacturerValue(r) : r[c.k];
   if(c.modelCustom){ const schema=columnSchemaFor(c); return schema?schema.format(v,{row:r}):norm(v); }
   // v7.28 — hesaplanan sütun ekranda ne yazıyorsa Excel'e/panoya da o gider.
@@ -9167,8 +9257,10 @@ function quickSeasonEntries(counts){
     .sort((a,b)=>BLBusinessRules.compareSeasonNewestFirst(a[0],b[0]));
 }
 function sortRows(rows,key,dir){
+  const privateKey=(COLS_BY_TABLE.cp||[]).some(col=>col.k===key&&col.personalNote)
+    ||(COLS_BY_TABLE.orders||[]).some(col=>col.k===key&&col.personalNote);
   return [...rows].sort((a,b)=>{
-    let x=a[key], y=b[key];
+    let x=privateKey?readPrivateOrderNote(a,key):a[key], y=privateKey?readPrivateOrderNote(b,key):b[key];
     if(key==='Priority')return (priorityRank(x)-priorityRank(y))*dir;
     if(String(key).toLocaleLowerCase('tr-TR')==='season') return compareSeasonValues(x,y)*dir;
     const column=(COLS_BY_TABLE.cp||[]).find(item=>item.k===key)||(COLS_BY_TABLE.orders||[]).find(item=>item.k===key);
@@ -10475,6 +10567,8 @@ function enterDateEdit(span){
   });
 }
 bindEditHandlers('cpTable');
+bindPersonalOrderNoteHandlers('cpTable');
+bindPersonalOrderNoteHandlers('ordersTable');
 bindCpLogisticToggle('cpTable','cp',()=>renderCP());
 bindCpLogisticToggle('ordersTable','orders',()=>renderOrders());
 // Koleksiyon tarih hücreleri CP ile aynı görüntüleme/düzenleme davranışını kullanır:
@@ -14792,7 +14886,8 @@ async function waitForRefreshJob(expectedJob=null){
     try{if(typeof window.renderLFLLanguage==='function')window.renderLFLLanguage();}catch(_){}
     const sourceName=data.sources&&data.sources.asas?data.sources.asas:(appLang==='en'?'No cached model data':'Önbellekte model verisi yok');
     if(Array.isArray(data.cpModelColumns))syncCpModelColumns(data.cpModelColumns);
-    if(Array.isArray(data.noteColumns))syncCpNoteColumns(data.noteColumns);
+    if(Array.isArray(data.noteColumns)||window.BLPersonalNoteColumns?.definitions?.().length)
+      syncCpNoteColumns(Array.isArray(data.noteColumns)?data.noteColumns:CP_NOTE_COLUMN_DEFS);
     CP_NOTE_COLUMN_DEFS_REVISION=Number(data.storeRevisions&&data.storeRevisions.noteColumnDefs)||CP_NOTE_COLUMN_DEFS_REVISION;
     if(data.importanceSettings)window.BLOrderImportanceUI?.setSettings(data.importanceSettings,data.storeRevisions&&data.storeRevisions.importanceSettings);
     state.modelScopes=(data.modelRefresh&&Array.isArray(data.modelRefresh.scopes))?data.modelRefresh.scopes:[];
@@ -16414,6 +16509,8 @@ function hydrateUserPreferencesAfterUi(){
     window.BLPerf?.mark?.('AUTH_USER_LOAD_READY',{mode:'after-ui',applied:Number(sync&&sync.applied)||0,pushed:Number(sync&&sync.pushed)||0});
     window.BLPerf?.mark?.('AUTH_READY',{mode:'after-ui'});
     if(sync&&Number(sync.applied)>0){
+      // Kişisel sütun tanımları/notları cihazlar arasında hesapla eşitlenir.
+      refreshPersonalOrderNoteColumns();
       window.BLOverviewHome?.reload?.();
       coreFilterAutoReady=false;
       applyCoreAutoFilterState();
