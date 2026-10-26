@@ -86,7 +86,7 @@ test('control feedback keeps finite timings, theme tokens and no independent key
   assert.match(script,/REFRESH_CONTROLS/);
   assert.match(script,/SYNC_CONTROLS/);
   assert.match(script,/syncStatusBadge','is-syncing','sync'/);
-  assert.match(components,/syncStatusBadge\.is-syncing\{color:var\(--ui-accent\)/);
+  assert.match(components,/\[data-plm-sync-category\]\) \.ic\{transform-origin:center/);
   assert.doesNotMatch(script,/setInterval\(|iterations\s*:\s*Infinity/);
   assert.doesNotMatch(css,/animation:[^;]*infinite/);
 });
