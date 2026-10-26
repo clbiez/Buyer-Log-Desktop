@@ -61,13 +61,7 @@ test('Manifest prohibits frames, rounded controls, gradients and raw overlay lev
    const group=['#cpTable','#ordersTable','#kolTable'].some(id=>d.selector===groupSeparator(id))&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
    const headerColumns=d.selector===':is(#cpTable,#ordersTable,#kolTable) thead tr.colRow th:not(:last-child)'&&d.prop==='border-inline-end'&&d.value==='1px solid var(--ui-row-divider)';
    const printRule=isPrint(d)&&d.selector==='.shipCompare tbody td'&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-print-rule)';
-   const viewPickerBorder=d.file==='table-view-drawers.css'&&(
-      d.selector==='.blViewPicker .blViewPickerTrigger'&&d.prop==='border'&&d.value==='1px solid var(--ui-group-divider)'||
-      d.selector==='.blViewPicker .blViewPickerTrigger:hover,.blViewPicker.isOpen .blViewPickerTrigger'&&d.prop==='border-color'&&d.value==='var(--ui-accent)'||
-      d.selector==='.blViewPickerMenu'&&d.prop==='border'&&d.value==='1px solid var(--ui-group-divider)'||
-      d.selector==='.blViewPickerMenu .tableFieldsBtn'&&d.prop==='border-top'&&d.value==='1px solid var(--ui-group-divider)'
-    ); // narrowly accepted canonical token-based drawer borders
-    if(!row&&!group&&!headerColumns&&!printRule&&!viewPickerBorder)failures.push(d);
+   if(!row&&!group&&!headerColumns&&!printRule)failures.push(d); // narrow user-approved dense table exceptions
   }
   if(d.prop==='outline'&&!/^(?:none|0)$/.test(d.value)){
    const cursor=['.blDetailDrawer .blDetailTable td.blGridActiveCell','#cpTable td.blGridActiveCell,#ordersTable td.blGridActiveCell','[data-ui-migrated] .blDetailTable .blGridActiveCell','#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolActiveGridCell,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolSpreadsheetActiveCell'].includes(d.selector);
@@ -95,7 +89,7 @@ test('Manifest fonts scale and only transform/opacity may animate',()=>{
  for(const file of ['overview-global-flow.js','overview-global-flow-earth.js'])assert.match(read(file),/function (?:wantsAnimation|animationWanted)\(\)\{return document.documentElement.dataset.uiSystem!=='manifest'/);
 });
 test('Main column separators cover both header tiers and never the table body',()=>{
- const rules=entries.filter(d=>d.value==='1px solid var(--ui-group-divider)'&&['#cpTable','#ordersTable','#kolTable'].some(id=>d.selector===groupSeparator(id)));
+ const rules=entries.filter(d=>d.value==='1px solid var(--ui-group-divider)');
  assert.equal(rules.length,3);
  for(const [i,id] of ['#cpTable','#ordersTable','#kolTable'].entries()){assert.equal(rules[i].selector,groupSeparator(id));assert.doesNotMatch(rules[i].selector,/tbody|td\b/);}
 });
@@ -179,7 +173,7 @@ test('Remaining module CSS owns layout only; nested output forms use the shared 
 });
 
 test('every module and shell layout file is free of private appearance definitions',()=>{
- const owners=new Set(['ui-tokens.css','ui-components.css','ui-startup.css','giris.css','ui-motion.css','thinking-orbs.css','table-view-drawers.css']);const failures=[];
+ const owners=new Set(['ui-tokens.css','ui-components.css','ui-startup.css','giris.css','ui-motion.css','thinking-orbs.css']);const failures=[];
  for(const file of OWNERS.filter(f=>!owners.has(f)))for(const d of declarations(read(file))){
   // Concurrent header-tracking change: permit only the approved header-only divider.
   if(file==='table-header-tracking.css'&&d.prop==='border-inline-end'&&
@@ -189,17 +183,6 @@ test('every module and shell layout file is free of private appearance definitio
   if(/^(?:color|accent-color|color-scheme|background(?:-.*)?|border(?!-collapse|-spacing)(?:-.*)?|box-shadow|text-shadow|font(?:-.*)?|letter-spacing|line-height|text-transform|fill|stroke(?:-.*)?|outline(?:-.*)?|animation(?:-.*)?|transition(?:-.*)?|filter|(?:-webkit-)?backdrop-filter|z-index)$/.test(d.prop))failures.push({file,...d});
  }
  assert.deepEqual(failures,[]);
-});
-
-test('Shared view drawer appearance uses only canonical token colors',()=>{
- const drawer=read('table-view-drawers.css');
- assert.match(drawer,/\.blViewPickerMenu\[hidden\]/);
- assert.match(drawer,/var\(--ui-group-divider\)/);
- const appearance=new Set(['color','background','border','border-top','border-color','outline','box-shadow','z-index']);
- for(const d of declarations(drawer)){
-  if(!appearance.has(d.prop))continue;
-  assert.doesNotMatch(d.value,/#[0-9a-f]{3,8}\b|rgba?\(/i);
- }
 });
 
 test('Motion+ CSS owner is limited to transform/opacity and short canonical timing',()=>{

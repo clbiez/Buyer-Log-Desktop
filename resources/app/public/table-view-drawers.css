@@ -1,0 +1,40 @@
+/* View and price picker geometry; shared visual states live in ui-components.css. */
+.blViewPicker{position:relative;display:inline-flex;align-items:center;min-width:0;flex:0 0 auto;}
+.blViewPicker .blViewPickerTrigger{
+  display:inline-flex;align-items:center;justify-content:space-between;
+  min-width:110px;gap:var(--ui-space-2);white-space:nowrap;
+}
+.blViewPicker .blViewPickerChevron{width:13px;height:13px;flex:0 0 auto;opacity:.7;}
+.blViewPicker.isOpen .blViewPickerChevron{transform:rotate(180deg);}
+.blViewPickerMenu{
+  position:fixed;
+  display:flex;flex-direction:column;gap:2px;
+  width:max-content;min-width:174px;max-width:calc(100vw - 16px);
+  max-height:min(420px,calc(100vh - 16px));overflow-y:auto;
+  padding:var(--ui-space-1);
+}
+.blViewPickerMenu[hidden]{display:none!important;}
+.blViewPickerMenu .tableViewPreset{
+  display:flex;align-items:center;justify-content:flex-start;
+  width:100%;min-height:var(--ui-control-height);
+  margin:0;padding:0 var(--ui-space-3);
+  white-space:nowrap;text-align:left;
+}
+.blViewPickerMenu .tableViewPreset[aria-pressed="true"]::after{
+  content:"✓";margin-left:auto;padding-left:var(--ui-space-3);
+}
+.blViewPickerMenu .tableFieldsBtn{
+  margin-top:var(--ui-space-1);padding-top:var(--ui-space-1);
+}
+.blPriceViewPicker .blViewPickerTrigger{min-width:125px;}
+.blViewPriceIcon{width:15px;height:15px;flex:0 0 auto;}
+#kolAllVariantsToggle{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:auto;min-width:max-content;padding:0 var(--ui-space-3)!important;
+  white-space:nowrap;
+}
+#kolAllVariantsToggle[disabled]{opacity:.48;}
+@media(max-width:600px){
+  .blViewPicker .blViewPickerTrigger{min-width:100px;}
+  .blPriceViewPicker .blViewPickerTrigger{min-width:110px;}
+}

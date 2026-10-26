@@ -99,6 +99,35 @@
       }
     },
     {
+      "id": "table-selection-checkbox-theme-unification",
+      "type": "improvement",
+      "module": {
+        "tr": "Tablolar",
+        "en": "Tables"
+      },
+      "title": {
+        "tr": "Tablo seçim kutuları tüm temalarda daha sade",
+        "en": "Cleaner table selection controls across themes"
+      },
+      "body": {
+        "tr": "Tabloların ilk sütunundaki satır seçimi ve tümünü seç kutuları Light, Grey ve Dark temalarının ortak renklerini kullanır. Boş, işaretli, kısmi seçim, klavye odağı ve devre dışı durumları okunaklıdır; mevcut seçim davranışları değişmez.",
+        "en": "Row selection and select-all checkboxes in the leading table column use the shared Light, Grey and Dark theme palette. Unchecked, checked, mixed, keyboard-focused and disabled states remain clear without changing selection behavior."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-selection-checkbox-theme-unification.png",
+        "alt": {
+          "tr": "Buyer Log tablo seçim kutuları, Light Grey ve Dark temalarda",
+          "en": "Buyer Log table selection checkboxes in Light, Grey and Dark themes"
+        },
+        "caption": {
+          "tr": "Sade ve temayla uyumlu seçim kutuları",
+          "en": "Clean selection controls matching each theme"
+        }
+      }
+    },
+    {
       "id": "thinking-orbs-loading-restored",
       "type": "fix",
       "module": {
