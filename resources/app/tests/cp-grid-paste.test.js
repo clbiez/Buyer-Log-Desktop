@@ -266,3 +266,18 @@ test('not düzenleyicisinde çok satırlı veya sekmeli metin doğal şekilde ya
     assert.deepEqual(h.applied, []);
   } finally { h.restore(); }
 });
+
+
+test('önizleme sırasında daha yeni seçimi, asenkron yapıştırma yanıtı ezmez', async () => {
+  let finish;
+  const deferred = new Promise(resolve => { finish = resolve; });
+  const h = loadGridWithDocument({ applyResult: deferred });
+  try {
+    h.grid.restoreActive('cpTable', { rowId: '2', columnId: 'b' });
+    h.paste(h.table, 'X\\nY'.replace('\\n', '\n'));
+    h.grid.restoreActive('cpTable', { rowId: '4', columnId: 'a' });
+    finish({ ok: true });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(h.grid.state('cpTable').selectionFocus, { rowId: '4', columnId: 'a' });
+  } finally { h.restore(); }
+});
