@@ -3655,6 +3655,8 @@ const CP_COLS = [
   {k:'Ant. Arrival', label:'Ant. Arrival', type:'date', weight:8, group:'Lojistik'},
   {k:'Notes', label:'Notes', type:'text', weight:16, group:'Notlar'},
   {k:'Ek Not', label:'Ek Notlar', type:'text', weight:16, group:'Notlar'},
+  // Private account data: never becomes an ASAS field or shared override.
+  {k:'__personalOrderNote', label:'Kişisel Not', labelTr:'Kişisel Not', labelEn:'Private Note', type:'privateNote', weight:16, group:'Notlar', privatePersonal:true},
 ];
 const ORDERS_STATUS_COL = {k:'Active/Inactive', label:'Order Status', type:'active', weight:8, group:'Sipariş Detayları'};
 // Orders, CP sütunlarının kopyasıdır; Sipariş Durumu Sipariş Detayları'nın başında durur.
@@ -4111,8 +4113,8 @@ function visibleCols(tableKey){
    v10.34 davranışındaki Focus ve All korunur; Extended aynı editor/persistence
    zincirini kullanarak üçüncü bağımsız ve kullanıcıya özel preset olur. */
 const TABLE_VIEW_PRESETS = Object.freeze({
-  cp:Object.freeze({focus:Object.freeze(['__picture','Priority','Buyer','Manufacturer','Sub-Manufacturer','License','Category','PLM ID','Model Name','Order Code','FOB ($)','Ex-factory','HANDOVER Tarihi','Order Quantity','Remaining Units','%','STATUS'])}),
-  orders:Object.freeze({focus:Object.freeze(['__picture','Priority','Buyer','Manufacturer','License','Category','PLM ID','Model Name','Order Code','FOB ($)','Ex-factory','HANDOVER Tarihi','Order Quantity','Remaining Units','%','STATUS'])}),
+  cp:Object.freeze({focus:Object.freeze(['__picture','Priority','Buyer','Manufacturer','Sub-Manufacturer','License','Category','PLM ID','Model Name','Order Code','FOB ($)','Ex-factory','HANDOVER Tarihi','Order Quantity','Remaining Units','%','STATUS','__personalOrderNote'])}),
+  orders:Object.freeze({focus:Object.freeze(['__picture','Priority','Buyer','Manufacturer','License','Category','PLM ID','Model Name','Order Code','FOB ($)','Ex-factory','HANDOVER Tarihi','Order Quantity','Remaining Units','%','STATUS','__personalOrderNote'])}),
   koleksiyon:Object.freeze({focus:Object.freeze(['__picture__','plmId','modelKod','lisans','urunTipi','specialCode','line','colourCode','colour','fabric','fit','quantity','exFactory','targetPrice','__bestPrice__','__confirmedName__','__confirmedPrice__','durum','not'])}),
 });
 const TABLE_VIEW_FOCUS_KEY = 'lcw.tableViewFocus.v1';
@@ -4773,7 +4775,7 @@ function defaultMinPx(c, tableKey){
   // Böylece sütun başlığı hiçbir dilde okunamaz hâle gelecek kadar daraltılamaz.
   const readableHeaderPx=tableHeaderTextWidth(label)+54;
   const typeMin=tableKey==='ship'?44:(byType[c.type]||44);
-  if(c.k==='Notes' || c.k==='Ek Not') return Math.max(220,readableHeaderPx);
+  if(c.k==='Notes' || c.k==='Ek Not' || c.k==='__personalOrderNote') return Math.max(220,readableHeaderPx);
   return Math.max(typeMin,readableHeaderPx);
 }
 function colWidthPx(tableKey, c){
@@ -5075,7 +5077,8 @@ const CP_EN_HEADER_LABELS = {
   'Del. Type':'Del. Type',
   'Importance':'Importance',
   'Notes':'Notes',
-  'Ek Not':'Notes 2'
+  'Ek Not':'Notes 2',
+  '__personalOrderNote':'Private Note'
 };
 
 // CP sütunlarının Türkçe görünümde kullanılacak onaylı başlıkları.
@@ -5129,7 +5132,8 @@ const CP_TR_HEADER_LABELS = {
   'Ant. Arrival':'Antrepo Varış',
   'Del. Type':'Yükleme Tipi',
   'Notes':'Notlar',
-  'Ek Not':'Ek Notlar'
+  'Ek Not':'Ek Notlar',
+  '__personalOrderNote':'Kişisel Not'
 };
 /* Sütunun kullanıcı adı verilmemiş (sistem / ortak tanım) etiketi. Sonradan
    eklenen DB, not ve hesaplanan sütunlar ortak tanımdaki labelEn/labelTr'yi
@@ -5784,6 +5788,7 @@ function cpSubManufacturerValue(r){
 /* tableKey: hücreyi çizen tablonun kimliği. Lojistik STATUS hücresi açılır
    satır durumunu tablo bazında okur; diğer dallar bu parametreden etkilenmez. */
 function cellHtml(c,r,cf,tableKey='cp'){
+  if(c.type==='privateNote')return window.BLPrivateOrderNotes.cellHtml(r,lineKeyOfRow(r),appLang);
   const v = r[c.k];
   const oc = r['Order Code'];
   const id = r._id;

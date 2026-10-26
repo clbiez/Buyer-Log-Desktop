@@ -82,6 +82,7 @@ const WORKSPACE_CATEGORIES = Object.freeze(Object.keys(WORKSPACE_CATEGORY_PREFIX
 // anahtarları kullanıcı değiştirince sunucudan hydrate edilir; bu depo tek
 // source of truth'tur, localStorage yalnız çevrimdışı/başlangıç önbelleğidir.
 const SYNCED_PREFIXES = Object.freeze([
+  'bl.privateOrderNotes.v1.', // Per-user, per-line CP/Orders annotations; never profile copied
   'lcw.todo.',            // Not Defteri — asıl istek
   'lcw.notifications.',   // kullanıcının bildirim geçmişi
   'lcw.mailTemplates.',   // mail şablonları
