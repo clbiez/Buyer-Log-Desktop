@@ -290,6 +290,9 @@ async function calculate(session, id) {
       pricingRevision: state.storeRevisions.pricingRules,
       fx: BLFX.store,
       drawer: document.querySelector(".cpdDrawer").innerText,
+      displayedWaterfall: [...document.querySelectorAll('.cpdWaterfall>div')].map(node=>({label:node.querySelector('h5')?.textContent,total:node.querySelector('.isTotal b')?.textContent})),
+      displayedLineage: [...document.querySelectorAll('.cpdLineage dl>div')].map(node=>({label:node.querySelector('dt')?.textContent,value:node.querySelector('dd')?.textContent})),
+      displayLanguage: appLang,
     };
   }, id);
   await p.evaluate(() => BLCollectionPriceDrawer.close());
