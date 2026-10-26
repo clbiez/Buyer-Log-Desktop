@@ -14952,3 +14952,38 @@ html[data-ui-system="manifest"] [data-ui-migrated] .lcCheck input[type="checkbox
   opacity:.45;
   cursor:default;
 }
+
+/* Shared visual states for compact view and price pickers. */
+html[data-ui-system="manifest"] .blViewPicker .blViewPickerTrigger{
+  font-weight:600;color:var(--ui-text);background:var(--ui-surface-soft);
+  border:0;border-radius:var(--ui-radius);
+}
+html[data-ui-system="manifest"] .blViewPicker .blViewPickerTrigger:hover,
+html[data-ui-system="manifest"] .blViewPicker.isOpen .blViewPickerTrigger{
+  background:var(--ui-selected);
+}
+html[data-ui-system="manifest"] .blViewPicker .blViewPickerTrigger:focus-visible,
+html[data-ui-system="manifest"] .blViewPickerMenu button:focus-visible{
+  outline:2px solid var(--ui-accent);outline-offset:2px;
+}
+html[data-ui-system="manifest"] .blViewPicker .blViewPickerChevron{
+  transition:transform var(--ui-motion-fast) var(--ui-ease);
+}
+html[data-ui-system="manifest"] .blViewPickerMenu{
+  z-index:var(--ui-z-popover);border:0;border-radius:var(--ui-radius);
+  background:var(--ui-surface);box-shadow:var(--ui-shadow-overlay);
+}
+html[data-ui-system="manifest"] .blViewPickerMenu .tableViewPreset{
+  color:var(--ui-text);background:transparent;border:0;border-radius:var(--ui-radius);
+}
+html[data-ui-system="manifest"] .blViewPickerMenu .tableViewPreset:hover{background:var(--ui-row-hover);}
+html[data-ui-system="manifest"] .blViewPickerMenu .tableViewPreset[aria-pressed="true"]{
+  color:var(--ui-selected-ink);background:var(--ui-selected);font-weight:650;
+}
+html[data-ui-system="manifest"] .blViewPickerMenu .tableViewPreset[aria-pressed="true"]::after{
+  color:var(--ui-accent);
+}
+html[data-ui-system="manifest"] .blViewPriceIcon{color:var(--ui-accent);}
+html[data-ui-system="manifest"] #kolAllVariantsToggle{
+  font-size:var(--ui-font-xs);font-weight:600;
+}
