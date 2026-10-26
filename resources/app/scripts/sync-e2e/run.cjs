@@ -885,6 +885,7 @@ async function reconcile() {
       seed,
       seconds,
       diagnostics: Boolean(args.diagnostics),
+      traceMode: args["trace-mode"] || "events",
       cpuProfilerUserIndex: args.diagnostics ? 1 : null,
       environment: {
         node: process.version,
@@ -950,7 +951,7 @@ async function reconcile() {
         );
       const server = runtime.servers[index];
       const s = await B.open(browser, server, account, runtime.manifest.owner, {
-        trace: account.index === 0,
+        trace: account.index === 0 ? (args['trace-mode'] || 'events') : false,
       });
       s.cookie = await B.cookie(s);
       if(args.diagnostics){s.debugDiagnostic=await s.context.newCDPSession(s.page);await s.debugDiagnostic.send('Debugger.enable');if(account.index===1){s.cpuDiagnostic=s.debugDiagnostic;await s.cpuDiagnostic.send('Profiler.enable');await s.cpuDiagnostic.send('Profiler.setSamplingInterval',{interval:10000});await s.cpuDiagnostic.send('Profiler.start');}}

@@ -46,8 +46,8 @@ async function open(
     }));
   if (trace)
     await context.tracing.start({
-      screenshots: true,
-      snapshots: true,
+      screenshots: trace !== 'events',
+      snapshots: trace !== 'events',
       sources: false,
     });
   const result = await context.request.post(server.base + "/api/user-login", {
