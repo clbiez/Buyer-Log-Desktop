@@ -82,11 +82,11 @@ test('no action animation with reduced motion, hidden tab, or opt-out',()=>{
   }
 });
 test('control feedback keeps finite timings, theme tokens and no independent keyframe loop',()=>{
-  const script=read('motion-plus.js'),css=read('ui-motion.css');
+  const script=read('motion-plus.js'),css=read('ui-motion.css'),components=read('app.css');
   assert.match(script,/REFRESH_CONTROLS/);
   assert.match(script,/SYNC_CONTROLS/);
   assert.match(script,/syncStatusBadge','is-syncing','sync'/);
-  assert.match(css,/syncStatusBadge\.is-syncing\{color:var\(--ui-accent\)/);
+  assert.match(components,/syncStatusBadge\.is-syncing\{color:var\(--ui-accent\)/);
   assert.doesNotMatch(script,/setInterval\(|iterations\s*:\s*Infinity/);
   assert.doesNotMatch(css,/animation:[^;]*infinite/);
 });
