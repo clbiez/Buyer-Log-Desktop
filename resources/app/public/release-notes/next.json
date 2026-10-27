@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-27",
   "bootstrapVisual": false,
   "title": {
     "tr": "Klasik tablo ve modül görünümünün geri dönüşü",
     "en": "Restore classic table and module presentation"
   },
   "summary": {
-    "tr": "7.0.294 tablo hiyerarşisi, kontrol kenarlıkları, satır seçim işaretleri ve Intake/OAB tablo önceliği geri getirildi.",
-    "en": "Restores 7.0.294 table hierarchy, control borders, row selection cues and table-first Intake/OAB."
+    "tr": "7.0.294 tablo hiyerarşisi, kontrol kenarlıkları, satır seçim işaretleri ve Intake/OAB tablo önceliği geri getirildi. Buyer Log açılışta hemen bilgi verir; Koleksiyon, CP ve Siparişler arka planda hazırlanır ve sekme geçişlerinde açık kalır.",
+    "en": "Restores 7.0.294 table hierarchy, control borders, row selection cues and table-first Intake/OAB. Buyer Log provides early launch feedback; Collection, CP and Orders prepare in the background and remain open across tab switches."
   },
   "changes": [
     {
@@ -95,6 +95,64 @@
         "caption": {
           "tr": "Başlangıçta tablo, hatada görünür Intake",
           "en": "Tables by default and visible Intake on errors"
+        }
+      }
+    },
+    {
+      "id": "early-launch-feedback",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Buyer Log açılıyor bildirimi daha erken görünür",
+        "en": "The opening notice appears earlier"
+      },
+      "body": {
+        "tr": "Açılış bildirimi, Electron hazır olduğunda ağır bütünlük kontrollerinden önce gösterilir. Normal açılıştaki ikinci dosya taraması ve boş checklist/görev listeleri için gereksiz sipariş hesaplamaları kaldırıldı. Bütünlük ve güncel veri erişimi denetimleri korunur.",
+        "en": "The opening notice appears as soon as Electron is ready, before expensive integrity checks. The duplicate file scan on ordinary launches and unnecessary order calculations for empty checklist/task lists were removed. Integrity and current data access checks remain in place."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "early-launch-notice.png",
+        "alt": {
+          "tr": "Gerçek Electron açılış penceresindeki Türkçe ve İngilizce Buyer Log açılıyor bildirimi",
+          "en": "The Turkish and English opening notice in the real Electron launch window"
+        },
+        "caption": {
+          "tr": "Bildirim, uygulama çekirdeği yüklenmeden önce gösterilir.",
+          "en": "The notice appears before the application core loads."
+        }
+      }
+    },
+    {
+      "id": "persistent-startup-module-tabs",
+      "type": "improvement",
+      "module": {
+        "tr": "Çalışma alanı",
+        "en": "Workspace"
+      },
+      "title": {
+        "tr": "Koleksiyon, CP ve Siparişler açılışta hazırlanır",
+        "en": "Collection, CP and Orders prepare at startup"
+      },
+      "body": {
+        "tr": "Erişim yetkisi olan üç modül, odağı değiştirmeden sırayla ayrı sekmelerde yüklenir. Sekme değiştirildiğinde aynı ekran, filtreler ve kaydırma konumu korunur. Arka plan sekmeleri hedef modülü doğrudan açar; gereksiz Genel Bakış yükü başlatmaz.",
+        "en": "The three authorized modules load sequentially in separate tabs without changing focus. Switching tabs preserves the same screen, filters and scroll position. Background tabs open their target module directly, avoiding unnecessary Overview work."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-orders-ready.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Siparişler ekranında yüklenmiş 30.000 demo satır",
+          "en": "30,000 loaded demo rows in the real Buyer Log Orders screen"
+        },
+        "caption": {
+          "tr": "Başlangıçta hazırlanan Siparişler verisinin yalnız ilk 50 satırı çizilir.",
+          "en": "Only the first 50 rows of the Orders data prepared at startup are rendered."
         }
       }
     }

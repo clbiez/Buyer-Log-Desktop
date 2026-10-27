@@ -36,13 +36,13 @@ const confirmLauncher=()=>{try{if(typeof host.confirm==='function')host.confirm(
  * userData (data\electron-profile) üzerinden alınır; main.js'teki ikinci çağrı
  * aynı süreçte zaten tutulan kilidi döndürür. */
 function acquireLaunchLock(){
-  if(!app.isPackaged)return true;
   try{
-    const paths=desktopPaths(resolvePortableRoot({packaged:true,execPath:process.execPath}));
+    const paths=desktopPaths(PORTABLE_ROOT);
     fs.mkdirSync(paths.electronProfileRoot,{recursive:true});
     app.setPath('userData',paths.electronProfileRoot);
+    app.setPath('sessionData',paths.electronProfileRoot);
   }catch(error){log('launch-lock-path-failed',{message:String(error&&error.message||error).slice(0,200)});return true;}
-  return app.requestSingleInstanceLock();
+  return !app.isPackaged||app.requestSingleInstanceLock();
 }
 const primaryInstance=acquireLaunchLock();
 if(!primaryInstance){
@@ -51,6 +51,40 @@ if(!primaryInstance){
   confirmLauncher();
   app.exit(0);
 }else{
+// Paint a trusted, self-contained notice before disk-wide integrity checks.
+// No application HTML or script is loaded before its integrity is verified.
+async function showLaunchNotice(){
+  const {BrowserWindow}=require('electron');
+  await app.whenReady();
+  const notice=new BrowserWindow({width:420,height:240,center:true,show:false,frame:false,
+    resizable:false,minimizable:false,maximizable:false,fullscreenable:false,
+    backgroundColor:'#f8f8f9',title:'Buyer Log açılıyor… / Buyer Log is opening…',
+    webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true}});
+  global.__buyerLogLaunchNotice=notice;
+  // Older/rolled-back cores do not know the hand-off global. Close the notice
+  // when their own splash, error or main window becomes visible as well.
+  const handOff=(_event,window)=>{
+    if(window===notice)return;
+    window.once('show',()=>{if(!notice.isDestroyed())notice.destroy();});
+  };
+  app.on('browser-window-created',handOff);
+  notice.once('closed',()=>{
+    app.removeListener('browser-window-created',handOff);
+    if(global.__buyerLogLaunchNotice===notice)delete global.__buyerLogLaunchNotice;
+  });
+  const html=`<!doctype html><html lang="tr"><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>Buyer Log</title><style>html,body{height:100%;margin:0}body{box-sizing:border-box;border:1px solid #d4d4d7;background:#f8f8f9;color:#1d1f20;font-family:system-ui,Segoe UI,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;-webkit-app-region:drag}strong{font-size:30px;font-weight:600}p{margin:0;font-size:14px;color:#5d5d60}</style><body><strong>Buyer Log</strong><p role="status">Buyer Log açılıyor…</p><p lang="en">Buyer Log is opening…</p></body></html>`;
+  let timer;
+  try{await new Promise((resolve,reject)=>{
+    timer=setTimeout(()=>reject(new Error('Launch notice timeout')),3000);
+    notice.once('ready-to-show',()=>{notice.show();setImmediate(resolve);});
+    notice.once('closed',()=>reject(new Error('Launch notice closed')));
+    notice.webContents.once('did-fail-load',(_event,code,description)=>reject(new Error('Launch notice: '+code+' '+description)));
+    notice.loadURL('data:text/html;charset=utf-8,'+encodeURIComponent(html)).catch(reject);
+  });}catch(error){if(!notice.isDestroyed())notice.destroy();throw error;}
+  finally{clearTimeout(timer);}
+  log('launch-notice-visible');
+}
+function launchCore(){
 const lifecycle=createLauncherState({bootstrapCore:BOOTSTRAP_CORE,portableRoot:PORTABLE_ROOT});
 const recovered=app.isPackaged?lifecycle.rollbackExistingTrial():null;
 if(recovered)log('rollback-on-next-launch',{failedVersion:recovered.failed.version,restoredVersion:recovered.restored.version});
@@ -59,9 +93,11 @@ if(recovered)log('rollback-on-next-launch',{failedVersion:recovered.failed.versi
 const patchManager=app.isPackaged?require('./manual-patch/manager').createInstalledManager({bootstrapCore:BOOTSTRAP_CORE,trustRoot:LAUNCHER_ROOT,portableRoot:PORTABLE_ROOT}):null;
 function verifySelected(selected){
   if(!app.isPackaged)return;
+  const started=Date.now();
   const relative=path.relative(path.join(PORTABLE_ROOT,'.buyerlog-versions'),selected.appCoreRoot);
   if(relative.split(path.sep)[0].startsWith('manual-'))patchManager.verifyInstalled(selected);
   else require('./manual-patch/core-verification').verifyPackagedCore(selected.appCoreRoot,selected.version);
+  log('core-verified',{version:selected.version,durationMs:Date.now()-started});
 }
 /* Bekleyen çekirdek bu launcher'dan daha yeni bir etkinleştirme protokolü
  * isterse deneme başlatılmaz; updater önce uygun launcher'ı kurar. */
@@ -76,6 +112,9 @@ function pendingNeedsNewerLauncher(pending){
 if(app.isPackaged){
   const pending=lifecycle.readState().pending;
   if(pending?.ready){
+    // Before a real activation, validate the rollback target as well. Normal
+    // launches validate the final selected core once, below.
+    verifySelected(lifecycle.currentPointer());
     if(pending.manualPatch)patchManager.verifyStaged(pending);
     else require('./manual-patch/core-verification').verifyPackagedCore(pending.appCoreRoot,pending.version);
     const required=pendingNeedsNewerLauncher(pending);
@@ -84,7 +123,6 @@ if(app.isPackaged){
       log('activation-deferred-launcher-too-old',{version:pending.version,required});
     }
   }
-  verifySelected(lifecycle.currentPointer());
 }
 const activationResult=app.isPackaged?lifecycle.activatePending():null;
 const activation=activationResult&&activationResult.activation||null;
@@ -128,6 +166,12 @@ try{
   if(activation){lifecycle.requestRollback(activation,'main-load-failed');log('rollback-requested',{failedVersion:activation.version,reason:'main-load-failed'});try{app.relaunch();}catch(_){};app.quit();}
   else throw error;
 }
+}
+void showLaunchNotice().catch(error=>log('launch-notice-failed',{message:String(error.message||error)})).then(launchCore).catch(error=>{
+  if(/^(UPDATE|PATCH)_/.test(String(error&&error.code||'')))confirmLauncher();
+  log('launcher-start-failed',{code:error&&error.code||'',message:String(error.message||error)});
+  try{dialog.showErrorBox('Buyer Log',String(error.message||error));}finally{app.exit(1);}
+});
 }
 }
 module.exports={start,UPDATER_VERSION,LAUNCHER_ROOT,LAUNCHER_INFO};

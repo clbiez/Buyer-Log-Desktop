@@ -16608,11 +16608,21 @@ async function refreshSyncStatusBadge(){
 // widgets, off-screen modules, images and Excel engines remain on demand.
 async function waitForStartupPrimaryScreen(){
   const tab=currentActiveTab();
+  if(tab==='koleksiyon'){
+    await ensureInitialKolWorkspace();
+    return ensureCollectionCatalogLoaded({deferRender:true});
+  }
   if(tab==='overview'&&state.overviewDeferred)return ensureOverviewLoaded();
   if(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false)return true;
   if(tab==='cp'&&!state.cp)return ensureCpLoaded();
   if(tab==='orders'&&!state.orders)return ensureOrdersLoaded();
   return true;
+}
+function scheduleStartupScreenReady(callback){
+  // An unattached native View can report visible yet receive no animation
+  // frames. Its data/DOM is already prepared; acknowledge it on the next task.
+  if(new URLSearchParams(location.search).get('startupWarm')==='1')return setTimeout(callback,0);
+  requestAnimationFrame(()=>requestAnimationFrame(callback));
 }
 window.addEventListener('DOMContentLoaded', async () => {
   window.BLPerf?.mark?.('DOM_CREATION_READY');
@@ -16639,12 +16649,21 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   const primaryScreenReady=initialDataLoaded&&await waitForStartupPrimaryScreen();
   if(!primaryScreenReady)window.BLBootGuard?.fail('initial-screen-failed');
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  scheduleStartupScreenReady(()=>{
     window.BLPerf?.mark?.('UI_READY');
     if(primaryScreenReady)window.BLBootGuard?.ready('ui');
     window.BLPerf?.record?.('firstUsableInteractionMs',performance.now()-(window.BLPerf?.origin?.()||performance.now()));
     signalStartupReady();
     window.dispatchEvent(new CustomEvent('bl:primary-screen-ready'));
+    // Native startup tabs keep independent filters, editors and scroll state.
+    // Access is resolved before preloading; each tab still uses server auth.
+    if(primaryScreenReady||new URLSearchParams(location.search).get('startupWarm')==='1'){
+      const desktopStartup=window.buyerLogDesktop?.workspace?.startupReady;
+      if(desktopStartup)void window.BLPerf._loadScript('user-access-ui.js?rev=APP-UPDATE-V3').then(()=>{
+        const modules=['koleksiyon','cp','orders'].filter(module=>window.BLCanAccessArea?.(module)===true);
+        return desktopStartup(modules);
+      }).catch(error=>console.warn('Startup tabs:',error));
+    }
     schedulePostUiStartupTasks();
     if(currentActiveTab()==='overview')void ensureOverviewCpDependency();
     if(state.overviewDeferred&&currentActiveTab()==='overview')void ensureOverviewLoaded();
@@ -16653,7 +16672,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       void loadPlmStyleLinks({rerender:false});
       if(!_favoritesAppliedPages.has(currentActiveTab()))void applyFavoritesOnStartup().catch(err=>console.warn('Başlangıç favorileri uygulanamadı:',err));
     },{timeout:900});
-  }));
+  });
 });
 
 async function refreshFolderLabel(){
@@ -37788,7 +37807,12 @@ document.getElementById('kolSendPricingBtn')?.addEventListener('click', async ()
 });
 loadKolRows();
 scheduleOverviewCollectionSummaryRender();
-setTimeout(()=>void initKolWorkspaces(),0);
+let kolInitialWorkspacePromise=null;
+function ensureInitialKolWorkspace(){
+  if(!kolInitialWorkspacePromise)kolInitialWorkspacePromise=initKolWorkspaces();
+  return kolInitialWorkspacePromise;
+}
+setTimeout(()=>void ensureInitialKolWorkspace(),0);
 
 /* ===================================================================
    v6.44 — CANLI SENKRONİZASYON (istemci tarafı)

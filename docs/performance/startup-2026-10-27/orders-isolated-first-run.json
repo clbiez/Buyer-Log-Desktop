@@ -1,0 +1,240 @@
+{
+  "backendStartupMs": 1527.5387919999998,
+  "measurements": [
+    {
+      "module": "orders",
+      "readyAtMs": 11795,
+      "rows": 30000,
+      "domRows": 50,
+      "longTaskTotalMs": 8716,
+      "maxLongTaskMs": 2956,
+      "resources": [
+        {
+          "path": "/api/data",
+          "ms": 417.80000000004657,
+          "decodedBytes": 11286,
+          "encodedBytes": 3586
+        }
+      ],
+      "timeline": [
+        {
+          "name": "APP_BOOT_START",
+          "atMs": 876.6999999999534,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOT_START",
+          "atMs": 877.8999999999069,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_START",
+          "atMs": 877.8999999999069,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_START",
+          "atMs": 879.0999999998603,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY",
+          "atMs": 1248.1999999999534,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_XLSX_DEFERRED",
+          "atMs": 1303.5,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_CORE_RESOURCES_READY",
+          "atMs": 1317.5999999998603,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_START",
+          "atMs": 3530.2999999998137,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_START",
+          "atMs": 3530.6999999999534,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_CONFIG_READY",
+          "atMs": 3679.6999999999534,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_READY",
+          "atMs": 4040.0999999998603,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_UI_SHELL_READY",
+          "atMs": 4075.5999999998603,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_READY",
+          "atMs": 4075.5999999998603,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_READY",
+          "atMs": 4075.6999999999534,
+          "detail": null
+        },
+        {
+          "name": "DOM_CREATION_READY",
+          "atMs": 4122.299999999814,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_START",
+          "atMs": 4129.299999999814,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_DB_READY",
+          "atMs": 4554.899999999907,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_READY",
+          "atMs": 4560.699999999953,
+          "detail": {
+            "pageCache": {
+              "hit": false,
+              "readMs": 0,
+              "generation": null
+            },
+            "durationMs": 431.4000000001397
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_START",
+          "atMs": 4560.699999999953,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 4561.799999999814,
+          "detail": {
+            "reason": "server-transit-rules-hydrated",
+            "revision": 2
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 4564.799999999814,
+          "detail": {
+            "reason": "server-cp-deferred",
+            "revision": 3
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_READY",
+          "atMs": 4565.199999999953,
+          "detail": {
+            "durationMs": 4.5
+          }
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_START",
+          "atMs": 4565.199999999953,
+          "detail": null
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_READY",
+          "atMs": 4565.299999999814,
+          "detail": {
+            "durationMs": 0.09999999986030161
+          }
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_START",
+          "atMs": 4565.399999999907,
+          "detail": null
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_READY",
+          "atMs": 4565.399999999907,
+          "detail": {
+            "mode": "lazy",
+            "durationMs": 0
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_START",
+          "atMs": 4565.399999999907,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_START",
+          "atMs": 4565.399999999907,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_READY",
+          "atMs": 4566.699999999953,
+          "detail": {
+            "module": "orders",
+            "durationMs": 1.3000000000465661
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_READY",
+          "atMs": 4566.799999999814,
+          "detail": {
+            "module": "orders",
+            "durationMs": 1.3999999999068677
+          }
+        },
+        {
+          "name": "UI_FIRST_RENDER",
+          "atMs": 4566.799999999814,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 8640.199999999953,
+          "detail": {
+            "reason": "orders-projection-loaded",
+            "revision": 4
+          }
+        },
+        {
+          "name": "UI_READY",
+          "atMs": 11081.59999999986,
+          "detail": null
+        },
+        {
+          "name": "AUTH_USER_LOAD_START",
+          "atMs": 11136.59999999986,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "EXCEL_ENGINE_LOAD_START",
+          "atMs": 11136.699999999953,
+          "detail": {
+            "mode": "after-ui"
+          }
+        }
+      ],
+      "retainedJsHeapBytes": 76337680,
+      "dom": {
+        "documents": 2,
+        "nodes": 34246,
+        "jsEventListeners": 3972
+      },
+      "elapsedMs": 12060.951948000002,
+      "rendererRssBytes": 651878400,
+      "errors": []
+    }
+  ]
+}
