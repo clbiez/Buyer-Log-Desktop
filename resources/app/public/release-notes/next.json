@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-25",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon eşzamanlı kayıt ve paylaşım güvenilirliği",
+    "en": "Reliable concurrent Collection saves and sharing"
   },
   "summary": {
     "tr": "Koleksiyon kayıtları eşzamanlı silme, yetki iptali, geciken yenileme ve çevrimdışı taslak geri yükleme sırasında korunur.",
@@ -530,6 +530,35 @@
         "caption": {
           "tr": "Eski otomatik alanlar geldiğinde editör yerinde kalır; çekmece güncel kuralla 5,93 gösterir.",
           "en": "The editor stays attached when older automatic fields arrive; the drawer shows 5.93 using the current rule."
+        }
+      }
+    },
+    {
+      "id": "collection-private-live-events",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Özel çalışma alanlarının canlı bildirimleri yetkiyle süzülür",
+        "en": "Live notifications for private workspaces respect access"
+      },
+      "body": {
+        "tr": "Yapısal Koleksiyon değişiklikleri ve izin güncellemeleri yalnız ilgili oturumlara bildirilir. Erişim kaldırıldığında açık oturum yeni veri olayları almaz; izin listesini yenileyen iptal bildirimi ilgili kullanıcıya ulaşır.",
+        "en": "Structural Collection changes and permission updates notify only relevant sessions. After access is removed, an open session receives no further data events; its permission invalidation still arrives so it can refresh the workspace list."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-private-live-events.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: özel sentetik çalışma alanının yetkili sahibinde açık Koleksiyon ekranı",
+          "en": "Real Buyer Log: the authorized owner viewing a private synthetic Collection workspace"
+        },
+        "caption": {
+          "tr": "Sahibin erişimi korunur. Yetkisiz SSE tesliminin engellendiği ayrı ham akış kayıtlarıyla doğrulandı.",
+          "en": "Owner access remains available. Separate raw stream evidence verifies that unauthorized SSE delivery is blocked."
         }
       }
     }

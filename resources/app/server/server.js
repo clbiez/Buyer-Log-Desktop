@@ -9696,6 +9696,18 @@ function liveEventCanSeeOrder(profile, orderCode, precomputed = null) {
   if (!rows.length) return false; // otorite bilmiyorsa gönderme
   return userAccess.filterRowsByScope(profile, rows).length > 0;
 }
+liveEvents.setReloadAuthorizer((entry, event, meta) => {
+  const profile = entry && entry.req ? userAccess.sessionProfile(entry.req) : null;
+  if (!profile) return false;
+  if (event.area === 'collection' || event.area === 'collection-permissions') {
+    const ownerId = String(event.ownerId || '');
+    if (!ownerId) return false;
+    // A revoked recipient must still refresh its workspace list to drop access.
+    if (event.area === 'collection-permissions' && String(profile.id) === String(meta && meta.granteeId || '')) return true;
+    return Boolean(userAccess.collectionAccessLevel(profile, ownerId));
+  }
+  return true;
+});
 liveEvents.setPatchAuthorizer((entry, rowPatches, event) => {
   if (!Array.isArray(rowPatches) || !rowPatches.length) return [];
   let profile = null;
