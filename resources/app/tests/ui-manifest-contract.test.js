@@ -51,7 +51,7 @@ test('Manifest has one token source; migrated owners never consume legacy appear
 // Restored 7.0.294 affordances are owned exclusively by the shared Manifest
 // stylesheet. Scope/values are deliberately enumerated: module CSS may not
 // create independent borders, outlines or shadows.
-const classicSelector = value => value.replace(/html\\[data-ui-system="manifest"\\] /g,'').replace(/\\s+/g,' ').trim();
+const classicSelector = value => value.replace(/html\[data-ui-system="manifest"\] /g,'').replace(/\s+/g,' ').trim();
 const classicFrame = d => {
  if(d.file!=='ui-components.css')return false;
  const selector=classicSelector(d.selector);
@@ -72,7 +72,7 @@ const classicFrame = d => {
  return prefixes.some(prefix=>selector.startsWith(prefix));
 };
 const classicRowStripe = d => d.file==='ui-components.css'
- && /\\.tablewrap tbody tr(?:\\.rowDirty|:has\\(|\\[aria-selected=)/.test(d.selector)
+ && /\.tablewrap tbody tr(?:\.rowDirty|:has\(|\[aria-selected=)/.test(d.selector)
  && d.prop==='box-shadow'
  && ['inset 3px 0 0 var(--ui-accent)','inset 3px 0 0 var(--ui-warning)'].includes(d.value);
 const classicBorder = d => classicFrame(d) && ({
