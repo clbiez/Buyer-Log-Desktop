@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "67929bb45ed8714b0b8b68e131c296540c787309",
-  "release_notes": "TR: Buyer Log 7.0.311 — 7.0.300 sonrası Motion+ ve Thinking Orbs, kişisel CP/Sipariş notları, çoklu hücre kopyala/yapıştır, Koleksiyon/tablo/güncelleyici iyileştirmeleri, kalıcı PLM görselleri ve dışa aktarma iyileştirmeleri. Chromium görsel dönüş kabulü uygulanır; eksik veya geç yüklenen görseller uyarı olarak raporlanır ve sürüm yayınını engellemez. Windows tam regresyonu ve imza doğrulaması zorunludur.\nEN: Buyer Log 7.0.311 — post-7.0.300 Motion+ and Thinking Orbs, private CP/Orders notes, multi-cell copy/paste, Collection/table/updater enhancements, persistent PLM images and image-aware exports. Chromium image-return acceptance still runs; missing or late images are reported as warnings and do not block release. Windows full regression and cryptographic verification remain mandatory.",
-  "request_id": "7.0.311-image-advisory-stable-gates-20261027"
+  "commit_sha": "e41af4472299bc8042de90fe083a8edc48ff1036",
+  "release_notes": "TR: Buyer Log TEST 7.0.315 — Klasik tablo çizgileri, seçim işaretleri, Intake/OAB tablo varsayılanı, erken açılış bildirimi ve kalıcı Koleksiyon/CP/Siparişler sekmeleri. Önceki TEST 7.0.314 Windows başlatıcı regresyonunda kullanılan Electron test taklidi düzeltildi. Gerçek Chromium görsel dönüş kabulü çalışır; eksik görseller uyarıdır. Windows regresyonu, Ed25519 imzası ve SHA doğrulamaları zorunludur.\nEN: Buyer Log TEST 7.0.315 — Classic table borders and selection cues, table-first Intake/OAB, earlier launch notice and persistent Collection/CP/Orders tabs. Fixes the Electron test harness that blocked TEST 7.0.314 launcher integrity regression. Real Chromium image-return acceptance still runs, with missing images advisory. Full Windows regression, Ed25519 signing and SHA verification remain mandatory.",
+  "request_id": "7.0.315-resume-blocked-regression-20261027"
 }
