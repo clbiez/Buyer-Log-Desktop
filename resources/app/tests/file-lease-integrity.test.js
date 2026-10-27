@@ -110,3 +110,28 @@ test('fenced native database mutators cannot expose uncommitted cached state',as
  await assert.rejects(db.transaction(async state=>{state.migrations={stale:true};const ownerFile=path.join(file+'.write-lock','owner.json'),owner=JSON.parse(fs.readFileSync(ownerFile,'utf8'));fs.writeFileSync(ownerFile,JSON.stringify({...owner,token:'synthetic-successor'}));}),{code:'SHARED_LEASE_LOST'});
  assert.equal((await db.read()).migrations?.stale,undefined,'failed mutator reloads durable state rather than returning its dirty cache');
 });
+
+for(const code of ['EPERM','EACCES','EBUSY'])test('transient retirement-marker '+code+' is retried without losing the fenced write',async()=>{
+ const file=target();seed(file,{pid:2147483647});const original=metadataFs.access;let denied=false,entered=0;
+ metadataFs.access=async function(candidate,...args){if(!denied&&String(candidate).startsWith(file+'.write-lock')&&path.basename(candidate).startsWith('.retired-owner-')){denied=true;throw Object.assign(Error('synthetic transient Windows metadata denial'),{code});}return original.call(this,candidate,...args);};
+ try{await lease.withFileLeaseAsync(file,async token=>{entered++;await token.assertOwnedAsync();await metadataFs.writeFile(file,'1');},{timeoutMs:1000,logger:()=>{}});}finally{metadataFs.access=original;}
+ assert.equal(denied,true);assert.equal(entered,1);assert.equal(fs.readFileSync(file,'utf8'),'1');assert.equal(fs.existsSync(file+'.write-lock'),false);
+});
+test('transient retirement-marker denial does not authorize takeover of a live owner',async()=>{
+ const file=target();seed(file);const ownerFile=path.join(file+'.write-lock','owner.json'),before=fs.readFileSync(ownerFile,'utf8'),original=metadataFs.access;let denied=false,entered=false;
+ metadataFs.access=async function(candidate,...args){if(!denied&&String(candidate).startsWith(file+'.write-lock')&&path.basename(candidate).startsWith('.retired-owner-')){denied=true;throw Object.assign(Error('synthetic transient metadata denial'),{code:'EPERM'});}return original.call(this,candidate,...args);};
+ try{await assert.rejects(lease.withFileLeaseAsync(file,()=>{entered=true},{timeoutMs:100,logger:()=>{}}),{code:'SHARED_WRITE_BUSY'});}finally{metadataFs.access=original;}
+ assert.equal(denied,true);assert.equal(entered,false);assert.equal(fs.readFileSync(ownerFile,'utf8'),before);assert.equal(fs.readFileSync(file,'utf8'),'0');
+});
+test('persistent retirement-marker denial fails closed with the original owner and data',async()=>{
+ const file=target();seed(file,{pid:2147483647});const ownerFile=path.join(file+'.write-lock','owner.json'),before=fs.readFileSync(ownerFile,'utf8'),original=metadataFs.access;let denied=0,entered=false;
+ metadataFs.access=async function(candidate,...args){if(String(candidate).startsWith(file+'.write-lock')&&path.basename(candidate).startsWith('.retired-owner-')){denied++;throw Object.assign(Error('synthetic persistent metadata denial'),{code:'EPERM'});}return original.call(this,candidate,...args);};
+ try{await assert.rejects(lease.withFileLeaseAsync(file,()=>{entered=true},{timeoutMs:1000,logger:()=>{}}),{code:'EPERM'});}finally{metadataFs.access=original;}
+ assert.ok(denied>1,'transient classification must permit a bounded recheck before failing');assert.equal(entered,false);assert.equal(fs.readFileSync(ownerFile,'utf8'),before);assert.equal(fs.readFileSync(file,'utf8'),'0');assert.equal(fs.existsSync(file+'.write-fence.json'),false);
+});
+test('unclassified retirement-marker I/O failure cannot authorize takeover',async()=>{
+ const file=target();seed(file,{pid:2147483647});const ownerFile=path.join(file+'.write-lock','owner.json'),before=fs.readFileSync(ownerFile,'utf8'),original=metadataFs.access;let entered=false;
+ metadataFs.access=async function(candidate,...args){if(String(candidate).startsWith(file+'.write-lock')&&path.basename(candidate).startsWith('.retired-owner-'))throw Object.assign(Error('synthetic metadata I/O error'),{code:'EIO'});return original.call(this,candidate,...args);};
+ try{await assert.rejects(lease.withFileLeaseAsync(file,()=>{entered=true},{timeoutMs:1000,logger:()=>{}}),{code:'EIO'});}finally{metadataFs.access=original;}
+ assert.equal(entered,false);assert.equal(fs.readFileSync(ownerFile,'utf8'),before);assert.equal(fs.readFileSync(file,'utf8'),'0');
+});

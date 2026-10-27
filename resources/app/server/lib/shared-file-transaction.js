@@ -225,7 +225,10 @@ const TRANSIENT_RENAME_CODES=new Set(['EPERM','EACCES','EBUSY']);
 async function retryAsync(operation,attempts=6){
   for(let attempt=0;;attempt++)try{return await operation();}catch(error){if(!TRANSIENT_RENAME_CODES.has(error.code)||attempt>=attempts-1)throw error;await sleep(Math.min(120,15*(2**attempt)));}
 }
-async function existsAsync(file){try{await fsp.access(file);return true;}catch(error){if(error.code==='ENOENT')return false;throw error;}}
+// Windows may briefly deny access to a marker while its directory is retired.
+// Recheck using the same bounded metadata-I/O policy as owner reads. A denial
+// is never evidence that the marker is absent or that its owner can be taken.
+async function existsAsync(file){try{await retryAsync(()=>fsp.access(file));return true;}catch(error){if(error.code==='ENOENT')return false;throw error;}}
 async function readOwnerAsync(lockDir){
   let raw=null;try{raw=await retryAsync(()=>fsp.readFile(path.join(lockDir,'owner.json'),'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;}
   let owner=null;try{owner=JSON.parse(raw);}catch(_){}
