@@ -15087,8 +15087,7 @@ html[data-ui-system="manifest"] .tablewrap tbody tr:has(input[type="checkbox"]:c
 html[data-ui-system="manifest"] .tablewrap tbody tr[aria-selected="true"] td:first-child {
   box-shadow:inset 3px 0 0 var(--ui-accent) !important;
 }
-html[data-ui-system="manifest"] .tablewrap tbody tr.rowDirty td:first-child,
-html[data-ui-system="manifest"] .tablewrap tbody tr:has(td:focus-within) td:first-child {
+html[data-ui-system="manifest"] .tablewrap tbody tr.rowDirty td:first-child {
   box-shadow:inset 3px 0 0 var(--ui-warning) !important;
 }
 /* The account affordance has exactly the mark's geometry instead of a pill. */
@@ -15108,4 +15107,37 @@ html[data-ui-system="manifest"] #currentUserBtn {
 }
 html[data-ui-system="manifest"] #currentUserBtn:hover {
   border-color:var(--ui-accent) !important;
+}
+
+/* 7.0.294 table semantics, shared by every table rather than one module. */
+html[data-ui-system="manifest"] table thead tr.groupRow th{
+  box-shadow:inset 0 2px 0 var(--ui-accent)!important;
+}
+html[data-ui-system="manifest"] table thead tr.groupRow th.groupSpacer{box-shadow:none!important;}
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable,table) input[type="checkbox"],
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable,table) input[type="checkbox"]:checked{
+  appearance:auto!important;
+  accent-color:var(--ui-accent);
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  width:14px!important;
+  height:14px!important;
+  cursor:pointer;
+}
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable,table) input[type="checkbox"]::after,
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable,table) input[type="checkbox"]:checked::after{content:none!important;}
+html[data-ui-system="manifest"] table tbody tr.rowDirty>td:first-child{box-shadow:inset 3px 0 0 var(--ui-warning)!important;}
+/* No outer frame: preserve the existing mark artwork and crop only its rim. */
+html[data-ui-system="manifest"] .rail .brandMark--image,
+html[data-ui-system="manifest"] #currentUserBtn{
+  width:34px;height:34px;border:0!important;background:transparent!important;box-shadow:none!important;
+  border-radius:var(--ui-mark-radius)!important;
+}
+html[data-ui-system="manifest"] .rail .brandMarkImage{width:34px;height:34px;clip-path:inset(2px round var(--ui-mark-radius));}
+html[data-ui-system="manifest"] #currentUserBtn #currentUserInitials{
+  display:grid;place-items:center;width:30px;height:30px;
+  border-radius:var(--ui-mark-radius)!important;
+  background:var(--ui-mark-paper)!important;color:var(--ui-avatar-ink)!important;
+  font-weight:800!important;
 }

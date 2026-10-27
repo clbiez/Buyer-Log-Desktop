@@ -1,7 +1,7 @@
 /* Same token source as sign-in and application; readiness remains gate driven. */
 html[data-ui-system="manifest"] #blBootGuard{position:fixed;inset:0;z-index:var(--ui-z-boot);display:flex;align-items:safe center;justify-content:center;overflow:auto;background:var(--ui-canvas);color:var(--ui-text);font:400 var(--ui-font-base)/1.45 var(--ui-font-body);}
 html[data-ui-system="manifest"] #blBootGuard .blBootCard{min-width:250px;max-width:1050px;width:min(1050px,calc(100vw - 48px));margin:24px;padding:32px;text-align:left;background:var(--ui-surface);border:0;border-radius:var(--ui-radius);box-shadow:none;}
-html[data-ui-system="manifest"] #blBootGuard .blBootOrb{display:block;width:64px;height:64px;margin:0 auto 12px;max-width:100%;}
+html[data-ui-system="manifest"] #blBootGuard .blBootOrb{display:inline-block;width:64px;height:64px;margin:0 12px 0 0;max-width:100%;vertical-align:middle;}
 html[data-ui-system="manifest"] #blBootGuard[data-ready="1"] .blBootOrb,html[data-ui-system="manifest"] #blBootGuard[data-failed="1"] .blBootOrb{display:none;}
 html[data-ui-system="manifest"] #blBootGuard button{border:0;border-radius:var(--ui-radius);background:var(--ui-surface-strong);color:var(--ui-text-secondary);font:500 var(--ui-font-xs)/1.2 var(--ui-font-body);padding:10px 14px;cursor:pointer;}
 html[data-ui-system="manifest"] #blBootGuard button:hover{background:var(--ui-selected);color:var(--ui-selected-ink);}

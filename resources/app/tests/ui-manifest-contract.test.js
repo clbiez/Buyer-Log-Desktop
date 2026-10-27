@@ -92,7 +92,7 @@ test('Manifest permits only shared classic frames and existing table/print borde
  for(const d of entries){
   if(d.prop.startsWith('--')||d.ancestors.some(s=>s.startsWith('@font-face')))continue;
   if(/gradient\(|blur\(/.test(d.value)&&!(d.file==='ui-components.css'&&d.selector.startsWith('.blWorkspaceBlur')&&d.prop==='backdrop-filter'&&/^blur\((0|var\(--ui-backdrop-blur\))\)$/.test(d.value)))failures.push(d);
-  if(/radius$/.test(d.prop)&&!/^0$|^var\(--ui-radius\)$/.test(d.value))failures.push(d);
+  if(/radius$/.test(d.prop)&&!/^0$|^var\(--ui-radius\)$/.test(d.value)&&!(d.file==='ui-components.css'&&d.value==='var(--ui-mark-radius)'&&(/#currentUserBtn|\.rail \.brandMark--image/.test(d.selector))))failures.push(d);
   if(/^border(?!-collapse|-spacing)/.test(d.prop)&&!/radius$/.test(d.prop)&&!/^0(?:\s|$)|^none$/.test(d.value)){
    const row=['#cpTable tbody td','[data-ui-migrated] table tbody td'].includes(d.selector)&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-row-divider)';
    const group=['#cpTable','#ordersTable','#kolTable'].some(id=>d.selector===groupSeparator(id))&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
@@ -105,7 +105,7 @@ test('Manifest permits only shared classic frames and existing table/print borde
    if(!/:focus/.test(d.selector)&&!cursor&&!classicFocus(d))failures.push(d);
   }
   if(d.prop==='z-index'&&!/^var\(--ui-z-(below|base|data|raised|sticky|sticky-column|chrome|popover|modal|modal-backdrop|rail-backdrop|modal-menu|tooltip|boot)\)$/.test(d.value))failures.push(d);
-  if(d.prop==='box-shadow'&&!/^(none|var\(--ui-shadow-overlay\))$/.test(d.value)&&!classicRowStripe(d))failures.push(d);
+  if(d.prop==='box-shadow'&&!/^(none|var\(--ui-shadow-overlay\))$/.test(d.value)&&!classicRowStripe(d)&&!(d.file==='ui-components.css'&&((d.selector==='table thead tr.groupRow th'&&d.value==='inset 0 2px 0 var(--ui-accent)')||(d.selector==='table tbody tr.rowDirty>td:first-child'&&d.value==='inset 3px 0 0 var(--ui-warning)'))))failures.push(d);
  }
  assert.deepEqual(failures,[]);
  assert.match(read('ui-tokens.css'),/--ui-radius:0;/);

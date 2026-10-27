@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-27",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Klasik tablo ve modül görünümünün geri dönüşü",
-    "en": "Restore classic table and module presentation"
+    "tr": "Klasik tablo görünümü ve akıcı çalışma alanı",
+    "en": "Classic tables and a smoother workspace"
   },
   "summary": {
-    "tr": "7.0.294 tablo hiyerarşisi, kontrol kenarlıkları, satır seçim işaretleri ve Intake/OAB tablo önceliği geri getirildi. Buyer Log açılışta hemen bilgi verir; Koleksiyon, CP ve Siparişler arka planda hazırlanır ve sekme geçişlerinde açık kalır. Tablo alanı, görünüm menüleri, not düzenleme ve arka plan geçişleri iyileştirildi.",
-    "en": "Restores 7.0.294 table hierarchy, control borders, row selection cues and table-first Intake/OAB. Buyer Log provides early launch feedback; Collection, CP and Orders prepare in the background and remain open across tab switches. Improved table space, view menus, note editing and backdrop transitions."
+    "tr": "7.0.294 tablo başlıkları, doğal seçim kutuları ve satır işaretleri ortak temada geri döndü. Intake görünür ve yenilenebilir; kimlik simgeleri çerçevesiz ve aynı kavisli köşelere sahip. Açılış Orb yerleşimi, tablo alanı, zengin notlar ve bulanık arka plan geçişleri iyileştirildi.",
+    "en": "Restores 7.0.294 headers, native checkboxes and row indicators through the shared theme. Intake is visible and refreshable; identity marks share frameless rounded corners. Improves the startup orb placement, table space, rich notes and blurred backdrop transitions."
   },
   "changes": [
     {
@@ -29,7 +29,7 @@
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "classic-panel-borders.png",
+        "src": "orders-classic-grid.png",
         "alt": {
           "tr": "Gerçek Buyer Log: Panel ve buton kenarları.",
           "en": "Real Buyer Log: Panel and button borders."
@@ -52,13 +52,13 @@
         "en": "Table headers and row indicators"
       },
       "body": {
-        "tr": "Sütun başlık ayraçları, seçim kutuları, seçili satır tonu, düzenleme şeridi ve kullanıcı simgesinin köşeleri geri getirildi.",
-        "en": "Restores header separators, checkboxes, selected-row tone, edit stripe and matching profile icon corners."
+        "tr": "Tüm tablolarda ortak başlık bandı, doğal seçim kutuları ve seçim/düzenleme şeritleri kullanılır. Kutucuğa odaklanmak satırı yanlışlıkla düzenlenmiş göstermez.",
+        "en": "Tables share header bands, native checkboxes and selected/edited row strips. Focusing a checkbox does not falsely mark the row as edited."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "classic-grid-selection.png",
+        "src": "cp-classic-grid.png",
         "alt": {
           "tr": "Gerçek Buyer Log: Tablo başlık ve satır işaretleri.",
           "en": "Real Buyer Log: Table headers and row indicators."
@@ -87,7 +87,7 @@
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "intake-oab-table-default.png",
+        "src": "intake-restored.png",
         "alt": {
           "tr": "Gerçek Buyer Log: Başlangıçta tablo, hatada görünür Intake.",
           "en": "Real Buyer Log: Tables by default and visible Intake on errors."
@@ -356,6 +356,64 @@
         "caption": {
           "tr": "Başlık işareti metinle birlikte hareket eder",
           "en": "Heading markers move with their labels"
+        }
+      }
+    },
+    {
+      "id": "frameless-matching-identity",
+      "type": "fix",
+      "module": {
+        "tr": "Uygulama kabuğu",
+        "en": "Application shell"
+      },
+      "title": {
+        "tr": "Logo ve kullanıcı işareti uyumu",
+        "en": "Matching logo and account marks"
+      },
+      "body": {
+        "tr": "Kullanıcı baş harfleri Buyer Log simgesiyle aynı 34px kutu, aynı görünen alan ve kavisli köşeleri kullanır. Ek dış çerçeve ve saten plaka kaldırıldı; klavye odağı korunur.",
+        "en": "User initials match the Buyer Log mark in a 34px box, visible area and rounded corners. Removes the extra outer frame and satin plate while retaining keyboard focus."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-classic-grid.png",
+        "alt": {
+          "tr": "Logo ve kullanıcı işareti uyumu",
+          "en": "Matching logo and account marks"
+        },
+        "caption": {
+          "tr": "Logo ve kullanıcı işareti uyumu",
+          "en": "Matching logo and account marks"
+        }
+      }
+    },
+    {
+      "id": "startup-orb-inline-294",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış ve genel kültür",
+        "en": "Startup and trivia"
+      },
+      "title": {
+        "tr": "Açılış Thinking Orb eski yerinde",
+        "en": "Startup Thinking Orb in its original place"
+      },
+      "body": {
+        "tr": "Genel kültür/açılış ekranındaki Breathing Orb 7.0.294 gibi durum metninin solunda, 64px boyutta ve 12px sağ boşlukla gösterilir. Hazır olunca durur; azaltılmış hareket tercihi korunur.",
+        "en": "The trivia/startup Breathing Orb returns to the left of the status text at 64px with a 12px right gap, as in 7.0.294. It stops at readiness and respects reduced motion."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-orb-294.png",
+        "alt": {
+          "tr": "Açılış Thinking Orb eski yerinde",
+          "en": "Startup Thinking Orb in its original place"
+        },
+        "caption": {
+          "tr": "Açılış Thinking Orb eski yerinde",
+          "en": "Startup Thinking Orb in its original place"
         }
       }
     }

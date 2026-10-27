@@ -44,7 +44,7 @@
  --ui-text:#16212d;--ui-text-secondary:#374454;--ui-text-muted:#5f6f80;
  --ui-accent:#356a96;--ui-accent-hover:#275779;--ui-selected:#eaf2f8;--ui-selected-ink:#245578;--ui-on-accent:#fff;
  --ui-success:#386e4f;--ui-success-bg:#e3ede6;--ui-danger:#a8453a;--ui-danger-bg:#f4e7e4;--ui-warning:#805f18;--ui-warning-bg:#f2ead6;
- --ui-header-bg:#f2f4f7;--ui-header-ink:#475467;--ui-group-header-bg:var(--ui-header-bg);--ui-group-header-ink:var(--ui-header-ink);
+ --ui-header-bg:#f2f4f7;--ui-header-ink:#475467;--ui-group-header-bg:var(--ui-surface-strong);--ui-group-header-ink:var(--ui-header-ink);
  --ui-check-idle:#728193;--ui-row-divider:#e6e9ed;--ui-group-divider:#cbd1d9;
  --ui-row-hover:color-mix(in srgb,var(--ui-accent) 6%,var(--ui-surface));
  --ui-chart-grid:color-mix(in srgb,var(--ui-text) 16%,var(--ui-surface));
@@ -84,4 +84,4 @@
 :root[data-ui-scale][data-rail="min"]{--ui-rail-width:var(--ui-rail-collapsed-width);}
 
 /* Packaged satin avatar patch is light in every theme. */
-:root{--ui-avatar-ink:#23272c;--ui-avatar-paper:#e6e9ec;}
+:root{--ui-avatar-ink:#23272c;--ui-avatar-paper:#e6e9ec;--ui-mark-radius:8px;--ui-mark-paper:#efefef;}
