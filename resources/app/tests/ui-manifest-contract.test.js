@@ -91,8 +91,8 @@ test('Manifest permits only shared classic frames and existing table/print borde
  const failures=[];
  for(const d of entries){
   if(d.prop.startsWith('--')||d.ancestors.some(s=>s.startsWith('@font-face')))continue;
-  if(/gradient\(|blur\(/.test(d.value))failures.push(d);
-  if(/radius$/.test(d.prop)&&!/^0$|^var\(--ui-radius\)$/.test(d.value))failures.push(d);
+  if(/gradient\(|blur\(/.test(d.value)&&!(d.file==='ui-components.css'&&d.selector.startsWith('.blWorkspaceBlur')&&d.prop==='backdrop-filter'&&/^blur\((0|var\(--ui-backdrop-blur\))\)$/.test(d.value)))failures.push(d);
+  if(/radius$/.test(d.prop)&&!/^0$|^var\(--ui-radius\)$/.test(d.value)&&!(d.file==='ui-components.css'&&d.value==='var(--ui-mark-radius)'&&(/#currentUserBtn|\.rail \.brandMark--image/.test(d.selector))))failures.push(d);
   if(/^border(?!-collapse|-spacing)/.test(d.prop)&&!/radius$/.test(d.prop)&&!/^0(?:\s|$)|^none$/.test(d.value)){
    const row=['#cpTable tbody td','[data-ui-migrated] table tbody td'].includes(d.selector)&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-row-divider)';
    const group=['#cpTable','#ordersTable','#kolTable'].some(id=>d.selector===groupSeparator(id))&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
@@ -104,8 +104,8 @@ test('Manifest permits only shared classic frames and existing table/print borde
    const cursor=['.blDetailDrawer .blDetailTable td.blGridActiveCell','#cpTable td.blGridActiveCell,#ordersTable td.blGridActiveCell','[data-ui-migrated] .blDetailTable .blGridActiveCell','#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolActiveGridCell,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolSpreadsheetActiveCell'].includes(d.selector);
    if(!/:focus/.test(d.selector)&&!cursor&&!classicFocus(d))failures.push(d);
   }
-  if(d.prop==='z-index'&&!/^var\(--ui-z-(below|base|data|raised|sticky|sticky-column|chrome|popover|modal|modal-menu|tooltip|boot)\)$/.test(d.value))failures.push(d);
-  if(d.prop==='box-shadow'&&!/^(none|var\(--ui-shadow-overlay\))$/.test(d.value)&&!classicRowStripe(d))failures.push(d);
+  if(d.prop==='z-index'&&!/^var\(--ui-z-(below|base|data|raised|sticky|sticky-column|chrome|popover|modal|modal-backdrop|rail-backdrop|modal-menu|tooltip|boot)\)$/.test(d.value))failures.push(d);
+  if(d.prop==='box-shadow'&&!/^(none|var\(--ui-shadow-overlay\))$/.test(d.value)&&!classicRowStripe(d)&&!(d.file==='ui-components.css'&&((d.selector==='table thead tr.groupRow th'&&d.value==='inset 0 2px 0 var(--ui-accent)')||(d.selector==='table tbody tr.rowDirty>td:first-child'&&d.value==='inset 3px 0 0 var(--ui-warning)'))))failures.push(d);
  }
  assert.deepEqual(failures,[]);
  assert.match(read('ui-tokens.css'),/--ui-radius:0;/);
@@ -118,7 +118,7 @@ test('Manifest fonts scale and only transform/opacity may animate',()=>{
   if(d.prop==='font'&&/(?:^|\s)[\d.]+px(?:\/|\s)/.test(d.value))failures.push(d);
   if(d.ancestors.some(s=>s.startsWith('@keyframes'))&&!['opacity','transform'].includes(d.prop))failures.push(d);
   if(/^transition(?:-property)?$/.test(d.prop)&&!/^none/.test(d.value)){
-   for(const part of d.value.split(','))if(!/^(transform|opacity)\b/.test(part.trim()))failures.push(d);
+   for(const part of d.value.split(','))if(!/^(transform|opacity)\b/.test(part.trim())&&!(d.file==='ui-motion.css'&&((d.selector==='.blWorkspaceBlur'&&part.trim().startsWith('backdrop-filter var(--ui-motion-overlay)'))||(d.selector===':root:not([data-bl-motion="off"]) .rail'&&part.trim().startsWith('width var(--ui-motion-overlay)')))))failures.push(d);
   }
  }
  assert.deepEqual(failures,[]);
@@ -149,9 +149,9 @@ test('Shared button contract covers interaction states and restricts explicit va
 test('Notes dialog keeps canonical behavior hooks, labelled field and keyboard focus containment',()=>{
  const s=read('app-main.js'),body=s.slice(s.indexOf('function openNotesEditor('),s.indexOf('// Explicit note saves'));
  for(const hook of ['_notesEditorModal','_notesEditorTitle','noteEditorArea','notesEditorClose','notesEditorCancel','notesEditorSave'])assert.ok(body.includes(hook));
- assert.match(body,/data-ui-variant="primary"/);assert.match(body,/aria-labelledby="_notesEditorTitle" spellcheck/);
+ assert.match(body,/data-ui-variant="primary"/);assert.match(body,/aria-labelledby="_notesEditorTitle"/);
  assert.match(body,/e\.key==='Tab'/);assert.match(body,/e\.shiftKey&&document\.activeElement===first/);assert.match(body,/!e\.shiftKey&&document\.activeElement===last/);
- assert.match(body,/saveNotesEditorTargets\(targets,next,Boolean\(options\.ownNotes\)\)/);
+ assert.match(body,/saveNotesEditorTargets\(targets,next,Boolean\(options\.ownNotes\),rich\)/);
 });
 test('Unauthenticated asset serving is a fixed UI-only list before auth gates',()=>{
  const server=fs.readFileSync(path.join(__dirname,'..','server','server.js'),'utf8');

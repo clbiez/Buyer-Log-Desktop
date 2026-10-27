@@ -30,7 +30,7 @@ test('checkbox selection keeps the source row id instead of coercing every id to
   assert.match(framework, /selectionSetId\(meta\.selSet,id,chk\.checked\)/);
   assert.doesNotMatch(framework, /Number\(chk\.dataset\.id\)/);
 
-  const collectionStart = APP.indexOf("tbody.querySelectorAll('.rowChk').forEach", APP.indexOf('function renderKol'));
+  const collectionStart = APP.indexOf("tbody.querySelectorAll('.rowChk').forEach(chk=>chk.addEventListener", APP.indexOf('function renderKol'));
   const collection = APP.slice(collectionStart, collectionStart + 700);
   assert.match(collection, /selectionActualId\(logicalRows,row=>row\.id,chk\.dataset\.id\)/);
   assert.match(collection, /selectionSetId\(kolSelected,id,chk\.checked\)/);

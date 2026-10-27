@@ -102,7 +102,7 @@ izdüşümü bir kontrolün hitbox’ı veya veri işaretçisi değildir.
 5. Grafik eksen/kılavuzları veri okumak içindir; `--ui-chart-grid` kullanır.
 6. Panel, modül ve kontrol sınırları: yalnız ortak `ui-components.css`
    üzerinde `--ui-group-divider` ile 1px sınır. Checkbox'ta durum
-   okunabilirliği, kullanıcı avatarında logo ile eşit kare köşe uygulanır.
+   okunabilirliği, kullanıcı avatarında logo ile eşit `--ui-mark-radius` köşe uygulanır.
 7. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
 
 Tablo başlıkları `--ui-header-*`, ana grup bandı `--ui-group-header-*` kullanır.
@@ -169,8 +169,8 @@ semantik işlem göstergesi olarak kullanılabilir. Her orb görünmez sekme, ek
 dışı kalma, işlem sonu ve reduced-motion için duraklama/durdurma ya da tek kare
 uygulamalıdır. Sürekli dekoratif canvas hareketi hâlâ yasaktır.
 
-**Sol üstten dalga:** Aktif tablodaki sadece ilk iki görünür gridin en fazla
-9 satır × 12 sütununda tek giriş efekti uygulanır. Hücreler diagonal gecikmeyle
+**Sol üstten dalga:** Aktif tablodaki sadece ilk iki görünür gridin
+kaydırma alanında görünen satır ve sütunlarında tek giriş efekti uygulanır. Hücreler diagonal gecikmeyle
 `--ui-selected` renginden özgün görünümüne döner; yatay/dikey kaydırma, seçim,
 hücre düzenleme, veri değişimi ve export tetiklemez. Aktif/seçilmiş/düzenlenen
 hücreler atlanır. Yeni sayfa aktivasyonunda tekrar çalışabilir; scroll,
@@ -254,12 +254,16 @@ Nonmodal filtreler Tab sırasını hapsetmez.
 
 ## Kullanıcı işareti ve güncel iş akışları
 
-Kullanıcı avatarı `icons/avatar-patch.png` paketli saten plakayı, uygulama logosu
+Kullanıcı avatarı çerçevesiz `--ui-mark-paper` zemini ve `--ui-mark-radius` köşesini, uygulama logosu
 `icons/icon-mark.png` dosyasını kullanır. Plaka bütün temalarda açık olduğu için
 baş harfler `--ui-avatar-ink`, yedek zemin `--ui-avatar-paper` ile sabittir.
-Baş harf üstüne ayrı bir yüzey kapatılmaz; ad/baş harf üretimi değişmez.
+Baş harfler logoyla aynı düz zeminde görünür; ad/baş harf üretimi değişmez.
 Metin gradyanı, ışıma veya yeni avatar çerçevesi eklenmez.
 
 Satır sıklığı, istisna kutusu, fiyat kaynağı, toplu işlem ve kayıt/ilerleme
 yüzeyleri de `ui-components.css` sahibidir; modül CSS dosyaları yalnız ölçü ve
 yerleşim taşır. Kullanıcıya bağlı sıklık ayarı yazı ölçeğinden bağımsızdır.
+
+**Paylaşılan bulanık arka plan:** Sidebar hover ve dialog açılışlarında karartma yerine `--ui-backdrop-blur` kullanılır. Kalıcı `.blWorkspaceBlur` katmanı açılış/kapanışta `backdrop-filter` geçişini Motion+ süresiyle yapar. Sidebar genişliği aynı ortak süre/easing ile değişir; reduced-motion her ikisini durdurur. Bu iki ortak kontrol, transform/opacity kuralının sınırlı istisnalarıdır.
+
+Kimlik işaretlerinin dış kutusu 34px, görünen simge alanı 30px olur. Logo görselinin yalnız dış çerçevesi kırpılır; baş harfler korunur. Kullanıcı baş harfleri aynı kavis ve düz zeminde görünür. Açılış genel kültür ekranındaki Breathing Orb, 7.0.294 gibi durum metninin solunda 64px ve 12px sağ boşlukla gösterilir.

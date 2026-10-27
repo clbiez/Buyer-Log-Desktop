@@ -747,8 +747,13 @@ function applyOrderPatch(ov, orderCode, patch, options = null) {
       const incoming = patch.notes[field] == null ? '' : String(patch.notes[field]);
       const before = previous[field] == null ? '' : String(previous[field]);
       next[field] = incoming;
-      if (incoming === before) return;
-      if (!incoming.trim()) {
+      const htmlField=field+'Html';
+      const rich=Object.prototype.hasOwnProperty.call(patch.notes,htmlField)?String(patch.notes[htmlField]||''):'';
+      if(Buffer.byteLength(rich,'utf8')>1800000)throw Object.assign(new Error('Not içeriği çok büyük. / Note content is too large.'),{code:'VALIDATION_ERROR',statusCode:400});
+      const sameRich=String(previous[htmlField]||'')===rich;
+      next[htmlField]=rich;
+      if (incoming === before&&sameRich) return;
+      if (!incoming.trim()&&!rich.trim()) {
         // Not silindi: tarih ve yazar da düşer, yoksa boş bir nota ait yazar
         // damgası kalır ve sonraki yazan kişinin notu ona atfedilirdi.
         next[atField] = '';
@@ -924,7 +929,7 @@ function verifyOrderOverridePatch(orderCode,patch,revision){
   if(Number(ov._revisions.orders)!==revision)return false;
   const expected={subManufacturer:'submap',licensor:'licensormap',delType:'delmap'};
   for(const [field,map]of Object.entries(expected))if(Object.hasOwn(patch,field)&&String(ov[map]?.[key]??'')!==String(field==='licensor'?patch[field].trim():patch[field]))return false;
-  for(const [field,value]of Object.entries(patch.notes||{}))if(!NOTE_AUTHOR_FIELDS.some(spec=>spec.field===field)||String(ov.notesmap?.[key]?.[field]??'')!==value)return false;
+  for(const [field,value]of Object.entries(patch.notes||{}))if(!NOTE_AUTHOR_FIELDS.some(spec=>spec.field===field||spec.field+'Html'===field)||String(ov.notesmap?.[key]?.[field]??'')!==value)return false;
   for(const [field,value]of Object.entries(patch.dates||{}))if(!DATE_OVERRIDE_FIELDS[field]||String(ov.datemap?.[key]?.[DATE_OVERRIDE_FIELDS[field]]??'')!==value)return false;
   const columnIds=new Set((ov.noteColumnDefs||[]).map(def=>def.id));
   for(const [id,value]of Object.entries(patch.noteColumns||{}))if(!columnIds.has(id)||String(ov.noteColumnValues?.[key]?.[id]??'')!==String(value??''))return false;

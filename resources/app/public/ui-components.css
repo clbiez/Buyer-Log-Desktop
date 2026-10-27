@@ -319,7 +319,7 @@ html[data-ui-system="manifest"] .excelTemplateCard .modalTitle {font-size:var(--
 }
 html[data-ui-system="manifest"] .excelTemplateQuantity strong {font-size:var(--ui-font-sm) !important
 }
-html[data-ui-system="manifest"] .layoutControlOverlay {z-index:var(--ui-z-modal);background:color-mix(in srgb,var(--ui-text) 42%,transparent) !important
+html[data-ui-system="manifest"] .layoutControlOverlay {z-index:var(--ui-z-modal);background:var(--ui-scrim) !important
 }
 html[data-ui-system="manifest"] .layoutControlModal {background:var(--ui-surface) !important;color:var(--ui-text) !important
 }
@@ -810,7 +810,7 @@ html[data-ui-system="manifest"] .ovHomeEdge {z-index:var(--ui-z-modal);backgroun
 }
 html[data-ui-system="manifest"] .ovHomeEdge.isHot {background:color-mix(in srgb,var(--ui-accent) 26%,transparent) !important
 }
-html[data-ui-system="manifest"] .ovHomeDrawerOverlay {z-index:var(--ui-z-modal);background:color-mix(in srgb,var(--ui-text) 22%,transparent) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+html[data-ui-system="manifest"] .ovHomeDrawerOverlay {z-index:var(--ui-z-modal);background:var(--ui-scrim) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 html[data-ui-system="manifest"] .ovHomeDrawer {background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
@@ -5190,7 +5190,7 @@ html[data-ui-system="manifest"] .backupSharedPanel b {font-size:var(--ui-font-xs
 }
 html[data-ui-system="manifest"] .backupSharedPanel [data-shared-personal-status] {font-size:var(--ui-font-2xs) !important;line-height:1.4;color:var(--ui-text-muted) !important
 }
-html[data-ui-system="manifest"] .updateTestOverlay {z-index:var(--ui-z-modal);background:color-mix(in srgb,var(--ui-text) 58%,transparent) !important
+html[data-ui-system="manifest"] .updateTestOverlay {z-index:var(--ui-z-modal);background:var(--ui-scrim) !important
 }
 html[data-ui-system="manifest"] .updateTestCard {background:var(--ui-surface) !important;
   color:var(--ui-text) !important
@@ -6074,7 +6074,7 @@ html[data-ui-system="manifest"] .umHistoryList p { font-size:var(--ui-font-sm) !
 }
 html[data-ui-system="manifest"] .umHistoryList small { font-size:var(--ui-font-2xs) !important; color:var(--ui-text-muted) !important
 }
-html[data-ui-system="manifest"] .umDialogOverlay { z-index:var(--ui-z-modal); background:color-mix(in srgb, var(--ui-text) 55%, transparent) !important
+html[data-ui-system="manifest"] .umDialogOverlay { z-index:var(--ui-z-modal); background:var(--ui-scrim) !important
 }
 html[data-ui-system="manifest"] .umDialog { background:var(--ui-surface, var(--ui-surface)) !important; box-shadow:var(--ui-shadow-overlay) !important
 }
@@ -6780,7 +6780,7 @@ html[data-ui-system="manifest"] .blGuideCopy .blGuideNote {font-size:var(--ui-fo
 }
 html[data-ui-system="manifest"] .blGuideDialog {background:var(--ui-surface,var(--ui-surface)) !important;color:var(--ui-text,var(--ui-accent)) !important;font-family:var(--ui-font-body,system-ui) !important;box-shadow:var(--ui-shadow-overlay) !important
 }
-html[data-ui-system="manifest"] .blGuideDialog::backdrop {background:color-mix(in srgb,var(--ui-text,var(--ui-accent)) 40%,transparent) !important
+html[data-ui-system="manifest"] .blGuideDialog::backdrop {background:var(--ui-scrim) !important
 }
 html[data-ui-system="manifest"] .blGuideHeader h1 {font:600 var(--ui-font-3xl)/1.1 var(--ui-font-heading,system-ui) !important
 }
@@ -7560,7 +7560,7 @@ html[data-ui-system="manifest"] .dmMerchMessage {background:var(--ui-surface-sof
 }
 html[data-ui-system="manifest"] .blRnDialog {background:var(--ui-surface) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;box-shadow:var(--ui-shadow-overlay) !important
 }
-html[data-ui-system="manifest"] .blRnDialog::backdrop {background:color-mix(in srgb,var(--ui-text) 40%,transparent) !important
+html[data-ui-system="manifest"] .blRnDialog::backdrop {background:var(--ui-scrim) !important
 }
 html[data-ui-system="manifest"] .blRnHeader h1 {font:600 var(--ui-font-3xl)/1.1 var(--ui-font-heading) !important
 }
@@ -7648,7 +7648,7 @@ html[data-ui-system="manifest"] .blRnEmpty {color:var(--ui-text-muted) !importan
 }
 html[data-ui-system="manifest"] .blRnLightbox {background:var(--ui-surface) !important;color:var(--ui-text) !important
 }
-html[data-ui-system="manifest"] .blRnLightbox::backdrop {background:color-mix(in srgb,var(--ui-text) 72%,transparent) !important
+html[data-ui-system="manifest"] .blRnLightbox::backdrop {background:var(--ui-scrim) !important
 }
 html[data-ui-system="manifest"] .blRnLightboxBody {background:var(--ui-canvas) !important
 }
@@ -11064,7 +11064,7 @@ html[data-ui-system="manifest"] .ocFormulaNote {font-size:var(--ui-font-2xs) !im
 }
 html[data-ui-system="manifest"] .ocSidebarEmpty {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important;line-height:1.45
 }
-html[data-ui-system="manifest"] .ocCompareOverlay {z-index:var(--ui-z-modal);background:color-mix(in srgb, var(--ui-text) 42%, transparent) !important
+html[data-ui-system="manifest"] .ocCompareOverlay {z-index:var(--ui-z-modal);background:var(--ui-scrim) !important
 }
 html[data-ui-system="manifest"] .ocCompareCard {background:var(--ui-surface) !important
 }
@@ -12082,7 +12082,7 @@ html[data-ui-system="manifest"] .lflDimPanel,html[data-ui-system="manifest"] .lf
   box-shadow:var(--ui-shadow-overlay) !important
 }
 html[data-ui-system="manifest"] .lflPortfolioModalBackdrop,html[data-ui-system="manifest"] .lflScenarioEditorBackdrop,html[data-ui-system="manifest"] .lflTrialOverlay,html[data-ui-system="manifest"] .ocCompareOverlay {
-  background:color-mix(in srgb,var(--ui-text) 55%,transparent) !important
+  background:var(--ui-scrim) !important
 }
 html[data-ui-system="manifest"] .lflPortfolioModalPanel,html[data-ui-system="manifest"] .lflScenarioEditorDialog,html[data-ui-system="manifest"] .lflTrialStudio {
   box-shadow:var(--ui-shadow-overlay) !important
@@ -12650,7 +12650,7 @@ html[data-ui-system="manifest"] .bpaTipHint {font-size:var(--ui-font-2xs) !impor
 }
 html[data-ui-system="manifest"] .bpaDrawerRoot {z-index:var(--ui-z-modal)
 }
-html[data-ui-system="manifest"] .bpaDrawerScrim {background:color-mix(in srgb,var(--ui-text) 28%,transparent) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+html[data-ui-system="manifest"] .bpaDrawerScrim {background:var(--ui-scrim) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 html[data-ui-system="manifest"] .bpaDrawer {background:var(--ui-surface) !important;color:var(--ui-text) !important;box-shadow:var(--ui-shadow-overlay) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
@@ -14988,6 +14988,48 @@ html[data-ui-system="manifest"] #kolAllVariantsToggle{
   font-size:var(--ui-font-xs);font-weight:600;
 }
 
+/* Dense, viewport-bound table workspaces. */
+html[data-ui-system="manifest"] body:is([data-active-tab="cp"],[data-active-tab="orders"],[data-active-tab="koleksiyon"]){height:100dvh;overflow:hidden;}
+html[data-ui-system="manifest"] body:is([data-active-tab="cp"],[data-active-tab="orders"],[data-active-tab="koleksiyon"]) main{padding:var(--ui-space-2);}
+html[data-ui-system="manifest"] :is(#view-cp,#view-orders,#view-koleksiyon) .panel{padding:0;}
+html[data-ui-system="manifest"] .workspaceQuickRow{display:flex;align-items:center;gap:var(--ui-space-2);min-width:0;}
+html[data-ui-system="manifest"] .workspaceQuickRow>.kpirow{flex:1;min-width:0;margin:0!important;padding-block:var(--ui-space-1);}
+html[data-ui-system="manifest"] .workspaceQuickRow>.tableViewActions{margin-inline-start:auto;flex:none;}
+html[data-ui-system="manifest"] :is(#view-cp,#view-orders,#view-koleksiyon) .workspaceContextBar{display:none!important;}
+html[data-ui-system="manifest"] :is(#view-cp,#view-orders,#view-koleksiyon) .tableActionToolbar{padding:var(--ui-space-1);min-height:0;margin:0;}
+html[data-ui-system="manifest"] :is(#view-cp,#view-orders,#view-koleksiyon) .activeFilterBar{padding:var(--ui-space-1);min-height:0;}
+html[data-ui-system="manifest"] .activeFilterBar:has(.activeFilterTokens:empty){display:none!important;}
+html[data-ui-system="manifest"] :is(#cpTableWrap,#ordersTableWrap,#view-koleksiyon .tablewrap){background:var(--ui-surface)!important;}
+html[data-ui-system="manifest"] .workspaceTableFooter{padding:var(--ui-space-1) var(--ui-space-2);min-height:0;color:var(--ui-text-secondary);font:var(--ui-font-xs)/1.3 var(--ui-font-body);}
+html[data-ui-system="manifest"] .workspaceTableFooter .workspaceContextMeta{font:inherit!important;color:inherit!important;}
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable) tfoot :is(td,span,b,small){font-family:var(--ui-font-body)!important;color:var(--ui-text-secondary)!important;font-size:var(--ui-font-xs)!important;}
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable) .selectionFooterCount,
+html[data-ui-system="manifest"] :is(#kolSpreadsheetHelper,#kolSpreadsheetStatusBar){display:none!important;}
+html[data-ui-system="manifest"] .workspacePriceSubview{padding:var(--ui-space-1);}
+html[data-ui-system="manifest"] .workspacePriceSubview>summary{cursor:pointer;padding:var(--ui-space-2);color:var(--ui-text-secondary);font:var(--ui-font-xs)/1.3 var(--ui-font-body);}
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable) tbody textarea.editCell{height:calc(var(--cp-row-h,46px) - 6px);max-height:calc(var(--cp-row-h,46px) - 6px);min-height:0;resize:none;overflow:auto;}
+
+html[data-ui-system="manifest"] .noteEditorCard{width:min(1000px,94vw);max-width:min(1000px,94vw);max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;}
+html[data-ui-system="manifest"] .noteEditorBody{min-height:0;overflow:auto;}
+html[data-ui-system="manifest"] .noteEditorArea.todoRichEditor{background:var(--ui-surface)!important;min-height:260px;max-height:55dvh;overflow:auto;resize:none;}
+
+.blWorkspaceBlur{position:fixed;inset:0;pointer-events:none;z-index:var(--ui-z-modal-backdrop);backdrop-filter:blur(0);}
+.blWorkspaceBlur[data-blur="dialog"]{backdrop-filter:blur(var(--ui-backdrop-blur));}
+.blWorkspaceBlur[data-mode="rail"]{left:var(--ui-rail-collapsed-width);z-index:var(--ui-z-rail-backdrop);}
+.blWorkspaceBlur[data-blur="rail"]{backdrop-filter:blur(var(--ui-backdrop-blur));}
+html[data-ui-system="manifest"] .noteCellTrigger.empty{min-height:0;padding-block:0;}
+/* Keep the group marker inside the same moving label as its text. */
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable) thead th[data-grp]::before{content:none!important;}
+html[data-ui-system="manifest"] .blGroupFollowLabel::before{content:"";display:inline-block;width:4px;height:.7em;margin-inline-end:8px;background:var(--ui-accent);vertical-align:baseline;}
+
+html[data-ui-system="manifest"] dialog::backdrop{background:var(--ui-scrim) !important;}
+html[data-ui-system="manifest"][data-rail="min"] .rail{z-index:var(--ui-z-popover);}
+
+html[data-ui-system="manifest"] #kolSaveState:has([data-persistence-state="local"]){display:none!important;}
+html[data-ui-system="manifest"] #kolTable tfoot .collectionModelCount{visibility:hidden;}
+
+html[data-ui-system="manifest"] .workspaceTableFooter{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-2);flex-wrap:wrap;}
+html[data-ui-system="manifest"] .workspaceTableFooter .uiPersistenceRegion{margin:0;padding:0;}
 /* Buyer Log 7.0.294 surface and spreadsheet restoration.
    Deliberately uses Manifest tokens; no separate theme or table logic. */
 html[data-ui-system="manifest"] :is(.panel,.cardBox,.modalCard,.mfrCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.appBlockingCard,.sourcebar,.tablewrap),
@@ -15045,8 +15087,7 @@ html[data-ui-system="manifest"] .tablewrap tbody tr:has(input[type="checkbox"]:c
 html[data-ui-system="manifest"] .tablewrap tbody tr[aria-selected="true"] td:first-child {
   box-shadow:inset 3px 0 0 var(--ui-accent) !important;
 }
-html[data-ui-system="manifest"] .tablewrap tbody tr.rowDirty td:first-child,
-html[data-ui-system="manifest"] .tablewrap tbody tr:has(td:focus-within) td:first-child {
+html[data-ui-system="manifest"] .tablewrap tbody tr.rowDirty td:first-child {
   box-shadow:inset 3px 0 0 var(--ui-warning) !important;
 }
 /* The account affordance has exactly the mark's geometry instead of a pill. */
@@ -15066,4 +15107,37 @@ html[data-ui-system="manifest"] #currentUserBtn {
 }
 html[data-ui-system="manifest"] #currentUserBtn:hover {
   border-color:var(--ui-accent) !important;
+}
+
+/* 7.0.294 table semantics, shared by every table rather than one module. */
+html[data-ui-system="manifest"] table thead tr.groupRow th{
+  box-shadow:inset 0 2px 0 var(--ui-accent)!important;
+}
+html[data-ui-system="manifest"] table thead tr.groupRow th.groupSpacer{box-shadow:none!important;}
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable,table) input[type="checkbox"],
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable,table) input[type="checkbox"]:checked{
+  appearance:auto!important;
+  accent-color:var(--ui-accent);
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  width:14px!important;
+  height:14px!important;
+  cursor:pointer;
+}
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable,table) input[type="checkbox"]::after,
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable,table) input[type="checkbox"]:checked::after{content:none!important;}
+html[data-ui-system="manifest"] table tbody tr.rowDirty>td:first-child{box-shadow:inset 3px 0 0 var(--ui-warning)!important;}
+/* No outer frame: preserve the existing mark artwork and crop only its rim. */
+html[data-ui-system="manifest"] .rail .brandMark--image,
+html[data-ui-system="manifest"] #currentUserBtn{
+  width:34px;height:34px;border:0!important;background:transparent!important;box-shadow:none!important;
+  border-radius:var(--ui-mark-radius)!important;
+}
+html[data-ui-system="manifest"] .rail .brandMarkImage{width:34px;height:34px;clip-path:inset(2px round var(--ui-mark-radius));}
+html[data-ui-system="manifest"] #currentUserBtn #currentUserInitials{
+  display:grid;place-items:center;width:30px;height:30px;
+  border-radius:var(--ui-mark-radius)!important;
+  background:var(--ui-mark-paper)!important;color:var(--ui-avatar-ink)!important;
+  font-weight:800!important;
 }

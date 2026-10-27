@@ -59,12 +59,13 @@
     for(const table of tables){
       const tbody=table.tBodies?.[0]||table.querySelector('tbody');
       if(!tbody)continue;
-      const rows=Array.from(tbody.rows||tbody.children).slice(0,9);
+      const rows=Array.from(tbody.rows||tbody.children).filter(row=>Array.from(row.cells||row.children).some(visible));
       for(let rowIndex=0;rowIndex<rows.length;rowIndex++){
-        const cells=Array.from(rows[rowIndex].cells||rows[rowIndex].children).slice(0,12);
+        const cells=Array.from(rows[rowIndex].cells||rows[rowIndex].children);
         for(let col=0;col<cells.length;col++){
           const cell=cells[col];
-          if(cell.tagName!=='TD'||!visible(cell)||
+          const bounds=cell.getBoundingClientRect(),host=table.closest?.('.tablewrap')?.getBoundingClientRect();
+          if(cell.tagName!=='TD'||!visible(cell)||(host&&(bounds.right<=host.left||bounds.left>=host.right||bounds.bottom<=host.top||bounds.top>=host.bottom))||
              cell.matches('.blGridActiveCell,.blGridSelectedCell,.kolSpreadsheetActiveCell,.kolActiveGridCell,[aria-selected="true"],[contenteditable="true"]')||
              cell.querySelector('input:focus,textarea:focus,select:focus,[contenteditable="true"]:focus')||cell.style?.backgroundColor||cell.style?.background)continue;
           // A brief tint travels from the top-left; no cell values or selection classes change.

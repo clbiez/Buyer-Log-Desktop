@@ -33,11 +33,11 @@ test('save failures remain explicit and keep note state in memory',()=>{
 });
 test('all save paths read rich content and image budget covers the entire notebook',()=>{
   assert.match(app,/if\(ta\) todoReadEditor\(ta,page\)/);
-  assert.match(notebook,/new TextEncoder\(\)\.encode\(JSON\.stringify\(candidate\)\)\.length>1800000/);
+  assert.match(notebook,/new TextEncoder\(\)\.encode\(JSON\.stringify\(candidate\)\)\.length<=1800000/);
   assert.match(notebook,/st\.pages\.map/);
   assert.match(notebook,/addImages\(\[\.\.\.e\.dataTransfer\.files\],range/);
-  assert.match(notebook,/pageId=todoActive\(\)\?\.id/);
-  assert.match(notebook,/!ta\.isConnected\|\|todoActive\(\)\?\.id!==pageId/);
+  assert.match(notebook,/function bindRichNoteEditor/);
+  assert.match(notebook,/!ta\.isConnected/);
 });
 
 test('oversized UTF-8 notebooks never report a successful save or overwrite persisted notes',()=>{

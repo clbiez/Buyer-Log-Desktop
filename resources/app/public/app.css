@@ -34,13 +34,13 @@ html[data-rail="min"] nav.tabs button span{display:none;}
 html[data-rail="min"] nav.tabs>.railGroupLabel{display:none;}
 html[data-rail="min"] .railFoot button{justify-content:center;padding:0;width:50px;}
 html[data-rail="min"] .railFoot button span{display:none;}
-html[data-rail="min"] .rail:is(:hover,:focus-within){width:var(--ui-rail-expanded-width);align-items:stretch;}
-html[data-rail="min"] .rail:is(:hover,:focus-within) nav.tabs button,html[data-rail="min"] .rail:is(:hover,:focus-within) .railFoot button{justify-content:flex-start;padding:0 10px;width:100%;}
-html[data-rail="min"] .rail:is(:hover,:focus-within) nav.tabs button span,html[data-rail="min"] .rail:is(:hover,:focus-within) .railFoot button span{display:inline;}
-html[data-rail="min"] .rail:is(:hover,:focus-within) nav.tabs>.railGroupLabel{display:block;}
-html[data-rail="min"] .rail:is(:hover,:focus-within) .railTop{flex-direction:row;gap:8px;padding:0 4px 8px;}
-html[data-rail="min"] .rail:is(:hover,:focus-within) .brandName{display:block;}
-html[data-rail="min"] .rail:is(:hover,:focus-within) .railCollapse{margin-left:auto;}
+html[data-rail="min"] .rail:is(:hover,.railKeyboardOpen){width:var(--ui-rail-expanded-width);align-items:stretch;}
+html[data-rail="min"] .rail:is(:hover,.railKeyboardOpen) nav.tabs button,html[data-rail="min"] .rail:is(:hover,.railKeyboardOpen) .railFoot button{justify-content:flex-start;padding:0 10px;width:100%;}
+html[data-rail="min"] .rail:is(:hover,.railKeyboardOpen) nav.tabs button span,html[data-rail="min"] .rail:is(:hover,.railKeyboardOpen) .railFoot button span{display:inline;}
+html[data-rail="min"] .rail:is(:hover,.railKeyboardOpen) nav.tabs>.railGroupLabel{display:block;}
+html[data-rail="min"] .rail:is(:hover,.railKeyboardOpen) .railTop{flex-direction:row;gap:8px;padding:0 4px 8px;}
+html[data-rail="min"] .rail:is(:hover,.railKeyboardOpen) .brandName{display:block;}
+html[data-rail="min"] .rail:is(:hover,.railKeyboardOpen) .railCollapse{margin-left:auto;}
 .appTop{position:sticky;top:0;height:var(--ui-topbar-height);max-width:100%;min-width:0;display:flex;align-items:center;gap:10px;padding:0 var(--ui-space-5);overflow:hidden;}
 .appTop h1{margin:0 auto 0 0;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .gsearch{margin-left:0;display:flex;align-items:center;gap:8px;padding:0 10px;height:33px;min-width:min(250px,36vw);max-width:360px;flex:0 1 360px;cursor:pointer;overflow:hidden;}
@@ -3679,3 +3679,41 @@ button.ovNoteCount{cursor:pointer;}
 .todoRichEditor ul,.todoRichEditor ol{padding-inline-start:24px;}
 .todoHint{padding-top:6px;}
 .todoToolbar [hidden]{display:none;}
+
+#ordersTable tbody tr:not(.cpLogisticDetailRow):not(.tableDetailRow)>td.editTd{
+  padding-top:1px;
+  padding-bottom:1px;
+}
+#ordersTable tbody tr:not(.cpLogisticDetailRow):not(.tableDetailRow)>td.editTd :is(
+  input.editCell,
+  select.editCell,
+  .noteCellWrap,
+  .noteCellTrigger,
+  .noteCellDelete,
+  .delTypeTrigger,
+  .licensorDependencyCell
+){
+  box-sizing:border-box;
+  max-height:calc(var(--cp-row-h-orders,var(--cp-row-h,46px)) - 2px);
+}
+#ordersTable tbody td.cpLogisticStatusTd,#ordersTable tbody td.cpLogisticArrivalTd,#ordersTable tbody td.cpLogisticDelTypeTd{
+  padding-top:3px;
+  padding-bottom:3px;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+}
+#ordersTable tbody .cpLogisticMainCell,#ordersTable tbody .cpLogisticSummaryStack,#ordersTable tbody .cpLogisticDelTypeWrap,#ordersTable tbody .cpLogisticReadOnlyTypes{
+  min-height:0;
+  max-height:calc(var(--cp-row-h-orders,var(--cp-row-h,46px)) - 6px);
+  overflow:hidden;
+  align-items:center;
+}
+#ordersTable tbody .cpLogisticSummaryStack,#ordersTable tbody .cpLogisticReadOnlyTypes{
+  flex-direction:row;
+  flex-wrap:nowrap;
+}
+#ordersTable tbody .cpLogisticPrimaryDate,#ordersTable tbody .cpLogisticDateSource,#ordersTable tbody .cpLogisticMore{
+  display:inline;
+  margin-top:0;
+}
+#ordersTable tbody .cpLogisticDateSource,#ordersTable tbody .cpLogisticMore{margin-left:5px;}

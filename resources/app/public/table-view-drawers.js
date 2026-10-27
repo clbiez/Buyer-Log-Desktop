@@ -36,12 +36,12 @@
     picker.trigger.setAttribute('aria-expanded','true');
     reposition(picker);
     if(focusOption){
-      const selected=picker.menu.querySelector('[aria-pressed="true"]');
+      const selected=picker.menu.querySelector(picker.price?'[aria-pressed="true"]':'[data-table-view-preset][aria-pressed="true"]');
       (selected||picker.menu.querySelector('button'))?.focus({preventScroll:true});
     }
   }
   function sync(picker){
-    const chosen=picker.menu.querySelector('[aria-pressed="true"]');
+    const chosen=picker.menu.querySelector(picker.price?'[aria-pressed="true"]':'[data-table-view-preset][aria-pressed="true"]');
     const en=isEnglish();
     const label=chosen?buttonLabel(chosen):(en?'Custom':'Özel');
     const current=picker.trigger.querySelector('[data-bl-view-current]');
@@ -69,7 +69,7 @@
       }
     });
     menu.addEventListener('click',event=>{
-      if(event.target.closest('button'))close(picker,false);
+      if(event.target.closest('button')&&!event.target.closest('.workspacePriceSubview'))close(picker,false);
     });
     menu.addEventListener('keydown',event=>{
       if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close(picker,true);return;}
@@ -101,6 +101,26 @@
     // Locale changes update the data-i18n element; reflect its final state in the label.
     new MutationObserver(sync).observe(label,{childList:true,characterData:true,subtree:true});
     sync();
+  }
+  // Put the existing controls on the quick-filter row; keep their event owners.
+  for(const [prefix,quickId] of [['cp','cpKpi'],['orders','ordersKpi'],['kol','kolQuickFilters']]){
+    const quick=document.getElementById(quickId),actions=document.getElementById(prefix+'TableViewActions');
+    if(!quick||!actions)continue;
+    const row=document.createElement('div');row.className='workspaceQuickRow';
+    quick.before(row);row.append(quick,actions);
+    const meta=document.getElementById(prefix+'WorkspaceMeta');
+    const table=document.getElementById(prefix==='kol'?'kolTable':prefix+'Table');
+    const footer=document.createElement('div');footer.className='workspaceTableFooter';
+    table.closest('.tablewrap').after(footer);if(meta)footer.append(meta);
+    if(prefix==='kol')footer.append(document.getElementById('kolSaveState'));
+  }
+  const prices=document.getElementById('kolPricePickerMenu'),view=document.getElementById('kolViewPickerMenu');
+  if(prices&&view){
+    const details=document.createElement('details');details.className='workspacePriceSubview';
+    const summary=document.createElement('summary');
+    summary.innerHTML='<span data-i18n-tr="Fiyat görünümü" data-i18n-en="Price view">'+(isEnglish()?'Price view':'Fiyat görünümü')+'</span>';
+    details.append(summary);while(prices.firstChild)details.append(prices.firstChild);
+    view.append(details);document.getElementById('kolPriceViewActions')?.remove();
   }
   document.querySelectorAll('.blViewPicker').forEach(mount);
   mountVariants();
