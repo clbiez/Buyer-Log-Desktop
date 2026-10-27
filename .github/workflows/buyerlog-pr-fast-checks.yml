@@ -31,6 +31,8 @@ jobs:
         run: node --test tests/cp-grid-paste.test.js tests/collection-spreadsheet-wiring.test.js
       - name: Thinking Orbs startup and navigation regression
         run: node --test tests/boot-thinking-orb-v20260929.test.js tests/startup-guide-v20260930.test.js tests/navigation-revisit-perf-v250.test.js
+      - name: Global Flow startup curtain and performance visibility
+        run: node --test tests/startup-global-flow-curtain.test.js tests/today-feature-performance-v20260926.test.js
       - name: Release version, lock, SBOM and artifact bytes
         run: |
           node --test tests/dependency-inventory-metadata.test.js
