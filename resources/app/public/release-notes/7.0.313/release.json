@@ -1,0 +1,601 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.313",
+  "channel": "stable",
+  "publishedAt": "2026-10-27",
+  "title": {
+    "tr": "Koleksiyon eşzamanlı kayıt ve paylaşım güvenilirliği",
+    "en": "Reliable concurrent Collection saves and sharing"
+  },
+  "summary": {
+    "tr": "Koleksiyon kayıtları eşzamanlı silme, yetki iptali, geciken yenileme ve çevrimdışı taslak geri yükleme sırasında korunur.",
+    "en": "Collection saves are protected during concurrent deletion, permission revocation, delayed refreshes and offline draft recovery."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 1,
+    "fixes": 19
+  },
+  "changes": [
+    {
+      "id": "collection-stale-delete-save",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Silinen modele eski ekrandan kayıt çakışması",
+        "en": "Stale saves detect a deleted model"
+      },
+      "body": {
+        "tr": "Aynı anda silinen modeli eski ekrandan kaydetmek artık çakışma bildirir; yerel taslak korunur. Yeni model ekleme ve geri dönüşüm kutusundan yeni kimlikle geri yükleme çalışmaya devam eder.",
+        "en": "Saving a model deleted by another user now reports a conflict and preserves the local draft. Creating a model and restoring a recycled model under a new identity remain available."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-stale-delete-save.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: silinen satır için çakışma ve korunan yerel taslak.",
+          "en": "Real Buyer Log: deleted-row conflict and preserved local draft."
+        },
+        "caption": {
+          "tr": "Silinen modele eski ekrandan kayıt çakışması",
+          "en": "Stale saves detect a deleted model"
+        }
+      }
+    },
+    {
+      "id": "collection-pending-write-authority",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Bekleyen kayıt güncel düzenleme yetkisini denetler",
+        "en": "Pending saves recheck current edit permission"
+      },
+      "body": {
+        "tr": "Koleksiyon kaydı dosya kilidini bekledikten sonra güncel kullanıcı ve düzenleme yetkisini yeniden denetler. Beklerken erişimi kaldırılan kullanıcının yazımı reddedilir ve kayıt hatası bildirilir.",
+        "en": "After waiting for the file lock, Collection saves recheck the current user and edit permission. A write whose access was revoked while waiting is rejected and a save error is shown."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-pending-write-authority.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: erişim kaldırıldıktan sonra kayıt reddi.",
+          "en": "Real Buyer Log: save rejected after access is removed."
+        },
+        "caption": {
+          "tr": "Bekleyen kayıt güncel düzenleme yetkisini denetler",
+          "en": "Pending saves recheck current edit permission"
+        }
+      }
+    },
+    {
+      "id": "collection-cross-device-empty-text",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Farklı alanların cihazlar arası birleşimi",
+        "en": "Cross-device merging of different fields"
+      },
+      "body": {
+        "tr": "Boş metin alanlarının ilk görüntülemede hazırlanması artık başka cihazdaki gerçek alan değişikliğiyle çakışma sayılmaz. Farklı alanlardaki girişler birlikte korunur; gerçek aynı alan çakışmaları bildirilmeye devam eder.",
+        "en": "Initializing empty text fields for display no longer conflicts with another device’s actual field edit. Changes to different fields are kept together, while genuine same-field conflicts remain visible."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-cross-device-empty-text.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: iki backend üzerinden girilen model ve özel kod aynı satırda.",
+          "en": "Real Buyer Log: model and special-code edits from two backends in one row."
+        },
+        "caption": {
+          "tr": "Farklı alanların cihazlar arası birleşimi",
+          "en": "Cross-device merging of different fields"
+        }
+      }
+    },
+    {
+      "id": "collection-late-read-preserves-save",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Geciken yenileme son kaydı geri alamaz",
+        "en": "Delayed refreshes preserve the latest save"
+      },
+      "body": {
+        "tr": "Düzenleme veya kayıt onayı sırasında geciken eski yenileme yanıtı artık son değerin üzerine uygulanmaz. Gerekli taze okuma yeniden planlanır; gecikmiş canlı olaylar kayıt sürümünü geriye götürmez.",
+        "en": "A stale refresh response arriving during an edit or save acknowledgement no longer replaces the latest value. A fresh read is scheduled when needed, and delayed live events cannot reduce the workspace revision."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-late-read-preserves-save.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: geciken eski yanıttan sonra korunan son kayıt.",
+          "en": "Real Buyer Log: latest saved value preserved after a delayed old response."
+        },
+        "caption": {
+          "tr": "Geciken yenileme son kaydı geri alamaz",
+          "en": "Delayed refreshes preserve the latest save"
+        }
+      }
+    },
+    {
+      "id": "collection-offline-draft-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Yenilemede çevrimdışı taslak ve kayıt sürümü korunur",
+        "en": "Offline drafts and original record versions survive refresh"
+      },
+      "body": {
+        "tr": "Taslak özgün kayıt sürümüyle geri yüklenir. Başka kullanıcının sildiği model yeniden oluşturulmaz; yerel giriş ve ilgisiz yeni kayıtlar korunur, çatışma açıkça gösterilir. Açılışta seçili yetkili çalışma alanı önce yüklenir.",
+        "en": "Draft recovery retains the original record version. A model deleted by another user is not recreated; the local edit and unrelated new records remain available with an explicit conflict. Startup first loads the selected authorized workspace."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-offline-draft-recovery.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: korunan taslak ve açık çatışma",
+          "en": "Real Buyer Log: preserved draft and explicit conflict"
+        },
+        "caption": {
+          "tr": "Yenilemede çevrimdışı taslak ve kayıt sürümü korunur",
+          "en": "Offline drafts and original record versions survive refresh"
+        }
+      }
+    },
+    {
+      "id": "collection-focused-editor-reload",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Açık editör gereksiz yenileme yapmaz",
+        "en": "Focused editors avoid unnecessary reloads"
+      },
+      "body": {
+        "tr": "Uzak yapısal güncelleme, hücre düzenleyicisi açıkken bekletilir. Tüm çalışma alanı sürekli yeniden okunmaz; hücreden çıkıldığında bekleyen güncelleme uygulanır.",
+        "en": "Remote structural updates wait while a cell editor has focus. The full workspace is no longer polled repeatedly; the deferred update resumes when the user leaves the cell."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-focused-editor-reload.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: odak bırakıldıktan sonra güncel satır sırası",
+          "en": "Real Buyer Log: updated row order after leaving the editor"
+        },
+        "caption": {
+          "tr": "Açık editör gereksiz yenileme yapmaz",
+          "en": "Focused editors avoid unnecessary reloads"
+        }
+      }
+    },
+    {
+      "id": "collection-draft-acceptance-feedback",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Taslak ve sunucu kaydı ayrı gösterilir",
+        "en": "Drafts and server saves have distinct states"
+      },
+      "body": {
+        "tr": "Tarayıcıdaki güvenli taslak artık sunucuya kaydedilmiş gibi gösterilmez. Sunucunun reddettiği değişiklikte çatışma veya hata rozeti, uzak güncelleme bildirimi geldiğinde de korunur. Kalıcı kabul ve paylaşım durumu ayrı kalır.",
+        "en": "A secured browser draft is no longer presented as saved to the server. A conflict or error badge remains visible after a remote update notification when the server rejected the change. Durable acceptance and sharing remain distinct."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-draft-acceptance-feedback.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: uzak bildirimden sonra da açık kalan kayıt çatışması",
+          "en": "Real Buyer Log: save conflict remains visible after a remote notification"
+        },
+        "caption": {
+          "tr": "Taslak ve sunucu kaydı ayrı gösterilir",
+          "en": "Drafts and server saves have distinct states"
+        }
+      }
+    },
+    {
+      "id": "collection-editor-preserved",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Uzak güncelleme yazmayı kesmez",
+        "en": "Remote updates preserve active editing"
+      },
+      "body": {
+        "tr": "Arka plan güncellemeleri ve fiyat yenilemeleri açık hücreyi DOM’dan çıkarmaz. Hesaplama verisi güncel tutulur; görsel yenileme düzenleyiciden çıkışta uygulanır. Henüz gönderilmemiş metin ayrı gösterilir.",
+        "en": "Background updates and pricing refreshes no longer detach the active cell. Calculation data stays current; visual refreshes resume when the user leaves the editor. Unsubmitted text has a distinct state."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-editor-preserved.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Uzak güncelleme yazmayı kesmez",
+          "en": "Real Buyer Log: Remote updates preserve active editing"
+        },
+        "caption": {
+          "tr": "Uzak güncelleme yazmayı kesmez",
+          "en": "Remote updates preserve active editing"
+        }
+      }
+    },
+    {
+      "id": "collection-import-live-notification",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Alınan kayıt açık ekranlara bildirilir",
+        "en": "Imported records notify open views"
+      },
+      "body": {
+        "tr": "Bir okuma uzak kopyayı önce almış olsa da değişiklik bildirimi kaybolmaz. Yeni kayıt ve silmeler yetkili açık ekranlara ulaşır; periyodik kontrol aynı aktarımı ikinci kez bildirmez.",
+        "en": "An update notification is no longer missed when a read imports the remote copy first. New records and deletions reach authorized open views, without the periodic poll announcing the same import again."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-import-live-notification.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Alınan kayıt açık ekranlara bildirilir",
+          "en": "Real Buyer Log: Imported records notify open views"
+        },
+        "caption": {
+          "tr": "Alınan kayıt açık ekranlara bildirilir",
+          "en": "Imported records notify open views"
+        }
+      }
+    },
+    {
+      "id": "collection-pull-preserves-accepted-write",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Eski uzak kopya yeni yerel kaydı ezemez",
+        "en": "Stale pulls preserve newly accepted writes"
+      },
+      "body": {
+        "tr": "Uzak kopya uygulanmadan önce yerel içeriğin değişmediği yeniden doğrulanır. Araya giren yeni kayıt, uzak sürüm numarası daha büyük olsa da korunur. Kesintiye uğrayan aktarım sonraki kontrolde yeniden değerlendirilir.",
+        "en": "Local content is rechecked before a remote copy is applied. A newly committed write is preserved even when the remote revision is larger. An interrupted import is reconsidered by the next poll."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-pull-preserves-accepted-write.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Eski uzak kopya yeni yerel kaydı ezemez",
+          "en": "Real Buyer Log: Stale pulls preserve newly accepted writes"
+        },
+        "caption": {
+          "tr": "Eski uzak kopya yeni yerel kaydı ezemez",
+          "en": "Stale pulls preserve newly accepted writes"
+        }
+      }
+    },
+    {
+      "id": "collection-pointer-preserved",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Bekleyen yenileme tıklamayı kesmez",
+        "en": "Pending refreshes preserve clicks"
+      },
+      "body": {
+        "tr": "Hücreden bir düğmeye geçerken bekleyen görsel yenileme, pointer bırakılıp tıklama işlendikten sonra uygulanır. Fiyat çekmecesi gibi işlemler arada kaybolan düğmeler yüzünden iptal olmaz.",
+        "en": "When moving from a cell to a button, a pending visual refresh waits until pointer release and click handling. Actions such as opening the price drawer are no longer interrupted by detached buttons."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-pointer-preserved.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Bekleyen yenileme tıklamayı kesmez",
+          "en": "Real Buyer Log: Pending refreshes preserve clicks"
+        },
+        "caption": {
+          "tr": "Bekleyen yenileme tıklamayı kesmez",
+          "en": "Pending refreshes preserve clicks"
+        }
+      }
+    },
+    {
+      "id": "collection-owner-sync-queue",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Senkron tabanı eşzamanlı işlemlerde korunur",
+        "en": "Concurrent sync keeps its merge base consistent"
+      },
+      "body": {
+        "tr": "Aynı Koleksiyon sahibinin uzak okuma ve yayın işlemleri sıralanır; eski bir okuma, yeni kabul edilmiş alanları güncel tabanla karşılaştırıp geri alamaz. Diğer sahiplerin kayıtları bağımsız ilerler.",
+        "en": "Remote reads and publications for one Collection owner run in order. An older read cannot use a newly advanced base to roll back accepted fields. Other owners continue independently."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-owner-sync-queue.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Senkron tabanı eşzamanlı işlemlerde korunur",
+          "en": "Real Buyer Log: Concurrent sync keeps its merge base consistent"
+        },
+        "caption": {
+          "tr": "Senkron tabanı eşzamanlı işlemlerde korunur",
+          "en": "Concurrent sync keeps its merge base consistent"
+        }
+      }
+    },
+    {
+      "id": "collection-rejected-draft-token",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Reddedilen taslak otomatik olarak kabul edilmiş sayılmaz",
+        "en": "Rejected drafts cannot silently become accepted"
+      },
+      "body": {
+        "tr": "Paylaşılan satırın kaydı reddedildiğinde özgün sürüm beklentisi ve yerel taslak korunur. Sonraki otomatik fiyat yenilemesi eski alanları yeni sürümle gönderip başka kullanıcının kaydını ezemez. Kendi Koleksiyonunuzun mevcut yeniden tabanlama davranışı korunur.",
+        "en": "A rejected shared-row save retains its original revision expectation and local draft. A later automatic pricing refresh cannot submit stale fields with a fresh revision and overwrite another user’s save. Existing rebasing behavior in your own Collection is preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-rejected-draft-token.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Fiyat yenilemesi sonrasında reddedilen taslak çakışma durumunda kalır",
+          "en": "Real Buyer Log: A rejected draft remains in conflict after pricing refresh"
+        },
+        "caption": {
+          "tr": "Yerel taslak korunur, sunucudaki kabul edilmiş kayıt ezilmez",
+          "en": "The draft is preserved without overwriting the accepted server record"
+        }
+      }
+    },
+    {
+      "id": "collection-explicit-server-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon ve SYNC",
+        "en": "Collection and SYNC"
+      },
+      "title": {
+        "tr": "Reddedilen taslaktan güvenli biçimde çıkış",
+        "en": "Safe recovery from a rejected draft"
+      },
+      "body": {
+        "tr": "Çakışma veya kayıt hatasında Sunucudakini yükle eylemi, açık onayınızla bu cihazın sunucusunda kabul edilmiş kopyayı alır. Taslak yalnız başarılı ve hâlâ güncel okuma sonrasında bırakılır; iptal, ağ hatası veya araya giren yeni düzenleme taslağı silmez. Paylaşıma teslim durumu ayrıca gösterilir.",
+        "en": "After a conflict or save error, Load accepted server data uses your explicit confirmation to read this device’s accepted server copy. The draft is discarded only after a successful read that is still current. Cancellation, network errors and intervening edits preserve the draft. Shared delivery status is shown separately."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-explicit-server-recovery.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Çakışma sonrası Sunucudakini yükle düğmesi",
+          "en": "Real Buyer Log: Load accepted server data after a conflict"
+        },
+        "caption": {
+          "tr": "Yerel taslak kullanıcı onayına ve başarılı okumaya kadar korunur",
+          "en": "The draft remains until user confirmation and a successful read"
+        }
+      }
+    },
+    {
+      "id": "collection-status-render-once",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Eşzamanlı tablo yenilemelerinde daha az bekleme",
+        "en": "Less waiting during concurrent table refreshes"
+      },
+      "body": {
+        "tr": "Durum seçenekleri her hücre ve seçenek için bütün çalışma alanı yeniden taranarak hazırlanmaz. Her tablo çizimi aynı güncel durum kataloğunu kullanır; özel durumlar, renkler ve Türkçe/İngilizce etiketler korunur.",
+        "en": "Status options no longer rescan the entire workspace for every cell and option. Each table paint shares the current status catalog; custom statuses, colors and Turkish/English labels are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-status-render-once.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: 50 sentetik satırda filtreleme sonrası güncel durum seçeneklerini koruyan Koleksiyon tablosu",
+          "en": "Real Buyer Log: Collection with 50 synthetic rows and current status options after filtering"
+        },
+        "caption": {
+          "tr": "50 sentetik modelde filtre temizlendikten sonra güncel durum seçenekleri korunur.",
+          "en": "Current status options are preserved after clearing the filter across 50 synthetic models."
+        }
+      }
+    },
+    {
+      "id": "feedback-closing-queue-progress",
+      "type": "fix",
+      "module": {
+        "tr": "Bildirimler",
+        "en": "Notifications"
+      },
+      "title": {
+        "tr": "Yoğun bildirimlerde arayüz kilitlenmesi giderildi",
+        "en": "Fixed UI freeze during notification bursts"
+      },
+      "body": {
+        "tr": "Kapanma animasyonu süren eski bir bildirim varken yeni bildirimler geldiğinde arayüz artık sonsuz tahliye döngüsüne girmez. Yığın dört öğeyle sınırlı kalır; kayıt ve bağlantı uyarılarından sonra düzenlemeye devam edebilirsiniz.",
+        "en": "New notifications no longer trap the UI in an endless eviction loop while an older notification is leaving. The stack remains limited to four items, and editing continues after save or connection warnings."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "feedback-closing-queue-progress.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: kapanmakta olan bildirim tahliye edildikten sonra dört sentetik bildirim ve sunucuda kabul edilmiş yeni model adı",
+          "en": "Real Buyer Log: four synthetic notifications after evicting a closing item, with a newly accepted model name"
+        },
+        "caption": {
+          "tr": "Bildirim yarışından sonra gerçek UI düzenlemesi sunucuda kabul edildi.",
+          "en": "A real UI edit was accepted by the server after the notification race."
+        }
+      }
+    },
+    {
+      "id": "collection-sharing-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Paylaşım geri geldiğinde bekleyen kayıtlar yeniden gönderilir",
+        "en": "Pending records are published when sharing recovers"
+      },
+      "body": {
+        "tr": "Bu cihazda kabul edilen bir kayıt paylaşım hatası nedeniyle gönderilemediyse, aynı paylaşım dosyası geri geldiğinde canlı eşitleme yeniden dener. Yerel kayıt korunur; paylaşım tamamlandığında kayıt durumu güncellenir.",
+        "en": "When a record accepted on this device could not be published because sharing failed, live sync retries even when the same shared file returns. The local record is preserved, and its save status updates after publication."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-sharing-recovery.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: paylaşım hatası giderildikten sonra kabul edilmiş sentetik model ve güncellenmiş kayıt durumu",
+          "en": "Real Buyer Log: an accepted synthetic model and updated save status after sharing recovers"
+        },
+        "caption": {
+          "tr": "Gerçek dosya hatası giderildikten sonra diğer cihaz güncellendi ve Paylaşım bekliyor durumu kapandı.",
+          "en": "After the real file error cleared, the peer updated and the Sharing pending state cleared."
+        }
+      }
+    },
+    {
+      "id": "collection-deferred-rule-projection",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Düzenleme sırasında fiyat çekmecesi güncel otomatik kuralı kullanır",
+        "en": "The price drawer uses the current automatic rule while editing"
+      },
+      "body": {
+        "tr": "Eski kuralı görmüş başka bir kullanıcının kaydı geldiğinde, aktif editör korunurken otomatik royalty ve maliyet alanları güncellenir. Çekmece artık güncel kural kimliğiyle eski royalty sonucunu birlikte göstermez; manuel fiyat ve kur tercihleriniz korunur.",
+        "en": "When a save arrives from a peer that observed an older rule, automatic royalty and cost fields update while your active editor stays attached. The drawer no longer combines the current rule identity with an old royalty result; manual prices and FX choices are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-deferred-rule-projection.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: bekletilmiş gerçek kural yanıtı yarışından sonra güncel yüzde 25 toplam royalty ve 5,93 maliyet",
+          "en": "Real Buyer Log: current 25 percent total royalty and 5.93 cost after a held genuine rule-response race"
+        },
+        "caption": {
+          "tr": "Eski otomatik alanlar geldiğinde editör yerinde kalır; çekmece güncel kuralla 5,93 gösterir.",
+          "en": "The editor stays attached when older automatic fields arrive; the drawer shows 5.93 using the current rule."
+        }
+      }
+    },
+    {
+      "id": "collection-private-live-events",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Özel çalışma alanlarının canlı bildirimleri yetkiyle süzülür",
+        "en": "Live notifications for private workspaces respect access"
+      },
+      "body": {
+        "tr": "Yapısal Koleksiyon değişiklikleri ve izin güncellemeleri yalnız ilgili oturumlara bildirilir. Erişim kaldırıldığında açık oturum yeni veri olayları almaz; izin listesini yenileyen iptal bildirimi ilgili kullanıcıya ulaşır.",
+        "en": "Structural Collection changes and permission updates notify only relevant sessions. After access is removed, an open session receives no further data events; its permission invalidation still arrives so it can refresh the workspace list."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-private-live-events.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: özel sentetik çalışma alanının yetkili sahibinde açık Koleksiyon ekranı",
+          "en": "Real Buyer Log: the authorized owner viewing a private synthetic Collection workspace"
+        },
+        "caption": {
+          "tr": "Sahibin erişimi korunur. Yetkisiz SSE tesliminin engellendiği ayrı ham akış kayıtlarıyla doğrulandı.",
+          "en": "Owner access remains available. Separate raw stream evidence verifies that unauthorized SSE delivery is blocked."
+        }
+      }
+    },
+    {
+      "id": "windows-lease-retirement-marker-retry",
+      "type": "fix",
+      "module": {
+        "tr": "Kayıt ve senkronizasyon",
+        "en": "Saving and synchronization"
+      },
+      "title": {
+        "tr": "Windows’ta geçici dosya kilidi hatalarından güvenli toparlanma",
+        "en": "Safe recovery from transient file-lock errors on Windows"
+      },
+      "body": {
+        "tr": "Eşzamanlı kayıt sırasında kilit işaretçisine erişim geçici olarak engellenirse mevcut sınırlı yeniden deneme uygulanır. Canlı kayıt sahibinin kilidi korunur; kalıcı izin veya disk hatasında veri değiştirilmeden işlem durdurulur.",
+        "en": "When access to a lease marker is temporarily blocked during concurrent saves, the existing bounded retry policy applies. A live writer retains its lease; persistent permission or disk errors stop the operation without changing the data."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "windows-lease-retirement-recovery.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: kilit metadata düzeltmesi sonrasında yetkili kullanıcının Koleksiyon ekranı",
+          "en": "Real Buyer Log: an authorized Collection workspace after the lease metadata fix"
+        },
+        "caption": {
+          "tr": "Normal kayıt ve yetki sınırı native uygulamada doğrulandı. Windows hatası ve güvenli yeniden deneme ayrı regresyon kayıtlarıyla sınandı.",
+          "en": "Normal saving and access boundaries were checked in the native application. The Windows error and safe retry were verified in separate regression records."
+        }
+      }
+    }
+  ]
+}

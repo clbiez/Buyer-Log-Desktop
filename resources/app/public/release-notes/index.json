@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.313",
+      "publishedAt": "2026-10-27",
+      "title": {
+        "tr": "Koleksiyon eşzamanlı kayıt ve paylaşım güvenilirliği",
+        "en": "Reliable concurrent Collection saves and sharing"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 1,
+        "fixes": 19
+      },
+      "file": "release-notes/7.0.313/release.json"
+    },
+    {
       "version": "7.0.311",
       "publishedAt": "2026-10-25",
       "title": {
