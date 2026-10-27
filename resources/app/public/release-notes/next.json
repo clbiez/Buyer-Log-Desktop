@@ -1,161 +1,16 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-25",
+  "publishedAt": "",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Kendini güncelleyen güncelleme altyapısı ve Shared Hub kullanıcı dizini ve Thinking Orbs",
-    "en": "Self-updating update infrastructure and Shared Hub user directory and Thinking Orbs"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "Eski kurulumlar “updater altyapısı yetersiz” hatası olmadan güncellenir; güncelleme altyapısı bundan sonra imzalı sürümlerle birlikte kendini güvenle yükseltir; yeni kurulum eksik denetim kaydına takılmadan Shared Hub kullanıcılarını yükler. Açılış ve işlem bekleme göstergelerindeki özgün Thinking Orbs animasyonları geri getirildi. Koleksiyon kayıtları eşzamanlı silme, yetki iptali, geciken yenileme ve çevrimdışı taslak geri yükleme sırasında korunur.",
-    "en": "Older installations update without the “updater infrastructure too old” error; from now on the update infrastructure upgrades itself safely together with signed releases; a new installation loads Shared Hub users without stalling on a missing audit record. The original Thinking Orbs animations have returned to startup and busy indicators. Collection saves are protected during concurrent deletion, permission revocation, delayed refreshes and offline draft recovery."
+    "tr": "Koleksiyon kayıtları eşzamanlı silme, yetki iptali, geciken yenileme ve çevrimdışı taslak geri yükleme sırasında korunur.",
+    "en": "Collection saves are protected during concurrent deletion, permission revocation, delayed refreshes and offline draft recovery."
   },
   "changes": [
-    {
-      "id": "update-infrastructure-self-upgrade",
-      "type": "fix",
-      "module": {
-        "tr": "Güncelleme",
-        "en": "Updates"
-      },
-      "title": {
-        "tr": "Güncelleme altyapısı artık kendini de güncelliyor",
-        "en": "The update infrastructure now updates itself"
-      },
-      "body": {
-        "tr": "Eski kurulumlar (updater 1.0.0 / 1.1.0) “daha yeni updater altyapısı gerekiyor” hatasında takılmadan yeni sürümü kurar. Sürümün ilk sağlıklı açılışında, imzalı ve doğrulanmış paketteki güncelleme altyapısı otomatik hazırlanır; bir sonraki açılışta etkinleşir. Yönetici yetkisi ya da elle kurulum gerekmez. Yeni altyapı açılamazsa önceki altyapıya otomatik dönülür. Kurulum dosyaları değiştirilmişse veya klasör yazılamıyorsa yükseltme yapılmaz; Güncellemeleri Kontrol Et penceresi nedenini gösterir.",
-        "en": "Older installations (updater 1.0.0 / 1.1.0) install the new version instead of stopping at “requires newer updater infrastructure”. On the version’s first healthy start, the update infrastructure from the signed, verified package is prepared automatically and activates on the next start. No administrator rights or manual installation are needed. If the new infrastructure cannot start, the previous one is restored automatically. When installation files were modified or the folder is not writable, the upgrade is skipped and Check for Updates shows the reason."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "update-infrastructure-self-upgrade.png",
-        "alt": {
-          "tr": "Gerçek Buyer Log Güncellemeleri Kontrol Et penceresi: güncelleme altyapısı 1.0.0 → 1.2.0 hazır, demo veri",
-          "en": "Real Buyer Log Check for Updates window: update infrastructure 1.0.0 → 1.2.0 ready, demo data"
-        },
-        "caption": {
-          "tr": "Güncelleme altyapısı otomatik yükseltildi",
-          "en": "Update infrastructure upgraded automatically"
-        }
-      }
-    },
-    {
-      "id": "new-install-shared-users",
-      "type": "fix",
-      "module": {
-        "tr": "Giriş · Kullanıcı Yönetimi",
-        "en": "Sign-in · User Management"
-      },
-      "title": {
-        "tr": "Yeni kurulum Shared Hub kullanıcılarını görür",
-        "en": "New installations see Shared Hub users"
-      },
-      "body": {
-        "tr": "Yeni bir Buyer Log klasörü Shared Hub’a bağlandığında yalnız Moderatör görünüyordu: bir revizyonun denetim kaydı (audit.json) eksik ya da eski biçimliyse doğrulanmış kullanıcı dizini de reddediliyordu. Denetim kaydı artık dizini engellemez; kullanıcılar listelenir. Dizin yine de reddedilirse giriş ekranındaki \"Kullanıcılar ve yetkiler\" satırı reddedilen revizyonu ve alanı gösterir.",
-        "en": "A new Buyer Log folder connected to the Shared Hub showed only the Moderator: when a revision’s audit record (audit.json) was missing or in a legacy format, the verified user directory was rejected too. The audit record no longer blocks the directory; users are listed. If the directory is still rejected, the \"Users and permissions\" line on the sign-in screen names the rejected revision and field."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "new-install-shared-users.png",
-        "alt": {
-          "tr": "Boş yeni kurulumda giriş ekranı: \"fat\" yazınca demo Shared Hub kullanıcıları Fatih Demir ve Fatma Yıldız önerilir",
-          "en": "Sign-in screen on an empty new installation: typing \"fat\" suggests demo Shared Hub users Fatih Demir and Fatma Yıldız"
-        },
-        "caption": {
-          "tr": "Audit kaydı olmayan demo Shared Hub’a bağlanan yeni kurulum: eşitleme 4 kullanıcı · 4 aktif ile tamamlanır.",
-          "en": "A new installation connected to a demo Shared Hub without audit records: sync completes with 4 users · 4 active."
-        }
-      }
-    },
-    {
-      "id": "smart-layout-studio",
-      "type": "feature",
-      "module": {
-        "tr": "Sunum · LCW AI · Koleksiyon · CP · Siparişler",
-        "en": "Presentations · LCW AI · Collection · CP · Orders"
-      },
-      "title": {
-        "tr": "Modellerden üç adımda akıllı sunum",
-        "en": "Smart presentations from models in three steps"
-      },
-      "body": {
-        "tr": "Tools menülerinden AI bağlantısı olmadan sunum taslağı oluşturun. Kaynak alanlarını ve grupları seçin; tekli ve set kartlarını ortak yerleşim hesabıyla düzenleyin. Başlık ve kart tutamakları, geri al/yinele, sekiz görsel şablon, A3/A4/A5/Letter/16:9 sayfalar ve PDF/PowerPoint/Excel/HTML çıktıları aynı editördedir. LCW AI düzen önerileri doğrulanır ve onayınızla uygulanır. Kaynak kayıt değerleri değişmez; büyük kapsamda 200 görsel sınırı açıkça gösterilir.",
-        "en": "Create presentation drafts from Tools without an AI connection. Choose source fields and groups; arrange single and set cards with the shared layout calculation. Title and card handles, undo/redo, eight visual presets, A3/A4/A5/Letter/16:9 pages and PDF/PowerPoint/Excel/HTML exports share one editor. LCW AI layout suggestions are validated and applied with your approval. Source record values remain unchanged; the 200-image limit is explicit for large scopes."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "smart-layout-studio.png",
-        "alt": {
-          "tr": "Manifest Smart Layout Studio içinde demo tekli ve set kartları, gruplama ve görsel şablonlar",
-          "en": "Demo single and set cards, grouping and visual presets in Manifest Smart Layout Studio"
-        },
-        "caption": {
-          "tr": "Gerçek Buyer Log ekranında 23 demo model; setler çift yükseklikte, kaynak bilgileri korunur.",
-          "en": "23 demo models in the actual Buyer Log screen; sets use double-height cards and source details are preserved."
-        }
-      }
-    },
-    {
-      "id": "table-selection-checkbox-theme-unification",
-      "type": "improvement",
-      "module": {
-        "tr": "Tablolar",
-        "en": "Tables"
-      },
-      "title": {
-        "tr": "Tablo seçim kutuları tüm temalarda daha sade",
-        "en": "Cleaner table selection controls across themes"
-      },
-      "body": {
-        "tr": "Tabloların ilk sütunundaki satır seçimi ve tümünü seç kutuları Light, Grey ve Dark temalarının ortak renklerini kullanır. Boş, işaretli, kısmi seçim, klavye odağı ve devre dışı durumları okunaklıdır; mevcut seçim davranışları değişmez.",
-        "en": "Row selection and select-all checkboxes in the leading table column use the shared Light, Grey and Dark theme palette. Unchecked, checked, mixed, keyboard-focused and disabled states remain clear without changing selection behavior."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "table-selection-checkbox-theme-unification.png",
-        "alt": {
-          "tr": "Buyer Log tablo seçim kutuları, Light Grey ve Dark temalarda",
-          "en": "Buyer Log table selection checkboxes in Light, Grey and Dark themes"
-        },
-        "caption": {
-          "tr": "Sade ve temayla uyumlu seçim kutuları",
-          "en": "Clean selection controls matching each theme"
-        }
-      }
-    },
-    {
-      "id": "thinking-orbs-loading-restored",
-      "type": "fix",
-      "module": {
-        "tr": "Açılış · Bekleme · Global Flow",
-        "en": "Startup · Loading · Global Flow"
-      },
-      "title": {
-        "tr": "Thinking Orbs animasyonları geri döndü",
-        "en": "Thinking Orbs animations are back"
-      },
-      "body": {
-        "tr": "Açılıştaki Breathing Orb, ekran ve işlem beklemelerindeki noktalı Thinking Orb ve Global Flow haritasındaki Working Orb yeniden etkinleştirildi. Yükleme tamamlandığında animasyon durur; görünmeyen ekran, sekme ve azaltılmış hareket tercihlerine saygı gösterilir. Eski yükleme davranışına veya verilere müdahale edilmez.",
-        "en": "The startup Breathing Orb, dotted Thinking Orb in loading states, and the Global Flow Working Orb are restored. Animation stops when loading completes and respects hidden screens, tabs, and reduced-motion preferences. Startup/data behavior remains unchanged."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "thinking-orbs-loading-restored.png",
-        "alt": {
-          "tr": "Yeni kodla çalışan gerçek Buyer Log açılış ekranı; noktalı Breathing Orb ve aşama göstergeleri",
-          "en": "Real Buyer Log startup with the updated code, dotted Breathing Orb and loading stages"
-        },
-        "caption": {
-          "tr": "Gerçek Buyer Log: Breathing Orb yükleme sırasında etkin",
-          "en": "Real Buyer Log: Breathing Orb active during startup"
-        }
-      }
-    },
     {
       "id": "collection-stale-delete-save",
       "type": "fix",

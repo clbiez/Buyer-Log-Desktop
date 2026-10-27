@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.300",
-  "commit_sha": "5150c389d3846f37efa0657c79b71b12d242766e",
-  "release_notes": "Buyer Log 7.0.300 STABLE — promote the exact signed TEST 7.0.300 artifact after successful Windows full regression, release validation and TEST publishing. Source 5150c389d384; draft notification PRs #694/#721 remain excluded. No rebuild.",
-  "request_id": "7.0.300-stable-after-signed-test-20261025"
+  "version": "7.0.311",
+  "commit_sha": "67929bb45ed8714b0b8b68e131c296540c787309",
+  "release_notes": "Buyer Log 7.0.311 STABLE — promote signed TEST 7.0.311 artifact byte-for-byte after full Windows regression, TEST publish success and remote SHA-256 verification. Model image return acceptance ran with explicitly non-blocking user-approved warning policy; all other mandatory checks passed. No rebuild.",
+  "request_id": "7.0.311-stable-promote-signed-test-20261027"
 }
