@@ -287,9 +287,19 @@
     state.syncPromise = drainAnswerChanges().finally(function () { state.syncPromise = null; });
     return state.syncPromise;
   }
+  // Promotion can rebuild an equivalent entry with a different property order.
+  // Compare fields rather than JSON object insertion order so a denied write
+  // remains deferred until the actual answer/evidence changes.
+  function samePendingEntry(a, b) {
+    if (!a || !b) return false;
+    const keys = Object.keys(a), others = Object.keys(b);
+    return keys.length === others.length && keys.every(function (key) {
+      return Object.prototype.hasOwnProperty.call(b, key) && sameJson(a[key], b[key]);
+    });
+  }
   function sendablePendingEntry(entry) {
     const key = answerKey(entry.orderKey, entry.itemId);
-    return !entry.syncBlocked && !sameJson(state.permissionDeferred.get(key), entry);
+    return !entry.syncBlocked && !samePendingEntry(state.permissionDeferred.get(key), entry);
   }
   async function drainAnswerChanges() {
     let inFlightEntries = [];
