@@ -1,24 +1,12 @@
 {
-  "finalIntegratedSource": "a98c55a8ee8278ffb4f518376b69757e2207341d",
-  "fullSource": "67235e3227e89cf1bbb4cc2aa1ec6b14849710e3",
-  "lastIntegratedMain": "3dc7723f1db4cfdb55648c3c19983eab6416e0c9",
-  "applicationVersion": "7.0.308",
-  "productionTreeEqualToFull": {
+  "finalProductionSource": "f2ff5a347ffefad2d52446df83ac2d9594b309a7",
+  "fullSource": "f2ff5a347ffefad2d52446df83ac2d9594b309a7",
+  "lastIntegratedMain": "1c1602fb369b90ea6c15d1915d4b07a909cc4594",
+  "applicationVersion": "7.0.311",
+  "productionTestTreesUnchangedSinceFull": {
     "server": true,
     "public": true,
-    "tests": false
+    "tests": true
   },
-  "testDifferenceFromFull": [
-    "resources/app/tests/clipboard-contract-v1085.test.js"
-  ],
-  "additionalTargetedCheck": {
-    "log": "latest-main-metadata-clipboard.log",
-    "files": 2,
-    "tests": 8,
-    "pass": 8,
-    "fail": 0,
-    "inventoryCheck": "latest-main-inventory.log"
-  },
-  "releaseRequestDifferenceAgainstMain": "",
-  "note": "Upstream changed release metadata/package version and the same clipboard fixture. Preserve both regression assertions. No new SYNC production code; original clean full plus the affected final fixture/metadata checks applies. No full/load repeated for metadata alone."
+  "note": "Subsequent audit-only commit is covered by identical production/test tree hashes; exact final PR head and actual merge are recorded in delivery-status JSON."
 }

@@ -1,0 +1,34 @@
+{
+  "status": "completed-with-targeted-test-fixture-correction",
+  "source": "f2ff5a347ffefad2d52446df83ac2d9594b309a7",
+  "originalFullSource": "7ea6fa5bae55644586d84bb8731745e72727bd81",
+  "originalFullExitCode": 1,
+  "originalFullResult": "final-full-suite-sse-isolation-result.json",
+  "sourceDirty": "audit-only files changed; server/public/tests match source",
+  "files": 1133,
+  "tests": 7978,
+  "pass": 7913,
+  "fail": 0,
+  "skipped": 65,
+  "cancelled": 0,
+  "remaining": {
+    "tests": 35,
+    "pass": 34,
+    "fail": 0,
+    "skipped": 1,
+    "cancelled": 0
+  },
+  "targeted": {
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "log": "settle-oracle-syntax-final.log"
+  },
+  "removedSyntheticFileFailures": 1,
+  "retainedOriginalAssertionFailures": 0,
+  "loadRunningAlongside": false,
+  "automaticRetries": 0,
+  "productionTreeUnchangedSinceOriginalFull": true,
+  "fixScope": "One missing parenthesis in the manual-driver test fixture; no product/test behavior changed elsewhere.",
+  "note": "Not a clean single-command full. Original standard run reached 1130 files and failed syntax in one fixture. Corrected fixture passed 6/6 through standard runner; 3 previously unreached files passed through the same standard runner. No successful earlier files were habitually repeated."
+}

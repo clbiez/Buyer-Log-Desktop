@@ -1,0 +1,2483 @@
+{
+  "note": "Statuses are copied from original retained files. certificationDisposition overrides overall acceptance when an independent oracle failed; it never rewrites the driver result. Recovery/correction is separate evidence, not a replacement result. Scope and source inheritance are in final-report.md. A lower user count is never a 50-user pass.",
+  "runs": [
+    {
+      "root": "/workspace/scratch/bl-active-watchdog-restart-3",
+      "sourceHeadAtSetup": "2a3de62964d4661b17a9f21b8edfbd1b93428004",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "5fc645f761fe4585a7f1fa73a0f452be5fea7845743b1e9c6cd1c232040f1258",
+          "status": "passed",
+          "source": "2a3de62964d4661b17a9f21b8edfbd1b93428004",
+          "backends": 2,
+          "replicas": 2
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-aligned-native-ui-smoke",
+      "sourceHeadAtSetup": "b9224879d04c89b014fdc0d97b366f15ea13f3cf",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "fb793c3f0f4fe4a223fa4cc70d222e61052ae6923dd9fb751321cb849bd6dd3a",
+          "status": "passed",
+          "source": "b9224879d04c89b014fdc0d97b366f15ea13f3cf",
+          "users": 3,
+          "backendInstances": 3,
+          "replicas": 3,
+          "requestedSeconds": 60,
+          "measurementAt": 1793028284451,
+          "measurementDurationMs": 60000,
+          "completedOperations": 21,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "bed43c8502d54402a9b8388a3dd51c39f7b19876ccb3fa7b3fa61751e1ab4987"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-base-race-green",
+      "sourceHeadAtSetup": "7a017679d218b944087d242d5122e1748797fc51",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "a8d5a5a5f47742edb1d2a8f8962855bd87f6faaa00279b030b3a5e10a56d273c",
+          "source": "7a017679d218b944087d242d5122e1748797fc51"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-base-race-red",
+      "sourceHeadAtSetup": "7a017679d218b944087d242d5122e1748797fc51",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "6813e7ad7378233bae9fab3374efce1b8255a30ff910dc803fb2c5a926cf259c",
+          "source": "7a017679d218b944087d242d5122e1748797fc51"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-base-race-red-2",
+      "sourceHeadAtSetup": "7a017679d218b944087d242d5122e1748797fc51",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "08e059c439fe46ef17e5da2c42cdd9ae041c283dc25bee0f7d9bb64a1d7add97",
+          "source": "7a017679d218b944087d242d5122e1748797fc51"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-base-race-red-3",
+      "sourceHeadAtSetup": "7a017679d218b944087d242d5122e1748797fc51",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "b4473961505d5d9a35c3c1ae1c40c492ad399322eab1ed8bb7b5698f1fcb9270",
+          "source": "7a017679d218b944087d242d5122e1748797fc51"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-controlled-1",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "e34c96933b461558faefc8cea5fe1576abb21b1aefea47ecaf1ae3b81b5219f0",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "same-field-row-CAS",
+              "status": "passed"
+            },
+            {
+              "name": "different-fields-same-row-CAS",
+              "status": "passed"
+            },
+            {
+              "name": "delete-before-stale-save",
+              "status": "passed"
+            },
+            {
+              "name": "response-lost-after-durable-acceptance",
+              "status": "passed"
+            },
+            {
+              "name": "offline-before-send-and-refresh",
+              "status": "passed"
+            },
+            {
+              "name": "same-user-two-tabs",
+              "status": "passed"
+            },
+            {
+              "name": "expired-client-session-rejects-save",
+              "status": "passed"
+            },
+            {
+              "name": "cross-owner-isolation",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-controlled-extra-1",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "96d989f3875ecb30b97558c3bf8b9fcb0888b0f029084d780c1887dc9653ee2c",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "extra-cross-backend-different-fields",
+              "status": "failed",
+              "error": "Error: field merge across actual backends timeout\n    at Object.until (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/runtime.cjs:6:214)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:18:374\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:7:142)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:18:1"
+            },
+            {
+              "name": "extra-real-ui-create-delete",
+              "status": "passed"
+            },
+            {
+              "name": "extra-two-moderators-rule-CAS",
+              "status": "failed",
+              "error": "Error: HTTP 400 {\"error\":\"Beklenen IAM revizyonu zorunludur.\",\"code\":\"IAM_EXPECTED_REVISION_REQUIRED\"}\n    at Object.check (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/runtime.cjs:12:61)\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:20:71\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:7:142)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:20:1"
+            },
+            {
+              "name": "extra-moderator-before-during-before-commit",
+              "status": "failed",
+              "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n20 !== 21\n\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:21:1038\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:7:142)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:21:1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-controlled-extra-2",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "47d81b2ccdd00f244cd480fa72ba280946ffbb9a30d7f742a89bb306768672e8",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "extra-cross-backend-different-fields",
+              "status": "passed"
+            },
+            {
+              "name": "extra-two-moderators-rule-CAS",
+              "status": "failed",
+              "error": "Error: HTTP 400 {\"error\":\"Yükseltilmiş sistem rolü için gerekçe zorunludur.\",\"code\":\"GRANT_REASON_REQUIRED\"}\n    at Object.check (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/runtime.cjs:12:61)\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:20:71\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:7:142)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:20:1"
+            },
+            {
+              "name": "extra-late-read-after-durable-save",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-controlled-extra-3",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "0412ceebc7f34c32d59a99f066bbc3c40165b9c54571d827c79dcfdb1da6e825",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "extra-two-moderators-rule-CAS",
+              "status": "failed",
+              "error": "Error: HTTP 400 {\"error\":\"Moderatör ataması için onay ve gerekçe zorunludur.\",\"code\":\"CRITICAL_CONFIRMATION_REQUIRED\"}\n    at Object.check (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/runtime.cjs:12:61)\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:20:71\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:7:142)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:20:1"
+            },
+            {
+              "name": "extra-moderator-before-during-before-commit",
+              "status": "failed",
+              "error": "Error: native rule content convergence timeout\n    at Object.until (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/runtime.cjs:6:214)\n    at async converge (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:24:204)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:25:74\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:7:142)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:21:1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-controlled-extra-5",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "49157e948074ac6ea0109b66ee2e80809cd680e9ad3eae9de4294d21d5e79624",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "extra-two-moderators-rule-CAS",
+              "status": "failed",
+              "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n409 !== 200\n\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:429:16\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:52:18)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:355:5"
+            },
+            {
+              "name": "extra-moderator-before-during-before-commit",
+              "status": "failed",
+              "error": "Error: request barrier deadline 30000ms\n    at Timeout.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/runtime.cjs:27:151)\n    at listOnTimeout (node:internal/timers:635:17)\n    at process.processTimers (node:internal/timers:571:7)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-controlled-extra-6",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "696e8a82566bc39593c5fa6561187d8d35fb467aeb98bc3ec69e1a596e8d1ac2",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "extra-two-moderators-rule-CAS",
+              "status": "passed"
+            },
+            {
+              "name": "extra-moderator-before-during-before-commit",
+              "status": "passed"
+            },
+            {
+              "name": "extra-request-body-interrupted",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-controlled-extra-7",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "487f78f8f22290b699fc13dd48625bb7de585dd7b71ccf01adbe68d91482166a",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "extra-cross-backend-different-fields",
+              "status": "passed"
+            },
+            {
+              "name": "extra-late-read-after-durable-save",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-controlled-late-read-final",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "8fe7794227768b23fa8e262f4e47b89ee1f83638e6a94e2b3a4daefa8a94ab2a",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "extra-late-read-after-durable-save",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-controlled-revoke-ui-2",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "691ef378f4a89ad255bb8628207c617a06ae473ce70de5b41373fd5f2ef40b56",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "extra-revocation-visible",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-current-interactions",
+      "sourceHeadAtSetup": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "33c55c6e7d3b074e9fac6916330035364d41c065664dad2deb50d86a207919fe",
+          "source": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "review-offline-edit-peer-delete-refresh",
+              "status": "passed"
+            },
+            {
+              "name": "review-focused-editor-defers-reload",
+              "status": "passed"
+            },
+            {
+              "name": "extra-moderator-before-during-before-commit",
+              "status": "passed"
+            },
+            {
+              "name": "extra-late-read-after-durable-save",
+              "status": "passed"
+            },
+            {
+              "name": "extra-manual-fx-price-preservation",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-diagnostic-driver-smoke",
+      "sourceHeadAtSetup": "3537c693bc0415caa1a29ebc993abcc750f13fd2",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "2ebc52cd5d48689fc1b9ce08c838153ceed4f0eee6ee7562a1fb28bee1c72881",
+          "status": "passed",
+          "source": "3537c693bc0415caa1a29ebc993abcc750f13fd2",
+          "users": 2,
+          "backendInstances": 2,
+          "replicas": 2,
+          "requestedSeconds": 25,
+          "measurementAt": 1793009473074,
+          "measurementDurationMs": 25000,
+          "completedOperations": 6,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "f0e9609ddf7cd58cefc765dac8d7c478cb2fd7b3b7974dc3c8cbc7cf28d3dd25"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-drawer-race-diagnostic",
+      "sourceHeadAtSetup": "9b97f0a1087f4fe577eb654d7c8762e3bce3f4ad",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "diagnostic-result.json",
+          "sha256": "27584714787085300c3403acc615f555e6ab6e753966c11bbe6762cd11e3d61b",
+          "status": "passed",
+          "source": "9b97f0a1087f4fe577eb654d7c8762e3bce3f4ad"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-drawer-trace-6",
+      "sourceHeadAtSetup": "9b97f0a1087f4fe577eb654d7c8762e3bce3f4ad",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "interrupted.json",
+          "sha256": "c23c462bcdc295e11f2ae7589c7f1ff964a00f9d7bcb588d55af30e896360d8e",
+          "status": "interrupted"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-drawer-trace-6-resumed",
+      "sourceHeadAtSetup": "9b97f0a1087f4fe577eb654d7c8762e3bce3f4ad",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "2dba921021cb04516ac422f7d453a31bc57afbeae3777193b2f46951806ce3ae",
+          "status": "passed",
+          "source": "9b97f0a1087f4fe577eb654d7c8762e3bce3f4ad",
+          "users": 6,
+          "backendInstances": 6,
+          "replicas": 6,
+          "requestedSeconds": 300,
+          "measurementAt": 1793054344447,
+          "measurementDurationMs": 300000,
+          "completedOperations": 180,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "dd1facaa4f95ca8deb02b6e4e3aced1962a5511d8829ae8c5b0f6eff3ee3da2a"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "669d2b12547282edcdf78661a9d4042982c58c2873b81d494463241bcd172c9d"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "3013d64705e9cb6f1f4b6658a54b6e9d2b0aca923d4bc09c3b5f76564cdab706"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-events-native-smoke",
+      "sourceHeadAtSetup": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "c46dc83ef85e1400cdabfe4afc910685a89598e5d479eda349f2c9373b63b52c",
+          "status": "passed",
+          "source": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+          "users": 3,
+          "backendInstances": 3,
+          "replicas": 3,
+          "requestedSeconds": 60,
+          "measurementAt": 1793031422871,
+          "measurementDurationMs": 60000,
+          "completedOperations": 21,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "75cab5001effb1b7b8e083f12405ef1a32ebc6235958c77a912d97c162bc17ec"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-failed-six-draft-copy",
+      "sourceHeadAtSetup": null,
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "fd8fc09beae0949af64db673572964a438742dced5d104561d1353b5436ccb00"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-failed-ui-copy-2",
+      "sourceHeadAtSetup": null,
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "f85b611024191ee31801750dafbf74d0c0db68c4397dea11421b2ff5bc28f24f"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-feedback-eviction-native",
+      "sourceHeadAtSetup": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "7c3acb6c6ad30bf50c7b65887a06c8934028e19cdb64e9f34571c3e66931d055",
+          "status": "passed",
+          "source": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+          "backends": 1
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-feedback-loop-green",
+      "sourceHeadAtSetup": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "1f499cb52c159d3a9a51029181b1854bb111715fb2fe69167d82931367b0688c",
+          "status": "passed",
+          "source": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+          "users": 2,
+          "backendInstances": 2,
+          "replicas": 2,
+          "requestedSeconds": 35,
+          "measurementAt": 1793034250413,
+          "measurementDurationMs": 35000,
+          "completedOperations": 52,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "b1f14d9b74c3aa130af93b40d3997b53d576a2c82b593712e785834beebba774"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "a4f51b77c629eb87a8f79907c61c3b19b62a9aa36ddfb547a5f59ffdec336703"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-filter-probe",
+      "sourceHeadAtSetup": "941a42f17b06ef4c886e0ad2490b21159d880a5e",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "3ea6135bd0330b4c9e31b7f15fbcdf0d4fcd4c6310466dda1db24b35ef9f575c",
+          "status": "passed",
+          "source": "941a42f17b06ef4c886e0ad2490b21159d880a5e",
+          "backends": 1
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-50",
+      "sourceHeadAtSetup": "fac88b0fa83e75755cd3261cf0aa6b23adbe181a",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "e510acba5cba615644de958c8654ffd5fcdbbccfd7646779476ecfafbf93f54c",
+          "backendInstances": 6,
+          "requestedUsers": 50,
+          "requestedSeconds": 1800,
+          "usersOpened": 6,
+          "measurementAt": null,
+          "error": "Error: Ramp session failed\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:873:49"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "578359f9219b637334832fa75df0bc08f8ff4486df06a4528026a1c119f2d6c9",
+          "status": "passed",
+          "source": "fac88b0fa83e75755cd3261cf0aa6b23adbe181a"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "272858be84c3426c710abf14ad400284492c4bbb21f8428fd71de0460d2759ee"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-50-2",
+      "sourceHeadAtSetup": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "691ce399d2a80ad9eacdcc8fc15923550b27b225f91a8d3722b401e3ea0c448f",
+          "backendInstances": 8,
+          "requestedUsers": 50,
+          "requestedSeconds": 1800,
+          "usersOpened": 8,
+          "measurementAt": null,
+          "error": "Error: Ramp session failed\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:873:49"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "959e790ee976c8435177d866147105c066d423739fbd988e3410ae3cb5af3876",
+          "status": "failed",
+          "source": "6d016e08f5de1f640d0c232c8fe2be836dabc19f"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "2afce8b81b33d6f02716944a9e4ff00eb1df51c3f9793beecf69ab607defa5f1"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-50-3",
+      "sourceHeadAtSetup": "7a017679d218b944087d242d5122e1748797fc51",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "50dcb99dd1e2bae1b1c7aab422f06fb4f9a2375f5ebfae671f405e3beef559e1",
+          "backendInstances": 9,
+          "requestedUsers": 50,
+          "requestedSeconds": 1800,
+          "usersOpened": 9,
+          "measurementAt": null,
+          "error": "Error: Ramp session failed\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:904:49"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "4123b129329359fc1f28d6880d1780ca2e69d8dd0ba26b3808bebf580700a301",
+          "status": "passed",
+          "source": "7a017679d218b944087d242d5122e1748797fc51"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "cd1864097390d3158b47739e765b5e6bf9a521145780376c7b7785a81d1520db"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-50-4",
+      "sourceHeadAtSetup": "941a42f17b06ef4c886e0ad2490b21159d880a5e",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "75e96bd2ba9aa31242ca0e8844689565c8e0f013a59d172c645dea12165fcf5f",
+          "backendInstances": 7,
+          "requestedUsers": 50,
+          "requestedSeconds": 1800,
+          "usersOpened": 7,
+          "measurementAt": null,
+          "error": "Error: Ramp session failed\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:909:49"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "5adc36b03099e10bf91be9f9b50384a78af3dd5c41920ef66a336cb7e25a06c6",
+          "status": "passed",
+          "source": "941a42f17b06ef4c886e0ad2490b21159d880a5e"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "51f9a22873275c52b6bfd4671553ac57772a0c613b94438814962af2f773287e"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "00f32fc2cb525c6473b5d66a9db107eba71c7e9437aa4c8e14554ba493ab10eb"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-aligned-3",
+      "sourceHeadAtSetup": "13f9d3bb986d6ddcc5c2d39bff286342d84168ef",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "3c64e8107d259abeaca21088344cc1d6d0b6fc5df85b011e96ac255fdbd5abfd",
+          "backendInstances": 1,
+          "requestedUsers": 3,
+          "requestedSeconds": 1800,
+          "usersOpened": 0,
+          "measurementAt": null,
+          "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:6520/\", waiting until \"domcontentloaded\"\u001b[22m\n\n    at Object.open (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/browser.cjs:72:14)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:952:17"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-aligned-50",
+      "sourceHeadAtSetup": "13f9d3bb986d6ddcc5c2d39bff286342d84168ef",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "882d3004e0b03ad1bf5675386d860e67b7024d72bfe02ca12ad143e9ff793d14",
+          "backendInstances": 5,
+          "requestedUsers": 50,
+          "requestedSeconds": 1800,
+          "usersOpened": 4,
+          "measurementAt": null,
+          "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:6524/\", waiting until \"domcontentloaded\"\u001b[22m\n\n    at Object.open (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/browser.cjs:72:14)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:952:17"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "6be76b0be5a9d50eb25341fc0b0f83e7cbc6a5a5a00c97aa52e474fde0b758a2",
+          "status": "passed",
+          "source": "13f9d3bb986d6ddcc5c2d39bff286342d84168ef"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "a22d4b3a334d26f973683abc3bb09eb1d990f8c9a77a04c6721bf00f76a10057"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "4618678abead2420a7d66a9180688f1e5e86c963f81387cb376bfabcc6441b0a"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-aligned-6",
+      "sourceHeadAtSetup": "13f9d3bb986d6ddcc5c2d39bff286342d84168ef",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "b8c898df68e844318bad10e4bc8d7e1b10e1966035d389a5ac82e47381beb360",
+          "backendInstances": 6,
+          "requestedUsers": 6,
+          "requestedSeconds": 1800,
+          "usersOpened": 5,
+          "measurementAt": null,
+          "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:6525/\", waiting until \"domcontentloaded\"\u001b[22m\n\n    at Object.open (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/browser.cjs:72:14)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:952:17"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "cf765b314692f3b5ef7e2b4d5d99629db19e03b8b3d85cb05555cc8deed4d194",
+          "status": "passed",
+          "source": "13f9d3bb986d6ddcc5c2d39bff286342d84168ef"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "b615d691de74aab70b55347d5396bd8da3d962be5393fc7297c7b960cd77679f"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "b8bd0674e720f5149b7eb56ac3c1ef630c1876fcf25d4b82a0c08c1c4eb8a783"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-atomic-settle-6",
+      "sourceHeadAtSetup": "7e7b137d9419b937071a864aac1e1f8a00516331",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": {
+        "file": "final-run-disposition.json",
+        "sha256": "e24fce046ce9b36a4cb2d6030496418f257b2f7074206449ce36609f637b950f",
+        "overallStatus": "passed-six-user-scope",
+        "driverStatus": "passed",
+        "independentVisibleOracleStatus": "passed-comparable-samples",
+        "counts": {
+          "different-observed-source-version": 6,
+          "passed": 212
+        },
+        "source": "7e7b137d9419b937071a864aac1e1f8a00516331",
+        "users": 6,
+        "backendInstances": 6,
+        "replicas": 6
+      },
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "bd2c0ebde72a2322fe901a26ac7ec7f276730d4b74d197b3007fa2b2e14270d3",
+          "status": "passed",
+          "source": "7e7b137d9419b937071a864aac1e1f8a00516331",
+          "users": 6,
+          "backendInstances": 6,
+          "replicas": 6,
+          "requestedSeconds": 1800,
+          "measurementAt": 1793061294908,
+          "measurementDurationMs": 1800000,
+          "completedOperations": 1046,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "fdcfa879d57360e34dec3e9223177472eb71f4a2eae248ae99c25af43f453b85"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "d55a59da7be2bb06c98df43fa5bf58837bacfb0eb2c5c33f8c822dfd951b03ed"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "feafd260753370b19214bff5c3233af0ceaecaff7ac5bf679765a7253e8212c0"
+        },
+        {
+          "file": "final-run-disposition.json",
+          "sha256": "e24fce046ce9b36a4cb2d6030496418f257b2f7074206449ce36609f637b950f",
+          "overallStatus": "passed-six-user-scope",
+          "driverStatus": "passed",
+          "independentVisibleOracleStatus": "passed-comparable-samples",
+          "counts": {
+            "different-observed-source-version": 6,
+            "passed": 212
+          },
+          "source": "7e7b137d9419b937071a864aac1e1f8a00516331",
+          "users": 6,
+          "backendInstances": 6,
+          "replicas": 6
+        },
+        {
+          "file": "visible-calculation-reconciliation.json",
+          "sha256": "d378837338ddfea6d460a062cfb87d853c56ec33d30d8aaee2343d88231b1395",
+          "counts": {
+            "different-observed-source-version": 6,
+            "passed": 212
+          }
+        },
+        {
+          "file": "data-health-supplement.json",
+          "sha256": "66a17e705be7588cb4c159ddf85811e9d1c6232d786ce8e44d0af6738df1e3d6"
+        },
+        {
+          "file": "bulk-acceptance-explanation.json",
+          "sha256": "05db5ad27a67efcb38f595da3f93007275d2494609e30a7297b3117b93de704d",
+          "status": "explained-by-native-replica-merge"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-blocking-revoke",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "a50b5842d81a219536f8a3522005d1757b73ad4f07ea65866ff4a15afb105a84",
+          "status": 403
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-bounded-6",
+      "sourceHeadAtSetup": "c1f58d1155aa3ac03e11e3721a95a79200eb0445",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "bddf28277183dccd85cca675a5c70e9c7b2e5ae9ffb7f67df20f96ab3f95ad58",
+          "backendInstances": 6,
+          "requestedUsers": 6,
+          "requestedSeconds": 1800,
+          "usersOpened": 6,
+          "measurementAt": 1793009683594,
+          "error": "Error: Active session failed; preserve failed run\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:1041:15\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "af10d760507d3935712cfff94323ec91306473691ffe7193dd5ae290887159f1",
+          "status": "passed",
+          "source": "c1f58d1155aa3ac03e11e3721a95a79200eb0445"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-bounded-8",
+      "sourceHeadAtSetup": "7a017679d218b944087d242d5122e1748797fc51",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "9424002676e075364df0fb3816c5b5031f42eb083af224bd3c55453a81979897",
+          "backendInstances": 8,
+          "requestedUsers": 8,
+          "requestedSeconds": 1800,
+          "usersOpened": 8,
+          "measurementAt": 1793003351349,
+          "error": "Error: Active session failed; preserve failed run\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:1019:15\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "1b1c21115f0cc435b2947dba4ac04d19216e58985be03defd9c851b38556ee4f",
+          "status": "failed",
+          "source": "7a017679d218b944087d242d5122e1748797fc51"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "ce0b44d3f79cc80547767bc219799a2295dafea83484dabd9da58211615a2f5a"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-bounded-8-2",
+      "sourceHeadAtSetup": "3537c693bc0415caa1a29ebc993abcc750f13fd2",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "63f66071f417a7bdd94ded8ecc39c6abaed03fb2942ededac0d8b79a6805f347",
+          "backendInstances": 8,
+          "requestedUsers": 8,
+          "requestedSeconds": 1800,
+          "usersOpened": 8,
+          "measurementAt": 1793007352349,
+          "error": "Error: Active session failed; preserve failed run\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:1025:15\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "87fe2ca3aa15e663089e0d215f4f01fede25e17fa553e7ec9cd9ceb82ad55033",
+          "status": "passed",
+          "source": "3537c693bc0415caa1a29ebc993abcc750f13fd2"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "1212b1326b31261fa12303045dc2602fc15353f498ba2de805d9a32f6c1ae1f5"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "6a8f3d67ccb9d8103e9fbb18ee08695f31d9869b64e62a9133238a70c7418392"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-cross-fields",
+      "sourceHeadAtSetup": "0651da5a123a6b79ac258ab8eb7737b3c337fbbe",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "133c81df8c1b74e93431dafe7ac58146e39ac4678e0c070334d1db705eb0d001",
+          "source": "0651da5a123a6b79ac258ab8eb7737b3c337fbbe",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "extra-cross-backend-different-fields",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-deferred-projection-6",
+      "sourceHeadAtSetup": "4c237664d67746c2ee0d3ab3e8d4ba6510d01eaa",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": {
+        "file": "final-run-disposition.json",
+        "sha256": "60d3f3836c0d29f3f91f9602860544a4ba2294a3eb395bced056d2e46573425f",
+        "overallStatus": "failed-driver-settle-race",
+        "source": "4c237664d67746c2ee0d3ab3e8d4ba6510d01eaa"
+      },
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "7c6bbd48b70be37544620891c5d0557a9c4cc158f24792fb29c1c5dfcec8f4f4",
+          "backendInstances": 6,
+          "requestedUsers": 6,
+          "requestedSeconds": 1800,
+          "usersOpened": 6,
+          "measurementAt": 1793059848376,
+          "error": "Error: Active session failed; preserve failed run\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:1083:15\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "2eeba3d2312d51d46e9b9ee62fee46d9c3cb3e2775a3c910d257a472a5e5f08b",
+          "status": "passed",
+          "source": "4c237664d67746c2ee0d3ab3e8d4ba6510d01eaa"
+        },
+        {
+          "file": "final-run-disposition.json",
+          "sha256": "60d3f3836c0d29f3f91f9602860544a4ba2294a3eb395bced056d2e46573425f",
+          "overallStatus": "failed-driver-settle-race",
+          "source": "4c237664d67746c2ee0d3ab3e8d4ba6510d01eaa"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-driver-smoke",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "6ed299fcfefd9f378b63285c2fdf851cc9bbde2391e6adb3a8b19e672d457235",
+          "status": "passed",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 2,
+          "backendInstances": 2,
+          "replicas": 2,
+          "requestedSeconds": 15,
+          "measurementAt": 1792954248328,
+          "measurementDurationMs": 15000,
+          "completedOperations": 5,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "c27db77bce2646a4accc98c99e542210dae0acc2807acf96c324b831c06f98b2"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-events-50",
+      "sourceHeadAtSetup": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "b2d563765e0a93af83654b892f61d23edc68d6cf6cf16501e5bb59601980d3b7",
+          "backendInstances": 7,
+          "requestedUsers": 50,
+          "requestedSeconds": 1800,
+          "usersOpened": 7,
+          "measurementAt": null,
+          "error": "Error: Ramp session failed\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:925:49"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "0243e811acc67f9fd502036ab1ca8043828144f1f5a9eae7a094c2254a7a8ac7",
+          "status": "passed",
+          "source": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "41065f17b440aaf96a224677fdd73d51e043cbc44ee1ba19be5e02a730218914"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "c10002fbc78dcc518051412736ac17970cd4b0c193e0338b097ebb9b4f9ba871"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-feedback",
+      "sourceHeadAtSetup": "fac88b0fa83e75755cd3261cf0aa6b23adbe181a",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "d1c447229bee8f21bea08e9d13b7f5bacc61ede6d9fb2415bb0f9dcaf7f3d853",
+          "source": "fac88b0fa83e75755cd3261cf0aa6b23adbe181a",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "same-field-row-CAS",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-projection-controls",
+      "sourceHeadAtSetup": "c819c92082954fb1d7238d55e9456db22fe7e89d",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "dc60aeec85e06db097a4b475459926c7360eb0999f971855eaf5b216e8a03ffa",
+          "source": "c819c92082954fb1d7238d55e9456db22fe7e89d",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "same-field-row-CAS",
+              "status": "passed"
+            },
+            {
+              "name": "extra-cross-backend-different-fields",
+              "status": "passed"
+            },
+            {
+              "name": "extra-manual-fx-price-preservation",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-render-sync-smoke",
+      "sourceHeadAtSetup": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "6b3722609ba66c703356fa3341094cd771c163d00ac38dd374d34dd2d6f0d057",
+          "status": "passed",
+          "source": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+          "users": 3,
+          "backendInstances": 3,
+          "replicas": 3,
+          "requestedSeconds": 35,
+          "measurementAt": 1792980027253,
+          "measurementDurationMs": 35000,
+          "completedOperations": 12,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "b718d71c31997826edf8e8700eed7e746c5e1d67c02bc276f08a8af45a6e5117"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-shared-crud",
+      "sourceHeadAtSetup": "6917940bc909ecec044e01b125b985a5cba0b5c3",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "4045157e4ab62a06dfbf2750cdbc534c40abd1e3323fb8aa5525bd66f2f19415",
+          "status": "passed",
+          "source": "6917940bc909ecec044e01b125b985a5cba0b5c3",
+          "users": 2,
+          "backends": 2,
+          "replicas": 2
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-sharing-recovery-50",
+      "sourceHeadAtSetup": "6c57c863b02896cbcdf322246f2badeb1d85f9e5",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "c51ea4bbcfa88e9ca0216795f8ad6b565bf2132df017170ac81595c8c5699af4",
+          "backendInstances": 10,
+          "requestedUsers": 50,
+          "requestedSeconds": 1800,
+          "usersOpened": 10,
+          "measurementAt": null,
+          "error": "Error: Measured environment memory capacity limit before 50\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:952:15"
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "80be876983b8820486d03bb001efe8293a0e83a8308c113015a55c5dcef1ecfb"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "26faf77f8b8ee4751383c884498bc9ea24881352ad98ade1cd4f6a8a6866419e"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "9809f8411057a2b0d5d1ac185ef25ce0d24bb694db4685462fd17cdb5c941970"
+        },
+        {
+          "file": "visible-calculation-reconciliation.json",
+          "sha256": "07b5faf018555f24be2a03dcdaa5c958c8dd4b284c3fbf111b1e840afd1cc385",
+          "counts": {
+            "different-observed-source-version": 2,
+            "passed": 25
+          }
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-sharing-recovery-6",
+      "sourceHeadAtSetup": "c819c92082954fb1d7238d55e9456db22fe7e89d",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": {
+        "file": "final-run-disposition.json",
+        "sha256": "79d54ec2185b1a0bf9620c31b25e19fe5dc90b1e8e01f0d550a934a32b6178ac",
+        "overallStatus": "failed-independent-visible-oracle",
+        "driverStatus": "passed",
+        "independentVisibleOracleStatus": "failed",
+        "source": "c819c92082954fb1d7238d55e9456db22fe7e89d"
+      },
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "5fb4c5619c97ba23126a9d224648e085065d0a0df969b104c6e5ae4584705950",
+          "status": "passed",
+          "source": "c819c92082954fb1d7238d55e9456db22fe7e89d",
+          "users": 6,
+          "backendInstances": 6,
+          "replicas": 6,
+          "requestedSeconds": 1800,
+          "measurementAt": 1793055994509,
+          "measurementDurationMs": 1800000,
+          "completedOperations": 1012,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "8c11ce4a6e5c0b0bc25f5cea2eb68255cc2fbaf1e79345710c44ea31b7a7d6a4"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "7d08125dbf545ebedf84a134713ea79bb3745be7dfa9e73110e628b4e5d1c567"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "7f25c9163c6ba4bf4b1a4418afd92f9e28de1731c64b27162b2a0e1fee73d91f"
+        },
+        {
+          "file": "final-run-disposition.json",
+          "sha256": "79d54ec2185b1a0bf9620c31b25e19fe5dc90b1e8e01f0d550a934a32b6178ac",
+          "overallStatus": "failed-independent-visible-oracle",
+          "driverStatus": "passed",
+          "independentVisibleOracleStatus": "failed",
+          "source": "c819c92082954fb1d7238d55e9456db22fe7e89d"
+        },
+        {
+          "file": "visible-calculation-reconciliation.json",
+          "sha256": "f2bf18358bd7fd10be145a4b3aeb6eafe663e34e0f144dd038c8998deb96428b",
+          "counts": {
+            "different-observed-source-version": 12,
+            "display-mismatch-or-unmeasured": 1,
+            "passed": 199
+          }
+        },
+        {
+          "file": "data-health-supplement.json",
+          "sha256": "25e16ae77b6a279ea5b6c9920fe412368903d4b1460b8aaf657943228bab0128"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-status-feedback-50",
+      "sourceHeadAtSetup": "0651da5a123a6b79ac258ab8eb7737b3c337fbbe",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "3caf65198481b463bb7e86a254a05ccdb3eec9631a99eb1f2215b2da7f2f1169",
+          "backendInstances": 8,
+          "requestedUsers": 50,
+          "requestedSeconds": 1800,
+          "usersOpened": 8,
+          "measurementAt": null,
+          "error": "Error: Ramp session failed\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:946:49\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processImmediate (node:internal/timers:502:9)"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "a6a2a466c84690b918d23b6c12e9f17deba6b7bdca77af63d50c812a7659598f",
+          "status": "passed",
+          "source": "0651da5a123a6b79ac258ab8eb7737b3c337fbbe"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "fc3e9daad254fb56e0cd7bc39a45fa21409197ba9de35060db5b9d5147a441a7"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "847f33b87c7e4c62f33a6bdd4de4c53cad0cac2570e67d503f0ac65310f7b93e"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-status-feedback-6",
+      "sourceHeadAtSetup": "9b97f0a1087f4fe577eb654d7c8762e3bce3f4ad",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "fe554e0fdc0bf6b2cd71664654a52fbed42e90614c0491caafd7826c58aee2a0",
+          "backendInstances": 6,
+          "requestedUsers": 6,
+          "requestedSeconds": 1800,
+          "usersOpened": 6,
+          "measurementAt": 1793036693250,
+          "error": "Error: Active session failed; preserve failed run\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:1064:15\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "9ff591be299b217334ff448e59f996456b8eda8d2145baa2304bd4cb7bf4616e",
+          "status": "passed",
+          "source": "9b97f0a1087f4fe577eb654d7c8762e3bce3f4ad"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "68e09522a4d24c840592a5e93524b796a0937e40e291f687584d667cff4d8da0"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-transit",
+      "sourceHeadAtSetup": null,
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "7d52d692b9d84c269a2e3bbc8179994dac52ffd51946cdd8f514bdd14b6600f2",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-final-ui-oracle-smoke",
+      "sourceHeadAtSetup": "2a3de62964d4661b17a9f21b8edfbd1b93428004",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "9feca6a200528909f37d400deda9b4a388ee78bb7d01214ffd3fe713cc390327",
+          "status": "passed",
+          "source": "2a3de62964d4661b17a9f21b8edfbd1b93428004",
+          "users": 2,
+          "backendInstances": 2,
+          "replicas": 2,
+          "requestedSeconds": 20,
+          "measurementAt": 1792981922271,
+          "measurementDurationMs": 20000,
+          "completedOperations": 8,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "b20a0091fd25d6d09082764bb2933b22f9633a061ba5a0dcff3ecb733eda9b2e"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-footer-probe",
+      "sourceHeadAtSetup": "7a017679d218b944087d242d5122e1748797fc51",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "8494e6399c8e1d99ea9889d66494020bfee1ea00802b64c728f28c5b1a206fc9"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-footer-probe-after-edit",
+      "sourceHeadAtSetup": "7a017679d218b944087d242d5122e1748797fc51",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "e854df3e2d79d5a2e4491919aea3de226c48543f6903be9ba95d266f6cca688a"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-live-rule-projection-green",
+      "sourceHeadAtSetup": "c819c92082954fb1d7238d55e9456db22fe7e89d",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "0221b330e7f6c3e779ba285b4d806d352f1906475c8235cec02aae23a3566a7c",
+          "status": "passed",
+          "source": "c819c92082954fb1d7238d55e9456db22fe7e89d",
+          "users": 2,
+          "backends": 1
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-live-rule-projection-red",
+      "sourceHeadAtSetup": "c819c92082954fb1d7238d55e9456db22fe7e89d",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "3d18816d65cbcc6b2edc46576468e93594dfac97181ea72492dcacebc07e0973",
+          "status": "failed",
+          "error": "AssertionError [ERR_ASSERTION]: drawer must use the currently loaded automatic rule, including after a deferred remote paint\n\n6.09 !== 5.93\n\n    at /workspace/Buyer-Log-Desktop/docs/audits/sync-e2e-20261025/live-rule-projection-native.cjs:25:9"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-long-race-smoke",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "3edf368040e70f0b50988263ee572ad568352d1270b4b05a30baf610e5af7e07",
+          "status": "passed",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backendInstances": 3,
+          "replicas": 3,
+          "requestedSeconds": 30,
+          "measurementAt": 1792954473657,
+          "measurementDurationMs": 30000,
+          "completedOperations": 7,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "e7a1ccafa4b40525d85d028ecdb0b8a7c12daa5b2d39a87696de122ca8b66185"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-main-updated-smoke",
+      "sourceHeadAtSetup": "ac4aa0bb79dde1bcf1b66cbebcf14607af46bd37",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "1a02ea20c93f5c76cc90782d2ecd7c58dcb05adfe78c7b8b4e5fd268007a6f21",
+          "status": "passed",
+          "source": "ac4aa0bb79dde1bcf1b66cbebcf14607af46bd37",
+          "users": 2,
+          "backendInstances": 2,
+          "replicas": 2,
+          "requestedSeconds": 15,
+          "measurementAt": 1792976897663,
+          "measurementDurationMs": 15000,
+          "completedOperations": 5,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "f10a2fd3f990dcd8721a80e18ceb0212bf8cb7712757468ff5cd10968e3337c5"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "3c0bd6f563f8a76e527fd8cb2ac5f86a86b2a7e933e8d4ad195219dcd4630576"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-main306-rejected-fix-smoke",
+      "sourceHeadAtSetup": "b84e23e8e03ee12e6fce6a651b83356b6bfe2afe",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "9e0be81f761744fb58dd0487b10bbf2b345e424f6e297ef1f000c7c15cb71041",
+          "status": "passed",
+          "source": "b84e23e8e03ee12e6fce6a651b83356b6bfe2afe",
+          "users": 3,
+          "backendInstances": 3,
+          "replicas": 3,
+          "requestedSeconds": 60,
+          "measurementAt": 1793005968682,
+          "measurementDurationMs": 60000,
+          "completedOperations": 20,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "cea251cb2bec846184641cbe1a66a566c7730ebf7d37934ea1e62027a632fa75"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-manual-fx-price",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "0027dcdad5aff1da5dc01df90a2dbd1fbdd9ef4a7190b0cf9c8f008457857ee5",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "extra-manual-fx-price-preservation",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-owner-pointer-targeted-8",
+      "sourceHeadAtSetup": "7a017679d218b944087d242d5122e1748797fc51",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "fdfd8605e1df055458eb17ee6bfd9639706cfca0b568081d6f7e0ca9ea7b65f3",
+          "backendInstances": 8,
+          "requestedUsers": 8,
+          "requestedSeconds": 90,
+          "usersOpened": 8,
+          "measurementAt": null,
+          "error": "Error: all users completed UI edit timeout\n    at Object.until (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/runtime.cjs:25:9)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:955:5"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "25df37d2a6ad2b07f42dd1ac627dfb03fc5efe431fdb9afcfd7f6a1097808005",
+          "status": "passed",
+          "source": "7a017679d218b944087d242d5122e1748797fc51"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-owner-pointer-targeted-8-scroll",
+      "sourceHeadAtSetup": "7a017679d218b944087d242d5122e1748797fc51",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "73d7689b8c469940d239827994e731a12310bdc878c8d4f5b43af304df6162a9",
+          "status": "failed",
+          "source": "7a017679d218b944087d242d5122e1748797fc51",
+          "users": 8,
+          "backendInstances": 8,
+          "replicas": 8,
+          "requestedSeconds": 60,
+          "measurementAt": 1793005306080,
+          "measurementDurationMs": 60000,
+          "completedOperations": 24,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "576f4a611ee77bf0c5a799e2ff78efe0d8aa6c945abb616ec220f84be37e5a79"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "9cf4b7dbd96fb2bf406b0e42798b059ef03f17d600b55252e6281e948588405e"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-pointer-refresh-green",
+      "sourceHeadAtSetup": "7a017679d218b944087d242d5122e1748797fc51",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "1a6dcc9b4cf0729ab95cd0b40e994710f436aebec090300afe668da7db7ca9e6",
+          "status": "passed",
+          "source": "7a017679d218b944087d242d5122e1748797fc51",
+          "backends": 1
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-pre-final",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "13e420bd9d16732a3a8028358c10f079d57ed75651e8ec4cf62cf450a9d67f48",
+          "status": "passed",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backendInstances": 3,
+          "replicas": 3,
+          "requestedSeconds": 65,
+          "measurementAt": 1792953836888,
+          "measurementDurationMs": 65000,
+          "completedOperations": 19,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "06c856a5ef134bcd0f4cbb8c779369d49c9c1599d04939f7957987afeb87b6f7"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-pull-race-green",
+      "sourceHeadAtSetup": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "d2474bd8268549397f76ecebf1224a62668c93b2b408c90e16e88c507150063c",
+          "source": "6d016e08f5de1f640d0c232c8fe2be836dabc19f"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-pull-race-owner-queue",
+      "sourceHeadAtSetup": "7a017679d218b944087d242d5122e1748797fc51",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "b0f74c56ab806eefb703a9b9fcb600463bfce74cd719debeaa912bcd97421b8d",
+          "source": "7a017679d218b944087d242d5122e1748797fc51"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-pull-race-red",
+      "sourceHeadAtSetup": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "fe1f90acf471b5e1473758d80c782a178ef30aa3dc2f60c5f2dfeaa77412ca3e",
+          "source": "6d016e08f5de1f640d0c232c8fe2be836dabc19f"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-rejected-retry-green",
+      "sourceHeadAtSetup": "b84e23e8e03ee12e6fce6a651b83356b6bfe2afe",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "5dd69c73561a448cdaedb29ff702a0ea9bc9ef8c3c5f4dbb7f1ef37945d3fae6",
+          "source": "b84e23e8e03ee12e6fce6a651b83356b6bfe2afe",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "same-field-row-CAS",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-rejected-retry-red",
+      "sourceHeadAtSetup": "c8b8d304cd6c443f61d4cf80c9fe7a8920fb7782",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "53ac105c747eae5cf91697fabc1bde0af6d1c16326bc12c768f5a55ded6d5338",
+          "source": "c8b8d304cd6c443f61d4cf80c9fe7a8920fb7782",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "same-field-row-CAS",
+              "status": "failed",
+              "error": "AssertionError [ERR_ASSERTION]: automatic pricing must not retry rejected shared-row fields with a fresh CAS token\n\n'RACE-B' !== 'RACE-A'\n\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:145:14\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:55:18)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:103:5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-remote-editor-final",
+      "sourceHeadAtSetup": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "93428154bea99c3f06f40490edab05d6c0c8e76541fad60a58908e4f34cd2b1e",
+          "status": "passed",
+          "source": "6d016e08f5de1f640d0c232c8fe2be836dabc19f"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-remote-editor-final-2",
+      "sourceHeadAtSetup": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "4894da7fed8b82bd5f040a3ee5e07cf2f4a517ad766b29626a5c7cd1848b8855",
+          "status": "passed",
+          "source": "6d016e08f5de1f640d0c232c8fe2be836dabc19f"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-remote-editor-green",
+      "sourceHeadAtSetup": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "93428154bea99c3f06f40490edab05d6c0c8e76541fad60a58908e4f34cd2b1e",
+          "status": "passed",
+          "source": "6d016e08f5de1f640d0c232c8fe2be836dabc19f"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-request-id-fault-targeted",
+      "sourceHeadAtSetup": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "9e85872523d6e1b099440709f04bb0045bb20737c2798c588919c3cbaac85c4b",
+          "backendInstances": 2,
+          "requestedUsers": 2,
+          "requestedSeconds": 30,
+          "usersOpened": 2,
+          "measurementAt": 1793033234554,
+          "error": "locator.focus: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('#kolTable')\u001b[22m\n\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:1051:47"
+        },
+        {
+          "file": "failed-run-recovery.json",
+          "sha256": "b39006323d5ca80501d434b461975940b40778ffe80697709ee9520d8362e8db",
+          "status": "passed",
+          "source": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-request-id-native",
+      "sourceHeadAtSetup": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "510e42e9b85826efe13256c3b6edaa8e1ca2a69b1fcc7bbe9f09c38fa43d8275",
+          "status": "passed",
+          "source": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+          "users": 2,
+          "backendInstances": 2,
+          "replicas": 2,
+          "requestedSeconds": 65,
+          "measurementAt": 1793033023188,
+          "measurementDurationMs": 65000,
+          "completedOperations": 14,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "0e603371399121fb4f1de498fc23e0c6f0f121f073eef36ff0bb0d2c88e704a9"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-review-final-smoke",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "c5ed4ffbfa0d9dd79b8dbc65d972696a7069a26e8ea37893a2baba594095e20f",
+          "status": "passed",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 2,
+          "backendInstances": 2,
+          "replicas": 2,
+          "requestedSeconds": 15,
+          "measurementAt": 1792976420714,
+          "measurementDurationMs": 15000,
+          "completedOperations": 2,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "899f1491dce66f821e474b600be27ed654feb48511372361069797a388687a7a"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-review-focus",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "9ccf10a3134ce81edb1b9bb25791b62981c745f1c27284fb54ffc21d794eae18",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "review-focused-editor-defers-reload",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-review-offline",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "e1fa0d670c7405fe628bd6d374080ce0c58f4b1d490ab14df3ac1ca8472c797d",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "review-offline-edit-peer-delete-refresh",
+              "status": "failed",
+              "error": "TypeError: Cannot read properties of undefined (reading 'find')\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:251:31\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processImmediate (node:internal/timers:502:9)\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:53:18)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:238:5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-review-offline-2",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "b90f7109ec5c1e545221502cc7a691321ec32cb01115710cf14b0897d2fb7c8a",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "review-offline-edit-peer-delete-refresh",
+              "status": "failed",
+              "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:257:14\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processImmediate (node:internal/timers:502:9)\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:53:18)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:238:5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-review-offline-3",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "5f80a4d8057d5d06f3c1679a0d24b3c7498410c64dd7170cf556375a2d96d961",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "review-offline-edit-peer-delete-refresh",
+              "status": "failed",
+              "error": "page.waitForFunction: Timeout 30000ms exceeded.\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:249:20\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:53:18)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:238:5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-review-offline-4",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "2ef3cbcb72ca3c39935bdb3ce7484bfb2ec64ed5e2074ffdc39236565fdc6480",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "review-offline-edit-peer-delete-refresh",
+              "status": "failed",
+              "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:260:14\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:53:18)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:238:5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-review-offline-5",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "e873c1839b517afdb45366d58811c2a129a9bfc92ce252cb4582d7d8c073bb58",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "review-offline-edit-peer-delete-refresh",
+              "status": "failed",
+              "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:266:14\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:53:18)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:238:5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-review-offline-6",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "472a4c32cc9591bfcd0a03ecb51576e3f65ba6b8a396fa591283f46ba4e00e55",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "review-offline-edit-peer-delete-refresh",
+              "status": "failed",
+              "error": "page.waitForFunction: Timeout 30000ms exceeded.\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:302:20\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:53:18)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:238:5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-review-offline-7",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "8af2f16794b3776e7c7c18b5e9819c46cc1acc14520555cbd9cab031e2ff3d10",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "review-offline-edit-peer-delete-refresh",
+              "status": "failed",
+              "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:342:14\n    at async scenario (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:53:18)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/controlled.cjs:239:5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-review-offline-8",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "results.json",
+          "sha256": "7658c7889e4414d874079e321941f1919dbcebdabb3b2a3876e7b3768a8f3425",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backends": 2,
+          "scenarios": [
+            {
+              "name": "review-offline-edit-peer-delete-refresh",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-revoke-green",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "f20077a26db746540e45edb0a72735904a53df84839db55faaa9049e3971cee9",
+          "status": 403
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-revoke-red",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "f3eec82590f4547e79e2dbec2e58bdfaaf1c5aa23e179c12fb6c5b231fdd9d63",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-session-expiry-2",
+      "sourceHeadAtSetup": "7a017679d218b944087d242d5122e1748797fc51",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "25a8063af2be027df0e19c583d7874acd12238fac4be2a71570c784a0b25061b",
+          "status": "passed",
+          "source": "7a017679d218b944087d242d5122e1748797fc51"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-settle-atomic-native",
+      "sourceHeadAtSetup": "4c237664d67746c2ee0d3ab3e8d4ba6510d01eaa",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "e85520177b3e11a157f5071f07774c4d097062d327f5e43a794889e9d2c134a4",
+          "status": "passed",
+          "source": "4c237664d67746c2ee0d3ab3e8d4ba6510d01eaa",
+          "users": 2,
+          "backendInstances": 2,
+          "replicas": 2,
+          "requestedSeconds": 35,
+          "measurementAt": 1793060957344,
+          "measurementDurationMs": 35000,
+          "completedOperations": 51,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "7fa9b0f903a8e921b619925ce2e55ec62bcd09806c1f85e013d9ecaee3dd7cd0"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "7d278c32efc9a674f3d20413f35ee5ffab615313a6d818ea2a411777e21655a0"
+        },
+        {
+          "file": "visible-calculation-reconciliation.json",
+          "sha256": "3b45c8cddae0a1f6dfe073eea490ae468ba8e14ca55ba7ec6a2d1ef0424afd19",
+          "counts": {
+            "different-observed-source-version": 4,
+            "passed": 10
+          }
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-shared-crud-green",
+      "sourceHeadAtSetup": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "b7809f91ace346349cd6064757e40edb01d27a0aafb8df2485688cfdd641d1f2",
+          "status": "passed",
+          "source": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+          "users": 2,
+          "backends": 2,
+          "replicas": 2
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-shared-crud-green-2",
+      "sourceHeadAtSetup": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "0fe10d11900ee41c9602599eda6b47f2e7fe6222af95108fceb52f452d69512e",
+          "status": "passed",
+          "source": "6d016e08f5de1f640d0c232c8fe2be836dabc19f",
+          "users": 2,
+          "backends": 2,
+          "replicas": 2
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-shared-recovery-ui-aligned",
+      "sourceHeadAtSetup": "b9224879d04c89b014fdc0d97b366f15ea13f3cf",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "8ce1632bdd22de8a6b44ef8f874f4d929b0e2705a650ad53c30606d611610e38",
+          "status": "passed",
+          "source": "b9224879d04c89b014fdc0d97b366f15ea13f3cf",
+          "backends": 1
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-shared-recovery-ui-green",
+      "sourceHeadAtSetup": "c1f58d1155aa3ac03e11e3721a95a79200eb0445",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "e1aefbb2e8d456b87f0a59aacfda8359ab21da5fcee82da48f38b88e80194219",
+          "status": "passed",
+          "source": "c1f58d1155aa3ac03e11e3721a95a79200eb0445",
+          "backends": 1
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-shared-recovery-ui-guarded",
+      "sourceHeadAtSetup": "b9224879d04c89b014fdc0d97b366f15ea13f3cf",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "51e9a5905a92cce00e2137522b6b1a328cff6012bda52c941f139585ac3a7668",
+          "status": "passed",
+          "source": "b9224879d04c89b014fdc0d97b366f15ea13f3cf",
+          "backends": 1
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-sharing-pending-final",
+      "sourceHeadAtSetup": "c819c92082954fb1d7238d55e9456db22fe7e89d",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "f02b79d8ab947b199265f7a0c28e3ae31cba6046bf341009fb60d96598a2ca65",
+          "status": "passed",
+          "source": "c819c92082954fb1d7238d55e9456db22fe7e89d",
+          "users": 2,
+          "backends": 2
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-sharing-pending-green",
+      "sourceHeadAtSetup": "9b97f0a1087f4fe577eb654d7c8762e3bce3f4ad",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "63a2e830e243afa2065ce6611d5053f59ce09949d063061dc99c539b5715eb5a",
+          "status": "passed",
+          "source": "9b97f0a1087f4fe577eb654d7c8762e3bce3f4ad",
+          "users": 2,
+          "backends": 2
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-sharing-pending-native",
+      "sourceHeadAtSetup": "9b97f0a1087f4fe577eb654d7c8762e3bce3f4ad",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "b5ea7d277c1f9b73a52a4a605205c8dbd12a7f9f904202a647ce82e86352de4c",
+          "status": "failed",
+          "error": "Error: actual peer DOM after restoring hub timeout\n    at Object.until (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/runtime.cjs:25:9)\n    at async /workspace/Buyer-Log-Desktop/docs/audits/sync-e2e-20261025/sharing-pending-native.cjs:16:2"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-sse-owner-isolation-final",
+      "sourceHeadAtSetup": "7ea6fa5bae55644586d84bb8731745e72727bd81",
+      "sourceDirtyRecorded": false,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "dcc965bf8461cd96873609307f26c4a51a868674357ffc6c2ae4f66f809cefb2",
+          "status": "passed",
+          "source": "7ea6fa5bae55644586d84bb8731745e72727bd81",
+          "backendInstances": 1,
+          "replicas": 1
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-sse-owner-isolation-green",
+      "sourceHeadAtSetup": "037bd52d2cad625b2f104f6bf8444ee5d3b91f12",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "8a433793dbad369b9bf989e442779d2f8079091884347d169cb3a4223620cb5f",
+          "status": "passed",
+          "source": "037bd52d2cad625b2f104f6bf8444ee5d3b91f12",
+          "backendInstances": 1,
+          "replicas": 1
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-sse-owner-isolation-red",
+      "sourceHeadAtSetup": "7e7b137d9419b937071a864aac1e1f8a00516331",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "e9355055194efab759983d78080d5dbbfa8848042711c049b0ff5a23f8e34959",
+          "status": "failed",
+          "source": "7e7b137d9419b937071a864aac1e1f8a00516331",
+          "error": "AssertionError [ERR_ASSERTION]: foreign workspace metadata must not reach unauthorized SSE subscriber\n\n1 !== 0\n\n    at /workspace/Buyer-Log-Desktop/docs/audits/sync-e2e-20261025/sse-owner-isolation-native.cjs:5:1213"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-status-render-multi",
+      "sourceHeadAtSetup": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "e136af5430635c1285035251754904532dca9bb09c247fb2f74d9127b2841453",
+          "status": "failed",
+          "source": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+          "users": 3,
+          "backendInstances": 3,
+          "replicas": 3,
+          "requestedSeconds": 60,
+          "measurementAt": 1793032478046,
+          "measurementDurationMs": 60000,
+          "completedOperations": 20,
+          "activityComplete": true
+        },
+        {
+          "file": "oracle-correction.json",
+          "sha256": "52488d217e9ee143f4bcdbba2df0031ea9b797f96eb99f165c51263f02c6ad35"
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "004a86c677b9d1ef2469556ae459ece5063e944a03100923120183113d38e84e"
+        },
+        {
+          "file": "intent-reconciliation.json",
+          "sha256": "c00658a93f05b00714d6c21f0fdb8ff0c50837049a148d97158d072c2ff99097"
+        },
+        {
+          "file": "analysis.json",
+          "sha256": "785b5688267e542100bd6dd5e38da903ea6ad0eb74d5f5b9a7113d70b38587e5"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-status-render-native-2",
+      "sourceHeadAtSetup": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "e4ccebd463f0da1af1a3d786fa29f7a9a92c3b999fc286f1d56280e5e67d7137",
+          "status": "passed",
+          "source": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+          "backends": 1
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-supplier-fixture-check",
+      "sourceHeadAtSetup": "313007a792a85425802f6b23b4ca82c9eb0e85dc",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "f7c75febd0dd4e8cb687026f1312dc3aa5a3285b72abeaf9c5617fec7aa3cd6a",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-targeted-1",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "3343fe61b48cf0a006764ade88804f2b616d10ee49fd7216ad03fefe8dde7846",
+          "usersOpened": 3,
+          "measurementAt": null,
+          "error": "Error: all users completed UI edit timeout\n    at Object.until (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/runtime.cjs:6:214)\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at listOnTimeout (node:internal/timers:597:9)\n    at process.processTimers (node:internal/timers:571:7)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:30:175"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-targeted-2",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "failure.json",
+          "sha256": "5dbd7f67dfb4448550899bb001ab508c3bfa4eb0568facbd0cd090307c30e7cf",
+          "usersOpened": 3,
+          "measurementAt": 1792951974704,
+          "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#_rulesSave') to be detached\u001b[22m\n\u001b[2m    63 × locator resolved to visible <button id=\"_rulesSave\" class=\"pricingRuleBtn primary\">…</button>\u001b[22m\n\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:17:336\n    at async action (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:9:273)\n    at async moderatorStep (/workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:17:16)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/sync-e2e/run.cjs:33:47"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-targeted-4",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "c4e5bf08a47934deed434251ca9b1df78b27bbe275274a1e2fb03748b682b9a4",
+          "status": "failed",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backendInstances": 3,
+          "replicas": 3,
+          "measurementAt": 1792952288075,
+          "completedOperations": 31
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "fc11dc1d322cd960aa016ed164415b9000cda83018030efb39d3e0a8c66c3c06"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-targeted-5",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "6acddaf1946907446a959bd9699f1720ccf92c28526e51ea66fab7e8c1956d14",
+          "status": "failed",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backendInstances": 3,
+          "replicas": 3,
+          "measurementAt": 1792952725474,
+          "measurementDurationMs": 155000,
+          "completedOperations": 50
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "efbdd3c58145bba50e4b59778afe7fc836b7fce2c7521f89c1e024909db71a3e"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-targeted-6",
+      "sourceHeadAtSetup": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "09fb2cab92b869f5a1b83e103c0eaa0f745c09be6738cad1c81c0b3bc04482fb",
+          "status": "failed",
+          "source": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+          "users": 3,
+          "backendInstances": 3,
+          "replicas": 3,
+          "measurementAt": 1792953468478,
+          "measurementDurationMs": 105000,
+          "completedOperations": 31
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "32c454bcace85127ba9c281d00aa7668bae172458af1c430c5bb9019c19af9d1"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-transit-native-2",
+      "sourceHeadAtSetup": null,
+      "sourceDirtyRecorded": null,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "b8937b1aedad23f030401382a3f13267c67cf8678166c4fc391962288e6a0715",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "root": "/workspace/scratch/bl-ui-freeze-targeted",
+      "sourceHeadAtSetup": "c1f58d1155aa3ac03e11e3721a95a79200eb0445",
+      "sourceDirtyRecorded": true,
+      "certificationDisposition": null,
+      "records": [
+        {
+          "file": "result.json",
+          "sha256": "f0f5d0500526619a53b8d978b810c837a1e9f17d7e0023674c7fb84e2e7b04ce",
+          "status": "passed",
+          "source": "c1f58d1155aa3ac03e11e3721a95a79200eb0445",
+          "users": 2,
+          "backendInstances": 2,
+          "replicas": 2,
+          "requestedSeconds": 120,
+          "measurementAt": 1793011768401,
+          "measurementDurationMs": 120000,
+          "completedOperations": 200,
+          "activityComplete": true
+        },
+        {
+          "file": "reconciliation.json",
+          "sha256": "453229c15b8ca252d046c09ace3307610e30a5fc2d1b5622c4589f6eec252864"
+        }
+      ]
+    }
+  ]
+}
