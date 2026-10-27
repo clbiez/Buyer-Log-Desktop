@@ -248,19 +248,20 @@ async function edit(session, id, value, field = "modelKod") {
 async function settle(session) {
   if (session.page.__proxyErrors?.length)
     throw Error(session.page.__proxyErrors.join("\n"));
-  await session.page.waitForFunction(
-    () => !kolWorkspaceSaveTimer && !kolWorkspaceSaving && !kolWorkspacePending,
-    null,
-    { timeout: 45000 },
-  );
-  return session.page.evaluate(() => ({
-    dirty: kolHasDirtyWorkspace(),
-    feedback: kolSaveFeedbackByOwner.get(kolWorkspaceOwnerId),
-    revision: kolWorkspaceRevision,
-    pending: kolReadPendingWorkspace(kolWorkspaceOwnerId),
-    ui: document.getElementById("kolSaveState")?.innerText,
-  }));
+  // One browser turn captures the result. A separate evaluate after the quiet
+  // predicate races a newly scheduled automatic pricing save.
+  const handle=await session.page.waitForFunction(() => {
+    if(kolWorkspaceSaveTimer||kolWorkspaceSaving||kolWorkspacePending)return false;
+    const dirty=kolHasDirtyWorkspace(),feedback=kolSaveFeedbackByOwner.get(kolWorkspaceOwnerId);
+    if(dirty&&!['conflict','failed'].includes(feedback?.status))return false;
+    return {dirty,feedback:feedback?{...feedback}:null,revision:kolWorkspaceRevision,
+      pending:kolReadPendingWorkspace(kolWorkspaceOwnerId),
+      ui:document.getElementById("kolSaveState")?.innerText};
+  },null,{timeout:45000});
+  try{return await R.deadline(handle.jsonValue(),"native save-state snapshot",30000);}
+  finally{await R.deadline(handle.dispose(),"save-state handle release",3000).catch(()=>{});}
 }
+
 async function snapshot(session, id) {
   return session.page.evaluate((id) => {
     const row = kolRows.find((r) => String(r.id) === String(id));
