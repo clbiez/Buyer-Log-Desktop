@@ -37,6 +37,8 @@ jobs:
           node scripts/dependency-inventory.js --check
       - name: Patch source and backup path contracts
         run: node --test tests/signed-patch-producer-cli.test.js tests/user-data-owned-temp.test.js
+      - name: Signed patch launch, tampering and rollback integration
+        run: node --test tests/manual-patch-v3-desktop.test.js
       - name: Clock-skew and seeded synchronization scenarios
         run: |
           node --test --test-name-pattern="OneDrive simulation: 10 devices|HLC simulation" tests/sync-simulation-v20261009.test.js
