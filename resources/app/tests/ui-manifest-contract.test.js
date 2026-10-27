@@ -125,10 +125,18 @@ test('Manifest fonts scale and only transform/opacity may animate',()=>{
  for(const file of ['ui-components.css','ui-startup.css','giris.css'])assert.match(read(file),/prefers-reduced-motion:reduce/);
  for(const file of ['overview-global-flow.js','overview-global-flow-earth.js'])assert.match(read(file),/function (?:wantsAnimation|animationWanted)\(\)\{return document.documentElement.dataset.uiSystem!=='manifest'/);
 });
-test('Main column separators cover both header tiers and never the table body',()=>{
- const rules=entries.filter(d=>d.value==='1px solid var(--ui-group-divider)');
+test('Main column separators cover both header tiers; classic frames do not add a body grid',()=>{
+ const ids=['#cpTable','#ordersTable','#kolTable'];
+ const rules=entries.filter(d=>d.prop==='border-inline-start'&&ids.some(id=>d.selector===groupSeparator(id)));
  assert.equal(rules.length,3);
- for(const [i,id] of ['#cpTable','#ordersTable','#kolTable'].entries()){assert.equal(rules[i].selector,groupSeparator(id));assert.doesNotMatch(rules[i].selector,/tbody|td\b/);}
+ for(const [i,id] of ids.entries()){
+  assert.equal(rules[i].selector,groupSeparator(id));
+  assert.equal(rules[i].value,'1px solid var(--ui-group-divider)');
+  assert.doesNotMatch(rules[i].selector,/tbody|td\b/);
+ }
+ const additional=entries.filter(d=>d.value==='1px solid var(--ui-group-divider)'&&!rules.includes(d));
+ assert.ok(additional.length>0,'Restored surfaces must be bordered');
+ assert.ok(additional.every(classicBorder),'Only approved shared surfaces may add another group divider');
 });
 test('Shared button contract covers interaction states and restricts explicit variants',()=>{
  const source=read('ui-components.css');
