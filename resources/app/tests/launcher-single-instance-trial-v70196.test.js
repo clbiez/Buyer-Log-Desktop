@@ -18,12 +18,14 @@ test('launcher tek kopya kilidini deneme rollback ve aktivasyondan ÖNCE alır',
 });
 
 test('ikinci kopya güncelleme durumuna dokunmadan kapanır',()=>{
-  assert.match(LAUNCHER,/if\(!primaryInstance\)\{[\s\S]*?app\.exit\(0\);\s*\}else\{\s*const lifecycle=createLauncherState/);
+  const secondary=LAUNCHER.slice(LAUNCHER.indexOf('if(!primaryInstance){'),LAUNCHER.indexOf('}else{'));
+  assert.match(secondary,/app\.exit\(0\)/);
+  assert.doesNotMatch(secondary,/createLauncherState|showLaunchNotice|launchCore\(/);
 });
 
 test('launcher kilidi main.js ile aynı userData (electron-profile) yoluyla alır',()=>{
   assert.ok(LAUNCHER.includes("app.setPath('userData',paths.electronProfileRoot)"));
-  assert.ok(LAUNCHER.includes('desktopPaths(resolvePortableRoot({packaged:true,execPath:process.execPath}))'));
+  assert.ok(LAUNCHER.includes('desktopPaths(PORTABLE_ROOT)'));
   assert.ok(MAIN.includes("app.setPath('userData', paths.electronProfileRoot)"));
   assert.ok(MAIN.includes('app.requestSingleInstanceLock()'));
 });
@@ -68,8 +70,9 @@ test('canlı: kilidi alamayan ikinci kopya trial rollback/aktivasyon çalıştı
     Object.defineProperty(process,'execPath',{value:originalExecPath,configurable:true,writable:true});
     delete require.cache[launcherPath];delete require.cache[hostPath];delete global.__buyerLogLauncherHost;
   }
-  assert.deepEqual(calls.map(c=>c[0]),['setPath','lock','exit']);
+  assert.deepEqual(calls.map(c=>c[0]),['setPath','setPath','lock','exit']);
   assert.equal(calls[0][2],path.join(tmp,'data','electron-profile'));
-  assert.equal(calls[2][1],0);
+  assert.equal(calls[1][1],'sessionData');
+  assert.equal(calls[3][1],0);
   fs.rmSync(tmp,{recursive:true,force:true});
 });

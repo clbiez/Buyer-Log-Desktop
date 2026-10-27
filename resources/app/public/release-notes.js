@@ -191,6 +191,7 @@ async function openArchive(){
 function bootReady(){const b=document.getElementById('blBootGuard');if(!b||b.hidden)return true;try{return getComputedStyle(b).display==='none';}catch(_){return false;}}
 function waitForBoot(){return new Promise(resolve=>{if(bootReady())return setTimeout(resolve,350);const t=setInterval(()=>{if(bootReady()){clearInterval(t);setTimeout(resolve,350);}},400);});}
 async function showUnseen(){
+  if(global.BL_STARTUP_WARMING)return; // the primary window owns startup announcements
   const generation=++openGeneration,current=ver(),last=readSeen(),plan=automaticPlan((await loadIndex()).releases,current,last);
   if(!plan)return;
   const releases=(await Promise.all(plan.entries.map(loadRelease))).filter(Boolean);if(!releases.length)return;

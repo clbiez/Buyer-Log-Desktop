@@ -42,8 +42,13 @@ module.exports = function registerChecklistSupplierRoutes(app, deps) {
 
   app.get('/api/checklist-supplier', readArea, async (req, res) => {
     try {
-      const ctx = await context(req);
+      current(req);
       const saved = await store._readAsync();
+      current(req); // permissions may have changed while the file was read
+      if(!Object.keys(saved.answers||{}).length&&!Object.keys(saved.tombstones||{}).length){
+        return res.set('Cache-Control','no-store').json(store.publicPayload(new Set(),saved));
+      }
+      const ctx = await context(req);
       res.set('Cache-Control', 'no-store').json(store.publicPayload(new Set(ctx.orders().keys()), saved));
     } catch (err) { automationError(res, err, 'Checklist üretici verileri okunamadı.'); }
   });

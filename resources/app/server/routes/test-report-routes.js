@@ -43,7 +43,14 @@ app.get('/api/test-reports', userAccess.requireAnyArea('cp', 'orders', 'overview
   });
 
 app.get('/api/test-reports/tasks', userAccess.requireAnyArea('cp', 'orders', 'overview'), async (req, res) => {
-    try { const allowed=await authorizedOrders(req);res.set('Cache-Control', 'no-store').json({ tasks: store.tasks().filter(task=>allowed.has(task.orderKey)) }); }
+    try {
+      const tasks=store.tasks();
+      // An empty task store has no order data to disclose. The area middleware
+      // still runs; avoid rebuilding the entire Orders model just to return [].
+      if(!tasks.length)return res.set('Cache-Control','no-store').json({tasks:[]});
+      const allowed=await authorizedOrders(req);
+      res.set('Cache-Control', 'no-store').json({ tasks: tasks.filter(task=>allowed.has(task.orderKey)) });
+    }
     catch (err) { automationError(res, err, 'Test raporu görevleri okunamadı.'); }
   });
 

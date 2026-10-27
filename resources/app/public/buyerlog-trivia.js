@@ -237,7 +237,7 @@
   const visible=el=>Boolean(el&&el.isConnected&&el.getClientRects().length);
   const isLoading=el=>el.isConnected&&el.classList.contains('uiState--loading');
   function eligible(state){
-    if(!isLoading(state)||state.closest(EXCLUDED)||bootActive())return false;
+    if(global.BL_STARTUP_WARMING||!isLoading(state)||state.closest(EXCLUDED)||bootActive())return false;
     const parent=state.parentElement;if(!parent)return false;
     return parent.getBoundingClientRect().width>=480&&visible(state);
   }

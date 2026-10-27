@@ -1015,7 +1015,10 @@ async function loadTransitRules(force){
   }catch(_){}
   return state.transitRules;
 }
-function isLive(){return state.workspaceActive&&!document.hidden&&!state.collapsed&&state.inView;}
+function isLive(){
+  const guard=document.getElementById('blBootGuard');
+  return state.workspaceActive&&!document.hidden&&!state.collapsed&&state.inView&&!(guard&&!guard.dataset.leaving);
+}
 async function refresh(force){
   // Daraltılmış veya görünmeyen harita veri çekmez; görünür olduğunda bir kez tazelenir.
   if(!force&&!isLive()){state.dirty=true;return;}
@@ -1940,6 +1943,9 @@ function bindCanvas(){
   canvas.addEventListener('dblclick',event=>event.preventDefault());
 }
 function bindObservers(){
+  // The startup curtain covers this widget. Its full Backlog projection must
+  // not compete with the initial screens before the user enters the workspace.
+  window.addEventListener('bl:startup-complete',()=>{if(state.dirty)void refresh(false);syncEarthActivity();});
   window.addEventListener('bl:overview-motion-changed',()=>{scheduleDraw();notifyEarth('motion');});
   // Kaynak verisi değiştiğinde app-main bildirir; ızgara DOM'u izlenmez.
   window.addEventListener('bl:global-flow-data-changed',event=>{

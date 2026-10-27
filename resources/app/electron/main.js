@@ -1979,6 +1979,13 @@ function createMainWindow(origin) {
  */
 function showSplash() {
   if (splashWindow && !splashWindow.isDestroyed()) return;
+  const launchNotice = global.__buyerLogLaunchNotice;
+  delete global.__buyerLogLaunchNotice;
+  if (launchNotice && !launchNotice.isDestroyed()) {
+    splashWindow = launchNotice;
+    splashWindow.on('closed', () => { if (splashWindow === launchNotice) splashWindow = null; });
+    return;
+  }
   try {
     splashWindow = new BrowserWindow({
       width: 420, height: 240, center: true, show: false, frame: false,
@@ -2418,6 +2425,10 @@ function registerIpc() {
   ipcMain.handle('buyerlog:workspace-set-module', (event, moduleId) => {
     if (!workspace || !trustedBuyerLogIpcSender(event)) return false;
     return workspace.updateTabModule(event.sender, moduleId);
+  });
+  ipcMain.handle('buyerlog:workspace-startup-ready', (event, modules) => {
+    if (!workspace || !trustedBuyerLogIpcSender(event)) return false;
+    return workspace.startupReady(event.sender, modules);
   });
   ipcMain.handle('buyerlog:workspace-theme', (event, theme) => {
     if (!workspace || !trustedBuyerLogIpcSender(event)) return false;
