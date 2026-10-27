@@ -37,7 +37,9 @@ if (!tests.length) {
 // the same test files, test concurrency and failure gates are preserved.
 // The ten-device filesystem simulation keeps its own deadlines by running
 // without competing file workers. Every seed and assertion still runs.
-const isolatedNames = new Set(['sync-simulation-v20261009.test.js', 'oab-batch-integration-v720.test.js']);
+const isolatedNames = new Set(['sync-simulation-v20261009.test.js', 'oab-batch-integration-v720.test.js', 'refresh-pipeline-perf-v251.test.js']);
+// The projection regression also forks workers; isolate it after a measured
+// 8 GiB suite OOM. Its data, assertions and deadlines remain unchanged.
 // OAB runs a real HTTP server, cancellation and intentionally delayed mock PASS
 // requests; isolate it from CPU/file contention in the parallel Windows suite.
 const isolatedTests = tests.filter(file => isolatedNames.has(path.basename(file)));
