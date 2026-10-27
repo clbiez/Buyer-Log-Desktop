@@ -3,12 +3,100 @@
   "publishedAt": "",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Klasik tablo ve modül görünümünün geri dönüşü",
+    "en": "Restore classic table and module presentation"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "7.0.294 tablo hiyerarşisi, kontrol kenarlıkları, satır seçim işaretleri ve Intake/OAB tablo önceliği geri getirildi.",
+    "en": "Restores 7.0.294 table hierarchy, control borders, row selection cues and table-first Intake/OAB."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "classic-shared-surfaces",
+      "type": "improvement",
+      "module": {
+        "tr": "Ortak arayüz",
+        "en": "Shared interface"
+      },
+      "title": {
+        "tr": "Panel ve buton kenarları",
+        "en": "Panel and button borders"
+      },
+      "body": {
+        "tr": "Modül, kart, araç çubuğu ve düğmeler, ortak tema ayraçlarıyla yeniden belirginleştirildi.",
+        "en": "Modules, cards, toolbars and buttons have clearly visible shared theme boundaries."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "classic-panel-borders.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Panel ve buton kenarları.",
+          "en": "Real Buyer Log: Panel and button borders."
+        },
+        "caption": {
+          "tr": "Panel ve buton kenarları",
+          "en": "Panel and button borders"
+        }
+      }
+    },
+    {
+      "id": "classic-table-selection",
+      "type": "fix",
+      "module": {
+        "tr": "CP, Siparişler ve Koleksiyon",
+        "en": "CP, Orders and Collection"
+      },
+      "title": {
+        "tr": "Tablo başlık ve satır işaretleri",
+        "en": "Table headers and row indicators"
+      },
+      "body": {
+        "tr": "Sütun başlık ayraçları, seçim kutuları, seçili satır tonu, düzenleme şeridi ve kullanıcı simgesinin köşeleri geri getirildi.",
+        "en": "Restores header separators, checkboxes, selected-row tone, edit stripe and matching profile icon corners."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "classic-grid-selection.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Tablo başlık ve satır işaretleri.",
+          "en": "Real Buyer Log: Table headers and row indicators."
+        },
+        "caption": {
+          "tr": "Tablo başlık ve satır işaretleri",
+          "en": "Table headers and row indicators"
+        }
+      }
+    },
+    {
+      "id": "intake-oab-table-first",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış / Intake ve OAB",
+        "en": "Overview / Intake and OAB"
+      },
+      "title": {
+        "tr": "Başlangıçta tablo, hatada görünür Intake",
+        "en": "Tables by default and visible Intake on errors"
+      },
+      "body": {
+        "tr": "Her iki modül ilk açılışta tablo gösterir; Intake ilk durum isteği başarısız olduğunda boş beyaz alan yerine tablo ve uyarıyı gösterir.",
+        "en": "Both modules start in table mode; if the initial Intake state request fails, a table and message remain visible instead of a blank white panel."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "intake-oab-table-default.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Başlangıçta tablo, hatada görünür Intake.",
+          "en": "Real Buyer Log: Tables by default and visible Intake on errors."
+        },
+        "caption": {
+          "tr": "Başlangıçta tablo, hatada görünür Intake",
+          "en": "Tables by default and visible Intake on errors"
+        }
+      }
+    }
+  ]
 }
