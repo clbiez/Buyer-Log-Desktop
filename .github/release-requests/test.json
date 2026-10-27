@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "e41af4472299bc8042de90fe083a8edc48ff1036",
-  "release_notes": "TR: Buyer Log TEST 7.0.315 — Klasik tablo çizgileri, seçim işaretleri, Intake/OAB tablo varsayılanı, erken açılış bildirimi ve kalıcı Koleksiyon/CP/Siparişler sekmeleri. Önceki TEST 7.0.314 Windows başlatıcı regresyonunda kullanılan Electron test taklidi düzeltildi. Gerçek Chromium görsel dönüş kabulü çalışır; eksik görseller uyarıdır. Windows regresyonu, Ed25519 imzası ve SHA doğrulamaları zorunludur.\nEN: Buyer Log TEST 7.0.315 — Classic table borders and selection cues, table-first Intake/OAB, earlier launch notice and persistent Collection/CP/Orders tabs. Fixes the Electron test harness that blocked TEST 7.0.314 launcher integrity regression. Real Chromium image-return acceptance still runs, with missing images advisory. Full Windows regression, Ed25519 signing and SHA verification remain mandatory.",
-  "request_id": "7.0.315-resume-blocked-regression-20261027"
+  "commit_sha": "f82f5234e27051742d5dc08083042ee85e60478e",
+  "release_notes": "TR: Buyer Log TEST 7.0.316 — 7.0.294 klasik tablo çizgileri ve seçim işaretleri, Intake/OAB tablo varsayılanları, erken açılış bildirimi, kalıcı Koleksiyon/CP/Siparişler sekmeleri. Başlatıcı imzalı yama ve Global Flow açılış perdesi güvenlik/performance regresyon testleri güncellendi. Windows tam regresyon, imza ve SHA doğrulaması zorunludur; Chromium görsel geri dönüş testindeki eksik model görselleri yalnız uyarıdır.\nEN: Buyer Log TEST 7.0.316 — Classic 7.0.294 grid outlines and selection cues, table-first Intake/OAB, early opening notice and persistent Collection/CP/Orders tabs. Updates the signed patch launcher and Global Flow startup curtain regression tests. Full Windows regression, signatures and SHA verification remain mandatory; missing model imagery from Chromium image-return acceptance is advisory only.",
+  "request_id": "7.0.316-guarded-flow-regression-retry-20261027"
 }
