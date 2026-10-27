@@ -15030,3 +15030,82 @@ html[data-ui-system="manifest"] #kolTable tfoot .collectionModelCount{visibility
 
 html[data-ui-system="manifest"] .workspaceTableFooter{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-2);flex-wrap:wrap;}
 html[data-ui-system="manifest"] .workspaceTableFooter .uiPersistenceRegion{margin:0;padding:0;}
+/* Buyer Log 7.0.294 surface and spreadsheet restoration.
+   Deliberately uses Manifest tokens; no separate theme or table logic. */
+html[data-ui-system="manifest"] :is(.panel,.cardBox,.modalCard,.mfrCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.appBlockingCard,.sourcebar,.tablewrap),
+html[data-ui-system="manifest"] .ovHome > [data-overview-widget] {
+  border:1px solid var(--ui-group-divider) !important;
+}
+html[data-ui-system="manifest"] :is(.toolbar,.tableActionToolbar) {
+  border-bottom:1px solid var(--ui-row-divider) !important;
+}
+html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.gsearch,.profileSelectTrigger,.ovHomePageTab,.ovBreakdownViewBtn,.ovHomeDrawerCard,.oabMultiTrigger),
+html[data-ui-system="manifest"] :is(.toolbar,.tableActionToolbar) :is(input,select),
+html[data-ui-system="manifest"] .vfBar select {
+  border:1px solid var(--ui-group-divider) !important;
+}
+html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.ovHomePageTab,.oabMultiTrigger):focus-visible {
+  outline:2px solid var(--ui-accent) !important;
+  outline-offset:1px;
+}
+/* Group bands and every subheader keep their own visible boundaries. */
+html[data-ui-system="manifest"] thead tr.groupRow th {
+  border-bottom:1px solid var(--ui-group-divider) !important;
+}
+html[data-ui-system="manifest"] :is(.tablewrap,.oabTableWrap,.intakeTableWrap) thead tr.colRow th,
+html[data-ui-system="manifest"] :is(.tablewrap,.oabTableWrap,.intakeTableWrap) thead th,
+html[data-ui-system="manifest"] .miniTable thead th {
+  border-right:1px solid var(--ui-row-divider) !important;
+  border-bottom:1px solid var(--ui-group-divider) !important;
+}
+html[data-ui-system="manifest"] thead tr.groupRow th.groupDivider,
+html[data-ui-system="manifest"] thead tr.colRow th.groupBoundary {
+  border-inline-start:1px solid var(--ui-group-divider) !important;
+}
+html[data-ui-system="manifest"] .miniTable tbody td,
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable,#shipTable,#backlogTreeTable) tbody td {
+  border-bottom:1px solid var(--ui-row-divider) !important;
+}
+/* Native checkbox behavior, keyboard focus and bulk selection remain intact. */
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable,#shipTable) :is(thead,tbody) input[type="checkbox"] {
+  appearance:auto;
+  accent-color:var(--ui-accent);
+  width:14px;
+  height:14px;
+  vertical-align:middle;
+  outline:1px solid var(--ui-group-divider);
+  outline-offset:-1px;
+}
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable,#shipTable) input[type="checkbox"]:focus-visible {
+  outline:2px solid var(--ui-accent) !important;
+  outline-offset:2px;
+}
+html[data-ui-system="manifest"] .tablewrap tbody tr:has(input[type="checkbox"]:checked) td {
+  background:var(--ui-selected) !important;
+}
+html[data-ui-system="manifest"] .tablewrap tbody tr:has(input[type="checkbox"]:checked) td:first-child,
+html[data-ui-system="manifest"] .tablewrap tbody tr[aria-selected="true"] td:first-child {
+  box-shadow:inset 3px 0 0 var(--ui-accent) !important;
+}
+html[data-ui-system="manifest"] .tablewrap tbody tr.rowDirty td:first-child,
+html[data-ui-system="manifest"] .tablewrap tbody tr:has(td:focus-within) td:first-child {
+  box-shadow:inset 3px 0 0 var(--ui-warning) !important;
+}
+/* The account affordance has exactly the mark's geometry instead of a pill. */
+html[data-ui-system="manifest"] .rail .brandMark--image,
+html[data-ui-system="manifest"] #currentUserBtn {
+  box-sizing:border-box;
+  width:34px;
+  height:34px;
+  border:1px solid var(--ui-group-divider) !important;
+  border-radius:var(--ui-radius) !important;
+  overflow:hidden;
+}
+html[data-ui-system="manifest"] #currentUserBtn {
+  flex:0 0 34px;
+  background:var(--ui-avatar-paper) !important;
+  box-shadow:none !important;
+}
+html[data-ui-system="manifest"] #currentUserBtn:hover {
+  border-color:var(--ui-accent) !important;
+}

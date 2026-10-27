@@ -180,6 +180,11 @@ test('cards never mount under the startup curtain and hidden tabs do not consume
   h.win.document.getElementById=()=>null;h.advance(800);assert.equal(st.children.length,1,'mounts once the curtain is gone');
   const src=TRIVIA;assert.match(src,/getClientRects&&!host\.getClientRects\(\)\.length/,'invisible cards do not tick');
 });
+test('preparing a native tab never adds a trivia Continue overlay before first activation',()=>{
+  const h=pageHarness();h.win.BL_STARTUP_WARMING=true;const state=h.state();h.add(state);
+  h.advance(4000);assert.equal(state.children.length,0);assert.equal(h.appended.length,0);
+  h.win.BL_STARTUP_WARMING=false;h.advance(800);assert.equal(state.children.length,1);
+});
 test('LFL and Backlog show the shared loading state on first load instead of an unready screen',()=>{
   const LFL=read('lfl.js'),LFLCSS=read('lfl.css'),APP=read('app-main.js');
   assert.match(INDEX,/<section id="view-lfl"[^>]*>\s*<div id="lflLoadingState" class="lflLoadingState" hidden><\/div>/);

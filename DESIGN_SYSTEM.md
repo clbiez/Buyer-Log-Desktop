@@ -43,8 +43,11 @@ Karanlık değerlerin ve durum renklerinin kanonik kaynağı `ui-tokens.css`’t
 Renk literal’leri yalnız bu kaynakta tanımlanır; custom property ve var fallback değerleri de guard kapsamındadır. `design-color-baseline.json`
 boştur; UI CSS dosyalarında ham renk borcu yoktur.
 
-Kartları çerçevelemez, yüzey tonu ve boşlukla ayırırız. Gölge yalnız geçici,
-üstte duran yüzey için `--ui-shadow-overlay` değeridir. Her karta gölge yoktur.
+7.0.294'ün kullanıcı tarafından tercih edilen belirgin yüzey hiyerarşisi korunur:
+ortak paneller, kartlar, modüller ve düğmeler `--ui-group-divider` ile ince 1px
+sınıra sahiptir. Araç çubuğu ve tablo satırı ayraçları `--ui-row-divider`
+kullanır. Gölge yalnız geçici, üstte duran yüzey için
+`--ui-shadow-overlay` değeridir. Her karta gölge yoktur.
 Mor/indigo, neon, gradyan yazı, glassmorphism ve süs ışıması kullanılmaz.
 Durumlar renk yanında metin, simge veya sayıyla açıklanır.
 
@@ -78,14 +81,17 @@ avatar veya durum noktası içindir. Radyo, slider tutamağı, yükleme işareti
 grafik noktaları köşelidir. İkonun içindeki mercek ya da coğrafi kürenin dünya
 izdüşümü bir kontrolün hitbox’ı veya veri işaretçisi değildir.
 
-İzin verilen çizgiler dar kapsamlıdır:
+İzin verilen çizgiler ortak bileşen sözleşmesiyle sınırlıdır:
 
 1. Klavye odağı: 2px opak `--ui-accent` outline; ≥3:1 gösterge kontrastı.
    Spreadsheet’in aktif hücresi klavye imlecidir ve aynı outline kullanır;
    seçilen aralığın geri kalanı yüzey tonuyla gösterilir. Drag hedefi, hata
    ve kılavuz vurguları çerçeve oluşturmaz.
 2. Yoğun tablonun gövdesi: hücre altında tek düşük kontrastlı yatay
-   `--ui-row-divider`. Dikey gövde ızgarası yoktur.
+   `--ui-row-divider`. Dikey gövde ızgarası yoktur. Satırda yerel
+   değişiklik (`rowDirty`) varsa, ilk hücrede `--ui-warning` renkli ince
+   sol gösterge; seçim varsa `--ui-accent` gösterge ve `--ui-selected` yüzeyi
+   bulunur. Seçim, düzenleme ve klavye davranışı JS'de değiştirilmez.
 3. Kullanıcının açık seçimi: CP, Siparişler ve Koleksiyon’da ana sütun grupları
    arasında **1px `--ui-group-divider`**, hem `.groupRow th.groupDivider` hem
    `.colRow th.groupBoundary` üzerinde. Satır gövdesine taşınmaz.
@@ -94,9 +100,14 @@ izdüşümü bir kontrolün hitbox’ı veya veri işaretçisi değildir.
    **görünür bölümünde ortalanır**; frozen sütunları kapatmaz, veri hücrelerine
    dokunmaz.
 5. Grafik eksen/kılavuzları veri okumak içindir; `--ui-chart-grid` kullanır.
-6. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
+6. Panel, modül ve kontrol sınırları: yalnız ortak `ui-components.css`
+   üzerinde `--ui-group-divider` ile 1px sınır. Checkbox'ta durum
+   okunabilirliği, kullanıcı avatarında logo ile eşit kare köşe uygulanır.
+7. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
 
 Tablo başlıkları `--ui-header-*`, ana grup bandı `--ui-group-header-*` kullanır.
+OAB ve INTAKE ilk açılışta grafik yerine pivot/tablo gösterir; grafik
+isteğe bağlı seçimle açılabilir.
 Seçili satır `--ui-selected` / `--ui-selected-ink`; hover `--ui-row-hover`.
 Filtre, sıralama, sticky başlık, kopyala/yapıştır ve canonical alan bağları
 CSS tasarımı için yeniden uygulanmaz.

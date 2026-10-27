@@ -161,9 +161,9 @@
     if(!wrap)return;
     let host=section.querySelector('.ovMetricSummary');
     if(!host){host=doc.createElement('div');host.className='ovMetricSummary';wrap.before(host);}
-    if(input.raw||!input.fields?.length||!input.rows?.length){host.hidden=true;section.classList.remove('hasOverviewChart');return;}
+    if(input.raw||!input.fields?.length||!input.rows?.length){host.hidden=true;section.classList.remove('hasOverviewChart','ovMetricTableOpen');return;}
     host.hidden=false;section.classList.add('hasOverviewChart');
-    const prefs=metricPrefs.get(id)||{field:input.fields[0].key,table:false};
+    const prefs=metricPrefs.get(id)||{field:input.fields[0].key,table:true};
     if(!input.fields.some(f=>f.key===prefs.field))prefs.field=input.fields[0].key;
     metricPrefs.set(id,prefs);section.classList.toggle('ovMetricTableOpen',prefs.table);
     const field=input.fields.find(f=>f.key===prefs.field),series=metricSeries(input.rows.map((row,index)=>({label:input.labelFor(row,index),value:input.valueFor(row,field),row})));

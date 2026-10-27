@@ -1045,8 +1045,21 @@
       }
       render();
       syncOverviewFilters();
+      if (!state.loaded) {
+        setStatus(text('INTAKE verisi henüz yüklenmedi. Görünür olduğunda tabloyu hazırlayacağız; Yenile ile tekrar deneyebilirsiniz.', 'INTAKE data has not loaded yet. The table will be prepared when visible; you can also retry with Refresh.'), 'loading');
+        // A report can be expensive. Load it once when its Overview widget is actually visible.
+        if (typeof IntersectionObserver === 'function') {
+          const observer = new IntersectionObserver(entries => {
+            if (!entries.some(entry => entry.isIntersecting) || document.body.dataset.activeTab !== 'overview') return;
+            observer.disconnect();
+            if (!state.loaded && !state.loading) void refresh(false);
+          }, { rootMargin: '120px' });
+          observer.observe(section);
+        }
+      }
     } catch (error) {
       setStatus(error.message || String(error), 'error');
+      render(); // Do not leave a permanently blank widget after a state/API failure.
     }
   }
 
@@ -1173,6 +1186,7 @@
   } };
 
   bind();
+  render(); // Make the empty table and its controls visible before the first network response.
   void loadState();
   window.BLINTAKE = { state, refresh: () => refresh(true), openFields, loadMetadata, onOverviewFiltersChanged: syncOverviewFilters };
 })();

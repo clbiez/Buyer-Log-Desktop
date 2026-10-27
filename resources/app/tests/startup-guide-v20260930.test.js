@@ -10,7 +10,7 @@ const INDEX=read('index.html'),APP=read('app-main.js'),GUIDE=read('buyerlog-guid
 const DATA=require('../public/buyerlog-guide-data.js');
 // Continue fades the curtain out, then removes it.
 function finishFade(h){const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.leaving,'1');assert.equal(g.isConnected,true);for(const [id,t] of [...h.timers])if(t.ms===340){h.timers.delete(id);t.fn();}}
-function guardHarness(){
+function guardHarness(search=''){
   const listeners={},nodes=new Map(),timers=new Map();let tick=0,stops=0,reloads=0;
   function node(id=''){
     const n={id,textContent:'',dataset:{},style:{},isConnected:true,children:[],classList:{add(){},contains(){return false;}},setAttribute(){},getClientRects(){return [{}];},focus(){doc.activeElement=n;},contains(o){return o===n||n.children.includes(o);},appendChild(c){n.children.push(c);},remove(){n.isConnected=false;nodes.delete(n.id);}};
@@ -21,7 +21,7 @@ function guardHarness(){
   const doc={readyState:'loading',activeElement:null,body:node(),documentElement:node(),getElementById:id=>nodes.get(id)||null,createElement:()=>node(),addEventListener:(name,fn)=>{(listeners['doc:'+name]??=[]).push(fn);}};
   doc.body.appendChild=el=>{nodes.set(el.id,el);};
   const win={addEventListener:(name,fn)=>{(listeners[name]??=[]).push(fn);},dispatchEvent:ev=>{for(const fn of listeners[ev.type]||[])fn(ev);},BLThinkingOrbBreathing:{attach:()=>({stop(){stops++;}})},BLGuide:{mountStartup(){},stage(){}}};
-  const context=vm.createContext({window:win,document:doc,console:{error(){}},sessionStorage:{removeItem(){},getItem(){return null;},setItem(){}},location:{replace(){reloads++;}},fetch:async()=>({ok:true,json:async()=>({app:'Buyer Log'})}),AbortSignal:{timeout(){}},CustomEvent:class {constructor(type,options){this.type=type;this.detail=options?.detail;}},setTimeout:(fn,ms)=>{const id=++tick;timers.set(id,{fn,ms});return id;},clearTimeout:id=>timers.delete(id)});
+  const context=vm.createContext({window:win,document:doc,URLSearchParams,console:{error(){}},sessionStorage:{removeItem(){},getItem(){return null;},setItem(){}},location:{search,replace(){reloads++;}},fetch:async()=>({ok:true,json:async()=>({app:'Buyer Log'})}),AbortSignal:{timeout(){}},CustomEvent:class {constructor(type,options){this.type=type;this.detail=options?.detail;}},setTimeout:(fn,ms)=>{const id=++tick;timers.set(id,{fn,ms});return id;},clearTimeout:id=>timers.delete(id)});
   const script=INDEX.slice(INDEX.indexOf('<script>\n(function(){')+8,INDEX.indexOf('</script>',INDEX.indexOf('<script>\n(function(){')));
   vm.runInContext(script,context);
   win.BLBootGuard.mount();
@@ -45,6 +45,17 @@ test('core markup and data wait for the authenticated profile but not a slow pag
   let completed=0;h.win.addEventListener('bl:startup-complete',()=>completed++);assert.equal(completed,0);
   button.onclick();assert.equal(completed,1);finishFade(h);assert.ok(!h.nodes.has('blBootGuard'));
   h.win.BLBootGuard.continue();assert.equal(completed,1,'a second Continue during the fade is ignored');
+});
+test('background startup tabs dismiss their curtain only after core, data and authenticated profile',()=>{
+  const h=guardHarness('?module=orders&startupWarm=1');
+  h.win.BLBootGuard.ready();h.win.BLBootGuard.ready('data');
+  assert.equal(h.nodes.get('blBootGuard').dataset.leaving,undefined);
+  h.profile();assert.equal(h.nodes.get('blBootGuard').dataset.leaving,'1');
+});
+test('requested table module is selected before eager helpers and core health does not wait for images',()=>{
+  assert.ok(INDEX.indexOf('window.BL_BOOT_MODULE=module')<INDEX.indexOf('<script src="app-main.js'));
+  assert.match(INDEX,/\['koleksiyon','cp','orders'\]\.includes\(module\)/);
+  assert.match(INDEX,/document\.addEventListener\('DOMContentLoaded',finishBoot,\{once:true\}\)/);
 });
 test('Continue does nothing until preparation is complete',()=>{
   const h=guardHarness();h.win.BLBootGuard.ready();h.win.BLBootGuard.ready('data');h.win.BLBootGuard.continue();

@@ -42,7 +42,7 @@ function installMain(f){
 }
 function launch(f,envOverrides={}){
  const marker=path.join(f.root,'main-was-loaded'),script=path.join(f.root,'launch.cjs');
- fs.writeFileSync(script,`const Module=require('node:module'),load=Module._load;Module._load=function(id){if(id==='electron')return {app:{isPackaged:true,setPath(){},requestSingleInstanceLock(){return true;},exit(){},quit(){},relaunch(){}}};return load.apply(this,arguments)};Object.defineProperty(process,'execPath',{value:${JSON.stringify(path.join(f.portable,'BuyerLog.exe'))}});try{require(${JSON.stringify(path.join(f.base,'electron/launcher.js'))})}catch(e){console.error(e.code||e.message);process.exitCode=1}`);
+ fs.writeFileSync(script,`const Module=require('node:module'),load=Module._load;Module._load=function(id){if(id==='electron')return {app:{isPackaged:true,setPath(){},requestSingleInstanceLock(){return true;},exit(code){process.exitCode=code;},quit(){},relaunch(){}},dialog:{showErrorBox(_title,message){console.error(message);}}};return load.apply(this,arguments)};Object.defineProperty(process,'execPath',{value:${JSON.stringify(path.join(f.portable,'BuyerLog.exe'))}});try{require(${JSON.stringify(path.join(f.base,'electron/launcher.js'))})}catch(e){console.error(e.code||e.message);process.exitCode=1}`);
  const result=child.spawnSync(process.execPath,[script],{encoding:'utf8',env:{...process.env,...envOverrides,TEST_MARKER:marker},timeout:20000});
  return {...result,loaded:fs.existsSync(marker)};
 }
@@ -57,13 +57,13 @@ test('the installed launcher loads and confirms a verified core and verifies its
 test('staged tampering stops the real launcher module before main and before any database checkpoint',t=>{
  const f=fixture(t);installMain(f);const p=f.build(),result=f.manager().apply(p.manifest,p.archiveFile),before=fs.readFileSync(f.stateFile);
  fs.writeFileSync(path.join(result.pending.appCoreRoot,'public/index.html'),'unsigned replacement');
- const launched=launch(f);assert.equal(launched.status,1);assert.equal(launched.loaded,false);assert.match(launched.stderr,/PATCH_FILE_MISMATCH/);
+ const launched=launch(f);assert.equal(launched.status,1);assert.equal(launched.loaded,false);assert.match(fs.readFileSync(path.join(f.portable,'data/local/updater/updater.log'),'utf8'),/"code":"PATCH_FILE_MISMATCH"/);
  assert.deepEqual(fs.readFileSync(f.stateFile),before);assert.equal(fs.readFileSync(f.db,'utf8'),'synthetic acknowledged baseline');
 });
 
 test('legacy public/server mutations are rejected before loading the new full bootstrap application',t=>{
  const f=fixture(t);installMain(f);fs.writeFileSync(path.join(f.base,'public/index.html'),'legacy unsigned mutation');
- const result=launch(f);assert.equal(result.status,1);assert.equal(result.loaded,false);assert.match(result.stderr,/UPDATE_CORE_INTEGRITY/);
+ const result=launch(f);assert.equal(result.status,1);assert.equal(result.loaded,false);assert.match(fs.readFileSync(path.join(f.portable,'data/local/updater/updater.log'),'utf8'),/"code":"UPDATE_CORE_INTEGRITY"/);
  const lifecycle=createLauncherState({bootstrapCore:f.base,portableRoot:f.portable});assert.equal(lifecycle.readState().activation,null);
 });
 

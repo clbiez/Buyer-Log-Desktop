@@ -3,14 +3,159 @@
   "publishedAt": "2026-10-27",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Daha geniş tablolar ve akıcı gezinme",
-    "en": "Roomier tables and smoother navigation"
+    "tr": "Klasik tablo ve modül görünümünün geri dönüşü",
+    "en": "Restore classic table and module presentation"
   },
   "summary": {
-    "tr": "Tablo alanı, görünüm menüleri, not düzenleme ve arka plan geçişleri iyileştirildi.",
-    "en": "Improved table space, view menus, note editing and backdrop transitions."
+    "tr": "7.0.294 tablo hiyerarşisi, kontrol kenarlıkları, satır seçim işaretleri ve Intake/OAB tablo önceliği geri getirildi. Buyer Log açılışta hemen bilgi verir; Koleksiyon, CP ve Siparişler arka planda hazırlanır ve sekme geçişlerinde açık kalır. Tablo alanı, görünüm menüleri, not düzenleme ve arka plan geçişleri iyileştirildi.",
+    "en": "Restores 7.0.294 table hierarchy, control borders, row selection cues and table-first Intake/OAB. Buyer Log provides early launch feedback; Collection, CP and Orders prepare in the background and remain open across tab switches. Improved table space, view menus, note editing and backdrop transitions."
   },
   "changes": [
+    {
+      "id": "classic-shared-surfaces",
+      "type": "improvement",
+      "module": {
+        "tr": "Ortak arayüz",
+        "en": "Shared interface"
+      },
+      "title": {
+        "tr": "Panel ve buton kenarları",
+        "en": "Panel and button borders"
+      },
+      "body": {
+        "tr": "Modül, kart, araç çubuğu ve düğmeler, ortak tema ayraçlarıyla yeniden belirginleştirildi.",
+        "en": "Modules, cards, toolbars and buttons have clearly visible shared theme boundaries."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "classic-panel-borders.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Panel ve buton kenarları.",
+          "en": "Real Buyer Log: Panel and button borders."
+        },
+        "caption": {
+          "tr": "Panel ve buton kenarları",
+          "en": "Panel and button borders"
+        }
+      }
+    },
+    {
+      "id": "classic-table-selection",
+      "type": "fix",
+      "module": {
+        "tr": "CP, Siparişler ve Koleksiyon",
+        "en": "CP, Orders and Collection"
+      },
+      "title": {
+        "tr": "Tablo başlık ve satır işaretleri",
+        "en": "Table headers and row indicators"
+      },
+      "body": {
+        "tr": "Sütun başlık ayraçları, seçim kutuları, seçili satır tonu, düzenleme şeridi ve kullanıcı simgesinin köşeleri geri getirildi.",
+        "en": "Restores header separators, checkboxes, selected-row tone, edit stripe and matching profile icon corners."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "classic-grid-selection.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Tablo başlık ve satır işaretleri.",
+          "en": "Real Buyer Log: Table headers and row indicators."
+        },
+        "caption": {
+          "tr": "Tablo başlık ve satır işaretleri",
+          "en": "Table headers and row indicators"
+        }
+      }
+    },
+    {
+      "id": "intake-oab-table-first",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış / Intake ve OAB",
+        "en": "Overview / Intake and OAB"
+      },
+      "title": {
+        "tr": "Başlangıçta tablo, hatada görünür Intake",
+        "en": "Tables by default and visible Intake on errors"
+      },
+      "body": {
+        "tr": "Her iki modül ilk açılışta tablo gösterir; Intake ilk durum isteği başarısız olduğunda boş beyaz alan yerine tablo ve uyarıyı gösterir.",
+        "en": "Both modules start in table mode; if the initial Intake state request fails, a table and message remain visible instead of a blank white panel."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "intake-oab-table-default.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Başlangıçta tablo, hatada görünür Intake.",
+          "en": "Real Buyer Log: Tables by default and visible Intake on errors."
+        },
+        "caption": {
+          "tr": "Başlangıçta tablo, hatada görünür Intake",
+          "en": "Tables by default and visible Intake on errors"
+        }
+      }
+    },
+    {
+      "id": "early-launch-feedback",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Buyer Log açılıyor bildirimi daha erken görünür",
+        "en": "The opening notice appears earlier"
+      },
+      "body": {
+        "tr": "Açılış bildirimi, Electron hazır olduğunda ağır bütünlük kontrollerinden önce gösterilir. Normal açılıştaki ikinci dosya taraması ve boş checklist/görev listeleri için gereksiz sipariş hesaplamaları kaldırıldı. Bütünlük ve güncel veri erişimi denetimleri korunur.",
+        "en": "The opening notice appears as soon as Electron is ready, before expensive integrity checks. The duplicate file scan on ordinary launches and unnecessary order calculations for empty checklist/task lists were removed. Integrity and current data access checks remain in place."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "early-launch-notice.png",
+        "alt": {
+          "tr": "Gerçek Electron açılış penceresindeki Türkçe ve İngilizce Buyer Log açılıyor bildirimi",
+          "en": "The Turkish and English opening notice in the real Electron launch window"
+        },
+        "caption": {
+          "tr": "Bildirim, uygulama çekirdeği yüklenmeden önce gösterilir.",
+          "en": "The notice appears before the application core loads."
+        }
+      }
+    },
+    {
+      "id": "persistent-startup-module-tabs",
+      "type": "improvement",
+      "module": {
+        "tr": "Çalışma alanı",
+        "en": "Workspace"
+      },
+      "title": {
+        "tr": "Koleksiyon, CP ve Siparişler açılışta hazırlanır",
+        "en": "Collection, CP and Orders prepare at startup"
+      },
+      "body": {
+        "tr": "Erişim yetkisi olan üç modül, odağı değiştirmeden sırayla ayrı sekmelerde yüklenir. Sekme değiştirildiğinde aynı ekran, filtreler ve kaydırma konumu korunur. Arka plan sekmeleri hedef modülü doğrudan açar; gereksiz Genel Bakış yükü başlatmaz.",
+        "en": "The three authorized modules load sequentially in separate tabs without changing focus. Switching tabs preserves the same screen, filters and scroll position. Background tabs open their target module directly, avoiding unnecessary Overview work."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-orders-ready.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Siparişler ekranında yüklenmiş 30.000 demo satır",
+          "en": "30,000 loaded demo rows in the real Buyer Log Orders screen"
+        },
+        "caption": {
+          "tr": "Başlangıçta hazırlanan Siparişler verisinin yalnız ilk 50 satırı çizilir.",
+          "en": "Only the first 50 rows of the Orders data prepared at startup are rendered."
+        }
+      }
+    },
     {
       "id": "compact-tables",
       "type": "improvement",

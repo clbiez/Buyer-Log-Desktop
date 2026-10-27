@@ -36,6 +36,8 @@
     syncRetryTimer: null,
     syncPromise: null,
     pendingAnswers: {},
+    // In-memory only: denied writes stay durable in the journal but are not retried on tab navigation.
+    permissionDeferred: new Map(),
     journalLoaded: false,
     journalError: false,
     observedAnswers: null,
@@ -285,7 +287,22 @@
     state.syncPromise = drainAnswerChanges().finally(function () { state.syncPromise = null; });
     return state.syncPromise;
   }
+  // Promotion can rebuild an equivalent entry with a different property order.
+  // Compare fields rather than JSON object insertion order so a denied write
+  // remains deferred until the actual answer/evidence changes.
+  function samePendingEntry(a, b) {
+    if (!a || !b) return false;
+    const keys = Object.keys(a), others = Object.keys(b);
+    return keys.length === others.length && keys.every(function (key) {
+      return Object.prototype.hasOwnProperty.call(b, key) && sameJson(a[key], b[key]);
+    });
+  }
+  function sendablePendingEntry(entry) {
+    const key = answerKey(entry.orderKey, entry.itemId);
+    return !entry.syncBlocked && !samePendingEntry(state.permissionDeferred.get(key), entry);
+  }
   async function drainAnswerChanges() {
+    let inFlightEntries = [];
     try {
       // Kullanıcı ilk kayıt devam ederken ikinci/üçüncü kez durum değiştirirse
       // eski kod bu olayları sessizce atlıyordu. Her başarılı POST'tan sonra
@@ -293,13 +310,15 @@
       for (;;) {
         state.syncQueued = false;
         captureAnswerChanges();
-        const entries = Object.values(state.pendingAnswers).filter(entry => !entry.syncBlocked).slice(0, 200);
+        const entries = Object.values(state.pendingAnswers).filter(sendablePendingEntry).slice(0, 200);
         if (!entries.length) {
-          if (Object.keys(state.pendingAnswers).length) throw Object.assign(new Error(T('Sunucuda daha yeni bir checklist kaydı var. Bekleyen değişiklik korundu; durumu kontrol edip yeniden seçin.', 'A newer checklist record exists on the server. Your pending edit was preserved; review and select the status again.')), { code: 'CHECKLIST_CONFLICT' });
+          if (Object.values(state.pendingAnswers).some(entry => entry.syncBlocked)) throw Object.assign(new Error(T('Sunucuda daha yeni bir checklist kaydı var. Bekleyen değişiklik korundu; durumu kontrol edip yeniden seçin.', 'A newer checklist record exists on the server. Your pending edit was preserved; review and select the status again.')), { code: 'CHECKLIST_CONFLICT' });
           if (!state.syncQueued) break;
           continue;
         }
+        inFlightEntries = entries;
         const result = await post('/answers', { entries: entries, source: 'buyer_log' });
+        inFlightEntries = [];
         if (result.ok === false) throw new Error(T('Checklist değişikliği onaylanmadı; bekleyen kayıt korunuyor.', 'Checklist change was not acknowledged; the pending record is preserved.'));
         const accepted = Array.isArray(result.changedKeys) ? new Set(result.changedKeys) : null;
         if (!accepted && (result.skipped || result.conflicts)) throw new Error(T('Checklist değişikliği onaylanmadı; bekleyen kayıt korunuyor.', 'Checklist change was not acknowledged; the pending record is preserved.'));
@@ -311,6 +330,7 @@
           }
           state.answerBaseline[key] = safeJson(entry);
           if (sameJson(state.pendingAnswers[key], entry)) delete state.pendingAnswers[key];
+          state.permissionDeferred.delete(key);
         });
         persistPendingAnswers();
         captureAnswerChanges();
@@ -320,7 +340,14 @@
     } catch (error) {
       // Baseline yalnız başarılı POST'ta ilerlediği için veri yerelde kalır ve
       // tekrar denendiğinde eksik değişiklik yeniden gönderilir.
-        if (error.code !== 'CHECKLIST_CONFLICT' && !state.syncRetryTimer) {
+      if (error.status === 403 || error.status === 401) {
+        // Authorization denial is not a transient network failure. Keep every
+        // refused edit in the local journal, without a retry loop or duplicate toast.
+        inFlightEntries.forEach(function (entry) {
+          const key = answerKey(entry.orderKey, entry.itemId);
+          if (sameJson(state.pendingAnswers[key], entry)) state.permissionDeferred.set(key, safeJson(entry));
+        });
+      } else if (error.code !== 'CHECKLIST_CONFLICT' && !state.syncRetryTimer) {
         state.syncRetryTimer = setTimeout(function () {
           state.syncRetryTimer = null;
           syncAnswerChanges().catch(function () {});
@@ -329,7 +356,7 @@
       throw error;
     } finally {
       state.syncingAnswers = false;
-      if (state.syncQueued && Object.values(state.pendingAnswers).some(entry => !entry.syncBlocked) && !state.syncRetryTimer) {
+      if (state.syncQueued && Object.values(state.pendingAnswers).some(sendablePendingEntry) && !state.syncRetryTimer) {
         state.syncRetryTimer = setTimeout(function () {
           state.syncRetryTimer = null;
           syncAnswerChanges().catch(function () {});
@@ -703,9 +730,11 @@
         promote.forEach(function (entry) { state.pendingAnswers[answerKey(entry.orderKey, entry.itemId)] = entry; });
         persistPendingAnswers();
       }
-      if (Object.keys(state.pendingAnswers).length) {
-        try { await syncAnswerChanges(); }
-        catch (error) { toast(T('Checklist kaydı bekliyor: ', 'Checklist save is pending: ') + error.message); }
+      if (Object.values(state.pendingAnswers).some(sendablePendingEntry)) {
+        // Fetch/merge controls the CP view; a rejected write must not delay navigation.
+        syncAnswerChanges().catch(function (error) {
+          toast(T('Checklist kaydı bekliyor: ', 'Checklist save is pending: ') + error.message);
+        });
       }
       const sharedSignature = runtimeSignature();
       if (sharedSignature !== state.sharedViewSignature) {
@@ -2881,8 +2910,7 @@
     wrapRender();
     bindReportDrop();
     const opts = options || {};
-    if (opts.ifStale && state.runtimeLoadedAt && Date.now() - state.runtimeLoadedAt < RUNTIME_FRESH_MS
-      && !Object.keys(state.pendingAnswers || {}).length) return;
+    if (opts.ifStale && state.runtimeLoadedAt && Date.now() - state.runtimeLoadedAt < RUNTIME_FRESH_MS) return;
     const first = !state.runtimeLoadedAt;
     await Promise.all([loadShared(), loadTestReportTasks()]);
     state.runtimeLoadedAt = Date.now();

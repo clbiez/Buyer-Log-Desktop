@@ -29,7 +29,10 @@ test('UI yerel state ile hazır olur; yardımcı yükler ve sync sonradan başla
   assert.ok(start >= 0, 'local-first DOMContentLoaded başlangıcı bulunamadı');
   assert.match(block, /await loadInitialBuyerLogData\(\)/);
   assert.doesNotMatch(block, /await Promise\.all\(\[loadInitialBuyerLogData\(\),loadPlmStyleLinks/);
-  assert.match(block, /requestAnimationFrame[\s\S]*UI_READY[\s\S]*signalStartupReady/);
+  assert.match(block, /scheduleStartupScreenReady[\s\S]*UI_READY[\s\S]*signalStartupReady/);
+  const scheduler=APP.slice(APP.indexOf('function scheduleStartupScreenReady('),start);
+  assert.match(scheduler,/requestAnimationFrame\(\(\)=>requestAnimationFrame\(callback\)\)/,'visible startup still waits for two paint frames');
+  assert.match(scheduler,/startupWarm[\s\S]*setTimeout\(callback,0\)/,'unattached background Views must not stall on paint frames');
   assert.match(SERVER, /app\.post\('\/api\/startup\/ready'/);
   assert.match(SERVER, /BACKGROUND_SYNC_DELAY_MS\s*=\s*2500/);
   assert.match(SERVER, /if\s*\(!uiReadySignaled\)\s*return/);

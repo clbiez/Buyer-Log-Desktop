@@ -1,0 +1,459 @@
+{
+  "synthetic": true,
+  "platform": "linux",
+  "chromium": "151.0.7922.173",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "cpuCount": 3,
+  "totalMemoryBytes": 10476851200,
+  "requestedRows": 30000,
+  "requestedModules": [
+    "orders"
+  ],
+  "backendStartupMs": 2235.157364999999,
+  "measurements": [
+    {
+      "module": "orders",
+      "readyAtMs": 12290.000000000233,
+      "rows": 30000,
+      "domRows": 50,
+      "longTaskTotalMs": 17704,
+      "maxLongTaskMs": 4331,
+      "resources": [
+        {
+          "path": "/api/data",
+          "ms": 487.70000000018626,
+          "decodedBytes": 14925,
+          "encodedBytes": 4691
+        },
+        {
+          "path": "/api/page-projection/orders",
+          "ms": 1607.5,
+          "decodedBytes": 71435820,
+          "encodedBytes": 5661795
+        },
+        {
+          "path": "/api/page-projection/collection-catalog",
+          "ms": 38.10000000009313,
+          "decodedBytes": 1619,
+          "encodedBytes": 684
+        }
+      ],
+      "timeline": [
+        {
+          "name": "APP_BOOT_START",
+          "atMs": 1478.1000000000931,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOT_START",
+          "atMs": 1478.3999999999069,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_START",
+          "atMs": 1478.3999999999069,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_START",
+          "atMs": 1483.3999999999069,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY",
+          "atMs": 1822.2999999998137,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_XLSX_DEFERRED",
+          "atMs": 1965.7000000001863,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_CORE_RESOURCES_READY",
+          "atMs": 1982.1000000000931,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_START",
+          "atMs": 5152.299999999814,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_START",
+          "atMs": 5152.5,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_CONFIG_READY",
+          "atMs": 5241.799999999814,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_READY",
+          "atMs": 5926.5,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_UI_SHELL_READY",
+          "atMs": 5975.700000000186,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_READY",
+          "atMs": 5975.799999999814,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_READY",
+          "atMs": 5975.799999999814,
+          "detail": null
+        },
+        {
+          "name": "DOM_CREATION_READY",
+          "atMs": 6042.100000000093,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_START",
+          "atMs": 6062.799999999814,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_DB_READY",
+          "atMs": 6559.700000000186,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_READY",
+          "atMs": 6565,
+          "detail": {
+            "pageCache": {
+              "hit": false,
+              "readMs": 0,
+              "generation": null
+            },
+            "durationMs": 502.20000000018626
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_START",
+          "atMs": 6565,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 6570.399999999907,
+          "detail": {
+            "reason": "server-transit-rules-hydrated",
+            "revision": 2
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 6575.600000000093,
+          "detail": {
+            "reason": "server-cp-deferred",
+            "revision": 3
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_READY",
+          "atMs": 6584.799999999814,
+          "detail": {
+            "durationMs": 19.799999999813735
+          }
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_START",
+          "atMs": 6584.799999999814,
+          "detail": null
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_READY",
+          "atMs": 6585.100000000093,
+          "detail": {
+            "durationMs": 0.3000000002793968
+          }
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_START",
+          "atMs": 6585.100000000093,
+          "detail": null
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_READY",
+          "atMs": 6585.100000000093,
+          "detail": {
+            "mode": "lazy",
+            "durationMs": 0
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_START",
+          "atMs": 6585.100000000093,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_START",
+          "atMs": 6585.100000000093,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_READY",
+          "atMs": 6586.100000000093,
+          "detail": {
+            "module": "orders",
+            "durationMs": 1
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_READY",
+          "atMs": 6586.100000000093,
+          "detail": {
+            "module": "orders",
+            "durationMs": 1
+          }
+        },
+        {
+          "name": "UI_FIRST_RENDER",
+          "atMs": 6586.100000000093,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 10346.600000000093,
+          "detail": {
+            "reason": "orders-projection-loaded",
+            "revision": 4
+          }
+        },
+        {
+          "name": "UI_READY",
+          "atMs": 10966.299999999814,
+          "detail": null
+        },
+        {
+          "name": "AUTH_USER_LOAD_START",
+          "atMs": 11096.5,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "EXCEL_ENGINE_LOAD_START",
+          "atMs": 11096.700000000186,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "EXCEL_ENGINE_LOAD_READY",
+          "atMs": 15294.700000000186,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "AUTH_USER_LOAD_READY",
+          "atMs": 15329.399999999907,
+          "detail": {
+            "mode": "after-ui",
+            "applied": 4,
+            "pushed": 2
+          }
+        },
+        {
+          "name": "AUTH_READY",
+          "atMs": 15329.5,
+          "detail": {
+            "mode": "after-ui"
+          }
+        }
+      ],
+      "retainedJsHeapBytes": 78663496,
+      "dom": {
+        "documents": 4,
+        "nodes": 16474,
+        "jsEventListeners": 2167
+      },
+      "elapsedMs": 16199.003701999998,
+      "rendererRssBytes": 537804800,
+      "errors": []
+    }
+  ],
+  "allTabsRetained": true,
+  "native": {
+    "ready": [
+      {
+        "module": "overview",
+        "atMs": 10886.635040000001
+      },
+      {
+        "module": "koleksiyon",
+        "atMs": 27961.364587
+      },
+      {
+        "module": "cp",
+        "atMs": 119106.870304
+      },
+      {
+        "module": "orders",
+        "atMs": 211358.476409
+      }
+    ],
+    "rows": 30000,
+    "retained": true,
+    "diagnostics": {
+      "windowCount": 1,
+      "tabCount": 4,
+      "windows": [
+        {
+          "windowId": 1,
+          "activeTabId": "86422eb0-583e-4fbd-8599-38f2d239d52e",
+          "shellPid": 5296
+        }
+      ],
+      "tabs": [
+        {
+          "tabId": "d842b329-d02b-4d76-8730-3a073652f3b7",
+          "module": "overview",
+          "active": false,
+          "pid": 5302
+        },
+        {
+          "tabId": "01175291-6db5-4700-b0da-c376dd50677d",
+          "module": "koleksiyon",
+          "active": false,
+          "pid": 5335
+        },
+        {
+          "tabId": "a45ce43c-1ea2-4a6c-a829-2a16e1a620ce",
+          "module": "cp",
+          "active": false,
+          "pid": 5387
+        },
+        {
+          "tabId": "86422eb0-583e-4fbd-8599-38f2d239d52e",
+          "module": "orders",
+          "active": true,
+          "pid": 5430
+        }
+      ]
+    },
+    "baselineProcesses": [
+      {
+        "pid": 5240,
+        "type": "Browser",
+        "memory": {
+          "workingSetSize": 140348,
+          "peakWorkingSetSize": 140348
+        }
+      },
+      {
+        "pid": 5266,
+        "type": "GPU",
+        "memory": {
+          "workingSetSize": 87672,
+          "peakWorkingSetSize": 87672
+        }
+      },
+      {
+        "pid": 5271,
+        "type": "Utility",
+        "memory": {
+          "workingSetSize": 72132,
+          "peakWorkingSetSize": 74764
+        }
+      },
+      {
+        "pid": 5296,
+        "type": "Tab",
+        "memory": {
+          "workingSetSize": 105188,
+          "peakWorkingSetSize": 105188
+        }
+      },
+      {
+        "pid": 5302,
+        "type": "Tab",
+        "memory": {
+          "workingSetSize": 281112,
+          "peakWorkingSetSize": 345052
+        }
+      }
+    ],
+    "processes": [
+      {
+        "pid": 5240,
+        "type": "Browser",
+        "memory": {
+          "workingSetSize": 152256,
+          "peakWorkingSetSize": 152256
+        }
+      },
+      {
+        "pid": 5266,
+        "type": "GPU",
+        "memory": {
+          "workingSetSize": 71336,
+          "peakWorkingSetSize": 87652
+        }
+      },
+      {
+        "pid": 5271,
+        "type": "Utility",
+        "memory": {
+          "workingSetSize": 73472,
+          "peakWorkingSetSize": 79684
+        }
+      },
+      {
+        "pid": 5296,
+        "type": "Tab",
+        "memory": {
+          "workingSetSize": 107892,
+          "peakWorkingSetSize": 107892
+        }
+      },
+      {
+        "pid": 5302,
+        "type": "Tab",
+        "memory": {
+          "workingSetSize": 357300,
+          "peakWorkingSetSize": 737312
+        }
+      },
+      {
+        "pid": 5335,
+        "type": "Tab",
+        "memory": {
+          "workingSetSize": 194956,
+          "peakWorkingSetSize": 215608
+        }
+      },
+      {
+        "pid": 5387,
+        "type": "Tab",
+        "memory": {
+          "workingSetSize": 451392,
+          "peakWorkingSetSize": 494032
+        }
+      },
+      {
+        "pid": 5430,
+        "type": "Tab",
+        "memory": {
+          "workingSetSize": 572300,
+          "peakWorkingSetSize": 572300
+        }
+      }
+    ]
+  },
+  "limitations": [
+    "Chromium page measurements; native Electron shell and Windows cold disk/antivirus are not included.",
+    "Backend process restarted; OS filesystem cache is not purged.",
+    "Collection workspace is empty demo data.",
+    "RSS sums include shared renderer pages and are not unique physical memory."
+  ]
+}

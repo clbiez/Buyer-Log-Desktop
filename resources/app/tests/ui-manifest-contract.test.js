@@ -48,9 +48,46 @@ test('Manifest has one token source; migrated owners never consume legacy appear
  assert.ok(read('index.html').indexOf('href="ui-startup.css')>read('index.html').indexOf('href="ui-components.css'));
  assert.doesNotMatch(read('giris.css'),/--(?:login-|ui-font-add|ui-font-(?:base|body))\s*:/);
 });
+// Restored 7.0.294 affordances are owned exclusively by the shared Manifest
+// stylesheet. Scope/values are deliberately enumerated: module CSS may not
+// create independent borders, outlines or shadows.
+const classicSelector = value => value.replace(/html\[data-ui-system="manifest"\] /g,'').replace(/\s+/g,' ').trim();
+const classicFrame = d => {
+ if(d.file!=='ui-components.css')return false;
+ const selector=classicSelector(d.selector);
+ const prefixes=[
+   ':is(.panel,.cardBox,.modalCard,',
+   ':is(.toolbar,.tableActionToolbar)',
+   ':is(.navActionBtn,.tbtn,.iconbtn,',
+   ':is(.tablewrap,.oabTableWrap,.intakeTableWrap) thead',
+   ':is(#cpTable,#ordersTable,#kolTable,#shipTable,#backlogTreeTable) tbody',
+   ':is(#cpTable,#ordersTable,#kolTable,#shipTable) :is(thead,tbody) input[type="checkbox"]',
+   '.miniTable thead th',
+   '.miniTable tbody td',
+   '.rail .brandMark--image',
+   '#currentUserBtn',
+   'thead tr.groupRow th',
+   'thead tr.colRow th.groupBoundary'
+ ];
+ return prefixes.some(prefix=>selector.startsWith(prefix));
+};
+const classicRowStripe = d => d.file==='ui-components.css'
+ && /\.tablewrap tbody tr(?:\.rowDirty|:has\(|\[aria-selected=)/.test(d.selector)
+ && d.prop==='box-shadow'
+ && ['inset 3px 0 0 var(--ui-accent)','inset 3px 0 0 var(--ui-warning)'].includes(d.value);
+const classicBorder = d => classicFrame(d) && ({
+ border:['1px solid var(--ui-group-divider)'],
+ 'border-bottom':['1px solid var(--ui-group-divider)','1px solid var(--ui-row-divider)'],
+ 'border-right':['1px solid var(--ui-row-divider)'],
+ 'border-inline-start':['1px solid var(--ui-group-divider)'],
+ 'border-color':['var(--ui-accent)']
+}[d.prop]||[]).includes(d.value);
+const classicFocus = d => classicFrame(d)&&d.prop==='outline'
+ && ['1px solid var(--ui-group-divider)','2px solid var(--ui-accent)'].includes(d.value);
+
 // Exact semantically identical prefiltered header selectors; no broader border exception.
 const groupSeparator=id=>['.groupDivider','.groupBoundary'].map(key=>id+' thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary):where('+key+')').join(',');
-test('Manifest prohibits frames, rounded controls, gradients and raw overlay levels',()=>{
+test('Manifest permits only shared classic frames and existing table/print borders',()=>{
  const failures=[];
  for(const d of entries){
   if(d.prop.startsWith('--')||d.ancestors.some(s=>s.startsWith('@font-face')))continue;
@@ -61,14 +98,14 @@ test('Manifest prohibits frames, rounded controls, gradients and raw overlay lev
    const group=['#cpTable','#ordersTable','#kolTable'].some(id=>d.selector===groupSeparator(id))&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
    const headerColumns=d.selector===':is(#cpTable,#ordersTable,#kolTable) thead tr.colRow th:not(:last-child)'&&d.prop==='border-inline-end'&&d.value==='1px solid var(--ui-row-divider)';
    const printRule=isPrint(d)&&d.selector==='.shipCompare tbody td'&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-print-rule)';
-   if(!row&&!group&&!headerColumns&&!printRule)failures.push(d); // narrow user-approved dense table exceptions
+   if(!row&&!group&&!headerColumns&&!printRule&&!classicBorder(d))failures.push(d); // explicit shared-surface restoration
   }
   if(d.prop==='outline'&&!/^(?:none|0)$/.test(d.value)){
    const cursor=['.blDetailDrawer .blDetailTable td.blGridActiveCell','#cpTable td.blGridActiveCell,#ordersTable td.blGridActiveCell','[data-ui-migrated] .blDetailTable .blGridActiveCell','#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolActiveGridCell,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolSpreadsheetActiveCell'].includes(d.selector);
-   if(!/:focus/.test(d.selector)&&!cursor)failures.push(d);
+   if(!/:focus/.test(d.selector)&&!cursor&&!classicFocus(d))failures.push(d);
   }
   if(d.prop==='z-index'&&!/^var\(--ui-z-(below|base|data|raised|sticky|sticky-column|chrome|popover|modal|modal-backdrop|rail-backdrop|modal-menu|tooltip|boot)\)$/.test(d.value))failures.push(d);
-  if(d.prop==='box-shadow'&&!/^(none|var\(--ui-shadow-overlay\))$/.test(d.value))failures.push(d);
+  if(d.prop==='box-shadow'&&!/^(none|var\(--ui-shadow-overlay\))$/.test(d.value)&&!classicRowStripe(d))failures.push(d);
  }
  assert.deepEqual(failures,[]);
  assert.match(read('ui-tokens.css'),/--ui-radius:0;/);
@@ -88,10 +125,18 @@ test('Manifest fonts scale and only transform/opacity may animate',()=>{
  for(const file of ['ui-components.css','ui-startup.css','giris.css'])assert.match(read(file),/prefers-reduced-motion:reduce/);
  for(const file of ['overview-global-flow.js','overview-global-flow-earth.js'])assert.match(read(file),/function (?:wantsAnimation|animationWanted)\(\)\{return document.documentElement.dataset.uiSystem!=='manifest'/);
 });
-test('Main column separators cover both header tiers and never the table body',()=>{
- const rules=entries.filter(d=>d.value==='1px solid var(--ui-group-divider)');
+test('Main column separators cover both header tiers; classic frames do not add a body grid',()=>{
+ const ids=['#cpTable','#ordersTable','#kolTable'];
+ const rules=entries.filter(d=>d.prop==='border-inline-start'&&ids.some(id=>d.selector===groupSeparator(id)));
  assert.equal(rules.length,3);
- for(const [i,id] of ['#cpTable','#ordersTable','#kolTable'].entries()){assert.equal(rules[i].selector,groupSeparator(id));assert.doesNotMatch(rules[i].selector,/tbody|td\b/);}
+ for(const [i,id] of ids.entries()){
+  assert.equal(rules[i].selector,groupSeparator(id));
+  assert.equal(rules[i].value,'1px solid var(--ui-group-divider)');
+  assert.doesNotMatch(rules[i].selector,/tbody|td\b/);
+ }
+ const additional=entries.filter(d=>d.prop.startsWith('border')&&d.value==='1px solid var(--ui-group-divider)'&&!rules.includes(d));
+ assert.ok(additional.length>0,'Restored surfaces must be bordered');
+ assert.ok(additional.every(classicBorder),'Only approved shared surfaces may add another group divider');
 });
 test('Shared button contract covers interaction states and restricts explicit variants',()=>{
  const source=read('ui-components.css');

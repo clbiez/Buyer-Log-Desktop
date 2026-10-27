@@ -31,17 +31,25 @@ jobs:
         run: node --test tests/cp-grid-paste.test.js tests/collection-spreadsheet-wiring.test.js
       - name: Thinking Orbs startup and navigation regression
         run: node --test tests/boot-thinking-orb-v20260929.test.js tests/startup-guide-v20260930.test.js tests/navigation-revisit-perf-v250.test.js
+      - name: Global Flow startup curtain and performance visibility
+        run: node --test tests/startup-global-flow-curtain.test.js tests/today-feature-performance-v20260926.test.js
       - name: Release version, lock, SBOM and artifact bytes
         run: |
           node --test tests/dependency-inventory-metadata.test.js
           node scripts/dependency-inventory.js --check
       - name: Patch source and backup path contracts
         run: node --test tests/signed-patch-producer-cli.test.js tests/user-data-owned-temp.test.js
+      - name: Signed patch launch, tampering and rollback integration
+        run: node --test tests/manual-patch-v3-desktop.test.js
       - name: Clock-skew and seeded synchronization scenarios
         run: |
           node --test --test-name-pattern="OneDrive simulation: 10 devices|HLC simulation" tests/sync-simulation-v20261009.test.js
       - name: Personal order notes and edit-authority isolation
         run: node --test tests/private-order-notes-v20261026.test.js tests/personal-order-note-columns-v20261026.test.js
+      # Node-only regression. The HTTP authorization suite needs Express and
+      # runs with dependencies installed in the full test environment.
+      - name: Checklist denied writes, journal durability and CP first load
+        run: node --test tests/checklist-forbidden-retry-v20261027.test.js tests/checklist-durability.test.js
       - name: Validate nonempty pending release notes
         run: |
           node -e "const n=require('./public/release-notes/next.json');if(n.changes?.length)require('./scripts/release-notes').validateNext();else if(n.publishedAt)throw Error('Empty pending notes must have blank publishedAt')"
