@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.311",
+      "publishedAt": "2026-10-25",
+      "title": {
+        "tr": "Kendini güncelleyen güncelleme altyapısı ve Shared Hub kullanıcı dizini ve Thinking Orbs",
+        "en": "Self-updating update infrastructure and Shared Hub user directory and Thinking Orbs"
+      },
+      "stats": {
+        "features": 1,
+        "improvements": 1,
+        "fixes": 3
+      },
+      "file": "release-notes/7.0.311/release.json"
+    },
+    {
       "version": "7.0.300",
       "publishedAt": "2026-10-25",
       "title": {
