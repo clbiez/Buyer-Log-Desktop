@@ -11,7 +11,7 @@ function settleFixture(status='draft',dirty=true){
  const ctx={dirty,feedback:{status,detail:''},kolWorkspaceSaveTimer:null,kolWorkspaceSaving:false,kolWorkspacePending:false,kolWorkspaceRevision:2,kolWorkspaceOwnerId:'owner',kolReadPendingWorkspace:()=>null,document:{getElementById:()=>({innerText:'state'})}};
  ctx.kolHasDirtyWorkspace=()=>ctx.dirty;ctx.kolSaveFeedbackByOwner={get:()=>ctx.feedback};
  ctx.R={deadline:async promise=>promise};
- const vmctx=vm.createContext(ctx),a=browserSource.indexOf('async function settle(',b=browserSource.indexOf('\nasync function snapshot(',a);vm.runInContext(browserSource.slice(a,b),vmctx);return{ctx,settle:vmctx.settle};
+ const vmctx=vm.createContext(ctx),a=browserSource.indexOf('async function settle('),b=browserSource.indexOf('\nasync function snapshot(',a);vm.runInContext(browserSource.slice(a,b),vmctx);return{ctx,settle:vmctx.settle};
 }
 test('settle waits through a nonterminal automatic draft and returns one atomic snapshot',async()=>{
  const f=settleFixture();let disposed=false;
