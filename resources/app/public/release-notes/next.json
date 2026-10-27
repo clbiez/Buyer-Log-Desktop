@@ -561,6 +561,35 @@
           "en": "Owner access remains available. Separate raw stream evidence verifies that unauthorized SSE delivery is blocked."
         }
       }
+    },
+    {
+      "id": "windows-lease-retirement-marker-retry",
+      "type": "fix",
+      "module": {
+        "tr": "Kayıt ve senkronizasyon",
+        "en": "Saving and synchronization"
+      },
+      "title": {
+        "tr": "Windows’ta geçici dosya kilidi hatalarından güvenli toparlanma",
+        "en": "Safe recovery from transient file-lock errors on Windows"
+      },
+      "body": {
+        "tr": "Eşzamanlı kayıt sırasında kilit işaretçisine erişim geçici olarak engellenirse mevcut sınırlı yeniden deneme uygulanır. Canlı kayıt sahibinin kilidi korunur; kalıcı izin veya disk hatasında veri değiştirilmeden işlem durdurulur.",
+        "en": "When access to a lease marker is temporarily blocked during concurrent saves, the existing bounded retry policy applies. A live writer retains its lease; persistent permission or disk errors stop the operation without changing the data."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "windows-lease-retirement-recovery.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: kilit metadata düzeltmesi sonrasında yetkili kullanıcının Koleksiyon ekranı",
+          "en": "Real Buyer Log: an authorized Collection workspace after the lease metadata fix"
+        },
+        "caption": {
+          "tr": "Normal kayıt ve yetki sınırı native uygulamada doğrulandı. Windows hatası ve güvenli yeniden deneme ayrı regresyon kayıtlarıyla sınandı.",
+          "en": "Normal saving and access boundaries were checked in the native application. The Windows error and safe retry were verified in separate regression records."
+        }
+      }
     }
   ]
 }
