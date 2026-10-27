@@ -50,7 +50,7 @@ test('Palet araması Türkçe karakterlerden bağımsız eşleşir ve önce baş
 });
 
 test('Dar ray üzerine gelince tam genişlikte, içeriği itmeden açılır', () => {
-  assert.match(APP_CSS, /html\[data-rail="min"\] \.rail:is\(:hover,:focus-within\)\{width:var\(--ui-rail-expanded-width\);/);
+  assert.match(APP_CSS, /html\[data-rail="min"\] \.rail:is\(:hover,.railKeyboardOpen\)\{width:var\(--ui-rail-expanded-width\);/);
   const shared=require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
   require('./helpers/manifest-css').assertReset();
   assert.doesNotMatch(shared,/transition:width/);

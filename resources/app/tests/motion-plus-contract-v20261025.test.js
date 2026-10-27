@@ -71,7 +71,7 @@ test('Active cell is skipped and reduced motion, hidden tab and opt-out bypass a
 });
 test('Motion+ never creates full-table observers, infinite animations or new hard-coded colors',()=>{
  const script=read('motion-plus.js'),css=read('ui-motion.css');
- assert.match(script,/slice\(0,2\)/);assert.match(script,/slice\(0,9\)/);assert.match(script,/slice\(0,12\)/);
+ assert.match(script,/slice\(0,2\)/);assert.match(script,/bounds.right<=host.left/);assert.doesNotMatch(script,/cells.*slice\(0,12\)/);
  assert.doesNotMatch(script,/subtree\s*:\s*true|setInterval\(/);
  assert.doesNotMatch(css,/#[0-9a-f]{3,8}\b|rgba?\(|gradient\(/i);
  assert.doesNotMatch(css,/animation:[^;]*(?:infinite|loop)/i);

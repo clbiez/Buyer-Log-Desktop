@@ -6030,8 +6030,9 @@ function cellHtml(c,r,cf,tableKey='cp'){
       const cur = (v instanceof Date) ? fmtDate(v) : norm(v);
       if(!canEdit) return viewOnly(cur);
       if(c.k==='Notes' || c.k==='Ek Not') {
-        const preview = cur || L('Not ekle…');
-        return `<td class="editTd"><div class="noteCellWrap"><button type="button" class="noteCellTrigger${cur?'':' empty'}" data-id="${id}"${editorIdentity} data-key="${c.k}" title="${escapeHtml(cur || L('Not ekle…'))}"><svg class="ic noteCellIcon"><use href="#i-pencil"/></svg><span class="noteCellText">${escapeHtml(preview)}</span></button><button type="button" class="noteCellDelete" data-id="${id}"${editorIdentity} data-key="${c.k}" title="${escapeHtml(L('Notu sil'))}" aria-label="${escapeHtml(L('Notu sil'))}" ${cur?'':'disabled'}><svg class="ic"><use href="#i-trash"/></svg></button></div></td>`;
+        const hasRich=Boolean(r[c.k+'Html']);
+        const preview = cur || (hasRich?(appLang==='en'?'Image':'Görsel'):L('Not ekle…'));
+        return `<td class="editTd"><div class="noteCellWrap"><button type="button" class="noteCellTrigger${cur||hasRich?'':' empty'}" data-id="${id}"${editorIdentity} data-key="${c.k}" title="${escapeHtml(cur || L('Not ekle…'))}"><svg class="ic noteCellIcon"><use href="#i-pencil"/></svg><span class="noteCellText">${escapeHtml(preview)}</span></button><button type="button" class="noteCellDelete" data-id="${id}"${editorIdentity} data-key="${c.k}" title="${escapeHtml(L('Notu sil'))}" aria-label="${escapeHtml(L('Notu sil'))}" ${cur||hasRich?'':'disabled'}><svg class="ic"><use href="#i-trash"/></svg></button></div></td>`;
       }
       return `<td class="editTd"><input class="editCell" type="text" value="${cur.replace(/"/g,'&quot;')}" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="text"></td>`;
     }
@@ -9875,7 +9876,7 @@ function syncOrderLinePeersFromCpRow(sourceRow, keys, options={}){
   const noteIds = new Set(Array.isArray(CP_NOTE_COLUMN_DEFS) ? CP_NOTE_COLUMN_DEFS.map(def=>def&&def.id).filter(Boolean) : []);
   const allowed = new Set([
     'Ex-factory','Retail Date','In-Store (Model Budget)','Del. Type','Licensor',
-    'Sub-Manufacturer','Supp. FOB','Notes','Ek Not',...noteIds
+    'Sub-Manufacturer','Supp. FOB','Notes','Ek Not','NotesHtml','Ek NotHtml',...noteIds
   ]);
   const keySet = new Set((Array.isArray(keys)?keys:[]).filter(k=>allowed.has(k)));
   if(!keySet.size) return 0;
@@ -10125,13 +10126,44 @@ document.addEventListener('click',e=>{
   }
 },true);
 
+function openCollectionNoteEditor(id){
+  const row=kolRows.find(row=>String(row.id)===String(id));
+  if(!row||!kolRequireWorkspaceEdit()||kolCellLinkedToModel(row,'not'))return;
+  const owner=kolWorkspaceOwnerId;
+  const before=String(kolEffectiveValue(row,'not')||''),beforeHtml=String(row.notHtml||'');
+  const modal=document.createElement('div');modal.className='warnOverlay';modal.dataset.uiMigrated='note-editor';
+  modal.innerHTML=`<div class="modalCard noteEditorCard" role="dialog" aria-modal="true" aria-label="${escapeHtml(appLang==='en'?'Model note':'Model notu')}"><div class="uiDialogHead"><div class="modalTitle">${escapeHtml(row.modelKod||'')}</div><button class="tbtn" data-close aria-label="${escapeHtml(L('Kapat'))}">×</button></div><div class="noteEditorBody">${todoToolbar().replace(/id="todo(?:AddImage|ImageFile)"/g,'')}<div class="noteEditorArea todoRichEditor" contenteditable="true" role="textbox" aria-multiline="true">${beforeHtml?todoSanitize(beforeHtml):escapeHtml(before).replace(/\n/g,'<br>')}</div></div><div class="uiDialogFoot"><button class="tbtn" data-close>${escapeHtml(L('Vazgeç'))}</button><button class="navActionBtn" data-save>${escapeHtml(L('Notu Kaydet'))}</button></div></div>`;
+  document.body.append(modal);const editor=modal.querySelector('.noteEditorArea');bindRichNoteEditor(modal,editor);
+  const close=()=>{window.BLLayerSystem?.closeDialog(modal);modal.remove();};
+  window.BLLayerSystem?.openDialog(modal,{onClose:close});
+  const save=()=>{
+    if(owner!==kolWorkspaceOwnerId||!kolRequireWorkspaceEdit()||kolCellLinkedToModel(row,'not')||kolRows.find(item=>item.id===row.id)!==row||String(kolEffectiveValue(row,'not')||'')!==before||String(row.notHtml||'')!==beforeHtml)return;
+    const text=editor.innerText,html=richNoteHtml(editor);
+    if(html!==beforeHtml||text!==before){
+      kolPushUndo();
+      kolWriteGroupedStorageValue(row,'not',text);row.notHtml=html;
+      const plmKey=kolPlmNormalizeId(row.plmId);
+      if(plmKey&&!(row.modelGroupRole==='variant'&&kolHasVariantOverride(row,'not')))kolRows.forEach(peer=>{
+        if(kolPlmNormalizeId(peer.plmId)===plmKey&&!(peer.modelGroupRole==='variant'&&kolHasVariantOverride(peer,'not'))){peer.not=text;peer.notHtml=html;}
+      });
+      saveKolRows();renderKol();
+    }
+    close();
+  };
+  modal.addEventListener('click',event=>{if(event.target===modal||event.target.closest('[data-close]'))close();else if(event.target.closest('[data-save]'))save();});
+  modal.addEventListener('keydown',event=>{if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)){event.preventDefault();save();}});
+  editor.focus();
+}
+document.addEventListener('click',event=>{const button=event.target.closest('[data-kol-note]');if(button)openCollectionNoteEditor(button.dataset.kolNote);});
+
 function openNotesEditor(id, key, options={}){
   const row = state.cp && state.cp.rows ? state.cp.rows.find(r=>r._id===Number(id)) : null;
   if(!row || !['Notes','Ek Not'].includes(key)) return;
   if(row._canEdit===false){showToast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.'));return;}
   // Display indices can change while the editor is open; retain canonical identities.
-  const targets=(options.targets||[{row,key}]).map(target=>({row:{...target.row},key:target.key,prev:String(target.row[target.key]??''),clear:Boolean(target.clear),ownerId:orderLinePeerOwner()}));
+  const targets=(options.targets||[{row,key}]).map(target=>({row:{...target.row},key:target.key,prev:String(target.row[target.key]??''),clear:Boolean(target.clear),ownerId:orderLinePeerOwner(),prevHtml:String(target.row[target.key+'Html']||'')}));
   const initialValue=options.value??norm(row[key]);
+  const initialHtml=options.value==null?(row[key+'Html']||''):'';
   const orderCount=new Set(targets.map(target=>lineKeyOfRow(target.row))).size;
   document.getElementById('_notesEditorModal')?.remove();
   const previousFocus = document.activeElement;
@@ -10151,7 +10183,7 @@ function openNotesEditor(id, key, options={}){
       <button type="button" class="notesEditorClose" title="${escapeHtml(L('Kapat'))}"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
     <div class="noteEditorBody">
-      <textarea class="noteEditorArea" aria-labelledby="_notesEditorTitle" spellcheck="true" placeholder="${escapeHtml(L('Notunuzu buraya yazın…'))}">${escapeHtml(initialValue)}</textarea>
+      ${todoToolbar().replace(/id="todo(?:AddImage|ImageFile)"/g,'')}<div class="noteEditorArea todoRichEditor" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="_notesEditorTitle">${initialHtml?todoSanitize(initialHtml):escapeHtml(initialValue).replace(/\n/g,'<br>')}</div>
       <div class="noteEditorHint">${escapeHtml(orderCount>1?(appLang==='en'?`This edit applies to ${orderCount} orders in this note group. Ctrl+Enter to save.`:`Bu düzenleme not grubundaki ${orderCount} siparişe uygulanır. Ctrl+Enter ile kaydedebilirsiniz.`):L('Ctrl+Enter ile kaydedebilirsiniz.'))}</div>
     </div>
     <div class="uiDialogFoot">
@@ -10163,20 +10195,22 @@ function openNotesEditor(id, key, options={}){
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   const ta = modal.querySelector('.noteEditorArea');
+  bindRichNoteEditor(modal,ta);
   let saving=false;
   const saveButton=modal.querySelector('.notesEditorSave');
   const close = ()=>{ if(saving)return;modal.remove(); if(previousFocus && previousFocus.focus) previousFocus.focus(); };
   const save = async()=>{
     if(saving)return;
-    const next=ta.value;
-    if(editableValuesEqual(initialValue,next)){close();return;}
-    saving=true;saveButton.disabled=true;ta.disabled=true;
+    const next=ta.innerText;
+    const rich=richNoteHtml(ta);
+    if(editableValuesEqual(initialValue,next)&&rich===(initialHtml||escapeHtml(initialValue).replace(/\n/g,'<br>'))){close();return;}
+    saving=true;saveButton.disabled=true;ta.contentEditable='false';
     try{
-      await saveNotesEditorTargets(targets,next,Boolean(options.ownNotes));
+      await saveNotesEditorTargets(targets,next,Boolean(options.ownNotes),rich);
       saving=false;close();
     }catch(err){
       showToast(err.message||(appLang==='en'?'The note could not be saved. Your draft is still open; please try again.':'Not kaydedilemedi. Taslağınız açık; lütfen yeniden deneyin.'));
-    }finally{saving=false;saveButton.disabled=false;ta.disabled=false;}
+    }finally{saving=false;saveButton.disabled=false;ta.contentEditable='true';}
   };
   modal.querySelector('.notesEditorClose').addEventListener('click', close);
   modal.querySelector('.notesEditorCancel').addEventListener('click', close);
@@ -10184,7 +10218,7 @@ function openNotesEditor(id, key, options={}){
   modal.addEventListener('click', e=>{ if(e.target===modal) close(); });
   modal.addEventListener('keydown', e=>{
     if(e.key==='Tab'){
-      const controls=[...modal.querySelectorAll('button:not(:disabled),textarea:not(:disabled)')];
+      const controls=[...modal.querySelectorAll('button:not(:disabled),select,input,[contenteditable="true"]')];
       const first=controls[0],last=controls[controls.length-1];
       if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}
       else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
@@ -10192,20 +10226,20 @@ function openNotesEditor(id, key, options={}){
     else if(e.key==='Escape'){ e.preventDefault(); close(); }
     else if(e.key==='Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); save(); }
   });
-  setTimeout(()=>{ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); },0);
+  setTimeout(()=>{ ta.focus(); },0);
 }
 // Explicit note saves use one revisioned, note-only transaction. Do not route an
 // acknowledged save through markDirty's delayed full-row write a second time.
-async function saveNotesEditorTargets(targets,next,ownNotes=false){
+async function saveNotesEditorTargets(targets,next,ownNotes=false,rich=''){
   if(window.isSavingCpBulk?.())throw new Error(appLang==='en'?'A bulk save is still pending. Retry after its result.':'Toplu kayıt sürüyor. Sonucundan sonra yeniden deneyin.');
-  const desired=targets.map(target=>({...target,next:target.clear?'':next}));
+  const desired=targets.map(target=>({...target,next:target.clear?'':next,rich:target.clear?'':rich}));
   const assertOwner=()=>{if(desired.some(target=>target.ownerId!=null&&target.ownerId!==orderLinePeerOwner()))throw new Error(appLang==='en'?'The session changed. Reopen the current note before saving.':'Oturum değişti. Kaydetmeden önce güncel notu yeniden açın.');};
   assertOwner();
   const resolve=()=>desired.map(target=>{
     assertOwner();
     const row=orderLinePeerRows('cp',target.row)[0];
     const by=target.key==='Notes'?'_notesBy':'_ekNotBy',byName=target.key==='Notes'?'_notesByName':'_ekNotByName';
-    if(!row||row._canEdit===false||isAreaFrozen('cp')||!editableValuesEqual(String(row[target.key]??''),target.prev)||
+    if(!row||row._canEdit===false||isAreaFrozen('cp')||!editableValuesEqual(String(row[target.key]??''),target.prev)||String(row[target.key+'Html']||'')!==String(target.prevHtml||'')||
       (ownNotes&&(!noteAuthoredByCurrentUser(row[by],row[byName])||overviewNoteCanonical(overviewOrderNoteText(row))!==overviewNoteCanonical(overviewOrderNoteText(target.row)))))throw new Error(appLang==='en'
         ?'The order or note changed while editing. Your draft is still open; reopen the current note before saving.'
         :'Düzenleme sırasında sipariş veya not değişti. Taslağınız açık; kaydetmeden önce güncel notu yeniden açın.');
@@ -10213,12 +10247,14 @@ async function saveNotesEditorTargets(targets,next,ownNotes=false){
   });
   resolve();
   if(window.SERVER_BACKED)await settleOverrideWrites();
-  const current=resolve().filter(target=>!editableValuesEqual(target.prev,target.next)),items=new Map();
+  const current=resolve().filter(target=>!editableValuesEqual(target.prev,target.next)||target.rich!==String(target.prevHtml||'')),items=new Map();
   if(!current.length)return;
   current.forEach(target=>{
     const identity=lineKeyOfRow(target.row);
     if(!items.has(identity))items.set(identity,{orderCode:target.row['Order Code'],patch:{...lineIdentity(target.row),notes:{}}});
-    items.get(identity).patch.notes[target.key==='Notes'?'Notes':'EkNot']=target.next;
+    const field=target.key==='Notes'?'Notes':'EkNot';
+    items.get(identity).patch.notes[field]=target.next;
+    items.get(identity).patch.notes[field+'Html']=target.rich;
   });
   let saved=null;
   if(window.SERVER_BACKED){
@@ -10239,7 +10275,7 @@ async function saveNotesEditorTargets(targets,next,ownNotes=false){
       NotesAt:target.row._notesAt||'',NotesBy:target.row._notesBy||'',NotesByName:target.row._notesByName||'',
       EkNotAt:target.row._ekNotAt||'',EkNotBy:target.row._ekNotBy||'',EkNotByName:target.row._ekNotByName||'',
       ...(state.overrides.notesmap[identity]||state.overrides.notesmap[target.row['Order Code']]||{}),
-      [field]:target.next,[field+'At']:target.next?now:'',
+      [field]:target.next,[field+'Html']:target.rich,[field+'At']:target.next?now:'',
       [field+'By']:target.next?(author.id||target.row[prefix+'By']||''):'',
       [field+'ByName']:target.next?(author.name||target.row[prefix+'ByName']||''):'',
     };
@@ -10248,6 +10284,7 @@ async function saveNotesEditorTargets(targets,next,ownNotes=false){
     for(const tableKey of ['cp','orders','orderSummary']){
       orderLinePeerRows(tableKey,target.row).forEach(row=>{
         row[target.key]=record[field]??target.next;
+        row[target.key+'Html']=record[field+'Html']||'';
         row[prefix+'At']=record[field+'At']||'';
         row[prefix+'By']=record[field+'By']||'';row[prefix+'ByName']=record[field+'ByName']||'';
       });
@@ -10255,7 +10292,7 @@ async function saveNotesEditorTargets(targets,next,ownNotes=false){
     const row=orderLinePeerRows('cp',target.row)[0];
     if(!row)return;
     if(!actions.has(identity))actions.set(identity,{id:row._id,fields:[]});
-    actions.get(identity).fields.push({key:target.key,prev:target.prev,next:record[field]??target.next});
+    actions.get(identity).fields.push({key:target.key,prev:target.prev,next:record[field]??target.next},{key:target.key+'Html',prev:target.prevHtml||'',next:record[field+'Html']||''});
   });
   const history=[...actions.values()];
   history.forEach(action=>_origMarkDirty(action.id));
@@ -10267,8 +10304,8 @@ function clearRowNote(id,key='Notes'){
   if(!row) return;
   if(row._canEdit===false){showToast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.'));return;}
   const prev=row[key]==null?'':String(row[key]);
-  if(!prev) return;
-  row[key]='';
+  if(!prev&&!row[key+'Html']) return;
+  row[key]='';row[key+'Html']='';
   markDirty(Number(id));
   syncOrderLinePeersFromCpRow(row,[key]);
   pushUndo({id:Number(id),fields:[{key,prev,next:''}]});
@@ -12919,7 +12956,7 @@ function buildCPRowsFromASAS(){
       'Buying Son Onay Tarihi':o.shipConf, 'In-Store (Model Budget)':o.mb,
       'Order Quantity':o.qty, 'Shipment Quantity':Math.max(0,toNum(hit&&((hit.loadedQty!=null)?hit.loadedQty:hit._loadedQty))||0), 'Remaining Units':o.kalan, '%': o.qty? (o.qty-o.kalan)/o.qty : '',
       STATUS:status, 'Ant. Arrival':ant, 'Del. Type':delType,
-      Notes: notesRec.Notes||'', 'Ek Not': notesRec.EkNot||'',
+      Notes: notesRec.Notes||'', 'Ek Not': notesRec.EkNot||'', NotesHtml:notesRec.NotesHtml||'', 'Ek NotHtml':notesRec.EkNotHtml||'',
       _notesAt: notesRec.NotesAt||'', _ekNotAt: notesRec.EkNotAt||'',
       // v7.29 — not yazarı (Overview yalnız kendi notlarını gösterir).
       _notesBy: notesRec.NotesBy||'', _notesByName: notesRec.NotesByName||'',
@@ -13005,8 +13042,8 @@ function syncOverridesFromRow(row){
     row._ekNotAt=notes.EkNotAt||'';
     row._ekNotBy=notes.EkNotBy||''; row._ekNotByName=notes.EkNotByName||'';
   }
-  notes.Notes=nextNotes;
-  notes.EkNot=nextEkNot;
+  notes.Notes=nextNotes;notes.NotesHtml=row.NotesHtml||'';
+  notes.EkNot=nextEkNot;notes.EkNotHtml=row['Ek NotHtml']||'';
   state.overrides.notesmap[key]=notes;
   if(row['Del. Type'])state.overrides.delmap[key]=row['Del. Type'];
   const isDtr=turknorm(row.Licensor)==='DTR';
@@ -13464,13 +13501,14 @@ function fitTableHeights(){
   document.querySelectorAll('.tablewrap').forEach(tw=>{
     const rect = tw.getBoundingClientRect();
     if(rect.top<=0 && rect.height===0) return; // hidden (inactive tab), skip
-    const h = window.innerHeight - rect.top - 14;
+    const footer=tw.parentElement.querySelector('.workspaceTableFooter');
+    const h = window.innerHeight - rect.top - (footer?.getBoundingClientRect().height||0) - 8;
     // rect.top/window.innerHeight are already post-zoom screen pixels, but maxHeight is a
     // layout value inside the zoomed element's own coordinate space — without dividing by
     // the table's zoom factor here, a zoomed-out (z<1) table renders shorter than intended
     // and leaves a gap below it instead of reaching the bottom of the window.
     const z = (typeof tableZoom!=='undefined' && tableZoom[tw.id]) || 1;
-    const fit = Math.max(220, h/z) + 'px';
+    const fit = Math.max(0, h/z) + 'px';
     // minHeight de aynı değere kurulur: satır sayısı az olduğunda tablo içeriği
     // kadar kısalıp altında ölü boşluk bırakmasın, her zaman pencerenin altına ulaşsın.
     tw.style.maxHeight = fit;
@@ -22297,6 +22335,7 @@ function kolRenderSaveFeedback(){
   target.hidden=!value||!kolWorkspaceCanEdit;
   if(value&&window.BLUI?.persistenceView){
     target.innerHTML=window.BLUI.persistenceView(value.status,{language:appLang,detail:value.detail});
+    if(value.status==='pending'){const label=target.querySelector('b');if(label)label.textContent=appLang==='en'?'Sharing pending':'Paylaşım bekliyor';}
     if(kolWorkspaceCanEdit&&kolWorkspaceMode==='single'&&['conflict','failed'].includes(value.status)){
       const busy=kolWorkspaceRecoveryOwnerId===kolWorkspaceOwnerId;
       target.insertAdjacentHTML('beforeend',` <button type="button" class="tbtn" data-kol-server-recovery${busy?' disabled':''}>${busy?(appLang==='en'?'Loading…':'Yükleniyor…'):(appLang==='en'?'Load accepted server data':'Sunucudakini yükle')}</button>`);
@@ -28226,6 +28265,7 @@ function commitKolEditor(el, options={}){
      colour field writes the row itself. This keeps render/refresh/restart from
      resurrecting the pre-edit override value. */
   row=kolWriteGroupedStorageValue(row,k,val);
+  if(k==='not')row.notHtml='';
   if(k==='durum'||k==='status')kolApplyStatusCellAppearance(el,val);
   if(k==='not'&&!variantOverrideEdit){
     const plmKey=kolPlmNormalizeId(row.plmId);
@@ -28236,7 +28276,7 @@ function commitKolEditor(el, options={}){
       kolRows.forEach(peer=>{
         if(peer===row||kolPlmNormalizeId(peer.plmId)!==plmKey)return;
         if(peer.modelGroupRole==='variant'&&kolHasVariantOverride(peer,'not'))return;
-        peer.not=val;
+        peer.not=val;peer.notHtml='';
       });
     }
   }
@@ -28485,7 +28525,12 @@ function renderKol(){
   }));
   const selAll=document.getElementById('kolSelAll');
   selAll.checked=logicalRows.length>0&&logicalRows.every(r=>selectionHasId(kolSelected,r.id));
-  selAll.addEventListener('change',()=>{logicalRows.forEach(r=>selectionSetId(kolSelected,r.id,selAll.checked));renderKol();});
+  selAll.addEventListener('change',()=>{
+    logicalRows.forEach(r=>selectionSetId(kolSelected,r.id,selAll.checked));
+    tbody.querySelectorAll('.rowChk').forEach(chk=>{chk.checked=selAll.checked;});
+    updateSelectionFooterCount(table,logicalRows,kolSelected,row=>row.id);
+    updateKolSendBtnState();
+  });
   // v6.34 — Koleksiyon işaret filtresi: ▾ paneli açar, sağ tık kipler arasında döner.
   const kolChkBtn=thead.querySelector('.kolChkFilterBtn');
   if(kolChkBtn) kolChkBtn.addEventListener('click',e=>{ e.stopPropagation(); openKolCheckFilter(kolChkBtn); });
@@ -28698,6 +28743,7 @@ function renderKol(){
       }else if(c.date){html+=`<td class="kolDateTd"${rc}><span class="exfDisplay kolDateDisplay" tabindex="0" data-id="${r.id}" data-k="${c.k}" title="${escapeHtml(L('Tarihi düzenle'))}">${escapeHtml(fmtDate(val)||'—')}</span></td>`;
       }else if(c.qty){html+=`<td class="editTd num"${rc}><input type="text" inputmode="numeric" class="editCell kolQtyCell" data-id="${r.id}" data-k="${c.k}" value="${escapeHtml(kolFormatQuantityDisplay(val))}" style="text-align:right;"></td>`;
       }else if(c.money){html+=`<td class="editTd money"${rc}><div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--ui-text-muted);font-size:var(--ui-font-2xs);flex-shrink:0;">$</span><input type="text" inputmode="decimal" class="editCell kolMoneyCell" data-id="${r.id}" data-k="${c.k}" value="${escapeHtml(kolFormatMoneyDisplay(val))}" placeholder="0,00" style="flex:1;min-width:0;"></div></td>`;
+      }else if(c.k==='not'){html+=`<td class="editTd"${rc}><button type="button" class="noteCellTrigger" data-kol-note="${r.id}"><svg class="ic"><use href="#i-pencil"/></svg><span class="noteCellText">${escapeHtml(String(val)||L('Not ekle…'))}</span></button></td>`;
       }else if(c.k==='inStoreMonth'){html+=`<td class="editTd"${rc}><input type="text" class="editCell kolMonthCell" data-id="${r.id}" data-k="${c.k}" value="${escapeHtml(kolMonthDisplay(val))}" placeholder=""></td>`;
       }else if(c.checklist){html+=kolChecklistCellHtml(r,c,val,rc);
       }else if(c.custom){
@@ -38075,8 +38121,8 @@ function remotePatchMatches(row,item){
 // alanlar (Priority, Ex→Retail, LT) mevcut applyFormulas ile yeniden hesaplanır.
 function applyRemoteRowPatch(row,patch){
   if(patch.notes&&typeof patch.notes==='object'){
-    if(Object.prototype.hasOwnProperty.call(patch.notes,'Notes'))row.Notes=patch.notes.Notes==null?'':String(patch.notes.Notes);
-    if(Object.prototype.hasOwnProperty.call(patch.notes,'EkNot'))row['Ek Not']=patch.notes.EkNot==null?'':String(patch.notes.EkNot);
+    if(Object.prototype.hasOwnProperty.call(patch.notes,'Notes')){row.Notes=patch.notes.Notes==null?'':String(patch.notes.Notes);row.NotesHtml=String(patch.notes.NotesHtml||'');}
+    if(Object.prototype.hasOwnProperty.call(patch.notes,'EkNot')){row['Ek Not']=patch.notes.EkNot==null?'':String(patch.notes.EkNot);row['Ek NotHtml']=String(patch.notes.EkNotHtml||'');}
   }
   if(Object.prototype.hasOwnProperty.call(patch,'suppFob')){
     row['Supp. FOB']=patch.suppFob==null?null:Number(patch.suppFob);
@@ -38377,7 +38423,7 @@ function todoText(){
     color: en ? 'Text color' : 'Yazı rengi',
     highlight: en ? 'Highlight' : 'Vurgula',
     image: en ? 'Add image' : 'Görsel ekle',
-    imageError: en ? 'Use a PNG, JPEG, WebP or GIF under 1 MB; keep the notebook under 1.8 MB.' : '1 MB altında PNG, JPEG, WebP veya GIF kullanın; not defterini 1,8 MB altında tutun.',
+    imageError: en ? 'Use a PNG, JPEG, WebP or GIF under 1 MB; keep note content under 1.8 MB.' : '1 MB altında PNG, JPEG, WebP veya GIF kullanın; not içeriğini 1,8 MB altında tutun.',
     hint: en ? 'Paste screenshots with Ctrl+V or add an image file.' : 'Ekran görüntülerini Ctrl+V ile yapıştırın veya görsel dosyası ekleyin.',
     title:    en ? 'Notebook' : 'Not Defteri',
     sub:      en ? 'Your note pages' : 'Not sayfaların',
@@ -38449,7 +38495,7 @@ function todoToolbar(){
     <select data-todo-format="fontSize" aria-label="${escapeHtml(t.size)}"><option value="3">${escapeHtml(t.normal)}</option><option value="2">${escapeHtml(t.small)}</option><option value="5">${escapeHtml(t.large)}</option><option value="6">${escapeHtml(t.heading)}</option></select>
     <label title="${escapeHtml(t.color)}">${escapeHtml(t.color)} <input type="color" data-todo-format="foreColor" aria-label="${escapeHtml(t.color)}"></label>
     <label title="${escapeHtml(t.highlight)}">${escapeHtml(t.highlight)} <input type="color" data-todo-format="hiliteColor" aria-label="${escapeHtml(t.highlight)}"></label>
-    <button type="button" class="tbtn" id="todoAddImage">${escapeHtml(t.image)}</button><input type="file" id="todoImageFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+    <button type="button" class="tbtn" id="todoAddImage" data-rich-add-image>${escapeHtml(t.image)}</button><input type="file" id="todoImageFile" data-rich-image-file accept="image/png,image/jpeg,image/webp,image/gif" hidden>
   </div>`;
 }
 function todoLoad(){
@@ -38587,6 +38633,78 @@ function renderTodoDetail(){
     <div class="todoMeta"><span id="todoChars">${escapeHtml(t.chars(String(page.text||'').length))}</span></div>`;
   bindTodoEditor();
 }
+function richNoteHtml(editor){return editor.innerText.trim()||editor.querySelector('img')?todoSanitize(editor.innerHTML):'';}
+function bindRichNoteEditor(host,ta,accept=()=>true){
+  const t=todoText();
+  if(ta){
+    let savedRange=null;
+    const remember=()=>{
+      const selection=window.getSelection();
+      if(selection.rangeCount && ta.contains(selection.anchorNode) && ta.contains(selection.focusNode)) savedRange=selection.getRangeAt(0).cloneRange();
+      host.querySelectorAll('[data-todo-command]').forEach(button=>{
+        if(['bold','italic','underline','strikeThrough','insertUnorderedList','insertOrderedList'].includes(button.dataset.todoCommand))button.setAttribute('aria-pressed',String(document.queryCommandState(button.dataset.todoCommand)));
+      });
+    };
+    const restore=()=>{
+      ta.focus();
+      const selection=window.getSelection();
+      if(savedRange && ta.contains(savedRange.commonAncestorContainer)){selection.removeAllRanges();selection.addRange(savedRange);}
+    };
+    const command=(name,value=null)=>{
+      restore(); document.execCommand(name,false,value);
+      ta.dispatchEvent(new Event('input',{bubbles:true})); remember();
+    };
+    for(const event of ['keyup','mouseup','input','focusout']) ta.addEventListener(event,remember);
+    const toolbar=host.querySelector('.todoToolbar');
+    toolbar.addEventListener('mousedown',e=>{remember();if(e.target.closest('button'))e.preventDefault();});
+    toolbar.addEventListener('click',e=>{const button=e.target.closest('[data-todo-command]');if(button)command(button.dataset.todoCommand);});
+    toolbar.querySelectorAll('[data-todo-format]').forEach(control=>{
+      if(control.type==='color'){
+        const probe=document.createElement('span');probe.style.color=control.dataset.todoFormat==='hiliteColor'?'var(--ui-warning)':'var(--ui-text)';toolbar.appendChild(probe);
+        const rgb=getComputedStyle(probe).color.match(/\d+/g);probe.remove();
+        if(rgb?.length>=3)control.value='#'+rgb.slice(0,3).map(n=>Number(n).toString(16).padStart(2,'0')).join('');
+      }
+      control.addEventListener('change',()=>command(control.dataset.todoFormat,control.value));
+    });
+    const insertHtml=html=>{
+      const clean=todoSanitize(html);
+      if(new TextEncoder().encode(ta.innerHTML+clean).length>1800000||!accept(clean)){showToast(t.imageError);return;}
+      command('insertHTML',clean);
+    };
+    const addImages=async (files,dropRange=null)=>{
+
+      if(!dropRange)remember();
+      let insertionRange=dropRange||savedRange?.cloneRange();
+      for(const file of files){
+        if(!/^image\/(png|jpeg|webp|gif)$/.test(file.type)||file.size>1000000){showToast(t.imageError);continue;}
+        try{
+          const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file);});
+          if(!ta.isConnected)return;
+          if(insertionRange && ta.contains(insertionRange.commonAncestorContainer))savedRange=insertionRange;
+          insertHtml(`<img src="${data}"><br>`);
+          insertionRange=savedRange?.cloneRange();
+        }catch(_){showToast(t.imageError);}
+      }
+    };
+    const fileInput=host.querySelector('[data-rich-image-file]');
+    host.querySelector('[data-rich-add-image]').addEventListener('click',()=>{remember();fileInput.click();});
+    fileInput.addEventListener('change',()=>{addImages([...fileInput.files]);fileInput.value='';});
+    ta.addEventListener('paste',e=>{
+      e.preventDefault();remember();
+      const files=[...(e.clipboardData?.files||[])];
+      if(files.length){addImages(files);return;}
+      const html=e.clipboardData?.getData('text/html');
+      insertHtml(html||escapeHtml(e.clipboardData?.getData('text/plain')||'').replace(/\n/g,'<br>'));
+    });
+    ta.addEventListener('dragover',e=>e.preventDefault());
+    ta.addEventListener('drop',e=>{
+      e.preventDefault();
+      const range=document.caretRangeFromPoint?.(e.clientX,e.clientY);
+      if(range&&ta.contains(range.commonAncestorContainer))savedRange=range;
+      if(e.dataTransfer?.files.length)addImages([...e.dataTransfer.files],range&&ta.contains(range.commonAncestorContainer)?range:null);
+    });
+  }
+}
 function bindTodoEditor(){
   const t = todoText();
   const status = document.getElementById('todoSaveStatus');
@@ -38606,76 +38724,11 @@ function bindTodoEditor(){
       queue();
     });
   }
-  if(ta){
-    let savedRange=null;
-    const remember=()=>{
-      const selection=window.getSelection();
-      if(selection.rangeCount && ta.contains(selection.anchorNode) && ta.contains(selection.focusNode)) savedRange=selection.getRangeAt(0).cloneRange();
-      document.querySelectorAll('#todoDetail [data-todo-command]').forEach(button=>{
-        if(['bold','italic','underline','strikeThrough','insertUnorderedList','insertOrderedList'].includes(button.dataset.todoCommand))button.setAttribute('aria-pressed',String(document.queryCommandState(button.dataset.todoCommand)));
-      });
-    };
-    const restore=()=>{
-      ta.focus();
-      const selection=window.getSelection();
-      if(savedRange && ta.contains(savedRange.commonAncestorContainer)){selection.removeAllRanges();selection.addRange(savedRange);}
-    };
-    const command=(name,value=null)=>{
-      restore(); document.execCommand(name,false,value);
-      ta.dispatchEvent(new Event('input',{bubbles:true})); remember();
-    };
-    for(const event of ['keyup','mouseup','input','focusout']) ta.addEventListener(event,remember);
-    const toolbar=document.querySelector('#todoDetail .todoToolbar');
-    toolbar.addEventListener('mousedown',e=>{remember();if(e.target.closest('button'))e.preventDefault();});
-    toolbar.addEventListener('click',e=>{const button=e.target.closest('[data-todo-command]');if(button)command(button.dataset.todoCommand);});
-    toolbar.querySelectorAll('[data-todo-format]').forEach(control=>{
-      if(control.type==='color'){
-        const probe=document.createElement('span');probe.style.color=control.dataset.todoFormat==='hiliteColor'?'var(--ui-warning)':'var(--ui-text)';toolbar.appendChild(probe);
-        const rgb=getComputedStyle(probe).color.match(/\d+/g);probe.remove();
-        if(rgb?.length>=3)control.value='#'+rgb.slice(0,3).map(n=>Number(n).toString(16).padStart(2,'0')).join('');
-      }
-      control.addEventListener('change',()=>command(control.dataset.todoFormat,control.value));
-    });
-    const insertHtml=html=>{
-      const clean=todoSanitize(html);
-      const st=todoLoad(),page=todoActive();
-      const candidate={...st,pages:st.pages.map(p=>p===page?{...p,html:ta.innerHTML+clean,text:(ta.innerText||'')+new DOMParser().parseFromString(clean,'text/html').body.textContent}:p)};
-      if(new TextEncoder().encode(JSON.stringify(candidate)).length>1800000){showToast(t.imageError);return;}
-      command('insertHTML',clean);
-    };
-    const addImages=async (files,dropRange=null)=>{
-      const pageId=todoActive()?.id;
-      if(!dropRange)remember();
-      let insertionRange=dropRange||savedRange?.cloneRange();
-      for(const file of files){
-        if(!/^image\/(png|jpeg|webp|gif)$/.test(file.type)||file.size>1000000){showToast(t.imageError);continue;}
-        try{
-          const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file);});
-          if(!ta.isConnected||todoActive()?.id!==pageId)return;
-          if(insertionRange && ta.contains(insertionRange.commonAncestorContainer))savedRange=insertionRange;
-          insertHtml(`<img src="${data}"><br>`);
-          insertionRange=savedRange?.cloneRange();
-        }catch(_){showToast(t.imageError);}
-      }
-    };
-    const fileInput=document.getElementById('todoImageFile');
-    document.getElementById('todoAddImage').addEventListener('click',()=>{remember();fileInput.click();});
-    fileInput.addEventListener('change',()=>{addImages([...fileInput.files]);fileInput.value='';});
-    ta.addEventListener('paste',e=>{
-      e.preventDefault();remember();
-      const files=[...(e.clipboardData?.files||[])];
-      if(files.length){addImages(files);return;}
-      const html=e.clipboardData?.getData('text/html');
-      insertHtml(html||escapeHtml(e.clipboardData?.getData('text/plain')||'').replace(/\n/g,'<br>'));
-    });
-    ta.addEventListener('dragover',e=>e.preventDefault());
-    ta.addEventListener('drop',e=>{
-      e.preventDefault();
-      const range=document.caretRangeFromPoint?.(e.clientX,e.clientY);
-      if(range&&ta.contains(range.commonAncestorContainer))savedRange=range;
-      if(e.dataTransfer?.files.length)addImages([...e.dataTransfer.files],range&&ta.contains(range.commonAncestorContainer)?range:null);
-    });
-  }
+  bindRichNoteEditor(document.getElementById('todoDetail'),ta,clean=>{
+    const st=todoLoad(),page=todoActive();
+    const candidate={...st,pages:st.pages.map(p=>p===page?{...p,html:ta.innerHTML+clean}:p)};
+    return new TextEncoder().encode(JSON.stringify(candidate)).length<=1800000;
+  });
   if(titleEl){
     titleEl.addEventListener('input', ()=>{
       const page = todoActive(); if(!page) return;

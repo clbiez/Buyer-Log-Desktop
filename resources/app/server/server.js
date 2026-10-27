@@ -9776,6 +9776,7 @@ function applyIncrementalProjectionPatch(row, patch, overrides, includePriority 
        az önce yazdığı not kendi Genel Bakış listesinde görünmezdi. */
     const notesRec = (overrides && overrides.notesmap
       && (overrides.notesmap[parseLib.rowLineKey(row)] || overrides.notesmap[parseLib.orderCodeKey(row['Order Code'])])) || {};
+    row.NotesHtml=notesRec.NotesHtml||'';row['Ek NotHtml']=notesRec.EkNotHtml||'';
     row._notesAt=notesRec.NotesAt||''; row._ekNotAt=notesRec.EkNotAt||'';
     row._notesBy=notesRec.NotesBy||''; row._notesByName=notesRec.NotesByName||'';
     row._ekNotBy=notesRec.EkNotBy||''; row._ekNotByName=notesRec.EkNotByName||'';

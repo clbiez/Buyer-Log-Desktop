@@ -158,8 +158,8 @@ semantik işlem göstergesi olarak kullanılabilir. Her orb görünmez sekme, ek
 dışı kalma, işlem sonu ve reduced-motion için duraklama/durdurma ya da tek kare
 uygulamalıdır. Sürekli dekoratif canvas hareketi hâlâ yasaktır.
 
-**Sol üstten dalga:** Aktif tablodaki sadece ilk iki görünür gridin en fazla
-9 satır × 12 sütununda tek giriş efekti uygulanır. Hücreler diagonal gecikmeyle
+**Sol üstten dalga:** Aktif tablodaki sadece ilk iki görünür gridin
+kaydırma alanında görünen satır ve sütunlarında tek giriş efekti uygulanır. Hücreler diagonal gecikmeyle
 `--ui-selected` renginden özgün görünümüne döner; yatay/dikey kaydırma, seçim,
 hücre düzenleme, veri değişimi ve export tetiklemez. Aktif/seçilmiş/düzenlenen
 hücreler atlanır. Yeni sayfa aktivasyonunda tekrar çalışabilir; scroll,
@@ -252,3 +252,5 @@ Metin gradyanı, ışıma veya yeni avatar çerçevesi eklenmez.
 Satır sıklığı, istisna kutusu, fiyat kaynağı, toplu işlem ve kayıt/ilerleme
 yüzeyleri de `ui-components.css` sahibidir; modül CSS dosyaları yalnız ölçü ve
 yerleşim taşır. Kullanıcıya bağlı sıklık ayarı yazı ölçeğinden bağımsızdır.
+
+**Paylaşılan bulanık arka plan:** Sidebar hover ve dialog açılışlarında karartma yerine `--ui-backdrop-blur` kullanılır. Kalıcı `.blWorkspaceBlur` katmanı açılış/kapanışta `backdrop-filter` geçişini Motion+ süresiyle yapar. Sidebar genişliği aynı ortak süre/easing ile değişir; reduced-motion her ikisini durdurur. Bu iki ortak kontrol, transform/opacity kuralının sınırlı istisnalarıdır.

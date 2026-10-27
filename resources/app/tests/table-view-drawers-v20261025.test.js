@@ -53,7 +53,7 @@ test('Collection variants are labelled dynamically with TR and EN text',()=>{
   assert.match(script,/getAttribute\('aria-pressed'\)/);
 });
 test('Menu tracks existing aria states and keeps keyboard/outside-close behavior',()=>{
-  assert.match(script,/querySelector\('\[aria-pressed="true"\]'\)/);
+  assert.match(script,/data-table-view-preset.*aria-pressed="true"/);
   assert.match(script,/new MutationObserver/);
   assert.match(script,/key==='Escape'/);
   assert.match(script,/key==='ArrowDown'/);

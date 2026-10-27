@@ -69,7 +69,7 @@ function recordFromOverrides(overrides, id) {
 }
 
 function noteTextPresent(notes, field) {
-  return Boolean(notes && typeof notes === 'object' && String(notes[field] == null ? '' : notes[field]).trim());
+  return Boolean(notes && typeof notes === 'object' && (String(notes[field] == null ? '' : notes[field]).trim() || String(notes[field+'Html']||'').trim()));
 }
 function notesExplicitlyCleared(notes) {
   if (!notes || typeof notes !== 'object') return false;

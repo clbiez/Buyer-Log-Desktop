@@ -35,12 +35,12 @@ function extractFunction(source, name) {
   assert.fail(`${name} kapanmıyor`);
 }
 
-test('CP ve Orders görünümünde Partial View, All seçeneğinin sağında bağımsız toggle olarak bulunur', () => {
+test('CP ve Orders görünümünde Partial View, görünüm menüsünde simgeli ve iki dilli toggle olarak bulunur', () => {
   for (const tableKey of ['cp', 'orders']) {
     assert.match(
       HTML,
       new RegExp(
-        `data-table-view-preset="all" data-table-key="${tableKey}"[\\s\\S]*?data-partial-view-toggle="${tableKey}" aria-pressed="false"[\\s\\S]*?<span>Partial View<\\/span>`
+        `data-table-view-preset="all" data-table-key="${tableKey}"[\\s\\S]*?data-partial-view-toggle="${tableKey}" aria-pressed="false"[\\s\\S]*?<span data-i18n-tr="Kısmi Görünüm" data-i18n-en="Partial View">Kısmi Görünüm<\\/span>`
       )
     );
   }

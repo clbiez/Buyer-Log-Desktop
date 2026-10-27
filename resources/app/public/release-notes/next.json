@@ -1,14 +1,218 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-27",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Daha geniş tablolar ve akıcı gezinme",
+    "en": "Roomier tables and smoother navigation"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Tablo alanı, görünüm menüleri, not düzenleme ve arka plan geçişleri iyileştirildi.",
+    "en": "Improved table space, view menus, note editing and backdrop transitions."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "compact-tables",
+      "type": "improvement",
+      "module": {
+        "tr": "CP / Siparişler / Koleksiyon",
+        "en": "CP / Orders / Collection"
+      },
+      "title": {
+        "tr": "Tablolara daha fazla alan",
+        "en": "More room for tables"
+      },
+      "body": {
+        "tr": "Görünüm hızlı filtre satırının sağına, model ve sipariş sayaçları sol alta taşındı. Sayfa yerine tablo kayar; seçim bilgileri, işlem kayıtları ve gereksiz boşluklar kaldırıldı. Alt toplamların yazı tipi tema ile eşleşir.",
+        "en": "View controls sit at the right of quick filters and model/order counts sit at the lower left. Only the table scrolls; selection messages, receipts and excess space are removed. Totals use the application typography."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-compact-workspace.png",
+        "alt": {
+          "tr": "Tablolara daha fazla alan",
+          "en": "More room for tables"
+        },
+        "caption": {
+          "tr": "Tablolara daha fazla alan",
+          "en": "More room for tables"
+        }
+      }
+    },
+    {
+      "id": "compact-collection",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Anında toplu seçim ve birleşik görünüm",
+        "en": "Instant bulk selection and combined views"
+      },
+      "body": {
+        "tr": "Tümünü seç tabloyu yeniden çizmeden kutuları günceller. Fiyat seçenekleri görünüm menüsünün alt bölümündedir; cihazda kayıt ve seçili satır bildirimleri kaldırıldı.",
+        "en": "Select all updates checkboxes without rebuilding the table. Price options are nested in the view menu; local-save and selection banners are removed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "koleksiyon-compact-workspace.png",
+        "alt": {
+          "tr": "Anında toplu seçim ve birleşik görünüm",
+          "en": "Instant bulk selection and combined views"
+        },
+        "caption": {
+          "tr": "Anında toplu seçim ve birleşik görünüm",
+          "en": "Instant bulk selection and combined views"
+        }
+      }
+    },
+    {
+      "id": "row-heights",
+      "type": "fix",
+      "module": {
+        "tr": "CP / Siparişler",
+        "en": "CP / Orders"
+      },
+      "title": {
+        "tr": "Tüm görünümlerde sıkı satırlar",
+        "en": "Compact rows across presets"
+      },
+      "body": {
+        "tr": "Boş not düğmelerinin satırları büyütmesi giderildi. Siparişler lojistik hücreleri CP ile aynı yükseklik sınırlarını kullanır; Kısmi Görünüm simgesiyle görünüm menüsündedir.",
+        "en": "Empty note buttons no longer inflate rows. Orders logistics cells use the same height constraints as CP; Partial View is an icon-labelled option inside the view menu."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-compact-workspace.png",
+        "alt": {
+          "tr": "Tüm görünümlerde sıkı satırlar",
+          "en": "Compact rows across presets"
+        },
+        "caption": {
+          "tr": "Tüm görünümlerde sıkı satırlar",
+          "en": "Compact rows across presets"
+        }
+      }
+    },
+    {
+      "id": "sidebar-blur",
+      "type": "improvement",
+      "module": {
+        "tr": "Gezinme ve pencereler",
+        "en": "Navigation and dialogs"
+      },
+      "title": {
+        "tr": "Animasyonlu menü ve bulanık arka plan",
+        "en": "Animated navigation and blurred backgrounds"
+      },
+      "body": {
+        "tr": "Dar menü fareyle açılır, fare ayrıldığında odak nedeniyle takılı kalmadan daralır. Menünün ve pencerelerin arka planı animasyonla bulanır ve yeniden netleşir; karartma kaldırıldı.",
+        "en": "The compact rail opens on hover and collapses on leave without pointer focus keeping it open. Backgrounds transition smoothly to blur and back to sharp for navigation and dialogs, replacing dimming."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sidebar-blur.png",
+        "alt": {
+          "tr": "Animasyonlu menü ve bulanık arka plan",
+          "en": "Animated navigation and blurred backgrounds"
+        },
+        "caption": {
+          "tr": "Animasyonlu menü ve bulanık arka plan",
+          "en": "Animated navigation and blurred backgrounds"
+        }
+      }
+    },
+    {
+      "id": "order-rich-note",
+      "type": "feature",
+      "module": {
+        "tr": "Sipariş notları",
+        "en": "Order notes"
+      },
+      "title": {
+        "tr": "Notebook araçları sipariş notlarında",
+        "en": "Notebook tools in order notes"
+      },
+      "body": {
+        "tr": "Sipariş notlarında yazı tipi, boyut, renk, vurgu, listeler ve görsel ekleme kullanılabilir. Biçim ve görseller düz metnin yanında saklanır; arama ve dışa aktarım düz metni kullanır.",
+        "en": "Order notes now include fonts, sizes, colors, highlights, lists and images. Rich content is saved alongside plain text, keeping searches and exports readable."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "rich-order-note.png",
+        "alt": {
+          "tr": "Notebook araçları sipariş notlarında",
+          "en": "Notebook tools in order notes"
+        },
+        "caption": {
+          "tr": "Notebook araçları sipariş notlarında",
+          "en": "Notebook tools in order notes"
+        }
+      }
+    },
+    {
+      "id": "collection-rich-note",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon notları",
+        "en": "Collection notes"
+      },
+      "title": {
+        "tr": "Ortak zengin not düzenleyicisi",
+        "en": "Shared rich note editor"
+      },
+      "body": {
+        "tr": "Koleksiyon not düğmesi Notebook ile aynı biçimlendirme, güvenli yapıştırma ve görsel araçlarını açar.",
+        "en": "Collection note buttons open the same formatting, sanitized paste and image tools used by Notebook."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "rich-collection-note.png",
+        "alt": {
+          "tr": "Ortak zengin not düzenleyicisi",
+          "en": "Shared rich note editor"
+        },
+        "caption": {
+          "tr": "Ortak zengin not düzenleyicisi",
+          "en": "Shared rich note editor"
+        }
+      }
+    },
+    {
+      "id": "header-tracking",
+      "type": "fix",
+      "module": {
+        "tr": "Tablolar",
+        "en": "Tables"
+      },
+      "title": {
+        "tr": "Başlık işareti metinle birlikte hareket eder",
+        "en": "Heading markers move with their labels"
+      },
+      "body": {
+        "tr": "Mavi grup işareti kaydırılan etiketin içine taşındı. Sayfa giriş dalgası ilk hücre bloğu yerine tablonun tüm görünür alanını kapsar; kaydırmada yeniden başlamaz.",
+        "en": "Blue group markers now belong to their moving labels. The page-entry wave covers the visible table area instead of only the first cell block, without replaying on scroll."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-compact-workspace.png",
+        "alt": {
+          "tr": "Başlık işareti metinle birlikte hareket eder",
+          "en": "Heading markers move with their labels"
+        },
+        "caption": {
+          "tr": "Başlık işareti metinle birlikte hareket eder",
+          "en": "Heading markers move with their labels"
+        }
+      }
+    }
+  ]
 }

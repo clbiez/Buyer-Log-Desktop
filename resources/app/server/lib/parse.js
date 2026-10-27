@@ -2191,6 +2191,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       _logisticAllPartialsInWarehouse: logistic.allPartialsInWarehouse,
       _logisticTotalQty: logistic.totalQty,
       Notes: notesRec.Notes || '', 'Ek Not': notesRec.EkNot || '',
+      NotesHtml:notesRec.NotesHtml||'', 'Ek NotHtml':notesRec.EkNotHtml||'',
       _notesAt: notesRec.NotesAt || '', _ekNotAt: notesRec.EkNotAt || '',
       // v7.29 — not yazarı. Overview yalnız KENDİ notlarını gösterir; CP ve
       // Orders herkesin notunu göstermeye devam eder.
