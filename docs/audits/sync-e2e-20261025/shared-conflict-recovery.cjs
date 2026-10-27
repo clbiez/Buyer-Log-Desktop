@@ -1,0 +1,17 @@
+'use strict';
+const R=require('../../../resources/app/scripts/sync-e2e/runtime.cjs'),B=require('../../../resources/app/scripts/sync-e2e/browser.cjs'),assert=require('node:assert/strict');
+const root=process.argv[2]||'/workspace/scratch/bl-shared-conflict-recovery';let rt,browser,release;
+(async()=>{try{
+ rt=await R.setup(root,{users:2,backends:1,port:6680});browser=await B.launch();const m=rt.manifest,server=rt.servers[0],a=await B.open(browser,server,m.accounts[0],m.owner),b=await B.open(browser,server,m.accounts[1],m.owner,{trace:true});
+
+ const journal=x=>R.fs.appendFileSync(R.path.join(root,'operations.jsonl'),JSON.stringify({at:Date.now(),...x})+'\n');for(const s of [a,b])B.instrument(s,journal);
+ let enter;const entered=new Promise(r=>enter=r),gate=new Promise(r=>release=r);
+ await B.onceRoute(b.page,'**/api/collection-workspaces/*',async route=>{enter(route.request().postDataJSON());await gate;await route.continue()});
+ b.currentOp={id:'rejected-user-draft'};const pending=B.edit(b,1,'REJECTED-DRAFT');await R.deadline(entered,'stale save submitted');const accepted=await B.edit(a,1,'ACCEPTED-SERVER');release();const rejected=await pending;assert.equal(rejected.dirty,true);assert.equal(rejected.feedback.status,'conflict');await b.page.locator('#kolTable').focus();await B.settle(b);
+ await B.edit(a,2,'PEER-NOTIFICATION');await b.page.waitForFunction(()=>kolRows.find(r=>r.id===2)?.modelKod==='PEER-NOTIFICATION',null,{timeout:10000});await b.page.screenshot({path:R.path.join(root,'rejected-state.png')});
+ const button=b.page.locator('[data-kol-server-recovery]');await button.waitFor({timeout:5000});await b.page.screenshot({path:R.path.join(root,'recovery-offered.png')});
+ await b.page.evaluate(()=>{appLang='en';kolRenderSaveFeedback()});assert.equal(await button.innerText(),'Load accepted server data');await b.page.screenshot({path:R.path.join(root,'recovery-offered-en.png')});b.page.once('dialog',d=>d.dismiss());await button.click();const cancelled=await B.settle(b);assert.equal(cancelled.dirty,true);assert.ok(cancelled.pending.rows.some(r=>r.modelKod==='REJECTED-DRAFT'));
+ await b.page.evaluate(()=>{appLang='tr';kolRenderSaveFeedback()});b.page.once('dialog',d=>d.accept());await button.click();await b.page.waitForFunction(()=>!kolHasDirtyWorkspace()&&kolRows.find(r=>r.id===1)?.modelKod==='ACCEPTED-SERVER',null,{timeout:15000});const recovered=await B.settle(b);assert.equal(recovered.pending,null);await b.page.screenshot({path:R.path.join(root,'accepted-server-loaded.png')});
+ b.currentOp={id:'new-explicit-edit-after-review'};const next=await B.edit(b,1,'NEW-EXPLICIT-EDIT');assert.equal(next.dirty,false);const cookie=await R.login(server),durable=R.check(await R.api(server,'/api/collection-workspaces/'+m.owner,{cookie})).workspace;assert.equal(durable.rows.find(r=>r.id===1).modelKod,'NEW-EXPLICIT-EDIT');assert.equal(durable.rows.length,2);
+ await b.context.tracing.stop({path:R.path.join(root,'recovery-trace.zip')});R.fs.writeFileSync(R.path.join(root,'result.json'),JSON.stringify({status:'passed',source:m.source,contexts:2,backends:1,rejected,cancelled,recovered,next,durable},null,2));console.log('PASS shared rejection → cancel preserves draft → explicit native server recovery → new real UI edit persists');
+}finally{release?.();await browser?.close();if(rt)for(const s of rt.servers)await R.stopServer(s)}})().catch(e=>{console.error(e);process.exitCode=1});

@@ -1,0 +1,12 @@
+{
+  "finalProductionSource": "f2ff5a347ffefad2d52446df83ac2d9594b309a7",
+  "fullSource": "f2ff5a347ffefad2d52446df83ac2d9594b309a7",
+  "lastIntegratedMain": "1c1602fb369b90ea6c15d1915d4b07a909cc4594",
+  "applicationVersion": "7.0.311",
+  "productionTestTreesUnchangedSinceFull": {
+    "server": true,
+    "public": true,
+    "tests": true
+  },
+  "note": "Subsequent audit-only commit is covered by identical production/test tree hashes; exact final PR head and actual merge are recorded in delivery-status JSON."
+}

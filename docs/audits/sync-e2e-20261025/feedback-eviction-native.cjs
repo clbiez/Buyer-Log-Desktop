@@ -1,0 +1,8 @@
+'use strict';
+const R=require('../../../resources/app/scripts/sync-e2e/runtime.cjs'),B=require('../../../resources/app/scripts/sync-e2e/browser.cjs'),assert=require('node:assert/strict');
+const root=process.argv[2];let rt,browser;
+(async()=>{try{rt=await R.setup(root,{users:1,backends:1,port:6670});browser=await B.launch();const s=await B.open(browser,rt.servers[0],rt.manifest.accounts[0],rt.manifest.owner);
+ const queue=await s.page.evaluate(()=>{const message=i=>appLang==='en'?'Synthetic notification '+i:'Sentetik bildirim '+i;const closes=Array.from({length:4},(_,i)=>BLUI.notify(message(i+1),{duration:0}));closes[0]();BLUI.notify(message(5),{duration:0});return {count:document.querySelector('[data-ui-feedback-region="edge"]').children.length,oldRemoved:!closes[0].element.isConnected}});assert.equal(queue.count,4);assert.ok(queue.oldRemoved);
+ const edit=await B.edit(s,1,'FEEDBACK-RESPONSIVE');assert.equal(edit.dirty,false);const durable=R.check(await R.api(rt.servers[0],'/api/collection-workspaces/'+rt.manifest.owner,{cookie:await B.cookie(s)})).workspace;assert.equal(durable.rows[0].modelKod,'FEEDBACK-RESPONSIVE');await s.page.locator('#kolTable').focus();await s.page.screenshot({path:R.path.join(root,'feedback-responsive.png')});
+ R.fs.writeFileSync(R.path.join(root,'result.json'),JSON.stringify({status:'passed',source:rt.manifest.source,sourceDirty:rt.manifest.sourceDirty,contexts:1,backends:1,queue,edit,durable},null,2));console.log('PASS native closing notification eviction + subsequent actual UI save');
+}finally{await browser?.close();if(rt)for(const s of rt.servers)await R.stopServer(s)}})().catch(e=>{console.error(e);process.exitCode=1});

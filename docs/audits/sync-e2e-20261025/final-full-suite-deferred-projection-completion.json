@@ -1,0 +1,29 @@
+{
+  "status": "completed-with-isolated-resource-failure-recheck",
+  "firstStandardCommandStatus": "failed",
+  "productionSource": "dd6ea5c8b31ebe71b338c7ab1ea4f02ae2f527b2",
+  "files": 1132,
+  "uniqueTests": 7971,
+  "effectivePass": 7906,
+  "skipped": 65,
+  "unresolvedFailures": 0,
+  "originalFailedFile": "tests/refresh-pipeline-perf-v251.test.js",
+  "revalidatedPassedPartialCases": [
+    "member-wise source equality matches full JSON equality and stops early on change",
+    "snapshot header carries the content key so a cold start can reuse unchanged data without re-hashing",
+    "snapshots written by older versions (no content key) still load",
+    "snapshot writes validate by byte round-trip instead of re-parsing the whole snapshot"
+  ],
+  "fileFailureSyntheticNodeCaseExcluded": 1,
+  "isolatedUnchangedFileTests": 8,
+  "isolatedPeakContainerBytes": 601317376,
+  "isolatedDurationSeconds": 9.905651330947876,
+  "oomKillCounterBeforeFailedRun": 2,
+  "oomKillCounterAfterFailedRun": 3,
+  "isolatedAdditionalOomKills": 0,
+  "unreachedStandardRunnerFiles": 232,
+  "remainingDurationSeconds": 74.7,
+  "loadRunningAlongside": false,
+  "automaticRetries": 0,
+  "note": "Original stopped command and OOM counter evidence retained. An assertion/heap exception was not emitted. Exact competing allocation/victim cannot be proven from the spec log; unchanged file passed alone. Runner now isolates this file; no data/assertion/deadline was reduced. All remaining files used the standard runner. Not a clean one-shot full command."
+}

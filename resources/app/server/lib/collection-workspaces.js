@@ -624,9 +624,10 @@ function diffWorkspaceRows(before, after) {
   return changed;
 }
 
-async function saveWorkspaceAsync(ownerId, payload, expectedRevision = null) {
+async function saveWorkspaceAsync(ownerId, payload, expectedRevision = null, options = {}) {
   return withFileLeaseAsync(workspaceFile(ownerId), async () => {
     const current = loadWorkspace(ownerId);
+    await options.assertAuthority?.();
     if (expectedRevision != null && Number(expectedRevision) !== current._revision) {
       const error = new Error('Koleksiyon sayfası başka bir kullanıcı tarafından değiştirildi. Güncel sayfayı yeniden açın.');
       error.code = 'REVISION_CONFLICT';
@@ -652,6 +653,7 @@ async function saveWorkspaceAsync(ownerId, payload, expectedRevision = null) {
       _updatedAt: new Date().toISOString(),
     };
     const rowPatches = diffWorkspaceRows(current, saved);
+    await options.assertAuthority?.();
     await atomicWriteJsonAsync(workspaceFile(ownerId), saved);
     return { saved, rowPatches };
   });
@@ -715,6 +717,12 @@ function structureSignature(workspace) {
 function applyRowChanges(current, change) {
   const upserts = Array.isArray(change && change.upserts) ? change.upserts : [];
   const deletes = Array.isArray(change && change.deletes) ? change.deletes : [];
+  // A new row and an edit of a now-deleted row must not share the create path.
+  // Explicit client expectations also protect legacy rows without _rev. Older
+  // clients can still prove prior existence with a positive row revision.
+  const hasExistenceExpectations = Array.isArray(change && change.expectedExistingIds);
+  const expectedExistingIds = new Set(hasExistenceExpectations ? change.expectedExistingIds.map(String) : []);
+  const expectedNewIds = new Set(Array.isArray(change && change.expectedNewIds) ? change.expectedNewIds.map(String) : []);
   const structure = change && change.structure && typeof change.structure === 'object' ? change.structure : null;
 
   const rows = (Array.isArray(current.rows) ? current.rows : []).map(row => ({ ...row }));
@@ -729,6 +737,10 @@ function applyRowChanges(current, change) {
     if (!id) { conflicts.push({ id: null, reason: 'missing-id', current: null }); continue; }
     const index = indexById.get(id);
     if (index == null) {
+      if (expectedExistingIds.has(id) || (!hasExistenceExpectations && rowRev(incoming) > 0)) {
+        conflicts.push({ id, reason: 'row-missing', current: null, expectedRev: rowRev(incoming) });
+        continue;
+      }
       // Yeni satır. Aynı id sunucuda YOKSA ekleme kabul edilir.
       const row = { ...incoming, _rev: nextRev };
       rows.push(row);
@@ -737,6 +749,7 @@ function applyRowChanges(current, change) {
       continue;
     }
     const stored = rows[index];
+    if (expectedNewIds.has(id)) { conflicts.push({ id, reason: 'row-exists', current: stored }); continue; }
     const expected = rowRev(incoming);
     if (rowRev(stored) !== expected) {
       // GERÇEK çakışma: aynı satır, bu istemci okuduğundan beri değişmiş.

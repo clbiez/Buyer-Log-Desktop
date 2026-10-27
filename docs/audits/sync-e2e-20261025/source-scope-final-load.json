@@ -1,0 +1,73 @@
+{
+  "loadSource": "7e7b137d9419b937071a864aac1e1f8a00516331",
+  "finalProductionSource": "7ea6fa5bae55644586d84bb8731745e72727bd81",
+  "scopes": [
+    {
+      "path": "resources/app/server/lib/user-access.js",
+      "loadSha256": "5a252dee238338aa42c5cff49abaf65412a8839f34ade5d15b7ab29015b18ed3",
+      "finalSha256": "5a252dee238338aa42c5cff49abaf65412a8839f34ade5d15b7ab29015b18ed3",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/server/lib/auth.js",
+      "loadSha256": "e0a00e43ea152bd53c756db2cd9d700f4abd4c8288ce6e3163c4c9743d3400af",
+      "finalSha256": "e0a00e43ea152bd53c756db2cd9d700f4abd4c8288ce6e3163c4c9743d3400af",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/server/collection-save-worker.js",
+      "loadSha256": "593406df9cab8c8322b68e1b165c26af52521b7e14f7dd8e1e1986b38caeb55c",
+      "finalSha256": "593406df9cab8c8322b68e1b165c26af52521b7e14f7dd8e1e1986b38caeb55c",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/server/lib/collection-workspaces.js",
+      "loadSha256": "d2fd6a2754be33935609d032ae8c3f96142700b2fd5ef4672bc21690263743e6",
+      "finalSha256": "d2fd6a2754be33935609d032ae8c3f96142700b2fd5ef4672bc21690263743e6",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/server/lib/collection-replication.js",
+      "loadSha256": "afffa224720969c20ff29933faed5616ecd89ce4c65e79edc52940fb6d601a16",
+      "finalSha256": "afffa224720969c20ff29933faed5616ecd89ce4c65e79edc52940fb6d601a16",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/server/lib/live-events.js",
+      "loadSha256": "2cb6f3eef5639193892205d01ad1bebb75e1cc33ac6284d8816aacd9986ef0fe",
+      "finalSha256": "1ef4abb40b77deeda7a9fadc3b05bae3113e478a7cd4cb4dc89ce14b8da44e2f",
+      "unchanged": false
+    },
+    {
+      "path": "resources/app/server/server.js",
+      "loadSha256": "16d2b95ef9dcd0fb7815431eac1004014cf9c0cbfc4a7c7b77c3d4e8aff2c1ce",
+      "finalSha256": "63016cf99f1213e443cbb89ef33a3a0bc93ae2f07a1925f02c99ff97927d00ec",
+      "unchanged": false
+    },
+    {
+      "path": "resources/app/public/app-main.js",
+      "loadSha256": "96c7828983638a6a8d018dcde33b925d1a9339b230ce8b2e4139bc3e5ac6d767",
+      "finalSha256": "96c7828983638a6a8d018dcde33b925d1a9339b230ce8b2e4139bc3e5ac6d767",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/public/collection-pricing-engine.js",
+      "loadSha256": "48729b6bb5e7be6a25078fbc46f5e689392927fa234840efff147d80b5ee5542",
+      "finalSha256": "48729b6bb5e7be6a25078fbc46f5e689392927fa234840efff147d80b5ee5542",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/public/pricing-desk-engine.js",
+      "loadSha256": "df471ad78f2e234b9044d93f3575dea81b8c4aa91fc5de10f84ae58fe18fc650",
+      "finalSha256": "df471ad78f2e234b9044d93f3575dea81b8c4aa91fc5de10f84ae58fe18fc650",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/public/pricing-workspace-engine.js",
+      "loadSha256": "c901955b83a4d8061473279d2d36a126a4ee5d23471c8625b9d75d354588fc65",
+      "finalSha256": "c901955b83a4d8061473279d2d36a126a4ee5d23471c8625b9d75d354588fc65",
+      "unchanged": true
+    }
+  ],
+  "changedBoundary": "Only reload SSE recipient authorization and private permission notification coalescing; final native scope bl-sse-owner-isolation-final. App-main, calculation, save worker and replica implementation unchanged. No claim that the 30-minute run contained the later reload fix."
+}

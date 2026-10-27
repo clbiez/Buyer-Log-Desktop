@@ -1,0 +1,19 @@
+{
+  "rows": 50,
+  "baselineSource": "96b2f7df",
+  "currentWorkingSource": "96b2f7df9ad76b055d46b9d148e321e82cf52bb4",
+  "currentDirty": true,
+  "before": {
+    "normalizations": 750,
+    "elapsedMs": 1454.003351,
+    "htmlSha256": "10262bbad2cc7fc0a65cfe9e6672422426205d9d2d4da3dc6e6f1c1e3f77343a"
+  },
+  "after": {
+    "normalizations": 1,
+    "elapsedMs": 3.4523159999998825,
+    "htmlSha256": "10262bbad2cc7fc0a65cfe9e6672422426205d9d2d4da3dc6e6f1c1e3f77343a"
+  },
+  "sameHtml": true,
+  "note": "Actual status-cell source and actual catalog API in VM. Descriptive timing; no product SLO and not native E2E.",
+  "counterDefinition": "Calls to row-aware kolStatusEntries; excludes additional internal normalization inside legacy API.find/color."
+}

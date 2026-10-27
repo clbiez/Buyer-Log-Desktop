@@ -1,0 +1,38 @@
+{
+  "status": "coverage-complete-after-upstream-fixture-correction",
+  "source": "6917940bc909ecec044e01b125b985a5cba0b5c3",
+  "productionSource": "e6f9579f324a073ff8330982480380d9b8b10824",
+  "productionTestTrees": {
+    "server": "903af134e848721dee66203d5c68378a443b839f",
+    "public": "09a5ddcf40d0811800df21dc438ff79c0a089889",
+    "tests": "62a03389b2889a1acb0c54d4e463bb11d8dbe57e"
+  },
+  "productionUnchangedAfterInitialFull": true,
+  "changedTestFilesSinceInitialFull": [
+    "resources/app/tests/table-fields-groups-v70229.test.js"
+  ],
+  "files": 1125,
+  "uniqueTests": 7948,
+  "effectivePass": 7883,
+  "skipped": 65,
+  "originalFailures": 1,
+  "resolvedFixtureFailures": 1,
+  "unresolvedFailures": 0,
+  "originalStandardRunCleanPass": false,
+  "targetedFileTests": 14,
+  "remainingFileTests": 27,
+  "remainingFiles": 2,
+  "automaticRetries": 0,
+  "finishedAt": "2026-10-26T09:23:55.177708+00:00",
+  "evidence": [
+    "final-full-suite.log",
+    "final-full-suite-result.json",
+    "final-header-fixture-fixed.log",
+    "final-full-suite-remaining.log"
+  ],
+  "commands": [
+    "cd resources/app && BUYER_LOG_TEST_CONCURRENCY=2 npm test",
+    "cd resources/app && BUYER_LOG_TEST_CONCURRENCY=2 npm test -- table-fields-groups-v70229",
+    "cd resources/app && BUYER_LOG_TEST_CONCURRENCY=2 npm test -- sync-simulation-v20261009.test.js oab-batch-integration-v720.test.js"
+  ]
+}

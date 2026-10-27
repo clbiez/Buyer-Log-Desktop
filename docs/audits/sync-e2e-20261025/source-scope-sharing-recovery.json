@@ -1,0 +1,90 @@
+{
+  "finalSource": "67235e3227e89cf1bbb4cc2aa1ec6b14849710e3",
+  "comparisons": [
+    {
+      "path": "resources/app/server/lib/user-access.js",
+      "baseSource": "7a017679d218b944087d242d5122e1748797fc51",
+      "baseSha256": "5a252dee238338aa42c5cff49abaf65412a8839f34ade5d15b7ab29015b18ed3",
+      "finalSha256": "5a252dee238338aa42c5cff49abaf65412a8839f34ade5d15b7ab29015b18ed3",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/server/lib/auth.js",
+      "baseSource": "7a017679d218b944087d242d5122e1748797fc51",
+      "baseSha256": "e0a00e43ea152bd53c756db2cd9d700f4abd4c8288ce6e3163c4c9743d3400af",
+      "finalSha256": "e0a00e43ea152bd53c756db2cd9d700f4abd4c8288ce6e3163c4c9743d3400af",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/server/collection-save-worker.js",
+      "baseSource": "7a017679d218b944087d242d5122e1748797fc51",
+      "baseSha256": "593406df9cab8c8322b68e1b165c26af52521b7e14f7dd8e1e1986b38caeb55c",
+      "finalSha256": "593406df9cab8c8322b68e1b165c26af52521b7e14f7dd8e1e1986b38caeb55c",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/server/lib/collection-workspaces.js",
+      "baseSource": "7a017679d218b944087d242d5122e1748797fc51",
+      "baseSha256": "d2fd6a2754be33935609d032ae8c3f96142700b2fd5ef4672bc21690263743e6",
+      "finalSha256": "d2fd6a2754be33935609d032ae8c3f96142700b2fd5ef4672bc21690263743e6",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/server/watchdog.js",
+      "baseSource": "7a017679d218b944087d242d5122e1748797fc51",
+      "baseSha256": "2b4001fd904ceb20c971a2831275792495ca19c9829320c3c65bb5f04845d088",
+      "finalSha256": "2b4001fd904ceb20c971a2831275792495ca19c9829320c3c65bb5f04845d088",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/server/lib/fxWorkbook.js",
+      "baseSource": "7a017679d218b944087d242d5122e1748797fc51",
+      "baseSha256": "e95e4ff480e9fab02c0e2ba3b5bde76277d2347678baaea127e749cb2ec455cd",
+      "finalSha256": "e95e4ff480e9fab02c0e2ba3b5bde76277d2347678baaea127e749cb2ec455cd",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/server/lib/collection-pricing-service.js",
+      "baseSource": "7a017679d218b944087d242d5122e1748797fc51",
+      "baseSha256": "7304ea39bb872c7c22a0362fb4f373b8f61a43f546bcf7473bb5c38af4297cb2",
+      "finalSha256": "7304ea39bb872c7c22a0362fb4f373b8f61a43f546bcf7473bb5c38af4297cb2",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/public/app-main.js",
+      "scope": "function initLiveSync(){ to /* Canl\u0131 ba\u011flant\u0131 bo\u015flu\u011fundan",
+      "baseSource": "7a017679d218b944087d242d5122e1748797fc51",
+      "baseSha256": "9f547fa031c4c4b2a394a3c37285e2812c89ba273b8060b2450bcb5f51834d9d",
+      "finalSha256": "9f547fa031c4c4b2a394a3c37285e2812c89ba273b8060b2450bcb5f51834d9d",
+      "unchanged": true
+    },
+    {
+      "path": "resources/app/public/app-main.js",
+      "scope": "function kolLandedCalc( to function kolBestPricing(",
+      "baseSource": "7a017679d218b944087d242d5122e1748797fc51",
+      "baseSha256": "b33df723f8be8a1daac704b83b8fb65b75c285fef714e7dcc8aa4448befb325e",
+      "finalSha256": "b33df723f8be8a1daac704b83b8fb65b75c285fef714e7dcc8aa4448befb325e",
+      "unchanged": true
+    }
+  ],
+  "note": "Original scoped hashes remain unchanged through the latest publication recovery fix. Two changed backend files are separately identified and revalidated. No old full or load is presented as a new final-source result.",
+  "previousScopeEvidence": "source-scope-final-comparison.json",
+  "changedFinalBoundary": [
+    {
+      "path": "resources/app/server/lib/collection-replication.js",
+      "previousSource": "af18a3a79af93b4497635c50e716945f07aecf52",
+      "previousSha256": "e9d82295f1501704d5bb1bf0272c971e2d91240b665ff6ce07d6ee065623d632",
+      "finalSha256": "7ebd2440f94d7178ede07d6fa595bb0435c65de928b6c1f9dfd53db2d5674113",
+      "unchanged": false,
+      "revalidation": "publish recovery RED/GREEN, native sharing-pending-green, new final standard full, new final load"
+    },
+    {
+      "path": "resources/app/server/server.js",
+      "previousSource": "af18a3a79af93b4497635c50e716945f07aecf52",
+      "previousSha256": "457f2cecc88f55fdc4d925dd590b9ab09c30636ae01fc4b4becfa42ff5ae6d2a",
+      "finalSha256": "16d2b95ef9dcd0fb7815431eac1004014cf9c0cbfc4a7c7b77c3d4e8aff2c1ce",
+      "unchanged": false,
+      "revalidation": "publish recovery RED/GREEN, native sharing-pending-green, new final standard full, new final load"
+    }
+  ]
+}

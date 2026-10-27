@@ -1,0 +1,10 @@
+{
+  "exitCode": 0,
+  "durationSeconds": 9.905651330947876,
+  "peakContainerMemoryBytes": 601317376,
+  "memoryEventsBefore": "low 0\nhigh 0\nmax 7232\noom 13\noom_kill 3\noom_group_kill 0\n",
+  "memoryEventsAfter": "low 0\nhigh 0\nmax 7232\noom 13\noom_kill 3\noom_group_kill 0\n",
+  "source": "dd6ea5c8b31ebe71b338c7ab1ea4f02ae2f527b2",
+  "testSourceUnchanged": true,
+  "scope": "one unchanged heavy file through the standard runner, isolated from other test-file workers"
+}

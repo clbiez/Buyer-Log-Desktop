@@ -52,7 +52,7 @@
 
   function persistenceView(status,options={}){
     const en=options.language==='en';
-    const labels={local:en?'Saved on this device':'Bu cihazda kaydedildi',sending:en?'Local edit secured · saving':'Yerel giriş korundu · kaydediliyor',pending:en?'Saved on this device · Sharing pending':'Bu cihazda kaydedildi · Paylaşım bekliyor',conflict:en?'Conflict · local edit preserved':'Çakışma · yerel giriş korundu',failed:en?'Save failed · retry required':'Kayıt başarısız · yeniden deneyin'};
+    const labels={editing:en?'Editing · not submitted':'Düzenleniyor · henüz gönderilmedi',draft:en?'Draft secured locally · not saved to server':'Yerel taslak korundu · sunucuya kaydedilmedi',local:en?'Saved on this device':'Bu cihazda kaydedildi',sending:en?'Local edit secured · saving':'Yerel giriş korundu · kaydediliyor',pending:en?'Saved on this device · Sharing pending':'Bu cihazda kaydedildi · Paylaşım bekliyor',conflict:en?'Conflict · local edit preserved':'Çakışma · yerel giriş korundu',failed:en?'Save failed · retry required':'Kayıt başarısız · yeniden deneyin'};
     const kind=status==='failed'?'error':status==='conflict'?'warning':'info';
     return `<span class="uiPersistence uiPersistence--${kind}" role="${kind==='error'?'alert':'status'}" aria-live="${kind==='error'?'assertive':'polite'}" data-persistence-state="${escapeHtml(status)}"><b>${escapeHtml(labels[status]||labels.pending)}</b>${options.detail?`<span>${escapeHtml(options.detail)}</span>`:''}</span>`;
   }
@@ -156,7 +156,9 @@
       if(!host.children.length)host.remove();
     };
     const close=({immediate=false}={})=>{
-      if(closed)return;
+      // An animated close is still in the DOM. Queue eviction must be able
+      // to finish that close synchronously instead of spinning on this item.
+      if(closed){if(immediate)remove();return;}
       closed=true;
       clearTimeout(timer);
       document.removeEventListener('keydown',onDocumentKeydown);
@@ -208,6 +210,8 @@
       if(oldest===item)break;
       if(typeof oldest._uiFeedbackClose==='function')oldest._uiFeedbackClose({immediate:true});
       else oldest.remove();
+      // A stale/no-op close hook must never leave this loop without progress.
+      if(oldest.parentElement===host)oldest.remove();
     }
     const update=(nextMessage,nextOptions={})=>{
       if(closed)return close;

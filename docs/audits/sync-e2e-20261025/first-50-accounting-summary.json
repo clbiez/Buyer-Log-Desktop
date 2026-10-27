@@ -1,0 +1,97 @@
+{
+  "root": "/workspace/scratch/bl-final-50",
+  "financialEvidenceCount": 6,
+  "financialEvidenceMapping": [
+    {
+      "at": 1792977721975,
+      "user": "d5f81808-0ecb-4b5f-aefb-8d42797c63a0",
+      "rowId": 1,
+      "operationId": "op-20261025-2",
+      "candidateCount": 1
+    },
+    {
+      "at": 1792977727465,
+      "user": "d7992a6e-9443-4c69-88f7-4bbaabcedeba",
+      "rowId": 2,
+      "operationId": "op-20261025-4",
+      "candidateCount": 1
+    },
+    {
+      "at": 1792977759552,
+      "user": "bbfb769c-ce92-4bcf-8f7a-473154fd7650",
+      "rowId": 3,
+      "operationId": "op-20261025-8",
+      "candidateCount": 1
+    },
+    {
+      "at": 1792977773277,
+      "user": "9b20cbab-bd7a-440b-9512-88351339ec0d",
+      "rowId": 4,
+      "operationId": "op-20261025-12",
+      "candidateCount": 1
+    },
+    {
+      "at": 1792977827068,
+      "user": "944592dd-a77d-4bbe-982c-8d36fc0755a1",
+      "rowId": 5,
+      "operationId": "op-20261025-23",
+      "candidateCount": 1
+    },
+    {
+      "at": 1792977828477,
+      "user": "d7992a6e-9443-4c69-88f7-4bbaabcedeba",
+      "rowId": 2,
+      "operationId": "op-20261025-22",
+      "candidateCount": 1
+    }
+  ],
+  "financialSamplesWithoutBothArithmeticChecks": [],
+  "failedFinancialChecks": [],
+  "logicalOperationCount": 29,
+  "measuredLogicalOperationCount": 0,
+  "outcomesAll": {
+    "accepted": 15,
+    "completed-non-collection-write": 10,
+    "not-submitted": 3,
+    "explicitly-rejected": 1
+  },
+  "outcomesMeasured": {},
+  "measuredKinds": {},
+  "peakOutstandingBrowserCollectionRequests": 2,
+  "outstandingBrowserCollectionRequestsAtEnd": 0,
+  "duplicateJournalRequestIds": 0,
+  "nativeBackgroundWrites": 0,
+  "resources": {
+    "driver": {
+      "peakAggregateRssBytes": 190279680,
+      "cpuSecondsBetweenSamples": 6.29,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 663552,
+      "sampledProcessCount": 1
+    },
+    "backend": {
+      "peakAggregateRssBytes": 1685524480,
+      "cpuSecondsBetweenSamples": 38.62,
+      "physicalDiskReadBytesBetweenSamples": 249856,
+      "physicalDiskWriteBytesBetweenSamples": 36540416,
+      "sampledProcessCount": 6
+    },
+    "application-renderer": {
+      "peakAggregateRssBytes": 3376517120,
+      "cpuSecondsBetweenSamples": 174.09,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 0,
+      "sampledProcessCount": 18
+    },
+    "browser-driver": {
+      "peakAggregateRssBytes": 625455104,
+      "cpuSecondsBetweenSamples": 23.85,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 0,
+      "sampledProcessCount": 8
+    }
+  },
+  "containerPeakMemoryBytes": 4827234304,
+  "resourceSamples": 28,
+  "sourceSamplingNote": "Linux USER_HZ=100; aggregate RSS can double-count shared pages; CPU/disk deltas omit work outside observed process lifetime. Network is completed browser HTTP only, excluding open SSE and setup. No per-process network or internal queue instrumentation is claimed."
+}

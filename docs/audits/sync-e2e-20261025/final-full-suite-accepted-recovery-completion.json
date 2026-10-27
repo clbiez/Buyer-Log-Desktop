@@ -1,0 +1,60 @@
+{
+  "status": "completed-with-targeted-fixture-corrections",
+  "firstStandardCommandStatus": "failed",
+  "finalSource": "44e2262bc42b438e91904ffdbd9f5f9001bd2caf",
+  "files": 1127,
+  "uniqueTests": 7959,
+  "effectivePass": 7894,
+  "skipped": 65,
+  "unresolvedFailures": 0,
+  "automaticRetries": 0,
+  "concurrency": 2,
+  "loadRunningAlongside": false,
+  "parts": [
+    {
+      "log": "final-full-suite-accepted-recovery.log",
+      "tests": 2003,
+      "pass": 1942,
+      "fail": 1,
+      "skipped": 60,
+      "cancelled": 0
+    },
+    {
+      "log": "final-full-suite-accepted-recovery-remaining.log",
+      "tests": 2322,
+      "pass": 2317,
+      "fail": 2,
+      "skipped": 3,
+      "cancelled": 0
+    },
+    {
+      "log": "final-full-suite-accepted-recovery-last.log",
+      "tests": 2064,
+      "pass": 2062,
+      "fail": 1,
+      "skipped": 1,
+      "cancelled": 0
+    },
+    {
+      "log": "final-full-suite-accepted-recovery-tail.log",
+      "tests": 1570,
+      "pass": 1569,
+      "fail": 0,
+      "skipped": 1,
+      "cancelled": 0
+    }
+  ],
+  "correctedFixtureFiles": [
+    "clipboard-contract-v1085.test.js",
+    "global-model-image-registry-v1013.test.js",
+    "image-sizing-email-v503.test.js",
+    "quotation-export-drop.test.js"
+  ],
+  "targetedProofLogs": [
+    "final-clipboard-upstream-aligned.log",
+    "final-image-contracts-upstream-aligned.log",
+    "final-quotation-fixture-upstream-aligned.log"
+  ],
+  "productionUnchangedFromFirstCommand": true,
+  "note": "The unchanged standard runner reached every file exactly once across stopped batches and remaining-file continuations. Four upstream image fixture failures were fixed and only affected files rerun. Original failed logs retained; not a clean one-shot standard command."
+}

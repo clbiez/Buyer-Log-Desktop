@@ -1,0 +1,121 @@
+{
+  "status": "scoped-validation-completed-fifty-user-goal-not-certified",
+  "finalProductionSource": "7ea6fa5bae55644586d84bb8731745e72727bd81",
+  "loadSource": "7e7b137d9419b937071a864aac1e1f8a00516331",
+  "seed": 20261025,
+  "measurementStartUTC": "2026-10-27T00:34:54.908000+00:00",
+  "measurementSeconds": 1800,
+  "users": 6,
+  "extraModeratorContexts": 1,
+  "backendInstances": 6,
+  "replicas": 6,
+  "physicalHosts": 1,
+  "activeEveryMinute": true,
+  "completedMeasuredUiOperationGroups": 1046,
+  "outcomesMeasured": {
+    "accepted": 535,
+    "completed-non-collection-write": 370,
+    "explicitly-rejected": 141
+  },
+  "measuredKinds": {
+    "moderator-royalty": 12,
+    "edit": 633,
+    "calculate": 211,
+    "list-filter": 159,
+    "create-delete": 5,
+    "moderator-transit": 12,
+    "moderator-fx": 12,
+    "controlled-conflict": 2
+  },
+  "saveLatencyMs": {
+    "samples": 492,
+    "p50": 642,
+    "p95": 2859,
+    "p99": 8630
+  },
+  "calculationLatencyMs": {
+    "p50": 931,
+    "p95": 2891,
+    "p99": 4505
+  },
+  "firstDifferentBackendVisibilityMs": {
+    "samples": 492,
+    "p50": 3589,
+    "p95": 13477,
+    "p99": 23718
+  },
+  "driverFailures": [],
+  "visibleFinancial": {
+    "different-observed-source-version": 6,
+    "passed": 212
+  },
+  "independentArithmeticFailures": 0,
+  "durableDifferences": 0,
+  "clientDifferences": 0,
+  "coldRootsChecked": 6,
+  "seedFieldDifferences": 0,
+  "falseLocalSavedClaims": [],
+  "duplicateRequestUuids": 0,
+  "duplicateArchivedEffectsInCheckedCrud": 0,
+  "conflictRows": {
+    "plannedBarrier": 0,
+    "unplannedReported": 850,
+    "byReason": {
+      "row-revision": 850
+    }
+  },
+  "applicationRetryEvents": 2,
+  "peakOutstandingRequests": 4,
+  "outstandingRequestsAtEnd": 0,
+  "resources": {
+    "driver": {
+      "peakAggregateRssBytes": 842403840,
+      "cpuSecondsBetweenSamples": 168.99,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 127827968,
+      "sampledProcessCount": 1
+    },
+    "backend": {
+      "peakAggregateRssBytes": 1553293312,
+      "cpuSecondsBetweenSamples": 430.0,
+      "physicalDiskReadBytesBetweenSamples": 4096,
+      "physicalDiskWriteBytesBetweenSamples": 572432384,
+      "sampledProcessCount": 6
+    },
+    "application-renderer": {
+      "peakAggregateRssBytes": 3249565696,
+      "cpuSecondsBetweenSamples": 990.14,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 0,
+      "sampledProcessCount": 15
+    },
+    "browser-driver": {
+      "peakAggregateRssBytes": 670846976,
+      "cpuSecondsBetweenSamples": 201.0,
+      "physicalDiskReadBytesBetweenSamples": 0,
+      "physicalDiskWriteBytesBetweenSamples": 0,
+      "sampledProcessCount": 8
+    }
+  },
+  "longScope": "Six native users and an extra moderator; not 50 users. Six models in common fixture; one physical machine/disk. Final SSE authorization checked separately.",
+  "unmeasured": [
+    "Internal lock queue sizes",
+    "Atomic all-client convergence timestamp",
+    "SMB/OneDrive provider behavior",
+    "Global exactly-once guarantee"
+  ],
+  "capacityAttempt": {
+    "root": "/workspace/scratch/bl-final-sharing-recovery-50",
+    "source": "6c57c863b02896cbcdf322246f2badeb1d85f9e5",
+    "requestedUsers": 50,
+    "actualBrowserContexts": 10,
+    "actualBackendInstances": 10,
+    "independentRoots": 10,
+    "usersCompletingUiOperations": 9,
+    "extraModeratorContexts": 0,
+    "measurementAt": null,
+    "memoryBytesAtGuard": 8140390400,
+    "status": "not-certified-environment-capacity",
+    "note": "10th in-flight context completed opening after guard and did no UI work. No 30-minute measurement began. Not a latest-source 50-user pass or a product maximum-user limit."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "startedAt": "2026-10-26T02:15:06.909690+00:00",
+  "source": "2a3de62964d4661b17a9f21b8edfbd1b93428004",
+  "applicationTree": "acca928275d1f2bc96ec703cc87b775ec5956034",
+  "command": "cd resources/app && npm test",
+  "concurrency": 4,
+  "loadRunning": false,
+  "mainIntegrated": "94df09447834c82adc964e772360614344472313",
+  "xlsx": "0.20.3",
+  "repeatReason": "Second final ramp exposed accepted-write loss and editor churn; real minimal backend/UI reproductions, import-notification regression, strict DOM smoke and 68 targeted checks passed. Core replication/server/public/test trees changed, so full suite is required."
+}

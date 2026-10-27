@@ -1,0 +1,34 @@
+{
+  "status": "previous-targeted-certification-corrected",
+  "originalCoverageRecord": {
+    "status": "completed-with-targeted-manual-driver-regression-update",
+    "baseFullCompletion": "final-full-suite-deferred-projection-completion.json",
+    "productionSource": "dd6ea5c8b31ebe71b338c7ab1ea4f02ae2f527b2",
+    "sourceBeforeCertificationCommit": "4c237664d67746c2ee0d3ab3e8d4ba6510d01eaa",
+    "files": 1132,
+    "effectiveUniqueTests": 7974,
+    "effectivePass": 7909,
+    "skipped": 65,
+    "unresolvedFailures": 0,
+    "baseFullUniqueTests": 7971,
+    "updatedFile": "resources/app/tests/sync-e2e-visible-oracle.test.js",
+    "previousCasesInUpdatedFile": 3,
+    "currentCasesInUpdatedFile": 6,
+    "currentFileTargetedPass": 6,
+    "targetedLog": "settle-atomic-green-bounded.log",
+    "updatedFileSha256": "7c71b28bfe54586d4f0e8fcbda768a14416ecee2214fcf02ae3be275de1d6710",
+    "productSourceUnchangedSinceBaseFull": true,
+    "note": "Do not add six on top of the old full: the three old oracle cases were repeated. Only three new driver cases extend the effective coverage. A transient-draft observation race changed the manual driver, not production code, so the full was not repeated."
+  },
+  "reason": "settle-atomic-green-bounded.log contains 0 pass and 1 failed file due to SyntaxError; prior 6/6 claim did not match actual log. Product driver code was not changed.",
+  "finalCorrectionSource": "f2ff5a347ffefad2d52446df83ac2d9594b309a7",
+  "changedFile": "resources/app/tests/sync-e2e-visible-oracle.test.js",
+  "targetedCommand": "cd resources/app && BUYER_LOG_TEST_CONCURRENCY=2 npm test -- sync-e2e-visible-oracle",
+  "targetedResult": {
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "log": "settle-oracle-syntax-final.log"
+  },
+  "correctedFileSha256": "d061c6718690d506daea8363931b887fede063aad9c173934fcd3be574d8e15b"
+}

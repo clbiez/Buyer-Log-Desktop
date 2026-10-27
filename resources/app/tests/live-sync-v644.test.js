@@ -73,11 +73,13 @@ test('v6.44 collection alanı ownerId bazında ayrı kanallarda birikiyor', asyn
   // Bir workspace'teki değişiklik başka bir workspace'in olayını ERKEN
   // tetiklememeli; her ownerId kendi throttle penceresine sahip olmalı.
   const received = [];
+  liveEvents.setReloadAuthorizer(() => true); // This case tests channel throttling; access is covered separately.
   const entry = liveEvents.addClient({ write: (c) => received.push(c) }, 'B');
   liveEvents.notifyChange('collection', 'A', { ownerId: 'ws1' });
   liveEvents.notifyChange('collection', 'A', { ownerId: 'ws2' });
   await new Promise((r) => setTimeout(r, 2700));
   liveEvents.removeClient(entry);
+  liveEvents.setReloadAuthorizer(null);
   assert.equal(received.length, 2, 'iki farklı workspace iki ayrı olay üretmeli');
   const owners = received.map((r) => JSON.parse(r.replace(/^data: /, '').trim()).ownerId).sort();
   assert.deepEqual(owners, ['ws1', 'ws2']);
@@ -201,7 +203,10 @@ test('v6.44 Koleksiyon uzak değişikliği kullanıcının yazdığını kaybett
   assert.match(apply, /busy&&busy\.has\(id\)/, 'düzenlenen satır ezilmemeli');
   assert.match(apply, /deferred\.push\(item\)/, 'atlanan yama kaybolmamalı');
   assert.match(APP, /kolDeferredPatches=deferred/);
-  assert.match(APP, /addEventListener\('focusout'[\s\S]{0,400}kolApplyRemotePatches\(pending\)/);
+  assert.match(APP, /addEventListener\('focusout',kolResumeDeferredRemoteChanges,true\)/);
+  const resume = bodyOf(APP, 'kolResumeDeferredRemoteChanges');
+  assert.match(resume, /if\(kolPointerActive\)return/);
+  assert.match(resume, /await kolSettlePendingSave\(\)[\s\S]*kolApplyRemotePatches\(pending\)/);
 });
 
 test('v6.44 Koleksiyon uzak değişikliği yalnız açık workspace eşleşirse çalışıyor', () => {

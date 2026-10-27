@@ -744,6 +744,7 @@ const collectionReplication = createCollectionReplication({
   getSharedSyncRoot: async () => (await syncSettings.read()).sharedSyncRoot,
   stateFile: path.join(LOCAL_DATA_ROOT, 'collection-replication-state.json'),
   onTrace: markStartup,
+  onApplied: item => liveEvents.notifyChange('collection', null, { ownerId:item.ownerId, revision:item.revision, source:item.published&&!item.synced&&!item.merged?'shared-hub-publish':'shared-hub-import' }),
 });
 const collectionPermissionsReady = new Promise(resolve=>trialWritePolicy.whenConfirmed(resolve)).then(async () => {
   await collectionPermissions.ensure();
@@ -3516,7 +3517,7 @@ async function pollCollectionReplicas() {
       for (const item of await collectionReplication.pollOwners(userId, ownerIds)) {
         changed.push(item);
         if (String(item.ownerId) !== String(userId)) void syncCollectionWorkspaceImagesForUser(userId, item.ownerId).catch(error => logRuntimeFailure('collectionLiveImageSync', error));
-        liveEvents.notifyChange('collection', null, { ownerId:item.ownerId, revision:item.revision, source:'shared-hub' });
+        // The replication service already notified clients at the import boundary.
       }
     }
     return changed;
@@ -3746,6 +3747,7 @@ app.put('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
     if (!body.length) return res.status(400).json({ error: 'Koleksiyon sayfası gövdesi boş.', code: 'COLLECTION_BODY_EMPTY' });
     const result = await collectionSaveWorker.runCollectionSave({
       ownerId, body, expectedRevision: null,
+      actorGuard: { actorId:req.currentUser.id, credentialRevision:req.currentUser.credentialRevision || 1, centralIamEnabled:userAccess.centralIamHealth().enabled },
       env: {
         BUYER_LOG_SERVER_DATA_ROOT: process.env.BUYER_LOG_SERVER_DATA_ROOT,
         BUYER_LOG_DATA_ROOT: process.env.BUYER_LOG_DATA_ROOT,
@@ -9694,6 +9696,18 @@ function liveEventCanSeeOrder(profile, orderCode, precomputed = null) {
   if (!rows.length) return false; // otorite bilmiyorsa gönderme
   return userAccess.filterRowsByScope(profile, rows).length > 0;
 }
+liveEvents.setReloadAuthorizer((entry, event, meta) => {
+  const profile = entry && entry.req ? userAccess.sessionProfile(entry.req) : null;
+  if (!profile) return false;
+  if (event.area === 'collection' || event.area === 'collection-permissions') {
+    const ownerId = String(event.ownerId || '');
+    if (!ownerId) return false;
+    // A revoked recipient must still refresh its workspace list to drop access.
+    if (event.area === 'collection-permissions' && String(profile.id) === String(meta && meta.granteeId || '')) return true;
+    return Boolean(userAccess.collectionAccessLevel(profile, ownerId));
+  }
+  return true;
+});
 liveEvents.setPatchAuthorizer((entry, rowPatches, event) => {
   if (!Array.isArray(rowPatches) || !rowPatches.length) return [];
   let profile = null;

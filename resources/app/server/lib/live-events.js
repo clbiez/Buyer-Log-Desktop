@@ -70,6 +70,8 @@ const pendingByArea = new Map(); // key -> { timer, originClientId, area, meta, 
 // Kurulmadıysa güvenli taraf seçilir: alan değerleri hiç yayınlanmaz.
 let patchAuthorizer = null;
 function setPatchAuthorizer(fn) { patchAuthorizer = typeof fn === 'function' ? fn : null; }
+let reloadAuthorizer = null;
+function setReloadAuthorizer(fn) { reloadAuthorizer = typeof fn === 'function' ? fn : null; }
 
 function addClient(res, id, meta) {
   const entry = { res, id: String(id || ''), req: meta && meta.req ? meta.req : null };
@@ -142,7 +144,10 @@ function mergeFor(area, existing, incoming) {
                      Verilmezse yapısal değişiklik varsayılır ve hafif yeniden
                      yükleme istenir. */
 function notifyChange(area, originClientId, meta) {
-  const key = meta && meta.ownerId ? `${area}:${meta.ownerId}` : area;
+  const ownerKey = meta && meta.ownerId ? `${area}:${meta.ownerId}` : area;
+  // Different revocations must each invalidate their own recipient's open UI.
+  const key = area === 'collection-permissions' && meta && meta.granteeId
+    ? `${ownerKey}:${meta.granteeId}` : ownerKey;
   const existing = pendingByArea.get(key);
   if (existing) {
     clearTimeout(existing.timer);
@@ -171,7 +176,15 @@ function flushAreaKey(key) {
     originClientId: pending.originClientId,
   };
   for (const entry of clients) {
-    if (pending.mode !== 'patch') { writeEvent(entry.res, { ...base, mode: 'reload' }); continue; }
+    if (pending.mode !== 'patch') {
+      // Owner IDs and activity are private even when no row values are sent.
+      // Resolve access at delivery, after the throttle window and any revocation.
+      let allowed = pending.area !== 'collection' && pending.area !== 'collection-permissions';
+      try { if (reloadAuthorizer) allowed = Boolean(reloadAuthorizer(entry, base, meta)); }
+      catch (_) { allowed = false; }
+      if (allowed) writeEvent(entry.res, { ...base, mode: 'reload' });
+      continue;
+    }
     // §32: satır değerleri yalnız o veriyi görebilen aboneye gider. Süzgeç
     // alanı da alır: sipariş kapsamı ile Koleksiyon erişimi farklı kurallardır.
     const allowed = patchAuthorizer ? patchAuthorizer(entry, pending.rowPatches, base) : [];
@@ -194,4 +207,4 @@ function notifySyncStatus(status, canSee = () => true) {
   }
 }
 
-module.exports = { addClient, removeClient, notifyChange, notifySyncStatus, clientCount, setPatchAuthorizer, mergeRowPatches, mergeCollectionPatches };
+module.exports = { addClient, removeClient, notifyChange, notifySyncStatus, clientCount, setPatchAuthorizer, setReloadAuthorizer, mergeRowPatches, mergeCollectionPatches };

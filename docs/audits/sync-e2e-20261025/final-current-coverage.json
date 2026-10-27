@@ -1,0 +1,15 @@
+{
+  "status": "completed-with-targeted-test-fixture-correction",
+  "source": "f2ff5a347ffefad2d52446df83ac2d9594b309a7",
+  "files": 1133,
+  "tests": 7978,
+  "pass": 7913,
+  "skipped": 65,
+  "fail": 0,
+  "fullResult": "final-full-suite-sse-isolation-result.json",
+  "completion": "final-full-suite-sse-isolation-completion.json",
+  "originalFullExitCode": 1,
+  "originalEarlierFailedFullPreserved": true,
+  "browserLoadAlongside": false,
+  "automaticRetries": 0
+}

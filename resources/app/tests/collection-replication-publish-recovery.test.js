@@ -1,0 +1,23 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),os=require('node:os'),path=require('node:path');
+const {createCollectionReplication}=require('../server/lib/collection-replication');
+test('unchanged remote stamp cannot suppress retry of a locally accepted failed publication',async t=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'bl-publish-recovery-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));
+ let local={ownerId:'owner',_revision:1,initialized:true,rows:[{id:1,_rev:1,modelKod:'original'}],manufacturers:[],customColumns:[],nextId:2};
+ const applied=[];
+ const replica=createCollectionReplication({workspaces:{loadWorkspace:()=>local,replaceWorkspaceReplica:async()=>{throw Error('pending local change must not be replaced')}},permissions:{accessLevel:()=> 'edit'},getSharedSyncRoot:async()=>dir,stateFile:path.join(dir,'local/state.json'),onApplied:r=>applied.push(r)});
+ await replica.publishOwner('owner');await replica.pollOwners('owner',['owner']);
+ const file=replica.remoteWorkspaceFile(dir,'owner'),backup=file+'.backup',before=await fs.stat(file);
+ await fs.rename(file,backup);await fs.mkdir(file);
+ local={...local,_revision:2,rows:[{id:1,_rev:2,modelKod:'accepted-local'}]};
+ await assert.rejects(replica.publishOwner('owner'),error=>error.code==='EISDIR');
+ assert.equal((await replica.status('owner')).state,'error');
+ await fs.rmdir(file);await fs.rename(backup,file);const restored=await fs.stat(file);
+ assert.equal(restored.mtimeMs,before.mtimeMs);assert.equal(restored.size,before.size);
+ await replica.pollOwners('owner',['owner']);
+ assert.equal(JSON.parse(await fs.readFile(file,'utf8')).workspace.rows[0].modelKod,'accepted-local');
+ assert.equal((await replica.status('owner')).ok,true);
+ assert.equal(applied.filter(x=>x.published).length,1,'publication recovery must notify its local clients once');
+ await replica.pollOwners('owner',['owner']);await replica.pollOwners('owner',['owner']);
+ assert.equal(applied.filter(x=>x.published).length,1,'unchanged successful publication must not emit repeated delivery events');
+});

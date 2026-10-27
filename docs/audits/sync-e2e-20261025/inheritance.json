@@ -1,0 +1,164 @@
+{
+  "referenceMain": "4a70aa152d1b4eb3279ddebda19679ca2639b372",
+  "previousFullSource": "62e9f4a7b65d6eae3b6e2fc85d48c194db6972c9",
+  "previousApplicationTree": "5868505035e00bace8a1307198156010c9be3d71",
+  "previousSourceTree": "5868505035e00bace8a1307198156010c9be3d71",
+  "mainAtStart": "499c1718d228afbd41d7ebff2c1a2b68629137dd",
+  "mainAtStartApplicationTree": "7378911940ee5c3d4045978f33dbe7f9c43f6762",
+  "changedFileCount": 6381,
+  "changedServerFiles": [
+    "resources/app/server/lib/auth.js",
+    "resources/app/server/lib/central-iam.js",
+    "resources/app/server/lib/lcwai-output/output-theme.js",
+    "resources/app/server/server.js"
+  ],
+  "files": [
+    {
+      "path": "docs/audits/remaining-packages-final-certification-20261025.json",
+      "referenceBlob": "86c60677168987c56efa6ece002db71f71861006",
+      "mainAtStartBlob": "86c60677168987c56efa6ece002db71f71861006",
+      "unchangedAtStart": true,
+      "workingSha256": "04e7d58f79f23a1995afee270f86c5eac83d12730249f6aeb1c61b3f37b75d62"
+    },
+    {
+      "path": "docs/audits/bl019-populated-desktop-20261025.json",
+      "referenceBlob": "68219439b17af9108cb0bf2f21984c39e05bfcc5",
+      "mainAtStartBlob": "68219439b17af9108cb0bf2f21984c39e05bfcc5",
+      "unchangedAtStart": true,
+      "workingSha256": "54b4f3ea84530952b862fb3e008de7eee9bc2b1b59fd6502a39f16c0efed6b60"
+    },
+    {
+      "path": "docs/audits/bl-017-financial-contracts.md",
+      "referenceBlob": "f35ef55f3a9e67aaf754bd5be682a1bead8e2580",
+      "mainAtStartBlob": "f35ef55f3a9e67aaf754bd5be682a1bead8e2580",
+      "unchangedAtStart": true,
+      "workingSha256": "9069f3e796b48821b13ca855eaef29d7a64668ef478eb82629440847f7f806dd"
+    },
+    {
+      "path": "docs/audits/bl-017-pricing-history.md",
+      "referenceBlob": "ce991f16384c43d693b7b9d4537b2a8ddd1081c0",
+      "mainAtStartBlob": "ce991f16384c43d693b7b9d4537b2a8ddd1081c0",
+      "unchangedAtStart": true,
+      "workingSha256": "4c6922f466099b0b384323e403ebaea288bb42201146f0c4ac32bc8b51a06871"
+    },
+    {
+      "path": "resources/app/server/lib/local-db.js",
+      "referenceBlob": "32350fc8097aa5faea478b280bee748367d2cb2a",
+      "mainAtStartBlob": "32350fc8097aa5faea478b280bee748367d2cb2a",
+      "unchangedAtStart": true,
+      "workingSha256": "0809943a3c4c46a62a80fc5f42d2f85709775c33863b99087ef1ebf4472d8141"
+    },
+    {
+      "path": "resources/app/server/lib/sync-settings.js",
+      "referenceBlob": "36f01c0759046f8464160ef9c630f65c58d09aa0",
+      "mainAtStartBlob": "36f01c0759046f8464160ef9c630f65c58d09aa0",
+      "unchangedAtStart": true,
+      "workingSha256": "a94c615cfb6a222b165deece3f0c8d3184d3d25100fd3561c592920520277ad5"
+    },
+    {
+      "path": "resources/app/server/lib/shared-sync-policy.js",
+      "referenceBlob": "9ab31f1f302a2e93ef58cc5dfa0c0b45304dd8b6",
+      "mainAtStartBlob": "9ab31f1f302a2e93ef58cc5dfa0c0b45304dd8b6",
+      "unchangedAtStart": true,
+      "workingSha256": "8beea9573beacc106b4a8533bf5ee41732323ed1d768e54cdc75b6d93f97974b"
+    },
+    {
+      "path": "resources/app/server/lib/central-iam.js",
+      "referenceBlob": "f341e33a14923ab08bd506fae832b73dfdab9bd3",
+      "mainAtStartBlob": "468bbba9b1f336d5ce3a0238825aded324c86a12",
+      "unchangedAtStart": false,
+      "workingSha256": "357d40a2bba42f6af49ca7f42d1bae31d27870618d555b253d0245cb446df78b"
+    },
+    {
+      "path": "resources/app/server/lib/auth.js",
+      "referenceBlob": "6abfc351373dfc3185c339bf3440125416273e9e",
+      "mainAtStartBlob": "41a78cf6fb9213de6c2c8affbd0ea3bb31f5f3c1",
+      "unchangedAtStart": false,
+      "workingSha256": "e0a00e43ea152bd53c756db2cd9d700f4abd4c8288ce6e3163c4c9743d3400af"
+    },
+    {
+      "path": "resources/app/server/lib/collection-workspaces.js",
+      "referenceBlob": "6a06417fb19239a3de81bb3dfee9cd7a9af500dd",
+      "mainAtStartBlob": "6a06417fb19239a3de81bb3dfee9cd7a9af500dd",
+      "unchangedAtStart": true,
+      "workingSha256": "22680df26fe696a4ca091f26e24b6ed6a3dd02e6d98ac283869278d5ebe5f177"
+    },
+    {
+      "path": "resources/app/server/lib/collection-replication.js",
+      "referenceBlob": "c6b9a4087ceb7a26a35fd7d307f23fc385047e94",
+      "mainAtStartBlob": "c6b9a4087ceb7a26a35fd7d307f23fc385047e94",
+      "unchangedAtStart": true,
+      "workingSha256": "9272017f6891cd5873fe48aede0e0a3c61126ef4ac12ca78fa59ee345ce8ca5c"
+    },
+    {
+      "path": "resources/app/server/lib/collection-pricing-service.js",
+      "referenceBlob": "8d97e26bfcd035c00818ba77d54c1079892adfa3",
+      "mainAtStartBlob": "8d97e26bfcd035c00818ba77d54c1079892adfa3",
+      "unchangedAtStart": true,
+      "workingSha256": "7304ea39bb872c7c22a0362fb4f373b8f61a43f546bcf7473bb5c38af4297cb2"
+    },
+    {
+      "path": "resources/app/public/business-rules.js",
+      "referenceBlob": "e798fc52942fbc42519a9667bf97a1b145451a88",
+      "mainAtStartBlob": "e798fc52942fbc42519a9667bf97a1b145451a88",
+      "unchangedAtStart": true,
+      "workingSha256": "ee1327eb872b65fb8101257c6d3bdc21c9b232975506dbacaf73bef40df110f5"
+    },
+    {
+      "path": "resources/app/public/fx-calculation-engine.js",
+      "referenceBlob": "e7565e9d0b6b9ee644d902dd9dcc94b53e60072f",
+      "mainAtStartBlob": "e7565e9d0b6b9ee644d902dd9dcc94b53e60072f",
+      "unchangedAtStart": true,
+      "workingSha256": "a7a80807ab9ca783d8d32b0832ea7a4adbeb0af90a530b02e3c07c2a98b9eaa7"
+    },
+    {
+      "path": "resources/app/public/collection-pricing-engine.js",
+      "referenceBlob": "ce8acc70624a23c177893865e22b68967d961477",
+      "mainAtStartBlob": "ce8acc70624a23c177893865e22b68967d961477",
+      "unchangedAtStart": true,
+      "workingSha256": "48729b6bb5e7be6a25078fbc46f5e689392927fa234840efff147d80b5ee5542"
+    },
+    {
+      "path": "resources/app/public/license-royalty-commissions.js",
+      "referenceBlob": "5b7b7131fef4dee5f4a2d0a02165d78e73def240",
+      "mainAtStartBlob": "ee1b91878c961d24df6b8ad2075db7bc7d495c80",
+      "unchangedAtStart": false,
+      "workingSha256": "0573322193392094c7ee690bfce625a912cba5291cacc7c1e398b4fc616f971c"
+    },
+    {
+      "path": "resources/app/public/app-main.js",
+      "referenceBlob": "29e300724c594ac3215e7dc4c061b0d1d39369b2",
+      "mainAtStartBlob": "27422aea355fbbb1e355023641a6060985fe225e",
+      "unchangedAtStart": false,
+      "workingSha256": "c8d31eb52f5e8a6c7ad8ec51de1202c0b3359044e3bc3166173ccce144a2934c"
+    },
+    {
+      "path": "resources/app/tests/helpers/sync-sim.js",
+      "referenceBlob": "ce6ec2a65f7d9119cd8611dfbb597aeef2ba70c8",
+      "mainAtStartBlob": "ce6ec2a65f7d9119cd8611dfbb597aeef2ba70c8",
+      "unchangedAtStart": true,
+      "workingSha256": "c068254c519eb8e602baf5cce188c7a7c43bac71caa9901cf840136f8a623704"
+    },
+    {
+      "path": "resources/app/tests/sync-simulation-v20261009.test.js",
+      "referenceBlob": "67d42d2b4490a9c86a2fa6bd1fac23e1a34d4195",
+      "mainAtStartBlob": "6c2ffefd17b2bcc47d5277e82c2d88427fb199ff",
+      "unchangedAtStart": false,
+      "workingSha256": "b85e056486232755ead25bfff048de41827fb1071fb8e5d03df534af0832270b"
+    },
+    {
+      "path": "resources/app/tests/fixtures/financial-contract-vectors.json",
+      "referenceBlob": "583c99af63902dea1a85e75a47a8a0a5b98f2689",
+      "mainAtStartBlob": "583c99af63902dea1a85e75a47a8a0a5b98f2689",
+      "unchangedAtStart": true,
+      "workingSha256": "7dfbf60b6b5f305f2bc5bbc70eaef1acb2d6b88fae5ce0d92ffa70dd39efafb9"
+    }
+  ],
+  "inheritance": {
+    "fullRegression": "Historical only; current application tree differs. A new final full suite is required.",
+    "simulationSoak": "Historical 10-device/20000 operation evidence retained for unchanged local-db, sync-settings, shared-sync-policy and helper. Not a new 50-user result.",
+    "desktopBenchmarks": "Historical Windows measurements only. Current UI changed; no current desktop performance certificate.",
+    "financialPolicy": "Existing contracts retained. Shared golden vectors executed again in targeted checks; no new financial priority invented.",
+    "provider": "Actual SMB/OneDrive unavailable in this environment. Local shared filesystem is not provider certification."
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "tests": 7918,
+  "pass": 7852,
+  "fail": 1,
+  "cancelled": 0,
+  "skipped": 65,
+  "todo": 0,
+  "initialFailures": 1,
+  "isolatedResolvedFailures": 1,
+  "effectivePass": 7853,
+  "unresolvedFailures": 0,
+  "status": "coverage-complete-with-isolated-timing-retry",
+  "files": 1120,
+  "source": "2a3de62964d4661b17a9f21b8edfbd1b93428004",
+  "applicationTree": "acca928275d1f2bc96ec703cc87b775ec5956034",
+  "productionTestTrees": {
+    "server": "08311cd6bbd68bdcf7860a6fe56aa2f1e8dbe7b5",
+    "public": "f312707fc88f172643c4175e2a7357a29ce87092",
+    "tests": "cc165301b1c6c13443b846a3b6f9d68e8d8c0704"
+  },
+  "startedAt": "2026-10-26T02:15:06.909690+00:00",
+  "finishedAt": "2026-10-26T02:23:20.595149+00:00",
+  "commands": [
+    "cd resources/app && npm test",
+    "isolated --test-name-pattern on file-parser-isolation.test.js",
+    "node docs/audits/sync-e2e-20261025/resume-standard-suite.cjs"
+  ],
+  "concurrency": {
+    "initial": 4,
+    "remaining": 2,
+    "isolated": 1
+  },
+  "originalStandardRunCleanPass": false,
+  "sourceChangedDuringResume": false,
+  "note": "All 1120 unique test files reached via unchanged standard runner. One ticks>=5 timer assertion failed under 2-CPU contention, passed unchanged in isolation. Original failure retained; passed batches were not rerun."
+}
