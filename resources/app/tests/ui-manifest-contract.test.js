@@ -134,7 +134,7 @@ test('Main column separators cover both header tiers; classic frames do not add 
   assert.equal(rules[i].value,'1px solid var(--ui-group-divider)');
   assert.doesNotMatch(rules[i].selector,/tbody|td\b/);
  }
- const additional=entries.filter(d=>d.value==='1px solid var(--ui-group-divider)'&&!rules.includes(d));
+ const additional=entries.filter(d=>d.prop.startsWith('border')&&d.value==='1px solid var(--ui-group-divider)'&&!rules.includes(d));
  assert.ok(additional.length>0,'Restored surfaces must be bordered');
  assert.ok(additional.every(classicBorder),'Only approved shared surfaces may add another group divider');
 });
