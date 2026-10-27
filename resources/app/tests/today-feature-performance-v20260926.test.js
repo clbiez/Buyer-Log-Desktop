@@ -27,8 +27,8 @@ test('Global Flow görünmezken çizmez; kenar geometrisi ve dünya katmanı ön
   const liveAt=src.indexOf('function isLive()');
   assert.ok(liveAt>=0,'isLive guard must exist');
   const isLive=src.slice(liveAt,src.indexOf('async function refresh(',liveAt));
-  assert.match(isLive,/state\\.workspaceActive&&!document\\.hidden&&!state\\.collapsed&&state\\.inView/);
-  assert.match(isLive,/!\\(guard&&!guard\\.dataset\\.leaving\\)/,'açılış perdesi de çizimi engellemeli');
+  assert.match(isLive,/state\.workspaceActive&&!document\.hidden&&!state\.collapsed&&state\.inView/);
+  assert.match(isLive,/!\(guard&&!guard\.dataset\.leaving\)/,'açılış perdesi de çizimi engellemeli');
   assert.match(src,/if\(!rect\.width\|\|!rect\.height\)return null;/,'gizli sekmedeki tuval çizilmez');
   assert.match(src,/EDGE_SAMPLE_CACHE/);assert.match(src,/function baseLayer\(/);assert.match(src,/state\.paletteCache/);
   assert.doesNotMatch(src,/new MutationObserver\(\(\)=>\{\s*if\(state\.source===id/,'grid tablolarına MutationObserver bağlanmaz');
