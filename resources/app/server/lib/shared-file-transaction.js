@@ -82,7 +82,15 @@ function unpin(file){
     throw error;
   }
 }
-function removeEmpty(lockDir){try{fs.rmdirSync(lockDir);return true;}catch(error){if(['ENOENT','ENOTEMPTY','EEXIST'].includes(error.code))return error.code==='ENOENT';throw error;}}
+// Windows briefly denies rmdir while a concurrent reclaimer still holds a handle
+// on the directory (readdir/unpin). Same bounded policy as unlinkWithRetry; a
+// persistent denial still fails closed instead of reporting the lock as gone.
+function removeEmpty(lockDir){
+  for(let attempt=0;;attempt++)try{fs.rmdirSync(lockDir);return true;}catch(error){
+    if(['ENOENT','ENOTEMPTY','EEXIST'].includes(error.code))return error.code==='ENOENT';
+    if(!['EACCES','EPERM','EBUSY'].includes(error.code)||attempt>=3)throw error;pause(15*(attempt+1));
+  }
+}
 function pinsProtectInitialization(lockDir){
   let protect=false;
   for(const name of fs.readdirSync(lockDir)){
@@ -249,7 +257,7 @@ async function pinAsync(lockDir,kind){
   try{handle=await fsp.open(file,'wx');created=true;await handle.writeFile(JSON.stringify(identity));await handle.close();handle=null;return file;}
   catch(error){try{if(handle)await handle.close();}finally{leaseRuntime.activePins.delete(file);if(created)await unpinAsync(file);}throw error;}
 }
-async function removeEmptyAsync(lockDir){try{await fsp.rmdir(lockDir);return true;}catch(error){if(['ENOENT','ENOTEMPTY','EEXIST'].includes(error.code))return error.code==='ENOENT';throw error;}}
+async function removeEmptyAsync(lockDir){try{await retryAsync(()=>fsp.rmdir(lockDir),4);return true;}catch(error){if(['ENOENT','ENOTEMPTY','EEXIST'].includes(error.code))return error.code==='ENOENT';throw error;}}
 async function pinsProtectInitializationAsync(lockDir){
   let protect=false;
   for(const name of await fsp.readdir(lockDir)){
