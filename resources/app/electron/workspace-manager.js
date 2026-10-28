@@ -13,7 +13,6 @@ const WORKSPACE_BAR_HEIGHT = 28;
 const MIN_WINDOW_WIDTH = 800;
 const MIN_WINDOW_HEIGHT = 600;
 const CLOSE_FORCE_DELAY_MS = 250;
-const STARTUP_MODULES = Object.freeze(['koleksiyon', 'cp', 'orders']);
 // Arayüz px tabanlı ve ~1600×900 DIP çalışma alanına göre tasarlandı. Windows
 // ölçeklendirmesi yüksek (%125/%150) küçük/orta ekranlarda CSS görünür alanı
 // ~1280×650'ye düşüyor; tablo alanları sıkışıyor. Sekme içeriğini bu referansa
@@ -87,7 +86,6 @@ function createWorkspaceManager(options) {
   let lastFocusedWindowId = 0;
   let rendererReadySignaled = false;
   let primaryWindowId = 0;
-  let startupState = null;
   let workspaceTheme = normalizeWorkspaceTheme(
     options.initialTheme,
     nativeTheme && nativeTheme.shouldUseDarkColors ? 'dark' : 'light',
@@ -396,7 +394,7 @@ function createWorkspaceManager(options) {
     });
   }
 
-  function createTab(moduleId, state, index = state.tabs.length, { startupWarm = false } = {}) {
+  function createTab(moduleId, state, index = state.tabs.length) {
     const module = normalizeModule(moduleId);
     const id = crypto.randomUUID();
     const view = new WebContentsView({
@@ -406,7 +404,7 @@ function createWorkspaceManager(options) {
         contextIsolation: true,
         sandbox: true,
         spellcheck: false,
-        backgroundThrottling: !startupWarm,
+        backgroundThrottling: true,
       },
     });
     view.setBackgroundColor(currentWindowTheme().background);
@@ -419,15 +417,10 @@ function createWorkspaceManager(options) {
       loading: true,
       closing: false,
       closeRequest: null,
-      startupWarm,
     };
     tabs.set(id, tab);
     contentsToTab.set(view.webContents.id, id);
     state.tabs.splice(clampIndex(index, state.tabs.length), 0, id);
-    if (startupWarm) {
-      const bounds = state.window.getContentBounds();
-      view.setBounds({ x:0, y:WORKSPACE_BAR_HEIGHT, width:bounds.width, height:Math.max(0,bounds.height-WORKSPACE_BAR_HEIGHT) });
-    }
 
     applyNavigationPolicy(view.webContents, origin);
     bindInputShortcuts(view.webContents);
@@ -469,7 +462,6 @@ function createWorkspaceManager(options) {
     });
     view.webContents.on('destroyed', () => {
       cleanupTab(tab);
-      if (startupState?.waiting === tab.id) advanceStartupTabs();
     });
     view.webContents.on('did-finish-load', () => {
       tab.loading = false;
@@ -487,49 +479,8 @@ function createWorkspaceManager(options) {
     url.searchParams.set('launch', String(Date.now()));
     url.searchParams.set('workspaceTab', id);
     url.searchParams.set('module', module);
-    if (startupWarm) url.searchParams.set('startupWarm', '1');
     view.webContents.loadURL(url.toString());
     return tab;
-  }
-
-  // Prepare only these three requested modules, one renderer at a time. Native
-  // views stay alive after preparation; activation never reloads their data.
-  function advanceStartupTabs() {
-    if (!startupState) return;
-    clearTimeout(startupState.timer);
-    startupState.waiting = '';
-    const state = stateForWindow(startupState.windowId);
-    if (!isLiveWindowState(state) || state.closingRequested || state.forceClosing) return;
-    while (startupState.queue.length) {
-      const module = startupState.queue.shift();
-      if (state.tabs.some(id => tabs.get(id)?.module === module)) continue;
-      const tab = createTab(module, state, state.tabs.length, { startupWarm:true });
-      startupState.waiting = tab.id;
-      // A failed preparation must not prevent the remaining tabs from opening.
-      // Keep the failed tab available with its own retry/error UI.
-      startupState.timer = setTimeout(() => {
-        log('Başlangıç sekmesi hazırlığı zaman aşımı: ' + module);
-        advanceStartupTabs();
-      }, 120000);
-      startupState.timer.unref?.();
-      notify(state);
-      return;
-    }
-  }
-
-  function startupReady(contents, modules) {
-    const tab = tabForContents(contents);
-    if (!tab) return false;
-    if (tab.startupWarm) {
-      tab.startupWarm = false;
-      contents.setBackgroundThrottling(true);
-      if (startupState?.waiting === tab.id) advanceStartupTabs();
-      return true;
-    }
-    if (startupState || tab.windowId !== primaryWindowId || !Array.isArray(modules)) return false;
-    startupState = { windowId:tab.windowId, queue:STARTUP_MODULES.filter(module => modules.includes(module)), waiting:'', timer:null };
-    advanceStartupTabs();
-    return true;
   }
 
   function windowOptions(bounds) {
@@ -876,7 +827,6 @@ function createWorkspaceManager(options) {
     WORKSPACE_BAR_HEIGHT,
     createWindow,
     openModule,
-    startupReady,
     updateTabModule,
     activateTab,
     moveTab,

@@ -20,9 +20,19 @@ function createOwnershipResolver(orderAccess, profiles = []) {
     // buyerDirectoryEntries ile aynı legacy kimlik yolu; keyfi scope/hiyerarşi yok.
     add(legacyNames, norm(profile.username || profile.displayName), profile);
   }
+  // Çözümleyici, sahiplik/profil kümesi değişince yeniden kurulur; bu ömür boyunca
+  // aynı alıcı adı aynı sonucu verir (CP satırları ve /api/cp-shared-edit için sha256 tekrarı kalkar).
+  const buyerCache = new Map();
   function resolveBuyer(name) {
     const normalized = norm(name);
     if (!normalized) return null;
+    if (buyerCache.has(normalized)) return buyerCache.get(normalized);
+    const owner = resolveBuyerUncached(normalized);
+    if (buyerCache.size >= 50000) buyerCache.clear();
+    buyerCache.set(normalized, owner);
+    return owner;
+  }
+  function resolveBuyerUncached(normalized) {
     const buyerId = crypto.createHash('sha256').update(normalized).digest('hex').slice(0, 20);
     const matches = new Map();
     for (const key of identityKeys({ buyerId, sourceId: `asas-buyer:${buyerId}` })) {

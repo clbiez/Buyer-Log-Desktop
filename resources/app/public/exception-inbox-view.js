@@ -32,7 +32,9 @@
   if(invalidate){dirty=true;cancel();}
   if(!bridge.allowed()){cancel();gate.clear();render();return;}
   if(!visible()){cancel();return;}
-  render();if(dirty&&!request&&!timer)timer=setTimeout(()=>{timer=0;void refresh();},180);
+  // Açılışta peş peşe gelen geçersiz kılmalar (yetki, CP/öncelik olayları) her biri
+  // 61 MB'lık tam CP okuması başlatıyordu; geçersiz kılmada son olaydan sonra bir kez okunur.
+  render();if(dirty&&!request&&!timer)timer=setTimeout(()=>{timer=0;void refresh();},invalidate?1200:180);
  }
  root()?.addEventListener('click',async event=>{
   if(event.target.closest('[data-inbox-refresh]')){await refresh();if(visible()&&(document.activeElement===document.body||root().contains(document.activeElement)))root().querySelector('[data-inbox-refresh]')?.focus({preventScroll:true});return;}
@@ -41,7 +43,9 @@
   const button=event.target.closest('[data-inbox-id]'),item=button&&gate.snapshot(user(),scope())?.items.find(item=>item.id===button.dataset.inboxId);if(!item||!bridge.allowed())return;
   button.disabled=true;try{await bridge.open(item);}catch(_){showToast(T('Kayıt açılamadı. Listeyi yenileyin.','The record could not be opened. Refresh the list.'));}finally{if(button.isConnected)button.disabled=false;}
  });
- for(const name of ['bl:user-access-applied','buyerlog:cp-write-ack','bl:global-flow-data-changed'])window.addEventListener(name,event=>{if(name==='bl:global-flow-data-changed'&&event.detail?.reason==='priority-ready')return;sync({invalidate:true});});
+ for(const name of ['bl:user-access-applied','buyerlog:cp-write-ack','bl:global-flow-data-changed'])window.addEventListener(name,event=>{
+  // Kutu yalnız CP verisini okur: yalnız Siparişler'i etkileyen değişiklik tam CP okuması tetiklemez.
+  const tables=event.detail?.tables;if(name==='bl:global-flow-data-changed'&&(event.detail?.reason==='priority-ready'||(Array.isArray(tables)&&!tables.includes('cp'))))return;sync({invalidate:true});});
  document.addEventListener('bl:overview-layout-changed',()=>sync());
  window.BLExceptionInboxView={sync,refresh,render};sync();
 })();

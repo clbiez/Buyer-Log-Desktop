@@ -53,6 +53,8 @@ const { createSharedPersonalBackupService } = require('./lib/shared-personal-bac
 const { createUserRestoreService } = require('./lib/user-restore-service');
 const { createFullRestoreService, recoverInterruptedRestoresSync } = require('./lib/full-restore-service');
 const { isClientRequestAborted } = require('./lib/http-errors');
+const { stringifyWithDates } = require('./lib/json-dates');
+const { stampAssetHashes, warmAssetHashes, immutableForRequest } = require('./lib/static-asset-hash');
 // v7.81: normalizeHorizonGroups artık kullanılmıyor — Horizon grupları kaldırıldı.
 
 const SERVER_BOOT_STARTED_AT = Date.now();
@@ -470,10 +472,13 @@ app.get('/api/auth-status', auth.statusHandler);
 // erişilebilir olmalıdır. Statik dosya katmanı güvenlik geçitlerinden sonra yer aldığı
 // için yalnız belirli UI dosyalarını açık rotalar üzerinden sunuyoruz.
 // Fixed UI-only allowlist. No wildcard and no user data is exposed here.
+// İçerik özeti eşleşen istek kalıcı önbelleğe alınabilir (lib/static-asset-hash).
+const publicAssetCacheControl = (req, file) => immutableForRequest(file, req.originalUrl || req.url) ? 'public, max-age=31536000, immutable' : 'no-cache';
 for (const file of ['giris.css', 'ui-tokens.css', 'ui-components.css', 'ui-appearance.js']) {
-  app.get('/' + file, (_req, res) => {
-    res.set('Cache-Control', 'no-cache');
-    res.type(file.endsWith('.css') ? 'text/css' : 'application/javascript').sendFile(path.join(__dirname, '..', 'public', file));
+  app.get('/' + file, (req, res) => {
+    const full = path.join(__dirname, '..', 'public', file);
+    res.set('Cache-Control', publicAssetCacheControl(req, full));
+    res.type(file.endsWith('.css') ? 'text/css' : 'application/javascript').sendFile(full);
   });
 }
 for (const file of ['IBMPlexSans.woff2', 'IBMPlexMono.woff2', 'barlow-condensed-400-latin.woff2', 'barlow-condensed-400-latin-ext.woff2', 'barlow-condensed-600-latin.woff2', 'barlow-condensed-600-latin-ext.woff2']) {
@@ -486,9 +491,10 @@ for (const file of ['IBMPlexSans.woff2', 'IBMPlexMono.woff2', 'barlow-condensed-
 // Shared Sync / giriş mesajları seçili dilde gösterilir). Yalnız arayüz sözlüğü ve
 // çeviri motorudur; iş verisi taşımaz.
 for (const file of ['i18n-dictionary.js', 'i18n-runtime.js']) {
-  app.get('/' + file, (_req, res) => {
-    res.set('Cache-Control', 'no-cache');
-    res.type('application/javascript').sendFile(path.join(__dirname, '..', 'public', file));
+  app.get('/' + file, (req, res) => {
+    const full = path.join(__dirname, '..', 'public', file);
+    res.set('Cache-Control', publicAssetCacheControl(req, full));
+    res.type('application/javascript').sendFile(full);
   });
 }
 // Uygulama simgesi giriş/kullanıcı seçimi ekranında ve favicon'da oturumdan önce
@@ -6440,7 +6446,8 @@ const INDEX_TEMPLATE_FILE = path.join(__dirname, '..', 'public', 'index.html');
 let INDEX_TEMPLATE_CACHE = null;
 function renderIndexTemplate() {
   if (INDEX_TEMPLATE_CACHE == null) INDEX_TEMPLATE_CACHE = fs.readFileSync(INDEX_TEMPLATE_FILE, 'utf8');
-  return INDEX_TEMPLATE_CACHE
+  // Yerel betik/stil adreslerine içerik özeti eklenir (kalıcı tarayıcı önbelleği; lib/static-asset-hash).
+  return stampAssetHashes(INDEX_TEMPLATE_CACHE, path.join(__dirname, '..', 'public'), '__BL_ASSET_VERSION__')
     .replace(/__BL_CANONICAL_VERSION__/g, APP_VERSION)
     .replace(/__BL_ASSET_VERSION__/g, APP_VERSION)
     .replace(/__BL_DISPLAY_VERSION__/g, DISPLAY_VERSION);
@@ -6515,9 +6522,11 @@ app.use((req, res, next) => {
 });
 app.use(express.static(path.join(__dirname, '..', 'public'), {
   index: 'index.html',
-  setHeaders(res, filePath) {
+  setHeaders(res, filePath, stat) {
     if (res.getHeader('Cache-Control')) return;
-    res.setHeader('Cache-Control', path.extname(filePath).toLowerCase() === '.html' ? 'no-store' : 'no-cache');
+    const html = path.extname(filePath).toLowerCase() === '.html';
+    const immutable = !html && immutableForRequest(filePath, res.req && (res.req.originalUrl || res.req.url), stat);
+    res.setHeader('Cache-Control', html ? 'no-store' : immutable ? 'public, max-age=31536000, immutable' : 'no-cache');
   },
 }));
 
@@ -6819,6 +6828,18 @@ async function ensureDataLoaded(value){
   return initialDataLoadPromises.get(id);
 }
 
+/* Backlog uçları soğuk açılışta veriyi doğrudan Excel'den yeniden ayrıştırıyordu.
+   Bu, aynı içeriği yeni bir loadedAt ile yüklüyor; model anlık görüntüsüyle ve
+   hazır sayfa önbelleğiyle eşleşme bozuluyor, sonraki her açılışta CP/Siparişler/
+   Genel Bakış önbelleği ıskalayıp sunucuda yeniden üretiliyordu. Önce diğer
+   uçlarla aynı anlık görüntü yolu kullanılır; anlık görüntü yoksa eski Excel
+   okuması aynen korunur. */
+async function ensureBacklogRuntime(id){
+  const runtime=await ensureDataLoaded(id);
+  if(runtime&&runtime.loadedAt&&Array.isArray(runtime.asasOrders))return runtime;
+  return loadFromDisk(id,false);
+}
+
 // KUR.xlsx seçili kaynak klasöründen içe alınır; normalleştirilmiş sonuç ortak
 // FX store'a yazılır. Diğer cihazların fiziksel Excel dosyasına erişmesi gerekmez.
 let folderFxSyncStatus = null;
@@ -6880,16 +6901,11 @@ function dateOnlyISO(d) {
 }
 // Yanit govdesi eskiden IKI kez dolasiliyordu: once jsonDateSafe tum agaci klonluyor
 // (10.000 satir x ~45 alan icin satir basina yeni nesne), sonra res.json ayni agaci
-// JSON.stringify ile bir kez daha geziyordu. Asagidaki yol tek gecistir: stringify'in
-// replacer'i Date alanlarini yerinde donusturur, ara klon hic olusmaz.
-// Not: replacer'a gelen deger Date.prototype.toJSON'dan gecmis olur; ham Date'e
-// tasiyici nesne uzerinden (this[key]) erisilir.
-function dateSafeReplacer(key, value) {
-  const raw = this[key];
-  return raw instanceof Date ? dateOnlyISO(raw) : value;
-}
+// JSON.stringify ile bir kez daha geziyordu. Asagidaki yol tek gecistir ve ara klon
+// olusturmaz; Date alanlari yerel YYYY-MM-DD yazilir. Anahtar basina replacer
+// cagrisi da yoktur (lib/json-dates, ~2,2x hizli; cikti birebir ayni).
 function sendDateSafeJson(res, value) {
-  const body = JSON.stringify(value, dateSafeReplacer);
+  const body = stringifyWithDates(value, dateOnlyISO);
   res.type('application/json');
   return res.send(body === undefined ? 'null' : body);
 }
@@ -8415,6 +8431,20 @@ app.get('/api/page-projection/:module', async (req, res) => {
   } catch (err) { apiError(res, err, 'Hazır ekran önbelleği okunamadı.'); }
 });
 
+// Hazır CP önbelleğiyle gelen satırlar için paylaşılan alan düzenleme yetkisi
+// (/api/data/cp'deki sharedAccessRows ile aynı karar). Yazma uçları yetkiyi
+// ayrıca denetler; bu yalnız arayüzün doğru kilitlenmesi içindir.
+// İstemci yalnız elindeki CP satırlarının sipariş kodlarını gönderir; yanıt onların
+// kilitli alt kümesidir (kapsam dışı kod açığa çıkmaz).
+const CP_SHARED_EDIT_MAX_CODES = 200000;
+app.post('/api/cp-shared-edit', userAccess.requireArea('cp'), express.json({ limit: '8mb' }), (req, res) => {
+  try {
+    const profile = req.currentUser, codes = Array.isArray(req.body && req.body.codes) ? req.body.codes : [];
+    if (codes.length > CP_SHARED_EDIT_MAX_CODES) return res.status(413).json({ ok:false, code:'CP_SHARED_EDIT_TOO_MANY', error:'Çok fazla sipariş kodu.', errorEn:'Too many order codes.' });
+    res.set('Cache-Control','no-store').json({ ok:true, denied: userAccess.sharedEditDeniedOrderCodes(profile && profile.id, codes) });
+  } catch (err) { apiError(res, err, 'Paylaşılan alan yetkisi okunamadı.'); }
+});
+
 const pageProjectionBuildInFlight = new Map();
 async function singleFlightPageProjection(currentUser, module, builder) {
   const ctx = pageProjectionContext(currentUser), key = `${ctx.id}\u0000${ctx.contextHash}\u0000${module}`;
@@ -8690,7 +8720,7 @@ app.get('/api/backlog-source-columns', userAccess.requireArea('backlog'), async 
   try{
     assertSourceFilters(['backlog'], req);
     const id=sourceUserId(req),runtime=cacheForUser(id);
-    if(!runtime.asasOrders) await loadFromDisk(id,false);
+    if(!runtime.asasOrders) await ensureBacklogRuntime(id);
     await ensureBacklogSourceFields(id);
     const active=cacheForUser(id),overrides=effectiveOverridesForUser(id);
     const backlogOrders=userAccess.filterRowsByScope(req.currentUser,ordersForTarget(active,'backlog',overrides));
@@ -8736,7 +8766,7 @@ app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res
   try{
     assertSourceFilters(['backlog'], req);
     const id=sourceUserId(req),runtime=cacheForUser(id);
-    if(!runtime.asasOrders) await loadFromDisk(id,false);
+    if(!runtime.asasOrders) await ensureBacklogRuntime(id);
     await ensureBacklogSourceFields(id);
     const active=cacheForUser(id),overrides=effectiveOverridesForUser(id);
     const {retailFrom,retailTo,inStoreFrom,inStoreTo,exFactoryFrom,exFactoryTo,buyerGrup,groupBy,dimFilters,antrepoFrom,antrepoTo,antrepoDateLevels}=req.query;
@@ -12682,6 +12712,11 @@ if (process.env.NODE_ENV !== 'test') {
 
 const httpServer = app.listen(PORT, HOST, () => {
   markStartup('SERVER_READY', { host: HOST, port: PORT });
+  // İçerik özetleri ilk GET / beklemesin diye arka planda hesaplanır (lib/static-asset-hash).
+  setImmediate(() => {
+    try { const html = fs.readFileSync(INDEX_TEMPLATE_FILE, 'utf8'); void warmAssetHashes(html, path.join(__dirname, '..', 'public'), '__BL_ASSET_VERSION__').catch(() => {}); }
+    catch (_) {}
+  });
   const displayHost = HOST === '127.0.0.1' ? 'localhost' : HOST;
   console.log(`Buyer Log sunucusu çalışıyor: http://${displayHost}:${PORT}`);
   console.log(`Dinleme adresi: ${HOST} (yerel kullanım için varsayılan 127.0.0.1)`);

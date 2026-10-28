@@ -43,8 +43,18 @@
   ]);
 
   const text = value => String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
-  const fold = value => text(value).toLocaleUpperCase('tr-TR')
-    .replace(/İ/g, 'I').replace(/Ş/g, 'S').replace(/Ğ/g, 'G').replace(/Ü/g, 'U').replace(/Ö/g, 'O').replace(/Ç/g, 'C');
+  // Saf fonksiyon; satır başına her kural/etiket için çağrılıyordu ve tr-TR
+  // büyük harf dönüşümü sunucu kilitlenmelerinin ~%12'siydi. Kısa metinler
+  // sınırlı bir bellekte tutulur; sonuç birebir aynıdır.
+  const FOLD_CACHE = new Map();
+  const fold = value => {
+    const raw = String(value == null ? '' : value), cacheable = raw.length <= 160;
+    if (cacheable) { const hit = FOLD_CACHE.get(raw); if (hit !== undefined) return hit; }
+    const folded = text(raw).toLocaleUpperCase('tr-TR')
+      .replace(/İ/g, 'I').replace(/Ş/g, 'S').replace(/Ğ/g, 'G').replace(/Ü/g, 'U').replace(/Ö/g, 'O').replace(/Ç/g, 'C');
+    if (cacheable) { if (FOLD_CACHE.size >= 50000) FOLD_CACHE.clear(); FOLD_CACHE.set(raw, folded); }
+    return folded;
+  };
   const cleanId = value => String(value == null ? '' : value).toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
 
   function slugId(label, taken) {

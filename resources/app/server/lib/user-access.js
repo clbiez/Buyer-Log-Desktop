@@ -320,7 +320,16 @@ function migrateLegacyAuthStoreIfNeeded() {
 }
 
 function clean(value) { return String(value == null ? '' : value).trim(); }
-function norm(value) { return clean(value).toLocaleUpperCase('tr-TR'); }
+// Saf fonksiyon; kapsam filtresinde satır başına çağrılır. Kısa metinler sınırlı
+// bir bellekte tutulur (parse.js turknorm ile aynı desen); sonuç birebir aynıdır.
+const NORM_CACHE = new Map();
+function norm(value) {
+  const raw = String(value == null ? '' : value), cacheable = raw.length <= 160;
+  if (cacheable) { const hit = NORM_CACHE.get(raw); if (hit !== undefined) return hit; }
+  const normalized = clean(raw).toLocaleUpperCase('tr-TR');
+  if (cacheable) { if (NORM_CACHE.size >= 50000) NORM_CACHE.clear(); NORM_CACHE.set(raw, normalized); }
+  return normalized;
+}
 function usernameKey(value) { return centralIam.normalizeUsername(value); }
 function unique(values) {
   const seen = new Set(), out = [];
@@ -2481,6 +2490,20 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     sharedOwnerOf: (recordId, userId) => {
       const store = readStore(), profile = findProfile(store, clean(userId));
       return sharedOwnerResolverFor(store, authoritySnapshot)({ recordId, userId, systemRole:profile && profile.systemRole });
+    },
+    /* Hazır (sıkıştırılmış) CP sayfa önbelleği satır başına _canEditShared taşımaz.
+       Aynı çözümleyiciyle, istek anındaki sahiplik bilgisinden paylaşılan alanları
+       düzenleyemeyeceği sipariş kodları döner. Yalnız çağıranın verdiği (zaten
+       elindeki satırlardan gelen) kodlar değerlendirilir; kapsam dışı sipariş kodu
+       açığa çıkmaz. Satır anahtarı biçimi ('kod|model|renk') sharedAccessRows ile aynı
+       çok sahipli satır kuralını uygular; çözüm yalnız koda bağlıdır. */
+    sharedEditDeniedOrderCodes: (userId, codes) => {
+      const store = readStore(), profile = findProfile(store, clean(userId)), denied = [];
+      const resolve = sharedOwnerResolverFor(store, authoritySnapshot);
+      for (const code of new Set((Array.isArray(codes) ? codes : []).map(value => clean(value)).filter(value => /^\d{1,20}$/.test(value)))) {
+        if (!resolve({ recordId:`cp-order:${code}||`, userId, systemRole:profile && profile.systemRole }).allowed) denied.push(code);
+      }
+      return denied;
     },
     effectiveScopes, appendAudit,
     listHandler, suggestHandler, loginHandler, logoutHandler, currentHandler, requireSelection, requireModerator, requireUserAdmin, requirePermission, requireArea, requireAnyArea, requireCapability,

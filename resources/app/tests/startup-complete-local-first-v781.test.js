@@ -32,7 +32,8 @@ test('UI yerel state ile hazır olur; yardımcı yükler ve sync sonradan başla
   assert.match(block, /scheduleStartupScreenReady[\s\S]*UI_READY[\s\S]*signalStartupReady/);
   const scheduler=APP.slice(APP.indexOf('function scheduleStartupScreenReady('),start);
   assert.match(scheduler,/requestAnimationFrame\(\(\)=>requestAnimationFrame\(callback\)\)/,'visible startup still waits for two paint frames');
-  assert.match(scheduler,/startupWarm[\s\S]*setTimeout\(callback,0\)/,'unattached background Views must not stall on paint frames');
+  assert.doesNotMatch(APP,/startupWarm/,'no hidden native startup tabs: modules warm inside this renderer');
+  assert.match(APP.slice(start,start+4000),/\.then\(scheduleBackgroundModuleWarmup\)/,'authorized modules warm in the background after the first screen');
   assert.match(SERVER, /app\.post\('\/api\/startup\/ready'/);
   assert.match(SERVER, /BACKGROUND_SYNC_DELAY_MS\s*=\s*2500/);
   assert.match(SERVER, /if\s*\(!uiReadySignaled\)\s*return/);

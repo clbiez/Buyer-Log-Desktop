@@ -42,9 +42,10 @@
     return id?`row:${id}`:`unknown-row:${index}`;
   }
 
-  function optionKey(row,index=0){
+  // knownModel: aynı satır için zaten hesaplanmış modelKey (dizi geri çağrısının 3. argümanı sayılmaz).
+  function optionKey(row,index=0,knownModel){
     const colourCode=keyText(first(row,COLOUR_CODE_FIELDS));
-    const model=modelKey(row,index);
+    const model=typeof knownModel==='string'?knownModel:modelKey(row,index);
     return colourCode?`${model}|colour:${colourCode}`:`row:${keyText(stableId(row))||index}`;
   }
 
@@ -64,10 +65,12 @@
     const modelFor=typeof options.modelKey==='function'?options.modelKey:modelKey;
     const optionFor=typeof options.optionKey==='function'?options.optionKey:optionKey;
     const models=new Set(),optionsSeen=new Set();
+    // Varsayılan anahtarlarda opsiyon, aynı satırın model anahtarını yeniden hesaplamaz.
+    const defaultKeys=modelFor===modelKey&&optionFor===optionKey;
     list.forEach((row,index)=>{
-      const model=keyText(modelFor(row,index));if(model)models.add(model);
+      const rawModel=modelFor(row,index),model=keyText(rawModel);if(model)models.add(model);
       if(options.optionMode==='unique'){
-        const option=keyText(optionFor(row,index));if(option)optionsSeen.add(option);
+        const option=keyText(defaultKeys?optionKey(row,index,rawModel):optionFor(row,index));if(option)optionsSeen.add(option);
       }
     });
     return {rowCount:list.length,modelCount:models.size,optionCount:options.optionMode==='unique'?optionsSeen.size:list.length};

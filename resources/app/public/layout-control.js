@@ -365,7 +365,10 @@
     modal.querySelectorAll('[data-layout-file],[data-layout-rerun],[data-layout-queue]').forEach(button=>button.disabled=busy);
   }
   async function fetchCpRows(){
-    const response=await fetch('/api/data/cp',{credentials:'same-origin',cache:'no-store'});
+    // Hazır sayfa önbelleği varsa sunucu CP'yi yeniden üretmez.
+    let response=await fetch('/api/page-projection/cp',{credentials:'same-origin',cache:'no-store'});
+    // 404: önbellek yok; 409: kaynak filtresi bekliyor — /api/data/cp eskisi gibi yanıtlar.
+    if(response.status===404||response.status===409)response=await fetch('/api/data/cp',{credentials:'same-origin',cache:'no-store'});
     if(!response.ok) throw new Error('CP_REFERENCE_UNAVAILABLE');
     const data=await response.json();
     return Array.isArray(data&&data.rows)?data.rows:[];

@@ -26,6 +26,8 @@ const BOOTSTRAP_CORE=path.resolve(host.bootstrapCore||LAUNCHER_ROOT);
 const PORTABLE_ROOT=resolvePortableRoot({packaged:app.isPackaged,execPath:process.execPath,appPath:BOOTSTRAP_CORE});
 const LOG_FILE=path.join(PORTABLE_ROOT,'data','local','updater','updater.log');
 function log(event,meta={}){try{fs.mkdirSync(path.dirname(LOG_FILE),{recursive:true});fs.appendFileSync(LOG_FILE,JSON.stringify({at:new Date().toISOString(),event,...meta})+'\n','utf8');}catch(_){} }
+// Saha ölçümü: EXE başlangıcından itibaren geçen süre. Ölçüm hiçbir koşulda açılışı durdurmaz.
+const sinceProcessStartMs=()=>{try{return Math.round(process.uptime()*1000);}catch(_){return null;}};
 const confirmLauncher=()=>{try{if(typeof host.confirm==='function')host.confirm();}catch(_){} };
 
 /* TEK KOPYA KİLİDİ güncelleme durumuna dokunmadan ÖNCE alınır. Deneme (trial)
@@ -82,9 +84,36 @@ async function showLaunchNotice(){
     notice.loadURL('data:text/html;charset=utf-8,'+encodeURIComponent(html)).catch(reject);
   });}catch(error){if(!notice.isDestroyed())notice.destroy();throw error;}
   finally{clearTimeout(timer);}
-  log('launch-notice-visible');
+  log('launch-notice-visible',{sinceProcessStartMs:sinceProcessStartMs()});
 }
-function launchCore(){
+/* Normal açılışta seçili çekirdeğin bütünlük taraması (~2.500 dosya / 165 MB)
+ * ana süreçte senkron çalışıyordu; yavaş disk veya antivirüste açılış penceresi
+ * "Yanıt vermiyor" görünebiliyordu. Aynı doğrulayıcı (core-verification.js) bir
+ * işçi iş parçacığında çalışır; bütünlük hataları aynı kodla açılışı durdurur.
+ * İşçi başlatılamaz ya da beklenmedik biçimde biterse doğrulama ana süreçte
+ * aynen yapılır: tarama hiçbir koşulda atlanmaz. Kod satır içidir; böylece
+ * imzalı launcher dosya listesi değişmez. */
+const OFF_THREAD_VERIFIER=`const {parentPort,workerData}=require('worker_threads');
+try{require(workerData.module).verifyPackagedCore(workerData.core,workerData.version);parentPort.postMessage({ok:true});}
+catch(error){parentPort.postMessage({ok:false,code:String(error&&error.code||''),message:String(error&&error.message||error)});}`;
+function verifyPackagedCoreOffThread(core,version){
+  let Worker;
+  try{({Worker}=require('worker_threads'));}catch(_){return Promise.resolve(false);}
+  return new Promise((resolve,reject)=>{
+    let settled=false,worker;
+    const settle=(fn,value)=>{if(settled)return;settled=true;fn(value);try{worker&&worker.terminate();}catch(_){}};
+    try{worker=new Worker(OFF_THREAD_VERIFIER,{eval:true,workerData:{module:path.join(__dirname,'manual-patch','core-verification.js'),core,version}});}
+    catch(_){resolve(false);return;}
+    worker.once('message',message=>{
+      if(message&&message.ok===true)settle(resolve,true);
+      else if(/^(UPDATE|PATCH)_/.test(String(message&&message.code||'')))settle(reject,Object.assign(new Error(String(message.message)),{code:message.code}));
+      else settle(resolve,false);
+    });
+    worker.once('error',()=>settle(resolve,false));
+    worker.once('exit',()=>settle(resolve,false));
+  });
+}
+async function launchCore(){
 const lifecycle=createLauncherState({bootstrapCore:BOOTSTRAP_CORE,portableRoot:PORTABLE_ROOT});
 const recovered=app.isPackaged?lifecycle.rollbackExistingTrial():null;
 if(recovered)log('rollback-on-next-launch',{failedVersion:recovered.failed.version,restoredVersion:recovered.restored.version});
@@ -97,7 +126,29 @@ function verifySelected(selected){
   const relative=path.relative(path.join(PORTABLE_ROOT,'.buyerlog-versions'),selected.appCoreRoot);
   if(relative.split(path.sep)[0].startsWith('manual-'))patchManager.verifyInstalled(selected);
   else require('./manual-patch/core-verification').verifyPackagedCore(selected.appCoreRoot,selected.version);
-  log('core-verified',{version:selected.version,durationMs:Date.now()-started});
+  log('core-verified',{version:selected.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs()});
+}
+async function verifySelectedOffThread(selected){
+  if(!app.isPackaged)return;
+  const relative=path.relative(path.join(PORTABLE_ROOT,'.buyerlog-versions'),selected.appCoreRoot);
+  // İmzalı el yaması çekirdekleri kendi yöneticisiyle doğrulanır (nadir yol).
+  if(relative.split(path.sep)[0].startsWith('manual-'))return verifySelected(selected);
+  const started=Date.now();
+  // Senkron taramada olay döngüsü kilitliydi; artık boşta ve main.js henüz kendi
+  // işleyicilerini kaydetmedi. Bildirim kapatılırsa (Alt+F4) Electron'un varsayılan
+  // çıkışı denemedeki sağlam sürümü sonraki açılışta geri aldırabilirdi; ikinci kopya
+  // olayı da kaybolurdu. Bu aralıkta açılış sürer ve ikinci kopya bildirimi öne getirir.
+  const keepRunning=()=>{};
+  const focusNotice=()=>{const notice=global.__buyerLogLaunchNotice;if(notice&&!notice.isDestroyed()){try{notice.show();notice.focus();}catch(_){}}};
+  // Dinleyici kaydı en iyi çabadır: hiçbir koşulda doğrulamayı ya da açılışı durdurmaz.
+  const listen=(name,fn)=>{try{if(typeof app.on==='function')app.on(name,fn);}catch(_){}};
+  const unlisten=(name,fn)=>{try{if(typeof app.removeListener==='function')app.removeListener(name,fn);}catch(_){}};
+  listen('window-all-closed',keepRunning);listen('second-instance',focusNotice);
+  let verified;
+  try{verified=await verifyPackagedCoreOffThread(selected.appCoreRoot,selected.version);}
+  finally{unlisten('window-all-closed',keepRunning);unlisten('second-instance',focusNotice);}
+  if(!verified)return verifySelected(selected);
+  log('core-verified',{version:selected.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs(),offThread:true});
 }
 /* Bekleyen çekirdek bu launcher'dan daha yeni bir etkinleştirme protokolü
  * isterse deneme başlatılmaz; updater önce uygun launcher'ı kurar. */
@@ -127,7 +178,7 @@ if(app.isPackaged){
 const activationResult=app.isPackaged?lifecycle.activatePending():null;
 const activation=activationResult&&activationResult.activation||null;
 const selected=app.isPackaged?lifecycle.currentPointer():lifecycle.bootstrapPointer();
-verifySelected(selected);
+await verifySelectedOffThread(selected);
 if(activation)log('activation-started',{version:activation.version,previousVersion:activation.previous&&activation.previous.version||''});
 process.env.BUYER_LOG_BOOTSTRAP_APP_CORE=BOOTSTRAP_CORE;
 process.env.BUYER_LOG_ACTIVE_APP_CORE=selected.appCoreRoot;

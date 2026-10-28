@@ -2377,7 +2377,24 @@ function trustedDesktopShellSender(event) {
   } catch (_) { return false; }
 }
 
+/* GPU durumu. VDI/RDP ve bazı kurumsal sürücülerde Chromium yazılım çizimine
+ * düşer; o zaman bulanık arka plan ve hücre dalgası işlemciye yük olur. Durum
+ * teşhis için günlüğe yazılır ve arayüze yalnız "yazılım çizimi mi" bilgisi verilir. */
+function softwareCompositing() {
+  try { return !String((app.getGPUFeatureStatus() || {}).gpu_compositing || '').startsWith('enabled'); }
+  catch (_) { return false; }
+}
+function logGpuStatus(reason) {
+  try { log('GPU durumu (' + reason + '): ' + JSON.stringify(app.getGPUFeatureStatus())); }
+  catch (error) { log('GPU durumu okunamadı: ' + error.message); }
+}
+
 function registerIpc() {
+  // Argümansız, salt okunur: arayüz yalnız yazılım çizimi bilgisini alır.
+  ipcMain.handle('buyerlog:render-profile', event => {
+    if (!trustedBuyerLogIpcSender(event)) return null;
+    return { softwareCompositing: softwareCompositing() };
+  });
   ipcMain.handle('buyerlog:workspace-snapshot', event => {
     if (!workspace || !workspace.windowForShellContents(event.sender)) return null;
     return workspace.shellSnapshot(event);
@@ -2425,10 +2442,6 @@ function registerIpc() {
   ipcMain.handle('buyerlog:workspace-set-module', (event, moduleId) => {
     if (!workspace || !trustedBuyerLogIpcSender(event)) return false;
     return workspace.updateTabModule(event.sender, moduleId);
-  });
-  ipcMain.handle('buyerlog:workspace-startup-ready', (event, modules) => {
-    if (!workspace || !trustedBuyerLogIpcSender(event)) return false;
-    return workspace.startupReady(event.sender, modules);
   });
   ipcMain.handle('buyerlog:workspace-theme', (event, theme) => {
     if (!workspace || !trustedBuyerLogIpcSender(event)) return false;
@@ -2876,6 +2889,10 @@ function bootstrap() {
     showSplash(); // kurulum onarımı/sunucu beklemesi sırasında kullanıcı boş ekran görmesin
     applyDownloadPolicy(session.defaultSession);
     registerIpc();
+    logGpuStatus('ready');
+    app.on('child-process-gone', (_event, details) => {
+      if (details && details.type === 'GPU') { log('GPU süreci sonlandı: ' + JSON.stringify(details)); logGpuStatus('gpu-gone'); }
+    });
 
     try {
       ensureConfig(paths, APP_CORE_ROOT);

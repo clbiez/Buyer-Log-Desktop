@@ -84,37 +84,14 @@ function mockManager({ dialogResponse=0, dark=false }={}){
   return manager;
 }
 
-test('startup prepares authorized Collection/CP/Orders sequentially and retains each live view', () => {
+test('startup opens a single renderer; modules warm inside it instead of hidden native tabs', () => {
   const manager=mockManager(),state=manager.createWindow({module:'overview'});
-  const overview=manager.activeContents(state),activeId=state.activeTabId;
-  assert.equal(manager.startupReady(overview,['koleksiyon','cp','orders','source']),true);
-  assert.deepEqual(manager.snapshot(state).tabs.map(tab=>tab.module),['overview','koleksiyon']);
-  const collection=manager.allTabContents().find(contents=>contents!==overview);
-  assert.match(collection.getURL(),/startupWarm=1/);
-  assert.equal(manager.tabForContents(collection).view.options.webPreferences.backgroundThrottling,false);
-  assert.equal(state.activeTabId,activeId,'background preparation must not steal focus');
-  assert.equal(manager.startupReady(collection,[]),true);
-  assert.equal(collection.throttled,true,'restore normal background throttling after readiness');
-  assert.deepEqual(manager.snapshot(state).tabs.map(tab=>tab.module),['overview','koleksiyon','cp']);
-  const cp=manager.allTabContents().at(-1);manager.startupReady(cp,[]);
-  const orders=manager.allTabContents().at(-1);manager.startupReady(orders,[]);
-  assert.deepEqual(manager.snapshot(state).tabs.map(tab=>tab.module),['overview','koleksiyon','cp','orders']);
-  assert.equal(manager.startupReady(overview,['cp','orders']),false,'only one startup queue per session');
-  for(const contents of [collection,cp,orders]){
-    const tab=manager.tabForContents(contents);manager.openModule(state.window.id,tab.module);
-    assert.equal(manager.activeContents(state),contents,'activation reuses the prepared renderer');
-    assert.equal(contents.reloaded,undefined);assert.equal(contents.isDestroyed(),false);
-  }
-  manager.destroyAllWindows();
-});
-
-test('startup does not preload denied modules or duplicate already open tabs', () => {
-  const manager=mockManager(),state=manager.createWindow({module:'overview'});
-  const overview=manager.activeContents(state),cp=manager.openModule(state.window.id,'cp');
-  manager.startupReady(overview,['cp','orders']);
-  assert.deepEqual(manager.snapshot(state).tabs.map(tab=>tab.module),['overview','cp','orders']);
-  manager.startupReady(manager.allTabContents().at(-1),[]);
-  assert.equal(manager.activeContents(state),cp.view.webContents);
+  assert.deepEqual(manager.snapshot(state).tabs.map(tab=>tab.module),['overview']);
+  assert.equal(manager.startupReady,undefined,'no startup tab queue');
+  assert.doesNotMatch(manager.activeContents(state).getURL(),/startupWarm/);
+  assert.equal(manager.tabForContents(manager.activeContents(state)).view.options.webPreferences.backgroundThrottling,true);
+  assert.doesNotMatch(MANAGER,/startupWarm|STARTUP_MODULES/);
+  assert.doesNotMatch(MAIN,/workspace-startup-ready/);
   manager.destroyAllWindows();
 });
 

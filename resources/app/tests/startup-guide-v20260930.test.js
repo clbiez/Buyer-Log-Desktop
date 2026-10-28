@@ -46,11 +46,11 @@ test('core markup and data wait for the authenticated profile but not a slow pag
   button.onclick();assert.equal(completed,1);finishFade(h);assert.ok(!h.nodes.has('blBootGuard'));
   h.win.BLBootGuard.continue();assert.equal(completed,1,'a second Continue during the fade is ignored');
 });
-test('background startup tabs dismiss their curtain only after core, data and authenticated profile',()=>{
+test('a stale startupWarm address no longer auto-dismisses the curtain',()=>{
   const h=guardHarness('?module=orders&startupWarm=1');
-  h.win.BLBootGuard.ready();h.win.BLBootGuard.ready('data');
-  assert.equal(h.nodes.get('blBootGuard').dataset.leaving,undefined);
-  h.profile();assert.equal(h.nodes.get('blBootGuard').dataset.leaving,'1');
+  h.win.BLBootGuard.ready();h.win.BLBootGuard.ready('data');h.profile();
+  const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.ready,'1');assert.equal(g.dataset.leaving,undefined);
+  assert.doesNotMatch(INDEX,/startupWarm|BL_STARTUP_WARMING/);
 });
 test('requested table module is selected before eager helpers and core health does not wait for images',()=>{
   assert.ok(INDEX.indexOf('window.BL_BOOT_MODULE=module')<INDEX.indexOf('<script src="app-main.js'));

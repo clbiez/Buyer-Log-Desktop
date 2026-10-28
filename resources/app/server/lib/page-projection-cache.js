@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const zlib = require('zlib');
 const { promisify } = require('util');
 const { LOCAL_DATA_ROOT } = require('../user-data');
+const { stringifyWithDates } = require('./json-dates');
 
 const gzip = promisify(zlib.gzip);
 const gunzip = promisify(zlib.gunzip);
@@ -35,10 +36,6 @@ function generationId() { return `${Date.now().toString(36)}-${crypto.randomByte
 function dateOnlyISO(d) {
   const p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
-}
-function dateSafeReplacer(key, value) {
-  const raw = this && this[key];
-  return raw instanceof Date ? dateOnlyISO(raw) : value;
 }
 function checksum(buffer) { return crypto.createHash('sha256').update(buffer).digest('hex'); }
 function lruKey(file, expectedChecksum) { return `${file}\u0000${expectedChecksum || ''}`; }
@@ -86,7 +83,7 @@ async function atomicWrite(file, buffer) {
   }
 }
 async function writeJsonGzip(file, value) {
-  const json = Buffer.from(JSON.stringify(value, dateSafeReplacer), 'utf8');
+  const json = Buffer.from(stringifyWithDates(value, dateOnlyISO), 'utf8');
   const compressed = await gzip(json, { level: 4 });
   await atomicWrite(file, compressed);
   lruForgetFile(file);
