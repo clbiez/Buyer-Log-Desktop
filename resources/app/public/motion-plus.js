@@ -21,7 +21,9 @@
   const OVERLAYS='dialog[open],[role="dialog"][aria-hidden="false"],.colPanel.show,.vfMenu.show,.toolbarMoreMenu:not([hidden]),.userMenu:not([hidden])';
   // Controls follow their real busy states; only an active refresh keeps rotating.
   // One-shot click feedback and other Motion+ effects remain finite.
-  const REFRESH_CONTROLS='#topRefreshBtn,#serverRefreshBtn,#cpRefreshBtn,#ordersRefreshBtn,#lflRefreshBtn,#intakeRefreshBtn,#backlogOverviewRefresh';
+  const REFRESH_IDS=['topRefreshBtn','serverRefreshBtn','cpRefreshBtn','ordersRefreshBtn','lflRefreshBtn','intakeRefreshBtn','backlogOverviewRefresh'];
+  const REFRESH_CONTROLS=REFRESH_IDS.map(id=>'#'+id).join(',');
+  const ACTIVITY_CONTROLS=REFRESH_IDS.map(id=>[id,'spinning','refresh']).concat([['syncStatusBadge','is-syncing','sync']]);
   const SYNC_CONTROLS='#syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,[data-plm-sync-category]';
   const activityAnimations=new Map();
   let generation=0,activeTab='',lastWave=-1,overlays=new WeakMap();
@@ -169,10 +171,7 @@
     else activityAnimations.delete(control);
   }
   function bindActivityControls(){
-    for(const [id,activeClass,kind] of [
-      ['topRefreshBtn','spinning','refresh'],['serverRefreshBtn','spinning','refresh'],
-      ['syncStatusBadge','is-syncing','sync']
-    ]){
+    for(const [id,activeClass,kind] of ACTIVITY_CONTROLS){
       const control=doc.getElementById?.(id);
       if(!control)continue;
       const update=()=>updateActivity(control,activeClass,kind);
@@ -183,10 +182,7 @@
     }
   }
   function restoreActivityControls(){
-    for(const [id,state,kind] of [
-      ['topRefreshBtn','spinning','refresh'],['serverRefreshBtn','spinning','refresh'],
-      ['syncStatusBadge','is-syncing','sync']
-    ]){
+    for(const [id,state,kind] of ACTIVITY_CONTROLS){
       const control=doc.getElementById?.(id);
       if(control)updateActivity(control,state,kind);
     }
