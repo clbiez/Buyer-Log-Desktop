@@ -23,14 +23,18 @@ function harness({reduced=false,hidden=false,off=false}={}){
     },querySelector:()=>icon,icon};
   }
   const controls=Object.fromEntries(
-    ['topRefreshBtn','serverRefreshBtn','syncStatusBadge','cpRefreshBtn','cpPlmSyncBtn'].map(id=>[id,el(id)])
+    ['topRefreshBtn','serverRefreshBtn','syncStatusBadge','cpRefreshBtn','ordersRefreshBtn','cpPlmSyncBtn'].map(id=>[id,el(id)])
   );
   const doc={
     documentElement:{dataset:{blMotion:off?'off':'on'}},
     body:{dataset:{activeTab:'cp'}},
     visibilityState:hidden?'hidden':'visible',readyState:'complete',
     getElementById:id=>controls[id]||null,
-    querySelector:()=>null,querySelectorAll:()=>[],
+    querySelector:selector=>selector==='main > section.active'?{
+      isConnected:true,hidden:false,closest:()=>null,
+      getBoundingClientRect:()=>({left:0,top:0,right:800,bottom:600,width:800,height:600}),
+      querySelector:()=>null,querySelectorAll:()=>[]
+    }:null,querySelectorAll:()=>[],
     addEventListener:(name,handler)=>{listeners[name]=handler;}
   };
   const root={
@@ -46,10 +50,13 @@ function harness({reduced=false,hidden=false,off=false}={}){
     listeners.click({target:{closest:selector=>
       selector.includes('#'+id)?control:null}});
   }
-  return {root,doc,controls,animations,click,listeners};
+  return {root,doc,controls,animations,click,listeners,
+    changeTab(name){doc.body.dataset.activeTab=name;observers.get(undefined)?.();},
+    visibility(state){doc.visibilityState=state;listeners.visibilitychange?.();}
+  };
 }
 
-test('7.0.294 refresh rotation and sync pulse return through shared finite Motion+',()=>{
+test('one-shot refresh feedback and sync pulse retain finite Motion+ durations',()=>{
   const h=harness();
   h.click('cpRefreshBtn');
   h.click('cpPlmSyncBtn');
@@ -60,16 +67,42 @@ test('7.0.294 refresh rotation and sync pulse return through shared finite Motio
   assert.equal(h.animations[1].frames[1].opacity,.48);
   assert.ok(h.animations.every(a=>Number.isFinite(a.options.iterations)&&a.options.iterations<=8));
 });
-test('busy state is animated on entrance and stopped when actual status clears',()=>{
-  const h=harness(),{topRefreshBtn,syncStatusBadge}=h.controls;
+test('active refresh rotates indefinitely and stops only when busy state clears',()=>{
+  const h=harness(),{topRefreshBtn,serverRefreshBtn,cpRefreshBtn,ordersRefreshBtn,syncStatusBadge}=h.controls;
   topRefreshBtn.setClass('spinning',true);
+  serverRefreshBtn.setClass('spinning',true);
+  cpRefreshBtn.setClass('spinning',true);
+  ordersRefreshBtn.setClass('spinning',true);
   syncStatusBadge.setClass('is-syncing',true);
-  assert.equal(h.animations.length,2);
-  assert.equal(h.animations[0].options.iterations,8);
-  assert.equal(h.animations[1].options.iterations,8);
+  assert.equal(h.animations.length,5);
+  assert.ok(h.animations.slice(0,4).every(a=>a.options.iterations===Infinity));
+  assert.equal(h.animations[4].options.iterations,8);
   topRefreshBtn.setClass('spinning',false);
+  assert.equal(h.animations[0].cancelled,true);
+  assert.equal(h.animations[1].cancelled,false);
+  serverRefreshBtn.setClass('spinning',false);
+  cpRefreshBtn.setClass('spinning',false);
+  ordersRefreshBtn.setClass('spinning',false);
   syncStatusBadge.setClass('is-syncing',false);
   assert.ok(h.animations.every(x=>x.cancelled));
+});
+test('busy refresh resumes after a tab change and visibility restoration',()=>{
+  const h=harness(),button=h.controls.topRefreshBtn;
+  button.setClass('spinning',true);
+  const first=h.animations.at(-1);
+  h.changeTab('orders');
+  assert.equal(first.cancelled,true);
+  const second=h.animations.at(-1);
+  assert.notEqual(second,first);
+  assert.equal(second.options.iterations,Infinity);
+  h.visibility('hidden');
+  assert.equal(second.cancelled,true);
+  h.visibility('visible');
+  const third=h.animations.at(-1);
+  assert.notEqual(third,second);
+  assert.equal(third.options.iterations,Infinity);
+  button.setClass('spinning',false);
+  assert.equal(third.cancelled,true);
 });
 test('no action animation with reduced motion, hidden tab, or opt-out',()=>{
   for(const opt of [{reduced:true},{hidden:true},{off:true}]){
@@ -81,12 +114,13 @@ test('no action animation with reduced motion, hidden tab, or opt-out',()=>{
     assert.equal(h.animations.length,0,JSON.stringify(opt));
   }
 });
-test('control feedback keeps finite timings, theme tokens and no independent keyframe loop',()=>{
+test('only real refresh activity may loop; other controls remain finite',()=>{
   const script=read('motion-plus.js'),css=read('ui-motion.css'),components=read('app.css');
   assert.match(script,/REFRESH_CONTROLS/);
   assert.match(script,/SYNC_CONTROLS/);
   assert.match(script,/syncStatusBadge','is-syncing','sync'/);
   assert.match(components,/\[data-plm-sync-category\]\) \.ic\{transform-origin:center/);
-  assert.doesNotMatch(script,/setInterval\(|iterations\s*:\s*Infinity/);
+  assert.match(script,/iterations:kind==='refresh-active'\?Infinity:2/);
+  assert.doesNotMatch(script,/setInterval\(/);
   assert.doesNotMatch(css,/animation:[^;]*infinite/);
 });

@@ -1,6 +1,7 @@
 /* Buyer Log Motion+ · shared motion language (DESIGN_SYSTEM.md §6).
    Geometry, DOM ownership, tab state and business data never change here.
-   All effects are finite and viewport-bounded; no animation loops/observers of table cells. */
+   Page/cell effects are finite. An active Refresh indicator runs only while its
+   refresh busy class is present; no animation loops/observers of table cells. */
 (function(root){
   'use strict';
   const doc=root.document;if(!doc)return;
@@ -18,9 +19,11 @@
   const CARDS='.bpaTile,.pricingMetric,.ovPulseKpi,.ovMetricRow,.ovCollectionCard,.kolModelCard,.kolCard,.lcCard,.mfrCard,.psaKpi,.cpaCard,.ovWidget';
   const BARS='.ovMetricBars em,.bpaBarFill,.bpaProgressFill,.ovPulseMini i';
   const OVERLAYS='dialog[open],[role="dialog"][aria-hidden="false"],.colPanel.show,.vfMenu.show,.toolbarMoreMenu:not([hidden]),.userMenu:not([hidden])';
-  // Short, state-driven control motion replaces the removed 7.0.294 refresh
-  // rotation / SYNC pulse without introducing perpetual animation loops.
-  const REFRESH_CONTROLS='#topRefreshBtn,#serverRefreshBtn,#cpRefreshBtn,#ordersRefreshBtn,#lflRefreshBtn,#intakeRefreshBtn,#backlogOverviewRefresh';
+  // Controls follow their real busy states; only an active refresh keeps rotating.
+  // One-shot click feedback and other Motion+ effects remain finite.
+  const REFRESH_IDS=['topRefreshBtn','serverRefreshBtn','cpRefreshBtn','ordersRefreshBtn','lflRefreshBtn','intakeRefreshBtn','backlogOverviewRefresh'];
+  const REFRESH_CONTROLS=REFRESH_IDS.map(id=>'#'+id).join(',');
+  const ACTIVITY_CONTROLS=REFRESH_IDS.map(id=>[id,'spinning','refresh']).concat([['syncStatusBadge','is-syncing','sync']]);
   const SYNC_CONTROLS='#syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,[data-plm-sync-category]';
   const activityAnimations=new Map();
   let generation=0,activeTab='',lastWave=-1,overlays=new WeakMap();
@@ -126,6 +129,7 @@
     generation++;
     const token=generation;
     cancelPending();
+    restoreActivityControls(); // Tab changes must not silence a running refresh.
     later(()=>{if(token===generation&&visible(view))enterPage(view);},85);
     later(()=>{if(token===generation&&visible(view))waveTable(view,token);},185);
     // Initial async render can deliver the table after the first paint.
@@ -147,7 +151,7 @@
     if(kind==='overlay')return animate(element,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('overlay')});
     if(kind==='refresh'||kind==='refresh-active')return animate(element,
       [{transform:'rotate(0deg)'},{transform:'rotate(360deg)'}],
-      {duration:duration('card')*2,iterations:kind==='refresh-active'?8:2});
+      {duration:duration('card')*2,iterations:kind==='refresh-active'?Infinity:2});
     if(kind==='sync'||kind==='sync-active')return animate(element,
       [{opacity:1,transform:'scale(1)'},{opacity:.48,transform:'scale(1.08)'},{opacity:1,transform:'scale(1)'}],
       {duration:duration('card')*2,iterations:kind==='sync-active'?8:2});
@@ -167,10 +171,7 @@
     else activityAnimations.delete(control);
   }
   function bindActivityControls(){
-    for(const [id,activeClass,kind] of [
-      ['topRefreshBtn','spinning','refresh'],['serverRefreshBtn','spinning','refresh'],
-      ['syncStatusBadge','is-syncing','sync']
-    ]){
+    for(const [id,activeClass,kind] of ACTIVITY_CONTROLS){
       const control=doc.getElementById?.(id);
       if(!control)continue;
       const update=()=>updateActivity(control,activeClass,kind);
@@ -180,19 +181,16 @@
       update();
     }
   }
+  function restoreActivityControls(){
+    for(const [id,state,kind] of ACTIVITY_CONTROLS){
+      const control=doc.getElementById?.(id);
+      if(control)updateActivity(control,state,kind);
+    }
+  }
   function setEnabled(value){
     html.dataset.blMotion=value?'on':'off';
     if(!value)cancelPending();
-    else {
-      activate(true);
-      for(const [id,state,kind] of [
-        ['topRefreshBtn','spinning','refresh'],['serverRefreshBtn','spinning','refresh'],
-        ['syncStatusBadge','is-syncing','sync']
-      ]){
-        const el=doc.getElementById?.(id);
-        if(el)updateActivity(el,state,kind);
-      }
-    }
+    else activate(true); // activate restores any in-progress refresh after cancellation.
   }
   function mount(){
     bindActivityControls();
@@ -214,16 +212,13 @@
     root.addEventListener?.('bl:overview-motion-changed',()=>{if(enabled())activate(true);else cancelPending();});
     doc.addEventListener('visibilitychange',()=>{
       if(doc.visibilityState==='hidden')cancelPending();
-      else for(const [id,state,kind] of [
-        ['topRefreshBtn','spinning','refresh'],['serverRefreshBtn','spinning','refresh'],
-        ['syncStatusBadge','is-syncing','sync']
-      ]){
-        const el=doc.getElementById?.(id);
-        if(el)updateActivity(el,state,kind);
-      }
+      else restoreActivityControls();
     });
     const media=root.matchMedia?.('(prefers-reduced-motion: reduce)');
-    media?.addEventListener?.('change',()=>{if(reduce())cancelPending();});
+    media?.addEventListener?.('change',()=>{
+      if(reduce())cancelPending();
+      else restoreActivityControls();
+    });
     activate(true);
     // Masaüstünde GPU yoksa bulanıklık ve hücre dalgası hafifletilir (ui-components.css).
     Promise.resolve(root.buyerLogDesktop?.renderProfile?.()).then(profile=>{
