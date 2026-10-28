@@ -24,3 +24,27 @@ node scripts/benchmark-startup-orders.js --rows 30000 --out /tmp/startup.json
 ```
 
 Doğrulama: tam depo test paketi 7.956 test geçti, 0 başarısız (65 mevcut skip). `release:notes:validate` 2 kaydı doğruladı; i18n bekçisi 0 eksik.
+
+## İkinci tur (7.0.318): sunucu, önbellek ve donanım uyumu
+
+**[Doğrulandı] Kök neden — hazır sayfa önbelleği hiç isabet etmiyordu.** Backlog uçları (`/api/backlog-source-columns`, `/api/backlog-export`) bellekte veri yokken model anlık görüntüsü yerine `loadFromDisk` ile Excel'i yeniden ayrıştırıyordu. Aynı içerik yeni bir `loadedAt` ile yükleniyor, sonra yazılan önbellek nesli anlık görüntüyle eşleşmiyor ve her yeniden açılışta CP/Siparişler/Genel Bakış `/api/data/*` yolunda sunucuda yeniden üretilip serileştiriliyordu. İzole çoğaltma: düzeltmeden önce soğuk Backlog isteği 13,3 sn, ardından `/api/page-projection/cp` ve `/orders` **404**; düzeltmeden sonra 2,7 sn ve ikisi de **200 (hit)**. Tarayıcı akışında açılıştaki bütün sayfa önbelleği istekleri artık isabet ediyor.
+
+Ek düzeltmeler:
+- Genel Bakış İstisna kutusu ve yerleşim kontrolü aynı kayıtlı CP verisini önce sıkıştırılmış önbellekten okur. Yalnız Siparişler'i etkileyen veri değişikliği CP kutusunu yeniden okutmaz (açılışta 61 MB'lık okuma sayısı azaldı).
+- Hazır önbellek yolunda eksik olan paylaşılan alan kilidi (`_canEditShared`) `/api/cp-shared-edit` ile istek anındaki sahiplikten uygulanır (sharedAccessRows ile aynı karar; test edildi).
+- Tarih serileştirmesi anahtar başına replacer yerine geçici `Date.prototype.toJSON` ile yapılır: 30.000 satırda 1.263 → 566 ms, çıktı birebir aynı.
+- `tr-TR` büyük harf normalleştirmeleri (önem etiketi `fold`, yetki `norm`, iş kuralları `turkNorm`) sınırlı bellekle önbelleğe alındı. Mikro ölçüm: 1.753 → 26 ms.
+
+**Sunucu olay döngüsü kilitlenmeleri [Doğrulandı]:** ilk turdaki benchmark oturumlarında 59 kilitlenme vardı (medyan 7,2 sn, en uzun 17,5 sn). Son tam benchmark koşusu boyunca 1 kilitlenme oldu.
+
+**İstemci:** Motion+ tablo dalgası önce tüm aday hücreleri ölçüp sonra animasyonları başlatır; her `animate()` sonrası zorunlu yeniden yerleşim kalktı. Seçilen hücreler ve gecikmeler aynıdır. Model/opsiyon sayımı satır başına model anahtarını bir kez hesaplar.
+
+**Statik dosyalar:** `index.html` yerel adreslere içerik özeti (`&h=`) ekler; özet güncel içerikle eşleşirse yanıt `immutable` olur. Tekrar açılışta 190 dosyanın 161'i önbellekten geldi; istek süreleri toplamı 29 sn → 2,4 sn, DOMContentLoaded 596 → 530 ms (headless, sıcak önbellek).
+
+**Launcher:** seçili çekirdeğin bütünlük taraması aynı doğrulayıcıyla işçi iş parçacığında çalışır; ana süreç donmaz. Bütünlük hatası açılışı aynı kodla durdurur, işçi arızasında senkron tarama yapılır; tarama atlanmaz. Gerçek doğrulayıcı işçide sağlam çekirdeği geçirdi, bozulmuş dosyayı `UPDATE_CORE_INTEGRITY` ile yakaladı. **[Muhtemel]** Electron ana sürecinde ayrıca denenmedi (bu ortamda Linux Electron yok); toplam tarama süresi değişmez, yalnız yanıt verebilirlik kazanılır.
+
+**Donanım uyumu:** açılışta GPU durumu günlüğe yazılır. Yazılım çiziminde (VDI/RDP) bulanık arka plan yerine token türevli yarı saydam katman kullanılır ve hücre dalgası kapanır; sayfa/kart hareketleri sürer. `deviceMemory` ≤ 4 GB veya JS belleği limitin %60'ını aşmışsa Orders arka plan ön yüklemesi atlanır.
+
+**Son ölçüm (aynı sekme, 30.000 sipariş):** Genel Bakış → CP **2,4 sn**, CP → Orders **1,4 sn**, Koleksiyon **0,09 sn**. Modül bazlı izole açılış: Genel Bakış 1,5 sn, Koleksiyon 1,8 sn, CP 16,2 sn (ilk turda 64 sn), Orders 4,1 sn (18–21 sn).
+
+**Ertelenen: sütunlu projeksiyon formatı.** Orders geçişinin ~0,36 sn'si JSON ayrıştırma; sütunlu format istemcide 30 bin satır nesnesinin yeniden kurulmasını gerektirir ve kazancın çoğunu yer. P1 sözleşme riskine değmez; ölçümle yeniden değerlendirilmeli.

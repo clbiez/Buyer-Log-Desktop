@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-28",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Tek pencerede hızlı açılış ve modül geçişi",
-    "en": "Faster startup and module switching in one window"
+    "tr": "Daha hızlı açılış ve modül geçişi",
+    "en": "Faster startup and module switching"
   },
   "summary": {
-    "tr": "Açılışta Koleksiyon, CP ve Siparişler için ayrı sekme açılmaz; yetkili modüllerin verisi aynı pencerede arka planda hazırlanır. CP'nin ilk tablo çizimi ve uygulama dosyalarının sunulması hızlandırıldı.",
-    "en": "Startup no longer opens separate Collection, CP and Orders tabs; authorized module data prepares in the background in the same window. CP's first table render and application file delivery are faster."
+    "tr": "Açılışta ayrı sekme açılmaz; modül verisi aynı pencerede arka planda hazırlanır. Kayıtlı ekran önbelleği yeniden açılışlarda gerçekten kullanılır, sunucu ağır yeniden hesaplamalarda donmaz. CP ilk çizimi, uygulama dosyaları ve açılış bütünlük kontrolü hızlandı; GPU'suz uzak masaüstlerinde arayüz hafifler.",
+    "en": "Startup no longer opens separate tabs; module data prepares in the background in the same window. The saved screen cache is actually reused on later launches and the server no longer freezes on heavy rebuilds. CP's first render, application files and the startup integrity check are faster; the interface is lighter on remote desktops without a GPU."
   },
   "changes": [
     {
@@ -66,6 +66,64 @@
         "caption": {
           "tr": "CP tablosu checklist sütunlarıyla birlikte ilk geçişte çizilir.",
           "en": "The CP table draws with its checklist columns on the first switch."
+        }
+      }
+    },
+    {
+      "id": "saved-screen-cache-reused",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış ve veri",
+        "en": "Startup and data"
+      },
+      "title": {
+        "tr": "Kayıtlı ekran önbelleği yeniden açılışlarda kullanılır",
+        "en": "The saved screen cache is reused on later launches"
+      },
+      "body": {
+        "tr": "Backlog verisi soğuk açılışta Excel'den yeniden okunduğunda kayıtlı CP, Siparişler ve Genel Bakış önbelleği geçersiz sayılıyor ve sunucu her açılışta bunları yeniden üretirken saniyelerce yanıt vermiyordu. Artık önce kayıtlı model verisi kullanılır; İstisna kutusu da aynı kayıtlı CP verisini önbellekten okur. Paylaşılan alan düzenleme kilidi bu yolda da doğru uygulanır.",
+        "en": "When Backlog data was re-read from Excel on a cold start, the saved CP, Orders and Overview cache was treated as stale and the server stopped responding for seconds while rebuilding it on every launch. The saved model data is now used first, and the Exception inbox reads the same saved CP data from the cache. The shared-field edit lock is also applied correctly on this path."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-saved-cache.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: kayıtlı veriden açılan Genel Bakış ve İstisna kutusu, demo veri",
+          "en": "Real Buyer Log: Overview and the Exception inbox opened from saved data, demo data"
+        },
+        "caption": {
+          "tr": "Genel Bakış ve İstisna kutusu kayıtlı ekran önbelleğinden açılır.",
+          "en": "Overview and the Exception inbox open from the saved screen cache."
+        }
+      }
+    },
+    {
+      "id": "lighter-startup-and-remote-desktop",
+      "type": "improvement",
+      "module": {
+        "tr": "Ortak arayüz",
+        "en": "Shared interface"
+      },
+      "title": {
+        "tr": "Daha akıcı açılış; GPU'suz uzak masaüstünde hafif görünüm",
+        "en": "Smoother startup; a lighter look on remote desktops without a GPU"
+      },
+      "body": {
+        "tr": "Uygulama dosyaları içerikleri değişmedikçe tarayıcı önbelleğinden açılır. Açılıştaki bütünlük kontrolü arka planda yapılır, böylece açılış penceresi yanıt vermez görünmez; kontrol aynı sıkılıkla sürer. Tablo hareketi önce ölçüp sonra başlar. GPU kullanılamayan makinelerde bulanık arka plan yerine hafif bir katman gösterilir ve hücre dalgası kapanır; az bellekli makinede Siparişler arka planda önceden yüklenmez.",
+        "en": "Application files open from the browser cache until their content changes. The startup integrity check runs in the background, so the opening window no longer appears unresponsive; the check stays just as strict. Table motion now measures first and then starts. On machines without a usable GPU, a light veil replaces the blurred backdrop and the cell wave is turned off; on low-memory machines Orders is not preloaded in the background."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "software-render-veil.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: yazılım çiziminde açık pencerenin arkasında bulanıklık yerine hafif katman, demo CP verisi",
+          "en": "Real Buyer Log: a light veil instead of blur behind an open window under software rendering, demo CP data"
+        },
+        "caption": {
+          "tr": "GPU'suz çizimde arka plan bulanıklaştırılmaz; tablo net kalır.",
+          "en": "Without a GPU the backdrop is not blurred; the table stays sharp."
         }
       }
     }
