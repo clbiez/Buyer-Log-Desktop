@@ -34,8 +34,9 @@ test('CP startup registry only returns current projection identities, including 
 
 test('CP registry applies after projection fetch but before render, without querying PLM', () => {
   const section = APP.slice(APP.indexOf('async function ensureCpLoaded('), APP.indexOf('async function ensureCollectionCatalogLoaded('));
-  assert.match(section, /await refreshCpStartupImageRegistry\(rows\)/);
-  assert.ok(section.indexOf('await refreshCpStartupImageRegistry(rows)') < section.indexOf('renderCP()'));
+  // Registry (and, for page-cache rows, shared-edit access) are awaited together before any render.
+  assert.match(section, /await Promise\.allSettled\(\[refreshCpStartupImageRegistry\(rows\),applyCpSharedEditAccess\(rows\)\]\)/);
+  assert.ok(section.indexOf('await Promise.allSettled([refreshCpStartupImageRegistry(rows)') < section.indexOf('renderCP()'));
   assert.doesNotMatch(section, /import-plm|shared\/hydrate/);
   const route = SERVER.slice(SERVER.indexOf("app.get('/api/model-images/registry/cp'"),SERVER.indexOf("app.get('/api/data/collection-catalog'"));
   assert.match(route, /userAccess\.requireArea\('cp'\)/);

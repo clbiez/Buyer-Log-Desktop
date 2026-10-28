@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 const { promisify } = require('util');
+const { immutableForRequest } = require('./static-asset-hash');
 
 const gzip = promisify(zlib.gzip);
 const TYPES = {
@@ -40,11 +41,14 @@ function hasVersionToken(urlValue) {
 function isContentHashed(filePath) {
   return /(?:^|[._-])[a-f0-9]{8,}(?:[._-]|$)/i.test(path.basename(filePath));
 }
-function cacheControlFor(filePath, requestUrl) {
+function cacheControlFor(filePath, requestUrl, stat = null) {
   // The HTML shell creates/refreshes the local Buyer session on GET /. A cached
   // shell can otherwise be restored without that request reaching Express, while
   // /user-context.js is fetched without a session and receives a redirect.
   if (path.extname(filePath).toLowerCase() === '.html') return 'no-store';
+  // index.html stamps each local asset with its content hash; a matching hash
+  // can never go stale (changed content gets a new URL). See static-asset-hash.
+  if (immutableForRequest(filePath, requestUrl, stat)) return 'public, max-age=31536000, immutable';
   const vendor = /(?:^|[\\/])vendor(?:[\\/]|$)/.test(filePath);
   return vendor && (hasVersionToken(requestUrl) || isContentHashed(filePath))
     ? 'public, max-age=31536000, immutable'
@@ -109,7 +113,7 @@ function createStaticGzip(root, options) {
       res.setHeader('Content-Encoding', 'gzip');
       res.setHeader('Vary', 'Accept-Encoding');
       res.setHeader('ETag', etag);
-      res.setHeader('Cache-Control', cacheControlFor(filePath, req.originalUrl || req.url));
+      res.setHeader('Cache-Control', cacheControlFor(filePath, req.originalUrl || req.url, stat));
     };
     // ETag dosya meta verisinden türetilir; 304 için gövde okunmaz/sıkıştırılmaz.
     if (String(req.headers['if-none-match'] || '') === etag) {

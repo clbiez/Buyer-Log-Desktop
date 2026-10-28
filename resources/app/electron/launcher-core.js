@@ -86,7 +86,34 @@ async function showLaunchNotice(){
   finally{clearTimeout(timer);}
   log('launch-notice-visible',{sinceProcessStartMs:sinceProcessStartMs()});
 }
-function launchCore(){
+/* Normal açılışta seçili çekirdeğin bütünlük taraması (~2.500 dosya / 165 MB)
+ * ana süreçte senkron çalışıyordu; yavaş disk veya antivirüste açılış penceresi
+ * "Yanıt vermiyor" görünebiliyordu. Aynı doğrulayıcı (core-verification.js) bir
+ * işçi iş parçacığında çalışır; bütünlük hataları aynı kodla açılışı durdurur.
+ * İşçi başlatılamaz ya da beklenmedik biçimde biterse doğrulama ana süreçte
+ * aynen yapılır: tarama hiçbir koşulda atlanmaz. Kod satır içidir; böylece
+ * imzalı launcher dosya listesi değişmez. */
+const OFF_THREAD_VERIFIER=`const {parentPort,workerData}=require('worker_threads');
+try{require(workerData.module).verifyPackagedCore(workerData.core,workerData.version);parentPort.postMessage({ok:true});}
+catch(error){parentPort.postMessage({ok:false,code:String(error&&error.code||''),message:String(error&&error.message||error)});}`;
+function verifyPackagedCoreOffThread(core,version){
+  let Worker;
+  try{({Worker}=require('worker_threads'));}catch(_){return Promise.resolve(false);}
+  return new Promise((resolve,reject)=>{
+    let settled=false,worker;
+    const settle=(fn,value)=>{if(settled)return;settled=true;fn(value);try{worker&&worker.terminate();}catch(_){}};
+    try{worker=new Worker(OFF_THREAD_VERIFIER,{eval:true,workerData:{module:path.join(__dirname,'manual-patch','core-verification.js'),core,version}});}
+    catch(_){resolve(false);return;}
+    worker.once('message',message=>{
+      if(message&&message.ok===true)settle(resolve,true);
+      else if(/^(UPDATE|PATCH)_/.test(String(message&&message.code||'')))settle(reject,Object.assign(new Error(String(message.message)),{code:message.code}));
+      else settle(resolve,false);
+    });
+    worker.once('error',()=>settle(resolve,false));
+    worker.once('exit',()=>settle(resolve,false));
+  });
+}
+async function launchCore(){
 const lifecycle=createLauncherState({bootstrapCore:BOOTSTRAP_CORE,portableRoot:PORTABLE_ROOT});
 const recovered=app.isPackaged?lifecycle.rollbackExistingTrial():null;
 if(recovered)log('rollback-on-next-launch',{failedVersion:recovered.failed.version,restoredVersion:recovered.restored.version});
@@ -100,6 +127,15 @@ function verifySelected(selected){
   if(relative.split(path.sep)[0].startsWith('manual-'))patchManager.verifyInstalled(selected);
   else require('./manual-patch/core-verification').verifyPackagedCore(selected.appCoreRoot,selected.version);
   log('core-verified',{version:selected.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs()});
+}
+async function verifySelectedOffThread(selected){
+  if(!app.isPackaged)return;
+  const relative=path.relative(path.join(PORTABLE_ROOT,'.buyerlog-versions'),selected.appCoreRoot);
+  // İmzalı el yaması çekirdekleri kendi yöneticisiyle doğrulanır (nadir yol).
+  if(relative.split(path.sep)[0].startsWith('manual-'))return verifySelected(selected);
+  const started=Date.now();
+  if(!await verifyPackagedCoreOffThread(selected.appCoreRoot,selected.version))return verifySelected(selected);
+  log('core-verified',{version:selected.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs(),offThread:true});
 }
 /* Bekleyen çekirdek bu launcher'dan daha yeni bir etkinleştirme protokolü
  * isterse deneme başlatılmaz; updater önce uygun launcher'ı kurar. */
@@ -129,7 +165,7 @@ if(app.isPackaged){
 const activationResult=app.isPackaged?lifecycle.activatePending():null;
 const activation=activationResult&&activationResult.activation||null;
 const selected=app.isPackaged?lifecycle.currentPointer():lifecycle.bootstrapPointer();
-verifySelected(selected);
+await verifySelectedOffThread(selected);
 if(activation)log('activation-started',{version:activation.version,previousVersion:activation.previous&&activation.previous.version||''});
 process.env.BUYER_LOG_BOOTSTRAP_APP_CORE=BOOTSTRAP_CORE;
 process.env.BUYER_LOG_ACTIVE_APP_CORE=selected.appCoreRoot;

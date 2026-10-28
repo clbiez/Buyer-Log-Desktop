@@ -1994,6 +1994,19 @@ function applyCpStartupImageRegistry(payload,rows=state.cp?.rows||[]){
   if(invalidated.size)BLImageRuntime.invalidate([...invalidated]);
   return true;
 }
+/* Hazır CP sayfa önbelleği satır başına _canEditShared taşımaz (yalnız /api/data/cp
+   ekler). Yetki istek anında ayrıca okunur; hata olursa eski davranış korunur
+   (arayüz kilitlemez, sunucu yazmada yine reddeder). */
+async function applyCpSharedEditAccess(rows){
+  if(!rows.length||rows.some(row=>row&&row._canEditShared!==undefined))return false;
+  try{
+    const response=await fetch('/api/cp-shared-edit',{cache:'no-store'});
+    if(!response.ok)return false;
+    const denied=new Set((await response.json()).denied||[]);
+    for(const row of rows)if(row)row._canEditShared=!denied.has(lineKeyOfRow(row).split('|')[0]);
+    return true;
+  }catch(error){console.warn('CP shared edit access:',error);return false;}
+}
 async function refreshCpStartupImageRegistry(rows){
   const response=await fetch('/api/model-images/registry/cp',{cache:'no-store'});
   if(!response.ok)throw new Error(`CP model image registry HTTP ${response.status}`);
@@ -2010,9 +2023,10 @@ async function ensureCpLoaded(options={}){
       const result=await fetchProjectionWithFallback('cp','/api/data/cp');if(result.cancelled)return false;
       const data=result.payload||{},rows=Array.isArray(data.rows)?data.rows:[];
       reviveServerDates(rows);
-      // Görünür CP satırları çizilmeden güncel yerel görsel registry'sini eşle.
-      try{await refreshCpStartupImageRegistry(rows);}
-      catch(error){console.warn('CP model image registry:',error);showToast(appLang==='en'?'Some saved model images could not be restored. Try reloading CP.':'Bazı kayıtlı model görselleri yüklenemedi. CP ekranını yeniden açmayı deneyin.');}
+      // Görünür CP satırları çizilmeden güncel yerel görsel registry'sini ve (hazır
+      // önbellekten geldiyse) paylaşılan alan yetkisini paralel eşle.
+      const [registry]=await Promise.allSettled([refreshCpStartupImageRegistry(rows),applyCpSharedEditAccess(rows)]);
+      if(registry.status==='rejected'){console.warn('CP model image registry:',registry.reason);showToast(appLang==='en'?'Some saved model images could not be restored. Try reloading CP.':'Bazı kayıtlı model görselleri yüklenemedi. CP ekranını yeniden açmayı deneyin.');}
       state.cp={fname:'Hazır ekran önbelleği',rows};state.cpLogisticExpanded.clear();
       applyPricingRulesToLoadedRows({render:false});
       overviewCpLoadState='ready';overviewCpLoadError='';
@@ -11289,7 +11303,10 @@ window.BLExceptionInboxBridge={
  filter:row=>passesOvDimFilters(row,true,'main'),
  analyze:row=>window.BLCpReadinessEngine.analyzeOrder(row,{transitRules:state.overrides?.transitRules||[]}),
  async read(signal){
-  const response=await fetch('/api/data/cp',{cache:'no-store',signal});
+  // Aynı kayıtlı sunucu verisi; hazırsa sıkıştırılmış sayfa önbelleğinden okunur,
+  // yoksa /api/data/cp onu üretir. Ayrı bir tam yeniden üretim tetiklenmez.
+  let response=await fetch('/api/page-projection/cp',{cache:'no-store',signal});
+  if(response.status===404)response=await fetch('/api/data/cp',{cache:'no-store',signal});
   if(!response.ok){const error=new Error('CP snapshot HTTP '+response.status);error.status=response.status;throw error;}
   const data=await response.json(),rows=Array.isArray(data.rows)?data.rows:[];reviveServerDates(rows);return rows;
  },
@@ -16656,6 +16673,15 @@ async function refreshSyncStatusBadge(){
    ve dakikalarca CPU yarışı üretiyordu (7.0.314 ölçümü). */
 const BACKGROUND_WARMUP_GAP_MS=1500;
 let backgroundWarmupStarted=false;
+/* Adaptif sınır: Orders ön yüklemesi en büyük veri kümesidir (30 bin satırda ~70 MB
+   JSON / ~75 MB JS belleği). Az bellekli makinede veya renderer belleği zaten
+   doluysa atlanır; Orders ilk girişte her zamanki gibi yüklenir. */
+function backgroundWarmupMemoryTight(){
+  const deviceMemory=Number(navigator.deviceMemory)||0;
+  if(deviceMemory>0&&deviceMemory<=4)return true;
+  const memory=performance.memory;
+  return Boolean(memory&&memory.jsHeapSizeLimit>0&&memory.usedJSHeapSize/memory.jsHeapSizeLimit>0.6);
+}
 function backgroundWarmupSteps(){
   const modelData=!(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false);
   return [
@@ -16667,7 +16693,7 @@ function backgroundWarmupSteps(){
       await scheduleUnifiedPrioritiesForTable('cp');
       return true;
     }},
-    {module:'orders',enabled:modelData,ready:()=>Boolean(state.orders),load:()=>ensureOrdersLoaded({deferRender:true})},
+    {module:'orders',enabled:modelData&&!backgroundWarmupMemoryTight(),ready:()=>Boolean(state.orders),load:()=>ensureOrdersLoaded({deferRender:true})},
     {module:'koleksiyon',enabled:true,ready:()=>collectionCatalogsReady(state.collectionCatalogs),load:()=>ensureCollectionCatalogLoaded({deferRender:true})},
   ];
 }

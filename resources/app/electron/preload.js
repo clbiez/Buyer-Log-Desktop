@@ -27,6 +27,8 @@ contextBridge.exposeInMainWorld('buyerLogDesktop', {
     app: String(process.env.BUYER_LOG_ACTIVE_VERSION || ''),
     updater: String(process.env.BUYER_LOG_UPDATER_VERSION || ''),
   },
+  // Salt okunur çizim profili (yazılım çizimi mi); bkz. main.js buyerlog:render-profile.
+  renderProfile: () => ipcRenderer.invoke('buyerlog:render-profile'),
   workspace: {
     openModule: (moduleId) => ipcRenderer.invoke('buyerlog:workspace-open-module', String(moduleId || '')),
     showModuleContextMenu: (moduleId, language) => ipcRenderer.invoke('buyerlog:workspace-show-module-context-menu', {

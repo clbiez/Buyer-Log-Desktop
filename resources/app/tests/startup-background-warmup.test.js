@@ -8,12 +8,12 @@ const APP=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
 const start=APP.indexOf('const BACKGROUND_WARMUP_GAP_MS');
 const source=APP.slice(start,APP.indexOf("window.addEventListener('DOMContentLoaded'",start));
 
-function harness({access=['cp','orders','koleksiyon'],state={},flags={},active='overview'}={}){
+function harness({access=['cp','orders','koleksiyon'],state={},flags={},active='overview',deviceMemory=8,heap=null}={}){
   const timers=[],calls=[],marks=[],events=[];
   const resolvers={};
   const window={BLCanAccessArea:area=>access.includes(area),BLPerf:{mark:(name,detail)=>marks.push({name,detail})},
     dispatchEvent:event=>events.push(event.type),...flags};
-  const context={window,state,console:{warn(){}},CustomEvent:class{constructor(type){this.type=type;}},
+  const context={window,state,console:{warn(){}},navigator:{deviceMemory},performance:{memory:heap},CustomEvent:class{constructor(type){this.type=type;}},
     setTimeout:fn=>{timers.push(fn);return timers.length;},
     currentActiveTab:()=>context.active,active,
     collectionCatalogsReady:catalogs=>Boolean(catalogs&&catalogs.ready),
@@ -67,4 +67,15 @@ test('switchTab draws a warmed table once, after the page profile, without an ea
   assert.match(body,/const warmedUnrendered=backgroundWarmupUnrendered\.delete\(tab\);\s*if\(warmedUnrendered\)_deferredTabRenders\.delete\(tab\);\s*flushDeferredRenderForTab\(tab\);/);
   assert.match(body,/if\(tab==='cp'&&\(!state\.cp\|\|warmedUnrendered\)\)/);
   assert.match(body,/if\(tab==='orders'&&\(!state\.orders\|\|warmedUnrendered\)\)/);
+});
+
+test('Orders warmup is skipped on low-memory machines or a nearly full renderer heap', async () => {
+  for(const options of [{deviceMemory:4},{deviceMemory:2},{heap:{usedJSHeapSize:700,jsHeapSizeLimit:1000}}]){
+    const h=harness({access:['cp','orders'],...options});
+    h.context.scheduleBackgroundModuleWarmup();await h.flush();h.resolvers.cp(true);await h.flush();
+    assert.deepEqual(h.calls.map(call=>call[0]),['cp','priorities:cp'],JSON.stringify(options));
+  }
+  const roomy=harness({access:['orders'],deviceMemory:8,heap:{usedJSHeapSize:200,jsHeapSizeLimit:1000}});
+  roomy.context.scheduleBackgroundModuleWarmup();await roomy.flush();
+  assert.deepEqual(roomy.calls.map(call=>call[0]),['orders']);
 });

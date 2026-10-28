@@ -31,7 +31,11 @@
     return r.width>0&&r.height>0&&r.bottom>0&&r.top<root.innerHeight&&r.right>0&&r.left<root.innerWidth;
   };
   function animate(el,frames,options){
-    if(!enabled()||!visible(el)||typeof el.animate!=='function')return null;
+    if(!enabled()||!visible(el))return null;
+    return start(el,frames,options);
+  }
+  function start(el,frames,options){
+    if(typeof el.animate!=='function')return null;
     let a;
     try{
       a=el.animate(frames,Object.assign({fill:'none',easing:EASE},options));
@@ -54,27 +58,38 @@
   }
   function waveTable(view,token){
     if(!enabled()||token!==generation||lastWave===token)return 0;
+    // Yazılım çiziminde (VDI/RDP) yüzlerce hücre animasyonu işlemciye düşer; sayfa ve kart hareketleri kalır.
+    if(html.dataset.blRender==='software')return 0;
     const tables=Array.from(view.querySelectorAll('table')).slice(0,12).filter(visible).slice(0,2);
-    let count=0;
+    // Önce yalnız ölçülür, sonra animasyonlar başlatılır. Her animate() stili
+    // kirletip sonraki hücre ölçümünü zorunlu yeniden yerleşime çeviriyordu
+    // (CP çiziminde 0,45–0,75 sn). Seçilen hücreler ve gecikmeler aynıdır.
+    const queue=[];
     for(const table of tables){
       const tbody=table.tBodies?.[0]||table.querySelector('tbody');
       if(!tbody)continue;
+      const host=table.closest?.('.tablewrap')?.getBoundingClientRect();
       const rows=Array.from(tbody.rows||tbody.children).filter(row=>Array.from(row.cells||row.children).some(visible));
       for(let rowIndex=0;rowIndex<rows.length;rowIndex++){
         const cells=Array.from(rows[rowIndex].cells||rows[rowIndex].children);
         for(let col=0;col<cells.length;col++){
           const cell=cells[col];
-          const bounds=cell.getBoundingClientRect(),host=table.closest?.('.tablewrap')?.getBoundingClientRect();
+          const bounds=cell.getBoundingClientRect();
           if(cell.tagName!=='TD'||!visible(cell)||(host&&(bounds.right<=host.left||bounds.left>=host.right||bounds.bottom<=host.top||bounds.top>=host.bottom))||
              cell.matches('.blGridActiveCell,.blGridSelectedCell,.kolSpreadsheetActiveCell,.kolActiveGridCell,[aria-selected="true"],[contenteditable="true"]')||
              cell.querySelector('input:focus,textarea:focus,select:focus,[contenteditable="true"]:focus')||cell.style?.backgroundColor||cell.style?.background)continue;
-          // A brief tint travels from the top-left; no cell values or selection classes change.
-          if(animate(cell,[
-            {opacity:.72,backgroundColor:'var(--ui-selected)',transform:'translate3d(-2px,-1px,0)'},
-            {opacity:1,backgroundColor:'transparent',transform:'translate3d(0,0,0)'}
-          ],{duration:duration('table'),delay:Math.min(200,rowIndex*23+col*12)}))count++;
+          queue.push([cell,Math.min(200,rowIndex*23+col*12)]);
         }
       }
+    }
+    const ms=duration('table');
+    let count=0;
+    for(const [cell,delay] of queue){
+      // A brief tint travels from the top-left; no cell values or selection classes change.
+      if(start(cell,[
+        {opacity:.72,backgroundColor:'var(--ui-selected)',transform:'translate3d(-2px,-1px,0)'},
+        {opacity:1,backgroundColor:'transparent',transform:'translate3d(0,0,0)'}
+      ],{duration:ms,delay}))count++;
     }
     if(count)lastWave=token;
     return count;
@@ -210,6 +225,10 @@
     const media=root.matchMedia?.('(prefers-reduced-motion: reduce)');
     media?.addEventListener?.('change',()=>{if(reduce())cancelPending();});
     activate(true);
+    // Masaüstünde GPU yoksa bulanıklık ve hücre dalgası hafifletilir (ui-components.css).
+    Promise.resolve(root.buyerLogDesktop?.renderProfile?.()).then(profile=>{
+      if(profile&&profile.softwareCompositing===true)html.dataset.blRender='software';
+    }).catch(()=>{});
   }
   root.BLMotionPlus=Object.freeze({enabled,play,activate,setEnabled,speeds:SPEED});
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',mount,{once:true});

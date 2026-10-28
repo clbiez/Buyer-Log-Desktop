@@ -15017,6 +15017,9 @@ html[data-ui-system="manifest"] .noteEditorArea.todoRichEditor{background:var(--
 .blWorkspaceBlur[data-blur="dialog"]{backdrop-filter:blur(var(--ui-backdrop-blur));}
 .blWorkspaceBlur[data-mode="rail"]{left:var(--ui-rail-collapsed-width);z-index:var(--ui-z-rail-backdrop);}
 .blWorkspaceBlur[data-blur="rail"]{backdrop-filter:blur(var(--ui-backdrop-blur));}
+/* Yazılım çiziminde (GPU yok: VDI/RDP) bulanıklık her karede işlemciyle hesaplanır;
+   aynı odak ayrımı ucuz bir yarı saydam katmanla verilir. */
+html[data-bl-render="software"] .blWorkspaceBlur[data-blur]{backdrop-filter:none;background:color-mix(in srgb,var(--ui-text) 8%,transparent);}
 html[data-ui-system="manifest"] .noteCellTrigger.empty{min-height:0;padding-block:0;}
 /* Keep the group marker inside the same moving label as its text. */
 html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable) thead th[data-grp]::before{content:none!important;}

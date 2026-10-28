@@ -18,12 +18,19 @@
     return String(value == null ? '' : value).trim();
   }
 
+  // Saf fonksiyon; durum/sınıflandırma kurallarında satır başına çağrılır. Kısa
+  // metinler sınırlı bir bellekte tutulur; sonuç birebir aynıdır.
+  const TURK_NORM_CACHE = new Map();
   function turkNorm(value) {
-    return String(value == null ? '' : value)
+    const raw = String(value == null ? '' : value), cacheable = raw.length <= 160;
+    if (cacheable) { const hit = TURK_NORM_CACHE.get(raw); if (hit !== undefined) return hit; }
+    const normalized = raw
       .toUpperCase()
       .replace(/[İŞÇÖÜĞ]/g, character => TURKISH_ASCII_MAP[character])
       .replace(/\s+/g, ' ')
       .trim();
+    if (cacheable) { if (TURK_NORM_CACHE.size >= 50000) TURK_NORM_CACHE.clear(); TURK_NORM_CACHE.set(raw, normalized); }
+    return normalized;
   }
 
   /* Lisansör ad nüansları ("ERMODA" / "ERMODA UK LTD"): şirket türü ve ülke ekleri
