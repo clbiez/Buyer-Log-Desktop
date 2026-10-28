@@ -26,10 +26,14 @@ test('ensureBacklogRuntime keeps the legacy Excel read only when no snapshot exi
 test('exception inbox and layout control read confirmed CP from the page cache first', () => {
   const bridge=APP.slice(APP.indexOf('window.BLExceptionInboxBridge={'),APP.indexOf('function renderOverviewNow(){'));
   assert.match(bridge,/let response=await fetch\('\/api\/page-projection\/cp',\{cache:'no-store',signal\}\);\s*if\(response\.status===404\)response=await fetch\('\/api\/data\/cp',\{cache:'no-store',signal\}\);/);
-  assert.match(LAYOUT,/let response=await fetch\('\/api\/page-projection\/cp',\{credentials:'same-origin',cache:'no-store'\}\);\s*if\(response\.status===404\)response=await fetch\('\/api\/data\/cp'/);
+  assert.match(LAYOUT,/let response=await fetch\('\/api\/page-projection\/cp',\{credentials:'same-origin',cache:'no-store'\}\);[\s\S]{0,160}response=await fetch\('\/api\/data\/cp'/);
 });
 
 test('an Orders-only data change does not re-read the CP exception inbox; bursts coalesce', () => {
   assert.match(INBOX,/timer=setTimeout\(\(\)=>\{timer=0;void refresh\(\);\},invalidate\?1200:180\);/);
   assert.match(INBOX,/if\(name==='bl:global-flow-data-changed'&&\(event\.detail\?\.reason==='priority-ready'\|\|\(Array\.isArray\(tables\)&&!tables\.includes\('cp'\)\)\)\)return;/);
+});
+
+test('layout control keeps working while source filters are pending (409 falls back like 404)', () => {
+  assert.match(LAYOUT,/if\(response\.status===404\|\|response\.status===409\)response=await fetch\('\/api\/data\/cp'/);
 });

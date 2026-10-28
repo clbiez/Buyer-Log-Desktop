@@ -16709,10 +16709,13 @@ function scheduleBackgroundModuleWarmup(){
     // Yetkisiz alan, zorunlu kaynak filtresi veya zaten yüklü veri için istek atılmaz.
     if(!step.enabled||step.ready()||window.BLCanAccessArea?.(step.module)!==true){next();return;}
     window.BLPerf?.mark?.('BACKGROUND_WARMUP_START',{module:step.module});
+    // Veri zaten bellekteyse (ör. açılış sekmesi CP idi) tablo çizilmiş olabilir; yalnız
+    // bu adımda ilk kez yüklenen tablo "çizilmemiş" sayılır.
+    const loadedBefore=step.module==='cp'?Boolean(state.cp):step.module==='orders'?Boolean(state.orders):true;
     Promise.resolve().then(step.load).then(ok=>{
       window.BLPerf?.mark?.('BACKGROUND_WARMUP_READY',{module:step.module,ok:ok===true});
       // Kullanıcı yükleme sırasında modüle geçtiyse switchTab çizimi zaten üstlendi.
-      if(ok===true&&step.module!=='koleksiyon'&&currentActiveTab()!==step.module)backgroundWarmupUnrendered.add(step.module);
+      if(ok===true&&!loadedBefore&&currentActiveTab()!==step.module)backgroundWarmupUnrendered.add(step.module);
     }).catch(error=>console.warn('Arka plan ön yükleme:',step.module,error))
       .finally(()=>setTimeout(()=>idle(next),BACKGROUND_WARMUP_GAP_MS));
   };

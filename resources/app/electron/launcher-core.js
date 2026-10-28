@@ -134,7 +134,20 @@ async function verifySelectedOffThread(selected){
   // İmzalı el yaması çekirdekleri kendi yöneticisiyle doğrulanır (nadir yol).
   if(relative.split(path.sep)[0].startsWith('manual-'))return verifySelected(selected);
   const started=Date.now();
-  if(!await verifyPackagedCoreOffThread(selected.appCoreRoot,selected.version))return verifySelected(selected);
+  // Senkron taramada olay döngüsü kilitliydi; artık boşta ve main.js henüz kendi
+  // işleyicilerini kaydetmedi. Bildirim kapatılırsa (Alt+F4) Electron'un varsayılan
+  // çıkışı denemedeki sağlam sürümü sonraki açılışta geri aldırabilirdi; ikinci kopya
+  // olayı da kaybolurdu. Bu aralıkta açılış sürer ve ikinci kopya bildirimi öne getirir.
+  const keepRunning=()=>{};
+  const focusNotice=()=>{const notice=global.__buyerLogLaunchNotice;if(notice&&!notice.isDestroyed()){try{notice.show();notice.focus();}catch(_){}}};
+  // Dinleyici kaydı en iyi çabadır: hiçbir koşulda doğrulamayı ya da açılışı durdurmaz.
+  const listen=(name,fn)=>{try{if(typeof app.on==='function')app.on(name,fn);}catch(_){}};
+  const unlisten=(name,fn)=>{try{if(typeof app.removeListener==='function')app.removeListener(name,fn);}catch(_){}};
+  listen('window-all-closed',keepRunning);listen('second-instance',focusNotice);
+  let verified;
+  try{verified=await verifyPackagedCoreOffThread(selected.appCoreRoot,selected.version);}
+  finally{unlisten('window-all-closed',keepRunning);unlisten('second-instance',focusNotice);}
+  if(!verified)return verifySelected(selected);
   log('core-verified',{version:selected.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs(),offThread:true});
 }
 /* Bekleyen çekirdek bu launcher'dan daha yeni bir etkinleştirme protokolü

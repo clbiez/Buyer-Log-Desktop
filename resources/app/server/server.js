@@ -54,7 +54,7 @@ const { createUserRestoreService } = require('./lib/user-restore-service');
 const { createFullRestoreService, recoverInterruptedRestoresSync } = require('./lib/full-restore-service');
 const { isClientRequestAborted } = require('./lib/http-errors');
 const { stringifyWithDates } = require('./lib/json-dates');
-const { stampAssetHashes, immutableForRequest } = require('./lib/static-asset-hash');
+const { stampAssetHashes, warmAssetHashes, immutableForRequest } = require('./lib/static-asset-hash');
 // v7.81: normalizeHorizonGroups artık kullanılmıyor — Horizon grupları kaldırıldı.
 
 const SERVER_BOOT_STARTED_AT = Date.now();
@@ -12712,6 +12712,11 @@ if (process.env.NODE_ENV !== 'test') {
 
 const httpServer = app.listen(PORT, HOST, () => {
   markStartup('SERVER_READY', { host: HOST, port: PORT });
+  // İçerik özetleri ilk GET / beklemesin diye arka planda hesaplanır (lib/static-asset-hash).
+  setImmediate(() => {
+    try { const html = fs.readFileSync(INDEX_TEMPLATE_FILE, 'utf8'); void warmAssetHashes(html, path.join(__dirname, '..', 'public'), '__BL_ASSET_VERSION__').catch(() => {}); }
+    catch (_) {}
+  });
   const displayHost = HOST === '127.0.0.1' ? 'localhost' : HOST;
   console.log(`Buyer Log sunucusu çalışıyor: http://${displayHost}:${PORT}`);
   console.log(`Dinleme adresi: ${HOST} (yerel kullanım için varsayılan 127.0.0.1)`);

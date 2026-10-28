@@ -73,3 +73,14 @@ test('a corrupt core is still blocked when the worker falls back', async () => {
   await until(()=>f.calls.includes('exit:1'));
   assert.equal(f.calls.includes('main'),false);
 });
+
+test('during the off-thread wait the launch survives a closed notice and catches second instances', async () => {
+  const f=fixture({trusted:trustedRoot("const start=Date.now();while(Date.now()-start<150){}exports.verifyPackagedCore=()=>({verified:true});")});
+  await tick();f.notices[0].emit('ready-to-show');
+  await until(()=>f.app.listenerCount('window-all-closed')===1);
+  assert.equal(f.app.listenerCount('second-instance'),1,'second instance is handled while main.js is not loaded');
+  f.app.emit('second-instance');
+  await until(()=>f.calls.includes('main'));
+  assert.equal(f.app.listenerCount('window-all-closed'),0,'temporary listeners are removed before main.js registers its own');
+  assert.equal(f.app.listenerCount('second-instance'),0);
+});

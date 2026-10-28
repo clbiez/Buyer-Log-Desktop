@@ -79,3 +79,10 @@ test('Orders warmup is skipped on low-memory machines or a nearly full renderer 
   roomy.context.scheduleBackgroundModuleWarmup();await roomy.flush();
   assert.deepEqual(roomy.calls.map(call=>call[0]),['orders']);
 });
+
+test('a table already in memory before its warmup step is not marked for a redundant draw', async () => {
+  const h=harness({access:['cp'],state:{cp:{rows:[]}}});
+  h.context.scheduleBackgroundModuleWarmup();await h.flush();
+  h.resolvers.cp(true);await h.flush();
+  assert.equal(h.context.backgroundWarmupUnrendered.has('cp'),false);
+});

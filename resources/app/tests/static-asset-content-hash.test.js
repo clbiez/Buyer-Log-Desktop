@@ -51,3 +51,12 @@ test('server wiring: index stamping, express.static and pre-session routes use t
   assert.match(server,/const immutable = !html && immutableForRequest\(filePath, res\.req && \(res\.req\.originalUrl \|\| res\.req\.url\), stat\);/);
   assert.equal((server.match(/res\.set\('Cache-Control', publicAssetCacheControl\(req, full\)\);/g)||[]).length,2);
 });
+
+test('boot warming precomputes hashes so the first index render reads no asset synchronously', async () => {
+  const dir=root(),html='<script src="app.js?v=__BL_ASSET_VERSION__"></script><link href="vendor/x.css?v=__BL_ASSET_VERSION__" rel="stylesheet">';
+  assert.equal(await H.warmAssetHashes(html,dir,'__BL_ASSET_VERSION__'),2);
+  assert.equal(await H.warmAssetHashes(html,dir,'__BL_ASSET_VERSION__'),0,'unchanged files are not re-read');
+  const original=fs.readFileSync;let reads=0;fs.readFileSync=function(...args){reads++;return original.apply(this,args);};
+  try{assert.match(H.stampAssetHashes(html,dir,'__BL_ASSET_VERSION__'),/app\.js\?v=__BL_ASSET_VERSION__&h=[a-f0-9]{16}/);}finally{fs.readFileSync=original;}
+  assert.equal(reads,0);
+});

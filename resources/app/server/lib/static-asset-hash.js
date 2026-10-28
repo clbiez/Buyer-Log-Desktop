@@ -44,6 +44,27 @@ function stampAssetHashes(html, root, versionToken) {
     return hash ? `${attr}${relative}${version}&h=${hash}` : match;
   });
 }
+// Açılışta arka planda: ilk GET / özetleri senkron hesaplamak zorunda kalmaz
+// (yavaş disk/antivirüste ~165 dosyanın okunması). Eksik kalan dosya ilk istekte hesaplanır.
+async function warmAssetHashes(html, root, versionToken) {
+  const token = String(versionToken).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(`(?:src|href)="([^"?#:]+)\\?v=${token}(?=[&"])`, 'g');
+  let warmed = 0;
+  for (const match of String(html).matchAll(pattern)) {
+    const file = safeFile(root, match[1]);
+    if (!file) continue;
+    try {
+      const stat = await fs.promises.stat(file);
+      if (!stat.isFile()) continue;
+      const tag = `${stat.size}:${stat.mtimeMs}`, hit = hashes.get(file);
+      if (hit && hit.tag === tag) continue;
+      const hash = crypto.createHash('sha256').update(await fs.promises.readFile(file)).digest('hex').slice(0, HASH_LENGTH);
+      if (hashes.size >= MAX_ENTRIES) hashes.clear();
+      hashes.set(file, { tag, hash }); warmed += 1;
+    } catch (_) { /* ilk istekte senkron yola düşer */ }
+  }
+  return warmed;
+}
 function requestHash(requestUrl) {
   try { return new URL(String(requestUrl || ''), 'http://buyerlog.local').searchParams.get('h') || ''; }
   catch (_) { return ''; }
@@ -54,4 +75,4 @@ function immutableForRequest(file, requestUrl, stat = null) {
   return Boolean(wanted && wanted.length === HASH_LENGTH && wanted === contentHash(file, stat));
 }
 
-module.exports = { contentHash, stampAssetHashes, immutableForRequest, HASH_LENGTH };
+module.exports = { contentHash, stampAssetHashes, warmAssetHashes, immutableForRequest, HASH_LENGTH };

@@ -61,3 +61,13 @@ test('owner identity remains known while disabled; actor role must be resolved b
   // event cannot supply it: buildUserAccess.sharedOwnerOf resolves findProfile.
   assert.equal(ownershipFor(actor('missing-profile'), rows, [disabled, other]).moderator, undefined);
 });
+
+test('buyer resolution is memoised per resolver without changing decisions', () => {
+  const resolve = createOwnershipResolver(rows, profiles);
+  const first = resolve(actor('other')), again = resolve(actor('other'));
+  assert.deepEqual(again, first);
+  assert.equal(resolve(actor('owner')).allowed, true);
+  assert.equal(resolve(actor('other')).allowed, false);
+  // A new resolver (new authority/profiles) never reuses an old answer.
+  assert.equal(createOwnershipResolver(rows, [other])(actor('other')).allowed, true);
+});
