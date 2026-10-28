@@ -1,0 +1,18 @@
+# 'base' = HEAD 8db3415 (no warmup, 45 s idle on Overview before switching).
+# 'after' runs below were taken BEFORE CP priority warmup was added; final-source runs are at the end.
+after run 1
+cp {"first":8567.09999999986,"painted":8654.899999999907}
+orders {"first":9858.09999999986,"painted":10769.699999999953}
+base run 1
+cp {"first":8935.100000000093,"painted":9424.800000000047}
+orders {"first":20672.100000000093,"painted":20772}
+after run 2
+cp {"first":6989.699999999721,"painted":7084.199999999721}
+orders {"first":1556.5,"painted":2148.899999999907}
+base run 2
+cp {"first":7693.700000000186,"painted":8113.600000000093}
+orders {"first":16801,"painted":16884}
+# Final source (CP priorities warmed too), three runs:
+cp {"painted":7902.9} orders {"painted":2592.5}
+cp {"painted":3764.6} orders {"painted":2150.1}
+cp {"painted":8765.4} orders {"painted":1892.7}

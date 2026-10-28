@@ -5,7 +5,7 @@
 // node scripts/benchmark-startup-orders.js --rows 30000 --out /tmp/startup.json
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),net=require('node:net');
 const {spawn,spawnSync}=require('node:child_process');
-const {chromium,_electron}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const APP=path.resolve(__dirname,'..');
 const arg=(name,fallback)=>{const index=process.argv.indexOf(name);return index<0?fallback:process.argv[index+1];};
 const count=Math.max(1,Number(arg('--rows',30000))||30000);
@@ -62,12 +62,10 @@ async function open(context,module){
     new PerformanceObserver(list=>window.__startupProbe.longTasks.push(...list.getEntries().map(task=>task.duration))).observe({type:'longtask',buffered:true});
   });
   const started=performance.now();
-  await page.goto(base+'/?module='+module+(module==='overview'?'':'&startupWarm=1'),{waitUntil:'domcontentloaded',timeout:120000});
+  await page.goto(base+'/?module='+module,{waitUntil:'domcontentloaded',timeout:120000});
   await page.waitForFunction(()=>window.__startupProbe?.readyAt!==null,null,{timeout:180000});
-  if(module==='overview'){
-    await page.waitForFunction(()=>!document.getElementById('blBootGuard')||document.getElementById('blBootGuard').dataset.ready==='1',null,{timeout:180000});
-    await page.evaluate(()=>window.BLBootGuard?.continue());
-  }
+  await page.waitForFunction(()=>!document.getElementById('blBootGuard')||document.getElementById('blBootGuard').dataset.ready==='1',null,{timeout:180000});
+  await page.evaluate(()=>window.BLBootGuard?.continue());
   if(module==='orders')await page.waitForFunction(()=>state.orders?.rows.length>0&&document.querySelector('#ordersTable tbody tr[data-id]'),null,{timeout:180000});
   if(module==='cp')await page.waitForFunction(()=>state.cp?.rows.length>0&&document.querySelector('#cpTable tbody tr[data-id]'),null,{timeout:180000});
   const elapsedMs=performance.now()-started;
@@ -84,6 +82,29 @@ async function open(context,module){
   data.retainedJsHeapBytes=metrics.find(metric=>metric.name==='JSHeapUsedSize')?.value;
   data.dom=await cdp.send('Memory.getDOMCounters');await cdp.detach();
   return {page,measurement:{...data,elapsedMs,rendererRssBytes:await rendererRss(),errors}};
+}
+// One renderer, as in the desktop app: Overview opens, authorized modules warm in
+// the background, then each module switch is timed until its first data row is drawn.
+async function measureSameTab(context){
+  const {page,measurement}=await open(context,'overview');
+  await page.waitForFunction(()=>window.BLPerf?.timeline?.().some(mark=>mark.name==='BACKGROUND_WARMUP_DONE'),null,{timeout:600000});
+  const warmup=await page.evaluate(()=>window.BLPerf.timeline().filter(mark=>/^BACKGROUND_WARMUP_/.test(mark.name)));
+  const switches=[];
+  for(const [module,selector] of [['cp','#cpTable tbody tr[data-id]'],['orders','#ordersTable tbody tr[data-id]'],['koleksiyon','#view-koleksiyon']]){
+    // Timed inside the page: Playwright's rAF polling adds seconds under load.
+    const ms=await page.evaluate(([module,selector])=>new Promise((resolve,reject)=>{
+      const started=performance.now();switchTab(module);
+      const tick=()=>{
+        if(document.querySelector(selector))return requestAnimationFrame(()=>requestAnimationFrame(()=>resolve(performance.now()-started)));
+        if(performance.now()-started>180000)return reject(new Error(module+' switch timed out'));
+        setTimeout(tick,20);
+      };tick();
+    }),[module,selector]);
+    switches.push({module,ms});console.log('same-tab switch '+module+': '+Math.round(ms)+' ms');
+    await page.screenshot({path:path.join(root,'same-tab-'+module+'.png')});
+  }
+  await page.close();
+  return {overviewReadyMs:measurement.elapsedMs,warmup,switches,rendererRssBytes:await rendererRss()};
 }
 (async()=>{
   try{
@@ -105,6 +126,7 @@ async function open(context,module){
     browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox',...(process.env.STARTUP_DEBUG_PORT?['--remote-debugging-port='+process.env.STARTUP_DEBUG_PORT]:[])]});
     const context=await browser.newContext({viewport:{width:1600,height:1000}});
     const split=cookie.indexOf('=');await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),url:base,httpOnly:true}]);
+    const sameTab=process.argv.includes('--skip-same-tab')?null:await measureSameTab(context);
     const measurements=[],pages=[];
     for(const module of requestedModules){
       const result=await open(context,module);pages.push(result.page);measurements.push(result.measurement);
@@ -114,24 +136,17 @@ async function open(context,module){
       await result.page.screenshot({path:path.join(root,module+'.png')});
     }
     const orders=measurements.find(item=>item.module==='orders');
-    if(orders.rows!==count)throw new Error('Expected '+count+' Orders rows, received '+orders.rows);
-    await pages.at(-1).evaluate(()=>{window.__retainedOrders=state.orders.rows;});
-    await pages[0].bringToFront();await pages.at(-1).bringToFront();
-    const retained=await pages.at(-1).evaluate(()=>state.orders.rows===window.__retainedOrders);
-    const browserVersion=browser.version();await browser.close();browser=null;
-    let native=null;
-    if(process.env.ELECTRON_PATH){
-      const electron=await _electron.launch({executablePath:process.env.ELECTRON_PATH,args:['--no-sandbox','--disable-gpu','--ozone-platform=headless',path.join(__dirname,'startup-workspace-harness.cjs')],
-        env:{...process.env,BUYER_LOG_STARTUP_MEASURE_ROOT:root,BUYER_LOG_STARTUP_MEASURE_ORIGIN:base,BUYER_LOG_STARTUP_MEASURE_COOKIE:cookie},timeout:60000});
-      try{
-        for(let i=0;i<720;i++){if(await electron.evaluate(()=>global.__startupNativeDone))break;await delay(500);}
-        native=await electron.evaluate(()=>global.__startupNativeResult);
-        if(!native.retained||native.rows!==count)throw new Error('Native startup acceptance failed: '+JSON.stringify(native));
-      }finally{await electron.close();}
+    if(orders&&orders.rows!==count)throw new Error('Expected '+count+' Orders rows, received '+orders.rows);
+    let retained=null;
+    if(orders){
+      await pages.at(-1).evaluate(()=>{window.__retainedOrders=state.orders.rows;});
+      await pages[0].bringToFront();await pages.at(-1).bringToFront();
+      retained=await pages.at(-1).evaluate(()=>state.orders.rows===window.__retainedOrders);
     }
+    const browserVersion=browser.version();await browser.close();browser=null;
     const report={synthetic:true,platform:process.platform,chromium:browserVersion,cpu:os.cpus()[0]?.model,cpuCount:os.cpus().length,totalMemoryBytes:os.totalmem(),
-      requestedRows:count,requestedModules,backendStartupMs,measurements,allTabsRetained:retained,native,
-      limitations:[native?'Native measurements use the production workspace manager and UI in an acceptance harness, excluding the Windows launcher and antivirus.':'Chromium page measurements; native Electron shell and Windows cold disk/antivirus are not included.','Backend process restarted; OS filesystem cache is not purged.','Collection workspace is empty demo data.','RSS sums include shared renderer pages and are not unique physical memory.']};
+      requestedRows:count,requestedModules,backendStartupMs,measurements,allTabsRetained:retained,sameTab,
+      limitations:['Chromium page measurements; native Electron shell and Windows cold disk/antivirus are not included.','Backend process restarted; OS filesystem cache is not purged.','Collection workspace is empty demo data.','RSS sums include shared renderer pages and are not unique physical memory.']};
     fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');console.log('Report: '+output+'; demo screenshots: '+root);
   }finally{if(browser)await browser.close();await stop();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

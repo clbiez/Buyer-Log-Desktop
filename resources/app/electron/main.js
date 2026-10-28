@@ -2426,10 +2426,6 @@ function registerIpc() {
     if (!workspace || !trustedBuyerLogIpcSender(event)) return false;
     return workspace.updateTabModule(event.sender, moduleId);
   });
-  ipcMain.handle('buyerlog:workspace-startup-ready', (event, modules) => {
-    if (!workspace || !trustedBuyerLogIpcSender(event)) return false;
-    return workspace.startupReady(event.sender, modules);
-  });
   ipcMain.handle('buyerlog:workspace-theme', (event, theme) => {
     if (!workspace || !trustedBuyerLogIpcSender(event)) return false;
     return workspace.setTheme(theme);

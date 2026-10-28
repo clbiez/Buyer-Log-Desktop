@@ -8,10 +8,6 @@
 <script src="thinking-orb-breathing.js?v=__BL_ASSET_VERSION__&rev=3"></script>
 <script src="ui-appearance.js?v=__BL_ASSET_VERSION__"></script>
 <script>window.BL_APP_VERSION="__BL_CANONICAL_VERSION__";window.BL_DISPLAY_VERSION="__BL_DISPLAY_VERSION__";window.BL_ASSET_VERSION="__BL_ASSET_VERSION__";window.__BL_DOCUMENT_BOOT_AT=(window.performance&&performance.now)?performance.now():Date.now();</script>
-<script>
-window.BL_STARTUP_WARMING=new URLSearchParams(location.search).get('startupWarm')==='1';
-if(window.BL_STARTUP_WARMING)window.buyerLogDesktop?.workspace?.onTabActivity?.(function(payload){if(payload.active)window.BL_STARTUP_WARMING=false;});
-</script>
 <link rel="stylesheet" href="buyerlog-guide.css?v=__BL_ASSET_VERSION__&rev=4">
 <link rel="stylesheet" href="release-notes.css?v=__BL_ASSET_VERSION__&rev=3">
 <script src="buyerlog-guide-data.js?v=__BL_ASSET_VERSION__&rev=2"></script>
@@ -114,8 +110,6 @@ if(window.BL_STARTUP_WARMING)window.buyerLogDesktop?.workspace?.onTabActivity?.(
     if(slot&&!el.querySelector('[data-boot-continue]')){var b=document.createElement('button');b.type='button';b.className='blBootContinue';b.dataset.bootContinue='1';b.textContent=(english()?'Continue to Buyer Log':'Buyer Log\'a devam et')+' →';b.onclick=dismiss;slot.appendChild(b);try{b.focus({preventScroll:true});}catch(_){}}
     window.BLGuide?.refreshStartup?.();
     window.dispatchEvent(new CustomEvent('bl:startup-ready'));
-    // Background startup tabs are ready to use on their first activation.
-    if(new URLSearchParams(location.search).get('startupWarm')==='1')dismiss();
   }
   function dismiss(){
     if(dismissed)return;dismissed=true;

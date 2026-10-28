@@ -504,17 +504,17 @@
     catch (_) { return { byRow: new WeakMap(), byOrderKey: new Map(), model: null }; }
   }
 
-  function itemApplies(item, analysis) {
+  // rowParts: aynı satırın bütün kalemleri için bir kez hesaplanmış parça listesi.
+  function itemApplies(item, analysis, rowParts) {
     if (!analysis) return true;
     const part = Components.parseItem(item.id);
-    const parts = componentParts(analysis);
     if (part) {
+      const parts = rowParts || componentParts(analysis);
       if (!parts.some(entry => entry.id === part.partId)) return false;
       item = { ...item, id: part.baseId };
-    } else if (parts.length || Components.isSet(analysis.sourceRow || analysis, 'cp')) {
-      // Base item is still applicable in the UI, but workbook callers explicitly
-      // expand it to part-specific columns below.
     }
+    // Set satırında temel kalem arayüzde geçerli kalır; çalışma kitabı çağıranları
+    // onu aşağıda parçaya özel sütunlara açıkça genişletir.
     // Karar katmanı her sipariş için geçerli checklist başlıklarını zaten
     // hesapladı; aynı sonucu yeniden değerlendirmeyiz.
     if (Array.isArray(analysis.checklistItemIds)) return analysis.checklistItemIds.indexOf(item.id) >= 0;
@@ -528,11 +528,11 @@
     });
   }
 
-  function answerFor(item, analysis) {
+  function answerFor(item, analysis, rowParts) {
     if (!analysis) return null;
     const s = assistantState(), Checklist = root.BLCpChecklistEngine;
     if (!s || !Checklist) return null;
-    if (!Components.parseItem(item.id) && componentParts(analysis).length) return { state: Checklist.statusOf(analysis, item.id, { answers: s.answers, item }) };
+    if (!Components.parseItem(item.id) && (rowParts || componentParts(analysis)).length) return { state: Checklist.statusOf(analysis, item.id, { answers: s.answers, item }) };
     const key = Checklist.answerKey(analysis.orderKey, item.id);
     const answer = s.answers && s.answers[key];
     if (answer) return answer;
@@ -600,18 +600,23 @@
       rows.forEach(function (row) {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
         const statuses = {}, partCells = {}, elementCells = {};
+        /* Parça listesi ve set bilgisi satıra bağlıdır, kaleme değil. Hücre başına
+           4-6 kez yeniden hesaplanıyordu; 25 bin satırlık CP'nin ilk çiziminin
+           ~%85'i (≈7,7 sn) bu tekrarlı alan aramalarıydı. */
+        const parts = componentParts(analysis);
+        const setRow = parts.length > 0 || Components.isSet(analysis && (analysis.sourceRow || analysis), 'cp');
         items.forEach(function (item) {
           const key = columnKey(item.id);
           // Soru henüz sorulmuyorsa hücre boştur; ancak test raporundan
           // kullanıcıya düşen bekleyen bir iş varsa hücre görünür kalır.
           const pendingTasks = analysis && state.testTasks.get(answerKey(analysis.orderKey, item.id));
-          if (!itemApplies(item, analysis) && !(pendingTasks && pendingTasks.length)) { row[key] = ''; return; }
+          if (!itemApplies(item, analysis, parts) && !(pendingTasks && pendingTasks.length)) { row[key] = ''; return; }
           // Tek doğruluk kaynağı: karar katmanının hesapladığı durum.
           const computed = analysis && analysis.checklistState && analysis.checklistState[item.id];
-          const answer = computed ? null : answerFor(item, analysis);
+          // Set satırının durumu aşağıda parçalardan toplanır; bütün kalem cevabı okunmaz.
+          const answer = computed || setRow ? null : answerFor(item, analysis, parts);
           const status = (computed && computed !== 'notApplicable' ? computed : '') || normalizeState(answer && answer.state) || 'open';
-          const parts = componentParts(analysis);
-          if (parts.length || Components.isSet(analysis && (analysis.sourceRow || analysis), 'cp')) {
+          if (setRow) {
             const Checklist = root.BLCpChecklistEngine, s = assistantState();
             const states = parts.map(part => ({ ...part, state: Checklist.statusOf(analysis, Components.itemId(item.id, part.id), { answers: s.answers, item }) }));
             partCells[item.id] = { parts: states, legacy: s.answers[Checklist.answerKey(analysis.orderKey, item.id)] || null };
@@ -620,7 +625,7 @@
           } else {
             statuses[item.id] = status;
             // v7.0.290 — bileşen sonuçları tek hücrede: "Main Fabric · Rejected | Neck RIB · Approved".
-            const stored = answerFor(item, analysis);
+            const stored = answerFor(item, analysis, parts);
             const elements = stored && Array.isArray(stored.elements) && stored.elements.length ? stored.elements : null;
             if (elements) elementCells[item.id] = { state: status, elements: elements };
             row[key] = elements ? Components.elementsLabel(elements, statusLabel) : statusLabel(status);

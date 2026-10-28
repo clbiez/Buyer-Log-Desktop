@@ -26,6 +26,8 @@ const BOOTSTRAP_CORE=path.resolve(host.bootstrapCore||LAUNCHER_ROOT);
 const PORTABLE_ROOT=resolvePortableRoot({packaged:app.isPackaged,execPath:process.execPath,appPath:BOOTSTRAP_CORE});
 const LOG_FILE=path.join(PORTABLE_ROOT,'data','local','updater','updater.log');
 function log(event,meta={}){try{fs.mkdirSync(path.dirname(LOG_FILE),{recursive:true});fs.appendFileSync(LOG_FILE,JSON.stringify({at:new Date().toISOString(),event,...meta})+'\n','utf8');}catch(_){} }
+// Saha ölçümü: EXE başlangıcından itibaren geçen süre. Ölçüm hiçbir koşulda açılışı durdurmaz.
+const sinceProcessStartMs=()=>{try{return Math.round(process.uptime()*1000);}catch(_){return null;}};
 const confirmLauncher=()=>{try{if(typeof host.confirm==='function')host.confirm();}catch(_){} };
 
 /* TEK KOPYA KİLİDİ güncelleme durumuna dokunmadan ÖNCE alınır. Deneme (trial)
@@ -82,7 +84,7 @@ async function showLaunchNotice(){
     notice.loadURL('data:text/html;charset=utf-8,'+encodeURIComponent(html)).catch(reject);
   });}catch(error){if(!notice.isDestroyed())notice.destroy();throw error;}
   finally{clearTimeout(timer);}
-  log('launch-notice-visible');
+  log('launch-notice-visible',{sinceProcessStartMs:sinceProcessStartMs()});
 }
 function launchCore(){
 const lifecycle=createLauncherState({bootstrapCore:BOOTSTRAP_CORE,portableRoot:PORTABLE_ROOT});
@@ -97,7 +99,7 @@ function verifySelected(selected){
   const relative=path.relative(path.join(PORTABLE_ROOT,'.buyerlog-versions'),selected.appCoreRoot);
   if(relative.split(path.sep)[0].startsWith('manual-'))patchManager.verifyInstalled(selected);
   else require('./manual-patch/core-verification').verifyPackagedCore(selected.appCoreRoot,selected.version);
-  log('core-verified',{version:selected.version,durationMs:Date.now()-started});
+  log('core-verified',{version:selected.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs()});
 }
 /* Bekleyen çekirdek bu launcher'dan daha yeni bir etkinleştirme protokolü
  * isterse deneme başlatılmaz; updater önce uygun launcher'ı kurar. */

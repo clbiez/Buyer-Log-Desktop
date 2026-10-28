@@ -1,14 +1,73 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-28",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Tek pencerede hızlı açılış ve modül geçişi",
+    "en": "Faster startup and module switching in one window"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Açılışta Koleksiyon, CP ve Siparişler için ayrı sekme açılmaz; yetkili modüllerin verisi aynı pencerede arka planda hazırlanır. CP'nin ilk tablo çizimi ve uygulama dosyalarının sunulması hızlandırıldı.",
+    "en": "Startup no longer opens separate Collection, CP and Orders tabs; authorized module data prepares in the background in the same window. CP's first table render and application file delivery are faster."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "single-window-background-warmup",
+      "type": "fix",
+      "module": {
+        "tr": "Çalışma alanı",
+        "en": "Workspace"
+      },
+      "title": {
+        "tr": "Açılışta ayrı sekme açılmaz; modüller arka planda hazırlanır",
+        "en": "No extra tabs at startup; modules prepare in the background"
+      },
+      "body": {
+        "tr": "Koleksiyon, CP ve Siparişler artık her biri uygulamayı baştan yükleyen ayrı sekmelerde açılmaz. Genel Bakış göründükten sonra yetkili modüllerin verisi aynı pencerede, sırayla ve tarayıcı boştayken yüklenir; modüle ilk geçişte veri beklenmez. Orta tık ile yeni sekme açma aynen çalışır.",
+        "en": "Collection, CP and Orders no longer open in separate tabs that each reload the whole application. After Overview appears, authorized module data loads in the same window, one module at a time while the browser is idle, so the first switch does not wait for data. Middle-click still opens a new tab."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-background-ready.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: arka planda hazırlanan Siparişler ekranı, tek sekmede 30.000 demo satır",
+          "en": "Real Buyer Log: the Orders screen prepared in the background, 30,000 demo rows in one tab"
+        },
+        "caption": {
+          "tr": "Genel Bakış'tan Siparişler'e geçiş, arka planda yüklenen veriyle hemen çizilir.",
+          "en": "Switching from Overview to Orders draws immediately from data loaded in the background."
+        }
+      }
+    },
+    {
+      "id": "cp-first-render-checklist-columns",
+      "type": "improvement",
+      "module": {
+        "tr": "CP",
+        "en": "CP"
+      },
+      "title": {
+        "tr": "CP ilk açılışta daha hızlı çizilir",
+        "en": "CP draws faster on first open"
+      },
+      "body": {
+        "tr": "Checklist sütunları hazırlanırken her satırın set/parça bilgisi her kalem için yeniden hesaplanıyordu. Bu bilgi artık satır başına bir kez hesaplanır; hücre durumları ve parça sonuçları aynı kalır.",
+        "en": "Preparing checklist columns recalculated each row's set/part identity for every item. It is now calculated once per row; cell statuses and part results stay the same."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-background-ready.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: checklist sütunlarıyla çizilmiş CP ekranı, demo veri",
+          "en": "Real Buyer Log: the CP screen drawn with checklist columns, demo data"
+        },
+        "caption": {
+          "tr": "CP tablosu checklist sütunlarıyla birlikte ilk geçişte çizilir.",
+          "en": "The CP table draws with its checklist columns on the first switch."
+        }
+      }
+    }
+  ]
 }

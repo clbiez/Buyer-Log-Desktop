@@ -34,7 +34,6 @@ contextBridge.exposeInMainWorld('buyerLogDesktop', {
       language: String(language || ''),
     }),
     setModule: (moduleId) => ipcRenderer.invoke('buyerlog:workspace-set-module', String(moduleId || '')),
-    startupReady: (modules) => ipcRenderer.invoke('buyerlog:workspace-startup-ready', modules),
     setTheme: (theme) => ipcRenderer.invoke('buyerlog:workspace-theme', String(theme || '')),
     onTabActivity: (callback) => {
       if (typeof callback !== 'function') return () => {};

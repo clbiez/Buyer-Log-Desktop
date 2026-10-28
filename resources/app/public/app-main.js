@@ -1516,6 +1516,8 @@ function syncActivePageTitle(){
 // tek seferde uygulanir. Cagri yerleri degismedi: renderCP/renderOverview
 // isimleri artik bu erteleyici sarmalayicilar.
 var _deferredTabRenders=new Set();
+// Arka planda yüklenmiş, henüz çizilmemiş CP/Siparişler (switchTab betik yüklenirken de çağrılabilir).
+var backgroundWarmupUnrendered=new Set();
 var DEFERRED_TAB_RENDERERS={cp:'renderCPNow',orders:'renderOrdersNow',overview:'renderOverviewNow'};
 function currentActiveTab(){
   return document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'';
@@ -2148,6 +2150,10 @@ function switchTab(tab){
   document.body.dataset.activeTab = tab;
   if(startupReadySignaled)workspaceResume()?.save(tab);
   if(tab==='overview'&&state.overviewDeferred)void ensureOverviewLoaded();
+  // Arka planda yüklenmiş ama hiç çizilmemiş tablo, ilk girişte profil uygulandıktan
+  // sonra bir kez çizilir; ertelenmiş erken çizim ikinci kez çalışmaz.
+  const warmedUnrendered=backgroundWarmupUnrendered.delete(tab);
+  if(warmedUnrendered)_deferredTabRenders.delete(tab);
   flushDeferredRenderForTab(tab);
   syncTableToolbarActions(tab);
   syncNavExcelButtonLabel(tab);
@@ -2165,19 +2171,19 @@ function switchTab(tab){
   if(profileFirstVisit)_favoritesAppliedPages.add(tab);
   const profileReady=profileFirstVisit?applyProfilesForCurrentPage(true):Promise.resolve();
   if(profileFirstVisit)void profileReady.then(()=>{if(currentActiveTab()!==tab)_favoritesAppliedPages.delete(tab);});
-  if(tab==='cp'&&!state.cp){
-    const dataReady=ensureCpLoaded({deferRender:profileFirstVisit});
-    void (profileFirstVisit?Promise.all([dataReady,profileReady]).then(()=>{
+  if(tab==='cp'&&(!state.cp||warmedUnrendered)){
+    const dataReady=ensureCpLoaded({deferRender:profileFirstVisit||warmedUnrendered});
+    void (profileFirstVisit||warmedUnrendered?Promise.all([dataReady,profileReady]).then(()=>{
       if(currentActiveTab()!=='cp'||!state.cp)return;
-      applyStoredProfilesForCurrentPage(true);
+      if(profileFirstVisit)applyStoredProfilesForCurrentPage(true);
       renderCP();
     }):dataReady);
   }
-  if(tab==='orders'&&!state.orders){
-    const dataReady=ensureOrdersLoaded({deferRender:profileFirstVisit});
-    void (profileFirstVisit?Promise.all([dataReady,profileReady]).then(()=>{
+  if(tab==='orders'&&(!state.orders||warmedUnrendered)){
+    const dataReady=ensureOrdersLoaded({deferRender:profileFirstVisit||warmedUnrendered});
+    void (profileFirstVisit||warmedUnrendered?Promise.all([dataReady,profileReady]).then(()=>{
       if(currentActiveTab()!=='orders'||!state.orders)return;
-      applyStoredProfilesForCurrentPage(true);
+      if(profileFirstVisit)applyStoredProfilesForCurrentPage(true);
       renderOrders();
     }):dataReady);
   }
@@ -16642,6 +16648,48 @@ function schedulePostUiStartupTasks(){
 async function refreshSyncStatusBadge(){
   try{const s=await fetchJSON('/api/sync-status');renderSyncStatusBadge(s.status);}catch(_){renderSyncStatusBadge(null);}
 }
+/* ARKA PLAN ÖN YÜKLEME (aynı sekme). Açılış ekranı çizildikten sonra kullanıcının
+   yetkili olduğu CP → Siparişler → Koleksiyon verisi BU renderer'a sırayla,
+   tarayıcı boştayken ve gizli çizimle yüklenir. Modüle ilk geçişte ağ/JSON
+   beklenmez; tablo ilk görünüşte bir kez çizilir. Ayrı native sekme açılmaz:
+   her sekme uygulamanın tamamını ve verisini baştan yükleyip ~1,5 GiB ek bellek
+   ve dakikalarca CPU yarışı üretiyordu (7.0.314 ölçümü). */
+const BACKGROUND_WARMUP_GAP_MS=1500;
+let backgroundWarmupStarted=false;
+function backgroundWarmupSteps(){
+  const modelData=!(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false);
+  return [
+    // CP tablosu ortak öncelikler hazır olmadan çizilmez; karar motoru da burada hazırlanır.
+    {module:'cp',enabled:modelData,ready:()=>Boolean(state.cp&&_unifiedPriorityCache.cp?.rows===state.cp.rows),load:async()=>{
+      const ok=await ensureCpLoaded({deferRender:true,reason:'warmup'});
+      if(ok!==true)return ok;
+      await window.BLPerf?.ensureFeature?.('cpAssistant');
+      await scheduleUnifiedPrioritiesForTable('cp');
+      return true;
+    }},
+    {module:'orders',enabled:modelData,ready:()=>Boolean(state.orders),load:()=>ensureOrdersLoaded({deferRender:true})},
+    {module:'koleksiyon',enabled:true,ready:()=>collectionCatalogsReady(state.collectionCatalogs),load:()=>ensureCollectionCatalogLoaded({deferRender:true})},
+  ];
+}
+function scheduleBackgroundModuleWarmup(){
+  if(backgroundWarmupStarted)return;backgroundWarmupStarted=true;
+  const steps=backgroundWarmupSteps();
+  const idle=fn=>typeof window.requestIdleCallback==='function'?window.requestIdleCallback(fn,{timeout:4000}):setTimeout(fn,0);
+  const next=()=>{
+    const step=steps.shift();
+    if(!step){window.BLPerf?.mark?.('BACKGROUND_WARMUP_DONE');window.dispatchEvent(new CustomEvent('bl:background-warmup-done'));return;}
+    // Yetkisiz alan, zorunlu kaynak filtresi veya zaten yüklü veri için istek atılmaz.
+    if(!step.enabled||step.ready()||window.BLCanAccessArea?.(step.module)!==true){next();return;}
+    window.BLPerf?.mark?.('BACKGROUND_WARMUP_START',{module:step.module});
+    Promise.resolve().then(step.load).then(ok=>{
+      window.BLPerf?.mark?.('BACKGROUND_WARMUP_READY',{module:step.module,ok:ok===true});
+      // Kullanıcı yükleme sırasında modüle geçtiyse switchTab çizimi zaten üstlendi.
+      if(ok===true&&step.module!=='koleksiyon'&&currentActiveTab()!==step.module)backgroundWarmupUnrendered.add(step.module);
+    }).catch(error=>console.warn('Arka plan ön yükleme:',step.module,error))
+      .finally(()=>setTimeout(()=>idle(next),BACKGROUND_WARMUP_GAP_MS));
+  };
+  setTimeout(()=>idle(next),BACKGROUND_WARMUP_GAP_MS);
+}
 // Await only the primary projection of the opening screen. Secondary Overview
 // widgets, off-screen modules, images and Excel engines remain on demand.
 async function waitForStartupPrimaryScreen(){
@@ -16657,9 +16705,6 @@ async function waitForStartupPrimaryScreen(){
   return true;
 }
 function scheduleStartupScreenReady(callback){
-  // An unattached native View can report visible yet receive no animation
-  // frames. Its data/DOM is already prepared; acknowledge it on the next task.
-  if(new URLSearchParams(location.search).get('startupWarm')==='1')return setTimeout(callback,0);
   requestAnimationFrame(()=>requestAnimationFrame(callback));
 }
 window.addEventListener('DOMContentLoaded', async () => {
@@ -16693,15 +16738,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     window.BLPerf?.record?.('firstUsableInteractionMs',performance.now()-(window.BLPerf?.origin?.()||performance.now()));
     signalStartupReady();
     window.dispatchEvent(new CustomEvent('bl:primary-screen-ready'));
-    // Native startup tabs keep independent filters, editors and scroll state.
-    // Access is resolved before preloading; each tab still uses server auth.
-    if(primaryScreenReady||new URLSearchParams(location.search).get('startupWarm')==='1'){
-      const desktopStartup=window.buyerLogDesktop?.workspace?.startupReady;
-      if(desktopStartup)void window.BLPerf._loadScript('user-access-ui.js?rev=APP-UPDATE-V3').then(()=>{
-        const modules=['koleksiyon','cp','orders'].filter(module=>window.BLCanAccessArea?.(module)===true);
-        return desktopStartup(modules);
-      }).catch(error=>console.warn('Startup tabs:',error));
-    }
+    // Erişim katmanı yüklendikten sonra yalnız yetkili modüller ön yüklenir.
+    if(primaryScreenReady)void window.BLPerf._loadScript('user-access-ui.js?rev=APP-UPDATE-V3')
+      .then(scheduleBackgroundModuleWarmup).catch(error=>console.warn('Arka plan ön yükleme başlatılamadı:',error));
     schedulePostUiStartupTasks();
     if(currentActiveTab()==='overview')void ensureOverviewCpDependency();
     if(state.overviewDeferred&&currentActiveTab()==='overview')void ensureOverviewLoaded();

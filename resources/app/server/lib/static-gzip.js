@@ -15,7 +15,9 @@ const TYPES = {
   '.webmanifest': 'application/manifest+json',
 };
 const MIN_BYTES = 1024;
-const DEFAULT_MAX_ENTRIES = 48;
+// Bir renderer açılışı ~155 sıkıştırılabilir dosya ister; 48 kayıtlık LRU sıralı
+// taramada hiç isabet etmiyor ve her sekme/yenilemede hepsini yeniden sıkıştırıyordu.
+const DEFAULT_MAX_ENTRIES = 256;
 const DEFAULT_MAX_BYTES = 32 * 1024 * 1024;
 
 function safeJoin(root, urlPath) {
@@ -76,7 +78,7 @@ function createStaticGzip(root, options) {
     const promise = (async () => {
       const raw = await fs.promises.readFile(filePath);
       const body = await gzip(raw, { level: zlib.constants.Z_DEFAULT_COMPRESSION });
-      return { tag, body, etag: `W/"gz-${tag}"` };
+      return { tag, body };
     })().finally(() => {
       const current = inflight.get(filePath);
       if (current?.promise === promise) inflight.delete(filePath);
@@ -101,6 +103,20 @@ function createStaticGzip(root, options) {
     if (!stat.isFile() || stat.size < minBytes) return next();
 
     const tag = `${stat.size}-${Number(stat.mtimeMs).toString(36)}`;
+    const etag = `W/"gz-${tag}"`;
+    const sendHeaders = () => {
+      res.setHeader('Content-Type', TYPES[ext]);
+      res.setHeader('Content-Encoding', 'gzip');
+      res.setHeader('Vary', 'Accept-Encoding');
+      res.setHeader('ETag', etag);
+      res.setHeader('Cache-Control', cacheControlFor(filePath, req.originalUrl || req.url));
+    };
+    // ETag dosya meta verisinden türetilir; 304 için gövde okunmaz/sıkıştırılmaz.
+    if (String(req.headers['if-none-match'] || '') === etag) {
+      sendHeaders();
+      res.statusCode = 304;
+      return res.end();
+    }
     let entry = cache.get(filePath);
     try {
       if (!entry || entry.tag !== tag) {
@@ -114,15 +130,7 @@ function createStaticGzip(root, options) {
     } catch (_) { return next(); }
 
     if (res.headersSent || res.writableEnded) return;
-    res.setHeader('Content-Type', TYPES[ext]);
-    res.setHeader('Content-Encoding', 'gzip');
-    res.setHeader('Vary', 'Accept-Encoding');
-    res.setHeader('ETag', entry.etag);
-    res.setHeader('Cache-Control', cacheControlFor(filePath, req.originalUrl || req.url));
-    if (String(req.headers['if-none-match'] || '') === entry.etag) {
-      res.statusCode = 304;
-      return res.end();
-    }
+    sendHeaders();
     res.setHeader('Content-Length', String(entry.body.length));
     if (req.method === 'HEAD') return res.end();
     return res.end(entry.body);
