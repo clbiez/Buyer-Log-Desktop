@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.318",
+      "publishedAt": "2026-10-28",
+      "title": {
+        "tr": "Daha hızlı açılış ve modül geçişi",
+        "en": "Faster startup and module switching"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 2,
+        "fixes": 2
+      },
+      "file": "release-notes/7.0.318/release.json"
+    },
+    {
       "version": "7.0.317",
       "publishedAt": "2026-10-27",
       "title": {
