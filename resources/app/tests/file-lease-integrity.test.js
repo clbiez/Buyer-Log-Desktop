@@ -135,3 +135,25 @@ test('unclassified retirement-marker I/O failure cannot authorize takeover',asyn
  try{await assert.rejects(lease.withFileLeaseAsync(file,()=>{entered=true},{timeoutMs:1000,logger:()=>{}}),{code:'EIO'});}finally{metadataFs.access=original;}
  assert.equal(entered,false);assert.equal(fs.readFileSync(ownerFile,'utf8'),before);assert.equal(fs.readFileSync(file,'utf8'),'0');
 });
+
+// Windows TEST regression 7.0.318: a concurrent reclaimer's rmdir got a transient
+// EPERM while the other still held a directory handle, failing the fenced write.
+for(const code of ['EPERM','EACCES','EBUSY'])test('transient lock-directory rmdir '+code+' is retried and the write completes (sync and async)',async()=>{
+ for(const kind of ['Sync','Async']){
+  const file=target(),originalSync=fs.rmdirSync,originalAsync=metadataFs.rmdir;let denied=0;
+  const deny=candidate=>String(candidate)===file+'.write-lock'&&denied<2&&++denied;
+  fs.rmdirSync=function(candidate,...args){if(deny(candidate))throw Object.assign(Error('synthetic transient rmdir denial'),{code});return originalSync.call(this,candidate,...args);};
+  metadataFs.rmdir=async function(candidate,...args){if(deny(candidate))throw Object.assign(Error('synthetic transient rmdir denial'),{code});return originalAsync.call(this,candidate,...args);};
+  try{
+   if(kind==='Sync')lease.withFileLeaseSync(file,()=>fs.writeFileSync(file,'1'),{timeoutMs:1000,logger:()=>{}});
+   else await lease.withFileLeaseAsync(file,async()=>{await metadataFs.writeFile(file,'1');},{timeoutMs:1000,logger:()=>{}});
+  }finally{fs.rmdirSync=originalSync;metadataFs.rmdir=originalAsync;}
+  assert.equal(denied,2,kind);assert.equal(fs.readFileSync(file,'utf8'),'1');assert.equal(fs.existsSync(file+'.write-lock'),false,kind+' lock directory removed after retry');
+ }
+});
+test('a persistent lock-directory rmdir denial still fails closed',()=>{
+ const file=target(),original=fs.rmdirSync;let denied=0;
+ fs.rmdirSync=function(candidate,...args){if(String(candidate)===file+'.write-lock'){denied++;throw Object.assign(Error('synthetic persistent rmdir denial'),{code:'EPERM'});}return original.call(this,candidate,...args);};
+ try{assert.throws(()=>lease.withFileLeaseSync(file,()=>fs.writeFileSync(file,'1'),{timeoutMs:1000,logger:()=>{}}),{code:'EPERM'});}finally{fs.rmdirSync=original;}
+ assert.ok(denied>1,'bounded retry before failing');
+});
