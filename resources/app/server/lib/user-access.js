@@ -2493,12 +2493,14 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     },
     /* Hazır (sıkıştırılmış) CP sayfa önbelleği satır başına _canEditShared taşımaz.
        Aynı çözümleyiciyle, istek anındaki sahiplik bilgisinden paylaşılan alanları
-       düzenleyemeyeceği sipariş kodları döner. Satır anahtarı biçimi ('kod|model|renk')
-       sharedAccessRows ile aynı çok sahipli satır kuralını uygular; çözüm yalnız koda bağlıdır. */
-    sharedEditDeniedOrderCodes: userId => {
+       düzenleyemeyeceği sipariş kodları döner. Yalnız çağıranın verdiği (zaten
+       elindeki satırlardan gelen) kodlar değerlendirilir; kapsam dışı sipariş kodu
+       açığa çıkmaz. Satır anahtarı biçimi ('kod|model|renk') sharedAccessRows ile aynı
+       çok sahipli satır kuralını uygular; çözüm yalnız koda bağlıdır. */
+    sharedEditDeniedOrderCodes: (userId, codes) => {
       const store = readStore(), profile = findProfile(store, clean(userId)), denied = [];
       const resolve = sharedOwnerResolverFor(store, authoritySnapshot);
-      for (const code of Object.keys(authoritySnapshot || {})) {
+      for (const code of new Set((Array.isArray(codes) ? codes : []).map(value => clean(value)).filter(value => /^\d{1,20}$/.test(value)))) {
         if (!resolve({ recordId:`cp-order:${code}||`, userId, systemRole:profile && profile.systemRole }).allowed) denied.push(code);
       }
       return denied;

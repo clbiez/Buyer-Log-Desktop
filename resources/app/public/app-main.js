@@ -2000,7 +2000,9 @@ function applyCpStartupImageRegistry(payload,rows=state.cp?.rows||[]){
 async function applyCpSharedEditAccess(rows){
   if(!rows.length||rows.some(row=>row&&row._canEditShared!==undefined))return false;
   try{
-    const response=await fetch('/api/cp-shared-edit',{cache:'no-store'});
+    // Yalnız elimizdeki satırların kodları sorulur; sunucu kapsam dışı kod döndürmez.
+    const codes=[...new Set(rows.map(row=>row?lineKeyOfRow(row).split('|')[0]:'').filter(Boolean))];
+    const response=await fetch('/api/cp-shared-edit',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({codes})});
     if(!response.ok)return false;
     const denied=new Set((await response.json()).denied||[]);
     for(const row of rows)if(row)row._canEditShared=!denied.has(lineKeyOfRow(row).split('|')[0]);

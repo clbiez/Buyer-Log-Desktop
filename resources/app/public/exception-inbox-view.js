@@ -32,7 +32,9 @@
   if(invalidate){dirty=true;cancel();}
   if(!bridge.allowed()){cancel();gate.clear();render();return;}
   if(!visible()){cancel();return;}
-  render();if(dirty&&!request&&!timer)timer=setTimeout(()=>{timer=0;void refresh();},180);
+  // Açılışta peş peşe gelen geçersiz kılmalar (yetki, CP/öncelik olayları) her biri
+  // 61 MB'lık tam CP okuması başlatıyordu; geçersiz kılmada son olaydan sonra bir kez okunur.
+  render();if(dirty&&!request&&!timer)timer=setTimeout(()=>{timer=0;void refresh();},invalidate?1200:180);
  }
  root()?.addEventListener('click',async event=>{
   if(event.target.closest('[data-inbox-refresh]')){await refresh();if(visible()&&(document.activeElement===document.body||root().contains(document.activeElement)))root().querySelector('[data-inbox-refresh]')?.focus({preventScroll:true});return;}

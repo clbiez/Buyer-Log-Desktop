@@ -8434,10 +8434,14 @@ app.get('/api/page-projection/:module', async (req, res) => {
 // Hazır CP önbelleğiyle gelen satırlar için paylaşılan alan düzenleme yetkisi
 // (/api/data/cp'deki sharedAccessRows ile aynı karar). Yazma uçları yetkiyi
 // ayrıca denetler; bu yalnız arayüzün doğru kilitlenmesi içindir.
-app.get('/api/cp-shared-edit', userAccess.requireArea('cp'), (req, res) => {
+// İstemci yalnız elindeki CP satırlarının sipariş kodlarını gönderir; yanıt onların
+// kilitli alt kümesidir (kapsam dışı kod açığa çıkmaz).
+const CP_SHARED_EDIT_MAX_CODES = 200000;
+app.post('/api/cp-shared-edit', userAccess.requireArea('cp'), express.json({ limit: '8mb' }), (req, res) => {
   try {
-    const profile = req.currentUser;
-    res.set('Cache-Control','no-store').json({ ok:true, denied: userAccess.sharedEditDeniedOrderCodes(profile && profile.id) });
+    const profile = req.currentUser, codes = Array.isArray(req.body && req.body.codes) ? req.body.codes : [];
+    if (codes.length > CP_SHARED_EDIT_MAX_CODES) return res.status(413).json({ ok:false, code:'CP_SHARED_EDIT_TOO_MANY', error:'Çok fazla sipariş kodu.', errorEn:'Too many order codes.' });
+    res.set('Cache-Control','no-store').json({ ok:true, denied: userAccess.sharedEditDeniedOrderCodes(profile && profile.id, codes) });
   } catch (err) { apiError(res, err, 'Paylaşılan alan yetkisi okunamadı.'); }
 });
 

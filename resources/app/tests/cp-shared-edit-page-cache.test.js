@@ -62,12 +62,19 @@ function expectedDenied(userId) {
 
 test('denied order codes match the per-line shared-owner decision for every actor', () => {
   for (const id of ['manager', 'owner', 'moderator']) {
-    assert.deepEqual(runtime.sharedEditDeniedOrderCodes(id).sort(), expectedDenied(id), id);
+    assert.deepEqual(runtime.sharedEditDeniedOrderCodes(id, codes).sort(), expectedDenied(id), id);
   }
-  assert.deepEqual(runtime.sharedEditDeniedOrderCodes('manager'), ['4100002'], 'foreign single owner is locked; multi/unknown owner lines stay open');
-  assert.deepEqual(runtime.sharedEditDeniedOrderCodes('owner'), []);
-  assert.deepEqual(runtime.sharedEditDeniedOrderCodes('moderator'), []);
-  assert.deepEqual(runtime.sharedEditDeniedOrderCodes(''), [], 'no session user keeps the legacy unlocked UI');
+  assert.deepEqual(runtime.sharedEditDeniedOrderCodes('manager', codes), ['4100002'], 'foreign single owner is locked; multi/unknown owner lines stay open');
+  assert.deepEqual(runtime.sharedEditDeniedOrderCodes('owner', codes), []);
+  assert.deepEqual(runtime.sharedEditDeniedOrderCodes('moderator', codes), []);
+  assert.deepEqual(runtime.sharedEditDeniedOrderCodes('', codes), [], 'no session user keeps the legacy unlocked UI');
+});
+
+test('only order codes the caller already holds are evaluated (no out-of-scope disclosure)', () => {
+  assert.deepEqual(runtime.sharedEditDeniedOrderCodes('manager', ['4100003']), []);
+  assert.deepEqual(runtime.sharedEditDeniedOrderCodes('manager', []), []);
+  assert.deepEqual(runtime.sharedEditDeniedOrderCodes('manager'), []);
+  assert.deepEqual(runtime.sharedEditDeniedOrderCodes('manager', ['4100002', '4100002', ' 4100002 ', 'x|y', '../4100002', 12]), ['4100002'], 'deduplicated, only plain numeric codes');
 });
 
 test('the CP client applies the list by the same order-code key as lineKeyOfRow', () => {
@@ -75,5 +82,7 @@ test('the CP client applies the list by the same order-code key as lineKeyOfRow'
   assert.match(app, /row\._canEditShared=!denied\.has\(lineKeyOfRow\(row\)\.split\('\|'\)\[0\]\)/);
   assert.match(app, /if\(!rows\.length\|\|rows\.some\(row=>row&&row\._canEditShared!==undefined\)\)return false;/);
   const server = fs.readFileSync(path.join(__dirname, '../server/server.js'), 'utf8');
-  assert.match(server, /app\.get\('\/api\/cp-shared-edit', userAccess\.requireArea\('cp'\)/);
+  assert.match(server, /app\.post\('\/api\/cp-shared-edit', userAccess\.requireArea\('cp'\), express\.json\(\{ limit: '8mb' \}\)/);
+  assert.match(server, /userAccess\.sharedEditDeniedOrderCodes\(profile && profile\.id, codes\)/);
+  assert.match(app, /const codes=\[\.\.\.new Set\(rows\.map\(row=>row\?lineKeyOfRow\(row\)\.split\('\|'\)\[0\]:''\)\.filter\(Boolean\)\)\];/);
 });

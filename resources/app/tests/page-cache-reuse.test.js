@@ -29,6 +29,7 @@ test('exception inbox and layout control read confirmed CP from the page cache f
   assert.match(LAYOUT,/let response=await fetch\('\/api\/page-projection\/cp',\{credentials:'same-origin',cache:'no-store'\}\);\s*if\(response\.status===404\)response=await fetch\('\/api\/data\/cp'/);
 });
 
-test('an Orders-only data change does not re-read the CP exception inbox', () => {
+test('an Orders-only data change does not re-read the CP exception inbox; bursts coalesce', () => {
+  assert.match(INBOX,/timer=setTimeout\(\(\)=>\{timer=0;void refresh\(\);\},invalidate\?1200:180\);/);
   assert.match(INBOX,/if\(name==='bl:global-flow-data-changed'&&\(event\.detail\?\.reason==='priority-ready'\|\|\(Array\.isArray\(tables\)&&!tables\.includes\('cp'\)\)\)\)return;/);
 });
