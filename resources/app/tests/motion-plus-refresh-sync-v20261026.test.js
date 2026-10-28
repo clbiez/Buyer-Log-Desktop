@@ -23,7 +23,7 @@ function harness({reduced=false,hidden=false,off=false}={}){
     },querySelector:()=>icon,icon};
   }
   const controls=Object.fromEntries(
-    ['topRefreshBtn','serverRefreshBtn','syncStatusBadge','cpRefreshBtn','cpPlmSyncBtn'].map(id=>[id,el(id)])
+    ['topRefreshBtn','serverRefreshBtn','syncStatusBadge','cpRefreshBtn','ordersRefreshBtn','cpPlmSyncBtn'].map(id=>[id,el(id)])
   );
   const doc={
     documentElement:{dataset:{blMotion:off?'off':'on'}},
@@ -68,18 +68,21 @@ test('one-shot refresh feedback and sync pulse retain finite Motion+ durations',
   assert.ok(h.animations.every(a=>Number.isFinite(a.options.iterations)&&a.options.iterations<=8));
 });
 test('active refresh rotates indefinitely and stops only when busy state clears',()=>{
-  const h=harness(),{topRefreshBtn,serverRefreshBtn,syncStatusBadge}=h.controls;
+  const h=harness(),{topRefreshBtn,serverRefreshBtn,cpRefreshBtn,ordersRefreshBtn,syncStatusBadge}=h.controls;
   topRefreshBtn.setClass('spinning',true);
   serverRefreshBtn.setClass('spinning',true);
+  cpRefreshBtn.setClass('spinning',true);
+  ordersRefreshBtn.setClass('spinning',true);
   syncStatusBadge.setClass('is-syncing',true);
-  assert.equal(h.animations.length,3);
-  assert.equal(h.animations[0].options.iterations,Infinity);
-  assert.equal(h.animations[1].options.iterations,Infinity);
-  assert.equal(h.animations[2].options.iterations,8);
+  assert.equal(h.animations.length,5);
+  assert.ok(h.animations.slice(0,4).every(a=>a.options.iterations===Infinity));
+  assert.equal(h.animations[4].options.iterations,8);
   topRefreshBtn.setClass('spinning',false);
   assert.equal(h.animations[0].cancelled,true);
   assert.equal(h.animations[1].cancelled,false);
   serverRefreshBtn.setClass('spinning',false);
+  cpRefreshBtn.setClass('spinning',false);
+  ordersRefreshBtn.setClass('spinning',false);
   syncStatusBadge.setClass('is-syncing',false);
   assert.ok(h.animations.every(x=>x.cancelled));
 });
