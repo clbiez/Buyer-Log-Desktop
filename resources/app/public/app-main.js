@@ -1350,7 +1350,7 @@ function syncNavExcelButtonLabel(tab=document.body.dataset.activeTab){
   const btn=document.getElementById('navExcelBtn');
   if(!label||!btn) return;
   if(tab==='cp'){
-    label.textContent='Export';
+    label.textContent=appLang==='en'?'Export table':'Tabloyu dışa aktar';
     btn.title=appLang==='en'
       ? 'Export the filtered CP table to Excel using light-theme formatting'
       : 'Filtrelenmiş CP tablosunu aydınlık tema biçimiyle Excel’e aktar';
@@ -1456,7 +1456,10 @@ function syncTableToolbarActions(tab=document.body.dataset.activeTab){
   if(columnsWrap)columnsWrap.hidden=tab==='cp'||tab==='orders'||tab==='koleksiyon';
   placeCpDimensionFilters(tab);
   if(tab==='cp'){
-    appendSharedTableActions('cpTableActions',['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','navExcelBtn']);
+    appendSharedTableActions('cpTableActions',['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus']);
+    // Tablo dışa aktarımı Excel çekmecesinin ilk işlemidir; diğer sekmelerde evine döner.
+    const cpExcelSlot=document.querySelector('#cpExcelMenu [data-excel-table-slot]'),cpExcelNode=document.getElementById('navExcelBtn');
+    if(cpExcelSlot&&cpExcelNode)cpExcelSlot.before(cpExcelNode);
     appendSharedTableActions('cpToolsMenu',_selectionActionIds);
     appendSharedTableActions('cpMoreMenu',['navFitColumnsBtn','navFreezeBtn']);
     placeSharedActionsBefore('cpMoreWrap',['navClearFilters']);
@@ -16441,7 +16444,7 @@ function closeOtherToolbarAndColumnPopups(target){
   if(typeof closeHeaderFilter==='function'&&_openFilterPanel&&!_openFilterPanel.contains(target)&&!target.closest?.('.thFilterBtn,.chkFilterBtn'))closeHeaderFilter();
 }
 document.addEventListener('pointerdown',e=>closeOtherToolbarAndColumnPopups(e.target),true);
-[['kolMoreBtn','kolMoreMenu'],['kolPlmSyncBtn','kolPlmSyncMenu'],['kolToolsBtn','kolToolsMenu'],['lflFabricGroupBtn','lflFabricGroupPanel'],['cpToolsBtn','cpToolsMenu'],['ordersToolsBtn','ordersToolsMenu'],['cpPlmSyncBtn','cpPlmSyncMenu'],['ordersPlmSyncBtn','ordersPlmSyncMenu']].forEach(([btnId,menuId])=>{
+[['kolMoreBtn','kolMoreMenu'],['kolPlmSyncBtn','kolPlmSyncMenu'],['kolToolsBtn','kolToolsMenu'],['kolExcelBtn','kolExcelMenu'],['cpExcelBtn','cpExcelMenu'],['lflFabricGroupBtn','lflFabricGroupPanel'],['cpToolsBtn','cpToolsMenu'],['ordersToolsBtn','ordersToolsMenu'],['cpPlmSyncBtn','cpPlmSyncMenu'],['ordersPlmSyncBtn','ordersPlmSyncMenu']].forEach(([btnId,menuId])=>{
   document.getElementById(btnId)?.addEventListener('click',e=>{
     e.stopPropagation();
     const btn=e.currentTarget,menu=document.getElementById(menuId);
@@ -16456,6 +16459,15 @@ document.addEventListener('pointerdown',e=>closeOtherToolbarAndColumnPopups(e.ta
       menu.hidden=true;
       btn?.setAttribute('aria-expanded','false');
     }
+  });
+});
+// Excel çekmecesi bir işlem seçilince kapanır; alt menü tetikleyicisi (Checklist) açık bırakır.
+[['cpExcelBtn','cpExcelMenu'],['kolExcelBtn','kolExcelMenu']].forEach(([btnId,menuId])=>{
+  document.getElementById(menuId)?.addEventListener('click',e=>{
+    const item=e.target.closest('button,label.tbtn');
+    if(!item||item.disabled||item.getAttribute('aria-haspopup')==='true')return;
+    const menu=e.currentTarget;
+    setTimeout(()=>{menu.hidden=true;document.getElementById(btnId)?.setAttribute('aria-expanded','false');},0);
   });
 });
 // v20260930 — Sayfa düğmeleri yalnız KENDİ sayfalarını ister; loadFromServer
@@ -21484,8 +21496,7 @@ function _xlsArgbFromHex(hex){
 // dedicated Shipping workbook/clipboard already has its own fixed palette.
 function shipDomExportPalette(td){
   const theme=document.documentElement.dataset.theme;
-  const tones=theme==='dark'?{body:'#f0f3f6',muted:'#a0adba'}
-    :theme==='grey'?{body:'#101820',muted:'#414e5a'}:{body:'#16212d',muted:'#627184'};
+  const tones=theme==='dark'?{body:'#f0f3f6',muted:'#a0adba'}:{body:'#16212d',muted:'#627184'};
   const calculated=!td.querySelector('input')&&td.cellIndex>0;
   return {bg:null,color:calculated?tones.muted:tones.body,bold:false};
 }
@@ -21842,14 +21853,15 @@ async function exportActiveTableStyled(){
   });
 }
 
-// ================= TEMA — AYDINLIK / GRİ / KARANLIK =================
-const THEMES = { light:{label:'Aydınlık', labelEn:'Light', icon:'#i-moon'}, grey:{label:'Kurşun', labelEn:'Slate', icon:'#i-contrast'}, dark:{label:'Karanlık', labelEn:'Dark', icon:'#i-sun'} };
+// ================= TEMA — AYDINLIK / KARANLIK =================
+const THEMES = { light:{label:'Aydınlık', labelEn:'Light', icon:'#i-moon'}, dark:{label:'Karanlık', labelEn:'Dark', icon:'#i-sun'} };
 // Tema adı tek yerden okunur: hem panel hem ray düğmesinin ipucu bunu kullanır.
-// Antrasit teması kaldırıldı. Taşıma kodu da v5.00'de silindi; tanınmayan bir
-// tema adı gelirse applyTheme sistem temasına düşer.
+// Kurşun (grey) teması kaldırıldı; aydınlık tarafta olduğu için kayıtlı seçim
+// Aydınlık'a taşınır. Başka tanınmayan ad gelirse applyTheme sistem temasına düşer.
+const RETIRED_THEMES = { grey:'light' };
 function themeLabel(key){ const th=THEMES[key]; if(!th) return key; return (appLang==='en'&&th.labelEn)?th.labelEn:th.label; }
 function themeCycleTitle(){ const names=THEME_CYCLE.map(themeLabel).join(' → '); return (appLang==='en'?'Theme: ':'Tema: ')+names; }
-const THEME_CYCLE = ['light','grey','dark'];
+const THEME_CYCLE = ['light','dark'];
 function systemTheme(){ return (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'; }
 let _themeSwitchRelease=null;
 let _themeRequested=null;
@@ -21881,7 +21893,8 @@ function beginFastThemeSwitch(){
   return release;
 }
 function applyTheme(name,options){
-  const resolved = THEMES[name] ? name : systemTheme();
+  const key = RETIRED_THEMES[name] || name;
+  const resolved = THEMES[key] ? key : systemTheme();
   _themeRequested=resolved;
   // Persist only theme/scale for the unauthenticated sign-in shell.
   try{localStorage.setItem('buyerlog.ui.appearance',JSON.stringify({theme:resolved,step:Number(document.documentElement.dataset.fontStep)||0}));}catch(_){}
@@ -21894,14 +21907,20 @@ function applyTheme(name,options){
     return;
   }
   const update=()=>{
+    // Animasyonlu geçişte güncelleme bir sonraki karede çalışır; arada yeni bir
+    // tema istendiyse eski istek uygulanmaz, son seçim kazanır.
+    if(_themeRequested!==resolved)return;
     root.dataset.theme = resolved;
-    // colorScheme: gri tema açık tarafta olduğu için yerel kontroller aydınlık kalır.
+    // colorScheme: yerel kontroller (select, kaydırma çubuğu) temayla aynı tarafta kalır.
     root.style.colorScheme = (resolved==='dark') ? 'dark' : 'light';
     if(use) use.setAttribute('href', THEMES[resolved].icon);
     try{ BLStorage.setItem('lcw_theme', resolved); }catch(e){}
     syncThemeButtonTitle();
   };
   if(typeof _themeSwitchRelease==='function')_themeSwitchRelease(true);
+  // Kullanıcı tetiklediğinde renkler Motion+ ile düğmeden yayılarak değişir;
+  // hareket kapalıysa, GPU yoksa veya tarayıcı desteklemiyorsa anlık yol kalır.
+  if(options&&options.animate&&window.BLMotionPlus?.theme?.(update,options.origin))return;
   const release=beginFastThemeSwitch();
   update();
   if(release)release(false);
@@ -21922,13 +21941,13 @@ function nextTheme(){
 }
 function renderThemePanel(){
   const panel = document.getElementById('themePanel'); if(!panel) return;
-  const cur = document.documentElement.dataset.theme || 'light';
+  const cur = _themeRequested || document.documentElement.dataset.theme || 'light';
   panel.innerHTML = Object.entries(THEMES).map(([key,t])=>
     `<button class="themeOptBtn" data-theme="${key}"><span class="tik">${key===cur?'✓':''}</span><span>${escapeHtml(themeLabel(key))}</span></button>`
   ).join('');
   panel.querySelectorAll('.themeOptBtn').forEach(b=> b.addEventListener('click', ()=>{
     panel.style.display='none';
-    applyTheme(b.dataset.theme,{animate:true}); renderThemePanel();
+    applyTheme(b.dataset.theme,{animate:true,origin:b}); renderThemePanel();
   }));
 }
 const UI_SCALE_PRESETS=[
@@ -21973,7 +21992,7 @@ document.addEventListener('click', e=>{
 
 (function premiumEnhancements(){
   document.documentElement.lang='tr';
-  const themeBtn=document.getElementById('headerThemeBtn'); if(themeBtn) themeBtn.addEventListener('click',()=>applyTheme(nextTheme(),{animate:true}));
+  const themeBtn=document.getElementById('headerThemeBtn'); if(themeBtn) themeBtn.addEventListener('click',event=>applyTheme(nextTheme(),{animate:true,origin:event.currentTarget}));
   document.querySelectorAll('button[title]').forEach(b=>{if(!b.getAttribute('aria-label'))b.setAttribute('aria-label',b.title)});
   if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{try{if((BLStorage.getItem('lcw_theme')||'dark')==='__never_system__')applyTheme('system')}catch(e){}});
 })();

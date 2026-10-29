@@ -3,7 +3,8 @@
  const root=document.documentElement;
  try{
   const saved=JSON.parse(localStorage.getItem('buyerlog.ui.appearance')||'{}');
-  const theme=['light','grey','dark'].includes(saved.theme)?saved.theme:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  // Kaldırılan Kurşun (grey) teması aydınlık tarafta olduğu için Aydınlık'a taşınır.
+  const theme=saved.theme==='grey'?'light':['light','dark'].includes(saved.theme)?saved.theme:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
   root.dataset.theme=theme;
   const step=Number.isInteger(saved.step)&&saved.step>=0&&saved.step<=3?saved.step:0;
   root.dataset.fontStep=String(step);root.dataset.uiScale=['standard','large','xl','compact'][step];

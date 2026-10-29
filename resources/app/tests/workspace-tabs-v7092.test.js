@@ -442,7 +442,8 @@ test('Buyer Log app theme overrides OS theme and updates every open window live'
   const manager=mockManager({dark:false});
   const first=manager.createWindow({module:'overview'});
   const second=manager.createWindow({module:'cp'});
-  assert.equal(normalizeWorkspaceTheme('grey'),'grey');
+  // Kurşun (grey) teması kaldırıldı; eski kayıt aydınlık pencere rengine düşer.
+  assert.equal(normalizeWorkspaceTheme('grey'),'light');
 
   manager.setTheme('dark');
   for(const state of [first,second]){

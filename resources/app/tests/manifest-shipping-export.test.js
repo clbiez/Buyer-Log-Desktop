@@ -8,7 +8,7 @@ function setup(theme,step){
  vm.createContext(context);vm.runInContext(source.slice(start,end),context);return context;
 }
 test('Shipping export preserves cell colors and four row sizes independently of the UI',()=>{
- const expected={light:['#16212d','#627184'],grey:['#101820','#414e5a'],dark:['#f0f3f6','#a0adba']};
+ const expected={light:['#16212d','#627184'],dark:['#f0f3f6','#a0adba']};
  for(const [theme,[body,muted]] of Object.entries(expected))for(let step=0;step<4;step++){
   const c=setup(theme,step),editable=c.shipDomExportPalette({cellIndex:2,querySelector:()=>({})}),calculated=c.shipDomExportPalette({cellIndex:3,querySelector:()=>null});
   assert.equal(editable.color,body);assert.equal(calculated.color,muted);assert.equal(editable.bg,null);assert.equal(calculated.bold,false);

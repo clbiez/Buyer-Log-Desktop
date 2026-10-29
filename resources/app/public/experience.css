@@ -234,6 +234,7 @@ button:disabled .ic{--ic-tint-o:.08;}
 }
 .vfBar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic)>svg.ic{width:16px;height:16px;}
 .appTop .corporateConnections{display:flex;align-items:center;gap:4px;flex:0 0 auto;white-space:nowrap;}
+.appTop .corporateConnections[hidden]{display:none;}
 .appTop .corporateConnection{
   display:inline-flex;align-items:center;justify-content:center;
   height:27px;min-width:42px;padding:0 9px;cursor:pointer;

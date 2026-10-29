@@ -29,9 +29,9 @@
 
   const MODEL_COLUMN_KEYS = new Set(['Model Name', 'Model Adı', 'modelName', 'model']);
   const TABLES = [
-    { sel: '#cpTable', module: 'cp', tools: 'cpToolsMenu' },
+    { sel: '#cpTable', module: 'cp', tools: 'cpToolsMenu', excel: 'cpExcelMenu' },
     { sel: '#ordersTable', module: 'orders', tools: 'ordersToolsMenu' },
-    { sel: '#kolTable', module: 'collection', tools: 'kolToolsMenu' },
+    { sel: '#kolTable', module: 'collection', tools: 'kolToolsMenu', excel: 'kolExcelMenu' },
     // Alt detay raporu çekmecesi (BLDetailDrawer): yalnız ortak kopyalama menüsü.
     { sel: '#blDetailTable', module: 'detail', tools: '' },
   ];
@@ -201,7 +201,7 @@
         run: () => plmBom.openForRow(row, config.module),
       });
     }
-    const tools = toolEntries(config.tools);
+    const tools = [...toolEntries(config.tools), ...toolEntries(config.excel)];
     if (items.length && tools.length) items.push({ separator: true });
     items.push(...tools);
     if (!items.length) return false;

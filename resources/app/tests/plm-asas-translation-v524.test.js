@@ -85,9 +85,9 @@ test('blank Model Budget Month renders as a truly blank cell',()=>{
 // bir açılır menü içinde bulunması sınanmaya devam ediyor.
 /* v7.81 — Import/Export menüsü kaldırıldı; MB List export artık Araçlar
    menüsünde (bkz. mb-list-v520.test.js). */
-test('v5.24 MB List export sits in the Collection toolbar Tools menu',()=>{
+test('v5.24 MB List export sits in the Collection toolbar Excel drawer',()=>{
   const actions=INDEX.slice(INDEX.indexOf('id="kolTableActions"'),INDEX.indexOf('id="kolCount"'));
-  assert.match(actions,/id="kolToolsMenu"[\s\S]*?id="kolMbExportBtn"/);
+  assert.match(actions,/id="kolExcelMenu"[\s\S]*?id="kolMbExportBtn"/);
 });
 
 test('v5.24 Collection picture uses the same anchored right-click delete confirmation as CP',()=>{

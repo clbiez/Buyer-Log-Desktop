@@ -26,18 +26,19 @@ ortak bileşene bağlanır; ayrı palet veya görünüm override dosyası oluşt
 
 ## 2. Tema ve yüzey
 
-Üç tema vardır: `light`, `grey`, `dark`. Açık ve karanlık temanın eski nötr
-ailesi ile tablo başlığı renkleri korunur. Grey, serin mat gri bir çalışma
-zeminidir. Tema rengi yalnız `data-theme` üzerinden değişir.
+İki tema vardır: `light`, `dark`. Açık ve karanlık temanın eski nötr
+ailesi ile tablo başlığı renkleri korunur. Tema rengi yalnız `data-theme`
+üzerinden değişir. Kurşun (`grey`) teması kaldırıldı; kayıtlı `grey` seçimi
+aydınlık tarafta olduğu için `light` olarak açılır (`RETIRED_THEMES`).
 
-| Token | Light | Grey | Kullanım |
+| Token | Light | Dark | Kullanım |
 | --- | --- | --- | --- |
-| `--ui-canvas` | `#f5f7f9` | `#d4d5d7` | çalışma zemini |
-| `--ui-surface` | `#ffffff` | `#e9eaec` | veri yüzeyi |
-| `--ui-surface-soft` | `#fafbfc` | `#dfe1e4` | ikincil yüzey |
-| `--ui-text` | `#16212d` | `#19222c` | ana metin |
-| `--ui-text-muted` | `#5f6f80` | `#414e5a` | açıklama |
-| `--ui-accent` | `#356a96` | `#315e83` | eylem ve odak |
+| `--ui-canvas` | `#f5f7f9` | `#171c22` | çalışma zemini |
+| `--ui-surface` | `#ffffff` | `#20262e` | veri yüzeyi |
+| `--ui-surface-soft` | `#fafbfc` | `#252d36` | ikincil yüzey |
+| `--ui-text` | `#16212d` | `#f0f3f6` | ana metin |
+| `--ui-text-muted` | `#5f6f80` | `#a0adba` | açıklama |
+| `--ui-accent` | `#356a96` | `#8fbfe8` | eylem ve odak |
 
 Karanlık değerlerin ve durum renklerinin kanonik kaynağı `ui-tokens.css`’tir.
 Renk literal’leri yalnız bu kaynakta tanımlanır; custom property ve var fallback değerleri de guard kapsamındadır. `design-color-baseline.json`
@@ -121,9 +122,19 @@ modüller `perf-runtime` lazy sözleşmesine uyar.
 
 - Eylem: ortak yükseklik, font ve odak. Açık varyantlar `primary` ve `quiet`.
   Mevcut `.tbtn`, `.navActionBtn`, `.cpaBtn`, `.mfpBtn`, `.lcBtn` gibi davranış
-  kancaları korunur, ortak bileşen görünümüne bağlanır.
-- Segment ve sekme: köşeli, seçili yüzey ve `aria-selected`/`aria-pressed`.
-  Ortak Tab/ok tuşu davranışı korunur. Filtre etiketi durum metnini taşır.
+  kancaları korunur, ortak bileşen görünümüne bağlanır. **Vurgu dolgusu
+  (`--ui-accent` zemin) yalnız sayfanın birincil eylemindedir** (Yenile, Yeni
+  talep…); seçim durumu dolgu kullanmaz.
+- Segment (mod/filtre seçimi): köşeli; seçili öğe `--ui-selected` zemin +
+  `--ui-selected-ink` metin, `aria-pressed`. Sayfa içi sekme (görünüm/alt sayfa):
+  zeminsiz; seçili öğe `--ui-selected-ink` metin + 2px `--ui-accent` alt çizgi,
+  `aria-selected`. Seçim değişince Motion+ çizgiyi eski öğeden yenisine kaydırır.
+  Yeni grup kapsayıcısı `ui-components.css` v7.0.319 bölümündeki listeye ve
+  `motion-plus.js` `SEGMENTS` listesine eklenir. Ortak Tab/ok tuşu davranışı
+  korunur. Filtre etiketi durum metnini taşır.
+- Bölüm başlığı: `.cardTitle` kalıbı — Barlow Condensed 600, `--ui-font-xl`,
+  büyük harf, `.6px` aralık, `--ui-text-secondary`. Alt başlık Barlow 18px,
+  cümle düzeni. Sayfa adı üst çubuktadır; sayfa içinde tekrarlanmaz.
 - Alan: yüzeyle ayrılır; görünür label, placeholder, disabled ve hata durumu.
   `aria-invalid` yalnız renk dışında hata açıklamasıyla birlikte kullanılır.
 - KPI: küçük açıklama, tabular sayısal değer ve alt bağlam. Her KPI ayrı
@@ -133,6 +144,15 @@ modüller `perf-runtime` lazy sözleşmesine uyar.
 - Modal/çekmece: adlandırılmış dialog, ilk odak, Tab/Shift+Tab sınırı, Escape
   ve tetikleyiciye odak dönüşü. İç içe pencerede yalnız üst katman kapanır.
 - Popover/menü: ortak yüzey; ok/Home/End, disabled öğe atlama ve Escape.
+  Çerçeve ve gölge yalnız menü kabındadır; öğeler çerçevesiz satırdır, hover
+  `--ui-surface-strong`. Aynı işi yapan eylemler tek çekmecede toplanır (ör.
+  CP/Koleksiyon **Excel** çekmecesi: "Excel oluştur" / "İçe aktar ve şablonlar").
+- Seçim çubuğu (`selection-action-bar.js`): CP/Siparişler/Koleksiyon'da satır
+  işaretlenince altta görünür; sayı + Kopyala/Excel/Araçlar. Kendi iş mantığı
+  yoktur, yalnız sayfadaki gerçek düğmeye tıklar ve onların pasif durumunu yansıtır.
+- Üst çubuk: bildirim, yerel işlemler, tek **Bağlantılar** düğmesi (LCW AI/PLM/OAB
+  durum noktaları) ve kullanıcı. Rol kullanıcı menüsündedir. Sol ray altı tek
+  **Görünüm** menüsüdür (dil, tema, arayüz boyutu).
 
 Hover, focus, active, selected, disabled, loading, empty ve error durumları
 aynı tokenları kullanır. Modül CSS’i bu durumlara ayrı renk/çerçeve icat etmez.
@@ -159,15 +179,31 @@ arayüzü önce `motion-plus.js` içindeki ortak `BLMotionPlus.play('card'|'over
 API'sini veya `blMotionEnter` / `blMotionOverlay` sınıfını kullanır; modül başına
 ayrı keyframe, tema rengi, animasyon motoru veya sonsuz döngü eklenmez.
 Hareket paleti yalnız `ui-tokens.css` üzerinden gelir: 100/140 ms temel kontrol,
-240 ms overlay, 340 ms sayfa, 360 ms kart, 390 ms tablo, 440 ms grafik.
+240 ms overlay, 340 ms sayfa, 360 ms kart, 390 ms tablo, 440 ms grafik,
+560 ms tema (`--ui-motion-theme`).
 Easing ortak cubic-bezier ile izlenir. Hareket içerik, geometri ve iş verisi
-üzerinde kalıcı değişiklik yapmaz. Tema değişimi anlıktır; otomatik parıltı,
-snapshot dalgası veya clip-path geçişi yoktur. **Thinking Orbs istisnası:**
+üzerinde kalıcı değişiklik yapmaz.
+
+**Tema geçişi:** Kullanıcı temayı değiştirdiğinde `BLMotionPlus.theme(update, origin)`
+yeni temayı tıklanan denetimden dairesel olarak açar (View Transitions; eski ve
+yeni kare kompozitörde birleşir, tablo hücreleri tek tek boyanmaz). Açılışta,
+sistem temasında, reduced-motion / `data-bl-motion='off'` / görünmez sekmede,
+yazılım çiziminde (`data-bl-render='software'`) veya API yoksa geçiş anlıktır.
+Ard arda istekte son seçim kazanır. Başka modül kendi tema animasyonunu,
+otomatik parıltıyı veya sürekli efekti eklemez. **Thinking Orbs istisnası:**
 7.0.294'ten gelen Breathing (açılış/bekleme) ve Working (harita yüklemesi)
 canvas bileşenleri yalnız gerçekten çalışan `thinking`/loading durumu boyunca
 semantik işlem göstergesi olarak kullanılabilir. Her orb görünmez sekme, ekran
 dışı kalma, işlem sonu ve reduced-motion için duraklama/durdurma ya da tek kare
 uygulamalıdır. Sürekli dekoratif canvas hareketi hâlâ yasaktır.
+**Global Flow istisnası (7.0.319):** Kritik (priority CRITICAL) sipariş taşıyan
+araç, küme ve düğümlerde kırmızı alarm nabzı anlamsal durum göstergesidir;
+yalnız harita canlıyken (`isLive`), hareket izinliyken ve yazılım çiziminde
+değilken ~12 fps ile çalışır, aksi hâlde durağan kırmızı çerçeve kalır. Araçlar
+veri değişiminde bir kez ölçeklenerek girer; rota akışı yalnız fare hattın
+üzerindeyken çizilir. Genel rota akışı (`wantsAnimation`) manifestte kapalı kalır.
+Taşıma simgeleri (gemi/uçak/tır) `MODE_GLYPH_PATHS` tek kaynağından gelir;
+1 araç tek rozet, 2–3 araç kademeli rozet, fazlası üç rozet + "+" işaretidir.
 
 **Sol üstten dalga:** Aktif tablodaki sadece ilk iki görünür gridin
 kaydırma alanında görünen satır ve sütunlarında tek giriş efekti uygulanır. Hücreler diagonal gecikmeyle
@@ -181,7 +217,7 @@ filtre seçimi veya her veri yaması bir dalga başlatmaz.
 geçişinde iptal edilir; `opacity/transform` tercih edilir. Yalnız tablo girişinde
 kısa süreli token tabanlı `backgroundColor` WAAPI istisnası vardır. Grafik ve
 kartlar görünürlükle sınırlı, en çok 14/16 öğe üzerinden animasyon alır.
-Aynı yeni görünür işlevin TR/EN karşılığı, 3 tema × 4 boyut, reduced-motion,
+Aynı yeni görünür işlevin TR/EN karşılığı, 2 tema × 4 boyut, reduced-motion,
 klavye/scroll ve veri doğruluğu regresyonları teslim koşuludur.
 
 ## 7. Guard ve erişilebilirlik

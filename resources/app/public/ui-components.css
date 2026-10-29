@@ -4,13 +4,11 @@ select {color-scheme:light
 }
 html[data-theme="dark"] select {color-scheme:dark
 }
-html[data-theme="grey"] select {color-scheme:light
-}
 .modelFilesSearch,.modelFilesSelect {color-scheme:light
 }
 html[data-theme="dark"] .modelFilesSelect {color-scheme:dark
 }
-html[data-theme="light"] .modelFilesSelect,html[data-theme="grey"] .modelFilesSelect {color-scheme:light
+html[data-theme="light"] .modelFilesSelect {color-scheme:light
 }
 .kolPeriodDrawer {color-scheme:inherit
 }
@@ -50,10 +48,6 @@ html[data-theme="light"] table:not(#shipTable) thead th {
   color:var(--ui-header-ink)!important
 }
 [data-iam-body] {background:var(--ui-surface)
-}
-html[data-theme="grey"] table:not(#shipTable) thead th {
-  background:var(--ui-header-bg) !important; background-color:var(--ui-header-bg) !important;
-  color:var(--ui-header-ink) !important
 }
 body {font-family:var(--ui-font-body);letter-spacing:0
 }
@@ -1200,6 +1194,13 @@ html[data-ui-system="manifest"] .tableSearchHelpNote {
 html[data-ui-system="manifest"] .ic {stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round
 }
 html[data-ui-system="manifest"] #_fastThemeCurtain {z-index:var(--ui-z-tooltip)
+}
+/* Motion+ tema geçişi: yeni tema eski anlık görüntünün üstünde BLMotionPlus.theme ile açılır. */
+html.blThemeMorph::view-transition-old(root),html.blThemeMorph::view-transition-new(root) {animation:none;mix-blend-mode:normal
+}
+html.blThemeMorph::view-transition-old(root) {z-index:var(--ui-z-data)
+}
+html.blThemeMorph::view-transition-new(root) {z-index:var(--ui-z-raised)
 }
 html[data-ui-system="manifest"].blThemeSwitching body,html[data-ui-system="manifest"].blThemeSwitching .rail,html[data-ui-system="manifest"].blThemeSwitching button,html[data-ui-system="manifest"].blThemeSwitching input,html[data-ui-system="manifest"].blThemeSwitching select,html[data-ui-system="manifest"].blThemeSwitching textarea {
   transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast);animation:none!important
@@ -4575,7 +4576,7 @@ html[data-ui-system="manifest"] .aiAutomationStatus.error {color:var(--ui-danger
 html[data-ui-system="manifest"] .aiAutomationDetails {background:var(--ui-surface-soft) !important;color:var(--ui-text-muted) !important;font:var(--ui-font-xs)/1.45 var(--ui-font-mono) !important
 }
 html[data-ui-system="manifest"] .tableToolbarActions>.navActionBtn.toolbarFramedAction,html[data-ui-system="manifest"] .toolbar>.navActionBtn.toolbarFramedAction {
-  border:0 !important;background:var(--ui-surface) !important;
+  background:var(--ui-surface) !important;
   color:var(--ui-text-secondary) !important;border-radius:var(--ui-radius) !important
 }
 html[data-ui-system="manifest"] .tableToolbarActions>.navActionBtn.toolbarFramedAction:hover,html[data-ui-system="manifest"] .toolbar>.navActionBtn.toolbarFramedAction:hover {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
@@ -5590,9 +5591,9 @@ html[data-ui-system="manifest"] #blBootGuard button {background:transparent !imp
 }
 html[data-ui-system="manifest"] #blBootGuard button:hover {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
 }
-html[data-ui-system="manifest"][data-theme="dark"] #blBootGuard,html[data-ui-system="manifest"][data-theme="grey"] #blBootGuard {background:var(--ui-canvas) !important;color:var(--ui-text) !important
+html[data-ui-system="manifest"][data-theme="dark"] #blBootGuard {background:var(--ui-canvas) !important;color:var(--ui-text) !important
 }
-html[data-ui-system="manifest"][data-theme="dark"] #blBootGuard .blBootCard,html[data-ui-system="manifest"][data-theme="grey"] #blBootGuard .blBootCard {background:transparent !important
+html[data-ui-system="manifest"][data-theme="dark"] #blBootGuard .blBootCard {background:transparent !important
 }
 html[data-ui-system="manifest"] .cfpRevision .cfpItem {font-size:var(--ui-font-xs) !important
 }
@@ -7796,7 +7797,7 @@ html[data-ui-system="manifest"] .sourceRefreshTable tbody tr:last-child td {bord
 }
 html[data-ui-system="manifest"] .sourceRefreshTable thead th {z-index:var(--ui-z-data);background:var(--ui-accent) !important;color:var(--ui-accent) !important;font-weight:700 !important
 }
-html[data-ui-system="manifest"][data-theme="dark"] .sourceRefreshTable thead th,html[data-ui-system="manifest"][data-theme="grey"] .sourceRefreshTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
+html[data-ui-system="manifest"][data-theme="dark"] .sourceRefreshTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .sourceRefreshTable tbody tr:hover td {background:var(--ui-row-hover) !important
 }
@@ -8231,8 +8232,6 @@ html[data-ui-system="manifest"] .autoEditorScroll>.autoSection>.autoSectionTitle
 html[data-ui-system="manifest"] .autoPreviewNote.isWarn {color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .autoPreviewTableWrap {border-radius:var(--ui-radius) !important
-}
-html[data-ui-system="manifest"][data-theme="grey"] .sourceRefreshTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important
 }
 html[data-ui-system="manifest"] .verHistTitle,html[data-ui-system="manifest"] .verHistDetailTitle {
   font-family:var(--ui-font-heading) !important;font-weight:600 !important;letter-spacing:.01em
@@ -15143,4 +15142,151 @@ html[data-ui-system="manifest"] #currentUserBtn #currentUserInitials{
   border-radius:var(--ui-mark-radius)!important;
   background:var(--ui-mark-paper)!important;color:var(--ui-avatar-ink)!important;
   font-weight:800!important;
+}
+/* ===== v7.0.319 · Sade ve tutarlı yüzeyler (DESIGN_SYSTEM.md §5) =====
+   Vurgu dolgusu yalnız birincil eylemdedir. Seçim grupları (segment) açık
+   seçim zemini, sayfa içi sekmeler alt vurgu çizgisi kullanır. Menü öğeleri
+   çerçevesiz satırdır; çerçeve ve gölge yalnız menü kabındadır. */
+html[data-ui-system="manifest"] :is(.toolbarMoreMenu,.railAppearanceMenu,#corporateConnections) :is(.navActionBtn,button.tbtn,label.tbtn,.vfMenuTrigger,.corporateConnection,.railFoot button,button[id^="rail"]) {border:0 !important;box-shadow:none !important;background:transparent !important;justify-content:flex-start !important
+}
+html[data-ui-system="manifest"] :is(.toolbarMoreMenu,.railAppearanceMenu,#corporateConnections) :is(.navActionBtn,button.tbtn,label.tbtn,.vfMenuTrigger,.corporateConnection,button[id^="rail"]):hover:not(:disabled) {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+}
+html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.cpaSeg) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]) {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font-weight:600 !important
+}
+html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.cpaSeg) > button:not(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]):hover:not(:disabled) {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+}
+html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs) > button {position:relative;border:0 !important;box-shadow:none !important
+}
+html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]) {background:transparent !important;color:var(--ui-selected-ink) !important;font-weight:600 !important
+}
+html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"])::after {content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .blSegmentGlide {position:fixed;height:2px;background:var(--ui-accent);transform-origin:left center;pointer-events:none;z-index:var(--ui-z-tooltip)
+}
+/* Bölüm başlıkları tek kalıpta: Barlow, büyük harf (bkz. .cardTitle). */
+html[data-ui-system="manifest"] :is(.dmTitle,.autoHeader h2,.ovInboxHead > b) {font:600 var(--ui-font-xl)/1.15 var(--ui-font-heading) !important;letter-spacing:.6px !important;text-transform:uppercase !important;color:var(--ui-text-secondary) !important
+}
+/* Genel Bakış KPI birimi okunur boyutta. */
+html[data-ui-system="manifest"] .ovPulseKpi strong small {font:500 var(--ui-font-sm) var(--ui-font-body) !important;letter-spacing:0 !important;margin-left:4px
+}
+/* Üst çubuk: rol rozeti kullanıcı menüsündedir; bağlantılar tek düğmede. */
+html[data-ui-system="manifest"] .accessModeBadge {display:none !important
+}
+html[data-ui-system="manifest"] .corporateConnectionsWrap {position:relative;display:inline-flex;align-items:center
+}
+html[data-ui-system="manifest"] .appTop .corporateConnectionsTrigger {width:auto !important;padding:0 10px !important;gap:8px;display:inline-flex;align-items:center;font:600 var(--ui-font-xs)/1 var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .corporateConnectionDots {display:inline-flex;gap:3px
+}
+html[data-ui-system="manifest"] .corporateConnectionDots i {width:7px;height:7px;background:var(--ui-group-divider)
+}
+html[data-ui-system="manifest"] .corporateConnectionDots i[data-state="connected"] {background:var(--ui-success)
+}
+html[data-ui-system="manifest"] .corporateConnectionDots i[data-state="connecting"] {background:var(--ui-warning)
+}
+html[data-ui-system="manifest"] .appTop #corporateConnections {position:fixed;min-width:220px;flex-direction:column;align-items:stretch;gap:1px;padding:4px;background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;z-index:var(--ui-z-popover)
+}
+html[data-ui-system="manifest"] .appTop #corporateConnections[hidden] {display:none !important
+}
+html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnection {height:var(--ui-control-height);width:100%;padding:0 10px;gap:8px;font:500 var(--ui-font-sm)/1 var(--ui-font-body) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnection::before {content:"";width:7px;height:7px;flex:none;background:var(--ui-group-divider)
+}
+html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnection[data-state="connected"]::before {background:var(--ui-success)
+}
+html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnection[data-state="connecting"]::before {background:var(--ui-warning)
+}
+@media (max-width:850px) {
+html[data-ui-system="manifest"] .corporateConnectionsLabel {display:none
+}
+}
+/* Ray: dil, tema ve boyut tek Görünüm menüsünde. */
+html[data-ui-system="manifest"] .railAppearanceMenu {position:fixed;min-width:210px;display:flex;flex-direction:column;gap:1px;padding:4px;background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;z-index:var(--ui-z-popover)
+}
+html[data-ui-system="manifest"] .railAppearanceMenu[hidden] {display:none !important
+}
+html[data-ui-system="manifest"] .railFoot .railAppearanceMenu button {width:100% !important;justify-content:flex-start !important;padding:0 10px !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .railFoot .railAppearanceMenu button span {display:inline !important
+}
+/* Seçim çubuğu: tablonun altında, içerik alanının ortasında. */
+html[data-ui-system="manifest"] .blSelectionBarHost {position:fixed;left:var(--ui-rail-width);right:0;bottom:44px;display:flex;justify-content:center;pointer-events:none;z-index:var(--ui-z-popover)
+}
+html[data-ui-system="manifest"] .blSelectionBar {pointer-events:auto;display:flex;align-items:center;gap:4px;padding:5px 6px 5px 14px;background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;color:var(--ui-text)
+}
+html[data-ui-system="manifest"] .blSelectionBar[hidden] {display:none !important
+}
+html[data-ui-system="manifest"] .blSelectionCount {font:500 var(--ui-font-sm)/1 var(--ui-font-body);color:var(--ui-text-secondary);white-space:nowrap;margin-right:6px
+}
+html[data-ui-system="manifest"] .blSelectionCount b {font-weight:700;color:var(--ui-selected-ink)
+}
+html[data-ui-system="manifest"] .blSelectionDivider {width:1px;align-self:stretch;margin:2px 6px 2px 0;background:var(--ui-row-divider)
+}
+html[data-ui-system="manifest"] .blSelectionBar .blSelectionAction {gap:6px;font-size:var(--ui-font-sm) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] .blSelectionBar .blSelectionDismiss {width:var(--ui-control-height);height:var(--ui-control-height);margin-left:2px
+}
+/* Veri Yönetimi: katlanabilir paneller. */
+html[data-ui-system="manifest"] .dmPanelToggle {display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:none;margin-right:4px;background:transparent !important;color:var(--ui-text-muted) !important;cursor:pointer
+}
+html[data-ui-system="manifest"] .dmPanelToggle:hover {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .dmPanelToggle .ic {width:14px;height:14px
+}
+html[data-ui-system="manifest"] .dmPanel.isCollapsed .dmPanelToggle .ic {transform:rotate(-90deg)
+}
+html[data-ui-system="manifest"] .dmPanel.isCollapsed > :not(.dmPanelHead) {display:none !important
+}
+html[data-ui-system="manifest"] .dmPanel > .dmPanelHead:has(> .dmPanelToggle) {justify-content:flex-start
+}
+html[data-ui-system="manifest"] .dmPanel > .dmPanelHead > .dmPanelToggle + .dmPanelTitle {margin-right:auto
+}
+/* Koleksiyon: genişletilecek opsiyon yokken pasif düğme gösterilmez. */
+html[data-ui-system="manifest"] #kolAllVariantsToggle:disabled {display:none !important
+}
+/* Not hatırlatıcısı boşken sakin, nötr bilgi satırı. */
+html[data-ui-system="manifest"] .ovPriorityEmpty.success {background:transparent !important;color:var(--ui-text-muted) !important
+}
+/* Global Flow: taşıma simgeleri ve hover özeti (overview-global-flow.js). */
+html[data-ui-system="manifest"] .globalFlowLegend .gfLegendIcon {width:14px;height:14px;fill:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .globalFlowLegend .air .gfLegendIcon {fill:var(--ui-chart-3)
+}
+html[data-ui-system="manifest"] .globalFlowLegend .road .gfLegendIcon {fill:var(--ui-warning)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip {width:244px !important;gap:6px !important;padding:9px 10px !important;box-shadow:var(--ui-shadow-overlay) !important
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipHead {display:flex;align-items:center;gap:7px;min-width:0
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipHead b {flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 var(--ui-font-xs)/1.2 var(--ui-font-body) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipMode {display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:none;background:color-mix(in srgb,var(--ui-accent) 12%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipMode .gfModeIcon {width:16px;height:16px;fill:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipMode[data-mode="air"] {background:color-mix(in srgb,var(--ui-chart-3) 14%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipMode[data-mode="air"] .gfModeIcon {fill:var(--ui-chart-3)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipMode[data-mode="road"] {background:color-mix(in srgb,var(--ui-warning) 14%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipMode[data-mode="road"] .gfModeIcon {fill:var(--ui-warning)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipHead em {flex:none;padding:2px 5px;background:var(--ui-danger-bg);font:700 var(--ui-font-2xs)/1 var(--ui-font-body) !important;color:var(--ui-danger) !important;text-transform:uppercase
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipStats {display:grid;grid-template-columns:repeat(3,1fr);gap:4px
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipStats span {display:grid;gap:1px;padding:4px 5px;background:var(--ui-surface-soft);color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipStats strong {font:700 var(--ui-font-sm)/1.1 var(--ui-font-body);color:var(--ui-text);font-variant-numeric:tabular-nums
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipProgress {height:4px;background:var(--ui-surface-strong)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipProgress i {display:block;height:100%;width:var(--gf-progress,0%);background:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip.isCritical .gfTipProgress i {background:var(--ui-danger)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipAlarm {display:none
+}
+html:root[data-ui-system="manifest"] .globalFlowLegend .critical i {background:var(--ui-danger) !important;width:7px;height:7px
 }

@@ -3717,3 +3717,9 @@ button.ovNoteCount{cursor:pointer;}
   margin-top:0;
 }
 #ordersTable tbody .cpLogisticDateSource,#ordersTable tbody .cpLogisticMore{margin-left:5px;}
+/* Excel çekmecesi: tetikleyicide küçük ok; menüde tablo dışa aktarımı etiketiyle görünür. */
+.blExcelTrigger .blMenuChevron{width:10px;height:10px;margin-left:2px;flex:none;}
+.blExcelTrigger[aria-expanded="true"] .blMenuChevron{transform:rotate(180deg);}
+.blExcelMenu{min-width:260px;}
+.blExcelMenu .tableActionIconOnly{width:auto!important;min-width:0!important;justify-content:flex-start!important;}
+.blExcelMenu .tableActionIconOnly>span{display:inline!important;}

@@ -22,7 +22,7 @@ function tabInsertIndex(clientX) {
 function render(next) {
   if (!next) return;
   state = next;
-  const theme = ['light','grey','dark'].includes(String(state.theme || '').toLowerCase()) ? String(state.theme).toLowerCase() : 'light';
+  const theme = ['light','dark'].includes(String(state.theme || '').toLowerCase()) ? String(state.theme).toLowerCase() : 'light';
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light';
   strip.innerHTML = state.tabs.map(tab => {

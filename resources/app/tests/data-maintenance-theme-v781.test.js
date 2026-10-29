@@ -120,7 +120,7 @@ const PAIRS = [
 ];
 
 for (const [themeName, selector] of [
-  ['Aydınlık', ':root{'], ['Kurşun', '[data-theme="grey"]{'], ['Karanlık', '[data-theme="dark"]{'],
+  ['Aydınlık', ':root{'], ['Karanlık', '[data-theme="dark"]{'],
 ]) {
   test(`v7.81 ${themeName} temada her yazı okunur (WCAG AA)`, () => {
     const tokens = selector === ':root{' ? tokensFor(':root{') : { ...tokensFor(':root{'), ...tokensFor(selector) };

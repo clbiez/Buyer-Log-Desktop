@@ -22,8 +22,9 @@ test('v5.21 MB List screen and its note API are removed while Collection MB Exce
   // v7.81 — "İçe / Dışa Aktar" sekmesi kullanıcı talebiyle KALDIRILDI; MB Listesi
   // dışa aktarımı Araçlar (kolToolsMenu) menüsüne taşındı. Sınanan şey aynı kalıyor:
   // düğme Koleksiyon araç çubuğunda duruyor ve tek bir yerde bulunuyor (çoklanmıyor).
+  // Excel üreten işlemler Araçlar'dan Excel çekmecesine (kolExcelMenu) taşındı.
   const tableActions=INDEX.slice(INDEX.indexOf('id="kolTableActions"'),INDEX.indexOf('id="kolCount"'));
-  assert.match(tableActions,/id="kolToolsMenu"[\s\S]*?id="kolMbExportBtn"/);
+  assert.match(tableActions,/id="kolExcelMenu"[\s\S]*?id="kolMbExportBtn"/);
   assert.doesNotMatch(INDEX,/id="kolIoMenu"/, 'İçe / Dışa Aktar menüsü kaldırılmış olmalı');
   assert.equal((INDEX.match(/id="kolMbExportBtn"/g)||[]).length,1,'MB dışa aktarım düğmesi tek olmalı');
   assert.match(APP,/function kolExportSelectedMb\(/);

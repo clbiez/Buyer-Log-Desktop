@@ -31,7 +31,7 @@
       {label:L('Tüm değişiklikleri kaydet','Save all changes'),hint:L('Kayıt','Save'),keywords:'save kaydet',run:()=>click('#saveAllBtn')},
       {label:L('Backlog sunum raporunu aç','Open Backlog presentation report'),hint:'Backlog',keywords:'backlog rapor report html pdf sunum presentation',run:()=>afterTab('backlog','#backlogPresentBtn'),when:()=>tabAllowed(doc.querySelector('nav.tabs button[data-tab="backlog"]'))},
       {label:L('Excel Backlog V3 indir','Download Excel Backlog V3'),hint:'Backlog',keywords:'excel backlog v3 export indir',run:()=>afterTab('backlog','#backlogExportV3Btn'),when:()=>tabAllowed(doc.querySelector('nav.tabs button[data-tab="backlog"]'))},
-      {label:L('Temayı değiştir','Change theme'),hint:L('Görünüm','View'),keywords:'tema theme dark karanlık kurşun grey',run:()=>click('#railThemeBtn')}, // i18n-ignore: arama anahtar kelimeleri görünmez
+      {label:L('Temayı değiştir','Change theme'),hint:L('Görünüm','View'),keywords:'tema theme dark karanlık light aydınlık',run:()=>click('#railThemeBtn')}, // i18n-ignore: arama anahtar kelimeleri görünmez
       {label:L('Dili değiştir (TR/EN)','Switch language (TR/EN)'),hint:L('Görünüm','View'),keywords:'dil language english türkçe',run:()=>click('#railLangBtn')},
       {label:L('Arayüz boyutunu değiştir','Change interface size'),hint:L('Görünüm','View'),keywords:'boyut size font yazı büyük compact',run:()=>click('#railFontSizeBtn')}, // i18n-ignore: arama anahtar kelimeleri görünmez
       {label:L('Menüyü daralt / genişlet','Collapse / expand menu'),hint:L('Görünüm','View'),keywords:'menu menü ray rail daralt collapse',run:()=>click('#railCollapse')},
