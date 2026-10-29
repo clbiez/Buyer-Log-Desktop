@@ -1,14 +1,102 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-29",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Etkileşimli HTML sunum ve tüm koleksiyon başlıkları",
+    "en": "Interactive HTML presentation and every collection header"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Sunum editörü HTML'i artık kaydırınca canlanan, modele tıklayınca ayrıntısı açılan etkileşimli bir sunum olarak oluşturuyor; kartlara ve gruplamaya koleksiyon tablosunun tüm başlıkları eklenebiliyor; PDF alt bilgisi üst üste binmiyor ve yerleşim adımında ayar paneli önizlemeyi kaydırmıyor.",
+    "en": "The presentation editor now creates HTML as an interactive presentation that comes alive as you scroll and opens a model's details on click; cards and grouping can use every collection table header; the PDF footer no longer overlaps and the settings panel in the layout step no longer scrolls the preview."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "output-studio-interactive-html",
+      "type": "feature",
+      "module": {
+        "tr": "Sunum Editörü",
+        "en": "Presentation Editor"
+      },
+      "title": {
+        "tr": "HTML çıktısı etkileşimli, animasyonlu bir sunum oldu",
+        "en": "HTML output is now an interactive, animated presentation"
+      },
+      "body": {
+        "tr": "Sunum editöründe HTML seçildiğinde dosya, Studio'da kurduğunuz düzenin aynısını (başlık bandı, gruplar, kart bilgileri, not, alt bilgi) ekran boyutuna göre ölçeklenen slaytlar hâlinde gösterir. Slaytlar kaydırınca yerine oturur ve kartlar sırayla belirir; üstte ilerleme çubuğu, sağda bulunduğunuz slaytı gösteren noktalar, “Tüm slaytlar” ile genel bakış vardır. Bir modele tıklayınca büyük görsel ve seçili tüm kart bilgileri açılır; Önceki/Sonraki ile modeller arasında gezilir. Dosya betik çalıştırmaz (katı güvenlik politikası korunur), hareket azaltma tercihine uyar ve yazdırınca her slayt bir sayfa olur. PDF çıktısında sayfa altındaki iki yazının üst üste binmesi giderildi. LCW AI kullanılmadan oluşturulan sunumlarda PowerPoint, PDF ve HTML alt bilgisinde yalnız “Buyer Log” yazar.",
+        "en": "When HTML is chosen in the presentation editor, the file shows exactly the layout you built in Studio (title band, groups, card details, note, footer) as slides that scale to the screen. Slides snap into place as you scroll and cards appear one after another; a progress bar at the top, dots on the right showing the current slide and an “All slides” overview help navigation. Clicking a model opens a large image with all chosen card details; Previous/Next move between models. The file runs no scripts (the strict security policy is kept), respects reduced-motion preferences and prints one slide per page. In the PDF output, the two overlapping texts at the bottom of each page are fixed. Presentations created without LCW AI show only “Buyer Log” in PowerPoint, PDF and HTML footers."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "output-studio-interactive-html.png",
+        "alt": {
+          "tr": "Buyer Log'un oluşturduğu HTML sunum: Fabric'e göre gruplanmış slaytın üzerinde tıklanan modelin büyük görseli ve Colour Code, Fit, Quantity, Target Price, Fabric bilgileri ile Önceki, Kapat, Sonraki düğmeleri (demo veri)",
+          "en": "HTML presentation created by Buyer Log: over a slide grouped by Fabric, the clicked model's large image with Colour Code, Fit, Quantity, Target Price and Fabric details plus Previous, Close and Next buttons (demo data)"
+        },
+        "caption": {
+          "tr": "Modele tıklayınca ayrıntısı açılır; Önceki/Sonraki ile gezilir.",
+          "en": "Click a model to open its details; move on with Previous/Next."
+        }
+      }
+    },
+    {
+      "id": "output-studio-any-collection-column",
+      "type": "fix",
+      "module": {
+        "tr": "Sunum Editörü",
+        "en": "Presentation Editor"
+      },
+      "title": {
+        "tr": "Kartlara ve gruplamaya her koleksiyon başlığı eklenebilir",
+        "en": "Any collection header can be used on cards and for grouping"
+      },
+      "body": {
+        "tr": "Kart bilgileri ve 1./2./3. grup listeleri yalnız sabit alanları değil, koleksiyon tablosundaki tüm dolu başlıkları sunar: Kumaş, Hedef Fiyat, Kalıp, Asorti, Notlar ve kendi eklediğiniz sütunlar. Değerler tabloda gördüğünüz biçimde, açılış anının kopyası olarak yazılır; büyük/küçük harf ve boşluk farkı olan değerler aynı grupta toplanır. Varsayılan kart bilgileri artık açıklamadaki gibi renk kodu, kalıp, adet ve hedef fiyattır. Gruplama açıklamasında alan kodu yerine başlık adı görünür. Excel, PDF ve HTML çıktıları da aynı alanları kullanır.",
+        "en": "Card details and the 1st/2nd/3rd group lists offer every filled collection table header, not only a fixed set: Fabric, Target Price, Fit, Assortment, Notes and your own columns. Values are written as shown in the table, as a snapshot taken when the editor opens; values differing only in case or spacing share one group. Default card details are now colour code, fit, quantity and target price, as the description says. The grouping hint shows the header name instead of the field code. Excel, PDF and HTML outputs use the same fields."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "output-studio-any-collection-column.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log sunum editörü, Modeller ve bilgiler adımı: kart bilgilerinde Colour Code, Fit, Quantity, Target Price ve Fabric işaretli; 1. grup Fabric (demo veri)",
+          "en": "Real Buyer Log presentation editor, Models and details step: Colour Code, Fit, Quantity, Target Price and Fabric ticked in card details; 1st group is Fabric (demo data)"
+        },
+        "caption": {
+          "tr": "Kumaş, Hedef Fiyat ve Kalıp artık kart bilgisi ve grup olarak seçilebiliyor.",
+          "en": "Fabric, Target Price and Fit can now be chosen as card details and groups."
+        }
+      }
+    },
+    {
+      "id": "output-studio-independent-scroll",
+      "type": "fix",
+      "module": {
+        "tr": "Sunum Editörü",
+        "en": "Presentation Editor"
+      },
+      "title": {
+        "tr": "Ayar paneli önizlemeyi kaydırmıyor",
+        "en": "The settings panel no longer scrolls the preview"
+      },
+      "body": {
+        "tr": "Sunumu şekillendir adımında soldaki ayar paneli ve sağdaki slayt önizlemesi ayrı ayrı kayar; panelde aşağı inerken önizleme yerinde kalır. Bir ayar değiştirildiğinde panel başa dönmez, bulunduğunuz konumda kalır.",
+        "en": "In the Shape the presentation step the settings panel on the left and the slide preview on the right scroll separately; the preview stays in place while you scroll the panel. Changing a setting keeps the panel at its current position instead of jumping to the top."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "output-studio-independent-scroll.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log sunum editörü, Sunumu şekillendir adımı: ayar paneli aşağı kaydırılmışken slayt önizlemesi üstte sabit; kartlar Fabric'e göre Single Jersey ve Pique gruplarında (demo veri)",
+          "en": "Real Buyer Log presentation editor, Shape the presentation step: the settings panel is scrolled down while the slide preview stays at the top; cards grouped by Fabric into Single Jersey and Pique (demo data)"
+        },
+        "caption": {
+          "tr": "Panel aşağı kaydırıldı; önizleme yerinde.",
+          "en": "Panel scrolled down; preview stays put."
+        }
+      }
+    }
+  ]
 }

@@ -113,5 +113,6 @@ contextBridge.exposeInMainWorld('buyerLogDesktop', {
   renderPdf: (html, options) => ipcRenderer.invoke('buyerlog:render-pdf', {
     html: String(html || ''),
     landscape: Boolean(options && options.landscape),
+    footer: !(options && options.footer === false),
   }),
 });

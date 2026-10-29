@@ -446,7 +446,10 @@ test('Electron: render-pdf JS kapalı, ağ engelli, güvenilir göndericili; pre
   assert.match(render, /tempFile = path\.join\(app\.getPath\('temp'\), `buyerlog-ai-pdf-\$\{crypto\.randomBytes\(8\)\.toString\('hex'\)\}\.html`\);\s*fs\.writeFileSync\(tempFile, bytes, \{ mode: 0o600 \}\);/);
   assert.match(render, /printToPDF\(/);
   const preload = fs.readFileSync(path.join(ROOT, 'electron', 'preload.js'), 'utf8');
-  assert.match(preload, /renderPdf: \(html, options\) => ipcRenderer\.invoke\('buyerlog:render-pdf', \{\s*html: String\(html \|\| ''\),\s*landscape: Boolean\(options && options\.landscape\),\s*\}\)/);
+  // Yalnız HTML, yön ve alt bilgi boolean'ı geçer (Studio sayfaları kendi alt bilgisini çizer).
+  assert.match(preload, /renderPdf: \(html, options\) => ipcRenderer\.invoke\('buyerlog:render-pdf', \{\s*html: String\(html \|\| ''\),\s*landscape: Boolean\(options && options\.landscape\),\s*footer: !\(options && options\.footer === false\),\s*\}\)/);
+  assert.match(handler, /renderAiPdf\(html, \{ landscape: payload\.landscape === true, footer: payload\.footer !== false \}\)/);
+  assert.match(render, /displayHeaderFooter: footer,/);
 });
 
 test('arayüz: yanıt biçimi seçici, dosya kartı (Aç/Klasörde Göster), ham HTML DOM’a girmez, TR/EN', () => {
