@@ -17,7 +17,7 @@
   const nf=(n,d=2)=>new Intl.NumberFormat(locale(),{maximumFractionDigits:d}).format(n);
   const PROFILE=['contactName','contactEmail','portalUrl','portalUsername','accessReference','workingNotes','artworkBrief'];
   const S={host:null,data:null,pending:null,loading:false,stale:false,error:'',loadError:null,query:'',licensor:null,status:'all',sort:{key:'license',dir:'asc'},
-    selected:new Set(),expanded:'',drafts:new Map(),renderQueued:false,animate:true,flash:new Set(),exporting:false,stats:new Map()};
+    selected:new Set(),expanded:'',drafts:new Map(),renderQueued:false,animate:true,flash:new Set(),exporting:false,stats:new Map(),writes:0,mapBase:null};
   const visible=()=>S.host&&S.host.getClientRects().length>0;
   const cardOf=id=>S.data?.cards?.find(c=>c.id===id)||null;
   const canEdit=()=>Boolean(S.data?.canEdit);
@@ -49,6 +49,8 @@
     if(!r.ok){const e=new Error(data.error||r.statusText);e.status=r.status;e.code=data.code;throw e;}
     return data;
   }
+  // A write response is newer than any list request already in flight; load() drops such a reply.
+  function accept(result){if(!result?.cards)return false;S.data=result;S.writes++;return true;}
   function toast(message,kind){if(typeof showToast==='function')showToast(message,kind?{kind}:undefined);else{S.error=message;render();}}
 
   /* ---------- drafts ---------- */
@@ -78,10 +80,12 @@
       try{
         do{
           S.stale=false;refresh=S.refreshNext;S.refreshNext=false;S.refreshing=refresh;
-          let data;
+          let data;const writes=S.writes;
           try{data=await api(refresh?'/api/license-cards/refresh':'/api/license-cards',refresh?{method:'POST'}:{});}
           catch(e){if(refresh)toast(failMessage(e),'warning');throw e;}
           if(refresh)toast(...refreshMessage(data));
+          // The list was read before one of our own saves answered: it would bring back the old card.
+          if(writes!==S.writes){S.stale=true;continue;}
           for(const [id,d] of S.drafts){
             const current=data.cards?.find(c=>c.id===id);
             // Notifications (polling, reconnect, our own echo) are hints; only the card's
@@ -303,7 +307,7 @@
     try{
       const result=await api(`/api/license-cards/${encodeURIComponent(id)}`,{method:'PUT',body:JSON.stringify(body)});
       dropDraft(id);S.flash.add(id);
-      if(result.cards)S.data=result;else S.stale=true;
+      if(!accept(result))S.stale=true;
       await window.BLLicenseDataBridge?.rulesChanged?.(result);
     }catch(e){d.error=failMessage(e);if(e.status===409)d.conflict=true;}
     finally{d.saving=false;if(S.stale||S.refreshNext)await load();render();}
@@ -355,7 +359,8 @@
       const old=before.find(c=>c.id===id),fresh=result.cards?.find(c=>c.id===id);
       if(!d.conflict&&old&&fresh&&d.editToken===old.editToken&&old.editToken!==fresh.editToken&&JSON.stringify(old.rules)===JSON.stringify(fresh.rules)){d.editToken=fresh.editToken;d.snapshot.processAtlas=fresh.processAtlas;}
     }
-    if(result.cards)S.data=result;
+    if(S.mapBase){const old=before.find(c=>c.id===S.mapBase.id),fresh=result.cards?.find(c=>c.id===S.mapBase.id);if(old&&fresh&&old.atlasToken===S.mapBase.atlasToken)S.mapBase.atlasToken=fresh.atlasToken;}
+    accept(result);
   }
   async function saveTemplate({template,expectedUpdatedAt}){
     const before=S.data.cards;S.templateWrite=true;
@@ -393,7 +398,7 @@
       // Our own assign changes only the licensor: an open draft follows the new token.
       const d=S.drafts.get(id),fresh=result.cards?.find(x=>x.id===id);
       if(mode!=='add'&&d&&!d.conflict&&fresh&&d.editToken===c.editToken){d.editToken=fresh.editToken;d.snapshot.licensor=fresh.licensor;}
-      if(result.cards)S.data=result;
+      accept(result);
       if(result.cardId){S.flash.add(result.cardId);if(S.expanded===id&&mode!=='add')S.expanded=result.cardId;}
       toast(mode==='add'?T(`${c.license} için ${licensor} satırı eklendi.`,`Added a ${licensor} row for ${c.license}.`):T(`${c.license} lisansörü: ${licensor}`,`${c.license} licensor: ${licensor}`),'success');
       await window.BLLicenseDataBridge?.rulesChanged?.(result);
@@ -419,7 +424,7 @@
     S.merging=true;render();
     try{
       const result=await api('/api/license-cards/licensor-merges',{method:'PUT',body:JSON.stringify(manual?{...manual,split}:{key,split})});
-      if(result.cards)S.data=result;S.animate=true;
+      accept(result);S.animate=true;
       if(manual&&!split){S.manualSource='';S.manualTarget='';}
       toast(split?T('Lisansörler ayrıldı; özgün sözleşmeler korundu.','Licensors split; original contracts were retained.'):T('Lisansörler birleştirildi; özgün sözleşmeler korundu.','Licensors merged; original contracts were retained.'),'success');
       await window.BLLicenseDataBridge?.rulesChanged?.(result);
@@ -438,7 +443,7 @@
         const result=await api(`/api/license-cards/${encodeURIComponent(current.id)}`,{method:'PUT',body:JSON.stringify({editToken:current.editToken,profile:{processAtlas:E.pasteMap(clip.atlas,current)}})});
         const d=S.drafts.get(current.id),fresh=result.cards?.find(x=>x.id===current.id);
         if(d&&!d.conflict&&fresh&&d.editToken===current.editToken){d.editToken=fresh.editToken;d.snapshot.processAtlas=fresh.processAtlas;}
-        if(result.cards)S.data=result;S.flash.add(current.id);done++;
+        accept(result);S.flash.add(current.id);done++;
       }catch(_){failed++;}
     }
     S.pasting=false;render();
@@ -446,16 +451,20 @@
   }
   function openMap(id){
     const c=cardOf(id);if(!c||!window.BLLicenseMapEditor)return;
+    // The guard is the map as it was opened, not the list's latest copy: unrelated card
+    // changes never block the save, and a map changed elsewhere is never overwritten.
+    const base={id,atlasToken:c.atlasToken};S.mapBase=base;
     window.BLLicenseMapEditor.open({card:c,cards:S.data.cards,canEdit:canEdit(),templates:S.data.stageTemplates||[],onSaveTemplate:canEdit()?saveTemplate:null,onSave:async atlas=>{
       const current=cardOf(id);if(!current)throw new Error(failMessage({status:409}));
       try{
-        const result=await api(`/api/license-cards/${encodeURIComponent(id)}`,{method:'PUT',body:JSON.stringify({editToken:current.editToken,profile:{processAtlas:atlas}})});
+        const result=await api(`/api/license-cards/${encodeURIComponent(id)}`,{method:'PUT',body:JSON.stringify({atlasToken:base.atlasToken,profile:{processAtlas:atlas}})});
         // Our own map save must not turn a pending rate draft on this card into a conflict.
         const d=S.drafts.get(id),fresh=result.cards?.find(x=>x.id===id);
         if(d&&!d.conflict&&fresh&&d.editToken===current.editToken){d.editToken=fresh.editToken;d.snapshot.processAtlas=fresh.processAtlas;}
-        if(result.cards)S.data=result;S.flash.add(id);render();
+        if(fresh)base.atlasToken=fresh.atlasToken;
+        accept(result);S.flash.add(id);render();
         toast(T('Onay haritası kaydedildi.','Approval map saved.'));
-      }catch(e){throw new Error(failMessage(e));}
+      }catch(e){if(e.status===409&&e.code==='REVISION_CONFLICT')load();throw new Error(failMessage(e));}
     }});
   }
   function act(el){

@@ -230,26 +230,37 @@ function mergeRules(existing, incoming, card, deps) {
 }
 // Scope optimistic edits to the opened card and its contracts. Import timestamps
 // and changes to unrelated cards/rates must not invalidate an editor.
+const stable = value => Array.isArray(value) ? value.map(stable) : value && typeof value === 'object'
+  ? Object.fromEntries(Object.keys(value).sort().map(key => [key, stable(value[key])])) : value;
 function editToken(card, rules) {
-  const stable = value => Array.isArray(value) ? value.map(stable) : value && typeof value === 'object'
-    ? Object.fromEntries(Object.keys(value).sort().map(key => [key, stable(value[key])])) : value;
   const profile = Object.fromEntries([...Object.keys(PROFILE_LIMITS), 'symbolDataUrl', 'processAtlas'].map(key => [key, card[key] || '']));
   const contracts = rules.filter(rule => pairKey(rule.license, rule.licensor) === pairKey(card.license, card.licensor)).map(stable);
   contracts.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
   return crypto.createHash('sha256').update(JSON.stringify(stable({ id: card.id, license: card.license, licensor: card.licensor, profile, contracts }))).digest('hex');
+}
+// The approval-map editor writes only processAtlas. Its guard covers only the map it
+// opened: rates, contacts, contracts or a peer echo must not block a map save.
+function atlasToken(card) {
+  return crypto.createHash('sha256').update(JSON.stringify(stable({ id: card.id, license: card.license, licensor: card.licensor, processAtlas: card.processAtlas || null }))).digest('hex');
 }
 function updateCard(overrides, id, body, deps, now = new Date().toISOString()) {
   const state = clone(stateOf(overrides));
   if(!state.items.some(card=>card.id===id)){const virtual=catalogue(overrides).find(card=>card.id===id);if(virtual)state.items.push(virtual);}
   const index = state.items.findIndex(card => card.id === id);
   if (index < 0) fail('LICENSE_CARD_NOT_FOUND', 'Lisans kartı bulunamadı. / License card not found.', 404);
-  const scoped = Object.hasOwn(body, 'editToken');
-  if (scoped) {
+  const scoped = Object.hasOwn(body, 'editToken') || Object.hasOwn(body, 'atlasToken');
+  if (Object.hasOwn(body, 'atlasToken')) {
+    const keys = body.profile && typeof body.profile === 'object' ? Object.keys(body.profile) : [];
+    if (Object.hasOwn(body, 'editToken') || Object.hasOwn(body, 'rules') || keys.length !== 1 || keys[0] !== 'processAtlas') fail('LICENSE_ATLAS_INVALID', 'Harita belirteci yalnız harita kaydında kullanılır. / The map token applies only to a map save.');
+    if (typeof body.atlasToken !== 'string' || body.atlasToken !== atlasToken(state.items[index])) {
+      fail('REVISION_CONFLICT', 'Açılan harita değişti; güncel kaydı açın. / The opened map changed; open the current record.', 409);
+    }
+  } else if (scoped) {
     if (typeof body.editToken !== 'string' || body.editToken !== editToken(state.items[index], overrides.pricingRules || [])) {
       fail('REVISION_CONFLICT', 'Açılan kart değişti; güncel kaydı açın. / The opened card changed; open the current record.', 409);
     }
   } else assertRevision(body.revision != null ? body.revision : body.expectedRevision, revisionOf(overrides, 'licenseCards'), 'licenseCards');
-  const profile = body.profile == null ? Object.fromEntries(Object.entries(body).filter(([key]) => !['revision','expectedRevision','pricingRevision','expectedPricingRevision','rules','editToken'].includes(key))) : body.profile;
+  const profile = body.profile == null ? Object.fromEntries(Object.entries(body).filter(([key]) => !['revision','expectedRevision','pricingRevision','expectedPricingRevision','rules','editToken','atlasToken'].includes(key))) : body.profile;
   const normalized = normalizeProfile(profile);
   if (normalized.processAtlas) normalized.processAtlas = linkTemplates(normalized.processAtlas, templatesOf(overrides).items);
   state.items[index] = { ...state.items[index], ...normalized, updatedAt: now };
@@ -447,7 +458,7 @@ function responseOf(overrides, canEdit) {
   const state = stateOf(overrides), rules = Array.isArray(overrides.pricingRules) ? overrides.pricingRules : [];
   const byPair = new Map();
   for (const rule of rules) { const key = pairKey(rule.license, rule.licensor); if (!byPair.has(key)) byPair.set(key, []); byPair.get(key).push(rule); }
-  return { cards: visibleCatalogue(overrides).map(card => ({ ...card, editToken: editToken(card, rules), rules: byPair.get(pairKey(card.license, card.licensor)) || [] })),
+  return { cards: visibleCatalogue(overrides).map(card => ({ ...card, editToken: editToken(card, rules), atlasToken: atlasToken(card), rules: byPair.get(pairKey(card.license, card.licensor)) || [] })),
     pricingRules: rules, revision: revisionOf(overrides, 'licenseCards'), pricingRevision: revisionOf(overrides, 'pricingRules'), initialized: state.initialized,
     lastImportedAt: state.lastImportedAt, stageTemplates: templatesOf(overrides).items, licensorMerges: { split: licensorMergesOf(overrides).split, entries: licensorMergesOf(overrides).entries }, canEdit: Boolean(canEdit) };
 }
