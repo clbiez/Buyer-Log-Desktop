@@ -113,6 +113,9 @@ footer{padding:10px var(--ui-space-5) 26px;}
 .kpi{padding:6px 12px;cursor:pointer;display:inline-flex;align-items:baseline;gap:8px;}
 .kpi:is(button){text-align:inherit;}
 .kpi.active::after{content:'✓';}
+/* Collection status quick filters use the same catalog colors as status cells.
+   The active/pressed state intentionally keeps the shared CP selection ink. */
+#kolQuickFilters .kpi[data-kolq-key="durum"]:not(.active) .n{color:var(--kol-quick-status,var(--ui-text-secondary))!important;}
 .kpiSep{align-self:stretch;width:1px;margin:2px 4px;}
 .kpiGroupLabel{margin-right:2px;}
 .kpiGroupEdit{order:-1000;flex:0 0 auto;margin:0 4px 0 0;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;cursor:pointer;}
