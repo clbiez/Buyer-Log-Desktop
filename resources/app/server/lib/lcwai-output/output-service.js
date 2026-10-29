@@ -237,7 +237,7 @@ function createOutputService(options = {}) {
     const job = {
       format: draft.format, data: parsed.data, title, template: draft.template, templateLabel: draft.templateLabel,
       attempts: 1, lang, orientation, day: draft.day, date: date.toISOString(), requestId: '', draftId: draft.id, edited: true,
-      records: draft.source ? studioSource.normalizeRecords(draft.records, Object.keys(draft.records), lang) : raw.layout && raw.layout.studio ? studioSource.bindLegacyRecords(draft.records, lang) : draft.records || {},
+      records: draft.source ? studioSource.normalizeRecords(draft.records, Object.keys(draft.records), lang, draft.source.columns) : raw.layout && raw.layout.studio ? studioSource.bindLegacyRecords(draft.records, lang) : draft.records || {},
     };
     const imageTokens = parsed.data.layout && parsed.data.layout.studio && draft.format === 'pptx'
       ? parsed.data.slides.flatMap(slide => [slide.image, ...(slide.items || []).map(item => item.image)]).filter(Boolean)
@@ -262,11 +262,14 @@ function createOutputService(options = {}) {
     if (!parsed.ok || parsed.warnings.length || !items.length || items.length > studioSource.MAX_ROWS) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: parsed.errors });
     const tokens = items.map(item => item.image);
     if (new Set(tokens).size !== tokens.length) throw lcwAiError('BAD_REQUEST');
-    const records = studioSource.normalizeRecords(input.records, tokens, lang);
+    const columns = studioSource.normalizeColumns(input.source && input.source.columns);
+    const records = studioSource.normalizeRecords(input.records, tokens, lang, columns);
     if (tokens.some(token => !records[token])) throw lcwAiError('BAD_REQUEST');
+    const omitted = (input.source && Array.isArray(input.source.omittedColumns) ? input.source.omittedColumns : []).map(label => String(label == null ? '' : label).replace(/\s+/g, ' ').trim().slice(0, 80)).filter(Boolean).slice(0, 300);
     const images = normalizeImages(input.images || {}, tokens);
     const source = { module: records[tokens[0]].module, scope: input.source && input.source.scope === 'filtered' ? 'filtered' : 'selected',
-      count: items.length, grain: records[tokens[0]].module === 'collection' ? 'model-colour' : 'order-row', capturedAt: now().toISOString() };
+      count: items.length, grain: records[tokens[0]].module === 'collection' ? 'model-colour' : 'order-row', capturedAt: now().toISOString(),
+      columns, ...(omitted.length ? { omittedColumns: omitted } : {}) };
     const id = drafts.create(ownerId, { format: 'pptx', data: parsed.data, records, source, title: parsed.data.title, lang,
       orientation: 'landscape', detail: 'standard', day: now().toISOString().slice(0, 10), template: 'catalog', templateLabel: 'Smart Layout Studio',
       images: Object.fromEntries(Object.entries(images).map(([token, image]) => [token, image.dataUrl])) });

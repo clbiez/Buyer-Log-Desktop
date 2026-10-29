@@ -158,3 +158,57 @@ test('studio: legacy HTML galleries reuse span packing while preserving surround
   assert.ok(report.includes('Keep the closing note.'));
   assert.equal((report.match(/class="bl-studio-card"/g) || []).length, 2);
 });
+
+test('studio: every non-canonical table header (Fabric, Target Price, custom) is a card field and grouping key', () => {
+  const rows = [
+    { id: 'a', plmId: 'P1', colourCode: '001', fabric: 'Single Jersey', targetPrice: '4.50', fit: 'Regular', cx_note: 'Önemli', fob: 3 },
+    { id: 'b', plmId: 'P2', colourCode: '002', fabric: 'single  jersey', targetPrice: '', fit: 'Slim', fob: 4 },
+    { id: 'c', plmId: 'P3', colourCode: '003', fabric: 'Pique', targetPrice: '5', fit: '', fob: 5 },
+  ];
+  const col = (key, label) => ({ key, label, readValue: row => row[key] });
+  const columns = [col('fabric', 'Fabric'), col('targetPrice', 'Target Price'), col('fit', 'Fit'), col('cx_note', 'Kişisel başlık'), col('fob', 'FOB'), col('empty', 'Empty'), col('plmId', 'PLM ID')];
+  const built = S.build({ module: 'collection', rows, columns });
+  assert.deepEqual(built.source.columns.map(c => c.id), ['col.fabric', 'col.targetPrice', 'col.fit', 'col.cx_note'], 'canonical keys (fob, plmId) and empty columns are not duplicated');
+  assert.equal(built.records['KOL-1'].values['col.targetPrice'], '4.50');
+  assert.equal(built.records['KOL-1'].labels['col.fabric'], 'Fabric');
+  assert.equal('col.targetPrice' in built.records['KOL-2'].values, false, 'empty cells stay sparse');
+  assert.equal(built.records['KOL-1'].values.fob, 3, 'canonical value keeps precedence');
+  assert.deepEqual(built.data.layout.cardFields, ['colourCode', 'col.fit', 'col.targetPrice'], 'collection default: colour code, fit, quantity, target price');
+  assert.ok(L.availableCardFields(built.items, built.records).source.includes('col.fabric'));
+  const details = L.cardDetails(built.items[0], { ...L.defaults('pptx'), cardFields: ['col.fabric', 'col.targetPrice'] }, built.records['KOL-1']);
+  assert.deepEqual(details.map(x => [x.label, x.value]), [['Fabric', 'Single Jersey'], ['Target Price', '4.50']]);
+  const layout = { ...built.data.layout, groupBy: ['col.fabric'], groupBreak: 0, studio: { ...built.data.layout.studio, groupRules: { 'col.fabric': 'side' } } };
+  assert.deepEqual(L.normalizeLayout('pptx', layout).studio.groupRules, { 'col.fabric': 'side' }, 'column ids survive group-rule validation');
+  const pages = L.expandGalleries(built.data.slides, layout, { records: built.records }).filter(p => p.page);
+  assert.equal(pages.flatMap(p => p.page.cells).length, 3, 'grouping never loses records');
+  assert.deepEqual(pages.flatMap(p => p.page.groups.map(g => [g.label, g.items.length])), [['Single Jersey', 2], ['Pique', 1]], 'whitespace/case variants share one group');
+});
+
+test('studio: table columns survive the server draft round-trip and reach Excel headers', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-studio-cols-'));
+  try {
+    const service = createOutputService({ engine: { chat() { throw Error('AI must not be called'); } }, storeOptions: { root } });
+    const rows = [{ id: 1, plmId: 'P1', fabric: 'Pique' }, { id: 2, plmId: 'P2' }];
+    const built = S.build({ module: 'collection', rows, columns: [{ key: 'fabric', label: 'Fabric', readValue: row => row.fabric }] });
+    const records = Object.fromEntries(Object.entries(built.records).map(([token, r]) => [token, { id: r.id, module: r.module, values: r.values }]));
+    const draft = service.createStudio('u1', { data: built.data, records, source: { ...built.source, columns: [...built.source.columns, { id: 'bad id', label: 'x' }] } });
+    assert.deepEqual(draft.source.columns, [{ id: 'col.fabric', label: 'Fabric' }]);
+    assert.equal(draft.records['KOL-1'].values['col.fabric'], 'Pique');
+    assert.equal(draft.records['KOL-2'].labels['col.fabric'], 'Fabric', 'labels exist even where the value is empty');
+    const data = { ...draft.data, layout: { ...draft.data.layout, cardFields: ['plmId', 'col.fabric'] } };
+    const xlsx = service.renderDraft('u1', draft.id, { data, format: 'xlsx' }).output;
+    const wb = XLSX.read(fs.readFileSync(xlsx.path), { type: 'buffer' });
+    const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames.at(-1)], { header: 1 });
+    assert.ok(sheet[0].includes('Fabric'));
+    assert.ok(sheet.flat().includes('Pique'));
+  } finally { fs.rmSync(root, { recursive: true, force: true }); fs.rmSync(`${root}-drafts`, { recursive: true, force: true }); }
+});
+
+test('studio: very large scopes drop whole heavy columns instead of exceeding the request size', () => {
+  const rows = Array.from({ length: 25000 }, (_, i) => ({ id: i, big: 'x'.repeat(300), big2: 'y'.repeat(300), small: `S${i % 3}` }));
+  const columns = ['big', 'big2', 'small'].map(key => ({ key, label: key, readValue: row => row[key] }));
+  const built = S.build({ module: 'collection', rows, columns });
+  assert.deepEqual(built.source.columns.map(c => c.id), ['col.big2', 'col.small'], 'only as many whole columns as needed are dropped');
+  assert.deepEqual(built.source.omittedColumns, ['big']);
+  assert.ok(Object.values(built.records).every(r => r.values['col.small'] && r.values['col.big2'] && !('col.big' in r.values)));
+});

@@ -1,14 +1,73 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-29",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Sunum editöründe tüm koleksiyon başlıkları",
+    "en": "Every collection header in the presentation editor"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Sunum editöründe kartlara ve gruplamaya Kumaş, Hedef Fiyat, Kalıp ve kendi eklediğiniz sütunlar dahil koleksiyon tablosunun tüm başlıkları seçilebilir; yerleşim adımında ayar paneli önizlemeyi kaydırmadan kendi başına kayar.",
+    "en": "In the presentation editor, cards and grouping can use every collection table header, including Fabric, Target Price, Fit and your own columns; in the layout step the settings panel scrolls on its own without moving the preview."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "output-studio-any-collection-column",
+      "type": "fix",
+      "module": {
+        "tr": "Sunum Editörü",
+        "en": "Presentation Editor"
+      },
+      "title": {
+        "tr": "Kartlara ve gruplamaya her koleksiyon başlığı eklenebilir",
+        "en": "Any collection header can be used on cards and for grouping"
+      },
+      "body": {
+        "tr": "Kart bilgileri ve 1./2./3. grup listeleri yalnız sabit alanları değil, koleksiyon tablosundaki tüm dolu başlıkları sunar: Kumaş, Hedef Fiyat, Kalıp, Asorti, Notlar ve kendi eklediğiniz sütunlar. Değerler tabloda gördüğünüz biçimde, açılış anının kopyası olarak yazılır; büyük/küçük harf ve boşluk farkı olan değerler aynı grupta toplanır. Varsayılan kart bilgileri artık açıklamadaki gibi renk kodu, kalıp, adet ve hedef fiyattır. Gruplama açıklamasında alan kodu yerine başlık adı görünür. Excel, PDF ve HTML çıktıları da aynı alanları kullanır.",
+        "en": "Card details and the 1st/2nd/3rd group lists offer every filled collection table header, not only a fixed set: Fabric, Target Price, Fit, Assortment, Notes and your own columns. Values are written as shown in the table, as a snapshot taken when the editor opens; values differing only in case or spacing share one group. Default card details are now colour code, fit, quantity and target price, as the description says. The grouping hint shows the header name instead of the field code. Excel, PDF and HTML outputs use the same fields."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "output-studio-any-collection-column.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log sunum editörü, Modeller ve bilgiler adımı: kart bilgilerinde Colour Code, Fit, Quantity, Target Price ve Fabric işaretli; 1. grup Fabric (demo veri)",
+          "en": "Real Buyer Log presentation editor, Models and details step: Colour Code, Fit, Quantity, Target Price and Fabric ticked in card details; 1st group is Fabric (demo data)"
+        },
+        "caption": {
+          "tr": "Kumaş, Hedef Fiyat ve Kalıp artık kart bilgisi ve grup olarak seçilebiliyor.",
+          "en": "Fabric, Target Price and Fit can now be chosen as card details and groups."
+        }
+      }
+    },
+    {
+      "id": "output-studio-independent-scroll",
+      "type": "fix",
+      "module": {
+        "tr": "Sunum Editörü",
+        "en": "Presentation Editor"
+      },
+      "title": {
+        "tr": "Ayar paneli önizlemeyi kaydırmıyor",
+        "en": "The settings panel no longer scrolls the preview"
+      },
+      "body": {
+        "tr": "Sunumu şekillendir adımında soldaki ayar paneli ve sağdaki slayt önizlemesi ayrı ayrı kayar; panelde aşağı inerken önizleme yerinde kalır. Bir ayar değiştirildiğinde panel başa dönmez, bulunduğunuz konumda kalır.",
+        "en": "In the Shape the presentation step the settings panel on the left and the slide preview on the right scroll separately; the preview stays in place while you scroll the panel. Changing a setting keeps the panel at its current position instead of jumping to the top."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "output-studio-independent-scroll.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log sunum editörü, Sunumu şekillendir adımı: ayar paneli aşağı kaydırılmışken slayt önizlemesi üstte sabit; kartlar Fabric'e göre Single Jersey ve Pique gruplarında (demo veri)",
+          "en": "Real Buyer Log presentation editor, Shape the presentation step: the settings panel is scrolled down while the slide preview stays at the top; cards grouped by Fabric into Single Jersey and Pique (demo data)"
+        },
+        "caption": {
+          "tr": "Panel aşağı kaydırıldı; önizleme yerinde.",
+          "en": "Panel scrolled down; preview stays put."
+        }
+      }
+    }
+  ]
 }
