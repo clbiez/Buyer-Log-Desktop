@@ -23,7 +23,6 @@ const ZOOM_REFERENCE_HEIGHT = 900;
 const MIN_AUTO_ZOOM = 0.75;
 const WINDOW_THEME = Object.freeze({
   light: { background:'#F6F7F9', overlay:'#FBFBFC', symbol:'#101828' },
-  grey: { background:'#DFE1E4', overlay:'#E3E5E8', symbol:'#22262B' },
   dark: { background:'#131417', overlay:'#212429', symbol:'#E8EAED' },
 });
 

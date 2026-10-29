@@ -1665,7 +1665,7 @@ pairs:[
 ["Açılış tamamlanamadı, bağlantı yeniden kontrol ediliyor…","Startup could not complete; checking the connection again…"],
 ["Buyer Log açılamadı. Yeniden denemek için düğmeye basın.","Buyer Log could not be opened. Press the button to try again."],
 ["Switch language / Dil değiştir","Switch language"],
-["Tema: Aydınlık → Kurşun → Karanlık","Theme: Light → Grey → Dark"],
+["Tema: Aydınlık → Karanlık","Theme: Light → Dark"],
 ["Arayüz: Standard","Interface: Standard"],
 ["0 satırda değişiklik var","0 rows have changes"],
 ["Seçili CP satırlarını Koleksiyon sayfasına kopyala","Copy selected CP rows to the Collection page"],

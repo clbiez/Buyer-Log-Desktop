@@ -2206,7 +2206,8 @@
   }
 
   function ensureUi() {
-    const menu = root.document && root.document.getElementById('cpToolsMenu');
+    // Checklist Excel işlemleri CP'nin Excel çekmecesinde, "Excel oluştur" bölümünün sonunda durur.
+    const menu = root.document && (root.document.getElementById('cpExcelMenu') || root.document.getElementById('cpToolsMenu'));
     if (!menu || root.document.getElementById('cpChecklistToolsWrap')) return;
 
     const wrap = root.document.createElement('div');
@@ -2248,7 +2249,7 @@
 
     wrap.appendChild(trigger);
     wrap.appendChild(sub);
-    menu.appendChild(wrap);
+    menu.insertBefore(wrap, menu.querySelector('.blExcelManageDivider'));
     menu.appendChild(input);
 
     const closeSub = function () {

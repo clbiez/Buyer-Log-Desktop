@@ -1,14 +1,73 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-29",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Animasyonlu tema geçişi ve tek Excel çekmecesi",
+    "en": "Animated theme switching and a single Excel drawer"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Tema değiştirildiğinde yeni renkler tema düğmesinden ekrana yayılarak gelir; Kurşun teması kaldırıldı, Aydınlık ve Karanlık kaldı. CP ve Koleksiyon'da dışarı Excel üreten ve Excel alan işlemler Araçlar'dan tek bir Excel çekmecesine toplandı.",
+    "en": "When the theme changes, the new colours now spread across the screen from the theme button; the Slate theme was removed, leaving Light and Dark. In CP and Collection, the actions that create or take in Excel workbooks moved from Tools into a single Excel drawer."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "theme-reveal-transition",
+      "type": "feature",
+      "module": {
+        "tr": "Ortak arayüz",
+        "en": "Shared interface"
+      },
+      "title": {
+        "tr": "Temalar arası animasyonlu geçiş; Kurşun teması kaldırıldı",
+        "en": "Animated switching between themes; Slate theme removed"
+      },
+      "body": {
+        "tr": "Tema düğmesine basıldığında yeni tema, düğmenin olduğu noktadan dairesel olarak açılır ve yaklaşık yarım saniyede tüm ekranı kaplar. Geçiş ekranın iki görüntüsü üzerinden yapılır, tablolar yeniden çizilmez. Hareketi azalt ayarı açıksa, GPU'suz uzak masaüstünde veya açılışta tema anında değişir. Tema döngüsü artık yalnız Aydınlık ve Karanlık'tır; Kurşun teması seçili olan kullanıcılar Aydınlık temayla devam eder.",
+        "en": "When the theme button is pressed, the new theme opens in a circle from the button and covers the screen in about half a second. The transition works on two images of the screen, so tables are not redrawn. With reduced motion enabled, on remote desktops without a GPU, or at startup, the theme changes instantly. The theme cycle is now Light and Dark only; users who had Slate selected continue with Light."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "theme-reveal-transition.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker: Karanlık tema, sol alttaki tema düğmesinden Aydınlık ekranın üzerine dairesel olarak yayılıyor (demo veri)",
+          "en": "Real Buyer Log CP Tracker: the Dark theme spreading in a circle over the Light screen from the theme button at the bottom left (demo data)"
+        },
+        "caption": {
+          "tr": "Aydınlık'tan Karanlık'a geçişin ortası: yeni tema düğmeden açılıyor.",
+          "en": "Midway from Light to Dark: the new theme opens from the button."
+        }
+      }
+    },
+    {
+      "id": "excel-drawer",
+      "type": "improvement",
+      "module": {
+        "tr": "CP ve Koleksiyon",
+        "en": "CP and Collection"
+      },
+      "title": {
+        "tr": "Excel işlemleri tek çekmecede",
+        "en": "Excel actions in one drawer"
+      },
+      "body": {
+        "tr": "CP ve Koleksiyon araç çubuğundaki yeni Excel düğmesi, tabloyu dışa aktarma, Capacity Request, Hologram Talep, MB Listesi ve Checklist Excel'lerini \"Excel oluştur\" bölümünde; kullanıcı Excel'ini içeri aktarma ve Excel şablonlarını \"İçe aktar ve şablonlar\" bölümünde toplar. Araçlar menüsü seçime bağlı işlemlere sadeleşti. Düğmelerin işlevi, seçim kuralı ve sağ tık menüsündeki erişimi aynıdır.",
+        "en": "The new Excel button in the CP and Collection toolbars gathers table export, Capacity Request, Hologram Request, MB List and Checklist workbooks under \"Create Excel\", and user Excel import plus Excel templates under \"Import and templates\". The Tools menu is now limited to selection actions. Each action keeps its behaviour, selection rule and right-click menu access."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-excel-drawer.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker: açık Excel çekmecesinde Excel oluştur ile İçe aktar ve şablonlar bölümleri (demo veri)",
+          "en": "Real Buyer Log CP Tracker: the open Excel drawer with Create Excel and Import and templates sections (demo data)"
+        },
+        "caption": {
+          "tr": "CP'de Excel düğmesi: oluşturma ve içe aktarma işlemleri ayrı bölümlerde.",
+          "en": "The Excel button in CP: create and import actions in separate sections."
+        }
+      }
+    }
+  ]
 }

@@ -31,8 +31,8 @@ test('Leading-column selection box supports unchecked, checked, partial, focused
   assert.match(selectionCss, /cursor:default/);
 });
 
-test('Light, grey and dark themes supply the needed selector state colors', () => {
-  for (const selector of [':root{', ':root[data-theme="grey"]{', ':root[data-theme="dark"]{']) {
+test('Light and dark themes supply the needed selector state colors', () => {
+  for (const selector of [':root{', ':root[data-theme="dark"]{']) {
     const at = tokens.indexOf(selector);
     assert.notEqual(at, -1, 'missing theme ' + selector);
   }

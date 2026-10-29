@@ -4,13 +4,11 @@ select {color-scheme:light
 }
 html[data-theme="dark"] select {color-scheme:dark
 }
-html[data-theme="grey"] select {color-scheme:light
-}
 .modelFilesSearch,.modelFilesSelect {color-scheme:light
 }
 html[data-theme="dark"] .modelFilesSelect {color-scheme:dark
 }
-html[data-theme="light"] .modelFilesSelect,html[data-theme="grey"] .modelFilesSelect {color-scheme:light
+html[data-theme="light"] .modelFilesSelect {color-scheme:light
 }
 .kolPeriodDrawer {color-scheme:inherit
 }
@@ -50,10 +48,6 @@ html[data-theme="light"] table:not(#shipTable) thead th {
   color:var(--ui-header-ink)!important
 }
 [data-iam-body] {background:var(--ui-surface)
-}
-html[data-theme="grey"] table:not(#shipTable) thead th {
-  background:var(--ui-header-bg) !important; background-color:var(--ui-header-bg) !important;
-  color:var(--ui-header-ink) !important
 }
 body {font-family:var(--ui-font-body);letter-spacing:0
 }
@@ -1200,6 +1194,13 @@ html[data-ui-system="manifest"] .tableSearchHelpNote {
 html[data-ui-system="manifest"] .ic {stroke:currentColor;fill:none;stroke-linecap:round;stroke-linejoin:round
 }
 html[data-ui-system="manifest"] #_fastThemeCurtain {z-index:var(--ui-z-tooltip)
+}
+/* Motion+ tema geçişi: yeni tema eski anlık görüntünün üstünde BLMotionPlus.theme ile açılır. */
+html.blThemeMorph::view-transition-old(root),html.blThemeMorph::view-transition-new(root) {animation:none;mix-blend-mode:normal
+}
+html.blThemeMorph::view-transition-old(root) {z-index:var(--ui-z-data)
+}
+html.blThemeMorph::view-transition-new(root) {z-index:var(--ui-z-raised)
 }
 html[data-ui-system="manifest"].blThemeSwitching body,html[data-ui-system="manifest"].blThemeSwitching .rail,html[data-ui-system="manifest"].blThemeSwitching button,html[data-ui-system="manifest"].blThemeSwitching input,html[data-ui-system="manifest"].blThemeSwitching select,html[data-ui-system="manifest"].blThemeSwitching textarea {
   transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast);animation:none!important
@@ -5590,9 +5591,9 @@ html[data-ui-system="manifest"] #blBootGuard button {background:transparent !imp
 }
 html[data-ui-system="manifest"] #blBootGuard button:hover {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
 }
-html[data-ui-system="manifest"][data-theme="dark"] #blBootGuard,html[data-ui-system="manifest"][data-theme="grey"] #blBootGuard {background:var(--ui-canvas) !important;color:var(--ui-text) !important
+html[data-ui-system="manifest"][data-theme="dark"] #blBootGuard {background:var(--ui-canvas) !important;color:var(--ui-text) !important
 }
-html[data-ui-system="manifest"][data-theme="dark"] #blBootGuard .blBootCard,html[data-ui-system="manifest"][data-theme="grey"] #blBootGuard .blBootCard {background:transparent !important
+html[data-ui-system="manifest"][data-theme="dark"] #blBootGuard .blBootCard {background:transparent !important
 }
 html[data-ui-system="manifest"] .cfpRevision .cfpItem {font-size:var(--ui-font-xs) !important
 }
@@ -7796,7 +7797,7 @@ html[data-ui-system="manifest"] .sourceRefreshTable tbody tr:last-child td {bord
 }
 html[data-ui-system="manifest"] .sourceRefreshTable thead th {z-index:var(--ui-z-data);background:var(--ui-accent) !important;color:var(--ui-accent) !important;font-weight:700 !important
 }
-html[data-ui-system="manifest"][data-theme="dark"] .sourceRefreshTable thead th,html[data-ui-system="manifest"][data-theme="grey"] .sourceRefreshTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
+html[data-ui-system="manifest"][data-theme="dark"] .sourceRefreshTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .sourceRefreshTable tbody tr:hover td {background:var(--ui-row-hover) !important
 }
@@ -8231,8 +8232,6 @@ html[data-ui-system="manifest"] .autoEditorScroll>.autoSection>.autoSectionTitle
 html[data-ui-system="manifest"] .autoPreviewNote.isWarn {color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .autoPreviewTableWrap {border-radius:var(--ui-radius) !important
-}
-html[data-ui-system="manifest"][data-theme="grey"] .sourceRefreshTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important
 }
 html[data-ui-system="manifest"] .verHistTitle,html[data-ui-system="manifest"] .verHistDetailTitle {
   font-family:var(--ui-font-heading) !important;font-weight:600 !important;letter-spacing:.01em

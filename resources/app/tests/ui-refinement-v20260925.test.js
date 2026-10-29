@@ -86,15 +86,10 @@ function contrast(a, b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-test('Kurşun tema koyulaştı ve metin/zemin çiftleri WCAG AA (≥4.5) sağlar', () => {
-  const block = read('public/ui-tokens.css').match(/:root\[data-theme="grey"\]\{([\s\S]*?)\n\}/)[1];
-  const token = name => block.match(new RegExp(`--ui-${({paper:'canvas',ink:'text',ink2:'text-secondary',muted:'text-muted',card:'surface',card2:'surface-soft','rail-bg':'rail','acc-ink':'selected-ink','acc-bg':'selected','on-acc':'on-accent',acc:'accent',green:'success',orange:'warning',red:'danger'})[name]}:(#[0-9a-f]{3,6})`, 'i'))[1];
-  assert.ok(luminance(token('paper')) < luminance('#e9ecf0'), 'kurşun kağıt açık temadan koyu olmalı');
-  for (const [fg, bg] of [['ink', 'card'], ['ink2', 'card'], ['muted', 'card'], ['muted', 'card2'], ['muted', 'paper'],
-    ['muted', 'rail-bg'], ['acc-ink', 'acc-bg'], ['on-acc', 'acc'], ['green', 'card2'], ['orange', 'card2'], ['red', 'card2']]) {
-    const ratio = contrast(token(fg), token(bg));
-    assert.ok(ratio >= 4.5, `${fg} / ${bg} kontrastı ${ratio.toFixed(2)}`);
-  }
+test('Kurşun teması kaldırıldı; yalnız Aydınlık ve Karanlık token blokları kalır', () => {
+  const tokens = read('public/ui-tokens.css');
+  assert.doesNotMatch(tokens, /data-theme="grey"/);
+  assert.match(tokens, /:root\[data-theme="dark"\]\{/);
 });
 
 test('Kullanıcı yönetimi emoji değil ortak SVG simge ve rozet kullanır', () => {

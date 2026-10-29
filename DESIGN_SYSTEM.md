@@ -26,18 +26,19 @@ ortak bileşene bağlanır; ayrı palet veya görünüm override dosyası oluşt
 
 ## 2. Tema ve yüzey
 
-Üç tema vardır: `light`, `grey`, `dark`. Açık ve karanlık temanın eski nötr
-ailesi ile tablo başlığı renkleri korunur. Grey, serin mat gri bir çalışma
-zeminidir. Tema rengi yalnız `data-theme` üzerinden değişir.
+İki tema vardır: `light`, `dark`. Açık ve karanlık temanın eski nötr
+ailesi ile tablo başlığı renkleri korunur. Tema rengi yalnız `data-theme`
+üzerinden değişir. Kurşun (`grey`) teması kaldırıldı; kayıtlı `grey` seçimi
+aydınlık tarafta olduğu için `light` olarak açılır (`RETIRED_THEMES`).
 
-| Token | Light | Grey | Kullanım |
+| Token | Light | Dark | Kullanım |
 | --- | --- | --- | --- |
-| `--ui-canvas` | `#f5f7f9` | `#d4d5d7` | çalışma zemini |
-| `--ui-surface` | `#ffffff` | `#e9eaec` | veri yüzeyi |
-| `--ui-surface-soft` | `#fafbfc` | `#dfe1e4` | ikincil yüzey |
-| `--ui-text` | `#16212d` | `#19222c` | ana metin |
-| `--ui-text-muted` | `#5f6f80` | `#414e5a` | açıklama |
-| `--ui-accent` | `#356a96` | `#315e83` | eylem ve odak |
+| `--ui-canvas` | `#f5f7f9` | `#171c22` | çalışma zemini |
+| `--ui-surface` | `#ffffff` | `#20262e` | veri yüzeyi |
+| `--ui-surface-soft` | `#fafbfc` | `#252d36` | ikincil yüzey |
+| `--ui-text` | `#16212d` | `#f0f3f6` | ana metin |
+| `--ui-text-muted` | `#5f6f80` | `#a0adba` | açıklama |
+| `--ui-accent` | `#356a96` | `#8fbfe8` | eylem ve odak |
 
 Karanlık değerlerin ve durum renklerinin kanonik kaynağı `ui-tokens.css`’tir.
 Renk literal’leri yalnız bu kaynakta tanımlanır; custom property ve var fallback değerleri de guard kapsamındadır. `design-color-baseline.json`
@@ -159,10 +160,18 @@ arayüzü önce `motion-plus.js` içindeki ortak `BLMotionPlus.play('card'|'over
 API'sini veya `blMotionEnter` / `blMotionOverlay` sınıfını kullanır; modül başına
 ayrı keyframe, tema rengi, animasyon motoru veya sonsuz döngü eklenmez.
 Hareket paleti yalnız `ui-tokens.css` üzerinden gelir: 100/140 ms temel kontrol,
-240 ms overlay, 340 ms sayfa, 360 ms kart, 390 ms tablo, 440 ms grafik.
+240 ms overlay, 340 ms sayfa, 360 ms kart, 390 ms tablo, 440 ms grafik,
+560 ms tema (`--ui-motion-theme`).
 Easing ortak cubic-bezier ile izlenir. Hareket içerik, geometri ve iş verisi
-üzerinde kalıcı değişiklik yapmaz. Tema değişimi anlıktır; otomatik parıltı,
-snapshot dalgası veya clip-path geçişi yoktur. **Thinking Orbs istisnası:**
+üzerinde kalıcı değişiklik yapmaz.
+
+**Tema geçişi:** Kullanıcı temayı değiştirdiğinde `BLMotionPlus.theme(update, origin)`
+yeni temayı tıklanan denetimden dairesel olarak açar (View Transitions; eski ve
+yeni kare kompozitörde birleşir, tablo hücreleri tek tek boyanmaz). Açılışta,
+sistem temasında, reduced-motion / `data-bl-motion='off'` / görünmez sekmede,
+yazılım çiziminde (`data-bl-render='software'`) veya API yoksa geçiş anlıktır.
+Ard arda istekte son seçim kazanır. Başka modül kendi tema animasyonunu,
+otomatik parıltıyı veya sürekli efekti eklemez. **Thinking Orbs istisnası:**
 7.0.294'ten gelen Breathing (açılış/bekleme) ve Working (harita yüklemesi)
 canvas bileşenleri yalnız gerçekten çalışan `thinking`/loading durumu boyunca
 semantik işlem göstergesi olarak kullanılabilir. Her orb görünmez sekme, ekran
@@ -181,7 +190,7 @@ filtre seçimi veya her veri yaması bir dalga başlatmaz.
 geçişinde iptal edilir; `opacity/transform` tercih edilir. Yalnız tablo girişinde
 kısa süreli token tabanlı `backgroundColor` WAAPI istisnası vardır. Grafik ve
 kartlar görünürlükle sınırlı, en çok 14/16 öğe üzerinden animasyon alır.
-Aynı yeni görünür işlevin TR/EN karşılığı, 3 tema × 4 boyut, reduced-motion,
+Aynı yeni görünür işlevin TR/EN karşılığı, 2 tema × 4 boyut, reduced-motion,
 klavye/scroll ve veri doğruluğu regresyonları teslim koşuludur.
 
 ## 7. Guard ve erişilebilirlik

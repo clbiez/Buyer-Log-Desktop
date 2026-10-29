@@ -23,6 +23,11 @@
 
   function makeIconOnly(button) {
     if (!button) return;
+    // Excel çekmecesi gibi menülerde düğme etiketiyle görünür.
+    if (button.closest('.toolbarMoreMenu')) {
+      button.classList.remove('tableActionIconOnly');
+      return;
+    }
     button.classList.add('tableActionIconOnly');
     if (!button.getAttribute('aria-label')) {
       const label = button.getAttribute('title') || button.textContent.trim();
@@ -67,7 +72,7 @@
     if (!button || button.disabled || !button.querySelector('svg.ic')) return null;
     const root = button.closest(
       '#cpTableToolbar,#ordersTableToolbar,#kolTableToolbar,' +
-      '#cpToolsMenu,#ordersToolsMenu,#kolToolsMenu,' +
+      '#cpToolsMenu,#ordersToolsMenu,#kolToolsMenu,#cpExcelMenu,#kolExcelMenu,' +
       '#cpMoreMenu,#ordersMoreMenu,#kolMoreMenu'
     );
     return root ? button : null;

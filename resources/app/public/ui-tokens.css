@@ -29,7 +29,7 @@
  --ui-feedback-tone:var(--ui-accent);--ui-feedback-surface:var(--ui-surface);
  --ui-radius:0;--ui-radius-avatar:50%;
  --ui-space-1:4px;--ui-space-2:8px;--ui-space-3:12px;--ui-space-4:16px;--ui-space-5:24px;--ui-space-6:32px;
- --ui-motion-fast:100ms;--ui-motion-enter:140ms;--ui-motion-page:340ms;--ui-motion-card:360ms;--ui-motion-table:390ms;--ui-motion-overlay:240ms;--ui-motion-bar:440ms;--ui-ease:cubic-bezier(.2,.7,.3,1);
+ --ui-motion-fast:100ms;--ui-motion-enter:140ms;--ui-motion-page:340ms;--ui-motion-card:360ms;--ui-motion-table:390ms;--ui-motion-overlay:240ms;--ui-motion-bar:440ms;--ui-motion-theme:560ms;--ui-ease:cubic-bezier(.2,.7,.3,1);
  --ui-shadow-overlay:0 16px 46px color-mix(in srgb,var(--ui-text) 18%,transparent);
  --ui-scrim:transparent;--ui-backdrop-blur:6px;
  /* Shared stack bands. Nested dialogs use 201–299; menus and notices stay above. */
@@ -48,13 +48,6 @@
  --ui-check-idle:#728193;--ui-row-divider:#e6e9ed;--ui-group-divider:#cbd1d9;
  --ui-row-hover:color-mix(in srgb,var(--ui-accent) 6%,var(--ui-surface));
  --ui-chart-grid:color-mix(in srgb,var(--ui-text) 16%,var(--ui-surface));
-}
-:root[data-theme="grey"]{
- --ui-canvas:#d4d5d7;--ui-rail:#cbccce;--ui-surface:#e9eaec;--ui-surface-soft:#dfe1e4;--ui-surface-strong:#c9cdd2;
- --ui-text:#19222c;--ui-text-secondary:#394652;--ui-text-muted:#414e5a;
- --ui-accent:#315e83;--ui-accent-hover:#244b6b;--ui-selected:#c9d9e6;--ui-selected-ink:#234865;--ui-on-accent:#fff;
- --ui-success:#0f6640;--ui-success-bg:#c3d8cb;--ui-danger:#a01d14;--ui-danger-bg:#e3c7c4;--ui-warning:#7a5000;--ui-warning-bg:#ddd0b0;
- --ui-header-bg:#e8e9ec;--ui-header-ink:#565a5e;--ui-check-idle:#667381;--ui-row-divider:#cfd3d8;--ui-group-divider:#bcc1c8;
 }
 :root[data-theme="dark"]{
  color-scheme:dark;
