@@ -96,14 +96,6 @@ body[data-active-tab="cp"] #vfSelLabel,body[data-active-tab="orders"] #vfSelLabe
 .kpirow:has(.kpiGroupMenu){flex-wrap:wrap;overflow:visible;}
 .kpi{padding:3px 9px;gap:6px;}
 .kpi .l{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-/* Collection quick filters use aria-pressed on buttons; a generic pressed-button rule
-   in ui-components.css paints them in the accent tone. CP's KPI chips use the
-   softer selection palette, so keep Collection's selected chips consistent with CP.
-   The container ID deliberately outranks the generic aria-pressed rule. */
-html[data-ui-system="manifest"] #kolQuickFilters .kpi[aria-pressed="true"]{
-  background:var(--ui-selected)!important;
-  color:var(--ui-selected-ink)!important;
-}
 .kpiSep{margin:1px 3px;}
 #view-orders .kpi[data-order-active]{min-width:0;}
 .kpiGroup{display:inline-flex;align-items:center;gap:6px;flex:none;position:relative;}
