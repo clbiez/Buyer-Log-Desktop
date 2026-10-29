@@ -85,7 +85,7 @@ test('studio: offline draft, owner isolation and real PDF/HTML/PPTX/XLSX paths p
     assert.ok(fs.readFileSync(pptx.path).subarray(0, 2).equals(Buffer.from('PK')));
     const html = service.renderDraft('u1', draft.id, { data: draft.data, format: 'html' }).output;
     const text = fs.readFileSync(html.path, 'utf8');
-    assert.equal((text.match(/class="bl-studio-card"/g) || []).length, 123);
+    assert.equal((text.match(/class="[^"]*\bbl-studio-card\b/g) || []).length, 123);
     assert.ok(text.includes('Model 122'));
     const pdf = service.renderDraft('u1', draft.id, { data: draft.data, format: 'pdf' }).output;
     assert.equal(pdf.pending, 'pdf');
@@ -128,7 +128,11 @@ test('studio: reordering a scope larger than the image cap preserves the same re
     const items = draft.data.slides.find(slide => slide.items).items;
     items.push(items.shift());
     const output = service.renderDraft('u1', draft.id, { data: draft.data, format: 'html' }).output;
-    assert.match(fs.readFileSync(output.path, 'utf8'), /src="data:image\/png;base64,/);
+    const html = fs.readFileSync(output.path, 'utf8');
+    // The deck embeds each image once as a CSS class; the moved ORD-1 card still uses it.
+    const cls = /\.(im\d+)\{background-image:url\("data:image\/png;base64,/.exec(html);
+    assert.ok(cls);
+    assert.match(html, new RegExp(`class="dk-img ${cls[1]}" role="img" aria-label="M0"`));
   } finally { fs.rmSync(root, { recursive: true, force: true }); fs.rmSync(`${root}-drafts`, { recursive: true, force: true }); }
 });
 
@@ -227,4 +231,31 @@ test('studio: PDF skips the shell footer (pages carry their own) and Buyer Log-o
     assert.ok(slides.every(xml => !xml.includes('LCW AI')));
     assert.ok(slides.some(xml => xml.includes('Buyer Log · ')));
   } finally { fs.rmSync(root, { recursive: true, force: true }); fs.rmSync(`${root}-drafts`, { recursive: true, force: true }); }
+});
+
+test('studio deck: interactive HTML keeps the strict CSP, escapes data and follows the configured layout', () => {
+  const { buildDeck } = require('../server/lib/lcwai-output/output-deck');
+  const { CSP } = require('../server/lib/lcwai-output/output-html');
+  const rows = [{ _id: 'a', modelName: '<img src=x onerror=alert(1)>', quantity: 5 }, { _id: 'b', modelName: 'B', quantity: 7 }, { _id: 'c', modelName: 'C', quantity: 9 }];
+  const built = S.build({ module: 'orders', rows, lang: 'en' });
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const images = { 'ORD-1': { dataUrl: png }, 'ORD-2': { dataUrl: 'data:image/png;base64,AAA") ;}body{x:url("' } };
+  const layout = { ...built.data.layout, cardFields: ['orderQuantity'], showFieldLabels: true, studio: { ...built.data.layout.studio, note: 'Seasonal note', noteHeight: 40 } };
+  const html = buildDeck({ data: { ...built.data, layout }, records: built.records, images, title: 'Deck', lang: 'en', date: '2026-10-29' });
+  assert.ok(html.includes(`content="${CSP}"`) && CSP.includes("script-src 'none'"));
+  assert.doesNotMatch(html, /<script/i);
+  assert.doesNotMatch(html, /<img src=x/);
+  assert.ok(html.includes('&lt;img src=x onerror=alert(1)&gt;'));
+  assert.equal((html.match(/background-image:url\(/g) || []).length, 1, 'only a well-formed data URL is embedded');
+  assert.equal((html.match(/class="dk-card bl-studio-card/g) || []).length, 3);
+  assert.ok(html.includes('<i>Order Quantity</i> <span>5</span>'), 'chosen field with its label');
+  assert.ok(html.includes('Seasonal note'));
+  assert.ok(html.includes('class="dk-band is-dark"'));
+  assert.ok(!html.includes('LCW AI'));
+  // Click-through: each card opens its own details layer; layers link to neighbours and back to the slide.
+  assert.ok(html.includes('href="#z1"') && html.includes('id="z3"'));
+  assert.match(html, /id="z2"[\s\S]*?href="#z1"[\s\S]*?href="#s\d+"[\s\S]*?href="#z3"/);
+  const hidden = buildDeck({ data: { ...built.data, layout: { ...layout, studio: { ...layout.studio, headerHidden: true } } }, records: built.records, images: {}, lang: 'tr' });
+  assert.ok(!hidden.includes('class="dk-band'));
+  assert.ok(hidden.includes('Görsel yok'));
 });

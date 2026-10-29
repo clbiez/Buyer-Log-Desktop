@@ -22,6 +22,7 @@ const { lcwAiError, isLcwAiError } = require('../lcwai/lcwai-errors');
 const contracts = require('./output-contracts');
 const { chooseTemplate, templateLabel } = require('./output-templates');
 const { buildDocument } = require('./output-html');
+const { buildDeck } = require('./output-deck');
 const { reportCss } = require('./output-theme');
 const { renderWorkbook } = require('./output-xlsx');
 const { renderPresentation } = require('./output-pptx');
@@ -295,6 +296,16 @@ function createOutputService(options = {}) {
       const parsed = contracts.normalizeWorkbook({ title: job.title, sheets }, { lang: job.lang });
       if (!parsed.ok || parsed.warnings.length) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: [...parsed.errors, ...parsed.warnings] });
       return render(ownerId, { ...job, format: target, data: parsed.data }, {});
+    }
+    if (target === 'html') {
+      // HTML: etkileşimli, animasyonlu sunum (yalnız CSS; katı CSP korunur). PDF aşağıdaki baskı yolunda kalır.
+      try {
+        const buffer = Buffer.from(buildDeck({ data: job.data, records: job.records, images, title: job.title, lang: job.lang, date: job.day }), 'utf8');
+        return store.save(ownerId, { buffer, title: job.title, format: 'html', template: job.template, templateLabel: job.templateLabel, attempts: job.attempts, requestId: job.requestId, draftId: job.draftId, edited: Boolean(job.edited) });
+      } catch (error) {
+        if (isLcwAiError(error)) throw error;
+        throw lcwAiError('OUTPUT_RENDER_FAILED', { detail: String(error && error.code || 'deck').slice(0, 60) });
+      }
     }
     const report = BLOutputLayout.presentationReport(job.data, job.records, job.lang === 'en');
     const c = require('./output-theme').theme().colors;

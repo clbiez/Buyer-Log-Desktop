@@ -3,14 +3,43 @@
   "publishedAt": "2026-10-29",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Sunum editöründe tüm koleksiyon başlıkları",
-    "en": "Every collection header in the presentation editor"
+    "tr": "Etkileşimli HTML sunum ve tüm koleksiyon başlıkları",
+    "en": "Interactive HTML presentation and every collection header"
   },
   "summary": {
-    "tr": "Sunum editöründe kartlara ve gruplamaya Kumaş, Hedef Fiyat, Kalıp ve kendi eklediğiniz sütunlar dahil koleksiyon tablosunun tüm başlıkları seçilebilir; yerleşim adımında ayar paneli önizlemeyi kaydırmadan kendi başına kayar.",
-    "en": "In the presentation editor, cards and grouping can use every collection table header, including Fabric, Target Price, Fit and your own columns; in the layout step the settings panel scrolls on its own without moving the preview."
+    "tr": "Sunum editörü HTML'i artık kaydırınca canlanan, modele tıklayınca ayrıntısı açılan etkileşimli bir sunum olarak oluşturuyor; kartlara ve gruplamaya koleksiyon tablosunun tüm başlıkları eklenebiliyor; PDF alt bilgisi üst üste binmiyor ve yerleşim adımında ayar paneli önizlemeyi kaydırmıyor.",
+    "en": "The presentation editor now creates HTML as an interactive presentation that comes alive as you scroll and opens a model's details on click; cards and grouping can use every collection table header; the PDF footer no longer overlaps and the settings panel in the layout step no longer scrolls the preview."
   },
   "changes": [
+    {
+      "id": "output-studio-interactive-html",
+      "type": "feature",
+      "module": {
+        "tr": "Sunum Editörü",
+        "en": "Presentation Editor"
+      },
+      "title": {
+        "tr": "HTML çıktısı etkileşimli, animasyonlu bir sunum oldu",
+        "en": "HTML output is now an interactive, animated presentation"
+      },
+      "body": {
+        "tr": "Sunum editöründe HTML seçildiğinde dosya, Studio'da kurduğunuz düzenin aynısını (başlık bandı, gruplar, kart bilgileri, not, alt bilgi) ekran boyutuna göre ölçeklenen slaytlar hâlinde gösterir. Slaytlar kaydırınca yerine oturur ve kartlar sırayla belirir; üstte ilerleme çubuğu, sağda bulunduğunuz slaytı gösteren noktalar, “Tüm slaytlar” ile genel bakış vardır. Bir modele tıklayınca büyük görsel ve seçili tüm kart bilgileri açılır; Önceki/Sonraki ile modeller arasında gezilir. Dosya betik çalıştırmaz (katı güvenlik politikası korunur), hareket azaltma tercihine uyar ve yazdırınca her slayt bir sayfa olur. PDF çıktısında sayfa altındaki iki yazının üst üste binmesi giderildi. LCW AI kullanılmadan oluşturulan sunumlarda PowerPoint, PDF ve HTML alt bilgisinde yalnız “Buyer Log” yazar.",
+        "en": "When HTML is chosen in the presentation editor, the file shows exactly the layout you built in Studio (title band, groups, card details, note, footer) as slides that scale to the screen. Slides snap into place as you scroll and cards appear one after another; a progress bar at the top, dots on the right showing the current slide and an “All slides” overview help navigation. Clicking a model opens a large image with all chosen card details; Previous/Next move between models. The file runs no scripts (the strict security policy is kept), respects reduced-motion preferences and prints one slide per page. In the PDF output, the two overlapping texts at the bottom of each page are fixed. Presentations created without LCW AI show only “Buyer Log” in PowerPoint, PDF and HTML footers."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "output-studio-interactive-html.png",
+        "alt": {
+          "tr": "Buyer Log'un oluşturduğu HTML sunum: Fabric'e göre gruplanmış slaytın üzerinde tıklanan modelin büyük görseli ve Colour Code, Fit, Quantity, Target Price, Fabric bilgileri ile Önceki, Kapat, Sonraki düğmeleri (demo veri)",
+          "en": "HTML presentation created by Buyer Log: over a slide grouped by Fabric, the clicked model's large image with Colour Code, Fit, Quantity, Target Price and Fabric details plus Previous, Close and Next buttons (demo data)"
+        },
+        "caption": {
+          "tr": "Modele tıklayınca ayrıntısı açılır; Önceki/Sonraki ile gezilir.",
+          "en": "Click a model to open its details; move on with Previous/Next."
+        }
+      }
+    },
     {
       "id": "output-studio-any-collection-column",
       "type": "fix",
