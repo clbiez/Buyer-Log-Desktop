@@ -136,7 +136,7 @@ function createOutputService(options = {}) {
         if (format === 'pdf') {
           const html = buildDocument({ body, styles: data.styles, title, lang, orientation, print: true, meta: { date: day, template: job.templateLabel }, layout });
           const pendingId = store.putPending(ownerId, { stage: 'pdf', html, ...saveMeta, lang, orientation, officeCapability:job.durablePending===true }, {durable:job.durablePending===true});
-          return { pending: 'pdf', pendingId, html, title, landscape: orientation === 'landscape', format: 'pdf', templateLabel: job.templateLabel, attempts: job.attempts, draftId: job.draftId };
+          return { pending: 'pdf', pendingId, html, title, landscape: orientation === 'landscape', ...(job.pageFooter === false ? { footer: false } : {}), format: 'pdf', templateLabel: job.templateLabel, attempts: job.attempts, draftId: job.draftId };
         }
         const buffer = Buffer.from(buildDocument({ body, styles: data.styles, title, lang, orientation, meta: { date: day, template: job.templateLabel }, layout }), 'utf8');
         return store.save(ownerId, { buffer, ...saveMeta });
@@ -299,7 +299,7 @@ function createOutputService(options = {}) {
     const report = BLOutputLayout.presentationReport(job.data, job.records, job.lang === 'en');
     const c = require('./output-theme').theme().colors;
     const css = `@page{size:${report.width}pt ${report.height}pt;margin:0}html,body,.bl-page,.bl-report{margin:0!important;padding:0!important;max-width:none!important;width:auto!important}.bl-header,.bl-footer{display:none!important}.bl-studio-page{background:${c.paper};margin:0!important;overflow:hidden}.bl-studio-page:last-child{break-after:auto}.bl-studio-title{color:${c.ink}}.bl-studio-title small{display:block;font-size:12pt}.bl-studio-card{background:${c.paper};border:0.5pt solid ${c.line}}.bl-studio-card img{max-width:none!important;margin:0!important}.bl-studio-content table{width:100%}`;
-    return render(ownerId, { ...job, format: target, orientation: job.data.layout.studio.orientation, data: { body: report.body, styles: [css], title: job.title, layout: null } }, images);
+    return render(ownerId, { ...job, format: target, pageFooter: false, orientation: job.data.layout.studio.orientation, data: { body: report.body, styles: [css], title: job.title, layout: null } }, images);
   }
 
   /* Şablon olarak kaydetme: taslaktaki (ya da düzenleyicideki) yapının

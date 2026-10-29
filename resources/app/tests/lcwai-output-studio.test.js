@@ -212,3 +212,19 @@ test('studio: very large scopes drop whole heavy columns instead of exceeding th
   assert.deepEqual(built.source.omittedColumns, ['big']);
   assert.ok(Object.values(built.records).every(r => r.values['col.small'] && r.values['col.big2'] && !('col.big' in r.values)));
 });
+
+test('studio: PDF skips the shell footer (pages carry their own) and Buyer Log-only decks do not claim LCW AI', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-studio-brand-'));
+  try {
+    const service = createOutputService({ engine: { chat() { throw Error('AI must not be called'); } }, storeOptions: { root } });
+    const draft = service.createStudio('u1', S.build({ module: 'orders', rows: [{ _id: 'a', modelName: 'A' }, { _id: 'b', modelName: 'B' }] }));
+    const pdf = service.renderDraft('u1', draft.id, { data: draft.data, format: 'pdf' }).output;
+    assert.equal(pdf.footer, false, 'Electron footerTemplate would overlap the slide footer');
+    const pptx = service.renderDraft('u1', draft.id, { data: draft.data, format: 'pptx' }).output;
+    const zip = XLSX.CFB.read(fs.readFileSync(pptx.path), { type: 'buffer' });
+    const slides = zip.FullPaths.map((p, i) => [p, zip.FileIndex[i]]).filter(([p]) => /ppt\/slides\/slide\d+\.xml$/.test(p)).map(([, e]) => Buffer.from(e.content).toString());
+    assert.ok(slides.length > 1);
+    assert.ok(slides.every(xml => !xml.includes('LCW AI')));
+    assert.ok(slides.some(xml => xml.includes('Buyer Log · ')));
+  } finally { fs.rmSync(root, { recursive: true, force: true }); fs.rmSync(`${root}-drafts`, { recursive: true, force: true }); }
+});

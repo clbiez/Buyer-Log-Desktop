@@ -1156,7 +1156,7 @@
       if (sub) body += box(g.margin, g.band - 14 - sub * 1.35, g.width, sub * 1.35, `is-plain${dark ? ' is-dark' : ''}`, text(sub, esc(slide.subtitle), 'is-muted'));
       body += box(g.margin, g.band - 10, 64, 3, `is-rule${dark ? ' is-dark' : ''}`);
       if (l.studio && l.studio.headerHidden) body = body.slice(0, headerStart);
-      body += box(g.margin, g.size.height - 30, 480, 18, 'is-plain', text(9, esc(`Buyer Log · LCW AI · ${ed.title}`), 'is-muted'));
+      body += box(g.margin, g.size.height - 30, 480, 18, 'is-plain', text(9, esc(`${isStudio() ? 'Buyer Log' : 'Buyer Log · LCW AI'} · ${ed.title}`), 'is-muted'));
       const top = g.contentTop + 8;
       if (entry.page) {
         const page = entry.page;
