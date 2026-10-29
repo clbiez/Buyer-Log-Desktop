@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.320",
+  "channel": "stable",
+  "publishedAt": "2026-10-29",
+  "title": {
+    "tr": "Açılır kapanır dünya saatleri",
+    "en": "Collapsible world clocks"
+  },
+  "summary": {
+    "tr": "Genel Bakış'taki dünya saatleri artık tek satırlık bir şerit; ayrıntılar, resmi tatiller ve saat yönetimi açılır panelde.",
+    "en": "Overview world clocks are now a single-line strip; details, public holidays and clock management open in a drop-down panel."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 1,
+    "fixes": 0
+  },
+  "changes": [
+    {
+      "id": "overview-world-clocks-collapsible",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Dünya saatleri açılır kapanır oldu",
+        "en": "World clocks now expand and collapse"
+      },
+      "body": {
+        "tr": "Kapalıyken widget tek satıra iner ve her ülke için minik saat, yerel saate göre fark ile mesai durumu noktası gösterir. Detaylar düğmesi veya bir saate tıklamak, saat kartları, yaklaşan resmi tatiller ve saat yönetimini içeren paneli açar; panel altındaki widget'ları kaydırmaz, Esc veya dışarı tıklamayla kapanır. Daha yüksek kaydedilmiş saat widget'ı tek satıra iner ve altındaki boşluk kapanır.",
+        "en": "When collapsed the widget shrinks to a single line with a mini clock per country, its offset from local time and an office-hours dot. Details, or a click on a clock, opens a panel with clock cards, upcoming public holidays and clock management; it does not push the widgets below and closes with Esc or an outside click. A taller saved clock widget shrinks to one line and the gap below it closes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-world-clocks-collapsible.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Genel Bakış, Açık tema: üstte TR, BD, IN, CN, EG minik saat şeridi ve altında açılmış panelde saat kartları, mesai durumu ve Hindistan resmi tatilleri (demo kullanıcı)",
+          "en": "Real Buyer Log Overview, Light theme: the TR, BD, IN, CN, EG mini clock strip and the opened panel below with clock cards, office-hours status and India public holidays (demo user)"
+        },
+        "caption": {
+          "tr": "Kapalıyken minik saatler, açılınca saat kartları ve resmi tatiller.",
+          "en": "Mini clocks when collapsed; clock cards and public holidays when opened."
+        }
+      }
+    }
+  ]
+}

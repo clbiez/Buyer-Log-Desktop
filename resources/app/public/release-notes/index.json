@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.320",
+      "publishedAt": "2026-10-29",
+      "title": {
+        "tr": "Açılır kapanır dünya saatleri",
+        "en": "Collapsible world clocks"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 1,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.320/release.json"
+    },
+    {
       "version": "7.0.319",
       "publishedAt": "2026-10-29",
       "title": {
