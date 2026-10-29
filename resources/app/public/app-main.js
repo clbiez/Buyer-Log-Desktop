@@ -28051,10 +28051,19 @@ function kolQuickScoped(excludeKey){
     return true;
   });
 }
+function kolQuickFilterTone(key){
+  // Use CP's semantic quick-filter palette for comparable Collection fields.
+  if(key==='delType')return 'purple';
+  if(key==='season'||key==='inStoreWeek'||key==='inStoreMonth')return 'blue';
+  return 'gray'; // Free-form values; status chips use their catalog color below.
+}
 function renderKolQuickFilters(){
   const wrap = document.getElementById('kolQuickFilters'); if(!wrap) return;
+  const quickDims=loadKolQuickDims();
+  // Capture catalog colors once per render; statuses are user-configurable.
+  const statusColors=quickDims.some(dim=>dim.key==='durum')?kolStatusRenderSnapshot():null;
   let html = `<button type="button" class="kpiGroupEdit" id="kolQuickFiltersEdit" title="${escapeHtml(appLang==='en'?'Add or remove quick filters':'Hızlı filtre ekle veya çıkar')}" aria-label="${escapeHtml(appLang==='en'?'Add or remove quick filters':'Hızlı filtre ekle veya çıkar')}"><svg class="ic"><use href="#i-settings"/></svg></button>`;
-  loadKolQuickDims().forEach(dim=>{
+  quickDims.forEach(dim=>{
     const scoped = kolQuickScoped(dim.key);
     const counts = {};
     scoped.forEach(r=>{ const v = (dim.key==='inStoreMonth'?kolFilterValue(r,dim.key):norm(r[dim.key])) || '—'; counts[v] = (counts[v]||0)+1; });
@@ -28065,7 +28074,9 @@ function renderKolQuickFilters(){
       const active = kolColFilters[dim.key] && kolColFilters[dim.key].has(val==='—'?'':val);
       const dispVal = dim.key==='inStoreMonth'?(kolMonthDisplay(val)||val):(dim.key==='durum'?L(val):val);
       const quickFilterLabel=appLang==='en'?`Filter ${L(dim.label)}: ${dispVal} (${n})`:`${L(dim.label)} filtresi: ${dispVal} (${n})`;
-      html += `<button type="button" class="kpi tone-blue${active?' active':''}" aria-pressed="${active?'true':'false'}" aria-label="${escapeHtml(quickFilterLabel)}" title="${escapeHtml(quickFilterLabel)}" data-kolq-key="${dim.key}" data-kolq-val="${escapeHtml(val==='—'?'':val)}"><span class="n">${n}</span><span class="l">${escapeHtml(dispVal)}</span></button>`;
+      const tone=kolQuickFilterTone(dim.key);
+      const statusStyle=dim.key==='durum'&&val!=='—' ? ` style="--kol-quick-status-color:${statusColors.color(val)}"` : '';
+      html += `<button type="button" class="kpi tone-${tone}${active?' active':''}" aria-pressed="${active?'true':'false'}" aria-label="${escapeHtml(quickFilterLabel)}" title="${escapeHtml(quickFilterLabel)}" data-kolq-key="${dim.key}" data-kolq-val="${escapeHtml(val==='—'?'':val)}"${statusStyle}><span class="n">${n}</span><span class="l">${escapeHtml(dispVal)}</span></button>`;
     });
     html += `<div class="kpiSep"></div>`;
   });

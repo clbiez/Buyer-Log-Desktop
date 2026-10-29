@@ -3723,3 +3723,9 @@ button.ovNoteCount{cursor:pointer;}
 .blExcelMenu{min-width:260px;}
 .blExcelMenu .tableActionIconOnly{width:auto!important;min-width:0!important;justify-content:flex-start!important;}
 .blExcelMenu .tableActionIconOnly>span{display:inline!important;}
+
+/* Collection Status quick filters use the same catalog hues as the table.
+   Keep the CP-style active selection ink when a chip is pressed. */
+#kolQuickFilters .kpi[data-kolq-key="durum"]:not(.active) .n {
+  color:var(--kol-quick-status-color,var(--ui-text-secondary)) !important;
+}
