@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-29",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Onay haritası kaydı yanlış çakışma vermez",
+    "en": "Approval map saves no longer report false conflicts"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Onay haritası yalnız haritanın kendisi başka yerde değiştiyse “Bu kart siz düzenlerken değişti” uyarısı verir; royalty, iletişim veya senkron kaynaklı değişiklikler kaydı engellemez.",
+    "en": "The approval map warns “This card changed while you were editing” only when the map itself changed elsewhere; royalty, contact or sync changes no longer block the save."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "license-map-save-guard",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Onay haritası ilgisiz değişikliklerde kaydedilebilir",
+        "en": "Approval maps save despite unrelated card changes"
+      },
+      "body": {
+        "tr": "Harita düzenlenirken aynı kartın royalty, komisyon, iletişim veya sözleşme bilgisi değişse ya da ortak klasör senkronu kartı yeniden yazsa bile harita artık kaydedilir ve diğer değişiklikler korunur. Uyarı yalnız açtığınız harita başka yerde değiştiyse çıkar. Kaydetmeden hemen önce başlamış eski bir liste yenilemesi de kaydedilen haritayı geri getiremez.",
+        "en": "While you edit a map, changes to the same card’s royalty, commissions, contacts or contracts, or a shared-folder sync rewriting the card, no longer block the save, and those changes are kept. The warning appears only if the map you opened changed elsewhere. An older list refresh that started just before the save can no longer bring back the previous map."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-map-save-guard.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Lisans kartları listesi, NORTH STAR haritası 3 adımla kaydedildi, aynı anda değişen %12,5 royalty korundu, demo veri",
+          "en": "Real Buyer Log: License cards list, the NORTH STAR map saved with 3 steps while the royalty changed to 12.5% at the same time was kept, demo data"
+        },
+        "caption": {
+          "tr": "Harita açıkken royalty değişti; harita yine kaydedildi ve iki değişiklik de korundu.",
+          "en": "The royalty changed while the map was open; the map still saved and both changes were kept."
+        }
+      }
+    }
+  ]
 }
