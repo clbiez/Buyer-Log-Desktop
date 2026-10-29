@@ -51,3 +51,13 @@ test('Collection quick filter colors follow CP selection and the collection stat
   assert.match(CSS, /#kolQuickFilters \.kpi\[data-kolq-key="durum"\]:not\(\.active\) \.n\{color:var\(--kol-quick-status,var\(--ui-text-secondary\)\)!important;\}/);
   assert.match(CSS, /\.kpi\.active::after\{content:'✓';\}/);
 });
+
+
+test('Collection quick-filter selection uses CP palette without overriding status tones', () => {
+  const selectedRule = DESIGN.match(/html\[data-ui-system="manifest"\] #kolQuickFilters \.kpi\[aria-pressed="true"\]\s*\{([^}]+)\}/);
+  assert.ok(selectedRule, 'Collection selection must override the generic pressed-button accent');
+  assert.match(selectedRule[1], /background:var\(--ui-selected\)!important/);
+  assert.match(selectedRule[1], /color:var\(--ui-selected-ink\)!important/);
+  assert.match(APP, /class="kpi tone-\$\{tone\}\$\{active\?' active':''\}"\$\{statusStyle\} aria-pressed="\$\{active\?'true':'false'\}"/);
+  assert.match(DESIGN, /html\[data-ui-system="manifest"\] \.kpi\.active \{background:var\(--ui-selected\) !important/);
+});
