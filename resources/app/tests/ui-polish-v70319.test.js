@@ -93,3 +93,13 @@ test('Filtreleri Temizle diğer araç düğmeleri gibi ortak çerçeveyi kullan�
   assert.ok(rule.length>0);
   assert.doesNotMatch(rule,/border:0/);
 });
+
+test('kapatılan seçim çubuğu seçim boşalıp aynı sayıda yeniden seçilince tekrar görünür',()=>{
+  const s=mountBar({cp:1});
+  assert.equal(s.bar.hidden,false);
+  s.bar.l.click({target:{closest:()=>({dataset:{selectionDismiss:''}})},stopPropagation(){}});
+  assert.equal(s.bar.hidden,true);
+  s.ctx.state.cpSelected.clear();s.fire();
+  s.ctx.state.cpSelected.add('other');s.fire();
+  assert.equal(s.bar.hidden,false);
+});

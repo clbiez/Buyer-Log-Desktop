@@ -72,6 +72,8 @@
     const key=String(doc.body&&doc.body.dataset.activeTab||'');
     const count=PAGES[key]?selected(key):0;
     const signature=key+':'+count;
+    // Seçim boşalınca gizleme unutulur; aynı sayıda yeni seçim çubuğu yeniden gösterir.
+    if(!count)dismissedAt='';
     if(!count||dismissedAt===signature){hide();lastKey=key;lastCount=count;return;}
     if(dismissedAt&&dismissedAt!==signature)dismissedAt='';
     const lang=en()?'en':'tr';
