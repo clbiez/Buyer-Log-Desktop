@@ -8,8 +8,10 @@
   const html=doc.documentElement;
   const reduce=()=>Boolean(root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
   const enabled=()=>!reduce()&&doc.visibilityState!=='hidden'&&html.dataset.blMotion!=='off'&&!(doc.body?.dataset?.activeTab==='overview'&&html.dataset.overviewMotion==='paused');
-  const SPEED=Object.freeze({page:340,card:360,table:390,overlay:240,bar:440});
+  const SPEED=Object.freeze({page:340,card:360,table:390,overlay:240,bar:440,theme:620});
   const EASE='cubic-bezier(.2,.75,.25,1)';
+  // Tema dairesi: dengeli hızlanıp yavaşlar; ortak EASE ilk karelerde bitmiş gibi görünüyordu.
+  const THEME_EASE='cubic-bezier(.5,0,.2,1)';
   const duration=name=>{
     const css=root.getComputedStyle?.(html).getPropertyValue('--ui-motion-'+name);
     const parsed=css?Number.parseFloat(css):NaN;
@@ -152,6 +154,10 @@
     if(kind==='refresh'||kind==='refresh-active')return animate(element,
       [{transform:'rotate(0deg)'},{transform:'rotate(360deg)'}],
       {duration:duration('card')*2,iterations:kind==='refresh-active'?Infinity:2});
+    // Tema düğmesi simgesi: tek seferlik dönüş + belirme (güneş/ay değişimi).
+    if(kind==='swap')return animate(element,
+      [{opacity:.2,transform:'rotate(-120deg) scale(.6)'},{opacity:1,transform:'rotate(0deg) scale(1)'}],
+      {duration:duration('card')+80});
     if(kind==='sync'||kind==='sync-active')return animate(element,
       [{opacity:1,transform:'scale(1)'},{opacity:.48,transform:'scale(1.08)'},{opacity:1,transform:'scale(1)'}],
       {duration:duration('card')*2,iterations:kind==='sync-active'?8:2});
@@ -186,6 +192,34 @@
       const control=doc.getElementById?.(id);
       if(control)updateActivity(control,state,kind);
     }
+  }
+  /* Tema geçişi (kullanıcı isteği, 7.0.319): yeni tema, tıklanan noktadan
+     açılan bir daireyle eskisinin üstüne yayılır. Tarayıcı iki anlık görüntüyü
+     birleştirir; tablo, seçim, kaydırma ve DOM değişmez. Hareket kapalıysa,
+     GPU yoksa (yazılım çizimi) ya da View Transitions yoksa false döner ve
+     çağıran mevcut hızlı yoldan geçer. Arka arkaya isteklerde sonuncusu kazanır. */
+  let themeTransition=null;
+  function theme(update,origin){
+    if(typeof update!=='function'||typeof doc.startViewTransition!=='function'||!enabled()||html.dataset.blRender==='software')return false;
+    if(themeTransition){try{themeTransition.skipTransition();}catch(_){}}
+    const w=root.innerWidth||1,h=root.innerHeight||1;
+    const x=Number.isFinite(origin?.x)?origin.x:w/2,y=Number.isFinite(origin?.y)?origin.y:h/2;
+    const radius=Math.ceil(Math.hypot(Math.max(x,w-x),Math.max(y,h-y)));
+    let transition;
+    html.classList.add('blThemeMorph');
+    try{transition=doc.startViewTransition(update);}
+    catch(_){html.classList.remove('blThemeMorph');return false;}
+    themeTransition=transition;
+    transition.ready.then(()=>{
+      html.animate({clipPath:[`circle(0px at ${x}px ${y}px)`,`circle(${radius}px at ${x}px ${y}px)`]},
+        {duration:duration('theme'),easing:THEME_EASE,pseudoElement:'::view-transition-new(root)'});
+      html.animate({opacity:[1,.86],transform:['scale(1)','scale(.992)']},
+        {duration:duration('theme'),easing:THEME_EASE,pseudoElement:'::view-transition-old(root)'});
+    }).catch(()=>{});
+    transition.finished.catch(()=>{}).then(()=>{
+      if(themeTransition===transition){themeTransition=null;html.classList.remove('blThemeMorph');}
+    });
+    return true;
   }
   function setEnabled(value){
     html.dataset.blMotion=value?'on':'off';
@@ -225,7 +259,7 @@
       if(profile&&profile.softwareCompositing===true)html.dataset.blRender='software';
     }).catch(()=>{});
   }
-  root.BLMotionPlus=Object.freeze({enabled,play,activate,setEnabled,speeds:SPEED});
+  root.BLMotionPlus=Object.freeze({enabled,play,activate,setEnabled,theme,speeds:SPEED});
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',mount,{once:true});
   else mount();
 })(typeof window!=='undefined'?window:globalThis);

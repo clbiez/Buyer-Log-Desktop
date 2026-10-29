@@ -9,9 +9,7 @@
 
   const ICON_ONLY_IDS = Object.freeze([
     'navCopy',
-    'navExcelBtn',
     'kolCopySelectedBtn',
-    'kolExportImgBtn',
     'kolAddRowBtn',
   ]);
 
@@ -68,6 +66,7 @@
     const root = button.closest(
       '#cpTableToolbar,#ordersTableToolbar,#kolTableToolbar,' +
       '#cpToolsMenu,#ordersToolsMenu,#kolToolsMenu,' +
+      '#cpExcelMenu,#ordersExcelMenu,#kolExcelMenu,' +
       '#cpMoreMenu,#ordersMoreMenu,#kolMoreMenu'
     );
     return root ? button : null;

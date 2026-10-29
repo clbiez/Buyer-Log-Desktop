@@ -1,14 +1,75 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-29",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Animasyonlu tema geçişi ve tek Excel çekmecesi",
+    "en": "Animated theme switch and a single Excel drawer"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Aydınlık ile Karanlık arasında dairesel geçiş; Kurşun teması kaldırıldı. CP, Siparişler ve Koleksiyon'daki bütün Excel işleri tek çekmecede, menüler sade satırlar hâlinde.",
+    "en": "A circular reveal between Light and Dark; the Slate theme was removed. Every Excel task in CP, Orders and Collection now lives in one drawer, and menus are clean rows."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "animated-theme-switch",
+      "type": "improvement",
+      "module": { "tr": "Görünüm ve temalar", "en": "Appearance and themes" },
+      "title": { "tr": "Temalar arasında animasyonlu geçiş", "en": "Animated switching between themes" },
+      "body": {
+        "tr": "Sol menüdeki Tema düğmesine basınca yeni tema, düğmenin olduğu noktadan açılan bir daireyle ekrana yayılır; simge de dönerek değişir. Tablolar, seçimler, filtreler ve kaydırma konumu olduğu gibi kalır. Arka arkaya basışlarda son seçim geçerlidir. Azaltılmış hareket tercihinde ve GPU'suz uzak masaüstünde tema eskisi gibi anında değişir.",
+        "en": "Pressing Theme in the left rail spreads the new theme across the screen in a circle that opens from the button, and the icon turns as it changes. Tables, selections, filters and scroll positions stay as they are. Rapid presses resolve to the last choice. With reduced motion, or on remote desktops without a GPU, the theme still switches instantly."
+      },
+      "visual": {
+        "kind": "screenshot", "capture": "post-change", "src": "theme-circle-transition.png",
+        "alt": { "tr": "Gerçek Buyer Log CP Tracker: Aydınlık temadan Karanlık temaya dairesel geçişin ortası, demo veriler", "en": "Real Buyer Log CP Tracker: midway through the circular Light-to-Dark transition, demo data" },
+        "caption": { "tr": "Karanlık tema, sol alttaki Tema düğmesinden açılarak yayılıyor.", "en": "Dark spreads out from the Theme button in the lower left." }
+      }
+    },
+    {
+      "id": "slate-theme-removed",
+      "type": "improvement",
+      "module": { "tr": "Görünüm ve temalar", "en": "Appearance and themes" },
+      "title": { "tr": "İki tema: Aydınlık ve Karanlık", "en": "Two themes: Light and Dark" },
+      "body": {
+        "tr": "Kurşun teması kaldırıldı. Tema düğmesi artık iki tema arasında geçiş yapar ve etiketinde etkin temayı gösterir. Kurşun teması seçili olan kullanıcılar uygulamayı Aydınlık temada açar.",
+        "en": "The Slate theme was removed. The Theme button now toggles between two themes and shows the active one in its label. Users who had Slate selected open the app in Light."
+      },
+      "visual": {
+        "kind": "screenshot", "capture": "post-change", "src": "two-themes-rail.png",
+        "alt": { "tr": "Gerçek Buyer Log: Karanlık temada CP Tracker, sol altta 'Tema: Karanlık' etiketi, demo veriler", "en": "Real Buyer Log: CP Tracker in Dark with the 'Tema: Karanlık' label in the lower left, demo data" },
+        "caption": { "tr": "Tema düğmesi etkin temayı adıyla gösterir.", "en": "The Theme button names the active theme." }
+      }
+    },
+    {
+      "id": "single-excel-drawer",
+      "type": "improvement",
+      "module": { "tr": "CP Tracker, Siparişler, Koleksiyon", "en": "CP Tracker, Orders, Collection" },
+      "title": { "tr": "Bütün Excel işleri tek çekmecede", "en": "Every Excel task in one drawer" },
+      "body": {
+        "tr": "Tablo araç çubuğundaki yeni Excel düğmesi; tabloyu Excel'e aktarma, Capacity Request, Hologram Talep, MB Listesi ve Checklist Excel'lerini, kullanıcı Excelini içe aktarmayı ve Excel şablonlarını bölümler hâlinde bir arada sunar. Araçlar menüsü yalnız oluşturma, hesaplama ve seçili satır işlemlerini taşır. İşlevler, seçim kuralları ve sağ tık menüsündeki kısayollar aynen çalışır.",
+        "en": "The new Excel button in the table toolbar groups table export, Capacity Request, Hologram Request, MB List and Checklist workbooks, user Excel import and Excel templates into labelled sections. Tools now holds only create, calculate and selected-row actions. All functions, selection rules and right-click shortcuts work as before."
+      },
+      "visual": {
+        "kind": "screenshot", "capture": "post-change", "src": "cp-excel-drawer.png",
+        "alt": { "tr": "Gerçek Buyer Log CP Tracker: açık Excel çekmecesi; Dışa aktar, Hazır formatlar, Kontrol Listesi ve İçe aktar bölümleri, demo veriler", "en": "Real Buyer Log CP Tracker: the open Excel drawer with Export, Ready-made formats, Checklist and Import sections, demo data" },
+        "caption": { "tr": "CP Tracker'ın Excel çekmecesi.", "en": "The CP Tracker Excel drawer." }
+      }
+    },
+    {
+      "id": "clean-drawer-menus",
+      "type": "improvement",
+      "module": { "tr": "Araç çubukları", "en": "Toolbars" },
+      "title": { "tr": "Sade çekmece menüleri ve etiketli tetikleyiciler", "en": "Clean drawer menus and labelled triggers" },
+      "body": {
+        "tr": "Menü öğeleri artık ayrı kutular gibi gölgeli değil; bölüm başlıklarıyla ayrılan düz satırlardır ve bir işlem seçilince menü kapanır. Excel ve Araçlar düğmeleri adını ve açılınca dönen bir ok gösterir; açık menünün üstüne ipucu binmez. Düğmeler basılırken hafifçe tepki verir.",
+        "en": "Menu items are no longer shadowed like separate boxes; they are plain rows separated by section headings, and the menu closes once an action is chosen. The Excel and Tools buttons show their name and an arrow that turns when open, and tooltips no longer cover an open menu. Buttons respond subtly when pressed."
+      },
+      "visual": {
+        "kind": "screenshot", "capture": "post-change", "src": "cp-tools-drawer.png",
+        "alt": { "tr": "Gerçek Buyer Log CP Tracker, Karanlık tema: Araçlar menüsü 'Oluştur ve hesapla' ve 'Seçili satırlar' bölümleriyle, demo veriler", "en": "Real Buyer Log CP Tracker in Dark: the Tools menu with 'Create and calculate' and 'Selected rows' sections, demo data" },
+        "caption": { "tr": "Bölümlü, düz satırlı Araçlar menüsü.", "en": "The sectioned Tools menu with plain rows." }
+      }
+    }
+  ]
 }

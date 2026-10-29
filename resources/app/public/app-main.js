@@ -1349,13 +1349,14 @@ function syncNavExcelButtonLabel(tab=document.body.dataset.activeTab){
   const label=document.getElementById('navExcelBtnLabel');
   const btn=document.getElementById('navExcelBtn');
   if(!label||!btn) return;
+  // 7.0.319: düğme Excel çekmecesinin içinde, etiketiyle birlikte görünür.
   if(tab==='cp'){
-    label.textContent='Export';
+    label.textContent=appLang==='en'?'Export table to Excel':"Tabloyu Excel'e Aktar";
     btn.title=appLang==='en'
       ? 'Export the filtered CP table to Excel using light-theme formatting'
       : 'Filtrelenmiş CP tablosunu aydınlık tema biçimiyle Excel’e aktar';
   }else{
-    label.textContent=appLang==='en'?'Export to Excel':"Excel'e Aktar";
+    label.textContent=appLang==='en'?'Export table to Excel':"Tabloyu Excel'e Aktar";
     btn.title=appLang==='en'
       ? 'Export the on-screen table to Excel with the current filters, columns and selection'
       : "Ekrandaki tabloyu filtre, sütun ve işaretleme seçimine göre Excel'e aktar";
@@ -1391,6 +1392,13 @@ function restoreSharedTableActions(){
 /* Tek bağlama: bu satır eskiden restoreSharedTableActions İÇİNDEYDİ ve her sekme
    geçişinde yeni bir dinleyici ekleyip tek tıkta birden çok PLM senkronu başlatıyordu. */
 document.getElementById('shipPlmSyncBtn')?.addEventListener('click',event=>openCurrentViewImageAction(event.currentTarget));
+// 7.0.319 — Genel "Excel'e Aktar" düğmesi aktif sayfanın Excel çekmecesindeki yuvaya taşınır.
+function placeExcelExportAction(tab){
+  const menuId=tab==='cp'?'cpExcelMenu':(tab==='orders'?'ordersExcelMenu':'');
+  const slot=menuId&&document.querySelector(`#${menuId} [data-excel-slot="table"]`);
+  const btn=document.getElementById('navExcelBtn');
+  if(slot&&btn){btn.classList.remove('tableActionIconOnly');slot.before(btn);}
+}
 function appendSharedTableActions(targetId,ids){
   const target=document.getElementById(targetId); if(!target) return;
   ids.forEach(id=>{const node=sharedTableActionNode(id)||document.getElementById(id);if(node)target.appendChild(node);});
@@ -1456,7 +1464,8 @@ function syncTableToolbarActions(tab=document.body.dataset.activeTab){
   if(columnsWrap)columnsWrap.hidden=tab==='cp'||tab==='orders'||tab==='koleksiyon';
   placeCpDimensionFilters(tab);
   if(tab==='cp'){
-    appendSharedTableActions('cpTableActions',['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','navExcelBtn']);
+    appendSharedTableActions('cpTableActions',['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus']);
+    placeExcelExportAction('cp');
     appendSharedTableActions('cpToolsMenu',_selectionActionIds);
     appendSharedTableActions('cpMoreMenu',['navFitColumnsBtn','navFreezeBtn']);
     placeSharedActionsBefore('cpMoreWrap',['navClearFilters']);
@@ -1465,7 +1474,8 @@ function syncTableToolbarActions(tab=document.body.dataset.activeTab){
     removeColumnActions('cpMoreMenu');
     appendVfProfiles('cpMoreMenu');
   }else if(tab==='orders'){
-    appendSharedTableActions('ordersTableActions',['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','navExcelBtn']);
+    appendSharedTableActions('ordersTableActions',['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus']);
+    placeExcelExportAction('orders');
     // Siparişler ve CP, ortak Kopyala alt menüsündeki Koleksiyona Kopyala eylemini kullanır.
     appendSharedTableActions('ordersToolsMenu',_selectionActionIds.filter(id=>id!=='cpQuotationsBtn'));
     appendSharedTableActions('ordersMoreMenu',['navFitColumnsBtn','navFreezeBtn']);
@@ -16441,7 +16451,7 @@ function closeOtherToolbarAndColumnPopups(target){
   if(typeof closeHeaderFilter==='function'&&_openFilterPanel&&!_openFilterPanel.contains(target)&&!target.closest?.('.thFilterBtn,.chkFilterBtn'))closeHeaderFilter();
 }
 document.addEventListener('pointerdown',e=>closeOtherToolbarAndColumnPopups(e.target),true);
-[['kolMoreBtn','kolMoreMenu'],['kolPlmSyncBtn','kolPlmSyncMenu'],['kolToolsBtn','kolToolsMenu'],['lflFabricGroupBtn','lflFabricGroupPanel'],['cpToolsBtn','cpToolsMenu'],['ordersToolsBtn','ordersToolsMenu'],['cpPlmSyncBtn','cpPlmSyncMenu'],['ordersPlmSyncBtn','ordersPlmSyncMenu']].forEach(([btnId,menuId])=>{
+[['kolMoreBtn','kolMoreMenu'],['kolPlmSyncBtn','kolPlmSyncMenu'],['kolToolsBtn','kolToolsMenu'],['cpExcelBtn','cpExcelMenu'],['ordersExcelBtn','ordersExcelMenu'],['kolExcelBtn','kolExcelMenu'],['lflFabricGroupBtn','lflFabricGroupPanel'],['cpToolsBtn','cpToolsMenu'],['ordersToolsBtn','ordersToolsMenu'],['cpPlmSyncBtn','cpPlmSyncMenu'],['ordersPlmSyncBtn','ordersPlmSyncMenu']].forEach(([btnId,menuId])=>{
   document.getElementById(btnId)?.addEventListener('click',e=>{
     e.stopPropagation();
     const btn=e.currentTarget,menu=document.getElementById(menuId);
@@ -16456,6 +16466,16 @@ document.addEventListener('pointerdown',e=>closeOtherToolbarAndColumnPopups(e.ta
       menu.hidden=true;
       btn?.setAttribute('aria-expanded','false');
     }
+  });
+});
+// 7.0.319 — Excel ve Araçlar çekmecelerinde bir eylem seçilince çekmece kapanır;
+// eylemin kendi dinleyicisi önce çalışır (aynı tıklama), alt menü açan düğmeler hariç.
+['cpExcelMenu','ordersExcelMenu','kolExcelMenu','cpToolsMenu','ordersToolsMenu','kolToolsMenu'].forEach(menuId=>{
+  document.getElementById(menuId)?.addEventListener('click',event=>{
+    const item=event.target.closest?.('button,label.tbtn');
+    if(!item||item.disabled||item.getAttribute('aria-haspopup')||item.closest('.toolbarMoreMenu')?.id!==menuId)return;
+    const menu=event.currentTarget;
+    setTimeout(()=>{if(menu.hidden)return;menu.hidden=true;menu.parentElement?.querySelector(':scope>[aria-expanded="true"]')?.setAttribute('aria-expanded','false');},0);
   });
 });
 // v20260930 — Sayfa düğmeleri yalnız KENDİ sayfalarını ister; loadFromServer
@@ -21485,7 +21505,7 @@ function _xlsArgbFromHex(hex){
 function shipDomExportPalette(td){
   const theme=document.documentElement.dataset.theme;
   const tones=theme==='dark'?{body:'#f0f3f6',muted:'#a0adba'}
-    :theme==='grey'?{body:'#101820',muted:'#414e5a'}:{body:'#16212d',muted:'#627184'};
+    :{body:'#16212d',muted:'#627184'};
   const calculated=!td.querySelector('input')&&td.cellIndex>0;
   return {bg:null,color:calculated?tones.muted:tones.body,bold:false};
 }
@@ -21842,14 +21862,15 @@ async function exportActiveTableStyled(){
   });
 }
 
-// ================= TEMA — AYDINLIK / GRİ / KARANLIK =================
-const THEMES = { light:{label:'Aydınlık', labelEn:'Light', icon:'#i-moon'}, grey:{label:'Kurşun', labelEn:'Slate', icon:'#i-contrast'}, dark:{label:'Karanlık', labelEn:'Dark', icon:'#i-sun'} };
+// ================= TEMA — AYDINLIK / KARANLIK =================
+// Kurşun (grey) teması 7.0.319'da kaldırıldı; kayıtlı 'grey' tercihi Aydınlık'a düşer.
+const THEMES = { light:{label:'Aydınlık', labelEn:'Light', icon:'#i-moon'}, dark:{label:'Karanlık', labelEn:'Dark', icon:'#i-sun'} };
 // Tema adı tek yerden okunur: hem panel hem ray düğmesinin ipucu bunu kullanır.
 // Antrasit teması kaldırıldı. Taşıma kodu da v5.00'de silindi; tanınmayan bir
 // tema adı gelirse applyTheme sistem temasına düşer.
 function themeLabel(key){ const th=THEMES[key]; if(!th) return key; return (appLang==='en'&&th.labelEn)?th.labelEn:th.label; }
 function themeCycleTitle(){ const names=THEME_CYCLE.map(themeLabel).join(' → '); return (appLang==='en'?'Theme: ':'Tema: ')+names; }
-const THEME_CYCLE = ['light','grey','dark'];
+const THEME_CYCLE = ['light','dark'];
 function systemTheme(){ return (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'; }
 let _themeSwitchRelease=null;
 let _themeRequested=null;
@@ -21881,7 +21902,8 @@ function beginFastThemeSwitch(){
   return release;
 }
 function applyTheme(name,options){
-  const resolved = THEMES[name] ? name : systemTheme();
+  const requested = name==='grey' ? 'light' : name;
+  const resolved = THEMES[requested] ? requested : systemTheme();
   _themeRequested=resolved;
   // Persist only theme/scale for the unauthenticated sign-in shell.
   try{localStorage.setItem('buyerlog.ui.appearance',JSON.stringify({theme:resolved,step:Number(document.documentElement.dataset.fontStep)||0}));}catch(_){}
@@ -21891,6 +21913,7 @@ function applyTheme(name,options){
   if(root.dataset.theme===resolved){
     if(use)use.setAttribute('href',THEMES[resolved].icon);
     try{BLStorage.setItem('lcw_theme',resolved);}catch(e){}
+    syncThemeButtonTitle();
     return;
   }
   const update=()=>{
@@ -21902,6 +21925,9 @@ function applyTheme(name,options){
     syncThemeButtonTitle();
   };
   if(typeof _themeSwitchRelease==='function')_themeSwitchRelease(true);
+  // Kullanıcının istediği animasyonlu geçiş Motion+ üzerinden yürür; hareket
+  // kapalıysa, GPU yoksa veya tarayıcı desteklemiyorsa hızlı perdeli yola düşer.
+  if(options&&options.animate&&window.BLMotionPlus?.theme?.(update,options.origin))return;
   const release=beginFastThemeSwitch();
   update();
   if(release)release(false);
@@ -21909,6 +21935,9 @@ function applyTheme(name,options){
 // Ray düğmesinin ipucu artık elle yazılmıyor; tema listesi değişirse metin de değişir.
 function syncThemeButtonTitle(){
   const btn=document.getElementById('railThemeBtn'); if(!btn) return;
+  const label=document.getElementById('railThemeLabel');
+  const current=_themeRequested||document.documentElement.dataset.theme||'light';
+  if(label)label.textContent=(appLang==='en'?'Theme: ':'Tema: ')+themeLabel(current);
   const title=themeCycleTitle();
   btn.setAttribute('title',title);
   btn.setAttribute('aria-label',title);
@@ -36686,7 +36715,7 @@ window.BLFixedExcelDefaults={
   mbHeaders:MB_LIST_HEADERS,download:kolDownloadBuffer,
   mb:()=>mbBuildWorkbook([{}])
 };
-for(const id of ['cpExcelTemplatesBtn','kolExcelTemplatesBtn'])document.getElementById(id)?.addEventListener('click',()=>window.BLExcelTemplates.open().catch(error=>showToast(error.message)));
+for(const id of ['cpExcelTemplatesBtn','ordersExcelTemplatesBtn','kolExcelTemplatesBtn'])document.getElementById(id)?.addEventListener('click',()=>window.BLExcelTemplates.open().catch(error=>showToast(error.message)));
 async function createHologramRequestExcel(rows){
   if(!Array.isArray(rows)||!rows.length){showToast(appLang==='en'?'Select rows first.':'Önce satır seçin.');return null;}
   let result;try{result=window.BLHologramRequest.buildExport(rows);}catch(error){throw window.BLExcelTemplates.error(error.message);}

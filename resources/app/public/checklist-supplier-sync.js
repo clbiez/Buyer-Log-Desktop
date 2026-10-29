@@ -2206,7 +2206,10 @@
   }
 
   function ensureUi() {
-    const menu = root.document && root.document.getElementById('cpToolsMenu');
+    // 7.0.319: Checklist Excel işlemleri CP'nin "Excel" çekmecesinde düz bir bölüm
+    // olarak durur; çekmece yoksa eski Araçlar alt menüsü yolu korunur.
+    const excelSlot = root.document && root.document.querySelector('#cpExcelMenu [data-excel-slot="checklist"]');
+    const menu = excelSlot ? excelSlot.parentElement : (root.document && root.document.getElementById('cpToolsMenu'));
     if (!menu || root.document.getElementById('cpChecklistToolsWrap')) return;
 
     const wrap = root.document.createElement('div');
@@ -2246,16 +2249,35 @@
     input.accept = '.xlsx,.xlsm';
     input.hidden = true;
 
-    wrap.appendChild(trigger);
-    wrap.appendChild(sub);
-    menu.appendChild(wrap);
-    menu.appendChild(input);
+    if (excelSlot) {
+      // Düz bölüm: tetikleyici yok, alt menü her zaman açık ve konumsuz.
+      wrap.className = 'toolbarExcelSection';
+      wrap.removeAttribute('style');
+      sub.className = 'toolbarExcelSectionBody';
+      sub.removeAttribute('style');
+      sub.hidden = false;
+      const head = sub.querySelector('.toolbarMoreLabel');
+      if (head) { head.textContent = T('Checklist', 'Checklist'); }
+      wrap.appendChild(sub);
+      excelSlot.before(wrap);
+      excelSlot.before(input);
+    } else {
+      wrap.appendChild(trigger);
+      wrap.appendChild(sub);
+      menu.appendChild(wrap);
+      menu.appendChild(input);
+    }
 
     const closeSub = function () {
+      if (excelSlot) {
+        menu.hidden = true;
+        root.document.getElementById('cpExcelBtn')?.setAttribute('aria-expanded', 'false');
+        return;
+      }
       sub.hidden = true;
       trigger.setAttribute('aria-expanded', 'false');
     };
-    trigger.addEventListener('click', function (event) {
+    if (!excelSlot) trigger.addEventListener('click', function (event) {
       event.preventDefault();
       event.stopPropagation();
       sub.hidden = !sub.hidden;
@@ -2273,10 +2295,12 @@
         });
       }
     });
-    sub.addEventListener('click', function (event) { event.stopPropagation(); });
-    root.document.addEventListener('click', function (event) {
-      if (!wrap.contains(event.target)) closeSub();
-    });
+    if (!excelSlot) {
+      sub.addEventListener('click', function (event) { event.stopPropagation(); });
+      root.document.addEventListener('click', function (event) {
+        if (!wrap.contains(event.target)) closeSub();
+      });
+    }
 
     sub.querySelector('[data-checklist-excel-create]').addEventListener('click', function () {
       closeSub();

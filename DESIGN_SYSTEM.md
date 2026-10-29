@@ -26,18 +26,21 @@ ortak bileşene bağlanır; ayrı palet veya görünüm override dosyası oluşt
 
 ## 2. Tema ve yüzey
 
-Üç tema vardır: `light`, `grey`, `dark`. Açık ve karanlık temanın eski nötr
-ailesi ile tablo başlığı renkleri korunur. Grey, serin mat gri bir çalışma
-zeminidir. Tema rengi yalnız `data-theme` üzerinden değişir.
+İki tema vardır: `light`, `dark`. Kurşun (`grey`) teması 7.0.319'da kullanıcı
+kararıyla kaldırıldı; kayıtlı `grey` tercihi (boot betiği, giriş kabuğu,
+`applyTheme`, masaüstü pencere teması) `light`'a düşer. Açık ve karanlık temanın
+nötr ailesi ile tablo başlığı renkleri korunur. Tema rengi yalnız `data-theme`
+üzerinden değişir. Sol raydaki Tema düğmesi iki tema arasında geçiş yapar ve
+etiketinde etkin temayı gösterir (`Tema: Aydınlık` / `Theme: Dark`).
 
-| Token | Light | Grey | Kullanım |
-| --- | --- | --- | --- |
-| `--ui-canvas` | `#f5f7f9` | `#d4d5d7` | çalışma zemini |
-| `--ui-surface` | `#ffffff` | `#e9eaec` | veri yüzeyi |
-| `--ui-surface-soft` | `#fafbfc` | `#dfe1e4` | ikincil yüzey |
-| `--ui-text` | `#16212d` | `#19222c` | ana metin |
-| `--ui-text-muted` | `#5f6f80` | `#414e5a` | açıklama |
-| `--ui-accent` | `#356a96` | `#315e83` | eylem ve odak |
+| Token | Light | Kullanım |
+| --- | --- | --- |
+| `--ui-canvas` | `#f5f7f9` | çalışma zemini |
+| `--ui-surface` | `#ffffff` | veri yüzeyi |
+| `--ui-surface-soft` | `#fafbfc` | ikincil yüzey |
+| `--ui-text` | `#16212d` | ana metin |
+| `--ui-text-muted` | `#5f6f80` | açıklama |
+| `--ui-accent` | `#356a96` | eylem ve odak |
 
 Karanlık değerlerin ve durum renklerinin kanonik kaynağı `ui-tokens.css`’tir.
 Renk literal’leri yalnız bu kaynakta tanımlanır; custom property ve var fallback değerleri de guard kapsamındadır. `design-color-baseline.json`
@@ -133,6 +136,19 @@ modüller `perf-runtime` lazy sözleşmesine uyar.
 - Modal/çekmece: adlandırılmış dialog, ilk odak, Tab/Shift+Tab sınırı, Escape
   ve tetikleyiciye odak dönüşü. İç içe pencerede yalnız üst katman kapanır.
 - Popover/menü: ortak yüzey; ok/Home/End, disabled öğe atlama ve Escape.
+- **Çekmece menüleri (7.0.319):** `.toolbarMoreMenu` öğeleri çerçevesiz, gölgesiz
+  düz satırlardır; gölge yalnız çekmecenin kendisindedir. Bölümler
+  `.toolbarMoreLabel` ile adlandırılır, ilk olmayan başlık üstte ince
+  `--ui-row-divider` çizgisi taşır. Bir eylem seçilince çekmece kapanır.
+- **Excel çekmecesi:** CP, Siparişler ve Koleksiyon'da bütün Excel işleri tek
+  `{cp|orders|kol}ExcelBtn` / `…ExcelMenu` altında toplanır: Dışa aktar (tablo),
+  Hazır formatlar (Capacity Request, Hologram, MB Listesi, Checklist) ve İçe
+  aktar/şablonlar. Düğmeler aynı id ve dinleyicilerle taşınır; genel
+  `navExcelBtn` aktif sayfanın `[data-excel-slot="table"]` yuvasına yerleşir.
+  Satır sağ tık menüsü Araçlar + Excel çekmecelerini birlikte listeler.
+- **Çekmece tetikleyicileri** (`.toolbarMenuTrigger`: Excel, Araçlar) simge +
+  etiket + ok taşır; diğer tablo eylemleri simge olarak kalır. Ok, çekmece
+  açıkken Motion+ geçişiyle döner; basılan düğme hafifçe çöker (yalnız transform).
 
 Hover, focus, active, selected, disabled, loading, empty ve error durumları
 aynı tokenları kullanır. Modül CSS’i bu durumlara ayrı renk/çerçeve icat etmez.
@@ -159,10 +175,19 @@ arayüzü önce `motion-plus.js` içindeki ortak `BLMotionPlus.play('card'|'over
 API'sini veya `blMotionEnter` / `blMotionOverlay` sınıfını kullanır; modül başına
 ayrı keyframe, tema rengi, animasyon motoru veya sonsuz döngü eklenmez.
 Hareket paleti yalnız `ui-tokens.css` üzerinden gelir: 100/140 ms temel kontrol,
-240 ms overlay, 340 ms sayfa, 360 ms kart, 390 ms tablo, 440 ms grafik.
+240 ms overlay, 340 ms sayfa, 360 ms kart, 390 ms tablo, 440 ms grafik,
+620 ms tema (`--ui-motion-theme`).
 Easing ortak cubic-bezier ile izlenir. Hareket içerik, geometri ve iş verisi
-üzerinde kalıcı değişiklik yapmaz. Tema değişimi anlıktır; otomatik parıltı,
-snapshot dalgası veya clip-path geçişi yoktur. **Thinking Orbs istisnası:**
+üzerinde kalıcı değişiklik yapmaz. **Tema geçişi (7.0.319, kullanıcı isteği):** `applyTheme(name,{animate:true,origin})`
+yalnız `BLMotionPlus.theme(update, origin)` üzerinden canlandırılır. Motion+
+View Transitions ile eski ve yeni ekranın anlık görüntüsünü alır; yeni tema
+tıklanan noktadan açılan bir daireyle (`clip-path`, `::view-transition-new(root)`)
+yayılır, eski görüntü hafifçe geri çekilir. DOM, tablo, seçim, kaydırma ve veri
+değişmez; arka arkaya isteklerde önceki geçiş atlanır ve son tema kazanır.
+Azaltılmış hareket, `data-bl-motion='off'`, gizli sekme, yazılım çizimi
+(`data-bl-render='software'`) veya desteklemeyen tarayıcıda `theme()` false döner
+ve tema mevcut hızlı perdeli yoldan anında değişir. Başlangıçta ve senkron
+çağrılarda (`animate` yok) hareket yoktur. Modül kendi tema animasyonu yazmaz. **Thinking Orbs istisnası:**
 7.0.294'ten gelen Breathing (açılış/bekleme) ve Working (harita yüklemesi)
 canvas bileşenleri yalnız gerçekten çalışan `thinking`/loading durumu boyunca
 semantik işlem göstergesi olarak kullanılabilir. Her orb görünmez sekme, ekran
@@ -181,7 +206,7 @@ filtre seçimi veya her veri yaması bir dalga başlatmaz.
 geçişinde iptal edilir; `opacity/transform` tercih edilir. Yalnız tablo girişinde
 kısa süreli token tabanlı `backgroundColor` WAAPI istisnası vardır. Grafik ve
 kartlar görünürlükle sınırlı, en çok 14/16 öğe üzerinden animasyon alır.
-Aynı yeni görünür işlevin TR/EN karşılığı, 3 tema × 4 boyut, reduced-motion,
+Aynı yeni görünür işlevin TR/EN karşılığı, 2 tema × 4 boyut, reduced-motion,
 klavye/scroll ve veri doğruluğu regresyonları teslim koşuludur.
 
 ## 7. Guard ve erişilebilirlik

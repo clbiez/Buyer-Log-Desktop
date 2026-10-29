@@ -232,7 +232,8 @@ test('every module and shell layout file is free of private appearance definitio
 
 test('Motion+ CSS owner is limited to transform/opacity and short canonical timing',()=>{
  const source=read('ui-motion.css');
- const failures=declarations(source).filter(d=>!['animation','transition','opacity','transform'].includes(d.prop));
+ // View Transition snapshots (theme switch) may reset the UA plus-lighter blend; nothing else.
+ const failures=declarations(source).filter(d=>!['animation','transition','opacity','transform'].includes(d.prop)&&!(d.prop==='mix-blend-mode'&&/::view-transition-(old|new)\(root\)/.test(d.selector)));
  assert.deepEqual(failures,[]);
  assert.match(source,/prefers-reduced-motion:reduce/);
  assert.match(source,/var\(--ui-motion-page\)/);

@@ -4,13 +4,11 @@ select {color-scheme:light
 }
 html[data-theme="dark"] select {color-scheme:dark
 }
-html[data-theme="grey"] select {color-scheme:light
-}
 .modelFilesSearch,.modelFilesSelect {color-scheme:light
 }
 html[data-theme="dark"] .modelFilesSelect {color-scheme:dark
 }
-html[data-theme="light"] .modelFilesSelect,html[data-theme="grey"] .modelFilesSelect {color-scheme:light
+html[data-theme="light"] .modelFilesSelect {color-scheme:light
 }
 .kolPeriodDrawer {color-scheme:inherit
 }
@@ -50,10 +48,6 @@ html[data-theme="light"] table:not(#shipTable) thead th {
   color:var(--ui-header-ink)!important
 }
 [data-iam-body] {background:var(--ui-surface)
-}
-html[data-theme="grey"] table:not(#shipTable) thead th {
-  background:var(--ui-header-bg) !important; background-color:var(--ui-header-bg) !important;
-  color:var(--ui-header-ink) !important
 }
 body {font-family:var(--ui-font-body);letter-spacing:0
 }
@@ -5590,9 +5584,9 @@ html[data-ui-system="manifest"] #blBootGuard button {background:transparent !imp
 }
 html[data-ui-system="manifest"] #blBootGuard button:hover {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
 }
-html[data-ui-system="manifest"][data-theme="dark"] #blBootGuard,html[data-ui-system="manifest"][data-theme="grey"] #blBootGuard {background:var(--ui-canvas) !important;color:var(--ui-text) !important
+html[data-ui-system="manifest"][data-theme="dark"] #blBootGuard {background:var(--ui-canvas) !important;color:var(--ui-text) !important
 }
-html[data-ui-system="manifest"][data-theme="dark"] #blBootGuard .blBootCard,html[data-ui-system="manifest"][data-theme="grey"] #blBootGuard .blBootCard {background:transparent !important
+html[data-ui-system="manifest"][data-theme="dark"] #blBootGuard .blBootCard {background:transparent !important
 }
 html[data-ui-system="manifest"] .cfpRevision .cfpItem {font-size:var(--ui-font-xs) !important
 }
@@ -7796,7 +7790,7 @@ html[data-ui-system="manifest"] .sourceRefreshTable tbody tr:last-child td {bord
 }
 html[data-ui-system="manifest"] .sourceRefreshTable thead th {z-index:var(--ui-z-data);background:var(--ui-accent) !important;color:var(--ui-accent) !important;font-weight:700 !important
 }
-html[data-ui-system="manifest"][data-theme="dark"] .sourceRefreshTable thead th,html[data-ui-system="manifest"][data-theme="grey"] .sourceRefreshTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
+html[data-ui-system="manifest"][data-theme="dark"] .sourceRefreshTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .sourceRefreshTable tbody tr:hover td {background:var(--ui-row-hover) !important
 }
@@ -8231,8 +8225,6 @@ html[data-ui-system="manifest"] .autoEditorScroll>.autoSection>.autoSectionTitle
 html[data-ui-system="manifest"] .autoPreviewNote.isWarn {color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .autoPreviewTableWrap {border-radius:var(--ui-radius) !important
-}
-html[data-ui-system="manifest"][data-theme="grey"] .sourceRefreshTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important
 }
 html[data-ui-system="manifest"] .verHistTitle,html[data-ui-system="manifest"] .verHistDetailTitle {
   font-family:var(--ui-font-heading) !important;font-weight:600 !important;letter-spacing:.01em
@@ -15144,3 +15136,37 @@ html[data-ui-system="manifest"] #currentUserBtn #currentUserInitials{
   background:var(--ui-mark-paper)!important;color:var(--ui-avatar-ink)!important;
   font-weight:800!important;
 }
+
+/* 7.0.319 — Çekmece menüleri (Excel / Araçlar / PLM Sync / ⋯): düz satır listesi.
+   Eskiden her öğe kendi gölgesini taşıyordu ve menü üst üste binmiş kartlar gibi
+   görünüyordu. Gölge yalnız çekmecenin kendisinde kalır; öğeler hover yüzeyiyle ayrılır. */
+html[data-ui-system="manifest"] .toolbarMoreMenu:not([hidden]){
+  padding:var(--ui-space-1)!important;min-width:248px;display:flex;flex-direction:column;gap:1px;
+}
+html[data-ui-system="manifest"] .toolbarMoreMenu :is(.navActionBtn,button.tbtn,label.tbtn,.vfMenuTrigger){
+  box-shadow:none!important;border:0!important;outline:0;width:100%;justify-content:flex-start!important;text-align:left;
+  gap:var(--ui-space-2)!important;padding-inline:var(--ui-space-2)!important;font-size:var(--ui-font-sm)!important;
+  min-height:var(--ui-control-height-small);
+}
+html[data-ui-system="manifest"] .toolbarMoreMenu :is(.navActionBtn,button.tbtn,label.tbtn):hover:not(:disabled)>svg.ic{color:var(--ui-accent)!important;}
+html[data-ui-system="manifest"] .toolbarMoreMenu :is(.navActionBtn,button.tbtn):disabled{color:var(--ui-text-muted)!important;background:transparent!important;}
+html[data-ui-system="manifest"] .toolbarMoreMenu .toolbarMoreLabel{
+  padding:var(--ui-space-2) var(--ui-space-2) var(--ui-space-1);position:relative;
+}
+html[data-ui-system="manifest"] .toolbarMoreMenu .toolbarMoreLabel:not(:first-child){margin-top:var(--ui-space-1);}
+html[data-ui-system="manifest"] .toolbarMoreMenu .toolbarExcelSection .toolbarMoreLabel{margin-top:var(--ui-space-1);}
+html[data-ui-system="manifest"] .toolbarMoreMenu .toolbarMoreLabel:not(:first-child)::before,html[data-ui-system="manifest"] .toolbarMoreMenu .toolbarExcelSection .toolbarMoreLabel::before{
+  content:"";position:absolute;left:var(--ui-space-2);right:var(--ui-space-2);top:0;height:1px;background:var(--ui-row-divider);
+}
+html[data-ui-system="manifest"] .toolbarExcelSlot{display:none;}
+html[data-ui-system="manifest"] .toolbarExcelSection,html[data-ui-system="manifest"] .toolbarExcelSectionBody{display:flex;flex-direction:column;gap:1px;}
+
+/* Çekmece tetikleyicileri (Excel, Araçlar) simge + etiket + ok taşır; diğer tablo
+   eylemleri simge olarak kalır. Ok, çekmece açıkken döner (ui-motion.css). */
+html[data-ui-system="manifest"] :is(#cpTableToolbar,#ordersTableToolbar,#kolTableToolbar) .tbtn.toolbarMenuTrigger{
+  font-size:var(--ui-font-sm)!important;gap:6px!important;width:auto!important;min-width:0;
+  padding-inline:var(--ui-space-2) 6px!important;font-weight:600!important;white-space:nowrap;
+}
+html[data-ui-system="manifest"] .tbtn.toolbarMenuTrigger>.toolbarMenuChevron{width:12px;height:12px;color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] .tbtn.toolbarMenuTrigger[aria-expanded="true"]{background:var(--ui-selected)!important;color:var(--ui-selected-ink)!important;}
+html[data-ui-system="manifest"] .tbtn.toolbarMenuTrigger[aria-expanded="true"]>svg.ic{color:var(--ui-selected-ink)!important;}

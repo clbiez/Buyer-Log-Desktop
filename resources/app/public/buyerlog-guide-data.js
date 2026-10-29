@@ -142,8 +142,8 @@
         "en": "Tools: select a scope first"
       },
       "summary": {
-        "tr": "Araçlar menüsü bulunduğunuz ekrana göre değişir. Seçim isteyen işlemler, satır işaretlenene kadar soluk görünür.",
-        "en": "Tools vary by screen. Actions that need a selection remain dimmed until you check rows."
+        "tr": "Araçlar menüsü bulunduğunuz ekrana göre değişir. Seçim isteyen işlemler, satır işaretlenene kadar soluk görünür. Excel çıktıları (tablo dışa aktarımı, Capacity Request, Hologram, MB Listesi, Checklist), Excel içe aktarma ve şablonlar yanındaki Excel çekmecesinde toplanır.",
+        "en": "Tools vary by screen. Actions that need a selection remain dimmed until you check rows. Excel outputs (table export, Capacity Request, Hologram, MB List, Checklist), Excel import and templates are grouped in the Excel drawer next to it."
       },
       "path": {
         "tr": "CP / Siparişler / Koleksiyon → Araçlar",
@@ -1112,18 +1112,18 @@
         "en": "Capacity Request is a selection-based export. Check records to create an Excel file in the request format."
       },
       "path": {
-        "tr": "CP Tracker → Araçlar → Capacity Request Excel Oluştur",
-        "en": "CP Tracker → Tools → Create Capacity Request Excel"
+        "tr": "CP Tracker → Excel → Capacity Request Excel Oluştur",
+        "en": "CP Tracker → Excel → Create Capacity Request Excel"
       },
       "steps": {
         "tr": [
           "CP’de gerekli satırları işaretleyin.",
-          "Araçlar menüsündeki Capacity Request işlemini seçin.",
+          "Excel çekmecesindeki Capacity Request işlemini seçin.",
           "Oluşan Excel’de kayıt kapsamını kontrol edin."
         ],
         "en": [
           "Check the required CP rows.",
-          "Select Capacity Request in Tools.",
+          "Select Capacity Request in the Excel drawer.",
           "Check the record scope in the resulting Excel file."
         ]
       },
@@ -1153,8 +1153,8 @@
         "en": "Import Your Excel helps map workbook columns onto CP fields before import."
       },
       "path": {
-        "tr": "CP Tracker → Araçlar → Kullanıcı Excelini İçeri Aktar",
-        "en": "CP Tracker → Tools → Import Your Excel"
+        "tr": "CP Tracker → Excel → Kullanıcı Excelini İçeri Aktar",
+        "en": "CP Tracker → Excel → Import Your Excel"
       },
       "steps": {
         "tr": [

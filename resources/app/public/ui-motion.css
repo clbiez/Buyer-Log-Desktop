@@ -12,3 +12,18 @@
 :root:not([data-bl-motion="off"]) .rail{transition:width var(--ui-motion-overlay) var(--ui-ease)!important;}
 @media(prefers-reduced-motion:reduce){.blWorkspaceBlur,:root:not([data-bl-motion="off"]) .rail{transition:none!important;}}
 :root[data-bl-motion="off"] :is(.blWorkspaceBlur,.rail){transition:none!important;}
+
+/* Tema geçişi: Motion+ theme() iki anlık görüntüyü birleştirir; varsayılan çapraz
+   solma kapatılır, dairesel açılma WAAPI ile ::view-transition-new(root) üzerinde oynar. */
+:root.blThemeMorph::view-transition-old(root),:root.blThemeMorph::view-transition-new(root){animation:none;mix-blend-mode:normal;}
+@media(prefers-reduced-motion:reduce){:root.blThemeMorph::view-transition-group(*),:root.blThemeMorph::view-transition-old(*),:root.blThemeMorph::view-transition-new(*){animation:none!important;}}
+
+/* 7.0.319 — Mikro etkileşimler: çekmece oku döner, düğme basışında hafif çöker.
+   Yalnız transform; Motion+ kapalıyken ve azaltılmış harekette durur. */
+:root:not([data-bl-motion="off"]) .toolbarMenuTrigger>.toolbarMenuChevron{transition:transform var(--ui-motion-enter) var(--ui-ease)!important;}
+:root .toolbarMenuTrigger[aria-expanded="true"]>.toolbarMenuChevron{transform:rotate(180deg);}
+:root:not([data-bl-motion="off"]) :is(.tbtn,.navActionBtn,.rail button):not(:disabled){transition:transform var(--ui-motion-fast) var(--ui-ease)!important;}
+:root:not([data-bl-motion="off"]) :is(.tbtn,.navActionBtn,.rail button):not(:disabled):active{transform:scale(.97);}
+@media(prefers-reduced-motion:reduce){
+  :root:not([data-bl-motion="off"]) :is(.toolbarMenuTrigger>.toolbarMenuChevron,.tbtn,.navActionBtn,.rail button){transition:none!important;}
+}

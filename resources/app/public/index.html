@@ -194,7 +194,7 @@
 <script src="i18n-runtime.js?v=__BL_ASSET_VERSION__"></script>
 <script src="preset-store.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="view-context.js?v=__BL_ASSET_VERSION__"></script>
-<script>(function(){try{var t=BLStorage.getItem('lcw_theme');if(!t)t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';document.documentElement.dataset.theme=(t==='dark'||t==='grey')?t:'light';var r=BLStorage.getItem('lcw_rail');document.documentElement.dataset.rail=(r==='min')?'min':'max';var f=Number(BLStorage.getItem('lcw_font_step')||0);f=f>=0&&f<=3?Math.trunc(f):0;document.documentElement.dataset.fontStep=String(f);document.documentElement.dataset.uiScale=['standard','large','xl','compact'][f];}catch(e){document.documentElement.dataset.fontStep='0';document.documentElement.dataset.uiScale='standard';}})();</script>
+<script>(function(){try{var t=BLStorage.getItem('lcw_theme');if(!t)t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';document.documentElement.dataset.theme=t==='dark'?'dark':'light';var r=BLStorage.getItem('lcw_rail');document.documentElement.dataset.rail=(r==='min')?'min':'max';var f=Number(BLStorage.getItem('lcw_font_step')||0);f=f>=0&&f<=3?Math.trunc(f):0;document.documentElement.dataset.fontStep=String(f);document.documentElement.dataset.uiScale=['standard','large','xl','compact'][f];}catch(e){document.documentElement.dataset.fontStep='0';document.documentElement.dataset.uiScale='standard';}})();</script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY');</script>
 <script src="business-rules.js?v=__BL_ASSET_VERSION__"></script>
 <script src="user-initials.js?v=__BL_ASSET_VERSION__"></script>
@@ -462,7 +462,7 @@
   </nav>
   <div class="railFoot">
     <button id="railLangBtn" title="Switch language / Dil değiştir"><svg class="ic"><use href="#i-globe"/></svg><span id="railLangLabel" data-no-i18n>Dil: TR</span></button>
-    <button id="railThemeBtn" title="Tema: Aydınlık → Kurşun → Karanlık"><svg class="ic"><use href="#i-moon"/></svg><span data-i18n-tr="Tema" data-i18n-en="Theme">Tema</span></button>
+    <button id="railThemeBtn" title="Tema: Aydınlık → Karanlık"><svg class="ic"><use href="#i-moon"/></svg><span id="railThemeLabel" data-no-i18n>Tema: Aydınlık</span></button>
     <button id="railFontSizeBtn" title="Arayüz boyutu: Standard → Büyük → Çok Büyük → Kompakt" data-i18n-title-tr="Arayüz boyutu: Standard → Büyük → Çok Büyük → Kompakt" data-i18n-title-en="Interface size: Standard → Large → XL → Compact"><b class="railFontGlyph" aria-hidden="true">A</b><span id="railFontSizeLabel">Arayüz: Standard</span></button>
   </div>
 </aside>
@@ -878,6 +878,21 @@
                işlemler. Düğmeler paylaşılan tekil düğümlerdir; sekmeye göre buraya taşınır. -->
           <!-- PLM Sync: model linki + model görseli. Koleksiyon'dan FARKLI olarak
                burada tablo alanlarına (line/category/fabric…) DOKUNULMAZ. -->
+          <!-- 7.0.319: bütün Excel çıktıları ve aktarımları tek "Excel" çekmecesinde. Düğmeler aynı id ve dinleyicilerle buraya taşındı. -->
+          <div class="toolbarMoreWrap toolbarExcelWrap" id="cpExcelWrap" data-tb-priority="utility" data-tb-overflow="never">
+            <button type="button" class="tbtn toolbarMenuTrigger" id="cpExcelBtn" title="Excel çıktıları, hazır formatlar ve içe aktarma" data-i18n-title-tr="Excel çıktıları, hazır formatlar ve içe aktarma" data-i18n-title-en="Excel exports, ready-made formats and import" aria-haspopup="true" aria-expanded="false" aria-controls="cpExcelMenu"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Excel" data-i18n-en="Excel">Excel</span><svg class="ic toolbarMenuChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+            <div class="toolbarMoreMenu toolbarExcelMenu" id="cpExcelMenu" hidden>
+              <span class="toolbarMoreLabel" data-i18n-tr="Dışa aktar" data-i18n-en="Export">Dışa aktar</span>
+              <span class="toolbarExcelSlot" data-excel-slot="table"></span>
+              <span class="toolbarMoreLabel" data-i18n-tr="Hazır formatlar" data-i18n-en="Ready-made formats">Hazır formatlar</span>
+              <button type="button" class="tbtn" id="cpCapacityRequestBtn" disabled title="Seçili satırları Capacity Request formatında Excel'e aktar" data-i18n-title-tr="Seçili satırları Capacity Request formatında Excel'e aktar" data-i18n-title-en="Export selected rows in Capacity Request format"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Capacity Request Excel Oluştur" data-i18n-en="Create Capacity Request Excel">Capacity Request Excel Oluştur</span></button>
+              <button type="button" class="tbtn" id="cpHologramRequestBtn" disabled><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Hologram Talep Excel Oluştur" data-i18n-en="Create Hologram Request Excel">Hologram Talep Excel Oluştur</span></button>
+              <span class="toolbarExcelSlot" data-excel-slot="checklist"></span>
+              <span class="toolbarMoreLabel" data-i18n-tr="İçe aktar ve şablonlar" data-i18n-en="Import and templates">İçe aktar ve şablonlar</span>
+              <button type="button" class="tbtn" id="cpExcelImportBtn" data-excel-import="cp" title="Kendi Excel dosyanızdaki sütunları CP alanlarına eşleyerek içeri aktarın" data-i18n-title-tr="Kendi Excel dosyanızdaki sütunları CP alanlarına eşleyerek içeri aktarın" data-i18n-title-en="Map columns from your own Excel workbook onto CP fields and import them"><svg class="ic"><use href="#i-file-import"/></svg><span data-i18n-tr="Kullanıcı Excelini İçeri Aktar" data-i18n-en="Import Your Excel">Kullanıcı Excelini İçeri Aktar</span></button>
+              <button type="button" class="tbtn" id="cpExcelTemplatesBtn"><svg class="ic"><use href="#i-settings"/></svg><span data-i18n-tr="Excel Şablonlarını Yönet" data-i18n-en="Manage Excel Templates">Excel Şablonlarını Yönet</span></button>
+            </div>
+          </div>
           <div class="toolbarMoreWrap" id="cpPlmSyncWrap" data-tb-priority="utility" data-tb-overflow="never">
             <button type="button" class="tbtn" id="cpPlmSyncBtn" title="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-tr="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-en="Open PLM and ASAS synchronization actions" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-sync"/></svg> <span>PLM SYNC</span></button>
             <div class="toolbarMoreMenu" id="cpPlmSyncMenu" hidden>
@@ -889,15 +904,13 @@
             </div>
           </div>
           <div class="toolbarMoreWrap" id="cpToolsWrap" data-tb-priority="utility" data-tb-overflow="never">
-            <button type="button" class="tbtn" id="cpToolsBtn" title="Seçili satırlar için işlemler" data-i18n-title-tr="Seçili satırlar için işlemler" data-i18n-title-en="Actions for selected rows" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
+            <button type="button" class="tbtn toolbarMenuTrigger" id="cpToolsBtn" title="Seçili satırlar için işlemler" data-i18n-title-tr="Seçili satırlar için işlemler" data-i18n-title-en="Actions for selected rows" aria-haspopup="true" aria-expanded="false"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span><svg class="ic toolbarMenuChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
             <div class="toolbarMoreMenu" id="cpToolsMenu" hidden>
+              <span class="toolbarMoreLabel" data-i18n-tr="Oluştur ve hesapla" data-i18n-en="Create and calculate">Oluştur ve hesapla</span>
               <button type="button" class="tbtn" data-output-studio="cp"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Sunum Oluştur" data-i18n-en="Create Presentation">Sunum Oluştur</span></button>
               <button type="button" class="tbtn" id="cpEndeksmatikBtn" title="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-tr="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-en="Calculate Endeksmatik one year before or after the selected order" disabled><svg class="ic"><use href="#i-calculator"/></svg><span>Endeksmatik</span></button>
               <button type="button" class="navActionBtn" id="cpLicenseRoyaltyBtn" data-license-royalty title="License Royalty hesaplarını düzenle"><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="License Royalty Hesapları" data-i18n-en="License Royalty Calculations">License Royalty Hesapları</span></button>
-              <button type="button" class="tbtn" id="cpCapacityRequestBtn" disabled title="Seçili satırları Capacity Request formatında Excel'e aktar" data-i18n-title-tr="Seçili satırları Capacity Request formatında Excel'e aktar" data-i18n-title-en="Export selected rows in Capacity Request format"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Capacity Request Excel Oluştur" data-i18n-en="Create Capacity Request Excel">Capacity Request Excel Oluştur</span></button>
-<button type="button" class="tbtn" id="cpHologramRequestBtn" disabled><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Hologram Talep Excel Oluştur" data-i18n-en="Create Hologram Request Excel">Hologram Talep Excel Oluştur</span></button>
-<button type="button" class="tbtn" id="cpExcelTemplatesBtn"><svg class="ic"><use href="#i-settings"/></svg><span data-i18n-tr="Excel Şablonlarını Yönet" data-i18n-en="Manage Excel Templates">Excel Şablonlarını Yönet</span></button>
-              <button type="button" class="tbtn" id="cpExcelImportBtn" data-excel-import="cp" title="Kendi Excel dosyanızdaki sütunları CP alanlarına eşleyerek içeri aktarın" data-i18n-title-tr="Kendi Excel dosyanızdaki sütunları CP alanlarına eşleyerek içeri aktarın" data-i18n-title-en="Map columns from your own Excel workbook onto CP fields and import them"><svg class="ic"><use href="#i-file-import"/></svg><span data-i18n-tr="Kullanıcı Excelini İçeri Aktar" data-i18n-en="Import Your Excel">Kullanıcı Excelini İçeri Aktar</span></button>
+              <span class="toolbarMoreLabel" data-tools-selection-label data-i18n-tr="Seçili satırlar" data-i18n-en="Selected rows">Seçili satırlar</span>
             </div>
           </div>
           <div class="toolbarMoreWrap" id="cpMoreWrap" data-tb-priority="pinned" data-tb-overflow="never">
@@ -951,6 +964,16 @@
           <div class="tableToolbarActions" id="ordersTableActions" aria-label="Orders table actions"></div>
           <!-- PLM Sync: model linki + model görseli. Koleksiyon'dan FARKLI olarak
                burada tablo alanlarına (line/category/fabric…) DOKUNULMAZ. -->
+          <!-- 7.0.319: bütün Excel çıktıları ve aktarımları tek "Excel" çekmecesinde. Düğmeler aynı id ve dinleyicilerle buraya taşındı. -->
+          <div class="toolbarMoreWrap toolbarExcelWrap" id="ordersExcelWrap" data-tb-priority="utility" data-tb-overflow="never">
+            <button type="button" class="tbtn toolbarMenuTrigger" id="ordersExcelBtn" title="Excel çıktıları, hazır formatlar ve içe aktarma" data-i18n-title-tr="Excel çıktıları, hazır formatlar ve içe aktarma" data-i18n-title-en="Excel exports, ready-made formats and import" aria-haspopup="true" aria-expanded="false" aria-controls="ordersExcelMenu"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Excel" data-i18n-en="Excel">Excel</span><svg class="ic toolbarMenuChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+            <div class="toolbarMoreMenu toolbarExcelMenu" id="ordersExcelMenu" hidden>
+              <span class="toolbarMoreLabel" data-i18n-tr="Dışa aktar" data-i18n-en="Export">Dışa aktar</span>
+              <span class="toolbarExcelSlot" data-excel-slot="table"></span>
+              <span class="toolbarMoreLabel" data-i18n-tr="Şablonlar" data-i18n-en="Templates">Şablonlar</span>
+              <button type="button" class="tbtn" id="ordersExcelTemplatesBtn"><svg class="ic"><use href="#i-settings"/></svg><span data-i18n-tr="Excel Şablonlarını Yönet" data-i18n-en="Manage Excel Templates">Excel Şablonlarını Yönet</span></button>
+            </div>
+          </div>
           <div class="toolbarMoreWrap" id="ordersPlmSyncWrap" data-tb-priority="utility" data-tb-overflow="never">
             <button type="button" class="tbtn" id="ordersPlmSyncBtn" title="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-tr="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-en="Open PLM and ASAS synchronization actions" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-sync"/></svg> <span>PLM SYNC</span></button>
             <div class="toolbarMoreMenu" id="ordersPlmSyncMenu" hidden>
@@ -961,11 +984,13 @@
             </div>
           </div>
           <div class="toolbarMoreWrap" id="ordersToolsWrap" data-tb-priority="utility" data-tb-overflow="never">
-            <button type="button" class="tbtn" id="ordersToolsBtn" title="Seçili satırlar için işlemler" data-i18n-title-tr="Seçili satırlar için işlemler" data-i18n-title-en="Actions for selected rows" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
+            <button type="button" class="tbtn toolbarMenuTrigger" id="ordersToolsBtn" title="Seçili satırlar için işlemler" data-i18n-title-tr="Seçili satırlar için işlemler" data-i18n-title-en="Actions for selected rows" aria-haspopup="true" aria-expanded="false"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span><svg class="ic toolbarMenuChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
             <div class="toolbarMoreMenu" id="ordersToolsMenu" hidden>
+              <span class="toolbarMoreLabel" data-i18n-tr="Oluştur ve hesapla" data-i18n-en="Create and calculate">Oluştur ve hesapla</span>
               <button type="button" class="tbtn" data-output-studio="orders"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Sunum Oluştur" data-i18n-en="Create Presentation">Sunum Oluştur</span></button>
               <button type="button" class="navActionBtn" id="ordersLicenseRoyaltyBtn" data-license-royalty title="License Royalty hesaplarını düzenle"><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="License Royalty Hesapları" data-i18n-en="License Royalty Calculations">License Royalty Hesapları</span></button>
               <button class="tbtn" id="ordersEndeksmatikBtn" title="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-tr="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-en="Calculate Endeksmatik one year before or after the selected order" disabled><svg class="ic"><use href="#i-calculator"/></svg><span>Endeksmatik</span></button>
+              <span class="toolbarMoreLabel" data-tools-selection-label data-i18n-tr="Seçili satırlar" data-i18n-en="Selected rows">Seçili satırlar</span>
             </div>
           </div>
           <div class="toolbarMoreWrap" id="ordersMoreWrap" data-tb-priority="pinned" data-tb-overflow="never">
@@ -1034,7 +1059,6 @@
           <button class="navActionBtn" id="kolRedoBtn" data-action-role="ghost" title="İleri al (Ctrl+Y)" data-i18n-title-tr="İleri al (Ctrl+Y)" data-i18n-title-en="Redo (Ctrl+Y)" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-arrow-forward-up"/></svg> <span data-i18n-tr="İleri" data-i18n-en="Redo">İleri</span></button>
           <button class="tbtn" id="kolSpreadsheetPasteBtn" title="Excel'den veya panodan aktif hücreye yapıştır" data-i18n-title-tr="Excel'den veya panodan aktif hücreye yapıştır" data-i18n-title-en="Paste from Excel or clipboard into the active cell" data-tb-priority="secondary" data-tb-compact="icon"><svg class="ic"><use href="#i-file-import"/></svg><span data-i18n-tr="Yapıştır" data-i18n-en="Paste">Yapıştır</span></button>
           <button class="tbtn" id="kolRecycleBinBtn" title="Silinen modeller 30 gün saklanır" data-i18n-title-tr="Silinen modeller 30 gün saklanır" data-i18n-title-en="Deleted models are kept for 30 days" data-tb-priority="utility" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-recycle"/></svg> <span data-i18n-tr="Geri Dönüşüm Kutusu" data-i18n-en="Recycle Bin">Geri Dönüşüm Kutusu</span></button>
-          <button class="tbtn" id="kolExportImgBtn" title="Model görselleriyle birlikte Excel'e aktar" data-i18n-title-tr="Model görselleriyle birlikte Excel'e aktar" data-i18n-title-en="Export to Excel with model images" data-tb-priority="secondary" data-tb-compact="icon"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Excel'e Aktar" data-i18n-en="Export to Excel">Excel'e Aktar</span></button>
           <button class="tbtn" id="kolCopySelectedBtn" title="Seçili satırları başlıkları ve biçimleriyle kopyala — Ctrl+C" data-i18n-title-tr="Seçili satırları başlıkları ve biçimleriyle kopyala — Ctrl+C" data-i18n-title-en="Copy selected rows with headers and formatting — Ctrl+C" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-copy"/></svg><span data-i18n-tr="Kopyala" data-i18n-en="Copy">Kopyala</span></button>
           <button class="tbtn" id="kolDuplicateBtn" title="Seçili satırların kopyalarını koleksiyona ekle" data-i18n-title-tr="Seçili satırların kopyalarını koleksiyona ekle" data-i18n-title-en="Duplicate selected rows in Collection" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-copy-plus"/></svg><span data-i18n-tr="Çoğalt" data-i18n-en="Duplicate">Çoğalt</span></button>
           <button class="tbtn" id="kolDropSelectedBtn" title="Seçili modelleri iptal edilmiş olarak işaretle" data-i18n-title-tr="Seçili modelleri iptal edilmiş olarak işaretle" data-i18n-title-en="Mark selected models as dropped" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-x"/></svg> <span data-i18n-tr="İptal Et" data-i18n-en="Drop">İptal Et</span></button>
@@ -1044,6 +1068,21 @@
              veri çeker/günceller. "PLM Excelinden Aktar" bu menünün İÇİNE
              taşındı (aynı id'ler, aynı işlev) — PLM erişimi geçici olarak
              kullanılamazsa yedek/offline yol olarak kalır (bkz. §28). -->
+          <!-- 7.0.319: bütün Excel çıktıları ve aktarımları tek "Excel" çekmecesinde. Düğmeler aynı id ve dinleyicilerle buraya taşındı. -->
+          <div class="toolbarMoreWrap toolbarExcelWrap" id="kolExcelWrap" data-tb-priority="utility" data-tb-overflow="never">
+            <button type="button" class="tbtn toolbarMenuTrigger" id="kolExcelBtn" title="Excel çıktıları, hazır formatlar ve içe aktarma" data-i18n-title-tr="Excel çıktıları, hazır formatlar ve içe aktarma" data-i18n-title-en="Excel exports, ready-made formats and import" aria-haspopup="true" aria-expanded="false" aria-controls="kolExcelMenu"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Excel" data-i18n-en="Excel">Excel</span><svg class="ic toolbarMenuChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+            <div class="toolbarMoreMenu toolbarExcelMenu" id="kolExcelMenu" hidden>
+              <span class="toolbarMoreLabel" data-i18n-tr="Dışa aktar" data-i18n-en="Export">Dışa aktar</span>
+              <button class="tbtn" id="kolExportImgBtn" title="Model görselleriyle birlikte Excel'e aktar" data-i18n-title-tr="Model görselleriyle birlikte Excel'e aktar" data-i18n-title-en="Export to Excel with model images"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Tabloyu Excel'e Aktar" data-i18n-en="Export table to Excel">Tabloyu Excel'e Aktar</span></button>
+              <span class="toolbarMoreLabel" data-i18n-tr="Hazır formatlar" data-i18n-en="Ready-made formats">Hazır formatlar</span>
+              <button class="tbtn" id="kolMbExportBtn" title="Seçili modelleri MB Listesi formatında Excel'e aktar"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="MB Listesi Excel'i" data-i18n-en="MB List Excel">MB Listesi Excel'i</span></button>
+              <button class="tbtn" id="kolCapacityRequestBtn" disabled title="Seçili modelleri Capacity Request formatında Excel'e aktar" data-i18n-title-tr="Seçili modelleri Capacity Request formatında Excel'e aktar" data-i18n-title-en="Export selected models in Capacity Request format"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Capacity Request Excel Oluştur" data-i18n-en="Create Capacity Request Excel">Capacity Request Excel Oluştur</span></button>
+              <span class="toolbarMoreLabel" data-i18n-tr="İçe aktar ve ayarlar" data-i18n-en="Import and settings">İçe aktar ve ayarlar</span>
+              <button type="button" class="tbtn" id="kolExcelImportBtn" data-excel-import="collection" title="Kendi Excel dosyanızdaki sütunları Koleksiyon alanlarına eşleyerek içeri aktarın" data-i18n-title-tr="Kendi Excel dosyanızdaki sütunları Koleksiyon alanlarına eşleyerek içeri aktarın" data-i18n-title-en="Map columns from your own Excel workbook onto Collection fields and import them"><svg class="ic"><use href="#i-file-import"/></svg><span data-i18n-tr="Kullanıcı Excelini İçeri Aktar" data-i18n-en="Import Your Excel">Kullanıcı Excelini İçeri Aktar</span></button>
+              <button type="button" class="tbtn" id="kolExcelTemplatesBtn"><svg class="ic"><use href="#i-settings"/></svg><span data-i18n-tr="Excel Şablonlarını Yönet" data-i18n-en="Manage Excel Templates">Excel Şablonlarını Yönet</span></button>
+              <button class="tbtn" id="kolPricingExcelColsBtn" title="Fiyatlama e-postasına eklenecek Excel sütunlarını seç" data-i18n-title-tr="Fiyatlama e-postasına eklenecek Excel sütunlarını seç" data-i18n-title-en="Choose the Excel columns attached to pricing e-mails"><svg class="ic"><use href="#i-columns-3"/></svg><span data-i18n-tr="Fiyatlama Excel Sütunları" data-i18n-en="Pricing Excel Columns">Fiyatlama Excel Sütunları</span></button>
+            </div>
+          </div>
         <div class="toolbarMoreWrap" id="kolPlmSyncWrap" data-tb-priority="utility" data-tb-overflow="never">
             <button type="button" class="tbtn" id="kolPlmSyncBtn" title="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-tr="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-en="Open PLM and ASAS synchronization actions" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-sync"/></svg> <span>PLM SYNC</span></button>
             <div class="toolbarMoreMenu" id="kolPlmSyncMenu" hidden>
@@ -1056,7 +1095,7 @@
         <!-- "Araçlar": seçime bağlı işlemler + model dosyaları ve fiyat çalışmaları. -->
         <input type="file" id="kolPlmImportFile" accept=".xlsx" hidden>
           <div class="toolbarMoreWrap" id="kolToolsWrap" data-tb-priority="utility" data-tb-overflow="never">
-          <button type="button" class="tbtn" id="kolToolsBtn" title="Koleksiyon araçları" data-i18n-title-tr="Koleksiyon araçları" data-i18n-title-en="Collection tools" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
+          <button type="button" class="tbtn toolbarMenuTrigger" id="kolToolsBtn" title="Koleksiyon araçları" data-i18n-title-tr="Koleksiyon araçları" data-i18n-title-en="Collection tools" aria-haspopup="true" aria-expanded="false"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span><svg class="ic toolbarMenuChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
           <div class="toolbarMoreMenu" id="kolToolsMenu" hidden>
               <button type="button" class="tbtn" data-output-studio="koleksiyon"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Sunum Oluştur" data-i18n-en="Create Presentation">Sunum Oluştur</span></button>
             <button class="tbtn" id="kolSendPricingBtn" title="Seçili modelleri fiyatlamaya gönder" data-i18n-title-tr="Seçili modelleri fiyatlamaya gönder" data-i18n-title-en="Send selected models to pricing" disabled><svg class="ic"><use href="#i-mail-send"/></svg><span data-i18n-tr="Fiyatlamaya Gönder" data-i18n-en="Send to Pricing">Fiyatlamaya Gönder</span></button>
@@ -1066,15 +1105,10 @@
             <button type="button" class="tbtn" id="kolManageStatusesBtn" title="Collection statuslarını ve renklerini yönet" data-i18n-title-tr="Collection statuslarını ve renklerini yönet" data-i18n-title-en="Manage Collection statuses and colors"><svg class="ic"><use href="#i-settings"/></svg><span data-i18n-tr="Statusları Yönet" data-i18n-en="Manage Statuses">Statusları Yönet</span></button>
             <button type="button" class="navActionBtn" id="kolLicenseRoyaltyBtn" data-license-royalty title="License Royalty hesaplarını düzenle"><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="License Royalty Hesapları" data-i18n-en="License Royalty Calculations">License Royalty Hesapları</span></button>
             <button class="tbtn" id="kolModelFilesBtn" title="Model dosyalarını yönet" data-i18n-title-tr="Model dosyalarını yönet" data-i18n-title-en="Manage model files"><svg class="ic"><use href="#i-folder"/></svg> <span data-i18n-tr="Dosyalar" data-i18n-en="TPs">Dosyalar</span></button>
-            <button class="tbtn" id="kolPricingExcelColsBtn" title="Fiyatlama e-postasına eklenecek Excel sütunlarını seç"><svg class="ic"><use href="#i-columns-3"/></svg> Pricing Excel Columns</button>
             <button type="button" class="tbtn" id="kolEndeksmatikSetsBtn" title="Yüklenen Endeksmatik ülke/bölge setlerini yönet ve varsayılanı seç" data-i18n-title-tr="Yüklenen Endeksmatik ülke/bölge setlerini yönet ve varsayılanı seç" data-i18n-title-en="Manage uploaded Endeksmatik country/region sets and choose the default"><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="Endeksmatik Setleri" data-i18n-en="Endeksmatik Sets">Endeksmatik Setleri</span></button>
             <label class="tbtn" id="endeksmatikUploadBtn" title="Yeni ENDEKSMATİK Excel dosyasını doğrulayıp programa yükle" data-i18n-title-tr="Yeni ENDEKSMATİK Excel dosyasını doğrulayıp programa yükle" data-i18n-title-en="Validate and load a new ENDEKSMATIK Excel workbook" style="cursor:pointer;"><svg class="ic"><use href="#i-file-import"/></svg><span data-i18n-tr="Endeksmatik Güncelle" data-i18n-en="Update Endeksmatik">Endeksmatik Güncelle</span><input type="file" id="endeksmatikUploadFile" accept=".xlsx,.xlsm" style="display:none;"></label>
             <button class="tbtn" id="kolCreateOcBtn" title="Seçili modellerden ön maliyet oluştur" disabled><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="Maliyet Oluştur" data-i18n-en="Create OC">Maliyet Oluştur</span></button>
             <button class="tbtn" id="kolLflTrialBtn" title="Seçili modelleri LFL Trial simülasyonuna gönder" disabled><svg class="ic"><use href="#i-chart-histogram"/></svg><span data-i18n-tr="LFL Trial" data-i18n-en="LFL Trial">LFL Trial</span></button>
-            <button class="tbtn" id="kolCapacityRequestBtn" disabled title="Seçili modelleri Capacity Request formatında Excel'e aktar" data-i18n-title-tr="Seçili modelleri Capacity Request formatında Excel'e aktar" data-i18n-title-en="Export selected models in Capacity Request format"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Capacity Request Excel Oluştur" data-i18n-en="Create Capacity Request Excel">Capacity Request Excel Oluştur</span></button>
-<button type="button" class="tbtn" id="kolExcelTemplatesBtn"><svg class="ic"><use href="#i-settings"/></svg><span data-i18n-tr="Excel Şablonlarını Yönet" data-i18n-en="Manage Excel Templates">Excel Şablonlarını Yönet</span></button>
-            <button class="tbtn" id="kolMbExportBtn" title="Seçili modelleri MB Listesi formatında Excel'e aktar"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="MB Listesi Excel'i" data-i18n-en="MB List Excel">MB Listesi Excel'i</span></button>
-            <button type="button" class="tbtn" id="kolExcelImportBtn" data-excel-import="collection" title="Kendi Excel dosyanızdaki sütunları Koleksiyon alanlarına eşleyerek içeri aktarın" data-i18n-title-tr="Kendi Excel dosyanızdaki sütunları Koleksiyon alanlarına eşleyerek içeri aktarın" data-i18n-title-en="Map columns from your own Excel workbook onto Collection fields and import them"><svg class="ic"><use href="#i-file-import"/></svg><span data-i18n-tr="Kullanıcı Excelini İçeri Aktar" data-i18n-en="Import Your Excel">Kullanıcı Excelini İçeri Aktar</span></button>
           </div>
         </div>
         <div class="toolbarMoreWrap" id="kolMoreWrap" data-tb-priority="pinned" data-tb-overflow="never">
@@ -1640,8 +1674,10 @@
   /* v7.81 — Kaynak Veri şeridi kaldırıldı; konumlandırma ve aç-kapat kodu
      da onunla birlikte gitti. */
 
-  document.getElementById('railThemeBtn')?.addEventListener('click',()=>{
-    applyTheme(nextTheme(),{animate:true});
+  document.getElementById('railThemeBtn')?.addEventListener('click',event=>{
+    const icon=event.currentTarget.querySelector('.ic')||event.currentTarget,box=icon.getBoundingClientRect();
+    applyTheme(nextTheme(),{animate:true,origin:{x:box.left+box.width/2,y:box.top+box.height/2}});
+    window.BLMotionPlus?.play?.('swap',icon);
   });
 
   document.getElementById('topRefreshBtn')?.addEventListener('click',e=>{

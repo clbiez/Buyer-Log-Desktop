@@ -30,7 +30,8 @@
     return parseFloat(style.fontSize)===0||el.matches('[data-toolbar-compact] [data-tb-compact="icon"]');
   }
   function show(el){
-    if(!iconOnly(el))return;
+    // Açık menünün tetikleyicisinde ipucu menünün üstüne binmez.
+    if(!iconOnly(el)||el.getAttribute('aria-expanded')==='true')return;
     const label=labelOf(el),title=el.getAttribute('title')||el.dataset.tipTitle||'';
     if(!label&&!title)return;
     if(el.hasAttribute('title')){el.dataset.tipTitle=title;el.removeAttribute('title');}

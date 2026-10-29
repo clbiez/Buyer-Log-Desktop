@@ -29,9 +29,9 @@
 
   const MODEL_COLUMN_KEYS = new Set(['Model Name', 'Model Adı', 'modelName', 'model']);
   const TABLES = [
-    { sel: '#cpTable', module: 'cp', tools: 'cpToolsMenu' },
-    { sel: '#ordersTable', module: 'orders', tools: 'ordersToolsMenu' },
-    { sel: '#kolTable', module: 'collection', tools: 'kolToolsMenu' },
+    { sel: '#cpTable', module: 'cp', tools: 'cpToolsMenu,cpExcelMenu' },
+    { sel: '#ordersTable', module: 'orders', tools: 'ordersToolsMenu,ordersExcelMenu' },
+    { sel: '#kolTable', module: 'collection', tools: 'kolToolsMenu,kolExcelMenu' },
     // Alt detay raporu çekmecesi (BLDetailDrawer): yalnız ortak kopyalama menüsü.
     { sel: '#blDetailTable', module: 'detail', tools: '' },
   ];
@@ -86,9 +86,10 @@
   /* Araçlar menüsündeki GERÇEK düğümleri okur. Etiket ve simge o düğmeden
      alınır; seçilince o düğmeye tıklanır. */
   function toolEntries(toolsMenuId) {
-    const host = document.getElementById(toolsMenuId);
-    if (!host) return [];
-    return [...host.querySelectorAll('button')]
+    // 7.0.319: Araçlar + Excel çekmeceleri (virgülle ayrılmış menü kimlikleri).
+    const hosts = String(toolsMenuId || '').split(',').map(id => document.getElementById(id.trim())).filter(Boolean);
+    if (!hosts.length) return [];
+    return hosts.flatMap(host => [...host.querySelectorAll('button')])
       .filter(button => !button.disabled && button.offsetParent !== null || !button.disabled)
       .map(button => {
         const label = String(button.textContent || '').trim() || String(button.title || '').trim();
