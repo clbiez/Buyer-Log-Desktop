@@ -15247,3 +15247,46 @@ html[data-ui-system="manifest"] #kolAllVariantsToggle:disabled {display:none !im
 /* Not hatırlatıcısı boşken sakin, nötr bilgi satırı. */
 html[data-ui-system="manifest"] .ovPriorityEmpty.success {background:transparent !important;color:var(--ui-text-muted) !important
 }
+/* Global Flow: taşıma simgeleri ve hover özeti (overview-global-flow.js). */
+html[data-ui-system="manifest"] .globalFlowLegend .gfLegendIcon {width:14px;height:14px;fill:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .globalFlowLegend .air .gfLegendIcon {fill:var(--ui-chart-3)
+}
+html[data-ui-system="manifest"] .globalFlowLegend .road .gfLegendIcon {fill:var(--ui-warning)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip {width:244px !important;gap:6px !important;padding:9px 10px !important;box-shadow:var(--ui-shadow-overlay) !important
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipHead {display:flex;align-items:center;gap:7px;min-width:0
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipHead b {flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 var(--ui-font-xs)/1.2 var(--ui-font-body) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipMode {display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;flex:none;background:color-mix(in srgb,var(--ui-accent) 12%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipMode .gfModeIcon {width:16px;height:16px;fill:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipMode[data-mode="air"] {background:color-mix(in srgb,var(--ui-chart-3) 14%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipMode[data-mode="air"] .gfModeIcon {fill:var(--ui-chart-3)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipMode[data-mode="road"] {background:color-mix(in srgb,var(--ui-warning) 14%,var(--ui-surface))
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipMode[data-mode="road"] .gfModeIcon {fill:var(--ui-warning)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipHead em {flex:none;padding:2px 5px;background:var(--ui-danger-bg);font:700 var(--ui-font-2xs)/1 var(--ui-font-body) !important;color:var(--ui-danger) !important;text-transform:uppercase
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipStats {display:grid;grid-template-columns:repeat(3,1fr);gap:4px
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipStats span {display:grid;gap:1px;padding:4px 5px;background:var(--ui-surface-soft);color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipStats strong {font:700 var(--ui-font-sm)/1.1 var(--ui-font-body);color:var(--ui-text);font-variant-numeric:tabular-nums
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipProgress {height:4px;background:var(--ui-surface-strong)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipProgress i {display:block;height:100%;width:var(--gf-progress,0%);background:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip.isCritical .gfTipProgress i {background:var(--ui-danger)
+}
+html[data-ui-system="manifest"] .globalFlowTooltip .gfTipAlarm {display:none
+}
+html:root[data-ui-system="manifest"] .globalFlowLegend .critical i {background:var(--ui-danger) !important;width:7px;height:7px
+}

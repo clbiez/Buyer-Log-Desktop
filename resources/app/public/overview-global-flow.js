@@ -1289,7 +1289,7 @@ function palette(){
     water:vivid?.water||css('--ui-surface-soft','#edf2f7'),land:vivid?.land||css('--ui-surface','#ffffff'),card:css('--ui-surface','#ffffff'),line:vivid?.line||css('--ui-chart-grid','#d8dee8'),
     ink:css('--ui-text','#1f2937'),muted:css('--ui-text-muted','#6b7280'),acc:vivid?.acc||css('--ui-accent','#3f6488'),
     green:vivid?.green||css('--ui-success','#16845b'),red:vivid?.red||css('--ui-danger','#c04455'),orange:vivid?.orange||css('--ui-warning','#c47a20'),
-    yellow:css('--ui-warning','#b88700'),cyan:css('--ui-accent'),purple:css('--ui-warning')
+    yellow:css('--ui-warning','#b88700'),cyan:css('--ui-accent'),purple:css('--ui-chart-3','#376f73')
   };
   return state.paletteCache;
 }
@@ -1404,7 +1404,7 @@ function buildScene(info,p){
         const stages=symbol.bundle.kind==='arrival'?ARRIVAL_STAGES:ORIGIN_STAGES,available=stages.filter(stage=>(symbol.bundle.stages.get(stage)||[]).length),offsets=available.length===3?[[-28,-30],[0,-38],[28,-30]]:available.length===2?[[-18,-30],[18,-30]]:[[0,-32]];
         symbol.stageIcons=available.map((stage,index)=>{const offset=offsets[index]||[0,-32],x=symbol.x+offset[0],y=symbol.y+offset[1],records=symbol.bundle.stages.get(stage)||[];hitTargets.push({type:'stage',x,y,r:12,stage,nodeKey:symbol.bundle.key,records,priority:100});return {stage,x,y};});
       }
-    }else if(symbol.kind==='vehicleCluster')hitTargets.push({type:'vehicleCluster',x:symbol.x,y:symbol.y,r:14,cluster:symbol,records:symbol.records,priority:90});
+    }else if(symbol.kind==='vehicleCluster')hitTargets.push({type:'vehicleCluster',x:symbol.x,y:symbol.y,r:18,cluster:symbol,records:symbol.records,priority:90});
     else hitTargets.push({type:'vehicle',x:symbol.x,y:symbol.y,r:SYMBOL_MIN_DISTANCE/2,vehicle:symbol.vehicle,records:symbol.vehicle.records,priority:90});
   });
   const hubs=referenceHubs(model).map(hub=>{const q=screenPoint(hub.location,w,h);return q?.visible?{hub,x:q.x,y:q.y}:null;}).filter(Boolean);
@@ -1481,34 +1481,93 @@ function drawEdges(ctx,scene,now,animate){
     if(animate)drawRouteParticles(ctx,item,now);
   });
 }
-/* Taşıma tipi simgesi (orijin merkezli, dolgu rengi çağırandan). Buyer Log
-   canvas'ı ve Earth billboard'ları aynı çizimi kullanır. Uçak +x yönüne bakar. */
-function drawModeGlyph(ctx,mode){
-  if(mode==='air'){ctx.beginPath();ctx.moveTo(6,0);ctx.lineTo(-4.5,-3.5);ctx.lineTo(-1.5,0);ctx.lineTo(-4.5,3.5);ctx.closePath();ctx.fill();}
-  else if(mode==='sea'){ctx.beginPath();ctx.moveTo(-5.5,-1);ctx.lineTo(5.5,-1);ctx.lineTo(3.2,4);ctx.lineTo(-3.8,4);ctx.closePath();ctx.fill();ctx.fillRect(-1,-5,2.4,4);}
-  else if(mode==='road'){ctx.fillRect(-5.5,-3,7.5,4.6);ctx.fillRect(2.3,-1.4,3.4,3);ctx.fillRect(-4.5,1.1,3,3);ctx.fillRect(2.3,1.1,3,3);}
-  else {ctx.fillRect(-3,-3,6,6);}
+/* Taşıma tipi simgeleri tek kaynaktan (24×24 SVG path): tuval, Earth billboard'ları,
+   gösterge ve hover özeti aynı silueti kullanır. Gemi ve tır yandan, uçak üstten
+   görünür ve +x yönüne bakar. */
+const MODE_GLYPH_PATHS=Object.freeze({
+  sea:'M2 14.2h20l-3.2 5.3H5.4z M5.5 8.6h4.2v4.4H5.5z M10.6 8.6h4.2v4.4h-4.2z M15.8 5.2h3.1v7.8h-3.1z',
+  air:'M21.6 12c0-.9-.8-1.4-1.7-1.4h-4.6L10.2 3.6H8l2.6 7H6.2L4.6 8.4H3l1 3.6-1 3.6h1.6l1.6-2.2h4.4L8 20.4h2.2l5.1-7h4.6c.9 0 1.7-.5 1.7-1.4z',
+  road:'M1.8 6.6h12.4v9.6H1.8z M15 9.6h3.9l3.3 3.4v3.2H15z M3.6 18.6a2.1 2.1 0 1 0 4.2 0a2.1 2.1 0 1 0-4.2 0z M15.4 18.6a2.1 2.1 0 1 0 4.2 0a2.1 2.1 0 1 0-4.2 0z',
+});
+const MODE_PATH_CACHE=new Map();
+function glyphMode(mode){return mode==='sea-air'?'sea':(MODE_GLYPH_PATHS[mode]?mode:'');}
+function modeGlyphSvg(mode,cls){
+  const key=glyphMode(mode);
+  return key?'<svg class="'+(cls||'gfModeIcon')+'" viewBox="0 0 24 24" aria-hidden="true"><path d="'+MODE_GLYPH_PATHS[key]+'"/></svg>':'<svg class="'+(cls||'gfModeIcon')+'" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10"/></svg>';
+}
+function drawModeGlyph(ctx,mode,size){
+  const key=glyphMode(mode),scale=(Number(size)||13)/24;
+  if(key&&typeof Path2D==='function'){
+    if(!MODE_PATH_CACHE.has(key))MODE_PATH_CACHE.set(key,new Path2D(MODE_GLYPH_PATHS[key]));
+    ctx.save();ctx.scale(scale,scale);ctx.translate(-12,-12);ctx.fill(MODE_PATH_CACHE.get(key));ctx.restore();return;
+  }
+  ctx.fillRect(-3,-3,6,6);
 }
 function plotSquare(ctx,x,y,r){ctx.rect(x-r,y-r,r*2,r*2);}
 function plotFont(){const style=getComputedStyle($('globalFlowMeta'));return '600 '+style.fontSize+' '+style.fontFamily;}
-function drawVehicle(ctx,symbol,p){
-  const vehicle=symbol.vehicle,color=modeColor(vehicle.mode,p),count=vehicle.records.length;
-  if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.55;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.fillStyle=color;ctx.beginPath();plotSquare(ctx,symbol.anchorX,symbol.anchorY,2);ctx.fill();ctx.restore();}
-  ctx.save();ctx.translate(symbol.x,symbol.y);
-  const frameColor=vehicle.overdue?p.yellow:(vehicle.critical?p.red:color);
-  ctx.fillStyle=p.card;ctx.strokeStyle=frameColor;ctx.lineWidth=vehicle.overdue||vehicle.critical?2:1.2;ctx.beginPath();plotSquare(ctx,0,0,9);ctx.fill();ctx.stroke();
-  ctx.fillStyle=color;
-  if(vehicle.mode==='air'){ctx.save();ctx.rotate(symbol.heading||0);drawModeGlyph(ctx,'air');ctx.restore();}
-  else drawModeGlyph(ctx,vehicle.mode);
-  if(count>1){const label=count>99?'99+':String(count);ctx.font=plotFont();const bw=Math.max(13,ctx.measureText(label).width+6);ctx.fillStyle=vehicle.critical?p.red:color;ctx.beginPath();plotSquare(ctx,8,-8,bw/2);ctx.fill();ctx.fillStyle=p.card;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,8,-7.5);}
+/* Global Flow Motion+: kritik alarm nabzı (anlamsal, harita görünürken),
+   araçların tek seferlik girişi ve hover kalkışı. Hareket kapalıysa, yazılım
+   çiziminde veya azaltılmış harekette çizimler durağan kalır. */
+const ALARM_PERIOD=1400,INTRO_MS=520;
+function flowMotionAllowed(){const root=document.documentElement;return !reducedMotion()&&root.dataset.blMotion!=='off'&&root.dataset.blRender!=='software';}
+function symbolCritical(symbol){return symbol.kind==='node'?symbol.bundle.records.some(r=>r.critical):symbol.kind==='vehicleCluster'?Boolean(symbol.critical):Boolean(symbol.vehicle&&symbol.vehicle.critical);}
+function drawAlarm(ctx,x,y,r,p,now){
+  if(!flowMotionAllowed())return;
+  const beat=(now%ALARM_PERIOD)/ALARM_PERIOD;
+  // Nabız zemini: kalp atışı gibi kısa parlayıp söner.
+  ctx.save();ctx.fillStyle=p.red;ctx.globalAlpha=Math.max(0,.22*(1-beat*2.2));ctx.beginPath();plotSquare(ctx,x,y,r+3);ctx.fill();ctx.restore();
+  for(let i=0;i<2;i++){
+    const phase=(beat+i/2)%1,grow=r+2+phase*15;
+    ctx.save();ctx.strokeStyle=p.red;ctx.globalAlpha=(1-phase)*.9;ctx.lineWidth=2.6-phase*1.6;ctx.beginPath();plotSquare(ctx,x,y,grow);ctx.stroke();ctx.restore();
+  }
+}
+function symbolScale(symbol,now){
+  let scale=1;
+  if(state.intro&&flowMotionAllowed()){
+    const t=clamp((now-state.intro.start-Math.min(360,(symbol.order||0)*22))/INTRO_MS,0,1);
+    scale*=t>=1?1:.55+.45*(1-Math.pow(1-t,3));
+  }
+  const hover=state.hover&&(state.hover.vehicle===symbol.vehicle&&symbol.vehicle||state.hover.cluster===symbol&&symbol.kind==='vehicleCluster');
+  if(hover)scale*=1.14;
+  return scale;
+}
+function drawVehicleBadge(ctx,x,y,mode,heading,p,frame,r){
+  const color=modeColor(mode,p);
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle=p.card;ctx.strokeStyle=frame||color;ctx.lineWidth=frame?2:1.3;ctx.beginPath();plotSquare(ctx,0,0,r);ctx.fill();ctx.stroke();
+  ctx.fillStyle=color;ctx.globalAlpha=.12;ctx.beginPath();plotSquare(ctx,0,0,r-2);ctx.fill();ctx.globalAlpha=1;
+  if(glyphMode(mode)==='air'&&heading)ctx.rotate(heading);
+  drawModeGlyph(ctx,mode,r*1.45);
   ctx.restore();
 }
-function drawVehicleCluster(ctx,symbol,p){
-  const count=(symbol.vehicles||[]).length,color=symbol.mode==='combined'?p.acc:modeColor(symbol.mode,p);
+function drawVehicle(ctx,symbol,p,now){
+  const vehicle=symbol.vehicle,color=modeColor(vehicle.mode,p);
+  if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.55;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.fillStyle=color;ctx.beginPath();plotSquare(ctx,symbol.anchorX,symbol.anchorY,2);ctx.fill();ctx.restore();}
+  const scale=symbolScale(symbol,now),frame=vehicle.overdue?p.yellow:(vehicle.critical?p.red:'');
+  if(vehicle.critical)drawAlarm(ctx,symbol.x,symbol.y,11*scale,p,now);
+  ctx.save();ctx.translate(symbol.x,symbol.y);ctx.scale(scale,scale);
+  drawVehicleBadge(ctx,0,0,vehicle.mode,symbol.heading,p,frame,11);
+  ctx.restore();
+}
+/* Birleşik simge: 2–3 araç yan yana kademeli rozetler; daha fazlasında üç rozet
+   ve "+" işareti. Rozetler araçların gerçek taşıma tipini gösterir. */
+function drawVehicleCluster(ctx,symbol,p,now){
+  const vehicles=symbol.vehicles||[],shown=vehicles.slice(0,3),more=vehicles.length>3;
   if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.45;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.restore();}
-  const frameColor=symbol.overdue?p.yellow:(symbol.critical?p.red:color);
-  ctx.save();ctx.translate(symbol.x,symbol.y);ctx.fillStyle=p.card;ctx.strokeStyle=frameColor;ctx.lineWidth=symbol.overdue||symbol.critical?2:1.5;ctx.beginPath();plotSquare(ctx,0,0,12);ctx.fill();ctx.stroke();
-  ctx.fillStyle=color;ctx.globalAlpha=.16;ctx.beginPath();plotSquare(ctx,0,0,8);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle=symbol.critical?p.red:color;ctx.font=plotFont();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(count>99?'99+':String(count),0,.5);ctx.restore();
+  const scale=symbolScale(symbol,now),step=7,offset=(shown.length-1)*step/2;
+  if(symbol.critical)drawAlarm(ctx,symbol.x,symbol.y,(10+offset)*scale,p,now);
+  ctx.save();ctx.translate(symbol.x,symbol.y);ctx.scale(scale,scale);
+  shown.forEach((vehicle,index)=>{
+    const dx=-offset+index*step,dy=offset-index*step,frame=vehicle.overdue?p.yellow:(vehicle.critical?p.red:'');
+    drawVehicleBadge(ctx,dx,dy,vehicle.mode,0,p,frame,9.5);
+  });
+  if(more){
+    const x=offset+9,y=-offset-9;
+    // Gizli araçlar dahil küme durumu: gecikme sarı, kritik kırmızı.
+    ctx.fillStyle=symbol.overdue?p.yellow:(symbol.critical?p.red:p.acc);ctx.beginPath();plotSquare(ctx,x,y,6.5);ctx.fill();
+    ctx.strokeStyle=p.card;ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(x-3.4,y);ctx.lineTo(x+3.4,y);ctx.moveTo(x,y-3.4);ctx.lineTo(x,y+3.4);ctx.stroke();
+  }
+  ctx.restore();
 }
 const STAGE_META={
   PRODUCTION:{tr:'Üretimde',en:'In production',glyph:'P'},LOADING:{tr:'Yükleme Operasyonları',en:'Loading Operations',glyph:'L'},
@@ -1520,20 +1579,24 @@ function drawStageIcon(ctx,x,y,stage,p){
   const meta=STAGE_META[stage]||{glyph:'•'},color=stage==='PRODUCTION'?p.acc:stage==='LOADING'?p.orange:stage==='CUSTOMS'?p.red:stage==='IN_WAREHOUSE'?p.green:p.purple;
   ctx.save();ctx.fillStyle=p.land;ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();plotSquare(ctx,x,y,10);ctx.fill();ctx.stroke();ctx.fillStyle=color;ctx.font=plotFont();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(meta.glyph,x,y+.5);ctx.restore();
 }
-function drawNode(ctx,symbol,p){
+function drawNode(ctx,symbol,p,now){
   const bundle=symbol.bundle,baseColor=bundle.kind==='arrival'?p.green:p.acc,radius=symbol.r;
   if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.55;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.restore();}
   ctx.save();ctx.fillStyle=baseColor;ctx.globalAlpha=.95;ctx.beginPath();plotSquare(ctx,symbol.x,symbol.y,radius);ctx.fill();
   if(bundle.records.some(r=>r.critical)){ctx.globalAlpha=1;ctx.strokeStyle=p.red;ctx.lineWidth=2;ctx.beginPath();plotSquare(ctx,symbol.x,symbol.y,radius+3);ctx.stroke();}
   ctx.restore();
+  if(bundle.records.some(r=>r.critical))drawAlarm(ctx,symbol.x,symbol.y,radius+3,p,now);
   (symbol.stageIcons||[]).forEach(icon=>drawStageIcon(ctx,icon.x,icon.y,icon.stage,p));
 }
-function drawHoverHighlight(ctx,hit,p,scene){
+function drawHoverHighlight(ctx,hit,p,scene,now){
   if(hit.type==='route'){
     const routeItems=routeHighlightEdges(scene,hit),items=routeItems.length?routeItems:[{points:hit.points,width:Number(hit.r||8)}];
     ctx.save();ctx.strokeStyle=p.ink;ctx.globalAlpha=.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.setLineDash([]);
     items.forEach(item=>{ctx.lineWidth=Math.max(3,Number(item.width||hit.r||8)*.9);strokePath(ctx,item.points||[]);});
-    ctx.restore();return;
+    ctx.restore();
+    // Hover sırasında yalnız bu hatta yük akışı görünür.
+    if(flowMotionAllowed())items.forEach(item=>{if(item.edge&&item.color)drawRouteParticles(ctx,item,now);});
+    return;
   }
   ctx.save();ctx.strokeStyle=p.ink;ctx.globalAlpha=.55;ctx.lineWidth=1.2;ctx.beginPath();plotSquare(ctx,hit.x,hit.y,Math.min(24,Number(hit.r||10)+3));ctx.stroke();ctx.restore();
 }
@@ -1573,13 +1636,21 @@ function draw(now){
   const scene=buildScene(info,p);drawEdges(ctx,scene,t,animate);
   drawReferenceHubs(ctx,scene,p);
   drawCountryLabels(ctx,scene,info,p);
-  scene.symbols.forEach(symbol=>{if(symbol.kind==='node')drawNode(ctx,symbol,p);});
-  scene.symbols.forEach(symbol=>{if(symbol.kind==='vehicle')drawVehicle(ctx,symbol,p);else if(symbol.kind==='vehicleCluster')drawVehicleCluster(ctx,symbol,p);});
+  if(state.introRevision!==state.modelRevision){state.introRevision=state.modelRevision;state.intro=flowMotionAllowed()&&scene.symbols.length?{start:t}:null;}
+  if(state.intro&&t-state.intro.start>INTRO_MS+400)state.intro=null;
+  let order=0;scene.symbols.forEach(symbol=>{if(symbol.kind!=='node')symbol.order=order++;});
+  scene.symbols.forEach(symbol=>{if(symbol.kind==='node')drawNode(ctx,symbol,p,t);});
+  scene.symbols.forEach(symbol=>{if(symbol.kind==='vehicle')drawVehicle(ctx,symbol,p,t);else if(symbol.kind==='vehicleCluster')drawVehicleCluster(ctx,symbol,p,t);});
   const selected=selectedTarget();if(selected)drawSelection(ctx,selected,p);
-  const hover=currentHit();if(hover)drawHoverHighlight(ctx,hover,p,scene);
-  if(animate||(document.documentElement.dataset.uiSystem!=='manifest'&&state.expandedNodeKey)||state.globeInertia)state.frame=requestAnimationFrame(throttledDraw);
+  const hover=currentHit();if(hover)drawHoverHighlight(ctx,hover,p,scene,t);
+  // Global Flow Motion+: kritik alarm, giriş ve hover akışı yalnız harita canlıyken sürer.
+  const transient=Boolean(state.intro)||Boolean(hover&&hover.type==='route'),alarm=scene.symbols.some(symbolCritical);
+  const motion=flowMotionAllowed()&&(transient||alarm);
+  // Yalnız alarm nabzı sürerken kare hızı düşük tutulur (~12 fps).
+  state.alarmOnly=motion&&!transient&&!animate;
+  if(animate||motion||(document.documentElement.dataset.uiSystem!=='manifest'&&state.expandedNodeKey)||state.globeInertia)state.frame=requestAnimationFrame(throttledDraw);
 }
-function throttledDraw(now){const minGap=state.globeInertia?16:50;if(now-state.lastFrame<minGap){state.frame=requestAnimationFrame(throttledDraw);return;}state.lastFrame=now;draw(now);}
+function throttledDraw(now){const minGap=state.globeInertia?16:(state.alarmOnly?80:50);if(now-state.lastFrame<minGap){state.frame=requestAnimationFrame(throttledDraw);return;}state.lastFrame=now;draw(now);}
 function scheduleDraw(){if(state.frame)cancelAnimationFrame(state.frame);state.frame=requestAnimationFrame(draw);}
 function nearestHit(x,y){return pickHit(state.scene?state.scene.hitTargets:[],x,y);}
 function canvasPoint(event){const canvas=$('globalFlowCanvas'),rect=canvas.getBoundingClientRect();return {x:event.clientX-rect.left,y:event.clientY-rect.top};}
@@ -1597,23 +1668,23 @@ function vehicleTitle(vehicle){
   const files=vehicle.files;return files.length===1?files[0]:files.slice(0,2).join(' + ')+(files.length>2?' +'+(files.length-2):'');
 }
 function showTooltip(hit,event){
-  const tip=$('globalFlowTooltip');if(!tip)return;if(!hit){tip.hidden=true;return;}let title='',lines=[],critical=false;
+  const tip=$('globalFlowTooltip');if(!tip)return;if(!hit){tip.hidden=true;return;}let title='',lines=[],critical=false,mode='',progress=null,summaryRecords=null;
   if(hit.type==='vehicleCluster'){
     const c=hit.cluster,modes=[...new Set((c.vehicles||[]).map(v=>modeLabel(v.mode)))];title=L('Gruplanmış araçlar','Grouped vehicles')+' · '+(c.vehicles||[]).length;
     lines.push(modes.join(' · '));
     if(c.avgElapsedDays!=null)lines.push(L('Ortalama transit günü','Average transit day')+': '+(Math.round(c.avgElapsedDays*10)/10));
     if(c.overdue)lines.push(L('Ortalama yol süresi doldu; sevkiyat hâlâ yolda statüsünde.','Average transit time elapsed; shipment is still marked in transit.'));
-    lines.push(countSummary(c.records));lines.push(L('Yakınlaştırdıkça araçlar ayrılır.','Vehicles separate as you zoom in.'));critical=c.critical;
+    summaryRecords=c.records;mode=c.mode;lines.push(L('Yakınlaştırdıkça araçlar ayrılır.','Vehicles separate as you zoom in.'));critical=c.critical;
   }else if(hit.type==='vehicle'){
     const v=hit.vehicle;title=vehicleTitle(v);
-    lines.push(modeLabel(v.mode)+' · '+v.leg.from+' → '+v.leg.to);
+    lines.push(modeLabel(v.mode)+' · '+countryDisplayName(v.leg.from)+' → '+v.leg.to);
     lines.push(Math.round(v.progress*100)+'% '+L('ayak ilerlemesi','leg progress')+(v.elapsedDays!=null&&v.leadDays!=null?' · '+Math.floor(v.elapsedDays)+' / '+Math.round(v.leadDays)+' '+L('gün','days'):''));
     if(v.overdue)lines.push(L('Ortalama yol süresi doldu; sevkiyat hâlâ yolda statüsünde.','Average transit time elapsed; shipment is still marked in transit.'));
     if(v.vesselName)lines.push(L('Gemi','Vessel')+': '+v.vesselName);
-    lines.push(countSummary(v.records));critical=v.critical;
+    summaryRecords=v.records;mode=v.mode;progress=v.progress;critical=v.critical;
   }else if(hit.type==='route'){
     const edge=hit.edge;title=edgeTitle(edge);
-    lines.push(routeTransportLabel(edge)+(edge.origins.size>1?' · '+L('Ortak koridor','Shared corridor'):''));lines.push(countSummary(edge.records));critical=edge.records.some(r=>r.critical);
+    lines.push(routeTransportLabel(edge)+(edge.origins.size>1?' · '+L('Ortak koridor','Shared corridor'):''));summaryRecords=edge.records;mode=routeTransportModes(edge)[0]||edge.mode;critical=edge.records.some(r=>r.critical);
   }else if(hit.type==='stage'){title=stageLabel(hit.stage);lines.push(countSummary(hit.records));if(hit.nodeKey==='arrival:istanbul')lines.push(ISTANBUL.name);critical=hit.records.some(r=>r.critical);}
   else if(hit.type==='cluster'){
     title=nf().format(hit.vehicles.length)+' '+L('araç','vehicles');
@@ -1622,14 +1693,21 @@ function showTooltip(hit,event){
   }else if(hit.type==='hub'){title=hitTitle(hit);lines.push(L('Referans terminal · gerçek koordinat','Reference terminal · real coordinate'));lines.push(hit.hub.location.lat.toFixed(3)+', '+hit.hub.location.lon.toFixed(3));lines.push(countSummary(hit.records));critical=hit.records.some(r=>r.critical);}
   else if(hit.type==='shipment'){
     const rec=hit.rec,p=hit.placement;title=hitTitle(hit);
-    if(p)lines.push(modeLabel(p.leg.mode)+' · '+p.leg.from+' → '+p.leg.to);
+    if(p)lines.push(modeLabel(p.leg.mode)+' · '+countryDisplayName(p.leg.from)+' → '+p.leg.to);
     if(p)lines.push(Math.round(p.meta.progress*100)+'% '+L('rota ilerlemesi','route progress')+(p.meta.elapsedDays!=null?' · '+Math.floor(p.meta.elapsedDays)+' / '+Math.round(p.meta.leadDays)+' '+L('gün','days'):''));
     lines.push(partialLabel(rec)+' · '+nf().format(Number(rec.qty)||0)+' '+L('adet','units')+(rec.vesselName?' · '+rec.vesselName:''));critical=Boolean(rec.critical);
   }
   else if(hit.type==='node'){title=hit.bundle.kind==='arrival'?ISTANBUL.name:hit.bundle.location.name;const parts=[...hit.bundle.stages.entries()].map(entry=>stageLabel(entry[0])+' '+nf().format(entry[1].length));lines.push(parts.join(' · ')||countSummary(hit.records));lines.push(countSummary(hit.records));lines.push(L('Durum simgeleri için üzerinde kalın.','Keep hovering to reveal status icons.'));critical=hit.records.some(r=>r.critical);}
   if(hit.type==='node'&&state.engine==='earth')lines.pop();
-  tip.innerHTML='<b>'+esc(title||L('Detay','Detail'))+'</b>'+lines.map(line=>'<span>'+esc(line)+'</span>').join('')+(critical?'<em>'+esc(L('Kritik parsiyel var','Critical partial present'))+'</em>':'');
-  const wrap=$('globalFlowCanvasWrap').getBoundingClientRect();tip.style.left=Math.min(wrap.width-240,Math.max(8,event.clientX-wrap.left+12))+'px';tip.style.top=Math.min(wrap.height-130,Math.max(8,event.clientY-wrap.top+12))+'px';tip.hidden=false;
+  // Araç ve hat özeti: taşıma simgesi, başlık, ölçüler ve ayak ilerlemesi tek kartta.
+  const stats=summaryRecords?'<div class="gfTipStats">'+[[summaryRecords.length,L('parsiyel','partials')],[new Set(summaryRecords.map(r=>r.orderKey||r.id)).size,L('sipariş','orders')],[totalOf(summaryRecords),L('adet','units')]].map(item=>'<span><strong>'+esc(nf().format(item[0]))+'</strong>'+esc(item[1])+'</span>').join('')+'</div>':'';
+  const bar=progress!=null?'<div class="gfTipProgress" role="presentation"><i style="--gf-progress:'+Math.round(clamp(progress,0,1)*100)+'%"></i></div>':'';
+  const head='<div class="gfTipHead">'+(mode?'<span class="gfTipMode" data-mode="'+esc(glyphMode(mode)||'unknown')+'">'+modeGlyphSvg(mode)+'</span>':'')+'<b>'+esc(title||L('Detay','Detail'))+'</b>'+(critical?'<em>'+esc(L('Kritik','Critical'))+'</em>':'')+'</div>';
+  tip.classList.toggle('isCritical',critical);
+  tip.innerHTML=head+stats+bar+lines.map(line=>'<span>'+esc(line)+'</span>').join('')+(critical?'<em class="gfTipAlarm">'+esc(L('Kritik parsiyel var','Critical partial present'))+'</em>':'');
+  const wrap=$('globalFlowCanvasWrap').getBoundingClientRect();tip.style.left=Math.min(wrap.width-240,Math.max(8,event.clientX-wrap.left+12))+'px';tip.style.top=Math.min(wrap.height-170,Math.max(8,event.clientY-wrap.top+12))+'px';
+  const wasHidden=tip.hidden;tip.hidden=false;
+  if(wasHidden&&flowMotionAllowed())window.BLMotionPlus?.play?.('overlay',tip);
 }
 function onPointerDown(event){
   if(event.button!==0)return;const p=canvasPoint(event),stamp=performance.now();state.lastDragMoved=false;state.globeInertia=null;
@@ -1848,7 +1926,7 @@ async function saveEarthProviderSettings(body){
 }
 function earthBridge(){
   return {
-    referenceHubs,L,esc,isEn,palette,drawModeGlyph,nodeRadius,edgeSamples,pointAlongLeg,geoInterpolate,heightForSpan,spanForHeight,hitIdentity,hitTitle,vehicleTitle,
+    referenceHubs,L,esc,isEn,palette,drawModeGlyph,modeGlyphSvg,nodeRadius,edgeSamples,pointAlongLeg,geoInterpolate,heightForSpan,spanForHeight,hitIdentity,hitTitle,vehicleTitle,
     angularDistanceDeg:(a,b)=>angularDistance(a,b)*180/Math.PI,
     modeColor:mode=>modeColor(mode,palette()),
     istanbul:()=>ISTANBUL,istanbulName:()=>ISTANBUL.name,
@@ -1995,6 +2073,8 @@ function init(){
   /* Harita ana ekran widget'ıdır: boyutu ızgaradan gelir, daraltılmaz. Eski
      kayıttaki daraltma durumu gövdeyi gizlemesin. */
   state.collapsed=false;
+  // Gösterge haritadaki simgelerin aynısını kullanır.
+  ['sea','air','road'].forEach(mode=>{const dot=widget.querySelector('.globalFlowLegend .'+mode+' i');if(dot)dot.outerHTML=modeGlyphSvg(mode,'gfLegendIcon');});
   bindControls();bindFilters();bindKpis();bindCanvas();bindObservers();renderAll();syncLoadingOverlay();
   // Uygulama başka sekmede açıldıysa veri gözlemci görünür dediğinde yüklenir.
   state.inView=widget.getClientRects().length>0;

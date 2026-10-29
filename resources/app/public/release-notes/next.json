@@ -7,8 +7,8 @@
     "en": "A simpler, consistent and more fluid interface"
   },
   "summary": {
-    "tr": "Tema geçişi düğmeden yayılarak animasyonlu gelir ve Kurşun teması kaldırıldı. Excel işlemleri tek çekmecede; satır seçince alta seçim çubuğu gelir. Bağlantılar, dil/tema/boyut ve seçim kontrolleri tek ve tutarlı kalıplarda toplandı; Veri Yönetimi panelleri katlanabilir, Genel Bakış haritası ve KPI birimleri daha okunur.",
-    "en": "Theme switching now animates outward from the button and the Slate theme was removed. Excel actions live in one drawer and a selection bar appears when rows are checked. Connections, language/theme/size and selection controls follow single, consistent patterns; Data Management panels collapse, and the Overview map and KPI units read more clearly."
+    "tr": "Tema geçişi düğmeden yayılarak animasyonlu gelir ve Kurşun teması kaldırıldı. Küresel Akış Haritası gemi/uçak/tır simgeleri, kritik alarm ve hover özeti kazandı. Excel işlemleri tek çekmecede; satır seçince alta seçim çubuğu gelir. Bağlantılar, dil/tema/boyut ve seçim kontrolleri tek ve tutarlı kalıplarda toplandı; Veri Yönetimi panelleri katlanabilir, Genel Bakış haritası ve KPI birimleri daha okunur.",
+    "en": "Theme switching now animates outward from the button and the Slate theme was removed. The Global Flow Map gained ship/plane/truck icons, a critical alarm and hover summaries. Excel actions live in one drawer and a selection bar appears when rows are checked. Connections, language/theme/size and selection controls follow single, consistent patterns; Data Management panels collapse, and the Overview map and KPI units read more clearly."
   },
   "changes": [
     {
@@ -66,6 +66,35 @@
         "caption": {
           "tr": "CP'de Excel düğmesi: oluşturma ve içe aktarma işlemleri ayrı bölümlerde.",
           "en": "The Excel button in CP: create and import actions in separate sections."
+        }
+      }
+    },
+    {
+      "id": "global-flow-icons-alarm",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış · Küresel Akış Haritası",
+        "en": "Overview · Global Flow Map"
+      },
+      "title": {
+        "tr": "Taşıma simgeleri, kritik alarm ve hover özeti",
+        "en": "Transport icons, critical alarm and hover summary"
+      },
+      "body": {
+        "tr": "Haritada araçlar taşıma tipine göre gemi, uçak ve tır simgesiyle görünür; gösterge aynı simgeleri kullanır. Yakın araçlar birleşince 2–3 araç kadar kademeli rozet, daha fazlasında üç rozet ve \"+\" işareti çizilir. Kritik öncelikli siparişleri taşıyan araç ve ülkelerde kırmızı alarm nabzı atar; hareketi azalt açıkken, harita görünmezken veya GPU'suz uzak masaüstünde durağan kırmızı çerçeve kalır. Araca veya hatta gelince taşıma simgesi, parsiyel/sipariş/adet ve ayak ilerlemesini gösteren küçük bir özet açılır; hat üzerinde yük akışı görünür. Uçak artık tırdan ayrı renktedir.",
+        "en": "Vehicles on the map now appear as ship, plane and truck icons by transport type, and the legend uses the same icons. When nearby vehicles merge, 2–3 vehicles show as stacked badges and larger groups show three badges with a \"+\" mark. Vehicles and countries carrying critical-priority orders pulse with a red alarm; with reduced motion, while the map is hidden, or on remote desktops without a GPU they keep a static red frame. Hovering a vehicle or route opens a small summary with the transport icon, partials/orders/units and leg progress, and the route shows its cargo flow. Air now has its own colour, separate from road."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "global-flow-icons-alarm.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Küresel Akış Haritası tam ekran: gemi, uçak, tır simgeleri, kritik ülkelerde kırmızı alarm halkaları ve bir tırın hover özeti (demo veri)",
+          "en": "Real Buyer Log Global Flow Map fullscreen: ship, plane and truck icons, red alarm rings on critical countries and a truck hover summary (demo data)"
+        },
+        "caption": {
+          "tr": "Tır üzerinde hover özeti; kritik ülkelerde alarm nabzı.",
+          "en": "Hover summary on a truck; alarm pulse on critical countries."
         }
       }
     },

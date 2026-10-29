@@ -196,6 +196,14 @@ canvas bileşenleri yalnız gerçekten çalışan `thinking`/loading durumu boyu
 semantik işlem göstergesi olarak kullanılabilir. Her orb görünmez sekme, ekran
 dışı kalma, işlem sonu ve reduced-motion için duraklama/durdurma ya da tek kare
 uygulamalıdır. Sürekli dekoratif canvas hareketi hâlâ yasaktır.
+**Global Flow istisnası (7.0.319):** Kritik (priority CRITICAL) sipariş taşıyan
+araç, küme ve düğümlerde kırmızı alarm nabzı anlamsal durum göstergesidir;
+yalnız harita canlıyken (`isLive`), hareket izinliyken ve yazılım çiziminde
+değilken ~12 fps ile çalışır, aksi hâlde durağan kırmızı çerçeve kalır. Araçlar
+veri değişiminde bir kez ölçeklenerek girer; rota akışı yalnız fare hattın
+üzerindeyken çizilir. Genel rota akışı (`wantsAnimation`) manifestte kapalı kalır.
+Taşıma simgeleri (gemi/uçak/tır) `MODE_GLYPH_PATHS` tek kaynağından gelir;
+1 araç tek rozet, 2–3 araç kademeli rozet, fazlası üç rozet + "+" işaretidir.
 
 **Sol üstten dalga:** Aktif tablodaki sadece ilk iki görünür gridin
 kaydırma alanında görünen satır ve sütunlarında tek giriş efekti uygulanır. Hücreler diagonal gecikmeyle
