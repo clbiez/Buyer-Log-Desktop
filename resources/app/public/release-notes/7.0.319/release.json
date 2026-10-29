@@ -1,0 +1,340 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.319",
+  "channel": "stable",
+  "publishedAt": "2026-10-29",
+  "title": {
+    "tr": "Daha sade, tutarlı ve hareketli arayüz",
+    "en": "A simpler, consistent and more fluid interface"
+  },
+  "summary": {
+    "tr": "Tema geçişi düğmeden yayılarak animasyonlu gelir ve Kurşun teması kaldırıldı. Küresel Akış Haritası gemi/uçak/tır simgeleri, kritik alarm ve hover özeti kazandı. Excel işlemleri tek çekmecede; satır seçince alta seçim çubuğu gelir. Bağlantılar, dil/tema/boyut ve seçim kontrolleri tek ve tutarlı kalıplarda toplandı; Veri Yönetimi panelleri katlanabilir, Genel Bakış haritası ve KPI birimleri daha okunur. Lisans kartlarında onay haritası kaydı, kart başka yerde değiştiğinde artık engellenmez.",
+    "en": "Theme switching now animates outward from the button and the Slate theme was removed. The Global Flow Map gained ship/plane/truck icons, a critical alarm and hover summaries. Excel actions live in one drawer and a selection bar appears when rows are checked. Connections, language/theme/size and selection controls follow single, consistent patterns; Data Management panels collapse, and the Overview map and KPI units read more clearly. License card approval-map saves are no longer blocked when the card changed elsewhere."
+  },
+  "stats": {
+    "features": 3,
+    "improvements": 6,
+    "fixes": 2
+  },
+  "changes": [
+    {
+      "id": "theme-reveal-transition",
+      "type": "feature",
+      "module": {
+        "tr": "Ortak arayüz",
+        "en": "Shared interface"
+      },
+      "title": {
+        "tr": "Temalar arası animasyonlu geçiş; Kurşun teması kaldırıldı",
+        "en": "Animated switching between themes; Slate theme removed"
+      },
+      "body": {
+        "tr": "Görünüm menüsündeki Tema düğmesine basıldığında yeni tema, düğmenin olduğu noktadan dairesel olarak açılır ve yaklaşık yarım saniyede tüm ekranı kaplar. Geçiş ekranın iki görüntüsü üzerinden yapılır, tablolar yeniden çizilmez. Hareketi azalt ayarı açıksa, GPU'suz uzak masaüstünde veya açılışta tema anında değişir. Tema döngüsü artık yalnız Aydınlık ve Karanlık'tır; Kurşun teması seçili olan kullanıcılar Aydınlık temayla devam eder.",
+        "en": "When Theme in the Appearance menu is pressed, the new theme opens in a circle from the button and covers the screen in about half a second. The transition works on two images of the screen, so tables are not redrawn. With reduced motion enabled, on remote desktops without a GPU, or at startup, the theme changes instantly. The theme cycle is now Light and Dark only; users who had Slate selected continue with Light."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "theme-reveal-transition.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker: Karanlık tema, Görünüm menüsündeki Tema düğmesinden Aydınlık ekranın üzerine dairesel olarak yayılıyor (demo veri)",
+          "en": "Real Buyer Log CP Tracker: the Dark theme spreading in a circle over the Light screen from Theme in the Appearance menu (demo data)"
+        },
+        "caption": {
+          "tr": "Aydınlık'tan Karanlık'a geçişin ortası: yeni tema düğmeden açılıyor.",
+          "en": "Midway from Light to Dark: the new theme opens from the button."
+        }
+      }
+    },
+    {
+      "id": "excel-drawer",
+      "type": "improvement",
+      "module": {
+        "tr": "CP ve Koleksiyon",
+        "en": "CP and Collection"
+      },
+      "title": {
+        "tr": "Excel işlemleri tek çekmecede",
+        "en": "Excel actions in one drawer"
+      },
+      "body": {
+        "tr": "CP ve Koleksiyon araç çubuğundaki yeni Excel düğmesi, tabloyu dışa aktarma, Capacity Request, Hologram Talep, MB Listesi ve Checklist Excel'lerini \"Excel oluştur\" bölümünde; kullanıcı Excel'ini içeri aktarma ve Excel şablonlarını \"İçe aktar ve şablonlar\" bölümünde toplar. Araçlar menüsü seçime bağlı işlemlere sadeleşti. Düğmelerin işlevi, seçim kuralı ve sağ tık menüsündeki erişimi aynıdır. Araç çubuğundaki Filtreleri Temizle düğmesi de artık diğer düğmeler gibi çerçevelidir.",
+        "en": "The new Excel button in the CP and Collection toolbars gathers table export, Capacity Request, Hologram Request, MB List and Checklist workbooks under \"Create Excel\", and user Excel import plus Excel templates under \"Import and templates\". The Tools menu is now limited to selection actions. Each action keeps its behaviour, selection rule and right-click menu access. The Clear Filters toolbar button now has the same frame as the other buttons."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-excel-drawer.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker: açık Excel çekmecesinde Excel oluştur ile İçe aktar ve şablonlar bölümleri (demo veri)",
+          "en": "Real Buyer Log CP Tracker: the open Excel drawer with Create Excel and Import and templates sections (demo data)"
+        },
+        "caption": {
+          "tr": "CP'de Excel düğmesi: oluşturma ve içe aktarma işlemleri ayrı bölümlerde.",
+          "en": "The Excel button in CP: create and import actions in separate sections."
+        }
+      }
+    },
+    {
+      "id": "global-flow-icons-alarm",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış · Küresel Akış Haritası",
+        "en": "Overview · Global Flow Map"
+      },
+      "title": {
+        "tr": "Taşıma simgeleri, kritik alarm ve hover özeti",
+        "en": "Transport icons, critical alarm and hover summary"
+      },
+      "body": {
+        "tr": "Haritada araçlar taşıma tipine göre gemi, uçak ve tır simgesiyle görünür; gösterge aynı simgeleri kullanır. Yakın araçlar birleşince 2–3 araç kadar kademeli rozet, daha fazlasında üç rozet ve \"+\" işareti çizilir. Kritik öncelikli siparişleri taşıyan araç ve ülkelerde kırmızı alarm nabzı atar; hareketi azalt açıkken, harita görünmezken veya GPU'suz uzak masaüstünde durağan kırmızı çerçeve kalır. Araca veya hatta gelince taşıma simgesi, parsiyel/sipariş/adet ve ayak ilerlemesini gösteren küçük bir özet açılır; hat üzerinde yük akışı görünür. Uçak artık tırdan ayrı renktedir.",
+        "en": "Vehicles on the map now appear as ship, plane and truck icons by transport type, and the legend uses the same icons. When nearby vehicles merge, 2–3 vehicles show as stacked badges and larger groups show three badges with a \"+\" mark. Vehicles and countries carrying critical-priority orders pulse with a red alarm; with reduced motion, while the map is hidden, or on remote desktops without a GPU they keep a static red frame. Hovering a vehicle or route opens a small summary with the transport icon, partials/orders/units and leg progress, and the route shows its cargo flow. Air now has its own colour, separate from road."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "global-flow-icons-alarm.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Küresel Akış Haritası tam ekran: gemi, uçak, tır simgeleri, kritik ülkelerde kırmızı alarm halkaları ve bir tırın hover özeti (demo veri)",
+          "en": "Real Buyer Log Global Flow Map fullscreen: ship, plane and truck icons, red alarm rings on critical countries and a truck hover summary (demo data)"
+        },
+        "caption": {
+          "tr": "Tır üzerinde hover özeti; kritik ülkelerde alarm nabzı.",
+          "en": "Hover summary on a truck; alarm pulse on critical countries."
+        }
+      }
+    },
+    {
+      "id": "selection-action-bar",
+      "type": "feature",
+      "module": {
+        "tr": "CP, Siparişler ve Koleksiyon",
+        "en": "CP, Orders and Collection"
+      },
+      "title": {
+        "tr": "Seçili satırlar için seçim çubuğu",
+        "en": "Selection bar for checked rows"
+      },
+      "body": {
+        "tr": "Satır veya model işaretlenince tablonun altında seçim sayısını ve Kopyala, Excel, Araçlar işlemlerini gösteren bir çubuk kayarak gelir. Çubuk mevcut düğmeleri kullanır; pasif bir işlem burada da pasif görünür. Seçim kaldırılınca kapanır, × ile bir sonraki seçim değişikliğine kadar gizlenebilir.",
+        "en": "When rows or models are checked, a bar slides in below the table with the selection count and Copy, Excel and Tools. It uses the existing buttons, so an unavailable action is shown as unavailable here too. It closes when the selection is cleared and can be hidden with × until the selection changes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "selection-bar.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker, Karanlık tema: üç satır işaretli, altta 3 satır seçili, Kopyala, Excel ve Araçlar çubuğu (demo veri)",
+          "en": "Real Buyer Log CP Tracker, Dark theme: three checked rows and the bar with 3 rows selected, Copy, Excel and Tools (demo data)"
+        },
+        "caption": {
+          "tr": "Seçim çubuğu işaretli satırların işlemlerini tek yerde toplar.",
+          "en": "The selection bar gathers actions for the checked rows."
+        }
+      }
+    },
+    {
+      "id": "consistent-segments-tabs",
+      "type": "improvement",
+      "module": {
+        "tr": "Ortak arayüz",
+        "en": "Shared interface"
+      },
+      "title": {
+        "tr": "Tek tip seçim düğmeleri, sekmeler, menüler ve başlıklar",
+        "en": "Consistent segments, tabs, menus and headings"
+      },
+      "body": {
+        "tr": "Mod ve filtre seçimleri tüm modüllerde açık seçim zeminiyle, sayfa içi sekmeler alt vurgu çizgisiyle gösterilir; dolu vurgu rengi yalnız birincil eylemde kalır. Seçim değişince vurgu çizgisi yeni seçeneğe kayar. Menü öğeleri çerçevesiz satır oldu; İstisna Kutusu ve Veri Yönetimi başlıkları diğer bölüm başlıklarıyla aynı kalıba geçti.",
+        "en": "Mode and filter choices now use a light selected background in every module, and in-page tabs use an accent underline; the filled accent colour is reserved for the primary action. When the choice changes, the underline glides to the new option. Menu items are borderless rows, and the Exception Inbox and Data Management headings match the other section headings."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-segments.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog: Hafta, Tümü, Buyer ve % seçimleri açık seçim zemininde (demo veri)",
+          "en": "Real Buyer Log Backlog: Week, All, Buyer and % choices on the light selected background (demo data)"
+        },
+        "caption": {
+          "tr": "Backlog seçimleri artık diğer modüllerle aynı görünür.",
+          "en": "Backlog choices now look the same as in other modules."
+        }
+      }
+    },
+    {
+      "id": "topbar-connections",
+      "type": "improvement",
+      "module": {
+        "tr": "Üst çubuk",
+        "en": "Top bar"
+      },
+      "title": {
+        "tr": "LCW AI, PLM ve OAB tek Bağlantılar düğmesinde",
+        "en": "LCW AI, PLM and OAB in one Connections button"
+      },
+      "body": {
+        "tr": "Üç ayrı bağlantı düğmesi tek bir Bağlantılar düğmesinde toplandı; üzerindeki üç nokta her oturumun durumunu gösterir (yeşil bağlı). Tıklayınca açılan pencerede oturumlar eskisi gibi tek tıkla açılır. Rol rozeti zaten kullanıcı menüsünde olduğu için üst çubuktan kaldırıldı.",
+        "en": "The three connection buttons were combined into one Connections button; its three dots show each session state (green when connected). The panel it opens starts sessions with one click as before. The role badge was removed from the top bar because it is already in the user menu."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "topbar-connections.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Genel Bakış: açık Bağlantılar penceresinde LCW AI, PLM ve OAB (demo veri)",
+          "en": "Real Buyer Log Overview: the open Connections panel with LCW AI, PLM and OAB (demo data)"
+        },
+        "caption": {
+          "tr": "Bağlantı durumları tek düğmede, oturumlar açılan pencerede.",
+          "en": "Connection states in one button, sessions in its panel."
+        }
+      }
+    },
+    {
+      "id": "rail-appearance-menu",
+      "type": "improvement",
+      "module": {
+        "tr": "Sol menü",
+        "en": "Side menu"
+      },
+      "title": {
+        "tr": "Dil, tema ve arayüz boyutu Görünüm menüsünde",
+        "en": "Language, theme and interface size in the Appearance menu"
+      },
+      "body": {
+        "tr": "Sol menünün altındaki üç ayrı düğme tek Görünüm menüsünde toplandı; menü yanında açılır ve seçim yaparken açık kalır. Kazanılan yerle Sistem bölümü kaydırmadan görünür. Komut paletindeki dil ve tema komutları aynen çalışır.",
+        "en": "The three separate buttons at the bottom of the side menu were combined into one Appearance menu, which opens beside it and stays open while you choose. The space saved keeps the System section visible without scrolling. Language and theme commands in the command palette still work."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "rail-appearance-menu.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: sol alttaki Görünüm menüsü açık; Dil, Tema ve Arayüz boyutu seçenekleri (demo veri)",
+          "en": "Real Buyer Log: the Appearance menu open at the bottom left with Language, Theme and Interface size (demo data)"
+        },
+        "caption": {
+          "tr": "Görünüm ayarları tek menüde.",
+          "en": "Appearance settings in one menu."
+        }
+      }
+    },
+    {
+      "id": "data-management-collapsible",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Katlanabilir Veri Yönetimi bölümleri",
+        "en": "Collapsible Data Management sections"
+      },
+      "body": {
+        "tr": "Kaynak modu, Modüller, Yenileme ve Araçlar bölümleri başlıktaki oka basılarak daraltılabilir; seçim bu bilgisayarda kullanıcı başına hatırlanır. Sayfa başlığı diğer bölüm başlıklarıyla aynı yazı kalıbına geçti.",
+        "en": "Source mode, Modules, Refresh and Tools can be collapsed with the arrow in their heading; the choice is remembered per user on this computer. The page heading now uses the same type style as other section headings."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-management-collapsible.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Veri Yönetimi: Kaynak modu daraltılmış, Modüller açık (demo veri)",
+          "en": "Real Buyer Log Data Management: Source mode collapsed, Modules expanded (demo data)"
+        },
+        "caption": {
+          "tr": "Kaynak modu bölümü daraltılmış hâlde.",
+          "en": "The Source mode section collapsed."
+        }
+      }
+    },
+    {
+      "id": "overview-map-kpi-legibility",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Harita ülke adları işaretlerle çakışmıyor; KPI birimleri okunur",
+        "en": "Map country names no longer overlap markers; readable KPI units"
+      },
+      "body": {
+        "tr": "Küresel Akış Haritası ülke adlarını yerleştirirken düğüm ve araç işaretlerini de engel sayar; Gürcistan, Türkiye ve Mısır gibi yakın adlar üst üste binmez. Operasyon Nabzı KPI birimleri (satır, adet) büyük rakamın sıkıştırılmış harf aralığını almaz ve okunur boyuttadır. Boş Not Hatırlatıcısı sakin bilgi satırı olarak görünür.",
+        "en": "The Global Flow Map now treats node and vehicle markers as obstacles when placing country names, so nearby names such as Georgia, Türkiye and Egypt no longer overlap. Operation Pulse KPI units (rows, units) no longer inherit the tight letter spacing of the large number and are readable. An empty Notes Reminder shows as a calm info line."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-map-kpi.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Genel Bakış: ayrı yerleşmiş ülke adları ve okunur KPI birimleri (demo veri)",
+          "en": "Real Buyer Log Overview: separately placed country names and readable KPI units (demo data)"
+        },
+        "caption": {
+          "tr": "Harita etiketleri ve KPI birimleri.",
+          "en": "Map labels and KPI units."
+        }
+      }
+    },
+    {
+      "id": "consistent-empty-states",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası ve Koleksiyon",
+        "en": "Pricing Desk and Collection"
+      },
+      "title": {
+        "tr": "Ortak boş durum kartı; gereksiz pasif düğme gizlendi",
+        "en": "Shared empty-state card; needless disabled button hidden"
+      },
+      "body": {
+        "tr": "Fiyat Masası, fiyat çalışması seçili değilken Koleksiyon ile aynı simgeli boş durum kartını gösterir. Koleksiyon’da genişletilecek opsiyon yokken pasif duran opsiyon düğmesi artık görünmez.",
+        "en": "When no quotation is selected, Pricing Desk shows the same empty-state card with icon as Collection. In Collection, the options button is no longer shown while it would be disabled with nothing to expand."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-empty-state.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Fiyat Masası: Fiyat çalışması seçilmedi boş durum kartı (demo veri)",
+          "en": "Real Buyer Log Pricing Desk: the No quotation selected empty-state card (demo data)"
+        },
+        "caption": {
+          "tr": "Boş durum, diğer modüllerle aynı kartta.",
+          "en": "The empty state uses the same card as other modules."
+        }
+      }
+    },
+    {
+      "id": "license-map-save-guard",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Onay haritası ilgisiz değişikliklerde kaydedilebilir",
+        "en": "Approval maps save despite unrelated card changes"
+      },
+      "body": {
+        "tr": "Harita düzenlenirken aynı kartın royalty, komisyon, iletişim veya sözleşme bilgisi değişse ya da ortak klasör senkronu kartı yeniden yazsa bile harita artık kaydedilir ve diğer değişiklikler korunur. Uyarı yalnız açtığınız harita başka yerde değiştiyse çıkar. Kaydetmeden hemen önce başlamış eski bir liste yenilemesi de kaydedilen haritayı geri getiremez.",
+        "en": "While you edit a map, changes to the same card’s royalty, commissions, contacts or contracts, or a shared-folder sync rewriting the card, no longer block the save, and those changes are kept. The warning appears only if the map you opened changed elsewhere. An older list refresh that started just before the save can no longer bring back the previous map."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-map-save-guard.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: Lisans kartları listesi, NORTH STAR haritası 3 adımla kaydedildi, aynı anda değişen %12,5 royalty korundu, demo veri",
+          "en": "Real Buyer Log: License cards list, the NORTH STAR map saved with 3 steps while the royalty changed to 12.5% at the same time was kept, demo data"
+        },
+        "caption": {
+          "tr": "Harita açıkken royalty değişti; harita yine kaydedildi ve iki değişiklik de korundu.",
+          "en": "The royalty changed while the map was open; the map still saved and both changes were kept."
+        }
+      }
+    }
+  ]
+}

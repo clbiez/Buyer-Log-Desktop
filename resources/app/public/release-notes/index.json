@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.319",
+      "publishedAt": "2026-10-29",
+      "title": {
+        "tr": "Daha sade, tutarlı ve hareketli arayüz",
+        "en": "A simpler, consistent and more fluid interface"
+      },
+      "stats": {
+        "features": 3,
+        "improvements": 6,
+        "fixes": 2
+      },
+      "file": "release-notes/7.0.319/release.json"
+    },
+    {
       "version": "7.0.318",
       "publishedAt": "2026-10-28",
       "title": {
