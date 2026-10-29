@@ -85,7 +85,7 @@ test('studio: offline draft, owner isolation and real PDF/HTML/PPTX/XLSX paths p
     assert.ok(fs.readFileSync(pptx.path).subarray(0, 2).equals(Buffer.from('PK')));
     const html = service.renderDraft('u1', draft.id, { data: draft.data, format: 'html' }).output;
     const text = fs.readFileSync(html.path, 'utf8');
-    assert.equal((text.match(/class="bl-studio-card"/g) || []).length, 123);
+    assert.equal((text.match(/class="[^"]*\bbl-studio-card\b/g) || []).length, 123);
     assert.ok(text.includes('Model 122'));
     const pdf = service.renderDraft('u1', draft.id, { data: draft.data, format: 'pdf' }).output;
     assert.equal(pdf.pending, 'pdf');
@@ -128,7 +128,11 @@ test('studio: reordering a scope larger than the image cap preserves the same re
     const items = draft.data.slides.find(slide => slide.items).items;
     items.push(items.shift());
     const output = service.renderDraft('u1', draft.id, { data: draft.data, format: 'html' }).output;
-    assert.match(fs.readFileSync(output.path, 'utf8'), /src="data:image\/png;base64,/);
+    const html = fs.readFileSync(output.path, 'utf8');
+    // The deck embeds each image once as a CSS class; the moved ORD-1 card still uses it.
+    const cls = /\.(im\d+)\{background-image:url\("data:image\/png;base64,/.exec(html);
+    assert.ok(cls);
+    assert.match(html, new RegExp(`class="dk-img ${cls[1]}" role="img" aria-label="M0"`));
   } finally { fs.rmSync(root, { recursive: true, force: true }); fs.rmSync(`${root}-drafts`, { recursive: true, force: true }); }
 });
 
@@ -157,4 +161,101 @@ test('studio: legacy HTML galleries reuse span packing while preserving surround
   assert.ok(report.includes('Keep this executive summary.'));
   assert.ok(report.includes('Keep the closing note.'));
   assert.equal((report.match(/class="bl-studio-card"/g) || []).length, 2);
+});
+
+test('studio: every non-canonical table header (Fabric, Target Price, custom) is a card field and grouping key', () => {
+  const rows = [
+    { id: 'a', plmId: 'P1', colourCode: '001', fabric: 'Single Jersey', targetPrice: '4.50', fit: 'Regular', cx_note: 'Önemli', fob: 3 },
+    { id: 'b', plmId: 'P2', colourCode: '002', fabric: 'single  jersey', targetPrice: '', fit: 'Slim', fob: 4 },
+    { id: 'c', plmId: 'P3', colourCode: '003', fabric: 'Pique', targetPrice: '5', fit: '', fob: 5 },
+  ];
+  const col = (key, label) => ({ key, label, readValue: row => row[key] });
+  const columns = [col('fabric', 'Fabric'), col('targetPrice', 'Target Price'), col('fit', 'Fit'), col('cx_note', 'Kişisel başlık'), col('fob', 'FOB'), col('empty', 'Empty'), col('plmId', 'PLM ID')];
+  const built = S.build({ module: 'collection', rows, columns });
+  assert.deepEqual(built.source.columns.map(c => c.id), ['col.fabric', 'col.targetPrice', 'col.fit', 'col.cx_note'], 'canonical keys (fob, plmId) and empty columns are not duplicated');
+  assert.equal(built.records['KOL-1'].values['col.targetPrice'], '4.50');
+  assert.equal(built.records['KOL-1'].labels['col.fabric'], 'Fabric');
+  assert.equal('col.targetPrice' in built.records['KOL-2'].values, false, 'empty cells stay sparse');
+  assert.equal(built.records['KOL-1'].values.fob, 3, 'canonical value keeps precedence');
+  assert.deepEqual(built.data.layout.cardFields, ['colourCode', 'col.fit', 'col.targetPrice'], 'collection default: colour code, fit, quantity, target price');
+  assert.ok(L.availableCardFields(built.items, built.records).source.includes('col.fabric'));
+  const details = L.cardDetails(built.items[0], { ...L.defaults('pptx'), cardFields: ['col.fabric', 'col.targetPrice'] }, built.records['KOL-1']);
+  assert.deepEqual(details.map(x => [x.label, x.value]), [['Fabric', 'Single Jersey'], ['Target Price', '4.50']]);
+  const layout = { ...built.data.layout, groupBy: ['col.fabric'], groupBreak: 0, studio: { ...built.data.layout.studio, groupRules: { 'col.fabric': 'side' } } };
+  assert.deepEqual(L.normalizeLayout('pptx', layout).studio.groupRules, { 'col.fabric': 'side' }, 'column ids survive group-rule validation');
+  const pages = L.expandGalleries(built.data.slides, layout, { records: built.records }).filter(p => p.page);
+  assert.equal(pages.flatMap(p => p.page.cells).length, 3, 'grouping never loses records');
+  assert.deepEqual(pages.flatMap(p => p.page.groups.map(g => [g.label, g.items.length])), [['Single Jersey', 2], ['Pique', 1]], 'whitespace/case variants share one group');
+});
+
+test('studio: table columns survive the server draft round-trip and reach Excel headers', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-studio-cols-'));
+  try {
+    const service = createOutputService({ engine: { chat() { throw Error('AI must not be called'); } }, storeOptions: { root } });
+    const rows = [{ id: 1, plmId: 'P1', fabric: 'Pique' }, { id: 2, plmId: 'P2' }];
+    const built = S.build({ module: 'collection', rows, columns: [{ key: 'fabric', label: 'Fabric', readValue: row => row.fabric }] });
+    const records = Object.fromEntries(Object.entries(built.records).map(([token, r]) => [token, { id: r.id, module: r.module, values: r.values }]));
+    const draft = service.createStudio('u1', { data: built.data, records, source: { ...built.source, columns: [...built.source.columns, { id: 'bad id', label: 'x' }] } });
+    assert.deepEqual(draft.source.columns, [{ id: 'col.fabric', label: 'Fabric' }]);
+    assert.equal(draft.records['KOL-1'].values['col.fabric'], 'Pique');
+    assert.equal(draft.records['KOL-2'].labels['col.fabric'], 'Fabric', 'labels exist even where the value is empty');
+    const data = { ...draft.data, layout: { ...draft.data.layout, cardFields: ['plmId', 'col.fabric'] } };
+    const xlsx = service.renderDraft('u1', draft.id, { data, format: 'xlsx' }).output;
+    const wb = XLSX.read(fs.readFileSync(xlsx.path), { type: 'buffer' });
+    const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames.at(-1)], { header: 1 });
+    assert.ok(sheet[0].includes('Fabric'));
+    assert.ok(sheet.flat().includes('Pique'));
+  } finally { fs.rmSync(root, { recursive: true, force: true }); fs.rmSync(`${root}-drafts`, { recursive: true, force: true }); }
+});
+
+test('studio: very large scopes drop whole heavy columns instead of exceeding the request size', () => {
+  const rows = Array.from({ length: 25000 }, (_, i) => ({ id: i, big: 'x'.repeat(300), big2: 'y'.repeat(300), small: `S${i % 3}` }));
+  const columns = ['big', 'big2', 'small'].map(key => ({ key, label: key, readValue: row => row[key] }));
+  const built = S.build({ module: 'collection', rows, columns });
+  assert.deepEqual(built.source.columns.map(c => c.id), ['col.big2', 'col.small'], 'only as many whole columns as needed are dropped');
+  assert.deepEqual(built.source.omittedColumns, ['big']);
+  assert.ok(Object.values(built.records).every(r => r.values['col.small'] && r.values['col.big2'] && !('col.big' in r.values)));
+});
+
+test('studio: PDF skips the shell footer (pages carry their own) and Buyer Log-only decks do not claim LCW AI', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-studio-brand-'));
+  try {
+    const service = createOutputService({ engine: { chat() { throw Error('AI must not be called'); } }, storeOptions: { root } });
+    const draft = service.createStudio('u1', S.build({ module: 'orders', rows: [{ _id: 'a', modelName: 'A' }, { _id: 'b', modelName: 'B' }] }));
+    const pdf = service.renderDraft('u1', draft.id, { data: draft.data, format: 'pdf' }).output;
+    assert.equal(pdf.footer, false, 'Electron footerTemplate would overlap the slide footer');
+    const pptx = service.renderDraft('u1', draft.id, { data: draft.data, format: 'pptx' }).output;
+    const zip = XLSX.CFB.read(fs.readFileSync(pptx.path), { type: 'buffer' });
+    const slides = zip.FullPaths.map((p, i) => [p, zip.FileIndex[i]]).filter(([p]) => /ppt\/slides\/slide\d+\.xml$/.test(p)).map(([, e]) => Buffer.from(e.content).toString());
+    assert.ok(slides.length > 1);
+    assert.ok(slides.every(xml => !xml.includes('LCW AI')));
+    assert.ok(slides.some(xml => xml.includes('Buyer Log · ')));
+  } finally { fs.rmSync(root, { recursive: true, force: true }); fs.rmSync(`${root}-drafts`, { recursive: true, force: true }); }
+});
+
+test('studio deck: interactive HTML keeps the strict CSP, escapes data and follows the configured layout', () => {
+  const { buildDeck } = require('../server/lib/lcwai-output/output-deck');
+  const { CSP } = require('../server/lib/lcwai-output/output-html');
+  const rows = [{ _id: 'a', modelName: '<img src=x onerror=alert(1)>', quantity: 5 }, { _id: 'b', modelName: 'B', quantity: 7 }, { _id: 'c', modelName: 'C', quantity: 9 }];
+  const built = S.build({ module: 'orders', rows, lang: 'en' });
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const images = { 'ORD-1': { dataUrl: png }, 'ORD-2': { dataUrl: 'data:image/png;base64,AAA") ;}body{x:url("' } };
+  const layout = { ...built.data.layout, cardFields: ['orderQuantity'], showFieldLabels: true, studio: { ...built.data.layout.studio, note: 'Seasonal note', noteHeight: 40 } };
+  const html = buildDeck({ data: { ...built.data, layout }, records: built.records, images, title: 'Deck', lang: 'en', date: '2026-10-29' });
+  assert.ok(html.includes(`content="${CSP}"`) && CSP.includes("script-src 'none'"));
+  assert.doesNotMatch(html, /<script/i);
+  assert.doesNotMatch(html, /<img src=x/);
+  assert.ok(html.includes('&lt;img src=x onerror=alert(1)&gt;'));
+  assert.equal((html.match(/background-image:url\(/g) || []).length, 1, 'only a well-formed data URL is embedded');
+  assert.equal((html.match(/class="dk-card bl-studio-card/g) || []).length, 3);
+  assert.ok(html.includes('<i>Order Quantity</i> <span>5</span>'), 'chosen field with its label');
+  assert.ok(html.includes('Seasonal note'));
+  assert.ok(html.includes('class="dk-band is-dark"'));
+  assert.ok(!html.includes('LCW AI'));
+  // Click-through: each card opens its own details layer; layers link to neighbours and back to the slide.
+  assert.ok(html.includes('href="#z1"') && html.includes('id="z3"'));
+  assert.match(html, /id="z2"[\s\S]*?href="#z1"[\s\S]*?href="#s\d+"[\s\S]*?href="#z3"/);
+  const hidden = buildDeck({ data: { ...built.data, layout: { ...layout, studio: { ...layout.studio, headerHidden: true } } }, records: built.records, images: {}, lang: 'tr' });
+  assert.ok(!hidden.includes('class="dk-band'));
+  assert.ok(hidden.includes('Görsel yok'));
 });

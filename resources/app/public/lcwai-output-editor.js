@@ -33,7 +33,9 @@
   // Sunucu sınırlarıyla aynı (output-contracts LIMITS); aşan kısım istemcide engellenir.
   const LIMITS = { slides: 40, bullets: 8, kpis: 6, tableCols: 8, tableRows: 60, chartCategories: 12, chartSeries: 3, gallery: 60, cardFields: 12, sheets: 10, sheetCols: 40, sheetRows: 5000, sheetKpis: 20 };
   const PAGE_ROWS = 100;
-  const fieldName = id => window.BLCanonicalFields && window.BLCanonicalFields.field(id) ? window.BLCanonicalFields.label(id, isEn() ? 'en' : 'tr') : id;
+  // Table columns without a canonical binding ("col.<key>") use the header captured with the source.
+  const columnName = id => ((ed && ed.draft.source && ed.draft.source.columns) || []).find(col => col.id === id)?.label || (/^col\./.test(id) ? String(id).slice(4) : '');
+  const fieldName = id => window.BLCanonicalFields && window.BLCanonicalFields.field(id) ? window.BLCanonicalFields.label(id, isEn() ? 'en' : 'tr') : columnName(id) || id;
   const isStudio = () => Boolean(ed && ed.format === 'pptx' && ed.data.layout && ed.data.layout.studio);
 
   const LAYOUTS = () => [
@@ -166,7 +168,7 @@
       if (rows.length > window.BLOutputSource.MAX_ROWS) throw Error(L('Bir sunumda en fazla 30.000 kayıt kullanılabilir. Filtreyi daraltın.', 'A presentation supports up to 30,000 records. Narrow the filter.'));
       if (!rows.length) throw Error(L('Önce modelleri seçin veya filtreyi değiştirin.', 'Select models first or change the filter.'));
       const built = window.BLOutputSource.build({ module: tab === 'koleksiyon' ? 'collection' : tab, rows, rowId: info.rowId,
-        readRow: info.canonicalRow || (row => row), scope: mode, lang: isEn() ? 'en' : 'tr' });
+        readRow: info.canonicalRow || (row => row), columns: info.columns || [], scope: mode, lang: isEn() ? 'en' : 'tr' });
       const records = Object.fromEntries(Object.entries(built.records).map(([token, record]) => [token, { id: record.id, module: record.module, values: record.values }]));
       const draft = await AI().createStudio({ data: built.data, records, source: built.source, lang: isEn() ? 'en' : 'tr' });
       await open({ draft, sourceTab: tab });
@@ -205,6 +207,7 @@
     const count = cardSourceItems().length;
     return `<p class="lcwaiNote">${esc(source ? L(`${source.module} · ${source.scope === 'selected' ? 'Seçili' : 'Filtrelenmiş'} ${source.count} kayıt · ${source.grain === 'order-row' ? 'Her kart bir sipariş satırı' : 'Her kart bir model/renk kaydı'}`, `${source.module} · ${source.scope === 'selected' ? 'Selected' : 'Filtered'} ${source.count} records · ${source.grain === 'order-row' ? 'One order row per card' : 'One model/colour record per card'}`) : L(`LCW AI taslağı · ${count} kart`, `LCW AI draft · ${count} cards`))}</p>
       ${source ? `<p class="lcwaiNote">${esc(L('Veriler açılış anının kopyasıdır; kaynak kayıtlar değiştirilmez.', 'Data is a snapshot taken when opened; source records are unchanged.'))} ${esc(source.capturedAt)}</p>` : ''}
+      ${source && (source.omittedColumns || []).length ? `<p class="lcwaiStatus is-warn">${esc(L(`Kayıt sayısı çok yüksek olduğu için şu sütunlar kart bilgilerine eklenmedi: ${source.omittedColumns.join(', ')}. Daha az kayıtla yeniden başlatın.`, `Because of the very large number of records these columns were not added to the card details: ${source.omittedColumns.join(', ')}. Restart with fewer records.`))}</p>` : ''}
       ${count > 200 ? `<p class="lcwaiStatus is-warn">${esc(L('Görsel belleği sınırı: ilk 200 kaydın görselleri yüklenir. Tüm kayıtlar çıktıda korunur; diğer kartlarda görsel yer tutucusu bulunur.', 'Image memory limit: images are loaded for the first 200 records. Every record remains in the output; other cards show an image placeholder.'))}</p>` : ''}`;
   }
   function renderStudioSource(main) {
@@ -255,6 +258,8 @@
   function renderStudioLayout(main) {
     const st = studioState();
     const chosen = ed.studioCard;
+    // Ayar paneli ve önizleme ayrı kayar; yeniden çizimde iki konum da korunur.
+    const scroll = ['.lcwaiLayControls', '.lcwaiLay > .lcwaiLayStage'].map(sel => main.querySelector(sel)?.scrollTop || 0);
     main.innerHTML = `<div class="lcwaiLay"><aside class="lcwaiLayControls">
       <section class="lcwaiLayGroup"><h4>${esc(L('Görsel şablonlar', 'Visual templates'))}</h4><div class="lcwaiLayPresets">${STUDIO_PRESETS().map(preset => `<button class="lcwaiLayPreset${st.preset === preset[0] ? ' is-active' : ''}" data-studio-preset="${preset[0]}">${studioPresetThumb(preset)}<b>${esc(preset[1])}</b></button>`).join('')}</div></section>
       <section class="lcwaiLayGroup">${studioSettings()}</section>
@@ -264,6 +269,7 @@
       <button class="lcwaiBtn is-primary" data-ed-mode="review">${esc(L('Önizle ve oluştur →', 'Preview and create →'))}</button>
       </aside><div class="lcwaiLayStage" data-lay-stage></div></div>`;
     updateLayoutPreview();
+    ['.lcwaiLayControls', '.lcwaiLay > .lcwaiLayStage'].forEach((sel, i) => { const el = main.querySelector(sel); if (el) el.scrollTop = scroll[i]; });
   }
   function renderStudioReview(main) {
     const pages = LAY().expandGalleries(ed.data.slides, ed.data.layout, { records: ed.draft.records || {}, english: isEn() });
@@ -936,8 +942,15 @@
     const tokens = [...new Set([...body.matchAll(/data-bl-image="([^"]+)"/g)].map(match => match[1].toUpperCase()))];
     return [{ fields: labels.map(label => ({ label, value: '·' })) }, ...tokens.map(image => ({ image }))];
   }
+  /* Kaynak tablonun tüm başlıkları seçilebilir: bu modellerde değeri boş olan sütun da listelenir (kart boş değeri yazmaz). */
+  function cardFieldOptions() {
+    const options = LAY().availableCardFields(cardSourceItems(), ed.draft.records || {}), key = LAY().fieldKey;
+    const seen = new Set([...options.ai, ...options.source].map(key));
+    const columns = ((ed.draft.source && ed.draft.source.columns) || []).map(col => col.id).filter(id => !seen.has(key(id)));
+    return { ...options, source: [...options.source, ...columns] };
+  }
   function cardFieldState() {
-    const options = LAY().availableCardFields(cardSourceItems(), ed.draft.records || {});
+    const options = cardFieldOptions();
     // Seçim yapılmadıysa varsayılan önemli bilgiler: renk kodu, fit, adet, hedef fiyat.
     const chosen = Array.isArray(ed.data.layout.cardFields) ? ed.data.layout.cardFields : options.defaults;
     const key = LAY().fieldKey;
@@ -966,7 +979,7 @@
      (ör. Kategori › Kumaş › Baskı). Son seviye sayfada yan yana gruplar,
      öncekiler yeni slayt/bölüm başlatır. Başlık: otomatik, alanlardan ya da
      elle ({Alan} yer tutucusuyla). Hesap sunucuyla ortaktır (BLOutputLayout). */
-  const allCardFields = () => { const options = LAY().availableCardFields(cardSourceItems(), ed.draft.records || {}); return [...options.ai, ...options.source]; };
+  const allCardFields = () => { const options = cardFieldOptions(); return [...options.ai, ...options.source]; };
   const isPptx = () => ed.format === 'pptx';
   function groupingPanel() {
     const key = LAY().fieldKey;
@@ -981,14 +994,14 @@
     }).join('');
     // Kaç seviye yeni slayt/bölüm başlatır (varsayılan: yalnız 1. grup); kalan seviyeler aynı sayfada yan yana alt gruplardır.
     const depth = LAY().pageDepth(ed.data.layout);
-    const side = levels.slice(depth).join(' · ');
+    const levelNames = levels.map(fieldName), side = levelNames.slice(depth).join(' · ');
     const breakOptions = levels.slice(0, -1).map((_, i) => i + 1);
-    const breakPick = levels.length > 1 ? `<label class="lcwaiLayPick"><span>${esc(isPptx() ? L('Yeni slayt', 'New slide') : L('Yeni bölüm', 'New section'))}</span><select data-lay-group-break>${[0, ...breakOptions].map(d => `<option value="${d}"${d === depth ? ' selected' : ''}>${esc(d ? L(`Her ${levels.slice(0, d).join(' › ')} değeri için`, `For each ${levels.slice(0, d).join(' › ')} value`) : L('Yok — tüm gruplar yan yana', 'None — all groups side by side'))}</option>`).join('')}</select></label>` : '';
+    const breakPick = levels.length > 1 ? `<label class="lcwaiLayPick"><span>${esc(isPptx() ? L('Yeni slayt', 'New slide') : L('Yeni bölüm', 'New section'))}</span><select data-lay-group-break>${[0, ...breakOptions].map(d => `<option value="${d}"${d === depth ? ' selected' : ''}>${esc(d ? L(`Her ${levelNames.slice(0, d).join(' › ')} değeri için`, `For each ${levelNames.slice(0, d).join(' › ')} value`) : L('Yok — tüm gruplar yan yana', 'None — all groups side by side'))}</option>`).join('')}</select></label>` : '';
     const hint = !levels.length
       ? L('Seçim yoksa LCW AI’ın grupları kullanılır. Örnek: Kategori › Kumaş › Baskı.', 'Without a choice LCW AI’s groups are used. Example: Category › Fabric › Print.')
       : !depth
         ? L(`“${side}” grupları ${isPptx() ? 'slaytta' : 'sayfada'} adlarıyla yan yana dizilir.`, `“${side}” groups are placed side by side on the ${isPptx() ? 'slide' : 'page'} with their names.`)
-        : L(`Her ${levels.slice(0, depth).join(' › ')} değeri yeni ${isPptx() ? 'slayt' : 'bölüm'} başlatır; içindeki “${side}” alt grupları aynı ${isPptx() ? 'slaytta' : 'bölümde'} adlarıyla yan yana dizilir.`, `Each ${levels.slice(0, depth).join(' › ')} value starts a new ${isPptx() ? 'slide' : 'section'}; its “${side}” sub-groups sit side by side on the same ${isPptx() ? 'slide' : 'section'} with their names.`);
+        : L(`Her ${levelNames.slice(0, depth).join(' › ')} değeri yeni ${isPptx() ? 'slayt' : 'bölüm'} başlatır; içindeki “${side}” alt grupları aynı ${isPptx() ? 'slaytta' : 'bölümde'} adlarıyla yan yana dizilir.`, `Each ${levelNames.slice(0, depth).join(' › ')} value starts a new ${isPptx() ? 'slide' : 'section'}; its “${side}” sub-groups sit side by side on the same ${isPptx() ? 'slide' : 'section'} with their names.`);
     return `<section class="lcwaiLayGroup"><h4>${esc(L('Gruplama', 'Grouping'))}</h4><div class="lcwaiLayPicks">${selects}${breakPick}</div>${isStudio() ? levels.map(id => `<label class="lcwaiEdField"><span>${esc(fieldName(id))}</span><select data-studio-group-rule="${esc(id)}">${[['page', L('Yeni sayfa', 'New page')], ['section', L('Yeni bölüm', 'New section')], ['inline', L('Alt başlık', 'Subheading')], ['side', L('Yan yana', 'Side by side')]].map(([key, label]) => `<option value="${key}"${(studioState().groupRules[id] || (levels.indexOf(id) < depth ? 'page' : 'side')) === key ? ' selected' : ''}>${esc(label)}</option>`).join('')}</select></label>`).join('') : ''}<p class="lcwaiNote">${esc(hint)}</p></section>`;
   }
   function titleFieldState() {
@@ -1143,7 +1156,7 @@
       if (sub) body += box(g.margin, g.band - 14 - sub * 1.35, g.width, sub * 1.35, `is-plain${dark ? ' is-dark' : ''}`, text(sub, esc(slide.subtitle), 'is-muted'));
       body += box(g.margin, g.band - 10, 64, 3, `is-rule${dark ? ' is-dark' : ''}`);
       if (l.studio && l.studio.headerHidden) body = body.slice(0, headerStart);
-      body += box(g.margin, g.size.height - 30, 480, 18, 'is-plain', text(9, esc(`Buyer Log · LCW AI · ${ed.title}`), 'is-muted'));
+      body += box(g.margin, g.size.height - 30, 480, 18, 'is-plain', text(9, esc(`${isStudio() ? 'Buyer Log' : 'Buyer Log · LCW AI'} · ${ed.title}`), 'is-muted'));
       const top = g.contentTop + 8;
       if (entry.page) {
         const page = entry.page;

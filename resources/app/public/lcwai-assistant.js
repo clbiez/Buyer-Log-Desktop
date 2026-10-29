@@ -628,7 +628,7 @@
     if (desktop && typeof desktop.renderPdf === 'function') {
       try { onProgress({ phase: 'output', step: 'pdf' }); } catch (_) {}
       try {
-        const rendered = await desktop.renderPdf(pending.html, { landscape: pending.landscape });
+        const rendered = await desktop.renderPdf(pending.html, { landscape: pending.landscape, footer: pending.footer !== false });
         if (rendered && rendered.ok && rendered.data) {
           record = (await api(endpoints.pdfUrl||`/api/lcwai/outputs/${id}/pdf`, { method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: rendered.data })).output;
         }

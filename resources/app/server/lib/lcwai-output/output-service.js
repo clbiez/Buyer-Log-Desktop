@@ -22,6 +22,7 @@ const { lcwAiError, isLcwAiError } = require('../lcwai/lcwai-errors');
 const contracts = require('./output-contracts');
 const { chooseTemplate, templateLabel } = require('./output-templates');
 const { buildDocument } = require('./output-html');
+const { buildDeck } = require('./output-deck');
 const { reportCss } = require('./output-theme');
 const { renderWorkbook } = require('./output-xlsx');
 const { renderPresentation } = require('./output-pptx');
@@ -136,7 +137,7 @@ function createOutputService(options = {}) {
         if (format === 'pdf') {
           const html = buildDocument({ body, styles: data.styles, title, lang, orientation, print: true, meta: { date: day, template: job.templateLabel }, layout });
           const pendingId = store.putPending(ownerId, { stage: 'pdf', html, ...saveMeta, lang, orientation, officeCapability:job.durablePending===true }, {durable:job.durablePending===true});
-          return { pending: 'pdf', pendingId, html, title, landscape: orientation === 'landscape', format: 'pdf', templateLabel: job.templateLabel, attempts: job.attempts, draftId: job.draftId };
+          return { pending: 'pdf', pendingId, html, title, landscape: orientation === 'landscape', ...(job.pageFooter === false ? { footer: false } : {}), format: 'pdf', templateLabel: job.templateLabel, attempts: job.attempts, draftId: job.draftId };
         }
         const buffer = Buffer.from(buildDocument({ body, styles: data.styles, title, lang, orientation, meta: { date: day, template: job.templateLabel }, layout }), 'utf8');
         return store.save(ownerId, { buffer, ...saveMeta });
@@ -237,7 +238,7 @@ function createOutputService(options = {}) {
     const job = {
       format: draft.format, data: parsed.data, title, template: draft.template, templateLabel: draft.templateLabel,
       attempts: 1, lang, orientation, day: draft.day, date: date.toISOString(), requestId: '', draftId: draft.id, edited: true,
-      records: draft.source ? studioSource.normalizeRecords(draft.records, Object.keys(draft.records), lang) : raw.layout && raw.layout.studio ? studioSource.bindLegacyRecords(draft.records, lang) : draft.records || {},
+      records: draft.source ? studioSource.normalizeRecords(draft.records, Object.keys(draft.records), lang, draft.source.columns) : raw.layout && raw.layout.studio ? studioSource.bindLegacyRecords(draft.records, lang) : draft.records || {},
     };
     const imageTokens = parsed.data.layout && parsed.data.layout.studio && draft.format === 'pptx'
       ? parsed.data.slides.flatMap(slide => [slide.image, ...(slide.items || []).map(item => item.image)]).filter(Boolean)
@@ -262,11 +263,14 @@ function createOutputService(options = {}) {
     if (!parsed.ok || parsed.warnings.length || !items.length || items.length > studioSource.MAX_ROWS) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: parsed.errors });
     const tokens = items.map(item => item.image);
     if (new Set(tokens).size !== tokens.length) throw lcwAiError('BAD_REQUEST');
-    const records = studioSource.normalizeRecords(input.records, tokens, lang);
+    const columns = studioSource.normalizeColumns(input.source && input.source.columns);
+    const records = studioSource.normalizeRecords(input.records, tokens, lang, columns);
     if (tokens.some(token => !records[token])) throw lcwAiError('BAD_REQUEST');
+    const omitted = (input.source && Array.isArray(input.source.omittedColumns) ? input.source.omittedColumns : []).map(label => String(label == null ? '' : label).replace(/\s+/g, ' ').trim().slice(0, 80)).filter(Boolean).slice(0, 300);
     const images = normalizeImages(input.images || {}, tokens);
     const source = { module: records[tokens[0]].module, scope: input.source && input.source.scope === 'filtered' ? 'filtered' : 'selected',
-      count: items.length, grain: records[tokens[0]].module === 'collection' ? 'model-colour' : 'order-row', capturedAt: now().toISOString() };
+      count: items.length, grain: records[tokens[0]].module === 'collection' ? 'model-colour' : 'order-row', capturedAt: now().toISOString(),
+      columns, ...(omitted.length ? { omittedColumns: omitted } : {}) };
     const id = drafts.create(ownerId, { format: 'pptx', data: parsed.data, records, source, title: parsed.data.title, lang,
       orientation: 'landscape', detail: 'standard', day: now().toISOString().slice(0, 10), template: 'catalog', templateLabel: 'Smart Layout Studio',
       images: Object.fromEntries(Object.entries(images).map(([token, image]) => [token, image.dataUrl])) });
@@ -293,10 +297,20 @@ function createOutputService(options = {}) {
       if (!parsed.ok || parsed.warnings.length) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: [...parsed.errors, ...parsed.warnings] });
       return render(ownerId, { ...job, format: target, data: parsed.data }, {});
     }
+    if (target === 'html') {
+      // HTML: etkileşimli, animasyonlu sunum (yalnız CSS; katı CSP korunur). PDF aşağıdaki baskı yolunda kalır.
+      try {
+        const buffer = Buffer.from(buildDeck({ data: job.data, records: job.records, images, title: job.title, lang: job.lang, date: job.day }), 'utf8');
+        return store.save(ownerId, { buffer, title: job.title, format: 'html', template: job.template, templateLabel: job.templateLabel, attempts: job.attempts, requestId: job.requestId, draftId: job.draftId, edited: Boolean(job.edited) });
+      } catch (error) {
+        if (isLcwAiError(error)) throw error;
+        throw lcwAiError('OUTPUT_RENDER_FAILED', { detail: String(error && error.code || 'deck').slice(0, 60) });
+      }
+    }
     const report = BLOutputLayout.presentationReport(job.data, job.records, job.lang === 'en');
     const c = require('./output-theme').theme().colors;
     const css = `@page{size:${report.width}pt ${report.height}pt;margin:0}html,body,.bl-page,.bl-report{margin:0!important;padding:0!important;max-width:none!important;width:auto!important}.bl-header,.bl-footer{display:none!important}.bl-studio-page{background:${c.paper};margin:0!important;overflow:hidden}.bl-studio-page:last-child{break-after:auto}.bl-studio-title{color:${c.ink}}.bl-studio-title small{display:block;font-size:12pt}.bl-studio-card{background:${c.paper};border:0.5pt solid ${c.line}}.bl-studio-card img{max-width:none!important;margin:0!important}.bl-studio-content table{width:100%}`;
-    return render(ownerId, { ...job, format: target, orientation: job.data.layout.studio.orientation, data: { body: report.body, styles: [css], title: job.title, layout: null } }, images);
+    return render(ownerId, { ...job, format: target, pageFooter: false, orientation: job.data.layout.studio.orientation, data: { body: report.body, styles: [css], title: job.title, layout: null } }, images);
   }
 
   /* Şablon olarak kaydetme: taslaktaki (ya da düzenleyicideki) yapının
