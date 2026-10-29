@@ -84,3 +84,26 @@ test('the map editor saves with the token of the map it opened, not the latest l
   assert.equal(p.requests[3].body.atlasToken,'a2');
   p.reply(3,listOf('e11','a3','PPS'));await again;
 });
+
+test('a map save does not hand an open draft the token of a card changed elsewhere',async()=>{
+  const p=page(),id='license-aaaaaaaaaaaaaaaaaaaaaaaa';
+  const first=p.api.load();p.reply(0,listOf('e1','a1','Artwork'));await first;
+  p.S.drafts.set(id,{editToken:'e1',snapshot:JSON.parse(JSON.stringify(p.S.data.cards[0])),rules:[],profile:{workingNotes:'mine'},conflict:false,saving:false,error:'',note:''});
+  p.api.openMap(id);
+  const saving=p.editor.onSave(map(id,'Fit Sample'));await flush();
+  const reply=listOf('e2','a2','Fit Sample');reply.cards[0].workingNotes='changed elsewhere';
+  p.reply(1,reply);await saving;
+  assert.equal(p.S.drafts.get(id).conflict,true);
+  assert.equal(p.S.drafts.get(id).editToken,'e1');
+});
+
+test('a map save keeps an open draft usable when only the map changed',async()=>{
+  const p=page(),id='license-aaaaaaaaaaaaaaaaaaaaaaaa';
+  const first=p.api.load();p.reply(0,listOf('e1','a1','Artwork'));await first;
+  p.S.drafts.set(id,{editToken:'e1',snapshot:JSON.parse(JSON.stringify(p.S.data.cards[0])),rules:[],profile:{workingNotes:'mine'},conflict:false,saving:false,error:'',note:''});
+  p.api.openMap(id);
+  const saving=p.editor.onSave(map(id,'Fit Sample'));await flush();
+  p.reply(1,listOf('e2','a2','Fit Sample'));await saving;
+  assert.equal(p.S.drafts.get(id).conflict,false);
+  assert.equal(p.S.drafts.get(id).editToken,'e2');
+});

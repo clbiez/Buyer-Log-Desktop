@@ -66,6 +66,8 @@
     return d.rules.filter(r=>base.get(r.id)!==JSON.stringify(r));
   }
   function changedProfile(d){return Object.fromEntries(PROFILE.filter(k=>(d.profile[k]||'')!==(d.snapshot[k]||'')).map(k=>[k,d.profile[k]]));}
+  // Everything editToken covers except the map (server: license-cards.js editToken).
+  const guarded=c=>JSON.stringify([c.licensor||'',c.symbolDataUrl||'',profileOf(c),c.rules||[]]);
   const isDirty=d=>Boolean(d&&(changedRules(d).length||Object.keys(changedProfile(d)).length||d.cover!==undefined));
   function dropDraft(id){S.drafts.delete(id);}
   function ruleOf(d,id){return d.rules.find(r=>r.id===id);}
@@ -458,9 +460,12 @@
       const current=cardOf(id);if(!current)throw new Error(failMessage({status:409}));
       try{
         const result=await api(`/api/license-cards/${encodeURIComponent(id)}`,{method:'PUT',body:JSON.stringify({atlasToken:base.atlasToken,profile:{processAtlas:atlas}})});
-        // Our own map save must not turn a pending rate draft on this card into a conflict.
+        // Our own map save must not turn a pending rate draft on this card into a conflict, but the
+        // map token passes changes made elsewhere: the draft follows only if its own fields are unchanged.
         const d=S.drafts.get(id),fresh=result.cards?.find(x=>x.id===id);
-        if(d&&!d.conflict&&fresh&&d.editToken===current.editToken){d.editToken=fresh.editToken;d.snapshot.processAtlas=fresh.processAtlas;}
+        if(d&&!d.conflict&&fresh&&d.editToken===current.editToken){
+          if(guarded(fresh)===guarded(d.snapshot)){d.editToken=fresh.editToken;d.snapshot.processAtlas=fresh.processAtlas;}else d.conflict=true;
+        }
         if(fresh)base.atlasToken=fresh.atlasToken;
         accept(result);S.flash.add(id);render();
         toast(T('Onay haritası kaydedildi.','Approval map saved.'));
