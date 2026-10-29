@@ -147,7 +147,8 @@ test('ana ekran DOM kancaları ve denetleyici sözleşmesi', () => {
 test('widget\'lar boyutlarına uyar: boyut kapsayıcısı, kaydırılan gövde ve dar pencere düzeni', () => {
   assert.match(CSS, /\.ovHome>\[data-overview-widget\]\{[^}]*container:ovw \/ size/);
   assert.match(CSS, /grid-template-rows:repeat\(var\(--ov-rows\),var\(--ov-row\)\)/);
-  assert.match(CSS, /@container ovw \(max-width:860px\)\{\.ovLaunchBody/);
+  // Dünya saatleri tek satırlık şerittir; dar widget'ta ikincil metinler gizlenir.
+  assert.match(CSS, /@container ovw \(max-width:620px\)\{\.ovClockBarDate>span/);
   assert.match(CSS, /\.ovHome>#globalFlowMapWidget \.globalFlowCanvasWrap\{height:100%/);
   assert.match(CSS, /\.ovHome>#oabSection \.oabTableWrap/);
   assert.match(CSS, /@media\(max-width:900px\)\{\s*\.ovHome\{grid-template-columns:minmax\(0,1fr\)/);
@@ -169,4 +170,20 @@ test('sayfa kenarı taşıması hareketsiz bırakılsa da korunur; iptal başlan
   assert.match(HOME, /updateMove\(s\.lastX,s\.lastY\);/);
   assert.match(HOME, /state=L\.setPage\(state,s\.originPage\)/);
   assert.match(HOME, /pointercancel',\(\)=>\{\n\s*if\(longPress\)\{clearTimeout\(longPress\.timer\);longPress=null;\}/);
+});
+
+test('Dünya saatleri tek satıra sabittir; eski yüksek kayıt kısalınca alttaki boşluk kapanır', () => {
+  assert.equal(L.spec('launchpad').maxH, 1);
+  const state = L.defaults();
+  state.pages[0].items.forEach(entry => { if (entry.key === 'launchpad') entry.h = 4; else entry.y += 3; });
+  const next = L.normalize(state);
+  assert.equal(item(next, 'launchpad').h, 1);
+  assert.deepEqual(next.pages[0].items.map(i => [i.key, i.y]), L.defaults().pages[0].items.map(i => [i.key, i.y]));
+  noOverlap(next.pages[0].items);
+  // Yanındaki widget çekilmez; yalnız gerçekten boşalan sütunlardaki widget'lar yukarı gelir.
+  const side = L.normalize({ version: 2, page: 0, known: L.widgets.slice(), pages: [{ items: [
+    { key: 'launchpad', x: 0, y: 0, w: 6, h: 4 }, { key: 'notes', x: 6, y: 0, w: 6, h: 4 }, { key: 'pulse', x: 0, y: 4, w: 12, h: 2 },
+  ] }] });
+  assert.deepEqual(side.pages[0].items.map(i => [i.key, i.y, i.h]), [['launchpad', 0, 1], ['notes', 0, 4], ['pulse', 4, 2]]);
+  assert.equal(item(L.resizeWidget(L.defaults(), 'launchpad', { h: 5 }), 'launchpad').h, 1);
 });

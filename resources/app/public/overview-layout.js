@@ -20,7 +20,7 @@
     pulse:{icon:'chart-bar',group:'today',tr:'Operasyon Nabzı',en:'Operation Pulse',descTr:'Gerçek CP kapsamı, öncelik dağılımı ve yakın yüklemeler.',descEn:'Current CP scope, priority mix and upcoming loading.',w:12,h:2,minW:6,minH:2,maxW:12,maxH:4},
     deadline:{icon:'calendar',group:'operations',tr:'Termin Ufku',en:'Delivery Horizon',descTr:'Önümüzdeki 7 veya 14 günün planlı yüklemeleri.',descEn:'Planned loading over the next 7 or 14 days.',w:5,h:4,minW:3,minH:4,maxW:12,maxH:9},
     collectionPreview:{icon:'table',group:'commercial',tr:'Koleksiyon Vitrini',en:'Collection Showcase',descTr:'Seçili ayın model görselleri ve durum dağılımı.',descEn:'Model images and status mix for the selected month.',w:4,h:4,minW:3,minH:4,maxW:12,maxH:10},
-    launchpad:{icon:'clock',group:'today',tr:'Dünya Saatleri',en:'World Clocks',descTr:'Selamlama ve çalıştığın ülkelerin canlı saatleri.',descEn:'Greeting and live clocks of the countries you work with.',w:12,h:1,minW:3,minH:1,maxW:12,maxH:5},
+    launchpad:{icon:'clock',group:'today',tr:'Dünya Saatleri',en:'World Clocks',descTr:'Selamlama ve çalıştığın ülkelerin canlı saatleri.',descEn:'Greeting and live clocks of the countries you work with.',w:12,h:1,minW:3,minH:1,maxW:12,maxH:1},
     exceptionInbox:{icon:'alert-circle',group:'operations',tr:'İstisna kutusu',en:'Exception inbox',descTr:'Kayıtlı CP verisinde geçmiş Ex-Factory ve ASAS tarih farkları.',descEn:'Overdue Ex-Factory and ASAS date differences in confirmed CP data.',w:12,h:4,minW:4,minH:3,maxW:12,maxH:10},
     checklistRules:{icon:'checklist',group:'operations',tr:'Kontrol Listesi ve Kurallar',en:'Checklist & Rules',descTr:'Kontroller, onay durumları ve kişisel kurallar.',descEn:'Checks, approval statuses and personal rules.',w:8,h:10,minW:4,minH:4,maxW:12,maxH:16},
     notes:{icon:'notebook',group:'operations',tr:'Not Hatırlatıcısı',en:'Notes Reminder',descTr:'Yalnız senin yazdığın CP notları.',descEn:'Only the CP notes you wrote.',w:4,h:2,minW:3,minH:2,maxW:12,maxH:12},
@@ -87,6 +87,21 @@
         else{let guard=0,hit;while((hit=settled.find(other=>overlaps(item,other)))&&guard++<400)item.y=hit.y+hit.h;}
       }
       settled.push(item);
+    });
+    return list;
+  }
+  /* Kayıtlı yüksekliği yeni sözleşmeyle kısalan widget'ın bıraktığı boşluğu
+     kapatır: yalnız onun altındaki ve aynı sütunlara taşan widget'lar, çarpışma
+     olmadan en fazla kısalma kadar yukarı çekilir. */
+  function closeShrinkGaps(items,shrinks){
+    if(!shrinks.length)return items;
+    const list=cloneItems(items).sort(byPosition);
+    shrinks.forEach(gap=>{
+      list.forEach(item=>{
+        if(item.y<gap.from||!(item.x<gap.x+gap.w&&gap.x<item.x+item.w))return;
+        let moved=0;
+        while(moved<gap.delta&&item.y>0&&!list.some(other=>other!==item&&overlaps({...item,y:item.y-1},other))){item.y--;moved++;}
+      });
     });
     return list;
   }
@@ -189,16 +204,17 @@
     const known=new Set((Array.isArray(input.known)?input.known:[]).map(widgetKey).filter(key=>REGISTRY[key]));
     const placed=new Set();
     let pages=(Array.isArray(input.pages)?input.pages:[]).slice(0,MAX_PAGES).map(page=>{
-      const items=[];
+      const items=[],shrinks=[];
       (Array.isArray(page&&page.items)?page.items:[]).forEach(raw=>{
         const item=clampItem({...raw,key:widgetKey(raw?.key)});if(!item||placed.has(item.key))return;
+        const rawH=int(raw&&raw.h,item.h);if(rawH>item.h)shrinks.push({x:item.x,w:item.w,from:item.y+rawH,delta:rawH-item.h});
         placed.add(item.key);items.push(item);
       });
       /* Bozuk kayıtta çakışan konumlar sabit sıra ile çözülür. */
       const clean=[];items.sort(byPosition).forEach(item=>{
         let guard=0,hit;while((hit=clean.find(other=>overlaps(item,other)))&&guard++<400)item.y=hit.y+hit.h;clean.push(item);
       });
-      return {name:cleanPageName(page&&page.name),items:clean};
+      return {name:cleanPageName(page&&page.name),items:closeShrinkGaps(clean,shrinks)};
     });
     if(!pages.length)pages=[{name:null,items:[]}];
     /* Sonradan eklenen yeni widget'lar ilk sayfada ilk uygun yere yerleşir;
