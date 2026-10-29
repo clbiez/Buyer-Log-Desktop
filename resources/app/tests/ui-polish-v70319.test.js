@@ -87,3 +87,9 @@ test('Fiyat Masası boş durumu ortak BLUI kart desenini TR/EN kullanır',()=>{
   assert.match(q,/qLang\('Fiyat çalışması seçilmedi','No quotation selected'\)/);
   assert.match(q,/window\.BLUI\.stateView\(\{kind:'empty',icon:'bl-n13',title:emptyTitle,detail:emptyDetail\}\)/);
 });
+
+test('Filtreleri Temizle diğer araç düğmeleri gibi ortak çerçeveyi kullanır',()=>{
+  const rule=CSS.slice(CSS.indexOf('.toolbar>.navActionBtn.toolbarFramedAction {'),CSS.indexOf('}',CSS.indexOf('.toolbar>.navActionBtn.toolbarFramedAction {')));
+  assert.ok(rule.length>0);
+  assert.doesNotMatch(rule,/border:0/);
+});

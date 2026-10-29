@@ -4576,7 +4576,7 @@ html[data-ui-system="manifest"] .aiAutomationStatus.error {color:var(--ui-danger
 html[data-ui-system="manifest"] .aiAutomationDetails {background:var(--ui-surface-soft) !important;color:var(--ui-text-muted) !important;font:var(--ui-font-xs)/1.45 var(--ui-font-mono) !important
 }
 html[data-ui-system="manifest"] .tableToolbarActions>.navActionBtn.toolbarFramedAction,html[data-ui-system="manifest"] .toolbar>.navActionBtn.toolbarFramedAction {
-  border:0 !important;background:var(--ui-surface) !important;
+  background:var(--ui-surface) !important;
   color:var(--ui-text-secondary) !important;border-radius:var(--ui-radius) !important
 }
 html[data-ui-system="manifest"] .tableToolbarActions>.navActionBtn.toolbarFramedAction:hover,html[data-ui-system="manifest"] .toolbar>.navActionBtn.toolbarFramedAction:hover {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important

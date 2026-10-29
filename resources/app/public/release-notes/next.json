@@ -52,8 +52,8 @@
         "en": "Excel actions in one drawer"
       },
       "body": {
-        "tr": "CP ve Koleksiyon araç çubuğundaki yeni Excel düğmesi, tabloyu dışa aktarma, Capacity Request, Hologram Talep, MB Listesi ve Checklist Excel'lerini \"Excel oluştur\" bölümünde; kullanıcı Excel'ini içeri aktarma ve Excel şablonlarını \"İçe aktar ve şablonlar\" bölümünde toplar. Araçlar menüsü seçime bağlı işlemlere sadeleşti. Düğmelerin işlevi, seçim kuralı ve sağ tık menüsündeki erişimi aynıdır.",
-        "en": "The new Excel button in the CP and Collection toolbars gathers table export, Capacity Request, Hologram Request, MB List and Checklist workbooks under \"Create Excel\", and user Excel import plus Excel templates under \"Import and templates\". The Tools menu is now limited to selection actions. Each action keeps its behaviour, selection rule and right-click menu access."
+        "tr": "CP ve Koleksiyon araç çubuğundaki yeni Excel düğmesi, tabloyu dışa aktarma, Capacity Request, Hologram Talep, MB Listesi ve Checklist Excel'lerini \"Excel oluştur\" bölümünde; kullanıcı Excel'ini içeri aktarma ve Excel şablonlarını \"İçe aktar ve şablonlar\" bölümünde toplar. Araçlar menüsü seçime bağlı işlemlere sadeleşti. Düğmelerin işlevi, seçim kuralı ve sağ tık menüsündeki erişimi aynıdır. Araç çubuğundaki Filtreleri Temizle düğmesi de artık diğer düğmeler gibi çerçevelidir.",
+        "en": "The new Excel button in the CP and Collection toolbars gathers table export, Capacity Request, Hologram Request, MB List and Checklist workbooks under \"Create Excel\", and user Excel import plus Excel templates under \"Import and templates\". The Tools menu is now limited to selection actions. Each action keeps its behaviour, selection rule and right-click menu access. The Clear Filters toolbar button now has the same frame as the other buttons."
       },
       "visual": {
         "kind": "screenshot",
