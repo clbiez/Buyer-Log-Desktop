@@ -121,9 +121,42 @@ test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekle
   assert.doesNotMatch(SOURCE, /rankTabs/);
   assert.match(CSS, /\.ovClockGrid/);
   assert.match(CSS, /repeat\(auto-fit,minmax\(128px,1fr\)\)/);
-  assert.match(CSS, /\.ovLaunchBody\{grid-template-columns:minmax\(120px,150px\) minmax\(0,1fr\);gap:18px 18px;\}/);
+  assert.match(CSS, /\.ovClockPopover \.ovLaunchBody\{display:grid;grid-template-columns:minmax\(0,1fr\)/);
   assert.match(SOURCE, /ovClockHolidayName\" title=/);
   assert.match(CSS, /\.ovClockTime\{[^}]*white-space:nowrap/);
+});
+
+test('Saat dilimi farkı ve mesai evresi deterministik hesaplanır', () => {
+  const summer = new Date('2026-07-01T12:00:00Z'), winter = new Date('2026-01-15T12:00:00Z');
+  assert.equal(launchpad.zoneOffsetMinutes(summer, 'Europe/Istanbul'), 180);
+  assert.equal(launchpad.zoneOffsetMinutes(summer, 'Asia/Kolkata'), 330);
+  assert.equal(launchpad.zoneOffsetMinutes(summer, 'America/New_York'), -240);
+  assert.equal(launchpad.zoneOffsetMinutes(winter, 'America/New_York'), -300, 'yaz/kış saati Intl/IANA üzerinden işlenir');
+  assert.equal(launchpad.relativeOffsetLabel(150, 'tr'), '+2:30 sa');
+  assert.equal(launchpad.relativeOffsetLabel(-420, 'en'), '−7h');
+  assert.equal(launchpad.relativeOffsetLabel(0, 'tr'), '');
+  assert.deepEqual([8, 9, 17, 18, 20, 21, 3].map(launchpad.clockPhase), ['day', 'work', 'work', 'day', 'day', 'night', 'night']);
+});
+
+test('Dünya saatleri kapalıyken minik saat şeridi, açılınca üst katman paneli gösterir', () => {
+  // Kapalı: tek satırlık şerit; panel DOM'u kapalıyken boş tutulur, tatiller yalnız açıkken çekilir.
+  assert.match(SOURCE, /class="ovClockChip" data-clock-open=/);
+  assert.match(SOURCE, /if\(!panelOpen\)\{panel\.replaceChildren\(\);/);
+  assert.match(SOURCE, /if\(!primaryScreenReady\)return;\n[^\n]*\n    if\(!panelOpen\)return;/);
+  // Açık: popover komşu widget'ları itmez; aç/kapa düğmesi, Esc ve dış tıklama tarayıcıdan gelir.
+  assert.match(SOURCE, /setAttribute\('popover','auto'\)/);
+  assert.match(SOURCE, /popovertarget="'\+PANEL_ID\+'"/);
+  assert.match(SOURCE, /aria-expanded="'\+\(panelOpen\?'true':'false'\)/);
+  assert.match(SOURCE, /addEventListener\('beforetoggle'/);
+  assert.match(SOURCE, /BLMotionPlus\?\.play\?\.\('overlay',panel\)/);
+  assert.match(SOURCE, /data-clock-close/);
+  assert.match(SOURCE, /attributeFilter:\['data-active-tab'\]/);
+  assert.doesNotMatch(SOURCE, /openClockDetail|ovClockDialog|ovClockCompactStrip/);
+  assert.match(CSS, /\.ovHome>#ovLaunchpad\{display:flex;align-items:center;overflow:hidden;padding:0;\}/);
+  assert.match(CSS, /\.ovClockPopover\{inset:auto;margin:0;/);
+  assert.match(CSS, /#ovLaunchpad\.is-open \.ovClockBarToggle \.ic\{transform:rotate\(180deg\);\}/);
+  assert.match(CSS, /\.ovClockPhase\[data-clock-phase="work"\]/);
+  assert.doesNotMatch(CSS, /\.ovClockDialog|\.ovClockCompactStrip/);
 });
 
 test('Premium ritim katmanı araç çubuğu dışı .tbtn için sıfır özgüllüklü ortak taban tanımlar', () => {

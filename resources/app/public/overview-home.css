@@ -102,12 +102,40 @@
 .srOnly{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
 
 /* ---------- Widget içerikleri: kaydırılan gövde ızgaradan gelen yüksekliği doldurur ---------- */
-/* Dünya Saatleri */
-.ovHome>#ovLaunchpad{overflow:auto;padding:16px 18px;}
-.ovLaunchBody{grid-template-columns:minmax(120px,150px) minmax(0,1fr);gap:18px 18px;}
-@container ovw (max-width:860px){.ovLaunchBody{grid-template-columns:1fr;gap:12px;}}
-@container ovw (max-height:230px){.ovLaunchSub{display:none;}}
-@container ovw (max-width:420px){.ovClockGrid,.ovClockGrid.is-both,.ovClockGrid.is-analog{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));}.ovClockAddControls{min-width:0;grid-template-columns:1fr;}}
+/* Dünya Saatleri: kapalıyken tek satırlık minik saat şeridi; ayrıntı (saat
+   kartları, resmi tatiller, yönetim) üst katmandaki açılır panelde. Panel
+   ızgaradaki komşu widget'ları itmez. */
+.ovHome>#ovLaunchpad{display:flex;align-items:center;overflow:hidden;padding:0;}
+.ovClockBar{display:flex;align-items:center;gap:12px;width:100%;min-width:0;height:100%;padding:0 4px 0 18px;}
+.ovClockBarDate{display:inline-flex;align-items:center;gap:7px;flex:none;white-space:nowrap;}
+.ovClockBarDate .ic{width:15px;height:15px;}
+.ovClockChips{display:flex;align-items:center;gap:4px;flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;}
+.ovClockChips::-webkit-scrollbar{display:none;}
+.ovClockChip{display:inline-flex;align-items:center;gap:6px;flex:none;height:28px;padding:0 9px;cursor:pointer;}
+.ovClockChipDot{width:6px;height:6px;flex:none;}
+.ovClockChipOffset,.ovClockBarEmpty{white-space:nowrap;}
+.ovClockBarToggle{display:inline-flex;align-items:center;gap:6px;flex:none;height:28px;padding:0 10px;cursor:pointer;}
+.ovClockBarToggle .ic{width:14px;height:14px;}
+#ovLaunchpad.is-open .ovClockBarToggle .ic{transform:rotate(180deg);}
+@container ovw (max-width:620px){.ovClockBarDate>span,.ovClockChipOffset,.ovClockBarToggle>span{display:none;}}
+@container ovw (max-width:380px){.ovClockChip>b{display:none;}}
+.ovClockPopover{inset:auto;margin:0;padding:0;overflow:auto;overscroll-behavior:contain;container:ovclock / inline-size;}
+.ovClockPopover .ovLaunchBody{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:14px;padding:18px 20px 20px;}
+.ovClockPopover .ovLaunchHead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+.ovClockPopover .ovClockToolbar{flex:none;}
+.ovClockManageBtn .ic,.ovClockClose .ic{width:14px;height:14px;}
+.ovClockClose{display:inline-grid;place-items:center;width:var(--ui-control-height);height:var(--ui-control-height);padding:0;cursor:pointer;}
+.ovClockPopover .ovClockGrid,.ovClockPopover .ovClockGrid.is-both,.ovClockPopover .ovClockGrid.is-analog{grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:10px;}
+.ovClockMeta{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:9px;min-width:0;}
+.ovClockPhase{display:inline-flex;align-items:center;gap:5px;padding:3px 6px;white-space:nowrap;}
+.ovClockPhase::before{content:'';width:6px;height:6px;}
+.ovClockOffset{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ovClockPopover .ovClockHolidayTitle{flex-direction:column;align-items:flex-start;gap:2px;}
+@container ovclock (max-width:560px){
+  .ovClockPopover .ovLaunchSub{display:none;}
+  .ovClockPopover .ovClockGrid,.ovClockPopover .ovClockGrid.is-both,.ovClockPopover .ovClockGrid.is-analog{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
+  .ovClockAddControls{min-width:0;grid-template-columns:1fr;}
+}
 
 /* CP'ye bağlı widget'lar veri gelene dek kendi boş durumunu gösterir */
 .ovHomeHostEmpty{display:none;margin:auto;padding:16px;text-align:center;}
@@ -265,7 +293,6 @@
 /* Premium Overview: compact geometry is opt-in for saved personal layouts.
    The original map surface, projection, controls and palette stay unchanged. */
 .ovHome[data-density="compact"]{--ov-row:40px;--ov-gap:10px;}
-.ovHome[data-density="compact"]>#ovLaunchpad{padding:0 12px;}
 #ovHomePremiumBtn[hidden]{display:none;}
 .ovHome>.ovPremiumHost{padding:0;}
 .ovPremiumHead{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:38px;padding:7px 12px;}
@@ -367,20 +394,6 @@
 .ovHome[data-density="compact"]>#globalFlowMapWidget .globalFlowMeta:is([data-tone="error"],[data-tone="warn"]){display:flex;}
 .ovHome[data-density="compact"]>#globalFlowMapWidget .globalFlowFoot{min-height:20px;padding:4px 8px;}
 .ovHome[data-density="compact"]>#globalFlowMapWidget .globalFlowFoot>strong,.ovHome[data-density="compact"]>#globalFlowMapWidget .globalFlowFoot>span:first-of-type{display:none;}
-.ovClockCompactStrip{display:none;align-items:center;gap:14px;min-width:0;width:100%;height:100%;}
-.ovClockCompactStrip>button{display:flex;align-items:center;gap:6px;flex:none;padding:3px 0;cursor:pointer;}
-.ovClockStripDot{width:4px;height:4px;}
-.ovClockStripDate{margin-right:auto;white-space:nowrap;}
-.ovClockCompactStrip .ovClockStripManage{margin-left:auto;padding:3px;}
-.ovClockStripManage .ic{width:16px;height:16px;}
-.ovClockDialog{width:min(980px,calc(100vw - 32px));max-height:85vh;padding:0;}
-.ovHome>#ovLaunchpad .ovClockDialog .ovLaunchBody{display:grid;grid-template-columns:minmax(110px,150px) minmax(0,1fr);padding:16px;}
-.ovClockDialog .ovClockGrid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
-@container ovw (max-height:100px){
-  .ovHome>#ovLaunchpad{padding:0 12px;}
-  .ovHome>#ovLaunchpad>.ovLaunchBody{display:none;}
-  .ovClockCompactStrip{display:flex;overflow:auto;}
-}
 .ovBdFill,.ovBdStack{transform-origin:left;}
 @container ovw (max-width:400px){.ovPulseKpi{padding:6px 8px;}.ovPulseKpi strong small{display:none;}.ovPulseMini{display:none;}}
 @media(max-width:900px){

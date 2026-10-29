@@ -844,10 +844,6 @@ html[data-ui-system="manifest"] .ovHomeDrawerCard.isPlaced .ovHomeDrawerAction {
 }
 html[data-ui-system="manifest"] .ovHomeDrawerEmpty {color:var(--ui-text-muted) !important
 }
-@container ovw (max-height:230px) {
-html[data-ui-system="manifest"] .ovLaunchTitle {font-size:var(--ui-font-lg) !important
-}
-}
 html[data-ui-system="manifest"] .ovHomeHostEmpty {color:var(--ui-text-muted) !important;font-size:var(--ui-font-sm) !important
 }
 html[data-ui-system="manifest"] .ovHome>.ovHomeHost#ovAttention .cpaCard,html[data-ui-system="manifest"] .ovHome>.ovHomeHost#ovDataCoverage .cpaCard {background:transparent !important
@@ -1090,19 +1086,51 @@ html[data-ui-system="manifest"] .ovHome[data-density="compact"]>#ovChecklistRule
 }
 html[data-ui-system="manifest"] .ovHome[data-density="compact"]>#ovCollectionSummary .ovCollectionMonthThumb {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
-html[data-ui-system="manifest"] .ovClockCompactStrip>button {background:transparent !important;color:var(--ui-text-secondary) !important;font:500 var(--ui-font-xs) var(--ui-font-mono) !important
+html[data-ui-system="manifest"] .ovClockBarDate {color:var(--ui-text-muted) !important;font:600 var(--ui-font-xs)/1 var(--ui-font-body) !important;letter-spacing:.04em;text-transform:uppercase
 }
-html[data-ui-system="manifest"] .ovClockCompactStrip>button:hover {color:var(--ui-selected-ink) !important
+html[data-ui-system="manifest"] .ovClockBarDate .ic {color:var(--ui-selected-ink) !important
 }
-html[data-ui-system="manifest"] .ovClockCompactStrip>button>b {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+html[data-ui-system="manifest"] .ovClockChip {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font:600 var(--ui-font-sm)/1 var(--ui-font-mono) !important;font-variant-numeric:tabular-nums
 }
-html[data-ui-system="manifest"] .ovClockStripDot {background:var(--ui-success) !important
+html[data-ui-system="manifest"] .ovClockChip:hover {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
 }
-html[data-ui-system="manifest"] .ovClockStripDate {color:var(--ui-text-muted) !important;font:500 var(--ui-font-xs) var(--ui-font-body) !important
+html[data-ui-system="manifest"] .ovClockChip>b {color:var(--ui-text-muted) !important;font:700 var(--ui-font-2xs)/1 var(--ui-font-mono) !important;letter-spacing:.04em
 }
-html[data-ui-system="manifest"] .ovClockDialog {background:var(--ui-surface) !important;color:var(--ui-text) !important;box-shadow:var(--ui-shadow-overlay) !important
+html[data-ui-system="manifest"] .ovClockChipOffset {color:var(--ui-text-muted) !important;font:500 var(--ui-font-2xs)/1 var(--ui-font-body) !important
 }
-html[data-ui-system="manifest"] .ovClockDialog::backdrop {background:var(--ui-scrim) !important
+html[data-ui-system="manifest"] .ovClockBarEmpty {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .ovClockChipDot[data-clock-phase="work"] {background:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .ovClockChipDot[data-clock-phase="day"] {background:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .ovClockChipDot[data-clock-phase="night"] {background:var(--ui-text-muted) !important;opacity:.6
+}
+html[data-ui-system="manifest"] .ovClockBarToggle {background:transparent !important;color:var(--ui-text-secondary) !important;font:600 var(--ui-font-xs)/1 var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] #ovLaunchpad.is-open .ovClockBarToggle {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .ovClockPopover {border:0 !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;box-shadow:var(--ui-shadow-overlay) !important
+}
+html[data-ui-system="manifest"] .ovClockPopover .ovClockCard {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .ovClockPopover .ovClockCard.is-focus,html[data-ui-system="manifest"] .ovClockPopover .ovClockCard.is-focus .ovClockHolidayTitle {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .ovClockBarToggle .ic {transition:transform var(--ui-motion-fast) var(--ui-ease)
+}
+html[data-ui-system="manifest"] .ovClockPhase::before {background:currentColor
+}
+html[data-ui-system="manifest"] .ovClockPhase {font:600 var(--ui-font-2xs)/1 var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .ovClockPhase[data-clock-phase="work"] {background:var(--ui-success-bg) !important;color:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .ovClockPhase[data-clock-phase="day"] {background:var(--ui-warning-bg) !important;color:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .ovClockPhase[data-clock-phase="night"] {background:var(--ui-surface-strong) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .ovClockOffset {color:var(--ui-text-muted) !important;font:600 var(--ui-font-2xs)/1 var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .ovClockClose {background:transparent !important;color:var(--ui-text-muted) !important
 }
 html[data-ui-system="manifest"] .ovBdFill,html[data-ui-system="manifest"] .ovBdStack {animation:none !important
 }
