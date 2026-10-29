@@ -1443,12 +1443,14 @@ function countryDisplayName(name){
 function drawCountryLabels(ctx,scene,info,p){
   if(!scene.countryLabels){
     const style=getComputedStyle($('globalFlowMeta')),font='600 '+style.fontSize+' '+style.fontFamily;
-    ctx.save();ctx.font=font;const names=new Map(),rects=[],labels=[];
+    ctx.save();ctx.font=font;const names=new Map(),labels=[];
+    // Düğüm ve araç işaretleri de engeldir: etiket onların üstüne yazılmaz.
+    const rects=(scene.symbols||[]).filter(symbol=>Number.isFinite(symbol.x)&&Number.isFinite(symbol.y)).map(symbol=>{const r=(Number(symbol.r)||8)+2;return {x:symbol.x-r,y:symbol.y-r,width:r*2,height:r*2};});
     state.filtered.forEach(rec=>{if(rec.origin)names.set(rec.origin.name,rec.origin);});
     for(const [name,location] of names){
       const q=screenPoint(location,info.w,info.h);if(!q?.visible)continue;
       const text=countryDisplayName(name),width=ctx.measureText(text).width+8,height=16;
-      const alternatives=[[q.x-width/2,q.y+17],[q.x-width/2,q.y-31],[q.x+17,q.y-8],[q.x-width-17,q.y-8]];
+      const alternatives=[[q.x-width/2,q.y+17],[q.x-width/2,q.y-31],[q.x+17,q.y-8],[q.x-width-17,q.y-8],[q.x-width/2,q.y+31],[q.x-width/2,q.y-45],[q.x+29,q.y-8],[q.x-width-29,q.y-8]];
       const position=alternatives.find(([x,y])=>x>=2&&y>=2&&x+width<=info.w-2&&y+height<=info.h-2&&!rects.some(r=>x<r.x+r.width&&x+width>r.x&&y<r.y+r.height&&y+height>r.y));
       if(!position)continue;const [x,y]=position;rects.push({x,y,width,height});labels.push({text,x,y,width,font});
     }

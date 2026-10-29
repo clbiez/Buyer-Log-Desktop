@@ -15143,3 +15143,107 @@ html[data-ui-system="manifest"] #currentUserBtn #currentUserInitials{
   background:var(--ui-mark-paper)!important;color:var(--ui-avatar-ink)!important;
   font-weight:800!important;
 }
+/* ===== v7.0.319 · Sade ve tutarlı yüzeyler (DESIGN_SYSTEM.md §5) =====
+   Vurgu dolgusu yalnız birincil eylemdedir. Seçim grupları (segment) açık
+   seçim zemini, sayfa içi sekmeler alt vurgu çizgisi kullanır. Menü öğeleri
+   çerçevesiz satırdır; çerçeve ve gölge yalnız menü kabındadır. */
+html[data-ui-system="manifest"] :is(.toolbarMoreMenu,.railAppearanceMenu,#corporateConnections) :is(.navActionBtn,button.tbtn,label.tbtn,.vfMenuTrigger,.corporateConnection,.railFoot button,button[id^="rail"]) {border:0 !important;box-shadow:none !important;background:transparent !important;justify-content:flex-start !important
+}
+html[data-ui-system="manifest"] :is(.toolbarMoreMenu,.railAppearanceMenu,#corporateConnections) :is(.navActionBtn,button.tbtn,label.tbtn,.vfMenuTrigger,.corporateConnection,button[id^="rail"]):hover:not(:disabled) {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+}
+html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.cpaSeg) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]) {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font-weight:600 !important
+}
+html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.cpaSeg) > button:not(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]):hover:not(:disabled) {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+}
+html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs) > button {position:relative;border:0 !important;box-shadow:none !important
+}
+html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]) {background:transparent !important;color:var(--ui-selected-ink) !important;font-weight:600 !important
+}
+html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"])::after {content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .blSegmentGlide {position:fixed;height:2px;background:var(--ui-accent);transform-origin:left center;pointer-events:none;z-index:var(--ui-z-tooltip)
+}
+/* Bölüm başlıkları tek kalıpta: Barlow, büyük harf (bkz. .cardTitle). */
+html[data-ui-system="manifest"] :is(.dmTitle,.autoHeader h2,.ovInboxHead > b) {font:600 var(--ui-font-xl)/1.15 var(--ui-font-heading) !important;letter-spacing:.6px !important;text-transform:uppercase !important;color:var(--ui-text-secondary) !important
+}
+/* Genel Bakış KPI birimi okunur boyutta. */
+html[data-ui-system="manifest"] .ovPulseKpi strong small {font:500 var(--ui-font-sm) var(--ui-font-body) !important;letter-spacing:0 !important;margin-left:4px
+}
+/* Üst çubuk: rol rozeti kullanıcı menüsündedir; bağlantılar tek düğmede. */
+html[data-ui-system="manifest"] .accessModeBadge {display:none !important
+}
+html[data-ui-system="manifest"] .corporateConnectionsWrap {position:relative;display:inline-flex;align-items:center
+}
+html[data-ui-system="manifest"] .appTop .corporateConnectionsTrigger {width:auto !important;padding:0 10px !important;gap:8px;display:inline-flex;align-items:center;font:600 var(--ui-font-xs)/1 var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .corporateConnectionDots {display:inline-flex;gap:3px
+}
+html[data-ui-system="manifest"] .corporateConnectionDots i {width:7px;height:7px;background:var(--ui-group-divider)
+}
+html[data-ui-system="manifest"] .corporateConnectionDots i[data-state="connected"] {background:var(--ui-success)
+}
+html[data-ui-system="manifest"] .corporateConnectionDots i[data-state="connecting"] {background:var(--ui-warning)
+}
+html[data-ui-system="manifest"] .appTop #corporateConnections {position:fixed;min-width:220px;flex-direction:column;align-items:stretch;gap:1px;padding:4px;background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;z-index:var(--ui-z-popover)
+}
+html[data-ui-system="manifest"] .appTop #corporateConnections[hidden] {display:none !important
+}
+html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnection {height:var(--ui-control-height);width:100%;padding:0 10px;gap:8px;font:500 var(--ui-font-sm)/1 var(--ui-font-body) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnection::before {content:"";width:7px;height:7px;flex:none;background:var(--ui-group-divider)
+}
+html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnection[data-state="connected"]::before {background:var(--ui-success)
+}
+html[data-ui-system="manifest"] .appTop #corporateConnections .corporateConnection[data-state="connecting"]::before {background:var(--ui-warning)
+}
+@media (max-width:850px) {
+html[data-ui-system="manifest"] .corporateConnectionsLabel {display:none
+}
+}
+/* Ray: dil, tema ve boyut tek Görünüm menüsünde. */
+html[data-ui-system="manifest"] .railAppearanceMenu {position:fixed;min-width:210px;display:flex;flex-direction:column;gap:1px;padding:4px;background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;z-index:var(--ui-z-popover)
+}
+html[data-ui-system="manifest"] .railAppearanceMenu[hidden] {display:none !important
+}
+html[data-ui-system="manifest"] .railFoot .railAppearanceMenu button {width:100% !important;justify-content:flex-start !important;padding:0 10px !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .railFoot .railAppearanceMenu button span {display:inline !important
+}
+/* Seçim çubuğu: tablonun altında, içerik alanının ortasında. */
+html[data-ui-system="manifest"] .blSelectionBarHost {position:fixed;left:var(--ui-rail-width);right:0;bottom:44px;display:flex;justify-content:center;pointer-events:none;z-index:var(--ui-z-popover)
+}
+html[data-ui-system="manifest"] .blSelectionBar {pointer-events:auto;display:flex;align-items:center;gap:4px;padding:5px 6px 5px 14px;background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;color:var(--ui-text)
+}
+html[data-ui-system="manifest"] .blSelectionBar[hidden] {display:none !important
+}
+html[data-ui-system="manifest"] .blSelectionCount {font:500 var(--ui-font-sm)/1 var(--ui-font-body);color:var(--ui-text-secondary);white-space:nowrap;margin-right:6px
+}
+html[data-ui-system="manifest"] .blSelectionCount b {font-weight:700;color:var(--ui-selected-ink)
+}
+html[data-ui-system="manifest"] .blSelectionDivider {width:1px;align-self:stretch;margin:2px 6px 2px 0;background:var(--ui-row-divider)
+}
+html[data-ui-system="manifest"] .blSelectionBar .blSelectionAction {gap:6px;font-size:var(--ui-font-sm) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] .blSelectionBar .blSelectionDismiss {width:var(--ui-control-height);height:var(--ui-control-height);margin-left:2px
+}
+/* Veri Yönetimi: katlanabilir paneller. */
+html[data-ui-system="manifest"] .dmPanelToggle {display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:none;margin-right:4px;background:transparent !important;color:var(--ui-text-muted) !important;cursor:pointer
+}
+html[data-ui-system="manifest"] .dmPanelToggle:hover {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .dmPanelToggle .ic {width:14px;height:14px
+}
+html[data-ui-system="manifest"] .dmPanel.isCollapsed .dmPanelToggle .ic {transform:rotate(-90deg)
+}
+html[data-ui-system="manifest"] .dmPanel.isCollapsed > :not(.dmPanelHead) {display:none !important
+}
+html[data-ui-system="manifest"] .dmPanel > .dmPanelHead:has(> .dmPanelToggle) {justify-content:flex-start
+}
+html[data-ui-system="manifest"] .dmPanel > .dmPanelHead > .dmPanelToggle + .dmPanelTitle {margin-right:auto
+}
+/* Koleksiyon: genişletilecek opsiyon yokken pasif düğme gösterilmez. */
+html[data-ui-system="manifest"] #kolAllVariantsToggle:disabled {display:none !important
+}
+/* Not hatırlatıcısı boşken sakin, nötr bilgi satırı. */
+html[data-ui-system="manifest"] .ovPriorityEmpty.success {background:transparent !important;color:var(--ui-text-muted) !important
+}

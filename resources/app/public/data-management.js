@@ -665,7 +665,7 @@
 
   function sourceModePanel() {
     if (!model.canManage) return '';
-    return `<div class="dmPanel dmModes">
+    return `<div class="dmPanel dmModes" data-dm-panel="modes">
       <div class="dmPanelHead">
         <span class="dmPanelTitle">${esc(T('Kaynak modu', 'Source mode'))}</span>
         <span class="dmsHint">${esc(T(
@@ -855,7 +855,7 @@
   function toolsPanel() {
     const groups = visibleToolGroups();
     if (!groups.length) return '';
-    return `<div class="dmPanel dmTools">
+    return `<div class="dmPanel dmTools" data-dm-panel="tools">
       <div class="dmPanelHead"><span class="dmPanelTitle">${esc(T('Araçlar', 'Tools'))}</span></div>
       ${groups.map(group => `<div class="dmToolGroup">
         <div class="dmToolGroupHead">
@@ -940,7 +940,7 @@
       <span>${esc(moduleLabel(moduleId))}</span>
     </label>`).join('');
 
-    return `<div class="dmPanel">
+    return `<div class="dmPanel" data-dm-panel="refresh">
       <div class="dmPanelHead">
         <span class="dmPanelTitle">${esc(T('Yenileme', 'Refresh'))}</span>
         ${model.canManage && !creatingGroup ? `<button type="button" class="tbtn" data-new-group>+ ${esc(T('Grup oluştur', 'Create group'))}</button>` : ''}
@@ -1397,7 +1397,7 @@
       ${matchRuleRow()}
       <div class="dmMatchSlot" data-matchrule-slot></div>
 
-      <div class="dmPanel">
+      <div class="dmPanel" data-dm-panel="modules">
         <div class="dmPanelHead">
           <span class="dmPanelTitle">${esc(T('Modüller', 'Modules'))}</span>
           <div class="dmViewToggle" role="group" aria-label="${esc(T('Görünüm', 'View'))}">
@@ -1435,7 +1435,53 @@
        uygula. Bu çağrı olmadan düğmeler doğru yerde ama HEPSİ pasif görünürdü —
        kullanıcı hangi modun seçili olduğunu göremezdi. */
     void feature('fx').then(()=>window.BLFX.load(true)).then(()=>window.BLFX.renderFolderSync(root.querySelector('[data-fx-folder-sync]'))).catch(()=>{});
+    decorateCollapsiblePanels();
     syncSourceModes();
+  }
+
+  /* Paneller başlıktan açılıp kapanır; seçim bu tarayıcıda kullanıcı başına
+     hatırlanır. İçerik DOM'da kalır, yalnız gizlenir: durum ve olaylar bozulmaz. */
+  const COLLAPSED_PANELS_KEY = 'bl.dataManagement.collapsedPanels';
+  function readCollapsedPanels() {
+    try {
+      const store = window.BLStorage || window.localStorage;
+      const value = JSON.parse(store.getItem(COLLAPSED_PANELS_KEY) || '[]');
+      return new Set(Array.isArray(value) ? value.filter(key => typeof key === 'string') : []);
+    } catch (_) { return new Set(); }
+  }
+  function writeCollapsedPanels(keys) {
+    try { (window.BLStorage || window.localStorage).setItem(COLLAPSED_PANELS_KEY, JSON.stringify([...keys])); } catch (_) {}
+  }
+  function decorateCollapsiblePanels() {
+    const collapsed = readCollapsedPanels();
+    root.querySelectorAll('.dmPanel[data-dm-panel]').forEach(panel => {
+      const head = panel.querySelector(':scope > .dmPanelHead');
+      if (!head) return;
+      const key = panel.dataset.dmPanel;
+      const isCollapsed = collapsed.has(key);
+      panel.classList.toggle('isCollapsed', isCollapsed);
+      let toggle = head.querySelector(':scope > [data-dm-panel-toggle]');
+      if (!toggle) {
+        toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'dmPanelToggle';
+        toggle.dataset.dmPanelToggle = key;
+        toggle.innerHTML = '<svg class="ic" aria-hidden="true"><use href="#i-chevron-down"/></svg>';
+        head.insertBefore(toggle, head.firstChild);
+      }
+      const label = isCollapsed ? T('Bölümü aç', 'Expand section') : T('Bölümü daralt', 'Collapse section');
+      toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+      toggle.setAttribute('aria-label', label);
+      toggle.title = label;
+    });
+  }
+  function togglePanel(key) {
+    const collapsed = readCollapsedPanels();
+    if (collapsed.has(key)) collapsed.delete(key); else collapsed.add(key);
+    writeCollapsedPanels(collapsed);
+    decorateCollapsiblePanels();
+    const panel = root.querySelector(`.dmPanel[data-dm-panel="${key}"]`);
+    if (panel && !panel.classList.contains('isCollapsed')) window.BLMotionPlus?.play?.('overlay', panel);
   }
 
   /* ---------------------------------------------------------------- */
@@ -1601,6 +1647,9 @@
   }
 
   function onClick(event) {
+    const panelToggle = event.target.closest('[data-dm-panel-toggle]');
+    if (panelToggle) { togglePanel(panelToggle.dataset.dmPanelToggle); return; }
+
     const labTabButton = event.target.closest('[data-lab-tab]');
     if (labTabButton) { labTab = labTabButton.dataset.labTab; labMessage = ''; render(); return; }
 

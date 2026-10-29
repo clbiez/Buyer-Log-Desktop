@@ -187,6 +187,34 @@
     });
     return true;
   }
+  /* Segment / sekme geçişi: seçim değişince 2px vurgu çizgisi eski seçenekten
+     yenisine kayar ve söner. Yalnız transform/opacity; metnin üstünü örtmez,
+     sayfa yeniden çizse de tıklanan noktadaki grup yeniden bulunur. */
+  const SEGMENTS='.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.cpaSeg,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs';
+  const SEGMENT_ACTIVE=':is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"])';
+  let segmentPress=null;
+  function segmentActive(group){return group&&group.isConnected?Array.from(group.querySelectorAll(':scope > button'+SEGMENT_ACTIVE+',:scope > * > button'+SEGMENT_ACTIVE)).find(visible)||null:null;}
+  function rememberSegment(ev){
+    const button=ev.target.closest?.('button'),group=button?.closest?.(SEGMENTS);
+    const from=group&&segmentActive(group);
+    segmentPress=from&&from!==button?{group,from:from.getBoundingClientRect(),x:ev.clientX,y:ev.clientY}:null;
+  }
+  function slideSegment(){
+    const press=segmentPress;segmentPress=null;
+    if(!press||!enabled())return;
+    root.requestAnimationFrame(()=>root.requestAnimationFrame(()=>{
+      const group=press.group.isConnected?press.group:doc.elementFromPoint?.(press.x,press.y)?.closest?.(SEGMENTS);
+      const to=segmentActive(group);if(!to)return;
+      const end=to.getBoundingClientRect(),from=press.from;
+      if(Math.abs(end.left-from.left)<1&&Math.abs(end.top-from.top)<1)return;
+      const line=doc.createElement('span');line.className='blSegmentGlide';line.setAttribute('aria-hidden','true');
+      line.style.left=end.left+'px';line.style.top=(end.bottom-2)+'px';line.style.width=end.width+'px';
+      doc.body.appendChild(line);
+      const dx=from.left-end.left,dy=from.bottom-end.bottom,scale=end.width?Math.max(.1,from.width/end.width):1;
+      const a=start(line,[{opacity:1,transform:'translate3d('+dx+'px,'+dy+'px,0) scaleX('+scale+')'},{opacity:1,transform:'translate3d(0,0,0) scaleX(1)',offset:.8},{opacity:0,transform:'translate3d(0,0,0) scaleX(1)'}],{duration:duration('overlay')});
+      if(a)a.addEventListener('finish',()=>line.remove(),{once:true}),a.addEventListener('cancel',()=>line.remove(),{once:true});else line.remove();
+    }));
+  }
   function updateActivity(control,activeClass,kind){
     const old=activityAnimations.get(control);
     if(!enabled()||!control.classList?.contains(activeClass)){
@@ -224,6 +252,8 @@
   }
   function mount(){
     bindActivityControls();
+    doc.addEventListener('pointerdown',rememberSegment,true);
+    doc.addEventListener('click',slideSegment);
     doc.addEventListener('click',ev=>{
       if(ev.target.closest?.('nav.tabs button[data-tab]'))later(()=>activate(true),45);
       else if(ev.target.closest?.('button,[role="button"]'))later(enterOverlay,65);

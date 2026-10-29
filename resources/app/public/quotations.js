@@ -1392,7 +1392,13 @@
       }
     }
     const req=qActiveRequest();
-    if(!req){delete host.dataset.quotationRequestId;host.innerHTML=`<div class="quotationEmpty">${qEsc(qLang('Sol panelden bir fiyat çalışması seç.','Select a quotation request from the left panel.'))}</div>`;return;}
+    if(!req){
+      delete host.dataset.quotationRequestId;
+      // Boş durum, Koleksiyon ile aynı ortak kart desenini (BLUI.stateView) kullanır.
+      const emptyTitle=qLang('Fiyat çalışması seçilmedi','No quotation selected'),emptyDetail=qLang('Sol panelden bir fiyat çalışması seç.','Select a quotation request from the left panel.');
+      host.innerHTML=`<div class="quotationEmpty">${window.BLUI?.stateView?window.BLUI.stateView({kind:'empty',icon:'bl-n13',title:emptyTitle,detail:emptyDetail}):qEsc(emptyDetail)}</div>`;
+      return;
+    }
     host.dataset.quotationRequestId=req.id;
     const tableState=qTableState(req), visibleItems=qVisibleTableItems(req);
     // Fiyat Masası: Koleksiyon talepleri varsayılan olarak model × üretici matrisinde açılır.

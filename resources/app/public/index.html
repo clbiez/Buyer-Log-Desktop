@@ -461,9 +461,13 @@
     <button data-tab="source" title="Veri Yönetimi" data-i18n-title-tr="Veri Yönetimi" data-i18n-title-en="Data Management"><svg class="ic"><use href="#i-bl-n25"/></svg><span data-i18n-tr="Veri Yönetimi" data-i18n-en="Data Management">Veri Yönetimi</span></button>
   </nav>
   <div class="railFoot">
+    <!-- Dil, tema ve arayüz boyutu tek "Görünüm" menüsünde; düğme kimlikleri ve işlevleri aynıdır. -->
+    <button type="button" id="railAppearanceBtn" aria-haspopup="true" aria-expanded="false" aria-controls="railAppearanceMenu" title="Görünüm: dil, tema ve arayüz boyutu" data-i18n-title-tr="Görünüm: dil, tema ve arayüz boyutu" data-i18n-title-en="Appearance: language, theme and interface size"><svg class="ic"><use href="#i-palette"/></svg><span data-i18n-tr="Görünüm" data-i18n-en="Appearance">Görünüm</span></button>
+    <div class="railAppearanceMenu" id="railAppearanceMenu" role="group" aria-label="Görünüm" data-i18n-aria-label-tr="Görünüm" data-i18n-aria-label-en="Appearance" hidden>
     <button id="railLangBtn" title="Switch language / Dil değiştir"><svg class="ic"><use href="#i-globe"/></svg><span id="railLangLabel" data-no-i18n>Dil: TR</span></button>
     <button id="railThemeBtn" title="Tema: Aydınlık → Karanlık"><svg class="ic"><use href="#i-moon"/></svg><span data-i18n-tr="Tema" data-i18n-en="Theme">Tema</span></button>
     <button id="railFontSizeBtn" title="Arayüz boyutu: Standard → Büyük → Çok Büyük → Kompakt" data-i18n-title-tr="Arayüz boyutu: Standard → Büyük → Çok Büyük → Kompakt" data-i18n-title-en="Interface size: Standard → Large → XL → Compact"><b class="railFontGlyph" aria-hidden="true">A</b><span id="railFontSizeLabel">Arayüz: Standard</span></button>
+    </div>
   </div>
 </aside>
 
@@ -490,10 +494,15 @@
   <button class="iconbtn" id="saveAllBtn" title="Tüm değişiklikleri şimdi kaydet" data-i18n-title-tr="Tüm değişiklikleri şimdi kaydet" data-i18n-title-en="Save all changes now"><svg class="ic"><use href="#i-device-floppy"/></svg></button>
   <button class="iconbtn" id="topRefreshBtn" title="Veri Modelinden Güncelle" data-i18n-title-tr="Veri Modelinden Güncelle" data-i18n-title-en="Refresh from data model"><svg class="ic"><use href="#i-reload"/></svg></button>
   <button class="iconbtn syncStatusBtn" id="syncStatusBtn" title="Offline" aria-label="Offline"><span class="syncStatusBadge is-offline" id="syncStatusBadge"><svg class="ic" aria-hidden="true"><use href="#i-cloud-off"/></svg></span></button>
-  <div class="corporateConnections" id="corporateConnections" role="group" aria-label="Kurumsal bağlantılar" data-i18n-aria-label-tr="Kurumsal bağlantılar" data-i18n-aria-label-en="Corporate connections">
-    <button type="button" class="corporateConnection" id="corporateLcwAiBtn" data-corporate-connection="lcwai" data-state="disconnected">LCW AI</button>
-    <button type="button" class="corporateConnection" data-corporate-connection="plm" data-state="disconnected">PLM</button>
-    <button type="button" class="corporateConnection" data-corporate-connection="oab" data-state="disconnected">OAB</button>
+  <!-- Kurumsal bağlantılar tek düğmede: noktalar LCW AI / PLM / OAB durumunu gösterir, oturum düğmeleri açılan pencerededir. -->
+  <div class="corporateConnectionsWrap" id="corporateConnectionsWrap">
+    <button type="button" class="iconbtn corporateConnectionsTrigger" id="corporateConnectionsBtn" aria-haspopup="true" aria-expanded="false" aria-controls="corporateConnections" title="Kurumsal bağlantılar" data-i18n-title-tr="Kurumsal bağlantılar" data-i18n-title-en="Corporate connections"><span class="corporateConnectionDots" aria-hidden="true"><i data-corporate-dot="lcwai" data-state="disconnected"></i><i data-corporate-dot="plm" data-state="disconnected"></i><i data-corporate-dot="oab" data-state="disconnected"></i></span><span class="corporateConnectionsLabel" data-i18n-tr="Bağlantılar" data-i18n-en="Connections">Bağlantılar</span></button>
+    <div class="corporateConnections" id="corporateConnections" role="group" aria-label="Kurumsal bağlantılar" data-i18n-aria-label-tr="Kurumsal bağlantılar" data-i18n-aria-label-en="Corporate connections" hidden>
+      <div class="toolbarMoreLabel" data-i18n-tr="Kurumsal bağlantılar" data-i18n-en="Corporate connections">Kurumsal bağlantılar</div>
+      <button type="button" class="corporateConnection" id="corporateLcwAiBtn" data-corporate-connection="lcwai" data-state="disconnected">LCW AI</button>
+      <button type="button" class="corporateConnection" data-corporate-connection="plm" data-state="disconnected">PLM</button>
+      <button type="button" class="corporateConnection" data-corporate-connection="oab" data-state="disconnected">OAB</button>
+    </div>
   </div>
   <span class="accessModeBadge" id="accessModeBadge"></span><button type="button" class="userAvatar userAvatarBtn" id="currentUserBtn" title="Kullanıcı menüsü" data-i18n-title-tr="Kullanıcı menüsü" data-i18n-title-en="User menu"><span id="currentUserInitials" class="blSteelInitials">?</span></button>
 </header>
@@ -1561,6 +1570,7 @@
 <script src="command-palette.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="kpi-motion.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="motion-plus.js?v=__BL_ASSET_VERSION__"></script>
+<script src="selection-action-bar.js?v=__BL_ASSET_VERSION__"></script>
 <script>
 (function syncRailLanguageIndicator(){
   const root=document.documentElement;
@@ -1663,6 +1673,21 @@
   document.getElementById('railThemeBtn')?.addEventListener('click',event=>{
     applyTheme(nextTheme(),{animate:true,origin:event.currentTarget});
   });
+
+  // Görünüm menüsü: rayın yanında açılır; dil/tema/boyut seçilirken açık kalır.
+  (function railAppearanceMenu(){
+    const trigger=document.getElementById('railAppearanceBtn'),menu=document.getElementById('railAppearanceMenu');
+    if(!trigger||!menu)return;
+    const place=()=>{const r=trigger.getBoundingClientRect();menu.style.left=Math.round(r.right+6)+'px';menu.style.bottom=Math.max(8,Math.round(window.innerHeight-r.bottom))+'px';};
+    const setOpen=open=>{
+      menu.hidden=!open;trigger.setAttribute('aria-expanded',open?'true':'false');
+      if(open){place();window.BLMotionPlus?.play?.('overlay',menu);}
+    };
+    trigger.addEventListener('click',event=>{event.stopPropagation();setOpen(menu.hidden);});
+    document.addEventListener('click',event=>{if(!menu.hidden&&!menu.contains(event.target)&&!trigger.contains(event.target))setOpen(false);});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!menu.hidden){setOpen(false);trigger.focus();}});
+    window.addEventListener('resize',()=>{if(!menu.hidden)place();},{passive:true});
+  })();
 
   document.getElementById('topRefreshBtn')?.addEventListener('click',e=>{
     e.preventDefault();e.stopPropagation();

@@ -9,6 +9,7 @@
   const keys = ['lcwai', 'plm', 'oab'];
   const buttons = Object.fromEntries(keys.map(key => [key, host.querySelector('[data-corporate-connection="' + key + '"]')]));
   const names = { lcwai: 'LCW AI', plm: 'PLM', oab: 'OAB' };
+  const trigger = root.document.getElementById('corporateConnectionsBtn');
   const busy = new Set();
   const revision = { lcwai: 0, plm: 0, oab: 0 };
   const connected = { lcwai: false, plm: false, oab: false };
@@ -34,6 +35,14 @@
     button.title = names[key] + ' — ' + status + '. ' + hint;
     button.setAttribute('aria-label', button.title);
     button.setAttribute('aria-busy', state === 'connecting' ? 'true' : 'false');
+    // Kapalı tetikleyicideki durum noktası aynı durumu gösterir.
+    const dot = trigger && trigger.querySelector('[data-corporate-dot="' + key + '"]');
+    if (dot) dot.dataset.state = state;
+    if (trigger) {
+      const summary = keys.map(name => names[name] + ': ' + (buttons[name] && buttons[name].dataset.state === 'connected' ? t('bağlı', 'connected') : t('bağlı değil', 'disconnected'))).join(' · ');
+      trigger.title = t('Kurumsal bağlantılar', 'Corporate connections') + ' — ' + summary;
+      trigger.setAttribute('aria-label', trigger.title);
+    }
   }
   keys.forEach(key => paint(key, 'disconnected'));
 
@@ -140,6 +149,27 @@
   }
 
   keys.forEach(key => buttons[key] && buttons[key].addEventListener('click', () => { void connect(key); }));
+  // Tetikleyici yalnız bağlantı penceresini açar/kapatır; oturum işlemleri pencere içindeki düğmelerdedir.
+  if (trigger) {
+    const setOpen = open => {
+      host.hidden = !open;
+      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      // Üst çubuk taşan içeriği kırptığı için pencere tetikleyicinin altına sabit konumlanır.
+      if (open && typeof trigger.getBoundingClientRect === 'function') {
+        const rect = trigger.getBoundingClientRect();
+        host.style.top = Math.round(rect.bottom + 6) + 'px';
+        host.style.right = Math.max(8, Math.round(root.innerWidth - rect.right)) + 'px';
+      }
+      if (open) { void refresh(false); if (root.BLMotionPlus && root.BLMotionPlus.play) root.BLMotionPlus.play('overlay', host); }
+    };
+    trigger.addEventListener('click', event => { event.stopPropagation(); setOpen(host.hidden); });
+    root.document.addEventListener('click', event => {
+      if (!host.hidden && !host.contains(event.target) && !trigger.contains(event.target)) setOpen(false);
+    });
+    root.document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !host.hidden) { setOpen(false); trigger.focus(); }
+    });
+  }
   root.addEventListener('focus', () => { void refresh(false); });
   root.addEventListener('bl:startup-complete', () => { void refresh(true); });
   root.document.addEventListener('visibilitychange', () => { if (!root.document.hidden) void refresh(false); });

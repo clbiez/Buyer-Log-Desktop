@@ -122,9 +122,19 @@ modüller `perf-runtime` lazy sözleşmesine uyar.
 
 - Eylem: ortak yükseklik, font ve odak. Açık varyantlar `primary` ve `quiet`.
   Mevcut `.tbtn`, `.navActionBtn`, `.cpaBtn`, `.mfpBtn`, `.lcBtn` gibi davranış
-  kancaları korunur, ortak bileşen görünümüne bağlanır.
-- Segment ve sekme: köşeli, seçili yüzey ve `aria-selected`/`aria-pressed`.
-  Ortak Tab/ok tuşu davranışı korunur. Filtre etiketi durum metnini taşır.
+  kancaları korunur, ortak bileşen görünümüne bağlanır. **Vurgu dolgusu
+  (`--ui-accent` zemin) yalnız sayfanın birincil eylemindedir** (Yenile, Yeni
+  talep…); seçim durumu dolgu kullanmaz.
+- Segment (mod/filtre seçimi): köşeli; seçili öğe `--ui-selected` zemin +
+  `--ui-selected-ink` metin, `aria-pressed`. Sayfa içi sekme (görünüm/alt sayfa):
+  zeminsiz; seçili öğe `--ui-selected-ink` metin + 2px `--ui-accent` alt çizgi,
+  `aria-selected`. Seçim değişince Motion+ çizgiyi eski öğeden yenisine kaydırır.
+  Yeni grup kapsayıcısı `ui-components.css` v7.0.319 bölümündeki listeye ve
+  `motion-plus.js` `SEGMENTS` listesine eklenir. Ortak Tab/ok tuşu davranışı
+  korunur. Filtre etiketi durum metnini taşır.
+- Bölüm başlığı: `.cardTitle` kalıbı — Barlow Condensed 600, `--ui-font-xl`,
+  büyük harf, `.6px` aralık, `--ui-text-secondary`. Alt başlık Barlow 18px,
+  cümle düzeni. Sayfa adı üst çubuktadır; sayfa içinde tekrarlanmaz.
 - Alan: yüzeyle ayrılır; görünür label, placeholder, disabled ve hata durumu.
   `aria-invalid` yalnız renk dışında hata açıklamasıyla birlikte kullanılır.
 - KPI: küçük açıklama, tabular sayısal değer ve alt bağlam. Her KPI ayrı
@@ -134,6 +144,15 @@ modüller `perf-runtime` lazy sözleşmesine uyar.
 - Modal/çekmece: adlandırılmış dialog, ilk odak, Tab/Shift+Tab sınırı, Escape
   ve tetikleyiciye odak dönüşü. İç içe pencerede yalnız üst katman kapanır.
 - Popover/menü: ortak yüzey; ok/Home/End, disabled öğe atlama ve Escape.
+  Çerçeve ve gölge yalnız menü kabındadır; öğeler çerçevesiz satırdır, hover
+  `--ui-surface-strong`. Aynı işi yapan eylemler tek çekmecede toplanır (ör.
+  CP/Koleksiyon **Excel** çekmecesi: "Excel oluştur" / "İçe aktar ve şablonlar").
+- Seçim çubuğu (`selection-action-bar.js`): CP/Siparişler/Koleksiyon'da satır
+  işaretlenince altta görünür; sayı + Kopyala/Excel/Araçlar. Kendi iş mantığı
+  yoktur, yalnız sayfadaki gerçek düğmeye tıklar ve onların pasif durumunu yansıtır.
+- Üst çubuk: bildirim, yerel işlemler, tek **Bağlantılar** düğmesi (LCW AI/PLM/OAB
+  durum noktaları) ve kullanıcı. Rol kullanıcı menüsündedir. Sol ray altı tek
+  **Görünüm** menüsüdür (dil, tema, arayüz boyutu).
 
 Hover, focus, active, selected, disabled, loading, empty ve error durumları
 aynı tokenları kullanır. Modül CSS’i bu durumlara ayrı renk/çerçeve icat etmez.
