@@ -42,10 +42,10 @@ test('Collection quick-filter settings button is the first item in the strip', (
 
 
 test('Collection quick filter selected tones match CP without changing other pressed buttons', () => {
-  const quickFilterRule = DESIGN.match(/html\\[data-ui-system="manifest"\\] #kolQuickFilters \\.kpi\\[aria-pressed="true"\\]\\s*\\{([^}]+)\\}/);
+  const quickFilterRule = DESIGN.match(/html\[data-ui-system="manifest"\] #kolQuickFilters \.kpi\[aria-pressed="true"\]\s*\{([^}]+)\}/);
   assert.ok(quickFilterRule, 'Collection must override the global aria-pressed accent rule');
-  assert.match(quickFilterRule[1], /background:var\\(--ui-selected\\)!important/);
-  assert.match(quickFilterRule[1], /color:var\\(--ui-selected-ink\\)!important/);
-  assert.match(APP, /class="kpi tone-blue\\$\\{active\\?' active':''\\}" aria-pressed="\\$\\{active\\?'true':'false'\\}"/);
-  assert.match(DESIGN, /html\\[data-ui-system="manifest"\\] \\.kpi\\.active \\{background:var\\(--ui-selected\\) !important/);
+  assert.match(quickFilterRule[1], /background:var\(--ui-selected\)!important/);
+  assert.match(quickFilterRule[1], /color:var\(--ui-selected-ink\)!important/);
+  assert.match(APP, /class="kpi tone-blue\$\{active\?' active':''\}" aria-pressed="\$\{active\?'true':'false'\}"/);
+  assert.match(DESIGN, /html\[data-ui-system="manifest"\] \.kpi\.active \{background:var\(--ui-selected\) !important/);
 });
