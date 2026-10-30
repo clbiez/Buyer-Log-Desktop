@@ -95,6 +95,8 @@ const SYNCED_PREFIXES = Object.freeze([
   'lcw.cp.checklist.',
   'lcw_view_favorite_',   // kayıtlı görünümler
   'lcw_filter_favorite_', // kayıtlı filtreler
+  // v2026-10-30: kişisel ASAS ⇄ IAS alan eşleme hafızası (horizon-field-pairs).
+  'buyerlog.horizonFieldPairs.',
   ...Object.values(WORKSPACE_CATEGORY_PREFIXES).flat(),
   APPLIED_HORIZON_PREFIX,
 ]);
@@ -685,7 +687,21 @@ function applyHorizonOverrides(items, userId, requestedTargets, roleEntries = nu
     const members = modelScopes.linkedTargetsOf(item).sort((a, b) => (a === 'cp') - (b === 'cp'));
     const linkedWanted = members.some(target => wanted.has(target));
     const isMember = target => members.includes(target);
-    const preferenceOf = target => (isMember(target) ? linkedPreference(members) : resolvedPreference(target));
+    /* v2026-10-30 — LFL GENEL FİLTREYLE PARALEL (kullanıcı kararı). LFL'in KENDİ
+       kişisel ufku (eskiden LFL gruptan ayrıyken yazılmış olabilir) yalnız
+       LFL'e uygulanır: kapsam imzaya göre bölünür ve LFL paralel bir sorgu
+       olur. Grubun kişisel ufku LFL anahtarından okunmaz; okunsaydı yalnız
+       LFL'e konmuş bir filtre Siparişler · Backlog · Fiyat & Üretici'yi de
+       değiştirirdi. Grup için yazılan kişisel filtre bütün üye anahtarlarına
+       yazıldığından (planPersonalFilter) LFL de aynı ufku alır, sorgu tek kalır. */
+    const standalone = modelScopes.LINKED_STANDALONE_TARGETS || [];
+    const groupMembers = members.filter(target => !standalone.includes(target));
+    const groupPreference = () => linkedPreference(groupMembers.length ? groupMembers : members);
+    const preferenceOf = target => {
+      if (!isMember(target)) return resolvedPreference(target);
+      if (standalone.includes(target)) return preferenceFor(target) || groupPreference();
+      return groupPreference();
+    };
     const isWanted = target => wanted.has(target) || (linkedWanted && isMember(target));
     const next = clone(item || {}), baseScopes = Array.isArray(next.scopes) && next.scopes.length
       ? next.scopes : [{ id: `${next.id || 'connection'}-default`, name: '', targets: [], enabled: true, horizon: next.horizon || {} }];

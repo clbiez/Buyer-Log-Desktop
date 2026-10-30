@@ -121,7 +121,8 @@ function build(items, options = {}) {
     if (modelScopes.LINKED_ROLES.has(role)) {
       linkBySource.set(clean(raw.id), {
         members: modelScopes.linkedTargetsOf(raw),
-        linkable: modelScopes.allowedTargets(role),
+        // v2026-10-30: üyelik sabit; gruba eklenebilecek başka modül yoktur.
+        linkable: modelScopes.linkedTargetsOf(raw),
         restorable: bindingWriter.normalizeParked(raw.linkRestore).map(entry => entry.moduleId),
       });
     }
@@ -426,12 +427,32 @@ function build(items, options = {}) {
     .sort()
     .pop() || '';
 
+  /* v2026-10-30 — İki sabit ufuk. Arayüz bu iki grubu tek panelde gösterir;
+     grup tanımı sunucudan gelir ki istemci ayrı bir liste tutmasın. Eski
+     ayrık modül filtresi ortak ufka katıldıysa (bkz. db.normalizeModelConnection)
+     kullanıcıya söylenebilsin diye yapısal olarak taşınır. */
+  const horizonGroups = modelScopes.HORIZON_GROUPS.map(group => ({ id: group.id, targets: group.targets.slice() }));
+  const mergedFilters = [];
+  for (const raw of Array.isArray(items) ? items : []) {
+    if (!raw || sourceProfiles.isRetiredRole(raw.role) || !modelScopes.LINKED_ROLES.has(clean(raw.role).toLowerCase())) continue;
+    for (const entry of bindingWriter.normalizeParked(raw.linkRestore)) {
+      if (entry.moduleId === 'cp' || !modelScopes.isLinkedTarget(entry.moduleId)) continue;
+      mergedFilters.push({
+        sourceId: clean(raw.id), sourceName: clean(raw.name) || clean(raw.catalog),
+        moduleId: entry.moduleId, filterName: entry.scopeName || '',
+        filterText: describeFilter(entry.horizon).text || '',
+      });
+    }
+  }
+
   return {
     sources,
     modules,
     localModules,
     filterSets,
     matrix,
+    horizonGroups,
+    mergedFilters,
     retiredCount: domain.retired.length,
     warnings: domain.warnings.slice(),
     summary: {

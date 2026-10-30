@@ -37,7 +37,11 @@ test('refresh grouping uses live saved configuration, never old snapshot metadat
   });
   assert.deepEqual(helper.linkedRefreshMembers(),members);
   await helper.syncLinkedRefreshMembers();
-  assert.deepEqual(helper.withLinkedRefreshTargets(['lfl']).slice().sort(),members.slice().sort());
+  // v2026-10-30: Diğer modüller yenilenince CP de yenilenir (LINKED_REFRESH_CHAIN).
+  assert.deepEqual(helper.withLinkedRefreshTargets(['orders']).slice().sort(),[...members,'cp'].sort());
+  // v2026-10-30: LFL tek başına yenilenebilir (IAS'tan beslenmez).
+  assert.deepEqual(helper.withLinkedRefreshTargets(['lfl']),['lfl']);
+  assert.deepEqual(helper.withLinkedRefreshTargets(['cp']),['cp'],'CP tek başına yenilenir');
 
   // User changes shared grouping in Data Management without a data refresh.
   members=['cp','orders'];

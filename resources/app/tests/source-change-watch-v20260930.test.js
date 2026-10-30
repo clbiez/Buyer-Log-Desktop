@@ -137,15 +137,16 @@ test('sunucu: damga yenilemenin başında okunur, veri yayınlandıktan sonra te
   assert.match(SERVER, /reason: 'asas-excel'/);
 });
 
-test('istemci: izleyici mevcut yenileme akışını kullanır, kullanıcıyı bölmez, CP önce gelir', () => {
+test('istemci: izleyici mevcut yenileme akışını kullanır, kullanıcıyı bölmez, CP iki kez sorgulanmaz', () => {
   const block = APP.slice(APP.indexOf("const SOURCE_WATCH_KEY='bl.autoRefresh.sourceWatch.v1';"), APP.indexOf('function sourceWatchLabel(){'));
   assert.ok(block.length > 0);
   assert.match(block, /fetchJSON\('\/api\/source-watch'/);
   assert.match(block, /const ok=await loadFromServer\(true,unit\);/);
   assert.match(block, /const blocked=autoRefreshBlockedReason\(\);/);
   assert.match(block, /if\(autoRefreshBlockedReason\(\)\)break;/);
-  assert.match(block, /units\.push\(members\.includes\(target\)\?members\.slice\(\):\[target\]\);/);
-  assert.match(block, /\(a==='cp'\?-1:0\)-\(b==='cp'\?-1:0\)/);
+  // v2026-10-30: Diğer modüllerden biri değiştiyse tek birim (grup + CP); yalnız CP değiştiyse yalnız CP.
+  assert.match(block, /if\(list\.some\(target=>members\.includes\(target\)\)\)\{\s*const unit=withLinkedRefreshTargets\(members\);/);
+  assert.match(block, /return list\.map\(target=>\[target\]\);/);
   assert.doesNotMatch(block, /fetch\(\s*['"`]\/api\/refresh/, 'ikinci bir yenileme motoru yazılmadı');
   // Varsayılan açık; tercih kullanıcı tercihleriyle senkronlanan bl.autoRefresh. önekinde.
   assert.match(block, /return BLStorage\.getItem\(SOURCE_WATCH_KEY\)!=='0';/);

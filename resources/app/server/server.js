@@ -275,7 +275,7 @@ const refreshGroupRules = require('./lib/data-domain/refresh-groups');
 // v20260930 — Yenileme filtre bağını izler: bağlı gruptaki bir sayfa grubu
 // (tek sorgu) birlikte yeniler, gruptan ayrı sayfa (ör. CP) yalnız kendini.
 // Kısmi yenileme hedefleri refreshTargetsFor ile genişletilir.
-const { withRefreshTargets, linkedTargetsOf, LINKED_TARGETS } = require('./lib/model-scopes');
+const { withRefreshTargets, linkedTargetsOf, LINKED_TARGETS, skipUnreadyChain } = require('./lib/model-scopes');
 /** Bağlı grubun GERÇEK üyeleri ASAS bağlantı kaydından okunur (düzenlenebilir). */
 function configuredRefreshMembers() {
   // Kaydedilmiş ASAS bağlantısı tek doğruluk kaynağıdır. Son refresh snapshot'ı
@@ -286,6 +286,21 @@ function configuredRefreshMembers() {
 }
 function refreshTargetsFor(targets) {
   return withRefreshTargets(targets, configuredRefreshMembers());
+}
+/* v2026-10-30 — CP EKSİKSE DİĞERLERİ YENİLENİR (kullanıcı kararı).
+   "Diğer modüller" yenilemesi CP'yi de kapsar; ama CP'nin filtresi eksik
+   (sınırsız) ya da CP hiç beslenmiyorsa bu, öteki modüllerin yenilenmesini
+   engellemez: CP uyarıyla atlanır, kalanlar yenilenir. Yalnız CP istenirse
+   eski davranış korunur (SOURCE_FILTER_REQUIRED). Sunucudaki bütün yenileme
+   yolları (HTTP, iş kuyruğu, otomasyon, loadFromModels) bu planı kullanır.
+   targets null/boş = "hepsi"; plan atlama yoksa null'ı korur. */
+function refreshTargetPlan(targets, value = null) {
+  const explicit = Array.isArray(targets) && targets.length > 0;
+  const expanded = explicit ? refreshTargetsFor(targets) : ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'];
+  const plan = value == null ? { targets: expanded, skipped: [] }
+    : skipUnreadyChain(expanded, () => sourceFilterReadiness(['cp'], value).ready);
+  if (!plan.skipped.length) return { targets: explicit ? expanded : null, requestedTargets: expanded, skippedTargets: [] };
+  return { targets: plan.targets, requestedTargets: plan.targets, skippedTargets: plan.skipped };
 }
 const cpCoverage = require('./lib/cp-coverage');
 /* v20260930 — Kaynak değişiklik sinyali: ASAS modelinin son işlenme zamanı
@@ -3862,6 +3877,7 @@ require('./routes/horizon-routes')(app, {
   USER_WORKSPACE_MODULES,
   apiError,
   cacheForUser,
+  db: require('./db'),
   express,
   horizonFields,
   horizonFilterMapping,
@@ -3878,7 +3894,8 @@ require('./routes/horizon-routes')(app, {
   selectConnection,
   userAccess,
   userPreferences,
-
+  publishSharedMasterChange,
+  sourceUserId,
 });
 // ---- Koleksiyon geri dönüşüm kutusu route'ları → server/routes/collection-recycle-bin-routes.js ----
 require('./routes/collection-recycle-bin-routes')(app, {
@@ -7404,7 +7421,7 @@ async function loadFromModels(value, targets = null, options = {}) {
   const id = sourceUserId(value), runtime = cacheForUser(id);
   /* Bağlı grubun bir üyesi istenirse grubun tamamı yenilenir (tek sorgu);
      gruptan ayrı modüller yalnız istendiğinde. /api/lfl/refresh de buradan geçer. */
-  if (Array.isArray(targets) && targets.length) targets = refreshTargetsFor(targets);
+  targets = refreshTargetPlan(targets, value).targets;
   const markSourcePhase = typeof options.markPhase === 'function' ? options.markPhase : () => {};
   markSourcePhase('source-setup');
   throwIfRefreshSignalAborted(options.signal);
@@ -9135,7 +9152,9 @@ function markRefreshJobPhase(id,phase){
 
 async function performRefresh(id, currentUser, targets = null, options = {}) {
   // Otomasyon yolu da buradan geçer: bağlı grup birlikte yenilenir.
-  if (Array.isArray(targets) && targets.length) targets = refreshTargetsFor(targets);
+  // CP'nin filtresi eksikse CP atlanır, kalanlar yenilenir (refreshTargetPlan).
+  const targetPlan = refreshTargetPlan(targets, currentUser || id);
+  targets = targetPlan.targets;
   // Aşama işaretleri (v5.89): sayaca tıklandığında yenilemenin hangi adımda
   // olduğu ve her adımın kaç saniye sürdüğü gösterilebilsin diye her geçiş
   // zaman damgasıyla kaydedilir. Bağlantı bazlı süre dökümü (sunucu / yazma /
@@ -9197,6 +9216,8 @@ async function performRefresh(id, currentUser, targets = null, options = {}) {
     // Hangi sayfaların bu yenilemeyle güncellendiği: ekran "son yenileme"
     // saatini sayfa yeniden açıldığında da doğru gösterebilsin.
     targets: requestedTargets.slice(),
+    // CP'nin filtresi eksik olduğu için atlanan hedefler (refreshTargetPlan).
+    skippedTargets: targetPlan.skippedTargets.slice(),
     // Genel filtre CP'yi kapsamıyorsa ekran yenileme bitince bunu ayrıca söyler.
     cpCoverage: staged.cpCoverage && staged.cpCoverage.outsideCount ? {
       outsideCount: staged.cpCoverage.outsideCount,
@@ -9551,13 +9572,13 @@ app.get('/api/refresh-targets', userAccess.requireArea('source'), (_req, res) =>
 /* Asenkron model yenilemesini başlatan tek native yol. HTTP /api/refresh ve
    Paylaşılan yenileme servisi aynı fonksiyonu kullanır. */
 function nativeRefreshPlan(currentUser, rawTargets) {
-  const { requestedTargets } = nativeRefreshTargets(rawTargets), id = sourceUserId(currentUser), filterError = sourceFilterRequiredError(requestedTargets, currentUser);
+  const { requestedTargets } = nativeRefreshTargets(rawTargets, currentUser), id = sourceUserId(currentUser), filterError = sourceFilterRequiredError(requestedTargets, currentUser);
   return { requestedTargets, filterReady: !filterError, running: refreshInFlight.has(id), activeJobId: refreshInFlight.has(id) ? (refreshJobs.get(id) || {}).jobId || null : null };
 }
-function nativeRefreshTargets(rawTargets) {
+function nativeRefreshTargets(rawTargets, value = null) {
   rawTargets = Array.isArray(rawTargets) ? rawTargets : null;
-  const targets = rawTargets ? refreshTargetsFor(rawTargets.filter(t => ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'].includes(String(t)))) : null;
-  return { targets, requestedTargets: targets && targets.length ? targets : ['cp','orders','backlog','lfl','priceanalysis'] };
+  const wanted = rawTargets ? rawTargets.filter(t => ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'].includes(String(t))) : null;
+  return refreshTargetPlan(wanted, value);
 }
 function startNativeRefresh(currentUser, rawTargets, options = {}) {
   const id = sourceUserId(currentUser), commandKey = String(options.commandKey || '').slice(0, 220);
@@ -9565,7 +9586,7 @@ function startNativeRefresh(currentUser, rawTargets, options = {}) {
   const previous = refreshJobs.get(id);
   if (commandKey && previous && previous.commandKey === commandKey) return { started: false, replayed: true, job: refreshJobState(id) };
   if (refreshInFlight.has(id)) throw Object.assign(new Error('Bu kullanıcı için bir veri yenileme işlemi zaten devam ediyor.'), { code: 'OPERATION_IN_PROGRESS', statusCode: 409, job: refreshJobState(id) });
-  const { targets, requestedTargets } = nativeRefreshTargets(rawTargets);
+  const { targets, requestedTargets } = nativeRefreshTargets(rawTargets, currentUser);
   const filterError = sourceFilterRequiredError(requestedTargets, currentUser);
   if (filterError) throw filterError;
     const startedAt=new Date().toISOString();
@@ -9618,7 +9639,7 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
   const wantSync = Boolean(req.body && req.body.sync);
   // Yalnız belirli sayfaları yenile: ['cp'], ['orders'], ['backlog'], ['lfl'] veya birkaçı.
   const rawTargets = req.body && Array.isArray(req.body.targets) ? req.body.targets : null;
-  const { targets, requestedTargets } = nativeRefreshTargets(rawTargets);
+  const { targets, requestedTargets } = nativeRefreshTargets(rawTargets, req.currentUser);
   const filterError = sourceFilterRequiredError(requestedTargets,req.currentUser);
   if (filterError) {
     return res.status(filterError.statusCode).json({ error: filterError.message, code: filterError.code, sourceFilterRequired: true, sourceFilterStatus: filterError.filterStatus });

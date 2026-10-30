@@ -39,6 +39,64 @@
           "en": "Editable fields are now recognisable by their border."
         }
       }
+    },
+    {
+      "id": "data-management-two-horizons",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Yenileme ufku iki basit seçime indi: CP ve Diğer modüller",
+        "en": "Refresh horizons are now two simple choices: CP and Other modules"
+      },
+      "body": {
+        "tr": "Veri kaynağı ufukları artık yalnız iki: CP kendi ufkuyla tek başına çalışır; Siparişler, Backlog, LFL ve Fiyat & Üretici tek ortak ufku paylaşır (IAS'ta Siparişler ve Backlog). Diğer modüller yenilendiğinde CP de yenilenir; CP tek başına yenilenebilir. LFL IAS'tan beslenmediği için \"Yalnız LFL\" ile tek başına da yenilenebilir; genel yenileme LFL'i yine kapsar. CP'nin filtresi eksikse diğer modüller yine yenilenir, CP atlanır ve bu açıkça söylenir. Veri Yönetimi'ndeki yeni \"Horizon ve yenileme\" paneli iki ufku, beslendikleri kaynak filtrelerini, kendi Yenile düğmelerini, otomatik yenilemeyi ve kaynak izlemeyi tek yerde toplar. Modül ekle/ayır seçenekleri, modül başına ayrı filtre ve adlandırılmış yenileme grupları kaldırıldı. Daha önce kendi filtresiyle ayrı duran bir modül (ör. LFL ya da IAS Backlog) artık ortak ufku kullanır ve verisi bir sonraki yenilemede buna göre gelir; panel hangi kaynakta hangi modülün etkilendiğini ve eski filtresini listeler, eski filtre silinmez. LFL'e özel kişisel filtreniz varsa yalnız LFL'e uygulanır. Üstteki Yenile menüsü: CP, Diğer modüller + CP ve LFL. INTAKE bu ufuklara dahil değildir.",
+        "en": "Data source horizons are now just two: CP runs on its own horizon; Orders, Backlog, LFL and Price & Supplier share one horizon (Orders and Backlog for IAS). Refreshing the other modules also refreshes CP; CP can be refreshed on its own. Because LFL is not fed from IAS, \"LFL only\" refreshes LFL on its own; the general refresh still includes LFL. If the CP filter is missing, the other modules are still refreshed, CP is skipped and you are told so. The new \"Horizon and refresh\" panel in Data Management brings both horizons, the source filters that feed them, their own Refresh buttons, auto refresh and source watch into one place. Link/unlink options, per-module separate filters and named refresh groups were removed. A module that previously had its own filter (e.g. LFL or IAS Backlog) now uses the shared horizon and its data follows it from the next refresh; the panel lists which module of which source is affected and its previous filter, which is not deleted. A personal filter you set for LFL alone applies to LFL only. The top Refresh menu: CP, Other modules + CP, and LFL. INTAKE is not part of these horizons."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-management-two-horizons.png",
+        "alt": {
+          "tr": "Veri Yönetimi'nde Horizon ve yenileme paneli: CP ve Diğer modüller satırları, ASAS ve IAS filtreleri, CP'yi yenile, Diğer modülleri + CP'yi yenile ve Yalnız LFL düğmeleri, ortak ufka katılan eski LFL ve IAS Backlog filtrelerini listeleyen not ve otomatik yenileme ayarları (demo veri)",
+          "en": "Horizon and refresh panel in Data Management: CP and Other modules rows, ASAS and IAS filters, Refresh CP, Refresh other modules + CP and LFL only buttons, a note listing the previous LFL and IAS Backlog filters that joined the shared horizon, and auto refresh settings (demo data)"
+        },
+        "caption": {
+          "tr": "İki ufuk, kendi filtreleri ve Yenile düğmeleriyle tek panelde.",
+          "en": "Two horizons with their filters and Refresh buttons in one panel."
+        }
+      }
+    },
+    {
+      "id": "data-management-asas-ias-side-by-side",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "ASAS ve IAS filtresi yan yana; IAS karşılığı otomatik seçilir ve elle seçim hatırlanır",
+        "en": "ASAS and IAS filters side by side; the IAS counterpart is picked automatically and manual choices are remembered"
+      },
+      "body": {
+        "tr": "Horizon ve yenileme panelinde bir ufkun filtresi açıldığında, ufuk hem ASAS hem IAS'tan besleniyorsa iki kaynak yan yana görünür: solda ASAS koşulu, sağda IAS karşılığı. ASAS'ta bir sütun seçildiğinde IAS'taki eşleşen sütun otomatik seçilir ve değerler taşınır; eşleşmenin nereden geldiği (mevcut, birebir, bilinen karşılık, benzer ad, hatırlanan, elle seçildi) yazar. Otomatik eşleşme yanlışsa IAS sütunu elle seçilebilir ya da \"IAS'ta uygulanmaz\" denebilir; bu karar kaydedilince hatırlanır ve sonraki filtrelerde ilk öneri olur: kişisel kayıtta yalnız sizin için, yöneticinin \"Herkes için\" kaydında bütün ekip için; kendi kararınız ekibinkinden önce gelir. IAS değerleri ayrıca düzenlenebilir, \"ASAS ile eşitle\" ile geri alınır. Yalnız IAS'ta olan koşullar silinmez. Ortak kayıtta iki filtre tek işlemde yazılır. IAS karşılığı alınamazsa IAS filtresi değiştirilmez; IAS'ın sezon/tarih gibi ekranda görünmeyen ayarları korunur.",
+        "en": "When a horizon's filter is opened in the Horizon and refresh panel and the horizon is fed by both ASAS and IAS, the two sources appear side by side: the ASAS condition on the left, its IAS counterpart on the right. Choosing a column in ASAS automatically selects the matching IAS column and carries the values over; the match shows where it came from (existing, exact, known alias, similar name, remembered, chosen manually). If the automatic match is wrong, the IAS column can be chosen manually or marked \"not applied in IAS\"; the choice is remembered on save and becomes the first suggestion next time: for you only on a personal save, for the whole team on a manager's \"For everyone\" save; your own choice comes before the team's. IAS values can be edited separately and reset with \"Sync with ASAS\". Conditions that exist only in IAS are kept. A shared save writes both filters in one operation. If the IAS counterpart cannot be retrieved, the IAS filter is not changed; IAS settings not shown on screen, such as season or date, are kept."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-management-asas-ias-side-by-side.png",
+        "alt": {
+          "tr": "CP ufku filtresi yan yana: solda ASAS Sezon, Buyer Grup ve Ürün koşulları, sağda IAS karşılıkları Sezon Kod (mevcut), Buyer Grup (birebir), Ürün Tanım (hatırlanan) ve korunan yalnız IAS koşulu (demo veri)",
+          "en": "CP horizon filter side by side: ASAS Season, Buyer Group and Product conditions on the left, IAS counterparts Season Code (existing), Buyer Group (exact), Product Description (remembered) and a kept IAS-only condition on the right (demo data)"
+        },
+        "caption": {
+          "tr": "ASAS solda, IAS sağda; eşleşmenin kaynağı her satırda yazar.",
+          "en": "ASAS on the left, IAS on the right; each row shows where the match came from."
+        }
+      }
     }
   ]
 }

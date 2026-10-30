@@ -34,6 +34,7 @@
 
 const modelFields = require('./model-fields');
 const horizonFields = require('./horizon-fields');
+const fieldPairs = require('./horizon-field-pairs');
 
 const fieldKey = modelFields.fieldKey;
 
@@ -135,6 +136,57 @@ function matchField(sourceName, indexed, taken) {
   return null;
 }
 
+/* v2026-10-30 — HATIRLANAN EŞLEME ÖNCE GELİR.
+
+   Kullanıcının elle seçtiği eşleme (horizon-field-pairs) otomatik tahminden
+   önce uygulanır. Hatırlanan hedef CANLI hedef şemada yoksa (sütun silinmiş /
+   adı değişmiş) sessizce kullanılmaz: otomatik eşlemeye düşülür ve bu durum
+   `rememberedStale` ile söylenir. `to: null` bilinçli "karşılığı yok"
+   kararıdır; otomatik tahmin de yapılmaz. */
+function matchWithMemory(condition, indexed, taken, memory = {}) {
+  const sourceName = String(condition && (condition.name || condition.field) || '');
+  const remembered = Array.isArray(memory.pairs) && memory.pairs.length
+    ? fieldPairs.lookupPair(memory.pairs, memory.fromRole || 'asas', memory.toRole || 'antrepo', {
+      table: condition && condition.table, name: condition && condition.name, field: condition && condition.field,
+    })
+    : null;
+  if (remembered && remembered.to === null) return { hit: null, remembered: true, rememberedNone: true };
+  if (remembered && remembered.to) {
+    const wanted = fieldPairs.endKey(remembered.to);
+    const entry = indexed.find(item => !taken.has(item.label)
+      && fieldPairs.endKey({ table: item.field.table, name: item.field.name || item.field.header }) === wanted);
+    if (entry) return { hit: { entry, confidence: 'remembered', matchedBy: entry.label }, remembered: true };
+    const auto = matchField(sourceName, indexed, taken);
+    return { hit: auto, remembered: true, rememberedStale: true };
+  }
+  return { hit: matchField(sourceName, indexed, taken), remembered: false };
+}
+
+/**
+ * Tek tek kaynak alanlar için hedef alan önerisi (yan yana düzenleyici).
+ * Koşul kurulmaz, değer taşınmaz; yalnız "bu alanın karşılığı hangisi".
+ * @returns {Array<{index:number, target:object|null, confidence:string, matchedBy:string, rememberedStale:boolean}>}
+ */
+function matchFields({ fields, targetFields, pairs, fromRole = 'asas', toRole = 'antrepo' } = {}) {
+  const indexed = indexTargetFields(targetFields);
+  return (Array.isArray(fields) ? fields : []).map((field, index) => {
+    const condition = field && typeof field === 'object' ? field : {};
+    const result = matchWithMemory(condition, indexed, new Set(), { pairs, fromRole, toRole });
+    const target = result.hit ? result.hit.entry.field : null;
+    return {
+      index,
+      target: target ? {
+        field: target.header || target.name || result.hit.entry.label,
+        table: target.table || '', name: target.name || '',
+        type: target.type || '', typeSource: target.typeSource || '',
+      } : null,
+      confidence: result.hit ? result.hit.confidence : (result.rememberedNone ? 'none' : ''),
+      matchedBy: result.hit ? result.hit.matchedBy : '',
+      rememberedStale: Boolean(result.rememberedStale),
+    };
+  });
+}
+
 /* Tip uyuşmazlığı koşulu geçersiz kılmaz ama kullanıcıya söylenmesi gerekir:
    metin alanına tarih aralığı koşulu taşımak sessizce boş sonuç üretir. */
 function typeNote(condition, field) {
@@ -154,7 +206,7 @@ function typeNote(condition, field) {
  *          `groups` doğrudan filtre düzenleyicisine yüklenebilecek hâldedir;
  *          hiçbir şey kaydedilmez.
  */
-function proposeMapping({ groups, targetFields } = {}) {
+function proposeMapping({ groups, targetFields, pairs = null, fromRole = 'asas', toRole = 'antrepo' } = {}) {
   const indexed = indexTargetFields(targetFields);
   const proposals = [];
   const unmapped = [];
@@ -169,13 +221,14 @@ function proposeMapping({ groups, targetFields } = {}) {
     (group && Array.isArray(group.conditions) ? group.conditions : []).forEach(condition => {
       if (!condition) return;
       const sourceName = String(condition.name || condition.field || '');
-      const hit = matchField(sourceName, indexed, taken);
+      const matched = matchWithMemory(condition, indexed, taken, { pairs, fromRole, toRole });
+      const hit = matched.hit;
       if (!hit) {
         unmapped.push({
           groupIndex,
           sourceField: sourceName,
-          reason: 'NO_TARGET_FIELD',
-          detail: 'Hedef modelde karşılığı bulunamadı.',
+          reason: matched.rememberedNone ? 'REMEMBERED_NONE' : 'NO_TARGET_FIELD',
+          detail: matched.rememberedNone ? 'Bu alan için "karşılığı yok" kararı hatırlandı.' : 'Hedef modelde karşılığı bulunamadı.',
         });
         return;
       }
@@ -208,6 +261,7 @@ function proposeMapping({ groups, targetFields } = {}) {
         physical: Boolean(hit.entry.physical),
         confidence: hit.confidence,
         matchedBy: hit.matchedBy,
+        rememberedStale: Boolean(matched.rememberedStale),
         typeMismatch: typeNote(condition, field),
         /* Değerler olduğu gibi taşınır ama DOĞRULANMAMIŞTIR: iki modelin
            değer alfabesi farklı olabilir. Onay ekranı bunu gösterir. */
@@ -229,8 +283,9 @@ function proposeMapping({ groups, targetFields } = {}) {
       exact: proposals.filter(item => item.confidence === 'exact').length,
       alias: proposals.filter(item => item.confidence === 'alias').length,
       fuzzy: proposals.filter(item => item.confidence === 'fuzzy').length,
+      remembered: proposals.filter(item => item.confidence === 'remembered').length,
     },
   };
 }
 
-module.exports = { proposeMapping, _conceptOf: conceptOf, _matchField: matchField, _indexTargetFields: indexTargetFields };
+module.exports = { proposeMapping, matchFields, _conceptOf: conceptOf, _matchField: matchField, _indexTargetFields: indexTargetFields };

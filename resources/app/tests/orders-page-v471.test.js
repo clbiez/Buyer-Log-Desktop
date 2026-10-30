@@ -68,13 +68,15 @@ test('v4.71 Orders ufku eski CP kapsamından ayrı bir scope olarak üretilir', 
   assert.ok(result.find(scope => scope.targets.includes('cp')));
 });
 
-test('v4.71 karışık Orders kapsamı otomatik olarak diğer hedeflerden ayrılır', () => {
+/* v4.71'in amacı korunur: Orders ufku CP'den bağımsız düzenlenebilir.
+   v2026-10-30: IAS'ta Orders artık Backlog ile aynı "Diğer modüller" ufkundadır. */
+test('v4.71 karışık Orders kapsamı otomatik olarak CP\'den ayrılır', () => {
   const horizon = {table:'IAS',groups:[{id:'g',conditions:[{field:'Sezon',op:'in',values:['W6']}]}]};
   const result = scopes.normalizeScopes([
     {id:'mixed',targets:['cp','orders','backlog'],enabled:true,horizon},
   ], 'antrepo', horizon, normalizeHorizon);
-  assert.deepEqual(result.find(scope => scope.targets.includes('orders')).targets, ['orders']);
-  assert.deepEqual(result.find(scope => scope.targets.includes('cp')).targets, ['cp','backlog']);
+  assert.deepEqual(result.find(scope => scope.targets.includes('orders')).targets, ['orders','backlog']);
+  assert.deepEqual(result.find(scope => scope.targets.includes('cp')).targets, ['cp']);
 });
 
 test('v4.71 Orders ekranı, hızlı aktif/pasif filtreleri ve bağımsız yenileme hedefi vardır', () => {
@@ -86,8 +88,8 @@ test('v4.71 Orders ekranı, hızlı aktif/pasif filtreleri ve bağımsız yenile
   assert.match(INDEX, /function toggleOrdersActiveQuick/);
   assert.match(INDEX, /state\.ordersQuickActive\.clear\(\);clearColumnFilters\('orders',mirrored\)/);
   assert.match(INDEX, /const MODEL_ROLE_TARGETS=\{asas:\['cp','orders','backlog','lfl'\]/);
-  // v20260930 — Orders yenilemesi bağlı grubunu (tek sorgu) yeniler; gruptan ayrı CP'yi çalıştırmaz.
-  assert.match(INDEX, /options\.push\(\['linked',refreshTargetsLabel\(members\),members\.slice\(\)\]\)/);
+  // v2026-10-30 — Orders yenilemesi Diğer modülleri (tek sorgu) ve CP'yi yeniler.
+  assert.match(INDEX, /options\.push\(\['linked',`\$\{refreshTargetsLabel\(members\)\} \+ CP`,linkedTargets\]\)/);
   assert.match(INDEX, /DEFAULT_LINKED_REFRESH_TARGETS=Object\.freeze\(\['orders','backlog','lfl','priceanalysis'\]\)/);
   assert.match(SERVER, /orders: \{ rows: ordersRows \},\s*'order-summary': \{ rows: orderSummaryRows \}/);
 });

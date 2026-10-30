@@ -16,10 +16,13 @@ test('actual native UI shared-filter route uses the same source transaction and 
  const f=fixture(),expected=adapter.configRevision(source('ias')),response=await f.invoke('filter',{sourceId:'ias',moduleId:'cp',mode:'shared',definition:H('W27'),expectedSourceRevision:expected});assert.equal(response.status,200);assert.equal(response.response.verified,true);assert.deepEqual(source('ias').scopes.find(s=>s.targets.includes('cp')).horizon.groups[0].conditions[0].values,['W27']);assert.deepEqual(f.events,['modelConnections']);
  const stale=await f.invoke('filter',{sourceId:'ias',moduleId:'cp',mode:'shared',definition:H('W28'),expectedSourceRevision:expected});assert.equal(stale.status,409);assert.equal(stale.response.code,'SOURCE_CHANGED');assert.equal(f.events.length,1);
 });
-test('actual native binding and link route semantics remain unchanged, including no-op receipts and parked filters',async()=>{
+test('actual native binding route semantics remain unchanged (no-op receipts, parked filters); link route is fixed (LINK_FIXED)',async()=>{
  const f=fixture();let result=await f.invoke('binding',{sourceId:'ias',moduleId:'orders',enabled:false});assert.equal(result.status,200);assert.equal(result.response.changed,true);assert.ok(source('ias').parkedBindings.length);result=await f.invoke('binding',{sourceId:'ias',moduleId:'orders',enabled:false});assert.equal(result.response.changed,false);assert.equal(f.events.length,1);
- result=await f.invoke('link',{sourceId:'asas',moduleId:'cp',linked:true});assert.equal(result.status,200);assert.ok(source('asas').linkedTargets.includes('cp'));assert.ok(source('asas').linkRestore.some(entry=>entry.moduleId==='cp'));
- result=await f.invoke('link',{sourceId:'asas',moduleId:'cp',linked:false});assert.equal(result.status,200);assert.deepEqual(source('asas').scopes.find(scope=>scope.targets.includes('cp')).horizon.groups[0].conditions[0].values,['S26']);
+ // v2026-10-30: iki sabit ufuk — link ucu her isteği açık kodla reddeder, kayıt ve olay değişmez.
+ const beforeLink=adapter.configRevision(source('asas'));
+ result=await f.invoke('link',{sourceId:'asas',moduleId:'cp',linked:true});assert.equal(result.status,409);assert.equal(result.response.code,'LINK_FIXED');assert.ok(!source('asas').linkedTargets.includes('cp'));
+ result=await f.invoke('link',{sourceId:'asas',moduleId:'lfl',linked:false});assert.equal(result.status,409);assert.equal(result.response.code,'LINK_FIXED');
+ assert.equal(adapter.configRevision(source('asas')),beforeLink);assert.equal(f.events.length,1);assert.deepEqual(source('asas').scopes.find(scope=>scope.targets.includes('cp')).horizon.groups[0].conditions[0].values,['S26']);
 });
 test('native lease rechecks current IAM after route middleware and before any persistence',async()=>{
  const f=fixture(),before=adapter.configRevision(source('ias')),original=db.mutateModelConnections;db.mutateModelConnections=work=>{f.profile.areas=[];return original(work);};try{const response=await f.invoke('binding',{sourceId:'ias',moduleId:'orders',enabled:false});assert.equal(response.status,403);assert.equal(response.response.code,'PERMISSION_REQUIRED');assert.equal(adapter.configRevision(source('ias')),before);assert.equal(f.events.length,0);}finally{db.mutateModelConnections=original;}

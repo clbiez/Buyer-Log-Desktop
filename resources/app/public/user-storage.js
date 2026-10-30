@@ -15,7 +15,9 @@
     'lcw.koleksiyon.priceView.','lcw.pricingDesk.','lcw.quotations.projectedLineEdits.',
     'bl.privateOrderNotes.v1.','lcw.personalOrderNotes.','lcw.todo.','lcw.notifications.','lcw.masterReleaseNotice.','lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.','lcw.quotations.columnWidths.','lcw.oab.','lcw.intake.',
     'lcw_view_favorite_','lcw_filter_favorite_','buyerlog.fx.persist.v1','buyerlog.workspace.','buyerlog.dashboard.','buyerlog.favorites.','buyerlog.presetCache.v2.',
-    'bl.backlog.excelColumns.','bl.detailTables.showImages.','bl.modelImages.','bl.tableRange.','bl.refreshHistory.','bl.autoRefresh.','bl.lcwai.history.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.'
+    'bl.backlog.excelColumns.','bl.detailTables.showImages.','bl.modelImages.','bl.tableRange.','bl.refreshHistory.','bl.autoRefresh.','bl.lcwai.history.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.',
+    // v2026-10-30 — kişisel ASAS ⇄ IAS alan eşleme hafızası (yalnız sunucu yazar).
+    'buyerlog.horizonFieldPairs.'
   ];
   /* AYNI BİLGİSAYARDA BİRDEN FAZLA KULLANICI.
      Aşağıdaki kişisel filtre/görünüm anahtarları eskiden kullanıcı önekine
@@ -119,7 +121,8 @@
     'buyerlog.workspace.horizon.','buyerlog.workspace.applied-horizon.','buyerlog.dashboard.','lcw.dashboard.','buyerlog.favorites.','lcw.favorites.','bl.backlog.excelColumns.','bl.detailTables.showImages.',
     'bl.formulaColumns.', // v7.28 — hesaplanan sütun tanımları kullanıcıyla birlikte taşınır
     'bl.excelImport.profiles.', // Excel içe aktarma eşleme profilleri: kullanıcıya ve modüle ait YAPILANDIRMA (çalışma kitabı verisi değil)
-    'lcw.cp.imageSize.','lcw_theme','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step','bl.refreshHistory.','bl.autoRefresh.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.'
+    'lcw.cp.imageSize.','lcw_theme','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step','bl.refreshHistory.','bl.autoRefresh.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.',
+    'buyerlog.horizonFieldPairs.' // v2026-10-30 — kişisel ASAS ⇄ IAS alan eşleme hafızası
   ];
   function synced(key){key=String(key);return SYNCED.some(function(p){return key.indexOf(p)===0})}
   var META_KEY='bl.user.'+uid+'.__syncMeta.v1';
