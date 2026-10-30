@@ -179,6 +179,8 @@ function mergeRequestCopies(a, b) {
     const history = unionHistory(item.history, twin.history);
     const rev = Math.max(positiveInt(item.rev, 0), positiveInt(twin.rev, 0));
     const merged = { ...item, price: winner.price, approved: winner.approved, dropped: winner.dropped, updatedAt: winner.updatedAt, updatedBy: winner.updatedBy, history, rev };
+    // Ana fiyatın etiketi/notu fiyatla birlikte taşınır (alternatifle yer değiştirme).
+    if (winner !== item && winner.priceLabel !== undefined) { merged.priceLabel = winner.priceLabel; merged.priceNote = winner.priceNote; }
     if (winner !== item || history.length !== (Array.isArray(item.history) ? item.history.length : 0) || rev !== positiveInt(item.rev, 0)) changed = true;
     return merged;
   });

@@ -192,9 +192,24 @@
   }
   function setDetailView(req,view){if(!req)return;state.detailViews[req.id]=view==='list'?'list':'matrix';store.set(VIEW_KEY,state.detailViews);}
 
+  /* Alternatif fiyat rozeti hücrenin sol üst köşesinde, fiyat metninin üstündeki
+     boşluktadır (hücre taşanı kırptığı ve üst şerit ilk satırda sabit başlığın
+     altında kaldığı için hücre dışına çıkmaz). Alternatif varsa daima görünür;
+     yoksa düzenleme yetkisinde yalnız üzerine gelince / odakta "+" çıkar. */
+  function optionBadgeHtml(line,label,canEdit){
+    const list=E.lineOptions(line);
+    if(!list.length&&!canEdit)return '';
+    const main=`${clean(line.priceLabel)||L('Ana teklif','Main offer')}: ${E.price(line.price)!=null?money(E.price(line.price)):'—'}`;
+    const tip=list.length?[main,...list.map((option,i)=>`${option.label||L(`Opsiyon ${i+1}`,`Option ${i+1}`)}: ${option.value!=null?money(option.value):(option.price||'—')}${option.note?` · ${option.note}`:''}`)].join('\n'):L('Alternatif fiyat ekle (O)','Add alternative price (O)');
+    return `<button type="button" class="pdOptBadge${list.length?' hasOptions':''}" data-pd-options="${esc(line.id)}" tabindex="-1" title="${esc(tip)}" aria-label="${esc(L(`${label}: alternatif fiyatlar (${list.length})`,`${label}: alternative prices (${list.length})`))}">${list.length?esc(L(`OPS ${list.length}`,`OPT ${list.length}`)):esc(L('+ OPS','+ OPT'))}</button>`;
+  }
   function cellHtml(req,model,name,stats,ctx){
     const line=model.cell(name);
-    if(!line)return `<td class="pdCell isEmpty"><span class="pdNoLine" aria-label="${esc(L('Teklif yok','No offer'))}">—</span></td>`;
+    if(!line){
+      if(!ctx.canEdit)return `<td class="pdCell isEmpty"><span class="pdNoLine" aria-label="${esc(L('Teklif yok','No offer'))}">—</span></td>`;
+      const label=`${lineInfo(req,model.first).model} · ${name}`;
+      return `<td class="pdCell isEmpty"><button type="button" class="pdAddLine" data-pd-add-line="${esc(name)}" data-pd-add-model="${esc(model.modelKey)}" title="${esc(L('Bu üretici için fiyat hücresi aç','Open a price cell for this manufacturer'))}" aria-label="${esc(L(`${label} için teklif satırı ekle`,`Add an offer line for ${label}`))}"><span aria-hidden="true">—</span><b aria-hidden="true">+</b></button></td>`;
+    }
     const info=lineInfo(req,model.first),value=E.price(line.price),dropped=!!line.dropped;
     const isBest=!dropped&&stats.best&&stats.best.lineId===line.id&&stats.priced>1,isAppr=!!line.approved&&!dropped,outlier=stats.outliers.has(line.id);
     const neg=E.negotiation(line,req),prev=neg&&neg.previous!=null&&Math.abs(neg.previous-(value||0))>0.0001?neg.previous:null;
@@ -203,10 +218,11 @@
     return `<td class="${classes}" data-pd-line="${esc(line.id)}">
       <div class="pdCellTop">${prev!=null?`<s class="pdPrev" title="${esc(L('Önceki teklif','Previous offer'))}">${esc(moneyPlain(prev))}</s>`:''}${isBest?`<span class="pdBestTag${ctx.moved?' isMoved':''}">${esc(L('EN İYİ','BEST'))}</span>`:''}${isAppr?`<span class="pdApprovedTag">${esc(L('ONAYLI','APPROVED'))}</span>`:''}</div>
       <div class="pdCellMain">
-        <input type="text" inputmode="decimal" class="pdCellInput" data-pd-input="${esc(line.id)}" data-r="${ctx.mi}" data-c="${ctx.ci}" value="${esc(value!=null?moneyPlain(value):clean(line.price))}" placeholder="—" aria-label="${esc(L(`${label} teklif fiyatı`,`${label} quotation price`))}" ${ctx.canEdit&&!dropped?'':'disabled'}>
+        <input type="text" inputmode="decimal" class="pdCellInput" data-pd-input="${esc(line.id)}" data-r="${ctx.mi}" data-c="${ctx.ci}" value="${esc(value!=null?moneyPlain(value):clean(line.price))}" placeholder="—" aria-label="${esc(L(`${label} teklif fiyatı`,`${label} quotation price`)+(E.lineOptions(line).length?L(` · ${E.lineOptions(line).length} alternatif fiyat`,` · ${E.lineOptions(line).length} alternative prices`):''))}" ${ctx.canEdit&&!dropped?'':'disabled'}>
         <button type="button" class="pdApprove${isAppr?' isOn':''}" data-pd-approve="${esc(line.id)}" tabindex="-1" aria-pressed="${isAppr?'true':'false'}" ${ctx.canEdit&&!dropped&&value!=null?'':'disabled'} title="${esc(isAppr?L('Onayı kaldır (A)','Remove approval (A)'):L('Onayla (A)','Approve (A)'))}" aria-label="${esc((isAppr?L('Onayı kaldır: ','Remove approval: '):L('Onayla: ','Approve: '))+label)}"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></button>
         <button type="button" class="pdDrop${dropped?' isOn':''}" data-pd-drop="${esc(line.id)}" tabindex="-1" aria-pressed="${dropped?'true':'false'}" ${ctx.canEdit?'':'disabled'} title="${esc(dropped?L('Drop işaretini kaldır (D)','Remove Drop (D)'):L('Drop (D)','Drop (D)'))}" aria-label="${esc('Drop: '+label)}"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
       </div>
+      <div class="pdCellOpt">${optionBadgeHtml(line,label,ctx.canEdit)}</div>
       <div class="pdCellNote">${outlier?esc(L('Olağan dışı · emin misin?','Unusual · are you sure?')):(dropped?esc(L('Drop','Dropped')):(neg&&neg.rounds>1?esc(L(`${neg.rounds} tur · ${pctText(neg.gainPct)}`,`${neg.rounds} rounds · ${pctText(neg.gainPct)}`)):''))}</div>
     </td>`;
   }
@@ -226,7 +242,7 @@
         <td class="pdNum pdTarget">${info.target!=null?esc(money(info.target)):'—'}</td>
         <td class="pdNum pdBestCol pdStickyBest" data-pd-best>${shown?`<b>${esc(money(shown.price))}</b><span>${esc(shown.manufacturer)}${stats.approved?` · ${esc(L('onaylı','approved'))}`:''}</span>`:'<span>—</span>'}</td>
         <td class="pdNum pdStickyDelta" data-pd-delta><span class="pdChip ${toneOf(delta)}">${esc(pctText(delta))}</span></td>
-        ${cells.join('')}
+        ${cells.join('')}${ctx.canEdit?'<td class="pdAddMfrCell" aria-hidden="true"></td>':''}
       </tr>`;
     }).join('');
     state.lastBest.set(req.id,nextBest);
@@ -244,6 +260,9 @@
     const gain=E.requestGain(req),round=Math.max(1,Number(req.round)||1);
     const heads=layout.visible.map(card=>`<th scope="col" class="pdMfrHead" data-pd-supplier="${esc(card.key)}">${supplierHeadHtml(card)}</th>`).join('');
     const otherHead=layout.other.length?`<th scope="col" class="pdMfrHead"><button type="button" class="linkBtn" data-pd-expand aria-expanded="false">${esc(L(`Diğer (${layout.other.length})`,`Other (${layout.other.length})`))}</button></th>`:'';
+    // Tablodan üretici ekleme sütunu (Send to Pricing kullanmadan fiyat veren üretici için).
+    const addHead=canEdit?`<th scope="col" class="pdMfrHead pdAddMfrHead"><button type="button" class="pdAddMfr" data-pd-add-mfr title="${esc(L('Tabloya üretici ekle','Add a manufacturer to the table'))}"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>${esc(L('Üretici','Manufacturer'))}</button></th>`:'';
+    const columnCount=matrix.manufacturers.length+(layout.other.length?1:0)+(canEdit?1:0);
     host.innerHTML=`<div class="pdMatrixBar">
         <span class="pdLegend"><i class="pdLegendBest"></i>${esc(L('En iyi','Best'))}<i class="pdLegendAppr"></i>${esc(L('Onaylı','Approved'))}<i class="pdLegendOut"></i>${esc(L('Olağan dışı','Unusual'))}</span>
         <span class="pdRoundBadge" title="${esc(L('Bu talepteki pazarlık turu','Negotiation round of this request'))}">${esc(L(`Tur ${round}`,`Round ${round}`))}</span>
@@ -258,12 +277,14 @@
       <div class="pdBulkPanel" data-pd-bulk-panel hidden></div>
       <div class="pdRoundPanel" data-pd-round-panel hidden></div>
       <div class="pdImportPanel" data-pd-import-panel hidden></div>
-      <div class="pdMatrixScroll"><table class="pdMatrix" style="--pd-columns:${matrix.manufacturers.length+(layout.other.length?1:0)}" aria-label="${esc(L('Model × üretici teklif matrisi','Model × manufacturer quotation matrix'))}">
-        <colgroup><col class="pdModelWidth"><col class="pdTargetWidth"><col class="pdBestWidth"><col class="pdDeltaWidth">${Array.from({length:matrix.manufacturers.length+(layout.other.length?1:0)},()=>'<col class="pdSupplierWidth">').join('')}</colgroup>
-        <thead><tr><th scope="col" class="pdModelHead">${esc(L('Model','Model'))}</th><th scope="col" class="pdNum pdTarget">${esc(L('Hedef','Target'))}</th><th scope="col" class="pdNum pdStickyBest">${esc(L('En iyi / Onaylı','Best / Approved'))}</th><th scope="col" class="pdNum pdStickyDelta">Δ ${esc(L('Hedef','Target'))}</th>${heads}${otherHead}</tr></thead>
-        <tbody>${matrix.models.length?matrixRowsHtml(req,matrix,{canEdit,other:layout.other}):`<tr><td colspan="${matrix.manufacturers.length+4+(layout.other.length?1:0)}"><div class="pricingEmptyState">${esc(L('Bu talepte model yok.','There are no models in this request.'))}</div></td></tr>`}</tbody>
+      <div class="pdMfrPanel" data-pd-mfr-panel hidden></div>
+      <div class="pdOptionsPanel" data-pd-options-panel hidden></div>
+      <div class="pdMatrixScroll"><table class="pdMatrix" style="--pd-columns:${columnCount}" aria-label="${esc(L('Model × üretici teklif matrisi','Model × manufacturer quotation matrix'))}">
+        <colgroup><col class="pdModelWidth"><col class="pdTargetWidth"><col class="pdBestWidth"><col class="pdDeltaWidth">${Array.from({length:columnCount},()=>'<col class="pdSupplierWidth">').join('')}</colgroup>
+        <thead><tr><th scope="col" class="pdModelHead">${esc(L('Model','Model'))}</th><th scope="col" class="pdNum pdTarget">${esc(L('Hedef','Target'))}</th><th scope="col" class="pdNum pdStickyBest">${esc(L('En iyi / Onaylı','Best / Approved'))}</th><th scope="col" class="pdNum pdStickyDelta">Δ ${esc(L('Hedef','Target'))}</th>${heads}${otherHead}${addHead}</tr></thead>
+        <tbody>${matrix.models.length?matrixRowsHtml(req,matrix,{canEdit,other:layout.other}):`<tr><td colspan="${columnCount+4}"><div class="pricingEmptyState">${esc(L('Bu talepte model yok.','There are no models in this request.'))}</div></td></tr>`}</tbody>
       </table></div>
-      <div class="pdHints" aria-hidden="true"><span><kbd>Enter</kbd> ${esc(L('alt satır','next row'))}</span><span><kbd>Tab</kbd> ${esc(L('sonraki üretici','next manufacturer'))}</span><span><kbd>A</kbd> ${esc(L('onayla','approve'))}</span><span><kbd>D</kbd> Drop</span><span><kbd>Ctrl+V</kbd> ${esc(L('Excel’den blok yapıştır','paste a block from Excel'))}</span><span><kbd>Ctrl+Z</kbd> ${esc(L('geri al','undo'))}</span><span><kbd>Esc</kbd> ${esc(L('vazgeç','cancel'))}</span></div>`;
+      <div class="pdHints" aria-hidden="true"><span><kbd>Enter</kbd> ${esc(L('alt satır','next row'))}</span><span><kbd>Tab</kbd> ${esc(L('sonraki üretici','next manufacturer'))}</span><span><kbd>A</kbd> ${esc(L('onayla','approve'))}</span><span><kbd>D</kbd> Drop</span><span><kbd>O</kbd> ${esc(L('alternatif fiyat','alternative price'))}</span><span><kbd>Ctrl+V</kbd> ${esc(L('Excel’den blok yapıştır','paste a block from Excel'))}</span><span><kbd>Ctrl+Z</kbd> ${esc(L('geri al','undo'))}</span><span><kbd>Esc</kbd> ${esc(L('vazgeç','cancel'))}</span></div>`;
     host.querySelectorAll('[data-pd-expand],[data-pd-collapse]').forEach(button=>button.addEventListener('click',()=>{
       const scroll=host.querySelector('.pdMatrixScroll'),left=scroll?.scrollLeft||0;
       if(button.hasAttribute('data-pd-expand'))state.expandedSuppliers[req.id]=true;else delete state.expandedSuppliers[req.id];
@@ -314,6 +335,7 @@
       td.className=next.className;
       td.querySelector('.pdCellTop').innerHTML=next.querySelector('.pdCellTop').innerHTML;
       td.querySelector('.pdCellNote').innerHTML=next.querySelector('.pdCellNote').innerHTML;
+      const opt=td.querySelector('.pdCellOpt');if(opt)opt.innerHTML=next.querySelector('.pdCellOpt').innerHTML;
       ['.pdApprove','.pdDrop'].forEach(selector=>{const a=td.querySelector(selector),b=next.querySelector(selector);if(a&&b){a.className=b.className;a.disabled=b.disabled;a.setAttribute('aria-pressed',b.getAttribute('aria-pressed'));a.title=b.title;}});
     });
     const shown=stats.approved&&stats.approved.price!=null?stats.approved:stats.best;
@@ -407,6 +429,113 @@
       else event.currentTarget.disabled=false;
     });
   }
+  function playPanel(panel){try{window.BLMotionPlus?.play?.('card',panel);}catch(_){}}
+  function closeSiblingPanels(host,keep){host.querySelectorAll('[data-pd-mfr-panel],[data-pd-options-panel]').forEach(panel=>{if(panel!==keep)panel.hidden=true;});}
+  /* Talepte yeni üretici: her model için boş fiyat hücresi açılır ve ilk hücreye
+     odaklanılır. Ad, Koleksiyon üretici listesi ve diğer taleplerden önerilir. */
+  function focusAdded(req,result){
+    if(!result||!result.added.length)return false;
+    if(E.requestMatrix(req).manufacturers.length>8&&!state.expandedSuppliers[req.id]){state.expandedSuppliers[req.id]=true;store.set(SUPPLIERS_KEY,state.expandedSuppliers);}
+    state.focus={requestId:req.id,lineId:result.added[0].id};
+    Q().renderDetail();
+    return true;
+  }
+  function openManufacturerPanel(host,req){
+    const api=Q(),panel=host.querySelector('[data-pd-mfr-panel]');if(!api||!panel)return;
+    if(!panel.hidden){panel.hidden=true;return;}
+    closeSiblingPanels(host,panel);
+    const present=new Map(E.supplierScorecards(req).map(card=>[card.key,card])),models=E.requestMatrix(req).models.length;
+    const suggestions=api.manufacturerSuggestions().filter(item=>{const card=present.get(E.keyOf(item.name));return !card||card.models<models;});
+    const listId=`pdMfrList-${String(req.id).replace(/[^A-Za-z0-9_-]/g,'_')}`;
+    panel.innerHTML=`<div class="pdPanelHead"><b>${esc(L('Tabloya üretici ekle','Add a manufacturer to the table'))}</b><span>${esc(L(`Send to Pricing kullanmadan fiyat veren üreticiyi ekle. Bu talepteki ${models} model için boş fiyat hücresi açılır; fiyatı doğrudan matrise yazarsın.`,`Add a manufacturer that quoted without Send to Pricing. Empty price cells open for the ${models} models of this request; type prices straight into the matrix.`))}</span></div>
+      <div class="pdMfrFields">
+        <label class="pdField"><span>${esc(L('Üretici','Manufacturer'))}</span><input type="text" maxlength="240" list="${esc(listId)}" data-pd-mfr-name autocomplete="off" placeholder="${esc(L('Üretici adı','Manufacturer name'))}"></label>
+        <label class="pdField"><span>${esc(L('E-posta (isteğe bağlı)','E-mail (optional)'))}</span><input type="email" maxlength="320" data-pd-mfr-email autocomplete="off" placeholder="name@example.com"></label>
+        <datalist id="${esc(listId)}">${suggestions.map(item=>`<option value="${esc(item.name)}"></option>`).join('')}</datalist>
+      </div>
+      <div class="pdPanelActions"><button type="button" class="tbtn" data-pd-mfr-cancel>${esc(L('Vazgeç','Cancel'))}</button><button type="button" class="tbtn primary" data-pd-mfr-apply>${esc(L('Üreticiyi ekle','Add manufacturer'))}</button></div>`;
+    panel.hidden=false;playPanel(panel);
+    const name=panel.querySelector('[data-pd-mfr-name]'),email=panel.querySelector('[data-pd-mfr-email]');
+    name?.focus();
+    name.addEventListener('change',()=>{const hit=suggestions.find(item=>E.keyOf(item.name)===E.keyOf(name.value));if(hit&&hit.email&&!clean(email.value))email.value=hit.email;});
+    const apply=()=>{
+      const typed=clean(name.value);
+      if(!typed){toast(L('Üretici adını yaz ya da listeden seç.','Type a manufacturer name or pick one from the list.'));name.focus();return;}
+      const result=api.addManufacturer(req,{name:typed,email:clean(email.value)});
+      if(!result)return;
+      if(!result.added.length){toast(L(`${result.manufacturer.name} bu talepteki bütün modellerde zaten var.`,`${result.manufacturer.name} is already on every model of this request.`));return;}
+      toast(L(`${result.manufacturer.name} eklendi; ${result.added.length} model için fiyat girebilirsin.`,`${result.manufacturer.name} added; enter prices for ${result.added.length} models.`));
+      focusAdded(req,result);
+    };
+    panel.querySelector('[data-pd-mfr-apply]').addEventListener('click',apply);
+    panel.querySelector('[data-pd-mfr-cancel]').addEventListener('click',()=>{panel.hidden=true;});
+    [name,email].forEach(input=>input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.isComposing){event.preventDefault();apply();}if(event.key==='Escape'){event.preventDefault();panel.hidden=true;}}));
+  }
+  // Boş hücre: üretici talepte var ama bu model için satırı yok → tek satır açılır.
+  function addLineFor(host,req,manufacturer,modelKey){
+    const api=Q();if(!api||!manufacturer||!modelKey)return;
+    const result=api.addManufacturer(req,{name:manufacturer},{modelKeys:[modelKey]});
+    if(result&&result.added.length)focusAdded(req,result);
+  }
+  /* Alternatif fiyatlar: üretici aynı model için koşula bağlı ayrı fiyat
+     verebilir (ör. kumaş gramajı / işçilik değişirse opsiyon 1, değişmezse
+     opsiyon 2). Ana fiyat en iyi teklif, onay ve Koleksiyon hesabına girer;
+     alternatif "Ana fiyat yap" ile seçilir, önceki ana fiyat alternatif olarak kalır. */
+  function openOptionsPanel(host,req,line){
+    const api=Q(),panel=host.querySelector('[data-pd-options-panel]');if(!api||!panel||!line)return;
+    if(!panel.hidden&&panel.dataset.pdLine===line.id){panel.hidden=true;return;}
+    closeSiblingPanels(host,panel);
+    const canEdit=api.canEdit(req),info=lineInfo(req,line);
+    const blank=()=>({id:`opt-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,label:'',price:'',note:''});
+    const draft={priceLabel:clean(line.priceLabel),priceNote:clean(line.priceNote),options:E.lineOptions(line).map(option=>({id:option.id||blank().id,label:option.label,price:option.value!=null?moneyPlain(option.value):option.price,note:option.note}))};
+    if(!draft.options.length&&canEdit)draft.options.push(blank());
+    const mainValue=E.price(line.price);
+    const dis=canEdit?'':'disabled';
+    const render=focusIndex=>{
+      panel.innerHTML=`<div class="pdPanelHead"><b>${esc(L('Alternatif fiyatlar','Alternative prices'))} · ${esc(info.model)} · ${esc(line.manufacturer)}</b><span>${esc(L('Üretici aynı model için farklı koşullarla fiyat verebilir (ör. kumaş gramajı ya da işçilik değişirse opsiyon 1, değişmezse opsiyon 2). En iyi teklif, onay ve Koleksiyon yalnız ana fiyatı kullanır; bir alternatifi “Ana fiyat yap” ile seçebilirsin.','A manufacturer may quote the same model under different conditions (e.g. option 1 if fabric weight or workmanship changes, option 2 if not). Best offer, approval and Collection use only the main price; pick an alternative with “Make main price”.'))}</span></div>
+        <div class="pdOptGrid" role="table" aria-label="${esc(L('Alternatif fiyat listesi','Alternative price list'))}">
+          <div class="pdOptRow pdOptHeadRow" role="row"><span role="columnheader">${esc(L('Seçenek','Option'))}</span><span role="columnheader" class="pdNum">${esc(L('Fiyat (USD)','Price (USD)'))}</span><span role="columnheader">${esc(L('Koşul / not','Condition / note'))}</span><span role="columnheader"></span></div>
+          <div class="pdOptRow isMain" role="row"><input type="text" maxlength="120" data-pd-main-label value="${esc(draft.priceLabel)}" placeholder="${esc(L('Ana teklif','Main offer'))}" aria-label="${esc(L('Ana fiyat etiketi','Main price label'))}" ${dis}><span class="pdNum pdOptMainPrice" title="${esc(L('Ana fiyat matristeki hücreden girilir','The main price is entered in the matrix cell'))}">${esc(mainValue!=null?money(mainValue):'—')}</span><input type="text" maxlength="500" data-pd-main-note value="${esc(draft.priceNote)}" placeholder="${esc(L('ör. mevcut gramaj, mevcut işçilik','e.g. current fabric weight and workmanship'))}" aria-label="${esc(L('Ana fiyat notu','Main price note'))}" ${dis}><span class="pdOptMainTag">${esc(L('ANA FİYAT','MAIN PRICE'))}</span></div>
+          ${draft.options.map((option,i)=>{const value=E.price(option.price);return `<div class="pdOptRow" role="row" data-pd-opt-row="${i}"><input type="text" maxlength="120" data-pd-opt-label="${i}" value="${esc(option.label)}" placeholder="${esc(L(`Opsiyon ${i+1}`,`Option ${i+1}`))}" aria-label="${esc(L(`Opsiyon ${i+1} etiketi`,`Option ${i+1} label`))}" ${dis}><input type="text" inputmode="decimal" class="pdNum" data-pd-opt-price="${i}" value="${esc(option.price)}" placeholder="—" aria-label="${esc(L(`Opsiyon ${i+1} fiyatı`,`Option ${i+1} price`))}" ${dis}><input type="text" maxlength="500" data-pd-opt-note="${i}" value="${esc(option.note)}" placeholder="${esc(L('ör. 160 gr kumaş, nakışsız','e.g. 160 gsm fabric, no embroidery'))}" aria-label="${esc(L(`Opsiyon ${i+1} notu`,`Option ${i+1} note`))}" ${dis}><span class="pdOptActions">${canEdit?`<button type="button" class="tbtn" data-pd-opt-promote="${i}" ${value!=null&&!line.dropped?'':'disabled'} title="${esc(L('Bu alternatifi ana fiyat yap; mevcut ana fiyat alternatif olarak saklanır','Make this alternative the main price; the current main price is kept as an alternative'))}">${esc(L('Ana fiyat yap','Make main price'))}</button><button type="button" class="pdOptRemove" data-pd-opt-remove="${i}" title="${esc(L('Alternatifi sil','Remove alternative'))}" aria-label="${esc(L(`Opsiyon ${i+1} sil`,`Remove option ${i+1}`))}"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>`:''}</span></div>`;}).join('')}
+        </div>
+        <div class="pdPanelActions">${canEdit?`<button type="button" class="tbtn" data-pd-opt-add ${draft.options.length>=10?'disabled':''}><svg class="ic"><use href="#i-plus"/></svg>${esc(L('Alternatif ekle','Add alternative'))}</button><span class="pdBarSpacer"></span>`:''}<button type="button" class="tbtn" data-pd-opt-cancel>${esc(canEdit?L('Vazgeç','Cancel'):L('Kapat','Close'))}</button>${canEdit?`<button type="button" class="tbtn primary" data-pd-opt-save>${esc(L('Kaydet','Save'))}</button>`:''}</div>`;
+      panel.dataset.pdLine=line.id;
+      panel.querySelector('[data-pd-main-label]')?.addEventListener('input',event=>{draft.priceLabel=event.target.value;});
+      panel.querySelector('[data-pd-main-note]')?.addEventListener('input',event=>{draft.priceNote=event.target.value;});
+      panel.querySelectorAll('[data-pd-opt-label],[data-pd-opt-price],[data-pd-opt-note]').forEach(input=>input.addEventListener('input',()=>{
+        const i=Number(input.dataset.pdOptLabel??input.dataset.pdOptPrice??input.dataset.pdOptNote),field=input.hasAttribute('data-pd-opt-label')?'label':input.hasAttribute('data-pd-opt-price')?'price':'note';
+        if(draft.options[i])draft.options[i][field]=input.value;
+        if(field==='price'){const promote=panel.querySelector(`[data-pd-opt-promote="${i}"]`);if(promote)promote.disabled=E.price(input.value)==null||!!line.dropped;}
+      }));
+      panel.querySelectorAll('[data-pd-opt-remove]').forEach(button=>button.addEventListener('click',()=>{draft.options.splice(Number(button.dataset.pdOptRemove),1);render();}));
+      panel.querySelector('[data-pd-opt-add]')?.addEventListener('click',()=>{if(draft.options.length>=10)return;draft.options.push(blank());render(draft.options.length-1);});
+      panel.querySelector('[data-pd-opt-cancel]')?.addEventListener('click',()=>{panel.hidden=true;});
+      panel.querySelector('[data-pd-opt-save]')?.addEventListener('click',()=>{if(save())toast(L('Alternatif fiyatlar kaydedildi.','Alternative prices saved.'));});
+      panel.querySelectorAll('[data-pd-opt-promote]').forEach(button=>button.addEventListener('click',()=>{
+        const option=draft.options[Number(button.dataset.pdOptPromote)];if(!option)return;
+        const id=option.id;if(!save({render:false}))return;
+        if(api.promoteOption(req,line,id,'matrix')){state.flash.add(line.id);toast(L('Alternatif ana fiyat yapıldı; önceki ana fiyat alternatif olarak saklandı.','Alternative is now the main price; the previous main price is kept as an alternative.'));}
+        api.renderDetail();
+      }));
+      if(focusIndex!=null)panel.querySelector(`[data-pd-opt-label="${focusIndex}"]`)?.focus();
+    };
+    // Boş satırlar atılır; fiyat yazılmışsa geçerli olmalıdır. Etiketsiz alternatif sırasıyla adlandırılır.
+    const save=({render:rerender=true}={})=>{
+      const options=[];
+      for(const option of draft.options){
+        const label=clean(option.label),price=clean(option.price),note=clean(option.note);
+        if(!label&&!price&&!note)continue;
+        if(price&&E.price(price)==null){toast(L(`Geçersiz fiyat: “${price}”. Sayı olarak yaz (ör. 4,15).`,`Invalid price: “${price}”. Enter a number (e.g. 4.15).`));return false;}
+        options.push({id:option.id,label:label||L(`Opsiyon ${options.length+1}`,`Option ${options.length+1}`),price,note});
+      }
+      if(!api.saveLineOptions(req,line,{priceLabel:draft.priceLabel,priceNote:draft.priceNote,options}))return false;
+      if(rerender){panel.hidden=true;state.focus={requestId:req.id,lineId:line.id,select:false};api.renderDetail();}
+      return true;
+    };
+    panel.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();panel.hidden=true;}};
+    render();panel.hidden=false;playPanel(panel);
+    if(canEdit)panel.querySelector(draft.options.length===1&&!draft.options[0].label?'[data-pd-opt-label="0"]':'[data-pd-main-label]')?.focus();
+  }
   function bindMatrix(host,req,matrix,candidates){
     const api=Q();
     host.querySelectorAll('.pdCellInput').forEach(input=>{
@@ -429,6 +558,7 @@
         const key=event.key.toLowerCase();
         if(key==='a'){event.preventDefault();commitInput(host,req,input);toggleApprove(host,req,line);return;}
         if(key==='d'){event.preventDefault();toggleDrop(host,req,line);return;}
+        if(key==='o'){event.preventDefault();commitInput(host,req,input);openOptionsPanel(host,req,line);return;}
         if(key==='h'){event.preventDefault();openTab('history',{query:lineInfo(req,line).model});}
       });
       input.addEventListener('paste',event=>{const text=event.clipboardData?.getData('text/plain')||'';if(/[\t\n]/.test(text.replace(/\r?\n$/,''))){event.preventDefault();pasteBlock(host,req,input,text);}});
@@ -437,6 +567,14 @@
     host.querySelectorAll('[data-pd-drop]').forEach(button=>button.addEventListener('click',()=>toggleDrop(host,req,lineOf(req,button.dataset.pdDrop))));
     host.querySelector('[data-pd-bulk]')?.addEventListener('click',()=>openBulk(host,req,candidates));
     host.querySelector('[data-pd-round]')?.addEventListener('click',()=>openRoundPanel(host,req));
+    host.querySelector('[data-pd-add-mfr]')?.addEventListener('click',()=>openManufacturerPanel(host,req));
+    // Hücre içi rozet/boş hücre düğmeleri kısmi yenilemede yeniden çizildiği için tablo kabında dinlenir.
+    host.querySelector('.pdMatrixScroll')?.addEventListener('click',event=>{
+      const optionButton=event.target.closest('[data-pd-options]');
+      if(optionButton){event.preventDefault();const active=document.activeElement;if(active?.classList?.contains('pdCellInput'))commitInput(host,req,active);openOptionsPanel(host,req,lineOf(req,optionButton.dataset.pdOptions));return;}
+      const addButton=event.target.closest('[data-pd-add-line]');
+      if(addButton){event.preventDefault();addLineFor(host,req,addButton.dataset.pdAddLine,addButton.dataset.pdAddModel);}
+    });
     host.querySelector('[data-pd-undo]')?.addEventListener('click',()=>undoLast());
     const fileInput=host.querySelector('[data-pd-import-file]');
     host.querySelector('[data-pd-import]')?.addEventListener('click',()=>fileInput?.click());

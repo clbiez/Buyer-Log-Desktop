@@ -42,6 +42,10 @@
   const qCurrentUserId = () => qNorm(qCurrentUser()?.id);
   const qIsModerator = () => qCurrentUser()?.role==='moderator';
 
+  // Alternatif fiyatlar (bkz. server/lib/quotations-store.js normalizeOptions).
+  function qNormalizeOptions(list){
+    return (Array.isArray(list)?list:[]).slice(0,10).map(option=>({id:qNorm(option?.id)||qId('opt'),label:qNorm(option?.label).slice(0,120),price:qNorm(option?.price).slice(0,120),note:qNorm(option?.note).slice(0,500)})).filter(option=>option.label||option.price||option.note);
+  }
   function qNormalizeRequest(req){
     const current=qCurrentUser();
     const created=req?.createdAt||qNow();
@@ -63,6 +67,7 @@
         category:qNorm(item.category),colour:qNorm(item.colour),fabric:qNorm(item.fabric),season:qNorm(item.season),
         picture:qNorm(item.picture),inStoreMonth:qNorm(item.inStoreMonth),quantity:qNumOrNull(item.quantity),targetPrice:qNorm(item.targetPrice),
         manufacturer:qNorm(item.manufacturer),manufacturerEmail:qNorm(item.manufacturerEmail),price:qNorm(item.price),approved:!!item.approved,dropped:!!item.dropped,
+        priceLabel:qNorm(item.priceLabel).slice(0,120),priceNote:qNorm(item.priceNote).slice(0,500),options:qNormalizeOptions(item.options),
         // Fiyat Defteri alanları sunucu tarafından yazılır; istemci yalnız taşır.
         rev:Number.isFinite(Number(item.rev))&&Number(item.rev)>0?Math.floor(Number(item.rev)):0,updatedAt:qNorm(item.updatedAt),updatedBy:qNorm(item.updatedBy),
         history:Array.isArray(item.history)?item.history.filter(event=>event&&typeof event==='object'&&event.type).slice(-200):[],
@@ -1491,6 +1496,57 @@
     qSave(req);qRefreshCollection();
     return value;
   }
+  /* Tablodan üretici / satır ekleme. Send to Pricing kullanmadan fiyat veren
+     bir üretici talebe eklenir; talepteki her model (ya da yalnız istenen
+     modeller) için boş fiyatlı satır açılır. Satır kümesi değiştiği için kayıt
+     tam talep (PUT) olarak gider; sunucu yeni satırı deftere işler. */
+  const qMfrKey=value=>qNorm(value).toLocaleUpperCase('tr-TR').replace(/\s+/g,' ');
+  function qManufacturerSuggestions(){
+    const map=new Map(),add=item=>{const name=qNorm(item?.name);if(!name)return;const key=qMfrKey(name),current=map.get(key);if(!current)map.set(key,{name,email:qNorm(item?.email)});else if(!current.email&&qNorm(item?.email))current.email=qNorm(item.email);};
+    if(typeof kolManufacturers!=='undefined'&&Array.isArray(kolManufacturers))kolManufacturers.forEach(add);
+    qLoad().requests.forEach(req=>(req.manufacturers||[]).forEach(add));
+    return [...map.values()].sort((a,b)=>a.name.localeCompare(b.name,'tr'));
+  }
+  function qAddManufacturerLines(req,raw,{modelKeys=null}={}){
+    if(!req||!qCanEditRequest(req)){qViewOnlyNotice(req);return null;}
+    const typed=qNorm(raw?.name).slice(0,240);if(!typed)return null;
+    const known=(req.manufacturers||[]).find(item=>qMfrKey(item.name)===qMfrKey(typed))||qManufacturerSuggestions().find(item=>qMfrKey(item.name)===qMfrKey(typed));
+    const m={name:qNorm(known?.name)||typed,email:qNorm(raw?.email)||qNorm(known?.email)};
+    const listed=(req.manufacturers||[]).find(item=>qMfrKey(item.name)===qMfrKey(m.name));
+    if(!listed)req.manufacturers.push(m);else if(!qNorm(listed.email)&&m.email)listed.email=m.email;
+    const seeds=new Map();(req.items||[]).forEach(item=>{if(item.modelKey&&!seeds.has(item.modelKey))seeds.set(item.modelKey,item);});
+    const wanted=Array.isArray(modelKeys)?new Set(modelKeys):null,added=[];
+    seeds.forEach((seed,modelKey)=>{
+      if(wanted&&!wanted.has(modelKey))return;
+      if(req.items.some(item=>item.modelKey===modelKey&&qMfrKey(item.manufacturer)===qMfrKey(m.name)))return;
+      const line={...seed,id:qId('quote-add'),manufacturer:m.name,manufacturerEmail:m.email,price:'',approved:false,dropped:false,priceLabel:'',priceNote:'',options:[],rev:0,updatedAt:'',updatedBy:'',history:[]};
+      req.items.push(line);added.push(line);
+    });
+    if(!added.length&&listed)return {manufacturer:m,added};
+    qTrackOwners(req);req.updatedAt=qNow();qSave(req);
+    return {manufacturer:m,added};
+  }
+  /* Alternatif fiyatların kaydı. Ana fiyat matristen girilir; burada ana
+     fiyatın etiketi/notu ile alternatif listesi yazılır (tam talep kaydı). */
+  function qSaveLineOptions(req,line,{priceLabel='',priceNote='',options=[]}={}){
+    if(!req||!line||!qCanEditLine(req,line)){qViewOnlyNotice(req);return false;}
+    line.priceLabel=qNorm(priceLabel).slice(0,120);line.priceNote=qNorm(priceNote).slice(0,500);
+    line.options=qNormalizeOptions(options).map(option=>({...option,price:qValidPrice(option.price)?qMoneyDisplay(option.price):option.price}));
+    req.updatedAt=qNow();qSave(req);return true;
+  }
+  /* Bir alternatifi ana fiyat yapar: alternatif ile ana fiyat yer değiştirir,
+     önceki ana fiyat alternatif olarak saklanır (veri kaybı yok). Önce yapı
+     kaydı kuyruğa girer, ardından fiyat satır olayı olarak deftere yazılır. */
+  function qPromoteLineOption(req,line,optionId,source='matrix'){
+    if(!req||!line||!qCanEditLine(req,line)){qViewOnlyNotice(req);return false;}
+    const option=(line.options||[]).find(item=>item.id===optionId);
+    if(!option||!qValidPrice(option.price))return false;
+    const previous={id:option.id,label:qNorm(line.priceLabel),price:qNorm(line.price),note:qNorm(line.priceNote)};
+    const keepPrevious=Boolean(previous.price||previous.label||previous.note);
+    qSaveLineOptions(req,line,{priceLabel:option.label,priceNote:option.note,options:(line.options||[]).map(item=>item.id===option.id?(keepPrevious?previous:null):item).filter(Boolean)});
+    qWithLineSource(source,()=>qApplyPrice(req,line,option.price));
+    return true;
+  }
   async function qApplyPricesBatch(requestId,changes,source='import'){
     const preview=qLoad().requests.find(item=>item.id===requestId),batch=changes.map(change=>{const line=preview?.items.find(item=>item.id===change.lineId);return {...change,identity:Object.fromEntries(['modelKey','rowId','manufacturer','plmId','modelCode','orderCode'].map(key=>[key,line?.[key]]))};});
     await qFlushSaves();
@@ -2841,6 +2897,10 @@
     moneyDisplay:qMoneyDisplay,moneyNumber:qMoneyNumber,validPrice:qValidPrice,date:qDate,lineOwnerId:qLineOwnerId,
     applyPrice(req,line,value,source='matrix'){if(!req||!line||!qCanEditLine(req,line)){qViewOnlyNotice(req);return null;}return qWithLineSource(source,()=>qApplyPrice(req,line,value));},
     applyPricesBatch:qApplyPricesBatch,
+    manufacturerSuggestions:qManufacturerSuggestions,
+    addManufacturer(req,manufacturer,options){return qAddManufacturerLines(req,manufacturer,options);},
+    saveLineOptions(req,line,value){return qSaveLineOptions(req,line,value);},
+    promoteOption(req,line,optionId,source='matrix'){return qPromoteLineOption(req,line,optionId,source);},
     setApproval(req,line,approved,source='matrix'){if(!req||!line||(line.approved===true)===Boolean(approved))return false;qWithLineSource(source,()=>qToggleApproval(req,line));return true;},
     toggleDrop(req,line,source='matrix'){return qWithLineSource(source,()=>qToggleDrop(req,line));},
     async startRound(req,note=''){

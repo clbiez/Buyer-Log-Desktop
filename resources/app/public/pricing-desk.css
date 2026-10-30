@@ -47,8 +47,30 @@
 .pdLegend i{display:inline-block;width:12px;height:12px;margin-left:6px}
 .pdLegend i:first-child{margin-left:0}
 .pdRoundBadge{display:inline-flex;align-items:center;height:22px;padding:0 8px}
-.pdBulkPanel,.pdRoundPanel,.pdImportPanel{display:flex;flex-direction:column;gap:8px;margin:8px 10px 0;padding:10px 12px}
-.pdBulkPanel[hidden],.pdRoundPanel[hidden],.pdImportPanel[hidden]{display:none}
+.pdBulkPanel,.pdRoundPanel,.pdImportPanel,.pdMfrPanel,.pdOptionsPanel{display:flex;flex-direction:column;gap:8px;margin:8px 10px 0;padding:10px 12px}
+.pdBulkPanel[hidden],.pdRoundPanel[hidden],.pdImportPanel[hidden],.pdMfrPanel[hidden],.pdOptionsPanel[hidden]{display:none}
+/* Tablodan üretici ekleme + alternatif fiyatlar */
+.pdMfrFields{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:8px;max-width:640px}
+.pdOptGrid{display:flex;flex-direction:column;gap:4px;max-height:320px;overflow:auto}
+.pdOptRow{display:grid;grid-template-columns:minmax(120px,1fr) 104px minmax(160px,2fr) minmax(150px,auto);align-items:center;gap:8px;min-height:32px}
+.pdOptRow input{height:var(--ui-control-height);min-width:0;padding:0 8px}
+.pdOptRow input.pdNum,.pdOptMainPrice{text-align:right}
+.pdOptMainPrice{padding:0 8px}
+.pdOptMainTag{justify-self:start;padding:1px 6px}
+.pdOptActions{display:inline-flex;align-items:center;gap:4px}
+.pdOptRemove{display:inline-grid;place-items:center;width:26px;height:26px;padding:0;cursor:pointer}
+.pdOptRemove .ic{width:14px;height:14px}
+.pdCellOpt{position:absolute;left:3px;top:1px;display:flex}
+.pdOptBadge{display:inline-flex;align-items:center;height:13px;padding:0 4px;cursor:pointer;white-space:nowrap}
+.pdOptBadge:not(.hasOptions){opacity:0;pointer-events:none}
+.pdCell:hover .pdOptBadge,.pdCell:focus-within .pdOptBadge{opacity:1;pointer-events:auto}
+.pdAddLine{display:inline-flex;align-items:center;justify-content:center;width:100%;height:28px;padding:0;cursor:pointer}
+.pdAddLine b{display:none}
+.pdAddLine:hover span,.pdAddLine:focus-visible span{display:none}
+.pdAddLine:hover b,.pdAddLine:focus-visible b{display:inline}
+.pdAddMfr{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;cursor:pointer;white-space:nowrap}
+.pdAddMfr .ic{width:14px;height:14px}
+@media (max-width:720px){.pdMfrFields{grid-template-columns:1fr}.pdOptRow{grid-template-columns:minmax(0,1fr) 88px}.pdOptRow>:nth-child(3),.pdOptRow>:nth-child(4){grid-column:1 / -1}}
 .pdMatrixScroll{flex:1 1 auto;min-height:0;overflow:auto}
 .pdMatrix{border-collapse:separate;border-spacing:0;table-layout:fixed;width:calc(504px + var(--pd-columns)*96px)}
 .pdMatrix thead th{position:sticky;top:0;padding:6px 8px;text-align:left;white-space:nowrap}
