@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-30",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Giriş alanları her ekranda belirgin",
+    "en": "Input fields stand out on every screen"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Tüm düzenlenebilir alanlar açık ve koyu temada okunur ince bir çerçeveyle görünüyor; nereye yazılacağı artık her ekranda belli.",
+    "en": "All editable fields show a thin border that stays readable in light and dark themes, so it is clear where to type on every screen."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "form-field-borders",
+      "type": "fix",
+      "module": {
+        "tr": "Genel arayüz",
+        "en": "General interface"
+      },
+      "title": {
+        "tr": "Giriş alanlarının çerçevesi her ekranda görünüyor",
+        "en": "Input field borders are visible on every screen"
+      },
+      "body": {
+        "tr": "Metin kutuları, açılır listeler, tarih alanları ve tablo filtre kutuları zeminle neredeyse aynı tonda olduğu için nereye yazılacağı belli olmuyordu. Artık tüm düzenlenebilir alanlar açık ve koyu temada okunur ince bir çerçeveyle görünüyor; tarih alanı takvim düğmesiyle tek kutu olarak çerçeveleniyor. Devre dışı alanlar daha soluk çerçeveyle ayrılıyor.",
+        "en": "Text boxes, dropdowns, date fields and table filter boxes were almost the same tone as the background, so it was unclear where to type. All editable fields now show a thin border that stays readable in both light and dark themes; the date field and its calendar button are framed as one box. Disabled fields use a lighter border."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "form-field-borders.png",
+        "alt": {
+          "tr": "License Royalty Hesapları penceresinde Kural, Supp. FOB, OPD tarihleri, Sezon, Lisans Veren, Lisans, Royalty ve komisyon alanları ile tablo filtre kutularının çerçeveli görünümü (demo veri)",
+          "en": "License Royalty Calculations window with framed Rule, Supp. FOB, OPD date, Season, Licensor, License, Royalty and commission fields and table filter boxes (demo data)"
+        },
+        "caption": {
+          "tr": "Düzenlenebilir alanlar artık çerçevesiyle ayırt ediliyor.",
+          "en": "Editable fields are now recognisable by their border."
+        }
+      }
+    }
+  ]
 }

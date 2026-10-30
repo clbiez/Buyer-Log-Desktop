@@ -102,7 +102,7 @@ izdüşümü bir kontrolün hitbox’ı veya veri işaretçisi değildir.
    dokunmaz.
 5. Grafik eksen/kılavuzları veri okumak içindir; `--ui-chart-grid` kullanır.
 6. Panel, modül ve kontrol sınırları: yalnız ortak `ui-components.css`
-   üzerinde `--ui-group-divider` ile 1px sınır. Checkbox'ta durum
+   üzerinde `--ui-group-divider` ile 1px sınır; giriş alanları `--ui-field-border` (§5). Checkbox'ta durum
    okunabilirliği, kullanıcı avatarında logo ile eşit `--ui-mark-radius` köşe uygulanır.
 7. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
 
@@ -135,7 +135,11 @@ modüller `perf-runtime` lazy sözleşmesine uyar.
 - Bölüm başlığı: `.cardTitle` kalıbı — Barlow Condensed 600, `--ui-font-xl`,
   büyük harf, `.6px` aralık, `--ui-text-secondary`. Alt başlık Barlow 18px,
   cümle düzeni. Sayfa adı üst çubuktadır; sayfa içinde tekrarlanmaz.
-- Alan: yüzeyle ayrılır; görünür label, placeholder, disabled ve hata durumu.
+- Alan: 1px `--ui-field-border` sınırıyla tanınır (açık/koyu temada zemine ≥3:1;
+  yüzey tonu tek başına yetmez). Kural yalnız `ui-components.css` sonundaki ortak
+  alan bloğundadır; modül CSS'i alan kenarlığını `border:0` ile silmez. Disabled/
+  readonly alan `--ui-group-divider`; ızgara hücresi editörü (`td`) tablo
+  sözleşmesinde kalır. Görünür label, placeholder, disabled ve hata durumu.
   `aria-invalid` yalnız renk dışında hata açıklamasıyla birlikte kullanılır.
 - KPI: küçük açıklama, tabular sayısal değer ve alt bağlam. Her KPI ayrı
   çerçeveli/gölgeli kart değildir.
