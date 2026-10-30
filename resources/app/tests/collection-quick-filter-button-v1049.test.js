@@ -31,7 +31,9 @@ test('Collection quick-filter settings button is the first item in the strip', (
   const renderEnd = APP.indexOf('// ================= PRICING PREFLIGHT =================', renderStart);
   const render = APP.slice(renderStart, renderEnd);
   const settingsAt = render.indexOf('id="kolQuickFiltersEdit"');
-  const groupsAt = render.indexOf('loadKolQuickDims().forEach');
+  // #787 tek okuma için quickDims değişkenine taşıdı; gruplar bu döngüde çizilir.
+  assert.match(render, /const quickDims=loadKolQuickDims\(\);/);
+  const groupsAt = render.indexOf('quickDims.forEach');
   assert.ok(settingsAt > -1 && groupsAt > -1 && settingsAt < groupsAt,
     'Collection ayar düğmesi hızlı filtre gruplarından önce oluşturulmalı');
   assert.doesNotMatch(render, /html \+= `<button[^>]+id="kolQuickFiltersEdit"/,
@@ -54,10 +56,11 @@ test('Collection quick filter colors follow CP selection and the collection stat
 
 
 test('Collection quick-filter selection uses CP palette without overriding status tones', () => {
-  const selectedRule = DESIGN.match(/html\[data-ui-system="manifest"\] #kolQuickFilters \.kpi\[aria-pressed="true"\]\s*\{([^}]+)\}/);
+  // manifest-css yardımcısı manifest önekini ve süslü parantez boşluklarını normalize eder.
+  const selectedRule = DESIGN.match(/#kolQuickFilters \.kpi\[aria-pressed="true"\]\{([^}]+)\}/);
   assert.ok(selectedRule, 'Collection selection must override the generic pressed-button accent');
   assert.match(selectedRule[1], /background:var\(--ui-selected\)!important/);
   assert.match(selectedRule[1], /color:var\(--ui-selected-ink\)!important/);
   assert.match(APP, /class="kpi tone-\$\{tone\}\$\{active\?' active':''\}"\$\{statusStyle\} aria-pressed="\$\{active\?'true':'false'\}"/);
-  assert.match(DESIGN, /html\[data-ui-system="manifest"\] \.kpi\.active \{background:var\(--ui-selected\) !important/);
+  assert.match(DESIGN, /(?:^|[}\n])\.kpi\.active\{background:var\(--ui-selected\) !important/m);
 });
