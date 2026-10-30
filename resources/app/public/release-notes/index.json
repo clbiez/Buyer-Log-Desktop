@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.321",
+      "publishedAt": "2026-10-29",
+      "title": {
+        "tr": "Etkileşimli HTML sunum ve tüm koleksiyon başlıkları",
+        "en": "Interactive HTML presentation and every collection header"
+      },
+      "stats": {
+        "features": 3,
+        "improvements": 1,
+        "fixes": 3
+      },
+      "file": "release-notes/7.0.321/release.json"
+    },
+    {
       "version": "7.0.320",
       "publishedAt": "2026-10-29",
       "title": {

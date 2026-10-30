@@ -8797,7 +8797,39 @@ html[data-ui-system="manifest"] .pdLegendOut {background:var(--ui-warning-bg) !i
 }
 html[data-ui-system="manifest"] .pdRoundBadge {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important;font:700 var(--ui-font-2xs) var(--ui-font-body) !important
 }
-html[data-ui-system="manifest"] .pdBulkPanel,html[data-ui-system="manifest"] .pdRoundPanel,html[data-ui-system="manifest"] .pdImportPanel {background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;animation:none !important
+html[data-ui-system="manifest"] .pdBulkPanel,html[data-ui-system="manifest"] .pdRoundPanel,html[data-ui-system="manifest"] .pdImportPanel,html[data-ui-system="manifest"] .pdMfrPanel,html[data-ui-system="manifest"] .pdOptionsPanel {background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;animation:none !important
+}
+html[data-ui-system="manifest"] .pdOptHeadRow {font:600 var(--ui-font-2xs)/1.2 var(--ui-font-body) !important;color:var(--ui-text-muted) !important;text-transform:uppercase;letter-spacing:.04em;min-height:20px !important
+}
+html[data-ui-system="manifest"] .pdOptRow input,html[data-ui-system="manifest"] .pdMfrFields .pdField input {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;border:0 !important;border-radius:var(--ui-radius) !important;font:400 var(--ui-font-sm) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .pdOptRow input.pdNum,html[data-ui-system="manifest"] .pdOptMainPrice {font:600 var(--ui-font-sm) var(--ui-font-mono) !important;font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .pdOptRow input:disabled {background:transparent !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .pdOptRow.isMain {background:var(--ui-surface-soft) !important;border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .pdOptRow.isMain input {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .pdOptMainTag {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font:800 var(--ui-font-2xs)/1.2 var(--ui-font-body) !important;letter-spacing:.04em;border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .pdOptRemove,html[data-ui-system="manifest"] .pdAddLine {background:transparent !important;border:0 !important;color:var(--ui-text-muted) !important;border-radius:var(--ui-radius) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .pdOptRemove:hover {color:var(--ui-danger) !important;background:var(--ui-danger-bg) !important
+}
+html[data-ui-system="manifest"] .pdAddLine:hover,html[data-ui-system="manifest"] .pdAddLine:focus-visible {color:var(--ui-accent) !important;background:var(--ui-selected) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .quotationOptionsText {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-secondary) !important;font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .pdCellOpt {z-index:var(--ui-z-raised)
+}
+html[data-ui-system="manifest"] .pdOptBadge {background:var(--ui-surface-soft) !important;color:var(--ui-accent) !important;border:0 !important;border-radius:var(--ui-radius) !important;font:800 var(--ui-font-2xs)/1 var(--ui-font-body) !important;letter-spacing:.04em;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .pdOptBadge.hasOptions {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .pdAddMfr {background:var(--ui-surface) !important;color:var(--ui-header-ink) !important;border:0 !important;border-radius:var(--ui-radius) !important;font:600 var(--ui-font-xs) var(--ui-font-body) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .pdAddMfr:hover,html[data-ui-system="manifest"] .pdAddMfr:focus-visible {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
 }
 html[data-ui-system="manifest"] .pdMatrix {font-size:var(--ui-font-sm) !important
 }
@@ -15322,4 +15354,31 @@ html[data-ui-system="manifest"] .globalFlowTooltip.isCritical .gfTipProgress i {
 html[data-ui-system="manifest"] .globalFlowTooltip .gfTipAlarm {display:none
 }
 html:root[data-ui-system="manifest"] .globalFlowLegend .critical i {background:var(--ui-danger) !important;width:7px;height:7px
+}
+/* Giriş alanları: düzenlenebilir her alan 1px --ui-field-border sınırıyla (≥3:1) tanınır.
+   Yüzey tonu tek başına ayırt edici değildi. Izgara hücresi editörleri (td) tablo sözleşmesinde kalır. */
+html[data-ui-system="manifest"] :is(input:not([type="checkbox"],[type="radio"],[type="range"],[type="file"],[type="color"],[type="hidden"],[type="button"],[type="submit"],[type="reset"],[type="image"]),select,textarea,.pricingRuleSeasonBtn):not(td *) {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] :is(input,select,textarea,.pricingRuleSeasonBtn):is(:disabled,[readonly]):not(td *) {border-color:var(--ui-group-divider) !important
+}
+html[data-ui-system="manifest"] [data-ui-migrated] .tableRangePager>input[data-range-page] {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] [data-ui-migrated] .tableRangePager>input[data-range-page]:disabled {border-color:var(--ui-group-divider) !important
+}
+/* Tarih alanı metin + takvim düğmesiyle tek kutu olarak çerçevelenir. */
+html[data-ui-system="manifest"] .dateFieldWrap>.dateKeyboardInput:not(td *) {border-right:0 !important
+}
+html[data-ui-system="manifest"] .dateFieldWrap>.datePickerBtn:not(td *) {border:1px solid var(--ui-field-border) !important;border-left:0 !important
+}
+html[data-ui-system="manifest"] .dateFieldWrap>.dateKeyboardInput:is(:disabled,[readonly]):not(td *)+.datePickerBtn {border-color:var(--ui-group-divider) !important
+}
+/* Native olmayan seçim alanları (tetikleyici değer gösterir) aynı alan sınırını taşır. */
+html[data-ui-system="manifest"] :is(.psaMultiTrigger,.lflDimBtn,.lflBreakdownBtn,.oabMultiTrigger,.cpaFieldPickerBtn):not(td *) {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] :is(.psaMultiTrigger[aria-disabled="true"],.lflDimBtn:disabled,.lflBreakdownBtn:disabled,.oabMultiTrigger:disabled,.cpaFieldPickerBtn:disabled):not(td *) {border-color:var(--ui-group-divider) !important
+}
+/* Endeksmatik ay alanı: kap tek kutudur; iç metin girişi ayrıca çerçevelenmez. */
+html[data-ui-system="manifest"] .endeksmatikMonthControl:not(td *) {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] .endeksmatikMonthControl>input[type="text"] {border:0 !important
 }

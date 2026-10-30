@@ -109,6 +109,13 @@
     const approved=(lines||[]).find(line=>line&&line.approved&&!line.dropped)||null;
     return {priced:priced.length,median:med,best:best?{lineId:best.line.id,manufacturer:clean(best.line.manufacturer),price:best.value}:null,outliers,approved:approved?{lineId:approved.id,manufacturer:clean(approved.manufacturer),price:price(approved.price)}:null};
   }
+  /* Alternatif fiyatlar: ana fiyat (line.price) dışında üreticinin farklı
+     koşullarla verdiği fiyatlar. En iyi teklif/onay hesabına girmez; farklı
+     özellik (ör. kumaş gramajı) aynı fiyat gibi kıyaslanmaz. */
+  function lineOptions(line){
+    return (Array.isArray(line&&line.options)?line.options:[]).filter(option=>option&&(clean(option.label)||clean(option.price)||clean(option.note)))
+      .map(option=>({id:clean(option.id),label:clean(option.label),price:clean(option.price),note:clean(option.note),value:price(option.price)}));
+  }
   // Kapsam puan değildir: aynı modellerde rekabet, sonra kapsama bakılır.
   function compareSuppliers(a,b){
     const wins=s=>s.modelWins??s.wins??0;
@@ -332,5 +339,5 @@
       .sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'tr'));
   }
 
-  return {compareSuppliers,supplierScorecards,supplierLayout,OUTLIER_RATIO,GROUP_DIMENSIONS,price,mean,median,pct,keyOf,effectiveHistory,offers,negotiation,requestMatrix,rowStats,outlierRatio,bulkApproveCandidates,rounds,requestGain,lane,responseRates,historySeries,filterObservations,dimensionValues,analyze,buyerComparison};
+  return {lineOptions,compareSuppliers,supplierScorecards,supplierLayout,OUTLIER_RATIO,GROUP_DIMENSIONS,price,mean,median,pct,keyOf,effectiveHistory,offers,negotiation,requestMatrix,rowStats,outlierRatio,bulkApproveCandidates,rounds,requestGain,lane,responseRates,historySeries,filterObservations,dimensionValues,analyze,buyerComparison};
 });

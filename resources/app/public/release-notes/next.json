@@ -1,129 +1,42 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-29",
+  "publishedAt": "2026-10-30",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Etkileşimli HTML sunum ve tüm koleksiyon başlıkları",
-    "en": "Interactive HTML presentation and every collection header"
+    "tr": "Giriş alanları her ekranda belirgin",
+    "en": "Input fields stand out on every screen"
   },
   "summary": {
-    "tr": "Sunum editörü HTML'i artık kaydırınca canlanan, modele tıklayınca ayrıntısı açılan etkileşimli bir sunum olarak oluşturuyor; kartlara ve gruplamaya koleksiyon tablosunun tüm başlıkları eklenebiliyor; PDF alt bilgisi üst üste binmiyor ve yerleşim adımında ayar paneli önizlemeyi kaydırmıyor. Güncelleme sonrası açılışta Buyer Log hangi adımda olduğunu ve geçen süreyi gösteriyor.",
-    "en": "The presentation editor now creates HTML as an interactive presentation that comes alive as you scroll and opens a model's details on click; cards and grouping can use every collection table header; the PDF footer no longer overlaps and the settings panel in the layout step no longer scrolls the preview. After an update, Buyer Log shows its current startup step and the elapsed time."
+    "tr": "Tüm düzenlenebilir alanlar açık ve koyu temada okunur ince bir çerçeveyle görünüyor; nereye yazılacağı artık her ekranda belli.",
+    "en": "All editable fields show a thin border that stays readable in light and dark themes, so it is clear where to type on every screen."
   },
   "changes": [
     {
-      "id": "output-studio-interactive-html",
-      "type": "feature",
-      "module": {
-        "tr": "Sunum Editörü",
-        "en": "Presentation Editor"
-      },
-      "title": {
-        "tr": "HTML çıktısı etkileşimli, animasyonlu bir sunum oldu",
-        "en": "HTML output is now an interactive, animated presentation"
-      },
-      "body": {
-        "tr": "Sunum editöründe HTML seçildiğinde dosya, Studio'da kurduğunuz düzenin aynısını (başlık bandı, gruplar, kart bilgileri, not, alt bilgi) ekran boyutuna göre ölçeklenen slaytlar hâlinde gösterir. Slaytlar kaydırınca yerine oturur ve kartlar sırayla belirir; üstte ilerleme çubuğu, sağda bulunduğunuz slaytı gösteren noktalar, “Tüm slaytlar” ile genel bakış vardır. Bir modele tıklayınca büyük görsel ve seçili tüm kart bilgileri açılır; Önceki/Sonraki ile modeller arasında gezilir. Dosya betik çalıştırmaz (katı güvenlik politikası korunur), hareket azaltma tercihine uyar ve yazdırınca her slayt bir sayfa olur. PDF çıktısında sayfa altındaki iki yazının üst üste binmesi giderildi. LCW AI kullanılmadan oluşturulan sunumlarda PowerPoint, PDF ve HTML alt bilgisinde yalnız “Buyer Log” yazar.",
-        "en": "When HTML is chosen in the presentation editor, the file shows exactly the layout you built in Studio (title band, groups, card details, note, footer) as slides that scale to the screen. Slides snap into place as you scroll and cards appear one after another; a progress bar at the top, dots on the right showing the current slide and an “All slides” overview help navigation. Clicking a model opens a large image with all chosen card details; Previous/Next move between models. The file runs no scripts (the strict security policy is kept), respects reduced-motion preferences and prints one slide per page. In the PDF output, the two overlapping texts at the bottom of each page are fixed. Presentations created without LCW AI show only “Buyer Log” in PowerPoint, PDF and HTML footers."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "output-studio-interactive-html.png",
-        "alt": {
-          "tr": "Buyer Log'un oluşturduğu HTML sunum: Fabric'e göre gruplanmış slaytın üzerinde tıklanan modelin büyük görseli ve Colour Code, Fit, Quantity, Target Price, Fabric bilgileri ile Önceki, Kapat, Sonraki düğmeleri (demo veri)",
-          "en": "HTML presentation created by Buyer Log: over a slide grouped by Fabric, the clicked model's large image with Colour Code, Fit, Quantity, Target Price and Fabric details plus Previous, Close and Next buttons (demo data)"
-        },
-        "caption": {
-          "tr": "Modele tıklayınca ayrıntısı açılır; Önceki/Sonraki ile gezilir.",
-          "en": "Click a model to open its details; move on with Previous/Next."
-        }
-      }
-    },
-    {
-      "id": "output-studio-any-collection-column",
+      "id": "form-field-borders",
       "type": "fix",
       "module": {
-        "tr": "Sunum Editörü",
-        "en": "Presentation Editor"
+        "tr": "Genel arayüz",
+        "en": "General interface"
       },
       "title": {
-        "tr": "Kartlara ve gruplamaya her koleksiyon başlığı eklenebilir",
-        "en": "Any collection header can be used on cards and for grouping"
+        "tr": "Giriş alanlarının çerçevesi her ekranda görünüyor",
+        "en": "Input field borders are visible on every screen"
       },
       "body": {
-        "tr": "Kart bilgileri ve 1./2./3. grup listeleri yalnız sabit alanları değil, koleksiyon tablosundaki tüm dolu başlıkları sunar: Kumaş, Hedef Fiyat, Kalıp, Asorti, Notlar ve kendi eklediğiniz sütunlar. Değerler tabloda gördüğünüz biçimde, açılış anının kopyası olarak yazılır; büyük/küçük harf ve boşluk farkı olan değerler aynı grupta toplanır. Varsayılan kart bilgileri artık açıklamadaki gibi renk kodu, kalıp, adet ve hedef fiyattır. Gruplama açıklamasında alan kodu yerine başlık adı görünür. Excel, PDF ve HTML çıktıları da aynı alanları kullanır.",
-        "en": "Card details and the 1st/2nd/3rd group lists offer every filled collection table header, not only a fixed set: Fabric, Target Price, Fit, Assortment, Notes and your own columns. Values are written as shown in the table, as a snapshot taken when the editor opens; values differing only in case or spacing share one group. Default card details are now colour code, fit, quantity and target price, as the description says. The grouping hint shows the header name instead of the field code. Excel, PDF and HTML outputs use the same fields."
+        "tr": "Metin kutuları, açılır listeler, tarih alanları, tablo filtre kutuları ve Fiyat & Üretici Analizi, LFL, OAB/Intake ile CP özetindeki seçim alanları zeminle neredeyse aynı tonda olduğu için nereye yazılacağı belli olmuyordu. Artık tüm düzenlenebilir alanlar açık ve koyu temada okunur ince bir çerçeveyle görünüyor; tarih ve Endeksmatik ay alanı düğmesiyle tek kutu olarak çerçeveleniyor. Devre dışı alanlar daha soluk çerçeveyle ayrılıyor. License Royalty Hesapları penceresi İngilizce seçildiğinde Uygula, TR/YD Komisyon gibi Türkçe kalan metinler dahil tamamen İngilizce görünüyor.",
+        "en": "Text boxes, dropdowns, date fields, table filter boxes and the pickers in Price & Supplier Analysis, LFL, OAB/Intake and the CP summary were almost the same tone as the background, so it was unclear where to type. All editable fields now show a thin border that stays readable in both light and dark themes; date and Endeksmatik month fields are framed as one box with their button. Disabled fields use a lighter border. In English, the License Royalty Calculations window is now fully English, including Apply and the TR/Overseas commission labels that stayed Turkish."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "output-studio-any-collection-column.png",
+        "src": "form-field-borders.png",
         "alt": {
-          "tr": "Gerçek Buyer Log sunum editörü, Modeller ve bilgiler adımı: kart bilgilerinde Colour Code, Fit, Quantity, Target Price ve Fabric işaretli; 1. grup Fabric (demo veri)",
-          "en": "Real Buyer Log presentation editor, Models and details step: Colour Code, Fit, Quantity, Target Price and Fabric ticked in card details; 1st group is Fabric (demo data)"
+          "tr": "License Royalty Hesapları penceresinde Kural, Supp. FOB, OPD tarihleri, Sezon, Lisans Veren, Lisans, Royalty ve komisyon alanları ile tablo filtre kutularının çerçeveli görünümü (demo veri)",
+          "en": "License Royalty Calculations window with framed Rule, Supp. FOB, OPD date, Season, Licensor, License, Royalty and commission fields and table filter boxes (demo data)"
         },
         "caption": {
-          "tr": "Kumaş, Hedef Fiyat ve Kalıp artık kart bilgisi ve grup olarak seçilebiliyor.",
-          "en": "Fabric, Target Price and Fit can now be chosen as card details and groups."
-        }
-      }
-    },
-    {
-      "id": "output-studio-independent-scroll",
-      "type": "fix",
-      "module": {
-        "tr": "Sunum Editörü",
-        "en": "Presentation Editor"
-      },
-      "title": {
-        "tr": "Ayar paneli önizlemeyi kaydırmıyor",
-        "en": "The settings panel no longer scrolls the preview"
-      },
-      "body": {
-        "tr": "Sunumu şekillendir adımında soldaki ayar paneli ve sağdaki slayt önizlemesi ayrı ayrı kayar; panelde aşağı inerken önizleme yerinde kalır. Bir ayar değiştirildiğinde panel başa dönmez, bulunduğunuz konumda kalır.",
-        "en": "In the Shape the presentation step the settings panel on the left and the slide preview on the right scroll separately; the preview stays in place while you scroll the panel. Changing a setting keeps the panel at its current position instead of jumping to the top."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "output-studio-independent-scroll.png",
-        "alt": {
-          "tr": "Gerçek Buyer Log sunum editörü, Sunumu şekillendir adımı: ayar paneli aşağı kaydırılmışken slayt önizlemesi üstte sabit; kartlar Fabric'e göre Single Jersey ve Pique gruplarında (demo veri)",
-          "en": "Real Buyer Log presentation editor, Shape the presentation step: the settings panel is scrolled down while the slide preview stays at the top; cards grouped by Fabric into Single Jersey and Pique (demo data)"
-        },
-        "caption": {
-          "tr": "Panel aşağı kaydırıldı; önizleme yerinde.",
-          "en": "Panel scrolled down; preview stays put."
-        }
-      }
-    },
-    {
-      "id": "desktop-update-startup-progress",
-      "type": "improvement",
-      "module": {
-        "tr": "Masaüstü açılışı",
-        "en": "Desktop startup"
-      },
-      "title": {
-        "tr": "Açılış ekranı adımları ve güncelleme durumunu gösteriyor",
-        "en": "The startup screen shows its steps and the update status"
-      },
-      "body": {
-        "tr": "Güncellemenin ilk açılışında dosyalar doğrulanıp veri yedeği alınırken ekranda artık \"Güncelleme uygulanıyor\" yazar ve Buyer Log'u kapatmamanız istenir. Ardından açılış ekranı ön bellek temizliği, veri klasörü, sunucu, yerel veritabanı ve ekranların açılması adımlarını sırayla işaretler, geçen süreyi gösterir. Normal açılışta da adım listesi görünür; bir adım uzun sürerse programın çalışmaya devam ettiği belirtilir.",
-        "en": "On the first launch after an update, while files are verified and a data backup is taken, the screen now says \"Applying the update\" and asks you not to close Buyer Log. The startup screen then marks the cache cleanup, data folder, server, local database and screen opening steps in order and shows the elapsed time. Normal launches show the step list too; if a step takes long, it says Buyer Log is still working."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "desktop-update-startup-progress.png",
-        "alt": {
-          "tr": "Gerçek Buyer Log açılış ekranı (splash.html, Türkçe): Güncelleme uygulanıyor başlığı, kapatmama uyarısı, ilerleme çubuğu ve yerel veritabanı adımında 7 adımlık liste, geçen süre 1:23",
-          "en": "Real Buyer Log startup screen (splash.html, Turkish): Applying the update title, do-not-close notice, progress bar and the 7-step list at the local database step, elapsed 1:23"
-        },
-        "caption": {
-          "tr": "Güncellemenin ilk açılışında adım listesi ve geçen süre.",
-          "en": "Step list and elapsed time on the first launch after an update."
+          "tr": "Düzenlenebilir alanlar artık çerçevesiyle ayırt ediliyor.",
+          "en": "Editable fields are now recognisable by their border."
         }
       }
     },
