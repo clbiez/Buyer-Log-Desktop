@@ -7405,15 +7405,15 @@ html[data-ui-system="manifest"] .dmfPickerItem.isSelected,html[data-ui-system="m
 }
 html[data-ui-system="manifest"] .dmfPickerEmpty { font-size: var(--ui-font-xs) !important; color: var(--ui-text-muted) !important
 }
-html[data-ui-system="manifest"] .dmGroupRow { font-size: var(--ui-font-sm) !important
+html[data-ui-system="manifest"] .dmHorizonRow { font-size: var(--ui-font-sm) !important
 }
-html[data-ui-system="manifest"] .dmGroupRow:hover { background: var(--ui-row-hover) !important
+html[data-ui-system="manifest"] .dmHorizonRow:hover { background: var(--ui-row-hover) !important
 }
-html[data-ui-system="manifest"] .dmGroupName { font-weight: 600 !important; color: var(--ui-text) !important
+html[data-ui-system="manifest"] .dmHorizonTitle { font-weight: 600 !important; color: var(--ui-text) !important
 }
-html[data-ui-system="manifest"] .dmGroupModules { color: var(--ui-text-secondary) !important
+html[data-ui-system="manifest"] .dmHorizonMembers { color: var(--ui-text-secondary) !important
 }
-html[data-ui-system="manifest"] .dmGroupEmpty { font-size: var(--ui-font-sm) !important; color: var(--ui-text-muted) !important
+html[data-ui-system="manifest"] .dmHorizonHint { font-size: var(--ui-font-xs) !important; color: var(--ui-text-muted) !important
 }
 html[data-ui-system="manifest"] .dmGroupNote { font-size: var(--ui-font-xs) !important; color: var(--ui-text-muted) !important; background: var(--ui-surface-soft) !important
 }
@@ -7568,6 +7568,16 @@ html[data-ui-system="manifest"] .dmfMapTag {
 }
 html[data-ui-system="manifest"] .dmfMapTag.is-fuzzy,html[data-ui-system="manifest"] .dmfMapTag.is-warn { color: var(--ui-warning) !important
 }
+html[data-ui-system="manifest"] .dmfMapTag.is-unmatched { color: var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .dmfMapTag.is-manual,html[data-ui-system="manifest"] .dmfMapTag.is-remembered { color: var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .dmfPairHead { font-size: var(--ui-font-xs) !important; font-weight: 600 !important; color: var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .dmfPairRow.isExtra { color: var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .dmfPairEmpty { font-size: var(--ui-font-xs) !important; font-style: italic !important; color: var(--ui-text-muted) !important
+}
 html[data-ui-system="manifest"] .dmfMapSkip { font-size: var(--ui-font-xs) !important; color: var(--ui-text-muted) !important
 }
 html[data-ui-system="manifest"] .dmsExcelConnection { background: var(--ui-surface) !important
@@ -7583,20 +7593,6 @@ html[data-ui-system="manifest"] .dmsExcelConnectionMain small { font-size: var(-
 html[data-ui-system="manifest"] .dmsExcelConnectionMain small.isBad { color: var(--ui-danger) !important
 }
 html[data-ui-system="manifest"] .dmConnectionPreview { background: var(--ui-surface-soft) !important
-}
-html[data-ui-system="manifest"] .dmLinkGroup { background: var(--ui-surface-soft) !important
-}
-html[data-ui-system="manifest"] .dmLinkRow { font-size: var(--ui-font-sm) !important
-}
-html[data-ui-system="manifest"] .dmLinkTitle { font-weight: 600 !important; color: var(--ui-text) !important
-}
-html[data-ui-system="manifest"] .dmLinkHint { font-size: var(--ui-font-xs) !important; color: var(--ui-text-muted) !important
-}
-html[data-ui-system="manifest"] .dmLinkChip { font-size: var(--ui-font-xs) !important; background: var(--ui-selected) !important; color: var(--ui-selected-ink) !important
-}
-html[data-ui-system="manifest"] .dmLinkOutside { font-size: var(--ui-font-xs) !important; color: var(--ui-text-secondary) !important
-}
-html[data-ui-system="manifest"] .dmLinkMark { font-size: var(--ui-font-2xs) !important
 }
 html[data-ui-system="manifest"] .dmMerchPanel {background:var(--ui-surface) !important
 }
@@ -15391,4 +15387,31 @@ html[data-ui-system="manifest"] .globalFlowTooltip.isCritical .gfTipProgress i {
 html[data-ui-system="manifest"] .globalFlowTooltip .gfTipAlarm {display:none
 }
 html:root[data-ui-system="manifest"] .globalFlowLegend .critical i {background:var(--ui-danger) !important;width:7px;height:7px
+}
+/* Giriş alanları: düzenlenebilir her alan 1px --ui-field-border sınırıyla (≥3:1) tanınır.
+   Yüzey tonu tek başına ayırt edici değildi. Izgara hücresi editörleri (td) tablo sözleşmesinde kalır. */
+html[data-ui-system="manifest"] :is(input:not([type="checkbox"],[type="radio"],[type="range"],[type="file"],[type="color"],[type="hidden"],[type="button"],[type="submit"],[type="reset"],[type="image"]),select,textarea,.pricingRuleSeasonBtn):not(td *) {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] :is(input,select,textarea,.pricingRuleSeasonBtn):is(:disabled,[readonly]):not(td *) {border-color:var(--ui-group-divider) !important
+}
+html[data-ui-system="manifest"] [data-ui-migrated] .tableRangePager>input[data-range-page] {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] [data-ui-migrated] .tableRangePager>input[data-range-page]:disabled {border-color:var(--ui-group-divider) !important
+}
+/* Tarih alanı metin + takvim düğmesiyle tek kutu olarak çerçevelenir. */
+html[data-ui-system="manifest"] .dateFieldWrap>.dateKeyboardInput:not(td *) {border-right:0 !important
+}
+html[data-ui-system="manifest"] .dateFieldWrap>.datePickerBtn:not(td *) {border:1px solid var(--ui-field-border) !important;border-left:0 !important
+}
+html[data-ui-system="manifest"] .dateFieldWrap>.dateKeyboardInput:is(:disabled,[readonly]):not(td *)+.datePickerBtn {border-color:var(--ui-group-divider) !important
+}
+/* Native olmayan seçim alanları (tetikleyici değer gösterir) aynı alan sınırını taşır. */
+html[data-ui-system="manifest"] :is(.psaMultiTrigger,.lflDimBtn,.lflBreakdownBtn,.oabMultiTrigger,.cpaFieldPickerBtn):not(td *) {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] :is(.psaMultiTrigger[aria-disabled="true"],.lflDimBtn:disabled,.lflBreakdownBtn:disabled,.oabMultiTrigger:disabled,.cpaFieldPickerBtn:disabled):not(td *) {border-color:var(--ui-group-divider) !important
+}
+/* Endeksmatik ay alanı: kap tek kutudur; iç metin girişi ayrıca çerçevelenmez. */
+html[data-ui-system="manifest"] .endeksmatikMonthControl:not(td *) {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] .endeksmatikMonthControl>input[type="text"] {border:0 !important
 }

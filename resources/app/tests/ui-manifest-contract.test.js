@@ -83,6 +83,23 @@ const classicBorder = d => classicFrame(d) && ({
  'border-inline-start':['1px solid var(--ui-group-divider)'],
  'border-color':['var(--ui-accent)']
 }[d.prop]||[]).includes(d.value);
+// Shared input field boundary (7.0.322): surface tone alone was ≈1.04:1, so editable
+// fields carry --ui-field-border (≥3:1). Only these exact shared selectors/values.
+const SHARED_FIELD_SELECTORS=[
+ ':is(input:not([type="checkbox"],[type="radio"],[type="range"],[type="file"],[type="color"],[type="hidden"],[type="button"],[type="submit"],[type="reset"],[type="image"]),select,textarea,.pricingRuleSeasonBtn):not(td *)',
+ ':is(input,select,textarea,.pricingRuleSeasonBtn):is(:disabled,[readonly]):not(td *)',
+ '[data-ui-migrated] .tableRangePager>input[data-range-page]',
+ '[data-ui-migrated] .tableRangePager>input[data-range-page]:disabled',
+ '.dateFieldWrap>.datePickerBtn:not(td *)',
+ '.dateFieldWrap>.dateKeyboardInput:is(:disabled,[readonly]):not(td *)+.datePickerBtn',
+ ':is(.psaMultiTrigger,.lflDimBtn,.lflBreakdownBtn,.oabMultiTrigger,.cpaFieldPickerBtn):not(td *)',
+ ':is(.psaMultiTrigger[aria-disabled="true"],.lflDimBtn:disabled,.lflBreakdownBtn:disabled,.oabMultiTrigger:disabled,.cpaFieldPickerBtn:disabled):not(td *)',
+ '.endeksmatikMonthControl:not(td *)'
+];
+const sharedFieldBorder = d => d.file==='ui-components.css' && SHARED_FIELD_SELECTORS.includes(classicSelector(d.selector)) && ({
+ border:['1px solid var(--ui-field-border)'],
+ 'border-color':['var(--ui-group-divider)']
+}[d.prop]||[]).includes(d.value);
 const classicFocus = d => classicFrame(d)&&d.prop==='outline'
  && ['1px solid var(--ui-group-divider)','2px solid var(--ui-accent)'].includes(d.value);
 
@@ -99,7 +116,7 @@ test('Manifest permits only shared classic frames and existing table/print borde
    const group=['#cpTable','#ordersTable','#kolTable'].some(id=>d.selector===groupSeparator(id))&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
    const headerColumns=d.selector===':is(#cpTable,#ordersTable,#kolTable) thead tr.colRow th:not(:last-child)'&&d.prop==='border-inline-end'&&d.value==='1px solid var(--ui-row-divider)';
    const printRule=isPrint(d)&&d.selector==='.shipCompare tbody td'&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-print-rule)';
-   if(!row&&!group&&!headerColumns&&!printRule&&!classicBorder(d))failures.push(d); // explicit shared-surface restoration
+   if(!row&&!group&&!headerColumns&&!printRule&&!classicBorder(d)&&!sharedFieldBorder(d))failures.push(d); // explicit shared-surface restoration
   }
   if(d.prop==='outline'&&!/^(?:none|0)$/.test(d.value)){
    const cursor=['.blDetailDrawer .blDetailTable td.blGridActiveCell','#cpTable td.blGridActiveCell,#ordersTable td.blGridActiveCell','[data-ui-migrated] .blDetailTable .blGridActiveCell','#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolActiveGridCell,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolSpreadsheetActiveCell'].includes(d.selector);

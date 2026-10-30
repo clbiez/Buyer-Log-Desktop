@@ -17,11 +17,15 @@
  * Yenileme artık filtre bağını izler (bkz. linked-refresh-horizon testi);
  * bağlı grup, CP kapsam denetimi ve ön-hazırlık bu dosyada korunur.
  *
+ * v2026-10-30 — İKİ SABİT UFUK (kullanıcı kararı): "CP ayrı, diğer modüller
+ * ayrı çalışacak. Diğer modüller yenilendiğinde CP de yenilensin." Grup
+ * üyeliği artık düzenlenemez; ekle/ayır ucu LINK_FIXED ile reddeder.
+ *
  * Korunan kusurlar:
- *  1) Ayrılan modül normalizasyonda gruba GERİ DÖNMEMELİ; gruba eklenen modül
- *     grubun filtresini gerçekten kullanmalı.
- *  2) Gruba katılan modülün kendi filtresi (ör. dar CP filtresi) KAYBOLMAMALI;
- *     gruptan tekrar ayrılınca geri gelmeli.
+ *  1) Grup normalizasyonda bölünmemeli; eski kayıttaki özel üyelik sabit gruba
+ *     dönmeli (CP her zaman ayrı).
+ *  2) Eskiden ayrı duran modülün kendi filtresi KAYBOLMAMALI; linkRestore'da
+ *     saklanmalı ve Veri Yönetimi bunu söylemeli.
  *  3) CP gruptan ayrıyken genel filtre CP satırlarını kapsamıyorsa yenileme
  *     bunu sessizce geçmemeli.
  *  4) Açık olmayan sayfalar yenileme sonrası beklemeden açılabilmeli, ama
@@ -73,68 +77,88 @@ const asasOf = items => items.find(item => item.id === 'mc_asas');
 const scopeOf = (item, target) => item.scopes.find(scope => scope.targets.includes(target));
 const apply = plan => { assert.equal(plan.ok, true, plan.message); return db.replaceModelConnections(plan.items, null).items; };
 
-test('eski kayıt varsayılan grubu alır; CP varsayılan olarak ayrıdır ve filtresi korunur', () => {
+test('eski kayıt sabit grubu alır; CP ayrıdır ve filtresi korunur; IAS de iki ufka ayrılır', () => {
   const asas = asasOf(setup());
   assert.deepEqual(asas.linkedTargets, ['orders', 'backlog', 'lfl', 'priceanalysis']);
   assert.deepEqual(valuesOf(scopeOf(asas, 'cp')), ['LIC']);
   assert.equal(scopeOf(asas, 'orders').id, 'sc_link');
-  // IAS gibi bağ kavramı olmayan rolde alan yazılmaz.
+  assert.deepEqual(asas.linkRestore, [], 'değişmeyen kayıtta saklanacak bir şey yok');
+  // v2026-10-30: IAS de sabit gruba sahiptir (Siparişler · Backlog); CP ayrıdır.
   const ias = db.replaceModelConnections([{ id: 'mc_ias', name: 'IAS', server: 's', catalog: 'c', role: 'antrepo', scopes: [{ id: 'x', targets: ['cp'], horizon: H(['S7']) }] }], null).items[0];
-  assert.equal(ias.linkedTargets, undefined);
+  assert.deepEqual(ias.linkedTargets, ['orders', 'backlog']);
+  assert.deepEqual(scopeOf(ias, 'cp').targets, ['cp']);
+  assert.deepEqual(valuesOf(scopeOf(ias, 'orders')), ['S7'], 'eksik Siparişler beslemesi CP ufkunun kopyasıyla kurulur');
 });
 
-test('gruptan ayır: modül grubun filtresinin kopyasıyla kendi kapsamına çıkar ve kalıcı olarak ayrı kalır', () => {
-  const next = apply(linkWriter.planLinkChange(setup(), { sourceId: 'mc_asas', moduleId: 'lfl', linked: false }));
-  const asas = asasOf(next);
-  assert.deepEqual(asas.linkedTargets, ['orders', 'backlog', 'priceanalysis']);
-  const lfl = scopeOf(asas, 'lfl');
-  assert.deepEqual(lfl.targets, ['lfl']);
-  assert.deepEqual(valuesOf(lfl), ['S6', 'S7'], 'ayrılma anında veri kapsamı değişmez');
-  assert.equal(scopeOf(asas, 'orders').id, 'sc_link', 'grup kimliğini korur');
-  assert.notEqual(lfl.id, 'sc_link');
-  // Kararlılık: yeniden normalleştirmek ayrılan modülü gruba geri katmaz.
-  assert.deepEqual(asasOf(db.replaceModelConnections(next, null).items).scopes, asas.scopes);
+test('ekle / ayır artık yapılmaz: link ucu LINK_FIXED döner ve kaydı değiştirmez', () => {
+  const items = setup();
+  for (const request of [
+    { sourceId: 'mc_asas', moduleId: 'lfl', linked: false },
+    { sourceId: 'mc_asas', moduleId: 'cp', linked: true },
+  ]) {
+    const plan = linkWriter.planLinkChange(items, request);
+    assert.equal(plan.ok, false);
+    assert.equal(plan.code, 'LINK_FIXED');
+    assert.equal(plan.items, items);
+  }
+  assert.equal(linkWriter.planLinkChange(items, { sourceId: 'nope', moduleId: 'cp', linked: true }).code, 'SOURCE_NOT_FOUND');
 });
 
-test('gruba ekle: CP ortak filtreyi kullanır; kendi dar filtresi saklanır ve ayrılınca geri gelir', () => {
-  const linked = apply(linkWriter.planLinkChange(setup(), { sourceId: 'mc_asas', moduleId: 'cp', linked: true }));
-  const asas = asasOf(linked);
-  assert.deepEqual(asas.linkedTargets, ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
-  assert.equal(scopeOf(asas, 'cp'), scopeOf(asas, 'orders'), 'CP grubun kapsamında (tek sorgu)');
-  assert.deepEqual(valuesOf(scopeOf(asas, 'cp')), ['S6', 'S7']);
-  assert.equal(scopeOf(asas, 'cp').id, 'sc_link');
-  assert.deepEqual(asas.linkRestore.map(entry => entry.moduleId), ['cp']);
-
-  const back = asasOf(apply(linkWriter.planLinkChange(linked, { sourceId: 'mc_asas', moduleId: 'cp', linked: false })));
-  const cp = scopeOf(back, 'cp');
-  assert.deepEqual(cp.targets, ['cp']);
-  assert.deepEqual(valuesOf(cp), ['LIC'], 'CP\'nin eski filtresi geri geldi');
-  assert.equal(cp.name, 'Lisans');
-  assert.equal(cp.id, 'sc_cp');
-  assert.deepEqual(back.linkRestore, []);
-  assert.deepEqual(valuesOf(scopeOf(back, 'orders')), ['S6', 'S7']);
+test('eski düzenlenmiş üyelik sabit gruba döner: ayrılmış LFL katılır ve eski filtresi saklanır', () => {
+  const asas = asasOf(db.replaceModelConnections([{
+    id: 'mc_asas', name: 'ASAS', server: 's', catalog: 'c', role: 'asas', refreshEnabled: true,
+    linkedTargets: ['orders', 'backlog', 'priceanalysis'],
+    scopes: [
+      { id: 'sc_cp', name: 'Lisans', targets: ['cp'], enabled: true, horizon: H(['LIC']) },
+      { id: 'sc_link', name: 'Orders horizon', targets: ['orders', 'backlog', 'priceanalysis'], enabled: true, horizon: H(['S6', 'S7']) },
+      { id: 'sc_lfl', name: 'LFL Kendi', targets: ['lfl'], enabled: true, horizon: H(['S5']) },
+    ],
+  }], null).items);
+  assert.deepEqual(asas.linkedTargets, ['orders', 'backlog', 'lfl', 'priceanalysis']);
+  assert.equal(scopeOf(asas, 'lfl'), scopeOf(asas, 'orders'), 'LFL grubun kapsamında (tek sorgu)');
+  assert.deepEqual(valuesOf(scopeOf(asas, 'lfl')), ['S6', 'S7'], 'çoğunluğun ufku kazanır');
+  const stash = asas.linkRestore.find(entry => entry.moduleId === 'lfl');
+  assert.ok(stash, 'LFL\'in kendi filtresi kaybolmamalı');
+  assert.equal(stash.scopeName, 'LFL Kendi');
+  assert.deepEqual(stash.horizon.groups[0].conditions[0].values, ['S5']);
+  assert.deepEqual(valuesOf(scopeOf(asas, 'cp')), ['LIC']);
+  // Kararlılık: yeniden kaydetmek saklananı çoğaltmaz, grubu bölmez.
+  const again = asasOf(db.replaceModelConnections([asas], null).items);
+  assert.deepEqual(again.scopes, asas.scopes);
+  assert.deepEqual(again.linkRestore, asas.linkRestore);
 });
 
-test('ayrılan modül geri eklenince grubun filtresine döner; değişiklik yoksa NO_CHANGE', () => {
-  const split = apply(linkWriter.planLinkChange(setup(), { sourceId: 'mc_asas', moduleId: 'backlog', linked: false }));
-  const again = asasOf(apply(linkWriter.planLinkChange(split, { sourceId: 'mc_asas', moduleId: 'backlog', linked: true })));
-  assert.equal(scopeOf(again, 'backlog'), scopeOf(again, 'orders'));
-  assert.equal(again.scopes.filter(scope => scope.targets.some(t => again.linkedTargets.includes(t))).length, 1);
-  assert.equal(linkWriter.planLinkChange(setup(), { sourceId: 'mc_asas', moduleId: 'orders', linked: true }).code, 'NO_CHANGE');
-  assert.equal(linkWriter.planLinkChange(setup(), { sourceId: 'nope', moduleId: 'cp', linked: true }).code, 'SOURCE_NOT_FOUND');
-  assert.equal(linkWriter.planLinkChange(setup(), { sourceId: 'mc_asas', moduleId: 'intake', linked: true }).code, 'MODULE_NOT_FEEDABLE');
+test('eski kayıtta gruba eklenmiş CP ayrılır ama veri kapsamı geçiş anında değişmez', () => {
+  const asas = asasOf(db.replaceModelConnections([{
+    id: 'mc_asas', name: 'ASAS', server: 's', catalog: 'c', role: 'asas', refreshEnabled: true,
+    linkedTargets: ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'],
+    linkRestore: [{ moduleId: 'cp', scopeId: 'sc_cp', scopeName: 'Lisans', horizon: H(['LIC']), parkedAt: '2026-10-01T00:00:00.000Z' }],
+    scopes: [{ id: 'sc_link', name: 'Orders horizon', targets: ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'], enabled: true, horizon: H(['S6', 'S7']) }],
+  }], null).items);
+  assert.deepEqual(scopeOf(asas, 'cp').targets, ['cp'], 'CP kendi ufkunda');
+  assert.deepEqual(valuesOf(scopeOf(asas, 'cp')), ['S6', 'S7'], 'CP\'nin verisi geçiş anında değişmez');
+  assert.ok(asas.linkRestore.some(entry => entry.moduleId === 'cp'), 'CP\'nin eski dar filtresi saklı kalır');
 });
 
-test('okuma modeli bağlı grubu ve modül beslemesinin bağ durumunu taşır; gidiş-dönüş eşitliği korunur', () => {
-  const items = asasOf(apply(linkWriter.planLinkChange(setup(), { sourceId: 'mc_asas', moduleId: 'lfl', linked: false })));
+test('okuma modeli iki sabit ufku ve ortak ufka katılan eski filtreleri taşır; gidiş-dönüş eşitliği korunur', () => {
+  const items = asasOf(db.replaceModelConnections([{
+    id: 'mc_asas', name: 'ASAS', server: 's', catalog: 'c', role: 'asas', refreshEnabled: true,
+    scopes: [
+      { id: 'sc_cp', name: 'Lisans', targets: ['cp'], enabled: true, horizon: H(['LIC']) },
+      { id: 'sc_link', name: 'Orders horizon', targets: ['orders', 'backlog', 'priceanalysis'], enabled: true, horizon: H(['S6', 'S7']) },
+      { id: 'sc_lfl', name: 'LFL Kendi', targets: ['lfl'], enabled: true, horizon: H(['S5']) },
+    ],
+  }], null).items);
   const model = readModel.build([items]);
   const source = model.sources.find(entry => entry.id === 'mc_asas');
-  assert.deepEqual(source.linkedModules, ['orders', 'backlog', 'priceanalysis']);
-  assert.deepEqual(source.linkableModules, ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
+  assert.deepEqual(source.linkedModules, ['orders', 'backlog', 'lfl', 'priceanalysis']);
+  assert.deepEqual(source.linkableModules, ['orders', 'backlog', 'lfl', 'priceanalysis'], 'gruba eklenebilecek başka modül yok');
+  assert.deepEqual(model.horizonGroups, [{ id: 'cp', targets: ['cp'] }, { id: 'linked', targets: ['orders', 'backlog', 'lfl', 'priceanalysis'] }]);
+  assert.deepEqual(model.mergedFilters.map(entry => [entry.moduleId, entry.filterName]), [['lfl', 'LFL Kendi']]);
   const feed = id => model.modules.find(module => module.id === id).feeds.find(entry => entry.sourceId === 'mc_asas');
   assert.equal(feed('orders').linked, true);
-  assert.equal(feed('lfl').linked, false);
-  assert.equal(feed('lfl').linkable, true);
+  assert.equal(feed('lfl').linked, true);
+  assert.equal(feed('cp').linked, false);
   const round = adapter.toLegacy(adapter.fromLegacy([items]))[0];
   assert.deepEqual(round.linkedTargets, items.linkedTargets);
   assert.deepEqual(round.linkRestore, items.linkRestore);
@@ -196,13 +220,18 @@ test('istemci: genel filtre CP\'yi kapsamıyorsa yenileme bitince açıkça uyar
   assert.match(notify, /genel filtre CP filtrenizi kapsamıyor/);
 });
 
-test('Veri Yönetimi: bağlı grup tek panelde; modül ayrılabilir ve geri eklenebilir', () => {
-  assert.match(DM, /\$\{linkGroupPanels\(\)\}<div class="dmModules">/);
-  assert.match(DM, /data-link="\$\{esc\(source\.id\)\}:\$\{esc\(id\)\}" data-next="off"/);
-  assert.match(DM, /data-link="\$\{esc\(source\.id\)\}:\$\{esc\(id\)\}" data-next="on"/);
-  assert.match(DM, /fetch\('\/api\/data-management\/link'/);
-  assert.match(DM, /expectedSourceRevision: source \? source\.revision : ''/);
-  // Filtre düzenleyicide bağlı modül "yalnız bunu ayır" ile gruptan çıkabilir.
-  assert.match(DM, /canSplit: true,\s*linked: feed\.linked === true,/);
-  assert.match(DMF, /Yalnız \$\{context\.moduleLabel\} için ayır \(gruptan çıkar\)/);
+test('Veri Yönetimi: iki ufuk tek panelde (Horizon ve yenileme); ekle/ayır ve gruplar yok', () => {
+  assert.match(DM, /\$\{horizonPanel\(\)\}/);
+  assert.match(DM, /data-refresh-horizon="\$\{esc\(group\.id\)\}"/);
+  assert.match(DM, /data-horizon-slot="\$\{esc\(group\.id\)\}"/);
+  assert.match(DM, /model\.horizonGroups/);
+  assert.match(DM, /model\.mergedFilters/);
+  assert.doesNotMatch(DM, /data-link=|linkGroupPanels|fetch\('\/api\/data-management\/link'/);
+  assert.doesNotMatch(DM, /canSplit: true/);
+  assert.doesNotMatch(DMF, /data-save="split"|gruptan çıkar/);
+  // Otomatik yenileme ve kaynak izleme aynı panelde kalır.
+  const panel = DM.slice(DM.indexOf('function horizonPanel()'), DM.indexOf('function refreshHorizon('));
+  assert.match(panel, /refreshSettings\(\)/);
+  assert.match(DM, /id="autoRefreshSelect"/);
+  assert.match(DM, /id="sourceWatchToggle"/);
 });

@@ -73,6 +73,27 @@ function createSourceWorkflowService({db}){
    return {verified:true,changed:true,revision:saved.revision,sourceRevision:adapter.configRevision(own),warnings:planned.warnings||[],appliedScopeId:planned.appliedScopeId||''};
   });
  }
+ /* v2026-10-30 — YAN YANA ASAS ⇄ IAS FİLTRE TEK İŞLEMDE.
+    İki kaynağın ortak filtresi aynı kilit, aynı revizyon kontrolü ve aynı
+    kayıtla yazılır: biri yazılıp diğeri reddedilirse ufuk iki kaynakta farklı
+    satır evrenleri gösterirdi. Her kaynağın kendi beklenen revizyonu ayrı
+    sınanır (başka yöneticinin araya giren değişikliği SOURCE_CHANGED). */
+ async function updateFilterPair(list,guard={}){
+  if(!Array.isArray(list)||list.length!==2||list[0].sourceId===list[1].sourceId)throw fail('VALIDATION_ERROR',400);
+  return db.mutateModelConnections(async lease=>{
+   guard.assertAuthority?.();const store=db.loadModelConnections();
+   const befores=list.map(entry=>checked(store,entry.sourceId,entry.expected));
+   let items=store.items,changed=false;const warnings=[];
+   for(const entry of list){const planned=plan('filter',items,entry.args);warnings.push(...(planned.warnings||[]));if(planned.code!=='NO_CHANGE'){changed=true;items=planned.items;}}
+   if(!changed)return {verified:true,changed:false,revision:store.revision,sourceRevisions:Object.fromEntries(befores.map(item=>[item.id,adapter.configRevision(item)])),warnings};
+   for(const item of befores)capacity(store,item,2);
+   const saved=db.replaceModelConnections(items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();
+   const actual=db.loadModelConnections();if(actual.revision!==saved.revision)throw fail('OFFICE_RESOURCE_VERIFY_FAILED');
+   const sourceRevisions={};
+   for(const entry of list){const own=checked(saved,entry.sourceId),current=checked(actual,entry.sourceId);if(adapter.configRevision(own)!==adapter.configRevision(current))throw fail('OFFICE_RESOURCE_VERIFY_FAILED');sourceRevisions[entry.sourceId]=adapter.configRevision(own);}
+   return {verified:true,changed:true,revision:saved.revision,sourceRevisions,warnings};
+  });
+ }
  async function restore(before,expected,guard={}){
   return db.mutateModelConnections(async lease=>{
    guard.assertAuthority?.();const store=db.loadModelConnections(),current=checked(store,before.id,expected),wanted={...clone(before),lastRun:current.lastRun};
@@ -143,6 +164,6 @@ function createSourceWorkflowService({db}){
    return {verified:true,revision:saved.revision,sourceRevision:adapter.configRevision(own)};
   });
  }
- return {snapshot,preview,update,restore,createPreview,create,removeCreated,deletePreview,remove,restoreDeleted,publicSource,filterFields,planMapping:(items,args)=>plan('mapping',items,args),createOptions:writer.createOptions};
+ return {snapshot,preview,update,updateFilterPair,restore,createPreview,create,removeCreated,deletePreview,remove,restoreDeleted,publicSource,filterFields,planMapping:(items,args)=>plan('mapping',items,args),createOptions:writer.createOptions};
 }
 module.exports={createSourceWorkflowService,publicSource,publicHorizon,semanticSource,affectedModules,filterFields};

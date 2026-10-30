@@ -97,7 +97,9 @@ test('menu waits for canonical configuration and ignores stale timestamp strings
   assert.match(menu, /const members=linkedRefreshMembers\(\)/);
   assert.match(menu, /map\(value=>new Date\(value\)\.getTime\(\)\)\.filter\(Number\.isFinite\)/);
   assert.match(menu, /if\(!times\.length\)/);
-  assert.match(menu, /options\.push\(\['all'/);
+  // v2026-10-30: "Diğer modüller + CP" satırı bütün modülleri kapsar; ayrı "Tümü" yok.
+  assert.match(menu, /options\.push\(\['linked',/);
+  assert.doesNotMatch(menu, /options\.push\(\['all'/);
   assert.match(server, /app\.get\('\/api\/refresh-targets', userAccess\.requireArea\('source'\)/);
   assert.match(server, /Cache-Control', 'no-store, no-cache, must-revalidate'/);
 });

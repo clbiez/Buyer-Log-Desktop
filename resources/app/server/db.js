@@ -17,6 +17,7 @@ const modelFields = require('./lib/model-fields');
 // yolu (binding-writer) ile depo aynı kuralı paylaşır.
 const bindingWriter = require('./lib/data-domain/binding-writer');
 const refreshGroups = require('./lib/data-domain/refresh-groups');
+const horizonFieldPairs = require('./lib/horizon-field-pairs');
 const { orderLineKey, plmImageKey, plmColourImageKey, plmColourImageNameKey, plmImageKeysFor, DEFAULT_ANTREPO_MATCH_RULE, defaultAntrepoMatchConfig, normalizeAntrepoMatchConfig } = require('./lib/parse');
 const { withFileLeaseSync } = require('./lib/shared-file-transaction');
 const { PROFILE_SCHEMA_VERSION, pageOf, normalizeProfileStore, setFavorite, markUsed, removeProfile } = require('./lib/profile-store');
@@ -1355,10 +1356,22 @@ function normalizeModelConnection(raw) {
      gruba katılırken modülün kendi filtresi linkRestore'da saklanır ki geri
      ayrıldığında kaybolmasın. */
   const linkedTargets = legacyFabricRole ? null : modelScopes.normalizeLinkedTargets(item.linkedTargets, role);
-  const linkRestore = linkedTargets ? bindingWriter.normalizeParked(item.linkRestore) : [];
+  let linkRestore = linkedTargets ? bindingWriter.normalizeParked(item.linkRestore) : [];
   const defaultSeasonsApplied = item.defaultSeasonsApplied === true;
   if (role === 'asas' && !defaultSeasonsApplied && !horizon.seasons.length && !horizon.dateStart && !horizon.dateEnd) {
     horizon.seasons = [...MODEL_CONNECTION_DEFAULT_SEASONS];
+  }
+  const scopes = legacyFabricRole ? [] : modelScopes.normalizeScopes(
+    item.scopes, role, horizon, modelHorizon.normalizeHorizon,
+    parkedBindings.map(entry => entry.moduleId), linkedTargets || undefined);
+  /* v2026-10-30 — İki sabit ufka geçiş: eskiden kendi filtresiyle ayrı duran
+     bir "Diğer modüller" üyesi gruba katılınca o filtre kapsamlardan düşer.
+     Silinmez; linkRestore'a saklanır (varsa eski kayıt korunur). */
+  if (linkedTargets && Array.isArray(item.scopes)) {
+    const kept = new Set(linkRestore.map(entry => entry.moduleId));
+    const superseded = modelScopes.supersededLinkedHorizons(item.scopes, scopes, linkedTargets, modelHorizon.normalizeHorizon)
+      .filter(entry => !kept.has(entry.moduleId));
+    if (superseded.length) linkRestore = bindingWriter.normalizeParked([...linkRestore, ...superseded]);
   }
   return {
     id,
@@ -1404,9 +1417,7 @@ function normalizeModelConnection(raw) {
     mappingEnhancementScanVersion: Math.max(0, Number(item.mappingEnhancementScanVersion) || 0),
     horizon,
     // Hedef başına ufuk. Boşsa mevcut tek ufuktan üretilir; eski kayıtlar aynen çalışır.
-    scopes: legacyFabricRole ? [] : modelScopes.normalizeScopes(
-      item.scopes, role, horizon, modelHorizon.normalizeHorizon,
-      parkedBindings.map(entry => entry.moduleId), linkedTargets || undefined),
+    scopes,
     ...(linkedTargets ? { linkedTargets, linkRestore } : {}),
     /* v7.81 — PARK EDİLMİŞ MODÜL BAĞLANTILARI.
        Bir modül bağlantısı ayrı bir kayıt değil, bir kapsamın targets[]
@@ -1504,6 +1515,25 @@ function replaceRefreshGroups(items, expectedRevision = null, options = {}) {
   settings._revisions.refreshGroups = current + 1;
   const saved = saveSettings(settings, settings._revision, options);
   return { items: saved.refreshGroups, revision: saved._revisions.refreshGroups };
+}
+
+/* v2026-10-30 — ASAS ⇄ IAS alan eşleme hafızası (ortak ayar, revizyonlu).
+   Ayrıntı: server/lib/horizon-field-pairs.js. */
+function loadHorizonFieldPairs() {
+  const settings = loadSettings();
+  const revision = Number(settings._revisions && settings._revisions.horizonFieldPairs) || 0;
+  return { items: horizonFieldPairs.normalizePairs(settings.horizonFieldPairs), revision };
+}
+function upsertHorizonFieldPairs(pairs, meta = {}, options = {}) {
+  const settings = loadSettings();
+  settings._revisions = settings._revisions && typeof settings._revisions === 'object' ? { ...settings._revisions } : {};
+  const current = Number(settings._revisions.horizonFieldPairs) || 0;
+  const next = horizonFieldPairs.upsertPairs(settings.horizonFieldPairs, pairs, meta);
+  if (!next.changed) return { items: next.items, revision: current, changed: 0 };
+  settings.horizonFieldPairs = next.items;
+  settings._revisions.horizonFieldPairs = current + 1;
+  const saved = saveSettings(settings, settings._revision, options);
+  return { items: horizonFieldPairs.normalizePairs(saved.horizonFieldPairs), revision: saved._revisions.horizonFieldPairs, changed: next.changed };
 }
 
 // Bir bağlantının son çalıştırma bilgisini yazar. Kullanıcı düzenlemesi değil,
@@ -1995,6 +2025,7 @@ module.exports = {
   loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
   normalizeMapping, normalizeCustomFields, normalizeCpModelColumns, normalizeModelConnection, normalizeModelConnections, loadModelConnections, replaceModelConnections, recordModelConnectionRun, MODEL_CONNECTION_LIMIT, MODEL_CONNECTION_DEFAULT_SEASONS,
   loadRefreshGroups, replaceRefreshGroups,
+  loadHorizonFieldPairs, upsertHorizonFieldPairs,
   loadViews: userId => loadProfileFile(scopedProfileFile(VIEWS_FILE, userId), userId, 'view'),
   addView: function () { return addScopedProfile(VIEWS_FILE, 'Görünümler', arguments); },
   updateView: function () { return updateScopedProfile(VIEWS_FILE, 'Görünümler', arguments); },

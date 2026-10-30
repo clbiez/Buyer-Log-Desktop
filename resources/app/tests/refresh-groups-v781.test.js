@@ -85,9 +85,12 @@ test('v7.81 modül sırası sabittir — seçim sırası hatırlanmak zorunda de
    beş modül birlikte yenilenir; grup tanımı gerçekte ne yenilendiğini söyler. */
 /* v20260930 — Tek motor geri alındı: bağlı gruptan bir modül konursa grup gelir;
    gruptan ayrı CP yalnız açıkça seçilirse (dar CP yenilemesi geniş grubu beklemez). */
-test('v20260930 gruba bağlı bir modül konursa bağlı grup gelir; CP tek başına kalır', () => {
-  const LINKED = ['orders', 'backlog', 'lfl', 'priceanalysis'];
-  assert.deepEqual(groups.normalizeGroups([{ name: 'L', moduleIds: ['lfl'] }])[0].moduleIds, LINKED);
+/* v2026-10-30: Diğer modüllerden biri konursa grup CP ile birlikte gelir
+   (Diğer modüller yenilenince CP de yenilenir); CP tek başına kalabilir. */
+test('v2026-10-30 gruba Diğer modüllerden biri konursa bütün grup ve CP gelir; CP tek başına kalır', () => {
+  assert.deepEqual(groups.normalizeGroups([{ name: 'B', moduleIds: ['backlog'] }])[0].moduleIds, ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
+  // v2026-10-30 (kullanıcı kararı): LFL tek başına yenilenebilir.
+  assert.deepEqual(groups.normalizeGroups([{ name: 'L', moduleIds: ['lfl'] }])[0].moduleIds, ['lfl']);
   assert.deepEqual(groups.normalizeGroups([{ name: 'C', moduleIds: ['cp'] }])[0].moduleIds, ['cp']);
 });
 
@@ -123,20 +126,21 @@ test('v7.81 kimlikler kalıcıdır — kaydetmek grubun kimliğini değiştirmez
 });
 
 test('v7.81 targetsFor grubun hedeflerini verir', () => {
-  const list = groups.normalizeGroups([{ id: 'rg_a', name: 'A', moduleIds: ['cp', 'lfl'] }]);
+  const list = groups.normalizeGroups([{ id: 'rg_a', name: 'A', moduleIds: ['cp', 'orders'] }]);
   assert.deepEqual(groups.targetsFor(list, 'rg_a'), ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'], 'CP + bağlı bir modül = CP + grup');
   assert.deepEqual(groups.targetsFor(list, 'yok'), []);
 });
 
 /* ------------------------------------------------------------------ */
 
+/* v2026-10-30 — Adlandırılmış grup düzenleyicisi Veri Yönetimi'nden kalktı;
+   yerini iki sabit ufkun Yenile düğmeleri aldı. Kural aynı: ikinci bir
+   yenileme motoru yoktur, düğme yalnız hedef listesi verir. */
 test('v7.81 ikinci bir yenileme motoru yazılmadı', () => {
-  /* Grup yalnız hedef listesi verir; iş kuyruğu, aşama paneli, iptal ve
-     "filtre gerekli" uyarısı mevcut akıştan gelir (CLAUDE.md §9). */
   const ui = fs.readFileSync(path.join(__dirname, '..', 'public', 'data-management.js'), 'utf8');
-  const runner = ui.match(/const runGroup = event\.target\.closest\('\[data-run-group\]'\);[\s\S]*?\n      return;\n    \}/);
-  assert.ok(runner, 'grup çalıştırma dalı bulunamadı');
-  assert.match(runner[0], /window\.loadFromServer\(true, group\.moduleIds\)/);
+  const runner = ui.match(/function refreshHorizon\(groupId\) \{[\s\S]*?\n  \}/);
+  assert.ok(runner, 'ufuk yenileme dalı bulunamadı');
+  assert.match(runner[0], /window\.loadFromServer\(true, group\.targets\.slice\(\)\)/);
   // Kendi başına /api/refresh çağırmamalı.
   assert.doesNotMatch(ui, /fetch\(\s*['"`]\/api\/refresh/);
 });
@@ -153,10 +157,13 @@ test('v20260929 üst Yenile menüsünde grup satırı yoktur; satırlar filtre b
   assert.match(appMain, /window\.BLInvalidateRefreshGroups=/);
 });
 
-test('v7.81 grup kaydedilince üstteki menünün önbelleği tazelenir', () => {
+test('v2026-10-30 grup düzenleyicisi kalktı; kayıtlı gruplar sunucuda korunur', () => {
   const ui = fs.readFileSync(path.join(__dirname, '..', 'public', 'data-management.js'), 'utf8');
-  const save = ui.match(/async function saveGroups\([\s\S]*?\n  \}/);
-  assert.ok(save);
-  assert.match(save[0], /BLInvalidateRefreshGroups/,
-    'kaydetme sonrası menü bayat grup listesi gösterir');
+  assert.doesNotMatch(ui, /data-new-group|data-run-group|async function saveGroups\(/);
+  assert.doesNotMatch(ui, /\/api\/data-management\/refresh-groups/);
+  const server = require('./helpers/server-source')();
+  // Veri silinmez: uç ve depo yerinde durur, eski kayıtlar okunabilir.
+  assert.match(server, /app\.get\('\/api\/data-management\/refresh-groups'/);
+  db.replaceRefreshGroups([{ name: 'Korunan', moduleIds: ['cp'] }], null);
+  assert.deepEqual(db.loadRefreshGroups().items.map(group => group.name), ['Korunan']);
 });

@@ -1565,6 +1565,13 @@ const DEFAULT_LINKED_REFRESH_TARGETS=Object.freeze(['orders','backlog','lfl','pr
 // modelScopes / sharedFilter son refresh snapshot'ından gelir; görünüm değiştirme
 // ya da kısmi yenileme sonrasında menüyü yanlış bölebiliyordu.
 let authoritativeLinkedRefreshTargets=null;
+/* v2026-10-30 — İKİ SABİT UFUK (kullanıcı kararı): CP ayrı, diğer modüller tek
+   ortak ufukta. "Diğer modüller" yenilenince CP de yenilenir; CP tek başına
+   yenilenebilir. Sunucudaki karşılığı: model-scopes LINKED_REFRESH_CHAIN. */
+const LINKED_REFRESH_CHAIN=Object.freeze(['cp']);
+// LFL IAS'tan beslenmez: tek başına yenilenebilir; genel yenileme onu da kapsar.
+// Sunucudaki karşılığı: model-scopes LINKED_STANDALONE_TARGETS.
+const LINKED_STANDALONE_TARGETS=Object.freeze(['lfl']);
 async function syncLinkedRefreshMembers(){
   const response=await fetch('/api/refresh-targets',{cache:'no-store'});
   if(!response.ok){
@@ -1586,7 +1593,10 @@ function linkedRefreshMembers(){
 function withLinkedRefreshTargets(targets){
   const list=[...new Set((Array.isArray(targets)?targets:[]).map(value=>String(value||'').trim()).filter(Boolean))];
   const members=linkedRefreshMembers();
-  if(list.some(target=>members.includes(target)))members.forEach(target=>{if(!list.includes(target))list.push(target);});
+  if(list.some(target=>members.includes(target)&&!LINKED_STANDALONE_TARGETS.includes(target))){
+    members.forEach(target=>{if(!list.includes(target))list.push(target);});
+    LINKED_REFRESH_CHAIN.forEach(target=>{if(!list.includes(target))list.push(target);});
+  }
   return list;
 }
 function refreshTargetsLabel(targets){
@@ -1743,9 +1753,13 @@ function renderHorizonBadges(){
         const linkBadge=document.createElement('span');
         linkBadge.className='horizonSummaryLinked horizonBadgeSource';
         linkBadge.textContent=en?'Linked':'Bağlı';
-        linkBadge.title=en
-          ?`This page uses the shared group filter and refreshes together with ${linkedRefreshLabel()}; unlink it in Data Management.`
-          :`Bu sayfa ortak (bağlı) filtreyi kullanır ve ${linkedRefreshLabel()} ile birlikte yenilenir; Veri Yönetimi'nden ayrılabilir.`;
+        linkBadge.title=LINKED_STANDALONE_TARGETS.includes(target)
+          ?(en
+            ?`This page uses the shared Other modules horizon. Its own refresh button refreshes LFL only; refreshing the other modules includes LFL. Change the horizon in Data Management.`
+            :`Bu sayfa Diğer modüllerin ortak ufkunu kullanır. Kendi Yenile düğmesi yalnız LFL'i yeniler; diğer modüllerin yenilenmesi LFL'i de kapsar. Ufuk Veri Yönetimi'nden değiştirilir.`)
+          :(en
+            ?`This page uses the shared Other modules horizon and refreshes together with ${linkedRefreshLabel()} and CP; change the horizon in Data Management.`
+            :`Bu sayfa Diğer modüllerin ortak ufkunu kullanır ve ${linkedRefreshLabel()} ile CP'yle birlikte yenilenir; ufuk Veri Yönetimi'nden değiştirilir.`);
         el.appendChild(linkBadge);
       }
       const stamp=refreshTargetsStamp(withLinkedRefreshTargets([target]));
@@ -15142,6 +15156,7 @@ async function waitForRefreshJob(expectedJob=null){
     if(userVisibleRefresh){
       scheduleRefreshPrewarm(targets);
       notifyCpCoverage(data.lastRefreshResult);
+      notifySkippedRefreshTargets(data.lastRefreshResult);
     }
     if(data.hasCachedData&&data.loadedAt){
       const t = new Date(data.loadedAt).toLocaleString(appLang==='en'?'en-GB':'tr-TR');
@@ -15552,6 +15567,16 @@ function scheduleRefreshPrewarm(targets){
 /* Genel (bağlı) filtre CP filtresini kapsamıyorsa: sunucu iki sorgunun GERÇEK
    sonucunu karşılaştırır (server/lib/cp-coverage.js). Uyarı ⚠ sayacında da durur;
    burada yenileme bitince ayrıca açıkça söylenir. */
+/* v2026-10-30 — CP'nin filtresi eksik olduğu için CP atlandıysa (sunucu
+   refreshTargetPlan) diğer modüller yenilenmiştir; CP'nin yenilenmediği açıkça
+   söylenir ki kullanıcı CP'yi güncel sanmasın. */
+function notifySkippedRefreshTargets(result){
+  const skipped=result&&Array.isArray(result.skippedTargets)?result.skippedTargets:[];
+  if(!skipped.some(entry=>entry&&entry.target==='cp'))return;
+  showToast(appLang==='en'
+    ?'CP was not refreshed: its filter is missing or unbounded. The other modules were refreshed. Add a CP filter in Data Management.'
+    :'CP yenilenmedi: CP filtresi eksik ya da sınırsız. Diğer modüller yenilendi. Veri Yönetimi\'nde CP için filtre tanımlayın.');
+}
 function notifyCpCoverage(result){
   const coverage=result&&result.cpCoverage;
   if(!coverage||!Number(coverage.outsideCount))return;
@@ -15601,18 +15626,23 @@ async function openTopRefreshMenu(anchor){
   }
   if(requestSequence!==topRefreshMenuSequence||!anchor.isConnected)return;
   const menu=document.createElement('div'); menu.id='_topRefreshMenu'; menu.className='topRefreshMenu';
-  /* v20260930 — MENÜ FİLTRE BAĞINI İZLER. Ortak filtreyi paylaşan sayfalar tek
-     satırdır (tek sorgu); gruptan ayrı her sayfa (varsayılan olarak CP) kendi
-     satırını alır ve yalnız kendi sorgusunu çalıştırır. "Tümünü yenile" hepsini
-     kapsar. Böylece dar CP yenilemesi en geniş filtrenin süresini beklemez. */
+  /* Menü filtre bağını izler (v20260930): dar CP yenilemesi en geniş filtrenin
+     süresini beklemez.
+     v2026-10-30 — İKİ SATIR: "CP" yalnız CP'yi, "Diğer modüller + CP" bütün
+     modülleri yeniler (diğer modüller CP'yi de yeniler). Bu ikinci satır
+     "Tümünü yenile" ile aynı kapsam olduğundan ayrı bir "Tümü" satırı yoktur.
+     Gruba girmeyen bir modül kalırsa (beklenmez) kendi satırını alır. */
   const members=linkedRefreshMembers();
-  const options=[];
+  const options=[['cp','CP',['cp']]];
+  if(members.length){
+    const linkedTargets=withLinkedRefreshTargets(members);
+    options.push(['linked',`${refreshTargetsLabel(members)} + CP`,linkedTargets]);
+    // LFL tek başına da yenilenebilir (IAS'tan beslenmez); yukarıdaki satır onu da kapsar.
+    LINKED_STANDALONE_TARGETS.filter(target=>members.includes(target)).forEach(target=>options.push([target,refreshTargetsLabel([target]),[target]]));
+  }
   ALL_REFRESH_TARGETS.forEach(target=>{
-    if(members.includes(target)){
-      if(!options.some(([key])=>key==='linked'))options.push(['linked',refreshTargetsLabel(members),members.slice()]);
-    }else options.push([target,refreshTargetsLabel([target]),[target]]);
+    if(!options.some(([,,targets])=>targets.includes(target)))options.push([target,refreshTargetsLabel([target]),[target]]);
   });
-  options.push(['all',appLang==='en'?'Refresh all':'Tümünü yenile',ALL_REFRESH_TARGETS.slice()]);
   /* v7.26 — SAYFANIN SON GÜNCELLENME SAATİ MENÜDE YAZAR (kullanıcı talebi).
      Hem "3 dk önce" gibi okunur bir ifade hem de satırdaki en eski sayfanın saati yazılır. */
   const stamp=targets=>{
@@ -15772,17 +15802,18 @@ function scheduleSourceWatch(delay=SOURCE_WATCH_INTERVAL_MS){
   if(!sourceWatchEnabled())return;
   sourceWatchTimer=setTimeout(runSourceWatch,Math.max(1000,Number(delay)||SOURCE_WATCH_INTERVAL_MS));
 }
-// Değişen sayfalar yenileme birimlerine bölünür: bağlı gruptaki sayfa grubun
-// tamamıyla (tek sorgu), gruptan ayrı sayfa tek başına. CP'nin birimi önce çalışır.
+// Değişen sayfalar yenileme birimlerine bölünür.
+// v2026-10-30: Diğer modüllerden biri değiştiyse tek birim hepsini ve CP'yi
+// yeniler (zincir); yalnız CP değiştiyse yalnız CP. CP iki kez sorgulanmaz.
 function sourceWatchUnits(changed){
   const members=linkedRefreshMembers();
-  const ordered=[...changed].sort((a,b)=>(a==='cp'?-1:0)-(b==='cp'?-1:0));
-  const units=[];
-  ordered.forEach(target=>{
-    if(units.some(unit=>unit.includes(target)))return;
-    units.push(members.includes(target)?members.slice():[target]);
-  });
-  return units;
+  const list=[...new Set(changed)];
+  if(list.some(target=>members.includes(target))){
+    const unit=withLinkedRefreshTargets(members);
+    list.forEach(target=>{if(!unit.includes(target))unit.push(target);});
+    return [unit];
+  }
+  return list.map(target=>[target]);
 }
 async function runSourceWatch(){
   sourceWatchTimer=null;
