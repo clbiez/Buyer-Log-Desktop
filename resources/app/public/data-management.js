@@ -495,7 +495,8 @@
 
   function horizonPanel() {
     const merged = Array.isArray(model.mergedFilters) ? model.mergedFilters : [];
-    return `<div class="dmPanel dmHorizon" data-dm-panel="horizon">
+    // Panel anahtarı eski "Yenileme" paneliyle aynı kalır: katlanma tercihi korunur.
+    return `<div class="dmPanel dmHorizon" data-dm-panel="refresh">
       <div class="dmPanelHead">
         <span class="dmPanelTitle">${esc(T('Horizon ve yenileme', 'Horizon and refresh'))}</span>
       </div>
