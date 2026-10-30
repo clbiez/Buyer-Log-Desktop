@@ -1384,6 +1384,20 @@
     setTimeout(()=>area?.focus(),0);
   }
 
+  /* Liste görünümü: satırın alternatif fiyatları teklif fiyatının altında özetlenir
+     (sütun düzeni sabit kalır). Düzenleme Fiyat Masası'nın ortak alternatif
+     panelinden yapılır; masa yüklü değilse yalnız okunur özet gösterilir. */
+  function qOptionsMarkup(item,canEdit){
+    const list=qNormalizeOptions(item.options),canOpen=typeof window.BLPricingDesk?.openOptions==='function';
+    if(!list.length&&!(canEdit&&canOpen))return '';
+    const money=value=>qValidPrice(value)?`$${qMoneyDisplay(value)}`:(qNorm(value)||'—');
+    const labelOf=(option,i)=>option.label||qLang(`Opsiyon ${i+1}`,`Option ${i+1}`);
+    const tip=list.length?[`${qNorm(item.priceLabel)||qLang('Ana teklif','Main offer')}: ${money(item.price)}${qNorm(item.priceNote)?` · ${qNorm(item.priceNote)}`:''}`,...list.map((option,i)=>`${labelOf(option,i)}: ${money(option.price)}${option.note?` · ${option.note}`:''}`)].join('\n'):qLang('Alternatif fiyat ekle','Add alternative price');
+    const badge=list.length?qLang(`OPS ${list.length}`,`OPT ${list.length}`):qLang('+ OPS','+ OPT');
+    const summary=list.map((option,i)=>`${labelOf(option,i)} ${money(option.price)}`).join(' · ');
+    const control=canOpen?`<button type="button" class="pdOptBadge${list.length?' hasOptions':''}" data-quote-options="${qEsc(item.id)}" aria-label="${qEsc(qLang(`Alternatif fiyatlar (${list.length})`,`Alternative prices (${list.length})`))}">${qEsc(badge)}</button>`:`<span class="pdOptBadge hasOptions">${qEsc(badge)}</span>`;
+    return `<div class="quotationOptions${list.length?' hasOptions':''}" title="${qEsc(tip)}">${control}${list.length?`<span class="quotationOptionsText">${qEsc(summary)}</span>`:''}</div>`;
+  }
   function qRenderDetail(){
     qCloseTableFilter();
     const host=document.getElementById('quotationDetail'); if(!host) return;
@@ -1427,7 +1441,7 @@
         <td><span class="quotationManufacturer" title="${qEsc(item.manufacturer)}">${qEsc(item.manufacturer)}</span></td>
         <td class="quotationMoney">${qEsc(target)}</td>
         <td class="quotationBestCell" data-quote-best="${qEsc(item.modelKey)}">${qBestMarkup(req,item)}</td>
-        <td class="quotationMoney${lineCanEdit?'':' viewOnlyCell'}"><div class="quotationPriceEditor">${qPriceDeltaMarkup(req,item)}<input type="text" inputmode="decimal" class="quotationPriceInput" data-quote-price="${qEsc(item.id)}" value="${qEsc(qValidPrice(item.price)?qMoneyDisplay(item.price):item.price)}" placeholder="0.00" aria-label="${qEsc(qLang('Teklif fiyatı','Quotation price'))}" ${lineCanEdit?'':'disabled title="'+qEsc(qLang('Yalnız görüntüleme','View only'))+'"'}></div></td>
+        <td class="quotationMoney${lineCanEdit?'':' viewOnlyCell'}"><div class="quotationPriceEditor">${qPriceDeltaMarkup(req,item)}<input type="text" inputmode="decimal" class="quotationPriceInput" data-quote-price="${qEsc(item.id)}" value="${qEsc(qValidPrice(item.price)?qMoneyDisplay(item.price):item.price)}" placeholder="0.00" aria-label="${qEsc(qLang('Teklif fiyatı','Quotation price'))}" ${lineCanEdit?'':'disabled title="'+qEsc(qLang('Yalnız görüntüleme','View only'))+'"'}></div>${qOptionsMarkup(item,lineCanEdit&&!dropped)}</td>
         <td style="text-align:center;"><button type="button" class="quotationApproveBtn${item.approved?' isApproved':''}" data-quote-approve="${qEsc(item.id)}" aria-pressed="${item.approved?'true':'false'}" ${lineCanEdit?'':'disabled'} title="${qEsc(item.approved?qLang('Onayı kaldır','Remove approval'):qLang('Bu üreticiyi ve fiyatı onayla','Approve this manufacturer and price'))}">✓</button></td>
         <td style="text-align:center;">${req.source==='collection'?`<button type="button" class="quotationDropBtn${dropped?' isDropped':''}" data-quote-drop="${qEsc(item.id)}" aria-pressed="${dropped?'true':'false'}" ${lineCanEdit?'':'disabled'} title="${qEsc(lineCanEdit?(dropped?qLang('Drop işaretini kaldır','Remove Drop mark'):qLang('Bu quotation içindeki modeli Drop olarak işaretle','Mark the model as Drop in this quotation')):qLang('Yalnız görüntüleme','View only'))}"><span aria-hidden="true">✓</span> Drop</button>`:'<span class="quotationDropUnavailable">—</span>'}</td>
       </tr>`;
@@ -1467,11 +1481,12 @@
           <span aria-hidden="true">✓</span><b>Capacity Confirmed</b>
         </label>
       </div>
-      ${matrixMode?`<div class="quotationTableWrap pdMatrixWrap" data-pd-matrix></div>`:`<div class="quotationTableWrap"><table class="quotationTable" style="width:${tableWidth}px;min-width:${tableWidth}px"><colgroup>${columnGroup}</colgroup><thead><tr>${headers}</tr></thead><tbody>${rows||`<tr><td colspan="${qTableCols.length}"><div class="quotationFilteredEmpty">${qEsc(qLang('Seçili filtrelere uyan satır yok.','No rows match the selected filters.'))}</div></td></tr>`}</tbody></table></div>`}
+      ${matrixMode?`<div class="quotationTableWrap pdMatrixWrap" data-pd-matrix></div>`:`<div class="pdOptionsPanel" data-pd-options-panel hidden></div><div class="quotationTableWrap"><table class="quotationTable" style="width:${tableWidth}px;min-width:${tableWidth}px"><colgroup>${columnGroup}</colgroup><thead><tr>${headers}</tr></thead><tbody>${rows||`<tr><td colspan="${qTableCols.length}"><div class="quotationFilteredEmpty">${qEsc(qLang('Seçili filtrelere uyan satır yok.','No rows match the selected filters.'))}</div></td></tr>`}</tbody></table></div>`}
       ${(!requestCanEdit?`<div class="quotationCpNotice">${qEsc(qLang(`Bu kayıt ${qOwnerLabel(req)} tarafından oluşturuldu. Görüntüleyebilirsiniz; düzenleme için kayıt sahibinin yetki vermesi gerekir.`,`This record was created by ${qOwnerLabel(req)}. You can view it; the owner must grant editing permission.`))}</div>`:(req.source==='cp'?`<div class="quotationCpNotice">${qEsc(qLang('CP quotation kayıtları takip amaçlıdır. Buradaki fiyat ve onay değişiklikleri CP tablosuna geri aktarılmaz.','CP quotations are for tracking. Price and approval changes here are not written back to the CP table.'))}</div>`:''))}`;
     qBindDetail(req);
     host.querySelectorAll('[data-pd-view]').forEach(button=>button.addEventListener('click',()=>{qCommitActivePriceInput(req,host);window.BLPricingDesk?.setDetailView?.(req,button.dataset.pdView);qRenderDetail();}));
     if(matrixMode)desk.renderMatrix(host.querySelector('[data-pd-matrix]'),req);
+    else host.querySelectorAll('[data-quote-options]').forEach(button=>button.addEventListener('click',()=>{const line=req.items.find(item=>item.id===button.dataset.quoteOptions);if(!line)return;qCommitActivePriceInput(req,host);window.BLPricingDesk?.openOptions?.(host,req,line);}));
     if(req.source==='collection'){
       window.BLDetailImages?.bindModelImagesButton?.('quotationDetailPlmSync');
       window.BLDetailImages?.registerScope?.(host,{contextType:'quotations-detail',label:qLang('Quotation Detayı','Quotation Detail'),identities:visibleItems.map((item,index)=>{const row=qFindCollectionRow(item);return {plmId:item.plmId||row?.plmId||'',styleName:item.modelCode||row?.modelKod||'',colourCode:row?.colourCode||'',colour:row?.colour||'',rowId:item.id||String(index),hasImage:null};}),repaint:qRenderDetail});

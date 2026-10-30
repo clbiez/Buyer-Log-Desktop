@@ -1008,5 +1008,5 @@
     bindThumbs(host);
   }
 
-  window.BLPricingDesk={renderLanguage(){state.hosts.forEach(host=>{if(host.isConnected&&host.getClientRects().length)renderHost(host);});},mount,openTab,setHistoryContext,renderMatrix,detailView,setDetailView,scopeAllows,ownerRows,setScope,undo:undoLast,_test:{supplierWorkbookPlan,state}};
+  window.BLPricingDesk={openOptions:openOptionsPanel,renderLanguage(){state.hosts.forEach(host=>{if(host.isConnected&&host.getClientRects().length)renderHost(host);});},mount,openTab,setHistoryContext,renderMatrix,detailView,setDetailView,scopeAllows,ownerRows,setScope,undo:undoLast,_test:{supplierWorkbookPlan,state}};
 })();

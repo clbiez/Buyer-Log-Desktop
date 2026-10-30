@@ -229,3 +229,30 @@ test('istemci normalizasyonu ve masa API sözleşmesi', () => {
   // Ortak Motion+ API'si kullanılır; ayrı animasyon motoru yok.
   assert.match(DESK, /BLMotionPlus\?\.play\?\.\('card',panel\)/);
 });
+
+test('liste görünümü alternatifleri teklif fiyatının altında gösterir ve ortak paneli açar', () => {
+  const body = [
+    "const qNorm=v=>String(v==null?'':v).trim();const qId=p=>p+'-x';",
+    'const qMoneyNumber=v=>{const n=Number(qNorm(v).replace(",","."));return Number.isFinite(n)?n:NaN;};',
+    'const qValidPrice=v=>{const n=qMoneyNumber(v);return Number.isFinite(n)&&n>0;};',
+    'const qMoneyDisplay=v=>qMoneyNumber(v).toFixed(2);',
+    "const qLang=(tr)=>tr;const qEsc=v=>String(v).replace(/[&<>\"']/g,c=>'&#'+c.charCodeAt(0)+';');",
+    functionSource(QUOTES, 'qNormalizeOptions'),
+    functionSource(QUOTES, 'qOptionsMarkup'),
+    'return qOptionsMarkup;',
+  ].join('\n');
+  const run = (item, canEdit, desk) => new Function('window', body)({ BLPricingDesk: desk ? { openOptions() {} } : undefined })(item, canEdit);
+  const item = { id: 'l1', price: '4.15', priceLabel: 'Standart', options: [{ id: 'o1', label: 'Opsiyon 1', price: '3.85', note: '160 gr' }, { id: 'o2', label: '', price: '3.95', note: '' }] };
+  const html = run(item, true, true);
+  assert.match(html, /data-quote-options="l1"/);
+  assert.match(html, />OPS 2</);
+  assert.match(html, /Opsiyon 1 \$3\.85 · Opsiyon 2 \$3\.95/);
+  assert.match(html, /Standart: \$4\.15/);
+  assert.doesNotMatch(run(item, true, false), /data-quote-options/, 'masa yüklü değilse yalnız özet');
+  assert.equal(run({ id: 'l2', price: '5', options: [] }, false, true), '', 'yetkisiz ve alternatifsiz satırda boş');
+  assert.match(run({ id: 'l3', price: '5', options: [] }, true, true), /\+ OPS/);
+  assert.match(QUOTES, /\$\{qOptionsMarkup\(item,lineCanEdit&&!dropped\)\}<\/td>/);
+  assert.match(QUOTES, /<div class="pdOptionsPanel" data-pd-options-panel hidden><\/div><div class="quotationTableWrap">/);
+  assert.match(QUOTES, /window\.BLPricingDesk\?\.openOptions\?\.\(host,req,line\)/);
+  assert.match(DESK, /window\.BLPricingDesk=\{openOptions:openOptionsPanel,/);
+});

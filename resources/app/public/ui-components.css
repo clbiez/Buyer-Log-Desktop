@@ -8823,6 +8823,8 @@ html[data-ui-system="manifest"] .pdOptRemove:hover {color:var(--ui-danger) !impo
 }
 html[data-ui-system="manifest"] .pdAddLine:hover,html[data-ui-system="manifest"] .pdAddLine:focus-visible {color:var(--ui-accent) !important;background:var(--ui-selected) !important;font-weight:700 !important
 }
+html[data-ui-system="manifest"] .quotationOptionsText {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-secondary) !important;font-variant-numeric:tabular-nums !important
+}
 html[data-ui-system="manifest"] .pdCellOpt {z-index:var(--ui-z-raised)
 }
 html[data-ui-system="manifest"] .pdOptBadge {background:var(--ui-surface-soft) !important;color:var(--ui-accent) !important;border:0 !important;border-radius:var(--ui-radius) !important;font:800 var(--ui-font-2xs)/1 var(--ui-font-body) !important;letter-spacing:.04em;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
