@@ -72,7 +72,7 @@ test('launcher bildirimi bekleyen güncellemede "Güncelleme uygulanıyor" ve ka
   assert.match(html, /Lütfen kapatmayın/);
   assert.match(html, /Please do not close Buyer Log/);
   assert.doesNotMatch(html, /Buyer Log açılıyor…/);
-  assert.match(html, /prefers-reduced-motion/);
+  assert.match(html, /prefers-reduced-motion:reduce\)\{i::after\{animation:none/);
 });
 
 test('launcher bildirimi onaylanmamış denemede geri alma metnini, normal açılışta eski metni gösterir', async () => {
@@ -125,6 +125,9 @@ test('açılış adımları gerçek iş sırasına bağlıdır ve yalnız ileri 
   // Ana süreçten yalnız JSON durum nesnesi gider; HTML/metin enjekte edilmez.
   assert.match(body('pushSplashState'), /window\.BLSplash\.update\(' \+ JSON\.stringify\(splashState\) \+ '\)/);
   assert.match(body('shutdown'), /await rememberUiLanguage\(\)/);
+  // Son pencere kapatılınca sekmeler kapanıştan önce yok olur: dil çalışırken izlenir.
+  assert.match(main, /onFirstRendererReady: \(\) => \{[\s\S]*?watchUiLanguage\(\)/);
+  assert.match(body('watchUiLanguage'), /setInterval\(/);
 });
 
 function renderSplash(query) {

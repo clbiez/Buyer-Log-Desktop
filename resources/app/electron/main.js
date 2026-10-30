@@ -1959,6 +1959,7 @@ function createMainWindow(origin) {
     log,
     onFirstRendererReady: () => {
       confirmLauncherHealth();
+      watchUiLanguage();
     },
   });
   log('Çoklu sekme çalışma alanı yükleniyor: ' + origin);
@@ -2000,6 +2001,17 @@ function startupLanguage() {
   return !locale || /^tr\b/i.test(locale) ? 'tr' : 'en';
 }
 
+let rememberedUiLanguage = '';
+let uiLanguageTimer = null;
+// Son pencere kapatılırken sekmeler window-all-closed'dan ÖNCE yok edilir;
+// kapanışta okumak yetmez. Dil, çalışma sırasında hafifçe izlenir.
+function watchUiLanguage() {
+  if (uiLanguageTimer) return;
+  void rememberUiLanguage();
+  uiLanguageTimer = setInterval(() => { void rememberUiLanguage(); }, 30000);
+  if (uiLanguageTimer.unref) uiLanguageTimer.unref();
+}
+
 async function rememberUiLanguage() {
   const contents = activeBuyerLogContents();
   if (!paths || !contents || contents.isDestroyed()) return;
@@ -2009,7 +2021,8 @@ async function rememberUiLanguage() {
       contents.executeJavaScript('document.documentElement.lang', false),
       new Promise(resolve => { timer = setTimeout(() => resolve(''), 400); }),
     ]);
-    if (language !== 'tr' && language !== 'en') return;
+    if ((language !== 'tr' && language !== 'en') || language === rememberedUiLanguage) return;
+    rememberedUiLanguage = language;
     fs.mkdirSync(path.dirname(uiLanguageFile()), { recursive: true });
     fs.writeFileSync(uiLanguageFile(), JSON.stringify({ language }) + '\n', 'utf8');
   } catch (_) { /* dil hatırlanamazsa açılış ekranı sistem dilini kullanır */ }
@@ -2301,6 +2314,7 @@ async function shutdown() {
   if (updateStartupTimer) { clearTimeout(updateStartupTimer); updateStartupTimer = null; }
   if (updateSignInTimer) { clearInterval(updateSignInTimer); updateSignInTimer = null; }
   if (updatePeriodicTimer) { clearInterval(updatePeriodicTimer); updatePeriodicTimer = null; }
+  if (uiLanguageTimer) { clearInterval(uiLanguageTimer); uiLanguageTimer = null; }
   try { saveWindowState(); } catch (_) {}
   await rememberUiLanguage();
   // Backend Authorization is process memory and may be cleared. The dedicated
