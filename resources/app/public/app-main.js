@@ -25095,13 +25095,15 @@ function setKolPriceView(mode){
   renderKol();
   return true;
 }
+// table-view-drawers.js butonları Görünüm menüsüne taşıyıp #kolPriceViewActions'ı
+// kaldırır; bu yüzden durum tüm butonlara yazılır ve tıklama document'tan yakalanır.
+let kolPriceViewClickBound=false;
 function syncKolPriceViewToggle(){
-  const group=document.getElementById('kolPriceViewActions');if(!group)return;
   const mode=kolPriceViewMode();
-  group.querySelectorAll('[data-kol-price-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.kolPriceView===mode)));
-  if(group.__kolBound)return;group.__kolBound=true;
-  group.addEventListener('click',event=>{
-    const button=event.target.closest('[data-kol-price-view]');if(!button)return;
+  document.querySelectorAll('[data-kol-price-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.kolPriceView===mode)));
+  if(kolPriceViewClickBound)return;kolPriceViewClickBound=true;
+  document.addEventListener('click',event=>{
+    const button=event.target.closest?.('[data-kol-price-view]');if(!button)return;
     commitActiveTableEditor({refresh:false});
     setKolPriceView(button.dataset.kolPriceView);
   });

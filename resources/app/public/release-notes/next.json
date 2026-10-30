@@ -126,6 +126,35 @@
           "en": "Step list and elapsed time on the first launch after an update."
         }
       }
+    },
+    {
+      "id": "collection-price-view-buttons",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Fiyat görünümü düğmeleri yeniden çalışıyor",
+        "en": "Price view buttons work again"
+      },
+      "body": {
+        "tr": "Koleksiyon’da Görünüm menüsündeki Fiyat görünümü altında Kompakt, Detay ve Maliyet seçimleri tabloyu yeniden değiştiriyor. Menü yenilendiğinde düğmeler yeni yerine taşınmış ama tıklama dinleyicisi eski, kaldırılmış alana bağlı kalmıştı; seçim artık tabloyu yeniden çizer, seçili düğmeyi işaretler ve tercihiniz saklanır.",
+        "en": "In Collection, Compact, Detail and Cost under Price view in the View menu change the table again. When the menu was redesigned the buttons moved to their new place but the click listener stayed bound to the old, removed area; a choice now redraws the table, marks the selected button and your preference is kept."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-price-view-buttons.png",
+        "alt": {
+          "tr": "Koleksiyon tablosu: Görünüm menüsünde Fiyat görünümü › Detay seçili; Fiyatlandırma grubunda Hedef Fiyat, En İyi Fiyat, Nihai Üretici, Onaylı Üretici Fiyatı ve FOB ayrı sütunlarda (demo veri)",
+          "en": "Collection table: Price view › Detail selected in the View menu; Target Price, Best Price, Final Manufacturer, Approved Manufacturer Price and FOB in separate columns under Pricing (demo data)"
+        },
+        "caption": {
+          "tr": "Detay seçilince fiyat bilgileri ayrı sütunlara açılır.",
+          "en": "Choosing Detail spreads price details into separate columns."
+        }
+      }
     }
   ]
 }
