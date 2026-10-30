@@ -161,10 +161,10 @@ test('uçlar: eşleme önerisi yazmaz; ortak hafıza yönetici, kişisel hafıza
 });
 
 test('arayüz: Horizon panelinden açılan ufuk ASAS solda, IAS sağda yan yana açılır', () => {
-  assert.match(DM, /function horizonPairFor\(moduleId\)/);
-  assert.match(DM, /const paired = slotOverride \? horizonPairFor\(moduleId\) : null;/);
-  assert.match(DM, /feed\.sourceRole === 'asas'/);
-  assert.match(DM, /feed\.sourceRole === 'antrepo'/);
+  assert.match(DM, /function horizonPairFor\(moduleId, sourceId\)/);
+  assert.match(DM, /const paired = slotOverride \? horizonPairFor\(moduleId, sourceId\) : null;/);
+  // Eş tıklanan kaynağa bağlanır; karşı rol seçilir (davranış: two-horizon-decisions testi).
+  assert.match(DM, /feed\.sourceRole === \(clicked\.sourceRole === 'asas' \? 'antrepo' : 'asas'\)/);
   assert.match(DM, /pair: paired \? \{/);
   // Sol alan seçilince IAS karşılığı otomatik aranır; değerler senkron kalır.
   assert.match(FILTER_UI, /void rematch\(condition\);/);

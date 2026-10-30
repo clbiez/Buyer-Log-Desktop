@@ -88,6 +88,47 @@
      eşlemesinin bayat cevabını eler. */
   const matchSeqs = new Map();
   let initSeq = 0;
+  /* v2026-10-30 — ESKİ SEZON / TARİH KISITI GÖRÜNÜR KOŞUL OLUR.
+     Sunucu (modelHorizon.buildHorizonFilter) etkin koşul grubu varken
+     seasons/dateStart/dateEnd alanlarını YOK SAYAR. Düzenleyici bu alanları
+     göstermediği için, yalnız sezon/tarihle sınırlı bir filtreye koşul eklemek
+     eski sınırı sessizce kaldırıyordu (ör. W26 sezonu → bütün sezonlar).
+     Açılışta bu kısıt sunucunun anlamıyla (model-conditions.
+     legacyGroupsFromHorizon: sezon VEYA tarih, ayrı gruplar) koşula çevrilir;
+     kullanıcı görür, düzenler ve kayıt anlamı korur. */
+  function hasActiveGroups(definition) {
+    return (Array.isArray(definition && definition.groups) ? definition.groups : [])
+      .some(group => group && Array.isArray(group.conditions) && group.conditions.some(condition => condition && condition.field));
+  }
+  function legacyGroups(definition) {
+    const out = [];
+    const table = String(definition.table || '');
+    const seasons = Array.isArray(definition.seasons) ? definition.seasons.filter(Boolean) : [];
+    if (seasons.length) {
+      const field = String(definition.seasonField || 'Sezon'); // i18n-ignore
+      out.push({ id: uid(), conditions: [{ id: uid(), table: String(definition.seasonTable || table), name: field, field, op: 'in', valueType: 'text', values: seasons.map(String), from: '', to: '' }] });
+    }
+    if (definition.dateStart || definition.dateEnd) {
+      const field = String(definition.dateField || 'Orijinal Exfactory Merch Tarih'); // i18n-ignore
+      out.push({ id: uid(), conditions: [{ id: uid(), table: String(definition.dateTable || table), name: field, field,
+        op: definition.dateStart && definition.dateEnd ? 'between' : (definition.dateStart ? 'gte' : 'lte'),
+        valueType: 'date', values: [], from: String(definition.dateStart || ''), to: String(definition.dateEnd || '') }] });
+    }
+    return out;
+  }
+  function editableGroups(definition) {
+    const def = definition && typeof definition === 'object' ? definition : {};
+    if (hasActiveGroups(def)) return JSON.parse(JSON.stringify(def.groups));
+    const legacy = legacyGroups(def);
+    return legacy.length ? legacy : [{ id: uid(), conditions: [] }];
+  }
+  /* Kısıt koşula çevrildiyse eski alanlar tanımdan çıkarılır: iki yerde
+     durması "hangisi geçerli" belirsizliği yaratırdı. */
+  function withoutLegacy(definition) {
+    const { seasons, dateStart, dateEnd, ...rest } = definition && typeof definition === 'object' ? definition : {};
+    return hasActiveGroups(definition) ? definition : rest;
+  }
+
   function operatorArity(op) {
     const found = OPERATORS.find(entry => entry.id === op);
     return found ? found.arity : 'list';
@@ -148,9 +189,7 @@
        onaylamadan ortak filtre değişmemeli. */
     const definition = item.definition;
     context.table = String(definition.table || context.table || '');
-    groups = Array.isArray(definition.groups) && definition.groups.length
-      ? JSON.parse(JSON.stringify(definition.groups))
-      : [{ id: uid(), conditions: [] }];
+    groups = editableGroups(definition);
     if (!filterName) filterName = item.name;
     templateMessage = T(`"${item.name}" yüklendi — kaydetmek için Kaydet'e basın.`, `"${item.name}" loaded — press Save to apply.`);
     render();
@@ -481,7 +520,8 @@
     const target = link.condition;
     const meta = target ? fieldMeta(target, pair.sourceId) : null;
     const label = target ? (meta ? (en() ? meta.en : meta.tr) || target.field : target.field) : '';
-    const arity = operatorArity(condition.op);
+    // Kontroller KAYDEDİLECEK işlece göre çizilir: korunan IAS koşulunun işleci ASAS'tan farklı olabilir.
+    const arity = operatorArity(target && target.op ? target.op : condition.op);
     const values = target && (arity === 'list' || arity === 'single')
       ? `${(target.values || []).map((value, valueIndex) => `<button type="button" class="dmfChip" data-pair-drop-value="${ref}:${valueIndex}"
           title="${esc(T('Kaldır', 'Remove'))}">${esc(value)} ×</button>`).join('')}
@@ -750,7 +790,11 @@
   /* Elle seçilen eşleme: "Herkes için" kaydında (yalnız yönetici) ekibin ortak
      hafızasına, kişisel kayıtta kullanıcının kendi hafızasına yazılır
      (kullanıcı kararı: kişisel + yönetici). */
+  const pairMemoryScope = mode => (mode === 'shared' && context && context.canShare === true ? 'shared' : 'personal');
   async function rememberManualPairs(mode) {
+    return putManualPairs(pairMemoryScope(mode), collectManualPairs());
+  }
+  function collectManualPairs() {
     const pairs = [];
     groups.forEach(group => group.conditions.forEach(condition => {
       const link = pair.links.get(condition.id);
@@ -761,11 +805,15 @@
         to: link.condition ? { table: link.condition.table || '', name: link.condition.name || '', field: link.condition.field } : null,
       });
     }));
+    return pairs;
+  }
+  // scope kayıttan ÖNCE hesaplanır: başarılı kayıt düzenleyiciyi kapatır (context null olur).
+  async function putManualPairs(scope, pairs) {
     if (!pairs.length) return '';
     try {
       const response = await fetch('/api/horizon/field-pairs', {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pairs, scope: mode === 'shared' && context.canShare === true ? 'shared' : 'personal' }),
+        body: JSON.stringify({ pairs, scope }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) throw new Error(payload.error || '');
@@ -797,8 +845,17 @@
     // Eşte hiç koşul kalmadıysa IAS'a sınırsız filtre yazılmaz; yalnız sol kaydedilir.
     if (!definition.groups.length) {
       const pairName = pair.sourceName;
+      const pairState = pair;
+      // "IAS'ta uygulanmaz" gibi elle kararlar bu yolda da hatırlanır.
+      const manual = collectManualPairs();
+      const scope = pairMemoryScope(mode);
       pair = null;
       await save(mode, T(`${pairName} filtresi değiştirilmedi: eşlenen koşul yok.`, `${pairName} filter was not changed: no condition was mapped.`));
+      if (host) { pair = pairState; render(); return; } // kayıt başarısız: yan yana kip geri gelir
+      if (manual.length) {
+        const warning = await putManualPairs(scope, manual);
+        if (warning && typeof showToast === 'function') showToast(warning);
+      }
       return;
     }
     busy = true; message = ''; render();
@@ -1113,9 +1170,7 @@
 
     const definition = options.definition && typeof options.definition === 'object' ? options.definition : {};
     context.table = String(definition.table || '');
-    groups = Array.isArray(definition.groups) && definition.groups.length
-      ? JSON.parse(JSON.stringify(definition.groups))
-      : [{ id: uid(), conditions: [] }];
+    groups = editableGroups(definition);
 
     host.classList.add('isOpen');
     host.addEventListener('click', onClick);
@@ -1136,15 +1191,16 @@
     if (options.pair && options.pair.sourceId) {
       groups.forEach(group => group.conditions.forEach(condition => { if (!condition.id) condition.id = uid(); }));
       const pairDef = options.pair.definition && typeof options.pair.definition === 'object' ? options.pair.definition : {};
-      const { groups: _pairGroups, ...pairBase } = JSON.parse(JSON.stringify(pairDef));
+      const pairEditable = { ...withoutLegacy(pairDef), groups: editableGroups(pairDef).filter(group => group.conditions.length) };
+      const { groups: _pairGroups, ...pairBase } = JSON.parse(JSON.stringify(pairEditable));
       pair = {
         sourceId: options.pair.sourceId, sourceName: options.pair.sourceName || '', sourceRole: options.pair.sourceRole || 'antrepo',
         revision: options.pair.revision || '', table: String(pairDef.table || ''), links: new Map(), extras: [], message: '',
-        base: pairBase, initial: JSON.parse(JSON.stringify(pairDef)), layerNote: String(options.pair.layerNote || ''),
+        base: pairBase, initial: JSON.parse(JSON.stringify(pairEditable)), layerNote: String(options.pair.layerNote || ''),
       };
       try {
         await loadFields(pair.sourceId);
-        await initPair(pairDef);
+        await initPair(pairEditable);
       } catch (error) {
         pair = null;
         message = T(`IAS yan yana açılamadı; yalnız bu filtre kaydedilir, IAS filtresi değişmez: ${error && error.message || error}`,

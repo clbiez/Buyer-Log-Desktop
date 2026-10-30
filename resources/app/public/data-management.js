@@ -1920,22 +1920,29 @@
      ASAS, sağda IAS. Hangi çipe tıklanırsa tıklansın sol taraf ASAS'tır
      (kullanıcının okuma yönü: "Asas x — x Ias"). İki kaynağın da beslediği
      ortak bir modül gerekir: kayıt iki kaynağa aynı modül üzerinden yazılır. */
-  function horizonPairFor(moduleId) {
+  /* Eş TIKLANAN kaynağa bağlanır: birden çok ASAS ya da IAS kaynağı varsa
+     tıklanan kaynak düzenlenir (ASAS ise solda, IAS ise sağda) ve yalnız
+     karşı rolün kaynağı eş seçilir. Eş yoksa tek kaynakla düzenlenir. */
+  function horizonPairFor(moduleId, sourceId) {
     const group = horizonGroupsOf().find(entry => entry.targets.includes(moduleId));
     if (!group) return null;
     const ordered = [moduleId, ...group.targets.filter(id => id !== moduleId)];
     for (const id of ordered) {
       const module = (model.modules || []).find(entry => entry.id === id);
       const feeds = module ? module.feeds.filter(feed => feed.enabled !== false) : [];
-      const asas = feeds.find(feed => feed.sourceRole === 'asas');
-      const ias = feeds.find(feed => feed.sourceRole === 'antrepo');
-      if (asas && ias) return { moduleId: id, primary: asas, pair: ias };
+      const clicked = feeds.find(feed => feed.sourceId === sourceId);
+      if (!clicked || !['asas', 'antrepo'].includes(clicked.sourceRole)) continue;
+      const other = feeds.find(feed => feed.sourceRole === (clicked.sourceRole === 'asas' ? 'antrepo' : 'asas'));
+      if (!other) return null;
+      return clicked.sourceRole === 'asas'
+        ? { moduleId: id, primary: clicked, pair: other }
+        : { moduleId: id, primary: other, pair: clicked };
     }
     return null;
   }
 
   function openFilterEditor(moduleId, sourceId, slotOverride = null) {
-    const paired = slotOverride ? horizonPairFor(moduleId) : null;
+    const paired = slotOverride ? horizonPairFor(moduleId, sourceId) : null;
     if (paired) { moduleId = paired.moduleId; sourceId = paired.primary.sourceId; }
     const module = (model.modules || []).find(entry => entry.id === moduleId);
     const feed = module && module.feeds.find(entry => entry.sourceId === sourceId);

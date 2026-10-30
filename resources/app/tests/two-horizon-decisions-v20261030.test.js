@@ -58,7 +58,7 @@ function editor({ left, right, templates = [], matchFails = false, canShare = tr
     const body = init.body ? JSON.parse(init.body) : null;
     if (String(url).startsWith('/api/horizon/fields')) {
       const ias = new URLSearchParams(String(url).split('?')[1]).get('sourceId') === 'ias';
-      return json({ ok: true, fields: ias ? fieldList('IAS', ['Sezon Kod', 'Buyer Grup', 'Ürün Tanım', 'Marka', 'Vasita']) : fieldList('ASAS', Object.keys(MAP)), operators: [{ id: 'in', arity: 'list' }] });
+      return json({ ok: true, fields: ias ? fieldList('IAS', ['Sezon Kod', 'Buyer Grup', 'Ürün Tanım', 'Marka', 'Vasita']) : fieldList('ASAS', Object.keys(MAP)), operators: [{ id: 'in', arity: 'list' }, { id: 'gte', arity: 'from' }, { id: 'lte', arity: 'to' }] });
     }
     if (url === '/api/horizon/field-match') {
       matchCalls += 1;
@@ -74,7 +74,7 @@ function editor({ left, right, templates = [], matchFails = false, canShare = tr
     posts.push({ url, body });
     return json({ ok: true, warnings: [] });
   };
-  const context = { fetch, setTimeout, clearTimeout, console, URLSearchParams, BLDataPicker: { open() {}, close() {} } };
+  const context = { fetch, setTimeout, clearTimeout, console, URLSearchParams, BLDataPicker: { open: (_anchor, _items, onPick) => { context.lastPick = onPick; }, close() {} } };
   context.window = context;
   vm.createContext(context);
   vm.runInContext(EDITOR, context, { filename: 'data-management-filter.js' });
@@ -91,6 +91,7 @@ function editor({ left, right, templates = [], matchFails = false, canShare = tr
     applyTemplate: id => click('data-apply-template', id, { applyTemplate: id, shared: '1' }),
     dropGroup: index => click('data-drop-group', String(index), { dropGroup: String(index) }),
     addGroup: () => click('data-add-group', '', {}),
+    pickPairField: (ref, value) => { click('data-pick-pair-field', ref, { pickPairField: ref }); context.lastPick(value); },
     save: mode => click('data-save', mode, { save: mode }),
   };
 }
@@ -181,6 +182,62 @@ test('IAS\'ın grup dışı alanları (sezon) yan yana kayıtta korunur', async 
   const post = ed.posts.find(item => item.url.endsWith('filter-pair'));
   assert.deepEqual(post.body.items[1].definition.seasons, ['W26']);
   assert.equal(post.body.items[1].definition.dateStart, '2026-01-01');
+});
+
+/* Codex incelemesi (PR #790) — doğrulanan bulgular. */
+test('yalnız sezonla sınırlı IAS filtresine koşul eklemek sezon sınırını kaldırmaz', async () => {
+  // Sunucu etkin koşul grubu varken seasons alanını yok sayar; sınır koşula çevrilmeli.
+  const ed = editor({
+    left: { table: 'ASAS', seasons: ['W26'], seasonField: 'Sezon', groups: [] },
+    right: { table: 'IAS', seasons: ['W26'], seasonField: 'Sezon Kod', groups: [] },
+  });
+  await ed.open();
+  await tick(5);
+  ed.save('shared');
+  await tick(5);
+  const post = ed.posts.find(item => item.url.endsWith('filter-pair'));
+  assert.deepEqual(post.body.items[0].definition.groups.map(g => g.conditions.map(c => `${c.name}=${c.values.join('|')}`)), [['Sezon=W26']], 'ASAS sezon sınırı görünür koşul olur');
+  assert.deepEqual(iasGroups(post), [['Sezon Kod=W26']], 'IAS sezon sınırı korunur');
+  assert.equal(post.body.items[1].definition.seasons, undefined, 'koşula çevrilen eski alan iki yerde durmaz');
+});
+
+test('"IAS\'ta uygulanmaz" kararları yalnız ASAS kaydedilen yolda da hatırlanır', async () => {
+  const ed = editor({
+    left: { table: 'ASAS', groups: [{ id: 'g0', conditions: [C('b', 'Buyer Grup', ['LIC'])] }] },
+    right: { table: 'IAS', groups: [] },
+  });
+  await ed.open();
+  await tick(5);
+  ed.pickPairField('0:0', '__none__');
+  ed.save('personal');
+  await tick(10);
+  assert.ok(ed.posts.some(item => item.url === '/api/data-management/filter'), 'yalnız ASAS kaydedilir');
+  const memory = ed.posts.find(item => item.url === '/api/horizon/field-pairs');
+  assert.ok(memory, 'elle karar hatırlanmalı');
+  assert.equal(memory.body.scope, 'personal');
+  assert.equal(memory.body.pairs[0].to, null);
+});
+
+test('IAS hücresi kaydedilecek IAS işlecine göre çizilir', async () => {
+  const ed = editor({
+    left: { table: 'ASAS', groups: [{ id: 'g0', conditions: [{ ...C('d', 'Sezon', []), op: 'gte', from: '2026-01-01' }] }] },
+    right: { table: 'IAS', groups: [{ id: 'h0', conditions: [{ ...C('x', 'Sezon Kod', [], 'IAS'), op: 'lte', to: '2026-06-30' }] }] },
+  });
+  await ed.open();
+  await tick(5);
+  assert.match(ed.host.innerHTML, /data-pair-range="0:0:to"/);
+  assert.doesNotMatch(ed.host.innerHTML, /data-pair-range="0:0:from"/);
+});
+
+test('yan yana eş tıklanan kaynağa bağlanır', () => {
+  const DM = fs.readFileSync(path.join(__dirname, '..', 'public', 'data-management.js'), 'utf8');
+  const start = DM.indexOf('function horizonPairFor(');
+  const source = DM.slice(start, DM.indexOf('\n  }\n', start) + 4);
+  const feed = (sourceId, sourceRole) => ({ sourceId, sourceRole, enabled: true });
+  const model = { modules: [{ id: 'orders', feeds: [feed('asas1', 'asas'), feed('asas2', 'asas'), feed('ias1', 'antrepo')] }] };
+  const pairFor = vm.runInNewContext(`(${source})`, { model, horizonGroupsOf: () => [{ id: 'linked', targets: ['orders'] }] });
+  assert.equal(pairFor('orders', 'asas2').primary.sourceId, 'asas2', 'ikinci ASAS kaynağı kendi çipinden düzenlenir');
+  assert.equal(pairFor('orders', 'ias1').pair.sourceId, 'ias1');
 });
 
 /* ------------------------------------------------------------------ */
