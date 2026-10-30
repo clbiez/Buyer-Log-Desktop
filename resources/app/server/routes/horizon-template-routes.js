@@ -127,6 +127,62 @@ app.post('/api/data-management/filter', userAccess.requireArea('source'), expres
   } catch (err) { apiError(res, err, 'Modül filtresi kaydedilemedi.'); }
 });
 
+/* v2026-10-30 — YAN YANA ASAS ⇄ IAS FİLTRE KAYDI.
+
+   Bir ufuk (CP ya da Diğer modüller) hem ASAS'tan hem IAS'tan besleniyorsa
+   iki filtre birlikte kaydedilir. Ortak kayıt TEK işlemdir
+   (sourceWorkflowService.updateFilterPair): ikisi birden yazılır ya da hiçbiri.
+   Kişisel kayıt kullanıcının kendi tercih deposuna kaynak başına yazılır;
+   ikincisi reddedilirse birincinin kaydedildiği AÇIKÇA söylenir (sessiz yarım
+   kayıt yok). Elle seçilen alan eşlemeleri ayrı uçla hatırlanır
+   (/api/horizon/field-pairs). */
+app.post('/api/data-management/filter-pair', userAccess.requireArea('source'), express.json({ limit: '512kb' }), async (req, res) => {
+  try {
+    const body = req.body || {};
+    const moduleId = String(body.moduleId || '').trim();
+    const entries = (Array.isArray(body.items) ? body.items : []).map(item => ({
+      sourceId: String(item && item.sourceId || '').trim(),
+      expected: String(item && item.expectedSourceRevision || '').trim(),
+      definition: item && item.definition,
+    }));
+    if (!moduleId || entries.length !== 2 || entries.some(entry => !entry.sourceId || !entry.definition) || entries[0].sourceId === entries[1].sourceId) {
+      return res.status(400).json({ error: 'moduleId ve iki farklı kaynak için filtre zorunlu.', code: 'VALIDATION_ERROR' });
+    }
+    if (body.mode === 'personal') {
+      const userId = sourceUserId(req), saved = [];
+      for (const entry of entries) {
+        try {
+          const result = await personalHorizonService.update({ sourceId: entry.sourceId, moduleId, definition: entry.definition }, { sourceRevision: entry.expected }, personalGuard(req));
+          saved.push({ sourceId: entry.sourceId, modules: result.modules, warnings: result.warnings || [] });
+        } catch (error) {
+          if (!saved.length) throw error;
+          return res.status(Number(error && error.statusCode) || 409).json({
+            error: `${saved.map(item => item.sourceId).join(', ')} kaydedildi ama ${entry.sourceId} kaydedilemedi: ${String(error && (error.publicMessage || error.message) || error)}`,
+            code: 'PAIR_PARTIAL', saved: saved.map(item => item.sourceId),
+          });
+        }
+      }
+      userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_PERSONAL_FILTER_PAIR_UPDATE', userId, { moduleId, sources: entries.map(entry => entry.sourceId) });
+      return res.json({ ok: true, personal: true, modules: saved[0].modules, warnings: saved.flatMap(item => item.warnings) });
+    }
+    if (!userAccess.hasPermission(req.currentUser, 'manageModelConnections')) {
+      return res.status(403).json({
+        error: 'Herkes için ortak filtreyi değiştirmek Kaynak Veri yönetim yetkisi gerektirir. Kendi filtrenizi "Kaydet (yalnız benim için)" ile kaydedebilirsiniz.',
+        code: 'PERMISSION_REQUIRED',
+      });
+    }
+    const name = Object.prototype.hasOwnProperty.call(body, 'name') ? body.name : null;
+    // Ortak filtre adı yalnız birinci (düzenlenen) kaynağa yazılır; eşinin adı korunur.
+    const saved = await sourceWorkflowService.updateFilterPair(entries.map((entry, index) => ({
+      sourceId: entry.sourceId, expected: entry.expected,
+      args: { sourceId: entry.sourceId, moduleId, definition: entry.definition, mode: 'shared', name: index === 0 ? name : null },
+    })), sourceGuard(req));
+    userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_FILTER_PAIR_UPDATE', entries.map(entry => entry.sourceId).join(','), { moduleId });
+    if (saved.changed) publishSharedMasterChange('modelConnections', req);
+    res.json({ ok: true, ...saved });
+  } catch (err) { apiError(res, err, 'ASAS ve IAS filtreleri kaydedilemedi.'); }
+});
+
 /* EZEN KİŞİSEL KATMANI KALDIR (P3 — çıkmazı açar).
 
    KORUNAN KUSUR: ekran, ortak filtrenin üstünde kişisel bir Horizon varken

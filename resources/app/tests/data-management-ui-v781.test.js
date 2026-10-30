@@ -267,7 +267,9 @@ test('v7.81 paylaşım kararı kullanıcıya sorulur, varsayılan uydurulmaz', (
 
 test('v7.81 alan listesi TÜM şema sütunlarını sunar', () => {
   // §17: yalnız eşlenmiş alanlar değil. /api/horizon/fields bunu zaten döndürüyor.
-  assert.match(FILTER_UI, /new URLSearchParams\(\{ target: context\.moduleId, sourceId: context\.sourceId \}\)/);
+  // v2026-10-30: alan listesi yan yana kipte eşin kaynağı için de okunur (varsayılan: düzenlenen kaynak).
+  assert.match(FILTER_UI, /async function loadFields\(sourceId = context\.sourceId\)/);
+  assert.match(FILTER_UI, /new URLSearchParams\(\{ target: context\.moduleId, sourceId \}\)/);
   assert.match(FILTER_UI, /fetch\(\`\/api\/horizon\/fields\?\$\{fieldParams\}\`/);
   assert.match(
     FILTER_UI,

@@ -17,6 +17,7 @@ const modelFields = require('./lib/model-fields');
 // yolu (binding-writer) ile depo aynı kuralı paylaşır.
 const bindingWriter = require('./lib/data-domain/binding-writer');
 const refreshGroups = require('./lib/data-domain/refresh-groups');
+const horizonFieldPairs = require('./lib/horizon-field-pairs');
 const { orderLineKey, plmImageKey, plmColourImageKey, plmColourImageNameKey, plmImageKeysFor, DEFAULT_ANTREPO_MATCH_RULE, defaultAntrepoMatchConfig, normalizeAntrepoMatchConfig } = require('./lib/parse');
 const { withFileLeaseSync } = require('./lib/shared-file-transaction');
 const { PROFILE_SCHEMA_VERSION, pageOf, normalizeProfileStore, setFavorite, markUsed, removeProfile } = require('./lib/profile-store');
@@ -1516,6 +1517,25 @@ function replaceRefreshGroups(items, expectedRevision = null, options = {}) {
   return { items: saved.refreshGroups, revision: saved._revisions.refreshGroups };
 }
 
+/* v2026-10-30 — ASAS ⇄ IAS alan eşleme hafızası (ortak ayar, revizyonlu).
+   Ayrıntı: server/lib/horizon-field-pairs.js. */
+function loadHorizonFieldPairs() {
+  const settings = loadSettings();
+  const revision = Number(settings._revisions && settings._revisions.horizonFieldPairs) || 0;
+  return { items: horizonFieldPairs.normalizePairs(settings.horizonFieldPairs), revision };
+}
+function upsertHorizonFieldPairs(pairs, meta = {}, options = {}) {
+  const settings = loadSettings();
+  settings._revisions = settings._revisions && typeof settings._revisions === 'object' ? { ...settings._revisions } : {};
+  const current = Number(settings._revisions.horizonFieldPairs) || 0;
+  const next = horizonFieldPairs.upsertPairs(settings.horizonFieldPairs, pairs, meta);
+  if (!next.changed) return { items: next.items, revision: current, changed: 0 };
+  settings.horizonFieldPairs = next.items;
+  settings._revisions.horizonFieldPairs = current + 1;
+  const saved = saveSettings(settings, settings._revision, options);
+  return { items: horizonFieldPairs.normalizePairs(saved.horizonFieldPairs), revision: saved._revisions.horizonFieldPairs, changed: next.changed };
+}
+
 // Bir bağlantının son çalıştırma bilgisini yazar. Kullanıcı düzenlemesi değil,
 // çalıştırma sonucu olduğu için revizyon çakışması aranmaz.
 function recordModelConnectionRun(id, lastRun) {
@@ -2005,6 +2025,7 @@ module.exports = {
   loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
   normalizeMapping, normalizeCustomFields, normalizeCpModelColumns, normalizeModelConnection, normalizeModelConnections, loadModelConnections, replaceModelConnections, recordModelConnectionRun, MODEL_CONNECTION_LIMIT, MODEL_CONNECTION_DEFAULT_SEASONS,
   loadRefreshGroups, replaceRefreshGroups,
+  loadHorizonFieldPairs, upsertHorizonFieldPairs,
   loadViews: userId => loadProfileFile(scopedProfileFile(VIEWS_FILE, userId), userId, 'view'),
   addView: function () { return addScopedProfile(VIEWS_FILE, 'Görünümler', arguments); },
   updateView: function () { return updateScopedProfile(VIEWS_FILE, 'Görünümler', arguments); },

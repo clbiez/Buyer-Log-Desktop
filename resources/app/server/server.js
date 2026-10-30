@@ -3862,6 +3862,7 @@ require('./routes/horizon-routes')(app, {
   USER_WORKSPACE_MODULES,
   apiError,
   cacheForUser,
+  db: require('./db'),
   express,
   horizonFields,
   horizonFilterMapping,

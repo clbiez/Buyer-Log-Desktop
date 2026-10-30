@@ -1881,7 +1881,28 @@
   /* Filtre düzenleyici satırın ALTINDA açılır. Eskiden buradaki tıklama
      1.619 satırlık eski modalı açıyordu; artık ortak filtre bu ekranda
      düzenlenir. Kişisel Horizon hâlâ sayfa rozetinden yönetilir. */
+  /* v2026-10-30 — YAN YANA ASAS ⇄ IAS. Horizon panelinden açılan ufuk hem
+     ASAS'tan hem IAS'tan besleniyorsa düzenleyici iki sütunlu açılır: solda
+     ASAS, sağda IAS. Hangi çipe tıklanırsa tıklansın sol taraf ASAS'tır
+     (kullanıcının okuma yönü: "Asas x — x Ias"). İki kaynağın da beslediği
+     ortak bir modül gerekir: kayıt iki kaynağa aynı modül üzerinden yazılır. */
+  function horizonPairFor(moduleId) {
+    const group = horizonGroupsOf().find(entry => entry.targets.includes(moduleId));
+    if (!group) return null;
+    const ordered = [moduleId, ...group.targets.filter(id => id !== moduleId)];
+    for (const id of ordered) {
+      const module = (model.modules || []).find(entry => entry.id === id);
+      const feeds = module ? module.feeds.filter(feed => feed.enabled !== false) : [];
+      const asas = feeds.find(feed => feed.sourceRole === 'asas');
+      const ias = feeds.find(feed => feed.sourceRole === 'antrepo');
+      if (asas && ias) return { moduleId: id, primary: asas, pair: ias };
+    }
+    return null;
+  }
+
   function openFilterEditor(moduleId, sourceId, slotOverride = null) {
+    const paired = slotOverride ? horizonPairFor(moduleId) : null;
+    if (paired) { moduleId = paired.moduleId; sourceId = paired.primary.sourceId; }
     const module = (model.modules || []).find(entry => entry.id === moduleId);
     const feed = module && module.feeds.find(entry => entry.sourceId === sourceId);
     const source = (model.sources || []).find(entry => entry.id === sourceId);
@@ -1917,9 +1938,15 @@
          rolde, KOŞUL İÇEREN bir kaynak varsa düzenleyici "oradan eşle"
          teklifi gösterebilir. Teklif yoksa düğme de çıkmaz — boş bir
          düğme, kullanıcıya olmayan bir yetenek vaat ederdi. */
+      pair: paired ? {
+        sourceId: paired.pair.sourceId, sourceName: paired.pair.sourceName, sourceRole: paired.pair.sourceRole,
+        revision: ((model.sources || []).find(entry => entry.id === paired.pair.sourceId) || {}).revision || '',
+        definition: paired.pair.effectiveDefinition || paired.pair.definition || {},
+      } : null,
       mapFrom: (() => {
         // Eşleme ucu yönetim yetkisi ister; yetkisiz kullanıcıya düğme gösterilmez.
-        if (!model.canManage) return null;
+        // Yan yana kipte eşleme zaten canlıdır; ayrı "eşle" düğmesi gösterilmez.
+        if (!model.canManage || paired) return null;
         const mine = feed.sourceRole || '';
         const other = module.feeds.find(entry => entry
           && entry.sourceId !== sourceId

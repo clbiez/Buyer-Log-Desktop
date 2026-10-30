@@ -10,6 +10,7 @@ module.exports = function registerHorizonRoutes(app, deps) {
     USER_WORKSPACE_MODULES,
     apiError,
     cacheForUser,
+    db,
     express,
     horizonFields,
     horizonFilterMapping,
@@ -87,6 +88,54 @@ app.get('/api/horizon/filter-mapping', userAccess.requireArea('source'), userAcc
       ...result,
     });
   } catch (err) { apiError(res, err, 'Filtre eşlemesi üretilemedi.'); }
+});
+/* ===================================================================
+   v2026-10-30 — YAN YANA ASAS ⇄ IAS FİLTRE: ALAN KARŞILIĞI + HAFIZA
+
+   Kullanıcı: "ASAS'ta X sütununu filtre için seçtiğimde IAS'ta da eşleşen
+   başlık otomatik seçilsin; otomatik eşleme hatalı olabilir, manuel de
+   seçilebilsin; manuel seçileni hatırla."
+
+   field-match yalnız ÖNERİR (yazmaz). Hedef alanlar CANLI şemadan okunur:
+   kullanıcının gerçekten seçebileceği sütunlar üzerinden eşlenir; şema
+   okunamazsa öneri yerine hata döner. Hatırlanan eşleme otomatik tahminden
+   önce gelir. Filtre düzenleme yetkisi olan herkes (Kaynak alanı) eşleme
+   kararı kaydedebilir: kayıt yalnız bir öneriyi değiştirir, hiçbir filtreyi
+   yazmaz ve her zaman ekranda yan yana görünür.
+   =================================================================== */
+app.post('/api/horizon/field-match', userAccess.requireArea('source'), express.json({ limit: '64kb' }), async (req, res) => {
+  try {
+    const body = req.body || {};
+    const toSourceId = String(body.toSourceId || '').trim();
+    const fields = Array.isArray(body.fields) ? body.fields.slice(0, 80) : [];
+    const to = (loadModelConnections().items || []).find(entry => entry && String(entry.id || '') === toSourceId);
+    if (!to || !['asas', 'antrepo'].includes(to.role)) return res.status(404).json({ error: 'Hedef kaynak bulunamadı.', code: 'TARGET_SOURCE_NOT_FOUND' });
+    const fromRole = String(body.fromRole || (to.role === 'asas' ? 'antrepo' : 'asas')).trim().toLowerCase();
+    const schema = await modelQuery.discoverSchema({ server: to.server, catalog: to.catalog });
+    const targetFields = horizonFields.fromSchema(schema);
+    const matches = horizonFilterMapping.matchFields({
+      fields, targetFields, pairs: db.loadHorizonFieldPairs().items, fromRole, toRole: to.role,
+    });
+    res.set('Cache-Control', 'no-store').json({ ok: true, toSourceId, toRole: to.role, fromRole, matches });
+  } catch (err) { apiError(res, err, 'Alan karşılığı bulunamadı.'); }
+});
+app.get('/api/horizon/field-pairs', userAccess.requireArea('source'), (_req, res) => {
+  try { res.set('Cache-Control', 'no-store').json({ ok: true, ...db.loadHorizonFieldPairs() }); }
+  catch (err) { apiError(res, err, 'Alan eşleme hafızası okunamadı.'); }
+});
+app.put('/api/horizon/field-pairs', userAccess.requireArea('source'), express.json({ limit: '64kb' }), async (req, res) => {
+  try {
+    const pairs = Array.isArray(req.body && req.body.pairs) ? req.body.pairs.slice(0, 80) : [];
+    if (!pairs.length) return res.status(400).json({ error: 'pairs zorunlu.', code: 'VALIDATION_ERROR' });
+    const by = String(req.currentUser && req.currentUser.id || '');
+    const saved = await db.mutateSettings(async lease => {
+      const result = db.upsertHorizonFieldPairs(pairs, { by }, lease);
+      if (result.changed) await lease.commit();
+      return result;
+    });
+    if (saved.changed) userAccess.appendAudit(req.currentUser, 'HORIZON_FIELD_PAIRS_UPDATE', 'horizonFieldPairs', { changed: saved.changed });
+    res.json({ ok: true, changed: saved.changed, revision: saved.revision });
+  } catch (err) { apiError(res, err, 'Alan eşlemesi kaydedilemedi.'); }
 });
 app.get('/api/horizon/fields', async (req, res) => {
   try {

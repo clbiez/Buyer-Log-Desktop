@@ -137,7 +137,7 @@ test('arayüz: varsayılan kaydetme kişiseldir; ortak kaydetme yalnız yetkiliy
   assert.doesNotMatch(FILTER_UI, /class="navActionBtn" data-save="shared"/, 'ortak kaydetme birincil düğme olmamalı');
   assert.match(FILTER_UI, /\$\{canShare \? \(shared\s*\?/);
   assert.match(FILTER_UI, /const canShare = context\.canShare === true;/);
-  assert.match(FILTER_UI, /onSaved\(payload\.warnings \|\| \[\], payload\)/);
+  assert.match(FILTER_UI, /onSaved\(\[\.\.\.\(payload\.warnings \|\| \[\]\), \.\.\.\(extraWarning \? \[extraWarning\] : \[\]\)\], payload\)/);
 
   const fn = UI.match(/function openFilterEditor\(moduleId, sourceId(?:, slotOverride = null)?\) \{[\s\S]*?\n  \}/)[0];
   const code = fn.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -151,5 +151,6 @@ test('arayüz: yetki isteyen şablon ve eşleme düğmeleri yalnız yetkiliye g�
   assert.match(FILTER_UI, /\$\{canShare \? templateBar\(\) : ''\}/);
   assert.match(FILTER_UI, /if \(context\.canShare === true\) void loadTemplates\(\)\.then\(render\);/);
   const fn = UI.match(/function openFilterEditor\(moduleId, sourceId(?:, slotOverride = null)?\) \{[\s\S]*?\n  \}/)[0];
-  assert.match(fn, /mapFrom: \(\(\) => \{\s*\/\/[^\n]*\n\s*if \(!model\.canManage\) return null;/);
+  // v2026-10-30: yan yana kipte eşleme canlıdır; ayrı "eşle" düğmesi de çıkmaz.
+  assert.match(fn, /mapFrom: \(\(\) => \{\s*(?:\/\/[^\n]*\n\s*)+if \(!model\.canManage \|\| paired\) return null;/);
 });

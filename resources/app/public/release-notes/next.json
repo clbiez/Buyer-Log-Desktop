@@ -155,6 +155,35 @@
           "en": "Two horizons with their filters and Refresh buttons in one panel."
         }
       }
+    },
+    {
+      "id": "data-management-asas-ias-side-by-side",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "ASAS ve IAS filtresi yan yana; IAS karşılığı otomatik seçilir ve elle seçim hatırlanır",
+        "en": "ASAS and IAS filters side by side; the IAS counterpart is picked automatically and manual choices are remembered"
+      },
+      "body": {
+        "tr": "Horizon ve yenileme panelinde bir ufkun filtresi açıldığında, ufuk hem ASAS hem IAS'tan besleniyorsa iki kaynak yan yana görünür: solda ASAS koşulu, sağda IAS karşılığı. ASAS'ta bir sütun seçildiğinde IAS'taki eşleşen sütun otomatik seçilir ve değerler taşınır; eşleşmenin nereden geldiği (mevcut, birebir, bilinen karşılık, benzer ad, hatırlanan, elle seçildi) yazar. Otomatik eşleşme yanlışsa IAS sütunu elle seçilebilir ya da \"IAS'ta uygulanmaz\" denebilir; bu karar kaydedilince hatırlanır ve sonraki filtrelerde ilk öneri olur. IAS değerleri ayrıca düzenlenebilir, \"ASAS ile eşitle\" ile geri alınır. Yalnız IAS'ta olan koşullar silinmez. Ortak kayıtta iki filtre tek işlemde yazılır.",
+        "en": "When a horizon's filter is opened in the Horizon and refresh panel and the horizon is fed by both ASAS and IAS, the two sources appear side by side: the ASAS condition on the left, its IAS counterpart on the right. Choosing a column in ASAS automatically selects the matching IAS column and carries the values over; the match shows where it came from (existing, exact, known alias, similar name, remembered, chosen manually). If the automatic match is wrong, the IAS column can be chosen manually or marked \"not applied in IAS\"; the choice is remembered on save and becomes the first suggestion next time. IAS values can be edited separately and reset with \"Sync with ASAS\". Conditions that exist only in IAS are kept. A shared save writes both filters in one operation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-management-asas-ias-side-by-side.png",
+        "alt": {
+          "tr": "CP ufku filtresi yan yana: solda ASAS Sezon, Buyer Grup ve Ürün koşulları, sağda IAS karşılıkları Sezon Kod (mevcut), Buyer Grup (birebir), Ürün Tanım (hatırlanan) ve korunan yalnız IAS koşulu (demo veri)",
+          "en": "CP horizon filter side by side: ASAS Season, Buyer Group and Product conditions on the left, IAS counterparts Season Code (existing), Buyer Group (exact), Product Description (remembered) and a kept IAS-only condition on the right (demo data)"
+        },
+        "caption": {
+          "tr": "ASAS solda, IAS sağda; eşleşmenin kaynağı her satırda yazar.",
+          "en": "ASAS on the left, IAS on the right; each row shows where the match came from."
+        }
+      }
     }
   ]
 }

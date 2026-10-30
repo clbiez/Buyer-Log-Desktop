@@ -431,6 +431,19 @@
 /* Kontrol edilmesi gereken iki durum RENKLE değil, yalnız kenarlıkla ayrılır:
    yeni ton uydurmuyoruz; vurgu mevcut uyarı token'ından gelir. */
 .dmfMapSkip { margin: 6px 0 0; }
+
+/* --- Yan yana ASAS ⇄ IAS (v2026-10-30) ---
+   Solda düzenlenen kaynağın koşulu, sağda eşinin karşılığı; aynı satırda
+   okunur. Dar ekranda alt alta düşer. Yalnız tasarım sistemi token'ları. */
+.dmfPairHead { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 10px; margin: 8px 0 4px; }
+.dmfPairRow { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 10px; align-items: center; padding: 2px 0; }
+.dmfPairCell { min-width: 0; }
+.dmfPairIas { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; padding-left: 10px; }
+.dmfPairIas .dmfField { max-width: 100%; }
+@media (max-width: 1100px) {
+  .dmfPairHead, .dmfPairRow { grid-template-columns: 1fr; }
+  .dmfPairIas { padding-left: 0; }
+}
 .dmfMapActions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
 
 /* --- Excel'den database connection metadata keşfi ---
