@@ -1162,6 +1162,11 @@ body.quotationColumnResizing,body.quotationColumnResizing *{cursor:col-resize!im
 .quotationPriceEditor{display:flex;align-items:center;gap:5px;min-width:0;width:100%;}
 .quotationPriceDelta{flex:0 0 auto;min-width:35px;text-align:right;white-space:nowrap;}
 .quotationPriceDelta.isEmpty{min-width:0;}
+.quotationOptions{display:flex;align-items:center;justify-content:flex-end;gap:5px;min-width:0;margin-top:3px;}
+.quotationOptionsText{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.quotationOptions .pdOptBadge{flex:0 0 auto;display:inline-flex;align-items:center;height:16px;padding:0 5px;cursor:pointer;white-space:nowrap;}
+.quotationOptions:not(.hasOptions){display:none;}
+tr:hover .quotationOptions:not(.hasOptions),tr:focus-within .quotationOptions:not(.hasOptions){display:flex;}
 .kolConfirmedPriceCell{white-space:nowrap;}
 .kolConfirmedPrice{vertical-align:middle;}
 .kolConfirmedDelta{margin-right:7px;}

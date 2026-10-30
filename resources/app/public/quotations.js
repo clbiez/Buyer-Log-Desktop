@@ -42,6 +42,10 @@
   const qCurrentUserId = () => qNorm(qCurrentUser()?.id);
   const qIsModerator = () => qCurrentUser()?.role==='moderator';
 
+  // Alternatif fiyatlar (bkz. server/lib/quotations-store.js normalizeOptions).
+  function qNormalizeOptions(list){
+    return (Array.isArray(list)?list:[]).slice(0,10).map(option=>({id:qNorm(option?.id)||qId('opt'),label:qNorm(option?.label).slice(0,120),price:qNorm(option?.price).slice(0,120),note:qNorm(option?.note).slice(0,500)})).filter(option=>option.label||option.price||option.note);
+  }
   function qNormalizeRequest(req){
     const current=qCurrentUser();
     const created=req?.createdAt||qNow();
@@ -63,6 +67,7 @@
         category:qNorm(item.category),colour:qNorm(item.colour),fabric:qNorm(item.fabric),season:qNorm(item.season),
         picture:qNorm(item.picture),inStoreMonth:qNorm(item.inStoreMonth),quantity:qNumOrNull(item.quantity),targetPrice:qNorm(item.targetPrice),
         manufacturer:qNorm(item.manufacturer),manufacturerEmail:qNorm(item.manufacturerEmail),price:qNorm(item.price),approved:!!item.approved,dropped:!!item.dropped,
+        priceLabel:qNorm(item.priceLabel).slice(0,120),priceNote:qNorm(item.priceNote).slice(0,500),options:qNormalizeOptions(item.options),
         // Fiyat Defteri alanları sunucu tarafından yazılır; istemci yalnız taşır.
         rev:Number.isFinite(Number(item.rev))&&Number(item.rev)>0?Math.floor(Number(item.rev)):0,updatedAt:qNorm(item.updatedAt),updatedBy:qNorm(item.updatedBy),
         history:Array.isArray(item.history)?item.history.filter(event=>event&&typeof event==='object'&&event.type).slice(-200):[],
@@ -1379,6 +1384,20 @@
     setTimeout(()=>area?.focus(),0);
   }
 
+  /* Liste görünümü: satırın alternatif fiyatları teklif fiyatının altında özetlenir
+     (sütun düzeni sabit kalır). Düzenleme Fiyat Masası'nın ortak alternatif
+     panelinden yapılır; masa yüklü değilse yalnız okunur özet gösterilir. */
+  function qOptionsMarkup(item,canEdit){
+    const list=qNormalizeOptions(item.options),canOpen=typeof window.BLPricingDesk?.openOptions==='function';
+    if(!list.length&&!(canEdit&&canOpen))return '';
+    const money=value=>qValidPrice(value)?`$${qMoneyDisplay(value)}`:(qNorm(value)||'—');
+    const labelOf=(option,i)=>option.label||qLang(`Opsiyon ${i+1}`,`Option ${i+1}`);
+    const tip=list.length?[`${qNorm(item.priceLabel)||qLang('Ana teklif','Main offer')}: ${money(item.price)}${qNorm(item.priceNote)?` · ${qNorm(item.priceNote)}`:''}`,...list.map((option,i)=>`${labelOf(option,i)}: ${money(option.price)}${option.note?` · ${option.note}`:''}`)].join('\n'):qLang('Alternatif fiyat ekle','Add alternative price');
+    const badge=list.length?qLang(`OPS ${list.length}`,`OPT ${list.length}`):qLang('+ OPS','+ OPT');
+    const summary=list.map((option,i)=>`${labelOf(option,i)} ${money(option.price)}`).join(' · ');
+    const control=canOpen?`<button type="button" class="pdOptBadge${list.length?' hasOptions':''}" data-quote-options="${qEsc(item.id)}" aria-label="${qEsc(qLang(`Alternatif fiyatlar (${list.length})`,`Alternative prices (${list.length})`))}">${qEsc(badge)}</button>`:`<span class="pdOptBadge hasOptions">${qEsc(badge)}</span>`;
+    return `<div class="quotationOptions${list.length?' hasOptions':''}" title="${qEsc(tip)}">${control}${list.length?`<span class="quotationOptionsText">${qEsc(summary)}</span>`:''}</div>`;
+  }
   function qRenderDetail(){
     qCloseTableFilter();
     const host=document.getElementById('quotationDetail'); if(!host) return;
@@ -1422,7 +1441,7 @@
         <td><span class="quotationManufacturer" title="${qEsc(item.manufacturer)}">${qEsc(item.manufacturer)}</span></td>
         <td class="quotationMoney">${qEsc(target)}</td>
         <td class="quotationBestCell" data-quote-best="${qEsc(item.modelKey)}">${qBestMarkup(req,item)}</td>
-        <td class="quotationMoney${lineCanEdit?'':' viewOnlyCell'}"><div class="quotationPriceEditor">${qPriceDeltaMarkup(req,item)}<input type="text" inputmode="decimal" class="quotationPriceInput" data-quote-price="${qEsc(item.id)}" value="${qEsc(qValidPrice(item.price)?qMoneyDisplay(item.price):item.price)}" placeholder="0.00" aria-label="${qEsc(qLang('Teklif fiyatı','Quotation price'))}" ${lineCanEdit?'':'disabled title="'+qEsc(qLang('Yalnız görüntüleme','View only'))+'"'}></div></td>
+        <td class="quotationMoney${lineCanEdit?'':' viewOnlyCell'}"><div class="quotationPriceEditor">${qPriceDeltaMarkup(req,item)}<input type="text" inputmode="decimal" class="quotationPriceInput" data-quote-price="${qEsc(item.id)}" value="${qEsc(qValidPrice(item.price)?qMoneyDisplay(item.price):item.price)}" placeholder="0.00" aria-label="${qEsc(qLang('Teklif fiyatı','Quotation price'))}" ${lineCanEdit?'':'disabled title="'+qEsc(qLang('Yalnız görüntüleme','View only'))+'"'}></div>${qOptionsMarkup(item,lineCanEdit&&!dropped)}</td>
         <td style="text-align:center;"><button type="button" class="quotationApproveBtn${item.approved?' isApproved':''}" data-quote-approve="${qEsc(item.id)}" aria-pressed="${item.approved?'true':'false'}" ${lineCanEdit?'':'disabled'} title="${qEsc(item.approved?qLang('Onayı kaldır','Remove approval'):qLang('Bu üreticiyi ve fiyatı onayla','Approve this manufacturer and price'))}">✓</button></td>
         <td style="text-align:center;">${req.source==='collection'?`<button type="button" class="quotationDropBtn${dropped?' isDropped':''}" data-quote-drop="${qEsc(item.id)}" aria-pressed="${dropped?'true':'false'}" ${lineCanEdit?'':'disabled'} title="${qEsc(lineCanEdit?(dropped?qLang('Drop işaretini kaldır','Remove Drop mark'):qLang('Bu quotation içindeki modeli Drop olarak işaretle','Mark the model as Drop in this quotation')):qLang('Yalnız görüntüleme','View only'))}"><span aria-hidden="true">✓</span> Drop</button>`:'<span class="quotationDropUnavailable">—</span>'}</td>
       </tr>`;
@@ -1462,11 +1481,12 @@
           <span aria-hidden="true">✓</span><b>Capacity Confirmed</b>
         </label>
       </div>
-      ${matrixMode?`<div class="quotationTableWrap pdMatrixWrap" data-pd-matrix></div>`:`<div class="quotationTableWrap"><table class="quotationTable" style="width:${tableWidth}px;min-width:${tableWidth}px"><colgroup>${columnGroup}</colgroup><thead><tr>${headers}</tr></thead><tbody>${rows||`<tr><td colspan="${qTableCols.length}"><div class="quotationFilteredEmpty">${qEsc(qLang('Seçili filtrelere uyan satır yok.','No rows match the selected filters.'))}</div></td></tr>`}</tbody></table></div>`}
+      ${matrixMode?`<div class="quotationTableWrap pdMatrixWrap" data-pd-matrix></div>`:`<div class="pdOptionsPanel" data-pd-options-panel hidden></div><div class="quotationTableWrap"><table class="quotationTable" style="width:${tableWidth}px;min-width:${tableWidth}px"><colgroup>${columnGroup}</colgroup><thead><tr>${headers}</tr></thead><tbody>${rows||`<tr><td colspan="${qTableCols.length}"><div class="quotationFilteredEmpty">${qEsc(qLang('Seçili filtrelere uyan satır yok.','No rows match the selected filters.'))}</div></td></tr>`}</tbody></table></div>`}
       ${(!requestCanEdit?`<div class="quotationCpNotice">${qEsc(qLang(`Bu kayıt ${qOwnerLabel(req)} tarafından oluşturuldu. Görüntüleyebilirsiniz; düzenleme için kayıt sahibinin yetki vermesi gerekir.`,`This record was created by ${qOwnerLabel(req)}. You can view it; the owner must grant editing permission.`))}</div>`:(req.source==='cp'?`<div class="quotationCpNotice">${qEsc(qLang('CP quotation kayıtları takip amaçlıdır. Buradaki fiyat ve onay değişiklikleri CP tablosuna geri aktarılmaz.','CP quotations are for tracking. Price and approval changes here are not written back to the CP table.'))}</div>`:''))}`;
     qBindDetail(req);
     host.querySelectorAll('[data-pd-view]').forEach(button=>button.addEventListener('click',()=>{qCommitActivePriceInput(req,host);window.BLPricingDesk?.setDetailView?.(req,button.dataset.pdView);qRenderDetail();}));
     if(matrixMode)desk.renderMatrix(host.querySelector('[data-pd-matrix]'),req);
+    else host.querySelectorAll('[data-quote-options]').forEach(button=>button.addEventListener('click',()=>{const line=req.items.find(item=>item.id===button.dataset.quoteOptions);if(!line)return;qCommitActivePriceInput(req,host);window.BLPricingDesk?.openOptions?.(host,req,line);}));
     if(req.source==='collection'){
       window.BLDetailImages?.bindModelImagesButton?.('quotationDetailPlmSync');
       window.BLDetailImages?.registerScope?.(host,{contextType:'quotations-detail',label:qLang('Quotation Detayı','Quotation Detail'),identities:visibleItems.map((item,index)=>{const row=qFindCollectionRow(item);return {plmId:item.plmId||row?.plmId||'',styleName:item.modelCode||row?.modelKod||'',colourCode:row?.colourCode||'',colour:row?.colour||'',rowId:item.id||String(index),hasImage:null};}),repaint:qRenderDetail});
@@ -1490,6 +1510,57 @@
     if(req.source==='collection') qWritePriceToCollection(req,line);
     qSave(req);qRefreshCollection();
     return value;
+  }
+  /* Tablodan üretici / satır ekleme. Send to Pricing kullanmadan fiyat veren
+     bir üretici talebe eklenir; talepteki her model (ya da yalnız istenen
+     modeller) için boş fiyatlı satır açılır. Satır kümesi değiştiği için kayıt
+     tam talep (PUT) olarak gider; sunucu yeni satırı deftere işler. */
+  const qMfrKey=value=>qNorm(value).toLocaleUpperCase('tr-TR').replace(/\s+/g,' ');
+  function qManufacturerSuggestions(){
+    const map=new Map(),add=item=>{const name=qNorm(item?.name);if(!name)return;const key=qMfrKey(name),current=map.get(key);if(!current)map.set(key,{name,email:qNorm(item?.email)});else if(!current.email&&qNorm(item?.email))current.email=qNorm(item.email);};
+    if(typeof kolManufacturers!=='undefined'&&Array.isArray(kolManufacturers))kolManufacturers.forEach(add);
+    qLoad().requests.forEach(req=>(req.manufacturers||[]).forEach(add));
+    return [...map.values()].sort((a,b)=>a.name.localeCompare(b.name,'tr'));
+  }
+  function qAddManufacturerLines(req,raw,{modelKeys=null}={}){
+    if(!req||!qCanEditRequest(req)){qViewOnlyNotice(req);return null;}
+    const typed=qNorm(raw?.name).slice(0,240);if(!typed)return null;
+    const known=(req.manufacturers||[]).find(item=>qMfrKey(item.name)===qMfrKey(typed))||qManufacturerSuggestions().find(item=>qMfrKey(item.name)===qMfrKey(typed));
+    const m={name:qNorm(known?.name)||typed,email:qNorm(raw?.email)||qNorm(known?.email)};
+    const listed=(req.manufacturers||[]).find(item=>qMfrKey(item.name)===qMfrKey(m.name));
+    if(!listed)req.manufacturers.push(m);else if(!qNorm(listed.email)&&m.email)listed.email=m.email;
+    const seeds=new Map();(req.items||[]).forEach(item=>{if(item.modelKey&&!seeds.has(item.modelKey))seeds.set(item.modelKey,item);});
+    const wanted=Array.isArray(modelKeys)?new Set(modelKeys):null,added=[];
+    seeds.forEach((seed,modelKey)=>{
+      if(wanted&&!wanted.has(modelKey))return;
+      if(req.items.some(item=>item.modelKey===modelKey&&qMfrKey(item.manufacturer)===qMfrKey(m.name)))return;
+      const line={...seed,id:qId('quote-add'),manufacturer:m.name,manufacturerEmail:m.email,price:'',approved:false,dropped:false,priceLabel:'',priceNote:'',options:[],rev:0,updatedAt:'',updatedBy:'',history:[]};
+      req.items.push(line);added.push(line);
+    });
+    if(!added.length&&listed)return {manufacturer:m,added};
+    qTrackOwners(req);req.updatedAt=qNow();qSave(req);
+    return {manufacturer:m,added};
+  }
+  /* Alternatif fiyatların kaydı. Ana fiyat matristen girilir; burada ana
+     fiyatın etiketi/notu ile alternatif listesi yazılır (tam talep kaydı). */
+  function qSaveLineOptions(req,line,{priceLabel='',priceNote='',options=[]}={}){
+    if(!req||!line||!qCanEditLine(req,line)){qViewOnlyNotice(req);return false;}
+    line.priceLabel=qNorm(priceLabel).slice(0,120);line.priceNote=qNorm(priceNote).slice(0,500);
+    line.options=qNormalizeOptions(options).map(option=>({...option,price:qValidPrice(option.price)?qMoneyDisplay(option.price):option.price}));
+    req.updatedAt=qNow();qSave(req);return true;
+  }
+  /* Bir alternatifi ana fiyat yapar: alternatif ile ana fiyat yer değiştirir,
+     önceki ana fiyat alternatif olarak saklanır (veri kaybı yok). Önce yapı
+     kaydı kuyruğa girer, ardından fiyat satır olayı olarak deftere yazılır. */
+  function qPromoteLineOption(req,line,optionId,source='matrix'){
+    if(!req||!line||!qCanEditLine(req,line)){qViewOnlyNotice(req);return false;}
+    const option=(line.options||[]).find(item=>item.id===optionId);
+    if(!option||!qValidPrice(option.price))return false;
+    const previous={id:option.id,label:qNorm(line.priceLabel),price:qNorm(line.price),note:qNorm(line.priceNote)};
+    const keepPrevious=Boolean(previous.price||previous.label||previous.note);
+    qSaveLineOptions(req,line,{priceLabel:option.label,priceNote:option.note,options:(line.options||[]).map(item=>item.id===option.id?(keepPrevious?previous:null):item).filter(Boolean)});
+    qWithLineSource(source,()=>qApplyPrice(req,line,option.price));
+    return true;
   }
   async function qApplyPricesBatch(requestId,changes,source='import'){
     const preview=qLoad().requests.find(item=>item.id===requestId),batch=changes.map(change=>{const line=preview?.items.find(item=>item.id===change.lineId);return {...change,identity:Object.fromEntries(['modelKey','rowId','manufacturer','plmId','modelCode','orderCode'].map(key=>[key,line?.[key]]))};});
@@ -2841,6 +2912,10 @@
     moneyDisplay:qMoneyDisplay,moneyNumber:qMoneyNumber,validPrice:qValidPrice,date:qDate,lineOwnerId:qLineOwnerId,
     applyPrice(req,line,value,source='matrix'){if(!req||!line||!qCanEditLine(req,line)){qViewOnlyNotice(req);return null;}return qWithLineSource(source,()=>qApplyPrice(req,line,value));},
     applyPricesBatch:qApplyPricesBatch,
+    manufacturerSuggestions:qManufacturerSuggestions,
+    addManufacturer(req,manufacturer,options){return qAddManufacturerLines(req,manufacturer,options);},
+    saveLineOptions(req,line,value){return qSaveLineOptions(req,line,value);},
+    promoteOption(req,line,optionId,source='matrix'){return qPromoteLineOption(req,line,optionId,source);},
     setApproval(req,line,approved,source='matrix'){if(!req||!line||(line.approved===true)===Boolean(approved))return false;qWithLineSource(source,()=>qToggleApproval(req,line));return true;},
     toggleDrop(req,line,source='matrix'){return qWithLineSource(source,()=>qToggleDrop(req,line));},
     async startRound(req,note=''){

@@ -7,8 +7,8 @@
     "en": "Interactive HTML presentation and every collection header"
   },
   "summary": {
-    "tr": "Sunum editörü HTML'i artık kaydırınca canlanan, modele tıklayınca ayrıntısı açılan etkileşimli bir sunum olarak oluşturuyor; kartlara ve gruplamaya koleksiyon tablosunun tüm başlıkları eklenebiliyor; PDF alt bilgisi üst üste binmiyor ve yerleşim adımında ayar paneli önizlemeyi kaydırmıyor. Güncelleme sonrası açılışta Buyer Log hangi adımda olduğunu ve geçen süreyi gösteriyor.",
-    "en": "The presentation editor now creates HTML as an interactive presentation that comes alive as you scroll and opens a model's details on click; cards and grouping can use every collection table header; the PDF footer no longer overlaps and the settings panel in the layout step no longer scrolls the preview. After an update, Buyer Log shows its current startup step and the elapsed time."
+    "tr": "Sunum editörü HTML'i artık kaydırınca canlanan, modele tıklayınca ayrıntısı açılan etkileşimli bir sunum olarak oluşturuyor; kartlara ve gruplamaya koleksiyon tablosunun tüm başlıkları eklenebiliyor; PDF alt bilgisi üst üste binmiyor ve yerleşim adımında ayar paneli önizlemeyi kaydırmıyor. Güncelleme sonrası açılışta Buyer Log hangi adımda olduğunu ve geçen süreyi gösteriyor. Fiyat Masası'nda üreticinin koşula bağlı alternatif fiyatları (opsiyon 1, opsiyon 2…) girilebiliyor ve Send to Pricing kullanmadan fiyat veren üretici doğrudan tabloya eklenebiliyor.",
+    "en": "The presentation editor now creates HTML as an interactive presentation that comes alive as you scroll and opens a model's details on click; cards and grouping can use every collection table header; the PDF footer no longer overlaps and the settings panel in the layout step no longer scrolls the preview. After an update, Buyer Log shows its current startup step and the elapsed time. In the Pricing Desk, a manufacturer's conditional alternative prices (option 1, option 2…) can be entered, and a manufacturer that quoted without Send to Pricing can be added straight to the table."
   },
   "changes": [
     {
@@ -153,6 +153,64 @@
         "caption": {
           "tr": "Detay seçilince fiyat bilgileri ayrı sütunlara açılır.",
           "en": "Choosing Detail spreads price details into separate columns."
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-alternative-prices",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Üreticinin alternatif fiyatları girilebiliyor",
+        "en": "Manufacturers' alternative prices can be entered"
+      },
+      "body": {
+        "tr": "Bir üretici aynı model için koşula bağlı birden çok fiyat verdiğinde (ör. kumaş gramajı ya da işçilik değişirse opsiyon 1, değişmezse opsiyon 2) bunlar matristeki hücreye kaydedilir. Hücrenin sol üstündeki OPS düğmesi ya da fiyat hücresindeyken O tuşu alternatif panelini açar; her alternatife ad, fiyat ve koşul notu yazılır, ana fiyata da etiket ve not verilebilir. En iyi teklif, onay, hedef farkı ve Koleksiyon yalnız ana fiyatı kullanır; farklı özellikteki fiyatlar birbiriyle kıyaslanmaz. “Ana fiyat yap” seçilen alternatifi ana fiyat yapar, yerini değiştirdiği fiyat ise alternatif olarak saklanır; fiyat değişikliği Fiyat Defteri'ne işlenir. Alternatifi olan hücrede OPS sayısı her zaman görünür. Liste görünümünde alternatifler teklif fiyatının altında özetlenir; OPS düğmesi aynı paneli açar.",
+        "en": "When a manufacturer quotes the same model under different conditions (e.g. option 1 if fabric weight or workmanship changes, option 2 if not), the prices are stored on the matrix cell. The OPT button at the top left of a cell, or the O key while in a price cell, opens the alternatives panel; each alternative gets a name, price and condition note, and the main price can carry its own label and note. Best offer, approval, target difference and Collection use only the main price, so prices for different specifications are not compared with each other. “Make main price” turns the chosen alternative into the main price and keeps the price it replaces as an alternative; the price change is written to the Pricing Ledger. Cells with alternatives always show the OPT count. In the List view the alternatives are summarised below the quotation price; the OPT button opens the same panel."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-alternative-prices.png",
+        "alt": {
+          "tr": "Fiyat Masası matrisi üzerinde DEMO-KNIT-101 · Demo Atelier için alternatif fiyat paneli: ana fiyat Opsiyon 1 · 160 gr 3,85 USD, Standart 4,15 ve Opsiyon 2 · nakışsız 3,95 alternatifleri koşul notlarıyla; hücrede OPS 2 rozeti (demo veri)",
+          "en": "Alternative prices panel for DEMO-KNIT-101 · Demo Atelier over the Pricing Desk matrix: main price Option 1 · 160 gsm at 3.85 USD, with Standard 4.15 and Option 2 · no embroidery 3.95 as alternatives and their condition notes; the cell shows an OPT 2 badge (demo data)"
+        },
+        "caption": {
+          "tr": "Alternatifler hücrede saklanır; “Ana fiyat yap” ile seçilir.",
+          "en": "Alternatives are kept on the cell; pick one with “Make main price”."
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-add-manufacturer",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Quotation tablosuna doğrudan üretici eklenebiliyor",
+        "en": "Manufacturers can be added straight to the quotation table"
+      },
+      "body": {
+        "tr": "Send to Pricing kullanmadan fiyat veren bir üretici, matris başlığındaki “+ Üretici” sütunundan talebe eklenir. Ad, Koleksiyon üretici listesi ve diğer taleplerden önerilir (yazım ve e-posta oradan alınır); talepteki her model için boş fiyat hücresi açılır ve ilk hücreye odaklanılır, fiyatlar Enter/Tab ile art arda yazılır. Talepte olup bir modelde satırı bulunmayan üreticinin boş hücresine tıklamak yalnız o model için fiyat hücresi açar. Girilen fiyatlar Fiyat Defteri'ne ve Koleksiyon'a her zamanki yoldan yazılır.",
+        "en": "A manufacturer that quoted without Send to Pricing is added to the request from the “+ Manufacturer” column in the matrix header. The name is suggested from the Collection manufacturer list and other requests (spelling and e-mail are taken from there); an empty price cell opens for every model of the request and the first cell is focused, so prices can be typed one after another with Enter/Tab. Clicking the empty cell of a manufacturer that is on the request but has no line for a model opens a price cell for that model only. Entered prices are written to the Pricing Ledger and Collection the usual way."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-add-manufacturer.png",
+        "alt": {
+          "tr": "Fiyat Masası matrisinde “Tabloya üretici ekle” paneli: Üretici alanında Orion Knitwear, e-posta alanında quotes@orion.example ve Üreticiyi ekle düğmesi; tablonun başlığında + Üretici sütunu (demo veri)",
+          "en": "“Add a manufacturer to the table” panel in the Pricing Desk matrix: Orion Knitwear in the Manufacturer field, quotes@orion.example in the e-mail field and the Add manufacturer button; the + Manufacturer column in the table header (demo data)"
+        },
+        "caption": {
+          "tr": "Üretici eklenince her model için fiyat hücresi açılır.",
+          "en": "Adding a manufacturer opens a price cell for every model."
         }
       }
     }

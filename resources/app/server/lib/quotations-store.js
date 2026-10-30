@@ -46,6 +46,17 @@ function normalizeManufacturer(value) {
   const src = cleanObject(value);
   return { name: clean(src.name, 240), email: clean(src.email, 320) };
 }
+/* Alternatif fiyatlar: üretici aynı model için farklı koşullarla (ör. kumaş
+   gramajı / işçilik değişirse) ayrı fiyat verebilir. Ana fiyat (price) en iyi
+   teklif, onay ve Koleksiyon'a yansıyan değerdir; alternatifler satırda bilgi
+   olarak taşınır ve kullanıcı seçerse ana fiyatla yer değiştirir. */
+const MAX_LINE_OPTIONS = 10;
+function normalizeOptions(value) {
+  return (Array.isArray(value) ? value : []).slice(0, MAX_LINE_OPTIONS).map(raw => {
+    const src = cleanObject(raw);
+    return { id: cleanId(src.id) || `opt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, label: clean(src.label, 120), price: clean(src.price, 120), note: clean(src.note, 500) };
+  }).filter(option => option.label || option.price || option.note);
+}
 function normalizeItem(value) {
   const src = cleanObject(value);
   const rowId = src.rowId !== null && src.rowId !== '' && Number.isFinite(Number(src.rowId)) ? Number(src.rowId) : null;
@@ -58,6 +69,7 @@ function normalizeItem(value) {
     picture: clean(src.picture, 5000000), inStoreMonth: clean(src.inStoreMonth, 120), quantity, targetPrice: clean(src.targetPrice, 120),
     manufacturer: clean(src.manufacturer, 240), manufacturerEmail: clean(src.manufacturerEmail, 320), price: clean(src.price, 120),
     approved: Boolean(src.approved), dropped: Boolean(src.dropped),
+    priceLabel: clean(src.priceLabel, 120), priceNote: clean(src.priceNote, 500), options: normalizeOptions(src.options),
     // Fiyat Defteri: satır revizyonu, son değişiklik ve değişmez olay kaydı.
     rev: Number.isFinite(Number(src.rev)) && Number(src.rev) > 0 ? Math.floor(Number(src.rev)) : 0,
     updatedAt: clean(src.updatedAt, 80), updatedBy: cleanId(src.updatedBy),
@@ -305,22 +317,30 @@ function seedLine(line, profile, request) {
   const result = ledger.applyLineChange(empty, { price: line.price, dropped: line.dropped, approved: line.approved }, profile, { round: request.round || 1, source: 'manual' });
   return result.changed ? { ...line, price: result.line.price, approved: result.line.approved, dropped: result.line.dropped, history: result.line.history, rev: result.line.rev, updatedAt: result.line.updatedAt, updatedBy: result.line.updatedBy } : { ...line, history: [], rev: 0 };
 }
+// Alternatif fiyat alanlarını tanımayan eski bir istemcinin tam kaydı mevcut alternatifleri silmez.
+function keepLineOptions(item, prev, raw) {
+  if (raw && Object.prototype.hasOwnProperty.call(raw, 'options')) return item;
+  return { ...item, priceLabel: prev.priceLabel || '', priceNote: prev.priceNote || '', options: prev.options || [] };
+}
 /* Tam talep (PUT) kaydında satır durumu sunucu defteriyle uzlaştırılır:
    · İstemcinin gönderdiği history yok sayılır; mevcut defter korunur.
    · İstemci satırın daha eski bir revizyonuna dayanıyorsa (rev < mevcut) o
      satırın fiyat/onay/drop alanları EZİLMEZ: başka bir kullanıcının girdiği
-     fiyat, not/kapasite gibi ilgisiz bir kayıtla kaybolmaz.
+     fiyat, not/kapasite gibi ilgisiz bir kayıtla kaybolmaz (ana fiyat etiketi
+     ve alternatifler de).
    · rev göndermeyen eski istemci eski davranışla yazar; değişiklik yine
      deftere olay olarak eklenir. */
 function reconcileLines(current, items, raws, profile) {
   const before = new Map((current.items || []).map(item => [item.id, item]));
-  return (items || []).map(item => {
-    const prev = before.get(item.id);
-    if (!prev) return seedLine(item, profile, current);
-    const raw = raws.get(item.id);
+  return (items || []).map(entry => {
+    const prev = before.get(entry.id);
+    if (!prev) return seedLine(entry, profile, current);
+    const raw = raws.get(entry.id);
+    const item = keepLineOptions(entry, prev, raw);
     const baseRev = raw && raw.rev != null && raw.rev !== '' && Number.isFinite(Number(raw.rev)) ? Number(raw.rev) : null;
     const keep = { history: prev.history, rev: prev.rev, updatedAt: prev.updatedAt, updatedBy: prev.updatedBy };
-    if (baseRev != null && baseRev < (prev.rev || 0)) return { ...item, price: prev.price, approved: prev.approved, dropped: prev.dropped, ...keep };
+    // Ana fiyat ile alternatifler yer değiştirebildiği için eski revizyon fiyatla birlikte bunları da ezemez.
+    if (baseRev != null && baseRev < (prev.rev || 0)) return { ...item, price: prev.price, approved: prev.approved, dropped: prev.dropped, priceLabel: prev.priceLabel || '', priceNote: prev.priceNote || '', options: prev.options || [], ...keep };
     const result = ledger.applyLineChange(prev, { price: item.price, dropped: item.dropped, approved: item.approved }, profile, { round: current.round || 1, source: 'manual' });
     if (!result.changed) return { ...item, price: prev.price, approved: prev.approved, dropped: prev.dropped, ...keep };
     return { ...item, price: result.line.price, approved: result.line.approved, dropped: result.line.dropped, history: result.line.history, rev: result.line.rev, updatedAt: result.line.updatedAt, updatedBy: result.line.updatedBy };
@@ -482,6 +502,8 @@ function mergeRequests(profile, sourceId, targetId) {
     }
     if (merged.rowId == null && item.rowId != null) merged.rowId = item.rowId;
     if (merged.quantity == null && item.quantity != null) merged.quantity = item.quantity;
+    if (!clean(current.price, 120) && clean(item.price, 120)) { merged.priceLabel = item.priceLabel; merged.priceNote = item.priceNote; }
+    if (!(merged.options || []).length && (item.options || []).length) merged.options = item.options;
     merged.approved = Boolean(merged.approved || item.approved);
     merged.dropped = Boolean(merged.dropped && item.dropped);
     merged.history = ledger.unionHistory(current.history, item.history);
