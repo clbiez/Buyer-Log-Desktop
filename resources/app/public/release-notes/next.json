@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-30",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Seçilebilir tema geçişleri",
+    "en": "Selectable theme transitions"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Tema değişirken ekran artık varsayılan olarak üçgenlere bölünüp sırayla katlanıyor. Görünüm menüsünden yedi geçiş efekti arasından seçim yapılabiliyor; geçiş hızı ve üçgen boyutu ayarlanabiliyor.",
+    "en": "When the theme changes, the screen now splits into triangles that fold one after another by default. The Appearance menu offers seven transition effects, with adjustable transition speed and triangle size."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "theme-transition-effects",
+      "type": "feature",
+      "module": {
+        "tr": "Görünüm",
+        "en": "Appearance"
+      },
+      "title": {
+        "tr": "Tema geçişi efekti seçilebilir ve ayarlanabilir",
+        "en": "Theme transition effect is selectable and adjustable"
+      },
+      "body": {
+        "tr": "Sol raydaki Görünüm menüsüne Tema geçişi bölümü eklendi. Efektler: sırayla katlanan üçgenler (varsayılan), kenardan katlanan üçgenler, yerinde dönen üçgenler, düğmeden üflenen toz, rüzgârda savrulan toz, taneli çözülme ve daire. Geçiş hızı beş kademede ayarlanır (varsayılan en hızlı); üçgen boyutu 40–100 px arasında seçilir (varsayılan 70 px). Geçiş tema düğmesinden başlar ve yeni tema altta hemen hazır olur. Üçgen ve toz efektleri masaüstü uygulamasında çalışır; tarayıcıda bu efektler yerine daire kullanılır. Hareketi azaltma tercihi, kapalı hareket ve yazılım çizimi açıkken tema yine anında değişir. Ayarlar tema tercihi gibi kullanıcıya ayrılır.",
+        "en": "A Theme transition section was added to the Appearance menu in the left rail. Effects: triangles folding in sequence (default), triangles folding at the edge, triangles flipping in place, dust blown from the button, dust carried by the wind, grainy dissolve and circle. Transition speed has five steps (default fastest); triangle size ranges from 40 to 100 px (default 70 px). The transition starts at the theme button and the new theme is ready underneath right away. Triangle and dust effects run in the desktop app; in the browser the circle is used instead. With reduced motion, motion turned off or software rendering, the theme still changes instantly. Settings belong to the user, like the theme choice."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "theme-transition-folding-triangles.png",
+        "alt": {
+          "tr": "Buyer Log Genel Bakış ekranı tema değişirken: sağdan sola katlanan üçgen şeritlerinin arasından koyu tema görünüyor; açık Görünüm menüsünde Tema geçişi bölümü, Sırayla katlanan üçgenler efekti, En hızlı geçiş hızı ve 70 px üçgen boyutu (demo veri)",
+          "en": "Buyer Log Overview screen while the theme changes: the dark theme shows between strips of triangles folding from right to left; the open Appearance menu shows the Theme transition section with Triangles folding in sequence, Fastest speed and 70 px triangle size (demo data)"
+        },
+        "caption": {
+          "tr": "Görünüm › Tema geçişi: efekt, hız ve üçgen boyutu.",
+          "en": "Appearance › Theme transition: effect, speed and triangle size."
+        }
+      }
+    }
+  ]
 }

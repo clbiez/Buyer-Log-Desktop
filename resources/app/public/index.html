@@ -467,6 +467,14 @@
     <button id="railLangBtn" title="Switch language / Dil değiştir"><svg class="ic"><use href="#i-globe"/></svg><span id="railLangLabel" data-no-i18n>Dil: TR</span></button>
     <button id="railThemeBtn" title="Tema: Aydınlık → Karanlık"><svg class="ic"><use href="#i-moon"/></svg><span data-i18n-tr="Tema" data-i18n-en="Theme">Tema</span></button>
     <button id="railFontSizeBtn" title="Arayüz boyutu: Standard → Büyük → Çok Büyük → Kompakt" data-i18n-title-tr="Arayüz boyutu: Standard → Büyük → Çok Büyük → Kompakt" data-i18n-title-en="Interface size: Standard → Large → XL → Compact"><b class="railFontGlyph" aria-hidden="true">A</b><span id="railFontSizeLabel">Arayüz: Standard</span></button>
+    <!-- Tema geçişi efekti: seçim ve ayarlar bu cihazda saklanır (motion-plus-theme.js). -->
+    <div class="railThemeFx" role="group" aria-labelledby="themeFxTitle">
+      <span class="railThemeFxTitle" id="themeFxTitle" data-i18n-tr="Tema geçişi" data-i18n-en="Theme transition">Tema geçişi</span>
+      <label class="railThemeFxField" for="themeFxEffect"><span data-i18n-tr="Efekt" data-i18n-en="Effect">Efekt</span><select id="themeFxEffect"></select></label>
+      <label class="railThemeFxField" for="themeFxSpeed"><span data-i18n-tr="Geçiş hızı" data-i18n-en="Transition speed">Geçiş hızı</span><output id="themeFxSpeedValue" for="themeFxSpeed"></output><input type="range" id="themeFxSpeed" min="1" max="5" step="1" value="5"></label>
+      <label class="railThemeFxField" for="themeFxSize"><span data-i18n-tr="Üçgen boyutu" data-i18n-en="Triangle size">Üçgen boyutu</span><output id="themeFxSizeValue" for="themeFxSize"></output><input type="range" id="themeFxSize" min="40" max="100" step="10" value="70"></label>
+      <p class="railThemeFxNote" id="themeFxNote" data-i18n-tr="Bu efekt masaüstü uygulamasında çalışır; tarayıcıda daire kullanılır." data-i18n-en="This effect runs in the desktop app; the browser uses the circle." hidden>Bu efekt masaüstü uygulamasında çalışır; tarayıcıda daire kullanılır.</p>
+    </div>
     </div>
   </div>
 </aside>
@@ -1569,6 +1577,7 @@
 <script src="image-search.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="command-palette.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="kpi-motion.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="motion-plus-theme.js?v=__BL_ASSET_VERSION__"></script>
 <script src="motion-plus.js?v=__BL_ASSET_VERSION__"></script>
 <script src="selection-action-bar.js?v=__BL_ASSET_VERSION__"></script>
 <script>

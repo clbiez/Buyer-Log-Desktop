@@ -6,7 +6,7 @@
   var prefixes=[
     'bl.excelTemplates.',
     'bl.dataManagement.', // Veri Yönetimi panel aç/kapa tercihi kişiseldir (cihazda kalır, eşitlenmez).
-    'lcw_theme','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step',
+    'lcw_theme','lcw.themeTransition.','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step',
     'lcw.corePageFilters.','lcw.table.columnState.','lcw.table.density.','lcw.tableViewFocus.','lcw.tableGroupOverrides.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.rules.','lcw.cp.dimFilters.','lcw.cp.imageSize.',
     'lcw.orders.dimFilters.','lcw.overview.dimFilters.','lcw.overview.bgDimFilters.','lcw.backlog.autoState.','lcw.backlog.dateRange.','lcw.backlog.columnWidths.','lcw.backlog.analysis.','lcw.backlog.planactual.','lcw.backlog.overview.',
     'lcw.koleksiyon.rows.','lcw.koleksiyon.manufacturers.','lcw.koleksiyon.pricingExcelColumns.','lcw.koleksiyon.colState.','lcw.koleksiyon.scope.','lcw.koleksiyon.analytics.','lcw.prodstatus.mails.','lcw.mailTemplates.',
@@ -119,7 +119,7 @@
     'buyerlog.workspace.horizon.','buyerlog.workspace.applied-horizon.','buyerlog.dashboard.','lcw.dashboard.','buyerlog.favorites.','lcw.favorites.','bl.backlog.excelColumns.','bl.detailTables.showImages.',
     'bl.formulaColumns.', // v7.28 — hesaplanan sütun tanımları kullanıcıyla birlikte taşınır
     'bl.excelImport.profiles.', // Excel içe aktarma eşleme profilleri: kullanıcıya ve modüle ait YAPILANDIRMA (çalışma kitabı verisi değil)
-    'lcw.cp.imageSize.','lcw_theme','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step','bl.refreshHistory.','bl.autoRefresh.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.'
+    'lcw.cp.imageSize.','lcw_theme','lcw.themeTransition.','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step','bl.refreshHistory.','bl.autoRefresh.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.'
   ];
   function synced(key){key=String(key);return SYNCED.some(function(p){return key.indexOf(p)===0})}
   var META_KEY='bl.user.'+uid+'.__syncMeta.v1';

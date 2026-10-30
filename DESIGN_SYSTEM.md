@@ -185,8 +185,17 @@ Easing ortak cubic-bezier ile izlenir. Hareket içerik, geometri ve iş verisi
 üzerinde kalıcı değişiklik yapmaz.
 
 **Tema geçişi:** Kullanıcı temayı değiştirdiğinde `BLMotionPlus.theme(update, origin)`
-yeni temayı tıklanan denetimden dairesel olarak açar (View Transitions; eski ve
-yeni kare kompozitörde birleşir, tablo hücreleri tek tek boyanmaz). Açılışta,
+Görünüm menüsünde seçilen efekti çalıştırır (`motion-plus-theme.js`,
+`BLMotionPlusTheme`; ayar kullanıcıya ayrılmış `lcw.themeTransition.v1` (BLStorage)): sırayla
+katlanan üçgenler (varsayılan), kenardan katlanan / yerinde dönen üçgenler,
+düğmeden üflenen / rüzgârda savrulan toz, taneli çözülme veya daire. Hız 1–5
+(varsayılan 5 = en hızlı, 500 ms temel süre), üçgen boyutu 40–100 px (varsayılan
+70). Üçgen ve toz efektleri masaüstü köprüsünün tek karelik
+`captureView` yakalamasını tek `.blThemeFxLayer` canvas'ında çözer; yeni tema
+altta gerçek DOM'dur, kare yalnız bellekte ve geçiş boyunca yaşar. Yakalama
+yoksa (tarayıcı kipi) veya başarısızsa daire / anlık yol kullanılır. Taneli
+çözülme ve daire View Transitions ile çalışır (eski ve yeni kare kompozitörde
+birleşir, tablo hücreleri tek tek boyanmaz). Açılışta,
 sistem temasında, reduced-motion / `data-bl-motion='off'` / görünmez sekmede,
 yazılım çiziminde (`data-bl-render='software'`) veya API yoksa geçiş anlıktır.
 Ard arda istekte son seçim kazanır. Başka modül kendi tema animasyonunu,

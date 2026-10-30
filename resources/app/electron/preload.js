@@ -29,6 +29,9 @@ contextBridge.exposeInMainWorld('buyerLogDesktop', {
   },
   // Salt okunur çizim profili (yazılım çizimi mi); bkz. main.js buyerlog:render-profile.
   renderProfile: () => ipcRenderer.invoke('buyerlog:render-profile'),
+  // Motion+ tema geçişi: yalnız bu sayfanın görünür karesi, CSS piksel boyutunda
+  // ham BGRA bayt olarak döner (bkz. main.js buyerlog:capture-view).
+  captureView: (width, height) => ipcRenderer.invoke('buyerlog:capture-view', { width: Number(width) || 0, height: Number(height) || 0 }),
   workspace: {
     openModule: (moduleId) => ipcRenderer.invoke('buyerlog:workspace-open-module', String(moduleId || '')),
     showModuleContextMenu: (moduleId, language) => ipcRenderer.invoke('buyerlog:workspace-show-module-context-menu', {
