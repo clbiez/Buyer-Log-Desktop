@@ -157,13 +157,17 @@
       {duration:duration('card')*2,iterations:kind==='sync-active'?8:2});
     return null;
   }
-  /* Tema geçişi: eski görünümün anlık görüntüsü üzerinde yeni tema, tetikleyen
-     düğmeden dairesel olarak yayılır. Tarayıcı iki kareyi kompozitörde birleştirir;
-     tablo hücreleri tek tek boyanmaz. Hareket kapalıysa, yazılım çizimindeyse
-     veya View Transitions yoksa false döner ve çağıran anlık yolu kullanır. */
+  /* Tema geçişi: kullanıcının Görünüm menüsünde seçtiği efekt (üçgen, toz,
+     taneli çözülme) motion-plus-theme.js'te çalışır. Seçim daireyse veya efekt
+     bu ortamda çalışamıyorsa (ör. tarayıcı kipinde ekran yakalama yok) eski
+     görünümün anlık görüntüsü üzerinde yeni tema, tetikleyen düğmeden dairesel
+     olarak yayılır. Hareket kapalıysa, yazılım çizimindeyse veya View
+     Transitions yoksa false döner ve çağıran anlık yolu kullanır. */
   let themeTransition=null;
   function theme(update,origin){
-    if(typeof update!=='function'||!enabled()||html.dataset.blRender==='software'||typeof doc.startViewTransition!=='function')return false;
+    if(typeof update!=='function'||!enabled()||html.dataset.blRender==='software')return false;
+    try{if(root.BLMotionPlusTheme?.run?.(update,origin))return true;}catch(_){}
+    if(typeof doc.startViewTransition!=='function')return false;
     const w=root.innerWidth||0,h=root.innerHeight||0;
     let x=w/2,y=h/2;
     const box=origin&&typeof origin.getBoundingClientRect==='function'&&origin.isConnected!==false?origin.getBoundingClientRect():null;
@@ -247,7 +251,7 @@
   }
   function setEnabled(value){
     html.dataset.blMotion=value?'on':'off';
-    if(!value)cancelPending();
+    if(!value){cancelPending();root.BLMotionPlusTheme?.finish?.();}
     else activate(true); // activate restores any in-progress refresh after cancellation.
   }
   function mount(){

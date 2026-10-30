@@ -2504,6 +2504,26 @@ function registerIpc() {
     if (!trustedBuyerLogIpcSender(event)) return null;
     return { softwareCompositing: softwareCompositing() };
   });
+  /*
+   * Motion+ tema geçişi: renderer kendi görünür sayfasının tek karelik
+   * görüntüsünü ister (toz/üçgen efektleri eski temayı parçalara ayırır).
+   * Yalnız çağıranın KENDİ webContents'i yakalanır ve CSS piksel boyutuna
+   * küçültülmüş ham BGRA baytları yalnız ona döner; diske, log'a veya başka
+   * bir sürece yazılmaz. Renderer'ın zaten gördüğü içerikten fazlası açılmaz.
+   */
+  ipcMain.handle('buyerlog:capture-view', async (event, payload = {}) => {
+    if (!trustedBuyerLogIpcSender(event)) return null;
+    const width = Math.round(Number(payload && payload.width) || 0), height = Math.round(Number(payload && payload.height) || 0);
+    if (!(width > 0 && height > 0 && width <= 8192 && height <= 8192)) return null;
+    try {
+      let image = await event.sender.capturePage();
+      if (image.isEmpty()) return null;
+      const size = image.getSize();
+      if (size.width !== width || size.height !== height) image = image.resize({ width, height, quality:'good' });
+      const out = image.getSize();
+      return { width: out.width, height: out.height, bgra: image.toBitmap() };
+    } catch (_) { return null; }
+  });
   ipcMain.handle('buyerlog:workspace-snapshot', event => {
     if (!workspace || !workspace.windowForShellContents(event.sender)) return null;
     return workspace.shellSnapshot(event);

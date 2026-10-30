@@ -1230,6 +1230,39 @@ html.blThemeMorph::view-transition-old(root) {z-index:var(--ui-z-data)
 }
 html.blThemeMorph::view-transition-new(root) {z-index:var(--ui-z-raised)
 }
+/* Motion+ seçilebilir tema geçişleri (motion-plus-theme.js): eski temanın karesi tek canvas katmanında çözülür. */
+.blThemeFxLayer {position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:var(--ui-z-boot);contain:strict
+}
+html.blThemeFxMask .blThemeFxLayer {view-transition-name:bl-theme-fx
+}
+html.blThemeFxMask::view-transition-group(bl-theme-fx),html.blThemeFxMask::view-transition-old(bl-theme-fx),html.blThemeFxMask::view-transition-new(bl-theme-fx),html.blThemeFxMask::view-transition-old(root),html.blThemeFxMask::view-transition-new(root) {animation:none;mix-blend-mode:normal
+}
+html.blThemeFxMask::view-transition-old(bl-theme-fx) {opacity:0
+}
+html.blThemeFxMask::view-transition-old(root) {z-index:var(--ui-z-raised);mask-repeat:no-repeat
+}
+html.blThemeFxMask::view-transition-new(root) {z-index:var(--ui-z-data)
+}
+html[data-ui-system="manifest"] .railAppearanceMenu .railThemeFx {display:grid;gap:8px;padding:10px 10px 6px;min-width:220px
+}
+html[data-ui-system="manifest"] .railAppearanceMenu .railThemeFx span {display:inline !important
+}
+html[data-ui-system="manifest"] .railThemeFxTitle {font-size:var(--ui-font-2xs);font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ui-text-muted)
+}
+html[data-ui-system="manifest"] .railThemeFxField {display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center;font-size:var(--ui-font-xs);color:var(--ui-text-secondary)
+}
+html[data-ui-system="manifest"] .railThemeFxField :is(select,input[type="range"]) {grid-column:1 / -1;width:100%;margin:0
+}
+html[data-ui-system="manifest"] .railThemeFxField select {height:var(--ui-control-height-small);font-size:var(--ui-font-xs)
+}
+html[data-ui-system="manifest"] .railThemeFxField input[type="range"] {accent-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .railThemeFxField input[type="range"]:disabled {opacity:.45
+}
+html[data-ui-system="manifest"] .railThemeFxField output {font-family:var(--ui-font-mono);font-size:var(--ui-font-2xs);color:var(--ui-text);font-variant-numeric:tabular-nums
+}
+html[data-ui-system="manifest"] .railThemeFxNote {margin:0;max-width:220px;font-size:var(--ui-font-2xs);color:var(--ui-text-muted)
+}
 html[data-ui-system="manifest"].blThemeSwitching body,html[data-ui-system="manifest"].blThemeSwitching .rail,html[data-ui-system="manifest"].blThemeSwitching button,html[data-ui-system="manifest"].blThemeSwitching input,html[data-ui-system="manifest"].blThemeSwitching select,html[data-ui-system="manifest"].blThemeSwitching textarea {
   transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast);animation:none!important
 }

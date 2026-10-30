@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-30",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Giriş alanları her ekranda belirgin",
-    "en": "Input fields stand out on every screen"
+    "tr": "Giriş alanları her ekranda belirgin; seçilebilir tema geçişleri",
+    "en": "Input fields stand out on every screen; selectable theme transitions"
   },
   "summary": {
-    "tr": "Tüm düzenlenebilir alanlar açık ve koyu temada okunur ince bir çerçeveyle görünüyor; nereye yazılacağı artık her ekranda belli.",
-    "en": "All editable fields show a thin border that stays readable in light and dark themes, so it is clear where to type on every screen."
+    "tr": "Tüm düzenlenebilir alanlar açık ve koyu temada okunur ince bir çerçeveyle görünüyor; nereye yazılacağı artık her ekranda belli. Tema değişirken ekran artık varsayılan olarak üçgenlere bölünüp sırayla katlanıyor. Görünüm menüsünden yedi geçiş efekti arasından seçim yapılabiliyor; geçiş hızı ve üçgen boyutu ayarlanabiliyor.",
+    "en": "All editable fields show a thin border that stays readable in light and dark themes, so it is clear where to type on every screen. When the theme changes, the screen now splits into triangles that fold one after another by default. The Appearance menu offers seven transition effects, with adjustable transition speed and triangle size."
   },
   "changes": [
     {
@@ -95,6 +95,35 @@
         "caption": {
           "tr": "ASAS solda, IAS sağda; eşleşmenin kaynağı her satırda yazar.",
           "en": "ASAS on the left, IAS on the right; each row shows where the match came from."
+        }
+      }
+    },
+    {
+      "id": "theme-transition-effects",
+      "type": "feature",
+      "module": {
+        "tr": "Görünüm",
+        "en": "Appearance"
+      },
+      "title": {
+        "tr": "Tema geçişi efekti seçilebilir ve ayarlanabilir",
+        "en": "Theme transition effect is selectable and adjustable"
+      },
+      "body": {
+        "tr": "Sol raydaki Görünüm menüsüne Tema geçişi bölümü eklendi. Efektler: sırayla katlanan üçgenler (varsayılan), kenardan katlanan üçgenler, yerinde dönen üçgenler, düğmeden üflenen toz, rüzgârda savrulan toz, taneli çözülme ve daire. Geçiş hızı beş kademede ayarlanır (varsayılan en hızlı); üçgen boyutu 40–100 px arasında seçilir (varsayılan 70 px). Geçiş tema düğmesinden başlar ve yeni tema altta hemen hazır olur. Üçgen ve toz efektleri masaüstü uygulamasında çalışır; tarayıcıda bu efektler yerine daire kullanılır. Hareketi azaltma tercihi, kapalı hareket ve yazılım çizimi açıkken tema yine anında değişir. Ayarlar tema tercihi gibi kullanıcıya ayrılır.",
+        "en": "A Theme transition section was added to the Appearance menu in the left rail. Effects: triangles folding in sequence (default), triangles folding at the edge, triangles flipping in place, dust blown from the button, dust carried by the wind, grainy dissolve and circle. Transition speed has five steps (default fastest); triangle size ranges from 40 to 100 px (default 70 px). The transition starts at the theme button and the new theme is ready underneath right away. Triangle and dust effects run in the desktop app; in the browser the circle is used instead. With reduced motion, motion turned off or software rendering, the theme still changes instantly. Settings belong to the user, like the theme choice."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "theme-transition-folding-triangles.png",
+        "alt": {
+          "tr": "Buyer Log Genel Bakış ekranı tema değişirken: sağdan sola katlanan üçgen şeritlerinin arasından koyu tema görünüyor; açık Görünüm menüsünde Tema geçişi bölümü, Sırayla katlanan üçgenler efekti, En hızlı geçiş hızı ve 70 px üçgen boyutu (demo veri)",
+          "en": "Buyer Log Overview screen while the theme changes: the dark theme shows between strips of triangles folding from right to left; the open Appearance menu shows the Theme transition section with Triangles folding in sequence, Fastest speed and 70 px triangle size (demo data)"
+        },
+        "caption": {
+          "tr": "Görünüm › Tema geçişi: efekt, hız ve üçgen boyutu.",
+          "en": "Appearance › Theme transition: effect, speed and triangle size."
         }
       }
     }
