@@ -55,6 +55,27 @@ if(!primaryInstance){
 }else{
 // Paint a trusted, self-contained notice before disk-wide integrity checks.
 // No application HTML or script is loaded before its integrity is verified.
+/* Güncellemenin uygulandığı açılışta (iki çekirdek doğrulaması + yerel veri
+ * checkpointi, ana süreçte senkron) bildirim normal açılış gibi görünüyordu.
+ * Durum yalnız okunur; okunamazsa normal metin gösterilir, açılış etkilenmez. */
+function launchNoticeKind(){
+  if(!app.isPackaged)return 'start';
+  try{
+    const state=createLauncherState({bootstrapCore:BOOTSTRAP_CORE,portableRoot:PORTABLE_ROOT}).readState();
+    if(state&&state.activation&&state.activation.status==='trial')return 'rollback';
+    if(state&&state.pending&&state.pending.ready)return 'update';
+  }catch(_){}
+  return 'start';
+}
+const LAUNCH_NOTICE_TEXT={
+  start:{tr:'Buyer Log açılıyor…',en:'Buyer Log is opening…'},
+  update:{tr:'Güncelleme uygulanıyor…',en:'Applying the update…',
+    trDetail:'Yeni sürüm dosyaları doğrulanıyor ve verinizin yedeği alınıyor. Lütfen kapatmayın.',
+    enDetail:'Verifying the new version and backing up your data. Please do not close Buyer Log.'},
+  rollback:{tr:'Önceki sürüme dönülüyor…',en:'Returning to the previous version…',
+    trDetail:'Yeni sürüm önceki açılışta tamamlanamadı; verileriniz korunarak geri alınıyor. Lütfen kapatmayın.',
+    enDetail:'The new version did not finish starting last time; it is being rolled back with your data preserved. Please do not close Buyer Log.'},
+};
 async function showLaunchNotice(){
   const {BrowserWindow}=require('electron');
   await app.whenReady();
@@ -74,7 +95,10 @@ async function showLaunchNotice(){
     app.removeListener('browser-window-created',handOff);
     if(global.__buyerLogLaunchNotice===notice)delete global.__buyerLogLaunchNotice;
   });
-  const html=`<!doctype html><html lang="tr"><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>Buyer Log</title><style>html,body{height:100%;margin:0}body{box-sizing:border-box;border:1px solid #d4d4d7;background:#f8f8f9;color:#1d1f20;font-family:system-ui,Segoe UI,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;-webkit-app-region:drag}strong{font-size:30px;font-weight:600}p{margin:0;font-size:14px;color:#5d5d60}</style><body><strong>Buyer Log</strong><p role="status">Buyer Log açılıyor…</p><p lang="en">Buyer Log is opening…</p></body></html>`;
+  const text=LAUNCH_NOTICE_TEXT[launchNoticeKind()];
+  // Animasyon derleyicide çalışır: ana süreç senkron doğrulamadayken de çubuk ilerler.
+  const detail=text.trDetail?`<small>${text.trDetail}</small>`:'',detailEn=text.enDetail?`<small lang="en">${text.enDetail}</small>`:'';
+  const html=`<!doctype html><html lang="tr"><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>Buyer Log</title><style>html,body{height:100%;margin:0}body{box-sizing:border-box;padding:0 28px;border:1px solid #d4d4d7;background:#f8f8f9;color:#1d1f20;font-family:system-ui,Segoe UI,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;-webkit-app-region:drag}strong{font-size:30px;font-weight:600}p{margin:0;font-size:14px;color:#5d5d60}small{display:block;font-size:11.5px;line-height:1.35;color:#7a7a7d}i{display:block;width:220px;height:3px;background:#d4d4d7;overflow:hidden;position:relative}i::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-40%;background:#3f6488;animation:s 1.2s ease-in-out infinite}@keyframes s{to{left:100%}}@media (prefers-reduced-motion:reduce){i::after{animation:none;left:0;width:100%;opacity:.35}}</style><body><strong>Buyer Log</strong><i aria-hidden="true"></i><p role="status">${text.tr}${detail}</p><p lang="en">${text.en}${detailEn}</p></body></html>`;
   let timer;
   try{await new Promise((resolve,reject)=>{
     timer=setTimeout(()=>reject(new Error('Launch notice timeout')),3000);

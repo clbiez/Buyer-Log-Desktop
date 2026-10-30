@@ -7,8 +7,8 @@
     "en": "Interactive HTML presentation and every collection header"
   },
   "summary": {
-    "tr": "Sunum editörü HTML'i artık kaydırınca canlanan, modele tıklayınca ayrıntısı açılan etkileşimli bir sunum olarak oluşturuyor; kartlara ve gruplamaya koleksiyon tablosunun tüm başlıkları eklenebiliyor; PDF alt bilgisi üst üste binmiyor ve yerleşim adımında ayar paneli önizlemeyi kaydırmıyor.",
-    "en": "The presentation editor now creates HTML as an interactive presentation that comes alive as you scroll and opens a model's details on click; cards and grouping can use every collection table header; the PDF footer no longer overlaps and the settings panel in the layout step no longer scrolls the preview."
+    "tr": "Sunum editörü HTML'i artık kaydırınca canlanan, modele tıklayınca ayrıntısı açılan etkileşimli bir sunum olarak oluşturuyor; kartlara ve gruplamaya koleksiyon tablosunun tüm başlıkları eklenebiliyor; PDF alt bilgisi üst üste binmiyor ve yerleşim adımında ayar paneli önizlemeyi kaydırmıyor. Güncelleme sonrası açılışta Buyer Log hangi adımda olduğunu ve geçen süreyi gösteriyor.",
+    "en": "The presentation editor now creates HTML as an interactive presentation that comes alive as you scroll and opens a model's details on click; cards and grouping can use every collection table header; the PDF footer no longer overlaps and the settings panel in the layout step no longer scrolls the preview. After an update, Buyer Log shows its current startup step and the elapsed time."
   },
   "changes": [
     {
@@ -95,6 +95,35 @@
         "caption": {
           "tr": "Panel aşağı kaydırıldı; önizleme yerinde.",
           "en": "Panel scrolled down; preview stays put."
+        }
+      }
+    },
+    {
+      "id": "desktop-update-startup-progress",
+      "type": "improvement",
+      "module": {
+        "tr": "Masaüstü açılışı",
+        "en": "Desktop startup"
+      },
+      "title": {
+        "tr": "Açılış ekranı adımları ve güncelleme durumunu gösteriyor",
+        "en": "The startup screen shows its steps and the update status"
+      },
+      "body": {
+        "tr": "Güncellemenin ilk açılışında dosyalar doğrulanıp veri yedeği alınırken ekranda artık \"Güncelleme uygulanıyor\" yazar ve Buyer Log'u kapatmamanız istenir. Ardından açılış ekranı ön bellek temizliği, veri klasörü, sunucu, yerel veritabanı ve ekranların açılması adımlarını sırayla işaretler, geçen süreyi gösterir. Normal açılışta da adım listesi görünür; bir adım uzun sürerse programın çalışmaya devam ettiği belirtilir.",
+        "en": "On the first launch after an update, while files are verified and a data backup is taken, the screen now says \"Applying the update\" and asks you not to close Buyer Log. The startup screen then marks the cache cleanup, data folder, server, local database and screen opening steps in order and shows the elapsed time. Normal launches show the step list too; if a step takes long, it says Buyer Log is still working."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "desktop-update-startup-progress.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log açılış ekranı (splash.html, Türkçe): Güncelleme uygulanıyor başlığı, kapatmama uyarısı, ilerleme çubuğu ve yerel veritabanı adımında 7 adımlık liste, geçen süre 1:23",
+          "en": "Real Buyer Log startup screen (splash.html, Turkish): Applying the update title, do-not-close notice, progress bar and the 7-step list at the local database step, elapsed 1:23"
+        },
+        "caption": {
+          "tr": "Güncellemenin ilk açılışında adım listesi ve geçen süre.",
+          "en": "Step list and elapsed time on the first launch after an update."
         }
       }
     }

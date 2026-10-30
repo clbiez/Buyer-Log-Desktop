@@ -1959,6 +1959,7 @@ function createMainWindow(origin) {
     log,
     onFirstRendererReady: () => {
       confirmLauncherHealth();
+      watchUiLanguage();
     },
   });
   log('Çoklu sekme çalışma alanı yükleniyor: ' + origin);
@@ -1976,32 +1977,129 @@ function createMainWindow(origin) {
  * için kullanıcılar programın açılmadığını sanıp BuyerLog.exe'yi tekrar
  * çalıştırıyordu. Ekranın ortasında küçük bir "başlatılıyor" penceresi ana
  * pencere görünene ya da hata ekranı açılana kadar kalır.
+ *
+ * Güncellemenin ilk açılışı (launcher denemesi ya da bu sürümün ilk kurulum
+ * onarımı) dakikalar sürebiliyor ve ekran normal bir açılış gibi görünüyordu.
+ * Pencere artık hangi adımda olunduğunu, geçen süreyi ve güncelleme kipinde
+ * "kapatmayın" uyarısını gösterir. Adım metinleri splash.html'dedir; buradan
+ * yalnız doğrulanmış adım kimliği gönderilir.
  */
+const SPLASH_STEPS = ['update', 'repair', 'data', 'server', 'database', 'finish', 'screens'];
+let splashState = null;
+
+function uiLanguageFile() {
+  return path.join(paths.localDataRoot, 'desktop-ui-language.json');
+}
+
+// Açılış ekranı arayüz yüklenmeden önce görünür; son kullanılan dil kapanışta
+// saklanır, ilk açılışta işletim sistemi dili kullanılır.
+function startupLanguage() {
+  const saved = paths ? readJson(uiLanguageFile(), null) : null;
+  if (saved && (saved.language === 'tr' || saved.language === 'en')) return saved.language;
+  let locale = '';
+  try { locale = String((app.getPreferredSystemLanguages()[0]) || app.getLocale() || ''); } catch (_) { locale = ''; }
+  return !locale || /^tr\b/i.test(locale) ? 'tr' : 'en';
+}
+
+let rememberedUiLanguage = '';
+let uiLanguageTimer = null;
+// Son pencere kapatılırken sekmeler window-all-closed'dan ÖNCE yok edilir;
+// kapanışta okumak yetmez. Dil, çalışma sırasında hafifçe izlenir.
+function watchUiLanguage() {
+  if (uiLanguageTimer) return;
+  void rememberUiLanguage();
+  uiLanguageTimer = setInterval(() => { void rememberUiLanguage(); }, 30000);
+  if (uiLanguageTimer.unref) uiLanguageTimer.unref();
+}
+
+async function rememberUiLanguage() {
+  const contents = activeBuyerLogContents();
+  if (!paths || !contents || contents.isDestroyed()) return;
+  let timer = null;
+  try {
+    const language = await Promise.race([
+      contents.executeJavaScript('document.documentElement.lang', false),
+      new Promise(resolve => { timer = setTimeout(() => resolve(''), 400); }),
+    ]);
+    if ((language !== 'tr' && language !== 'en') || language === rememberedUiLanguage) return;
+    rememberedUiLanguage = language;
+    fs.mkdirSync(path.dirname(uiLanguageFile()), { recursive: true });
+    fs.writeFileSync(uiLanguageFile(), JSON.stringify({ language }) + '\n', 'utf8');
+  } catch (_) { /* dil hatırlanamazsa açılış ekranı sistem dilini kullanır */ }
+  finally { clearTimeout(timer); }
+}
+
+/* Güncelleme kipi: launcher bu açılışta yeni sürümü denemeye aldıysa ya da
+ * önceki bir sürümün onarım kaydı varken bu sürüm/çekirdek için kurulum onarımı
+ * henüz tamamlanmadıysa. Kaydı hiç olmayan ilk kurulum normal açılıştır. */
+function startupIsUpdate() {
+  if (process.env.BUYER_LOG_UPDATE_HEALTH_TOKEN) return true;
+  if (!app.isPackaged || !paths) return false;
+  try {
+    const report = readRepairReport(paths.localDataRoot);
+    return Boolean(report) && !(report.version === appVersion() && report.appCoreRoot === path.resolve(APP_CORE_ROOT) && report.finishedAt);
+  } catch (_) { return false; }
+}
+
+function pushSplashState() {
+  const window = splashWindow;
+  if (!splashState || !window || window.isDestroyed() || window.webContents.isLoading()) return;
+  const script = 'window.BLSplash&&window.BLSplash.update(' + JSON.stringify(splashState) + ')';
+  window.webContents.executeJavaScript(script, false).catch(() => {});
+}
+
+// Adımlar yalnız ileri gider; geç gelen bir sunucu işareti ekranı geri sardırmaz.
+function setSplashStep(step) {
+  if (!splashState || SPLASH_STEPS.indexOf(step) <= SPLASH_STEPS.indexOf(splashState.step)) return;
+  splashState = { ...splashState, step };
+  log('Açılış adımı: ' + step);
+  pushSplashState();
+}
+
 function showSplash() {
   if (splashWindow && !splashWindow.isDestroyed()) return;
   const launchNotice = global.__buyerLogLaunchNotice;
   delete global.__buyerLogLaunchNotice;
-  if (launchNotice && !launchNotice.isDestroyed()) {
-    splashWindow = launchNotice;
-    splashWindow.on('closed', () => { if (splashWindow === launchNotice) splashWindow = null; });
-    return;
-  }
+  const update = startupIsUpdate();
+  const firstSplash = !splashState;
+  splashState = {
+    mode: update ? 'update' : 'start',
+    lang: startupLanguage(),
+    version: appVersion(),
+    step: update ? 'repair' : 'data',
+    // İlk açılışta süre BuyerLog.exe başlangıcından (launcher doğrulaması dahil) sayılır.
+    startedAt: firstSplash ? Math.round(Date.now() - process.uptime() * 1000) : Date.now(),
+  };
   try {
-    splashWindow = new BrowserWindow({
-      width: 420, height: 240, center: true, show: false, frame: false,
+    const splash = new BrowserWindow({
+      width: 460, height: 320, center: true, show: false, frame: false,
       resizable: false, minimizable: false, maximizable: false, fullscreenable: false,
-      backgroundColor: '#f8f8f9', title: 'Buyer Log başlatılıyor',
+      backgroundColor: '#f8f8f9', title: 'Buyer Log başlatılıyor / Starting Buyer Log',
       icon: APP_ICON_SOURCE,
       webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true },
     });
-    splashWindow.once('ready-to-show', () => {
-      if (splashWindow && !splashWindow.isDestroyed()) splashWindow.show();
+    splashWindow = splash;
+    // Launcher'ın erken bildirimi, adımlı ekran gerçekten görününce kapanır (boşluk kalmaz).
+    splash.once('ready-to-show', () => {
+      if (splash.isDestroyed()) return;
+      splash.show();
+      if (launchNotice && !launchNotice.isDestroyed()) launchNotice.destroy();
     });
-    splashWindow.on('closed', () => { splashWindow = null; });
-    splashWindow.loadFile(path.join(__dirname, 'splash.html'), { query: { v: appVersion() } });
+    splash.webContents.on('did-finish-load', pushSplashState);
+    splash.on('closed', () => {
+      if (splashWindow === splash) splashWindow = null;
+      if (launchNotice && !launchNotice.isDestroyed()) launchNotice.destroy();
+    });
+    splash.loadFile(path.join(__dirname, 'splash.html'), {
+      query: {
+        v: splashState.version, mode: splashState.mode, lang: splashState.lang,
+        step: splashState.step, t0: String(splashState.startedAt),
+      },
+    });
   } catch (error) {
-    splashWindow = null;
     log('Açılış ekranı gösterilemedi: ' + error.message);
+    splashWindow = launchNotice && !launchNotice.isDestroyed() ? launchNotice : null;
+    if (splashWindow) splashWindow.on('closed', () => { if (splashWindow === launchNotice) splashWindow = null; });
   }
 }
 
@@ -2081,6 +2179,7 @@ function handleBackendLoss() {
 async function startBuyerLog() {
   lastStartedAt = Date.now();
   showSplash();
+  setSplashStep('data');
   try {
     ensureDataTree(paths);
   } catch (error) {
@@ -2149,6 +2248,10 @@ async function startBuyerLog() {
     onStartupReady: () => {
       log('Backend server and local DB ready (startup milestones).');
       confirmLauncherHealth();
+      setSplashStep('finish');
+    },
+    onStartupProgress: marker => {
+      if (marker === 'LOCAL_DB_CONFIG_PATH') setSplashStep('database');
     },
     onUnexpectedExit: info => {
       if (quitting) return;
@@ -2158,6 +2261,7 @@ async function startBuyerLog() {
   });
 
   let bound;
+  setSplashStep('server');
   try {
     bound = backend.start();
   } catch (error) {
@@ -2198,6 +2302,7 @@ async function startBuyerLog() {
    * first tab finishes loading. The renderer hook below stays as a fallback. */
   confirmLauncherHealth();
   closeErrorWindow();
+  setSplashStep('screens');
   createMainWindow(bound.origin);
   return true;
 }
@@ -2209,7 +2314,9 @@ async function shutdown() {
   if (updateStartupTimer) { clearTimeout(updateStartupTimer); updateStartupTimer = null; }
   if (updateSignInTimer) { clearInterval(updateSignInTimer); updateSignInTimer = null; }
   if (updatePeriodicTimer) { clearInterval(updatePeriodicTimer); updatePeriodicTimer = null; }
+  if (uiLanguageTimer) { clearInterval(uiLanguageTimer); uiLanguageTimer = null; }
   try { saveWindowState(); } catch (_) {}
+  await rememberUiLanguage();
   // Backend Authorization is process memory and may be cleared. The dedicated
   // OAB browser partition is deliberately preserved across normal restarts.
   try { await clearOabBackendAuthorization(); } catch (_) {}

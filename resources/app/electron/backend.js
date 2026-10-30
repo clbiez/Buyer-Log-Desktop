@@ -169,6 +169,8 @@ class BackendProcess {
     // initial sync work. The backend reports its real listening and DB-ready
     // milestones over its owned stdout before that HTTP response is handled.
     this.onStartupReady = typeof options.onStartupReady === 'function' ? options.onStartupReady : () => {};
+    // Açılış ekranı için ara adımlar: yalnız tam satır, yalnız işaret adı iletilir.
+    this.onStartupProgress = typeof options.onStartupProgress === 'function' ? options.onStartupProgress : () => {};
     this.startupMilestones = { server: false, db: false, emitted: false };
     this.startupOutputTail = '';
   }
@@ -199,6 +201,11 @@ class BackendProcess {
     const lines = data.split(/\r?\n/);
     this.startupOutputTail = lines.pop().slice(-512);
     for (const line of lines) {
+      const marker = /^\[PERF\] ([A-Z][A-Z0-9_]{1,63})(?: |$)/.exec(line);
+      if (marker) {
+        try { this.onStartupProgress(marker[1]); }
+        catch (error) { this.log('Backend startup progress callback failed: ' + (error && error.message || error)); }
+      }
       if (/^\[PERF\] APP_BOOT_START \+\d+ms\s*$/.test(line)) {
         milestones.server = false;
         milestones.db = false;
