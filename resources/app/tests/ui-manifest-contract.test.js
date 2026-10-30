@@ -34,6 +34,7 @@ test('Manifest has one token source; migrated owners never consume legacy appear
    m[1]==='--kol-text-lh'&&d.selector==='#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody textarea.editCell'||
    m[1]==='--pd-rate'&&d.selector==='.pdRing::after'||
    m[1]==='--kol-status-color'&&/^#kolTable (?:select|td)/.test(d.selector)||
+   m[1]==='--kol-quick-status'&&d.selector==='#kolQuickFilters .kpi[data-kolq-key="durum"]:not(.active) .n'||
    m[1]==='--status-color'&&d.selector==='.kolStatusManagerDot'||
    m[1]==='--swatch'&&d.selector==='.kolStatusSwatch'))continue;
   // Module-local values may describe measured geometry, never appearance.

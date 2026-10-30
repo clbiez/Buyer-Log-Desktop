@@ -28054,7 +28054,9 @@ function kolQuickScoped(excludeKey){
 function renderKolQuickFilters(){
   const wrap = document.getElementById('kolQuickFilters'); if(!wrap) return;
   let html = `<button type="button" class="kpiGroupEdit" id="kolQuickFiltersEdit" title="${escapeHtml(appLang==='en'?'Add or remove quick filters':'Hızlı filtre ekle veya çıkar')}" aria-label="${escapeHtml(appLang==='en'?'Add or remove quick filters':'Hızlı filtre ekle veya çıkar')}"><svg class="ic"><use href="#i-settings"/></svg></button>`;
-  loadKolQuickDims().forEach(dim=>{
+  const quickDims=loadKolQuickDims();
+  const statusSnapshot=quickDims.some(dim=>dim.key==='durum')?kolStatusRenderSnapshot():null;
+  quickDims.forEach(dim=>{
     const scoped = kolQuickScoped(dim.key);
     const counts = {};
     scoped.forEach(r=>{ const v = (dim.key==='inStoreMonth'?kolFilterValue(r,dim.key):norm(r[dim.key])) || '—'; counts[v] = (counts[v]||0)+1; });
@@ -28064,8 +28066,10 @@ function renderKolQuickFilters(){
     entries.forEach(([val,n])=>{
       const active = kolColFilters[dim.key] && kolColFilters[dim.key].has(val==='—'?'':val);
       const dispVal = dim.key==='inStoreMonth'?(kolMonthDisplay(val)||val):(dim.key==='durum'?L(val):val);
+      const tone=dim.key==='inStoreMonth'?'blue':'gray';
+      const statusStyle=dim.key==='durum'?` style="--kol-quick-status:${escapeHtml(statusSnapshot.color(val))}"`:'';
       const quickFilterLabel=appLang==='en'?`Filter ${L(dim.label)}: ${dispVal} (${n})`:`${L(dim.label)} filtresi: ${dispVal} (${n})`;
-      html += `<button type="button" class="kpi tone-blue${active?' active':''}" aria-pressed="${active?'true':'false'}" aria-label="${escapeHtml(quickFilterLabel)}" title="${escapeHtml(quickFilterLabel)}" data-kolq-key="${dim.key}" data-kolq-val="${escapeHtml(val==='—'?'':val)}"><span class="n">${n}</span><span class="l">${escapeHtml(dispVal)}</span></button>`;
+      html += `<button type="button" class="kpi tone-${tone}${active?' active':''}"${statusStyle} aria-pressed="${active?'true':'false'}" aria-label="${escapeHtml(quickFilterLabel)}" title="${escapeHtml(quickFilterLabel)}" data-kolq-key="${dim.key}" data-kolq-val="${escapeHtml(val==='—'?'':val)}"><span class="n">${n}</span><span class="l">${escapeHtml(dispVal)}</span></button>`;
     });
     html += `<div class="kpiSep"></div>`;
   });

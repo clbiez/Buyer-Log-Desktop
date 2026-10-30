@@ -2425,7 +2425,7 @@ function renderAiPdf(html, options) {
   aiPdfQueue = run.catch(() => {});
   return run;
 }
-async function renderAiPdfNow(html, { landscape = false } = {}) {
+async function renderAiPdfNow(html, { landscape = false, footer = true } = {}) {
   aiPdfSession();
   let tempFile = '';
   const partition = AI_PDF_PARTITION;
@@ -2446,7 +2446,9 @@ async function renderAiPdfNow(html, { landscape = false } = {}) {
       await withDeadline(win.loadURL(aiPdfAllowedFileUrl), 60000, 'load');
     }
     return await withDeadline(win.webContents.printToPDF({
-      printBackground: true, preferCSSPageSize: true, landscape, displayHeaderFooter: true,
+      printBackground: true, preferCSSPageSize: true, landscape,
+      // Smart Layout Studio pages carry their own footer and page number; a second one would overlap it.
+      displayHeaderFooter: footer,
       headerTemplate: '<span></span>',
       footerTemplate: '<div style="font-size:8px;width:100%;padding:0 12mm;color:#7a7a7d;display:flex;justify-content:space-between;font-family:Segoe UI,Arial,sans-serif"><span>Buyer Log · LCW AI</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',
     }), 60000, 'print');
@@ -2821,7 +2823,7 @@ function registerIpc() {
     if (!trustedBuyerLogIpcSender(event)) return { ok:false, error:'forbidden' };
     const html = payload && typeof payload.html === 'string' ? payload.html : '';
     if (!html || Buffer.byteLength(html, 'utf8') > AI_PDF_HTML_MAX_BYTES) return { ok:false, error:'invalid' };
-    try { return { ok:true, data: await renderAiPdf(html, { landscape: payload.landscape === true }) }; }
+    try { return { ok:true, data: await renderAiPdf(html, { landscape: payload.landscape === true, footer: payload.footer !== false }) }; }
     catch (error) { return { ok:false, error: String(error && error.message || 'render-failed').slice(0, 80) }; }
   });
 }

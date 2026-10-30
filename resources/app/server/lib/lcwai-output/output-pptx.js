@@ -30,6 +30,8 @@ const pt = value => Math.round(value * EMU);
    public/lcwai-output-layout.js). Oluşturma eşzamanlıdır: renderPresentation
    / expandSlides başında applyGeometry ile ayarlanır, sonra yalnız okunur. */
 let LAYOUT = BLOutputLayout.defaults('pptx');
+// Smart Layout Studio decks are built from Buyer Log data alone; LCW AI is named only on AI-authored decks.
+const brandName = () => (LAYOUT.studio ? 'Buyer Log' : 'Buyer Log · LCW AI');
 let MARGIN = pt(48);
 let BAND = pt(96);
 let CONTENT_TOP = pt(110);
@@ -174,7 +176,7 @@ function chrome(s, slide, index, total, deck, p, lang) {
   s.box({ x: MARGIN, y: BAND - pt(10), w: pt(64), h: pt(3), fill: dark ? 'FFFFFF' : p.logo, name: 'Rule' });
   }
   if (LAYOUT.studio && LAYOUT.studio.note) s.text(MARGIN, H - pt(44 + LAYOUT.studio.noteHeight), W - MARGIN * 2, pt(LAYOUT.studio.noteHeight), LAYOUT.studio.note, { size: 10, color: p.ink });
-  s.text(MARGIN, H - pt(30), W / 2, pt(18), `Buyer Log · LCW AI${deck.title ? ` · ${deck.title}` : ''}`.slice(0, 110), { size: 9, color: p.muted });
+  s.text(MARGIN, H - pt(30), W / 2, pt(18), `${brandName()}${deck.title ? ` · ${deck.title}` : ''}`.slice(0, 110), { size: 9, color: p.muted });
   s.text(W - MARGIN - pt(120), H - pt(30), pt(120), pt(18), `${index + 1} / ${total}`, { size: 9, color: p.muted }, { align: 'r' });
 }
 
@@ -288,7 +290,7 @@ function renderSlideBody(s, slide, index, total, deck, p, lang, records = {}) {
     s.box({ x: W - pt(210), y: pt(300), w: pt(300), h: pt(300), fill: { color: p.headInk, alpha: 8 }, geometry: 'ellipse', name: 'Orb' });
     s.box({ x: -pt(90), y: H - pt(150), w: pt(240), h: pt(240), fill: { color: p.logo, alpha: 4 }, geometry: 'ellipse', name: 'Orb' });
     s.box({ x: 0, y: H - pt(6), w: W, h: pt(6), fill: p.logo, name: 'Base' });
-    s.text(pt(80), pt(140), W - pt(200), pt(40), 'BUYER LOG · LCW AI', { size: 13, bold: true, color: p.headInk });
+    s.text(pt(80), pt(140), W - pt(200), pt(40), brandName().toLocaleUpperCase('tr-TR'), { size: 13, bold: true, color: p.headInk });
     s.text(pt(80), pt(180), W - pt(260), pt(150), slide.title, { size: slide.title.length > 50 ? 36 : 46, bold: true, color: p.logo });
     if (slide.subtitle) s.text(pt(80), pt(335), W - pt(260), pt(60), slide.subtitle, { size: 20, color: p.headInk });
     s.box({ x: pt(80), y: pt(410), w: pt(90), h: pt(4), fill: p.logo, name: 'Rule' });
