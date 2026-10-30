@@ -15359,3 +15359,30 @@ html[data-ui-system="manifest"] .globalFlowTooltip .gfTipAlarm {display:none
 }
 html:root[data-ui-system="manifest"] .globalFlowLegend .critical i {background:var(--ui-danger) !important;width:7px;height:7px
 }
+/* Giriş alanları: düzenlenebilir her alan 1px --ui-field-border sınırıyla (≥3:1) tanınır.
+   Yüzey tonu tek başına ayırt edici değildi. Izgara hücresi editörleri (td) tablo sözleşmesinde kalır. */
+html[data-ui-system="manifest"] :is(input:not([type="checkbox"],[type="radio"],[type="range"],[type="file"],[type="color"],[type="hidden"],[type="button"],[type="submit"],[type="reset"],[type="image"]),select,textarea,.pricingRuleSeasonBtn):not(td *) {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] :is(input,select,textarea,.pricingRuleSeasonBtn):is(:disabled,[readonly]):not(td *) {border-color:var(--ui-group-divider) !important
+}
+html[data-ui-system="manifest"] [data-ui-migrated] .tableRangePager>input[data-range-page] {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] [data-ui-migrated] .tableRangePager>input[data-range-page]:disabled {border-color:var(--ui-group-divider) !important
+}
+/* Tarih alanı metin + takvim düğmesiyle tek kutu olarak çerçevelenir. */
+html[data-ui-system="manifest"] .dateFieldWrap>.dateKeyboardInput:not(td *) {border-right:0 !important
+}
+html[data-ui-system="manifest"] .dateFieldWrap>.datePickerBtn:not(td *) {border:1px solid var(--ui-field-border) !important;border-left:0 !important
+}
+html[data-ui-system="manifest"] .dateFieldWrap>.dateKeyboardInput:is(:disabled,[readonly]):not(td *)+.datePickerBtn {border-color:var(--ui-group-divider) !important
+}
+/* Native olmayan seçim alanları (tetikleyici değer gösterir) aynı alan sınırını taşır. */
+html[data-ui-system="manifest"] :is(.psaMultiTrigger,.lflDimBtn,.lflBreakdownBtn,.oabMultiTrigger,.cpaFieldPickerBtn):not(td *) {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] :is(.psaMultiTrigger[aria-disabled="true"],.lflDimBtn:disabled,.lflBreakdownBtn:disabled,.oabMultiTrigger:disabled,.cpaFieldPickerBtn:disabled):not(td *) {border-color:var(--ui-group-divider) !important
+}
+/* Endeksmatik ay alanı: kap tek kutudur; iç metin girişi ayrıca çerçevelenmez. */
+html[data-ui-system="manifest"] .endeksmatikMonthControl:not(td *) {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] .endeksmatikMonthControl>input[type="text"] {border:0 !important
+}
