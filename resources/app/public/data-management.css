@@ -251,6 +251,9 @@
 
 /* --- Horizon ve yenileme notları --- */
 .dmGroupNote { margin: 0; padding: 7px 11px; }
+/* v2026-10-30 — iki ufka geçiş notu: etkilenen kaynak · modül listesi ve "Anladım". */
+.dmGroupNote[data-merged-note] p { margin: 0 0 4px; }
+.dmGroupNote[data-merged-note] ul { margin: 0 0 6px; padding-left: 18px; }
 .dmCheck { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
 
 /* --- Özet --- */

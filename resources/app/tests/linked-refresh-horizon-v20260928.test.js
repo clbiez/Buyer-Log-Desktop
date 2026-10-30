@@ -117,7 +117,12 @@ test('IAS (antrepo) iki ufka ayrılır: CP tek başına, Siparişler + Backlog b
    beklemez — v20260930 kararı korunur). */
 test('yenileme hedefleri: Diğer modüller CP ile birlikte, CP tek başına', () => {
   const ALL = ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'];
-  assert.deepEqual(scopes.withRefreshTargets(['lfl']).slice().sort(), ALL.slice().sort(), 'diğer modüller CP\'yi de yeniler');
+  assert.deepEqual(scopes.withRefreshTargets(['backlog']).slice().sort(), ALL.slice().sort(), 'diğer modüller CP\'yi de yeniler');
+  /* v2026-10-30 (kullanıcı kararı): LFL IAS'tan beslenmez; yalnız LFL istenirse
+     grup ve CP eklenmez. Genel (Diğer modüller) yenileme LFL'i yine kapsar. */
+  assert.deepEqual(scopes.withRefreshTargets(['lfl']), ['lfl'], 'LFL tek başına yenilenebilir');
+  assert.ok(scopes.withRefreshTargets(['orders']).includes('lfl'), 'genel yenileme LFL\'i kapsar');
+  assert.deepEqual(scopes.LINKED_STANDALONE_TARGETS, ['lfl']);
   assert.deepEqual(scopes.withRefreshTargets(['cp']), ['cp'], 'dar CP yenilemesi geniş grubu çalıştırmaz');
   assert.deepEqual(scopes.withRefreshTargets(['cp', 'orders', 'cp']).slice().sort(), ALL.slice().sort());
   assert.deepEqual(scopes.withRefreshTargets([]), [], 'boş liste boş kalır; varsayılanı çağıran uygular');
@@ -129,15 +134,18 @@ test('yenileme hedefleri: Diğer modüller CP ile birlikte, CP tek başına', ()
 });
 
 test('sunucu: /api/refresh, performRefresh ve loadFromModels (LFL yolu dahil) kayıttaki bağlı grupla genişletir', () => {
-  assert.match(SERVER, /const \{ withRefreshTargets, linkedTargetsOf, LINKED_TARGETS \} = require\('\.\/lib\/model-scopes'\);/);
+  assert.match(SERVER, /const \{ withRefreshTargets, linkedTargetsOf, LINKED_TARGETS, skipUnreadyChain \} = require\('\.\/lib\/model-scopes'\);/);
   const config = SERVER.slice(SERVER.indexOf('function configuredRefreshMembers()'), SERVER.indexOf('const cpCoverage'));
   assert.match(config, /linkedTargetsOf\(asasItem\)/);
   assert.match(config, /withRefreshTargets\(targets, configuredRefreshMembers\(\)\)/);
-  assert.match(SERVER, /const targets = rawTargets \? refreshTargetsFor\(/);
-  const perform = SERVER.slice(SERVER.indexOf('async function performRefresh('), SERVER.indexOf('async function performRefresh(') + 400);
-  assert.match(perform, /targets = refreshTargetsFor\(targets\)/);
+  // v2026-10-30: bütün yollar aynı planı kullanır (grup genişletme + CP eksikse CP'yi atlama).
+  const plan = SERVER.slice(SERVER.indexOf('function refreshTargetPlan('), SERVER.indexOf('const cpCoverage'));
+  assert.match(plan, /const expanded = explicit \? refreshTargetsFor\(targets\)/);
+  assert.match(SERVER, /function nativeRefreshTargets\(rawTargets, value = null\) \{[\s\S]{0,300}return refreshTargetPlan\(wanted, value\);/);
+  const perform = SERVER.slice(SERVER.indexOf('async function performRefresh('), SERVER.indexOf('async function performRefresh(') + 500);
+  assert.match(perform, /const targetPlan = refreshTargetPlan\(targets, currentUser \|\| id\);/);
   const load = SERVER.slice(SERVER.indexOf('async function loadFromModels('), SERVER.indexOf('async function loadFromModels(') + 800);
-  assert.match(load, /targets = refreshTargetsFor\(targets\)/);
+  assert.match(load, /targets = refreshTargetPlan\(targets, value\)\.targets;/);
   assert.doesNotMatch(SERVER, /withLinkedTargets/);
   // Son yenilemenin kapsadığı sayfalar saklanır: "son yenileme" saati sekme açılışında da görünür.
   assert.match(SERVER, /targets: requestedTargets\.slice\(\),/);
@@ -146,8 +154,12 @@ test('sunucu: /api/refresh, performRefresh ve loadFromModels (LFL yolu dahil) ka
   assert.match(SERVER, /\.\.\.\(result\.partialTargets && runtime\.modelRefresh && runtime\.modelRefresh\.appliedHorizons/);
 });
 
+/* v2026-10-30 (kullanıcı kararı: "LFL de genel filtreyle paralel çalışsın").
+   Grup için yazılan kişisel ufuk (bütün üye anahtarları) grubu bölmez. Yalnız
+   LFL'e ait eski bir kişisel ufuk ise YALNIZ LFL'e uygulanır (paralel sorgu)
+   ve Siparişler · Backlog · Fiyat & Üretici'yi değiştirmez. */
 test('kişisel/rol ufku bağlı grubu yeniden bölmez', () => {
-  prefs.saveHorizon('user-linked', 'lfl', H(['S5']), { connectionId: 'asas-main', role: 'asas' });
+  for (const moduleId of LINKED) prefs.saveHorizon('user-linked', moduleId, H(['S5']), { connectionId: 'asas-main', role: 'asas' });
   const items = prefs.applyHorizonOverrides([{
     id: 'asas-main', role: 'asas',
     scopes: [
@@ -160,6 +172,23 @@ test('kişisel/rol ufku bağlı grubu yeniden bölmez', () => {
   assert.deepEqual(linked[0].targets, LINKED);
   assert.deepEqual(valuesOf(linked[0]), ['S5']);
   assert.deepEqual(valuesOf(items[0].scopes.find(scope => scope.targets.includes('cp'))), ['S7']);
+});
+
+test('yalnız LFL\'e ait kişisel ufuk yalnız LFL\'e uygulanır; grubun geri kalanına sızmaz', () => {
+  prefs.saveHorizon('user-lfl-only', 'lfl', H(['S5']), { connectionId: 'asas-main', role: 'asas' });
+  const items = prefs.applyHorizonOverrides([{
+    id: 'asas-main', role: 'asas',
+    scopes: [
+      { id: 'cp-scope', targets: ['cp'], horizon: H(['S7']) },
+      { id: 'linked-scope', targets: LINKED.slice(), horizon: H(['S7']) },
+    ],
+  }], 'user-lfl-only', ['orders']);
+  const lfl = items[0].scopes.find(scope => scope.targets.includes('lfl'));
+  const orders = items[0].scopes.find(scope => scope.targets.includes('orders'));
+  assert.deepEqual(lfl.targets, ['lfl'], 'LFL kendi kişisel ufkuyla paralel sorgu olur');
+  assert.deepEqual(valuesOf(lfl), ['S5']);
+  assert.deepEqual(orders.targets, ['orders', 'backlog', 'priceanalysis']);
+  assert.deepEqual(valuesOf(orders), ['S7'], 'LFL\'e ait kişisel ufuk Siparişler\'e sızmamalı');
 });
 
 test('istemci: sayfa düğmeleri yalnız kendi sayfasını ister; menü filtre bağına göre satır üretir', () => {
@@ -204,7 +233,7 @@ test('istemci: yenileme açık olmayan sayfaları bayat bırakmaz ve verilerini 
   const load = APP.slice(APP.indexOf('async function loadFromServer(force, targets){'), APP.indexOf('let sharedRevisionSnapshot'));
   assert.match(load, /backlogLoadedOnce=false;/);
   assert.match(load, /window\.BLPriceSupplierAnalysis\?\.invalidate\?\.\(\)/);
-  assert.match(load, /if\(userVisibleRefresh\)\{\s*scheduleRefreshPrewarm\(targets\);\s*notifyCpCoverage\(data\.lastRefreshResult\);\s*\}/);
+  assert.match(load, /if\(userVisibleRefresh\)\{\s*scheduleRefreshPrewarm\(targets\);\s*notifyCpCoverage\(data\.lastRefreshResult\);\s*notifySkippedRefreshTargets\(data\.lastRefreshResult\);\s*\}/);
   // Sunucunun gerçek hedef listesi (düzenlenmiş grup) istemcinin tahminine eklenir.
   assert.match(load, /targets=\[\.\.\.new Set\(\[\.\.\.targets,\.\.\.serverRefreshTargets\.filter\(/);
   assert.match(ANALYTICS, /function invalidate\(\)\{prefetched=false;if\(!root\|\|!root\.dataset\.initialized\)return;datasetStale=true;if\(isVisible\(\)\)\{datasetStale=false;void prepare\(\);\}\}/);

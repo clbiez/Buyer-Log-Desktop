@@ -1569,6 +1569,9 @@ let authoritativeLinkedRefreshTargets=null;
    ortak ufukta. "Diğer modüller" yenilenince CP de yenilenir; CP tek başına
    yenilenebilir. Sunucudaki karşılığı: model-scopes LINKED_REFRESH_CHAIN. */
 const LINKED_REFRESH_CHAIN=Object.freeze(['cp']);
+// LFL IAS'tan beslenmez: tek başına yenilenebilir; genel yenileme onu da kapsar.
+// Sunucudaki karşılığı: model-scopes LINKED_STANDALONE_TARGETS.
+const LINKED_STANDALONE_TARGETS=Object.freeze(['lfl']);
 async function syncLinkedRefreshMembers(){
   const response=await fetch('/api/refresh-targets',{cache:'no-store'});
   if(!response.ok){
@@ -1590,7 +1593,7 @@ function linkedRefreshMembers(){
 function withLinkedRefreshTargets(targets){
   const list=[...new Set((Array.isArray(targets)?targets:[]).map(value=>String(value||'').trim()).filter(Boolean))];
   const members=linkedRefreshMembers();
-  if(list.some(target=>members.includes(target))){
+  if(list.some(target=>members.includes(target)&&!LINKED_STANDALONE_TARGETS.includes(target))){
     members.forEach(target=>{if(!list.includes(target))list.push(target);});
     LINKED_REFRESH_CHAIN.forEach(target=>{if(!list.includes(target))list.push(target);});
   }
@@ -1750,9 +1753,13 @@ function renderHorizonBadges(){
         const linkBadge=document.createElement('span');
         linkBadge.className='horizonSummaryLinked horizonBadgeSource';
         linkBadge.textContent=en?'Linked':'Bağlı';
-        linkBadge.title=en
-          ?`This page uses the shared Other modules horizon and refreshes together with ${linkedRefreshLabel()} and CP; change the horizon in Data Management.`
-          :`Bu sayfa Diğer modüllerin ortak ufkunu kullanır ve ${linkedRefreshLabel()} ile CP'yle birlikte yenilenir; ufuk Veri Yönetimi'nden değiştirilir.`;
+        linkBadge.title=LINKED_STANDALONE_TARGETS.includes(target)
+          ?(en
+            ?`This page uses the shared Other modules horizon. Its own refresh button refreshes LFL only; refreshing the other modules includes LFL. Change the horizon in Data Management.`
+            :`Bu sayfa Diğer modüllerin ortak ufkunu kullanır. Kendi Yenile düğmesi yalnız LFL'i yeniler; diğer modüllerin yenilenmesi LFL'i de kapsar. Ufuk Veri Yönetimi'nden değiştirilir.`)
+          :(en
+            ?`This page uses the shared Other modules horizon and refreshes together with ${linkedRefreshLabel()} and CP; change the horizon in Data Management.`
+            :`Bu sayfa Diğer modüllerin ortak ufkunu kullanır ve ${linkedRefreshLabel()} ile CP'yle birlikte yenilenir; ufuk Veri Yönetimi'nden değiştirilir.`);
         el.appendChild(linkBadge);
       }
       const stamp=refreshTargetsStamp(withLinkedRefreshTargets([target]));
@@ -15149,6 +15156,7 @@ async function waitForRefreshJob(expectedJob=null){
     if(userVisibleRefresh){
       scheduleRefreshPrewarm(targets);
       notifyCpCoverage(data.lastRefreshResult);
+      notifySkippedRefreshTargets(data.lastRefreshResult);
     }
     if(data.hasCachedData&&data.loadedAt){
       const t = new Date(data.loadedAt).toLocaleString(appLang==='en'?'en-GB':'tr-TR');
@@ -15559,6 +15567,16 @@ function scheduleRefreshPrewarm(targets){
 /* Genel (bağlı) filtre CP filtresini kapsamıyorsa: sunucu iki sorgunun GERÇEK
    sonucunu karşılaştırır (server/lib/cp-coverage.js). Uyarı ⚠ sayacında da durur;
    burada yenileme bitince ayrıca açıkça söylenir. */
+/* v2026-10-30 — CP'nin filtresi eksik olduğu için CP atlandıysa (sunucu
+   refreshTargetPlan) diğer modüller yenilenmiştir; CP'nin yenilenmediği açıkça
+   söylenir ki kullanıcı CP'yi güncel sanmasın. */
+function notifySkippedRefreshTargets(result){
+  const skipped=result&&Array.isArray(result.skippedTargets)?result.skippedTargets:[];
+  if(!skipped.some(entry=>entry&&entry.target==='cp'))return;
+  showToast(appLang==='en'
+    ?'CP was not refreshed: its filter is missing or unbounded. The other modules were refreshed. Add a CP filter in Data Management.'
+    :'CP yenilenmedi: CP filtresi eksik ya da sınırsız. Diğer modüller yenilendi. Veri Yönetimi\'nde CP için filtre tanımlayın.');
+}
 function notifyCpCoverage(result){
   const coverage=result&&result.cpCoverage;
   if(!coverage||!Number(coverage.outsideCount))return;
@@ -15619,6 +15637,8 @@ async function openTopRefreshMenu(anchor){
   if(members.length){
     const linkedTargets=withLinkedRefreshTargets(members);
     options.push(['linked',`${refreshTargetsLabel(members)} + CP`,linkedTargets]);
+    // LFL tek başına da yenilenebilir (IAS'tan beslenmez); yukarıdaki satır onu da kapsar.
+    LINKED_STANDALONE_TARGETS.filter(target=>members.includes(target)).forEach(target=>options.push([target,refreshTargetsLabel([target]),[target]]));
   }
   ALL_REFRESH_TARGETS.forEach(target=>{
     if(!options.some(([,,targets])=>targets.includes(target)))options.push([target,refreshTargetsLabel([target]),[target]]);

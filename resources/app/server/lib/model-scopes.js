@@ -170,6 +170,11 @@ const LINKED_TARGETS = Object.freeze(['orders', 'backlog', 'lfl', 'priceanalysis
 const LINKED_ROLES = new Set(['asas', 'antrepo']);
 // "Diğer modüller" yenilendiğinde onlarla birlikte yenilenen modüller.
 const LINKED_REFRESH_CHAIN = Object.freeze(['cp']);
+/* v2026-10-30 — LFL TEK BAŞINA YENİLENEBİLİR (kullanıcı kararı): "LFL IAS'tan
+   beslenmediği için yalnız LFL'i yenilemek mümkün olsun; genel yenileme yine
+   LFL'i de kapsasın." LFL ortak ufku kullanmaya devam eder; yalnız LFL
+   istendiğinde grubun geri kalanı ve CP eklenmez. */
+const LINKED_STANDALONE_TARGETS = Object.freeze(['lfl']);
 // Veri Yönetimi'nin gösterdiği iki ufuk. INTAKE kendi bağlantısıyla ayrı çalışır.
 const HORIZON_GROUPS = Object.freeze([
   Object.freeze({ id: 'cp', targets: Object.freeze(['cp']) }),
@@ -216,7 +221,8 @@ function withRefreshTargets(targets, linkedMembers = LINKED_TARGETS) {
     .map(value => String(value == null ? '' : value).trim()).filter(Boolean);
   const out = [...new Set(list)];
   const members = Array.isArray(linkedMembers) ? linkedMembers : LINKED_TARGETS;
-  if (out.some(target => members.includes(target))) {
+  // Yalnız LFL (LINKED_STANDALONE_TARGETS) istendiyse grup genişletilmez.
+  if (out.some(target => members.includes(target) && !LINKED_STANDALONE_TARGETS.includes(target))) {
     for (const target of members) if (!out.includes(target)) out.push(target);
     // v2026-10-30: "Diğer modüller" yenilenince CP de yenilenir (tek yön).
     for (const target of LINKED_REFRESH_CHAIN) if (!out.includes(target)) out.push(target);
@@ -225,6 +231,20 @@ function withRefreshTargets(targets, linkedMembers = LINKED_TARGETS) {
 }
 // Eski ad: otomasyon ve yenileme grupları bu adla çağırıyordu.
 const withLinkedTargets = withRefreshTargets;
+
+/**
+ * v2026-10-30 — CP EKSİKSE DİĞERLERİ YENİLENİR (kullanıcı kararı).
+ * Genişletilmiş hedeflerde CP başka modüllerle birlikteyse ve CP'nin filtresi
+ * hazır değilse (cpReady() false) CP atlanır; yalnız CP istendiyse dokunulmaz
+ * (çağıran SOURCE_FILTER_REQUIRED ile reddeder). cpReady yalnız gerektiğinde
+ * çağrılır. Saf: disk/ağ yok.
+ * @returns {{targets:string[], skipped:Array<{target:string, code:string}>}}
+ */
+function skipUnreadyChain(targets, cpReady) {
+  const list = Array.isArray(targets) ? targets.slice() : [];
+  if (!list.includes('cp') || !list.some(target => target !== 'cp') || cpReady()) return { targets: list, skipped: [] };
+  return { targets: list.filter(target => target !== 'cp'), skipped: [{ target: 'cp', code: 'SOURCE_FILTER_REQUIRED' }] };
+}
 
 function linkScopeTargets(scopes, role, fallbackHorizon, normalizeHorizon, detached = null, linkedMembers = null) {
   const linked = Array.isArray(linkedMembers)
@@ -424,5 +444,5 @@ module.exports = {
   allowedTargets, normalizeTargets, normalizeScopes, isolateOrdersScope, dedupeTargets, scopeByTarget, scopeLabel,
   LINKED_TARGETS, LINKED_ROLES, isLinkedTarget, withLinkedTargets, linkScopeTargets,
   REFRESH_TARGETS, withRefreshTargets, normalizeLinkedTargets, linkedTargetsOf,
-  LINKED_REFRESH_CHAIN, HORIZON_GROUPS, supersededLinkedHorizons,
+  LINKED_REFRESH_CHAIN, LINKED_STANDALONE_TARGETS, HORIZON_GROUPS, supersededLinkedHorizons, skipUnreadyChain,
 };

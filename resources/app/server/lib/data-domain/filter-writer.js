@@ -117,7 +117,7 @@ function planFilterChange(items, { sourceId, moduleId, definition, mode = 'share
     /* v2026-10-30 — İki sabit ufuk: "Diğer modüller"den tek bir modül kendi
        filtresine ayrılamaz. Sessizce ortak kayda çevirmek kullanıcının
        istemediği bir kararı vermek olurdu; açıkça reddedilir. */
-    return { ok: false, code: 'LINK_FIXED', message: 'Diğer modüller tek ortak ufuk kullanır; bir modül için ayrı filtre kaydedilemez.', items: list, warnings };
+    return { ok: false, code: 'LINK_FIXED', message: 'Diğer modüller tek ortak ufuk kullanır; bir modül için ayrı filtre kaydedilemez. / The other modules share one horizon; a separate filter cannot be saved for one module.', items: list, warnings };
   } else if (linkedGroup) {
     /* BAĞLI MODÜLLER tek ufuk taşır: grubun bütün üyeleri yeni ufku alır,
        gruba ait olmayan ortaklar (ör. ayrı tutulan CP) eski ufkunda kalır. */

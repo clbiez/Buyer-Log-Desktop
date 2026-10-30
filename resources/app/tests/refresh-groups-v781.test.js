@@ -88,7 +88,9 @@ test('v7.81 modül sırası sabittir — seçim sırası hatırlanmak zorunda de
 /* v2026-10-30: Diğer modüllerden biri konursa grup CP ile birlikte gelir
    (Diğer modüller yenilenince CP de yenilenir); CP tek başına kalabilir. */
 test('v2026-10-30 gruba Diğer modüllerden biri konursa bütün grup ve CP gelir; CP tek başına kalır', () => {
-  assert.deepEqual(groups.normalizeGroups([{ name: 'L', moduleIds: ['lfl'] }])[0].moduleIds, ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
+  assert.deepEqual(groups.normalizeGroups([{ name: 'B', moduleIds: ['backlog'] }])[0].moduleIds, ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
+  // v2026-10-30 (kullanıcı kararı): LFL tek başına yenilenebilir.
+  assert.deepEqual(groups.normalizeGroups([{ name: 'L', moduleIds: ['lfl'] }])[0].moduleIds, ['lfl']);
   assert.deepEqual(groups.normalizeGroups([{ name: 'C', moduleIds: ['cp'] }])[0].moduleIds, ['cp']);
 });
 
@@ -124,7 +126,7 @@ test('v7.81 kimlikler kalıcıdır — kaydetmek grubun kimliğini değiştirmez
 });
 
 test('v7.81 targetsFor grubun hedeflerini verir', () => {
-  const list = groups.normalizeGroups([{ id: 'rg_a', name: 'A', moduleIds: ['cp', 'lfl'] }]);
+  const list = groups.normalizeGroups([{ id: 'rg_a', name: 'A', moduleIds: ['cp', 'orders'] }]);
   assert.deepEqual(groups.targetsFor(list, 'rg_a'), ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'], 'CP + bağlı bir modül = CP + grup');
   assert.deepEqual(groups.targetsFor(list, 'yok'), []);
 });

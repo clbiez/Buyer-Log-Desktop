@@ -27,7 +27,15 @@ module.exports = function registerHorizonRoutes(app, deps) {
     selectConnection,
     userAccess,
     userPreferences,
+    publishSharedMasterChange,
+    sourceUserId,
   } = deps;
+  const fieldPairs = require('../lib/horizon-field-pairs');
+  /* Kişisel alan eşleme hafızası kullanıcının kendi tercih deposundadır. */
+  const personalFieldPairs = async userId => {
+    const current = await userPreferences.loadAsync(userId);
+    return fieldPairs.parsePersonal(current && current.entries && current.entries[fieldPairs.PERSONAL_KEY]);
+  };
 
 
 /* ===================================================================
@@ -99,9 +107,9 @@ app.get('/api/horizon/filter-mapping', userAccess.requireArea('source'), userAcc
    field-match yalnız ÖNERİR (yazmaz). Hedef alanlar CANLI şemadan okunur:
    kullanıcının gerçekten seçebileceği sütunlar üzerinden eşlenir; şema
    okunamazsa öneri yerine hata döner. Hatırlanan eşleme otomatik tahminden
-   önce gelir. Filtre düzenleme yetkisi olan herkes (Kaynak alanı) eşleme
-   kararı kaydedebilir: kayıt yalnız bir öneriyi değiştirir, hiçbir filtreyi
-   yazmaz ve her zaman ekranda yan yana görünür.
+   önce gelir. Kayıt yalnız bir öneriyi değiştirir, hiçbir filtreyi yazmaz ve
+   her zaman ekranda yan yana görünür. Ortak hafızayı yalnız yönetici yazar;
+   herkes kendi kişisel hafızasını tutar (bkz. PUT /api/horizon/field-pairs).
    =================================================================== */
 app.post('/api/horizon/field-match', userAccess.requireArea('source'), express.json({ limit: '64kb' }), async (req, res) => {
   try {
@@ -109,33 +117,61 @@ app.post('/api/horizon/field-match', userAccess.requireArea('source'), express.j
     const toSourceId = String(body.toSourceId || '').trim();
     const fields = Array.isArray(body.fields) ? body.fields.slice(0, 80) : [];
     const to = (loadModelConnections().items || []).find(entry => entry && String(entry.id || '') === toSourceId);
-    if (!to || !['asas', 'antrepo'].includes(to.role)) return res.status(404).json({ error: 'Hedef kaynak bulunamadı.', code: 'TARGET_SOURCE_NOT_FOUND' });
+    if (!to || !['asas', 'antrepo'].includes(to.role)) return res.status(404).json({ error: 'Hedef kaynak bulunamadı. / Target source not found.', code: 'TARGET_SOURCE_NOT_FOUND' });
     const fromRole = String(body.fromRole || (to.role === 'asas' ? 'antrepo' : 'asas')).trim().toLowerCase();
     const schema = await modelQuery.discoverSchema({ server: to.server, catalog: to.catalog });
     const targetFields = horizonFields.fromSchema(schema);
-    const matches = horizonFilterMapping.matchFields({
-      fields, targetFields, pairs: db.loadHorizonFieldPairs().items, fromRole, toRole: to.role,
-    });
+    // v2026-10-30: kullanıcının kişisel kararı ortak (yönetici) kararından önce gelir.
+    const pairs = fieldPairs.withPersonalFirst(await personalFieldPairs(sourceUserId(req)), db.loadHorizonFieldPairs().items);
+    const matches = horizonFilterMapping.matchFields({ fields, targetFields, pairs, fromRole, toRole: to.role });
     res.set('Cache-Control', 'no-store').json({ ok: true, toSourceId, toRole: to.role, fromRole, matches });
-  } catch (err) { apiError(res, err, 'Alan karşılığı bulunamadı.'); }
+  } catch (err) { apiError(res, err, 'Alan karşılığı bulunamadı. / Could not find the field counterpart.'); }
 });
-app.get('/api/horizon/field-pairs', userAccess.requireArea('source'), (_req, res) => {
-  try { res.set('Cache-Control', 'no-store').json({ ok: true, ...db.loadHorizonFieldPairs() }); }
-  catch (err) { apiError(res, err, 'Alan eşleme hafızası okunamadı.'); }
+app.get('/api/horizon/field-pairs', userAccess.requireArea('source'), async (req, res) => {
+  try {
+    const shared = db.loadHorizonFieldPairs();
+    res.set('Cache-Control', 'no-store').json({ ok: true, items: shared.items, revision: shared.revision, personal: await personalFieldPairs(sourceUserId(req)) });
+  } catch (err) { apiError(res, err, 'Alan eşleme hafızası okunamadı. / Could not read the field mapping memory.'); }
 });
+/* v2026-10-30 (kullanıcı kararı: "kişisel + yönetici").
+   scope 'shared' → ekip geneli hafıza; yalnız manageModelConnections. Sync'e
+   yayımlanır ve audit kaydı neyin neye eşlendiğini taşır.
+   scope 'personal' (varsayılan) → kullanıcının kendi tercih deposu; yalnız
+   kendi önerisini etkiler. */
 app.put('/api/horizon/field-pairs', userAccess.requireArea('source'), express.json({ limit: '64kb' }), async (req, res) => {
   try {
     const pairs = Array.isArray(req.body && req.body.pairs) ? req.body.pairs.slice(0, 80) : [];
-    if (!pairs.length) return res.status(400).json({ error: 'pairs zorunlu.', code: 'VALIDATION_ERROR' });
+    if (!pairs.length) return res.status(400).json({ error: 'Kaydedilecek eşleme yok. / No mapping to save.', code: 'VALIDATION_ERROR' });
+    const scope = req.body && req.body.scope === 'shared' ? 'shared' : 'personal';
     const by = String(req.currentUser && req.currentUser.id || '');
-    const saved = await db.mutateSettings(async lease => {
-      const result = db.upsertHorizonFieldPairs(pairs, { by }, lease);
-      if (result.changed) await lease.commit();
-      return result;
-    });
-    if (saved.changed) userAccess.appendAudit(req.currentUser, 'HORIZON_FIELD_PAIRS_UPDATE', 'horizonFieldPairs', { changed: saved.changed });
-    res.json({ ok: true, changed: saved.changed, revision: saved.revision });
-  } catch (err) { apiError(res, err, 'Alan eşlemesi kaydedilemedi.'); }
+    if (scope === 'shared') {
+      if (!userAccess.hasPermission(req.currentUser, 'manageModelConnections')) {
+        return res.status(403).json({ error: 'Ortak alan eşlemesini yalnız Kaynak Veri yönetim yetkisi olan kaydedebilir. / Only users who manage source data can save the shared field mapping.', code: 'PERMISSION_REQUIRED' });
+      }
+      const saved = await db.mutateSettings(async lease => {
+        const result = db.upsertHorizonFieldPairs(pairs, { by }, lease);
+        if (result.changed) await lease.commit();
+        return result;
+      });
+      if (saved.changed) {
+        userAccess.appendAudit(req.currentUser, 'HORIZON_FIELD_PAIRS_UPDATE', 'horizonFieldPairs', { changed: saved.changed, pairs: fieldPairs.describePairs(pairs) });
+        publishSharedMasterChange('horizonFieldPairs', req);
+      }
+      return res.json({ ok: true, scope, changed: saved.changed, revision: saved.revision });
+    }
+    const userId = sourceUserId(req);
+    const current = await userPreferences.loadAsync(userId);
+    const next = fieldPairs.upsertPairs(fieldPairs.parsePersonal(current && current.entries && current.entries[fieldPairs.PERSONAL_KEY]), pairs, { by });
+    if (next.changed) {
+      // Okuma ile yazma arasında başka bir sekme yazdıysa sessizce ezilmez (409).
+      const expected = (current && current.entries && current.entries[fieldPairs.PERSONAL_KEY]) || null;
+      const saved = await userPreferences.applyEntryChangesAsync(userId, { [fieldPairs.PERSONAL_KEY]: JSON.stringify(next.items) }, [], { expectedEntries: { [fieldPairs.PERSONAL_KEY]: expected } });
+      if (Array.isArray(saved && saved.rejected) && saved.rejected.length) {
+        return res.status(409).json({ error: 'Kişisel alan eşlemesi kaydedilemedi. / Could not save your personal field mapping.', code: 'PREFERENCE_REJECTED' });
+      }
+    }
+    res.json({ ok: true, scope, changed: next.changed });
+  } catch (err) { apiError(res, err, 'Alan eşlemesi kaydedilemedi. / Could not save the field mapping.'); }
 });
 app.get('/api/horizon/fields', async (req, res) => {
   try {

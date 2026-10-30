@@ -30,7 +30,7 @@ function planLinkChange(items, { sourceId } = {}) {
   if (!modelScopes.LINKED_ROLES.has(clean(item.role).toLowerCase())) {
     return { ok: false, code: 'LINK_NOT_SUPPORTED', message: `${item.name || item.id} kaynağında bağlı grup yoktur; modüller kendi filtreleriyle çalışır.`, items: list, warnings };
   }
-  return { ok: false, code: 'LINK_FIXED', message: 'Ufuklar sabittir: CP ayrı, diğer modüller tek ortak ufukta çalışır; modül gruba eklenip çıkarılamaz.', items: list, warnings };
+  return { ok: false, code: 'LINK_FIXED', message: 'Ufuklar sabittir: CP ayrı, diğer modüller tek ortak ufukta çalışır; modül gruba eklenip çıkarılamaz. / Horizons are fixed: CP is separate and the other modules share one horizon; a module cannot be added to or removed from the group.', items: list, warnings };
 }
 
 module.exports = { planLinkChange };

@@ -18,6 +18,13 @@
    alan önerdiğinde kullanıcı "eşleme yok" seçerse, aynı yanlış öneri bir
    daha gelmez.
 
+   v2026-10-30 (kullanıcı kararı: "kişisel + yönetici") — İKİ KATMAN.
+   Ortak hafızayı (ayarlar › horizonFieldPairs) yalnız Kaynak Veri yönetim
+   yetkisi olan yazar; herkes kendi KİŞİSEL hafızasını tutar (kullanıcı
+   tercihleri › PERSONAL_KEY). Öneride kişisel karar ortak karardan önce
+   gelir (withPersonalFirst). Yetkisiz bir kullanıcının elle seçimi böylece
+   yalnız kendi önerisini etkiler; yöneticinin ekibe verdiği öneriyi ezmez.
+
    SAF MODÜL: disk ve ağ yok.
    =================================================================== */
 
@@ -103,4 +110,24 @@ function lookupPair(list, fromRole, toRole, from) {
   return (Array.isArray(list) ? list : []).find(pair => pair && pairKey(pair.fromRole, pair.toRole, pair.from) === key) || null;
 }
 
-module.exports = { MAX_PAIRS, normalizePairs, upsertPairs, lookupPair, endKey, normalizeEnd };
+const PERSONAL_KEY = 'buyerlog.horizonFieldPairs.v1';
+
+/** Kişisel tercih kaydındaki listeyi okur; bozuk kayıt boş liste sayılır. */
+function parsePersonal(entry) {
+  if (!entry) return [];
+  try { return normalizePairs(JSON.parse(typeof entry === 'string' ? entry : entry.value)); }
+  catch (_) { return []; }
+}
+
+/** Öneri sırası: kişisel karar önce (lookupPair ilk eşleşmeyi alır). */
+function withPersonalFirst(personal, shared) {
+  return [...normalizePairs(personal), ...normalizePairs(shared)];
+}
+
+/** Audit için kısa özet: hangi alan hangi alana (ya da "yok"a) eşlendi. */
+function describePairs(pairs) {
+  return (Array.isArray(pairs) ? pairs : []).map(normalizePair).filter(Boolean).slice(0, 20)
+    .map(pair => `${pair.fromRole}:${pair.from.table}.${pair.from.name || pair.from.field} -> ${pair.to ? `${pair.toRole}:${pair.to.table}.${pair.to.name || pair.to.field}` : '-'}`);
+}
+
+module.exports = { MAX_PAIRS, PERSONAL_KEY, normalizePairs, upsertPairs, lookupPair, endKey, normalizeEnd, parsePersonal, withPersonalFirst, describePairs };

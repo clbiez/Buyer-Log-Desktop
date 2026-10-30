@@ -146,7 +146,7 @@ app.post('/api/data-management/filter-pair', userAccess.requireArea('source'), e
       definition: item && item.definition,
     }));
     if (!moduleId || entries.length !== 2 || entries.some(entry => !entry.sourceId || !entry.definition) || entries[0].sourceId === entries[1].sourceId) {
-      return res.status(400).json({ error: 'moduleId ve iki farklı kaynak için filtre zorunlu.', code: 'VALIDATION_ERROR' });
+      return res.status(400).json({ error: 'moduleId ve iki farklı kaynak için filtre zorunlu. / moduleId and filters for two different sources are required.', code: 'VALIDATION_ERROR' });
     }
     if (body.mode === 'personal') {
       const userId = sourceUserId(req), saved = [];
@@ -157,7 +157,7 @@ app.post('/api/data-management/filter-pair', userAccess.requireArea('source'), e
         } catch (error) {
           if (!saved.length) throw error;
           return res.status(Number(error && error.statusCode) || 409).json({
-            error: `${saved.map(item => item.sourceId).join(', ')} kaydedildi ama ${entry.sourceId} kaydedilemedi: ${String(error && (error.publicMessage || error.message) || error)}`,
+            error: `${saved.map(item => item.sourceId).join(', ')} kaydedildi ama ${entry.sourceId} kaydedilemedi / ${saved.map(item => item.sourceId).join(', ')} was saved but ${entry.sourceId} could not be saved: ${String(error && (error.publicMessage || error.message) || error)}`,
             code: 'PAIR_PARTIAL', saved: saved.map(item => item.sourceId),
           });
         }
@@ -180,7 +180,7 @@ app.post('/api/data-management/filter-pair', userAccess.requireArea('source'), e
     userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_FILTER_PAIR_UPDATE', entries.map(entry => entry.sourceId).join(','), { moduleId });
     if (saved.changed) publishSharedMasterChange('modelConnections', req);
     res.json({ ok: true, ...saved });
-  } catch (err) { apiError(res, err, 'ASAS ve IAS filtreleri kaydedilemedi.'); }
+  } catch (err) { apiError(res, err, 'ASAS ve IAS filtreleri kaydedilemedi. / Could not save the ASAS and IAS filters.'); }
 });
 
 /* EZEN KİŞİSEL KATMANI KALDIR (P3 — çıkmazı açar).

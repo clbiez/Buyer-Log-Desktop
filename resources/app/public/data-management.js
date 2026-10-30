@@ -428,7 +428,7 @@
     },
     linked: {
       title: { tr: 'Diğer modüller', en: 'Other modules' },
-      hint: { tr: 'Tek ortak ufuk. Yenilenirken CP de yenilenir.', en: 'One shared horizon. CP is refreshed along with it.' },
+      hint: { tr: 'Tek ortak ufuk. Yenilenirken CP de yenilenir; LFL tek başına da yenilenebilir.', en: 'One shared horizon. CP is refreshed along with it; LFL can also be refreshed on its own.' },
       refresh: { tr: 'Diğer modülleri + CP’yi yenile', en: 'Refresh other modules + CP' },
     },
   };
@@ -485,11 +485,44 @@
         <button type="button" class="tbtn" data-refresh-horizon="${esc(group.id)}" ${busy ? 'disabled' : ''}
           title="${esc(busy ? T('Bir yenileme zaten sürüyor', 'A refresh is already running') : textOf(text.refresh))}">
           <svg class="ic"><use href="#i-refresh"/></svg>${esc(textOf(text.refresh))}</button>
+        ${group.targets.includes('lfl') && group.id !== 'cp' ? `<button type="button" class="tbtn" data-refresh-horizon="lfl" ${busy ? 'disabled' : ''}
+          title="${esc(busy ? T('Bir yenileme zaten sürüyor', 'A refresh is already running') : T('Yalnız LFL\'i yenile — LFL IAS\'tan beslenmez; ortak ufukla çalışır', 'Refresh LFL only — LFL is not fed from IAS; it runs with the shared horizon'))}">
+          <svg class="ic"><use href="#i-refresh"/></svg>${esc(T('Yalnız LFL', 'LFL only'))}</button>` : ''}
       </div>
       <div class="dmHorizonFeeds">${feeds || `<span class="dmModuleEmpty">${esc(T('Hiçbir kaynağa bağlı değil', 'Not connected to any source'))}</span>`}
         ${needsFilter ? `<span class="dmWarn" title="${esc(T('Sınırsız sorgu çalıştırılamaz; bu ufuk yenilenmeden önce bir filtre gerekir.', 'An unbounded query cannot run; this horizon needs a filter before it can refresh.'))}">${esc(T('filtre gerekli', 'filter required'))}</span>` : ''}
       </div>
       <div class="dmFilterSlot" data-horizon-slot="${esc(group.id)}"></div>
+    </div>`;
+  }
+
+  /* v2026-10-30 — İKİ UFKA GEÇİŞ NOTU (kullanıcı kararı: "uygun olanı yap").
+     Geçişte kendi filtresiyle ayrı duran bir modül (ör. LFL, IAS Backlog)
+     Diğer modüllerin ortak ufkuna katıldı; o modülün VERİ KAPSAMI değişmiş
+     olabilir. Not hangi kaynakta hangi modülün etkilendiğini ve eski filtreyi
+     açıkça söyler; kullanıcı "Anladım" deyince bu tarayıcıda gizlenir. Eski
+     filtre silinmez (linkRestore). Listeye yeni bir kayıt eklenirse parmak
+     izi değişir ve not yeniden görünür. */
+  const MERGED_NOTE_KEY = 'bl.dataManagement.mergedFiltersSeen.v1';
+  const mergedFingerprint = merged => merged.map(entry => `${entry.sourceId}:${entry.moduleId}:${entry.filterText || entry.filterName || ''}`).sort().join('|');
+  function mergedNoteSeen(merged) {
+    try { return (window.BLStorage || window.localStorage).getItem(MERGED_NOTE_KEY) === mergedFingerprint(merged); }
+    catch (_) { return false; }
+  }
+  function dismissMergedNote() {
+    const merged = Array.isArray(model && model.mergedFilters) ? model.mergedFilters : [];
+    try { (window.BLStorage || window.localStorage).setItem(MERGED_NOTE_KEY, mergedFingerprint(merged)); } catch (_) {}
+    render();
+  }
+  function mergedNote(merged) {
+    if (!merged.length || mergedNoteSeen(merged)) return '';
+    const items = merged.map(entry => `<li>${esc(entry.sourceName)} · ${esc(moduleLabel(entry.moduleId))} — ${esc(T('eski filtre', 'previous filter'))}: ${esc(entry.filterName || entry.filterText || '—')}</li>`).join('');
+    return `<div class="dmGroupNote" data-merged-note>
+      <p>${esc(T(
+        'Bu modüller eskiden kendi filtreleriyle çalışıyordu ve artık Diğer modüllerin ortak ufkunu kullanıyor; bir sonraki yenilemede verileri bu ortak ufka göre gelir. Eski filtreler silinmedi, saklanıyor.',
+        'These modules used to run with their own filters and now use the shared Other modules horizon; from the next refresh their data follows this shared horizon. The previous filters were not deleted; they are kept.'))}</p>
+      <ul>${items}</ul>
+      <button type="button" class="tbtn" data-dismiss-merged-note>${esc(T('Anladım', 'Got it'))}</button>
     </div>`;
   }
 
@@ -501,16 +534,15 @@
         <span class="dmPanelTitle">${esc(T('Horizon ve yenileme', 'Horizon and refresh'))}</span>
       </div>
       ${horizonGroupsOf().map(horizonRow).join('')}
-      ${merged.length ? `<p class="dmGroupNote" title="${esc(merged.map(entry => `${entry.sourceName} · ${moduleLabel(entry.moduleId)}: ${entry.filterText || entry.filterName || '—'}`).join('\n'))}">${esc(T(
-        `Eski ayrı filtreler saklandı (${merged.map(entry => moduleLabel(entry.moduleId)).join(', ')}); bu modüller artık Diğer modüllerin ortak ufkunu kullanır.`,
-        `Previous separate filters were kept (${merged.map(entry => moduleLabel(entry.moduleId)).join(', ')}); these modules now use the shared Other modules horizon.`))}</p>` : ''}
+      ${mergedNote(merged)}
       ${refreshSettings()}
       <p class="dmGroupNote">${esc(T('INTAKE bu ufuklara dahil değildir: kendi ekranından ve kendi bağlantısıyla yenilenir.', 'INTAKE is not part of these horizons: it refreshes from its own screen with its own connection.'))}</p>
     </div>`;
   }
 
   function refreshHorizon(groupId) {
-    const group = horizonGroupsOf().find(entry => entry.id === groupId);
+    // "Yalnız LFL": sunucu ve istemci LFL'i tek başına yeniler (LINKED_STANDALONE_TARGETS).
+    const group = groupId === 'lfl' ? { id: 'lfl', targets: ['lfl'] } : horizonGroupsOf().find(entry => entry.id === groupId);
     if (!group) return;
     /* İKİNCİ BİR YENİLEME MOTORU YOK: mevcut akış (iş kuyruğu, aşama paneli,
        iptal, filtre-gerekli uyarısı) kullanılır. "Diğer modüller" isteğini
@@ -1650,6 +1682,8 @@
       return;
     }
 
+    if (event.target.closest('[data-dismiss-merged-note]')) { dismissMergedNote(); return; }
+
     const refreshBtn = event.target.closest('[data-refresh-horizon]');
     if (refreshBtn) { refreshHorizon(refreshBtn.dataset.refreshHorizon); return; }
 
@@ -1942,6 +1976,8 @@
         sourceId: paired.pair.sourceId, sourceName: paired.pair.sourceName, sourceRole: paired.pair.sourceRole,
         revision: ((model.sources || []).find(entry => entry.id === paired.pair.sourceId) || {}).revision || '',
         definition: paired.pair.effectiveDefinition || paired.pair.definition || {},
+        // IAS tarafı kişisel katmandan başlıyorsa düzenleyici bunu açıkça söyler.
+        layerNote: paired.pair.layer && paired.pair.layer !== 'source' ? ((LAYER[paired.pair.layer] || {})[en() ? 'en' : 'tr'] || '') : '',
       } : null,
       mapFrom: (() => {
         // Eşleme ucu yönetim yetkisi ister; yetkisiz kullanıcıya düğme gösterilmez.

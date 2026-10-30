@@ -80,8 +80,14 @@
        manualPair   kullanıcı alanı elle seçti; kayıtta hatırlanır
      Eşte olup solda karşılığı olmayan koşullar SİLİNMEZ (extras), görünür
      kalır ve kayıtta korunur. Kayıt iki kaynağı TEK işlemde yazar. */
-  let pair = null;             // {sourceId, sourceName, sourceRole, revision, table, links:Map, extras:[[]], message}
-  let matchSeq = 0;
+  let pair = null;             // {sourceId, sourceName, sourceRole, revision, table, base, initial, links:Map, extras:[[]], message, layerNote}
+  /* v2026-10-30 — Eşleme isteklerinin sırası KOŞUL BAŞINADIR. Tek ortak sayaç,
+     aynı anda birkaç koşul eşlenirken (şablon yükleme, art arda alan seçimi)
+     yalnız sonuncusunun cevabını işliyor; ötekiler sonsuza dek "aranıyor"
+     kalıyor ve kayıt IAS'a eksik filtre yazıyordu. initSeq açılış/şablon
+     eşlemesinin bayat cevabını eler. */
+  const matchSeqs = new Map();
+  let initSeq = 0;
   function operatorArity(op) {
     const found = OPERATORS.find(entry => entry.id === op);
     return found ? found.arity : 'list';
@@ -148,7 +154,10 @@
     if (!filterName) filterName = item.name;
     templateMessage = T(`"${item.name}" yüklendi — kaydetmek için Kaydet'e basın.`, `"${item.name}" loaded — press Save to apply.`);
     render();
-    if (pair) groups.forEach(group => group.conditions.forEach(condition => { if (condition.field) void rematch(condition); }));
+    /* Yan yana kipte eş, açılıştaki IAS filtresine göre TEK toplu istekle
+       yeniden kurulur: mevcut IAS koşulları yine "mevcut" olarak eşleşir,
+       eşleşmeyenler "yalnız IAS" olarak görünür kalır. */
+    if (pair) void reinitPair();
   }
 
   async function saveAsTemplate() {
@@ -375,15 +384,23 @@
 
   /* Açılışta: sol koşulların karşılığı bulunur; eşin MEVCUT filtresinde aynı
      alanda bir koşul varsa onun değerleri korunur (kept). Kalanlar extras. */
+  /* Eşleme alınamazsa HATA FIRLATILIR: çağıran yan yana kipi kapatır ve IAS
+     filtresi hiç yazılmaz. Eskiden hata yutuluyor, IAS koşulları "yalnız IAS"
+     sayılıp yeniden yazılıyor ve grup dışı alanlar (sezon/tarih) düşüyordu. */
   async function initPair(definition) {
     const existing = (Array.isArray(definition.groups) ? definition.groups : [])
       .map(group => (group && Array.isArray(group.conditions) ? group.conditions : []).map(condition => ({ ...condition, values: (condition.values || []).slice() })));
     const used = new Set();
     const all = [];
+    groups.forEach(group => group.conditions.forEach(condition => { if (!condition.id) condition.id = uid(); }));
     groups.forEach((group, groupIndex) => group.conditions.forEach(condition => { if (condition.field) all.push({ groupIndex, condition }); }));
-    let matches = [];
-    try { matches = await fetchMatches(all.map(entry => entry.condition)); }
-    catch (error) { pair.message = String(error && error.message || error); }
+    const seq = ++initSeq;
+    // Eşleme sürerken her satır "aranıyor" görünür ve kayıt engellenir.
+    pair.links = new Map(all.map(entry => [entry.condition.id, { condition: null, origin: 'unmatched', matching: true, valuesEdited: false, manualPair: false, stale: false }]));
+    pair.extras = [];
+    const matches = await fetchMatches(all.map(entry => entry.condition));
+    if (!pair || seq !== initSeq) return;
+    pair.links = new Map();
     all.forEach((entry, index) => {
       const match = matches[index];
       const target = match && match.target;
@@ -403,18 +420,36 @@
     pair.extras = existing.map((pool, groupIndex) => pool.filter((_, at) => !used.has(`${groupIndex}:${at}`)));
   }
 
+  async function reinitPair() {
+    if (!pair) return;
+    render();
+    try { await initPair(pair.initial); }
+    catch (error) {
+      // Eşleme alınamadı: yan yana kip kapanır, IAS filtresi değişmez.
+      const name = pair ? pair.sourceName : 'IAS';
+      pair = null;
+      message = T(`${name} karşılığı alınamadı; yalnız bu filtre kaydedilir, ${name} filtresi değişmez. (${error && error.message || error})`,
+        `Could not get the ${name} counterpart; only this filter is saved, the ${name} filter is not changed. (${error && error.message || error})`);
+      messageTone = 'warn';
+    }
+    render();
+  }
+
   async function rematch(condition) {
     if (!pair || !condition || !condition.field) return;
-    const seq = ++matchSeq;
+    const seq = (matchSeqs.get(condition.id) || 0) + 1;
+    matchSeqs.set(condition.id, seq);
     pair.links.set(condition.id, { condition: null, origin: 'unmatched', matching: true, valuesEdited: false, manualPair: false, stale: false });
     render();
     try {
       const [match] = await fetchMatches([condition]);
-      if (!pair || seq !== matchSeq) return;
+      if (!pair || matchSeqs.get(condition.id) !== seq) return;
       pair.links.set(condition.id, linkFromMatch(condition, match));
     } catch (error) {
-      if (!pair) return;
-      pair.links.set(condition.id, { condition: null, origin: 'unmatched', valuesEdited: false, manualPair: false, stale: false });
+      if (!pair || matchSeqs.get(condition.id) !== seq) return;
+      /* Karşılık alınamadı: satır "IAS'ta uygulanmaz" diye sessizce düşmez;
+         kullanıcı elle seçene ya da "uygulanmaz" diyene kadar kayıt engellenir. */
+      pair.links.set(condition.id, { condition: null, origin: 'unmatched', failed: true, valuesEdited: false, manualPair: false, stale: false });
       pair.message = String(error && error.message || error);
     }
     render();
@@ -435,6 +470,12 @@
     if (!condition.field) return `<span class="dmfPairEmpty">${esc(T('önce soldaki alanı seçin', 'pick the field on the left first'))}</span>`;
     const link = pair.links.get(condition.id);
     if (!link || link.matching) return `<span class="dmfPairEmpty">${esc(T('karşılık aranıyor…', 'looking for the counterpart…'))}</span>`;
+    if (link.failed) {
+      return `<button type="button" class="dmfField" data-pick-pair-field="${groupIndex}:${index}"
+        title="${esc(T('Karşılık alınamadı — IAS sütununu elle seçin ya da "IAS\'ta uygulanmaz" deyin', 'The counterpart could not be retrieved — pick the IAS column manually or choose "not applied in IAS"'))}">
+        <span><em>${esc(T('karşılık alınamadı — seçin', 'counterpart not retrieved — choose'))}</em></span></button>
+        <span class="dmfMapTag is-warn">⚠</span>`;
+    }
     const ref = `${groupIndex}:${index}`;
     const tag = ORIGIN[link.origin] || { tr: link.origin, en: link.origin };
     const target = link.condition;
@@ -495,7 +536,23 @@
       const conditions = [...mapped, ...(pair.extras[groupIndex] || [])];
       if (conditions.length) out.push({ id: `g_${groupIndex}`, conditions });
     }
-    return { table: pair.table || '', groups: out };
+    /* Eşin grup dışı alanları (sezon, tarih, ek ifade) düzenleyicide görünmez;
+       DEĞİŞMEDEN korunur. Eskiden yalnız {table, groups} gidiyor ve bunlar
+       her yan yana kayıtta sessizce düşüyordu. */
+    return { ...(pair.base || {}), table: pair.table || '', groups: out };
+  }
+
+  /* Sol taraftaki grup sayısını aşan "yalnız IAS" VEYA grupları da görünür
+     ve silinebilir olmalı; görünmeyen bir koşul kaydedilmemeli. */
+  function extraOnlyGroups() {
+    if (!pair) return '';
+    let html = '';
+    for (let groupIndex = groups.length; groupIndex < pair.extras.length; groupIndex += 1) {
+      if (!(pair.extras[groupIndex] || []).length) continue;
+      html += `<div class="dmfOr">${esc(T('VEYA', 'OR'))}</div>
+        <div class="dmfGroup"><p class="dmfEmpty">${esc(T('Yalnız IAS\'ta olan VEYA grubu (korunur)', 'OR group only in IAS (kept)'))}</p>${extraRows(groupIndex)}</div>`;
+    }
+    return html;
   }
 
   function conditionRow(groupIndex, index, condition) {
@@ -594,6 +651,9 @@
         <span>${esc(context.sourceName)}</span>
         <span>${esc(pair.sourceName)} · ${esc(T('otomatik eşlenir, elle değiştirilebilir', 'matched automatically, can be changed manually'))}</span>
       </div>
+      ${pair.layerNote ? `<p class="dmfMapSkip">${esc(T(
+        `${pair.sourceName} tarafı sizin "${pair.layerNote}" filtrenizden başlar. "Herkes için kaydet" bunu herkesin ortak ${pair.sourceName} filtresi yapar.`,
+        `The ${pair.sourceName} side starts from your "${pair.layerNote}" filter. "Save for everyone" makes it everyone's shared ${pair.sourceName} filter.`))}</p>` : ''}
       ${pair.message ? `<p class="dmfMapSkip">${esc(pair.message)}</p>` : ''}` : ''}
 
       ${shared ? `<p class="dmfShared">${esc(T(
@@ -612,6 +672,7 @@
                 title="${esc(T('Grubu sil', 'Delete group'))}">🗑 ${esc(T('grup', 'group'))}</button>` : ''}
             </div>
           </div>`).join('')}
+        ${extraOnlyGroups()}
       </div>
 
       <div class="dmfFoot">
@@ -686,7 +747,10 @@
     return groups[groupIndex] && groups[groupIndex].conditions[index];
   }
 
-  async function rememberManualPairs() {
+  /* Elle seçilen eşleme: "Herkes için" kaydında (yalnız yönetici) ekibin ortak
+     hafızasına, kişisel kayıtta kullanıcının kendi hafızasına yazılır
+     (kullanıcı kararı: kişisel + yönetici). */
+  async function rememberManualPairs(mode) {
     const pairs = [];
     groups.forEach(group => group.conditions.forEach(condition => {
       const link = pair.links.get(condition.id);
@@ -700,7 +764,8 @@
     if (!pairs.length) return '';
     try {
       const response = await fetch('/api/horizon/field-pairs', {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pairs }),
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pairs, scope: mode === 'shared' && context.canShare === true ? 'shared' : 'personal' }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) throw new Error(payload.error || '');
@@ -711,6 +776,16 @@
   }
 
   async function savePair(mode) {
+    // Eşleşmesi bitmemiş ya da alınamamış satır varken IAS'a eksik filtre yazılmaz.
+    const links = groups.flatMap(group => group.conditions.filter(condition => condition.field).map(condition => pair.links.get(condition.id)));
+    if (links.some(link => !link || link.matching)) {
+      message = T('IAS karşılıkları hâlâ aranıyor; birkaç saniye sonra tekrar kaydedin.', 'IAS counterparts are still being looked up; save again in a few seconds.');
+      messageTone = 'bad'; render(); return;
+    }
+    if (links.some(link => link.failed)) {
+      message = T('Bazı satırların IAS karşılığı alınamadı: IAS sütununu elle seçin ya da "IAS\'ta uygulanmaz" deyin.', 'Some rows have no IAS counterpart yet: pick the IAS column manually or choose "not applied in IAS".');
+      messageTone = 'bad'; render(); return;
+    }
     const definition = pairDefinition();
     const missing = definition.groups.flatMap(group => group.conditions)
       .filter(condition => ['list', 'single'].includes(operatorArity(condition.op)) && !(condition.values || []).length)
@@ -741,7 +816,7 @@
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) throw new Error(payload.error || T('ASAS ve IAS filtreleri kaydedilemedi.', 'Could not save the ASAS and IAS filters.'));
-      const memoryWarning = await rememberManualPairs();
+      const memoryWarning = await rememberManualPairs(mode);
       close();
       if (typeof onSaved === 'function') onSaved([...(payload.warnings || []), ...(memoryWarning ? [memoryWarning] : [])], payload);
     } catch (error) {
@@ -883,10 +958,30 @@
     if (saveBtn) { void save(saveBtn.dataset.save); return; }
 
     const addGroup = event.target.closest('[data-add-group]');
-    if (addGroup) { groups.push({ id: uid(), conditions: [] }); render(); return; }
+    if (addGroup) {
+      /* Yan yana kipte sağda soldan fazla "yalnız IAS" VEYA grubu varsa yeni sol
+         grup onların ÖNÜNE boş bir IAS yuvasıyla girer; yoksa yeni koşullar o
+         IAS grubuyla VE'lenirdi. */
+      if (pair && pair.extras.length > groups.length) pair.extras.splice(groups.length, 0, []);
+      groups.push({ id: uid(), conditions: [] });
+      render();
+      return;
+    }
 
     const dropGroup = event.target.closest('[data-drop-group]');
-    if (dropGroup) { groups.splice(Number(dropGroup.dataset.dropGroup), 1); render(); return; }
+    if (dropGroup) {
+      const at = Number(dropGroup.dataset.dropGroup);
+      const [removed] = groups.splice(at, 1);
+      /* Yan yana kipte grubun "yalnız IAS" koşulları da grupla birlikte silinir.
+         Silinmezse sonraki gruba kayıyor, sondaki de görünmeyen tek başına bir
+         VEYA grubu olarak IAS filtresini genişletiyordu. */
+      if (pair) {
+        pair.extras.splice(at, 1);
+        (removed && removed.conditions || []).forEach(condition => { pair.links.delete(condition.id); matchSeqs.delete(condition.id); });
+      }
+      render();
+      return;
+    }
 
     const addCondition = event.target.closest('[data-add-condition]');
     if (addCondition) {
@@ -1041,20 +1136,25 @@
     if (options.pair && options.pair.sourceId) {
       groups.forEach(group => group.conditions.forEach(condition => { if (!condition.id) condition.id = uid(); }));
       const pairDef = options.pair.definition && typeof options.pair.definition === 'object' ? options.pair.definition : {};
+      const { groups: _pairGroups, ...pairBase } = JSON.parse(JSON.stringify(pairDef));
       pair = {
         sourceId: options.pair.sourceId, sourceName: options.pair.sourceName || '', sourceRole: options.pair.sourceRole || 'antrepo',
         revision: options.pair.revision || '', table: String(pairDef.table || ''), links: new Map(), extras: [], message: '',
+        base: pairBase, initial: JSON.parse(JSON.stringify(pairDef)), layerNote: String(options.pair.layerNote || ''),
       };
       try {
         await loadFields(pair.sourceId);
         await initPair(pairDef);
       } catch (error) {
         pair = null;
-        message = T(`IAS yan yana açılamadı: ${error && error.message || error}`, `IAS side-by-side could not open: ${error && error.message || error}`);
+        message = T(`IAS yan yana açılamadı; yalnız bu filtre kaydedilir, IAS filtresi değişmez: ${error && error.message || error}`,
+          `IAS side-by-side could not open; only this filter is saved, the IAS filter is not changed: ${error && error.message || error}`);
         messageTone = 'warn';
       }
     }
     render();
+    // Motion+ (DESIGN_SYSTEM §6): düzenleyici ortak kart hareketiyle açılır.
+    if (host) window.BLMotionPlus?.play?.('card', host);
   }
 
   window.BLDataFilterEditor = { open, close };

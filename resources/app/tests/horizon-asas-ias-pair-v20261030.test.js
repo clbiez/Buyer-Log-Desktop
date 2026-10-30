@@ -144,11 +144,15 @@ test('ortak kayıt: kaynaklardan biri araya giren değişiklikle eskidiyse HİÇ
   await assert.rejects(service.updateFilterPair([{ sourceId: 'mc_asas', expected: '', args: {} }]), error => error.code === 'VALIDATION_ERROR');
 });
 
-test('uçlar: eşleme önerisi yazmaz; hafıza ve çift kayıt Kaynak yetkisiyle korunur', () => {
+/* Uçların davranışı gerçek route işleyicileriyle two-horizon-decisions testinde
+   sınanır; burada yalnız yetki sözleşmesi çivilenir. */
+test('uçlar: eşleme önerisi yazmaz; ortak hafıza yönetici, kişisel hafıza kullanıcı yetkisiyle', () => {
   assert.match(HORIZON_ROUTES, /app\.post\('\/api\/horizon\/field-match', userAccess\.requireArea\('source'\)/);
   assert.match(HORIZON_ROUTES, /app\.put\('\/api\/horizon\/field-pairs', userAccess\.requireArea\('source'\)/);
-  assert.match(HORIZON_ROUTES, /pairs: db\.loadHorizonFieldPairs\(\)\.items/);
-  assert.match(HORIZON_ROUTES, /appendAudit\(req\.currentUser, 'HORIZON_FIELD_PAIRS_UPDATE'/);
+  const put = HORIZON_ROUTES.slice(HORIZON_ROUTES.indexOf("app.put('/api/horizon/field-pairs'"));
+  assert.match(put, /if \(scope === 'shared'\) \{\s*if \(!userAccess\.hasPermission\(req\.currentUser, 'manageModelConnections'\)\)/);
+  assert.match(put, /appendAudit\(req\.currentUser, 'HORIZON_FIELD_PAIRS_UPDATE'/);
+  assert.match(put, /publishSharedMasterChange\('horizonFieldPairs', req\)/);
   const route = TEMPLATE_ROUTES.slice(TEMPLATE_ROUTES.indexOf("app.post('/api/data-management/filter-pair'"), TEMPLATE_ROUTES.indexOf('/* EZEN KİŞİSEL KATMANI KALDIR'));
   assert.match(route, /userAccess\.requireArea\('source'\)/);
   assert.match(route, /hasPermission\(req\.currentUser, 'manageModelConnections'\)/, 'ortak kayıt yönetim yetkisi ister');
