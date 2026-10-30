@@ -372,11 +372,8 @@
   function render() {
     if (!host) return;
     const shared = (context.sharedWith || []).length;
-    /* v20260929 — Bağlı gruptaki bir modül artık gruptan AYRILABİLİR: "ayır"
-       onu kendi filtresine çıkarır (sunucu üyelikten de düşürür). Yenileme
-       her durumda ortaktır. */
-    const canSplit = context.canSplit !== false;
-    const linked = context.linked === true;
+    /* v2026-10-30 — İki sabit ufuk: "yalnız bu modül için ayır" yoktur. Ortak
+       kapsam yalnız Diğer modüllerin kendi içindedir ve birlikte güncellenir. */
     // Ortak varsayılanı yazmak herkesi etkiler; yalnız yönetim yetkisiyle görünür.
     const canShare = context.canShare === true;
 
@@ -419,21 +416,10 @@
         <span class="dmfSpacer"></span>
         ${message ? `<span class="dmfMessage is-${esc(messageTone)}">${esc(message)}</span>` : ''}
         <button type="button" class="tbtn" data-cancel ${busy ? 'disabled' : ''}>${esc(T('İptal', 'Cancel'))}</button>
-        ${canShare ? (shared && canSplit
-          ? `<button type="button" class="tbtn" data-save="split" ${busy ? 'disabled' : ''}
-               title="${esc(linked
-                 ? T('HERKES İÇİN: bu modül bağlı gruptan ayrılır ve bu filtreyle çalışır; diğer bağlı modüller ortak filtrede kalır. Yenileme yine ortaktır.', 'FOR EVERYONE: this module leaves the linked group and runs with this filter; the other linked modules keep the shared filter. Refresh stays shared.')
-                 : T('HERKES İÇİN: diğer modüller eski ortak filtreyi kullanmaya devam eder', 'FOR EVERYONE: other modules keep the previous shared filter'))}">
-               ${esc(linked
-                 ? T(`Herkes için — Yalnız ${context.moduleLabel} için ayır (gruptan çıkar)`, `For everyone — split ${context.moduleLabel} only (unlink)`)
-                 : T(`Herkes için — Yalnız ${context.moduleLabel} için ayır`, `For everyone — split for ${context.moduleLabel} only`))}</button>
-             <button type="button" class="tbtn" data-save="shared" ${busy ? 'disabled' : ''}
-               title="${esc(T(`HERKES İÇİN ortak filtre: ${shared + 1} modülün hepsini etkiler`, `SHARED filter for EVERYONE: affects all ${shared + 1} modules`))}">
-               ${esc(linked ? T('Herkes için: bağlı modüllerin hepsini güncelle', 'For everyone: update all linked modules') : T('Herkes için: hepsini güncelle', 'For everyone: update all'))}</button>`
-          : shared
+        ${canShare ? (shared
           ? `<button type="button" class="tbtn" data-save="shared" ${busy ? 'disabled' : ''}
-               title="${esc(T('HERKES İÇİN: bağlı modüller tek ufuk paylaşır; hepsi birlikte güncellenir', 'FOR EVERYONE: linked modules share one horizon; all are updated together'))}">
-               ${esc(T('Herkes için: bağlı modüllerin hepsini güncelle', 'For everyone: update all linked modules'))}</button>`
+               title="${esc(T('HERKES İÇİN: diğer modüller tek ortak ufuk paylaşır; hepsi birlikte güncellenir', 'FOR EVERYONE: the other modules share one horizon; all are updated together'))}">
+               ${esc(T('Herkes için: diğer modüllerin hepsini güncelle', 'For everyone: update all other modules'))}</button>`
           : `<button type="button" class="tbtn" data-save="shared" ${busy ? 'disabled' : ''}
                title="${esc(T('Tüm kullanıcıların ortak varsayılan filtresini değiştirir', 'Changes the shared default filter for all users'))}">${esc(T('Herkes için kaydet', 'Save for everyone'))}</button>`) : ''}
         <button type="button" class="navActionBtn" data-save="personal" ${busy ? 'disabled' : ''}

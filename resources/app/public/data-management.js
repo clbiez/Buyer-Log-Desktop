@@ -43,10 +43,6 @@
   let labBusy = '';
   let labMessage = '';
   let automationPreview = null;
-  let groups = { items: [], revision: 0, refreshableModules: [] };
-  let creatingGroup = false;
-  let groupDraft = { name: '', moduleIds: [] };
-  let groupError = '';
   let loading = false;
   let loadError = '';
   let merchCalendar = { configured:false, calendar:null, summary:null };
@@ -142,15 +138,12 @@
     loadError = '';
     render();
     try {
-      const [payload, groupPayload, labPayload, merchPayload] = await Promise.all([
+      const [payload, labPayload, merchPayload] = await Promise.all([
         readLoadPayload(`/api/data-management/overview?language=${en() ? 'en' : 'tr'}`),
-        readLoadPayload('/api/data-management/refresh-groups', true),
         readLoadPayload(`/api/data-management/integration-lab?language=${en() ? 'en' : 'tr'}`, true),
         readLoadPayload('/api/merch-calendar', true),
       ]);
       model = payload;
-      // Gruplar okunamazsa ekran yine açılır; yalnız grup bölümü boş kalır.
-      if (groupPayload) groups = groupPayload;
       if (labPayload) {
         lab = labPayload;
         if (!selectedLabSourceId) selectedLabSourceId = lab.selectedInspector && lab.selectedInspector.sourceId || '';
@@ -414,58 +407,119 @@
 
   /* ---------------------------------------------------------------- */
 
-  /* v20260929 — BAĞLI GRUP (tek ortak filtre).
-     Kullanıcı kararı: "Modüller birbirine bağlı olduğu için hepsini tek
-     filtreleme altına topla. Kullanıcı herhangi bir sayfayı bu linklemeden
-     ayırmak isterse bunu yapabilsin veya geri ekleyebilsin."
-     Grubun üyeleri tek filtreyi (tek sorgu) paylaşır; ayrılan modül kendi
-     filtresiyle ayrı sorgu olur. Yenileme HER DURUMDA ortaktır. Üyelik ve
-     filtre sunucudaki okuma modelinden gelir (linkedModules / linkableModules). */
-  function linkGroupPanels() {
-    return (model.sources || [])
-      .filter(source => (source.linkableModules || []).length)
-      .map(linkGroupPanel).join('');
+  /* İKİ UFUK — HORIZON VE YENİLEME (v2026-10-30, kullanıcı kararı)
+
+     "Veri kaynağı refresh horizonlarını sadece 2 basit horizon seçimine
+     daraltacağım (INTAKE hariç). CP ayrı, diğer modüller ayrı çalışacak.
+     Diğer modüller yenilendiğinde CP de yenilensin. Data Management'ta da
+     bunları birleştirelim."
+
+     Bu panel eski üç yapının yerini alır: bağlı grup paneli (modül ekle /
+     ayır), modül başına ayrı filtre ("yalnız bunu ayır") ve adlandırılmış
+     yenileme grupları. Her ufuk bir satırdır: hangi kaynağın hangi filtreyle
+     beslediği, kendi Yenile düğmesi ve filtre düzenleyicisinin açılacağı yer.
+     Grup tanımı sunucudan gelir (read-model › horizonGroups). INTAKE kendi
+     ekranından ve kendi bağlantısıyla yenilenir. */
+  const HORIZON_TEXT = {
+    cp: {
+      title: { tr: 'CP', en: 'CP' },
+      hint: { tr: 'Yalnız CP Tracker’ı besler; tek başına yenilenebilir.', en: 'Feeds CP Tracker only; it can be refreshed on its own.' },
+      refresh: { tr: 'CP’yi yenile', en: 'Refresh CP' },
+    },
+    linked: {
+      title: { tr: 'Diğer modüller', en: 'Other modules' },
+      hint: { tr: 'Tek ortak ufuk. Yenilenirken CP de yenilenir.', en: 'One shared horizon. CP is refreshed along with it.' },
+      refresh: { tr: 'Diğer modülleri + CP’yi yenile', en: 'Refresh other modules + CP' },
+    },
+  };
+  const DEFAULT_HORIZON_GROUPS = [
+    { id: 'cp', targets: ['cp'] },
+    { id: 'linked', targets: ['orders', 'backlog', 'lfl', 'priceanalysis'] },
+  ];
+  const horizonGroupsOf = () => (Array.isArray(model && model.horizonGroups) && model.horizonGroups.length
+    ? model.horizonGroups : DEFAULT_HORIZON_GROUPS);
+  const textOf = entry => entry[en() ? 'en' : 'tr'];
+
+  /* Bir ufkun kaynak beslemeleri: kaynak başına bir çip. Grubun üyeleri aynı
+     kapsamı paylaştığı için, kaynağı besleyen ilk üyenin beslemesi grubun
+     filtresidir; düzenleyici o üye üzerinden açılır (sunucu bütün üyelere yazar). */
+  function horizonFeeds(group) {
+    const seen = new Set();
+    const out = [];
+    for (const moduleId of group.targets) {
+      const module = (model.modules || []).find(entry => entry.id === moduleId);
+      for (const feed of module ? module.feeds : []) {
+        if (seen.has(feed.sourceId)) continue;
+        seen.add(feed.sourceId);
+        out.push({ moduleId, feed });
+      }
+    }
+    return out;
   }
 
-  function linkGroupPanel(source) {
-    const labelOf = id => ((model.modules || []).find(entry => entry.id === id) || {}).label || id;
-    const feedOf = id => {
-      const module = (model.modules || []).find(entry => entry.id === id);
-      return module ? module.feeds.find(feed => feed.sourceId === source.id) : null;
-    };
-    const members = (source.linkedModules || []).filter(id => feedOf(id));
-    const outside = (source.linkableModules || []).filter(id => !members.includes(id) && feedOf(id));
-    const lead = members[0] ? feedOf(members[0]) : null;
-    const busyKey = id => busyCell === `link:${source.id}:${id}`;
-    const filterName = lead ? (lead.filterName || (lead.filterBounded ? lead.filterText : T('Filtre yok', 'No filter'))) : '';
-    const memberChips = members.map(id => `<span class="dmLinkChip">${esc(labelOf(id))}${model.canManage && members.length > 1
-      ? `<button type="button" class="dmDisconnect" data-link="${esc(source.id)}:${esc(id)}" data-next="off" ${busyKey(id) ? 'disabled' : ''}
-          title="${esc(T(`${labelOf(id)} bağlı gruptan ayır — kendi filtresiyle çalışır, yenileme yine ortaktır`, `Unlink ${labelOf(id)} — it runs with its own filter, refresh stays shared`))}"
-          aria-label="${esc(T('Gruptan ayır', 'Unlink'))}">×</button>` : ''}</span>`).join('');
-    const outsideChips = outside.map(id => {
-      const own = feedOf(id);
-      return model.canManage
-        ? `<button type="button" class="dmConnect" data-link="${esc(source.id)}:${esc(id)}" data-next="on" ${busyKey(id) ? 'disabled' : ''}
-            title="${esc(T(`${labelOf(id)} gruba ekle — ortak filtreyi kullanır. Kendi filtresi${own && own.filterName ? ` ("${own.filterName}")` : ''} saklanır; gruptan ayrılırsa geri gelir.`, `Link ${labelOf(id)} — it uses the shared filter. Its own filter${own && own.filterName ? ` ("${own.filterName}")` : ''} is kept and returns if it is unlinked.`))}">+ ${esc(labelOf(id))}</button>`
-        : `<span class="dmLinkOutside">${esc(labelOf(id))}</span>`;
+  function horizonRow(group) {
+    const text = HORIZON_TEXT[group.id] || HORIZON_TEXT.linked;
+    const busy = Boolean(window.BL_REFRESH_BUSY);
+    const members = group.targets.map(moduleLabel).join(' · ');
+    const feeds = horizonFeeds(group).map(({ moduleId, feed }) => {
+      const name = feed.filterName || (feed.filterBounded ? feed.filterText : T('Filtre yok', 'No filter'));
+      const layer = LAYER[feed.layer];
+      return `<span class="dmFeed${feed.enabled ? '' : ' isOff'}">
+        <span class="dmFeedSource">${esc(feed.sourceName)}</span>
+        <button type="button" class="dmFeedFilter${feed.filterBounded ? '' : ' isUnbounded'}"
+          data-open-filter="${esc(moduleId)}:${esc(feed.sourceId)}" data-horizon-group="${esc(group.id)}"
+          title="${esc(feed.filterText || T('Filtre tanımlı değil', 'No filter defined'))}">${esc(name)}</button>
+        ${layer ? (feed.layerRemovable
+          ? `<button type="button" class="dmLayer dmLayer--${esc(feed.layer)} isRemovable" data-clear-layer="${esc(moduleId)}:${esc(feed.sourceId)}"
+              title="${esc(`${layer.hint[en() ? 'en' : 'tr']}\n${T('Kaldırmak için tıklayın — ortak filtre yeniden geçerli olur.', 'Click to remove — the shared filter takes effect again.')}`)}">${esc(layer[en() ? 'en' : 'tr'])} ×</button>`
+          : `<span class="dmLayer dmLayer--${esc(feed.layer)}" title="${esc(layer.hint[en() ? 'en' : 'tr'])}">${esc(layer[en() ? 'en' : 'tr'])}</span>`) : ''}
+      </span>`;
     }).join('');
-    return `<div class="dmLinkGroup" data-link-group="${esc(source.id)}">
-      <div class="dmLinkRow">
-        <span class="dmLinkTitle">🔗 ${esc(T('Bağlı modüller', 'Linked modules'))} — ${esc(source.name)}</span>
-        <span class="dmLinkHint">${esc(T('Tek ortak filtre · yenileme bütün modüllerde ortaktır', 'One shared filter · refresh is shared by all modules'))}</span>
+    const needsFilter = group.targets.some(moduleId => ((model.modules || []).find(entry => entry.id === moduleId) || {}).needsFilter);
+    return `<div class="dmHorizonRow${needsFilter ? ' hasWarning' : ''}" data-horizon-row="${esc(group.id)}">
+      <div class="dmHorizonHead">
+        <span class="dmHorizonTitle">${esc(textOf(text.title))}</span>
+        ${group.id === 'cp' ? '' : `<span class="dmHorizonMembers">${esc(members)}</span>`}
+        <span class="dmHorizonHint">${esc(textOf(text.hint))}</span>
+        <span class="dmSummarySpacer"></span>
+        <button type="button" class="tbtn" data-refresh-horizon="${esc(group.id)}" ${busy ? 'disabled' : ''}
+          title="${esc(busy ? T('Bir yenileme zaten sürüyor', 'A refresh is already running') : textOf(text.refresh))}">
+          <svg class="ic"><use href="#i-refresh"/></svg>${esc(textOf(text.refresh))}</button>
       </div>
-      <div class="dmLinkRow">
-        <span class="dmLabel">${esc(T('Ortak filtre', 'Shared filter'))}</span>
-        ${lead ? `<button type="button" class="dmFeedFilter${lead.filterBounded ? '' : ' isUnbounded'}" data-open-filter="${esc(members[0])}:${esc(source.id)}"
-            title="${esc(lead.filterText || T('Filtre tanımlı değil', 'No filter defined'))}">${esc(filterName)}</button>`
-          : `<span class="dmModuleEmpty">${esc(T('Grupta modül yok', 'No module in the group'))}</span>`}
+      <div class="dmHorizonFeeds">${feeds || `<span class="dmModuleEmpty">${esc(T('Hiçbir kaynağa bağlı değil', 'Not connected to any source'))}</span>`}
+        ${needsFilter ? `<span class="dmWarn" title="${esc(T('Sınırsız sorgu çalıştırılamaz; bu ufuk yenilenmeden önce bir filtre gerekir.', 'An unbounded query cannot run; this horizon needs a filter before it can refresh.'))}">${esc(T('filtre gerekli', 'filter required'))}</span>` : ''}
       </div>
-      <div class="dmLinkRow">
-        <span class="dmLabel">${esc(T('Bağlı', 'Linked'))}</span>
-        ${memberChips || `<span class="dmModuleEmpty">—</span>`}
-        ${outside.length ? `<span class="dmLabel dmLinkOutsideLabel">${esc(T('Ayrı filtreli', 'Own filter'))}</span>${outsideChips}` : ''}
-      </div>
+      <div class="dmFilterSlot" data-horizon-slot="${esc(group.id)}"></div>
     </div>`;
+  }
+
+  function horizonPanel() {
+    const merged = Array.isArray(model.mergedFilters) ? model.mergedFilters : [];
+    return `<div class="dmPanel dmHorizon" data-dm-panel="horizon">
+      <div class="dmPanelHead">
+        <span class="dmPanelTitle">${esc(T('Horizon ve yenileme', 'Horizon and refresh'))}</span>
+      </div>
+      ${horizonGroupsOf().map(horizonRow).join('')}
+      ${merged.length ? `<p class="dmGroupNote" title="${esc(merged.map(entry => `${entry.sourceName} · ${moduleLabel(entry.moduleId)}: ${entry.filterText || entry.filterName || '—'}`).join('\n'))}">${esc(T(
+        `Eski ayrı filtreler saklandı (${merged.map(entry => moduleLabel(entry.moduleId)).join(', ')}); bu modüller artık Diğer modüllerin ortak ufkunu kullanır.`,
+        `Previous separate filters were kept (${merged.map(entry => moduleLabel(entry.moduleId)).join(', ')}); these modules now use the shared Other modules horizon.`))}</p>` : ''}
+      ${refreshSettings()}
+      <p class="dmGroupNote">${esc(T('INTAKE bu ufuklara dahil değildir: kendi ekranından ve kendi bağlantısıyla yenilenir.', 'INTAKE is not part of these horizons: it refreshes from its own screen with its own connection.'))}</p>
+    </div>`;
+  }
+
+  function refreshHorizon(groupId) {
+    const group = horizonGroupsOf().find(entry => entry.id === groupId);
+    if (!group) return;
+    /* İKİNCİ BİR YENİLEME MOTORU YOK: mevcut akış (iş kuyruğu, aşama paneli,
+       iptal, filtre-gerekli uyarısı) kullanılır. "Diğer modüller" isteğini
+       istemci ve sunucu CP ile genişletir. */
+    if (typeof window.loadFromServer !== 'function') {
+      if (typeof showToast === 'function') showToast(T('Yenileme akışı henüz hazır değil.', 'The refresh flow is not ready yet.'));
+      return;
+    }
+    if (window.BL_REFRESH_BUSY) { if (typeof showToast === 'function') showToast(T('Bir yenileme zaten sürüyor.', 'A refresh is already running.')); return; }
+    void Promise.resolve(window.loadFromServer(true, group.targets.slice())).then(() => load());
   }
 
   function moduleRow(module) {
@@ -514,7 +568,7 @@
           title="${esc(T(`${feed.sourceName} bağlantısını kapat — filtre ve eşleme korunur`, `Disconnect ${feed.sourceName} — filter and mapping are preserved`))}"
           aria-label="${esc(T('Bağlantıyı kapat', 'Disconnect'))}">×</button>` : ''}
         ${feed.locked ? `<span class="dmLockMark" title="${esc(T('Bu bağlantı kapatılamaz', 'This connection cannot be turned off'))}" aria-hidden="true">🔒</span>` : ''}
-        ${feed.linked ? `<span class="dmLinkMark" title="${esc(T('Bağlı grubun ortak filtresini kullanır', 'Uses the linked group\'s shared filter'))}">🔗</span>` : ''}
+        ${feed.linked ? `<span class="dmLinkMark" title="${esc(T('Diğer modüllerin ortak ufkunu kullanır; CP ile birlikte yenilenir', 'Uses the shared Other modules horizon; refreshes together with CP'))}">🔗</span>` : ''}
       </span>`;
     }).join('');
     return `<div class="dmModuleRow${module.needsFilter ? ' hasWarning' : ''}">
@@ -923,41 +977,21 @@
     render();
   }
 
-  function refreshGroupsPanel() {
-    const busy = Boolean(window.BL_REFRESH_BUSY);
-    const rows = groups.items.map(group => `<div class="dmGroupRow">
-      <span class="dmGroupName">${esc(group.name)}</span>
-      <span class="dmGroupModules">${group.moduleIds.map(id => esc(moduleLabel(id))).join(' · ')}</span>
-      <button type="button" class="tbtn" data-run-group="${esc(group.id)}" ${busy ? 'disabled' : ''}
-        title="${esc(busy ? T('Bir yenileme zaten sürüyor', 'A refresh is already running') : T('Bu gruptaki modülleri birlikte yenile', 'Refresh these modules together'))}">
-        <svg class="ic"><use href="#i-refresh"/></svg>${esc(T('Yenile', 'Refresh'))}</button>
-      ${model.canManage ? `<button type="button" class="dmDisconnect" data-delete-group="${esc(group.id)}"
-        title="${esc(T('Grubu sil — modüller ve filtreler etkilenmez', 'Delete the group — modules and filters are unaffected'))}" aria-label="${esc(T('Grubu sil', 'Delete group'))}">×</button>` : ''}
-    </div>`).join('');
-
-    const checkboxes = (groups.refreshableModules || []).map(moduleId => `<label class="dmCheck">
-      <input type="checkbox" data-draft-module="${esc(moduleId)}" ${groupDraft.moduleIds.includes(moduleId) ? 'checked' : ''}>
-      <span>${esc(moduleLabel(moduleId))}</span>
-    </label>`).join('');
-
-    return `<div class="dmPanel" data-dm-panel="refresh">
-      <div class="dmPanelHead">
-        <span class="dmPanelTitle">${esc(T('Yenileme', 'Refresh'))}</span>
-        ${model.canManage && !creatingGroup ? `<button type="button" class="tbtn" data-new-group>+ ${esc(T('Grup oluştur', 'Create group'))}</button>` : ''}
-      </div>
-
-      ${model.canManage ? `<div class="dmModeRow dmAutoRefresh">
+  /* Yenileme ayarları "Horizon ve yenileme" panelinin parçasıdır. Zamanlama
+     ve koşul BİLEREK yok — değer ve zamanlayıcı app-main.js'te yaşar. */
+  function refreshSettings() {
+    return `${model.canManage ? `<div class="dmModeRow dmAutoRefresh">
         <span class="dmModeText">
           <span class="dmToolName">${esc(T('Otomatik yenileme', 'Auto refresh'))}</span>
           <span class="dmToolHint" id="autoRefreshNote"></span>
         </span>
         <select id="autoRefreshSelect" class="dmAutoSelect" aria-label="${esc(T('Otomatik yenileme', 'Auto refresh'))}">
           <option value="0">${esc(T('Kapalı', 'Off'))}</option>
-          <option value="15">15 dk</option>
-          <option value="30">30 dk</option>
-          <option value="60">60 dk</option>
-          <option value="120">2 sa</option>
-          <option value="240">4 sa</option>
+          <option value="15">${esc(T('15 dk', '15 min'))}</option>
+          <option value="30">${esc(T('30 dk', '30 min'))}</option>
+          <option value="60">${esc(T('60 dk', '60 min'))}</option>
+          <option value="120">${esc(T('2 sa', '2 h'))}</option>
+          <option value="240">${esc(T('4 sa', '4 h'))}</option>
         </select>
       </div>` : ''}
 
@@ -981,30 +1015,7 @@
         </span>
         <span class="sourceRefreshTimer" data-source-timer="all"
           aria-label="${esc(T('Yenileme süresi', 'Refresh duration'))}">—</span>
-      </div>
-
-      <div class="dmSectionLabel dmSectionLabel--sub">${esc(T('Gruplar', 'Groups'))}</div>
-
-      ${rows || (creatingGroup ? '' : `<p class="dmGroupEmpty">${esc(T('Henüz grup yok. Birlikte yenilenmesini istediğin modülleri tek bir adla topla.', 'No groups yet. Collect the modules you want refreshed together under one name.'))}</p>`)}
-
-      ${creatingGroup ? `<div class="dmGroupForm">
-        <label class="dmGroupNameField">
-          <span class="dmLabel">${esc(T('Ad', 'Name'))}</span>
-          <input type="text" id="_dmGroupName" value="${esc(groupDraft.name)}" maxlength="60"
-            placeholder="${esc(T('Örn. Buying Core', 'e.g. Buying Core'))}" autocomplete="off">
-        </label>
-        <div class="dmGroupChecks">${checkboxes}</div>
-        ${groupError ? `<p class="dmGroupError">${esc(groupError)}</p>` : ''}
-        <div class="dmGroupActions">
-          <button type="button" class="tbtn" data-cancel-group>${esc(T('İptal', 'Cancel'))}</button>
-          <button type="button" class="navActionBtn" data-save-group>${esc(T('Oluştur', 'Create'))}</button>
-        </div>
-      </div>` : ''}
-
-      ${(groups.refreshableModules || []).length && !creatingGroup ? `<p class="dmGroupNote">${esc(T(
-        'INTAKE bu listede yoktur: kendi ekranından yenilenir.',
-        'INTAKE is not in this list: it refreshes from its own screen.'))}</p>` : ''}
-    </div>`;
+      </div>`;
   }
 
   const LAB_STATUS = {
@@ -1397,6 +1408,8 @@
       ${matchRuleRow()}
       <div class="dmMatchSlot" data-matchrule-slot></div>
 
+      ${horizonPanel()}
+
       <div class="dmPanel" data-dm-panel="modules">
         <div class="dmPanelHead">
           <span class="dmPanelTitle">${esc(T('Modüller', 'Modules'))}</span>
@@ -1406,7 +1419,7 @@
           </div>
         </div>
         ${view === 'list'
-          ? `${linkGroupPanels()}<div class="dmModules">${model.modules.map(moduleRow).join('')}</div>`
+          ? `<div class="dmModules">${model.modules.map(moduleRow).join('')}</div>`
           : matrixTable()}
 
         ${model.localModules.length ? `<div class="dmLocalNote">
@@ -1415,8 +1428,6 @@
             `<span title="${esc((LOCAL_REASON[module.reason] || {})[en() ? 'en' : 'tr'] || '')}">${esc(module.label)}</span>`).join(' · ')}</span>
         </div>` : ''}
       </div>
-
-      ${refreshGroupsPanel()}
 
       ${toolsPanel()}
 
@@ -1523,56 +1534,6 @@
 
   /* Bağlı gruba ekle / gruptan ayır. toggleBinding ile aynı sözleşme: iyimser
      güncelleme yok, kaynak başına sürüm gönderilir, bitince tazelenir. */
-  async function toggleLink(sourceId, moduleId, linked) {
-    const key = `link:${sourceId}:${moduleId}`;
-    if (busyCell) return;
-    busyCell = key;
-    writeError = '';
-    render();
-    let warnings = [];
-    try {
-      const source = (model.sources || []).find(entry => entry.id === sourceId);
-      const response = await fetch('/api/data-management/link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceId, moduleId, linked, expectedSourceRevision: source ? source.revision : '' }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.error || T('Bağlı grup güncellenemedi.', 'Could not update the linked group.'));
-      }
-      warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
-    } catch (error) {
-      writeError = String(error && error.message || error);
-    } finally {
-      busyCell = '';
-      await load();
-      if (typeof showToast === 'function') {
-        if (writeError) showToast(writeError);
-        else if (warnings.length) showToast(`${warnings.join(' ')} ${T('Yeni filtre bir sonraki yenilemede uygulanır.', 'The new filter applies on the next refresh.')}`);
-      }
-    }
-  }
-
-  async function saveGroups(items) {
-    groupError = '';
-    const response = await fetch('/api/data-management/refresh-groups', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'If-Match': `"${groups.revision}"` },
-      body: JSON.stringify({ items }),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok || !payload.ok) throw new Error(payload.error || T('Yenileme grupları kaydedilemedi.', 'Could not save the refresh groups.'));
-    groups = { ...groups, items: payload.items, revision: payload.revision };
-    // Üstteki Yenile menüsü aynı grupları gösteriyor; önbelleği bayat bırakma.
-    window.BLInvalidateRefreshGroups?.(payload.items);
-  }
-
-  function readDraftName() {
-    const field = root.querySelector('#_dmGroupName');
-    if (field) groupDraft.name = field.value;
-  }
-
   async function runLabInspector(sourceId, traceValue = '') {
     if (!sourceId || labBusy) return;
     labBusy = 'inspect';
@@ -1688,62 +1649,8 @@
       return;
     }
 
-    /* --- Yenileme grupları --- */
-    const newGroup = event.target.closest('[data-new-group]');
-    if (newGroup) { creatingGroup = true; groupDraft = { name: '', moduleIds: [] }; groupError = ''; render(); return; }
-
-    const cancelGroup = event.target.closest('[data-cancel-group]');
-    if (cancelGroup) { creatingGroup = false; groupError = ''; render(); return; }
-
-    const saveGroup = event.target.closest('[data-save-group]');
-    if (saveGroup) {
-      readDraftName();
-      if (!groupDraft.name.trim()) { groupError = T('Gruba bir ad ver.', 'Give the group a name.'); render(); return; }
-      if (!groupDraft.moduleIds.length) { groupError = T('En az bir modül seç.', 'Select at least one module.'); render(); return; }
-      void (async () => {
-        try {
-          await saveGroups([...groups.items, { name: groupDraft.name.trim(), moduleIds: groupDraft.moduleIds }]);
-          creatingGroup = false;
-          groupDraft = { name: '', moduleIds: [] };
-        } catch (error) { groupError = String(error && error.message || error); }
-        render();
-      })();
-      return;
-    }
-
-    const deleteGroup = event.target.closest('[data-delete-group]');
-    if (deleteGroup) {
-      const id = deleteGroup.dataset.deleteGroup;
-      void (async () => {
-        try { await saveGroups(groups.items.filter(entry => entry.id !== id)); }
-        catch (error) { if (typeof showToast === 'function') showToast(String(error && error.message || error)); }
-        render();
-      })();
-      return;
-    }
-
-    const runGroup = event.target.closest('[data-run-group]');
-    if (runGroup) {
-      const group = groups.items.find(entry => entry.id === runGroup.dataset.runGroup);
-      if (!group) return;
-      /* İKİNCİ BİR YENİLEME MOTORU YOK. Mevcut akış (iş kuyruğu, aşama paneli,
-         iptal, filtre-gerekli uyarısı) olduğu gibi kullanılır; grup yalnız
-         hedef listesini verir. */
-      if (typeof window.loadFromServer !== 'function') {
-        if (typeof showToast === 'function') showToast(T('Yenileme akışı henüz hazır değil.', 'The refresh flow is not ready yet.'));
-        return;
-      }
-      if (window.BL_REFRESH_BUSY) { if (typeof showToast === 'function') showToast(T('Bir yenileme zaten sürüyor.', 'A refresh is already running.')); return; }
-      void Promise.resolve(window.loadFromServer(true, group.moduleIds)).then(() => load());
-      return;
-    }
-
-    const link = event.target.closest('[data-link]');
-    if (link) {
-      const [sourceId, moduleId] = String(link.dataset.link).split(':');
-      void toggleLink(sourceId, moduleId, link.dataset.next === 'on');
-      return;
-    }
+    const refreshBtn = event.target.closest('[data-refresh-horizon]');
+    if (refreshBtn) { refreshHorizon(refreshBtn.dataset.refreshHorizon); return; }
 
     const toggle = event.target.closest('[data-toggle]');
     if (toggle) {
@@ -1822,7 +1729,10 @@
     const filter = event.target.closest('[data-open-filter]');
     if (filter) {
       const [moduleId, sourceId] = String(filter.dataset.openFilter).split(':');
-      openFilterEditor(moduleId, sourceId);
+      // Horizon panelinden açılan düzenleyici o ufkun satırında açılır.
+      const horizonSlot = filter.dataset.horizonGroup
+        ? root.querySelector(`[data-horizon-slot="${filter.dataset.horizonGroup}"]`) : null;
+      openFilterEditor(moduleId, sourceId, horizonSlot);
     }
   }
 
@@ -1970,7 +1880,7 @@
   /* Filtre düzenleyici satırın ALTINDA açılır. Eskiden buradaki tıklama
      1.619 satırlık eski modalı açıyordu; artık ortak filtre bu ekranda
      düzenlenir. Kişisel Horizon hâlâ sayfa rozetinden yönetilir. */
-  function openFilterEditor(moduleId, sourceId) {
+  function openFilterEditor(moduleId, sourceId, slotOverride = null) {
     const module = (model.modules || []).find(entry => entry.id === moduleId);
     const feed = module && module.feeds.find(entry => entry.sourceId === sourceId);
     const source = (model.sources || []).find(entry => entry.id === sourceId);
@@ -1997,7 +1907,7 @@
     } : null;
 
     const rowIndex = model.modules.findIndex(entry => entry.id === moduleId);
-    const slot = root.querySelectorAll('[data-filter-slot]')[rowIndex];
+    const slot = slotOverride || root.querySelectorAll('[data-filter-slot]')[rowIndex];
     if (!slot) return;
 
     void window.BLDataFilterEditor?.open?.(slot, {
@@ -2016,7 +1926,8 @@
           && entry.conditionCount > 0);
         return other && mine ? { role: other.sourceRole, sourceId: other.sourceId, name: other.sourceName, toRole: mine } : null;
       })(),
-      moduleId, moduleLabel: module.label,
+      // Horizon panelinden açılan Diğer modüller düzenleyicisi grubun adını taşır.
+      moduleId, moduleLabel: slotOverride && feed.linked === true ? T('Diğer modüller', 'Other modules') : module.label,
       revision: source.revision,
       /* Ezen katman varken ekrandaki ad/tanım o katmanın; DÜZENLENEN ise ortak
          katmandır. Bu yüzden düzenleyiciye ortak olanın adı ve tanımı verilir —
@@ -2027,10 +1938,9 @@
       definition: feed.effectiveDefinition || feed.definition || {},
       canShare: Boolean(model.canManage),
       sharedWith: (feed.sharedModuleIds || []),
-      /* v20260929 — Bağlı grubun üyesi de ayrılabilir: "yalnız bunu ayır"
-         modülü gruptan çıkarıp kendi filtresine taşır (sunucu üyeliği düşürür). */
-      canSplit: true,
-      linked: feed.linked === true,
+      /* v2026-10-30 — İki sabit ufuk: "Diğer modüller"in bir üyesi ayrı
+         filtreye ayrılamaz (sunucu da LINK_FIXED ile reddeder); düzenleyicide
+         "ayır" seçeneği yoktur. */
       layerNote,
       labelOf: id => {
         const found = (model.modules || []).find(entry => entry.id === id);
@@ -2093,12 +2003,6 @@
     if (source) { selectedLabSourceId = source.value; labMessage = ''; render(); return; }
     const recipe = event.target.closest('[data-lab-recipe]');
     if (recipe) { selectedAutomationId = recipe.value; automationPreview = null; labMessage = ''; render(); return; }
-    const box = event.target.closest('[data-draft-module]');
-    if (!box) return;
-    const moduleId = box.dataset.draftModule;
-    groupDraft.moduleIds = box.checked
-      ? [...new Set([...groupDraft.moduleIds, moduleId])]
-      : groupDraft.moduleIds.filter(entry => entry !== moduleId);
   }
 
   function mount(host) {
@@ -2107,8 +2011,16 @@
       root = host;
       root.addEventListener('click', onClick);
       root.addEventListener('change', onChange);
-      root.addEventListener('input', event => {
-        if (event.target && event.target.id === '_dmGroupName') groupDraft.name = event.target.value;
+      /* Ufuk Yenile düğmeleri yenileme sürerken pasiftir; yenileme bitince
+         (başka ekrandan başlatılmış olsa da) yeniden etkinleşmeli. */
+      // Tam yeniden çizim yapılmaz: açık bir filtre düzenleyicisi kaybolmasın.
+      window.addEventListener('bl-refresh-finished', () => {
+        if (!root || window.BL_REFRESH_BUSY) return;
+        root.querySelectorAll('[data-refresh-horizon]').forEach(button => {
+          const group = HORIZON_TEXT[button.dataset.refreshHorizon] || HORIZON_TEXT.linked;
+          button.disabled = false;
+          button.title = textOf(group.refresh);
+        });
       });
     }
     // Sekmeye her dönüşte tazelenir: başka bir ekrandan yapılan bir bağlantı

@@ -1355,10 +1355,22 @@ function normalizeModelConnection(raw) {
      gruba katılırken modülün kendi filtresi linkRestore'da saklanır ki geri
      ayrıldığında kaybolmasın. */
   const linkedTargets = legacyFabricRole ? null : modelScopes.normalizeLinkedTargets(item.linkedTargets, role);
-  const linkRestore = linkedTargets ? bindingWriter.normalizeParked(item.linkRestore) : [];
+  let linkRestore = linkedTargets ? bindingWriter.normalizeParked(item.linkRestore) : [];
   const defaultSeasonsApplied = item.defaultSeasonsApplied === true;
   if (role === 'asas' && !defaultSeasonsApplied && !horizon.seasons.length && !horizon.dateStart && !horizon.dateEnd) {
     horizon.seasons = [...MODEL_CONNECTION_DEFAULT_SEASONS];
+  }
+  const scopes = legacyFabricRole ? [] : modelScopes.normalizeScopes(
+    item.scopes, role, horizon, modelHorizon.normalizeHorizon,
+    parkedBindings.map(entry => entry.moduleId), linkedTargets || undefined);
+  /* v2026-10-30 — İki sabit ufka geçiş: eskiden kendi filtresiyle ayrı duran
+     bir "Diğer modüller" üyesi gruba katılınca o filtre kapsamlardan düşer.
+     Silinmez; linkRestore'a saklanır (varsa eski kayıt korunur). */
+  if (linkedTargets && Array.isArray(item.scopes)) {
+    const kept = new Set(linkRestore.map(entry => entry.moduleId));
+    const superseded = modelScopes.supersededLinkedHorizons(item.scopes, scopes, linkedTargets, modelHorizon.normalizeHorizon)
+      .filter(entry => !kept.has(entry.moduleId));
+    if (superseded.length) linkRestore = bindingWriter.normalizeParked([...linkRestore, ...superseded]);
   }
   return {
     id,
@@ -1404,9 +1416,7 @@ function normalizeModelConnection(raw) {
     mappingEnhancementScanVersion: Math.max(0, Number(item.mappingEnhancementScanVersion) || 0),
     horizon,
     // Hedef başına ufuk. Boşsa mevcut tek ufuktan üretilir; eski kayıtlar aynen çalışır.
-    scopes: legacyFabricRole ? [] : modelScopes.normalizeScopes(
-      item.scopes, role, horizon, modelHorizon.normalizeHorizon,
-      parkedBindings.map(entry => entry.moduleId), linkedTargets || undefined),
+    scopes,
     ...(linkedTargets ? { linkedTargets, linkRestore } : {}),
     /* v7.81 — PARK EDİLMİŞ MODÜL BAĞLANTILARI.
        Bir modül bağlantısı ayrı bir kayıt değil, bir kapsamın targets[]

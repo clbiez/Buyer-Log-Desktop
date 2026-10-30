@@ -16,10 +16,9 @@
  *    eklenmesi kapsamları yeniden düzenler; yazdığımız ufkun hedef modülde
  *    gerçekten geçerli olduğu DOĞRULANMALI, varsayılmamalı.
  *
- * v20260928 — ASAS'ta Orders · Backlog · LFL · Price & Supplier BAĞLI bir
- * gruptur (tek ufuk). ASAS'ta CP dışında paylaşım kalmadığı için paylaş/ayır
- * sözleşmesi IAS (antrepo) kaynağı üzerinde doğrulanır; bağlı grubun kendi
- * sözleşmesi ayrıca korunur.
+ * v2026-10-30 — İKİ SABİT UFUK: her kaynakta CP ayrı, "Diğer modüller"
+ * (ASAS: Orders · Backlog · LFL · Price & Supplier; IAS: Orders · Backlog)
+ * tek ufuk. Paylaşım artık yalnız bu grubun içindedir; grup ayrılamaz.
  */
 
 const test = require('node:test');
@@ -68,36 +67,42 @@ const horizonFor = (items, moduleId, sourceId = 'mc_asas') => {
 
 /* ------------------------------------------------------------------ */
 
-test('P3w paylaşılan filtreyi güncellemek TÜM paylaşanları etkiler ve bunu söyler', () => {
+/* v2026-10-30 — İKİ SABİT UFUK: IAS de CP ve "Diğer modüller" (Siparişler ·
+   Backlog) olarak ikiye ayrılır. Eski IAS kaydında Backlog CP ile, Siparişler
+   tek başına duruyordu; oylamada Siparişler'in ufku kazanır (eşitlikte Orders
+   önce) ve Backlog'un eski ufku linkRestore'a saklanır. */
+test('P3w IAS iki ufka ayrılır: Diğer modüllerin filtresi Siparişler + Backlog\'u birlikte günceller, CP etkilenmez', () => {
   const items = setup();
-  const plan = writer.planFilterChange(items, {
-    sourceId: 'mc_ias', moduleId: 'cp', definition: horizonOf(['W9']), mode: 'shared',
-  });
-  assert.equal(plan.ok, true);
-  assert.ok(plan.warnings.some(text => /paylaşılıyor/.test(text)), 'paylaşım uyarısı verilmedi');
+  assert.deepEqual(horizonFor(items, 'cp', 'mc_ias'), ['S7'], 'CP eski ufkunu korur');
+  assert.deepEqual(horizonFor(items, 'backlog', 'mc_ias'), ['S6'], 'Backlog Siparişler ile aynı ufku taşır');
+  const ias = items.find(entry => entry.id === 'mc_ias');
+  assert.deepEqual(ias.linkedTargets, ['orders', 'backlog']);
+  const stash = ias.linkRestore.find(entry => entry.moduleId === 'backlog');
+  assert.ok(stash, 'Backlog\'un eski ufku saklanmalı');
+  assert.deepEqual(stash.horizon.groups[0].conditions[0].values, ['S7']);
 
+  const plan = writer.planFilterChange(items, {
+    sourceId: 'mc_ias', moduleId: 'orders', definition: horizonOf(['W9']), mode: 'shared',
+  });
+  assert.equal(plan.ok, true, plan.message);
+  assert.ok(plan.warnings.some(text => /bağlı 2 modülün ortak ufkudur/.test(text)), 'grup uyarısı verilmedi');
   const next = save(plan);
-  assert.deepEqual(horizonFor(next, 'cp', 'mc_ias'), ['W9']);
-  assert.deepEqual(horizonFor(next, 'backlog', 'mc_ias'), ['W9'], 'aynı kapsamdaki modül de değişmeli');
-  // Başka kapsam etkilenmemeli.
-  assert.deepEqual(horizonFor(next, 'orders', 'mc_ias'), ['S6']);
+  assert.deepEqual(horizonFor(next, 'orders', 'mc_ias'), ['W9']);
+  assert.deepEqual(horizonFor(next, 'backlog', 'mc_ias'), ['W9'], 'aynı ufuktaki modül de değişmeli');
+  assert.deepEqual(horizonFor(next, 'cp', 'mc_ias'), ['S7'], 'CP ayrı ufuktur');
 });
 
-test('P3w ayırmak diğer modülleri ESKİ filtrede bırakır', () => {
+test('P3w CP tek başına bir ufuktur; "ayır" kipi CP\'nin kendi ufkunu yazar', () => {
   const items = setup();
   const plan = writer.planFilterChange(items, {
     sourceId: 'mc_ias', moduleId: 'cp', definition: horizonOf(['W9']), mode: 'split', name: 'CP Kendi Kapsamı',
   });
-  assert.equal(plan.ok, true);
-  assert.ok(plan.warnings.some(text => /kendi filtresine ayrıldı/.test(text)));
-
+  assert.equal(plan.ok, true, plan.message);
   const next = save(plan);
   assert.deepEqual(horizonFor(next, 'cp', 'mc_ias'), ['W9']);
-  assert.deepEqual(horizonFor(next, 'backlog', 'mc_ias'), ['S7'], 'ayrılan modül diğerini de götürmemeli');
-
+  assert.deepEqual(horizonFor(next, 'backlog', 'mc_ias'), ['S6'], 'Diğer modüllerin ufku değişmez');
   const cpScope = next.find(entry => entry.id === 'mc_ias').scopes.find(s => s.targets.includes('cp'));
-  assert.equal(cpScope.name, 'CP Kendi Kapsamı');
-  assert.ok(!cpScope.targets.includes('backlog'));
+  assert.deepEqual(cpScope.targets, ['cp']);
 });
 
 test('P3w ASAS bağlı grubu tek ufuk taşır; eski ayrık kayıtlar tek kapsamda birleşir', () => {
@@ -126,27 +131,30 @@ test('P3w bağlı modülün ortak filtresi grubun HEPSİNİ günceller, CP etkil
   assert.equal(linkedScopes.length, 1, 'grup bölünmemeli');
 });
 
-/* v20260929 — Kullanıcı kararı: bir sayfa bağlı gruptan ayrılabilmeli.
-   "Yalnız bunu ayır" artık modülü gruptan ÇIKARIR; üyelikten de çıkmazsa
-   normalizasyon onu gruba geri katar ve yazılan ufuk kaybolurdu. */
-test('P3w bağlı modülü "ayırmak" onu gruptan çıkarır; diğer üyeler ortak filtrede kalır', () => {
+/* v2026-10-30 — Diğer modüllerden tek bir modül kendi filtresine ayrılamaz.
+   Sessizce ortak kayda çevirmek yerine açık bir kodla reddedilir. */
+test('P3w Diğer modüllerin bir üyesi için "ayır" reddedilir (LINK_FIXED); kayıt değişmez', () => {
   const items = setup();
   const plan = writer.planFilterChange(items, {
     sourceId: 'mc_asas', moduleId: 'lfl', definition: horizonOf(['W9']), mode: 'split', name: 'LFL Kendi',
   });
-  assert.equal(plan.ok, true, plan.message);
-  assert.ok(plan.warnings.some(text => /bağlı gruptan ayrıldı/.test(text)));
-  const next = save(plan);
-  const asas = next.find(entry => entry.id === 'mc_asas');
-  assert.deepEqual(asas.linkedTargets, ['orders', 'backlog', 'priceanalysis'], 'LFL üyelikten çıkmalı');
-  assert.deepEqual(horizonFor(next, 'lfl'), ['W9']);
-  const lflScope = asas.scopes.find(s => s.targets.includes('lfl'));
-  assert.deepEqual(lflScope.targets, ['lfl']);
-  assert.equal(lflScope.name, 'LFL Kendi');
-  for (const moduleId of ['orders', 'backlog', 'priceanalysis']) assert.notDeepEqual(horizonFor(next, moduleId), ['W9']);
-  assert.deepEqual(horizonFor(next, 'cp'), ['S7']);
-  // Kararlılık: ikinci kayıt ayrılan modülü gruba geri katmaz.
-  assert.deepEqual(db.replaceModelConnections(next, null).items.find(entry => entry.id === 'mc_asas').scopes, asas.scopes);
+  assert.equal(plan.ok, false);
+  assert.equal(plan.code, 'LINK_FIXED');
+  assert.deepEqual(horizonFor(items, 'lfl'), ['S7']);
+});
+
+test('P3w eski kayıtta kendi filtresiyle ayrı duran LFL ortak ufka katılır; eski filtresi saklanır', () => {
+  const items = setup();
+  const asas = items.find(entry => entry.id === 'mc_asas');
+  assert.deepEqual(asas.linkedTargets, ['orders', 'backlog', 'lfl', 'priceanalysis']);
+  const stash = asas.linkRestore.find(entry => entry.moduleId === 'lfl');
+  assert.ok(stash, 'LFL\'in eski ayrı filtresi kaybolmamalı');
+  assert.equal(stash.scopeName, 'LFL');
+  assert.deepEqual(stash.horizon.groups[0].conditions[0].values, ['S6']);
+  // Kararlılık: yeniden kaydetmek saklananı kaybetmez, çoğaltmaz.
+  const again = db.replaceModelConnections(items, null).items.find(entry => entry.id === 'mc_asas');
+  assert.deepEqual(again.linkRestore, asas.linkRestore);
+  assert.deepEqual(again.scopes, asas.scopes);
 });
 
 test('P3w tek başına olan modülü "ayırmak" kapsam kimliğini boşuna değiştirmez', () => {
@@ -256,8 +264,9 @@ test('P3w kaydedilen ufuk DAX üretimine birebir girer', () => {
 
 test('P3w sharedModules paylaşanları listeler', () => {
   const items = setup();
-  assert.deepEqual(writer.sharedModules(items, 'mc_ias', 'cp').sort(), ['backlog']);
-  assert.deepEqual(writer.sharedModules(items, 'mc_ias', 'orders'), []);
+  // v2026-10-30: IAS'ta da CP tek başına, Siparişler + Backlog birlikte.
+  assert.deepEqual(writer.sharedModules(items, 'mc_ias', 'cp'), []);
+  assert.deepEqual(writer.sharedModules(items, 'mc_ias', 'orders'), ['backlog']);
   // ASAS'ta bağlı grup üyeleri birbirinin ortağıdır; CP tek başınadır.
   assert.deepEqual(writer.sharedModules(items, 'mc_asas', 'lfl').sort(), ['backlog', 'orders', 'priceanalysis']);
   assert.deepEqual(writer.sharedModules(items, 'mc_asas', 'cp'), []);

@@ -200,7 +200,7 @@ const SERVER = require('./helpers/server-source')();
 test('v7.81 filtre çipi artık eski 1.619 satırlık modalı açmıyor', () => {
   const branch = UI.match(/const filter = event\.target\.closest\('\[data-open-filter\]'\);[\s\S]*?\n    \}/);
   assert.ok(branch, 'filtre dalı bulunamadı');
-  assert.match(branch[0], /openFilterEditor\(moduleId, sourceId\)/);
+  assert.match(branch[0], /openFilterEditor\(moduleId, sourceId(?:, horizonSlot)?\)/);
   assert.doesNotMatch(branch[0], /openDataSourceAndFilters/);
 });
 
@@ -211,7 +211,7 @@ test('v7.81 ezilmiş katman ÇIKMAZ değil: düzenleyici açılır ve durumu sö
      ama kaldırılacak yer BAŞKA BİR EKRANDI ve kullanıcı orada bırakılıyordu.
      Artık açılır, hangi katmanın kazandığını söyler ve kaldırılabiliyorsa
      kaldırma yolunu taşır. */
-  const fn = UI.match(/function openFilterEditor\(moduleId, sourceId\) \{[\s\S]*?\n  \}/);
+  const fn = UI.match(/function openFilterEditor\(moduleId, sourceId(?:, slotOverride = null)?\) \{[\s\S]*?\n  \}/);
   assert.ok(fn);
   /* Yorumlar ELENİR: bu dosyanın kendi açıklama metni "önce onu kaldırın"
      ifadesini anlatım olarak içeriyor ve ham eşleştirme onu kod sanardı. */
@@ -233,7 +233,7 @@ test('v7.81 ezilmiş katman ÇIKMAZ değil: düzenleyici açılır ve durumu sö
 test('v7.81 ezen katman varken DÜZENLENEN şey ortak filtredir', () => {
   /* Ekranda görünen ad/metin ezen katmanındır; düzenleyiciye ortak katmanın
      adı verilir. Yoksa kullanıcı kişisel ufkunu ortak filtrenin üstüne yazardı. */
-  const fn = UI.match(/function openFilterEditor\(moduleId, sourceId\) \{[\s\S]*?\n  \}/);
+  const fn = UI.match(/function openFilterEditor\(moduleId, sourceId(?:, slotOverride = null)?\) \{[\s\S]*?\n  \}/);
   assert.match(fn[0], /filterName: layerNote \? \(feed\.sharedFilterName \|\| ''\) : feed\.filterName/);
 });
 
@@ -253,15 +253,14 @@ test('v7.81 yalnız KİŞİSEL katman kaldırılabilir', () => {
   assert.match(clear[0], /confirm/);
 });
 
+/* v2026-10-30 — İki sabit ufuk: paylaşım yalnız Diğer modüllerin kendi
+   içindedir ve ayrılamaz; "ayır" seçeneği kalktı. Paylaşım SESSİZ kalmaz:
+   paylaşılan filtrede düğme hepsinin güncelleneceğini açıkça söyler (§19). */
 test('v7.81 paylaşım kararı kullanıcıya sorulur, varsayılan uydurulmaz', () => {
-  // Paylaşılan filtrede İKİ ayrı kaydetme düğmesi çıkar (§19).
-  assert.match(FILTER_UI, /data-save="split"/);
+  assert.doesNotMatch(FILTER_UI, /data-save="split"/);
   assert.match(FILTER_UI, /data-save="shared"/);
-  /* "Ayır" seçeneği YALNIZ paylaşım varken çıkmalı; paylaşılmayan bir filtrede
-     iki düğme göstermek olmayan bir karar sordurur. `shared` koşulunun içinde
-     olduğu doğrulanır (şablonda satır sonu olabilir). */
-  const savePart = FILTER_UI.match(/\(shared && canSplit[\s\S]{0,600}?data-save="split"/);
-  assert.ok(savePart, '"ayır" düğmesi shared koşuluna bağlı değil');
+  const savePart = FILTER_UI.match(/\$\{canShare \? \(shared\s*\?[\s\S]{0,600}?diğer modüllerin hepsini güncelle/);
+  assert.ok(savePart, 'paylaşılan filtrede "hepsini güncelle" uyarısı yok');
   // Ve mod sunucuya AÇIKÇA gider; istemci varsayılan uydurmaz.
   assert.match(FILTER_UI, /body: JSON\.stringify\(\{[\s\S]{0,200}?mode,/);
 });

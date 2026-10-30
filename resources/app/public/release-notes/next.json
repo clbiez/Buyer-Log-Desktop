@@ -126,6 +126,35 @@
           "en": "Step list and elapsed time on the first launch after an update."
         }
       }
+    },
+    {
+      "id": "data-management-two-horizons",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Yenileme ufku iki basit seçime indi: CP ve Diğer modüller",
+        "en": "Refresh horizons are now two simple choices: CP and Other modules"
+      },
+      "body": {
+        "tr": "Veri kaynağı ufukları artık yalnız iki: CP kendi ufkuyla tek başına çalışır; Siparişler, Backlog, LFL ve Fiyat & Üretici tek ortak ufku paylaşır (IAS'ta Siparişler ve Backlog). Diğer modüller yenilendiğinde CP de yenilenir; CP tek başına yenilenebilir. Veri Yönetimi'ndeki yeni \"Horizon ve yenileme\" paneli iki ufku, beslendikleri kaynak filtrelerini, kendi Yenile düğmelerini, otomatik yenilemeyi ve kaynak izlemeyi tek yerde toplar. Modül ekle/ayır seçenekleri, modül başına ayrı filtre ve adlandırılmış yenileme grupları kaldırıldı. Daha önce kendi filtresiyle ayrı duran bir modülün filtresi silinmez, saklanır ve panelde belirtilir. Üstteki Yenile menüsü de iki satırdır: CP ve Diğer modüller + CP. INTAKE bu ufuklara dahil değildir.",
+        "en": "Data source horizons are now just two: CP runs on its own horizon; Orders, Backlog, LFL and Price & Supplier share one horizon (Orders and Backlog for IAS). Refreshing the other modules also refreshes CP; CP can be refreshed on its own. The new \"Horizon and refresh\" panel in Data Management brings both horizons, the source filters that feed them, their own Refresh buttons, auto refresh and source watch into one place. Link/unlink options, per-module separate filters and named refresh groups were removed. A module that previously had its own filter does not lose it: the filter is kept and the panel says so. The top Refresh menu has two rows as well: CP and Other modules + CP. INTAKE is not part of these horizons."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-management-two-horizons.png",
+        "alt": {
+          "tr": "Veri Yönetimi'nde Horizon ve yenileme paneli: CP ve Diğer modüller satırları, ASAS ve IAS filtreleri, CP'yi yenile ve Diğer modülleri + CP'yi yenile düğmeleri, saklanan eski LFL filtresi notu ve otomatik yenileme ayarları (demo veri)",
+          "en": "Horizon and refresh panel in Data Management: CP and Other modules rows, ASAS and IAS filters, Refresh CP and Refresh other modules + CP buttons, a note about the kept previous LFL filter and auto refresh settings (demo data)"
+        },
+        "caption": {
+          "tr": "İki ufuk, kendi filtreleri ve Yenile düğmeleriyle tek panelde.",
+          "en": "Two horizons with their filters and Refresh buttons in one panel."
+        }
+      }
     }
   ]
 }

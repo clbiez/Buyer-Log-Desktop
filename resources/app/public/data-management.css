@@ -249,21 +249,9 @@
   .dmfRow { grid-template-columns: 1fr; }
 }
 
-/* --- Yenileme grupları --- */
-.dmGroupRow { display: flex; align-items: center; gap: 12px; padding: 7px 11px; }
-.dmGroupName { flex: 0 0 170px; }
-.dmGroupModules { flex: 1; }
-.dmGroupEmpty { margin: 0; padding: 11px; }
+/* --- Horizon ve yenileme notları --- */
 .dmGroupNote { margin: 0; padding: 7px 11px; }
-
-.dmGroupForm { padding: 11px; display: flex; flex-direction: column; gap: 9px; }
-.dmGroupNameField { display: flex; flex-direction: column; gap: 3px; max-width: 280px; }
-.dmGroupNameField input { height: var(--ui-control-height); padding: 0 8px;
-}
-.dmGroupChecks { display: flex; flex-wrap: wrap; gap: 6px 18px; }
 .dmCheck { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
-.dmGroupActions { display: flex; gap: 6px; justify-content: flex-end; }
-.dmGroupError { margin: 0; }
 
 /* --- Özet --- */
 .dmSummary { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 7px 11px; }
@@ -466,16 +454,13 @@
   .dmsExcelConnection { align-items: flex-start; flex-direction: column; }
 }
 
-/* --- Bağlı grup: tek ortak filtre (v20260929) ---
-   Grubun üyeleri tek filtreyi paylaşır; ayrılan modül kendi filtresiyle
-   çalışır. Yalnız tasarım sistemi token'ları kullanılır. */
-.dmLinkGroup { display: flex; flex-direction: column; gap: 6px; padding: 8px 11px; }
-.dmLinkRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
-.dmLinkChip { display: inline-flex; align-items: center; gap: 2px; padding: 0 2px 0 7px; }
-.dmLinkOutside { padding: 1px 7px; }
-.dmLinkOutsideLabel { margin-left: 8px; }
+/* --- İki ufuk: CP ve Diğer modüller (v2026-10-30) ---
+   Her ufuk bir satır: başlık, üyeler, Yenile düğmesi, kaynak filtreleri ve
+   filtre düzenleyicisinin açıldığı yuva. Yalnız tasarım sistemi token'ları. */
+.dmHorizonRow { display: flex; flex-direction: column; gap: 5px; padding: 8px 11px; }
+.dmHorizonHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
+.dmHorizonFeeds { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; min-width: 0; }
 .dmLinkMark { opacity: .7; cursor: help; }
-
 
 /* --- Merch Calendar -------------------------------------------------
    İş takvimi Veri Yönetimi'nin yerleşik panelidir. Buyer Log isteği gereği

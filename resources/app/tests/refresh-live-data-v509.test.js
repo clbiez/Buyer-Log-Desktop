@@ -52,9 +52,13 @@ test('v5.09 Source Refresh All explicitly refreshes every live target', () => {
   // yapmaz). Testin AMACI değişmedi: "tümünü yenile" yolu HÂLÂ dört hedefin
   // dördünü de açıkça yeniliyor olmalı — bir hedefin sessizce düşmemesi için.
   assert.match(APP, /serverRefreshBtn['"]\)\?\.addEventListener\(['"]click['"],\s*\(\)=>\{[\s\S]{0,240}?loadFromServer\(true,\['cp','orders','backlog','lfl'\]\)/);
-  // v20260930 — Başlıktaki Yenile menüsünün "Tümünü yenile" satırı CP dahil bütün hedefleri yeniler.
+  // v2026-10-30 — Başlıktaki Yenile menüsünün "Diğer modüller + CP" satırı CP dahil
+  // bütün hedefleri yeniler (ayrı "Tümü" satırı yok); gruba girmeyen hedef de
+  // kendi satırını alır — hiçbir hedef menüden sessizce düşmez.
   const menu = APP.slice(APP.indexOf('function openTopRefreshMenu'), APP.indexOf('// Yenile sürerken aynı düğmeye'));
-  assert.match(menu, /options\.push\(\['all',appLang==='en'\?'Refresh all':'Tümünü yenile',ALL_REFRESH_TARGETS\.slice\(\)\]\);/);
+  assert.match(menu, /const linkedTargets=withLinkedRefreshTargets\(members\);/);
+  assert.match(menu, /ALL_REFRESH_TARGETS\.forEach\(target=>\{\s*if\(!options\.some\(\(\[,,targets\]\)=>targets\.includes\(target\)\)\)options\.push/);
+  assert.match(APP, /LINKED_REFRESH_CHAIN\.forEach\(target=>\{if\(!list\.includes\(target\)\)list\.push\(target\);\}\);/);
   assert.match(menu, /return loadFromServer\(true,option\[2\]\.slice\(\)\)/);
   assert.match(APP, /const ALL_REFRESH_TARGETS=Object\.freeze\(\['cp','orders','backlog','lfl','priceanalysis'\]\);/);
 });

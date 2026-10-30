@@ -15,7 +15,8 @@
  *    ufuk kazanmalı; aksi hâlde birleşme gereğinden fazla sayfanın verisini değiştirir.
  * 3) YARIM YENİLEME. Gruptan tek sayfa istenirse (istemci, sunucu, yenileme
  *    grupları, otomasyon) dördü birlikte yenilenmeli; yalnız birini yayınlamak
- *    sayfaları farklı anlık görüntülerde bırakırdı.
+ *    sayfaları farklı anlık görüntülerde bırakırdı. v2026-10-30: grup
+ *    yenilenirken CP de yenilenir; CP tek başına yenilenebilir.
  * 4) BAYAT EKRAN. Yenileme açık olmayan Backlog'u ve Fiyat & Üretici Analizi'ni
  *    eski veriyle bırakmamalı.
  */
@@ -94,29 +95,36 @@ test('ASAS: kapatılmış (park edilmiş) bağlı besleme geri doğmaz', () => {
   assert.deepEqual(linkedScopes(out)[0].targets, ['orders', 'backlog']);
 });
 
-test('IAS (antrepo) eski Orders ayrıştırma kuralıyla devam eder', () => {
+/* v2026-10-30 — İKİ SABİT UFUK: IAS de CP ve Diğer modüller (Siparişler ·
+   Backlog) olarak ikiye ayrılır; eski Orders ayrıştırma kuralı IAS'ta yok. */
+test('IAS (antrepo) iki ufka ayrılır: CP tek başına, Siparişler + Backlog birlikte', () => {
   const out = scopes.normalizeScopes([
     { id: 'mixed', targets: ['cp', 'orders', 'backlog'], horizon: H(['S7']) },
   ], 'antrepo', {}, normalizeHorizon);
-  assert.deepEqual(out.find(scope => scope.targets.includes('orders')).targets, ['orders']);
-  assert.deepEqual(out.find(scope => scope.targets.includes('cp')).targets, ['cp', 'backlog']);
+  assert.deepEqual(out.find(scope => scope.targets.includes('orders')).targets, ['orders', 'backlog']);
+  assert.deepEqual(out.find(scope => scope.targets.includes('cp')).targets, ['cp']);
+  // Veri kapsamı geçiş anında değişmez: iki ufuk eski ortak ufku taşır.
+  for (const scope of out) assert.deepEqual(valuesOf(scope), ['S7']);
+  assert.deepEqual(scopes.normalizeLinkedTargets(['cp', 'orders'], 'antrepo'), ['orders', 'backlog'], 'üyelik sabittir');
 });
 
 /* v20260930 — TEK MOTOR GERİ ALINDI. Kullanıcı: "CP yenilemek 40 sn sürerken
    şimdi 200'e yanaştı." Yenileme filtre bağını izler: bağlı gruptaki bir sayfa
    grubu (tek sorgu) birlikte yeniler; gruptan ayrı sayfa (varsayılan CP) yalnız
    kendini. En geniş filtre dar CP yenilemesinin süresini belirlememeli. */
-test('yenileme hedefleri: bağlı grup birlikte, gruptan ayrı CP tek başına', () => {
+/* v2026-10-30 — Kullanıcı: "Diğer modüller yenilendiğinde CP de yenilensin."
+   Zincir tek yönlüdür: CP tek başına yenilenebilir (dar CP en geniş filtreyi
+   beklemez — v20260930 kararı korunur). */
+test('yenileme hedefleri: Diğer modüller CP ile birlikte, CP tek başına', () => {
   const ALL = ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'];
-  assert.deepEqual(scopes.withRefreshTargets(['lfl']).slice().sort(), LINKED.slice().sort());
+  assert.deepEqual(scopes.withRefreshTargets(['lfl']).slice().sort(), ALL.slice().sort(), 'diğer modüller CP\'yi de yeniler');
   assert.deepEqual(scopes.withRefreshTargets(['cp']), ['cp'], 'dar CP yenilemesi geniş grubu çalıştırmaz');
   assert.deepEqual(scopes.withRefreshTargets(['cp', 'orders', 'cp']).slice().sort(), ALL.slice().sort());
   assert.deepEqual(scopes.withRefreshTargets([]), [], 'boş liste boş kalır; varsayılanı çağıran uygular');
-  // Üyelik düzenlenebilir: kayıttaki gerçek grup esas alınır.
-  assert.deepEqual(scopes.withRefreshTargets(['cp'], ['cp', 'orders']).slice().sort(), ['cp', 'orders']);
-  assert.deepEqual(scopes.withRefreshTargets(['backlog'], ['orders', 'lfl']), ['backlog'], 'gruptan ayrılan sayfa tek başına');
+  assert.deepEqual(scopes.LINKED_REFRESH_CHAIN, ['cp']);
+  assert.deepEqual(scopes.HORIZON_GROUPS.map(group => [group.id, group.targets.slice()]), [['cp', ['cp']], ['linked', LINKED]]);
   assert.equal(scopes.withLinkedTargets, scopes.withRefreshTargets, 'eski ad aynı kuralı çağırır');
-  assert.deepEqual(refreshGroups.targetsFor([{ id: 'g', name: 'G', moduleIds: ['backlog'] }], 'g'), LINKED);
+  assert.deepEqual(refreshGroups.targetsFor([{ id: 'g', name: 'G', moduleIds: ['backlog'] }], 'g').slice().sort(), ALL.slice().sort());
   assert.deepEqual(scopes.REFRESH_TARGETS, ALL, '"Tümünü yenile" kapsamı');
 });
 
@@ -165,11 +173,16 @@ test('istemci: sayfa düğmeleri yalnız kendi sayfasını ister; menü filtre b
   const load = APP.slice(APP.indexOf('async function loadFromServer(force, targets){'), APP.indexOf('async function loadFromServer(force, targets){') + 1350);
   assert.match(load, /await syncLinkedRefreshMembers\(\)/);
   assert.match(load, /targets=withLinkedRefreshTargets\(targets\)/);
-  // Menü: ayrı sayfa kendi satırı, bağlı grup tek satır, ayrıca "Tümünü yenile".
+  // v2026-10-30 — Menü iki satır: "CP" ve "Diğer modüller + CP" (= bütün modüller;
+  // ayrıca "Tümü" satırı yok). Gruba girmeyen modül kalırsa kendi satırını alır.
   const menu = APP.slice(APP.indexOf('function openTopRefreshMenu'), APP.indexOf('// Yenileme sürerken aynı düğmeye tekrar basmak'));
-  assert.match(menu, /options\.push\(\['linked',refreshTargetsLabel\(members\),members\.slice\(\)\]\)/);
-  assert.match(menu, /else options\.push\(\[target,refreshTargetsLabel\(\[target\]\),\[target\]\]\);/);
-  assert.match(menu, /options\.push\(\['all',appLang==='en'\?'Refresh all':'Tümünü yenile',ALL_REFRESH_TARGETS\.slice\(\)\]\);/);
+  assert.match(menu, /const options=\[\['cp','CP',\['cp'\]\]\];/);
+  assert.match(menu, /options\.push\(\['linked',`\$\{refreshTargetsLabel\(members\)\} \+ CP`,linkedTargets\]\);/);
+  assert.match(menu, /const linkedTargets=withLinkedRefreshTargets\(members\);/);
+  assert.doesNotMatch(menu, /\['all',/);
+  const chain = APP.slice(APP.indexOf('function withLinkedRefreshTargets('), APP.indexOf('function refreshTargetsLabel('));
+  assert.match(chain, /LINKED_REFRESH_CHAIN\.forEach/);
+  assert.match(APP, /const LINKED_REFRESH_CHAIN=Object\.freeze\(\['cp'\]\);/);
   assert.match(menu, /if\(option\)return loadFromServer\(true,option\[2\]\.slice\(\)\);/);
   // CP düğmesi yalnız CP'yi, Siparişler düğmesi Siparişler'i ister (grup sunucuda eklenir).
   for (const [id, target] of [['cpRefreshBtn', 'cp'], ['ordersRefreshBtn', 'orders']]) {

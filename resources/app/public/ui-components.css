@@ -7372,15 +7372,15 @@ html[data-ui-system="manifest"] .dmfPickerItem.isSelected,html[data-ui-system="m
 }
 html[data-ui-system="manifest"] .dmfPickerEmpty { font-size: var(--ui-font-xs) !important; color: var(--ui-text-muted) !important
 }
-html[data-ui-system="manifest"] .dmGroupRow { font-size: var(--ui-font-sm) !important
+html[data-ui-system="manifest"] .dmHorizonRow { font-size: var(--ui-font-sm) !important
 }
-html[data-ui-system="manifest"] .dmGroupRow:hover { background: var(--ui-row-hover) !important
+html[data-ui-system="manifest"] .dmHorizonRow:hover { background: var(--ui-row-hover) !important
 }
-html[data-ui-system="manifest"] .dmGroupName { font-weight: 600 !important; color: var(--ui-text) !important
+html[data-ui-system="manifest"] .dmHorizonTitle { font-weight: 600 !important; color: var(--ui-text) !important
 }
-html[data-ui-system="manifest"] .dmGroupModules { color: var(--ui-text-secondary) !important
+html[data-ui-system="manifest"] .dmHorizonMembers { color: var(--ui-text-secondary) !important
 }
-html[data-ui-system="manifest"] .dmGroupEmpty { font-size: var(--ui-font-sm) !important; color: var(--ui-text-muted) !important
+html[data-ui-system="manifest"] .dmHorizonHint { font-size: var(--ui-font-xs) !important; color: var(--ui-text-muted) !important
 }
 html[data-ui-system="manifest"] .dmGroupNote { font-size: var(--ui-font-xs) !important; color: var(--ui-text-muted) !important; background: var(--ui-surface-soft) !important
 }
@@ -7550,20 +7550,6 @@ html[data-ui-system="manifest"] .dmsExcelConnectionMain small { font-size: var(-
 html[data-ui-system="manifest"] .dmsExcelConnectionMain small.isBad { color: var(--ui-danger) !important
 }
 html[data-ui-system="manifest"] .dmConnectionPreview { background: var(--ui-surface-soft) !important
-}
-html[data-ui-system="manifest"] .dmLinkGroup { background: var(--ui-surface-soft) !important
-}
-html[data-ui-system="manifest"] .dmLinkRow { font-size: var(--ui-font-sm) !important
-}
-html[data-ui-system="manifest"] .dmLinkTitle { font-weight: 600 !important; color: var(--ui-text) !important
-}
-html[data-ui-system="manifest"] .dmLinkHint { font-size: var(--ui-font-xs) !important; color: var(--ui-text-muted) !important
-}
-html[data-ui-system="manifest"] .dmLinkChip { font-size: var(--ui-font-xs) !important; background: var(--ui-selected) !important; color: var(--ui-selected-ink) !important
-}
-html[data-ui-system="manifest"] .dmLinkOutside { font-size: var(--ui-font-xs) !important; color: var(--ui-text-secondary) !important
-}
-html[data-ui-system="manifest"] .dmLinkMark { font-size: var(--ui-font-2xs) !important
 }
 html[data-ui-system="manifest"] .dmMerchPanel {background:var(--ui-surface) !important
 }
