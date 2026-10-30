@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.322",
+      "publishedAt": "2026-10-30",
+      "title": {
+        "tr": "Giriş alanları her ekranda belirgin; seçilebilir tema geçişleri",
+        "en": "Input fields stand out on every screen; selectable theme transitions"
+      },
+      "stats": {
+        "features": 2,
+        "improvements": 1,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.322/release.json"
+    },
+    {
       "version": "7.0.321",
       "publishedAt": "2026-10-29",
       "title": {
