@@ -139,7 +139,9 @@ modüller `perf-runtime` lazy sözleşmesine uyar.
   yüzey tonu tek başına yetmez). Kural yalnız `ui-components.css` sonundaki ortak
   alan bloğundadır; modül CSS'i alan kenarlığını `border:0` ile silmez. Disabled/
   readonly alan `--ui-group-divider`; ızgara hücresi editörü (`td`) tablo
-  sözleşmesinde kalır. Görünür label, placeholder, disabled ve hata durumu.
+  sözleşmesinde kalır. Değer gösteren native olmayan seçici (çoklu seçim,
+  dönem/boyut seçici) aynı sınırı ortak listeden alır; yeni seçici o listeye
+  eklenir. Gerçek uygulama kabulü: `scripts/form-field-border-ui-acceptance.js`. Görünür label, placeholder, disabled ve hata durumu.
   `aria-invalid` yalnız renk dışında hata açıklamasıyla birlikte kullanılır.
 - KPI: küçük açıklama, tabular sayısal değer ve alt bağlam. Her KPI ayrı
   çerçeveli/gölgeli kart değildir.

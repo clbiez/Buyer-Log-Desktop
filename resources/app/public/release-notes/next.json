@@ -23,8 +23,8 @@
         "en": "Input field borders are visible on every screen"
       },
       "body": {
-        "tr": "Metin kutuları, açılır listeler, tarih alanları ve tablo filtre kutuları zeminle neredeyse aynı tonda olduğu için nereye yazılacağı belli olmuyordu. Artık tüm düzenlenebilir alanlar açık ve koyu temada okunur ince bir çerçeveyle görünüyor; tarih alanı takvim düğmesiyle tek kutu olarak çerçeveleniyor. Devre dışı alanlar daha soluk çerçeveyle ayrılıyor.",
-        "en": "Text boxes, dropdowns, date fields and table filter boxes were almost the same tone as the background, so it was unclear where to type. All editable fields now show a thin border that stays readable in both light and dark themes; the date field and its calendar button are framed as one box. Disabled fields use a lighter border."
+        "tr": "Metin kutuları, açılır listeler, tarih alanları, tablo filtre kutuları ve Fiyat & Üretici Analizi, LFL, OAB/Intake ile CP özetindeki seçim alanları zeminle neredeyse aynı tonda olduğu için nereye yazılacağı belli olmuyordu. Artık tüm düzenlenebilir alanlar açık ve koyu temada okunur ince bir çerçeveyle görünüyor; tarih ve Endeksmatik ay alanı düğmesiyle tek kutu olarak çerçeveleniyor. Devre dışı alanlar daha soluk çerçeveyle ayrılıyor. License Royalty Hesapları penceresi İngilizce seçildiğinde Uygula, TR/YD Komisyon gibi Türkçe kalan metinler dahil tamamen İngilizce görünüyor.",
+        "en": "Text boxes, dropdowns, date fields, table filter boxes and the pickers in Price & Supplier Analysis, LFL, OAB/Intake and the CP summary were almost the same tone as the background, so it was unclear where to type. All editable fields now show a thin border that stays readable in both light and dark themes; date and Endeksmatik month fields are framed as one box with their button. Disabled fields use a lighter border. In English, the License Royalty Calculations window is now fully English, including Apply and the TR/Overseas commission labels that stayed Turkish."
       },
       "visual": {
         "kind": "screenshot",

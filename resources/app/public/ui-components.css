@@ -15376,3 +15376,13 @@ html[data-ui-system="manifest"] .dateFieldWrap>.datePickerBtn:not(td *) {border:
 }
 html[data-ui-system="manifest"] .dateFieldWrap>.dateKeyboardInput:is(:disabled,[readonly]):not(td *)+.datePickerBtn {border-color:var(--ui-group-divider) !important
 }
+/* Native olmayan seçim alanları (tetikleyici değer gösterir) aynı alan sınırını taşır. */
+html[data-ui-system="manifest"] :is(.psaMultiTrigger,.lflDimBtn,.lflBreakdownBtn,.oabMultiTrigger,.cpaFieldPickerBtn):not(td *) {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] :is(.psaMultiTrigger[aria-disabled="true"],.lflDimBtn:disabled,.lflBreakdownBtn:disabled,.oabMultiTrigger:disabled,.cpaFieldPickerBtn:disabled):not(td *) {border-color:var(--ui-group-divider) !important
+}
+/* Endeksmatik ay alanı: kap tek kutudur; iç metin girişi ayrıca çerçevelenmez. */
+html[data-ui-system="manifest"] .endeksmatikMonthControl:not(td *) {border:1px solid var(--ui-field-border) !important
+}
+html[data-ui-system="manifest"] .endeksmatikMonthControl>input[type="text"] {border:0 !important
+}
