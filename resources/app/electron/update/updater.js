@@ -115,6 +115,10 @@ class BuyerLogUpdater{
       if(transportMessage)detail.transportMessage=transportMessage;
       if(transport)detail.transport=transport;
       if(artifactSource)detail.artifactSource=artifactSource;
+      // Ağ kök nedeni ve deneme sayısı; URL/kimlik bilgisi içermez.
+      if(error.transportCause)detail.transportCause=String(error.transportCause).slice(0,300);
+      if(error.transportFailures)detail.transportFailures=String(error.transportFailures).slice(0,300);
+      if(error.attempts)detail.attempts=Number(error.attempts)||0;
       this.saveState({state:STATES.FAILED,lastError:detail});this.appendLog('check-failed',detail);if(options.manual)throw Object.assign(error,detail);return {ok:false,offline:true,error:detail,...this.status(base,channel)};
     }
   }
@@ -126,15 +130,19 @@ class BuyerLogUpdater{
     if(!reuse){
       this.saveState({state:STATES.DOWNLOADING});rmSafe(partial);this.appendLog('download-started',{version:manifest.version});
       try{
-        await provider.copyArtifact(manifest.channel,manifest.artifact,partial,manifest.version);
+        const copied=await provider.copyArtifact(manifest.channel,manifest.artifact,partial,manifest.version);
+        if(copied&&Number(copied.attempts)>1)this.appendLog('download-resumed',{version:manifest.version,attempts:Number(copied.attempts)});
       }catch(error){
         rmSafe(partial);
         throw updaterError('Update paketi kopyalanamadı.','UPDATE_DOWNLOAD_FAILED',{
           cause:error,
-          transportCode:String(error&&error.code||'').slice(0,120),
+          transportCode:String(error&&(error.transportCode||error.code)||'').slice(0,120),
           transportMessage:String(error&&error.message||'').slice(0,500),
           transport:String(error&&error.transport||'').slice(0,80),
           artifactSource:String(error&&error.artifactSource||'').slice(0,80),
+          transportCause:String(error&&error.transportCause||'').slice(0,300),
+          transportFailures:String(error&&error.transportFailures||'').slice(0,300),
+          attempts:Number(error&&error.attempts)||0,
         });
       }
       fs.renameSync(partial,cacheFile);
