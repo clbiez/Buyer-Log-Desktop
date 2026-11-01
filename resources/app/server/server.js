@@ -2761,7 +2761,12 @@ async function automationSourceRows(ownerId, profile, source, recipe, assertAuth
       const owner = userAccess.profileById(ownerId) || profile;
       const priority = cpAgentPreferences.ruleSnapshot(owner, 'priority'), checklist = cpAgentPreferences.ruleSnapshot(owner, 'checklist');
       const context = cpAgentPreferences.context(owner);
-      ruleContext = { rules: [...priority.rules, ...checklist.rules], answers: context.answers || {}, checklistEnabled: context.checklistEnabled };
+      ruleContext = {
+        rules: [...priority.rules, ...checklist.rules],
+        priorityCatalog: priority.priorityCatalog || [],
+        answers: context.answers || {},
+        checklistEnabled: context.checklistEnabled,
+      };
     } catch (_) { ruleContext = null; }
     return cpAutomation.enrichRows(list, {
       transitRules: (overrides && overrides.transitRules) || [],
@@ -11052,7 +11057,12 @@ app.get('/api/cp-managed-rules', (_req, res) => {
 app.put('/api/cp-managed-rules', userAccess.requireModerator, express.json({ limit: '2mb' }), (req, res) => {
   try {
     const body = req.body && typeof req.body === 'object' ? req.body : {};
-    const saved = require('./db').replaceCpManagedRules({ rules: body.rules, deletedRuleIds: body.deletedRuleIds }, requestRevision(req), req.currentUser);
+    const saved = require('./db').replaceCpManagedRules({
+      rules: body.rules,
+      deletedRuleIds: body.deletedRuleIds,
+      priorityCatalog: body.priorityCatalog,
+      checklistStatuses: body.checklistStatuses,
+    }, requestRevision(req), req.currentUser);
     userAccess.appendAudit(req.currentUser, 'CP_MANAGED_RULES_UPDATE', 'rules', { rules: saved.rules.length, deleted: saved.deletedRuleIds.length, revision: saved.revision });
     publishSharedMasterChange('cpManagedRules', req);
     res.set('ETag', `"${saved.revision}"`);

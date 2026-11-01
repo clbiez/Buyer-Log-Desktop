@@ -12,7 +12,11 @@ self.onmessage=function(event){
   if(!importsReady){self.postMessage({id,ok:false,error:'CP_WORKER_IMPORT_FAILED'});return;}
   try{
     let result;
-    if(type==='begin'){context=payload;analyses=[];rowCache=new Map();result=true;}
+    if(type==='begin'){
+      context=payload;analyses=[];rowCache=new Map();
+      if(self.BLOrderDecisionEngine?.setPriorityCatalog)self.BLOrderDecisionEngine.setPriorityCatalog(payload&&payload.priorityCatalog||null);
+      result=true;
+    }
     else if(type==='batch'){
       result=payload.map(entry=>{
         if(rowCache.has(entry.reference))return rowCache.get(entry.reference);

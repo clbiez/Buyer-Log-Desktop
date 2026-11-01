@@ -198,7 +198,7 @@
   /* Segment / sekme geçişi: seçim değişince 2px vurgu çizgisi eski seçenekten
      yenisine kayar ve söner. Yalnız transform/opacity; metnin üstünü örtmez,
      sayfa yeniden çizse de tıklanan noktadaki grup yeniden bulunur. */
-  const SEGMENTS='.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.cpaSeg,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs';
+  const SEGMENTS='.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.cpaSeg,.cpaStudioTabs,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs';
   const SEGMENT_ACTIVE=':is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"])';
   let segmentPress=null;
   function segmentActive(group){return group&&group.isConnected?Array.from(group.querySelectorAll(':scope > button'+SEGMENT_ACTIVE+',:scope > * > button'+SEGMENT_ACTIVE)).find(visible)||null:null;}

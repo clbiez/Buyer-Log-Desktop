@@ -576,7 +576,15 @@ function replaceFreightRates(value, expectedRevision = null, options = {}) {
 function normalizeCpManagedRules(value) {
   const Rules = require('../public/cp-rules-engine');
   const clean = Rules.normalizeManagedRules(value);
-  return { version: 1, rules: clean.rules, deletedRuleIds: clean.deletedRuleIds, updatedAt: clean.updatedAt, updatedBy: clean.updatedBy };
+  return {
+    version: 1,
+    rules: clean.rules,
+    deletedRuleIds: clean.deletedRuleIds,
+    priorityCatalog: clean.priorityCatalog || [],
+    checklistStatuses: clean.checklistStatuses || [],
+    updatedAt: clean.updatedAt,
+    updatedBy: clean.updatedBy,
+  };
 }
 function replaceCpManagedRules(value, expectedRevision = null, actor = null) {
   const ov = loadOverrides();

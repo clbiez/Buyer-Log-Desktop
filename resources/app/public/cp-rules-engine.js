@@ -44,10 +44,20 @@
      can target only real Action Priority severities. Rank comes from the shared
      decision registry. */
   const SEVERITY = Object.freeze([...(OD.ACTION_PRIORITIES || ['CRITICAL', 'ACTION_TODAY', 'ACTION_THIS_WEEK', 'WATCH', 'ON_TRACK']), 'UNKNOWN']);
-  const severityRank = key => OD.priorityRank ? OD.priorityRank(key) : (() => {
+  const severityRank = (key, catalog) => OD.priorityRank ? OD.priorityRank(key, catalog) : (() => {
     const index = SEVERITY.indexOf(key);
     return index < 0 ? SEVERITY.length : index;
   })();
+
+  function isValidPriorityTarget(target, catalog) {
+    const raw = String(target || '').trim();
+    if (!raw || raw === 'UNKNOWN') return false;
+    if (SEVERITY.includes(raw)) return true;
+    if (OD.isCustomPriorityCode && OD.isCustomPriorityCode(raw)) return true;
+    if (/^prio:[a-z0-9_-]{1,35}$/.test(raw)) return true;
+    if (Array.isArray(catalog) && catalog.some(entry => entry && entry.id === raw)) return true;
+    return false;
+  }
 
   const OPERATORS = Object.freeze([
     { id: 'eq', tr: 'eşittir', en: 'equals', value: true },
@@ -609,9 +619,11 @@
     });
   }
 
-  function normalizeRule(raw, kind) {
+  function normalizeRule(raw, kindOrOptions) {
     const item = raw && typeof raw === 'object' ? raw : {};
-    const ruleKind = kind || (['priority', 'checklist'].includes(text(item.kind)) ? text(item.kind) : 'priority');
+    const opts = kindOrOptions && typeof kindOrOptions === 'object' ? kindOrOptions : {};
+    const explicitKind = typeof kindOrOptions === 'string' ? kindOrOptions : text(opts.kind);
+    const ruleKind = explicitKind || (['priority', 'checklist'].includes(text(item.kind)) ? text(item.kind) : 'priority');
     const legacyExpression = (Number(item.expressionVersion) || 1) < EXPRESSION_VERSION;
     const conditions = (Array.isArray(item.conditions) ? item.conditions : []).slice(0, 12).map(normalizeCondition)
       .filter(rule => rule.field)
@@ -635,7 +647,8 @@
     // Moderatörün tüm kullanıcılara yayımladığı kural. Yalnız true iken yazılır.
     if (item.managed === true) base.managed = true;
     if (ruleKind === 'priority') {
-      base.target = SEVERITY.includes(text(item.target)) ? text(item.target) : 'ACTION_THIS_WEEK';
+      const target = text(item.target);
+      base.target = isValidPriorityTarget(target, opts.priorityCatalog) ? target : 'ACTION_THIS_WEEK';
       base.reasonTr = text(item.reasonTr).slice(0, 200);
       base.reasonEn = text(item.reasonEn).slice(0, 200);
     } else {
@@ -643,7 +656,18 @@
       // independent conditions. Empty autoFormula intentionally never writes.
       const requestedAutoStatus = text(item.autoStatus);
       base.autoStatus = Checklist.normalizeStatus && Checklist.normalizeStatus(requestedAutoStatus) || '';
-      base.autoFormula = text(item.autoFormula).slice(0, 4000);
+      const autoMode = text(item.autoMode) === 'basic' ? 'basic' : 'formula';
+      const autoMatch = text(item.autoMatch) === 'any' ? 'any' : 'all';
+      const autoConditions = (Array.isArray(item.autoConditions) ? item.autoConditions : [])
+        .slice(0, 12).map(normalizeCondition).filter(cond => cond.field);
+      if (item.autoMode === 'basic' || Array.isArray(item.autoConditions)) {
+        base.autoMode = autoMode;
+        base.autoMatch = autoMatch;
+        base.autoConditions = autoConditions;
+      }
+      base.autoFormula = autoMode === 'basic'
+        ? (autoConditions.length ? conditionsToFormula(autoConditions, autoMatch) : '')
+        : text(item.autoFormula).slice(0, 4000);
       base.questionTr = text(item.questionTr).slice(0, 300);
       base.questionEn = text(item.questionEn).slice(0, 300);
       base.tr = text(item.tr).slice(0, 160) || base.name;
@@ -673,6 +697,94 @@
       }
     }
     return base;
+  }
+
+  /* ------------------------------------------------ BASİT CHECKLIST ŞABLONLARI
+     Kullanıcının ham formül görmeden "Tüm aktif siparişlere sor" veya
+     "Yüklemeye ≤ X gün kala sor" diyebilmesini sağlar. */
+  function checklistScopePreset(rule) {
+    if (!rule || rule.kind !== 'checklist') return { preset: 'custom', maxDaysToLoad: 28, minOrderAgeDays: null };
+    if (rule.mode === 'formula' && text(rule.formula)) {
+      const compact = text(rule.formula).replace(/\s+/g, '');
+      const winWithAge = compact.match(/^=AND\(IN\(\[@stage\],"PRODUCTION","LOADING","SHORTAGE"\),OR\(ISBLANK\(\[@daysToLoad\]\),\[@daysToLoad\]>=-?\d+\),OR\(\[@daysToLoad\]<=(-?\d+),\[@orderAgeDays\]>=(\d+)\)\)$/i);
+      if (winWithAge) {
+        return { preset: 'window', maxDaysToLoad: Number(winWithAge[1]), minOrderAgeDays: Number(winWithAge[2]) };
+      }
+      const winNoAge = compact.match(/^=AND\(IN\(\[@stage\],"PRODUCTION","LOADING","SHORTAGE"\),OR\(ISBLANK\(\[@daysToLoad\]\),\[@daysToLoad\]>=-?\d+\),\[@daysToLoad\]<=(-?\d+)\)$/i);
+      if (winNoAge) {
+        return { preset: 'window', maxDaysToLoad: Number(winNoAge[1]), minOrderAgeDays: null };
+      }
+      if (/^=IN\(\[@stage\],"PRODUCTION","LOADING","SHORTAGE"\)$/i.test(compact)) {
+        return { preset: 'all', maxDaysToLoad: 28, minOrderAgeDays: null };
+      }
+      return { preset: 'custom', maxDaysToLoad: 28, minOrderAgeDays: null };
+    }
+    const conds = Array.isArray(rule.conditions) ? rule.conditions : [];
+    if (rule.match !== 'any' && conds.length === 1) {
+      const only = conds[0];
+      if (only.field === '@stage' && only.operator === 'in') {
+        const vals = Array.isArray(only.value) ? only.value : [];
+        if (vals.length === 3 && vals.includes('PRODUCTION') && vals.includes('LOADING') && vals.includes('SHORTAGE')) {
+          return { preset: 'all', maxDaysToLoad: 28, minOrderAgeDays: null };
+        }
+      }
+      if (only.field === '@daysToLoad' && only.operator === 'lte' && Number.isFinite(Number(only.value))) {
+        return { preset: 'window', maxDaysToLoad: Number(only.value), minOrderAgeDays: null };
+      }
+    }
+    if (rule.match !== 'any' && conds.length >= 2 && conds.length <= 3) {
+      const allowed = conds.every(c =>
+        (c.field === '@stage' && c.operator === 'in')
+        || (c.field === '@daysToLoad' && (c.operator === 'lte' || c.operator === 'gte'))
+      );
+      const lte = conds.find(c => c.field === '@daysToLoad' && c.operator === 'lte');
+      if (allowed && lte && Number.isFinite(Number(lte.value))) {
+        return { preset: 'window', maxDaysToLoad: Number(lte.value), minOrderAgeDays: null };
+      }
+    }
+    return { preset: 'custom', maxDaysToLoad: 28, minOrderAgeDays: null };
+  }
+
+  function applyChecklistScopePreset(rule, spec = {}) {
+    if (!rule || rule.kind !== 'checklist') return rule;
+    const preset = text(spec.preset);
+    if (preset === 'all') {
+      rule.mode = 'basic';
+      rule.match = 'all';
+      rule.conditions = [normalizeCondition({ field: '@stage', operator: 'in', value: ['PRODUCTION', 'LOADING', 'SHORTAGE'] })];
+      rule.formula = conditionsToFormula(rule.conditions, 'all');
+      delete rule._compiledFormula;
+      delete rule._formulaError;
+      return rule;
+    }
+    if (preset === 'window') {
+      const maxDays = Number.isFinite(Number(spec.maxDaysToLoad)) ? Math.max(0, Math.min(365, Math.round(Number(spec.maxDaysToLoad)))) : 28;
+      const minAgeRaw = spec.minOrderAgeDays === '' || spec.minOrderAgeDays == null ? null : Number(spec.minOrderAgeDays);
+      const minAge = minAgeRaw != null && Number.isFinite(minAgeRaw) && minAgeRaw > 0 ? Math.min(365, Math.round(minAgeRaw)) : null;
+      if (minAge != null) {
+        rule.mode = 'formula';
+        rule.formula = `=AND(IN([@stage],"PRODUCTION","LOADING","SHORTAGE"),OR(ISBLANK([@daysToLoad]),[@daysToLoad]>=-30),OR([@daysToLoad]<=${maxDays},[@orderAgeDays]>=${minAge}))`;
+        rule.conditions = [
+          normalizeCondition({ field: '@stage', operator: 'in', value: ['PRODUCTION', 'LOADING', 'SHORTAGE'] }),
+          normalizeCondition({ field: '@daysToLoad', operator: 'lte', value: maxDays }),
+        ];
+        delete rule._compiledFormula;
+        delete rule._formulaError;
+      } else {
+        rule.mode = 'basic';
+        rule.match = 'all';
+        rule.conditions = [
+          normalizeCondition({ field: '@stage', operator: 'in', value: ['PRODUCTION', 'LOADING', 'SHORTAGE'] }),
+          normalizeCondition({ field: '@daysToLoad', operator: 'gte', value: -30 }),
+          normalizeCondition({ field: '@daysToLoad', operator: 'lte', value: maxDays }),
+        ];
+        rule.formula = conditionsToFormula(rule.conditions, 'all');
+        delete rule._compiledFormula;
+        delete rule._formulaError;
+      }
+      return rule;
+    }
+    return rule;
   }
 
   /* ------------------------------------------------------------- YERLEŞİK
@@ -884,17 +996,37 @@
   /* Öncelik kuralları: YALNIZ yükseltir (§2). Eşleşen kuralların adları
      döner ki kullanıcı bir siparişin neden Kritik olduğunu görebilsin. */
   function applyPriorityRules(analysis, rules, checklistState, preparedFacts) {
+    const stateOrOpts = checklistState && typeof checklistState === 'object' ? checklistState : {};
+    const catalog = (preparedFacts && preparedFacts.priorityCatalog) || stateOrOpts.priorityCatalog || undefined;
+    const isTracking = target => OD.priorityMeta?.(target, catalog)?.usage === 'tracking';
+    if (stateOrOpts.evaluated && Array.isArray(stateOrOpts.evaluated.matched)) {
+      let priority = analysis.priority;
+      const trackingTags = [];
+      for (const rule of stateOrOpts.evaluated.matched) {
+        if (isTracking(rule.target)) { if (!trackingTags.includes(rule.target)) trackingTags.push(rule.target); continue; }
+        if (OD.moreUrgent) priority = OD.moreUrgent(priority, rule.target, catalog);
+        else if (severityRank(rule.target, catalog) < severityRank(priority, catalog)) priority = rule.target;
+      }
+      return {
+        priority, trackingTags,
+        matched: stateOrOpts.evaluated.matched,
+        signals: stateOrOpts.evaluated.signals || [],
+      };
+    }
     const list = preparedFacts?._rulePreparation?.rules===rules
       ?preparedFacts._rulePreparation.priorityRules
       :(Array.isArray(rules) ? rules : []).filter(rule => rule.kind === 'priority');
-    if (!list.length) return { priority: analysis.priority, matched: [], signals: [] };
-    const facts = preparedFacts || factsFor(analysis, checklistState);
+    if (!list.length) return { priority: analysis.priority, matched: [], signals: [], trackingTags: [] };
+    const cleanChecklistState = stateOrOpts.priorityCatalog || stateOrOpts.evaluated ? {} : checklistState;
+    const facts = preparedFacts || factsFor(analysis, cleanChecklistState);
     let priority = analysis.priority;
     const matched = [];
     const signals = [];
+    const trackingTags = [];
     for (const rule of list) {
       if (!matchesRule(rule, facts)) continue;
       matched.push(rule);
+      if (isTracking(rule.target)) { if (!trackingTags.includes(rule.target)) trackingTags.push(rule.target); continue; }
       const signal = {
         code: `CUSTOM_RULE:${rule.id}`,
         source: 'custom_rule',
@@ -904,10 +1036,10 @@
         ruleId: rule.id,
       };
       signals.push(signal);
-      if (OD.moreUrgent) priority = OD.moreUrgent(priority, rule.target);
-      else if (severityRank(rule.target) < severityRank(priority)) priority = rule.target;
+      if (OD.moreUrgent) priority = OD.moreUrgent(priority, rule.target, catalog);
+      else if (severityRank(rule.target, catalog) < severityRank(priority, catalog)) priority = rule.target;
     }
-    return { priority, matched, signals };
+    return { priority, matched, signals, trackingTags };
   }
 
   /* Özel kontrol kuralları: koşulu sağlayan siparişe kendi sorusunu ekler.
@@ -1066,6 +1198,7 @@
     const facts = factsFor(analysis, {});
     if(prepared)facts._rulePreparation=prepared;
     if (opts.today != null) facts.today = opts.today;
+    if (Array.isArray(opts.priorityCatalog)) facts.priorityCatalog = opts.priorityCatalog;
     const guarded = (key, compute, cycleValue) => {
       if (memo.has(key)) return memo.get(key);
       if (visiting.has(key)) return cycleValue;
@@ -1132,6 +1265,36 @@
     const ruleState = {};
     for (const rule of rules) if (rule.kind === 'priority') ruleState[rule.id] = applied.matched.includes(rule) ? 'matched' : 'notMatched';
     return { ...applied, checklistState, customItems, ruleState, autoDecisions };
+  }
+
+  // Pure, side-effect-free comparison of saved rules and the proposed rule set.
+  function previewRuleImpact(orders, candidate, options = {}) {
+    const rows = Array.isArray(orders) ? orders : [];
+    const baselineRules = Array.isArray(options.rules) ? options.rules : [];
+    const nextRules = Array.isArray(options.proposedRules) ? options.proposedRules
+      : [...baselineRules.filter(rule => rule.id !== candidate.id), candidate];
+    const shared = { answers: options.answers || {}, plmEvidence: options.plmEvidence,
+      checklistEnabled: options.checklistEnabled, priorityCatalog: options.priorityCatalog };
+    let count = 0, changed = 0, qty = 0, automaticAnswers = 0;
+    const sample = [];
+    const resultKey = result => JSON.stringify([result.priority, [...(result.trackingTags || [])].sort(), Object.entries(result.checklistState || {}).sort(([a], [b]) => a.localeCompare(b))]);
+    for (const original of rows) {
+      const analysis = { ...original, sourceRow: original.sourceRow, priority: original.basePriority || 'ON_TRACK' };
+      const before = evaluateOrder(analysis, { ...shared, rules: baselineRules });
+      const after = evaluateOrder(analysis, { ...shared, rules: nextRules });
+      const hit = candidate.kind === 'checklist' ? after.customItems.some(item => item.id === candidate.id)
+        : after.ruleState[candidate.id] === 'matched';
+      if (resultKey(before) !== resultKey(after)) changed++;
+      for (const auto of after.autoDecisions || []) {
+        if (auto.itemId !== candidate.id) continue;
+        const existing = (options.answers || {})[Checklist.answerKey(original.orderKey, auto.itemId)];
+        if ((!existing || existing.source === 'auto_rule') && existing?.state !== auto.state) automaticAnswers++;
+      }
+      if (!hit) continue;
+      count++; qty += Number(original.qty) || 0;
+      if (sample.length < 4) sample.push(`${original.orderCode || ''} ${original.modelName || ''}`.trim());
+    }
+    return { count, changed, qty, automaticAnswers, total: rows.length, sample };
   }
 
   /* ---------------------------------------------------------- bağımlılıklar
@@ -1439,7 +1602,15 @@
   const MAX_MANAGED_DELETED = 500;
   function normalizeManagedRules(raw) {
     const source = raw && typeof raw === 'object' ? raw : {};
-    const rules = normalizeRules(source.rules).map(rule => ({ ...normalizeRule({ ...rule, managed: true }) }));
+    const priorityCatalog = (Array.isArray(source.priorityCatalog) ? source.priorityCatalog : [])
+      .map(entry => OD.normalizePriorityEntry ? OD.normalizePriorityEntry({ ...entry, managed: true }) : null)
+      .filter(Boolean)
+      .slice(0, 40);
+    const checklistStatuses = (Array.isArray(source.checklistStatuses) ? source.checklistStatuses : [])
+      .map(entry => Checklist.normalizeCustomStatusEntry ? Checklist.normalizeCustomStatusEntry({ ...entry, managed: true }) : null)
+      .filter(Boolean)
+      .slice(0, 24);
+    const rules = normalizeRules(source.rules).map(rule => ({ ...normalizeRule({ ...rule, managed: true }, { priorityCatalog }) }));
     const ids = new Set(rules.map(rule => rule.id));
     const deletedRuleIds = [...new Set((Array.isArray(source.deletedRuleIds) ? source.deletedRuleIds : []).map(text).filter(Boolean))]
       .filter(id => !ids.has(id)).slice(0, MAX_MANAGED_DELETED);
@@ -1448,7 +1619,10 @@
       revision: Math.max(0, Math.floor(Number(source.revision) || 0)),
       updatedAt: text(source.updatedAt).slice(0, 40),
       updatedBy: text(source.updatedBy).slice(0, 160),
-      rules, deletedRuleIds,
+      rules,
+      deletedRuleIds,
+      priorityCatalog,
+      checklistStatuses,
     };
   }
   /* Kişisel kayıt + yerleşikler + Moderatör yayını → çalışan kural listesi.
@@ -1463,12 +1637,13 @@
   }
 
   return {
-    SEVERITY, severityRank, OPERATORS, OPERATOR_IDS, DERIVED_FIELDS, CHECKLIST_PREFIX, CHECKLIST_STATES,
+    SEVERITY, severityRank, isValidPriorityTarget, OPERATORS, OPERATOR_IDS, DERIVED_FIELDS, CHECKLIST_PREFIX, CHECKLIST_STATES,
     CHECKLIST_STATE_LABELS, STAGE_VALUES, OUTCOME_VALUES, RULE_PREFIX, RULE_STATES, RULE_STATE_LABELS, EXPRESSION_VERSION,
-    evaluateOrder, prepareEvaluation, referenceFieldOf, referencedFields, dependentsOf, danglingReferences, findCycle,
+    evaluateOrder, previewRuleImpact, prepareEvaluation, referenceFieldOf, referencedFields, dependentsOf, danglingReferences, findCycle,
     mapFormulaFields, formulaToDisplay, formulaFromDisplay, buildAiGuide, extractFormula,
     DEFAULT_RULES, DEFAULT_PRIORITY_RULES, DEFAULT_CHECKLIST_RULES, DEFAULT_CHECKLIST_RULE_IDS,
-    normalizeCondition, normalizeRule, normalizeRules, conditionsToFormula, formulaToConditions, validateRule, mergeWithDefaults,
+    normalizeCondition, normalizeRule, normalizeRules, checklistScopePreset, applyChecklistScopePreset,
+    conditionsToFormula, formulaToConditions, validateRule, mergeWithDefaults,
     normalizeManagedRules, effectiveRules,
     compileExpression, evaluateExpression, validateExpression,
     factsFor, readField, matchesCondition, matchesRule,

@@ -125,6 +125,7 @@ modüller `perf-runtime` lazy sözleşmesine uyar.
   kancaları korunur, ortak bileşen görünümüne bağlanır. **Vurgu dolgusu
   (`--ui-accent` zemin) yalnız sayfanın birincil eylemindedir** (Yenile, Yeni
   talep…); seçim durumu dolgu kullanmaz.
+- Kontrol ve Kurallar Merkezi aynı ortak çerçeveleri kullanır: `.cpaFrame` yüzeyleri ve `.cpaBtn` / `.cpaIconBtn` eylemleri `--ui-group-divider` sınırına bağlanır. Tablo içindeki `.cpaQueueStatusSelect` düzenlenebilir bir seçim alanıdır; ortak `--ui-field-border` sınırını taşır.
 - Segment (mod/filtre seçimi): köşeli; seçili öğe `--ui-selected` zemin +
   `--ui-selected-ink` metin, `aria-pressed`. Sayfa içi sekme (görünüm/alt sayfa):
   zeminsiz; seçili öğe `--ui-selected-ink` metin + 2px `--ui-accent` alt çizgi,

@@ -56,7 +56,7 @@ test('v9.58 Priorities ve Checklist iki eşit sütun, tek kartta tam genişlik k
 
 test('CP Öncelik Radarı yerine Öncelikler kartında tıklanabilir dağılım çubuğu vardır',()=>{
   assert.match(VIEW,/class="cpaMix"/);
-  assert.match(VIEW,/class="cpaMixSeg tone-\$\{tone\[key\]\}"[^`]*data-cpa-priority="\$\{key\}"/);
+  assert.match(VIEW,/class="cpaMixSeg tone-\$\{esc\(tone\)\}"[^`]*data-cpa-priority="\$\{esc\(key\)\}"/);
   assert.match(CPA_CSS,/\.cpaMix\{/);
   assert.doesNotMatch(INDEX,/id="ovPriorityRadar"/);
 });
