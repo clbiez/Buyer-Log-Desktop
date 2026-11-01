@@ -7,9 +7,9 @@ const CSS=fs.readFileSync(path.join(__dirname,'../public/ui-components.css'),'ut
 
 function clusterHarness({motion=true}={}){
   const calls=[];
-  const ctx={save(){},restore(){},translate(){},scale(){},rotate(){},beginPath(){},fill(){},stroke(){},moveTo(){},lineTo(){},set fillStyle(v){calls.push(['fill',v]);},get fillStyle(){return '';},strokeStyle:'',lineWidth:1,globalAlpha:1};
+  const ctx={save(){},restore(){},translate(){},scale(){},rotate(){},beginPath(){},fill(){},stroke(){},moveTo(){},lineTo(){},arc(x,y,r){calls.push(['dot',x,y,r]);},set fillStyle(v){calls.push(['fill',v]);},get fillStyle(){return '';},set strokeStyle(v){calls.push(['stroke',v]);},lineWidth:1,globalAlpha:1};
   const context={ctx,calls,state:{hover:null,intro:null},document:{documentElement:{dataset:{}}},reducedMotion:()=>!motion,clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),
-    modeColor:mode=>'mode:'+mode,glyphMode:mode=>mode,drawModeGlyph:(c,mode)=>calls.push(['glyph',mode]),plotSquare:(c,x,y,r)=>calls.push(['square',r])};
+    modeColor:mode=>'mode:'+mode,glyphMode:mode=>mode,drawModeGlyph:(c,mode,size)=>calls.push(['glyph',mode,size]),plotSquare:(c,x,y,r)=>calls.push(['square',r])};
   vm.createContext(context);
   vm.runInContext(SOURCE.slice(SOURCE.indexOf('const ALARM_PERIOD'),SOURCE.indexOf('const STAGE_META')),context);
   return context;
@@ -26,24 +26,25 @@ test('gemi, uçak ve tır tanınabilir tek kaynaklı simgelerle çizilir; göste
   assert.match(SOURCE,/purple:css\('--ui-chart-3','#376f73'\)/,'uçak, tırdan ayrı kanonik renk kullanır');
 });
 
-test('birleşik simge: 2–3 araç kadar rozet, fazlası üç rozet ve + işareti',()=>{
-  const two=clusterHarness();two.drawVehicleCluster(two.ctx,cluster(['sea','air']),p,0);
-  assert.deepEqual(two.calls.filter(c=>c[0]==='glyph').map(c=>c[1]),['sea','air']);
-  const three=clusterHarness();three.drawVehicleCluster(three.ctx,cluster(['road','air','sea']),p,0);
-  assert.equal(three.calls.filter(c=>c[0]==='glyph').length,3);
-  assert.equal(three.calls.filter(c=>c[0]==='square'&&c[1]===6.5).length,0,'üç araçta + yok');
-  const five=clusterHarness();five.drawVehicleCluster(five.ctx,cluster(['sea','sea','air','road','air'],{overdue:true}),p,0);
-  assert.equal(five.calls.filter(c=>c[0]==='glyph').length,3);
-  assert.equal(five.calls.filter(c=>c[0]==='square'&&c[1]===6.5).length,1,'üçten fazla araçta + işareti');
-  assert.ok(five.calls.some(c=>c[0]==='fill'&&c[1]==='yellow'),'gizli araçların gecikmesi + işaretinde görünür');
-  assert.match(SOURCE,/symbol\.overdue\?p\.yellow/);
+test('araç kümesi, sayısı ve taşıma tipi ne olursa olsun tek küçük filo rozeti kullanır',()=>{
+  for(const modes of [['sea','air'],['road','air','sea'],['sea','sea','air','road','air']]){
+    const h=clusterHarness();h.drawVehicleCluster(h.ctx,cluster(modes,{overdue:true}),p,0);
+    assert.deepEqual(h.calls.filter(c=>c[0]==='glyph').map(c=>c[1]),['fleet']);
+    assert.equal(h.calls.filter(c=>c[0]==='square').length,2,'yalnız tek rozetin çerçevesi ve zemini');
+    assert.ok(h.calls.filter(c=>c[0]==='square').every(c=>c[1]<=11),'tek araç boyutunu aşmaz');
+    assert.ok(h.calls.some(c=>c[0]==='stroke'&&c[1]==='yellow'),'kümenin gecikmesi çerçevede görünür');
+  }
+  const h=clusterHarness({motion:false});h.drawVehicleCluster(h.ctx,cluster(['sea','air'],{critical:true}),p,0);
+  assert.ok(h.calls.some(c=>c[0]==='stroke'&&c[1]==='red'),'kritik küme durağan kırmızı çerçeveyi korur');
 });
 
-test('kritik alarm yalnız hareket izinliyken nabız çizer; azaltılmış harekette durağan kalır',()=>{
-  const on=clusterHarness({motion:true});on.drawVehicleCluster(on.ctx,cluster(['sea','air'],{critical:true}),p,350);
-  const off=clusterHarness({motion:false});off.drawVehicleCluster(off.ctx,cluster(['sea','air'],{critical:true}),p,350);
-  assert.ok(on.calls.filter(c=>c[0]==='fill'&&c[1]==='red').length>=1,'nabız zemini kırmızı');
-  assert.ok(on.calls.filter(c=>c[0]==='square').length>off.calls.filter(c=>c[0]==='square').length,'harekette ek alarm halkaları');
+test('kritik alarm, büyüyen halkalar yerine hareket kapalıyken de görünen küçük bir noktadır',()=>{
+  for(const motion of [true,false]){
+    const h=clusterHarness({motion});h.drawAlarm(h.ctx,10,20,11,p,350);
+    assert.equal(h.calls.filter(c=>c[0]==='square').length,0,'haritaya yayılan halka yok');
+    const dots=h.calls.filter(c=>c[0]==='dot');assert.equal(dots.length,1);
+    assert.ok(dots[0][3]<=2.5,'uyarı noktası en çok 5 px çapında');
+  }
   const fn=SOURCE.slice(SOURCE.indexOf('function flowMotionAllowed()'),SOURCE.indexOf('function symbolCritical('));
   assert.match(fn,/!reducedMotion\(\)&&root\.dataset\.blMotion!=='off'&&root\.dataset\.blRender!=='software'/);
 });
