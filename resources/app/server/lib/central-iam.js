@@ -11,6 +11,18 @@ const iam = require('./iam-core');
 const { withFileLeaseAsync } = require('./shared-file-transaction');
 
 const PROFILE_FIELDS = Object.freeze(('username displayName title email role systemRole orgLevel status enabled passwordHash pinHash supervisorId managerId permissions accessAreas collectionAccess scopeMode autoScopes customScopes mags mmygs buyingGroups legacySourceAccount sourceBuyer iamVersion stableIds identityKey external directPermissions temporaryPermissions dataScope createdAt createdBy updatedAt updatedBy credentialRevision accessRevision').split(' '));
+// Eski, SHA-256 ile doğrulanan IAM revizyonları kaldırılmış modüllerin izinlerini
+// taşır. Bunlar yalnız taşıma biçiminde tanınır; etkin izin kataloğuna eklenmez.
+// Kullanıcılar, roller ve hash'ler aynen korunur; iam-core etkin erişimden bu
+// kodları zaten çıkarır. Bilinmeyen kodlar ve geçmişte hiç olmayan eylemler
+// reddedilmeye devam eder (örn. AGENTS.ADMIN veya OUTLOOK_MAIL.DELETE).
+const RETIRED_PERMISSION_CODES = new Set([
+  'AGENTS.VIEW', 'AGENTS.CREATE', 'AGENTS.EDIT', 'AGENTS.DELETE', 'AGENTS.APPROVE', 'AGENTS.MANAGE',
+  'OUTLOOK.SEARCH', 'OUTLOOK_SHARED_MAIL.SEARCH', 'OUTLOOK_MAIL.LINK', 'OUTLOOK_MAIL.PIN',
+  'OUTLOOK_MAIL.TIMELINE_VIEW', 'OUTLOOK_MAIL.ATTACHMENT_VIEW', 'OUTLOOK_MAIL.AI_SUMMARY',
+  'OUTLOOK_INTELLIGENCE.VIEW', 'OUTLOOK_INTELLIGENCE.ADMIN', 'OUTLOOK_MANAGED_MAILBOX.ADMIN',
+]);
+function snapshotPermissionSupported(code) { return iam.PERMISSION_CODES.has(code) || RETIRED_PERMISSION_CODES.has(code); }
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const clone = value => JSON.parse(JSON.stringify(value));
 const profiles = store => [store && store.moderator, ...(store && store.users || [])].filter(Boolean);
@@ -96,11 +108,11 @@ function validateSnapshot(s) {
     if (u.enabled && !(u.passwordHash || u.pinHash)) invalid(`${at}.passwordHash`);
     for (const key of ['directPermissions','temporaryPermissions']) {
       if (!Array.isArray(u[key])) invalid(`${at}.${key}`);
-      for (const grant of u[key]) if (!grant || !iam.PERMISSION_CODES.has(grant.permission)) invalid(`${at}.${key}`);
+      for (const grant of u[key]) if (!grant || !snapshotPermissionSupported(grant.permission)) invalid(`${at}.${key}`);
     }
   }
   for (const [id, role] of Object.entries(s.roles)) if (!iam.SYSTEM_ROLES[id] || role.id !== id ||
-    !Array.isArray(role.permissions) || role.permissions.some(p => !iam.PERMISSION_CODES.has(p))) invalid(`roles.${id}`);
+    !Array.isArray(role.permissions) || role.permissions.some(p => !snapshotPermissionSupported(p))) invalid(`roles.${id}`);
   for (const role of Object.keys(iam.SYSTEM_ROLES)) if (!s.roles[role]) invalid(`roles.${role}`);
   const byId = new Map(s.users.map(u => [u.id, u]));
   for (const [index, u] of s.users.entries()) {
