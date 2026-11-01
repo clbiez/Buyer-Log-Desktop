@@ -1,4 +1,5 @@
 'use strict';
+const collectionLflEngine=require('../../public/collection-lfl-engine');
 
 /* LFL verisi route'ları
    server.js'ten birebir taşındı (davranış değişikliği yok). Kayıt, server.js'te
@@ -24,21 +25,43 @@ module.exports = function registerLflRoutes(app, deps) {
     collectionLflCache,
   } = deps;
 
-// Collection consumes aggregate references only; retain LFL area and row-scope checks.
-app.get('/api/collection-lfl-reference', userAccess.requireArea('koleksiyon'), userAccess.requireArea('lfl'), async (req,res)=>{
-  try{
+async function collectionReferenceSource(req,res){
     res.set('Cache-Control','no-store');
     const id=sourceUserId(req),readiness=sourceFilterReadiness(['lfl'],req);
-    if(!readiness.ready)return res.status(409).json({code:'SOURCE_FILTER_REQUIRED'});
+    if(!readiness.ready){res.status(409).json({code:'SOURCE_FILTER_REQUIRED'});return null;}
     let runtime=cacheForUser(id);
     if(!runtime.lflLoadedAt){await ensureDataLoaded(id);runtime=cacheForUser(id);}
-    if(!runtime.lflLoadedAt)return res.status(409).json({code:'LFL_SOURCE_UNAVAILABLE'});
-    const rows=runtime.lflRows||[];
+    if(!runtime.lflLoadedAt){res.status(409).json({code:'LFL_SOURCE_UNAVAILABLE'});return null;}
+    return {id,runtime,rows:runtime.lflRows||[],version:runtime.lflLoadedAt};
+}
+function collectionReferenceSnapshot(req,source,rebuild=false){
     const profile=userAccess.publicProfile(req.currentUser);
-    const identity=JSON.stringify([id,profile.id,userAccess.localIamRevision(),profile.dataScope,profile.scopes,profile.delegatedUserIds]);
-    const snapshot=await collectionLflCache.get({identity,version:runtime.lflLoadedAt,rebuild:req.query.rebuild==='1',loadRows:()=>userAccess.filterRowsByScope(req.currentUser,rows)});
+    const identity=JSON.stringify([source.id,profile.id,userAccess.localIamRevision(),profile.dataScope,profile.scopes,profile.delegatedUserIds]);
+    return collectionLflCache.get({identity,version:source.version,rebuild,loadRows:()=>userAccess.filterRowsByScope(req.currentUser,source.rows)});
+}
+// Collection reads shared summaries; source order rows are requested only for a clicked detail report.
+app.get('/api/collection-lfl-reference', userAccess.requireArea('koleksiyon'), userAccess.requireArea('lfl'), async (req,res)=>{
+  try{
+    const source=await collectionReferenceSource(req,res);if(!source)return;
+    const snapshot=await collectionReferenceSnapshot(req,source,req.query.rebuild==='1');
     sendDateSafeJson(res,snapshot);
   }catch(err){apiError(res,err,'LFL reference could not be calculated.');}
+});
+app.post('/api/collection-lfl-detail',userAccess.requireArea('koleksiyon'),userAccess.requireArea('lfl'),async(req,res)=>{
+  try{
+    res.set('Cache-Control','no-store');
+    const {key,version}=req.body||{};
+    if(typeof key!=='string'||!key||key.length>2048||typeof version!=='string'||!version||version.length>256)return res.status(400).json({code:'VALIDATION_ERROR'});
+    const source=await collectionReferenceSource(req,res);if(!source)return;
+    if(version!==String(source.version))return res.status(409).json({code:'LFL_REFERENCE_STALE'});
+    const snapshot=await collectionReferenceSnapshot(req,source);
+    // Never trust client dimensions: the key must exist in the current user's scoped summary.
+    const reference=snapshot.references.find(item=>item.key===key);
+    if(!reference)return res.status(404).json({code:'LFL_REFERENCE_NOT_FOUND'});
+    const rows=collectionLflEngine.referenceDetails(userAccess.filterRowsByScope(req.currentUser,source.rows),reference);
+    const imageAwareRows=attachModelImageIdentities(rows,modelImageIdentityOrders(source.runtime));
+    sendDateSafeJson(res,{version:String(source.version),calculatedAt:snapshot.calculatedAt,reference,rows:imageAwareRows});
+  }catch(err){apiError(res,err,'LFL order detail could not be loaded.');}
 });
 
 // Program açılışındaki ilk okuma tamamlanmışsa seçili kullanıcının LFL verisini döndürür.

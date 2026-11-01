@@ -25121,9 +25121,9 @@ const KOL_PRICE_VIEWS=Object.freeze(['compact','detail','cost']);
 const KOL_PRICE_VIEW_COLS=Object.freeze({
   __priceStrip__:Object.freeze({kind:'priceStrip',tr:'Teklif & Onay',en:'Quotes & Approval',group:'Fiyatlandırma'}), // i18n-ignore — sütun kimliği/grup anahtarı
   __landedSummary__:Object.freeze({kind:'landedSummary',tr:'Landed Özeti',en:'Landed Summary',group:'Endeksmatik & Avantaj'}), // i18n-ignore — sütun kimliği/grup anahtarı
-  __referenceSummary__:Object.freeze({kind:'priceReferences',tr:'Previous Season / LFL',en:'Previous Season / LFL',group:'Fiyatlandırma'}), // i18n-ignore — sütun kimliği/grup anahtarı
+  __referenceSummary__:Object.freeze({kind:'priceReferences',tr:'Previous Season / LFL / Sezon Etkisi',en:'Previous Season / LFL / Season Impact',group:'Fiyatlandırma'}), // i18n-ignore — sütun kimliği/grup anahtarı
 });
-const KOL_REFERENCE_SOURCES=Object.freeze({compact:Object.freeze(['__previousSeason__','__lfl__'])});
+const KOL_REFERENCE_SOURCES=Object.freeze({compact:Object.freeze(['__previousSeason__','__lfl__','__seasonImpact__'])});
 const KOL_PRICE_STRIP_SOURCES=Object.freeze({compact:Object.freeze(['__bestPrice__','__confirmedName__','__confirmedPrice__','fob']),cost:Object.freeze(['__bestPrice__','__confirmedName__','__confirmedPrice__'])});
 const KOL_LANDED_SUMMARY_SOURCES=Object.freeze({compact:Object.freeze(['ydLanded','trLanded'])});
 const KOL_COST_VIEW_KEYS=Object.freeze(['fob','royalty','hologramCost','ydLanded','trLanded']);
@@ -27867,11 +27867,13 @@ function renderKolSummaryFooter(table,rows,descriptors,{pictureVisible=false}={}
   const quantityTotal=(rows||[]).reduce((sum,row)=>sum+tableNumericValue(row&&row.quantity),0);
   const selectedCount=tableVisibleSelectedCount(rows,kolSelected,row=>row.id);
   const modelText=pageModelOptionText(rows);
+  const referenceFooters=window.BLCollectionLfl?.footerCells(rows,descriptors)||new Map();
   const cells=[selectionFooterCellHtml(selectedCount)];
   let modelPlaced=false;
   if(pictureVisible)cells.push('<td class="quantityTotalSpacer"></td>');
   const metricDescriptor=d=>d.kind==='best'||d.kind==='confirmedPrice'||(d.kind==='base'&&['targetPrice','fob','ydLanded','trLanded','quantity'].includes(d.k));
   descriptors.forEach(d=>{
+    if(referenceFooters.has(d.k)){cells.push(referenceFooters.get(d.k));return;}
     if(d.kind==='base'&&d.k==='targetPrice'){cells.push(kolAverageFooter(targetAvg,targetArithmetic,L('Target Price')));return;}
     if(d.kind==='best'){cells.push(kolAverageFooter(bestAvg,bestArithmetic,L('Best Price')));return;}
     if(d.kind==='confirmedPrice'){cells.push(kolAverageFooter(confirmedAvg,confirmedArithmetic,L('Approved Mfr. Price')));return;}
@@ -29102,7 +29104,7 @@ function renderKol(){
 function kolSpreadsheetFormulaInfo(key){
   if(key==='__lfl__')return 'Same MB month last year + MAG + Classification; quantity-weighted USD FOB; Confirmed → Best → Target';
   if(key==='__previousSeason__')return 'Previous full season + MAG + Classification; quantity-weighted USD FOB; Confirmed → Best → Target';
-  if(key==='__referenceSummary__')return 'Previous Season and same-MB-month LFL references';
+  if(key==='__referenceSummary__')return 'Previous Season and same-MB-month LFL references; current Season Impact from earlier MB months';
   if(key==='__seasonImpact__')return '(Prior-month season value + model price × model quantity) / (prior-month quantity + model quantity); same season + MAG + Classification';
   if(key==='__bestPrice__')return 'Calculated from current valid quotations';
   if(key==='__confirmedName__')return 'Approved quotation manufacturer';
