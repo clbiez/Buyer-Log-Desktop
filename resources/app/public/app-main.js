@@ -913,9 +913,9 @@ function actionPriorityCodes(){
   if(OD&&typeof OD.priorityIds==='function')return OD.priorityIds();
   return OD&&Array.isArray(OD.ACTION_PRIORITIES)?OD.ACTION_PRIORITIES.slice():[];
 }
-function priorityHas(priority, flag){
+function priorityHas(priority, flag, row){
   const left=actionPriorityCode(priority),right=actionPriorityCode(flag);
-  return !!left&&!!right&&left===right;
+  return !!right&&((!!left&&left===right)||(row?._trackingTags||[]).includes(right));
 }
 function priorityDisplay(priority){
   const code=actionPriorityCode(priority);
@@ -958,7 +958,10 @@ function priorityRank(priority){
 }
 function actionPriorityCounts(rows){
   const counts=Object.fromEntries(actionPriorityCodes().map(code=>[code,0]));
-  for(const row of rows||[]){const code=actionPriorityCode(row&&row['Priority']);if(code&&Object.prototype.hasOwnProperty.call(counts,code))counts[code]+=1;}
+  for(const row of rows||[]){
+    const ids=new Set([actionPriorityCode(row&&row['Priority']),...(row?._trackingTags||[])]);
+    for(const code of ids)if(code&&Object.prototype.hasOwnProperty.call(counts,code))counts[code]+=1;
+  }
   return counts;
 }
 function priorityReasonText(row){
@@ -1026,6 +1029,7 @@ function applyUnifiedPriorityAnalysis(row,analysis){
   const code=actionPriorityCode(analysis&&analysis.priority)||'ON_TRACK';
   row['Priority']=code;
   row._calculationStatus=analysis&&analysis.calculationStatus||'KNOWN';
+  row._trackingTags=Array.isArray(analysis?.trackingTags)?analysis.trackingTags.slice():[];
   row._actionPriorityReasons=analysis&&Array.isArray(analysis.actionReasons)?analysis.actionReasons.slice():[];
   row._actionPrioritySignals=analysis&&Array.isArray(analysis.signals)?analysis.signals.slice():[];
 }
@@ -1041,7 +1045,7 @@ function syncUnifiedPrioritiesForTable(tableKey,preparedResult=null){
   const result=preparedResult||assistant.computeDecisionsForRows(activeRows);
   for(const row of rows){
     if(!unifiedPriorityRowActive(tableKey,row)){
-      row['Priority']='';row._actionPriorityReasons=[];row._actionPrioritySignals=[];continue;
+      row['Priority']='';row._trackingTags=[];row._actionPriorityReasons=[];row._actionPrioritySignals=[];continue;
     }
     const analysis=result&&result.byRow?result.byRow.get(row):null;
     applyUnifiedPriorityAnalysis(row,analysis);
@@ -5997,8 +6001,9 @@ function cellHtml(c,r,cf,tableKey='cp'){
     case 'plmSample': return plmSampleCellHtml(r,tableKey);
     case 'priority': {
       const reason=priorityReasonText(r),title=reason?` title="${escapeHtml(reason)}"`:'';
-      if(rev) return `<td${title}>${revisionHtml(c.k, rev, value=>badge(priorityDisplay(value)||'—', priorityTone(value)))}</td>`;
-      return `<td${title}>${badge(priorityDisplay(v)||'—', priorityTone(v))}</td>`;
+      const tracking=(r._trackingTags||[]).map(id=>`<span class="cpTrackingTag badge b-${escapeHtml(priorityTone(id))}" title="${escapeHtml(appLang==='en'?'Tracking tag; urgency is unchanged':'Takip etiketi; aciliyet değişmez')}">${escapeHtml(priorityDisplay(id))}</span>`).join(' ');
+      if(rev) return `<td${title}>${revisionHtml(c.k, rev, value=>badge(escapeHtml(priorityDisplay(value)||'—'), priorityTone(value)))} ${tracking}</td>`;
+      return `<td${title}>${badge(escapeHtml(priorityDisplay(v)||'—'), priorityTone(v))} ${tracking}</td>`;
     }
     case 'status': return r&&r._partialViewActive ? partialViewStatusCellHtml(r) : cpLogisticHasDetails(r) ? cpLogisticStatusCellHtml(r,tableKey) : `<td>${badge(escapeHtml(statusDisplay(v)||'—'), statusTone(v))}</td>`;
     case 'active': { const t = norm(v)==='Active'?'green':'gray'; return `<td>${badge(norm(v), t)}</td>`; }
@@ -6567,7 +6572,7 @@ function preparedColFilterPasses(prepared,key,row){
     return true;
   }
   if(prepared.kind==='priority'){
-    for(let i=0;i<prepared.flags.length;i++)if(priorityHas(row['Priority'],prepared.flags[i]))return true;
+    for(let i=0;i<prepared.flags.length;i++)if(priorityHas(row['Priority'],prepared.flags[i],row))return true;
     return false;
   }
   if(prepared.kind==='exf'){
@@ -9199,7 +9204,7 @@ function cpPassesBase(r,ctx){
 function cpPassesGroup(r,ctx,id){
   // Priority artık tek kanonik Action Priority kodudur; exact canonical eşleşme kullanılır.
   if(id==='pri'){
-    if(ctx.fP && !priorityHas(r['Priority'],ctx.fP)) return false;
+    if(ctx.fP && !priorityHas(r['Priority'],ctx.fP,r)) return false;
     return preparedColFilterPasses(ctx.groupFilters.pri,'Priority',r);
   }
   if(id==='status'){

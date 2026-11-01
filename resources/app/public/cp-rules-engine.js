@@ -998,14 +998,17 @@
   function applyPriorityRules(analysis, rules, checklistState, preparedFacts) {
     const stateOrOpts = checklistState && typeof checklistState === 'object' ? checklistState : {};
     const catalog = (preparedFacts && preparedFacts.priorityCatalog) || stateOrOpts.priorityCatalog || undefined;
+    const isTracking = target => OD.priorityMeta?.(target, catalog)?.usage === 'tracking';
     if (stateOrOpts.evaluated && Array.isArray(stateOrOpts.evaluated.matched)) {
       let priority = analysis.priority;
+      const trackingTags = [];
       for (const rule of stateOrOpts.evaluated.matched) {
+        if (isTracking(rule.target)) { if (!trackingTags.includes(rule.target)) trackingTags.push(rule.target); continue; }
         if (OD.moreUrgent) priority = OD.moreUrgent(priority, rule.target, catalog);
         else if (severityRank(rule.target, catalog) < severityRank(priority, catalog)) priority = rule.target;
       }
       return {
-        priority,
+        priority, trackingTags,
         matched: stateOrOpts.evaluated.matched,
         signals: stateOrOpts.evaluated.signals || [],
       };
@@ -1013,15 +1016,17 @@
     const list = preparedFacts?._rulePreparation?.rules===rules
       ?preparedFacts._rulePreparation.priorityRules
       :(Array.isArray(rules) ? rules : []).filter(rule => rule.kind === 'priority');
-    if (!list.length) return { priority: analysis.priority, matched: [], signals: [] };
+    if (!list.length) return { priority: analysis.priority, matched: [], signals: [], trackingTags: [] };
     const cleanChecklistState = stateOrOpts.priorityCatalog || stateOrOpts.evaluated ? {} : checklistState;
     const facts = preparedFacts || factsFor(analysis, cleanChecklistState);
     let priority = analysis.priority;
     const matched = [];
     const signals = [];
+    const trackingTags = [];
     for (const rule of list) {
       if (!matchesRule(rule, facts)) continue;
       matched.push(rule);
+      if (isTracking(rule.target)) { if (!trackingTags.includes(rule.target)) trackingTags.push(rule.target); continue; }
       const signal = {
         code: `CUSTOM_RULE:${rule.id}`,
         source: 'custom_rule',
@@ -1034,7 +1039,7 @@
       if (OD.moreUrgent) priority = OD.moreUrgent(priority, rule.target, catalog);
       else if (severityRank(rule.target, catalog) < severityRank(priority, catalog)) priority = rule.target;
     }
-    return { priority, matched, signals };
+    return { priority, matched, signals, trackingTags };
   }
 
   /* Özel kontrol kuralları: koşulu sağlayan siparişe kendi sorusunu ekler.
@@ -1260,6 +1265,36 @@
     const ruleState = {};
     for (const rule of rules) if (rule.kind === 'priority') ruleState[rule.id] = applied.matched.includes(rule) ? 'matched' : 'notMatched';
     return { ...applied, checklistState, customItems, ruleState, autoDecisions };
+  }
+
+  // Pure, side-effect-free comparison of saved rules and the proposed rule set.
+  function previewRuleImpact(orders, candidate, options = {}) {
+    const rows = Array.isArray(orders) ? orders : [];
+    const baselineRules = Array.isArray(options.rules) ? options.rules : [];
+    const nextRules = Array.isArray(options.proposedRules) ? options.proposedRules
+      : [...baselineRules.filter(rule => rule.id !== candidate.id), candidate];
+    const shared = { answers: options.answers || {}, plmEvidence: options.plmEvidence,
+      checklistEnabled: options.checklistEnabled, priorityCatalog: options.priorityCatalog };
+    let count = 0, changed = 0, qty = 0, automaticAnswers = 0;
+    const sample = [];
+    const resultKey = result => JSON.stringify([result.priority, [...(result.trackingTags || [])].sort(), Object.entries(result.checklistState || {}).sort(([a], [b]) => a.localeCompare(b))]);
+    for (const original of rows) {
+      const analysis = { ...original, sourceRow: original.sourceRow, priority: original.basePriority || 'ON_TRACK' };
+      const before = evaluateOrder(analysis, { ...shared, rules: baselineRules });
+      const after = evaluateOrder(analysis, { ...shared, rules: nextRules });
+      const hit = candidate.kind === 'checklist' ? after.customItems.some(item => item.id === candidate.id)
+        : after.ruleState[candidate.id] === 'matched';
+      if (resultKey(before) !== resultKey(after)) changed++;
+      for (const auto of after.autoDecisions || []) {
+        if (auto.itemId !== candidate.id) continue;
+        const existing = (options.answers || {})[Checklist.answerKey(original.orderKey, auto.itemId)];
+        if ((!existing || existing.source === 'auto_rule') && existing?.state !== auto.state) automaticAnswers++;
+      }
+      if (!hit) continue;
+      count++; qty += Number(original.qty) || 0;
+      if (sample.length < 4) sample.push(`${original.orderCode || ''} ${original.modelName || ''}`.trim());
+    }
+    return { count, changed, qty, automaticAnswers, total: rows.length, sample };
   }
 
   /* ---------------------------------------------------------- bağımlılıklar
@@ -1604,7 +1639,7 @@
   return {
     SEVERITY, severityRank, isValidPriorityTarget, OPERATORS, OPERATOR_IDS, DERIVED_FIELDS, CHECKLIST_PREFIX, CHECKLIST_STATES,
     CHECKLIST_STATE_LABELS, STAGE_VALUES, OUTCOME_VALUES, RULE_PREFIX, RULE_STATES, RULE_STATE_LABELS, EXPRESSION_VERSION,
-    evaluateOrder, prepareEvaluation, referenceFieldOf, referencedFields, dependentsOf, danglingReferences, findCycle,
+    evaluateOrder, previewRuleImpact, prepareEvaluation, referenceFieldOf, referencedFields, dependentsOf, danglingReferences, findCycle,
     mapFormulaFields, formulaToDisplay, formulaFromDisplay, buildAiGuide, extractFormula,
     DEFAULT_RULES, DEFAULT_PRIORITY_RULES, DEFAULT_CHECKLIST_RULES, DEFAULT_CHECKLIST_RULE_IDS,
     normalizeCondition, normalizeRule, normalizeRules, checklistScopePreset, applyChecklistScopePreset,

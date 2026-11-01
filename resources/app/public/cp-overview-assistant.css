@@ -499,3 +499,27 @@
  .cpaCatalogTagBadges{display:none}
  .cpaStudioModal>footer>.cpaNote{max-width:70%}
 }
+
+/* Compact Overview summary and draft-oriented rule editing. */
+.cpaOverviewCompact{display:grid;gap:var(--ui-space-3);padding:var(--ui-space-3)}
+.cpaOverviewMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--ui-space-2)}
+.cpaOverviewMetric{display:grid;gap:4px;min-width:0;padding:var(--ui-space-3);cursor:pointer}
+.cpaOverviewActions{display:flex;align-items:center;gap:var(--ui-space-2);flex-wrap:wrap}
+.cpaOverviewDetails>summary,.cpaAdvancedModes>summary{padding:var(--ui-space-2) 0;cursor:pointer}
+.cpaOverviewDetails[open]>.cpaOverviewPriorities{margin-top:var(--ui-space-2)}
+.cpaAdvancedModes{display:block;min-width:0}
+.cpaRuleSentence{margin:0;padding:var(--ui-space-2);overflow-wrap:anywhere}
+.cpaRuleMenu{min-width:0}
+.cpaRuleMenuItems{display:grid;gap:var(--ui-space-2);padding-top:var(--ui-space-2)}
+.cpaRuleMenuItems .cpaBtn{justify-content:flex-start}
+.cpaDraftActions{display:flex;gap:var(--ui-space-2);justify-content:flex-end;flex-wrap:wrap}
+.cpaStudioModal>footer{flex-wrap:wrap}
+.cpaStudioModal>footer .cpaNote{flex:1 1 200px}
+.cpaStudioModal>footer .cpaDraftActions{flex:1 1 auto}
+.cpaCatalogTagRow,.cpaRule,.cpaModal,.cpaCatalogCard,.cpaCatalogInlineForm{box-sizing:border-box}
+.cpTrackingTag{margin-inline-start:4px}
+@media(max-width:760px){.cpaOverviewMetrics{grid-template-columns:1fr}.cpaDraftActions{justify-content:flex-start}.cpaStudioModal>footer .cpaNote{max-width:none}}
+
+.cpaCatalogDisclosure{flex:0 0 auto;min-width:0}
+.cpaCatalogDisclosureSummary{display:flex;width:100%;justify-content:space-between;box-sizing:border-box}
+.cpaCatalogDisclosure[open]>.cpaCatalogCard{margin-top:var(--ui-space-2)}

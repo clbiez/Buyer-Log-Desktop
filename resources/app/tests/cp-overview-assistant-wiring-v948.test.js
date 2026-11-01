@@ -254,7 +254,7 @@ test('v9.48 hesaplama motorlarında AI iş mantığı yok', () => {
    alt alta çizdiği için özellikle 1366×768 ekranda koşullar görünmüyordu.
    Çözüm: geniş modal + tür sekmeleri + tek-açık accordion. İş mantığı aynı kalır. */
 test('v9.50 kural penceresi geniş ve tek-açık accordion kullanır; v7.221 Rules yalnız öncelik kuralı gösterir', () => {
-  assert.match(VIEW, /class="cpaModal cpaRulesModal cpaStudioModal"/);
+  assert.match(VIEW, /class="cpaModal cpaRulesModal cpaStudioModal cpaFrame"/);
   // Studio keeps rule types separate via three named tabs and type-specific shortcuts.
   assert.doesNotMatch(VIEW, /data-cpa-rules-tab=/);
   assert.match(VIEW, /function openRules\(\) \{ openRuleManager\('priority'\); \}/);
@@ -299,7 +299,8 @@ test('kural satırı built-in dahil düzenleme ve silme aksiyonlarını gösteri
 });
 
 test('Studio creates expanded rules and templates and scrolls to their editor', () => {
-  assert.match(VIEW, /state\.rules = \[created, \.\.\.state\.rules\];\s*expandedRuleId = created\.id;/);
+  assert.match(VIEW, /ruleDrafts\.set\(created\.id, created\); draftBases\.set\(created\.id, ''\);/);
+  assert.doesNotMatch(VIEW, /state\.rules = \[created, \.\.\.state\.rules\]/, 'new rules must remain draft until Apply');
   assert.match(VIEW, /scrollIntoView\(\{ block: 'nearest' \}\)/);
   assert.equal((VIEW.match(/scrollToRule\(created\.id\)/g) || []).length, 2);
 });
@@ -318,7 +319,8 @@ test('Production Focus Loading Plan render etmez ve layout kullanıcıya özeldi
 });
 
 test('Overview uses the unified Studio entry points and live priority distribution', () => {
-  assert.match(VIEW, /container\.innerHTML = toolbarHtml\(\) \+ prioritiesOverviewBlock\(\)/);
+  assert.match(VIEW, /container\.innerHTML = overviewWidgetHtml\(\)/);
+  assert.match(VIEW, /<details class="cpaOverviewDetails"/);
   for (const hook of ['data-cpa-queue', 'data-cpa-settings', 'data-cpa-rules']) {
     assert.ok((VIEW.match(new RegExp(hook, 'g')) || []).length >= 2, `${hook} rendered and bound`);
   }

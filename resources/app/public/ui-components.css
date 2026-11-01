@@ -15287,19 +15287,19 @@ html[data-ui-system="manifest"] .workspaceTableFooter{display:flex;align-items:c
 html[data-ui-system="manifest"] .workspaceTableFooter .uiPersistenceRegion{margin:0;padding:0;}
 /* Buyer Log 7.0.294 surface and spreadsheet restoration.
    Deliberately uses Manifest tokens; no separate theme or table logic. */
-html[data-ui-system="manifest"] :is(.panel,.cardBox,.modalCard,.mfrCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.appBlockingCard,.sourcebar,.tablewrap),
+html[data-ui-system="manifest"] :is(.panel,.cardBox,.modalCard,.mfrCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.appBlockingCard,.sourcebar,.tablewrap,.cpaFrame,.cpaSeg),
 html[data-ui-system="manifest"] .ovHome > [data-overview-widget] {
   border:1px solid var(--ui-group-divider) !important;
 }
 html[data-ui-system="manifest"] :is(.toolbar,.tableActionToolbar) {
   border-bottom:1px solid var(--ui-row-divider) !important;
 }
-html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.gsearch,.profileSelectTrigger,.ovHomePageTab,.ovBreakdownViewBtn,.ovHomeDrawerCard,.oabMultiTrigger),
+html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.gsearch,.profileSelectTrigger,.ovHomePageTab,.ovBreakdownViewBtn,.ovHomeDrawerCard,.oabMultiTrigger,.cpaBtn,.cpaIconBtn,.cpaValueToggle,.cpaTagMiniBtn,.cpaScopePresetBtn,.cpaStatusBtn,.cpaQuestionPill,.cpaToneSwatch,.cpaCheckTile,.cpaOverviewMetric),
 html[data-ui-system="manifest"] :is(.toolbar,.tableActionToolbar) :is(input,select),
 html[data-ui-system="manifest"] .vfBar select {
   border:1px solid var(--ui-group-divider) !important;
 }
-html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.ovHomePageTab,.oabMultiTrigger):focus-visible {
+html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.ovHomePageTab,.oabMultiTrigger,.cpaBtn,.cpaIconBtn,.cpaValueToggle,.cpaTagMiniBtn,.cpaScopePresetBtn,.cpaStatusBtn,.cpaQuestionPill,.cpaToneSwatch,.cpaCheckTile,.cpaOverviewMetric):focus-visible {
   outline:2px solid var(--ui-accent) !important;
   outline-offset:1px;
 }
@@ -15577,3 +15577,13 @@ html[data-ui-system="manifest"] .cpaCatalogTagMain small,html[data-ui-system="ma
 html[data-ui-system="manifest"] .cpaTemplatesPopover {background:var(--ui-surface);box-shadow:var(--ui-shadow-overlay);z-index:var(--ui-z-popover)}
 html[data-ui-system="manifest"] .cpaTemplateChoice {background:var(--ui-surface);color:var(--ui-text)}
 html[data-ui-system="manifest"] .cpaTemplateChoice:hover {background:var(--ui-row-hover)}
+
+/* Compact Checklist Studio uses the shared Manifest surfaces and field contract. */
+html[data-ui-system="manifest"] [data-ui-migrated="cp-assistant"] .cpaQueueStatusSelect {border:1px solid var(--ui-field-border) !important}
+html[data-ui-system="manifest"] .cpaOverviewMetric {background:var(--ui-surface-soft);color:var(--ui-text);text-align:left}
+html[data-ui-system="manifest"] .cpaOverviewMetric>b {font:600 var(--ui-font-xl)/1.1 var(--ui-font-heading);font-variant-numeric:tabular-nums}
+html[data-ui-system="manifest"] .cpaOverviewMetric>span,html[data-ui-system="manifest"] .cpaOverviewDetails>summary {font-size:var(--ui-font-xs);color:var(--ui-text-secondary)}
+html[data-ui-system="manifest"] .cpaRuleSentence {background:var(--ui-surface-soft);color:var(--ui-text-secondary);font-size:var(--ui-font-sm)}
+html[data-ui-system="manifest"] .cpaAdvancedModes>summary {font-size:var(--ui-font-xs);color:var(--ui-text-secondary)}
+html[data-ui-system="manifest"] .cpaDraftBadge {background:var(--ui-warning-bg);color:var(--ui-warning)}
+html[data-ui-system="manifest"] .cpaRuleMenuItems {background:var(--ui-surface)}

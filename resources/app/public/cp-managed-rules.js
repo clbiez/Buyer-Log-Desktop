@@ -36,7 +36,11 @@
     return payload;
   }
   async function save(next, revision) {
-    const response = await fetch(API, {
+    const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    const timer = controller ? setTimeout(() => controller.abort(), 15000) : null;
+    let response;
+    try { response = await fetch(API, {
+      ...(controller ? { signal: controller.signal } : {}),
       method: 'PUT', credentials: 'same-origin',
       headers: headers({ 'Content-Type': 'application/json', 'If-Match': `"${Number(revision) || 0}"` }),
       body: JSON.stringify({
@@ -44,7 +48,10 @@
         ...(Array.isArray(next.priorityCatalog) ? { priorityCatalog: next.priorityCatalog } : {}),
         ...(Array.isArray(next.checklistStatuses) ? { checklistStatuses: next.checklistStatuses } : {}),
       }),
-    });
+    }); } catch (error) {
+      if (controller?.signal.aborted) throw new Error(L('Kaydetme yanıtı gecikti. Yeniden deneyin.', 'Saving took too long to confirm. Try again.'));
+      throw error;
+    } finally { if (timer) clearTimeout(timer); }
     const payload = await response.json().catch(() => null);
     if (!response.ok) {
       const error = new Error((payload && (isEn() ? payload.errorEn || payload.error : payload.error))

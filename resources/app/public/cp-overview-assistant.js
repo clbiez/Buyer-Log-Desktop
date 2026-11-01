@@ -20,6 +20,7 @@
 
   const PREF_KEY = 'lcw.cp.assistant.v1';
   const ANSWER_KEY = 'lcw.cp.checklist.v1';
+  const QUEUE_VIEW_KEY = 'lcw.cp.assistant.queue-view.v1';
   /* Öncelik kuralları (+ öncelik etiketleri) ve checklist soruları (+ özel durumlar)
      kendi anahtarlarında durur; Ön Ayar Paylaşımı bu iki alanı bağımsız aktarır. */
   const RULE_KEYS = Object.freeze({
@@ -576,7 +577,7 @@
       || (state.priorityCatalog || []).find(item => item.id === tagId && !item.builtIn);
     if (!tag) return Promise.resolve(null);
     const priorityCatalog = (state.managed.priorityCatalog || []).filter(item => item.id !== tagId)
-      .concat([{ id: tag.id, tr: tag.tr, en: tag.en || tag.tr, tone: tag.tone, isRisk: tag.isRisk !== false, managed: true }]);
+      .concat([{ id: tag.id, tr: tag.tr, en: tag.en || tag.tr, tone: tag.tone, isRisk: tag.isRisk !== false, usage: tag.usage, managed: true }]);
     return saveManagedRules({ rules: state.managed.rules, deletedRuleIds: state.managed.deletedRuleIds, priorityCatalog },
       L('Öncelik etiketi tüm kullanıcılara yayımlandı.', 'Priority tag published to all users.'));
   }
@@ -718,6 +719,21 @@
     </section>`;
   }
 
+  function overviewWidgetHtml() {
+    const items = state.checklist?.items || [];
+    const rejected = items.reduce((total, item) => total + (item.rejected || 0), 0);
+    const attention = Engine.needsAttention(state.model, { limit: 5000, priorityCatalog: state.priorityCatalog }).length;
+    return `<div class="cpaOverviewCompact">
+      <div class="cpaOverviewMetrics" role="group" aria-label="${esc(L('Takip özeti', 'Follow-up summary'))}">
+        <button type="button" class="cpaOverviewMetric" data-cpa-queue-scope="openRejected"><b>${int(openQueueCount())}</b><span>${esc(L('Açık kontrol', 'Open checks'))}</span></button>
+        <button type="button" class="cpaOverviewMetric" data-cpa-queue-scope="rejected"><b>${int(rejected)}</b><span>${esc(L('Reddedilen', 'Rejected'))}</span></button>
+        <button type="button" class="cpaOverviewMetric" data-cpa-summary-attention><b>${int(attention)}</b><span>${esc(L('Aksiyon gereken sipariş', 'Orders needing action'))}</span></button>
+      </div>
+      <div class="cpaOverviewActions"><button type="button" class="cpaBtn primary" data-cpa-queue>${esc(L('İş Listesini Aç', 'Open Work Queue'))}</button><button type="button" class="cpaBtn" data-cpa-rules>${esc(L('Kurallar ve Etiketler', 'Rules and Tags'))}</button></div>
+      <details class="cpaOverviewDetails"><summary>${esc(L('Dağılım ve kontrol ayrıntıları', 'Distribution and check details'))}</summary>${prioritiesOverviewBlock()}<div class="cpaChecklistOverview">${checklistCard()}</div></details>
+    </div>`;
+  }
+
   function checklistCard() {
     const summary = state.checklist;
     if (!state.checklistSettings.enabled) {
@@ -787,7 +803,7 @@
       entries.push({ code: key, text: textValueClean, source });
     };
     for (const rule of (Array.isArray(item && item.matchedRules) ? item.matchedRules : [])) {
-      if (!rule) continue;
+      if (!rule || OD?.priorityMeta?.(rule.target, state.priorityCatalog)?.usage === 'tracking') continue;
       const code = String(rule.reasonCode || customRuleReasonCode(rule.id)).trim();
       const textValue = customRuleReasonText(rule);
       if (code && textValue) push(code, textValue, 'customRule');
@@ -1029,7 +1045,7 @@
       window.BLOverviewPremium?.update?.({ model: null });
       return;
     }
-    container.innerHTML = toolbarHtml() + prioritiesOverviewBlock() + `<div class="cpaChecklistOverview">${checklistCard()}</div>`;
+    container.innerHTML = overviewWidgetHtml();
     if (attention) attention.innerHTML = '';
     if (coverage) coverage.innerHTML = coverageCard();
     window.BLOverviewPremium?.update?.({
@@ -1081,6 +1097,8 @@
     const plmSyncBtn = container.querySelector('[data-cpa-plm-requests-sync]');
     if (plmSyncBtn) plmSyncBtn.onclick = () => syncPlmSampleRequests(plmSyncBtn);
     container.querySelectorAll('[data-cpa-queue]').forEach(el => el.onclick = () => openStudio('queue'));
+    container.querySelectorAll('[data-cpa-queue-scope]').forEach(el => el.onclick = () => openStudio('queue', { scope: el.dataset.cpaQueueScope, itemId: 'ALL', supplier: 'ALL', search: '' }));
+    container.querySelectorAll('[data-cpa-summary-attention]').forEach(el => el.onclick = () => openOverviewRows(Engine.needsAttention(state.model, { limit: 5000, priorityCatalog: state.priorityCatalog }).map(item => item.sourceRow).filter(Boolean), L('Aksiyon gereken siparişler', 'Orders needing action')));
     container.querySelectorAll('[data-cpa-settings]').forEach(el => el.onclick = openSettings);
     container.querySelectorAll('[data-cpa-rules]').forEach(el => el.onclick = openRules);
     const attentionColumnsBtn = container.querySelector('[data-cpa-attention-columns]');
@@ -1852,7 +1870,7 @@
   }
 
   function ruleBadge(rule) {
-    return rule.kind === 'priority' ? priorityLabel(rule.target) : L('Checklist', 'Checklist');
+    return rule.kind === 'priority' ? (OD?.priorityMeta?.(rule.target, state.priorityCatalog)?.usage === 'tracking' ? L('Takip: ', 'Tracking: ') : '') + priorityLabel(rule.target) : L('Checklist', 'Checklist');
   }
 
   function ruleName(rule) {
@@ -1867,33 +1885,17 @@
   function rulePreview(rule) {
     const orders = state.model && Array.isArray(state.model.orders) ? state.model.orders : null;
     if (!orders) return null;
-    const probe = rule.enabled ? rule : Object.assign(Object.create(Object.getPrototypeOf(rule)), rule, { enabled: true });
-    const rules = state.rules.map(item => (item.id === rule.id ? probe : item));
-    let count = 0;
-    let qty = 0;
-    const sample = [];
-    for (const analysis of orders) {
-      const result = Rules.evaluateOrder(analysis, {
-        rules, answers: state.answers, plmEvidence, checklistEnabled: state.checklistSettings.enabled, priorityCatalog: state.priorityCatalog,
-      });
-      const hit = rule.kind === 'checklist'
-        ? result.customItems.some(item => item.id === rule.id)
-        : result.ruleState[rule.id] === 'matched';
-      if (!hit) continue;
-      count += 1;
-      qty += Number(analysis.qty) || 0;
-      if (sample.length < 4) sample.push(`${analysis.orderCode || ''} ${analysis.modelName || ''}`.trim());
-    }
-    return { count, qty, total: orders.length, sample };
+    return Rules.previewRuleImpact(orders, rule, { rules: state.rules, answers: state.answers,
+      plmEvidence, checklistEnabled: state.checklistSettings.enabled, priorityCatalog: state.priorityCatalog });
   }
 
   function previewHtml(rule) {
     const preview = rulePreview(rule);
-    if (!preview) return `<span class="cpaNote">${esc(L('Önizleme CP / Genel Bakış verisi yüklenince görünür.', 'The preview appears once CP / Overview data is loaded.'))}</span>`;
-    const head = rule.kind === 'checklist'
-      ? L(`Bu soru şu an ${int(preview.count)} siparişe soruluyor`, `This question is asked for ${int(preview.count)} orders right now`)
-      : L(`Bu kural şu an ${int(preview.count)} siparişi "${priorityLabel(rule.target)}" etiketine taşıyor`, `This rule escalates ${int(preview.count)} orders to "${priorityLabel(rule.target)}" right now`);
-    return `<b>${esc(head)}</b><span>${esc(L(`${int(preview.total)} siparişin içinde · ${int(preview.qty)} adet`, `out of ${int(preview.total)} orders · ${int(preview.qty)} units`))}${!rule.enabled ? ` · ${esc(L('kural kapalı; açılırsa', 'rule is off; if enabled'))}` : ''}</span>${preview.sample.length ? `<small>${esc(L('Örnek', 'e.g.'))}: ${esc(preview.sample.join(' · '))}</small>` : ''}`;
+    if (!preview) return `<span class="cpaNote">${esc(L('Önizleme CP verisi yüklendiğinde görünür.', 'Preview appears when CP data is loaded.'))}</span>`;
+    return `<b>${esc(L(`${int(preview.count)} sipariş eşleşiyor · ${int(preview.changed)} siparişin sonucu değişecek`, `${int(preview.count)} orders match · ${int(preview.changed)} order results will change`))}</b>
+      <span>${esc(L(`${int(preview.total)} sipariş içinde · ${int(preview.qty)} adet`, `out of ${int(preview.total)} orders · ${int(preview.qty)} units`))}</span>
+      ${preview.automaticAnswers ? `<small>${esc(L(`${int(preview.automaticAnswers)} otomatik checklist yanıtı yazılacak. Geri alma yalnız kural tanımını geri getirir.`, `${int(preview.automaticAnswers)} automatic checklist answers will be written. Undo restores the rule definition only.`))}</small>` : ''}
+      ${preview.sample.length ? `<small>${esc(L('Örnek', 'Example'))}: ${esc(preview.sample.join(' · '))}</small>` : ''}`;
   }
 
   function conditionRow(rule, condition, index, advanced, attrPrefix) {
@@ -2133,7 +2135,8 @@
         <div class="cpaRuleHead">${editorFields}</div>
         ${reasonFields}
         ${scopePresetSelect}
-        ${showConditionBuilder ? `${modeEditor}<div class="cpaRuleModePanel" id="cpa-rule-mode-panel-${esc(rule.id)}" role="tabpanel" aria-labelledby="cpa-rule-mode-${uiMode}-${esc(rule.id)}" tabindex="0">${panel}</div>` : `<div class="cpaRuleModePanel" id="cpa-rule-mode-panel-${esc(rule.id)}" role="tabpanel" aria-labelledby="cpa-rule-mode-${uiMode}-${esc(rule.id)}" tabindex="0" hidden></div>`}
+        <p class="cpaRuleSentence">${esc((rule.conditions || []).map(condition => conditionSummary(condition, rule)).join(rule.match === 'any' ? L(' veya ', ' or ') : L(' ve ', ' and ')))} → ${esc(rule.kind === 'priority' ? ruleBadge(rule) : ruleName(rule))}</p>
+        ${showConditionBuilder ? `<details class="cpaAdvancedModes"${uiMode !== 'basic' ? ' open' : ''}><summary>${esc(L('Gelişmiş: Formül / LCW AI', 'Advanced: Formula / LCW AI'))}</summary>${modeEditor}</details><div class="cpaRuleModePanel" id="cpa-rule-mode-panel-${esc(rule.id)}" role="tabpanel" aria-labelledby="cpa-rule-mode-${uiMode}-${esc(rule.id)}" tabindex="0">${panel}</div>` : `<div class="cpaRuleModePanel" id="cpa-rule-mode-panel-${esc(rule.id)}" role="tabpanel" aria-labelledby="cpa-rule-mode-${uiMode}-${esc(rule.id)}" tabindex="0" hidden></div>`}
         ${automaticStatusFields}
         </fieldset>
         <div class="cpaRulePreview" data-cpa-rule-preview aria-live="polite">${previewHtml(rule)}</div>
@@ -2144,11 +2147,11 @@
       ? `<span class="cpaBuiltIn cpaManagedBadge" title="${esc(L('Moderatör tüm kullanıcılara uyguluyor', 'Applied to all users by the Moderator'))}">${esc(L('Tüm kullanıcılar', 'All users'))}</span>` : '';
     const moderatorActions = moderator
       ? (rule.managed === true
-        ? `<button type="button" class="cpaBtn sm" data-cpa-rule-unpublish title="${esc(L('Yayını durdur; kullanıcıların kendi kopyaları korunur', 'Stop publishing; users keep their own copies'))}">${esc(L('Yayından kaldır', 'Unpublish'))}</button>`
-        : `<button type="button" class="cpaBtn sm" data-cpa-rule-publish title="${esc(L('Bu kuralı tüm kullanıcılara uygula', 'Apply this rule to all users'))}">${esc(L('Tüm kullanıcılara uygula', 'Apply to all users'))}</button>`)
+        ? `<button type="button" class="cpaBtn sm" data-cpa-rule-unpublish ${view.isDirty?.(rule) ? 'disabled' : ''} title="${esc(L('Yayını durdur; kullanıcıların kendi kopyaları korunur', 'Stop publishing; users keep their own copies'))}">${esc(L('Yayından kaldır', 'Unpublish'))}</button>`
+        : `<button type="button" class="cpaBtn sm" data-cpa-rule-publish ${view.isDirty?.(rule) ? 'disabled' : ''} title="${esc(L('Bu kuralı tüm kullanıcılara uygula', 'Apply this rule to all users'))}">${esc(L('Tüm kullanıcılara uygula', 'Apply to all users'))}</button>`)
         + `<button type="button" class="cpaBtn sm" data-cpa-rule-delete-all title="${esc(L('Bu kuralın aynı kimlikli kopyalarını tüm kullanıcılardan sil', 'Delete copies of this rule with the same ID for all users'))}">${esc(L('Tüm kullanıcılardan sil', 'Delete for all users'))}</button>`
       : '';
-    return `<div class="cpaRule${isOpen ? ' is-open' : ''}${rule.enabled ? '' : ' is-disabled'}" data-cpa-rule="${esc(rule.id)}">
+    return `<div class="cpaRule cpaFrame${isOpen ? ' is-open' : ''}${rule.enabled ? '' : ' is-disabled'}" data-cpa-rule="${esc(rule.id)}">
       <header class="cpaRuleBar">
         <label class="cpaSwitch" title="${esc(L('Kuralı aç / kapat', 'Enable / disable rule'))}">
           <input type="checkbox" data-cpa-rule-enabled ${rule.enabled ? 'checked' : ''}${readOnly ? ' disabled' : ''} aria-label="${esc(L('Kuralı etkinleştir', 'Enable rule'))}">
@@ -2163,7 +2166,9 @@
           ${dangling.length ? `<span class="cpaPill tone-red" title="${esc(L('Silinmiş bir başlığa bağlı koşul var', 'A condition refers to a deleted item'))}">⚠ ${esc(L('Eksik bağlantı', 'Missing link'))}</span>` : ''}
           ${dependents.length ? `<span class="cpaUsedBy" title="${esc(L(`Kullanan: ${ruleNames(dependents)}`, `Used by: ${ruleNames(dependents)}`))}">${esc(L(`${dependents.length} kuralda kullanılıyor`, `Used in ${dependents.length}`))}</span>` : ''}
           ${rule.builtIn ? `<span class="cpaBuiltIn">${esc(L('Yerleşik', 'Built-in'))}</span>` : ''}
-          ${managedBadge}${moderatorActions}
+          <span class="cpaBuiltIn cpaScopeBadge">${esc(rule.managed ? L('Ekip', 'Team') : L('Kişisel', 'Personal'))}</span>
+          ${view.isDirty?.(rule) ? `<span class="cpaBuiltIn cpaDraftBadge">${esc(L('Taslak', 'Draft'))}</span>` : ''}
+          ${moderatorActions ? `<details class="cpaRuleMenu"><summary class="cpaBtn sm" aria-label="${esc(L('Ekip işlemleri', 'Team actions'))}">⋯</summary><div class="cpaRuleMenuItems">${moderatorActions}</div></details>` : ''}
           ${readOnly ? '' : `<button type="button" class="cpaIconBtn" data-cpa-rule-edit title="${esc(L('Kuralı düzenle', 'Edit rule'))}" aria-label="${esc(L('Kuralı düzenle', 'Edit rule'))}"><svg class="ic"><use href="#i-pencil"/></svg></button>
           ${rule.managed === true ? '' : `<button type="button" class="cpaIconBtn cpaDangerIcon" data-cpa-rule-delete title="${esc(L('Yalnız benden sil', 'Delete only for me'))}" aria-label="${esc(L('Yalnız benden sil', 'Delete only for me'))}"><svg class="ic"><use href="#i-trash"/></svg></button>`}`}
           <button type="button" class="cpaRuleChevron" data-cpa-rule-toggle aria-label="${esc(isOpen ? L('Kuralı daralt', 'Collapse rule') : L('Kuralı genişlet', 'Expand rule'))}" aria-expanded="${isOpen ? 'true' : 'false'}"><svg class="ic"><use href="#i-chevron-down"/></svg></button>
@@ -2191,7 +2196,8 @@
     const tone = OD && typeof OD.normalizePriorityTone === 'function'
       ? OD.normalizePriorityTone(spec && spec.tone, 'copper')
       : (TONE_IDS.includes(spec && spec.tone) ? spec.tone : 'copper');
-    const isRisk = !spec || spec.isRisk !== false;
+    const usage = spec?.usage === 'tracking' ? 'tracking' : 'priority';
+    const isRisk = usage === 'tracking' ? false : (!spec || spec.isRisk !== false);
     const existingIds = [
       ...(state.personalPriorityCatalog || []).map(item => item.id),
       ...(state.priorityCatalog || []).map(item => item.id),
@@ -2202,7 +2208,7 @@
       : (OD && typeof OD.makePriorityId === 'function'
         ? OD.makePriorityId(rawEn || rawTr, existingIds)
         : `prio:${rawTr.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'custom'}`);
-    const entry = { id, tr: rawTr, en: rawEn, tone, isRisk, builtIn: false };
+    const entry = { id, tr: rawTr, en: rawEn, tone, isRisk, ...(usage === 'tracking' ? { usage } : {}), builtIn: false };
     const nextList = (state.personalPriorityCatalog || defaultCatalog()).slice();
     const watchIdx = nextList.findIndex(item => item.id === 'WATCH' || item.id === 'ON_TRACK');
     if (watchIdx >= 0) nextList.splice(watchIdx, 0, entry);
@@ -2226,18 +2232,19 @@
     const tone = OD && typeof OD.normalizePriorityTone === 'function'
       ? OD.normalizePriorityTone(patch && patch.tone, 'copper')
       : (TONE_IDS.includes(patch && patch.tone) ? patch.tone : 'copper');
-    const isRisk = !patch || patch.isRisk !== false;
+    const usage = patch?.usage === 'tracking' ? 'tracking' : 'priority';
+    const isRisk = usage === 'tracking' ? false : (!patch || patch.isRisk !== false);
     const currentList = (state.personalPriorityCatalog || defaultCatalog()).slice();
     let found = false;
     const updated = currentList.map(item => {
       if (item.id !== tagId || item.builtIn) return item;
       found = true;
-      return { ...item, tr, en, tone, isRisk };
+      return { ...item, tr, en, tone, isRisk, usage };
     });
     if (!found) {
       const managedExisting = (state.priorityCatalog || []).find(item => item.id === tagId && !item.builtIn);
       if (!managedExisting) return null;
-      updated.push({ id: tagId, tr, en, tone, isRisk, builtIn: false });
+      updated.push({ id: tagId, tr, en, tone, isRisk, usage, builtIn: false });
     }
     state.personalPriorityCatalog = OD && typeof OD.normalizePriorityCatalog === 'function'
       ? OD.normalizePriorityCatalog(updated)
@@ -2252,7 +2259,8 @@
   function movePriorityTag(id, direction) {
     const tagId = String(id || '').trim();
     if (!tagId || tagId === 'ON_TRACK') return false;
-    const base = (state.priorityCatalog || defaultCatalog()).map(item => ({ ...item }));
+    const tracking = (state.priorityCatalog || []).filter(item => item.usage === 'tracking');
+    const base = (state.priorityCatalog || defaultCatalog()).filter(item => item.usage !== 'tracking').map(item => ({ ...item }));
     const idx = base.findIndex(item => item.id === tagId);
     if (idx < 0) return false;
     const delta = direction === 'up' ? -1 : 1;
@@ -2262,7 +2270,7 @@
     const [moved] = base.splice(idx, 1);
     base.splice(targetIdx, 0, moved);
     state.personalPriorityCatalog = OD && typeof OD.normalizePriorityCatalog === 'function'
-      ? OD.normalizePriorityCatalog(base.map(({ managed, ...rest }) => rest))
+      ? OD.normalizePriorityCatalog([...base.slice(0, -1), ...tracking, base.at(-1)].map(({ managed, ...rest }) => rest))
       : base;
     applyRuleLayers(personalRuleList());
     savePrefs();
@@ -2278,7 +2286,7 @@
     const safeFallback = String(fallbackTarget || 'ACTION_THIS_WEEK').trim() || 'ACTION_THIS_WEEK';
     state.personalPriorityCatalog = (state.personalPriorityCatalog || defaultCatalog()).filter(item => item.id !== tagId);
     const nextPersonalRules = personalRuleList().map(rule => (rule.kind === 'priority' && rule.target === tagId
-      ? { ...rule, target: safeFallback }
+      ? (targetEntry.usage === 'tracking' ? { ...rule, enabled: false } : { ...rule, target: safeFallback })
       : rule));
     if (state.activePriority === tagId) state.activePriority = 'ALL';
     applyRuleLayers(nextPersonalRules);
@@ -2290,7 +2298,7 @@
 
   let closeActiveStudio = null;
   function openStudio(initialTab, studioOptions) {
-    closeActiveStudio?.();
+    if (closeActiveStudio && closeActiveStudio() === false) return;
     const opts = studioOptions && typeof studioOptions === 'object' ? studioOptions : {};
     if (Array.isArray(opts.rows) && opts.rows !== lastRows) {
       lastRows = opts.rows;
@@ -2301,11 +2309,13 @@
     refreshFieldCatalog();
     document.querySelectorAll('.cpaRulesOverlay,.cpaStudioOverlay,.cpaChecklistModalOverlay').forEach(el => el.remove());
 
+    let remembered = {};
+    try { remembered = JSON.parse(store.get(QUEUE_VIEW_KEY) || '{}') || {}; } catch (_) {}
     let activeTab = ['queue', 'priority', 'checklist'].includes(initialTab) ? initialTab : 'queue';
-    let qItemId = String(opts.itemId || 'ALL') || 'ALL';
-    let qScope = ['openRejected', 'overdue', 'rejected', 'all'].includes(opts.scope) ? opts.scope : 'openRejected';
-    let qSupplier = 'ALL';
-    let qSearch = '';
+    let qItemId = String(opts.itemId ?? remembered.itemId ?? 'ALL') || 'ALL';
+    let qScope = ['openRejected', 'overdue', 'rejected', 'all'].includes(opts.scope ?? remembered.scope) ? (opts.scope ?? remembered.scope) : 'openRejected';
+    let qSupplier = String(opts.supplier ?? remembered.supplier ?? 'ALL').slice(0, 160);
+    let qSearch = String(opts.search ?? remembered.search ?? '').slice(0, 200);
     let qLimit = 120;
     const selectedQueueKeys = new Set();
     let bulkStatus = 'approved';
@@ -2315,6 +2325,7 @@
       ? { mode: 'create', id: '', tr: '', en: '', tone: 'copper', isRisk: true, pendingRuleId: '' }
       : null;
     let statusEditor = null;
+    let catalogOpen = false;
 
     let expandedRuleId = String(opts.ruleId || '');
     let statusTimer = 0;
@@ -2454,7 +2465,88 @@
       const next = event.key === 'ArrowDown' ? Math.min(options.length - 1, current + 1) : Math.max(0, current < 0 ? options.length - 1 : current - 1);
       event.preventDefault(); options[next].focus();
     }
-    const rulesFor = kind => state.rules.filter(rule => rule.kind === kind);
+    const ruleDrafts = new Map(), draftBases = new Map(), invalidRuleDrafts = new Map();
+    let lastRuleApply = null, applyingRules = false;
+    const cloneRule = rule => JSON.parse(JSON.stringify(rule));
+    const ruleSignature = rule => rule ? JSON.stringify(Rules.normalizeRule(rule, { kind: rule.kind, priorityCatalog: state.priorityCatalog })) : '';
+    const isDirtyRule = rule => ruleSignature(rule) !== ruleSignature(state.rules.find(item => item.id === rule.id));
+    const dirtyRules = () => [...ruleDrafts.values()].filter(isDirtyRule);
+    const allDraftRules = () => [...state.rules.map(rule => ruleDrafts.get(rule.id) || rule), ...[...ruleDrafts.values()].filter(rule => !state.rules.some(item => item.id === rule.id))];
+    const rulesFor = kind => allDraftRules().filter(rule => rule.kind === kind);
+    function rememberQueueView() {
+      try { const value = JSON.stringify({ itemId: qItemId, scope: qScope, supplier: qSupplier, search: qSearch }); if (store.get(QUEUE_VIEW_KEY) !== value) store.set(QUEUE_VIEW_KEY, value); }
+      catch (error) { setStatus(error.message, 'warn'); }
+    }
+    function stageRuleChange(rule) {
+      const dirty = dirtyRules().length;
+      setStatus(dirty ? L(`${dirty} kural taslağı · Uygula ile kaydedilir`, `${dirty} rule drafts · Apply to save`) : '', '');
+      syncRuleSummaryDom(modal.querySelector(`[data-cpa-rule="${CSS.escape(rule.id)}"]`), rule);
+      const apply = modal.querySelector('[data-cpa-apply-drafts]'); if (apply) apply.disabled = applyingRules || !dirty;
+      const discard = modal.querySelector('[data-cpa-discard-drafts]'); if (discard) { discard.disabled = applyingRules || !dirty; discard.hidden = !dirty; }
+      const undo = modal.querySelector('[data-cpa-undo-rules]'); if (undo) undo.disabled = applyingRules || !!dirty;
+    }
+    async function applyDrafts() {
+      if (applyingRules) return;
+      clearTimeout(debounceTimer); debounceTimer = 0;
+      const changes = dirtyRules().map(cloneRule);
+      if (!changes.length) return;
+      if (invalidRuleDrafts.size) { setStatus(L('Geçersiz formül düzeltilmeden taslaklar uygulanamaz.', 'Correct the invalid formula before applying drafts.'), 'warn'); return; }
+      for (const rule of changes) {
+        const current = state.rules.find(item => item.id === rule.id);
+        if (ruleSignature(current) !== draftBases.get(rule.id)) { setStatus(L('Kural başka bir işlemde değişti; taslağı iptal edip güncel kuralı açın.', 'The rule changed elsewhere; discard this draft and reopen the current rule.'), 'warn'); return; }
+        if (rule.managed && !isModerator()) return;
+        const check = Rules.validateRule(rule, { fields: formulaFieldIds(rule) });
+        if (!check.valid) { expandedRuleId = rule.id; draw(); setStatus(L('Kural uygulanamadı: ', 'Cannot apply rule: ') + check.errors.join(' · '), 'warn'); return; }
+      }
+      const before = changes.map(rule => ({ id: rule.id, rule: state.rules.find(item => item.id === rule.id) ? cloneRule(state.rules.find(item => item.id === rule.id)) : null }));
+      let failure;
+      applyingRules = true; draw();
+      try {
+        const published = new Map(changes.filter(rule => rule.managed).map(rule => [rule.id, rule]));
+        if (published.size) {
+          clearTimeout(managedSyncTimer);
+          await saveManagedRules({ rules: state.managed.rules.map(rule => published.get(rule.id) || rule), deletedRuleIds: state.managed.deletedRuleIds });
+        }
+        const previous = state.rules;
+        const byId = new Map(changes.map(rule => [rule.id, rule]));
+        state.rules = [...previous.map(rule => byId.get(rule.id) || rule), ...changes.filter(rule => !previous.some(item => item.id === rule.id))].map(rule => Rules.normalizeRule(rule, { kind: rule.kind, priorityCatalog: state.priorityCatalog }));
+        try { commit({ refreshColumns: changes.some(rule => rule.kind === 'checklist'), message: L('Kural değişiklikleri uygulandı', 'Rule changes applied') }); }
+        catch (error) { state.rules = previous; throw error; }
+        lastRuleApply = { before, after: new Map(changes.map(rule => [rule.id, ruleSignature(state.rules.find(item => item.id === rule.id))])) };
+        for (const submitted of changes) {
+          if (ruleSignature(ruleDrafts.get(submitted.id)) === ruleSignature(submitted)) { ruleDrafts.delete(submitted.id); draftBases.delete(submitted.id); }
+          else draftBases.set(submitted.id, ruleSignature(state.rules.find(rule => rule.id === submitted.id)));
+        }
+      } catch (error) { failure = error; }
+      finally {
+        applyingRules = false;
+        if (modal.isConnected) { draw(); setStatus(failure ? failure.message : L('Kural değişiklikleri uygulandı', 'Rule changes applied'), failure ? 'warn' : 'ok'); }
+      }
+    }
+    async function undoRuleApply() {
+      if (applyingRules || !lastRuleApply || dirtyRules().length) return;
+      for (const [id, signature] of lastRuleApply.after) if (ruleSignature(state.rules.find(rule => rule.id === id)) !== signature) { setStatus(L('Daha yeni kural değişikliği var; geri alma uygulanmadı.', 'A newer rule change exists; undo was not applied.'), 'warn'); return; }
+      const undo = lastRuleApply;
+      let failure;
+      applyingRules = true; draw();
+      try {
+        const published = new Map(undo.before.filter(item => item.rule?.managed).map(item => [item.id, item.rule]));
+        if (published.size) {
+          clearTimeout(managedSyncTimer);
+          await saveManagedRules({ rules: state.managed.rules.map(rule => published.get(rule.id) || rule), deletedRuleIds: state.managed.deletedRuleIds });
+        }
+        const previous = state.rules;
+        const ids = new Set(undo.before.map(item => item.id));
+        state.rules = [...state.rules.filter(rule => !ids.has(rule.id)), ...undo.before.map(item => item.rule).filter(Boolean)];
+        try { commit({ refreshColumns: true, message: L('Son kural değişikliği geri alındı', 'Last rule change undone') }); }
+        catch (error) { state.rules = previous; throw error; }
+        lastRuleApply = null; ruleDrafts.clear(); draftBases.clear(); invalidRuleDrafts.clear();
+      } catch (error) { failure = error; }
+      finally {
+        applyingRules = false;
+        if (modal.isConnected) { draw(); setStatus(failure ? failure.message : L('Son kural değişikliği geri alındı', 'Last rule change undone'), failure ? 'warn' : 'ok'); }
+      }
+    }
     function modeOf(rule) {
       return uiModes.get(rule.id) || (rule.mode === 'formula' ? 'formula' : 'basic');
     }
@@ -2480,7 +2572,7 @@
     };
     const isAdvanced = (rule, index, condition) =>
       advancedConditions.has(`${rule.id}:${index}`) || conditionHasAdvancedData(condition);
-    const view = { get expandedRuleId() { return expandedRuleId; }, modeOf, aiDraftOf, isAdvanced };
+    const view = { get expandedRuleId() { return expandedRuleId; }, modeOf, aiDraftOf, isAdvanced, isDirty: isDirtyRule };
 
     function setStatus(message, tone) {
       const node = modal.querySelector('[data-cpa-rules-status]');
@@ -2542,6 +2634,7 @@
           entries.push({ rowKey, analysis, bucket, itemId: bucket.id, bucketLabel: bLabel, supplier, parts, stateCode, resolved, overdue });
         }
       }
+      if (qSupplier !== 'ALL' && !suppliers.has(qSupplier)) { qSupplier = 'ALL'; return buildQueueEntries(); }
       entries.sort((a, b) => {
         if (a.stateCode === 'rejected' && b.stateCode !== 'rejected') return -1;
         if (b.stateCode === 'rejected' && a.stateCode !== 'rejected') return 1;
@@ -2609,7 +2702,7 @@
           <td>${esc(supplier)}</td>
           <td><span class="cpaPill tone-blue">${esc(bucketLabel)}</span></td>
           <td class="num${days != null && days <= 7 ? ' is-urgent' : ''}">${days == null ? '—' : int(days)}</td>
-          <td><span class="cpaPill tone-${esc(prioTone)}">${esc(priorityLabel(analysis.priority))}</span></td>
+          <td><span class="cpaPill tone-${esc(prioTone)}">${esc(priorityLabel(analysis.priority))}</span>${(analysis.trackingTags || []).map(id => `<span class="cpaPill tone-${esc(priorityToneOf(id))}">${esc(priorityLabel(id))}</span>`).join('')}</td>
           <td>${plmCell(analysis, itemId) || '<span class="cpaNote">—</span>'}</td>
           <td>${statusControl}</td>
           <td class="act">
@@ -2658,7 +2751,7 @@
             <th>${esc(L('Üretici', 'Supplier'))}</th>
             <th>${esc(L('Kontrol', 'Check'))}</th>
             <th class="num">${esc(L('Yüklemeye Gün', 'Days to Load'))}</th>
-            <th>${esc(L('Öncelik', 'Priority'))}</th>
+            <th>${esc(L('Öncelik / Takip', 'Urgency / Tracking'))}</th>
             <th>PLM</th>
             <th>${esc(L('Durum', 'Status'))}</th>
             <th></th>
@@ -2679,11 +2772,11 @@
     function priorityCatalogHtml() {
       const catalog = state.priorityCatalog || defaultCatalog();
       const byPrio = new Map(((state.model && state.model.priorities) || []).map(item => [item.name, item]));
-      const nonTrackMax = Math.max(0, catalog.findIndex(item => item.id === 'ON_TRACK') - 1);
+      const nonTrackMax = Math.max(0, catalog.filter(item => item.usage !== 'tracking').findIndex(item => item.id === 'ON_TRACK') - 1);
       const moderator = isModerator();
-      const rows = catalog.map((entry, idx) => {
-        const count = (byPrio.get(entry.id) || { rows: 0 }).rows || 0;
-        const canMove = entry.id !== 'ON_TRACK';
+      const renderTag = (entry, idx) => {
+        const count = entry.usage === 'tracking' ? (state.model?.orders || []).filter(order => order.trackingTags?.includes(entry.id)).length : (byPrio.get(entry.id) || { rows: 0 }).rows || 0;
+        const canMove = entry.id !== 'ON_TRACK' && entry.usage !== 'tracking';
         const canUp = canMove && idx > 0;
         const canDown = canMove && idx < nonTrackMax;
         const isManaged = entry.managed === true || (state.managed.priorityCatalog || []).some(m => m.id === entry.id);
@@ -2693,14 +2786,14 @@
             : `<button type="button" class="cpaBtn sm ghost" data-cpa-priority-publish="${esc(entry.id)}" title="${esc(L('Tüm kullanıcılara yayımla', 'Publish to all users'))}">${esc(L('Yayımla', 'Publish'))}</button>`)
           : '';
         return `<div class="cpaCatalogTagRow" data-cpa-priority-tag="${esc(entry.id)}">
-          <span class="cpaTagRank" title="${esc(L('Aciliyet sırası (#1 en acil)', 'Urgency rank (#1 most urgent)'))}">#${idx + 1}</span>
+          <span class="cpaTagRank" title="${esc(L('Aciliyet sırası (#1 en acil)', 'Urgency rank (#1 most urgent)'))}">${entry.usage === 'tracking' ? '—' : '#' + (catalog.filter(item => item.usage !== 'tracking').findIndex(item => item.id === entry.id) + 1)}</span>
           <span class="cpaTagDot tone-${esc(entry.tone || 'blue')}" aria-hidden="true"></span>
           <span class="cpaCatalogTagMain" data-no-i18n>
             <b>${esc(isEn() ? (entry.en || entry.tr) : entry.tr)}</b>
             ${entry.en && entry.en !== entry.tr ? `<small>${esc(isEn() ? entry.tr : entry.en)}</small>` : ''}
           </span>
           <span class="cpaCatalogTagBadges">
-            ${entry.isRisk ? `<span class="cpaBuiltIn">${esc(L('Aksiyon / Risk', 'Action / Risk'))}</span>` : `<span class="cpaBuiltIn">${esc(L('Bilgi / Normal', 'Info / Normal'))}</span>`}
+            ${entry.usage === 'tracking' ? `<span class="cpaBuiltIn">${esc(L('Takip etiketi', 'Tracking tag'))}</span>` : entry.isRisk ? `<span class="cpaBuiltIn">${esc(L('Aksiyon / Risk', 'Action / Risk'))}</span>` : `<span class="cpaBuiltIn">${esc(L('Bilgi / Normal', 'Info / Normal'))}</span>`}
             ${entry.builtIn ? `<span class="cpaBuiltIn">${esc(L('Yerleşik', 'Built-in'))}</span>` : ''}
             ${isManaged ? `<span class="cpaBuiltIn cpaManagedBadge">${esc(L('Tüm kullanıcılar', 'All users'))}</span>` : ''}
             <span class="cpaPill tone-${esc(entry.tone || 'blue')}">${int(count)} ${esc(L('sipariş', 'orders'))}</span>
@@ -2713,9 +2806,11 @@
             ${!entry.builtIn && !isManaged ? `<button type="button" class="cpaIconBtn cpaDangerIcon" data-cpa-priority-delete="${esc(entry.id)}" title="${esc(L('Etiketi sil', 'Delete tag'))}" aria-label="${esc(L('Etiketi sil', 'Delete tag'))}"><svg class="ic"><use href="#i-trash"/></svg></button>` : ''}
           </div>
         </div>`;
-      }).join('');
+      };
+      const rows = catalog.filter(entry => entry.usage !== 'tracking').map(renderTag).join('');
+      const trackingRows = catalog.filter(entry => entry.usage === 'tracking').map(renderTag).join('');
 
-      const form = prioEditor ? `<div class="cpaCatalogInlineForm" data-cpa-priority-form>
+      const form = prioEditor ? `<div class="cpaCatalogInlineForm cpaFrame" data-cpa-priority-form>
         <div class="cpaRowBetween">
           <b>${esc(prioEditor.mode === 'edit' ? L('Öncelik Etiketini Düzenle', 'Edit Priority Tag') : L('Yeni Öncelik Durumu Etiketi', 'New Priority Status Tag'))}</b>
           ${prioEditor.pendingRuleId ? `<small class="cpaNote">${esc(L('Kaydedildiğinde kural hedefi olarak otomatik seçilecek.', 'Will be selected automatically as the rule target on save.'))}</small>` : ''}
@@ -2726,12 +2821,13 @@
           <label><span>${esc(L('İngilizce ad (opsiyonel — boşsa Türkçe kullanılır)', 'English label (optional — falls back to Turkish)'))}</span>
             <input data-cpa-priority-en value="${esc(prioEditor.en)}" placeholder="${esc(L('Örn. Waiting Fabric', 'e.g. Waiting Fabric'))}" maxlength="80"></label>
         </div>
+        <label class="cpaRuleTarget"><span>${esc(L('Etiket kullanımı', 'Tag purpose'))}</span><select data-cpa-priority-usage><option value="priority"${prioEditor.usage !== 'tracking' ? ' selected' : ''}>${esc(L('Aciliyet önceliği', 'Urgency priority'))}</option><option value="tracking"${prioEditor.usage === 'tracking' ? ' selected' : ''}>${esc(L('Takip etiketi — aciliyeti değiştirmez', 'Tracking tag — keeps urgency unchanged'))}</option></select></label>
         <div class="cpaCatalogFormToneRow">
           <span>${esc(L('Renk tonu', 'Color tone'))}</span>
           ${toneSwatchPicker(prioEditor.tone, 'data-cpa-priority-tone')}
         </div>
         <div class="cpaRowBetween">
-          <label class="cpaCheck"><input type="checkbox" data-cpa-priority-risk ${prioEditor.isRisk !== false ? 'checked' : ''}>
+          <label class="cpaCheck"><input type="checkbox" data-cpa-priority-risk ${prioEditor.isRisk !== false ? 'checked' : ''} ${prioEditor.usage === 'tracking' ? 'disabled' : ''}>
             <span>${esc(L('Aksiyon / Risk kapsamında say (Genel Bakış Nabız ve Aksiyon Gerekenler listesine girer)', 'Count as Action / Risk (included in Overview Pulse and Orders Requiring Attention)'))}</span></label>
           <div class="cpaCatalogFormBtns">
             <button type="button" class="cpaBtn sm ghost" data-cpa-priority-cancel>${esc(L('Vazgeç', 'Cancel'))}</button>
@@ -2740,7 +2836,7 @@
         </div>
       </div>` : '';
 
-      return `<section class="cpaCatalogCard" aria-label="${esc(L('Öncelik Durumu Etiketleri', 'Priority Status Tags'))}">
+      return `<section class="cpaCatalogCard cpaFrame" aria-label="${esc(L('Öncelik Durumu Etiketleri', 'Priority Status Tags'))}">
         <div class="cpaRowBetween cpaCatalogHead">
           <div>
             <b>${esc(L('Öncelik Durumu Etiketleri ve Aciliyet Sırası', 'Priority Status Tags & Urgency Order'))}</b>
@@ -2749,7 +2845,7 @@
           <button type="button" class="cpaBtn sm primary" data-cpa-priority-add>+ ${esc(L('Yeni Öncelik Etiketi', 'New Priority Tag'))}</button>
         </div>
         ${form}
-        <div class="cpaCatalogList">${rows}</div>
+        <div class="cpaCatalogList">${rows}</div>${trackingRows ? `<b>${esc(L('Takip etiketleri · aciliyetten bağımsız', 'Tracking tags · separate from urgency'))}</b><div class="cpaCatalogList">${trackingRows}</div>` : ''}
       </section>`;
     }
 
@@ -2787,7 +2883,7 @@
         </div>`;
       }).join('');
 
-      const form = statusEditor ? `<div class="cpaCatalogInlineForm" data-cpa-status-form>
+      const form = statusEditor ? `<div class="cpaCatalogInlineForm cpaFrame" data-cpa-status-form>
         <b>${esc(statusEditor.mode === 'edit' ? L('Özel Checklist Durumunu Düzenle', 'Edit Custom Checklist Status') : L('Yeni Özel Checklist Durumu', 'New Custom Checklist Status'))}</b>
         <div class="cpaCatalogFormGrid">
           <label><span>${esc(L('Durum adı (Türkçe)', 'Status label (Turkish)'))}</span>
@@ -2809,7 +2905,7 @@
         </div>
       </div>` : '';
 
-      return `<section class="cpaCatalogCard" aria-label="${esc(L('Checklist Durum Seçenekleri', 'Checklist Status Options'))}">
+      return `<section class="cpaCatalogCard cpaFrame" aria-label="${esc(L('Checklist Durum Seçenekleri', 'Checklist Status Options'))}">
         <div class="cpaRowBetween cpaCatalogHead">
           <label class="cpaSwitchRow"><input type="checkbox" data-cpa-checklist-enabled ${state.checklistSettings.enabled ? 'checked' : ''}>
             <span><b>${esc(L('Kontrol Listesi Açık', 'Checklist Enabled'))}</b>
@@ -2830,7 +2926,7 @@
       const topCatalog = kind === 'priority' ? priorityCatalogHtml() : checklistStatusCatalogHtml();
       const addLabel = kind === 'priority' ? L('Yeni Öncelik Kuralı', 'New Priority Rule') : L('Yeni Kontrol Sorusu', 'New Checklist Question');
       return `<div class="cpaStudioRulesPane">
-        ${topCatalog}
+        <details class="cpaCatalogDisclosure"${catalogOpen || prioEditor || statusEditor ? ' open' : ''}><summary class="cpaBtn cpaCatalogDisclosureSummary">${esc(kind === 'priority' ? L('Öncelik ve takip etiketlerini yönet', 'Manage urgency and tracking tags') : L('Checklist durumlarını yönet', 'Manage checklist statuses'))}<span aria-hidden="true">▾</span></summary>${topCatalog}</details>
         <div class="cpaRulesTopBar">
           <div>
             <b>${esc(kind === 'priority' ? L('Öncelik Kuralları', 'Priority Rules') : L('Kontrol Soruları', 'Checklist Questions'))} (${int(visible.length)})</b>
@@ -2839,6 +2935,7 @@
               : L('Koşulu sağlayan siparişler için CP tablosunda ve İş Listesi’nde kontrol sorusu açar.', 'Opens a check question in CP and Work Queue for matching orders.'))}</small>
           </div>
           <div class="cpaRulesTopActions">
+            ${kind === 'priority' ? `<button type="button" class="cpaBtn sm" data-cpa-priority-add>+ ${esc(L('Etiket Ekle', 'Add Tag'))}</button>` : `<button type="button" class="cpaBtn sm" data-cpa-status-add>+ ${esc(L('Durum Ekle', 'Add Status'))}</button>`}
             <details class="cpaTemplatesMenu">
               <summary class="cpaBtn sm">${esc(L('Hazır Şablondan Ekle', 'Add from Template'))} ▾</summary>
               <div class="cpaTemplatesPopover">${templates.map(tpl =>
@@ -2856,7 +2953,12 @@
       </div>`;
     }
 
-    const findRule = id => state.rules.find(rule => rule.id === id);
+    const findRule = id => {
+      if (ruleDrafts.has(id)) return ruleDrafts.get(id);
+      const current = state.rules.find(rule => rule.id === id);
+      if (!current) return null;
+      const draft = cloneRule(current); ruleDrafts.set(id, draft); draftBases.set(id, ruleSignature(current)); return draft;
+    };
     const ruleIdOf = el => el.closest('[data-cpa-rule]')?.dataset.cpaRule || '';
 
     function syncRuleSummaryDom(row, rule) {
@@ -2873,6 +2975,8 @@
         const sm = summaryBtn.querySelector('.cpaRuleSummaryMain small');
         if (sm) sm.textContent = ruleSummary(rule);
       }
+      const sentence = row.querySelector('.cpaRuleSentence');
+      if (sentence) sentence.textContent = (rule.conditions || []).map(condition => conditionSummary(condition, rule)).join(rule.match === 'any' ? L(' veya ', ' or ') : L(' ve ', ' and ')) + ' → ' + (rule.kind === 'priority' ? ruleBadge(rule) : ruleName(rule));
       const previewNode = row.querySelector('[data-cpa-rule-preview]');
       if (previewNode) previewNode.innerHTML = previewHtml(rule);
     }
@@ -2907,16 +3011,19 @@
       const internal = Rules.formulaFromDisplay(raw, catalogFor(rule));
       const check = Rules.validateExpression(internal, { fields: formulaFieldIds(rule) });
       if (!check.valid) {
+        invalidRuleDrafts.set(`${rule.id}:formula`, check.errors.join(' · '));
+        textarea.setAttribute('aria-invalid', 'true');
         if (errorEl) { errorEl.hidden = false; errorEl.textContent = L('Geçersiz formül: ', 'Invalid formula: ') + check.errors.join(' · '); }
         if (statusEl) statusEl.textContent = '';
         if (diagEl) diagEl.hidden = true;
         return false;
       }
+      invalidRuleDrafts.delete(`${rule.id}:formula`); textarea.removeAttribute('aria-invalid');
       if (errorEl) { errorEl.hidden = true; errorEl.textContent = ''; }
       const sampleOrder = state.model && Array.isArray(state.model.orders) && state.model.orders[0];
       if (sampleOrder) {
         const sampleEval = Rules.evaluateOrder(sampleOrder, {
-          rules: state.rules.map(item => item.id === rule.id ? { ...rule, enabled: true, mode: 'formula', formula: internal } : item),
+          rules: [...state.rules.filter(item => item.id !== rule.id), { ...rule, enabled: true, mode: 'formula', formula: internal }],
           answers: state.answers, plmEvidence, checklistEnabled: state.checklistSettings.enabled,
           priorityCatalog: state.priorityCatalog,
         });
@@ -2930,7 +3037,7 @@
         }
       }
       applyFormula(rule, internal);
-      commit({ message: silent ? '' : L('Formül doğrulandı ve kaydedildi', 'Formula validated and saved'), refreshColumns: rule.kind === 'checklist' });
+      stageRuleChange(rule);
       if (statusEl) statusEl.textContent = L('✓ Geçerli formül', '✓ Valid formula');
       syncRuleSummaryDom(row, rule);
       return true;
@@ -2954,6 +3061,7 @@
         availablePriorities: selectablePriorityTargets().map(item => ({
           id: item.id,
           label: priorityLabel(item.id),
+          usage: item.usage || 'priority',
           isRisk: item.isRisk !== false,
         })),
       };
@@ -3040,9 +3148,9 @@
         onApply: ({ formula, priority }) => {
           applyAiFormula(rule, formula, draft);
           if (priority && rule.kind === 'priority') rule.target = priority;
-          draft.applied = L('LCW AI önerisi kurala uygulandı.', 'LCW AI suggestion applied to the rule.');
+          draft.applied = L('LCW AI önerisi taslağa eklendi. Kaydetmek için Uygula’ya basın.', 'LCW AI suggestion added to draft. Choose Apply to save.');
           draft.error = '';
-          commit({ message: L('LCW AI kuralı kaydedildi', 'LCW AI rule saved'), refreshColumns: rule.kind === 'checklist' });
+          stageRuleChange(rule);
           draw();
         },
       });
@@ -3080,6 +3188,7 @@
         const rule = findRule(ruleIdOf(el));
         if (!rule) return;
         if (!confirmDelete(rule)) return;
+        ruleDrafts.delete(rule.id); draftBases.delete(rule.id); invalidRuleDrafts.delete(`${rule.id}:formula`); invalidRuleDrafts.delete(`${rule.id}:auto`);
         if (rule.builtIn && !state.deletedRuleIds.includes(rule.id)) state.deletedRuleIds.push(rule.id);
         state.rules = state.rules.filter(item => item.id !== rule.id);
         if (expandedRuleId === rule.id) expandedRuleId = '';
@@ -3091,7 +3200,7 @@
         if (!rule) return;
         rule.conditions.push(Rules.normalizeCondition({ field: '@daysToLoad', operator: 'lte', value: 14 }));
         applyBasicConditions(rule);
-        commit({ refreshColumns: rule.kind === 'checklist' });
+        stageRuleChange(rule);
         draw();
       });
 
@@ -3105,13 +3214,13 @@
         const rule = findRule(ruleIdOf(el));
         if (!rule) return;
         rule.enabled = Boolean(el.checked);
-        commit({ refreshColumns: rule.kind === 'checklist' });
+        stageRuleChange(rule);
         draw();
       });
 
       modal.querySelectorAll('[data-cpa-rule-publish]').forEach(el => el.onclick = async () => {
         const rule = findRule(ruleIdOf(el));
-        if (!rule) return;
+        if (!rule || isDirtyRule(rule)) return;
         el.disabled = true;
         try { await publishRuleToAll(rule); draw(); }
         catch (error) { if (typeof showToast === 'function') showToast(error.message); }
@@ -3120,7 +3229,7 @@
 
       modal.querySelectorAll('[data-cpa-rule-unpublish]').forEach(el => el.onclick = async () => {
         const rule = findRule(ruleIdOf(el));
-        if (!rule) return;
+        if (!rule || isDirtyRule(rule)) return;
         el.disabled = true;
         try { await unpublishRule(rule.id); draw(); }
         catch (error) { if (typeof showToast === 'function') showToast(error.message); }
@@ -3152,9 +3261,9 @@
             target: fallbackTarget,
             conditions: [{ field: '@daysToLoad', operator: 'lte', value: 14 }],
           }, { kind, priorityCatalog: state.priorityCatalog });
-        state.rules = [created, ...state.rules];
+        ruleDrafts.set(created.id, created); draftBases.set(created.id, '');
         expandedRuleId = created.id;
-        commit({ message: L('Yeni kural eklendi', 'New rule added'), refreshColumns: kind === 'checklist' });
+        stageRuleChange(created);
         draw();
         scrollToRule(created.id);
       });
@@ -3164,9 +3273,9 @@
         const tpl = ruleTemplates(kind).find(item => item.id === el.dataset.cpaTemplate);
         if (!tpl) return;
         const created = Rules.normalizeRule({ ...tpl.rule, kind }, { kind, priorityCatalog: state.priorityCatalog });
-        state.rules = [created, ...state.rules];
+        ruleDrafts.set(created.id, created); draftBases.set(created.id, '');
         expandedRuleId = created.id;
-        commit({ message: L('Şablondan eklendi', 'Added from template'), refreshColumns: kind === 'checklist' });
+        stageRuleChange(created);
         draw();
         scrollToRule(created.id);
       });
@@ -3192,7 +3301,7 @@
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
           debounceTimer = 0;
-          commit({ refreshColumns: rule.kind === 'checklist' });
+          stageRuleChange(rule);
         }, 320);
       };
 
@@ -3250,7 +3359,7 @@
           return;
         }
         rule.target = OD ? OD.normalizePriority(el.value, 'ACTION_THIS_WEEK', state.priorityCatalog) : el.value;
-        commit();
+        stageRuleChange(rule);
         draw();
       });
 
@@ -3258,7 +3367,7 @@
         const rule = findRule(ruleIdOf(el));
         if (!rule) return;
         rule.approvalScope = el.value === 'option' ? 'option' : 'order';
-        commit({ refreshColumns: true });
+        stageRuleChange(rule);
       });
 
       modal.querySelectorAll('[data-cpa-rule-evidence]').forEach(el => el.onchange = () => {
@@ -3266,7 +3375,7 @@
         if (!rule) return;
         const field = el.dataset.cpaRuleEvidence;
         rule.evidenceFields = { ...(rule.evidenceFields || {}), [field]: Boolean(el.checked) };
-        commit({ refreshColumns: true });
+        stageRuleChange(rule);
       });
 
       modal.querySelectorAll('[data-cpa-scope-preset]').forEach(el => el.onclick = () => {
@@ -3277,14 +3386,14 @@
           if (Rules.checklistScopePreset(rule).preset !== 'custom') {
             rule.conditions = [...rule.conditions, Rules.normalizeCondition({ field: 'License', operator: 'notEmpty', value: '' })];
             applyBasicConditions(rule);
-            commit({ refreshColumns: true });
+            stageRuleChange(rule);
           }
           draw();
           return;
         }
         Rules.applyChecklistScopePreset(rule, { preset, maxDaysToLoad: 28 });
         uiModes.set(rule.id, 'basic');
-        commit({ refreshColumns: true });
+        stageRuleChange(rule);
         draw();
       });
 
@@ -3300,7 +3409,7 @@
           maxDaysToLoad: Number.isFinite(maxDaysToLoad) ? maxDaysToLoad : 28,
           minOrderAgeDays: ageRaw === '' ? null : Number(ageRaw),
         });
-        commit({ refreshColumns: true });
+        stageRuleChange(rule);
         syncRuleSummaryDom(row, rule);
       });
 
@@ -3308,6 +3417,7 @@
         const rule = findRule(ruleIdOf(el));
         if (!rule) return;
         const nextMode = el.dataset.cpaRuleMode;
+        if (nextMode !== 'formula') invalidRuleDrafts.delete(`${rule.id}:formula`);
         if (nextMode === 'formula' && rule.mode !== 'formula' && !rule.formula) {
           rule.formula = Rules.conditionsToFormula(rule.conditions, rule.match);
         }
@@ -3320,7 +3430,7 @@
         if (!rule) return;
         rule.match = el.value === 'any' ? 'any' : 'all';
         applyBasicConditions(rule);
-        commit({ refreshColumns: rule.kind === 'checklist' });
+        stageRuleChange(rule);
         draw();
       });
 
@@ -3376,7 +3486,7 @@
 
       bindConditionCollection('cond', r => r.conditions, r => {
         applyBasicConditions(r);
-        commit({ refreshColumns: r.kind === 'checklist' });
+        stageRuleChange(r);
       });
       bindConditionCollection('auto-cond', r => {
         if (!Array.isArray(r.autoConditions)) r.autoConditions = [];
@@ -3384,7 +3494,7 @@
       }, r => {
         r.autoMode = 'basic';
         r.autoFormula = Rules.conditionsToFormula(r.autoConditions, r.autoMatch || 'all');
-        commit({ refreshColumns: true });
+        stageRuleChange(rule);
       });
 
       modal.querySelectorAll('[data-cpa-cond-advanced]').forEach(el => el.onclick = () => {
@@ -3406,7 +3516,7 @@
         const right = type === 'today' ? { type: 'today' } : type === 'field' ? { type: 'field', field: '@daysToLoad' } : { type: 'value', value: '' };
         rule.conditions[idx] = Rules.normalizeCondition({ ...rule.conditions[idx], right });
         applyBasicConditions(rule);
-        commit({ refreshColumns: rule.kind === 'checklist' });
+        stageRuleChange(rule);
         draw();
       });
 
@@ -3427,7 +3537,7 @@
         };
         rule.conditions[idx] = Rules.normalizeCondition({ ...cond, left: applySide('left'), right: applySide('right') });
         applyBasicConditions(rule);
-        commit({ refreshColumns: rule.kind === 'checklist' });
+        stageRuleChange(rule);
         syncRuleSummaryDom(el.closest('[data-cpa-rule]'), rule);
       });
 
@@ -3435,12 +3545,13 @@
         const rule = findRule(ruleIdOf(el));
         if (!rule) return;
         rule.autoStatus = Checklist.normalizeStatus(el.value) || '';
+        if (!rule.autoStatus) invalidRuleDrafts.delete(`${rule.id}:auto`);
         if (rule.autoStatus && !rule.autoMode) rule.autoMode = 'basic';
         if (rule.autoStatus && rule.autoMode === 'basic' && (!Array.isArray(rule.autoConditions) || !rule.autoConditions.length)) {
           rule.autoConditions = [Rules.normalizeCondition({ field: '@stage', operator: 'in', value: ['LOADING', 'IN_WAREHOUSE'] })];
           rule.autoFormula = Rules.conditionsToFormula(rule.autoConditions, rule.autoMatch || 'all');
         }
-        commit({ refreshColumns: true });
+        stageRuleChange(rule);
         draw();
       });
 
@@ -3448,6 +3559,7 @@
         const rule = findRule(ruleIdOf(el));
         if (!rule) return;
         const next = el.dataset.cpaAutoMode === 'formula' ? 'formula' : 'basic';
+        if (next === 'basic') invalidRuleDrafts.delete(`${rule.id}:auto`);
         rule.autoMode = next;
         if (next === 'formula' && !rule.autoFormula && Array.isArray(rule.autoConditions) && rule.autoConditions.length) {
           rule.autoFormula = Rules.conditionsToFormula(rule.autoConditions, rule.autoMatch || 'all');
@@ -3455,7 +3567,7 @@
           const synced = Rules.formulaToConditions(rule.autoFormula);
           if (synced) { rule.autoConditions = synced.conditions; rule.autoMatch = synced.match; }
         }
-        commit({ refreshColumns: true });
+        stageRuleChange(rule);
         draw();
       });
 
@@ -3464,7 +3576,7 @@
         if (!rule) return;
         rule.autoMatch = el.value === 'any' ? 'any' : 'all';
         rule.autoFormula = Rules.conditionsToFormula(rule.autoConditions || [], rule.autoMatch);
-        commit({ refreshColumns: true });
+        stageRuleChange(rule);
       });
 
       modal.querySelectorAll('[data-cpa-auto-cond-add]').forEach(el => el.onclick = () => {
@@ -3474,7 +3586,7 @@
         rule.autoConditions.push(Rules.normalizeCondition({ field: '@stage', operator: 'in', value: ['LOADING', 'IN_WAREHOUSE'] }));
         rule.autoMode = 'basic';
         rule.autoFormula = Rules.conditionsToFormula(rule.autoConditions, rule.autoMatch || 'all');
-        commit({ refreshColumns: true });
+        stageRuleChange(rule);
         draw();
       });
 
@@ -3487,18 +3599,20 @@
         const internal = Rules.formulaFromDisplay(raw, catalogFor(rule));
         if (!internal) {
           rule.autoFormula = '';
-          commit({ refreshColumns: true });
+          stageRuleChange(rule);
           return;
         }
         const check = Rules.validateExpression(internal, { fields: formulaFieldIds(rule) });
         if (!check.valid) {
+          invalidRuleDrafts.set(`${rule.id}:auto`, check.errors.join(' · ')); el.setAttribute('aria-invalid', 'true');
           if (fb) fb.textContent = L('Geçersiz formül: ', 'Invalid formula: ') + check.errors.join(' · ');
           return;
         }
+        invalidRuleDrafts.delete(`${rule.id}:auto`); el.removeAttribute('aria-invalid');
         rule.autoMode = 'formula';
         rule.autoFormula = internal;
         if (fb) fb.textContent = L('✓ Otomatik durum formülü kaydedildi.', '✓ Auto-status formula saved.');
-        commit({ refreshColumns: true });
+        stageRuleChange(rule);
       });
 
       modal.querySelectorAll('[data-cpa-formula-test]').forEach(el => el.onclick = () => {
@@ -3583,7 +3697,7 @@
               rule.autoConditions[idx] = Rules.normalizeCondition({ field: fieldId, operator: defOp, value: '' });
               rule.autoMode = 'basic';
               rule.autoFormula = Rules.conditionsToFormula(rule.autoConditions, rule.autoMatch || 'all');
-              commit({ refreshColumns: true });
+              stageRuleChange(rule);
               draw();
             }
             return;
@@ -3605,7 +3719,7 @@
             rule.conditions[idx] = Rules.normalizeCondition({ ...cond, right: { ...(cond.right || {}), offsetField: fieldId } });
           }
           applyBasicConditions(rule);
-          commit({ refreshColumns: rule.kind === 'checklist' });
+          stageRuleChange(rule);
           draw();
         };
       });
@@ -3645,7 +3759,7 @@
             rule.autoMode = 'basic';
             rule.autoFormula = Rules.conditionsToFormula(rule.autoConditions, rule.autoMatch || 'all');
           } else applyBasicConditions(rule);
-          commit({ refreshColumns: rule.kind === 'checklist' });
+          stageRuleChange(rule);
           closeValueMenu();
           syncRuleSummaryDom(picker.closest('[data-cpa-rule]'), rule);
         };
@@ -3658,7 +3772,7 @@
             rule.autoMode = 'basic';
             rule.autoFormula = Rules.conditionsToFormula(rule.autoConditions, rule.autoMatch || 'all');
           } else applyBasicConditions(rule);
-          commit({ refreshColumns: rule.kind === 'checklist' });
+          stageRuleChange(rule);
           syncRuleSummaryDom(picker.closest('[data-cpa-rule]'), rule);
         };
       });
@@ -3678,12 +3792,16 @@
         if (!entry || entry.builtIn) return;
         prioEditor = {
           mode: 'edit', id: entry.id, tr: entry.tr || '', en: entry.en || '',
-          tone: entry.tone || 'copper', isRisk: entry.isRisk !== false, pendingRuleId: '',
+          tone: entry.tone || 'copper', isRisk: entry.isRisk !== false, usage: entry.usage || 'priority', pendingRuleId: '',
         };
         draw();
         modal.querySelector('[data-cpa-priority-tr]')?.focus();
       });
 
+      modal.querySelector('[data-cpa-priority-usage]')?.addEventListener('change', el => {
+        prioEditor.tr = modal.querySelector('[data-cpa-priority-tr]').value; prioEditor.en = modal.querySelector('[data-cpa-priority-en]').value;
+        prioEditor.usage = el.target.value; if (prioEditor.usage === 'tracking') prioEditor.isRisk = false; draw();
+      });
       modal.querySelectorAll('[data-cpa-priority-tone]').forEach(el => el.onclick = () => {
         if (!prioEditor) return;
         prioEditor.tr = modal.querySelector('[data-cpa-priority-tr]')?.value || prioEditor.tr;
@@ -3710,17 +3828,17 @@
         try {
           if (prioEditor.mode === 'edit' && prioEditor.id) {
             const tagId = prioEditor.id;
-            updatePriorityTag(tagId, { tr, en: en || tr, tone: prioEditor.tone, isRisk });
+            updatePriorityTag(tagId, { tr, en: en || tr, tone: prioEditor.tone, isRisk, usage: prioEditor.usage });
             if (isModerator() && state.managed.priorityCatalog.some(item => item.id === tagId)) await publishPriorityTagToAll(tagId);
             setStatus(L('Öncelik etiketi güncellendi', 'Priority tag updated'), 'ok');
           } else {
-            const created = addPriorityTag({ tr, en: en || tr, tone: prioEditor.tone, isRisk });
+            const created = addPriorityTag({ tr, en: en || tr, tone: prioEditor.tone, isRisk, usage: prioEditor.usage });
             if (prioEditor.pendingRuleId) {
               const targetRule = findRule(prioEditor.pendingRuleId);
               if (targetRule && targetRule.kind === 'priority') {
                 targetRule.target = created.id;
                 expandedRuleId = targetRule.id;
-                commit({ message: L('Etiket oluşturuldu ve kurala bağlandı', 'Tag created and assigned to rule') });
+                stageRuleChange(targetRule);
               }
             } else {
               setStatus(L('Yeni öncelik etiketi eklendi', 'New priority tag added'), 'ok');
@@ -3748,8 +3866,9 @@
         const entry = (state.priorityCatalog || []).find(item => item.id === id);
         if (!entry || entry.builtIn) return;
         const usedCount = state.rules.filter(rule => rule.kind === 'priority' && rule.target === id).length;
-        const msg = usedCount
-          ? L(`"${priorityLabel(id)}" etiketi silinsin mi? Bu etiketi kullanan ${usedCount} kural "Bu Hafta Aksiyon" hedefine taşınacak.`,
+        const msg = usedCount && entry.usage === 'tracking'
+          ? L(`Bu takip etiketi silinsin mi? Etiketi kullanan ${usedCount} kural devre dışı bırakılacak.`, `Delete this tracking tag? Its ${usedCount} rule(s) will be disabled.`)
+          : usedCount ? L(`"${priorityLabel(id)}" etiketi silinsin mi? Bu etiketi kullanan ${usedCount} kural "Bu Hafta Aksiyon" hedefine taşınacak.`,
             `Delete tag "${priorityLabel(id)}"? ${usedCount} rule(s) using it will switch to "Action This Week".`)
           : L(`"${priorityLabel(id)}" etiketi silinsin mi?`, `Delete tag "${priorityLabel(id)}"?`);
         if (typeof confirm === 'function' && !confirm(msg)) return;
@@ -4040,7 +4159,9 @@
     }
 
     function closeStudio() {
-      if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = 0; commit(); }
+      if (applyingRules) { setStatus(L('Kural kaydı sürüyor; tamamlanmasını bekleyin.', 'Saving rule changes; please wait.'), ''); return false; }
+      if ((dirtyRules().length || invalidRuleDrafts.size) && typeof confirm === 'function' && !confirm(L('Kaydedilmemiş kural taslakları var. Uygulamadan kapatılsın mı?', 'There are unapplied rule drafts. Close without applying them?'))) return false;
+      rememberQueueView();
       closeValueMenu({ remove: true });
       document.removeEventListener('pointerdown', onValueOutsidePointer, true);
       document.removeEventListener('scroll', onValueViewportChange, true);
@@ -4055,6 +4176,8 @@
     }
 
     function draw() {
+      for (const [id, draft] of ruleDrafts) if (ruleSignature(draft) === draftBases.get(id) && ruleSignature(state.rules.find(rule => rule.id === id)) !== draftBases.get(id)) { ruleDrafts.delete(id); draftBases.delete(id); }
+      rememberQueueView();
       closeValueMenu({ remove: true });
       const queueTotal = openQueueCount();
       const prioRuleCount = rulesFor('priority').filter(r => r.enabled).length;
@@ -4066,7 +4189,7 @@
           ? rulesTabHtml('priority')
           : rulesTabHtml('checklist');
 
-      modal.innerHTML = `<div class="cpaModal cpaRulesModal cpaStudioModal" role="dialog" aria-modal="true" aria-labelledby="cpaStudioTitle">
+      modal.innerHTML = `<div class="cpaModal cpaRulesModal cpaStudioModal cpaFrame" role="dialog" aria-modal="true" aria-labelledby="cpaStudioTitle">
         <header>
           <div>
             <b id="cpaStudioTitle">${esc(L('Kontrol & Kurallar Merkezi', 'Checklist & Rules Studio'))}</b>
@@ -4077,7 +4200,7 @@
               <button type="button" data-cpa-studio-target="retail" class="${state.settings.targetType !== 'inStore' ? 'is-on' : ''}">${esc(L('Retail Depo', 'Retail'))}</button>
               <button type="button" data-cpa-studio-target="inStore" class="${state.settings.targetType === 'inStore' ? 'is-on' : ''}">${esc(L('In Store', 'In Store'))}</button>
             </div>
-            <button type="button" data-cpa-studio-close aria-label="${esc(L('Kapat', 'Close'))}">×</button>
+            <button type="button" class="cpaIconBtn" data-cpa-studio-close aria-label="${esc(L('Kapat', 'Close'))}">×</button>
           </div>
         </header>
         <div class="cpaStudioNavBar">
@@ -4088,15 +4211,22 @@
           </div>
           <span class="cpaRulesStatus" data-cpa-rules-status aria-live="polite"></span>
         </div>
-        <div class="cpaModalBody cpaStudioBody" id="cpa-studio-panel" role="tabpanel" aria-labelledby="cpa-studio-tab-${activeTab}">
+        <div class="cpaModalBody cpaStudioBody" id="cpa-studio-panel" role="tabpanel" aria-labelledby="cpa-studio-tab-${activeTab}" ${applyingRules ? 'inert' : ''}>
           ${panelHtml}
         </div>
         <footer>
-          <span class="cpaNote">${esc(L('Değişiklikler anında kaydedilir ve CP / Genel Bakış tablolarına uygulanır.', 'Changes save automatically and apply immediately to CP / Overview.'))}</span>
-          <button type="button" class="cpaBtn primary" data-cpa-studio-close>${esc(L('Tamam', 'Done'))}</button>
+          <span class="cpaNote">${esc(L('Kural taslakları Uygula ile kaydedilir. Checklist yanıtları anında kaydedilir.', 'Apply saves rule drafts. Checklist answers save immediately.'))}</span>
+          <div class="cpaDraftActions">
+          ${lastRuleApply ? `<button type="button" class="cpaBtn" data-cpa-undo-rules ${dirtyRules().length || applyingRules ? 'disabled' : ''} title="${esc(L('Kural tanımını geri alır; kaydedilmiş checklist yanıtlarını değiştirmez.', 'Restores rule definitions; saved checklist answers are preserved.'))}">${esc(L('Son Kural Değişikliğini Geri Al', 'Undo Last Rule Change'))}</button>` : ''}
+          <button type="button" class="cpaBtn" data-cpa-discard-drafts ${dirtyRules().length && !applyingRules ? '' : 'disabled hidden'}>${esc(L('Taslakları İptal Et', 'Discard Drafts'))}</button>
+          <button type="button" class="cpaBtn primary" data-cpa-apply-drafts ${dirtyRules().length && !applyingRules ? '' : 'disabled'} ${activeTab === 'queue' && !dirtyRules().length ? 'hidden' : ''}>${esc(applyingRules ? L('Kaydediliyor…', 'Saving…') : L('Değişiklikleri Uygula', 'Apply Changes'))}</button>
+          <button type="button" class="cpaBtn" data-cpa-studio-close>${esc(L('Kapat', 'Close'))}</button></div>
         </footer>
       </div>`;
 
+      modal.querySelector('[data-cpa-apply-drafts]').onclick = applyDrafts;
+      modal.querySelector('[data-cpa-undo-rules]')?.addEventListener('click', undoRuleApply);
+      modal.querySelector('[data-cpa-discard-drafts]').onclick = () => { ruleDrafts.clear(); draftBases.clear(); invalidRuleDrafts.clear(); draw(); };
       modal.querySelectorAll('[data-cpa-studio-close]').forEach(btn => btn.onclick = closeStudio);
       modal.querySelectorAll('[data-cpa-studio-tab]').forEach(btn => btn.onclick = () => {
         activeTab = btn.dataset.cpaStudioTab || 'queue';
@@ -4109,6 +4239,8 @@
         draw();
       });
 
+      const catalog = modal.querySelector('.cpaCatalogDisclosure');
+      if (catalog) catalog.ontoggle = () => { if (catalog.isConnected) catalogOpen = catalog.open; };
       if (activeTab === 'queue') bindQueue();
       else {
         bindCatalogs();
@@ -4166,7 +4298,7 @@
   function baseDecisionKey() {
     const userId = String((window.BL_USER_CONTEXT && window.BL_USER_CONTEXT.id) || '');
     const dataRev = typeof window.BL_CP_DECISION_DATA_REVISION === 'function' ? Number(window.BL_CP_DECISION_DATA_REVISION()) || 0 : 0;
-    const catSig = (state.priorityCatalog || []).map(item => `${item.id}:${item.isRisk ? 1 : 0}`).join(',');
+    const catSig = (state.priorityCatalog || []).map(item => `${item.id}:${item.isRisk ? 1 : 0}:${item.usage || 'priority'}`).join(',');
     return `d:${new Date().toLocaleDateString('en-CA')}|u:${userId}|r:${dataRev}|t:${state.settings.targetType}|c:${catSig}|tr:${transitRulesList().length}`;
   }
 
@@ -4285,6 +4417,7 @@
       const applied = evaluations.get(analysis);
       analysis.basePriority = analysis.basePriority || analysis.priority;
       analysis.priority = applied.priority;
+      analysis.trackingTags = applied.trackingTags || [];
       analysis.checklistState = applied.checklistState;
       analysis.ruleState = applied.ruleState;
       analysis.matchedRules = (applied.matched || []).map(rule => ({

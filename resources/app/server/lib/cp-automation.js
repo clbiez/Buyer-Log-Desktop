@@ -134,9 +134,10 @@ function enrichRows(rows, options) {
         today: ctx.today,
       });
       analysis.priority = evaluated.priority;
+      analysis.trackingTags = evaluated.trackingTags || [];
       matched = evaluated.matched || [];
     }
-    const merged = { ...row };
+    const merged = { ...row, _trackingTags: analysis.trackingTags || [] };
     for (const [key, value] of Object.entries(analysisFields(analysis, matched, Boolean(rules), priorityCatalog))) {
       if (Object.prototype.hasOwnProperty.call(merged, key)) continue;
       merged[key] = value;
@@ -154,7 +155,7 @@ function evaluateCpAutomations(options) {
     const cfg = auto.triggerConfig || {};
     const wanted = new Set(Array.isArray(cfg.priorities) ? cfg.priorities : []);
     const matches = enriched
-      .filter(row => !wanted.size || wanted.has(row[FIELDS.priorityCode]))
+      .filter(row => !wanted.size || wanted.has(row[FIELDS.priorityCode]) || (row._trackingTags || []).some(id => wanted.has(id)))
       .map(row => ({
         row,
         priority: row[FIELDS.priorityCode],
