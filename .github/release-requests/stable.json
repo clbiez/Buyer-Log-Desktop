@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.311",
-  "commit_sha": "67929bb45ed8714b0b8b68e131c296540c787309",
-  "release_notes": "Buyer Log 7.0.311 STABLE — promote signed TEST 7.0.311 artifact byte-for-byte after full Windows regression, TEST publish success and remote SHA-256 verification. Model image return acceptance ran with explicitly non-blocking user-approved warning policy; all other mandatory checks passed. No rebuild.",
-  "request_id": "7.0.311-stable-promote-signed-test-20261027"
+  "version": "7.0.327",
+  "commit_sha": "76720b2b70d342ad4934fb0425790fe03c644c3f",
+  "release_notes": "TR: Buyer Log STABLE 7.0.327 — Tam Windows regresyonu ve TEST yayın kontrolleri sonrasında aynı imzalı TEST paketini yeniden derlemeden terfi ettirir.\nEN: Buyer Log STABLE 7.0.327 — Promotes the identical signed TEST artifact after full Windows regression and TEST publication checks, without rebuilding.",
+  "request_id": "7.0.327-promote-verified-checklist-studio-20261101"
 }

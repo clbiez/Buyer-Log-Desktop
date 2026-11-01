@@ -408,3 +408,6 @@
 }
 /* v7.0.290 — öncelik kuralı yokken açıklayıcı kart */
 .ovPulseKpi.ovPulseHint em{white-space:normal;}
+
+/* The compact Checklist summary scrolls details within its saved widget size. */
+.ovHome>#ovChecklistRules>#cpAssistant{overflow:auto}

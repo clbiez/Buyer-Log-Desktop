@@ -248,7 +248,7 @@
     if (lastUpdateStatus) renderStartupUpdate(lastUpdateStatus);
     updatePasswordToggle();
     renderSuggestions();
-    renderLoginButton();
+    renderHubStatus();
   }
 
   function updatePasswordToggle() {
@@ -499,6 +499,7 @@
     if (!status) return tr('Shared Hub durumu kontrol ediliyor… · Girişe engel değil', 'Checking Shared Hub status… · Sign-in remains available');
     if (status.status === 'syncing' || status.status === 'starting') return (status.message || tr('Buyer Log eşitleniyor…', 'Buyer Log is synchronizing…')) + tr(' · Girişe engel değil', ' · Sign-in remains available');
     if (status.status === 'ready') return status.message || tr('Senkronizasyon tamamlandı · Buyer Log hazır', 'Synchronization complete · Buyer Log is ready');
+    if (String(status.errorCode || '').startsWith('IAM_')) return tr('Kullanıcılar SYNC klasöründen alınamadı. Klasörü kontrol edip Tekrar Dene’ye basın.', 'Users could not be loaded from the SYNC folder. Check the folder and click Retry.') + ` (${status.errorCode})` + (status.loginAllowed ? tr(' · Yerel hesabınızla giriş yapabilirsiniz.', ' · You can sign in with your local account.') : '');
     if (status.status === 'offline') return tr('Çevrimdışı · son doğrulanmış yerel veri kullanılıyor · Giriş yapılabilir.', 'Offline · using the last verified local data · You can sign in.');
     if (!status.configured) return tr('Shared Hub henüz ayarlanmadı. Yerel hesabınızla giriş yapabilirsiniz; eşitleme için klasörü daha sonra seçebilirsiniz.', 'Shared Hub is not configured yet. You can sign in with your local account and configure sync later.');
     return (status.message || tr('Shared Hub eşitlemesi tamamlanamadı.', 'Shared Hub synchronization could not be completed.')) + tr(' · Girişe engel değil', ' · Sign-in remains available');
@@ -545,12 +546,19 @@
     renderLoginButton();
   }
   async function loadHubStatus(force = false, options = {}) {
+    const previousUsersStep = hubStatus && hubStatus.steps && hubStatus.steps.users;
+    const previousIamRevision = hubStatus && hubStatus.iamRevision;
     if (!options.quiet) hubBusy = true;
     renderHubStatus();
     try {
       const response = await fetch(force ? '/api/shared-hub/bootstrap-retry' : '/api/shared-hub/bootstrap-status', { method:force ? 'POST' : 'GET', headers:force ? {'Content-Type':'application/json'} : undefined, body:force ? '{}' : undefined, cache:'no-store' });
       hubStatus = await response.json().catch(() => ({}));
       if (hubStatus && hubStatus.root) $('hubPath').value = hubStatus.root;
+      // The query may have returned no users before the first IAM download.
+      // Refresh it as soon as that directory arrives, without another keystroke.
+      const usersStep = hubStatus && hubStatus.steps && hubStatus.steps.users;
+      if (!selected && !loginBusy && usersStep && usersStep.status === 'done'
+          && (!previousUsersStep || previousUsersStep.status !== 'done' || previousIamRevision !== hubStatus.iamRevision)) void searchUsers();
     } catch (_) {
       hubStatus = { configured:false, loginAllowed:false, bootstrapRequired:true, status:'error', message:tr('Shared Hub durumu okunamadı.', 'Shared Hub status could not be read.') };
     } finally {

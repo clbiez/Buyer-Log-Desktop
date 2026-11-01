@@ -149,6 +149,10 @@
     if(!element||!enabled())return null;
     if(kind==='card')return animate(element,[{opacity:.6,transform:'translate3d(-5px,-3px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('card')});
     if(kind==='overlay')return animate(element,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('overlay')});
+    // Alttan açılan çekmece: içerik aşağıdan yukarı doğru açılır ve yerine kayar.
+    if(kind==='drawer')return animate(element,[{clipPath:'inset(100% 0 0 0)',transform:'translate3d(0,12px,0)'},{clipPath:'inset(0 0 0 0)',transform:'translate3d(0,0,0)'}],{duration:duration('overlay')});
+    // Bölüm genişletme: yüksekliği sıfırdan kendi boyuna açılır (alta sabitli kapta yukarı doğru büyür).
+    if(kind==='expand')return animate(element,[{height:'0px',opacity:0,overflow:'hidden'},{height:element.scrollHeight+'px',opacity:1,overflow:'hidden'}],{duration:duration('overlay')});
     if(kind==='refresh'||kind==='refresh-active')return animate(element,
       [{transform:'rotate(0deg)'},{transform:'rotate(360deg)'}],
       {duration:duration('card')*2,iterations:kind==='refresh-active'?Infinity:2});
@@ -194,7 +198,7 @@
   /* Segment / sekme geçişi: seçim değişince 2px vurgu çizgisi eski seçenekten
      yenisine kayar ve söner. Yalnız transform/opacity; metnin üstünü örtmez,
      sayfa yeniden çizse de tıklanan noktadaki grup yeniden bulunur. */
-  const SEGMENTS='.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.cpaSeg,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs';
+  const SEGMENTS='.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.cpaSeg,.cpaStudioTabs,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs';
   const SEGMENT_ACTIVE=':is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"])';
   let segmentPress=null;
   function segmentActive(group){return group&&group.isConnected?Array.from(group.querySelectorAll(':scope > button'+SEGMENT_ACTIVE+',:scope > * > button'+SEGMENT_ACTIVE)).find(visible)||null:null;}

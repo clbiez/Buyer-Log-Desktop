@@ -94,7 +94,8 @@ const SHARED_FIELD_SELECTORS=[
  '.dateFieldWrap>.dateKeyboardInput:is(:disabled,[readonly]):not(td *)+.datePickerBtn',
  ':is(.psaMultiTrigger,.lflDimBtn,.lflBreakdownBtn,.oabMultiTrigger,.cpaFieldPickerBtn):not(td *)',
  ':is(.psaMultiTrigger[aria-disabled="true"],.lflDimBtn:disabled,.lflBreakdownBtn:disabled,.oabMultiTrigger:disabled,.cpaFieldPickerBtn:disabled):not(td *)',
- '.endeksmatikMonthControl:not(td *)'
+ '.endeksmatikMonthControl:not(td *)',
+ '[data-ui-migrated="cp-assistant"] .cpaQueueStatusSelect'
 ];
 const sharedFieldBorder = d => d.file==='ui-components.css' && SHARED_FIELD_SELECTORS.includes(classicSelector(d.selector)) && ({
  border:['1px solid var(--ui-field-border)'],

@@ -18,7 +18,7 @@ test('v9.59 Attention exclusion tek birleşik modeldir ve kullanıcı tercihine 
 });
 
 test('v9.59 exclusion risk motorunu değiştirmez; needsAttention sonrası görünürlük filtresi uygulanır', () => {
-  assert.match(VIEW, /const list = Engine\.needsAttention\(state\.model, \{ limit: 5000 \}\)/);
+  assert.match(VIEW, /const list = Engine\.needsAttention\(state\.model, \{ limit: 5000, priorityCatalog: state\.priorityCatalog \}\)/);
   assert.match(VIEW, /function attentionRowsState\(\)/);
   assert.match(VIEW, /isAttentionExcluded\(item, index\) \? excluded : visible/);
   assert.doesNotMatch(VIEW, /item\.priority\s*=\s*['"]ON_TRACK['"]/);

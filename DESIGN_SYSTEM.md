@@ -125,6 +125,7 @@ modüller `perf-runtime` lazy sözleşmesine uyar.
   kancaları korunur, ortak bileşen görünümüne bağlanır. **Vurgu dolgusu
   (`--ui-accent` zemin) yalnız sayfanın birincil eylemindedir** (Yenile, Yeni
   talep…); seçim durumu dolgu kullanmaz.
+- Kontrol ve Kurallar Merkezi aynı ortak çerçeveleri kullanır: `.cpaFrame` yüzeyleri ve `.cpaBtn` / `.cpaIconBtn` eylemleri `--ui-group-divider` sınırına bağlanır. Tablo içindeki `.cpaQueueStatusSelect` düzenlenebilir bir seçim alanıdır; ortak `--ui-field-border` sınırını taşır.
 - Segment (mod/filtre seçimi): köşeli; seçili öğe `--ui-selected` zemin +
   `--ui-selected-ink` metin, `aria-pressed`. Sayfa içi sekme (görünüm/alt sayfa):
   zeminsiz; seçili öğe `--ui-selected-ink` metin + 2px `--ui-accent` alt çizgi,
@@ -158,7 +159,9 @@ modüller `perf-runtime` lazy sözleşmesine uyar.
   yoktur, yalnız sayfadaki gerçek düğmeye tıklar ve onların pasif durumunu yansıtır.
 - Üst çubuk: bildirim, yerel işlemler, tek **Bağlantılar** düğmesi (LCW AI/PLM/OAB
   durum noktaları) ve kullanıcı. Rol kullanıcı menüsündedir. Sol ray altı tek
-  **Görünüm** menüsüdür (dil, tema, arayüz boyutu).
+  **Görünüm** menüsüdür (dil, tema, arayüz boyutu): düğmenin üstünde alttan
+  yukarı açılan çekmece (`BLMotionPlus.play('drawer')`); Tema geçişi bölümü kapalı
+  başlar, başlığına basınca yukarı doğru genişler (`play('expand')`).
 
 Hover, focus, active, selected, disabled, loading, empty ve error durumları
 aynı tokenları kullanır. Modül CSS’i bu durumlara ayrı renk/çerçeve icat etmez.
@@ -193,7 +196,7 @@ Easing ortak cubic-bezier ile izlenir. Hareket içerik, geometri ve iş verisi
 **Tema geçişi:** Kullanıcı temayı değiştirdiğinde `BLMotionPlus.theme(update, origin)`
 Görünüm menüsünde seçilen efekti çalıştırır (`motion-plus-theme.js`,
 `BLMotionPlusTheme`; ayar kullanıcıya ayrılmış `lcw.themeTransition.v1` (BLStorage)): sırayla
-katlanan üçgenler (varsayılan), kenardan katlanan / yerinde dönen üçgenler,
+katlanan üçgenler (varsayılan; dalga ekranın sol alt köşesinden yayılır), kenardan katlanan / yerinde dönen üçgenler,
 düğmeden üflenen / rüzgârda savrulan toz, taneli çözülme veya daire. Hız 1–5
 (varsayılan 5 = en hızlı, 500 ms temel süre), üçgen boyutu 40–100 px (varsayılan
 70). Üçgen ve toz efektleri masaüstü köprüsünün tek karelik
@@ -212,13 +215,15 @@ semantik işlem göstergesi olarak kullanılabilir. Her orb görünmez sekme, ek
 dışı kalma, işlem sonu ve reduced-motion için duraklama/durdurma ya da tek kare
 uygulamalıdır. Sürekli dekoratif canvas hareketi hâlâ yasaktır.
 **Global Flow istisnası (7.0.319):** Kritik (priority CRITICAL) sipariş taşıyan
-araç, küme ve düğümlerde kırmızı alarm nabzı anlamsal durum göstergesidir;
+araç, küme ve düğümlerde sabit boyutlu küçük kırmızı köşe noktası anlamsal durum göstergesidir;
 yalnız harita canlıyken (`isLive`), hareket izinliyken ve yazılım çiziminde
-değilken ~12 fps ile çalışır, aksi hâlde durağan kırmızı çerçeve kalır. Araçlar
+değilken ~12 fps ile çalışır, aksi hâlde durağan kırmızı nokta ve çerçeve kalır.
+Noktanın yalnız opaklığı hafifçe değişir; büyüyen halka çizilmez. Araçlar
 veri değişiminde bir kez ölçeklenerek girer; rota akışı yalnız fare hattın
 üzerindeyken çizilir. Genel rota akışı (`wantsAnimation`) manifestte kapalı kalır.
 Taşıma simgeleri (gemi/uçak/tır) `MODE_GLYPH_PATHS` tek kaynağından gelir;
-1 araç tek rozet, 2–3 araç kademeli rozet, fazlası üç rozet + "+" işaretidir.
+1 araç tek rozet, birden fazla araç aynı boyutta üç küçük gemi içeren tek filo
+rozetidir; gerçek taşıma tipleri ve araç sayısı hover/detay özetinde korunur.
 
 **Sol üstten dalga:** Aktif tablodaki sadece ilk iki görünür gridin
 kaydırma alanında görünen satır ve sütunlarında tek giriş efekti uygulanır. Hücreler diagonal gecikmeyle

@@ -39,6 +39,8 @@ const holidayService = require('./lib/holiday-service').createHolidayService({
 const { createLocalDb, offloadLegacyAssets, sweepWriteDebris, summarizeConflict } = require('./lib/local-db');
 const { createSyncSettings, writeValidatedJson, withTimeout: syncNetworkTimeout } = require('./lib/sync-settings');
 const syncHealth = require('./lib/sync-health');
+const hubDirent = require('./lib/hub-dirent');
+const oneDriveConflictCopies = require('./lib/onedrive-conflict-copies');
 const { createSharedHub } = require('./lib/shared-hub');
 const masterReleases = require('./lib/master-releases');
 const { createRefreshPerformance } = require('./lib/refresh-performance');
@@ -1519,7 +1521,9 @@ async function readSyncHealthReports() {
   if (!settings.sharedSyncRoot) return reports;
   const root = path.join(settings.sharedSyncRoot, 'BUYER_LOG_SYNC');
   const readBounded = async file => {
-    const st = await fs.promises.lstat(file);
+    // OneDrive reparse point bağlantı görünebilir; yalnız normal dosyaya çözülürse okunur.
+    let st = await fs.promises.lstat(file);
+    if (st.isSymbolicLink()) st = await fs.promises.stat(file);
     if (!st.isFile() || st.size > 1024 * 1024) throw new Error('SYNC_HEALTH_FILE_INVALID');
     const raw = await fs.promises.readFile(file, 'utf8');
     if (Buffer.byteLength(raw) > 1024 * 1024) throw new Error('SYNC_HEALTH_FILE_TOO_LARGE');
@@ -1529,8 +1533,7 @@ async function readSyncHealthReports() {
   const files = await fs.promises.readdir(healthRoot, { withFileTypes:true }).catch(error => {
     if (error.code === 'ENOENT') return []; throw error;
   });
-  for (const entry of files) {
-    if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
+  for (const entry of await hubDirent.hubFiles(healthRoot, files.filter(item => item.name.endsWith('.json')))) {
     try {
       const report = await readBounded(path.join(healthRoot, entry.name));
       if (report.schemaVersion === 1 && typeof report.deviceId === 'string' &&
@@ -1542,8 +1545,7 @@ async function readSyncHealthReports() {
   const devices = await fs.promises.readdir(changes, { withFileTypes:true }).catch(error => {
     if (error.code === 'ENOENT') return []; throw error;
   });
-  for (const entry of devices) {
-    if (!entry.isDirectory()) continue;
+  for (const entry of await hubDirent.hubDirectories(changes, devices)) {
     let deviceId; try { deviceId = decodeURIComponent(entry.name); } catch (_) { continue; }
     if (seen.has(deviceId)) continue;
     const head = await readBounded(path.join(changes, entry.name, '_head.json')).catch(() => ({}));
@@ -1706,8 +1708,7 @@ function scheduleMasterCheckpointPublish(actorId = '', delayMs = 1500) {
 async function readSharedSyncHeads(root) {
   const changesRoot=path.join(root,'BUYER_LOG_SYNC','changes'),out={};
   let entries=[];try{entries=await fs.promises.readdir(changesRoot,{withFileTypes:true});}catch(_){return out;}
-  for(const entry of entries.slice(0,500)){
-    if(!entry.isDirectory())continue;
+  for(const entry of await hubDirent.hubDirectories(changesRoot,entries.slice(0,500))){
     let deviceId='';try{deviceId=decodeURIComponent(entry.name);}catch(_){deviceId=entry.name;}
     try{
       const head=JSON.parse(await fs.promises.readFile(path.join(changesRoot,entry.name,'_head.json'),'utf8'));
@@ -1825,7 +1826,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
   sharedHubBootstrapInFlight = (async () => {
     const settings = await syncSettings.read();
     const hadLocalLoginSnapshot = userAccess.hasLocalLoginSnapshot();
-    const localLoginAllowed = userAccess.canLoginLocally();
+    let localLoginAllowed = userAccess.canLoginLocally();
     const localState = sharedHub.readLocalState();
 
     if (!settings.sharedSyncRoot) {
@@ -1863,30 +1864,36 @@ async function bootstrapSharedHub({ force = false } = {}) {
       setBootstrapStep('users', { status:'active' });
       userAccess.enableCentralIam();
       const sameCompletedHub = localState && localState.completed === true && localState.hubId === checked.manifest.hubId;
-      const iam = await userAccess.refreshIam({ allowBootstrapPlaceholderReplace:!sameCompletedHub, timeoutMs:30000 });
+      // Older bootstraps could mark this Hub completed while still using only
+      // the local Moderator. Completion metadata is not an IAM cache: retry the
+      // guarded placeholder replacement on every bootstrap. Central IAM itself
+      // still protects real multi-user directories and verified revision floors.
+      const iam = await userAccess.refreshIam({ allowBootstrapPlaceholderReplace:true, timeoutMs:30000 });
       const iamHealth = userAccess.centralIamHealth();
-      // A remembered "completed" Hub marker is not proof that IAM still has a
-      // usable local/remote directory. The old bypass allowed bootstrap to show
-      // "0 kullanıcı · 0 aktif" as DONE after an auth-cache loss.
-      if (!iam && !userAccess.hasLocalLoginSnapshot()) {
-        // Hata kodu adımda görünür; "neden kullanıcı yok" sorusu tahmin gerektirmesin.
-        setBootstrapStep('users', { status:'error', detail:[iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED', iamHealth.lastErrorDetail].filter(Boolean).join(' · ') });
-        throw Object.assign(new Error('Kullanıcı verileri Shared Hub’dan alınamadı ve geçerli yerel kullanıcı önbelleği bulunamadı.'), { code:iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED', statusCode:503 });
+      localLoginAllowed = userAccess.canLoginLocally();
+      // Local sign-in availability is independent of directory synchronization.
+      // A cached or personal account may still log in, but must never turn a
+      // failed IAM download into "users synchronized" / a completed bootstrap.
+      if (!iam) {
+        const code = iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED';
+        if (userAccess.usingPersonalLoginFallback()) {
+          markStartup('IAM_PERSONAL_LOGIN_FALLBACK', { code, profiles:userAccess.allPublicProfiles().length });
+          setBootstrapStep('users', { status:'error', personalFallback:true, code, detail:['Kişisel yerel giriş', iamHealth.lastError || 'IAM_OFFLINE', iamHealth.lastErrorDetail].filter(Boolean).join(' · ') });
+        } else {
+          setBootstrapStep('users', { status:'error', code, detail:[code, iamHealth.lastErrorDetail].filter(Boolean).join(' · ') });
+        }
+        throw Object.assign(new Error('Kullanıcı verileri Shared Hub’dan alınamadı.'), { code, statusCode:503 });
       }
       const profiles = userAccess.allPublicProfiles();
       const activeProfiles = profiles.filter(profile => profile && profile.enabled !== false);
       if (!profiles.length || !activeProfiles.length) {
+        setBootstrapStep('users', { status:'error', code:'IAM_DIRECTORY_EMPTY', detail:'IAM_DIRECTORY_EMPTY' });
         throw Object.assign(new Error('Kullanıcı dizini boş görünüyor; giriş için geçerli kullanıcı verisi kurtarılamadı.'), { code:'IAM_DIRECTORY_EMPTY', statusCode:503 });
       }
-      if (!iam && userAccess.usingPersonalLoginFallback()) {
-        markStartup('IAM_PERSONAL_LOGIN_FALLBACK', { code:iamHealth.lastError || null, profiles:profiles.length });
-        setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, personalFallback:true, code:iamHealth.lastError || 'IAM_OFFLINE', detail:['Kişisel yerel giriş', iamHealth.lastError || 'IAM_OFFLINE', iamHealth.lastErrorDetail].filter(Boolean).join(' · ') });
-      } else {
-        // 'stale': the newest IAM revision is still unreadable here (e.g. OneDrive
-        // has not finished downloading it); the newest valid one is in use.
-        const staleIam = iamHealth.status === 'stale' ? ` · rev ${iamHealth.localRevision}/${iamHealth.remoteRevision} · ${[iamHealth.lastError, iamHealth.lastErrorDetail].filter(Boolean).join(' ')}` : '';
-        setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, detail:`${profiles.length} kullanıcı · ${activeProfiles.length} aktif${staleIam}` });
-      }
+      // 'stale': the newest IAM revision is still unreadable here (e.g. OneDrive
+      // has not finished downloading it); the newest valid one is in use.
+      const staleIam = iamHealth.status === 'stale' ? ` · rev ${iamHealth.localRevision}/${iamHealth.remoteRevision} · ${[iamHealth.lastError, iamHealth.lastErrorDetail].filter(Boolean).join(' ')}` : '';
+      setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, detail:`${profiles.length} kullanıcı · ${activeProfiles.length} aktif${staleIam}` });
 
       setBootstrapProgress({ phase:'master', message:'Sistem ayarları eşitleniyor…' });
       setBootstrapStep('master', { status:'active' });
@@ -2754,7 +2761,12 @@ async function automationSourceRows(ownerId, profile, source, recipe, assertAuth
       const owner = userAccess.profileById(ownerId) || profile;
       const priority = cpAgentPreferences.ruleSnapshot(owner, 'priority'), checklist = cpAgentPreferences.ruleSnapshot(owner, 'checklist');
       const context = cpAgentPreferences.context(owner);
-      ruleContext = { rules: [...priority.rules, ...checklist.rules], answers: context.answers || {}, checklistEnabled: context.checklistEnabled };
+      ruleContext = {
+        rules: [...priority.rules, ...checklist.rules],
+        priorityCatalog: priority.priorityCatalog || [],
+        answers: context.answers || {},
+        checklistEnabled: context.checklistEnabled,
+      };
     } catch (_) { ruleContext = null; }
     return cpAutomation.enrichRows(list, {
       transitRules: (overrides && overrides.transitRules) || [],
@@ -9446,7 +9458,10 @@ app.get('/api/sync-health', userAccess.requireModerator, async (_req, res) => {
   try {
     const reports = await syncNetworkTimeout(readSyncHealthReports, 15000, 'Sync health');
     const classified = syncHealth.classifyReports(reports);
-    res.json({ ...classified, devices:classified.devices.map(({ recordHashes, ...summary }) => summary) });
+    // Yalnız okuyan tarama; hatası cihaz sağlığı yanıtını düşürmez.
+    const conflictCopies = await syncNetworkTimeout(async () => oneDriveConflictCopies.scanConflictCopies((await syncSettings.read()).sharedSyncRoot), 15000, 'OneDrive conflict copies')
+      .catch(error => { logRuntimeFailure('syncHealth:conflictCopies', error); return { items:[], truncated:false, error:error.code || 'SCAN_FAILED' }; });
+    res.json({ ...classified, devices:classified.devices.map(({ recordHashes, ...summary }) => summary), conflictCopies });
   } catch (error) { apiError(res, error, 'SYNC_HEALTH_UNAVAILABLE'); }
 });
 app.get('/api/sync-health/diff', userAccess.requireModerator, async (req, res) => {
@@ -11042,7 +11057,12 @@ app.get('/api/cp-managed-rules', (_req, res) => {
 app.put('/api/cp-managed-rules', userAccess.requireModerator, express.json({ limit: '2mb' }), (req, res) => {
   try {
     const body = req.body && typeof req.body === 'object' ? req.body : {};
-    const saved = require('./db').replaceCpManagedRules({ rules: body.rules, deletedRuleIds: body.deletedRuleIds }, requestRevision(req), req.currentUser);
+    const saved = require('./db').replaceCpManagedRules({
+      rules: body.rules,
+      deletedRuleIds: body.deletedRuleIds,
+      priorityCatalog: body.priorityCatalog,
+      checklistStatuses: body.checklistStatuses,
+    }, requestRevision(req), req.currentUser);
     userAccess.appendAudit(req.currentUser, 'CP_MANAGED_RULES_UPDATE', 'rules', { rules: saved.rules.length, deleted: saved.deletedRuleIds.length, revision: saved.revision });
     publishSharedMasterChange('cpManagedRules', req);
     res.set('ETag', `"${saved.revision}"`);

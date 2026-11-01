@@ -22,7 +22,7 @@
     collectionPreview:{icon:'table',group:'commercial',tr:'Koleksiyon Vitrini',en:'Collection Showcase',descTr:'Seçili ayın model görselleri ve durum dağılımı.',descEn:'Model images and status mix for the selected month.',w:4,h:4,minW:3,minH:4,maxW:12,maxH:10},
     launchpad:{icon:'clock',group:'today',tr:'Dünya Saatleri',en:'World Clocks',descTr:'Selamlama ve çalıştığın ülkelerin canlı saatleri.',descEn:'Greeting and live clocks of the countries you work with.',w:12,h:1,minW:3,minH:1,maxW:12,maxH:1},
     exceptionInbox:{icon:'alert-circle',group:'operations',tr:'İstisna kutusu',en:'Exception inbox',descTr:'Kayıtlı CP verisinde geçmiş Ex-Factory ve ASAS tarih farkları.',descEn:'Overdue Ex-Factory and ASAS date differences in confirmed CP data.',w:12,h:4,minW:4,minH:3,maxW:12,maxH:10},
-    checklistRules:{icon:'checklist',group:'operations',tr:'Kontrol Listesi ve Kurallar',en:'Checklist & Rules',descTr:'Kontroller, onay durumları ve kişisel kurallar.',descEn:'Checks, approval statuses and personal rules.',w:8,h:10,minW:4,minH:4,maxW:12,maxH:16},
+    checklistRules:{icon:'checklist',group:'operations',tr:'Kontrol Listesi ve Kurallar',en:'Checklist & Rules',descTr:'Kontroller, onay durumları ve kişisel kurallar.',descEn:'Checks, approval statuses and personal rules.',w:8,h:4,minW:4,minH:4,maxW:12,maxH:16},
     notes:{icon:'notebook',group:'operations',tr:'Not Hatırlatıcısı',en:'Notes Reminder',descTr:'Yalnız senin yazdığın CP notları.',descEn:'Only the CP notes you wrote.',w:4,h:2,minW:3,minH:2,maxW:12,maxH:12},
     breakdown:{icon:'chart-bar',group:'operations',tr:'Aktif Sipariş Kırılımı',en:'Active Order Breakdown',descTr:'Ülke, alt üretici, sezon ve buying group dağılımı tek grafikte.',descEn:'Country, sub-manufacturer, season and buying group in one chart.',w:3,h:4,minW:3,minH:4,maxW:12,maxH:14},
     dataCoverage:{icon:'checklist',group:'operations',tr:'Veri Kapsamı',en:'Data Coverage',descTr:'Eksik tarih/kural sayıları ve takip dışı alanlar.',descEn:'Missing dates/rules and untracked fields.',w:4,h:5,minW:3,minH:3,maxW:12,maxH:12},
@@ -42,7 +42,7 @@
       {key:'deadline',x:0,y:15,w:5,h:6},
       {key:'breakdown',x:5,y:15,w:3,h:6},
       {key:'collectionPreview',x:8,y:15,w:4,h:6},
-      {key:'checklistRules',x:0,y:21,w:8,h:10},
+      {key:'checklistRules',x:0,y:21,w:8,h:4},
       {key:'dataCoverage',x:8,y:21,w:4,h:6},
     ]},
     {name:{tr:'Ticari',en:'Commercial'},items:[

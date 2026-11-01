@@ -138,7 +138,24 @@ function mergeValue(key, targetValue, sourceValue) {
     const rules = [...source.rules, ...target.rules.filter(rule => rule && rule.id && !ids.has(rule.id))];
     const deletedRuleIds = (Array.isArray(target.deletedRuleIds) ? target.deletedRuleIds : []).filter(id => !ids.has(id));
     const adopted = Boolean(target.sharedChecklistAdopted || source.sharedChecklistAdopted);
-    return JSON.stringify({ ...target, ...source, rules, deletedRuleIds, ...(adopted ? { sharedChecklistAdopted: true } : {}) });
+    const mergeById = (srcList, tgtList) => {
+      if (!Array.isArray(srcList) && !Array.isArray(tgtList)) return undefined;
+      const src = (Array.isArray(srcList) ? srcList : []).filter(item => item && item.id);
+      const tgt = (Array.isArray(tgtList) ? tgtList : []).filter(item => item && item.id);
+      const srcIds = new Set(src.map(item => item.id));
+      return [...src, ...tgt.filter(item => !srcIds.has(item.id))];
+    };
+    const priorityCatalog = mergeById(source.priorityCatalog, target.priorityCatalog);
+    const customStatuses = mergeById(source.customStatuses, target.customStatuses);
+    return JSON.stringify({
+      ...target,
+      ...source,
+      rules,
+      deletedRuleIds,
+      ...(priorityCatalog ? { priorityCatalog } : {}),
+      ...(customStatuses ? { customStatuses } : {}),
+      ...(adopted ? { sharedChecklistAdopted: true } : {}),
+    });
   }
   if (String(key).indexOf(HORIZON_PREFIX) === 0 && isPlainObject(target) && isPlainObject(source)
     && isPlainObject(target.byConnection) && isPlainObject(source.byConnection)) {

@@ -12,7 +12,7 @@ const CSS = read('public/cp-overview-assistant.css');
 
 test('priority reason mail action is rendered inline before the reason content', () => {
   const blockStart = VIEW.indexOf('const reasons = ruleReasonCounts(model)');
-  const blockEnd = VIEW.indexOf('/* Seçili öncelik için otomasyon', blockStart);
+  const blockEnd = VIEW.indexOf('const active = state.activePriority;', blockStart);
   assert.ok(blockStart >= 0 && blockEnd > blockStart, 'priorities reason renderer should exist');
   const block = VIEW.slice(blockStart, blockEnd);
   assert.match(block, /<li class="cpaReasonRow">[\s\S]*data-cpa-automate-reason[\s\S]*class="cpaReasonMain"[\s\S]*cpaReasonCount/);

@@ -19,9 +19,11 @@ test('CP Orders Collection ortak toolbar cleanup katmanı yüklenir', () => {
   ]) assert.ok(UI.includes(marker), `page map missing: ${marker}`);
 });
 
-test('CP ve Orders Koleksiyona Kopyala eylemi Araçlar menüsüne taşınmaz', () => {
+test('CP ve Orders aktarım eylemi ortak toolbar yerleşimiyle Araçlar menüsüne taşınır', () => {
   assert.doesNotMatch(UI, /placeCopyToCollection|el\('cpCopyToKolBtn'\)/);
-  assert.match(INDEX, /id="cpCopyToKolBtn"[^>]*hidden/);
+  assert.doesNotMatch(INDEX, /id="cpCopyToKolBtn"[^>]*\bhidden\b/);
+  const app = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
+  assert.match(app, /const _selectionActionIds=\['cpCopyToKolBtn'/);
 });
 
 test('Kopyala ve Excel export CP Orders Collection üzerinde ikon-only olur', () => {

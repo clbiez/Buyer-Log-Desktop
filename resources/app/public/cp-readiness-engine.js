@@ -534,15 +534,21 @@
       if (analysis.dims.country === EMPTY) missing.country += 1;
     }
 
+    const priorityKeys = new Set([
+      ...(OD.priorityIds ? OD.priorityIds(context && context.priorityCatalog) : ACTION_PRIORITIES),
+      ...analyses.map(item => item.priority).filter(Boolean),
+    ]);
     const priorityGroups = {};
-    for (const key of ACTION_PRIORITIES) priorityGroups[key] = analyses.filter(item => item.priority === key);
+    for (const key of priorityKeys) priorityGroups[key] = analyses.filter(item => item.priority === key);
     priorityGroups.UNKNOWN = analyses.filter(item => item.calculationStatus === 'UNKNOWN');
+    const priorityCounts = Object.fromEntries(Object.entries(priorityGroups).map(([key, list]) => [key, list.length]));
 
     const model = {
       generatedFor: today,
       settings,
       totals: { rows: analyses.length, orders: orders.size, qty: totalQty },
       priorities: [...bucketList(byPriority, totalQty), { name: 'UNKNOWN', ...sealMeasure(unknownCalculation, totalQty) }],
+      priorityCounts,
       deliveryOutcome: bucketList(byOutcome, totalQty),
       loadWindows: bucketList(byLoadWindow, totalQty),
       stages: bucketList(byStage, totalQty),
@@ -576,7 +582,13 @@
    sayıları gösterir, tablo ise yeni önceliği — aynı ekranda iki farklı cevap.
    Teslimat sonucu, ETA ve risk sebepleri BURADA DEĞİŞMEZ; yalnız öncelik
    kovaları yeniden sayılır. */
-  function recount(model) {
+  function recount(modelOrOrders, targetOrOptions, maybeOptions) {
+    if (!modelOrOrders) return modelOrOrders;
+    const opts = (targetOrOptions && typeof targetOrOptions === 'object' ? targetOrOptions : maybeOptions) || {};
+    const targetType = typeof targetOrOptions === 'string' ? targetOrOptions : (opts.targetType || undefined);
+    const model = Array.isArray(modelOrOrders)
+      ? summarizeAnalyses(modelOrOrders, { settings: targetType ? { targetType } : {}, priorityCatalog: opts.priorityCatalog })
+      : modelOrOrders;
     if (!model || !model.orders) return model;
     const analyses = model.orders;
     const totalQty = model.totals ? model.totals.qty : analyses.reduce((sum, item) => sum + item.qty, 0);
@@ -586,10 +598,19 @@
       addMeasure(touch(byPriority, analysis.priority), analysis);
       if (analysis.calculationStatus === 'UNKNOWN') addMeasure(unknownCalculation, analysis);
     }
+    const priorityKeys = new Set([
+      ...(OD.priorityIds ? OD.priorityIds(opts.priorityCatalog) : ACTION_PRIORITIES),
+      ...analyses.map(item => item.priority).filter(Boolean),
+    ]);
     const priorityGroups = {};
-    for (const key of ACTION_PRIORITIES) priorityGroups[key] = analyses.filter(item => item.priority === key);
+    for (const key of priorityKeys) priorityGroups[key] = analyses.filter(item => item.priority === key);
     priorityGroups.UNKNOWN = analyses.filter(item => item.calculationStatus === 'UNKNOWN');
-    const next = { ...model, priorities: [...bucketList(byPriority, totalQty), { name: 'UNKNOWN', ...sealMeasure(unknownCalculation, totalQty) }] };
+    const priorityCounts = Object.fromEntries(Object.entries(priorityGroups).map(([key, list]) => [key, list.length]));
+    const next = {
+      ...model,
+      priorities: [...bucketList(byPriority, totalQty), { name: 'UNKNOWN', ...sealMeasure(unknownCalculation, totalQty) }],
+      priorityCounts,
+    };
     next.dataQuality = { ...model.dataQuality, unknownPriority: analyses.filter(item => item.calculationStatus === 'UNKNOWN').length };
     Object.defineProperty(next, 'orders', { value: analyses, enumerable: false });
     Object.defineProperty(next, 'priorityGroups', { value: priorityGroups, enumerable: false });
@@ -602,11 +623,12 @@
   function needsAttention(model, options) {
     const opts = options || {};
     const limit = Math.max(1, Number(opts.limit) || 200);
-    const rank = { CRITICAL: 0, ACTION_TODAY: 1, ACTION_THIS_WEEK: 2, WATCH: 3, ON_TRACK: 4 };
+    const catalog = opts.priorityCatalog;
+    const rankOf = key => (OD.priorityRank ? OD.priorityRank(key, catalog) : ({ CRITICAL: 0, ACTION_TODAY: 1, ACTION_THIS_WEEK: 2, WATCH: 3, ON_TRACK: 4 }[key] ?? 99));
     const all = (model && model.orders ? model.orders : []).filter(item =>
-      OD.needsAttention ? OD.needsAttention(item.decision || item) : item.priority !== 'ON_TRACK');
+      OD.needsAttention ? OD.needsAttention({ priority: item.priority, calculationStatus: item.calculationStatus }, catalog) : item.priority !== 'ON_TRACK');
     const sorted = all.slice().sort((a, b) =>
-      ((rank[a.priority] == null ? 99 : rank[a.priority]) - (rank[b.priority] == null ? 99 : rank[b.priority]))
+      (rankOf(a.priority) - rankOf(b.priority))
       || ((a.daysToLoad == null ? 1e9 : a.daysToLoad) - (b.daysToLoad == null ? 1e9 : b.daysToLoad))
       || (b.qty - a.qty));
     const list = sorted.slice(0, limit);

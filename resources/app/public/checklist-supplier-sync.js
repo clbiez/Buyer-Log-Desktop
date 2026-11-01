@@ -109,11 +109,20 @@
     const custom = Array.isArray(customList) ? customList
       : buildContext ? (buildContext.customStatuses || [])
       : engine && typeof engine.customStatuses === 'function' ? engine.customStatuses() : [];
-    const match = custom.find(item => item && typeof item.name === 'string' && item.name.toLocaleLowerCase('tr-TR') === raw);
+    const match = custom.find(item => item && [item.name, item.tr, item.en].some(label => typeof label === 'string' && label.toLocaleLowerCase('tr-TR').replace(/[._-]+/g, ' ').trim() === raw));
     if (match) return match.id;
     const direct = String(value == null ? '' : value).trim();
     if (/^custom:[a-z0-9][a-z0-9-]{0,47}$/.test(direct)) return direct;
     return '';
+  }
+  function statusTone(status) {
+    const s = normalizeState(status) || 'open';
+    const engine = root.BLCpChecklistEngine;
+    if (engine && typeof engine.statusTone === 'function') return engine.statusTone(s);
+    if (s === 'approved') return 'green';
+    if (s === 'rejected') return 'red';
+    if (s === 'notRequired') return 'gray';
+    return 'blue';
   }
   function statusLabel(status) {
     const s = normalizeState(status);
@@ -124,7 +133,7 @@
     if (s === 'open') return T('Bekliyor', 'Pending');
     const engine = root.BLCpChecklistEngine;
     const named = s.startsWith('custom:') && buildContext && (buildContext.customStatuses || []).find(function (item) { return item.id === s; });
-    if (named) return named.name;
+    if (named) return isEn() ? (named.en || named.tr || named.name) : (named.tr || named.name || named.en);
     if (s.startsWith('custom:')) return engine && typeof engine.statusLabel === 'function'
       ? engine.statusLabel(s, isEn() ? 'en' : 'tr') : s.slice(7).replace(/-/g, ' ');
     return '';
@@ -427,17 +436,17 @@
     const focus = info.elements.find(function (entry) { return entry.state === 'rejected'; })
       || info.elements.find(function (entry) { return !isResolvedStatus(entry.state); }) || info.elements[0];
     const chips = '<span class="clElementChip">' + info.elements.map(function (entry) {
-      return '<span class="clStatusDot is-' + html(stateClass(entry.state)) + '" aria-hidden="true"></span>';
+      return '<span class="clStatusDot is-' + html(stateClass(entry.state)) + ' tone-' + html(statusTone(entry.state)) + '" aria-hidden="true"></span>';
     }).join('') + '<span class="clElementName">' + html(focus.name + ' · ' + statusLabel(focus.state)) + '</span>'
       + (info.elements.length > 1 ? '<small class="clElementMore">+' + (info.elements.length - 1) + '</small>' : '') + '</span>';
     if (!canEdit) return '<td class="clElementsCell" title="' + html(title) + '"><span class="clElementStack">' + chips + '</span></td>';
-    return '<td class="editTd clElementsCell"><button type="button" class="clStatusTrigger is-' + html(info.state) + '" data-id="' + html(row._id) + '"' + checklistTriggerAttributes(row) + ' data-item="' + html(itemId) + '" data-status="' + html(info.state) + '" aria-haspopup="listbox" aria-expanded="false" title="' + html(title) + '" aria-label="' + html(title.replace(/\n/g, ', ')) + '"><span class="clElementStack">' + chips + '</span><span class="delTypeChevron" aria-hidden="true">▾</span></button></td>';
+    return '<td class="editTd clElementsCell"><button type="button" class="clStatusTrigger is-' + html(info.state) + ' tone-' + html(statusTone(info.state)) + '" data-id="' + html(row._id) + '"' + checklistTriggerAttributes(row) + ' data-item="' + html(itemId) + '" data-status="' + html(info.state) + '" aria-haspopup="listbox" aria-expanded="false" title="' + html(title) + '" aria-label="' + html(title.replace(/\n/g, ', ')) + '"><span class="clElementStack">' + chips + '</span><span class="delTypeChevron" aria-hidden="true">▾</span></button></td>';
   }
   function componentCellHtml(row, itemId, canEdit) {
     const info = row._checklistParts && row._checklistParts[itemId];
     if (!info) return elementCellHtml(row, itemId, canEdit);
     const disabled = canEdit ? '' : ' disabled aria-disabled="true"';
-    const parts = info.parts.map(part => '<button type="button" class="clStatusTrigger is-' + html(part.state) + '" data-id="' + html(row._id) + '"' + checklistTriggerAttributes(row) + ' data-item="' + html(Components.itemId(itemId, part.id)) + '" data-status="' + html(part.state) + '" title="' + html(part.label + ' · ' + statusLabel(part.state)) + '" aria-label="' + html(part.label + ' · ' + statusLabel(part.state)) + '" aria-haspopup="listbox" aria-expanded="false"' + disabled + '><b class="clPartLabel">' + html(part.label) + '</b><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">' + html(statusLabel(part.state)) + '</span><span class="delTypeChevron" aria-hidden="true">▾</span></button>').join('');
+    const parts = info.parts.map(part => '<button type="button" class="clStatusTrigger is-' + html(part.state) + ' tone-' + html(statusTone(part.state)) + '" data-id="' + html(row._id) + '"' + checklistTriggerAttributes(row) + ' data-item="' + html(Components.itemId(itemId, part.id)) + '" data-status="' + html(part.state) + '" title="' + html(part.label + ' · ' + statusLabel(part.state)) + '" aria-label="' + html(part.label + ' · ' + statusLabel(part.state)) + '" aria-haspopup="listbox" aria-expanded="false"' + disabled + '><b class="clPartLabel">' + html(part.label) + '</b><span class="clStatusDot tone-' + html(statusTone(part.state)) + '" aria-hidden="true"></span><span class="clStatusText">' + html(statusLabel(part.state)) + '</span><span class="delTypeChevron" aria-hidden="true">▾</span></button>').join('');
     const summary = info.parts.length ? info.parts.filter(part => part.state === 'approved').length + '/' + info.parts.length : T('Parça sayısını belirleyin', 'Define the part count');
     const legacyHtml = info.legacy ? '<button type="button" class="clPartsConfigure" data-cl-legacy data-id="' + html(row._id) + '"' + checklistTriggerAttributes(row) + ' data-item="' + html(itemId) + '" title="' + T('Eski set kaydı', 'Legacy set record') + '" aria-label="' + T('Eski set kaydı', 'Legacy set record') + '">↶</button>' : '';
     return '<td class="editTd clPartsCell"><div class="clPartsStack">' + parts + '<div class="clPartsFooter"><small>' + html(summary) + '</small>' + (canEdit ? '<button type="button" class="clPartsConfigure" data-cl-config-parts data-id="' + html(row._id) + '"' + checklistTriggerAttributes(row) + ' aria-label="' + T('Set parçalarını tanımla', 'Define set parts') + '" title="' + T('Set parçalarını tanımla', 'Define set parts') + '">' + '<span aria-hidden="true">⋯</span></button>' : '') + '</div>' + legacyHtml + '</div></td>';
@@ -1287,8 +1296,14 @@
     styleSummaryTile(ws, 6, 5, T('Option', 'Options'), stats.options, C.gold, 'PLM ID + ' + T('Model + Renk', 'Model + Colour'), '#,##0');
     styleSummaryTile(ws, 8, 5, T('Satır', 'Rows'), stats.rows, C.green, T('Excel veri satırı', 'Workbook data rows'), '#,##0');
 
-    const pendingFormula = statusCountFormula(statusColumns, lastRow, statusLabel('open'));
-    const approvedFormula = statusCountFormula(statusColumns, lastRow, statusLabel('approved'));
+    const customIds = availableStatuses().filter(function (id) { return String(id).startsWith('custom:'); });
+    const openCustomIds = customIds.filter(function (id) { return !isResolvedStatus(id); });
+    const resolvedCustomIds = customIds.filter(function (id) { return isResolvedStatus(id); });
+    const sumFormulas = function (ids) {
+      return ids.map(function (id) { return statusCountFormula(statusColumns, lastRow, statusLabel(id)); }).join('+');
+    };
+    const pendingFormula = sumFormulas(['open'].concat(openCustomIds));
+    const approvedFormula = sumFormulas(['approved'].concat(resolvedCustomIds));
     const rejectedFormula = statusCountFormula(statusColumns, lastRow, statusLabel('rejected'));
     const naFormula = statusCountFormula(statusColumns, lastRow, statusLabel('notRequired'));
     styleSummaryTile(ws, 2, 9, T('Bekliyor', 'Pending'), { formula: pendingFormula }, C.acc, T('Cevap bekleyen', 'Awaiting an answer'), '#,##0');
@@ -2637,7 +2652,7 @@
     menu.setAttribute('aria-label', T('Checklist durumu', 'Checklist status'));
     const statusOptions = [...new Set([...availableStatuses(), current])].map(function (status) {
       return '<button type="button" class="delTypeOption clStatusOption" role="option" data-cl-status="' + status + '" aria-selected="' + (status === current ? 'true' : 'false') + '">'
-        + '<span class="clStatusDot is-' + (status.startsWith('custom:') ? 'custom' : status) + '" aria-hidden="true"></span>'
+        + '<span class="clStatusDot is-' + (status.startsWith('custom:') ? 'custom' : status) + ' tone-' + html(statusTone(status)) + '" aria-hidden="true"></span>'
         // Kullanıcının yazdığı özel durum adı çeviri ağına girmez ("In Progress" kalır).
         + '<span' + (status.startsWith('custom:') ? ' data-no-i18n' : '') + '>' + html(statusLabel(status)) + '</span></button>';
     }).join('');
@@ -2963,7 +2978,20 @@
     }
   }
 
-  if (assistantState()) state.observedAnswers = snapshotAnswers();
+    if (assistantState()) state.observedAnswers = snapshotAnswers();
+  function openEvidenceForRow(row, itemId, fallbackStatus) {
+    if (!row || !itemId) return;
+    const identity = checklistTriggerIdentity(row);
+    openChecklistEvidenceDialog({
+      dataset: {
+        id: String(row._id != null ? row._id : ''),
+        item: String(itemId),
+        lineKey: identity.key,
+        editOwner: identity.owner,
+        status: String(fallbackStatus || ''),
+      },
+    });
+  }
   function latestAnswerAt(key) {
     const remote = state.shared.answers[key] || state.shared.tombstones[key] || {};
     const pending = state.pendingAnswers[key] || {};
@@ -2984,6 +3012,7 @@
     statusLabel: statusLabel,
     statusOptions: statusOptions,
     openStatusMenu: openStatusMenu,
+    openEvidenceForRow: openEvidenceForRow,
     componentCellHtml, openComponentCountDialog, expandedItems,
     diffAnswers: diffAnswers,
     syncAnswerChanges: syncAnswerChanges,

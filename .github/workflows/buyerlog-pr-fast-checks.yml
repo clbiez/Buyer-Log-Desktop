@@ -29,6 +29,8 @@ jobs:
         run: node --test tests/motion-plus-contract-v20261025.test.js tests/motion-plus-refresh-sync-v20261026.test.js tests/ui-manifest-contract.test.js tests/ui-inline-contract.test.js tests/design-token-guard.test.js
       - name: Clipboard matrix paste, focus and Collection range regression
         run: node --test tests/cp-grid-paste.test.js tests/collection-spreadsheet-wiring.test.js
+      - name: Checklist Worker, formula editor and attention regressions
+        run: node --test tests/cp-background-personal-decisions-v249.test.js tests/cp-rule-editor-v980.test.js tests/cp-attention-exclusions-v959.test.js tests/current-ui-regressions-v20260920.test.js
       - name: Thinking Orbs startup and navigation regression
         run: node --test tests/boot-thinking-orb-v20260929.test.js tests/startup-guide-v20260930.test.js tests/navigation-revisit-perf-v250.test.js
       - name: Global Flow startup curtain and performance visibility

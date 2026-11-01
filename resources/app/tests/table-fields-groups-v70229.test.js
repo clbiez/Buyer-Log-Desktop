@@ -105,7 +105,8 @@ test('Koleksiyon varsayılan sırası kullanıcı düzenini izler; checklist mad
     'licensor', 'lisans', 'royalty', 'hologramCost',
     'country', 'delType', 'exFactory', 'retail', 'exToRetail', 'inStore',
     '...checklist',
-    'targetPrice', '__bestPrice__', '__confirmedName__', '__confirmedPrice__', 'fob',
+    // #798: fiyat referansları ve sezon etkisi Fiyatlandırma grubunda, onaylı fiyat ile FOB arasında.
+    'targetPrice', '__bestPrice__', '__confirmedName__', '__confirmedPrice__', '__previousSeason__', '__lfl__', '__seasonImpact__', 'fob',
     'endeksmatik', 'ydLanded', 'trLanded',
   ]);
 });

@@ -2,6 +2,7 @@ name: Buyer Log new-user installer
 # Builds BuyerLog-Kurulum-<version>.zip for NEW users after a STABLE promotion.
 # The app core is the exact STABLE update artifact (no rebuild); the Electron
 # runtime comes from this repository root plus the SHA-pinned BuyerLog.exe.
+# Its staged copy receives the exact STABLE app icon before ZIP creation.
 on:
   workflow_dispatch:
     inputs:

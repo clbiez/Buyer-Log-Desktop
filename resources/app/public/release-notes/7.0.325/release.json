@@ -1,0 +1,369 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.325",
+  "channel": "stable",
+  "publishedAt": "2026-11-01",
+  "title": {
+    "tr": "Fiyat kıyasları, sezon etkisi ve daha hızlı açılış ve sade harita simgeleri; Görünüm çekmecesi ve köşeden yayılan üçgen geçişi",
+    "en": "Price comparisons, season impact and faster startup and simpler map icons; Appearance drawer and corner-wave triangle transition"
+  },
+  "summary": {
+    "tr": "Yeni bilgisayarların SYNC kullanıcılarını alması ve kullanıcı eşitleme hatalarının doğru gösterilmesi düzeltildi. Güncelleme paketleri, mevcut istemcilerin erişebildiği alternatif indirme adresine sığacak şekilde hazırlanıyor. Görselli sürüm arşivi korunuyor; geçmiş ekran görüntüleri yalnız açıldığında yükleniyor. Buyer Log sunucusu açılışta ve güncelleme sonrasında daha az bekliyor: önbellek temizliğini beklemeden başlıyor ve güncellemeden sonra ekran önbelleğini silmiyor. İlk ekrandan sonra kullanıcı yönetimi, Excel motoru, dil sözlüğü ve model görsel anahtarları kullanıcıyla daha az yarışıyor. Price içinde sezon ve MB ayı referanslarını, veri uyarılarını ve model fiyatı ile adedinin mevcut sezon ortalamasına etkisini görün. Küresel Akış Haritasında uyarı ve birleşik araç simgeleri küçültüldü. Görünüm menüsü düğmenin üstünde alttan yukarı açılan bir çekmeceye dönüştü; Tema geçişi ayarları yalnız istenince açılıyor. Sırayla katlanan üçgenler artık ekranın sol alt köşesinden tek bir dalga hâlinde yayılıyor. OneDrive ile eşitlenen ortak klasörde başka cihazların değişiklik klasörleri artık atlanmıyor; Moderatör, Cihazlar bölümünde OneDrive çakışma kopyalarını görüyor.",
+    "en": "New computers now load SYNC users correctly and display user-directory synchronization failures accurately. Update packages now fit the alternative download address supported by existing clients. The visual release archive is preserved; historical screenshots load only when opened. The Buyer Log server waits less at startup and after updates: it starts without waiting for the cache cleanup and no longer wipes the screen cache after an update. After the first screen, user management, the Excel engine, the language dictionary and model image keys compete less with the user. See season and MB-month references, data warnings and the impact of each model price and quantity on the current season average within Price. Warning and grouped vehicle icons are more compact in the Global Flow Map. The Appearance menu became a drawer that slides up above its button; Theme transition settings open only when asked. Triangles folding in sequence now spread from the bottom-left corner as a single wave. In a OneDrive-synced shared folder, other devices' change folders are no longer skipped; Moderators see OneDrive conflict copies in the Devices section."
+  },
+  "stats": {
+    "features": 2,
+    "improvements": 5,
+    "fixes": 5
+  },
+  "changes": [
+    {
+      "id": "shared-sync-new-device-users",
+      "type": "fix",
+      "module": {
+        "tr": "Shared Sync ve Giriş",
+        "en": "Shared Sync and Sign-in"
+      },
+      "title": {
+        "tr": "Yeni bilgisayarda SYNC kullanıcılarının yüklenmesi",
+        "en": "Load SYNC users on a new computer"
+      },
+      "body": {
+        "tr": "Önceki bir eşitleme tamamlandı kaydı, bilgisayarda yalnız yerel Moderatör hesabı kalmış olsa bile merkezi kullanıcıların alınmasını engelleyebiliyordu. Yeniden deneme artık bu tek hesaplık başlangıç durumunu güvenli biçimde merkezi dizinle eşitler; gerçek yerel kullanıcı dizinleri ve merkezi revizyon korumaları korunur. Merkezi kullanıcılar alınamadığında yerel hesap sayısı başarılı eşitleme gibi gösterilmez; kullanıcı adımı ve hata kodu görünür. Mevcut yerel hesaplarla çevrimdışı giriş devam eder. Kullanıcılar yüklendiğinde yazılmış arama kendiliğinden yenilenir; hata açıklamaları dil değişiminde Türkçe veya İngilizce olarak güncellenir.",
+        "en": "A previous synchronization-completed marker could prevent the central users from loading even when the computer still had only its local Moderator account. Retry now safely synchronizes this single-account initial state with the central directory while preserving independent local directories and central revision safeguards. When central users cannot be loaded, the local account count is no longer presented as successful synchronization; the user step and error code show the failure. Existing local accounts can still sign in offline. Once users arrive, the current search refreshes automatically, and error explanations update when switching between Turkish and English."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "shared-sync-new-device-users.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log giriş ekranında SYNC’den alınan demo.buyer arama sonucu ve Shared Sync adımında üç aktif kullanıcı",
+          "en": "Real Buyer Log sign-in screen showing the demo.buyer search result loaded from SYNC and three active users in Shared Sync"
+        },
+        "caption": {
+          "tr": "Tek yerel Moderatörle kalan cihazda Tekrar Dene sonrası üç SYNC hesabı, ortak ayarlar ve iş kaydı yüklenir; mevcut arama yeniden yazılmadan kullanıcıyı bulur.",
+          "en": "After Retry, a device left with one local Moderator loads three SYNC accounts, shared settings and a business record; its existing search finds the user without typing again."
+        }
+      }
+    },
+    {
+      "id": "installer-exe-current-icon",
+      "type": "fix",
+      "module": {
+        "tr": "Masaüstü Kurulum",
+        "en": "Desktop Installation"
+      },
+      "title": {
+        "tr": "Kurulum EXE dosyasında güncel Buyer Log simgesi",
+        "en": "Current Buyer Log icon in the installer EXE"
+      },
+      "body": {
+        "tr": "Yeni kullanıcı kurulum paketindeki BuyerLog.exe artık ilk çalıştırılmadan önce güncel gri BL logosunu içerir. Paket hazırlanırken doğrulanmış STABLE çekirdeğindeki buyerlog.ico tüm boyutlarıyla EXE kopyasına gömülür ve yeniden okunarak doğrulanır. Kaynak EXE ve uygulama çekirdeği korunur; kurulum ZIP bütünlük özeti simge uygulandıktan sonra hesaplanır. Daha önce yayımlanmış kurulum paketlerinin üzerine yazılmaz; düzeltme yeni sürümün kurulum paketiyle gelir.",
+        "en": "BuyerLog.exe in new-user installers now contains the current grey BL logo before its first launch. Packaging embeds every size from buyerlog.ico in the verified STABLE core into the staged EXE and reads it back for verification. The source EXE and app core are preserved, and the installer ZIP checksum is calculated after branding. Previously published installers are never overwritten; the fix ships with the installer for a new version."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "installer-exe-current-icon.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log giriş ekranında kurulum EXE dosyasına da gömülen güncel gri BL logosu; hesap ve iş verisi yok",
+          "en": "Real Buyer Log sign-in screen showing the current grey BL logo also embedded in the installer EXE; no account or business data"
+        },
+        "caption": {
+          "tr": "Giriş ekranındaki güncel logo kurulum EXE dosyasında da kullanılır. Görsel Windows Dosya Gezgini doğrulaması değildir; gömülü simge içeriği paket testlerinde ayrıca denetlenir.",
+          "en": "The current sign-in logo is also used in the installer EXE. This image is not a Windows Explorer verification; embedded icon contents are checked separately in packaging tests."
+        }
+      }
+    },
+    {
+      "id": "raw-mirror-update-compatibility",
+      "type": "fix",
+      "module": {
+        "tr": "Güncelleme ve Sürüm Arşivi",
+        "en": "Updates and Release Archive"
+      },
+      "title": {
+        "tr": "Release indirmesi engelli ağlarda otomatik güncelleme",
+        "en": "Automatic updates where Release downloads are blocked"
+      },
+      "body": {
+        "tr": "GitHub Release indirmeleri kurum tarafından engellendiğinde büyük paketler alternatif raw indirme adresine konamıyor ve uygulama yeni sürümü bulduğu halde indiremiyordu. GitHub güncelleme paketi artık son üç görselli sürümü çevrimdışı taşır; daha önceki sürümlerin açıklamaları yerel kalır, değiştirilmeyen ekran görüntüleri sürüm arşivi açıldığında ayrı görsel arşivinden yüklenir. Böylece mevcut STORE ZIP güncelleyicisiyle uyumluluk korunur. Paket 100 MiB sınırını aşarsa yayın durur. TEST veya STABLE sürümü duyurulmadan önce alternatif adresteki paketin boyutu ve SHA-256 değeri doğrulanır; yalnız Release sunucusuna erişebilmek yeterli sayılmaz. Kullanıcı verileri ve güncellemenin imza, bütünlük, açılış kontrolü ile geri alma denetimleri korunur.",
+        "en": "When an organization blocked GitHub Release downloads, large packages could not be placed at the alternative raw address, so the app found an update but could not download it. GitHub update packages now keep the latest three visual releases offline; earlier descriptions remain local and their unchanged screenshots load from a separate image archive when opened. Compatibility with the existing STORE ZIP updater is preserved. Publication stops if a package exceeds 100 MiB. Before announcing TEST or STABLE, the alternative address must return the exact package size and SHA-256; access to the Release server alone is insufficient. User data and the update signature, integrity, startup health and rollback checks are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "raw-mirror-update-compatibility.png",
+        "alt": {
+          "tr": "Buyer Log 7.0.323 sürüm arşivinde istek üzerine yüklenen geçmiş sürüm görseli ve yerel açıklamalar, demo veri",
+          "en": "Historical visual loaded on demand alongside local descriptions in the Buyer Log 7.0.323 release archive, demo data"
+        },
+        "caption": {
+          "tr": "Sürüm arşivi korunur; son üç sürümün görselleri çevrimdışı, diğer görseller istek üzerine yüklenir.",
+          "en": "The release archive is preserved; the latest three visual releases stay offline and other images load on demand."
+        }
+      }
+    },
+    {
+      "id": "desktop-faster-startup",
+      "type": "improvement",
+      "module": {
+        "tr": "Masaüstü açılışı",
+        "en": "Desktop startup"
+      },
+      "title": {
+        "tr": "Açılış ve güncelleme sonrası ilk açılış daha az bekliyor",
+        "en": "Startup and the first launch after an update wait less"
+      },
+      "body": {
+        "tr": "Buyer Log sunucusu artık güncelleme sonrası onarım adımını beklemeden başlıyor; güncelleme durum kaydı yine sunucudan önce temizleniyor, ekran önbelleği temizliği yalnız pencere açılmadan önce tamamlanmış olmalı. Sunucu hazır olduğunda pencere 400 ms'lik yoklama aralığını beklemeden açılıyor. Güncellemeden sonra tarayıcı ve derlenmiş kod önbelleği artık tamamen silinmiyor; içerik özetli adresler sayesinde eski dosya yine görünmez, yalnız eski service worker kayıtları temizleniyor. Kurulum dosyalarının ikinci bütünlük taraması ilk ekran açıldıktan sonra yapılıyor. Kullanıcı yönetimi ekranı ilk açıldığında yükleniyor, Excel motoru tarayıcı boşa çıkınca yükleniyor, dil sözlüğü yalnız kullanılan dil için hazırlanıyor, CP açılışında model görsel anahtarları daha az işlemci harcıyor ve tembel yüklenen ekran dosyaları kalıcı önbelleğe alınabiliyor. Ekran kartının kullanılıp kullanılmadığı artık pencere açıldıktan sonra da günlüğe yazılıyor.",
+        "en": "The Buyer Log server now starts without waiting for the post-update repair step; the update status record is still cleaned before the server, and the screen cache cleanup only has to finish before the window opens. Once the server is ready, the window opens without waiting for the 400 ms polling interval. After an update, the browser and compiled-code cache is no longer wiped entirely; thanks to content-hashed addresses old files still cannot appear, and only old service worker registrations are cleared. The second integrity scan of the installation files runs after the first screen opens. The user management screen loads when first opened, the Excel engine loads when the browser is idle, the language dictionary is prepared only for the language in use, model image keys use less CPU when CP opens, and lazily loaded screen files can be cached permanently. Whether the graphics card is used is now also logged after the window opens."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "desktop-faster-startup.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log açılış ekranı (splash.html, Türkçe, temsili durum): Güncelleme uygulanıyor başlığı; yeni sürüm dosyaları, eski ekran önbelleği ve veri klasörü adımları tamamlanmış, Buyer Log sunucusu başlatılıyor adımı etkin, geçen süre 0:04",
+          "en": "Real Buyer Log startup screen (splash.html, Turkish, representative state): Applying the update title; the new version files, previous screen cache and data folder steps are done, the Starting the Buyer Log server step is active, elapsed 0:04"
+        },
+        "caption": {
+          "tr": "Güncelleme sonrası ilk açılışta sunucu, önbellek temizliğini beklemeden başlar.",
+          "en": "On the first launch after an update the server starts without waiting for the cache cleanup."
+        }
+      }
+    },
+    {
+      "id": "collection-price-lfl",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · Price",
+        "en": "Collection · Price"
+      },
+      "title": {
+        "tr": "Previous Season ve MB ayına göre LFL",
+        "en": "Previous Season and LFL by MB month"
+      },
+      "body": {
+        "tr": "Previous Season, önceki sezonun MAG + Klasman bazında adet ağırlıklı USD FOB ortalamasını gösterir. LFL ayrıca önceki yılın aynı Model Bütçe Ayı ile eşleşir: Şubat 2027, Şubat 2026 ile kıyaslanır. Yüzde farkları Onaylı → Best Price → Target sırasıyla seçilen geçerli fiyattan hesaplanır. Kompakt görünüm iki referansı tek sütunda toplar; Detay ve Maliyet ayrı sütunlar gösterir. İkisi de mevcut fiyat çekmecesinde ve Excel aktarımında yer alır. Aynı gruptaki satırlar diskte tutulan ortak özeti kullanır; sürekli sorgu yapılmaz. MB ayı eksikse aylık LFL boş kalır.",
+        "en": "Previous Season shows the quantity-weighted USD FOB average by MAG + Classification for the previous season. LFL additionally matches the same Model Budget Month in the previous year: February 2027 is compared with February 2026. Percentage changes use the applicable price in Confirmed → Best Price → Target order. Compact combines both references in one column; Detail and Cost show separate columns. Both appear in the existing price drawer and Excel export. Rows in the same group share a summary saved to disk without repeated queries. Monthly LFL stays blank when the MB month is missing."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-price-lfl.png",
+        "alt": {
+          "tr": "Demo Koleksiyon satırında kompakt Price grubundaki Previous Season ve aylık LFL referansları",
+          "en": "Previous Season and monthly LFL references in the compact Price group of a demo Collection row"
+        },
+        "caption": {
+          "tr": "Şubat 2027 demo modelinde sezon geneli $17,50; Şubat 2026 için LFL $15,00. İki referans tek kompakt hücrede gösterilir.",
+          "en": "The February 2027 demo model shows a full-season reference of $17.50 and an LFL reference of $15.00 for February 2026 in one compact cell."
+        }
+      }
+    },
+    {
+      "id": "collection-lfl-reference-quality",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · Price",
+        "en": "Collection · Price"
+      },
+      "title": {
+        "tr": "LFL kıyas verisi ve az sipariş uyarısı",
+        "en": "LFL missing-reference and small-sample warnings"
+      },
+      "body": {
+        "tr": "Eşleşen geçmiş USD siparişi yoksa referans hücresi Kıyaslanacak veri yok mesajını gösterir ve yüzde farkı hesaplanmaz. Referans yalnız 1–3 farklı siparişe dayanıyorsa fiyat ve farkın yanında kontrol uyarısı görünür. Aynı siparişin renkleri veya kaynak satırları örnek sayısını artırmaz. Sipariş kodları eksikse sayının doğrulanamadığı belirtilir. Uyarılar Kompakt, Detay ve Maliyet görünümlerinde, fiyat çekmecesinde, kopyalamada ve Excel aktarımında korunur. Sayımlar ortak önbellekte tutulur; satır başına yeniden sorgu yapılmaz.",
+        "en": "When no matching historical USD orders exist, the reference cell shows No comparison data and no percentage change is calculated. References based on only 1–3 distinct orders show a review warning beside the price and change. Colours or source rows of the same order do not increase the sample size. Missing order codes are flagged as an unverified count. Warnings appear in Compact, Detail and Cost views, the price drawer, clipboard and Excel export. Counts use the shared cache without repeated per-row queries."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-price-lfl-no-data.png",
+        "alt": {
+          "tr": "Demo satırında LFL için Kıyaslanacak veri yok mesajı ve Previous Season için üç sipariş uyarısı",
+          "en": "Demo row showing No comparison data for LFL and a three-order warning for Previous Season"
+        },
+        "caption": {
+          "tr": "Nisan ayı için eşleşen referans bulunmaz; sezon geneli referansının yalnız üç farklı siparişe dayandığı ayrıca gösterilir.",
+          "en": "April has no matching reference; the full-season reference also shows that it is based on only three distinct orders."
+        }
+      }
+    },
+    {
+      "id": "collection-season-impact",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · Price",
+        "en": "Collection · Price"
+      },
+      "title": {
+        "tr": "Fiyat ve adedin mevcut sezona etkisi",
+        "en": "Impact of model price and quantity on the current season"
+      },
+      "body": {
+        "tr": "Sezon Etkisi sütunu, aynı sezon + MAG + Klasman için modelin MB ayından önceki aylarda yerleşmiş USD siparişlerini baz alır. Modelin Onaylı → Best Price → Target sırasıyla seçilen fiyatı ve adedi eklendiğinde oluşacak yeni ağırlıklı ortalamayı ve yüzde değişimini gösterir. Her satır ayrı bir simülasyondur. İlk ayda veya önceki aylarda veri yoksa hesap yapılmaz; eksik adet/fiyat ve siparişe bağlı satırlar açıkça belirtilir. Az sipariş uyarıları korunur. Kaynak her yenilendiğinde ortak özet güncellenir; fiyat ve adet değişikliklerinde yeniden kaynak sorgusu yapılmaz. Sütun tüm Price görünümlerinde, fiyat çekmecesinde ve Excel aktarımında bulunur.",
+        "en": "Season Impact uses placed USD orders from earlier MB months in the same season + MAG + Classification. It shows the new quantity-weighted average and percentage change after adding the model quantity and its applicable price in Confirmed → Best Price → Target order. Each row is an independent simulation. No calculation is made in the first month or without earlier-month data; missing quantities/prices and order-linked rows are clearly identified. Small-sample warnings remain available. Shared summaries update when the source is refreshed, while price and quantity edits need no new source query. The column appears in all Price views, the price drawer and Excel export."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-season-impact.png",
+        "alt": {
+          "tr": "Koleksiyon Price grubunda mevcut sezon ortalamasının model eklendiğinde değişimini gösteren Sezon Etkisi sütunu",
+          "en": "Season Impact column in Collection Price showing how adding a model changes the current season average"
+        },
+        "caption": {
+          "tr": "400 adetlik $10,00 sezon ortalamasına 200 adet × $15,00 model eklendiğinde yeni ortalama $11,67, etki +%16,67 olur.",
+          "en": "Adding a model of 200 units at $15.00 to a season average of $10.00 over 400 units produces an $11.67 average and a +16.67% impact."
+        }
+      }
+    },
+    {
+      "id": "global-flow-minimal-warning",
+      "type": "improvement",
+      "module": {
+        "tr": "Küresel Akış Haritası",
+        "en": "Global Flow Map"
+      },
+      "title": {
+        "tr": "Haritada daha sakin kritik uyarı",
+        "en": "Quieter critical warning on the map"
+      },
+      "body": {
+        "tr": "Haritaya yayılan büyük kırmızı alarm halkaları yerine küçük, sabit boyutlu bir köşe noktası gösterilir. Hareket açıkken yalnız opaklığı hafifçe değişir; azaltılmış harekette sabit kalır.",
+        "en": "Large expanding red alarm rings are replaced with a small corner dot of fixed size. Only its opacity changes subtly when motion is enabled; it stays still with reduced motion."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "global-flow-minimal-icons.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log Küresel Akış Haritasında küçük kırmızı uyarı noktası ve tek rozet içinde üç gemili araç kümeleri",
+          "en": "Real Buyer Log Global Flow Map with demo data, a small red warning dot and vehicle clusters showing three ships inside one badge"
+        },
+        "caption": {
+          "tr": "Araç kümeleri tek araç boyutunda; kritik durum küçük kırmızı köşe noktasıyla gösterilir.",
+          "en": "Vehicle clusters use the size of a single vehicle; a small red corner dot indicates critical status."
+        }
+      }
+    },
+    {
+      "id": "global-flow-compact-fleet",
+      "type": "improvement",
+      "module": {
+        "tr": "Küresel Akış Haritası",
+        "en": "Global Flow Map"
+      },
+      "title": {
+        "tr": "Birleşik araçlar için tek küçük filo simgesi",
+        "en": "One small fleet icon for grouped vehicles"
+      },
+      "body": {
+        "tr": "Üst üste binen araç rozetleri ve ek artı işareti kaldırıldı. Birden fazla araç, tek araçla aynı boyutta ve içinde üç küçük gemi bulunan tek rozetle gösterilir. Gerçek araç sayısı, taşıma tipleri, kritik durum ve gecikme bilgisi hover ve detayda korunur.",
+        "en": "Overlapping vehicle badges and the extra plus sign are removed. Multiple vehicles use one badge, the size of a single vehicle, containing three small ships. Actual vehicle counts, transport modes, critical status and delays remain available in hover and details."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "global-flow-minimal-icons.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log Küresel Akış Haritasında küçük kırmızı uyarı noktası ve tek rozet içinde üç gemili araç kümeleri",
+          "en": "Real Buyer Log Global Flow Map with demo data, a small red warning dot and vehicle clusters showing three ships inside one badge"
+        },
+        "caption": {
+          "tr": "Araç kümeleri tek araç boyutunda; kritik durum küçük kırmızı köşe noktasıyla gösterilir.",
+          "en": "Vehicle clusters use the size of a single vehicle; a small red corner dot indicates critical status."
+        }
+      }
+    },
+    {
+      "id": "theme-transition-corner-wave",
+      "type": "fix",
+      "module": {
+        "tr": "Görünüm",
+        "en": "Appearance"
+      },
+      "title": {
+        "tr": "Sırayla katlanan üçgenler sol alt köşeden yayılıyor",
+        "en": "Triangles folding in sequence spread from the bottom-left corner"
+      },
+      "body": {
+        "tr": "Sırayla katlanan üçgenler efektinde ekran dikey şeritler hâlinde açılıyordu. Artık dalga ekranın sol alt köşesinden başlıyor; her satırda üçgenler soldan sağa, soldaki komşusu katlanmaya başladıktan sonra sağdakinin üstüne katlanıyor. Cephe tek ve düzgün bir yay olarak ilerliyor.",
+        "en": "The triangles folding in sequence effect opened the screen in vertical stripes. The wave now starts at the bottom-left corner; in each row triangles fold from left to right onto their neighbour, each starting after the one on its left. The front moves as one smooth arc."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "theme-transition-corner-wave.png",
+        "alt": {
+          "tr": "Buyer Log Genel Bakış ekranı tema değişirken: sol alt köşeden yayılan katlanan üçgen dalgası, arkasında koyu tema; açık Görünüm çekmecesinde Tema geçişi ayarları (demo veri)",
+          "en": "Buyer Log Overview while the theme changes: a wave of folding triangles spreading from the bottom-left corner with the dark theme behind it; the open Appearance drawer shows Theme transition settings (demo data)"
+        },
+        "caption": {
+          "tr": "Dalga sol alt köşeden tek bir yay olarak yayılır.",
+          "en": "The wave spreads from the bottom-left corner as one arc."
+        }
+      }
+    },
+    {
+      "id": "appearance-drawer",
+      "type": "improvement",
+      "module": {
+        "tr": "Görünüm",
+        "en": "Appearance"
+      },
+      "title": {
+        "tr": "Görünüm menüsü alttan açılan çekmece oldu",
+        "en": "Appearance menu is now a drawer that opens upward"
+      },
+      "body": {
+        "tr": "Sol raydaki Görünüm düğmesi menüyü sağa değil, düğmenin hemen üstünde alttan yukarı kayan bir çekmece olarak açıyor. Önce Dil, Tema ve Arayüz boyutu görünüyor. Tema geçişi bölümü kapalı başlıyor; başlığına basınca çekmece yukarı doğru genişleyerek efekt, geçiş hızı ve üçgen boyutu ayarlarını gösteriyor.",
+        "en": "The Appearance button in the left rail now opens a drawer that slides up just above the button instead of a menu to the right. Language, Theme and Interface size come first. The Theme transition section starts collapsed; pressing its title expands the drawer upward to show effect, transition speed and triangle size."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "appearance-drawer.png",
+        "alt": {
+          "tr": "Sol rayda Görünüm düğmesinin üstünde açık çekmece: Dil, Tema, Arayüz boyutu ve genişletilmiş Tema geçişi bölümü ile efekt, geçiş hızı ve üçgen boyutu ayarları (demo veri)",
+          "en": "Open drawer above the Appearance button in the left rail: Language, Theme, Interface size and the expanded Theme transition section with effect, transition speed and triangle size (demo data)"
+        },
+        "caption": {
+          "tr": "Görünüm › Tema geçişi yalnız tıklanınca genişler.",
+          "en": "Appearance › Theme transition expands only when pressed."
+        }
+      }
+    },
+    {
+      "id": "onedrive-sync-reparse-and-conflict-copies",
+      "type": "fix",
+      "module": {
+        "tr": "Senkron ve Ortak Klasör",
+        "en": "Sync and Shared Folder"
+      },
+      "title": {
+        "tr": "OneDrive ortak klasöründe atlanan cihazlar ve çakışma kopyası uyarısı",
+        "en": "Skipped devices and conflict copy warning in OneDrive shared folders"
+      },
+      "body": {
+        "tr": "OneDrive \"İsteğe bağlı dosyalar\" açıkken Windows bazı ortak klasör ve dosyaları bağlantı gibi bildirebiliyor. Bu durumda Buyer Log diğer cihazların değişiklik klasörlerini, onay (ACK) kayıtlarını, cihaz sağlık raporlarını ve görsel deposu başlıklarını hata vermeden atlayabiliyordu. Bu girdiler artık gerçek klasör veya dosyaya çözülerek okunuyor; kullanıcı yönetimindeki önceki düzeltme tüm ortak klasör taramalarına genişletildi. Ayrıca iki cihaz aynı ortak dosyayı eşitleme bitmeden değiştirdiğinde OneDrive'ın bilgisayar adıyla ayırdığı yan dosyalar Moderatör için Senkron › Cihazlar bölümünde asıl dosyasıyla birlikte listeleniyor. Buyer Log bu dosyaları okumaz, birleştirmez veya silmez; Moderatör karşılaştırıp karar verir.",
+        "en": "With OneDrive Files On-Demand enabled, Windows can report some shared folders and files as links. Buyer Log could then silently skip other devices' change folders, acknowledgement (ACK) records, device health reports and image store heads. These entries are now resolved to the real folder or file before reading; the earlier user management fix now covers every shared folder scan. In addition, when two devices change the same shared file before syncing completes, the side files OneDrive names after the computer are listed for Moderators with their original file in Sync › Devices. Buyer Log never reads, merges or deletes these files; the Moderator compares them and decides."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "onedrive-sync-conflict-copies.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Senkron penceresinde Cihazlar bölümü: iki olası OneDrive çakışma kopyası asıl dosyalarıyla listeleniyor; demo klasör ve demo Moderatör",
+          "en": "Devices section of the real Buyer Log Sync window listing two possible OneDrive conflict copies with their original files; demo folder and demo Moderator"
+        },
+        "caption": {
+          "tr": "Moderatör, Buyer Log'un okumadığı OneDrive yan dosyalarını asıl dosyalarıyla birlikte görür. Klasör bağlantısı düzeltmesi Windows OneDrive ortamında ayrıca doğrulanmalıdır; görsel yalnız uyarı ekranını gösterir.",
+          "en": "Moderators see the OneDrive side files Buyer Log does not read, together with their original files. The folder-link fix still needs confirmation on Windows OneDrive; the image shows only the warning screen."
+        }
+      }
+    }
+  ]
+}

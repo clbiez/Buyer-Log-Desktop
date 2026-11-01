@@ -13,7 +13,8 @@
  *      (node_modules dâhil). Yeni kurulan ile güncellenen kullanıcı aynı
  *      baytları çalıştırır; ayrı bir derleme yapılmaz.
  *   2) Electron çalışma zamanı dosyaları (repo kökündeki dll/pak/locales).
- *   3) BuyerLog.exe (SHA-256 ile sabitlenmiş).
+ *   3) BuyerLog.exe (girdi SHA-256 ile sabitlenir; paket kopyasına STABLE
+ *      çekirdeğindeki buyerlog.ico gömülür ve tekrar okunarak doğrulanır).
  * Pakette kullanıcı verisi, config.json, cihaz kimliği, eski sürüm klasörü
  * (.buyerlog-versions) veya geliştirici dosyası BULUNAMAZ; bulunursa derleme
  * durur.
@@ -25,6 +26,8 @@
 const fs=require('fs');
 const path=require('path');
 const childProcess=require('child_process');
+const { createRequire }=require('module');
+const { pathToFileURL }=require('url');
 const { createZipFromDirectory, extractZipSafe }=require('../electron/update/zip');
 const { sha256File }=require('../electron/update/crypto');
 const { parseSemver }=require('../electron/update/semver');
@@ -71,6 +74,36 @@ function assertPackage(stage,version){
   const manifest=JSON.parse(fs.readFileSync(path.join(stage,'manifest.json'),'utf8'));
   if(manifest.appVersion!==version)fail('manifest.json sürümü paketle uyuşmuyor.','INSTALLER_MANIFEST_MISMATCH');
   return files.length;
+}
+
+async function brandInstallerExe(stage){
+  // CI kaynak ağacına bağımlılık kurmaz. Düzenleyici ve simge, doğrulanmış
+  // STABLE çekirdeğinden okunur; çekirdeğin hiçbir dosyası değiştirilmez.
+  const appRoot=path.join(stage,'resources','app');
+  try{
+    const requireApp=createRequire(path.join(appRoot,'package.json'));
+    const ResEdit=await import(pathToFileURL(requireApp.resolve('resedit')).href);
+    const icon=ResEdit.Data.IconFile.from(fs.readFileSync(path.join(appRoot,'buyerlog.ico')));
+    if(!icon.icons.length)throw new Error('buyerlog.ico: empty icon / simge boş');
+    const exePath=path.join(stage,'BuyerLog.exe');
+    const exe=ResEdit.NtExecutable.from(fs.readFileSync(exePath),{ignoreCert:true});
+    const resources=ResEdit.NtExecutableResource.from(exe);
+    const groups=ResEdit.Resource.IconGroupEntry.fromEntries(resources.entries);
+    const main=groups.slice().sort((a,b)=>String(a.id).localeCompare(String(b.id),'en',{numeric:true}))[0];
+    // İlk grup Windows Explorer uygulama simgesidir; diğer gruplar korunur.
+    const id=main?main.id:1,lang=main?main.lang:1033;
+    ResEdit.Resource.IconGroupEntry.replaceIconsForResource(resources.entries,id,lang,icon.icons.map(item=>item.data));
+    resources.outputResource(exe);
+    const patched=Buffer.from(exe.generate());
+    const checked=ResEdit.NtExecutableResource.from(ResEdit.NtExecutable.from(patched));
+    const group=ResEdit.Resource.IconGroupEntry.fromEntries(checked.entries).find(item=>item.id===id&&item.lang===lang);
+    const actual=group?group.getIconItemsFromEntries(checked.entries):[];
+    const bytes=item=>Buffer.from(item.isIcon()?item.generate():item.bin);
+    if(actual.length!==icon.icons.length||actual.some((item,index)=>!bytes(item).equals(bytes(icon.icons[index].data))))
+      throw new Error('Embedded icon verification failed / Gömülü simge doğrulanamadı');
+    // Yalnız geçici paket kopyasını değiştir; indirilen sabitlenmiş EXE korunur.
+    fs.writeFileSync(exePath,patched);
+  }catch(error){fail('Installer EXE icon / Kurulum EXE simgesi: '+error.message,'INSTALLER_EXE_ICON');}
 }
 
 function readme(version,electronVersion){
@@ -131,6 +164,7 @@ async function buildInstaller(options={}){
     fs.writeFileSync(path.join(stage,'manifest.json'),JSON.stringify(manifest,null,2)+'\n','utf8');
     fs.writeFileSync(path.join(stage,'KURULUM-OKU.txt'),readme(version,manifest.electronVersion),'utf8');
     const fileCount=assertPackage(stage,version);
+    await brandInstallerExe(stage);
 
     const name=`BuyerLog-Kurulum-${version}.zip`,output=path.join(outDir,name);
     fs.rmSync(output,{force:true});

@@ -48,8 +48,8 @@ const server=spawn(process.execPath,['server/server.js'],{cwd:app,env,stdio:['ig
  await page.evaluate(()=>{for(let i=0;i<4;i++)renderKol();});assert.equal(requests,initialRequests);
  const assets=path.join(app,'public/release-notes/next-assets');fs.mkdirSync(assets,{recursive:true});
  await page.locator('td[data-key="__referenceSummary__"]').scrollIntoViewIfNeeded();
- await page.screenshot({path:path.join(assets,'collection-price-lfl.png')});
- await page.screenshot({path:path.join(assets,'collection-season-impact.png')});
+ await page.screenshot({path:path.join(root,'collection-price-lfl.png')});
+ await page.screenshot({path:path.join(root,'collection-season-impact.png')});
  await page.evaluate(()=>{kolRows[0].inStoreMonth='JANUARY 2027';renderKol();});
  assert.match(await page.locator('td[data-key="__referenceSummary__"]').innerText(),/Önceki ay verisi yok/);
  await page.evaluate(()=>{kolRows[0].inStoreMonth='FEBRUARY 2027';kolRows[0].quantity='0';renderKol();});
@@ -110,7 +110,7 @@ const server=spawn(process.execPath,['server/server.js'],{cwd:app,env,stdio:['ig
   assert.match(await page.locator('td[data-key="__lfl__"]').innerText(),/Yalnız 2 sipariş/);
   assert.match(await page.locator('td[data-key="__seasonImpact__"]').innerText(),/16[,.]67%/);
   assert.match(await page.locator('td[data-key="__previousSeason__"]').innerText(),/17,50/);
-  if(view==='detail'){await page.locator('td[data-key="__lfl__"]').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(assets,'collection-price-lfl-detail.png')});}
+  if(view==='detail'){await page.locator('td[data-key="__lfl__"]').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(root,'collection-price-lfl-detail.png')});}
  }
  await page.evaluate(()=>{const hidden=new Set(kolHiddenCols);applyTableViewPreset('koleksiyon','all');if(!kolDisplayDescriptors({detail:true}).some(d=>d.k==='__previousSeason__'))throw new Error('Previous Season missing from All');kolHiddenCols=hidden;setKolPriceView('detail');renderKol();});
  await page.evaluate(()=>{kolRows[0].confirmedManufacturer='DEMO B';renderKol();});
@@ -133,7 +133,7 @@ const server=spawn(process.execPath,['server/server.js'],{cwd:app,env,stdio:['ig
  assert.match(await page.locator('td[data-key="__lfl__"]').innerText(),/Kıyaslanacak veri yok/);
  assert.ok(!(await page.locator('td[data-key="__lfl__"]').innerText()).includes('%'));
  await page.evaluate(()=>setKolPriceView('compact'));assert.match(await page.locator('td[data-key="__referenceSummary__"]').innerText(),/Kıyaslanacak veri yok/);
- await page.locator('td[data-key="__referenceSummary__"]').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(assets,'collection-price-lfl-no-data.png')});
+ await page.locator('td[data-key="__referenceSummary__"]').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(root,'collection-price-lfl-no-data.png')});
  await page.locator('td[data-key="__referenceSummary__"]').dblclick();await page.locator('.cpdDrawer [data-cpd-lfl-details="month"]').waitFor();
  assert.equal(await page.locator('.cpdDrawer [data-cpd-lfl-details="month"]').isDisabled(),true);
  assert.equal(await page.locator('.cpdDrawer [data-cpd-lfl-details="season"]').isEnabled(),true);

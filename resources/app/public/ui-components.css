@@ -1243,11 +1243,15 @@ html.blThemeFxMask::view-transition-old(root) {z-index:var(--ui-z-raised);mask-r
 }
 html.blThemeFxMask::view-transition-new(root) {z-index:var(--ui-z-data)
 }
-html[data-ui-system="manifest"] .railAppearanceMenu .railThemeFx {display:grid;gap:8px;padding:10px 10px 6px;min-width:220px
+html[data-ui-system="manifest"] .railAppearanceMenu .railThemeFx {display:grid;gap:8px;padding:6px 10px 6px;min-width:220px
+}
+html[data-ui-system="manifest"] .railAppearanceMenu .railThemeFx[hidden] {display:none
+}
+html[data-ui-system="manifest"] .railThemeFxToggle .ic {transition:transform var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .railThemeFxToggle[aria-expanded="true"] .ic {transform:rotate(180deg)
 }
 html[data-ui-system="manifest"] .railAppearanceMenu .railThemeFx span {display:inline !important
-}
-html[data-ui-system="manifest"] .railThemeFxTitle {font-size:var(--ui-font-2xs);font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ui-text-muted)
 }
 html[data-ui-system="manifest"] .railThemeFxField {display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center;font-size:var(--ui-font-xs);color:var(--ui-text-secondary)
 }
@@ -1759,9 +1763,15 @@ html[data-ui-system="manifest"] .badge::before {background:currentColor !importa
 }
 html[data-ui-system="manifest"] .b-red {background:var(--ui-danger-bg) !important;color:var(--ui-danger) !important
 }
+html[data-ui-system="manifest"] .b-copper {background:color-mix(in srgb,var(--ui-chart-4) 15%,var(--ui-surface)) !important;color:var(--ui-chart-4) !important
+}
 html[data-ui-system="manifest"] .b-orange {background:var(--ui-warning-bg) !important;color:var(--ui-warning) !important
 }
 html[data-ui-system="manifest"] .b-yellow {background:var(--ui-warning-bg) !important;color:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .b-blue {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .b-teal {background:color-mix(in srgb,var(--ui-chart-3) 15%,var(--ui-surface)) !important;color:var(--ui-chart-3) !important
 }
 html[data-ui-system="manifest"] .b-green {background:var(--ui-success-bg) !important;color:var(--ui-success) !important
 }
@@ -1808,6 +1818,32 @@ html[data-ui-system="manifest"] .clStatusTrigger.is-notRequired {color:var(--ui-
 html[data-ui-system="manifest"] .clStatusTrigger.is-notRequired .clStatusDot,html[data-ui-system="manifest"] .clStatusDot.is-notRequired {background:var(--ui-text-muted) !important
 }
 html[data-ui-system="manifest"] .clStatusTrigger.is-open {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .clStatusTrigger.tone-red {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .clStatusTrigger.tone-red .clStatusDot,html[data-ui-system="manifest"] .clStatusDot.tone-red {background:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .clStatusTrigger.tone-copper {color:var(--ui-chart-4) !important
+}
+html[data-ui-system="manifest"] .clStatusTrigger.tone-copper .clStatusDot,html[data-ui-system="manifest"] .clStatusDot.tone-copper {background:var(--ui-chart-4) !important
+}
+html[data-ui-system="manifest"] .clStatusTrigger.tone-orange,html[data-ui-system="manifest"] .clStatusTrigger.tone-yellow {color:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .clStatusTrigger.tone-orange .clStatusDot,html[data-ui-system="manifest"] .clStatusDot.tone-orange {background:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .clStatusTrigger.tone-yellow .clStatusDot,html[data-ui-system="manifest"] .clStatusDot.tone-yellow {background:color-mix(in srgb,var(--ui-warning) 62%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .clStatusTrigger.tone-teal {color:var(--ui-chart-3) !important
+}
+html[data-ui-system="manifest"] .clStatusTrigger.tone-teal .clStatusDot,html[data-ui-system="manifest"] .clStatusDot.tone-teal {background:var(--ui-chart-3) !important
+}
+html[data-ui-system="manifest"] .clStatusTrigger.tone-green {color:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .clStatusTrigger.tone-green .clStatusDot,html[data-ui-system="manifest"] .clStatusDot.tone-green {background:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .clStatusTrigger.tone-gray {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .clStatusTrigger.tone-gray .clStatusDot,html[data-ui-system="manifest"] .clStatusDot.tone-gray {background:var(--ui-text-muted) !important
 }
 html[data-ui-system="manifest"] .clStatusNa {color:var(--ui-text-muted) !important
 }
@@ -13158,13 +13194,19 @@ html[data-ui-system="manifest"] .cpaChip .q {font-family:var(--ui-font-mono) !im
 }
 html[data-ui-system="manifest"] .cpaChip.tone-red .n {color:var(--ui-danger) !important
 }
+html[data-ui-system="manifest"] .cpaChip.tone-copper .n {color:var(--ui-chart-4) !important
+}
 html[data-ui-system="manifest"] .cpaChip.tone-orange .n,html[data-ui-system="manifest"] .cpaChip.tone-yellow .n {color:var(--ui-warning) !important
 }
 html[data-ui-system="manifest"] .cpaChip.tone-green .n {color:var(--ui-success) !important
 }
+html[data-ui-system="manifest"] .cpaChip.tone-teal .n {color:var(--ui-chart-3) !important
+}
 html[data-ui-system="manifest"] .cpaChip.tone-blue .n {color:var(--ui-accent) !important
 }
 html[data-ui-system="manifest"] .cpaChip.tone-gray .n {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaChip.is-on {background:var(--ui-selected) !important
 }
 html[data-ui-system="manifest"] .cpaReasons .cpaReasonRow {background:var(--ui-surface-soft) !important
 }
@@ -13200,11 +13242,17 @@ html[data-ui-system="manifest"] .cpaTable tbody tr[data-cpa-order]:hover {backgr
 }
 html[data-ui-system="manifest"] .cpaPill {font-size:var(--ui-font-xs) !important;font-weight:700 !important;background:var(--ui-surface-soft) !important
 }
-html[data-ui-system="manifest"] .cpaPill.tone-red {color:var(--ui-danger) !important
+html[data-ui-system="manifest"] .cpaPill.tone-red {color:var(--ui-danger) !important;background:var(--ui-danger-bg) !important
 }
-html[data-ui-system="manifest"] .cpaPill.tone-orange,html[data-ui-system="manifest"] .cpaPill.tone-yellow {color:var(--ui-warning) !important
+html[data-ui-system="manifest"] .cpaPill.tone-copper {color:var(--ui-chart-4) !important;background:color-mix(in srgb,var(--ui-chart-4) 14%,var(--ui-surface)) !important
 }
-html[data-ui-system="manifest"] .cpaPill.tone-blue {color:var(--ui-accent) !important
+html[data-ui-system="manifest"] .cpaPill.tone-orange,html[data-ui-system="manifest"] .cpaPill.tone-yellow {color:var(--ui-warning) !important;background:var(--ui-warning-bg) !important
+}
+html[data-ui-system="manifest"] .cpaPill.tone-blue {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .cpaPill.tone-teal {color:var(--ui-chart-3) !important;background:color-mix(in srgb,var(--ui-chart-3) 14%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .cpaPill.tone-green {color:var(--ui-success) !important;background:var(--ui-success-bg) !important
 }
 html[data-ui-system="manifest"] .cpaPill.tone-gray {color:var(--ui-text-muted) !important
 }
@@ -13544,11 +13592,15 @@ html[data-ui-system="manifest"] .cpaMixSeg {background:var(--ui-text-muted) !imp
 }
 html[data-ui-system="manifest"] .cpaMixSeg.tone-red {background:var(--ui-danger) !important
 }
+html[data-ui-system="manifest"] .cpaMixSeg.tone-copper {background:var(--ui-chart-4) !important
+}
 html[data-ui-system="manifest"] .cpaMixSeg.tone-orange {background:var(--ui-warning) !important
 }
 html[data-ui-system="manifest"] .cpaMixSeg.tone-yellow {background:color-mix(in srgb,var(--ui-warning) 52%,var(--ui-surface)) !important
 }
 html[data-ui-system="manifest"] .cpaMixSeg.tone-blue {background:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .cpaMixSeg.tone-teal {background:var(--ui-chart-3) !important
 }
 html[data-ui-system="manifest"] .cpaMixSeg.tone-green {background:var(--ui-success) !important
 }
@@ -13641,6 +13693,106 @@ html[data-ui-system="manifest"] .cpaManagedStrip {background:var(--ui-surface) !
 html[data-ui-system="manifest"] .cpaManagedRemoved>b {font-size:var(--ui-font-xs) !important
 }
 html[data-ui-system="manifest"] .cpaManagedRemovedItem {font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaBtnBadge {background:var(--ui-surface) !important;color:var(--ui-selected-ink) !important;font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .cpaBtn.primary .cpaBtnBadge {background:color-mix(in srgb,var(--ui-on-accent) 20%,transparent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] .cpaOverviewPriorities {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaOverviewPrioHead b {font-size:var(--ui-font-sm) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpaStudioNavBar {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaStudioTabs>button {font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important;color:var(--ui-text-secondary) !important;background:transparent !important
+}
+html[data-ui-system="manifest"] .cpaStudioTabs>button .cpaStudioTabCount {background:var(--ui-surface) !important;color:var(--ui-text-muted) !important;font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .cpaStudioTabs>button.is-on .cpaStudioTabCount {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpaQueueSyncBar {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaQuestionPill {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important;font-weight:600 !important
+}
+html[data-ui-system="manifest"] .cpaQuestionPill:hover {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpaQuestionPill.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpaQueueFilterBar input,html[data-ui-system="manifest"] .cpaQueueFilterBar select {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaBulkBar {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaBulkControls select,html[data-ui-system="manifest"] .cpaBulkControls input {background:var(--ui-surface) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaQueueTable th {z-index:var(--ui-z-data);background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaQueueSelectCol input {accent-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .cpaQueueStatusSelect {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpaQueueStatusSelect.tone-red {background:var(--ui-danger-bg) !important;color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .cpaQueueStatusSelect.tone-copper {background:color-mix(in srgb,var(--ui-chart-4) 14%,var(--ui-surface)) !important;color:var(--ui-chart-4) !important
+}
+html[data-ui-system="manifest"] .cpaQueueStatusSelect.tone-orange,html[data-ui-system="manifest"] .cpaQueueStatusSelect.tone-yellow {background:var(--ui-warning-bg) !important;color:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .cpaQueueStatusSelect.tone-blue {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpaQueueStatusSelect.tone-teal {background:color-mix(in srgb,var(--ui-chart-3) 14%,var(--ui-surface)) !important;color:var(--ui-chart-3) !important
+}
+html[data-ui-system="manifest"] .cpaQueueStatusSelect.tone-green {background:var(--ui-success-bg) !important;color:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .cpaQueueStatusSelect.tone-gray {background:var(--ui-surface-strong) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpaCatalogCard {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaCatalogHead b {font-size:var(--ui-font-sm) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpaTagItem {background:var(--ui-surface) !important;font-size:var(--ui-font-xs) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpaTagDot {background:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .cpaTagDot.tone-red {background:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .cpaTagDot.tone-copper {background:var(--ui-chart-4) !important
+}
+html[data-ui-system="manifest"] .cpaTagDot.tone-orange {background:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .cpaTagDot.tone-yellow {background:color-mix(in srgb,var(--ui-warning) 65%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .cpaTagDot.tone-blue {background:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .cpaTagDot.tone-teal {background:var(--ui-chart-3) !important
+}
+html[data-ui-system="manifest"] .cpaTagDot.tone-green {background:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .cpaTagDot.tone-gray {background:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaTagRank {font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .cpaTagMiniBtn {background:transparent !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important;line-height:1
+}
+html[data-ui-system="manifest"] .cpaTagMiniBtn:hover:not(:disabled) {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpaCatalogInlineForm {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaCatalogFormGrid label>span {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaCatalogFormGrid input,html[data-ui-system="manifest"] .cpaCatalogFormGrid select {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaToneSwatch {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-2xs) !important;font-weight:600 !important
+}
+html[data-ui-system="manifest"] .cpaToneSwatch.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpaScopePresets {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaScopePresetBtn,html[data-ui-system="manifest"] .cpaAutoModeSwitch button {background:var(--ui-surface) !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important;font-weight:600 !important
+}
+html[data-ui-system="manifest"] .cpaScopePresetBtn.is-on,html[data-ui-system="manifest"] .cpaAutoModeSwitch button.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpaScopeInlineRow {font-size:var(--ui-font-xs) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpaScopeInlineRow input {background:var(--ui-surface) !important;color:var(--ui-text) !important;font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-sm) !important
 }
 html[data-ui-system="manifest"] .trParts>small {color:var(--ui-text-muted) !important
 }
@@ -14522,7 +14674,10 @@ html[data-ui-system="manifest"] #cpTable tbody tr.selected>td{background-color:v
 html[data-ui-system="manifest"] #cpTable .badge{border:0 !important;padding:4px 7px;border-radius:0 !important;}
 html[data-ui-system="manifest"] #cpTable .b-green{background:var(--ui-success-bg) !important;color:var(--ui-success) !important;}
 html[data-ui-system="manifest"] #cpTable .b-red{background:var(--ui-danger-bg) !important;color:var(--ui-danger) !important;}
+html[data-ui-system="manifest"] #cpTable .b-copper{background:color-mix(in srgb,var(--ui-chart-4) 15%,var(--ui-surface)) !important;color:var(--ui-chart-4) !important;}
 html[data-ui-system="manifest"] #cpTable .b-orange,html[data-ui-system="manifest"] #cpTable .b-yellow{background:var(--ui-warning-bg) !important;color:var(--ui-warning) !important;}
+html[data-ui-system="manifest"] #cpTable .b-blue{background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;}
+html[data-ui-system="manifest"] #cpTable .b-teal{background:color-mix(in srgb,var(--ui-chart-3) 15%,var(--ui-surface)) !important;color:var(--ui-chart-3) !important;}
 html[data-ui-system="manifest"] #cpTable .b-gray{background:var(--ui-surface-strong) !important;color:var(--ui-text-secondary) !important;}
 html[data-ui-system="manifest"] #view-cp .tableRangeBar,html[data-ui-system="manifest"] #view-cp .tableRangePager,html[data-ui-system="manifest"] #view-cp .tableFoot,html[data-ui-system="manifest"] #view-cp .tableFooter,html[data-ui-system="manifest"] #view-cp .chkFooter{border:0 !important;background:var(--ui-surface-soft);}
 html[data-ui-system="manifest"] #cpTableToolbar .tbtn:not(.primary):not(.toolbarMoreMenu *):has(>svg.ic),html[data-ui-system="manifest"] #cpTableToolbar .navActionBtn:not(.primary):not(.toolbarMoreMenu *):has(>svg.ic){font-size:0;gap:0;justify-content:center;}
@@ -15132,19 +15287,19 @@ html[data-ui-system="manifest"] .workspaceTableFooter{display:flex;align-items:c
 html[data-ui-system="manifest"] .workspaceTableFooter .uiPersistenceRegion{margin:0;padding:0;}
 /* Buyer Log 7.0.294 surface and spreadsheet restoration.
    Deliberately uses Manifest tokens; no separate theme or table logic. */
-html[data-ui-system="manifest"] :is(.panel,.cardBox,.modalCard,.mfrCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.appBlockingCard,.sourcebar,.tablewrap),
+html[data-ui-system="manifest"] :is(.panel,.cardBox,.modalCard,.mfrCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.appBlockingCard,.sourcebar,.tablewrap,.cpaFrame,.cpaSeg),
 html[data-ui-system="manifest"] .ovHome > [data-overview-widget] {
   border:1px solid var(--ui-group-divider) !important;
 }
 html[data-ui-system="manifest"] :is(.toolbar,.tableActionToolbar) {
   border-bottom:1px solid var(--ui-row-divider) !important;
 }
-html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.gsearch,.profileSelectTrigger,.ovHomePageTab,.ovBreakdownViewBtn,.ovHomeDrawerCard,.oabMultiTrigger),
+html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.gsearch,.profileSelectTrigger,.ovHomePageTab,.ovBreakdownViewBtn,.ovHomeDrawerCard,.oabMultiTrigger,.cpaBtn,.cpaIconBtn,.cpaValueToggle,.cpaTagMiniBtn,.cpaScopePresetBtn,.cpaStatusBtn,.cpaQuestionPill,.cpaToneSwatch,.cpaCheckTile,.cpaOverviewMetric),
 html[data-ui-system="manifest"] :is(.toolbar,.tableActionToolbar) :is(input,select),
 html[data-ui-system="manifest"] .vfBar select {
   border:1px solid var(--ui-group-divider) !important;
 }
-html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.ovHomePageTab,.oabMultiTrigger):focus-visible {
+html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.ovHomePageTab,.oabMultiTrigger,.cpaBtn,.cpaIconBtn,.cpaValueToggle,.cpaTagMiniBtn,.cpaScopePresetBtn,.cpaStatusBtn,.cpaQuestionPill,.cpaToneSwatch,.cpaCheckTile,.cpaOverviewMetric):focus-visible {
   outline:2px solid var(--ui-accent) !important;
   outline-offset:1px;
 }
@@ -15253,11 +15408,11 @@ html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreak
 }
 html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.cpaSeg) > button:not(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]):hover:not(:disabled) {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
 }
-html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs) > button {position:relative;border:0 !important;box-shadow:none !important
+html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs,.cpaStudioTabs) > button {position:relative;border:0 !important;box-shadow:none !important
 }
-html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]) {background:transparent !important;color:var(--ui-selected-ink) !important;font-weight:600 !important
+html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs,.cpaStudioTabs) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]) {background:transparent !important;color:var(--ui-selected-ink) !important;font-weight:600 !important
 }
-html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"])::after {content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--ui-accent)
+html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs,.cpaStudioTabs) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"])::after {content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--ui-accent)
 }
 html[data-ui-system="manifest"] .blSegmentGlide {position:fixed;height:2px;background:var(--ui-accent);transform-origin:left center;pointer-events:none;z-index:var(--ui-z-tooltip)
 }
@@ -15415,3 +15570,20 @@ html[data-ui-system="manifest"] .endeksmatikMonthControl:not(td *) {border:1px s
 }
 html[data-ui-system="manifest"] .endeksmatikMonthControl>input[type="text"] {border:0 !important
 }
+
+/* Studio catalog hierarchy uses the common Manifest palette. */
+html[data-ui-system="manifest"] .cpaCatalogTagRow,html[data-ui-system="manifest"] .cpaStatusBadgeChip {background:var(--ui-surface);color:var(--ui-text)}
+html[data-ui-system="manifest"] .cpaCatalogTagMain small,html[data-ui-system="manifest"] .cpaCatalogHead small,html[data-ui-system="manifest"] .cpaRulesTopBar small {color:var(--ui-text-muted);font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .cpaTemplatesPopover {background:var(--ui-surface);box-shadow:var(--ui-shadow-overlay);z-index:var(--ui-z-popover)}
+html[data-ui-system="manifest"] .cpaTemplateChoice {background:var(--ui-surface);color:var(--ui-text)}
+html[data-ui-system="manifest"] .cpaTemplateChoice:hover {background:var(--ui-row-hover)}
+
+/* Compact Checklist Studio uses the shared Manifest surfaces and field contract. */
+html[data-ui-system="manifest"] [data-ui-migrated="cp-assistant"] .cpaQueueStatusSelect {border:1px solid var(--ui-field-border) !important}
+html[data-ui-system="manifest"] .cpaOverviewMetric {background:var(--ui-surface-soft);color:var(--ui-text);text-align:left}
+html[data-ui-system="manifest"] .cpaOverviewMetric>b {font:600 var(--ui-font-xl)/1.1 var(--ui-font-heading);font-variant-numeric:tabular-nums}
+html[data-ui-system="manifest"] .cpaOverviewMetric>span,html[data-ui-system="manifest"] .cpaOverviewDetails>summary {font-size:var(--ui-font-xs);color:var(--ui-text-secondary)}
+html[data-ui-system="manifest"] .cpaRuleSentence {background:var(--ui-surface-soft);color:var(--ui-text-secondary);font-size:var(--ui-font-sm)}
+html[data-ui-system="manifest"] .cpaAdvancedModes>summary {font-size:var(--ui-font-xs);color:var(--ui-text-secondary)}
+html[data-ui-system="manifest"] .cpaDraftBadge {background:var(--ui-warning-bg);color:var(--ui-warning)}
+html[data-ui-system="manifest"] .cpaRuleMenuItems {background:var(--ui-surface)}

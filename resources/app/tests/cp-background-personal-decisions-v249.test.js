@@ -2,16 +2,16 @@
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const Engine=require('../public/cp-readiness-engine');
 function harness(useWorker=false){
-  const storage=new Map();let revision=1,tick=0;
+  const storage=new Map(),listeners=new Map();let revision=1,tick=0;
   const context={console,Date,Intl,Set,Map,WeakMap,Promise,setTimeout,clearTimeout,performance:{now:()=>tick+=2},
     BLCpReadinessEngine:Engine,BLCpChecklistEngine:require('../public/cp-checklist-engine'),BLCpRulesEngine:require('../public/cp-rules-engine'),
     BLCpDecisionRuntime:require('../public/cp-decision-runtime'),BL_USER_CONTEXT:{id:'demo'},appLang:'tr',state:{overrides:{transitRules:[]}},
     BL_CP_DECISION_DATA_REVISION:()=>revision,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
-    document:{getElementById:()=>null,querySelectorAll:()=>[],addEventListener:()=>{}},addEventListener:()=>{},dispatchEvent:()=>{},CustomEvent:class{}};
+    document:{getElementById:()=>null,querySelectorAll:()=>[],addEventListener:()=>{}},addEventListener:(name,fn)=>listeners.set(name,fn),dispatchEvent:()=>{},CustomEvent:class{}};
   if(useWorker)context.Worker=function(){return require('./helpers/cp-browser-worker')();};
   context.window=context;vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/cp-overview-assistant.js'),'utf8'),context);
-  return {context,assistant:context.BLCpAssistant,bump:()=>revision++};
+  return {context,assistant:context.BLCpAssistant,bump:()=>revision++,emit:name=>listeners.get(name)?.()};
 }
 function rows(){const F=Engine.FIELDS;return Array.from({length:20},(_,i)=>({[F.orderCode]:String(i),[F.qty]:100,[F.status]:'Üretimde',[F.exFactory]:'2026-10-05',[F.model]:'DEMO',[F.colourCode]:'RED',[F.retail]:'2026-12-01',[F.inStore]:'2026-12-10'}));}
 test('background personal decisions match the synchronous canonical engine and reuse final results',async()=>{
@@ -33,6 +33,16 @@ test('a context change during a background pass cannot publish previous personal
   const result=h.assistant.computeDecisionsForRowsAsync(list);
   h.context.BL_USER_CONTEXT={id:'another-user'};h.bump();
   assert.equal(await result,null);assert.equal(h.assistant.peekDecisionsForRows(list),null);
+});
+
+test('the canonical PLM change event invalidates cached personal checklist decisions',()=>{
+  const h=harness(),list=rows(),before=h.assistant.computeDecisionsForRows(list);
+  const revision=h.assistant.decisionContextRevision();
+  assert.equal(h.assistant.peekDecisionsForRows(list),before);
+  h.emit('bl:plm-requests-changed');
+  assert.ok(h.assistant.decisionContextRevision()>revision);
+  assert.equal(h.assistant.peekDecisionsForRows(list),null);
+  assert.notEqual(h.assistant.computeDecisionsForRows(list),before);
 });
 
  test('Web Worker personal priority, checklist formulas, answers and filtered row cache match synchronous decisions',async()=>{

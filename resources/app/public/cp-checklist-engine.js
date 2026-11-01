@@ -98,15 +98,49 @@
      Eski kayıtlardaki 'done' (Tamamlandı) değeri 'approved' olarak okunur. */
   const STATUS_IDS = Object.freeze(['open', 'approved', 'rejected', 'notRequired']);
   const ANSWER_STATES = Object.freeze(['approved', 'rejected', 'notRequired']);
-  // Additional states are user-scoped preferences; the canonical custom:<slug>
-  // value travels with each answer so remote sync never silently downgrades it.
+  const STATUS_TONES = Object.freeze(['red', 'copper', 'orange', 'yellow', 'blue', 'teal', 'green', 'gray']);
+  // Additional states are user-scoped preferences (plus optional Moderator-published
+  // team statuses); the canonical custom:<slug> value travels with each answer.
   const CUSTOM_STATUS_KEY = 'lcw.cp.checklist.custom-statuses.v1';
   let customStatusCache = null, customStatusOwner = '';
+  let managedStatusList = [];
+
+  function normalizeStatusTone(tone, resolved = false) {
+    const raw = String(tone || '').trim().toLowerCase();
+    if (STATUS_TONES.includes(raw)) return raw;
+    if (raw === 'danger') return 'red';
+    if (raw === 'amber' || raw === 'warning') return 'yellow';
+    if (raw === 'accent') return 'blue';
+    if (raw === 'success') return 'green';
+    if (raw === 'neutral' || raw === 'muted') return 'gray';
+    return resolved ? 'green' : 'gray';
+  }
+
+  function normalizeCustomStatusEntry(item) {
+    if (!item || typeof item !== 'object') return null;
+    const id = String(item.id || '').trim();
+    if (!/^custom:[a-z0-9][a-z0-9-]{0,47}$/.test(id) || id === 'custom:ordered') return null;
+    const tr = String(item.tr || item.name || item.en || '').trim().replace(/\s+/g, ' ').slice(0, 50);
+    const en = String(item.en || item.nameEn || tr).trim().replace(/\s+/g, ' ').slice(0, 50);
+    if (!tr) return null;
+    const resolved = item.resolved === true;
+    return {
+      id,
+      name: tr,
+      tr,
+      en: en || tr,
+      tone: normalizeStatusTone(item.tone, resolved),
+      resolved,
+      ...(item.managed === true ? { managed: true } : {}),
+    };
+  }
+
   function customStorage() {
     const root = typeof globalThis !== 'undefined' ? globalThis : {};
     return root.BLStorage || root.localStorage || null;
   }
-  function customStatuses() {
+
+  function personalCustomStatuses() {
     const root = typeof globalThis !== 'undefined' ? globalThis : {};
     const owner = String((root.BL_USER_CONTEXT || {}).id || '');
     if (customStatusCache && customStatusOwner === owner) return customStatusCache.slice();
@@ -114,36 +148,97 @@
     try {
       const store = customStorage();
       const raw = JSON.parse(store && store.getItem(CUSTOM_STATUS_KEY) || '[]');
-      customStatusCache = (Array.isArray(raw) ? raw : []).filter(item =>
-        item && /^custom:[a-z0-9][a-z0-9-]{0,47}$/.test(item.id)
-        && typeof item.name === 'string' && item.name.trim().length > 0)
-        .slice(0, 24).map(item => ({ id: item.id, name: item.name.slice(0, 50), resolved: item.resolved === true }));
+      customStatusCache = (Array.isArray(raw) ? raw : [])
+        .map(normalizeCustomStatusEntry)
+        .filter(Boolean)
+        .slice(0, 24);
     } catch (_) { customStatusCache = []; }
     return customStatusCache.slice();
   }
+
+  function setManagedStatuses(list) {
+    const seen = new Set();
+    const out = [];
+    for (const raw of Array.isArray(list) ? list : []) {
+      const clean = normalizeCustomStatusEntry({ ...raw, managed: true });
+      if (!clean || seen.has(clean.id)) continue;
+      seen.add(clean.id);
+      out.push(clean);
+    }
+    managedStatusList = out.slice(0, 24);
+    return managedStatusList.slice();
+  }
+
+  function customStatuses() {
+    const personal = personalCustomStatuses();
+    if (!managedStatusList.length) return personal;
+    const byId = new Map();
+    for (const item of personal) byId.set(item.id, item);
+    for (const item of managedStatusList) byId.set(item.id, item);
+    return [...byId.values()].slice(0, 32);
+  }
+
   function statusIds() { return [...STATUS_IDS, 'custom:ordered', ...customStatuses().map(item => item.id).filter(id => id !== 'custom:ordered')]; }
-  function addCustomStatus(name, resolved = false) {
-    const title = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 50);
-    if (title.length < 2) throw new Error('Status name must have at least two characters.');
-    const list = customStatuses();
+
+  function addCustomStatus(nameOrSpec, resolvedArg = false) {
+    const spec = nameOrSpec && typeof nameOrSpec === 'object'
+      ? nameOrSpec
+      : { tr: nameOrSpec, name: nameOrSpec, resolved: resolvedArg };
+    const tr = String(spec.tr || spec.name || '').trim().replace(/\s+/g, ' ').slice(0, 50);
+    const en = String(spec.en || spec.nameEn || tr).trim().replace(/\s+/g, ' ').slice(0, 50);
+    const resolved = spec.resolved === true;
+    const tone = normalizeStatusTone(spec.tone, resolved);
+    if (tr.length < 2) throw new Error('Status name must have at least two characters.');
+    const list = personalCustomStatuses();
     if (list.length >= 24) throw new Error('Custom status limit reached (24).');
-    if (statusIds().some(id => statusLabel(id, 'en').toLocaleLowerCase('tr-TR') === title.toLocaleLowerCase('tr-TR')))
+    const lowerTr = tr.toLocaleLowerCase('tr-TR');
+    const lowerEn = en.toLocaleLowerCase('tr-TR');
+    if (statusIds().some(id =>
+      statusLabel(id, 'tr').toLocaleLowerCase('tr-TR') === lowerTr
+      || statusLabel(id, 'en').toLocaleLowerCase('tr-TR') === lowerEn)) {
       throw new Error('This status already exists.');
-    const slug = title.toLocaleLowerCase('tr-TR').replace(/ı/g, 'i').replace(/ğ/g, 'g')
+    }
+    const slug = tr.toLocaleLowerCase('tr-TR').replace(/ı/g, 'i').replace(/ğ/g, 'g')
       .replace(/ş/g, 's').replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c')
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '').slice(0, 42) || 'status';
-    let id = 'custom:' + slug, counter = 2;
-    while (list.some(item => item.id === id)) id = 'custom:' + slug.slice(0, 38) + '-' + counter++;
-    const next = [...list, { id, name: title, resolved: resolved === true }];
+    const existingIds = new Set(customStatuses().map(item => item.id));
+    let id = /^custom:[a-z0-9][a-z0-9-]{0,47}$/.test(String(spec.id || '')) ? String(spec.id) : ('custom:' + slug);
+    let counter = 2;
+    while (existingIds.has(id) || id === 'custom:ordered') id = 'custom:' + slug.slice(0, 38) + '-' + counter++;
+    const next = [...list, { id, name: tr, tr, en: en || tr, tone, resolved }];
     const store = customStorage();
     if (!store || typeof store.setItem !== 'function') throw new Error('Preference storage is unavailable.');
     store.setItem(CUSTOM_STATUS_KEY, JSON.stringify(next));
     customStatusCache = next;
     return id;
   }
+
+  function updateCustomStatus(id, patch = {}) {
+    const list = personalCustomStatuses();
+    const index = list.findIndex(item => item.id === id);
+    if (index < 0) return false;
+    const current = list[index];
+    const tr = patch.tr !== undefined || patch.name !== undefined
+      ? String(patch.tr ?? patch.name ?? '').trim().replace(/\s+/g, ' ').slice(0, 50)
+      : current.tr;
+    if (tr.length < 2) return false;
+    const en = patch.en !== undefined || patch.nameEn !== undefined
+      ? (String(patch.en ?? patch.nameEn ?? '').trim().replace(/\s+/g, ' ').slice(0, 50) || tr)
+      : (current.en === current.tr ? tr : current.en);
+    const resolved = patch.resolved !== undefined ? Boolean(patch.resolved) : current.resolved;
+    const tone = patch.tone !== undefined ? normalizeStatusTone(patch.tone, resolved) : current.tone;
+    const next = list.slice();
+    next[index] = { id: current.id, name: tr, tr, en, tone, resolved };
+    const store = customStorage();
+    if (!store || typeof store.setItem !== 'function') throw new Error('Preference storage is unavailable.');
+    store.setItem(CUSTOM_STATUS_KEY, JSON.stringify(next));
+    customStatusCache = next;
+    return true;
+  }
+
   function deleteCustomStatus(id) {
-    const list = customStatuses();
+    const list = personalCustomStatuses();
     const next = list.filter(item => item.id !== id);
     if (next.length === list.length) return false;
     const store = customStorage();
@@ -174,6 +269,9 @@
     if (['notrequired', 'not required', 'n a', 'na', 'gerekmiyor', 'gerek yok', 'uygulanmaz'].includes(raw)) return 'notRequired'; // i18n-ignore — içe aktarma eş anlamlıları, UI metni değil
     if (['open', 'pending', 'açık', 'acik', 'bekliyor', 'beklemede', 'yeniden aç', 'yeniden ac'].includes(raw)) return 'open'; // i18n-ignore — içe aktarma eş anlamlıları, UI metni değil
     if (/^custom:[a-z0-9][a-z0-9-]{0,47}$/.test(String(value || '').trim())) return String(value).trim();
+    const matchedCustom = customStatuses().find(entry =>
+      entry.tr.toLocaleLowerCase('tr-TR') === raw || entry.en.toLocaleLowerCase('tr-TR') === raw);
+    if (matchedCustom) return matchedCustom.id;
     return '';
   }
   function statusLabel(status, lang) {
@@ -182,9 +280,23 @@
     if (id === 'custom:ordered') return lang === 'en' ? 'Ordered' : 'Sipariş Geçildi';
     if (id.startsWith('custom:')) {
       const item = customStatuses().find(entry => entry.id === id);
-      return item ? item.name : id.slice(7).replace(/-/g, ' ');
+      if (item) return lang === 'en' ? (item.en || item.tr || item.name) : (item.tr || item.name || item.en);
+      return id.slice(7).replace(/-/g, ' ');
     }
     return labels[id];
+  }
+  function statusTone(status) {
+    const id = normalizeStatus(status) || 'open';
+    if (id === 'approved') return 'green';
+    if (id === 'rejected') return 'red';
+    if (id === 'open') return 'yellow';
+    if (id === 'notRequired') return 'gray';
+    if (id === 'custom:ordered') return 'blue';
+    if (id.startsWith('custom:')) {
+      const item = customStatuses().find(entry => entry.id === id);
+      return item && item.tone ? item.tone : (item && item.resolved ? 'green' : 'gray');
+    }
+    return 'gray';
   }
 
 /* GECİKMİŞ SİPARİŞ PENCERESİ.
@@ -516,8 +628,9 @@
   }
 
   return {
-    Components, ITEMS, ITEM_BY_ID, GROUP_LABELS, ANSWER_STATES, ANSWER_LABELS, STATUS_IDS, STATUS_LABELS, RESOLVED_STATES,
-    normalizeStatus, statusLabel, statusOf, isResolved, statusIds, customStatuses, addCustomStatus, deleteCustomStatus,
+    Components, ITEMS, ITEM_BY_ID, GROUP_LABELS, ANSWER_STATES, ANSWER_LABELS, STATUS_IDS, STATUS_LABELS, STATUS_TONES, RESOLVED_STATES,
+    normalizeStatus, normalizeStatusTone, normalizeCustomStatusEntry, statusLabel, statusTone, statusOf, isResolved,
+    statusIds, personalCustomStatuses, setManagedStatuses, customStatuses, addCustomStatus, updateCustomStatus, deleteCustomStatus,
     componentsFor, normalizeSettings, answerKey, optionIdentity, optionAnswerKey, approvalScopeOf, makeAnswer, answerIsStale, stateFor,
     itemApplies, openItems, summarize,
   };

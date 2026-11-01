@@ -50,7 +50,7 @@ test('moderators have a visible delete-for-all button beside publication', () =>
   const start = source.indexOf('    const moderatorActions = moderator');
   const end = source.indexOf('    return `<div class="cpaRule', start);
   for (const managed of [false, true]) {
-    const ctx = vm.createContext({ moderator: true, rule: { managed }, esc: v => v, L: (_tr, en) => en });
+    const ctx = vm.createContext({ moderator: true, view: { isDirty: () => false }, rule: { managed }, esc: v => v, L: (_tr, en) => en });
     const html = vm.runInContext(source.slice(start, end) + '\nmoderatorActions;', ctx);
     assert.match(html, /data-cpa-rule-delete-all/);
     assert.match(html, /Delete for all users/);
@@ -130,7 +130,7 @@ test('global deletion retains dependency warnings and undo restores original che
 
 test('local trash action never writes a global deletion', () => {
   const m = manager();
-  Object.assign(m.ctx, { newPriorityRuleIds: new Set(), expandedRuleId: null, commit: () => {}, draw: () => {} });
+  Object.assign(m.ctx, { ruleDrafts: new Map(), draftBases: new Map(), invalidRuleDrafts: new Map(), newPriorityRuleIds: new Set(), expandedRuleId: null, commit: () => {}, draw: () => {} });
   const start = source.indexOf("      modal.querySelectorAll('[data-cpa-rule-delete]')");
   const button = {};
   m.ctx.modal.querySelectorAll = () => [button];
