@@ -39,6 +39,8 @@ const holidayService = require('./lib/holiday-service').createHolidayService({
 const { createLocalDb, offloadLegacyAssets, sweepWriteDebris, summarizeConflict } = require('./lib/local-db');
 const { createSyncSettings, writeValidatedJson, withTimeout: syncNetworkTimeout } = require('./lib/sync-settings');
 const syncHealth = require('./lib/sync-health');
+const hubDirent = require('./lib/hub-dirent');
+const oneDriveConflictCopies = require('./lib/onedrive-conflict-copies');
 const { createSharedHub } = require('./lib/shared-hub');
 const masterReleases = require('./lib/master-releases');
 const { createRefreshPerformance } = require('./lib/refresh-performance');
@@ -1519,7 +1521,9 @@ async function readSyncHealthReports() {
   if (!settings.sharedSyncRoot) return reports;
   const root = path.join(settings.sharedSyncRoot, 'BUYER_LOG_SYNC');
   const readBounded = async file => {
-    const st = await fs.promises.lstat(file);
+    // OneDrive reparse point bağlantı görünebilir; yalnız normal dosyaya çözülürse okunur.
+    let st = await fs.promises.lstat(file);
+    if (st.isSymbolicLink()) st = await fs.promises.stat(file);
     if (!st.isFile() || st.size > 1024 * 1024) throw new Error('SYNC_HEALTH_FILE_INVALID');
     const raw = await fs.promises.readFile(file, 'utf8');
     if (Buffer.byteLength(raw) > 1024 * 1024) throw new Error('SYNC_HEALTH_FILE_TOO_LARGE');
@@ -1529,8 +1533,7 @@ async function readSyncHealthReports() {
   const files = await fs.promises.readdir(healthRoot, { withFileTypes:true }).catch(error => {
     if (error.code === 'ENOENT') return []; throw error;
   });
-  for (const entry of files) {
-    if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
+  for (const entry of await hubDirent.hubFiles(healthRoot, files.filter(item => item.name.endsWith('.json')))) {
     try {
       const report = await readBounded(path.join(healthRoot, entry.name));
       if (report.schemaVersion === 1 && typeof report.deviceId === 'string' &&
@@ -1542,8 +1545,7 @@ async function readSyncHealthReports() {
   const devices = await fs.promises.readdir(changes, { withFileTypes:true }).catch(error => {
     if (error.code === 'ENOENT') return []; throw error;
   });
-  for (const entry of devices) {
-    if (!entry.isDirectory()) continue;
+  for (const entry of await hubDirent.hubDirectories(changes, devices)) {
     let deviceId; try { deviceId = decodeURIComponent(entry.name); } catch (_) { continue; }
     if (seen.has(deviceId)) continue;
     const head = await readBounded(path.join(changes, entry.name, '_head.json')).catch(() => ({}));
@@ -1706,8 +1708,7 @@ function scheduleMasterCheckpointPublish(actorId = '', delayMs = 1500) {
 async function readSharedSyncHeads(root) {
   const changesRoot=path.join(root,'BUYER_LOG_SYNC','changes'),out={};
   let entries=[];try{entries=await fs.promises.readdir(changesRoot,{withFileTypes:true});}catch(_){return out;}
-  for(const entry of entries.slice(0,500)){
-    if(!entry.isDirectory())continue;
+  for(const entry of await hubDirent.hubDirectories(changesRoot,entries.slice(0,500))){
     let deviceId='';try{deviceId=decodeURIComponent(entry.name);}catch(_){deviceId=entry.name;}
     try{
       const head=JSON.parse(await fs.promises.readFile(path.join(changesRoot,entry.name,'_head.json'),'utf8'));
@@ -9452,7 +9453,10 @@ app.get('/api/sync-health', userAccess.requireModerator, async (_req, res) => {
   try {
     const reports = await syncNetworkTimeout(readSyncHealthReports, 15000, 'Sync health');
     const classified = syncHealth.classifyReports(reports);
-    res.json({ ...classified, devices:classified.devices.map(({ recordHashes, ...summary }) => summary) });
+    // Yalnız okuyan tarama; hatası cihaz sağlığı yanıtını düşürmez.
+    const conflictCopies = await syncNetworkTimeout(async () => oneDriveConflictCopies.scanConflictCopies((await syncSettings.read()).sharedSyncRoot), 15000, 'OneDrive conflict copies')
+      .catch(error => { logRuntimeFailure('syncHealth:conflictCopies', error); return { items:[], truncated:false, error:error.code || 'SCAN_FAILED' }; });
+    res.json({ ...classified, devices:classified.devices.map(({ recordHashes, ...summary }) => summary), conflictCopies });
   } catch (error) { apiError(res, error, 'SYNC_HEALTH_UNAVAILABLE'); }
 });
 app.get('/api/sync-health/diff', userAccess.requireModerator, async (req, res) => {

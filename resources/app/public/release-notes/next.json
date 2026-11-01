@@ -7,8 +7,8 @@
     "en": "Price comparisons, season impact and faster startup and simpler map icons; Appearance drawer and corner-wave triangle transition"
   },
   "summary": {
-    "tr": "Yeni bilgisayarların SYNC kullanıcılarını alması ve kullanıcı eşitleme hatalarının doğru gösterilmesi düzeltildi. Güncelleme paketleri, mevcut istemcilerin erişebildiği alternatif indirme adresine sığacak şekilde hazırlanıyor. Görselli sürüm arşivi korunuyor; geçmiş ekran görüntüleri yalnız açıldığında yükleniyor. Buyer Log sunucusu açılışta ve güncelleme sonrasında daha az bekliyor: önbellek temizliğini beklemeden başlıyor ve güncellemeden sonra ekran önbelleğini silmiyor. İlk ekrandan sonra kullanıcı yönetimi, Excel motoru, dil sözlüğü ve model görsel anahtarları kullanıcıyla daha az yarışıyor. Price içinde sezon ve MB ayı referanslarını, veri uyarılarını ve model fiyatı ile adedinin mevcut sezon ortalamasına etkisini görün. Küresel Akış Haritasında uyarı ve birleşik araç simgeleri küçültüldü. Görünüm menüsü düğmenin üstünde alttan yukarı açılan bir çekmeceye dönüştü; Tema geçişi ayarları yalnız istenince açılıyor. Sırayla katlanan üçgenler artık ekranın sol alt köşesinden tek bir dalga hâlinde yayılıyor.",
-    "en": "New computers now load SYNC users correctly and display user-directory synchronization failures accurately. Update packages now fit the alternative download address supported by existing clients. The visual release archive is preserved; historical screenshots load only when opened. The Buyer Log server waits less at startup and after updates: it starts without waiting for the cache cleanup and no longer wipes the screen cache after an update. After the first screen, user management, the Excel engine, the language dictionary and model image keys compete less with the user. See season and MB-month references, data warnings and the impact of each model price and quantity on the current season average within Price. Warning and grouped vehicle icons are more compact in the Global Flow Map. The Appearance menu became a drawer that slides up above its button; Theme transition settings open only when asked. Triangles folding in sequence now spread from the bottom-left corner as a single wave."
+    "tr": "Yeni bilgisayarların SYNC kullanıcılarını alması ve kullanıcı eşitleme hatalarının doğru gösterilmesi düzeltildi. Güncelleme paketleri, mevcut istemcilerin erişebildiği alternatif indirme adresine sığacak şekilde hazırlanıyor. Görselli sürüm arşivi korunuyor; geçmiş ekran görüntüleri yalnız açıldığında yükleniyor. Buyer Log sunucusu açılışta ve güncelleme sonrasında daha az bekliyor: önbellek temizliğini beklemeden başlıyor ve güncellemeden sonra ekran önbelleğini silmiyor. İlk ekrandan sonra kullanıcı yönetimi, Excel motoru, dil sözlüğü ve model görsel anahtarları kullanıcıyla daha az yarışıyor. Price içinde sezon ve MB ayı referanslarını, veri uyarılarını ve model fiyatı ile adedinin mevcut sezon ortalamasına etkisini görün. Küresel Akış Haritasında uyarı ve birleşik araç simgeleri küçültüldü. Görünüm menüsü düğmenin üstünde alttan yukarı açılan bir çekmeceye dönüştü; Tema geçişi ayarları yalnız istenince açılıyor. Sırayla katlanan üçgenler artık ekranın sol alt köşesinden tek bir dalga hâlinde yayılıyor. OneDrive ile eşitlenen ortak klasörde başka cihazların değişiklik klasörleri artık atlanmıyor; Moderatör, Cihazlar bölümünde OneDrive çakışma kopyalarını görüyor.",
+    "en": "New computers now load SYNC users correctly and display user-directory synchronization failures accurately. Update packages now fit the alternative download address supported by existing clients. The visual release archive is preserved; historical screenshots load only when opened. The Buyer Log server waits less at startup and after updates: it starts without waiting for the cache cleanup and no longer wipes the screen cache after an update. After the first screen, user management, the Excel engine, the language dictionary and model image keys compete less with the user. See season and MB-month references, data warnings and the impact of each model price and quantity on the current season average within Price. Warning and grouped vehicle icons are more compact in the Global Flow Map. The Appearance menu became a drawer that slides up above its button; Theme transition settings open only when asked. Triangles folding in sequence now spread from the bottom-left corner as a single wave. In a OneDrive-synced shared folder, other devices' change folders are no longer skipped; Moderators see OneDrive conflict copies in the Devices section."
   },
   "changes": [
     {
@@ -327,6 +327,35 @@
         "caption": {
           "tr": "Görünüm › Tema geçişi yalnız tıklanınca genişler.",
           "en": "Appearance › Theme transition expands only when pressed."
+        }
+      }
+    },
+    {
+      "id": "onedrive-sync-reparse-and-conflict-copies",
+      "type": "fix",
+      "module": {
+        "tr": "Senkron ve Ortak Klasör",
+        "en": "Sync and Shared Folder"
+      },
+      "title": {
+        "tr": "OneDrive ortak klasöründe atlanan cihazlar ve çakışma kopyası uyarısı",
+        "en": "Skipped devices and conflict copy warning in OneDrive shared folders"
+      },
+      "body": {
+        "tr": "OneDrive \"İsteğe bağlı dosyalar\" açıkken Windows bazı ortak klasör ve dosyaları bağlantı gibi bildirebiliyor. Bu durumda Buyer Log diğer cihazların değişiklik klasörlerini, onay (ACK) kayıtlarını, cihaz sağlık raporlarını ve görsel deposu başlıklarını hata vermeden atlayabiliyordu. Bu girdiler artık gerçek klasör veya dosyaya çözülerek okunuyor; kullanıcı yönetimindeki önceki düzeltme tüm ortak klasör taramalarına genişletildi. Ayrıca iki cihaz aynı ortak dosyayı eşitleme bitmeden değiştirdiğinde OneDrive'ın bilgisayar adıyla ayırdığı yan dosyalar Moderatör için Senkron › Cihazlar bölümünde asıl dosyasıyla birlikte listeleniyor. Buyer Log bu dosyaları okumaz, birleştirmez veya silmez; Moderatör karşılaştırıp karar verir.",
+        "en": "With OneDrive Files On-Demand enabled, Windows can report some shared folders and files as links. Buyer Log could then silently skip other devices' change folders, acknowledgement (ACK) records, device health reports and image store heads. These entries are now resolved to the real folder or file before reading; the earlier user management fix now covers every shared folder scan. In addition, when two devices change the same shared file before syncing completes, the side files OneDrive names after the computer are listed for Moderators with their original file in Sync › Devices. Buyer Log never reads, merges or deletes these files; the Moderator compares them and decides."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "onedrive-sync-conflict-copies.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Senkron penceresinde Cihazlar bölümü: iki olası OneDrive çakışma kopyası asıl dosyalarıyla listeleniyor; demo klasör ve demo Moderatör",
+          "en": "Devices section of the real Buyer Log Sync window listing two possible OneDrive conflict copies with their original files; demo folder and demo Moderator"
+        },
+        "caption": {
+          "tr": "Moderatör, Buyer Log'un okumadığı OneDrive yan dosyalarını asıl dosyalarıyla birlikte görür. Klasör bağlantısı düzeltmesi Windows OneDrive ortamında ayrıca doğrulanmalıdır; görsel yalnız uyarı ekranını gösterir.",
+          "en": "Moderators see the OneDrive side files Buyer Log does not read, together with their original files. The folder-link fix still needs confirmation on Windows OneDrive; the image shows only the warning screen."
         }
       }
     }
