@@ -25,7 +25,11 @@ test('v7.64 fiyat ve üretici analizi bağımsız ana navigasyon modülüdür',(
 });
 
 test('v6.66 analiz betikleri Overview açılışını bloklamadan lazy feature kaydından yüklenir',()=>{
-  assert.doesNotMatch(html,/<script[^>]+src=["'][^"']*lfl\.js/);
+  // Yalnız dosya adı tam "lfl.js" olan 255 KB analiz paketi; collection-lfl.js ayrı modüldür.
+  const eagerLfl=/<script[^>]+src=["'](?:[^"']*\/)?lfl\.js/;
+  assert.match('<script src="lfl.js?v=1"></script>',eagerLfl);assert.match('<script src="./lfl.js"></script>',eagerLfl);
+  assert.doesNotMatch('<script src="collection-lfl.js?v=1"></script>',eagerLfl);
+  assert.doesNotMatch(html,eagerLfl);
   assert.doesNotMatch(html,/<script[^>]+src=["'][^"']*price-supplier-analysis\.js/);
   assert.match(perf,/lfl:\[[^\]]*'lfl\.js/);
   assert.match(perf,/collectionTools:\[[^\]]*'price-supplier-insights-engine\.js','price-supplier-analysis\.js'/);
