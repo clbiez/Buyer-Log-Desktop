@@ -1825,7 +1825,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
   sharedHubBootstrapInFlight = (async () => {
     const settings = await syncSettings.read();
     const hadLocalLoginSnapshot = userAccess.hasLocalLoginSnapshot();
-    const localLoginAllowed = userAccess.canLoginLocally();
+    let localLoginAllowed = userAccess.canLoginLocally();
     const localState = sharedHub.readLocalState();
 
     if (!settings.sharedSyncRoot) {
@@ -1863,30 +1863,36 @@ async function bootstrapSharedHub({ force = false } = {}) {
       setBootstrapStep('users', { status:'active' });
       userAccess.enableCentralIam();
       const sameCompletedHub = localState && localState.completed === true && localState.hubId === checked.manifest.hubId;
-      const iam = await userAccess.refreshIam({ allowBootstrapPlaceholderReplace:!sameCompletedHub, timeoutMs:30000 });
+      // Older bootstraps could mark this Hub completed while still using only
+      // the local Moderator. Completion metadata is not an IAM cache: retry the
+      // guarded placeholder replacement on every bootstrap. Central IAM itself
+      // still protects real multi-user directories and verified revision floors.
+      const iam = await userAccess.refreshIam({ allowBootstrapPlaceholderReplace:true, timeoutMs:30000 });
       const iamHealth = userAccess.centralIamHealth();
-      // A remembered "completed" Hub marker is not proof that IAM still has a
-      // usable local/remote directory. The old bypass allowed bootstrap to show
-      // "0 kullanıcı · 0 aktif" as DONE after an auth-cache loss.
-      if (!iam && !userAccess.hasLocalLoginSnapshot()) {
-        // Hata kodu adımda görünür; "neden kullanıcı yok" sorusu tahmin gerektirmesin.
-        setBootstrapStep('users', { status:'error', detail:[iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED', iamHealth.lastErrorDetail].filter(Boolean).join(' · ') });
-        throw Object.assign(new Error('Kullanıcı verileri Shared Hub’dan alınamadı ve geçerli yerel kullanıcı önbelleği bulunamadı.'), { code:iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED', statusCode:503 });
+      localLoginAllowed = userAccess.canLoginLocally();
+      // Local sign-in availability is independent of directory synchronization.
+      // A cached or personal account may still log in, but must never turn a
+      // failed IAM download into "users synchronized" / a completed bootstrap.
+      if (!iam) {
+        const code = iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED';
+        if (userAccess.usingPersonalLoginFallback()) {
+          markStartup('IAM_PERSONAL_LOGIN_FALLBACK', { code, profiles:userAccess.allPublicProfiles().length });
+          setBootstrapStep('users', { status:'error', personalFallback:true, code, detail:['Kişisel yerel giriş', iamHealth.lastError || 'IAM_OFFLINE', iamHealth.lastErrorDetail].filter(Boolean).join(' · ') });
+        } else {
+          setBootstrapStep('users', { status:'error', code, detail:[code, iamHealth.lastErrorDetail].filter(Boolean).join(' · ') });
+        }
+        throw Object.assign(new Error('Kullanıcı verileri Shared Hub’dan alınamadı.'), { code, statusCode:503 });
       }
       const profiles = userAccess.allPublicProfiles();
       const activeProfiles = profiles.filter(profile => profile && profile.enabled !== false);
       if (!profiles.length || !activeProfiles.length) {
+        setBootstrapStep('users', { status:'error', code:'IAM_DIRECTORY_EMPTY', detail:'IAM_DIRECTORY_EMPTY' });
         throw Object.assign(new Error('Kullanıcı dizini boş görünüyor; giriş için geçerli kullanıcı verisi kurtarılamadı.'), { code:'IAM_DIRECTORY_EMPTY', statusCode:503 });
       }
-      if (!iam && userAccess.usingPersonalLoginFallback()) {
-        markStartup('IAM_PERSONAL_LOGIN_FALLBACK', { code:iamHealth.lastError || null, profiles:profiles.length });
-        setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, personalFallback:true, code:iamHealth.lastError || 'IAM_OFFLINE', detail:['Kişisel yerel giriş', iamHealth.lastError || 'IAM_OFFLINE', iamHealth.lastErrorDetail].filter(Boolean).join(' · ') });
-      } else {
-        // 'stale': the newest IAM revision is still unreadable here (e.g. OneDrive
-        // has not finished downloading it); the newest valid one is in use.
-        const staleIam = iamHealth.status === 'stale' ? ` · rev ${iamHealth.localRevision}/${iamHealth.remoteRevision} · ${[iamHealth.lastError, iamHealth.lastErrorDetail].filter(Boolean).join(' ')}` : '';
-        setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, detail:`${profiles.length} kullanıcı · ${activeProfiles.length} aktif${staleIam}` });
-      }
+      // 'stale': the newest IAM revision is still unreadable here (e.g. OneDrive
+      // has not finished downloading it); the newest valid one is in use.
+      const staleIam = iamHealth.status === 'stale' ? ` · rev ${iamHealth.localRevision}/${iamHealth.remoteRevision} · ${[iamHealth.lastError, iamHealth.lastErrorDetail].filter(Boolean).join(' ')}` : '';
+      setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, detail:`${profiles.length} kullanıcı · ${activeProfiles.length} aktif${staleIam}` });
 
       setBootstrapProgress({ phase:'master', message:'Sistem ayarları eşitleniyor…' });
       setBootstrapStep('master', { status:'active' });
