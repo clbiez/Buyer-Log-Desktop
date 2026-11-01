@@ -4225,7 +4225,7 @@ function visibleCols(tableKey){
 const TABLE_VIEW_PRESETS = Object.freeze({
   cp:Object.freeze({focus:Object.freeze(['__picture','Priority','Buyer','Manufacturer','Sub-Manufacturer','License','Category','PLM ID','Model Name','Order Code','FOB ($)','Ex-factory','HANDOVER Tarihi','Order Quantity','Remaining Units','%','STATUS','__personalOrderNote'])}),
   orders:Object.freeze({focus:Object.freeze(['__picture','Priority','Buyer','Manufacturer','License','Category','PLM ID','Model Name','Order Code','FOB ($)','Ex-factory','HANDOVER Tarihi','Order Quantity','Remaining Units','%','STATUS','__personalOrderNote'])}),
-  koleksiyon:Object.freeze({focus:Object.freeze(['__picture__','plmId','modelKod','lisans','urunTipi','specialCode','line','colourCode','colour','fabric','fit','quantity','exFactory','targetPrice','__bestPrice__','__confirmedName__','__confirmedPrice__','durum','not'])}),
+  koleksiyon:Object.freeze({focus:Object.freeze(['__picture__','plmId','modelKod','lisans','urunTipi','specialCode','line','colourCode','colour','fabric','fit','quantity','exFactory','targetPrice','__bestPrice__','__confirmedName__','__confirmedPrice__','__previousSeason__','__lfl__','__seasonImpact__','durum','not'])}),
 });
 const TABLE_VIEW_FOCUS_KEY = 'lcw.tableViewFocus.v1';
 const TABLE_VIEW_EDITABLE_PRESETS = Object.freeze(['focus','extended']);
@@ -15125,6 +15125,7 @@ async function waitForRefreshJob(expectedJob=null){
     // Üst/Source yenileme menüsündeki LFL seçeneği ana model cache'ini yeniler.
     // LFL modülü kendi state'ini tuttuğu için aynı cache'i GET ile yeniden okuyup
     // ekrana uygula; aksi halde model yenilenmesine rağmen LFL eski satırları gösterirdi.
+    if(userVisibleRefresh&&(!Array.isArray(targets)||!targets.length||targets.includes('lfl')))window.BLCollectionLfl?.invalidate();
     if(userVisibleRefresh&&(!Array.isArray(targets)||!targets.length||targets.includes('lfl'))&&typeof window.reloadLflFromCache==='function'){
       try{await window.reloadLflFromCache();}catch(err){console.warn('LFL cache yenilenemedi:',err);}
     }
@@ -25093,14 +25094,18 @@ function releaseKolTransientTopRow(id=null){
 }
 const KOL_COL_STATE_KEY = 'lcw.koleksiyon.colState.v1';
 const KOL_COL_LAYOUT_VERSION = 7;
-const KOL_SYNTHETIC_COL_KEYS = Object.freeze(['__bestPrice__','__confirmedName__','__confirmedPrice__']);
+const KOL_SYNTHETIC_COL_KEYS = Object.freeze(['__bestPrice__','__confirmedName__','__confirmedPrice__','__previousSeason__','__lfl__','__seasonImpact__']);
 // Sentetik sütunların tek kaynak tanımı: hem çizim (kolDescriptorCatalog) hem de
 // sütun seçici paneli buradan okur, ikisi ayrışamaz.
 const KOL_SYNTHETIC_COL_META = Object.freeze({
   __bestPrice__:{kind:'best',label:'Best Price',group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği
   __confirmedName__:{kind:'confirmedName',label:'Conf. Manufacturer',group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği
   __confirmedPrice__:{kind:'confirmedPrice',label:'Approved Mfr. Price',group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği
+  __lfl__:{kind:'lfl',label:'LFL',group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği
+  __previousSeason__:{kind:'previousSeason',label:'Previous Season',group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği
+  __seasonImpact__:{kind:'seasonImpact',label:'Season Impact',tr:'Sezon Etkisi',en:'Season Impact',group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği; görünür etiket TR/EN çiftinden okunur
 });
+function kolSyntheticColLabel(key){const meta=KOL_SYNTHETIC_COL_META[key];return meta?.tr?(appLang==='en'?meta.en:meta.tr):L(meta?.label||key);}
 function kolIsSyntheticColKey(key){ return KOL_SYNTHETIC_COL_KEYS.indexOf(key)>=0; }
 /* v2026-10-22 — FİYAT GÖRÜNÜMÜ (Kompakt · Detay · Maliyet).
    Görünüm yalnız ÇİZİM katmanıdır: sütun sırası, gizli sütunlar ve Odak /
@@ -25116,7 +25121,9 @@ const KOL_PRICE_VIEWS=Object.freeze(['compact','detail','cost']);
 const KOL_PRICE_VIEW_COLS=Object.freeze({
   __priceStrip__:Object.freeze({kind:'priceStrip',tr:'Teklif & Onay',en:'Quotes & Approval',group:'Fiyatlandırma'}), // i18n-ignore — sütun kimliği/grup anahtarı
   __landedSummary__:Object.freeze({kind:'landedSummary',tr:'Landed Özeti',en:'Landed Summary',group:'Endeksmatik & Avantaj'}), // i18n-ignore — sütun kimliği/grup anahtarı
+  __referenceSummary__:Object.freeze({kind:'priceReferences',tr:'Previous Season / LFL',en:'Previous Season / LFL',group:'Fiyatlandırma'}), // i18n-ignore — sütun kimliği/grup anahtarı
 });
+const KOL_REFERENCE_SOURCES=Object.freeze({compact:Object.freeze(['__previousSeason__','__lfl__'])});
 const KOL_PRICE_STRIP_SOURCES=Object.freeze({compact:Object.freeze(['__bestPrice__','__confirmedName__','__confirmedPrice__','fob']),cost:Object.freeze(['__bestPrice__','__confirmedName__','__confirmedPrice__'])});
 const KOL_LANDED_SUMMARY_SOURCES=Object.freeze({compact:Object.freeze(['ydLanded','trLanded'])});
 const KOL_COST_VIEW_KEYS=Object.freeze(['fob','royalty','hologramCost','ydLanded','trLanded']);
@@ -25287,9 +25294,14 @@ function kolExportDescriptors(){
 // hiçbiri görünür değilse ilgili özet sütunu da çizilmez.
 function kolApplyPriceView(list,mode=kolPriceViewMode()){
   const stripSources=new Set(KOL_PRICE_STRIP_SOURCES[mode]||[]),landedSources=new Set(KOL_LANDED_SUMMARY_SOURCES[mode]||[]);
-  if(!stripSources.size&&!landedSources.size)return list;
-  const out=[];let strip=null,landed=null;
+  const referenceSources=new Set(KOL_REFERENCE_SOURCES[mode]||[]);
+  if(!stripSources.size&&!landedSources.size&&!referenceSources.size)return list;
+  const out=[];let strip=null,landed=null,references=null;
   list.forEach(d=>{
+    if(referenceSources.has(d.k)){
+      if(!references){references=kolPriceViewDescriptor('__referenceSummary__');out.push(references);}
+      references.folds.push(d.k);return;
+    }
     if(stripSources.has(d.k)){
       if(!strip){strip=kolPriceViewDescriptor('__priceStrip__');out.push(strip);}
       strip.folds.push(d.k);return;
@@ -25322,7 +25334,7 @@ function kolDefaultDisplayOrder(){
     'licensor','lisans','royalty','hologramCost',
     'country','delType','exFactory','retail','exToRetail','inStore',
     ...checklistKeys,
-    'targetPrice','__bestPrice__','__confirmedName__','__confirmedPrice__','fob',
+    'targetPrice','__bestPrice__','__confirmedName__','__confirmedPrice__','__previousSeason__','__lfl__','__seasonImpact__','fob',
     'endeksmatik','ydLanded','trLanded'
   ];
   const valid=[];kolColDefs().forEach(c=>{valid.push(c.k);if(c.k==='targetPrice')valid.push(...KOL_SYNTHETIC_COL_KEYS);});
@@ -25613,7 +25625,7 @@ function renderKolColumnPanel(panelEl){
   const labelTitle = appLang==='en' ? 'Rename column / show data source' : 'Sütun adını değiştir / veri kaynağını gör';
   panelEl.innerHTML = `<label class="colPanelItem"><input type="checkbox" data-key="__picture" ${kolPictureHidden?'':'checked'}> ${escapeHtml(L('Picture'))}</label>`
     + sortColumnPanelEntries(cols.concat(KOL_SYNTHETIC_COL_KEYS.map(key=>({k:key,label:KOL_SYNTHETIC_COL_META[key].label})))
-        .map(c=>({col:c,label:KOL_SYNTHETIC_COL_META[c.k]?L(c.label):kolColumnLabel(c)}))).map(({col:c,label})=>{
+        .map(c=>({col:c,label:KOL_SYNTHETIC_COL_META[c.k]?kolSyntheticColLabel(c.k):kolColumnLabel(c)}))).map(({col:c,label})=>{
         // Özel sütun yapısı çalışma alanı verisidir; görüntüleme yetkisinde yalnız görünürlük değiştirilebilir.
         const custom = kolIsCustomCol(c.k),editableCustom=custom&&canEdit;
         // Sistem sütunu (ve düzenleme yetkisi olmayan özel sütun): kişisel EN/TR ad.
@@ -26388,6 +26400,8 @@ function kolCollapsedGroupSummary(members,descriptors){
   };
   (descriptors||[]).forEach(descriptor=>{
     const key=descriptor.k;
+    if(descriptor.kind==='lfl'||descriptor.kind==='previousSeason'||descriptor.kind==='seasonImpact'){put(key,kolGroupSummaryDistinct(rows.map(row=>window.BLCollectionLfl?.text(row,window.BLCollectionLfl.modeForKey(key))||'')).join(KOL_GROUP_SUMMARY_SEPARATOR));return;}
+    if(descriptor.kind==='priceReferences'){put(key,kolGroupSummaryDistinct(rows.map(row=>window.BLCollectionLfl?.combinedText(row,descriptor.folds)||'')).join(KOL_GROUP_SUMMARY_SEPARATOR));return;}
     if(descriptor.kind==='best'){
       const valueOf=row=>kolBestPricing(row)?.price??'';
       const distinct=kolGroupSummaryDistinct(rows.map(row=>{const v=valueOf(row);return Number.isFinite(kolParseMoneyNum(v))?`$${kolFormatMoneyDisplay(v)}`:'';}));
@@ -26498,6 +26512,8 @@ function kolCollectionProjectionSelected(record,selection){
 }
 function kolCollectionRawCellText(col,row){
   if(!row||!col)return '';
+  if(col.kind==='lfl'||col.kind==='previousSeason'||col.kind==='seasonImpact')return window.BLCollectionLfl?.text(row,window.BLCollectionLfl.modeForKey(col.k))||'';
+  if(col.kind==='priceReferences')return window.BLCollectionLfl?.combinedText(row,col.folds)||'';
   if(col.kind==='price'){
     const pricing=kolEffectivePricing(row),v=pricing&&pricing[col.manufacturer];
     if(v==null||v==='') return '';
@@ -27697,7 +27713,7 @@ function kolDescriptorCatalog(opts={}){
   KOL_SYNTHETIC_COL_KEYS.forEach(key=>{
     if(!opts.all&&kolHiddenCols.has(key)) return;
     const meta = KOL_SYNTHETIC_COL_META[key];
-    if(meta) map.set(key,{kind:meta.kind,k:key,label:L(meta.label)});
+    if(meta) map.set(key,{kind:meta.kind,k:key,label:kolSyntheticColLabel(key)});
   });
   return map;
 }
@@ -27710,6 +27726,9 @@ function kolDisplayDescriptors(opts={}){
   return kolPriceViewMode()==='cost'?kolExpandPriceDetails(viewed):viewed;
 }
 function kolDescriptorDefaultWidth(d){
+  if(d.kind==='lfl'||d.kind==='previousSeason')return 165;
+  if(d.kind==='seasonImpact')return 250;
+  if(d.kind==='priceReferences')return 250;
   if(d.kind==='base')return d.col.w;
   if(d.kind==='best')return 112;
   if(d.kind==='confirmedName')return 150;
@@ -27725,6 +27744,7 @@ function kolDescriptorMinWidth(d){
   if(d.kind==='best'||d.kind==='confirmedPrice')return Math.max(92,readableHeaderPx);
   if(d.kind==='priceStrip')return Math.max(190,readableHeaderPx);
   if(d.kind==='landedSummary')return Math.max(128,readableHeaderPx);
+  if(d.kind==='priceReferences')return Math.max(300,readableHeaderPx);
   return d.kind==='base'?kolColMinWidth(d.col):Math.max(64,readableHeaderPx);
 }
 function kolDescriptorWidth(d){
@@ -28586,6 +28606,7 @@ function renderKol(){
   const visibleRows=renderTableRangeControls(table,'koleksiyon',rows,renderKol);
   const thead=table.querySelector('thead'),tbody=table.querySelector('tbody'),colgroup=table.querySelector('colgroup');
   const descriptors=kolDisplayDescriptors();
+  if(document.body.dataset.activeTab==='koleksiyon'&&descriptors.some(d=>['lfl','previousSeason','priceReferences','seasonImpact'].includes(d.kind)))void window.BLCollectionLfl?.ensure();
   descriptors.forEach(descriptor=>{
     if(descriptor.kind==='base')descriptor.col._blSchema=columnSchemaFor(descriptor.col,logicalRows);
   });
@@ -28610,6 +28631,8 @@ function renderKol(){
       const filterLabel=appLang==='en'?`Filter: ${d.label}`:`Filtrele: ${d.label}`;
       return `<th data-kcol="${d.k}" class="${isFiltered?'columnFilterActive':''}"${userLabelAttr}><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}<span class="arrow">${arrow}</span></span><button type="button" class="thFilterBtn kolThFilterBtn${active}" data-kcol="${d.k}" title="${escapeHtml(filterLabel)}" aria-label="${escapeHtml(filterLabel)}">▾</button></div></th>`;
     }
+    if(d.kind==='seasonImpact')return `<th data-kcol="${d.k}" class="kolComputedHeader" title="${escapeHtml(appLang==='en'?'Impact of this model price and quantity on the same season, MAG and Classification average · earlier MB months only':'Model fiyatı ve adedinin aynı sezon, MAG ve Klasman ortalamasına etkisi · yalnız önceki MB ayları')}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
+    if(d.kind==='lfl'||d.kind==='previousSeason')return `<th data-kcol="${d.k}" class="kolComputedHeader" title="${escapeHtml(d.kind==='lfl'?(appLang==='en'?'Same MB month last year + MAG + Classification · weighted USD FOB':'Önceki yılın aynı MB ayı + MAG + Klasman · ağırlıklı USD FOB'):(appLang==='en'?'Previous full season + MAG + Classification · weighted USD FOB':'Önceki sezonun tamamı + MAG + Klasman · ağırlıklı USD FOB'))}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
     if(d.kind==='best') return `<th data-kcol="${d.k}" title="${escapeHtml(appLang==='en'?'Lowest valid quotation; hover the cell to see the manufacturer':'En düşük geçerli teklif; üreticiyi görmek için hücrenin üzerinde bekle')}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
     if(d.kind==='confirmedName'){
       const key=KOL_CONFIRMED_NAME_FILTER_KEY,isFiltered=!!(kolColFilters[key]&&kolColFilters[key].size),active=isFiltered?' filterActive':'';
@@ -28620,7 +28643,7 @@ function renderKol(){
       const tip=d.field.input?(appLang==='en'?'Editable input of the landed calculation':'Landed hesabının düzenlenebilir girdisi'):(appLang==='en'?'Calculated detail':'Hesaplanan ayrıntı');
       return `<th data-kcol="${d.k}" class="kolComputedHeader kolPriceDetailHeader${d.field.input?' isInput':''}" title="${escapeHtml(tip)}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
     }
-    if(d.kind==='priceStrip'||d.kind==='landedSummary'){
+    if(d.kind==='priceStrip'||d.kind==='landedSummary'||d.kind==='priceReferences'){
       const foldLabels=(d.folds||[]).map(key=>key.startsWith('__')?L(KOL_SYNTHETIC_COL_META[key]?.label||key):kolColumnLabel(kolColDefs().find(c=>c.k===key)||{k:key,label:key})).join(' · ');
       const tip=(appLang==='en'?'Compact price view: ':'Kompakt fiyat görünümü: ')+foldLabels+(appLang==='en'?' · switch to Detail above to see separate columns':' · ayrı sütunlar için yukarıdan Detay görünümüne geç');
       return `<th data-kcol="${d.k}" class="kolComputedHeader kolPriceViewHeader" title="${escapeHtml(tip)}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
@@ -28744,6 +28767,8 @@ function renderKol(){
        const summaryAttrs=summaryEntry?` data-kol-group-summary="1" data-kol-summary-display="${escapeHtml(summaryEntry.display)}" data-kol-summary-title="${escapeHtml(summaryEntry.title)}"`:'';
        const rc=` data-r="${ri}" data-c="${di+fixedColCount}" data-key="${escapeHtml(d.k)}"${inherited?' data-kol-inherited="1"':''}${overridden?' data-kol-override="1"':''}${summaryAttrs}`;
       if(d.kind==='priceDetail'){html+=kolPriceDetailCellHtml(d,r,rc);return;}
+      if(d.kind==='lfl'||d.kind==='previousSeason'||d.kind==='seasonImpact'){html+=window.BLCollectionLfl?.cell(r,rc,window.BLCollectionLfl.modeForKey(d.k))||`<td${rc}>—</td>`;return;}
+      if(d.kind==='priceReferences'){html+=window.BLCollectionLfl?.combinedCell(r,rc,d.folds)||`<td${rc}>—</td>`;return;}
       // Maliyet görünümünde TR/YD girdileri ayrı sütunlardadır; landed hücresi yalnız sonucu gösterir.
       if(d.kind==='base'&&(d.k==='trLanded'||d.k==='ydLanded')&&kolPriceViewMode()==='cost'){html+=kolPlainLandedCellHtml(d.k,r,rc);return;}
       if(d.kind==='priceStrip'){html+=kolPriceStripCellHtml(r,rc,{showFob:(d.folds||[]).includes('fob')});return;}
@@ -29075,6 +29100,10 @@ function renderKol(){
 // Görsel boyutu Picture başlığındaki ortak slider'dan değiştirilir.
 
 function kolSpreadsheetFormulaInfo(key){
+  if(key==='__lfl__')return 'Same MB month last year + MAG + Classification; quantity-weighted USD FOB; Confirmed → Best → Target';
+  if(key==='__previousSeason__')return 'Previous full season + MAG + Classification; quantity-weighted USD FOB; Confirmed → Best → Target';
+  if(key==='__referenceSummary__')return 'Previous Season and same-MB-month LFL references';
+  if(key==='__seasonImpact__')return '(Prior-month season value + model price × model quantity) / (prior-month quantity + model quantity); same season + MAG + Classification';
   if(key==='__bestPrice__')return 'Calculated from current valid quotations';
   if(key==='__confirmedName__')return 'Approved quotation manufacturer';
   if(key==='__confirmedPrice__')return 'Approved quotation price';
@@ -29095,7 +29124,7 @@ function kolSpreadsheetColumnMeta(key){
   const landedInput=KOL_LANDED_INPUT_COLS[key];
   if(landedInput)return {key,label:kolStyleFieldLabel(landedInput),type:key==='trPrice'?'money':'number',access:'editable',editable:true,formula:'',col:landedInput};
   const d=kolFieldDescriptorByKey(key);if(!d)return {key,label:key,type:'text',access:'system',editable:false,formula:''};
-  if(d.kind==='priceStrip'||d.kind==='landedSummary')return {key,label:d.label,type:'text',access:'derived',editable:false,formula:kolSpreadsheetFormulaInfo(key)};
+  if(d.kind==='priceStrip'||d.kind==='landedSummary'||d.kind==='lfl'||d.kind==='previousSeason'||d.kind==='priceReferences'||d.kind==='seasonImpact')return {key,label:d.label,type:'text',access:'derived',editable:false,formula:kolSpreadsheetFormulaInfo(key)};
   if(d.kind==='priceDetail')return {key,label:d.label,type:d.field.type==='text'?'text':'number',access:'derived',editable:false,formula:'Calculated from canonical pricing, landed and Endeksmatik results'};
   if(d.kind!=='base')return {key,label:d.label,type:d.kind==='confirmedName'?'text':'money',access:'derived',editable:false,formula:kolSpreadsheetFormulaInfo(key)};
   const c=d.col;
@@ -29115,6 +29144,8 @@ function kolSpreadsheetRawValue(row,key){
   if(key==='__picture__')return row.img||'';
   if(String(key||'').startsWith('pricing:'))return kolEffectivePricing(row)[String(key).slice(8)]??'';
   const d=kolDescriptorByKey(key);if(!d)return '';
+  if(d.kind==='lfl'||d.kind==='previousSeason'||d.kind==='seasonImpact')return window.BLCollectionLfl?.text(row,window.BLCollectionLfl.modeForKey(key))||'';
+  if(d.kind==='priceReferences')return window.BLCollectionLfl?.combinedText(row,kolDisplayDescriptors().find(item=>item.k===key)?.folds||[])||'';
   // Hesaplanan para değerleri hücreye yazılan fiyatlarla aynı biçimde (9,20)
   // kopyalanır; ham kayan nokta (9.801300000000001) panoya taşınmaz.
   if(d.kind==='best')return kolCopyMoney(kolBestPricing(row)?.price);
@@ -36437,6 +36468,7 @@ async function kolExportWithImages(rows,fileBase){
   if(typeof ExcelJS==='undefined'){showToast('Görsel gömme kütüphanesi yüklenemedi — internet/dosya erişimini kontrol et.');return null;}
   kolSyncRulePricing({save:true});
   const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet(appLang==='en'?'Collection':'Koleksiyon'),descriptors=kolExportDescriptors();
+  if(descriptors.some(d=>d.kind==='lfl'||d.kind==='previousSeason'||d.kind==='seasonImpact'))await window.BLCollectionLfl?.ensure();
   const statusValidationFormula=kolEnsureExcelStatusList(wb);
   const sourceRows=(rows||[]).map(kolCollectionProjectionSource);
   const headers=[appLang==='en'?'Picture':'Görsel',...descriptors.map(d=>d.label)];
@@ -36457,6 +36489,7 @@ async function kolExportWithImages(rows,fileBase){
         if(summaryEntry.title&&summaryEntry.title!==summaryEntry.display)cell.note=summaryEntry.title;
         return;
       }
+      if(d.kind==='lfl'||d.kind==='previousSeason'||d.kind==='seasonImpact'){const mode=window.BLCollectionLfl?.modeForKey(d.k);cell.value=window.BLCollectionLfl?.text(r,mode)||'';cell.note=window.BLCollectionLfl?.model(r,mode).detail||'';cell.alignment={vertical:'middle',wrapText:true};return;}
       if(d.kind==='best'){const best=kolBestPricing(r),delta=kolBestPriceTargetDelta(r,best);if(best){cell.value=best.price;cell.numFmt='"$"#,##0.00';cell.font={bold:true,size:10,...(delta&&delta.meetsTarget?{color:{argb:'FF177A4C'}}:{})};if(delta&&delta.meetsTarget)cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE4F3EB'}};cell.note=appLang==='en'?`Manufacturer: ${best.name}${delta?`\nTarget Price: $${kolFormatMoneyDisplay(String(delta.target))}\nDifference: ${delta.text}`:''}`:`Üretici: ${best.name}${delta?`\nTarget Price: $${kolFormatMoneyDisplay(String(delta.target))}\nFark: ${delta.text}`:''}`;}cell.alignment={horizontal:'right',vertical:'middle'};return;}
       if(d.kind==='confirmedName'){
         if(confirmedDisplay){

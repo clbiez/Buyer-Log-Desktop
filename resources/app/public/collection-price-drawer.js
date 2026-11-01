@@ -177,7 +177,7 @@
     if(!row){close();return;}
     const scroll=state.body?.scrollTop||0;
     const session=state;session.rendering=true;
-    try{session.panel.innerHTML=`${headHtml(row)}<div class="cpdBody">${lineageHtml(row)}${state.module==='collection'?offersHtml(row)+waterfallHtml(row)+endeksmatikHtml(row):''}${canEdit()?'':`<p class="cpdNote">${esc(T('Bu sayfa salt okunur; değerler yalnız görüntülenir.','This page is read-only; values are view-only.'))}</p>`}</div>`;}finally{session.rendering=false;}
+    try{session.panel.innerHTML=`${headHtml(row)}<div class="cpdBody">${lineageHtml(row)}${state.module==='collection'?offersHtml(row)+(global.BLCollectionLfl?.drawer(row)||'')+waterfallHtml(row)+endeksmatikHtml(row):''}${canEdit()?'':`<p class="cpdNote">${esc(T('Bu sayfa salt okunur; değerler yalnız görüntülenir.','This page is read-only; values are view-only.'))}</p>`}</div>`;}finally{session.rendering=false;}
     state.body=state.panel.querySelector('.cpdBody');
     if(state.body)state.body.scrollTop=scroll;
   }
@@ -203,6 +203,7 @@
   }
 
   function onClick(event){
+    if(event.target.closest('[data-cpd-lfl-refresh]')){void global.BLCollectionLfl?.ensure({rebuild:true});render();return;}
     if(!state||!state.overlay.contains(event.target))return;
     const backdropTap=state.backdropTap;
     state.backdropTap=false;

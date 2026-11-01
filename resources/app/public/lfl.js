@@ -2224,6 +2224,7 @@
       if(data&&data.sourceFilterRequired&&typeof window.showSourceFilterRequiredNotice==='function')window.showSourceFilterRequiredNotice(data.sourceFilterStatus,data.sourceFilterMessage);
       state.serverRows=(Array.isArray(data.rows)?data.rows:[]).filter(r=>['mag','mmyg','classification','season','manufacturer','country','buyingGroup','buyer'].every(k=>isUsableValue(r[k]))&&['inStore','opd','retailDate'].some(k=>isUsableValue(r[k])));
       rebuildDimensionLabelIndex(state.serverRows);applyTrialRows();state.meta=data.meta||{};state.source=data.source||null;state.loadedAt=data.loadedAt||null;
+      if(force)window.BLCollectionLfl?.invalidate();
       // Fiyat & Üretici Analizi LFL verisini sekme hiç açılmadan isteyebilir:
       // görünmeyen LFL ekranı çizilmez, kontroller sekme ilk açıldığında doldurulur.
       setLoadingView(false);
