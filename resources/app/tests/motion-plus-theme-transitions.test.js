@@ -107,3 +107,13 @@ test('Appearance opens as a drawer above its button; Theme transition stays coll
   assert.match(motion,/kind==='expand'\)return animate\(element,\[\{height:'0px'/);
   assert.match(SOURCE,/if\(open\)root\.BLMotionPlus\?\.play\?\.\('expand',body\)/);
 });
+test('triangle safety limit follows the last scheduled triangle, so a slow wide chain is never cut short',()=>{
+  const body=SOURCE.slice(SOURCE.indexOf('function triangles('),SOURCE.indexOf('/* ---- taneli çözülme'));
+  assert.match(body,/const endSec=tris\.length\?tris\[tris\.length-1\]\.st\+flip:0;/);
+  assert.match(body,/\},endSec\*1000\+2500\);/);
+  assert.doesNotMatch(body,/D\*2200|D\*1000\+flip\*1000/);
+  // Worst case from review: speed 1 (1.6 s), 40 px, 2560 px wide → ~130 triangles per row.
+  const D=1.6,flip=Math.max(.12,D*.3),perRow=2*(Math.ceil(2560/40)+1);
+  const minimumEnd=(perRow-1)*flip*.1+flip;
+  assert.ok(minimumEnd>6.5-2.5,'the old fixed limit would have cut this chain');
+});

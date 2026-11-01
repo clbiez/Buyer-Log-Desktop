@@ -199,6 +199,9 @@
       q.bw=Math.min(W,Math.ceil(Math.max(...xs))+1)-q.bx;q.bh=Math.min(H,Math.ceil(Math.max(...ys))+1)-q.by;q.on=false;
     }
     tris.sort((a,b)=>a.st-b.st);
+    // Güvenlik sınırı son planlanan üçgenin bitişinden türetilir; yavaş hız ve geniş
+    // ekranda uzayan zincir yarıda kesilip eski temanın kalanı birden kaybolmaz.
+    const endSec=tris.length?tris[tris.length-1].st+flip:0;
     const smooth=k=>k*k*(3-2*k),hinged=kind!=='spin';
     return loop(t=>{
       let left=0;
@@ -224,7 +227,7 @@
         ctx.restore();
       }
       return left>0;
-    },kind==='chain'?D*2200+flip*1000+2500:D*1000+flip*1000+2500);
+    },endSec*1000+2500);
   }
 
   /* ---- taneli çözülme: View Transitions eski karesine kayan taneli maske ---- */
