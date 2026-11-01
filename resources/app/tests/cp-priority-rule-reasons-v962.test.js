@@ -29,18 +29,15 @@ test('v9.62 priority rule reasonTr/reasonEn normalize edilir ve built-in nedenle
   }
 });
 
-test('v9.62 Rules UI Priority Rule editöründe iki dilli reason alanlarını ve yeni kural doğrulamasını içerir', () => {
-  assert.ok(VIEW.includes('data-cpa-rule-reason-tr'), 'Reason TR input eksik');
-  assert.ok(VIEW.includes('data-cpa-rule-reason-en'), 'Reason EN input eksik');
-  assert.ok(VIEW.includes('Türkçe sebep zorunludur.'), 'TR validation mesajı eksik');
-  assert.ok(VIEW.includes('English reason is required.'), 'EN validation mesajı eksik');
-  assert.match(VIEW, /const newPriorityRuleIds = new Set\(\)/);
-  assert.match(VIEW, /function validateNewPriorityReasons\(\)/);
-  assert.match(VIEW, /if \(!validateNewPriorityReasons\(\)\) return;/);
+test('Studio reasons are optional in both languages and fall back to the rule name', () => {
+  for (const hook of ['data-cpa-rule-reason-tr', 'data-cpa-rule-reason-en']) {
+    const input = VIEW.match(new RegExp('<input ' + hook + '[^>]*>'))?.[0];
+    assert.ok(input, `${hook} input must exist`);
+    assert.doesNotMatch(input, /\brequired\b|aria-invalid/);
+  }
+  assert.doesNotMatch(VIEW, /validateNewPriorityReasons/);
+  assert.ok(VIEW.includes("return primary || secondary || String(ruleLike.name || '').trim();"));
   assert.match(CSS, /\.cpaRuleReasons\{[^}]*grid-template-columns:/);
-  assert.match(CSS, /\.cpaRuleReasonField input\.is-invalid\{background:var\(--ui-danger-bg\)[^}]*color:var\(--ui-danger\)/);
-  assert.match(VIEW, /aria-invalid="\$\{!rule\.builtIn/);
-  assert.match(VIEW, /setAttribute\('aria-invalid', String\(!rule\.builtIn && !value\)\)/);
 });
 
 test('v9.62 matched custom priority rule stabil CUSTOM_RULE:<id> identity ve TR/EN metadata taşır', () => {

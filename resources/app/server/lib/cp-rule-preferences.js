@@ -33,7 +33,7 @@ function createCpRulePreferences(preferences,userAccess,managedRules=()=>null) {
     if(!payload||!Array.isArray(payload.rules))throw error('OFFICE_RULE_STORE_UNREADABLE',409);
     const managed=managedRules();
     const priorityCatalog=kind==='priority'?OD.effectivePriorityCatalog(payload.priorityCatalog,managed?.priorityCatalog):undefined;
-    return {key,own,payload,priorityCatalog,rules:Rules.effectiveRules(payload.rules,payload.deletedRuleIds||[],managed).filter(r=>r.kind===kind),hash:hash(JSON.stringify({own,entry,deletion:personal.deletions[key]||null}))};
+    return {key,own,payload,priorityCatalog,rules:Rules.effectiveRules(payload.rules,payload.deletedRuleIds||[],managedRules()).filter(r=>r.kind===kind),hash:hash(JSON.stringify({own,entry,deletion:personal.deletions[key]||null}))};
   }
   function saveRule(profile,rule,before,options={}) {
     if(snapshot(profile,rule.kind).hash!==before.hash)throw error('OFFICE_PREVIEW_CHANGED',409);

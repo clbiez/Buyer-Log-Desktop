@@ -53,7 +53,7 @@
     return PRIORITY_TONES.includes(fallback) ? fallback : 'orange';
   }
 
-  function makePriorityId(label) {
+  function makePriorityId(label, existingIds = []) {
     const map = { ç: 'c', ğ: 'g', ı: 'i', İ: 'i', ö: 'o', ş: 's', ü: 'u', Ç: 'c', Ğ: 'g', Ö: 'o', Ş: 's', Ü: 'u' };
     const slug = String(label || '')
       .replace(/[çğıİöşüÇĞÖŞÜ]/g, ch => map[ch] || ch)
@@ -61,7 +61,14 @@
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .slice(0, 32);
-    return slug ? `prio:${slug}` : `prio:tag-${Date.now().toString(36).slice(-5)}`;
+    const base = slug || `tag-${Date.now().toString(36).slice(-5)}`;
+    const taken = new Set(existingIds);
+    let id = `prio:${base}`, counter = 2;
+    while (taken.has(id)) {
+      const suffix = `-${counter++}`;
+      id = `prio:${base.slice(0, 35 - suffix.length)}${suffix}`;
+    }
+    return id;
   }
 
   function isCustomPriorityCode(value) {
@@ -122,7 +129,9 @@
       items.push({ ...def });
     }
     items.push(onTrackEntry || { ...DEFAULT_PRIORITY_CATALOG[DEFAULT_PRIORITY_CATALOG.length - 1] });
-    return items.slice(0, 40).map((item, rank) => ({ ...item, rank }));
+    let customCount = 0;
+    return items.filter(item => item.builtIn || customCount++ < 40 - DEFAULT_PRIORITY_CATALOG.length)
+      .map((item, rank) => ({ ...item, rank }));
   }
 
   function effectivePriorityCatalog(personalList, managedList) {

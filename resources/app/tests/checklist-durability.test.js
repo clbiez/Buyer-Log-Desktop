@@ -209,6 +209,8 @@ test('option migration retains each PO evidence and never overwrites a newer Pen
   assert.equal(b.assistant.decisionContextRevision(),revision,'unchanged migration must not render/save recursively');
   assert.equal(b.assistant._state.answers[option].state,'approved');
   assert.equal(b.assistant._state.answers['PO1::shared'].attachments.length,1);
+  b.assistant.onOverviewRendered([one,two],{dataRevision:1});
+  assert.equal(JSON.parse(b.saved.get('lcw.cp.checklist.v1'))[option].state,'approved','a read-only decision pass must not prevent the later committed migration from persisting');
 });
 
 test('unreadable preferences and rules cannot be replaced by defaults or shared adoption',()=>{

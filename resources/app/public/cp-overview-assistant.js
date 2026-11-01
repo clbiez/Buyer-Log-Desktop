@@ -572,7 +572,8 @@
   window.addEventListener('bl:cp-managed-rules-changed', () => { void loadManagedRules(); });
 
   function publishPriorityTagToAll(tagId) {
-    const tag = (state.priorityCatalog || []).find(item => item.id === tagId && !item.builtIn);
+    const tag = (state.personalPriorityCatalog || []).find(item => item.id === tagId && !item.builtIn)
+      || (state.priorityCatalog || []).find(item => item.id === tagId && !item.builtIn);
     if (!tag) return Promise.resolve(null);
     const priorityCatalog = (state.managed.priorityCatalog || []).filter(item => item.id !== tagId)
       .concat([{ id: tag.id, tr: tag.tr, en: tag.en || tag.tr, tone: tag.tone, isRisk: tag.isRisk !== false, managed: true }]);
@@ -1029,7 +1030,7 @@
       return;
     }
     container.innerHTML = toolbarHtml() + prioritiesOverviewBlock() + `<div class="cpaChecklistOverview">${checklistCard()}</div>`;
-    if (attention) attention.innerHTML = attentionCard();
+    if (attention) attention.innerHTML = '';
     if (coverage) coverage.innerHTML = coverageCard();
     window.BLOverviewPremium?.update?.({
       model: state.model,
@@ -2183,6 +2184,7 @@
 
   /* ------------------------------------ Öncelik Etiket Kataloğu CRUD (Kişisel + Yayın) */
   function addPriorityTag(spec) {
+    if ((state.priorityCatalog || []).filter(item => !item.builtIn).length >= 35) throw new Error(L('En fazla 35 özel öncelik etiketi eklenebilir.', 'You can add up to 35 custom priority tags.'));
     const rawTr = String(spec && (spec.tr || spec.name) || '').replace(/\s+/g, ' ').trim().slice(0, 80);
     if (!rawTr) throw new Error(L('Öncelik etiketi adı boş olamaz.', 'Priority tag label cannot be empty.'));
     const rawEn = String(spec && spec.en || '').replace(/\s+/g, ' ').trim().slice(0, 80) || rawTr;
@@ -2242,9 +2244,6 @@
       : updated;
     applyRuleLayers(personalRuleList());
     savePrefs();
-    if (isModerator() && (state.managed.priorityCatalog || []).some(item => item.id === tagId)) {
-      void publishPriorityTagToAll(tagId).catch(() => {});
-    }
     recompute();
     render();
     return (state.priorityCatalog || []).find(item => item.id === tagId) || null;
@@ -2289,9 +2288,11 @@
     return true;
   }
 
+  let closeActiveStudio = null;
   function openStudio(initialTab, studioOptions) {
+    closeActiveStudio?.();
     const opts = studioOptions && typeof studioOptions === 'object' ? studioOptions : {};
-    if (Array.isArray(opts.rows) && opts.rows.length && !lastRows) {
+    if (Array.isArray(opts.rows) && opts.rows !== lastRows) {
       lastRows = opts.rows;
       recompute();
     } else if (!state.model && lastRows) {
@@ -2327,6 +2328,132 @@
     modal.dataset.uiMigrated = 'cp-assistant';
     document.body.appendChild(modal);
 
+    let activeValuePicker = null;
+    let activeValueMenu = null;
+    let valuePositionRaf = 0;
+    let backdropPointerStarted = false;
+    let releaseKeyboard = () => {};
+    const valueMenuSafeMargin = 12;
+    const valueMenuGap = 4;
+    const setValuePickerExpanded = (picker, expanded, menu) => {
+      if (!picker) return;
+      const id = menu && menu.id;
+      picker.querySelectorAll('[data-cpa-value-toggle], [data-cpa-cond-value], [data-cpa-field-toggle]').forEach(el => {
+        el.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        if (id) el.setAttribute('aria-controls', id);
+        else el.removeAttribute('aria-controls');
+      });
+    };
+
+    const positionValueMenu = () => {
+      valuePositionRaf = 0;
+      const picker = activeValuePicker;
+      const menu = activeValueMenu;
+      if (!picker || !menu || !picker.isConnected || !menu.isConnected) {
+        closeValueMenu();
+        return;
+      }
+      const rect = picker.getBoundingClientRect();
+      if (!rect.width || !rect.height) {
+        closeValueMenu();
+        return;
+      }
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth || 0;
+      const viewportHeight = document.documentElement.clientHeight || window.innerHeight || 0;
+      const maxViewportWidth = Math.max(120, viewportWidth - valueMenuSafeMargin * 2);
+      const width = Math.min(Math.max(rect.width, Math.min(320, maxViewportWidth)), 620, maxViewportWidth);
+      const spaceBelow = Math.max(0, viewportHeight - rect.bottom - valueMenuSafeMargin - valueMenuGap);
+      const spaceAbove = Math.max(0, rect.top - valueMenuSafeMargin - valueMenuGap);
+      const openAbove = spaceBelow < 180 && spaceAbove > spaceBelow;
+      const availableHeight = Math.max(72, openAbove ? spaceAbove : spaceBelow);
+      const menuMaxHeight = Math.min(360, availableHeight);
+      const optionMaxHeight = Math.max(48, menuMaxHeight - 50);
+
+      menu.hidden = false;
+      menu.style.visibility = 'hidden';
+      menu.style.width = `${width}px`;
+      menu.style.maxHeight = `${menuMaxHeight}px`;
+      menu.style.setProperty('--cpa-value-options-max-height', `${optionMaxHeight}px`);
+      menu.style.left = '0px';
+      menu.style.top = '0px';
+
+      const measuredHeight = Math.min(menu.getBoundingClientRect().height || menuMaxHeight, menuMaxHeight);
+      const maxLeft = Math.max(valueMenuSafeMargin, viewportWidth - width - valueMenuSafeMargin);
+      const left = Math.max(valueMenuSafeMargin, Math.min(rect.left, maxLeft));
+      let top = openAbove
+        ? rect.top - valueMenuGap - measuredHeight
+        : rect.bottom + valueMenuGap;
+      top = Math.max(valueMenuSafeMargin, Math.min(top, viewportHeight - measuredHeight - valueMenuSafeMargin));
+
+      menu.style.left = `${Math.round(left)}px`;
+      menu.style.top = `${Math.round(top)}px`;
+      menu.style.visibility = '';
+      menu.dataset.placement = openAbove ? 'top' : 'bottom';
+    };
+
+    const scheduleValueMenuPosition = () => {
+      if (!activeValueMenu || valuePositionRaf) return;
+      valuePositionRaf = requestAnimationFrame(positionValueMenu);
+    };
+
+    function closeValueMenu(options = {}) {
+      const picker = activeValuePicker;
+      const menu = activeValueMenu;
+      if (valuePositionRaf) {
+        cancelAnimationFrame(valuePositionRaf);
+        valuePositionRaf = 0;
+      }
+      activeValuePicker = null;
+      activeValueMenu = null;
+      if (!menu) return;
+      setValuePickerExpanded(picker, false, menu);
+      menu.hidden = true;
+      menu.style.cssText = '';
+      menu.removeAttribute('data-placement');
+      if (options.remove || !picker || !picker.isConnected) menu.remove();
+      else picker.appendChild(menu);
+    }
+
+    const onValueViewportChange = () => scheduleValueMenuPosition();
+    const onValueOutsidePointer = event => {
+      if (!activeValueMenu) return;
+      if (activeValueMenu.contains(event.target) || (activeValuePicker && activeValuePicker.contains(event.target))) return;
+      closeValueMenu();
+    };
+    const onValueEscape = event => {
+      if (event.key !== 'Escape'||[...document.querySelectorAll('.cpaModalOverlay')].at(-1)!==modal) return;
+      if(!activeValueMenu){event.preventDefault();closeStudio();return;}
+      event.preventDefault();
+      event.stopPropagation();
+      const toggle = activeValuePicker && activeValuePicker.querySelector('[data-cpa-value-toggle], [data-cpa-field-toggle]');
+      closeValueMenu();
+      if (toggle) toggle.focus();
+    };
+
+    const scrollToRule = id => requestAnimationFrame(() => {
+      const row = modal.querySelector(`[data-cpa-rule="${CSS.escape(id)}"]`);
+      row?.scrollIntoView({ block: 'nearest' });
+      row?.querySelector('[data-cpa-rule-name], [data-cpa-rule-question]')?.focus();
+    });
+    function openValueMenu(picker, menu) {
+      closeValueMenu();
+      activeValuePicker = picker;
+      activeValueMenu = menu;
+      menu.id = `cpa-value-menu-${Date.now()}`;
+      menu.dataset.uiMigrated = 'cp-assistant';
+      setValuePickerExpanded(picker, true, menu);
+      document.body.appendChild(menu);
+      positionValueMenu();
+      setTimeout(() => { if (activeValueMenu === menu) menu.querySelector('[data-cpa-value-search]')?.focus(); }, 0);
+    }
+    function menuKeyboard(event) {
+      if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+      const options = [...activeValueMenu.querySelectorAll('button[data-cpa-value-option],input[data-cpa-value-option],button[data-cpa-field-option]')].filter(el => !el.disabled);
+      if (!options.length) return;
+      const current = options.indexOf(document.activeElement);
+      const next = event.key === 'ArrowDown' ? Math.min(options.length - 1, current + 1) : Math.max(0, current < 0 ? options.length - 1 : current - 1);
+      event.preventDefault(); options[next].focus();
+    }
     const rulesFor = kind => state.rules.filter(rule => rule.kind === kind);
     function modeOf(rule) {
       return uiModes.get(rule.id) || (rule.mode === 'formula' ? 'formula' : 'basic');
@@ -2391,6 +2518,7 @@
       const suppliers = new Set();
       const entries = [];
       const needle = qSearch.trim().toLocaleLowerCase(locale());
+      const answerContext = { answers: state.answers, plmEvidence, itemScopes: Object.fromEntries(state.rules.filter(rule => rule.kind === 'checklist').map(rule => [rule.id, rule.approvalScope])) };
       for (const bucket of activeBuckets) {
         const pool = bucket.allOrders || bucket.orders || [];
         const bLabel = itemLabel(bucket);
@@ -2399,7 +2527,7 @@
           const supplier = String(analysis.dims && analysis.dims.manufacturer || '—');
           suppliers.add(supplier);
           const parts = Checklist.componentsFor(analysis, { answers: state.answers });
-          const stateCode = Checklist.statusOf(analysis, bucket.id, { answers: state.answers, plmEvidence });
+          const stateCode = analysis.checklistState?.[bucket.id] || Checklist.statusOf(analysis, bucket.id, answerContext);
           const resolved = Checklist.isResolved(stateCode);
           const overdue = !resolved && analysis.daysToLoad != null && Number(analysis.daysToLoad) <= 7;
           if (qScope === 'openRejected' && resolved) continue;
@@ -2422,7 +2550,7 @@
         if (da !== db) return da - db;
         return String(a.analysis.orderCode || '').localeCompare(String(b.analysis.orderCode || ''), locale());
       });
-      return { buckets, suppliers: [...suppliers].sort((a, b) => a.localeCompare(b, locale())), entries };
+      return { buckets, suppliers: [...suppliers].sort((a, b) => a.localeCompare(b, locale())), entries, answerContext };
     }
 
     function queueTabHtml() {
@@ -2439,7 +2567,7 @@
           <p class="cpaNote">${esc(L('Kritik Yol (CP) veya Genel Bakış verisi yüklendiğinde açık kontroller burada listelenir. Öncelik etiketlerini ve kuralları şimdiden düzenleyebilirsiniz.', 'Open checks appear here once Critical Path (CP) or Overview data is loaded. You can configure priority tags and rules right away.'))}</p>
         </div>`;
       }
-      const { buckets, suppliers, entries } = buildQueueEntries();
+      const { buckets, suppliers, entries, answerContext } = buildQueueEntries();
       for (const key of [...selectedQueueKeys]) {
         if (!entries.some(item => item.rowKey === key)) selectedQueueKeys.delete(key);
       }
@@ -2460,7 +2588,7 @@
         } else if (parts.length) {
           statusControl = `<div class="cpaPartSelectList">${parts.map(part => {
             const scopedId = Checklist.Components.itemId(itemId, part.id);
-            const partState = Checklist.statusOf(analysis, scopedId, { answers: state.answers, plmEvidence });
+            const partState = Checklist.statusOf(analysis, scopedId, answerContext);
             return `<label class="cpaPartSelectItem"><span>${esc(isEn() ? part.en : part.tr)}</span>
               <select class="cpaQueueStatusSelect tone-${esc(statusToneOf(partState))}" data-cpa-queue-status="${esc(entry.rowKey)}" data-cpa-order-key="${esc(analysis.orderKey)}" data-cpa-item-id="${esc(scopedId)}">
                 ${Checklist.statusIds().map(id => `<option value="${esc(id)}"${partState === id ? ' selected' : ''}>${esc(Checklist.statusLabel(id, lang()))}</option>`).join('')}
@@ -2567,7 +2695,7 @@
         return `<div class="cpaCatalogTagRow" data-cpa-priority-tag="${esc(entry.id)}">
           <span class="cpaTagRank" title="${esc(L('Aciliyet sırası (#1 en acil)', 'Urgency rank (#1 most urgent)'))}">#${idx + 1}</span>
           <span class="cpaTagDot tone-${esc(entry.tone || 'blue')}" aria-hidden="true"></span>
-          <span class="cpaCatalogTagMain">
+          <span class="cpaCatalogTagMain" data-no-i18n>
             <b>${esc(isEn() ? (entry.en || entry.tr) : entry.tr)}</b>
             ${entry.en && entry.en !== entry.tr ? `<small>${esc(isEn() ? entry.tr : entry.en)}</small>` : ''}
           </span>
@@ -2616,7 +2744,7 @@
         <div class="cpaRowBetween cpaCatalogHead">
           <div>
             <b>${esc(L('Öncelik Durumu Etiketleri ve Aciliyet Sırası', 'Priority Status Tags & Urgency Order'))}</b>
-            <small>${esc(L('Bir siparişte birden fazla kural eşleşirse listede daha üstte (#1 en acil) yer alan etiket kazanır. İstediğiniz kadar özel etiket ekleyebilirsiniz.', 'When multiple rules match an order, the higher-ranked tag (#1 most urgent) wins. Add as many custom tags as you need.'))}</small>
+            <small>${esc(L('Birden fazla kural eşleşirse daha üstteki (#1 en acil) etiket kazanır. En fazla 35 özel etiket ekleyebilirsiniz.', 'When multiple rules match, the higher-ranked tag (#1 most urgent) wins. Add up to 35 custom tags.'))}</small>
           </div>
           <button type="button" class="cpaBtn sm primary" data-cpa-priority-add>+ ${esc(L('Yeni Öncelik Etiketi', 'New Priority Tag'))}</button>
         </div>
@@ -2643,7 +2771,7 @@
           : '';
         return `<div class="cpaCatalogTagRow" data-cpa-custom-status="${esc(entry.id)}">
           <span class="cpaTagDot tone-${esc(entry.tone || 'blue')}" aria-hidden="true"></span>
-          <span class="cpaCatalogTagMain">
+          <span class="cpaCatalogTagMain" data-no-i18n>
             <b>${esc(isEn() ? (entry.en || entry.tr || entry.name) : (entry.tr || entry.name))}</b>
             ${entry.en && entry.en !== (entry.tr || entry.name) ? `<small>${esc(isEn() ? (entry.tr || entry.name) : entry.en)}</small>` : ''}
           </span>
@@ -2778,8 +2906,8 @@
       const raw = Rules.extractFormula(textarea.value);
       const internal = Rules.formulaFromDisplay(raw, catalogFor(rule));
       const check = Rules.validateExpression(internal, { fields: formulaFieldIds(rule) });
-      if (!check.ok) {
-        if (errorEl) { errorEl.hidden = false; errorEl.textContent = isEn() ? check.errorEn || check.error : check.error; }
+      if (!check.valid) {
+        if (errorEl) { errorEl.hidden = false; errorEl.textContent = L('Geçersiz formül: ', 'Invalid formula: ') + check.errors.join(' · '); }
         if (statusEl) statusEl.textContent = '';
         if (diagEl) diagEl.hidden = true;
         return false;
@@ -2787,13 +2915,18 @@
       if (errorEl) { errorEl.hidden = true; errorEl.textContent = ''; }
       const sampleOrder = state.model && Array.isArray(state.model.orders) && state.model.orders[0];
       if (sampleOrder) {
-        const sampleEval = Rules.evaluateExpression(internal, sampleOrder.sourceRow || {}, {
-          analysis: sampleOrder, answers: state.answers, plmEvidence,
+        const sampleEval = Rules.evaluateOrder(sampleOrder, {
+          rules: state.rules.map(item => item.id === rule.id ? { ...rule, enabled: true, mode: 'formula', formula: internal } : item),
+          answers: state.answers, plmEvidence, checklistEnabled: state.checklistSettings.enabled,
+          priorityCatalog: state.priorityCatalog,
         });
+        const sampleMatched = rule.kind === 'checklist'
+          ? sampleEval.customItems.some(item => item.id === rule.id)
+          : sampleEval.ruleState[rule.id] === 'matched';
         if (diagEl) {
           diagEl.hidden = false;
-          diagEl.textContent = L(`Örnek sipariş (${sampleOrder.orderCode || '—'}): ${sampleEval.matched ? 'EŞLEŞTİ (TRUE)' : 'Eşleşmedi (FALSE)'}`,
-            `Sample order (${sampleOrder.orderCode || '—'}): ${sampleEval.matched ? 'MATCHED (TRUE)' : 'Did not match (FALSE)'}`);
+          diagEl.textContent = L(`Örnek sipariş (${sampleOrder.orderCode || '—'}): ${sampleMatched ? 'EŞLEŞTİ (TRUE)' : 'Eşleşmedi (FALSE)'}`,
+            `Sample order (${sampleOrder.orderCode || '—'}): ${sampleMatched ? 'MATCHED (TRUE)' : 'Did not match (FALSE)'}`);
         }
       }
       applyFormula(rule, internal);
@@ -2885,8 +3018,8 @@
           }
           const formula = Rules.formulaFromDisplay(Rules.extractFormula(picked.value), catalogFor(rule));
           const check = Rules.validateExpression(formula, { fields: formulaFieldIds(rule) });
-          if (!check.ok) {
-            return { ok: false, error: isEn() ? check.errorEn || check.error : check.error, code: picked.value };
+          if (!check.valid) {
+            return { ok: false, error: L('Geçersiz formül: ', 'Invalid formula: ') + check.errors.join(' · '), code: picked.value };
           }
           const rawPriority = result && result.data && result.data.priority ? String(result.data.priority).trim() : '';
           const validPrio = selectablePriorityTargets().some(item => item.id === rawPriority) ? rawPriority : '';
@@ -3023,7 +3156,7 @@
         expandedRuleId = created.id;
         commit({ message: L('Yeni kural eklendi', 'New rule added'), refreshColumns: kind === 'checklist' });
         draw();
-        modal.querySelector(`[data-cpa-rule="${CSS.escape ? CSS.escape(created.id) : created.id}"] [data-cpa-rule-name]`)?.focus();
+        scrollToRule(created.id);
       });
 
       modal.querySelectorAll('[data-cpa-template]').forEach(el => el.onclick = () => {
@@ -3035,6 +3168,7 @@
         expandedRuleId = created.id;
         commit({ message: L('Şablondan eklendi', 'Added from template'), refreshColumns: kind === 'checklist' });
         draw();
+        scrollToRule(created.id);
       });
 
       modal.querySelectorAll('[data-cpa-restore-builtin]').forEach(el => el.onclick = () => {
@@ -3057,6 +3191,7 @@
         syncRuleSummaryDom(row, rule);
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
+          debounceTimer = 0;
           commit({ refreshColumns: rule.kind === 'checklist' });
         }, 320);
       };
@@ -3147,7 +3282,7 @@
           draw();
           return;
         }
-        Rules.applyChecklistScopePreset(rule, preset, { maxDaysToLoad: 28 });
+        Rules.applyChecklistScopePreset(rule, { preset, maxDaysToLoad: 28 });
         uiModes.set(rule.id, 'basic');
         commit({ refreshColumns: true });
         draw();
@@ -3161,7 +3296,7 @@
         const ageInput = row.querySelector('[data-cpa-scope-age]');
         const maxDaysToLoad = Number(daysInput && daysInput.value);
         const ageRaw = String(ageInput && ageInput.value || '').trim();
-        Rules.applyChecklistScopePreset(rule, 'window', {
+        Rules.applyChecklistScopePreset(rule, { preset: 'window',
           maxDaysToLoad: Number.isFinite(maxDaysToLoad) ? maxDaysToLoad : 28,
           minOrderAgeDays: ageRaw === '' ? null : Number(ageRaw),
         });
@@ -3356,8 +3491,8 @@
           return;
         }
         const check = Rules.validateExpression(internal, { fields: formulaFieldIds(rule) });
-        if (!check.ok) {
-          if (fb) fb.textContent = isEn() ? check.errorEn || check.error : check.error;
+        if (!check.valid) {
+          if (fb) fb.textContent = L('Geçersiz formül: ', 'Invalid formula: ') + check.errors.join(' · ');
           return;
         }
         rule.autoMode = 'formula';
@@ -3411,12 +3546,13 @@
         const rule = findRule(ruleIdOf(picker));
         if (!toggle || !menu || !optionsBox || !rule) return;
         const role = picker.dataset.cpaFieldPicker;
+        menu.onkeydown = menuKeyboard;
         const renderOptions = q => { optionsBox.innerHTML = fieldOptionRows(rule, '', q); };
         toggle.onclick = event => {
           event.stopPropagation();
           const wasHidden = menu.hidden;
-          modal.querySelectorAll('[data-cpa-value-menu]').forEach(m => { m.hidden = true; });
-          menu.hidden = !wasHidden;
+          if (!wasHidden) { closeValueMenu(); return; }
+          openValueMenu(picker, menu);
           toggle.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true');
           if (!menu.hidden) { renderOptions(search ? search.value : ''); search?.focus(); }
         };
@@ -3425,7 +3561,7 @@
           const btn = event.target.closest('[data-cpa-field-option]');
           if (!btn) return;
           const fieldId = btn.dataset.cpaFieldOption;
-          menu.hidden = true;
+          closeValueMenu();
           if (role === 'formula') {
             const row = picker.closest('[data-cpa-rule]');
             const textarea = row && row.querySelector('[data-cpa-rule-formula]');
@@ -3489,11 +3625,12 @@
         const idx = Number(idxStr);
         if (!toggle || !menu || !optionsBox || !list || !list[idx]) return;
         const multi = picker.dataset.multi === '1';
+        menu.onkeydown = menuKeyboard;
         toggle.onclick = event => {
           event.stopPropagation();
           const wasHidden = menu.hidden;
-          modal.querySelectorAll('[data-cpa-value-menu]').forEach(m => { m.hidden = true; });
-          menu.hidden = !wasHidden;
+          if (!wasHidden) { closeValueMenu(); return; }
+          openValueMenu(picker, menu);
           if (!menu.hidden) { optionsBox.innerHTML = valueOptionRows(list[idx], search ? search.value : ''); search?.focus(); }
         };
         if (search) search.oninput = () => { optionsBox.innerHTML = valueOptionRows(list[idx], search.value); };
@@ -3509,7 +3646,7 @@
             rule.autoFormula = Rules.conditionsToFormula(rule.autoConditions, rule.autoMatch || 'all');
           } else applyBasicConditions(rule);
           commit({ refreshColumns: rule.kind === 'checklist' });
-          menu.hidden = true;
+          closeValueMenu();
           syncRuleSummaryDom(picker.closest('[data-cpa-rule]'), rule);
         };
         optionsBox.onchange = () => {
@@ -3560,7 +3697,7 @@
       if (prioCancel) prioCancel.onclick = () => { prioEditor = null; draw(); };
 
       const prioSave = modal.querySelector('[data-cpa-priority-save]');
-      if (prioSave) prioSave.onclick = () => {
+      if (prioSave) prioSave.onclick = async () => {
         if (!prioEditor) return;
         const tr = String(modal.querySelector('[data-cpa-priority-tr]')?.value || '').trim();
         const en = String(modal.querySelector('[data-cpa-priority-en]')?.value || '').trim();
@@ -3572,7 +3709,9 @@
         }
         try {
           if (prioEditor.mode === 'edit' && prioEditor.id) {
-            updatePriorityTag(prioEditor.id, { tr, en: en || tr, tone: prioEditor.tone, isRisk });
+            const tagId = prioEditor.id;
+            updatePriorityTag(tagId, { tr, en: en || tr, tone: prioEditor.tone, isRisk });
+            if (isModerator() && state.managed.priorityCatalog.some(item => item.id === tagId)) await publishPriorityTagToAll(tagId);
             setStatus(L('Öncelik etiketi güncellendi', 'Priority tag updated'), 'ok');
           } else {
             const created = addPriorityTag({ tr, en: en || tr, tone: prioEditor.tone, isRisk });
@@ -3595,7 +3734,9 @@
       };
 
       modal.querySelectorAll('[data-cpa-priority-move]').forEach(el => el.onclick = () => {
-        const [id, dir] = String(el.dataset.cpaPriorityMove || '').split(':');
+        const value = String(el.dataset.cpaPriorityMove || '');
+        const separator = value.lastIndexOf(':');
+        const id = value.slice(0, separator), dir = value.slice(separator + 1);
         if (movePriorityTag(id, dir)) {
           setStatus(L('Aciliyet sırası güncellendi', 'Urgency order updated'), 'ok');
           draw();
@@ -3673,7 +3814,7 @@
       if (statusCancel) statusCancel.onclick = () => { statusEditor = null; draw(); };
 
       const statusSave = modal.querySelector('[data-cpa-status-save]');
-      if (statusSave) statusSave.onclick = () => {
+      if (statusSave) statusSave.onclick = async () => {
         if (!statusEditor) return;
         const tr = String(modal.querySelector('[data-cpa-status-tr]')?.value || '').trim();
         const en = String(modal.querySelector('[data-cpa-status-en]')?.value || '').trim();
@@ -3685,7 +3826,12 @@
         }
         try {
           if (statusEditor.mode === 'edit' && statusEditor.id && typeof Checklist.updateCustomStatus === 'function') {
-            Checklist.updateCustomStatus(statusEditor.id, { tr, en: en || tr, tone: statusEditor.tone, resolved });
+            const id = statusEditor.id;
+            const patch = { tr, name: tr, en: en || tr, tone: statusEditor.tone, resolved };
+            Checklist.updateCustomStatus(id, patch);
+            if (isModerator() && state.managed.checklistStatuses.some(item => item.id === id)) {
+              await saveManagedRules({ checklistStatuses: state.managed.checklistStatuses.map(item => item.id === id ? { ...item, ...patch } : item) });
+            }
             if (isModerator() && (state.managed.checklistStatuses || []).some(item => item.id === statusEditor.id)) {
               void publishChecklistStatusToAll(statusEditor.id).catch(() => {});
             }
@@ -3704,7 +3850,7 @@
         const id = el.dataset.cpaStatusDelete;
         const label = Checklist.statusLabel(id, lang());
         if (typeof confirm === 'function' && !confirm(L(`"${label}" özel durumu silinsin mi?`, `Delete custom status "${label}"?`))) return;
-        Checklist.removeCustomStatus(id);
+        Checklist.deleteCustomStatus(id);
         commit({ message: L('Özel durum silindi', 'Custom status deleted'), refreshColumns: true });
         draw();
       });
@@ -3743,6 +3889,7 @@
         const pos = qSearchInput.selectionStart || qSearch.length;
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
+          debounceTimer = 0;
           draw();
           const nextInput = modal.querySelector('[data-cpa-q-search]');
           if (nextInput) { nextInput.focus(); try { nextInput.setSelectionRange(pos, pos); } catch (_) {} }
@@ -3803,7 +3950,9 @@
       };
 
       modal.querySelectorAll('[data-cpa-set-parts]').forEach(el => el.onclick = () => {
-        const [orderKey, countStr] = String(el.dataset.cpaSetParts || '').split(':');
+        const value = String(el.dataset.cpaSetParts || '');
+        const separator = value.lastIndexOf(':');
+        const orderKey = value.slice(0, separator), countStr = value.slice(separator + 1);
         const analysis = state.model && state.model.orders ? state.model.orders.find(o => o.orderKey === orderKey) : null;
         if (analysis && setChecklistComponents(analysis, Number(countStr))) {
           recompute(); render();
@@ -3817,7 +3966,7 @@
         const itemId = el.dataset.cpaItemId;
         const analysis = state.model && state.model.orders ? state.model.orders.find(o => o.orderKey === orderKey) : null;
         if (!analysis || !itemId) return;
-        setChecklistAnswer(analysis, itemId, el.value);
+        if (!setChecklistAnswer(analysis, itemId, el.value)) return;
         recompute();
         render();
         try {
@@ -3891,13 +4040,22 @@
     }
 
     function closeStudio() {
+      if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = 0; commit(); }
+      closeValueMenu({ remove: true });
+      document.removeEventListener('pointerdown', onValueOutsidePointer, true);
+      document.removeEventListener('scroll', onValueViewportChange, true);
+      document.removeEventListener('keydown', onValueEscape, true);
+      window.removeEventListener('resize', onValueViewportChange);
+      closeActiveStudio = null;
       if (managedRulesRedraw === draw) managedRulesRedraw = null;
       clearTimeout(debounceTimer);
       clearTimeout(statusTimer);
       modal.remove();
+      releaseKeyboard();
     }
 
     function draw() {
+      closeValueMenu({ remove: true });
       const queueTotal = openQueueCount();
       const prioRuleCount = rulesFor('priority').filter(r => r.enabled).length;
       const checkRuleCount = rulesFor('checklist').filter(r => r.enabled).length;
@@ -3943,6 +4101,7 @@
       modal.querySelectorAll('[data-cpa-studio-tab]').forEach(btn => btn.onclick = () => {
         activeTab = btn.dataset.cpaStudioTab || 'queue';
         draw();
+        modal.querySelector(`[data-cpa-studio-tab="${activeTab}"]`)?.focus();
       });
       modal.querySelectorAll('[data-cpa-studio-target]').forEach(btn => btn.onclick = () => {
         state.settings.targetType = btn.dataset.cpaStudioTarget === 'inStore' ? 'inStore' : 'retail';
@@ -3962,18 +4121,26 @@
           }
         }
       }
-      window.BLMotionPlus?.enhanceSegments?.(modal);
     }
 
     managedRulesRedraw = draw;
-    modal.addEventListener('click', event => {
-      if (event.target === modal) closeStudio();
-      else if (!event.target.closest('[data-cpa-field-picker],[data-cpa-value-picker]')) {
-        modal.querySelectorAll('[data-cpa-value-menu]').forEach(m => { m.hidden = true; });
-      }
+    closeActiveStudio = closeStudio;
+    document.addEventListener('pointerdown', onValueOutsidePointer, true);
+    document.addEventListener('scroll', onValueViewportChange, true);
+    document.addEventListener('keydown', onValueEscape, true);
+    window.addEventListener('resize', onValueViewportChange);
+    modal.addEventListener('pointerdown', event => {
+      backdropPointerStarted = event.target === modal;
     });
-    modal.addEventListener('keydown', event => { if (event.key === 'Escape') closeStudio(); });
+    modal.addEventListener('pointercancel', () => { backdropPointerStarted = false; });
+    modal.addEventListener('click', event => {
+      const shouldClose = event.target === modal && backdropPointerStarted;
+      backdropPointerStarted = false;
+      if (shouldClose) closeStudio();
+    });
     draw();
+    releaseKeyboard = window.BLUI?.bindDialogKeyboard(modal) || (() => {});
+    window.BLMotionPlus?.play?.('overlay', modal.querySelector('.cpaStudioModal'));
   }
 
   /* -------------------------------------- karar çalışma zamanı ve yeniden hesap */
@@ -4000,7 +4167,7 @@
     const userId = String((window.BL_USER_CONTEXT && window.BL_USER_CONTEXT.id) || '');
     const dataRev = typeof window.BL_CP_DECISION_DATA_REVISION === 'function' ? Number(window.BL_CP_DECISION_DATA_REVISION()) || 0 : 0;
     const catSig = (state.priorityCatalog || []).map(item => `${item.id}:${item.isRisk ? 1 : 0}`).join(',');
-    return `u:${userId}|r:${dataRev}|t:${state.settings.targetType}|c:${catSig}|tr:${transitRulesList().length}`;
+    return `d:${new Date().toLocaleDateString('en-CA')}|u:${userId}|r:${dataRev}|t:${state.settings.targetType}|c:${catSig}|tr:${transitRulesList().length}`;
   }
 
   function fullDecisionKey() {
@@ -4040,10 +4207,41 @@
     return copy;
   }
 
+  let reusableAnswerPromotionPending = false;
+  function promoteReusableChecklistAnswers(orders) {
+    if (typeof Checklist.optionAnswerKey !== 'function') return false;
+    const reusableRules = state.rules.filter(rule =>
+      rule && rule.kind === 'checklist' && rule.approvalScope === 'option');
+    if (!reusableRules.length) return false;
+    let changed = false;
+    for (const analysis of (Array.isArray(orders) ? orders : [])) {
+      if (!analysis || !analysis.orderKey) continue;
+      for (const rule of reusableRules) {
+        const directKey = Checklist.answerKey(analysis.orderKey, rule.id);
+        const direct = state.answers[directKey];
+        if (!direct || direct.source === 'auto_rule' || Checklist.normalizeStatus(direct.state) !== 'approved') continue;
+        const optionKey = Checklist.optionAnswerKey(analysis, rule.id);
+        if (!optionKey) continue;
+        const reusable = state.answers[optionKey];
+        const directAt = Date.parse(String(direct.at || '')) || 0;
+        const reusableAt = reusable ? (Date.parse(String(reusable.at || '')) || 0) : 0;
+        if (!reusable || directAt > reusableAt) {
+          state.answers[optionKey] = Checklist.makeAnswer('approved', analysis, { ...direct, loadDate: null });
+          changed = true;
+        }
+        // Each PO keeps its own evidence. Only the reusable approval is copied;
+        // migrating multiple POs must never discard their different notes/files.
+      }
+    }
+    return changed;
+  }
+
   function applyPersonalLayer(baseModel, rows, options) {
     const opts = options || {};
     if (OD && typeof OD.setPriorityCatalog === 'function') OD.setPriorityCatalog(state.priorityCatalog);
     const orders = (baseModel && Array.isArray(baseModel.orders) ? baseModel.orders : []).map(cloneAnalysis);
+    if (promoteReusableChecklistAnswers(orders)) reusableAnswerPromotionPending = true;
+    if (opts.commit && reusableAnswerPromotionPending && saveAnswers({ silent: true })) reusableAnswerPromotionPending = false;
     const preparedRules = typeof Rules.prepareEvaluation === 'function' ? Rules.prepareEvaluation(state.rules) : null;
     const evaluations = new Map();
     const customItems = new Map();
@@ -4224,6 +4422,7 @@
     onOverviewRendered,
     invalidateOverview,
     openStudio,
+    refreshLanguage: () => { render(); if (managedRulesRedraw) managedRulesRedraw(); },
     openChecklist,
     openRules,
     openSettings,
@@ -4244,6 +4443,7 @@
     computeDecisionsForRowsAsync,
     peekDecisionsForRows,
     decisionRuntimeStats,
+    decisionContextRevision: () => decisionContextRevision,
     _state: state,
   };
 })();

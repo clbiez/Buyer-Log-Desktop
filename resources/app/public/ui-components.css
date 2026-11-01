@@ -13698,27 +13698,27 @@ html[data-ui-system="manifest"] .cpaBtnBadge {background:var(--ui-surface) !impo
 }
 html[data-ui-system="manifest"] .cpaBtn.primary .cpaBtnBadge {background:color-mix(in srgb,var(--ui-on-accent) 20%,transparent) !important;color:var(--ui-on-accent) !important
 }
-html[data-ui-system="manifest"] .cpaOverviewPriorities {background:var(--ui-surface) !important;border:1px solid var(--ui-row-divider) !important
+html[data-ui-system="manifest"] .cpaOverviewPriorities {background:var(--ui-surface) !important
 }
 html[data-ui-system="manifest"] .cpaOverviewPrioHead b {font-size:var(--ui-font-sm) !important;color:var(--ui-text) !important
 }
-html[data-ui-system="manifest"] .cpaStudioNavBar {background:var(--ui-surface-soft) !important;border-bottom:1px solid var(--ui-row-divider) !important
+html[data-ui-system="manifest"] .cpaStudioNavBar {background:var(--ui-surface-soft) !important
 }
 html[data-ui-system="manifest"] .cpaStudioTabs>button {font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important;color:var(--ui-text-secondary) !important;background:transparent !important
 }
-html[data-ui-system="manifest"] .cpaStudioTabs>button span {background:var(--ui-surface) !important;color:var(--ui-text-muted) !important;font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important
+html[data-ui-system="manifest"] .cpaStudioTabs>button .cpaStudioTabCount {background:var(--ui-surface) !important;color:var(--ui-text-muted) !important;font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important
 }
-html[data-ui-system="manifest"] .cpaStudioTabs>button.is-on span {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+html[data-ui-system="manifest"] .cpaStudioTabs>button.is-on .cpaStudioTabCount {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
 }
-html[data-ui-system="manifest"] .cpaQueueQuickBar {background:var(--ui-surface-soft) !important
+html[data-ui-system="manifest"] .cpaQueueSyncBar {background:var(--ui-surface-soft) !important
 }
-html[data-ui-system="manifest"] .cpaQueueQuestionPill {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important;font-weight:600 !important
+html[data-ui-system="manifest"] .cpaQuestionPill {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important;font-weight:600 !important
 }
-html[data-ui-system="manifest"] .cpaQueueQuestionPill:hover {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+html[data-ui-system="manifest"] .cpaQuestionPill:hover {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
 }
-html[data-ui-system="manifest"] .cpaQueueQuestionPill.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+html[data-ui-system="manifest"] .cpaQuestionPill.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
 }
-html[data-ui-system="manifest"] .cpaQueueFilterRow input,html[data-ui-system="manifest"] .cpaQueueFilterRow select {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+html[data-ui-system="manifest"] .cpaQueueFilterBar input,html[data-ui-system="manifest"] .cpaQueueFilterBar select {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
 }
 html[data-ui-system="manifest"] .cpaBulkBar {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font-size:var(--ui-font-xs) !important
 }
@@ -13744,11 +13744,11 @@ html[data-ui-system="manifest"] .cpaQueueStatusSelect.tone-green {background:var
 }
 html[data-ui-system="manifest"] .cpaQueueStatusSelect.tone-gray {background:var(--ui-surface-strong) !important;color:var(--ui-text-secondary) !important
 }
-html[data-ui-system="manifest"] .cpaCatalogCard {background:var(--ui-surface-soft) !important;border:1px solid var(--ui-row-divider) !important
+html[data-ui-system="manifest"] .cpaCatalogCard {background:var(--ui-surface-soft) !important
 }
 html[data-ui-system="manifest"] .cpaCatalogHead b {font-size:var(--ui-font-sm) !important;color:var(--ui-text) !important
 }
-html[data-ui-system="manifest"] .cpaTagItem {background:var(--ui-surface) !important;border:1px solid var(--ui-row-divider) !important;font-size:var(--ui-font-xs) !important;color:var(--ui-text) !important
+html[data-ui-system="manifest"] .cpaTagItem {background:var(--ui-surface) !important;font-size:var(--ui-font-xs) !important;color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .cpaTagDot {background:var(--ui-accent) !important
 }
@@ -13774,15 +13774,15 @@ html[data-ui-system="manifest"] .cpaTagMiniBtn {background:transparent !importan
 }
 html[data-ui-system="manifest"] .cpaTagMiniBtn:hover:not(:disabled) {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
 }
-html[data-ui-system="manifest"] .cpaTagEditor {background:var(--ui-surface) !important;border:1px solid var(--ui-row-divider) !important
+html[data-ui-system="manifest"] .cpaCatalogInlineForm {background:var(--ui-surface) !important
 }
-html[data-ui-system="manifest"] .cpaTagEditorGrid label>span {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+html[data-ui-system="manifest"] .cpaCatalogFormGrid label>span {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
 }
-html[data-ui-system="manifest"] .cpaTagEditorGrid input,html[data-ui-system="manifest"] .cpaTagEditorGrid select {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+html[data-ui-system="manifest"] .cpaCatalogFormGrid input,html[data-ui-system="manifest"] .cpaCatalogFormGrid select {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
 }
-html[data-ui-system="manifest"] .cpaToneSwatch {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-2xs) !important;font-weight:600 !important;border:1px solid transparent !important
+html[data-ui-system="manifest"] .cpaToneSwatch {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-2xs) !important;font-weight:600 !important
 }
-html[data-ui-system="manifest"] .cpaToneSwatch.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;border-color:var(--ui-accent) !important
+html[data-ui-system="manifest"] .cpaToneSwatch.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
 }
 html[data-ui-system="manifest"] .cpaScopePresets {background:var(--ui-surface-soft) !important
 }
@@ -15570,3 +15570,10 @@ html[data-ui-system="manifest"] .endeksmatikMonthControl:not(td *) {border:1px s
 }
 html[data-ui-system="manifest"] .endeksmatikMonthControl>input[type="text"] {border:0 !important
 }
+
+/* Studio catalog hierarchy uses the common Manifest palette. */
+html[data-ui-system="manifest"] .cpaCatalogTagRow,html[data-ui-system="manifest"] .cpaStatusBadgeChip {background:var(--ui-surface);color:var(--ui-text)}
+html[data-ui-system="manifest"] .cpaCatalogTagMain small,html[data-ui-system="manifest"] .cpaCatalogHead small,html[data-ui-system="manifest"] .cpaRulesTopBar small {color:var(--ui-text-muted);font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .cpaTemplatesPopover {background:var(--ui-surface);box-shadow:var(--ui-shadow-overlay);z-index:var(--ui-z-popover)}
+html[data-ui-system="manifest"] .cpaTemplateChoice {background:var(--ui-surface);color:var(--ui-text)}
+html[data-ui-system="manifest"] .cpaTemplateChoice:hover {background:var(--ui-row-hover)}

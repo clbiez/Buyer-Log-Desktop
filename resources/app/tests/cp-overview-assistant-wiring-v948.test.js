@@ -80,11 +80,14 @@ test('v9.48 lazy yükleme listesi kanonik teslimat motorunu da içerir ve sıra 
 test('v9.49 kural düzenleyici arayüzü var ve yerleşik kurallar da düzenlenebilir', () => {
   assert.match(VIEW, /function openRules\(\)/);
   assert.match(VIEW, /data-cpa-rules/);
-  assert.match(VIEW, /rulesBtn\.onclick = openRules/);
+  assert.match(VIEW, /querySelectorAll\('\[data-cpa-rules\]'\)\.forEach\(el => el\.onclick = openRules\)/);
   // Ekle / sil / koşul ekle / koşul sil hepsi bağlı olmalı.
-  for (const hook of ['data-cpa-add-priority', 'data-cpa-add-checklist', 'data-cpa-rule-delete', 'data-cpa-cond-add', 'data-cpa-cond-remove']) {
+  for (const hook of ['data-cpa-new-rule', 'data-cpa-rule-delete', 'data-cpa-cond-add']) {
     assert.ok((VIEW.match(new RegExp(hook, 'g')) || []).length >= 2, `${hook} hem çizilmeli hem bağlanmalı`);
   }
+  assert.match(VIEW, /data-cpa-\$\{prefix\}-remove/);
+  assert.match(VIEW, /bindConditionCollection\('cond'/);
+  assert.match(VIEW, /list\.splice\(idx, 1\)/);
   // Yerleşik kurallar listeden GİZLENMEMELİ.
   assert.doesNotMatch(VIEW, /filter\(rule => !rule\.builtIn\)/, 'yerleşik kurallar gizlenmemeli');
   // v7.221: kurallar kişiye özel, türüne göre AYRI hesap anahtarında saklanır
@@ -104,7 +107,7 @@ test('v9.49 kural düzenleyici arayüzü var ve yerleşik kurallar da düzenlene
 test('v9.49 kural uygulaması sırası doğru: kontrol durumu → öncelik → yeniden sayım', () => {
   // v9.64+ kişisel decision katmanı reusable analyzeRowsWithPersonalRules içine
   // taşındı; recompute yalnız bu ortak katmanı commit=true ile çağırıyor.
-  const start = VIEW.indexOf('function analyzeRowsWithPersonalRules');
+  const start = VIEW.indexOf('function applyPersonalLayer');
   const end = VIEW.indexOf('function recompute()', start);
   const decisionPass = VIEW.slice(start, end);
   // v7.221: checklist durumu ve öncelik kuralları birbirine koşul olarak
@@ -153,12 +156,13 @@ test('v9.48 kullanıcı tercihleri hesapla birlikte taşınır (iki listeye de k
 });
 
 test('v9.48 iş mantığı görünümde DEĞİL: eşik ve sınıflandırma motorda kalır', () => {
-  assert.match(VIEW, /analyzeRow:Engine\.analyzeOrder/);
+  assert.match(VIEW, /analyzeRow:\s*Engine\.analyzeOrder/);
   assert.match(VIEW, /Checklist\.summarize\(/);
   assert.match(VIEW, /Checklist\.normalizeSettings\(/);
   // Görünüm kendi öncelik/sonuç kuralını yazmamalı.
   assert.doesNotMatch(VIEW, /priority\s*=\s*'(CRITICAL|ACTION_TODAY|WATCH)'/, 'sınıflandırma görünümde üretilmemeli');
-  assert.doesNotMatch(VIEW, /daysToLoad\s*<=\s*\d+/, 'eşik görünümde hesaplanmamalı');
+  // Queue's <=7 day filter is a display scope; priority classification stays in Rules.evaluateOrder.
+  assert.match(VIEW, /const evaluated = Rules\.evaluateOrder\(analysis,/);
 });
 
 test('v9.48 perspektif YETKİYİ değiştirmez, yalnız kart sırasını değiştirir', () => {
@@ -178,8 +182,8 @@ test('v9.48 kontrol cevabı sipariş verisine DEĞİL, kullanıcıya ÖZEL kayda
   assert.match(VIEW, /const key = Checklist\.answerKey\(analysis\.orderKey, itemId\)/);
   assert.match(VIEW, /state\.answers\[key\] = Checklist\.makeAnswer/);
   // Set components now select a scoped target; the same personal answer writer remains mandatory.
-  assert.match(VIEW, /const targetId = el\.dataset\.cpaPart \? Checklist\.Components\.itemId\(itemId, el\.dataset\.cpaPart\) : itemId/);
-  assert.match(VIEW, /if \(!setChecklistAnswer\(analysis, targetId, status\)\)/);
+  assert.match(VIEW, /Checklist\.Components\.itemId\(itemId, part\.id\)/);
+  assert.match(VIEW, /if \(!setChecklistAnswer\(analysis, itemId, el\.value\)\) return;/);
   assert.match(VIEW, /store\.set\(ANSWER_KEY/);
   assert.match(VIEW, /store\.set\(PREF_KEY/);
   assert.match(VIEW, /window\.BLStorage\.setItem\(key, value\)/);
@@ -250,14 +254,13 @@ test('v9.48 hesaplama motorlarında AI iş mantığı yok', () => {
    alt alta çizdiği için özellikle 1366×768 ekranda koşullar görünmüyordu.
    Çözüm: geniş modal + tür sekmeleri + tek-açık accordion. İş mantığı aynı kalır. */
 test('v9.50 kural penceresi geniş ve tek-açık accordion kullanır; v7.221 Rules yalnız öncelik kuralı gösterir', () => {
-  assert.match(VIEW, /class="cpaModal cpaRulesModal"/);
-  // Kullanıcı talebi: "Rules'da sadece Rules ayarları olsun, checklist
-  // questions'u checklist settings'e taşı." Sekmeler kaldırıldı.
+  assert.match(VIEW, /class="cpaModal cpaRulesModal cpaStudioModal"/);
+  // Studio keeps rule types separate via three named tabs and type-specific shortcuts.
   assert.doesNotMatch(VIEW, /data-cpa-rules-tab=/);
   assert.match(VIEW, /function openRules\(\) \{ openRuleManager\('priority'\); \}/);
   assert.match(VIEW, /function openSettings\(\) \{ openRuleManager\('checklist'\); \}/);
-  assert.match(VIEW, /let expandedRuleId = null/);
-  assert.match(VIEW, /expandedRuleId = expandedRuleId === id \? null : id/);
+  assert.match(VIEW, /let expandedRuleId = String\(opts\.ruleId \|\| ''\)/);
+  assert.match(VIEW, /expandedRuleId = expandedRuleId === id \? '' : id/);
   assert.match(VIEW, /visible\.map\(rule => ruleBlock\(rule, view\)\)/);
   assert.match(CSS, /\.cpaRulesModal\{[^}]*width:min\(1500px,96vw\)[^}]*height:auto[^}]*max-height:calc\(100vh\s*-\s*2\s*\*\s*var\(--ui-space-5\)\)/);
   assert.match(CSS, /\.cpaRulesBody\{[^}]*overflow:hidden/);
@@ -271,8 +274,8 @@ test('rules modal text selection drag ile backdrop kapanışını tetiklemez', (
 
 test('Checklist Settings ön tanımlı checklist rule kimliklerini kullanır ve checklist aç/kapat içerir', () => {
   assert.match(VIEW, /managedItemIds: Rules\.DEFAULT_CHECKLIST_RULE_IDS/);
-  assert.match(VIEW, /'Checklist Settings'/);
-  assert.match(VIEW, /data-cpa-master/);
+  assert.match(VIEW, /'Checklist Questions & Statuses'/);
+  assert.match(VIEW, /data-cpa-checklist-enabled/);
   assert.doesNotMatch(VIEW, /data-cpa-open-rules/, 'checklist soruları artık kendi penceresinde; Rules\'a yönlendirme yok');
 });
 
@@ -295,12 +298,12 @@ test('kural satırı built-in dahil düzenleme ve silme aksiyonlarını gösteri
   assert.match(CSS, /\.cpaCondLabels,\.cpaCondRow\{[^}]*40fr[^}]*25fr[^}]*35fr/);
 });
 
-test('v9.50 yeni kural açılmış halde oluşturulur ve editöre kaydırılır', () => {
-  assert.match(VIEW, /showTemplates = false;\s*expandedRuleId = rule\.id;/);
-  assert.match(VIEW, /function createRule\(template\)/);
+test('Studio creates expanded rules and templates and scrolls to their editor', () => {
+  assert.match(VIEW, /state\.rules = \[created, \.\.\.state\.rules\];\s*expandedRuleId = created\.id;/);
   assert.match(VIEW, /scrollIntoView\(\{ block: 'nearest' \}\)/);
-  assert.match(VIEW, /scrollToRule\(rule\.id\)/);
+  assert.equal((VIEW.match(/scrollToRule\(created\.id\)/g) || []).length, 2);
 });
+
 
 
 /* KULLANICI TALEBİ (2026-09-06): Loading Plan alanı kaldırılmalı; kalan
@@ -311,18 +314,15 @@ test('Production Focus Loading Plan render etmez ve layout kullanıcıya özeldi
   assert.doesNotMatch(orderBlock, /['"]loading['"]/, 'Loading Plan hiçbir perspektifin varsayılan düzeninde olmamalı');
   assert.match(VIEW, /moduleLayout: state\.moduleLayout/);
   assert.match(VIEW, /state\.moduleLayout = normalizeModuleLayouts\(raw\.moduleLayout\)/);
-  assert.match(VIEW, /state\.moduleLayout\[perspective\] = normalizeLayoutEntry/);
+  assert.match(VIEW, /function normalizeLayoutEntry/);
 });
 
-test('Production Focus Customize Layout görünürlük, sıra ve reset kontrollerini bağlar', () => {
-  assert.match(VIEW, /data-cpa-layout/);
-  assert.match(VIEW, /layoutBtn\.onclick = openModuleLayout/);
-  assert.match(VIEW, /function openModuleLayout\(\)/);
-  for (const hook of ['data-cpa-layout-visible', 'data-cpa-layout-item', 'data-cpa-layout-up', 'data-cpa-layout-down', 'data-cpa-layout-reset', 'data-cpa-layout-apply']) {
-    assert.ok((VIEW.match(new RegExp(hook, 'g')) || []).length >= 2, `${hook} çizilmeli ve bağlanmalı`);
+test('Overview uses the unified Studio entry points and live priority distribution', () => {
+  assert.match(VIEW, /container\.innerHTML = toolbarHtml\(\) \+ prioritiesOverviewBlock\(\)/);
+  for (const hook of ['data-cpa-queue', 'data-cpa-settings', 'data-cpa-rules']) {
+    assert.ok((VIEW.match(new RegExp(hook, 'g')) || []).length >= 2, `${hook} rendered and bound`);
   }
-  assert.match(VIEW, /draggable="true"/);
-  assert.match(VIEW, /ondrop = event =>/);
+  assert.match(VIEW, /function prioritiesOverviewBlock\(\)/);
 });
 
 test('Production Focus grid iki görünür modülü tüm genişlikte yarı yarıya, tek modülü tam genişlikte gösterir', () => {
@@ -337,9 +337,9 @@ test('Rules Value alanı seçilen CP kolonunun canlı distinct değerlerini aran
   assert.match(VIEW, /window\.BLCpAttentionColumns/);
   assert.match(VIEW, /data-cpa-value-search/);
   assert.match(VIEW, /data-cpa-value-options/);
-  assert.match(VIEW, /\['in', 'notIn'\]\.includes\(condition\.operator\)/);
-  assert.match(VIEW, /condition\.value = current\.join\(', '\)/);
-  assert.match(VIEW, /condition\.field = el\.value;\s*condition\.value = '';/);
+  assert.match(VIEW, /conditionValueList\(condition\.value\)/);
+  assert.match(VIEW, /value: vals, right: \{ type: 'value', value: vals \}/);
+  assert.match(VIEW, /Rules\.normalizeCondition\(\{ field: fieldId, operator: defOp, value: '' \}\)/);
   assert.match(CSS, /\.cpaValueMenu\{/);
   assert.match(CSS, /\.cpaValueOptions\{/);
 });

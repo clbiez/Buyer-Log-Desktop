@@ -314,7 +314,7 @@ test('kurallar kişiye özel anahtarlarda durur, hesapla taşınır ve Ön Ayar 
   assert.deepEqual(merged.deletedRuleIds, ['builtin_y'], 'kaynakta olan yerleşik kural geri gelir; diğer silmeler korunur');
 });
 
-test('Rules yalnız öncelik kurallarını, Checklist Settings yalnız checklist sorularını açar; silme bağımlılık uyarır', () => {
+test('Studio tür kısayolları doğru sekmeyi açar; silme bağımlılık uyarır', () => {
   const view = read('public/cp-overview-assistant.js');
   assert.match(view, /function openRules\(\) \{ openRuleManager\('priority'\); \}/);
   assert.match(view, /function openSettings\(\) \{ openRuleManager\('checklist'\); \}/);
@@ -325,11 +325,11 @@ test('Rules yalnız öncelik kurallarını, Checklist Settings yalnız checklist
   assert.match(view, /data-cpa-rule-approval-scope/, 'checklist editöründe PO / ürün opsiyonu seçimi olmalı');
   assert.match(view, /Checklist\.optionAnswerKey\(analysis, itemId\)/, 'seçenek bazlı onay özel kimliğe yazılmalı');
   // Sade düzenleyici: şablon, aranabilir alan seçici, canlı önizleme, AI rehberi.
-  for (const hook of ['data-cpa-template', 'data-cpa-field-picker', 'data-cpa-rule-preview', 'data-cpa-ai-copy', 'data-cpa-ai-download', 'data-cpa-ai-answer', 'data-cpa-cond-choice']) {
+  for (const hook of ['data-cpa-template', 'data-cpa-field-picker', 'data-cpa-rule-preview', 'data-cpa-lcwai-host', 'data-cpa-cond-choice']) {
     assert.ok((view.match(new RegExp(hook, 'g')) || []).length >= 2, `${hook} çizilmeli ve bağlanmalı`);
   }
   // AI cevabı çalıştırılmaz; Buyer Log ayrıştırıcısıyla doğrulanır.
-  assert.match(view, /Rules\.extractFormula\(answer\)/);
+  assert.match(view, /AI\.pickField\(result, 'formula', Rules\.extractFormula\)/);
   assert.match(view, /Rules\.validateExpression\(formula, \{ fields: formulaFieldIds\(rule\) \}\)/);
   assert.doesNotMatch(view, /new Function\(|\beval\(/);
 });

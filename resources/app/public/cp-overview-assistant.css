@@ -107,20 +107,20 @@
 .cpaStudioNavBar{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-3);padding:0 var(--ui-space-4);flex-wrap:wrap}
 .cpaStudioTabs{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%;overflow-x:auto}
 .cpaStudioTabs>button{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 12px;cursor:pointer;white-space:nowrap}
-.cpaStudioTabs>button span{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:19px;padding:0 6px}
-.cpaStudioTargetWrap{display:flex;align-items:center;gap:6px;padding:4px 0}
+.cpaStudioTabs>button .cpaStudioTabCount{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:19px;padding:0 6px}
+.cpaStudioHeaderRight{display:flex;align-items:center;gap:6px;padding:4px 0}
 .cpaRulesBody{display:flex;flex:1 1 auto;min-height:0;flex-direction:column;gap:8px;padding:var(--ui-space-3) var(--ui-space-4);overflow:hidden}
 .cpaRulesModal>footer{align-items:center;justify-content:space-between;gap:var(--ui-space-3);padding:9px var(--ui-space-4)}
 .cpaRulesCount{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ---- Sekme 1: İş Listesi (Hızlı Checklist Masası) ---- */
-.cpaQueueQuickBar{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-2);flex-wrap:wrap;padding:6px 10px}
-.cpaQueueQuickBtns{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cpaQueueSyncBar{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-2);flex-wrap:wrap;padding:6px 10px}
+.cpaQueueSyncGroup{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .cpaQueueFilters{display:grid;gap:7px}
-.cpaQueueQuestionPills{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.cpaQueueQuestionPill{display:inline-flex;align-items:center;gap:6px;height:29px;padding:0 10px;cursor:pointer;white-space:nowrap}
-.cpaQueueFilterRow{display:grid;grid-template-columns:minmax(220px,1.5fr) minmax(170px,1fr) minmax(170px,1fr) auto;gap:8px;align-items:center}
-.cpaQueueFilterRow input,.cpaQueueFilterRow select{width:100%;height:34px;padding:0 9px;box-sizing:border-box}
+.cpaQuestionPills{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.cpaQuestionPill{display:inline-flex;align-items:center;gap:6px;height:29px;padding:0 10px;cursor:pointer;white-space:nowrap}
+.cpaQueueFilterBar{display:grid;grid-template-columns:minmax(220px,1.5fr) minmax(170px,1fr) minmax(170px,1fr) auto;gap:8px;align-items:center}
+.cpaQueueFilterBar input,.cpaQueueFilterBar select{width:100%;height:34px;padding:0 9px;box-sizing:border-box}
 .cpaBulkBar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 10px}
 .cpaBulkControls{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .cpaBulkControls select,.cpaBulkControls input{height:30px;padding:0 9px;box-sizing:border-box}
@@ -131,8 +131,8 @@
 .cpaQueueSelectCol{width:34px;min-width:34px;text-align:center}
 .cpaQueueSelectCol input{width:16px;height:16px;margin:0;cursor:pointer}
 .cpaQueueStatusSelect{height:29px;min-width:136px;max-width:210px;padding:0 8px;box-sizing:border-box;cursor:pointer}
-.cpaQueueParts{display:grid;gap:4px}
-.cpaQueuePartRow{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+.cpaPartSelectList{display:grid;gap:4px}
+.cpaPartSelectItem{display:flex;align-items:center;justify-content:flex-end;gap:6px}
 .cpaQueueRowActions{display:inline-flex;align-items:center;gap:5px;justify-content:flex-end}
 
 /* ---- Etiket ve Durum Kataloğu (Öncelik Etiketleri & Checklist Durumları) ---- */
@@ -145,13 +145,13 @@
 .cpaTagRank{min-width:18px;text-align:center}
 .cpaTagMiniBtn{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;padding:0;cursor:pointer}
 .cpaTagMiniBtn:disabled{opacity:.35;cursor:default}
-.cpaTagEditor{display:grid;gap:8px;padding:9px 10px}
-.cpaTagEditorGrid{display:grid;grid-template-columns:minmax(180px,1.2fr) minmax(180px,1.1fr) auto auto;gap:8px;align-items:end}
-.cpaTagEditorGrid label{display:grid;gap:3px;min-width:0}
-.cpaTagEditorGrid input,.cpaTagEditorGrid select{width:100%;height:32px;padding:0 9px;box-sizing:border-box}
+.cpaCatalogInlineForm{display:grid;gap:8px;padding:9px 10px}
+.cpaCatalogFormGrid{display:grid;grid-template-columns:minmax(180px,1.2fr) minmax(180px,1.1fr) auto auto;gap:8px;align-items:end}
+.cpaCatalogFormGrid label{display:grid;gap:3px;min-width:0}
+.cpaCatalogFormGrid input,.cpaCatalogFormGrid select{width:100%;height:32px;padding:0 9px;box-sizing:border-box}
 .cpaToneSwatches{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;min-height:32px}
 .cpaToneSwatch{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 8px;cursor:pointer}
-.cpaTagEditorFoot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.cpaCatalogFormBtns{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 
 /* ---- Kapsam Hazır Seçimleri (Checklist Scope Presets) ---- */
 .cpaScopePresets{display:grid;gap:7px;padding:9px 10px}
@@ -284,8 +284,8 @@
   .cpaRuleHead{grid-template-columns:1fr 1fr}
   .cpaRuleNameField{grid-column:1/-1}
   .cpaRuleQuestionField{grid-column:1/-1}
-  .cpaQueueFilterRow{grid-template-columns:1fr 1fr}
-  .cpaTagEditorGrid{grid-template-columns:1fr 1fr}
+  .cpaQueueFilterBar{grid-template-columns:1fr 1fr}
+  .cpaCatalogFormGrid{grid-template-columns:1fr 1fr}
 }
 @media(max-width:760px){
   .cpaRulesModal>header small{white-space:normal}
@@ -306,7 +306,7 @@
   .cpaCondValueSpacer,.cpaCondRow>[data-cpa-cond-value],.cpaCondRow .cpaValuePicker{grid-column:1/3}
   .cpaRulesCount{display:none}
   .cpaRulesModal>footer{justify-content:flex-end}
-  .cpaQueueFilterRow,.cpaTagEditorGrid{grid-template-columns:1fr}
+  .cpaQueueFilterBar,.cpaCatalogFormGrid{grid-template-columns:1fr}
 }
 
 /* ---- Orders Requiring Attention: özelleştirilebilir sütunlar ---- */
@@ -451,3 +451,51 @@
 .trElementPick>span{flex:1 0 100%}
 .trElementPick input{min-width:0;width:100%}
 .trVerify{align-items:flex-start}
+
+/* Studio geometry shared by queue, catalogs and rule editors. */
+.cpaStudioModal{height:min(900px,calc(100vh - 2 * var(--ui-space-5)))}
+.cpaStudioBody{display:flex;flex:1 1 auto;min-height:0;flex-direction:column;gap:var(--ui-space-3)}
+.cpaStudioHeaderRight{flex:0 0 auto}
+.cpaStudioHeaderRight .cpaSeg button{width:auto;padding:0 12px}
+.cpaStudioRulesPane,.cpaStudioQueue{display:flex;flex:1 1 auto;min-height:0;flex-direction:column;gap:var(--ui-space-3)}
+.cpaStudioRulesPane .cpaCatalogCard{max-height:50vh;overflow:auto}
+.cpaStudioEmptyBox{display:grid;gap:var(--ui-space-2);padding:var(--ui-space-4);justify-items:start}
+.cpaCatalogHead>div{display:grid;gap:4px;flex:1 1 420px}
+.cpaCatalogList{display:grid;gap:5px}
+.cpaCatalogTagRow{display:flex;align-items:center;gap:var(--ui-space-2);min-height:36px}
+.cpaCatalogTagMain{display:grid;gap:2px;min-width:140px;flex:1 1 180px}
+.cpaCatalogTagBadges,.cpaCatalogTagActions{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.cpaCatalogTagActions{justify-content:flex-end}
+.cpaCatalogFormGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cpaCatalogFormToneRow{display:flex;align-items:center;gap:var(--ui-space-2);flex-wrap:wrap}
+.cpaBuiltInStatusesRow{display:flex;align-items:center;gap:var(--ui-space-2);flex-wrap:wrap}
+.cpaStatusBadgeChip{display:inline-flex;align-items:center;gap:5px;padding:4px 6px}
+.cpaSwitchRow{display:flex;align-items:center;gap:var(--ui-space-2)}
+.cpaSwitchRow>span{display:grid;gap:3px}
+.cpaRulesTopBar,.cpaRulesTopActions,.cpaRestoreBar{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-2);flex-wrap:wrap}
+.cpaRulesTopBar>div:first-child{display:grid;gap:3px}
+.cpaTemplatesMenu{position:relative}
+.cpaTemplatesPopover{position:absolute;right:0;display:grid;width:min(380px,70vw);max-height:260px;overflow:auto;padding:var(--ui-space-2)}
+.cpaTemplateChoice{display:grid;gap:4px;text-align:left;padding:var(--ui-space-2);cursor:pointer}
+.cpaQueueFilterBar{grid-template-columns:minmax(220px,1.5fr) minmax(170px,1fr) minmax(170px,1fr)}
+.cpaBulkBar>select,.cpaBulkBar>input{height:30px;padding:0 9px}
+.cpaBulkBar>input{flex:1 1 210px;min-width:140px}
+.cpaSetPartsInline{display:flex;align-items:center;gap:4px}
+.cpaQueueTable .chk{width:30px}
+.cpaQueueTable .chk input{width:16px;height:16px}
+@media(max-width:1100px){
+ .cpaStudioHeaderRight{flex-wrap:wrap;justify-content:flex-end}
+ .cpaCatalogTagRow{flex-wrap:wrap;gap:5px}
+ .cpaCatalogTagBadges{margin-left:auto}
+ .cpaCatalogTagActions{margin-left:auto}
+ .cpaQueueFilterBar{grid-template-columns:1fr 1fr}
+ .cpaQueueFilterBar input{grid-column:1/-1}
+}
+@media(max-width:760px){
+ .cpaStudioModal>header{flex-wrap:wrap}
+ .cpaStudioHeaderRight{width:100%;justify-content:space-between}
+ .cpaCatalogFormGrid,.cpaQueueFilterBar{grid-template-columns:1fr}
+ .cpaStudioRulesPane .cpaCatalogCard{max-height:45vh}
+ .cpaCatalogTagBadges{display:none}
+ .cpaStudioModal>footer>.cpaNote{max-width:70%}
+}

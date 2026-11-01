@@ -58,9 +58,8 @@ test('v10.36 gerçek tablistlerin tamamı adlandırılmış ve tek tab durağı 
   const source = TAB_FILES.map(([, value]) => value).join('\n');
   const lists = tags(source, 'tablist');
   const tabs = tags(source, 'tab');
-  // v7.221: Rules penceresindeki Priority/Checklist sekmeleri kaldırıldı;
-  // checklist soruları Checklist Settings penceresine taşındı.
-  assert.equal(lists.length, 7, 'durum filtresi tablist sayılmadan yedi gerçek tablist kalmalı');
+  // The unified Studio adds one named, roving-tabindex tablist to the seven existing lists.
+  assert.equal(lists.length, 8, 'Studio dahil sekiz gerçek tablist olmalı');
   lists.forEach(tag => {
     assert.match(tag, /data-bl-tabs="(?:line|segment|metrics)"/);
     assert.match(tag, /aria-label=/);

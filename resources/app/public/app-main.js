@@ -39976,6 +39976,7 @@ function applyLanguage(lang){
   // dile tamamlar (bkz. i18n-runtime.js). Yeniden çizimlerden SONRA çalışır.
   try{window.BLI18n?.absorbLegacy?.();window.BLI18n?.setLanguage?.(appLang);}catch(_){}
   window.BLCollectionPriceDrawer?.refresh?.({force:true});
+  window.BLCpAssistant?.refreshLanguage?.();
   // TR/EN etiket genişlikleri farklı: duyarlı araç çubukları yeniden ölçülür.
   window.BLToolbarResponsive?.refresh?.(null,{remeasure:true});
 }

@@ -286,3 +286,29 @@ test('Rebuilt Studio UI exposes 3-tab hub, inline priority tags, bulk queue acti
   assert.doesNotMatch(view, /data-cpa-ai-download/, 'obsolete manual .md AI download clutter must be removed in favor of BuyerLogAI');
   assert.match(html, /id="cpChecklistRulesBtn"/, 'CP toolbar exposes direct shortcut to Checklist & Rules Studio');
 });
+
+test('Priority tag IDs remain unique when labels collide after normalization', () => {
+  const first = OD.makePriorityId('Supplier Confirmation');
+  const second = OD.makePriorityId('Supplier Confirmation', [first]);
+  assert.notEqual(second, first);
+  assert.equal(OD.isCustomPriorityCode(second), true);
+});
+
+test('Full catalogs retain all built-ins and anchor On Track after custom tags', () => {
+  const catalog = OD.normalizePriorityCatalog(Array.from({ length: 50 }, (_, i) => ({ id: `prio:demo-${i}`, tr: `Demo ${i}`, tone: 'copper' })));
+  assert.equal(catalog.length, 40);
+  for (const entry of OD.DEFAULT_PRIORITY_CATALOG) assert.ok(catalog.some(item => item.id === entry.id));
+  assert.equal(catalog.at(-1).id, 'ON_TRACK');
+});
+
+test('Moderator browser channel carries both catalogs alongside rules without dropping metadata', async () => {
+  let body;
+  const context = { localStorage: { setItem() {} }, fetch: async (_url, options) => { body = JSON.parse(options.body); return { ok: true, json: async () => body }; } };
+  context.window = context;
+  vm.runInNewContext(read('public/cp-managed-rules.js'), context);
+  const priorityCatalog = [{ id: 'prio:demo-published', tr: 'Demo', en: 'Demo', tone: 'copper', isRisk: true }];
+  const checklistStatuses = [{ id: 'custom:demo-published', tr: 'Demo', en: 'Demo', tone: 'teal', resolved: false }];
+  await context.BLCpManagedRules.save({ rules: [], deletedRuleIds: [], priorityCatalog, checklistStatuses }, 0);
+  assert.deepEqual(body.priorityCatalog, priorityCatalog);
+  assert.deepEqual(body.checklistStatuses, checklistStatuses);
+});

@@ -39,7 +39,11 @@
     const response = await fetch(API, {
       method: 'PUT', credentials: 'same-origin',
       headers: headers({ 'Content-Type': 'application/json', 'If-Match': `"${Number(revision) || 0}"` }),
-      body: JSON.stringify({ rules: next.rules || [], deletedRuleIds: next.deletedRuleIds || [] }),
+      body: JSON.stringify({
+        rules: next.rules || [], deletedRuleIds: next.deletedRuleIds || [],
+        ...(Array.isArray(next.priorityCatalog) ? { priorityCatalog: next.priorityCatalog } : {}),
+        ...(Array.isArray(next.checklistStatuses) ? { checklistStatuses: next.checklistStatuses } : {}),
+      }),
     });
     const payload = await response.json().catch(() => null);
     if (!response.ok) {

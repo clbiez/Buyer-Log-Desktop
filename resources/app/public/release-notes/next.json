@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-01",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Kontrol ve kurallar tek merkezde",
+    "en": "Checklist and rules in one studio"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "İş listesi, öncelik kuralları ve kontrol sorularını üç sekmeden yönetin. Kendi öncelik etiketlerinizi ve checklist durumlarınızı ekleyin.",
+    "en": "Manage the work queue, priority rules and checklist questions across three tabs. Add your own priority tags and checklist statuses."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "checklist-rules-studio",
+      "type": "feature",
+      "module": {
+        "tr": "Kontrol ve Kurallar",
+        "en": "Checklist and Rules"
+      },
+      "title": {
+        "tr": "Üç sekmeli merkez ve özel öncelik etiketleri",
+        "en": "Three-tab studio and custom priority tags"
+      },
+      "body": {
+        "tr": "Genel Bakış veya CP araç çubuğundan İş Listesi, Öncelik Kuralları ve Etiketler, Kontrol Soruları ve Durumlar sekmelerine erişin. Özel etiketlere renk tonu ve aciliyet sırası verin; kurallara bağlayıp sonuçlarını canlı görün. Toplu yanıtları, not ve ekleri, basit kapsam seçimlerini, doğrulanan formülleri ve LCW AI desteğini tek merkezde kullanın. Kişisel ayarlar korunur; Moderatör etiketleri ve durumları ekibe yayımlayabilir.",
+        "en": "Open Work Queue, Priority Rules and Tags, and Checklist Questions and Statuses from Overview or the CP toolbar. Choose custom tag tones and urgency ranks, assign them to rules and see live results. Use bulk answers, notes and attachments, simple scope presets, validated formulas and LCW AI in one studio. Personal preferences are preserved; Moderators can publish tags and statuses to the team."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-rules-studio.png",
+        "alt": {
+          "tr": "Demo verilerle üç sekmeli Kontrol ve Kurallar Merkezi ve özel tedarikçi teyidi öncelik etiketi",
+          "en": "Three-tab Checklist and Rules Studio with a custom supplier confirmation priority tag on demo data"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log ekranı; yalnız üretilmiş demo veriler kullanılmıştır.",
+          "en": "Real Buyer Log screen captured after the change using generated demo data only."
+        }
+      }
+    }
+  ]
 }
