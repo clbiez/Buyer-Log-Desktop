@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "91c4c716c1902bd8591c744379434dd57f5406ab",
-  "release_notes": "TR: Buyer Log TEST 7.0.326 — CP ve Orders içindeki seçili siparişleri önizleyerek Koleksiyonunuza aktarın. Aynı model ve MB ayında adetler birleştirilir; farklı fiyat, ülke veya tedarikçiler ayrı kalır. Tekrar aktarım koruması ve tek adım geri alma dahildir. Daha sade Genel Bakış özeti, Buyer Log temasıyla belirgin alanlar, uygulamadan önce kural önizlemesi ve aciliyetten bağımsız takip etiketleri.\nEN: Buyer Log TEST 7.0.326 — Preview selected CP and Orders rows and import them into your Collection. Quantities are combined for the same model and MB month; different prices, countries or suppliers stay separate. Includes duplicate protection and one-step undo. A simpler Overview summary, clear fields in the Buyer Log theme, rule previews before applying changes and tracking tags separate from urgency.",
-  "request_id": "7.0.326-checklist-studio-20261101"
+  "commit_sha": "76720b2b70d342ad4934fb0425790fe03c644c3f",
+  "release_notes": "TR: Buyer Log TEST 7.0.327 — CP ve Orders içindeki seçili siparişleri önizleyerek Koleksiyonunuza aktarın. Aynı model ve MB ayında adetler birleştirilir; farklı fiyat, ülke veya tedarikçiler ayrı kalır. Tekrar aktarım koruması ve tek adım geri alma dahildir. Daha sade Genel Bakış özeti, Buyer Log temasıyla belirgin alanlar, uygulamadan önce kural önizlemesi ve aciliyetten bağımsız takip etiketleri.\nEN: Buyer Log TEST 7.0.327 — Preview selected CP and Orders rows and import them into your Collection. Quantities are combined for the same model and MB month; different prices, countries or suppliers stay separate. Includes duplicate protection and one-step undo. A simpler Overview summary, clear fields in the Buyer Log theme, rule previews before applying changes and tracking tags separate from urgency.",
+  "request_id": "7.0.327-checklist-studio-worker-plm-20261101"
 }
