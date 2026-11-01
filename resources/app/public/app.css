@@ -616,6 +616,7 @@ select.editCell,input.editCell{width:100%;min-width:0;padding:5px 7px;cursor:poi
 .warningDetailTable td.empty{text-align:center;padding:30px;}
 #navToShipping,#selectedBacklogBtn{display:none;}
 #cpSuppFobRulesBtn,#cpQuotationsBtn,#cpPriceHistoryBtn,#cpSendPricingBtn,#cpCreateOcBtn,#cpCopyToKolBtn,#cpProdStatusBtn,#cpRemoveImagesBtn{display:none;}
+body[data-active-tab="orders"] #cpCopyToKolBtn{display:inline-flex;}
 body[data-active-tab="cp"] #navToShipping,body[data-active-tab="cp"] #selectedBacklogBtn,body[data-active-tab="orders"] #selectedBacklogBtn{display:inline-flex;}
 body[data-active-tab="cp"] #cpSuppFobRulesBtn,body[data-active-tab="cp"] #cpQuotationsBtn,body[data-active-tab="cp"] #cpPriceHistoryBtn,body[data-active-tab="cp"] #cpSendPricingBtn,body[data-active-tab="cp"] #cpCreateOcBtn,body[data-active-tab="cp"] #cpCopyToKolBtn,body[data-active-tab="cp"] #cpProdStatusBtn,body[data-active-tab="cp"] #cpRemoveImagesBtn,body[data-active-tab="orders"] #cpPriceHistoryBtn{display:inline-flex;}
 .ordersDimFilterGroup{display:none;gap:6px;align-items:center;}
