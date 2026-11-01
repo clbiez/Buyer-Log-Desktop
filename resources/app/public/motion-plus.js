@@ -149,6 +149,10 @@
     if(!element||!enabled())return null;
     if(kind==='card')return animate(element,[{opacity:.6,transform:'translate3d(-5px,-3px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('card')});
     if(kind==='overlay')return animate(element,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('overlay')});
+    // Alttan açılan çekmece: içerik aşağıdan yukarı doğru açılır ve yerine kayar.
+    if(kind==='drawer')return animate(element,[{clipPath:'inset(100% 0 0 0)',transform:'translate3d(0,12px,0)'},{clipPath:'inset(0 0 0 0)',transform:'translate3d(0,0,0)'}],{duration:duration('overlay')});
+    // Bölüm genişletme: yüksekliği sıfırdan kendi boyuna açılır (alta sabitli kapta yukarı doğru büyür).
+    if(kind==='expand')return animate(element,[{height:'0px',opacity:0,overflow:'hidden'},{height:element.scrollHeight+'px',opacity:1,overflow:'hidden'}],{duration:duration('overlay')});
     if(kind==='refresh'||kind==='refresh-active')return animate(element,
       [{transform:'rotate(0deg)'},{transform:'rotate(360deg)'}],
       {duration:duration('card')*2,iterations:kind==='refresh-active'?Infinity:2});

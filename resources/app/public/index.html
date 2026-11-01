@@ -469,8 +469,8 @@
     <button id="railThemeBtn" title="Tema: Aydınlık → Karanlık"><svg class="ic"><use href="#i-moon"/></svg><span data-i18n-tr="Tema" data-i18n-en="Theme">Tema</span></button>
     <button id="railFontSizeBtn" title="Arayüz boyutu: Standard → Büyük → Çok Büyük → Kompakt" data-i18n-title-tr="Arayüz boyutu: Standard → Büyük → Çok Büyük → Kompakt" data-i18n-title-en="Interface size: Standard → Large → XL → Compact"><b class="railFontGlyph" aria-hidden="true">A</b><span id="railFontSizeLabel">Arayüz: Standard</span></button>
     <!-- Tema geçişi efekti: seçim ve ayarlar bu cihazda saklanır (motion-plus-theme.js). -->
-    <div class="railThemeFx" role="group" aria-labelledby="themeFxTitle">
-      <span class="railThemeFxTitle" id="themeFxTitle" data-i18n-tr="Tema geçişi" data-i18n-en="Theme transition">Tema geçişi</span>
+    <button type="button" id="railThemeFxToggle" class="railThemeFxToggle" aria-expanded="false" aria-controls="themeFxBody"><svg class="ic"><use href="#i-chevron-up"/></svg><span id="themeFxTitle" data-i18n-tr="Tema geçişi" data-i18n-en="Theme transition">Tema geçişi</span></button>
+    <div class="railThemeFx" id="themeFxBody" role="group" aria-labelledby="themeFxTitle" hidden>
       <label class="railThemeFxField" for="themeFxEffect"><span data-i18n-tr="Efekt" data-i18n-en="Effect">Efekt</span><select id="themeFxEffect"></select></label>
       <label class="railThemeFxField" for="themeFxSpeed"><span data-i18n-tr="Geçiş hızı" data-i18n-en="Transition speed">Geçiş hızı</span><output id="themeFxSpeedValue" for="themeFxSpeed"></output><input type="range" id="themeFxSpeed" min="1" max="5" step="1" value="5"></label>
       <label class="railThemeFxField" for="themeFxSize"><span data-i18n-tr="Üçgen boyutu" data-i18n-en="Triangle size">Üçgen boyutu</span><output id="themeFxSizeValue" for="themeFxSize"></output><input type="range" id="themeFxSize" min="40" max="100" step="10" value="70"></label>
@@ -1690,10 +1690,11 @@
   (function railAppearanceMenu(){
     const trigger=document.getElementById('railAppearanceBtn'),menu=document.getElementById('railAppearanceMenu');
     if(!trigger||!menu)return;
-    const place=()=>{const r=trigger.getBoundingClientRect();menu.style.left=Math.round(r.right+6)+'px';menu.style.bottom=Math.max(8,Math.round(window.innerHeight-r.bottom))+'px';};
+    // Çekmece düğmenin hemen üstünde, sol kenarıyla hizalı açılır ve alttan yukarı kayar.
+    const place=()=>{const r=trigger.getBoundingClientRect();menu.style.left=Math.round(r.left)+'px';menu.style.bottom=Math.max(8,Math.round(window.innerHeight-r.top+4))+'px';};
     const setOpen=open=>{
       menu.hidden=!open;trigger.setAttribute('aria-expanded',open?'true':'false');
-      if(open){place();window.BLMotionPlus?.play?.('overlay',menu);}
+      if(open){window.BLMotionPlusTheme?.collapse?.();place();window.BLMotionPlus?.play?.('drawer',menu);}
     };
     trigger.addEventListener('click',event=>{event.stopPropagation();setOpen(menu.hidden);});
     document.addEventListener('click',event=>{if(!menu.hidden&&!menu.contains(event.target)&&!trigger.contains(event.target))setOpen(false);});
