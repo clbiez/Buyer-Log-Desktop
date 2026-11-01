@@ -21,8 +21,25 @@ module.exports = function registerLflRoutes(app, deps) {
     sourceUserId,
     userAccess,
     withFabricDimensions,
+    collectionLflCache,
   } = deps;
 
+// Collection consumes aggregate references only; retain LFL area and row-scope checks.
+app.get('/api/collection-lfl-reference', userAccess.requireArea('koleksiyon'), userAccess.requireArea('lfl'), async (req,res)=>{
+  try{
+    res.set('Cache-Control','no-store');
+    const id=sourceUserId(req),readiness=sourceFilterReadiness(['lfl'],req);
+    if(!readiness.ready)return res.status(409).json({code:'SOURCE_FILTER_REQUIRED'});
+    let runtime=cacheForUser(id);
+    if(!runtime.lflLoadedAt){await ensureDataLoaded(id);runtime=cacheForUser(id);}
+    if(!runtime.lflLoadedAt)return res.status(409).json({code:'LFL_SOURCE_UNAVAILABLE'});
+    const rows=runtime.lflRows||[];
+    const profile=userAccess.publicProfile(req.currentUser);
+    const identity=JSON.stringify([id,profile.id,userAccess.localIamRevision(),profile.dataScope,profile.scopes,profile.delegatedUserIds]);
+    const snapshot=await collectionLflCache.get({identity,version:runtime.lflLoadedAt,rebuild:req.query.rebuild==='1',loadRows:()=>userAccess.filterRowsByScope(req.currentUser,rows)});
+    sendDateSafeJson(res,snapshot);
+  }catch(err){apiError(res,err,'LFL reference could not be calculated.');}
+});
 
 // Program açılışındaki ilk okuma tamamlanmışsa seçili kullanıcının LFL verisini döndürür.
 // GET çağrısı Excel/Power Query yenilemesi başlatmaz; yalnız diskteki kayıtlı dosyayı okur.
