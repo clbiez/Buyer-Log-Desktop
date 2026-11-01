@@ -325,16 +325,23 @@ test('v6.34 sentetik sütunlar Target Price ile birlikte kapanmıyor', () => {
   assert.match(block, /KOL_SYNTHETIC_COL_KEYS\.forEach\(key=>\{/);
   assert.match(block, /if\(!opts\.all&&kolHiddenCols\.has\(key\)\) return;/);
 
-  const meta = new Function(`${APP.slice(APP.indexOf('const KOL_SYNTHETIC_COL_KEYS'), APP.indexOf('function kolIsSyntheticColKey'))}; return {KOL_SYNTHETIC_COL_KEYS, KOL_SYNTHETIC_COL_META};`)();
-  assert.deepEqual([...meta.KOL_SYNTHETIC_COL_KEYS], ['__bestPrice__', '__confirmedName__', '__confirmedPrice__']);
+  const metaFor = appLang => new Function('appLang', 'L', `${APP.slice(APP.indexOf('const KOL_SYNTHETIC_COL_KEYS'), APP.indexOf('function kolIsSyntheticColKey'))}; return {KOL_SYNTHETIC_COL_KEYS, KOL_SYNTHETIC_COL_META, kolSyntheticColLabel};`)(appLang, s => s);
+  const meta = metaFor('tr');
+  // #798 bilinçli olarak Previous Season, LFL ve Season Impact sentetik sütunlarını ekledi.
+  assert.deepEqual([...meta.KOL_SYNTHETIC_COL_KEYS], ['__bestPrice__', '__confirmedName__', '__confirmedPrice__', '__previousSeason__', '__lfl__', '__seasonImpact__']);
   // Etiketler tek kaynaktan gelmeli; çizim ve sütun seçici ayrışamaz.
   assert.equal(meta.KOL_SYNTHETIC_COL_META.__bestPrice__.label, 'Best Price');
   assert.equal(meta.KOL_SYNTHETIC_COL_META.__confirmedName__.kind, 'confirmedName');
-  const catalog = new Function('opts', 'kolHiddenCols', 'KOL_SYNTHETIC_COL_KEYS', 'KOL_SYNTHETIC_COL_META', 'kolAllOrderedCols', 'kolColumnLabel', 'L', block);
+  assert.equal(meta.kolSyntheticColLabel('__seasonImpact__'), 'Sezon Etkisi');
+  assert.equal(metaFor('en').kolSyntheticColLabel('__seasonImpact__'), 'Season Impact');
+  const catalog = new Function('opts', 'kolHiddenCols', 'KOL_SYNTHETIC_COL_KEYS', 'KOL_SYNTHETIC_COL_META', 'kolSyntheticColLabel', 'kolAllOrderedCols', 'kolColumnLabel', 'L', block);
+  const readWith = (hidden, opts) => catalog(opts, hidden, meta.KOL_SYNTHETIC_COL_KEYS, meta.KOL_SYNTHETIC_COL_META, meta.kolSyntheticColLabel, () => [], c => c.label, s => s);
   const hidden = new Set(['targetPrice', '__confirmedPrice__']);
-  const read = opts => catalog(opts, hidden, meta.KOL_SYNTHETIC_COL_KEYS, meta.KOL_SYNTHETIC_COL_META, () => [], c => c.label, s => s);
+  const read = opts => readWith(hidden, opts);
   // Hiding Target Price still leaves the other synthetic columns visible.
-  assert.deepEqual([...read({}).keys()], ['__bestPrice__', '__confirmedName__']);
+  assert.deepEqual([...read({}).keys()], ['__bestPrice__', '__confirmedName__', '__previousSeason__', '__lfl__', '__seasonImpact__']);
+  // Every synthetic column hides on its own key only.
+  assert.deepEqual([...readWith(new Set(['__lfl__']), {}).keys()], meta.KOL_SYNTHETIC_COL_KEYS.filter(key => key !== '__lfl__'));
   // AI all-record context explicitly includes individually hidden columns.
   assert.deepEqual([...read({ all: true }).keys()], [...meta.KOL_SYNTHETIC_COL_KEYS]);
 });
