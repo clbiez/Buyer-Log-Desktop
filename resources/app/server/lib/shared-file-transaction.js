@@ -148,9 +148,19 @@ function nextGeneration(target){
   writeMetadata(file,{schemaVersion:1,generation:previous+1});return previous+1;
 }
 function leaseOptions(options){return {...options,timeoutMs:Math.max(100,Number(options.timeoutMs)||3000),staleMs:Math.max(5000,Number(options.staleMs)||60000),ownerGraceMs:Math.max(100,Number(options.ownerGraceMs)||1000)};}
+// Windows answers mkdir of a lock directory that a concurrent reclaimer has
+// just removed (delete pending, handle still open) with EPERM instead of
+// EEXIST. Same bounded policy as removeEmpty; mkdir stays the only claim, so a
+// retry grants nothing until it succeeds and a persistent denial fails closed.
+function makeLockDir(lockDir){
+  for(let attempt=0;;attempt++)try{fs.mkdirSync(lockDir);return true;}catch(error){
+    if(error.code==='EEXIST')return false;
+    if(!['EACCES','EPERM','EBUSY'].includes(error.code)||attempt>=3)throw error;pause(15*(attempt+1));
+  }
+}
 function acquire(target,options){
   const lockDir=target+'.write-lock';
-  try{fs.mkdirSync(lockDir);}catch(error){if(error.code==='EEXIST')return null;throw error;}
+  if(!makeLockDir(lockDir))return null;
   const token=crypto.randomUUID();let initialization,claimed=false,fd,owner;
   try{
     initialization=pin(lockDir,'init');
@@ -318,7 +328,7 @@ async function releaseAsync(lease,options){
   }
 }
 async function acquireAsync(target,options){
-  const lockDir=target+'.write-lock';try{await fsp.mkdir(lockDir);}catch(error){if(error.code==='EEXIST')return null;throw error;}
+  const lockDir=target+'.write-lock';try{await retryAsync(()=>fsp.mkdir(lockDir),4);}catch(error){if(error.code==='EEXIST')return null;throw error;}
   const token=crypto.randomUUID();let initialization,claimed=false,handle,owner;
   try{
     initialization=await pinAsync(lockDir,'init');handle=await retryAsync(()=>fsp.open(path.join(lockDir,'owner.json'),'wx'));claimed=true;
