@@ -69,7 +69,9 @@ test('repair runs once per version, clears renderer cache and records the report
   const first = await runInstallRepair({ localDataRoot, appCoreRoot: appCore, currentVersion: '7.0.184', updater, session, packaged: true });
   await first.integrity;
   assert.equal(first.skipped, false);
-  assert.deepEqual(cleared, ['cache', 'serviceworkers,cachestorage,shadercache']);
+  // 7.0.323: HTTP + V8 kod önbelleği korunur (statik yanıtlar içerik özetli/sürümlü
+  // immutable ya da no-cache); yalnız service worker ve Cache Storage temizlenir.
+  assert.deepEqual(cleared, ['serviceworkers,cachestorage']);
   assert.equal(updater.state().state, 'IDLE');
   assert.deepEqual(updater.state().failedVersions, {});
   const report = readRepairReport(localDataRoot);
@@ -77,7 +79,7 @@ test('repair runs once per version, clears renderer cache and records the report
   assert.ok(report.finishedAt);
   const second = await runInstallRepair({ localDataRoot, appCoreRoot: appCore, currentVersion: '7.0.184', updater, session, packaged: true });
   assert.equal(second.skipped, true);
-  assert.equal(cleared.length, 2, 'cache is cleared only once per version');
+  assert.equal(cleared.length, 1, 'cache is cleared only once per version');
 });
 
 test('damaged managed core is restaged from the verified cached package', async t => {
@@ -117,7 +119,11 @@ test('release build embeds the integrity manifest and startup runs the repair be
   const main = fs.readFileSync(path.join(APP, 'electron', 'main.js'), 'utf8');
   const ready = main.slice(main.indexOf('app.whenReady().then(async () => {'));
   assert.ok(ready.indexOf('await runInstallRepair(') > 0);
-  assert.ok(ready.indexOf('await runInstallRepair(') < ready.indexOf('await startBuyerLog();'));
+  // 7.0.323: onarım sunucuyla paralel yürür ama ana pencere açılmadan önce beklenir.
+  assert.ok(ready.indexOf('const installRepairDone = (async () => {') < ready.indexOf('await startBuyerLog({ beforeWindow: installRepairDone });'));
+  const start = main.slice(main.indexOf('async function startBuyerLog(options = {})'), main.indexOf('/* --------------------------------------------------------------- kapanış */'));
+  assert.ok(start.indexOf('await options.beforeWindow') > start.indexOf('waitUntilReady'));
+  assert.ok(start.indexOf('await options.beforeWindow') < start.indexOf('createMainWindow(bound.origin)'));
   assert.match(main, /repair:repairSummary\(\)/);
   const ui = fs.readFileSync(path.join(APP, 'public', 'app-main.js'), 'utf8');
   assert.match(ui, /\$\{buyerLogRepairLine\(status\.repair\)\}/);

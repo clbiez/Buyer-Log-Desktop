@@ -42,7 +42,7 @@ test('açılış ekranı uzun başlatma adımlarından ÖNCE gösterilir', () =>
   const splashAt = ready.indexOf('showSplash()');
   assert.ok(splashAt >= 0, 'whenReady içinde showSplash çağrılmalı');
   assert.ok(splashAt < ready.indexOf('runInstallRepair('), 'kurulum onarımından önce');
-  assert.ok(splashAt < ready.indexOf('startBuyerLog()'), 'sunucu başlatmadan önce');
+  assert.ok(splashAt < ready.indexOf('startBuyerLog('), 'sunucu başlatmadan önce');
   assert.match(body('startBuyerLog'), /showSplash\(\)/, 'yeniden deneme yolları da açılış ekranını gösterir');
 });
 

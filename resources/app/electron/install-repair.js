@@ -49,11 +49,18 @@ function cleanUpdaterState(state,currentVersion){
 }
 function compareSemverSafe(a,b){try{return compareSemver(String(a||''),String(b||''));}catch(_){return 0;}}
 
+/* Yalnız service worker kayıtları ve Cache Storage silinir (7.0.323).
+ * Chromium HTTP önbelleği ve V8 kod önbelleği ARTIK SİLİNMEZ: statik katman
+ * her yanıta ya içerik özetli (&h=) / sürümlü (?v=) "immutable" ya da
+ * "no-cache"/"no-store" başlığı verir; yeni sürümde adres veya doğrulama
+ * değişir, eski JS/CSS görünemez. Önbelleği silmek güncelleme sonrası ilk
+ * açılışı tamamen soğuk (derlenmiş kod dâhil) bırakıyordu. Shader önbelleği
+ * Electron çalışma zamanına bağlıdır; uygulama güncellemesi onu değiştirmez. */
+const RENDERER_STORAGES_CLEARED=['serviceworkers','cachestorage'];
 async function clearRendererCache(session,log){
   if(!session||!session.defaultSession)return {ok:false,skipped:'no-session'};
   try{
-    await session.defaultSession.clearCache();
-    await session.defaultSession.clearStorageData({storages:['serviceworkers','cachestorage','shadercache']});
+    await session.defaultSession.clearStorageData({storages:RENDERER_STORAGES_CLEARED});
     return {ok:true};
   }catch(error){log('Onarım: arayüz önbelleği temizlenemedi: '+error.message);return {ok:false,error:String(error.message||error).slice(0,300)};}
 }
@@ -88,8 +95,10 @@ async function runInstallRepair(options={}){
   const report={schemaVersion:REPAIR_SCHEMA,version:currentVersion,startedAt:new Date().toISOString(),appCoreRoot:path.resolve(appCoreRoot),steps:{}};
   const save=()=>{try{ensureDir(path.dirname(reportFile(localDataRoot)));atomicWriteJson(reportFile(localDataRoot),report);}catch(_){}};
 
-  report.steps.rendererCache=packaged?await clearRendererCache(session,log):{ok:true,skipped:'development'};
-
+  // Updater durum temizliği İLK await'ten önce, senkron yapılır (7.0.323). Ana süreç
+  // onarımı beklemeden sunucuyu başlattığı için bu adım ertelenirse launcher'ın
+  // aynı state.json'a yazdığı sağlık onayını (confirmHealth) eski anlık görüntüyle
+  // ezebilirdi. Böylece çağrı döndüğünde durum dosyası zaten temizdir.
   if(updater){
     try{
       const {state,actions}=cleanUpdaterState(updater.state(),currentVersion);
@@ -98,10 +107,17 @@ async function runInstallRepair(options={}){
     }catch(error){report.steps.updaterState={ok:false,error:String(error.message||error).slice(0,300)};}
   }
 
+  report.steps.rendererCache=packaged?await clearRendererCache(session,log):{ok:true,skipped:'development'};
+
   save();
   // Bütünlük kontrolü uzun sürebilir; açılış beklemez, sonuç rapora sonra eklenir.
+  // Launcher aynı listeyi çekirdek yüklenmeden önce zaten doğruladı; bu ikinci
+  // tarama yalnız onarım raporu içindir ve sunucunun soğuk açılışıyla disk/CPU
+  // yarışına girmemesi için gecikmeli başlar (integrityDelayMs).
+  const integrityDelayMs=Math.max(0,Number(options.integrityDelayMs)||0);
   const integrity=(async()=>{
     try{
+      if(integrityDelayMs)await new Promise(resolve=>setTimeout(resolve,integrityDelayMs));
       const result=await verifyIntegrity(appCoreRoot,{version:currentVersion});
       const step={status:result.status,checked:result.checked,missing:result.missing.slice(0,20),changed:result.changed.slice(0,20),missingCount:result.missing.length,changedCount:result.changed.length};
       if(result.status==='damaged'){
@@ -117,4 +133,4 @@ async function runInstallRepair(options={}){
   return {skipped:false,report,integrity};
 }
 
-module.exports={runInstallRepair,readRepairReport,cleanUpdaterState,reportFile};
+module.exports={runInstallRepair,readRepairReport,cleanUpdaterState,reportFile,RENDERER_STORAGES_CLEARED};

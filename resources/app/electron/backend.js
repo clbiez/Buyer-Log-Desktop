@@ -43,11 +43,18 @@ const http = require('http');
 const crypto = require('crypto');
 const { spawn, execFile } = require('child_process');
 
-const { backendEnv, resolveAppUrl, readJsonFile } = require('./portable-paths');
+const { backendEnv, resolveAppUrl, readJsonFile, compileCacheDirectory } = require('./portable-paths');
 const { redactSecrets } = require('../shared/secret-redaction');
 
 const READY_TIMEOUT_MS = 90000;
 const READY_POLL_MS = 400;
+/* İlk saniyelerde sunucu çoğu zaman henüz dinlemiyor; bağlantı reddi loopback'te
+   anında döner. Kısa aralık, hazır olduktan sonraki boşa beklemeyi (ortalama
+   ~200 ms) kaldırır; uzun açılışta yoklama yine 400 ms'ye seyrelir. Sunucu
+   stdout'una SERVER_READY yazdığında yoklama beklemeden hemen tetiklenir. */
+const READY_FAST_POLL_MS = 60;
+const READY_FAST_WINDOW_MS = 4000;
+function readyPollDelay(elapsedMs) { return elapsedMs < READY_FAST_WINDOW_MS ? READY_FAST_POLL_MS : READY_POLL_MS; }
 const GRACEFUL_STOP_MS = 6000;
 const PROBE_TIMEOUT_MS = 2500;
 
@@ -82,23 +89,41 @@ function ensureDataTree(paths) {
 
 /* Sunucu cevap verene kadar yokla (§4). HTTP durum kodu ne olursa olsun
    (302 giriş yönlendirmesi dâhil) bir cevap gelmesi "hazır" demektir. */
-function waitForServer(origin, timeoutMs = READY_TIMEOUT_MS, isAborted = () => false) {
-  const deadline = Date.now() + timeoutMs;
+function waitForServer(origin, timeoutMs = READY_TIMEOUT_MS, isAborted = () => false, options = {}) {
+  const startedAt = Date.now();
+  const deadline = startedAt + timeoutMs;
   return new Promise(resolve => {
+    let done = false, inFlight = false, timer = null;
+    const finish = result => {
+      if (done) return;
+      done = true;
+      if (timer) clearTimeout(timer);
+      if (typeof options.unsubscribe === 'function') { try { options.unsubscribe(wake); } catch (_) {} }
+      resolve(result);
+    };
     const attempt = () => {
-      if (isAborted()) { resolve({ ready: false, reason: 'aborted' }); return; }
+      timer = null;
+      if (done || inFlight) return;
+      if (isAborted()) { finish({ ready: false, reason: 'aborted' }); return; }
+      inFlight = true;
       const request = http.get(origin + '/', { timeout: 2000 }, response => {
+        inFlight = false;
         response.resume();
-        resolve({ ready: true, status: response.statusCode });
+        finish({ ready: true, status: response.statusCode });
       });
-      request.on('timeout', () => { request.destroy(); retry(); });
-      request.on('error', retry);
+      request.on('timeout', () => { request.destroy(new Error('ready-probe-timeout')); });
+      request.on('error', () => { inFlight = false; retry(); });
     };
     const retry = () => {
-      if (isAborted()) { resolve({ ready: false, reason: 'aborted' }); return; }
-      if (Date.now() >= deadline) { resolve({ ready: false, reason: 'timeout' }); return; }
-      setTimeout(attempt, READY_POLL_MS);
+      if (done) return;
+      if (isAborted()) { finish({ ready: false, reason: 'aborted' }); return; }
+      if (Date.now() >= deadline) { finish({ ready: false, reason: 'timeout' }); return; }
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(attempt, readyPollDelay(Date.now() - startedAt));
     };
+    // Sunucu "dinliyorum" dediğinde sıradaki yoklama beklenmez.
+    const wake = () => { if (done || inFlight) return; if (timer) { clearTimeout(timer); timer = null; } attempt(); };
+    if (typeof options.subscribe === 'function') { try { options.subscribe(wake); } catch (_) {} }
     attempt();
   });
 }
@@ -173,6 +198,7 @@ class BackendProcess {
     this.onStartupProgress = typeof options.onStartupProgress === 'function' ? options.onStartupProgress : () => {};
     this.startupMilestones = { server: false, db: false, emitted: false };
     this.startupOutputTail = '';
+    this.serverReadyWakers = new Set();
   }
 
   get pid() { return this.child ? this.child.pid : 0; }
@@ -210,7 +236,10 @@ class BackendProcess {
         milestones.server = false;
         milestones.db = false;
       }
-      if (/^\[PERF\] SERVER_READY \+\d+ms\s*$/.test(line)) milestones.server = true;
+      if (/^\[PERF\] SERVER_READY \+\d+ms\s*$/.test(line)) {
+        milestones.server = true;
+        for (const wake of this.serverReadyWakers) { try { wake(); } catch (_) {} }
+      }
       if (/^\[PERF\] LOCAL_DB_READY \+\d+ms\s*$/.test(line)) milestones.db = true;
     }
     if (!milestones.server || !milestones.db) return;
@@ -238,6 +267,16 @@ class BackendProcess {
 
     this.openLogStream();
     const env = backendEnv(this.paths, process.env);
+    // Sunucu modüllerinin derlenmiş kodu açılışlar arasında saklanabilir
+    // (server/lib/compile-cache.js). VARSAYILAN KAPALI: sıcak açılışta ölçülen
+    // kazanç ~30 ms'dir; soğuk açılış (yeniden başlatma sonrası) Defender/NTFS
+    // dosya G/Ç'si ile sınırlıdır ve yüzlerce ek önbellek dosyasının etkisi
+    // ölçülmemiştir. Soğuk açılış A/B ölçümü için BUYER_LOG_BACKEND_COMPILE_CACHE=1
+    // ile açılır. Elle verilmiş bir NODE_COMPILE_CACHE dizini korunur.
+    if (!env.NODE_COMPILE_CACHE && env.BUYER_LOG_BACKEND_COMPILE_CACHE === '1') {
+      const version = (readJsonFile(path.join(this.appCoreRoot, 'package.json'), {}) || {}).version;
+      env.NODE_COMPILE_CACHE = compileCacheDirectory(this.paths, version);
+    }
     if (this.desktopBridgeSecret) env.BUYER_LOG_DESKTOP_BRIDGE_SECRET = this.desktopBridgeSecret;
     // OAB requests are relayed to the hidden signed-in PASS page in Electron main.
     if (this.desktopOabRelayUrl) env.BUYER_LOG_DESKTOP_OAB_RELAY_URL = this.desktopOabRelayUrl;
@@ -297,7 +336,10 @@ class BackendProcess {
 
   /* Hazırlık ölçümü. Backend beklerken çökerse boşuna 90 saniye beklenmez. */
   waitUntilReady(timeoutMs = READY_TIMEOUT_MS) {
-    return waitForServer(this.origin, timeoutMs, () => this.exited);
+    return waitForServer(this.origin, timeoutMs, () => this.exited, {
+      subscribe: wake => this.serverReadyWakers.add(wake),
+      unsubscribe: wake => this.serverReadyWakers.delete(wake),
+    });
   }
 
   /*
@@ -336,4 +378,5 @@ class BackendProcess {
 
 module.exports = {
   BackendProcess, waitForServer, probeOrigin, ensureConfig, ensureDataTree, missingRuntimeDependencies, READY_TIMEOUT_MS,
+  readyPollDelay, READY_POLL_MS, READY_FAST_POLL_MS,
 };

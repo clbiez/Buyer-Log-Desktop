@@ -1,4 +1,7 @@
 require('./lib/update-trial-backend').waitForTrialBackend();
+// Derleme önbelleği diğer modüllerden ÖNCE açılır (lib/compile-cache).
+const backendCompileCache = require('./lib/compile-cache');
+const backendCompileCacheState = backendCompileCache.enableBackendCompileCache();
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
@@ -54,7 +57,7 @@ const { createUserRestoreService } = require('./lib/user-restore-service');
 const { createFullRestoreService, recoverInterruptedRestoresSync } = require('./lib/full-restore-service');
 const { isClientRequestAborted } = require('./lib/http-errors');
 const { stringifyWithDates } = require('./lib/json-dates');
-const { stampAssetHashes, warmAssetHashes, immutableForRequest } = require('./lib/static-asset-hash');
+const { stampAssetHashes, warmAssetHashes, immutableForRequest, lazyScriptFiles, warmFileHashes, cachedHashMap, hashMapJson } = require('./lib/static-asset-hash');
 // v7.81: normalizeHorizonGroups artık kullanılmıyor — Horizon grupları kaldırıldı.
 
 const SERVER_BOOT_STARTED_AT = Date.now();
@@ -73,6 +76,7 @@ function markStartup(name, detail = null) {
   return entry;
 }
 markStartup('APP_BOOT_START');
+if (backendCompileCacheState.status !== 'disabled') markStartup('COMPILE_CACHE_' + String(backendCompileCacheState.status).toUpperCase().replace(/[^A-Z0-9]+/g, '_').slice(0, 40));
 
 // Local-first bootstrap. The retired whole-folder legacy import is deliberately
 // not part of startup; business data remains in the local DB + delta registry.
@@ -6461,10 +6465,22 @@ if (typeof backupJobCleanupTimer.unref === 'function') backupJobCleanupTimer.unr
 app.get('/index.html', (_req, res) => res.set('Cache-Control', 'no-store').redirect(302, '/'));
 const INDEX_TEMPLATE_FILE = path.join(__dirname, '..', 'public', 'index.html');
 let INDEX_TEMPLATE_CACHE = null;
+const PUBLIC_ROOT_FOR_HASHES = path.join(__dirname, '..', 'public');
+// Tembel yüklenen betik listesi perf-runtime.js'ten bir kez okunur (lib/static-asset-hash).
+let LAZY_SCRIPT_FILES = null;
+function lazyScriptFileList() {
+  if (LAZY_SCRIPT_FILES == null) {
+    try { LAZY_SCRIPT_FILES = lazyScriptFiles(fs.readFileSync(path.join(PUBLIC_ROOT_FOR_HASHES, 'perf-runtime.js'), 'utf8')); }
+    catch (_) { LAZY_SCRIPT_FILES = []; }
+  }
+  return LAZY_SCRIPT_FILES;
+}
 function renderIndexTemplate() {
   if (INDEX_TEMPLATE_CACHE == null) INDEX_TEMPLATE_CACHE = fs.readFileSync(INDEX_TEMPLATE_FILE, 'utf8');
   // Yerel betik/stil adreslerine içerik özeti eklenir (kalıcı tarayıcı önbelleği; lib/static-asset-hash).
   return stampAssetHashes(INDEX_TEMPLATE_CACHE, path.join(__dirname, '..', 'public'), '__BL_ASSET_VERSION__')
+    // Tembel betik özetleri: yalnız ısınmış ve güncel olanlar; eksikler eski no-cache yolunda kalır.
+    .replace('__BL_ASSET_HASH_MAP__', () => hashMapJson(cachedHashMap(PUBLIC_ROOT_FOR_HASHES, lazyScriptFileList())))
     .replace(/__BL_CANONICAL_VERSION__/g, APP_VERSION)
     .replace(/__BL_ASSET_VERSION__/g, APP_VERSION)
     .replace(/__BL_DISPLAY_VERSION__/g, DISPLAY_VERSION);
@@ -12733,9 +12749,15 @@ if (process.env.NODE_ENV !== 'test') {
 
 const httpServer = app.listen(PORT, HOST, () => {
   markStartup('SERVER_READY', { host: HOST, port: PORT });
+  if (backendCompileCacheState.status !== 'disabled') backendCompileCache.scheduleCompileCacheFlush();
   // İçerik özetleri ilk GET / beklemesin diye arka planda hesaplanır (lib/static-asset-hash).
   setImmediate(() => {
-    try { const html = fs.readFileSync(INDEX_TEMPLATE_FILE, 'utf8'); void warmAssetHashes(html, path.join(__dirname, '..', 'public'), '__BL_ASSET_VERSION__').catch(() => {}); }
+    try {
+      const html = fs.readFileSync(INDEX_TEMPLATE_FILE, 'utf8');
+      void warmAssetHashes(html, PUBLIC_ROOT_FOR_HASHES, '__BL_ASSET_VERSION__')
+        .then(() => warmFileHashes(PUBLIC_ROOT_FOR_HASHES, lazyScriptFileList()))
+        .catch(() => {});
+    }
     catch (_) {}
   });
   const displayHost = HOST === '127.0.0.1' ? 'localhost' : HOST;
