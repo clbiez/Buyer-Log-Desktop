@@ -26,7 +26,7 @@ function directory(names = []) {
   return iam.migrateStore({ schemaVersion:8, _revision:1,
     moderator:{ ...profile('moderator', 'moderator'), username:'demo.admin' }, users:names.map(name => profile(name, 'buyer')) });
 }
-async function fixture(t) {
+async function fixture(t, { legacyPermissions = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-new-device-'));
   const children = [];
   t.after(async () => {
@@ -42,6 +42,19 @@ async function fixture(t) {
   const { manifest } = await hub.initialize(shared);
   const publisher = central.createCentralIam({ sharedRoot:shared, cacheFile:path.join(root, 'publisher', 'auth', 'user-access.json') });
   await publisher.initialize(directory(['demo.buyer', 'demo.manager']), { id:'moderator' });
+  if (legacyPermissions) {
+    const snapshot = central.snapshotFromStore(directory(['demo.buyer', 'demo.manager']), 8, { id:'moderator' });
+    const legacyGrant = { ...iam.normalizeGrant('CP.VIEW'), permission:'OUTLOOK.SEARCH' };
+    snapshot.users[0].directPermissions.push(legacyGrant);
+    snapshot.users[1].temporaryPermissions.push({ ...legacyGrant, permission:'AGENTS.VIEW' });
+    for (const role of Object.values(snapshot.roles)) role.permissions.push('OUTLOOK.SEARCH', 'AGENTS.VIEW');
+    const revisions = path.join(shared, 'iam', 'revisions');
+    fs.rmSync(revisions, { recursive:true });
+    const revision = path.join(revisions, '0000000000000008'); fs.mkdirSync(revision, { recursive:true });
+    fs.writeFileSync(path.join(revision, 'snapshot.json'), JSON.stringify(snapshot));
+    fs.writeFileSync(path.join(revision, 'meta.json'), JSON.stringify({ revision:8, sha256:central.digest(snapshot) }));
+    fs.writeFileSync(path.join(revision, 'audit.json'), JSON.stringify({ revision:8, action:'IAM_UPDATE' }));
+  }
   await hub.publishMaster(shared, { records:{ 'store:email-groups.json':{ records:[{ id:'demo-mail', email:'demo@example.com' }], countries:[], types:[] } } });
   await hub.publishBusiness(shared, { records:{ 'cp-order:12345||':{ subManufacturer:'Demo Supplier', _revision:1 } }, syncHeads:{} });
   async function device({ initial, completed = false, cached = false } = {}) {
@@ -163,4 +176,20 @@ test('a verified offline directory keeps existing users available without claimi
   assert.equal(status.errorCode, 'IAM_NOT_INITIALIZED');
   assert.equal((await device.request('/api/auth/users/suggest?q=demo.buyer')).body.users.length, 1);
   assert.equal((await device.request('/api/user-login', { username:'demo.buyer', password:PASSWORD })).status, 200);
+});
+
+test('a clean device imports legacy revision 8 instead of rejecting users[0].directPermissions', async t => {
+  const f = await fixture(t, { legacyPermissions:true }), device = await f.device({ initial:directory() });
+  const status = await device.settled();
+  assert.equal(status.status, 'ready', JSON.stringify(status));
+  assert.equal(status.iamRevision, 8);
+  assert.equal(status.steps.users.current, 3);
+  assert.equal(status.dataInventory.localMasterRecords >= 1, true);
+  assert.equal(status.dataInventory.localBusinessRecords >= 1, true);
+  assert.equal((await device.request('/api/auth/users/suggest?q=demo.buyer')).body.users.length, 1);
+  const login = await device.request('/api/user-login', { username:'demo.buyer', password:PASSWORD });
+  assert.equal(login.status, 200, JSON.stringify(login.body));
+  const current = (await device.request('/api/current-user', undefined, login.cookie)).body.user;
+  assert.equal(current.username, 'demo.buyer');
+  assert.equal(current.capabilities.some(code => /^(AGENTS|OUTLOOK)(?:\.|_)/.test(code)), false);
 });

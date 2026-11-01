@@ -3,14 +3,43 @@
   "publishedAt": "2026-11-01",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Price alt ortalamaları, kompakt kıyaslar ve sipariş detayları",
-    "en": "Price footer averages, compact comparisons and order details"
+    "tr": "SYNC kullanıcıları ve Koleksiyon fiyat kıyasları",
+    "en": "SYNC accounts and Collection price comparisons"
   },
   "summary": {
-    "tr": "Koleksiyon Price grubunda filtrelenmiş adet ağırlıklı alt ortalamaları görün. Kompakt görünüm Previous Season, LFL ve Sezon Etkisi göstergelerini tek sütunda toplar. Price Drawer içinden hesapta kullanılan ASAS siparişlerini ortak sağ detay raporunda açın.",
-    "en": "See quantity-weighted footer averages across filtered Collection Price rows. Compact combines Previous Season, LFL and Season Impact in one column. Open the underlying ASAS orders from Price Drawer in the shared right-hand detail report."
+    "tr": "Eski sürümlerin kullanıcı izinlerini taşıyan SYNC klasörlerinde kullanıcı listesi ve mevcut şifrelerle giriş uyumluluğu düzeltildi. Koleksiyon Price grubunda filtrelenmiş adet ağırlıklı alt ortalamaları görün. Kompakt görünüm Previous Season, LFL ve Sezon Etkisi göstergelerini tek sütunda toplar. Price Drawer içinden hesapta kullanılan ASAS siparişlerini ortak sağ detay raporunda açın.",
+    "en": "Fixed loading the user directory and signing in with existing passwords when a SYNC folder contains permissions from older releases. See quantity-weighted footer averages across filtered Collection Price rows. Compact combines Previous Season, LFL and Season Impact in one column. Open the underlying ASAS orders from Price Drawer in the shared right-hand detail report."
   },
   "changes": [
+    {
+      "id": "shared-sync-legacy-permissions",
+      "type": "fix",
+      "module": {
+        "tr": "Shared Sync ve Giriş",
+        "en": "Shared Sync and Sign-in"
+      },
+      "title": {
+        "tr": "Eski izin kayıtları artık kullanıcı listesini engellemiyor",
+        "en": "Legacy permission records no longer block the user directory"
+      },
+      "body": {
+        "tr": "Eski Buyer Log sürümlerinde bulunan Outlook ve Agent modüllerinin izin kayıtları, yeni bilgisayarda kullanıcı dizininin IAM_REMOTE_INVALID · rev 8 users[0].directPermissions hatasıyla reddedilmesine yol açabiliyordu. SYNC okuyucusu artık geçmişte gerçekten kullanılan bu kayıtları tanır; mevcut kullanıcılar, şifreler ve güncel yetkiler korunarak giriş yapılabilir. Kaldırılmış izinler etkin yetki vermez. Bilinmeyen izinler, dosya bütünlüğü ve son yönetici kontrolleri korunur. Klasör bağlıysa Tekrar Dene ile kullanıcılar yeniden yüklenir.",
+        "en": "Permission records from the Outlook and Agent modules in older Buyer Log releases could cause a new computer to reject the user directory with IAM_REMOTE_INVALID · rev 8 users[0].directPermissions. The SYNC reader now recognizes these historically valid records, allowing sign-in with existing users, passwords and current permissions. Retired permissions grant no active access. Unknown-permission, file-integrity and last-administrator checks remain enforced. If the folder is connected, Retry reloads the users."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "shared-sync-legacy-permissions.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log giriş ekranında eski izinleri içeren revizyon 8’den yüklenen demo.buyer ve üç aktif SYNC kullanıcısı",
+          "en": "Real Buyer Log sign-in screen showing demo.buyer and three active SYNC users loaded from revision 8 with legacy permission records"
+        },
+        "caption": {
+          "tr": "Eski izin kayıtlarını içeren demo SYNC revizyonu 8, kullanıcıları ve ortak verileri yükler; kullanıcı aramada görünür ve mevcut şifresiyle giriş yapar.",
+          "en": "Demo SYNC revision 8 with legacy permission records loads the users and shared data; the account appears in search and signs in with its existing password."
+        }
+      }
+    },
     {
       "id": "collection-price-reference-footer",
       "type": "improvement",
