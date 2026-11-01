@@ -23,11 +23,11 @@ test('Kaynak klasör seçiminde eski FolderBrowserDialog yerine Sync ile aynı m
   assert.match(PICKER, /Kaynak klasörünü seçin \(klasörün içine girip Aç'a basın\)/);
 });
 
-test('Bugünün Üretim Öncelikleri kalıcı Buyer görünümünde ve Kırılımlar Buyer layoutuna dahil değildir', () => {
+test('Kontrol özeti kalıcı Buyer görünümünde kalır ve dağılım ayrıntıları açılır bölümde gösterilir', () => {
   assert.match(CP_ASSIST, /perspective: 'buyer'/);
   assert.match(CP_ASSIST, /buyer: \['priorities', 'checklist'\]/);
-  assert.match(CP_ASSIST, /function activeModuleLayout\(\)[\s\S]*?const perspective = 'buyer';[\s\S]*?state\.perspective = perspective/);
-  assert.match(CP_ASSIST, /function openModuleLayout\(\)[\s\S]*?const perspective = 'buyer'/);
+  assert.match(CP_ASSIST, /container\.innerHTML = overviewWidgetHtml\(\)/);
+  assert.match(CP_ASSIST, /<details class="cpaOverviewDetails"[\s\S]*?prioritiesOverviewBlock\(\)[\s\S]*?checklistCard\(\)/);
   assert.doesNotMatch(CP_ASSIST, /data-cpa-perspective|cpaPerspective/);
 });
 
