@@ -173,14 +173,18 @@
     const centroid=t=>[(t[0][0]+t[1][0]+t[2][0])/3,(t[0][1]+t[1][1]+t[2][1])/3];
     let flip=Math.max(.32,D*.5);
     if(kind==='chain'){
-      // Her üçgen öncekinin katlanmasını bekler, sonra yığınla birlikte sıradakinin
-      // üstüne katlanır. Geniş ekranda süre uzamasın diye satırlar 16 üçgenlik
-      // zincirlere bölünür; zincirler düğmeye uzaklıklarına göre kademeli başlar.
-      const SEG=16;flip=Math.max(.045,D*.12);
-      for(const row of chains)for(let s=0;s<row.length;s+=SEG){
-        const seg=row.slice(s,s+SEG),c=centroid(seg[0]),lag=Math.hypot(c[0]-o.x,c[1]-o.y)/R*D*.6;
-        let prev=null;
-        seg.forEach((t,k)=>{const q=Object.assign({t,st:lag+k*flip,last:k===seg.length-1,prev},hinge(t,o,seg[k+1]));tris.push(q);prev=q;});
+      // Dalga ekranın sol alt köşesinden yayılır (tema düğmesinden bağımsız).
+      // Her satır soldan sağa kesintisiz bir zincirdir: üçgen sağdaki komşusunun
+      // üstüne katlanır; komşusu, soldaki katlanmaya başlamadan başlamaz. Başlangıç
+      // sol alta uzaklıkla arttığından cephe tek ve düzgün bir yaydır; satırlar
+      // parçalara bölünmediği için dikey şerit oluşmaz.
+      const corner={x:0,y:H},span=Math.hypot(W,H),travel=D*2.2;flip=Math.max(.12,D*.3);
+      for(const row of chains){
+        const line=row.slice().reverse();let prev=null;
+        line.forEach((t,k)=>{
+          const c=centroid(t),st=Math.max(Math.hypot(c[0]-corner.x,c[1]-corner.y)/span*travel,prev?prev.st+flip*.1:0);
+          const q=Object.assign({t,st,last:k===line.length-1,prev},hinge(t,corner,line[k+1]));tris.push(q);prev=q;
+        });
       }
     }else{
       for(const row of chains)for(const t of row){
@@ -220,7 +224,7 @@
         ctx.restore();
       }
       return left>0;
-    },kind==='chain'?D*1000+20*flip*1000+2500:D*1000+flip*1000+2500);
+    },kind==='chain'?D*2200+flip*1000+2500:D*1000+flip*1000+2500);
   }
 
   /* ---- taneli çözülme: View Transitions eski karesine kayan taneli maske ---- */
@@ -331,16 +335,24 @@
     if(sizeOut)sizeOut.textContent=pref.size+' px';
     if(note)note.hidden=!(fx.capture&&typeof root.buyerLogDesktop?.captureView!=='function');
   }
+  // Tema geçişi bölümü kapalı başlar; yalnız başlığına basınca yukarı doğru genişler.
+  function setExpanded(open){
+    const toggle=doc.getElementById('railThemeFxToggle'),body=doc.getElementById('themeFxBody');
+    if(!toggle||!body)return;
+    toggle.setAttribute('aria-expanded',open?'true':'false');body.hidden=!open;
+    if(open)root.BLMotionPlus?.play?.('expand',body);
+  }
   function mount(){
     const select=doc.getElementById('themeFxEffect'),speed=doc.getElementById('themeFxSpeed'),size=doc.getElementById('themeFxSize');
     if(!select||!speed||!size)return;
+    doc.getElementById('railThemeFxToggle')?.addEventListener('click',event=>{event.stopPropagation();setExpanded(event.currentTarget.getAttribute('aria-expanded')!=='true');});
     select.addEventListener('change',()=>{save({effect:select.value});syncControls();});
     speed.addEventListener('input',()=>{save({speed:Number(speed.value)});syncControls();});
     size.addEventListener('input',()=>{save({size:Number(size.value)});syncControls();});
     doc.addEventListener('bl:language-changed',syncControls);
     syncControls();
   }
-  root.BLMotionPlusTheme=Object.freeze({EFFECTS,SPEEDS,DEFAULTS,settings,save,run,finish:finishActive});
+  root.BLMotionPlusTheme=Object.freeze({EFFECTS,SPEEDS,DEFAULTS,settings,save,run,finish:finishActive,collapse:()=>setExpanded(false)});
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',mount,{once:true});
   else mount();
 })(typeof window!=='undefined'?window:globalThis);

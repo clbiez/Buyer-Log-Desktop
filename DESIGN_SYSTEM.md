@@ -158,7 +158,9 @@ modüller `perf-runtime` lazy sözleşmesine uyar.
   yoktur, yalnız sayfadaki gerçek düğmeye tıklar ve onların pasif durumunu yansıtır.
 - Üst çubuk: bildirim, yerel işlemler, tek **Bağlantılar** düğmesi (LCW AI/PLM/OAB
   durum noktaları) ve kullanıcı. Rol kullanıcı menüsündedir. Sol ray altı tek
-  **Görünüm** menüsüdür (dil, tema, arayüz boyutu).
+  **Görünüm** menüsüdür (dil, tema, arayüz boyutu): düğmenin üstünde alttan
+  yukarı açılan çekmece (`BLMotionPlus.play('drawer')`); Tema geçişi bölümü kapalı
+  başlar, başlığına basınca yukarı doğru genişler (`play('expand')`).
 
 Hover, focus, active, selected, disabled, loading, empty ve error durumları
 aynı tokenları kullanır. Modül CSS’i bu durumlara ayrı renk/çerçeve icat etmez.
@@ -193,7 +195,7 @@ Easing ortak cubic-bezier ile izlenir. Hareket içerik, geometri ve iş verisi
 **Tema geçişi:** Kullanıcı temayı değiştirdiğinde `BLMotionPlus.theme(update, origin)`
 Görünüm menüsünde seçilen efekti çalıştırır (`motion-plus-theme.js`,
 `BLMotionPlusTheme`; ayar kullanıcıya ayrılmış `lcw.themeTransition.v1` (BLStorage)): sırayla
-katlanan üçgenler (varsayılan), kenardan katlanan / yerinde dönen üçgenler,
+katlanan üçgenler (varsayılan; dalga ekranın sol alt köşesinden yayılır), kenardan katlanan / yerinde dönen üçgenler,
 düğmeden üflenen / rüzgârda savrulan toz, taneli çözülme veya daire. Hız 1–5
 (varsayılan 5 = en hızlı, 500 ms temel süre), üçgen boyutu 40–100 px (varsayılan
 70). Üçgen ve toz efektleri masaüstü köprüsünün tek karelik

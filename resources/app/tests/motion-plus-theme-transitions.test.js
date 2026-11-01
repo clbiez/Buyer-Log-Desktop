@@ -87,3 +87,23 @@ test('Appearance menu offers effect, speed and triangle size in TR/EN with the r
   assert.ok(html.indexOf('motion-plus-theme.js')>-1&&html.indexOf('motion-plus-theme.js')<html.indexOf('motion-plus.js?'));
   assert.match(read('public/ui-components.css'),/\.blThemeFxLayer \{position:fixed;inset:0;[^}]*pointer-events:none;z-index:var\(--ui-z-boot\)/);
 });
+test('sequential folding starts at the bottom-left corner as one unbroken wave (no per-segment stripes)',()=>{
+  const body=SOURCE.slice(SOURCE.indexOf("if(kind==='chain'){"),SOURCE.indexOf('}else{',SOURCE.indexOf("if(kind==='chain'){")));
+  assert.match(body,/const corner=\{x:0,y:H\}/);
+  assert.match(body,/row\.slice\(\)\.reverse\(\)/,'rows run left to right, away from the corner');
+  assert.match(body,/hinge\(t,corner,line\[k\+1\]\)/);
+  assert.match(body,/prev\?prev\.st\+flip\*\.1:0/,'a triangle never starts before its left neighbour');
+  assert.doesNotMatch(body,/SEG=|slice\(s,s\+SEG\)/);
+});
+test('Appearance opens as a drawer above its button; Theme transition stays collapsed until pressed',()=>{
+  const html=read('public/index.html');
+  assert.match(html,/<button type="button" id="railThemeFxToggle" class="railThemeFxToggle" aria-expanded="false" aria-controls="themeFxBody">/);
+  assert.match(html,/<div class="railThemeFx" id="themeFxBody" role="group" aria-labelledby="themeFxTitle" hidden>/);
+  assert.ok(html.indexOf('id="railFontSizeBtn"')<html.indexOf('id="railThemeFxToggle"'),'language, theme and size come first');
+  assert.match(html,/menu\.style\.left=Math\.round\(r\.left\)\+'px';menu\.style\.bottom=Math\.max\(8,Math\.round\(window\.innerHeight-r\.top\+4\)\)\+'px'/);
+  assert.match(html,/window\.BLMotionPlusTheme\?\.collapse\?\.\(\);place\(\);window\.BLMotionPlus\?\.play\?\.\('drawer',menu\)/);
+  const motion=read('public/motion-plus.js');
+  assert.match(motion,/kind==='drawer'\)return animate\(element,\[\{clipPath:'inset\(100% 0 0 0\)'/);
+  assert.match(motion,/kind==='expand'\)return animate\(element,\[\{height:'0px'/);
+  assert.match(SOURCE,/if\(open\)root\.BLMotionPlus\?\.play\?\.\('expand',body\)/);
+});

@@ -1,14 +1,73 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-01",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Görünüm çekmecesi ve köşeden yayılan üçgen geçişi",
+    "en": "Appearance drawer and corner-wave triangle transition"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Görünüm menüsü düğmenin üstünde alttan yukarı açılan bir çekmeceye dönüştü; Tema geçişi ayarları yalnız istenince açılıyor. Sırayla katlanan üçgenler artık ekranın sol alt köşesinden tek bir dalga hâlinde yayılıyor.",
+    "en": "The Appearance menu became a drawer that slides up above its button; Theme transition settings open only when asked. Triangles folding in sequence now spread from the bottom-left corner as a single wave."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "theme-transition-corner-wave",
+      "type": "fix",
+      "module": {
+        "tr": "Görünüm",
+        "en": "Appearance"
+      },
+      "title": {
+        "tr": "Sırayla katlanan üçgenler sol alt köşeden yayılıyor",
+        "en": "Triangles folding in sequence spread from the bottom-left corner"
+      },
+      "body": {
+        "tr": "Sırayla katlanan üçgenler efektinde ekran dikey şeritler hâlinde açılıyordu. Artık dalga ekranın sol alt köşesinden başlıyor; her satırda üçgenler soldan sağa, soldaki komşusu katlanmaya başladıktan sonra sağdakinin üstüne katlanıyor. Cephe tek ve düzgün bir yay olarak ilerliyor.",
+        "en": "The triangles folding in sequence effect opened the screen in vertical stripes. The wave now starts at the bottom-left corner; in each row triangles fold from left to right onto their neighbour, each starting after the one on its left. The front moves as one smooth arc."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "theme-transition-corner-wave.png",
+        "alt": {
+          "tr": "Buyer Log Genel Bakış ekranı tema değişirken: sol alt köşeden yayılan katlanan üçgen dalgası, arkasında koyu tema; açık Görünüm çekmecesinde Tema geçişi ayarları (demo veri)",
+          "en": "Buyer Log Overview while the theme changes: a wave of folding triangles spreading from the bottom-left corner with the dark theme behind it; the open Appearance drawer shows Theme transition settings (demo data)"
+        },
+        "caption": {
+          "tr": "Dalga sol alt köşeden tek bir yay olarak yayılır.",
+          "en": "The wave spreads from the bottom-left corner as one arc."
+        }
+      }
+    },
+    {
+      "id": "appearance-drawer",
+      "type": "improvement",
+      "module": {
+        "tr": "Görünüm",
+        "en": "Appearance"
+      },
+      "title": {
+        "tr": "Görünüm menüsü alttan açılan çekmece oldu",
+        "en": "Appearance menu is now a drawer that opens upward"
+      },
+      "body": {
+        "tr": "Sol raydaki Görünüm düğmesi menüyü sağa değil, düğmenin hemen üstünde alttan yukarı kayan bir çekmece olarak açıyor. Önce Dil, Tema ve Arayüz boyutu görünüyor. Tema geçişi bölümü kapalı başlıyor; başlığına basınca çekmece yukarı doğru genişleyerek efekt, geçiş hızı ve üçgen boyutu ayarlarını gösteriyor.",
+        "en": "The Appearance button in the left rail now opens a drawer that slides up just above the button instead of a menu to the right. Language, Theme and Interface size come first. The Theme transition section starts collapsed; pressing its title expands the drawer upward to show effect, transition speed and triangle size."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "appearance-drawer.png",
+        "alt": {
+          "tr": "Sol rayda Görünüm düğmesinin üstünde açık çekmece: Dil, Tema, Arayüz boyutu ve genişletilmiş Tema geçişi bölümü ile efekt, geçiş hızı ve üçgen boyutu ayarları (demo veri)",
+          "en": "Open drawer above the Appearance button in the left rail: Language, Theme, Interface size and the expanded Theme transition section with effect, transition speed and triangle size (demo data)"
+        },
+        "caption": {
+          "tr": "Görünüm › Tema geçişi yalnız tıklanınca genişler.",
+          "en": "Appearance › Theme transition expands only when pressed."
+        }
+      }
+    }
+  ]
 }

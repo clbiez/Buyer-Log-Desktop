@@ -1243,11 +1243,15 @@ html.blThemeFxMask::view-transition-old(root) {z-index:var(--ui-z-raised);mask-r
 }
 html.blThemeFxMask::view-transition-new(root) {z-index:var(--ui-z-data)
 }
-html[data-ui-system="manifest"] .railAppearanceMenu .railThemeFx {display:grid;gap:8px;padding:10px 10px 6px;min-width:220px
+html[data-ui-system="manifest"] .railAppearanceMenu .railThemeFx {display:grid;gap:8px;padding:6px 10px 6px;min-width:220px
+}
+html[data-ui-system="manifest"] .railAppearanceMenu .railThemeFx[hidden] {display:none
+}
+html[data-ui-system="manifest"] .railThemeFxToggle .ic {transition:transform var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .railThemeFxToggle[aria-expanded="true"] .ic {transform:rotate(180deg)
 }
 html[data-ui-system="manifest"] .railAppearanceMenu .railThemeFx span {display:inline !important
-}
-html[data-ui-system="manifest"] .railThemeFxTitle {font-size:var(--ui-font-2xs);font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ui-text-muted)
 }
 html[data-ui-system="manifest"] .railThemeFxField {display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center;font-size:var(--ui-font-xs);color:var(--ui-text-secondary)
 }
