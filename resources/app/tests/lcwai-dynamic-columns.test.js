@@ -56,6 +56,8 @@ function fixture() {
   };
   const context = vm.createContext(env);
   for (const [start, end] of [
+    // #798: synthetic column labels resolve through one TR/EN helper.
+    ['function kolSyntheticColLabel(', 'function kolIsSyntheticColKey('],
     ['function kolChecklistParts(', 'function kolConfigureChecklistParts('],
     ['function cellPlainText(', 'function escapeHtml('],
     ['function kolDescriptorCatalog(', 'function kolDescriptorDefaultWidth('],
