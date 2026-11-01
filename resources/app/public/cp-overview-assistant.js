@@ -4510,7 +4510,7 @@
     return cached && cached.key === fullDecisionKey() ? cached.result : null;
   }
   function decisionRuntimeStats() {
-    return decisionRuntime ? decisionRuntime.stats() : { completed: 0, failed: 0, cancelled: 0, workerJobs: 0, fallbackJobs: 0 };
+    return decisionRuntime ? decisionRuntime.getStats() : { completed: 0, failed: 0, cancelled: 0, workerJobs: 0, fallbackJobs: 0 };
   }
 
   function recompute() {
@@ -4546,10 +4546,16 @@
     try { savePrefs(); } catch (_) {}
   }
   void loadManagedRules();
-  window.addEventListener('bl:plm-sample-requests-updated', () => {
+  function onPlmSampleRequestsChanged() {
     notifyDecisionContextChanged('plm-sample-requests');
-    if (lastRows) { recompute(); render(); }
-  });
+    if (lastRows) { state.rowsSignature = ''; onOverviewRendered(lastRows, { dataRevision: window.BL_CP_DECISION_DATA_REVISION?.() || 0, filterRevision: 'plm-evidence' }); }
+    if (managedRulesRedraw) managedRulesRedraw();
+  }
+  window.addEventListener('bl:plm-requests-changed', onPlmSampleRequestsChanged);
+  const plmApi = sampleRequests();
+  if (typeof plmApi?.load === 'function') void plmApi.load().then(data => {
+    if (data?.loaded && Object.keys(data.models || {}).length) onPlmSampleRequestsChanged();
+  }).catch(() => {});
 
   window.BLCpAssistant = {
     onOverviewRendered,

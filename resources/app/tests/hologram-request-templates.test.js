@@ -1,6 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const ExcelJS=require('../public/vendor/exceljs.min.js'),JSZip=require('../public/vendor/jszip.min.js'),XLSX=require('xlsx');
+const {extractFunction}=require('./helpers/app-main-functions');
 const fields=require('../public/canonical-fields.js'),dates=require('../public/excel-date-utils.js'),H=require('../public/hologram-request-export.js'),templates=require('../public/excel-template-engine.js');
 const file=fs.readFileSync(path.join(__dirname,'../public/excel-templates/hologram-request.xlsx'));
 const today=new Date(2026,9,19);
@@ -46,7 +47,7 @@ test('revisions move/add/remove columns, clear stale examples and preserve other
   assert.throws(()=>templates.validate({...config,dataRow:1}),/INVALID_TEMPLATE/);assert.throws(()=>templates.validate({...config,columns:[{column:1,field:''}]}),/EMPTY_MAPPING/);
 });
 test('successful creation downloads before changing checklist; failed serialization never changes answers',async()=>{
-  const source=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');const code=source.slice(source.indexOf('async function createHologramRequestExcel('),source.indexOf("document.getElementById('cpHologramRequestBtn')?.addEventListener"));
+  const source=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');const code=extractFunction(source,'createHologramRequestExcel');
   const events=[],root={BLHologramRequest:H,BLPerf:{ensureFeature:async()=>{}},BLChecklistSupplierSync:{loadShared:async()=>{},syncAnswerChanges:async()=>events.push('sync')},BLCpAssistant:{validateHologramOrders:()=>{},markHologramOrdered:()=>events.push('ordered')},BLExcelTemplates:{records:()=>[],build:async()=>new Uint8Array(),error:()=>new Error('invalid')}};
   const ctx=vm.createContext({window:root,appLang:'en',showToast:()=>{},kolDownloadBuffer:()=>events.push('download')});vm.runInContext(code,ctx);
   await ctx.createHologramRequestExcel([row]);assert.deepEqual(events,['download','ordered','sync']);events.length=0;

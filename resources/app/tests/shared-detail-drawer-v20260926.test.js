@@ -28,7 +28,7 @@ test('Backlog analiz drilldown ortak sağ detay çekmecesini kullanır',()=>{
 });
 test('CP Attention satırı navigasyon yerine ortak detay çekmecesini açar',()=>{
   assert.match(CP,/function openAttentionDetail\(/);
-  assert.match(CP,/storageKey:'cp\.attention\.detail'/);
+  assert.match(CP,/storageKey:\s*'cp\.attention\.detail'/);
   assert.match(CP,/openAttentionDetail\(el\.dataset\.cpaOrderKey\)/);
 });
 test('Ortak drawer Excel export için tüm veya görünen sütun seçimi sunar',()=>{

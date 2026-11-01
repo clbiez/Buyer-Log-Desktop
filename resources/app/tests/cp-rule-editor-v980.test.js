@@ -18,7 +18,7 @@ test('v9.80 rule editor exposes basic/formula modes and datasource-aware operand
 
 test('v9.80 rule editor validates and previews formulas through the shared engine', () => {
   assert.match(view, /Rules\.validateExpression\(/);
-  assert.match(view, /Rules\.evaluateExpression\(/);
+  assert.match(view, /Rules\.previewRuleImpact\(/);
   assert.match(view, /data-cpa-formula-test/);
   assert.match(view, /data-cpa-formula-error/);
   assert.match(view, /data-cpa-formula-diagnostics/);
