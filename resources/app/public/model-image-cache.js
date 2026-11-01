@@ -19,11 +19,20 @@
   // Registry anahtarları server/lib/parse.js içindeki turknorm ile üretilir.
   // Locale upper-case (özellikle i/İ) kullanmak istemci ile sunucunun farklı
   // anahtar üretmesine yol açar; model görseli diskte olduğu halde görünmez.
+  /* 7.0.323: CP açılışında ~200 bin kez çağrılıyordu; her çağrı 7 elemanlı dizi
+     ve 7 split/join zinciri üretiyordu (profilde ~180 ms öz CPU). Aynı sonuç tek
+     geçişli eşlemeyle üretilir; tekrar eden anahtarlar sınırlı bellekten döner. */
+  const FOLD_MAP={'İ':'I','Ş':'S','Ç':'C','Ö':'O','Ü':'U','Ğ':'G'};
+  const FOLD_RE=/[İŞÇÖÜĞ]/g;
+  const UPPER_MEMO=new Map(),UPPER_MEMO_MAX=50000;
   const upper=value=>{
-    let text=clean(value).toUpperCase();
-    const pairs=[['İ','I'],['I','I'],['Ş','S'],['Ç','C'],['Ö','O'],['Ü','U'],['Ğ','G']];
-    pairs.forEach(([a,b])=>{text=text.split(a).join(b);});
-    return text.replace(/\s+/g,' ').trim();
+    const key=clean(value);
+    const hit=UPPER_MEMO.get(key);
+    if(hit!==undefined)return hit;
+    const out=key.toUpperCase().replace(FOLD_RE,ch=>FOLD_MAP[ch]).replace(/\s+/g,' ').trim();
+    if(UPPER_MEMO.size>=UPPER_MEMO_MAX)UPPER_MEMO.clear();
+    UPPER_MEMO.set(key,out);
+    return out;
   };
   const normalizeModelId=value=>{
     let text=clean(value);

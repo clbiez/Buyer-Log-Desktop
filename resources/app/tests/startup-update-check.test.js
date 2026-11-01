@@ -24,7 +24,7 @@ test('startup update check begins immediately and does not wait for renderer/log
   const readyEnd = MAIN.indexOf("process.on('uncaughtException'", readyStart);
   const ready = MAIN.slice(readyStart, readyEnd);
   assert.ok(ready.indexOf('scheduleUpdateChecks();') >= 0);
-  assert.ok(ready.indexOf('scheduleUpdateChecks();') < ready.indexOf('await startBuyerLog();'));
+  assert.ok(ready.indexOf('scheduleUpdateChecks();') < ready.indexOf('await startBuyerLog('));
 
   const rendererHookStart = MAIN.indexOf('onFirstRendererReady: () => {');
   const rendererHookEnd = MAIN.indexOf('},\n  });', rendererHookStart);

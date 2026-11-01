@@ -53,20 +53,38 @@
     const bucket=patterns[lang].get(key);
     if(bucket)bucket.push(entry);else patterns[lang].set(key,[entry]);
   }
-  function addPair(tr,en){
-    tr=norm(tr);en=norm(en);
-    if(!tr||!en||tr===en)return;
+  /* 7.0.323: indeks yalnız İHTİYAÇ DUYULAN hedef dil için, o dilde ilk çeviri
+     istendiğinde kurulur. Türkçe kipte İngilizce yönün ~8 bin kalıbı/regex'i
+     açılışta hiç derlenmez. Çiftler aynı sırayla işlendiği için "ilk kayıt
+     kazanır" kuralı değişmez. */
+  const pairList=[];
+  const built={en:false,tr:false};
+  function indexPair(target,tr,en){
     const hasPh=/\{\d+\}/.test(tr);
     // EN kipinde: Türkçe → İngilizce
-    if(!same.has(tr)){
+    if(target==='en'){
+      if(same.has(tr))return;
       if(hasPh)addPattern('en',tr,en);
       else if(!exact.en.has(tr))exact.en.set(tr,en);
+      return;
     }
     // TR kipinde: İngilizce → Türkçe (iki dilde aynı kalan jargon hariç)
     if(!same.has(en)&&!TR_LETTER.test(en)){
       if(hasPh)addPattern('tr',en,tr);
       else if(!exact.tr.has(en))exact.tr.set(en,tr);
     }
+  }
+  function addPair(tr,en){
+    tr=norm(tr);en=norm(en);
+    if(!tr||!en||tr===en)return;
+    pairList.push([tr,en]);
+    if(built.en)indexPair('en',tr,en);
+    if(built.tr)indexPair('tr',tr,en);
+  }
+  function ensureIndex(target){
+    if(built[target])return;
+    built[target]=true;
+    for(const [tr,en] of pairList)indexPair(target,tr,en);
   }
   (RAW.pairs||[]).forEach(pair=>{if(Array.isArray(pair))addPair(pair[0],pair[1]);});
   // Eski statik sözlükler (app-main.js) de aynı kaynağa katılır.
@@ -164,8 +182,9 @@
     return text;
   }
   function translate(value,target){
-    target=target||lang;
+    target=target==='en'?'en':target==='tr'?'tr':lang;
     if(value==null)return value;
+    ensureIndex(target);
     const raw=String(value);
     const text=norm(raw);
     if(!text||!needsWork(text,target))return raw;

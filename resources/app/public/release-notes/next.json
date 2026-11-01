@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-01",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Daha hızlı masaüstü açılışı",
+    "en": "Faster desktop startup"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Buyer Log sunucusu açılışta ve güncelleme sonrasında daha az bekliyor: önbellek temizliğini beklemeden başlıyor ve güncellemeden sonra ekran önbelleğini silmiyor. İlk ekrandan sonra kullanıcı yönetimi, Excel motoru, dil sözlüğü ve model görsel anahtarları kullanıcıyla daha az yarışıyor.",
+    "en": "The Buyer Log server waits less at startup and after updates: it starts without waiting for the cache cleanup and no longer wipes the screen cache after an update. After the first screen, user management, the Excel engine, the language dictionary and model image keys compete less with the user."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "desktop-faster-startup",
+      "type": "improvement",
+      "module": {
+        "tr": "Masaüstü açılışı",
+        "en": "Desktop startup"
+      },
+      "title": {
+        "tr": "Açılış ve güncelleme sonrası ilk açılış daha az bekliyor",
+        "en": "Startup and the first launch after an update wait less"
+      },
+      "body": {
+        "tr": "Buyer Log sunucusu artık güncelleme sonrası onarım adımını beklemeden başlıyor; güncelleme durum kaydı yine sunucudan önce temizleniyor, ekran önbelleği temizliği yalnız pencere açılmadan önce tamamlanmış olmalı. Sunucu hazır olduğunda pencere 400 ms'lik yoklama aralığını beklemeden açılıyor. Güncellemeden sonra tarayıcı ve derlenmiş kod önbelleği artık tamamen silinmiyor; içerik özetli adresler sayesinde eski dosya yine görünmez, yalnız eski service worker kayıtları temizleniyor. Kurulum dosyalarının ikinci bütünlük taraması ilk ekran açıldıktan sonra yapılıyor. Kullanıcı yönetimi ekranı ilk açıldığında yükleniyor, Excel motoru tarayıcı boşa çıkınca yükleniyor, dil sözlüğü yalnız kullanılan dil için hazırlanıyor, CP açılışında model görsel anahtarları daha az işlemci harcıyor ve tembel yüklenen ekran dosyaları kalıcı önbelleğe alınabiliyor. Ekran kartının kullanılıp kullanılmadığı artık pencere açıldıktan sonra da günlüğe yazılıyor.",
+        "en": "The Buyer Log server now starts without waiting for the post-update repair step; the update status record is still cleaned before the server, and the screen cache cleanup only has to finish before the window opens. Once the server is ready, the window opens without waiting for the 400 ms polling interval. After an update, the browser and compiled-code cache is no longer wiped entirely; thanks to content-hashed addresses old files still cannot appear, and only old service worker registrations are cleared. The second integrity scan of the installation files runs after the first screen opens. The user management screen loads when first opened, the Excel engine loads when the browser is idle, the language dictionary is prepared only for the language in use, model image keys use less CPU when CP opens, and lazily loaded screen files can be cached permanently. Whether the graphics card is used is now also logged after the window opens."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "desktop-faster-startup.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log açılış ekranı (splash.html, Türkçe, temsili durum): Güncelleme uygulanıyor başlığı; yeni sürüm dosyaları, eski ekran önbelleği ve veri klasörü adımları tamamlanmış, Buyer Log sunucusu başlatılıyor adımı etkin, geçen süre 0:04",
+          "en": "Real Buyer Log startup screen (splash.html, Turkish, representative state): Applying the update title; the new version files, previous screen cache and data folder steps are done, the Starting the Buyer Log server step is active, elapsed 0:04"
+        },
+        "caption": {
+          "tr": "Güncelleme sonrası ilk açılışta sunucu, önbellek temizliğini beklemeden başlar.",
+          "en": "On the first launch after an update the server starts without waiting for the cache cleanup."
+        }
+      }
+    }
+  ]
 }
