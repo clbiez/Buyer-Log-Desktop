@@ -77,6 +77,22 @@ Elle çalıştırmak için Actions'tan `version` vererek tetiklenebilir. Paketin
 - repo kökündeki Electron çalışma zamanı dosyaları,
 - SHA-256 ile sabitlenmiş `BuyerLog.exe` (`.github/installer/runtime.json`).
 
+Kurulum hazırlanırken yalnız paketteki EXE kopyasının ana simgesi, doğrulanmış
+STABLE çekirdeğindeki `buyerlog.ico` ile değiştirilir. Tüm simge boyutları yeniden
+okunup içerikleri doğrulanmadan ZIP üretilmez. Böylece Windows Dosya Gezgini,
+ilk çalıştırmadan önce de güncel logoyu gösterir. İndirilen kaynak EXE ve STABLE
+uygulama çekirdeği değiştirilmez; kurulum ZIP'inin SHA-256 değeri işlemden sonra
+hesaplanır. Yayımlanmış kurulum paketlerinin üzerine yazılmaz; düzeltme yeni
+sürümün kurulum paketinde yer alır.
+
+During installer packaging, only the staged EXE's main icon is replaced with
+`buyerlog.ico` from the verified STABLE app core. Every embedded icon size is
+read back and its contents verified before ZIP creation, so Windows Explorer
+shows the current logo before the first launch. The downloaded source EXE and
+STABLE app core remain unchanged. The installer ZIP's SHA-256 is calculated
+after branding. Published installers are never overwritten; the fix ships in
+the installer for a new version.
+
 Electron çalışma zamanı değişirse yeni `BuyerLog.exe`'yi `BuyerLog` release'ine yükleyin ve
 `runtime.json` içindeki `sha256` ile `electronVersion` değerlerini güncelleyin. Paket
 kullanıcı verisi, `config.json`, `.buyerlog-versions` veya geliştirici dosyası içerirse

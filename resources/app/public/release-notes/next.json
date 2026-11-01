@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "installer-exe-current-icon",
+      "type": "fix",
+      "module": {
+        "tr": "Masaüstü Kurulum",
+        "en": "Desktop Installation"
+      },
+      "title": {
+        "tr": "Kurulum EXE dosyasında güncel Buyer Log simgesi",
+        "en": "Current Buyer Log icon in the installer EXE"
+      },
+      "body": {
+        "tr": "Yeni kullanıcı kurulum paketindeki BuyerLog.exe artık ilk çalıştırılmadan önce güncel gri BL logosunu içerir. Paket hazırlanırken doğrulanmış STABLE çekirdeğindeki buyerlog.ico tüm boyutlarıyla EXE kopyasına gömülür ve yeniden okunarak doğrulanır. Kaynak EXE ve uygulama çekirdeği korunur; kurulum ZIP bütünlük özeti simge uygulandıktan sonra hesaplanır. Daha önce yayımlanmış kurulum paketlerinin üzerine yazılmaz; düzeltme yeni sürümün kurulum paketiyle gelir.",
+        "en": "BuyerLog.exe in new-user installers now contains the current grey BL logo before its first launch. Packaging embeds every size from buyerlog.ico in the verified STABLE core into the staged EXE and reads it back for verification. The source EXE and app core are preserved, and the installer ZIP checksum is calculated after branding. Previously published installers are never overwritten; the fix ships with the installer for a new version."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "installer-exe-current-icon.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log giriş ekranında kurulum EXE dosyasına da gömülen güncel gri BL logosu; hesap ve iş verisi yok",
+          "en": "Real Buyer Log sign-in screen showing the current grey BL logo also embedded in the installer EXE; no account or business data"
+        },
+        "caption": {
+          "tr": "Giriş ekranındaki güncel logo kurulum EXE dosyasında da kullanılır. Görsel Windows Dosya Gezgini doğrulaması değildir; gömülü simge içeriği paket testlerinde ayrıca denetlenir.",
+          "en": "The current sign-in logo is also used in the installer EXE. This image is not a Windows Explorer verification; embedded icon contents are checked separately in packaging tests."
+        }
+      }
+    },
+    {
       "id": "raw-mirror-update-compatibility",
       "type": "fix",
       "module": {
