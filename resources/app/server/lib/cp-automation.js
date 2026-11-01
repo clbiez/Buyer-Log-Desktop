@@ -28,6 +28,7 @@
  * indirmiştir.
  */
 
+const OD = require('../../public/order-decision-engine.js');
 const Engine = require('../../public/cp-readiness-engine.js');
 const Rules = require('../../public/cp-rules-engine.js');
 
@@ -55,6 +56,15 @@ const FIELDS = Object.freeze({
 });
 
 const PRIORITY_LABELS_TR = Engine.PRIORITY_LABELS.tr;
+const STAGE_LABELS_TR = Object.freeze({
+  PRODUCTION: 'Üretimde',
+  LOADING: 'Yükleme Operasyonlarında',
+  IN_TRANSIT: 'Yolda',
+  AT_ANTREPO: 'Antrepoda',
+  SHORTAGE: 'Eksik Teslimat',
+  DELIVERED: 'Depoda',
+  UNKNOWN: 'Bilinmiyor',
+});
 const OUTCOME_LABELS_TR = Object.freeze({
   ON_TRACK: 'Zamanında Yetişecek', AT_RISK: 'Riskli', EXPECTED_LATE: 'Gecikmesi Bekleniyor',
   ALREADY_LATE: 'Zaten Gecikmiş', UNKNOWN: 'Hesaplanamıyor',
@@ -66,16 +76,21 @@ function ordinalToISO(value) {
   return isNaN(date) ? '' : date.toISOString().slice(0, 10);
 }
 
-function analysisFields(analysis, matched, rulesApplied) {
+function resolvePriorityLabel(code, priorityCatalog) {
+  const fromCatalog = OD.priorityLabel ? OD.priorityLabel(code, 'tr', priorityCatalog) : '';
+  return fromCatalog || PRIORITY_LABELS_TR[code] || code;
+}
+
+function analysisFields(analysis, matched, rulesApplied, priorityCatalog) {
   const ruleReasons = (matched || []).map(rule => String(rule.reasonTr || rule.name || '').trim()).filter(Boolean);
   return {
     [FIELDS.priorityCode]: analysis.priority,
-    [FIELDS.priority]: PRIORITY_LABELS_TR[analysis.priority] || analysis.priority,
+    [FIELDS.priority]: resolvePriorityLabel(analysis.priority, priorityCatalog),
     [FIELDS.prioritySource]: rulesApplied ? 'Kullanıcı kuralları' : 'Kural uygulanmadı',
     [FIELDS.calculationStatus]: analysis.calculationStatus || (analysis.deliveryOutcome === 'UNKNOWN' ? 'UNKNOWN' : 'KNOWN'),
     [FIELDS.outcomeCode]: analysis.deliveryOutcome,
     [FIELDS.outcome]: OUTCOME_LABELS_TR[analysis.deliveryOutcome] || analysis.deliveryOutcome,
-    [FIELDS.stage]: Engine.PRIORITY_LABELS.tr[analysis.stage] || analysis.stage,
+    [FIELDS.stage]: STAGE_LABELS_TR[analysis.stage] || Engine.PRIORITY_LABELS.tr[analysis.stage] || analysis.stage,
     [FIELDS.riskReasons]: [...ruleReasons, ...analysis.riskReasons.map(key => Engine.RISK_REASON_LABELS.tr[key] || key)].join(' · '),
     [FIELDS.daysToLoad]: analysis.daysToLoad == null ? '' : analysis.daysToLoad,
     [FIELDS.loadWindow]: Engine.LOAD_WINDOW_LABELS.tr[analysis.loadWindow] || analysis.loadWindow,
@@ -104,18 +119,25 @@ function enrichRows(rows, options) {
     settings: opts.settings || {},
   };
   const rules = Array.isArray(opts.rules) ? opts.rules : null;
+  const priorityCatalog = Array.isArray(opts.priorityCatalog) ? opts.priorityCatalog : undefined;
   const prepared = rules && Rules.prepareEvaluation ? Rules.prepareEvaluation(rules) : null;
   return list.map(row => {
     const analysis = Engine.analyzeOrder(row, ctx);
     let matched = [];
     if (rules) {
-      const evaluated = Rules.evaluateOrder(analysis, { rules, preparedRules: prepared, answers: opts.answers || {},
-        checklistEnabled: opts.checklistEnabled !== false, today: ctx.today });
+      const evaluated = Rules.evaluateOrder(analysis, {
+        rules,
+        preparedRules: prepared,
+        priorityCatalog,
+        answers: opts.answers || {},
+        checklistEnabled: opts.checklistEnabled !== false,
+        today: ctx.today,
+      });
       analysis.priority = evaluated.priority;
       matched = evaluated.matched || [];
     }
     const merged = { ...row };
-    for (const [key, value] of Object.entries(analysisFields(analysis, matched, Boolean(rules)))) {
+    for (const [key, value] of Object.entries(analysisFields(analysis, matched, Boolean(rules), priorityCatalog))) {
       if (Object.prototype.hasOwnProperty.call(merged, key)) continue;
       merged[key] = value;
     }
@@ -123,4 +145,25 @@ function enrichRows(rows, options) {
   });
 }
 
-module.exports = { FIELDS, enrichRows, ordinalToISO };
+function evaluateCpAutomations(options) {
+  const opts = options || {};
+  const automations = (Array.isArray(opts.automations) ? opts.automations : []).filter(item => item && item.enabled !== false);
+  if (!automations.length) return [];
+  const enriched = enrichRows(opts.rows || [], opts);
+  return automations.map(auto => {
+    const cfg = auto.triggerConfig || {};
+    const wanted = new Set(Array.isArray(cfg.priorities) ? cfg.priorities : []);
+    const matches = enriched
+      .filter(row => !wanted.size || wanted.has(row[FIELDS.priorityCode]))
+      .map(row => ({
+        row,
+        priority: row[FIELDS.priorityCode],
+        priorityLabel: row[FIELDS.priority],
+        stageLabel: row[FIELDS.stage],
+        reasons: row[FIELDS.riskReasons],
+      }));
+    return { id: auto.id, matches };
+  });
+}
+
+module.exports = { FIELDS, enrichRows, evaluateCpAutomations, ordinalToISO };

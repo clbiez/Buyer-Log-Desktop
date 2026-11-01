@@ -8,13 +8,38 @@
   'use strict';
   const DAY=86400000;
   const PRIORITIES=['CRITICAL','ACTION_TODAY','ACTION_THIS_WEEK','WATCH','ON_TRACK'];
+  const BUILTIN_PULSE_KEYS={CRITICAL:'critical',ACTION_TODAY:'today',ACTION_THIS_WEEK:'week'};
   const CATEGORIES=['var(--ui-chart-1)','var(--ui-chart-2)','var(--ui-chart-3)','var(--ui-chart-4)','var(--ui-chart-5)','var(--ui-chart-6)','var(--ui-chart-7)','var(--ui-chart-8)'];
   const RISK=new Set(PRIORITIES.slice(0,3));
   const finite=value=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value));
   const number=value=>finite(value)?Number(value):0;
+  const decisionEngine=()=>{
+    if(root&&root.BLOrderDecisionEngine)return root.BLOrderDecisionEngine;
+    if(typeof require==='function'){try{return require('./order-decision-engine.js');}catch(_){}}
+    return null;
+  };
+  function activePriorityCatalog(explicit){
+    const OD=decisionEngine();
+    if(Array.isArray(explicit)&&explicit.length)return OD?.normalizePriorityCatalog?OD.normalizePriorityCatalog(explicit):explicit;
+    return OD?.getPriorityCatalog?OD.getPriorityCatalog():PRIORITIES.map((id,rank)=>({id,rank,tr:id,en:id,tone:'gray',isRisk:RISK.has(id)}));
+  }
+  function isRiskCode(code,catalog){
+    const OD=decisionEngine();
+    if(OD?.isRiskPriority)return OD.isRiskPriority(code,catalog);
+    return RISK.has(code);
+  }
+  function priorityBand(priorityCode,catalog){
+    const OD=decisionEngine();
+    const tone=OD?.priorityTone?OD.priorityTone(priorityCode,catalog):({CRITICAL:'red',ACTION_TODAY:'orange',ACTION_THIS_WEEK:'yellow',WATCH:'blue',ON_TRACK:'green'}[priorityCode]||'gray');
+    if(tone==='red')return 'danger';
+    if(tone==='copper'||tone==='orange'||tone==='yellow')return 'warning';
+    if(tone==='green')return 'ok';
+    return 'info';
+  }
   function today(){const d=new Date();return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/DAY;}
   function buildHorizon(orders,options={}){
     const start=finite(options.start)?Math.floor(Number(options.start)):today(),count=options.days===14?14:7;
+    const catalog=options.priorityCatalog;
     const days=Array.from({length:count},(_,i)=>({date:start+i,qty:0,riskQty:0,unknownRows:0,rows:[]}));
     const result={start,days,qty:0,missing:[],overdue:[],outside:[]};
     for(const item of Array.isArray(orders)?orders:[]){
@@ -24,7 +49,7 @@
       if(index>=count){result.outside.push(item);continue;}
       const slot=days[index],qty=Math.max(0,number(item.qty));
       slot.rows.push(item);slot.qty+=qty;result.qty+=qty;
-      if(RISK.has(item.priority))slot.riskQty+=qty;
+      if(isRiskCode(item.priority,catalog))slot.riskQty+=qty;
       if(item.calculationStatus==='UNKNOWN')slot.unknownRows++;
     }
     return result;
@@ -43,14 +68,21 @@
   }
   function pulseScopes(model,options={}){
     const orders=Array.isArray(model?.orders)?model.orders:[];
+    const catalog=activePriorityCatalog(options.priorityCatalog);
     const loading=buildHorizon(orders,options).days.flatMap(day=>day.rows);
+    const riskScopes=[];
+    for(const meta of catalog){
+      if(!meta||meta.id==='ON_TRACK'||!meta.isRisk)continue;
+      const key=BUILTIN_PULSE_KEYS[meta.id]||meta.id;
+      riskScopes.push({key,priority:meta.id,meta,orders:orders.filter(item=>item.priority===meta.id)});
+    }
     return [
       {key:'scope',orders},
-      ...[['critical','CRITICAL'],['today','ACTION_TODAY'],['week','ACTION_THIS_WEEK']].map(([key,priority])=>({key,orders:orders.filter(item=>item.priority===priority)})),
+      ...riskScopes,
       {key:'loading',orders:loading},
     ].filter(entry=>entry.orders.length);
   }
-  const api={buildHorizon,buildCoverage,metricSeries,pulseScopes};
+  const api={buildHorizon,buildCoverage,metricSeries,pulseScopes,priorityBand};
   if(!root.document)return api;
   const doc=root.document;
   const L=(tr,en)=>String(doc.documentElement.lang||'tr').startsWith('en')?en:tr;
@@ -72,9 +104,17 @@
     if(focusKey)node.querySelector(`[data-ov-focus="${CSS.escape(focusKey)}"]`)?.focus({preventScroll:true});
     return true;
   }
-  function priorityBand(){
-    const values=PRIORITIES.map(key=>({key,count:number(model?.priorities?.find(item=>item.name===key)?.rows)}));
-    return `<div class="ovPulseBand" aria-hidden="true">${values.filter(x=>x.count).map(x=>`<i class="ovBdTone--${{CRITICAL:'critical',ACTION_TODAY:'today',ACTION_THIS_WEEK:'week',WATCH:'watch',ON_TRACK:'ok'}[x.key]}" style="flex:${x.count}"></i>`).join('')}</div>`;
+  function renderPriorityBand(){
+    const catalog=activePriorityCatalog();
+    const toneClass=meta=>{
+      if(meta.id==='CRITICAL'||meta.tone==='red')return 'critical';
+      if(meta.id==='ACTION_TODAY'||meta.tone==='copper'||meta.tone==='orange')return 'today';
+      if(meta.id==='ACTION_THIS_WEEK'||meta.tone==='yellow')return 'week';
+      if(meta.id==='ON_TRACK'||meta.tone==='green')return 'ok';
+      return 'watch';
+    };
+    const values=catalog.map(meta=>({meta,count:number(model?.priorities?.find(item=>item.name===meta.id)?.rows)}));
+    return `<div class="ovPulseBand" aria-hidden="true">${values.filter(x=>x.count).map(x=>`<i class="ovBdTone--${toneClass(x.meta)}" style="flex:${x.count}"></i>`).join('')}</div>`;
   }
   function animatePulse(node){
     if(doc.hidden||doc.documentElement.dataset.overviewMotion==='paused'||root.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -93,15 +133,16 @@
     const labels={scope:L('Aktif CP kapsamı','Active CP scope'),critical:L('Kritik aksiyon','Critical action'),today:L('Bugün Aksiyon','Action Today'),week:L('Bu Hafta Aksiyon','Action This Week'),loading:L('Yakın yükleme · 7 gün','Upcoming loading · 7 days')};
     const records=pulseScopes(model).map(entry=>{
       const qty=entry.orders.reduce((sum,item)=>sum+number(item.qty),0),loading=entry.key==='loading';
-      return {...entry,label:labels[entry.key],value:fmt(loading?qty:entry.orders.length),unit:loading?L('adet','units'):L('satır','rows'),sub:loading?`${fmt(entry.orders.length)} ${L('planlı satır','planned rows')}`:`${fmt(qty)} ${L('adet','units')}`,
-        visual:loading?`<div class="ovPulseMini" aria-hidden="true">${horizon.days.map(d=>`<i style="--ov-level:${Math.max(4,100*d.qty/Math.max(1,...horizon.days.map(x=>x.qty)))}%"></i>`).join('')}</div>`:priorityBand()};
+      const label=labels[entry.key]||(entry.meta?L(entry.meta.tr,entry.meta.en):entry.key);
+      return {...entry,label,value:fmt(loading?qty:entry.orders.length),unit:loading?L('adet','units'):L('satır','rows'),sub:loading?`${fmt(entry.orders.length)} ${L('planlı satır','planned rows')}`:`${fmt(qty)} ${L('adet','units')}`,
+        visual:loading?`<div class="ovPulseMini" aria-hidden="true">${horizon.days.map(d=>`<i style="--ov-level:${Math.max(4,100*d.qty/Math.max(1,...horizon.days.map(x=>x.qty)))}%"></i>`).join('')}</div>`:renderPriorityBand()};
     });
     // v7.0.290 — Öncelik yalnız kullanıcının kurallarından gelir: kural yoksa
     // Kritik/Bugün/Bu Hafta kartları gizli kalmaz, nedenini ve çözümünü söyler.
     const noRules=context.priorityRules===0&&records.length;
     const rulesHint=noRules?`<button type="button" class="ovPulseKpi ovPulseHint" data-ov-rules data-ov-focus="pulse-rules"><span>${esc(L('Öncelik kuralı yok','No priority rules'))}</span><strong><b>0</b><small>${esc(L('kural','rules'))}</small></strong><em>${esc(L('Kritik / Bugün / Bu Hafta yalnız kurallarınızla hesaplanır · Kural ekle','Critical / Today / This Week come only from your rules · Add a rule'))}</em></button>`:'';
     const count=records.length+(noRules?1:0);
-    const changed=draw(node,records.length?`<div class="ovPulseGrid" style="--ov-pulse-count:${count}">${records.map(r=>`<button type="button" class="ovPulseKpi${r.key==='critical'?' isRisk':''}" data-ov-pulse="${r.key}" data-ov-focus="pulse-${r.key}"><span>${esc(r.label)}</span><strong><b data-ov-count>${esc(r.value)}</b><small>${esc(r.unit)}</small></strong><em>${esc(r.sub)}</em>${r.visual}</button>`).join('')}${rulesHint}</div>`:empty(L('Bu kapsamda aktif sipariş yok.','No active orders in this scope.')));
+    const changed=draw(node,records.length?`<div class="ovPulseGrid" style="--ov-pulse-count:${count}">${records.map(r=>`<button type="button" class="ovPulseKpi${(r.key==='critical'||r.meta?.tone==='red')?' isRisk':''}" data-ov-pulse="${esc(r.key)}" data-ov-focus="pulse-${esc(r.key)}"><span>${esc(r.label)}</span><strong><b data-ov-count>${esc(r.value)}</b><small>${esc(r.unit)}</small></strong><em>${esc(r.sub)}</em>${r.visual}</button>`).join('')}${rulesHint}</div>`:empty(L('Bu kapsamda aktif sipariş yok.','No active orders in this scope.')));
     if(changed)animatePulse(node);
   }
   function renderHorizon(){

@@ -1,4 +1,6 @@
 'use strict';
+const OD=require('../../public/order-decision-engine');
+const Checklist=require('../../public/cp-checklist-engine');
 const Rules=require('../../public/cp-rules-engine');
 const CP=require('../../public/cp-readiness-engine');
 const {hash,error}=require('./operation-utils');
@@ -9,7 +11,11 @@ function createCpRulePreferences(preferences,userAccess,managedRules=()=>null) {
   // same validation as cp-checklist-engine customStatuses().
   function customStatuses(effective){
     let raw;try{raw=JSON.parse(effective['lcw.cp.checklist.custom-statuses.v1']?.value||'[]');}catch(_){return [];}
-    return (Array.isArray(raw)?raw:[]).filter(item=>item&&/^custom:[a-z0-9][a-z0-9-]{0,47}$/.test(item.id)&&typeof item.name==='string'&&item.name.trim()).slice(0,24).map(item=>({id:item.id,name:item.name.slice(0,50)}));
+    const personal=(Array.isArray(raw)?raw:[]).map(Checklist.normalizeCustomStatusEntry).filter(Boolean).slice(0,24);
+    const managed=(managedRules()?.checklistStatuses||[]).map(item=>Checklist.normalizeCustomStatusEntry({...item,managed:true})).filter(Boolean);
+    const byId=new Map(personal.map(item=>[item.id,item]));
+    for(const item of managed)byId.set(item.id,item);
+    return [...byId.values()].slice(0,32);
   }
   function context(profile){
     // Assistant settings/answers are personal keys; only rule stores belong
@@ -25,7 +31,9 @@ function createCpRulePreferences(preferences,userAccess,managedRules=()=>null) {
     let payload={version:kind==='checklist'?2:1,rules:[],deletedRuleIds:[]};
     if(entry?.value){try{payload=JSON.parse(entry.value);}catch(_){throw error('OFFICE_RULE_STORE_UNREADABLE',409);}}
     if(!payload||!Array.isArray(payload.rules))throw error('OFFICE_RULE_STORE_UNREADABLE',409);
-    return {key,own,payload,rules:Rules.effectiveRules(payload.rules,payload.deletedRuleIds||[],managedRules()).filter(r=>r.kind===kind),hash:hash(JSON.stringify({own,entry,deletion:personal.deletions[key]||null}))};
+    const managed=managedRules();
+    const priorityCatalog=kind==='priority'?OD.effectivePriorityCatalog(payload.priorityCatalog,managed?.priorityCatalog):undefined;
+    return {key,own,payload,priorityCatalog,rules:Rules.effectiveRules(payload.rules,payload.deletedRuleIds||[],managed).filter(r=>r.kind===kind),hash:hash(JSON.stringify({own,entry,deletion:personal.deletions[key]||null}))};
   }
   function saveRule(profile,rule,before,options={}) {
     if(snapshot(profile,rule.kind).hash!==before.hash)throw error('OFFICE_PREVIEW_CHANGED',409);

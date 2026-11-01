@@ -891,6 +891,15 @@ function actionPriorityCode(value){
   if(OD&&OD.ACTION_PRIORITY&&OD.ACTION_PRIORITY[text])return text;
   if(text==='ACT_TODAY')return 'ACTION_TODAY';
   if(text==='ACT_THIS_WEEK')return 'ACTION_THIS_WEEK';
+  if(OD&&typeof OD.isCustomPriorityCode==='function'&&OD.isCustomPriorityCode(text))return text;
+  const catalog=OD&&typeof OD.getPriorityCatalog==='function'?OD.getPriorityCatalog():null;
+  if(Array.isArray(catalog)){
+    const wanted=text.toLocaleLowerCase('tr-TR');
+    for(const meta of catalog){
+      if(meta&&meta.id===text)return meta.id;
+      if(norm(meta&&meta.tr).toLocaleLowerCase('tr-TR')===wanted||norm(meta&&meta.en).toLocaleLowerCase('tr-TR')===wanted)return meta.id;
+    }
+  }
   if(OD&&OD.ACTION_PRIORITY){
     const wanted=text.toLocaleLowerCase('tr-TR');
     for(const [code,meta] of Object.entries(OD.ACTION_PRIORITY)){
@@ -901,6 +910,7 @@ function actionPriorityCode(value){
 }
 function actionPriorityCodes(){
   const OD=window.BLOrderDecisionEngine;
+  if(OD&&typeof OD.priorityIds==='function')return OD.priorityIds();
   return OD&&Array.isArray(OD.ACTION_PRIORITIES)?OD.ACTION_PRIORITIES.slice():[];
 }
 function priorityHas(priority, flag){
@@ -909,15 +919,21 @@ function priorityHas(priority, flag){
 }
 function priorityDisplay(priority){
   const code=actionPriorityCode(priority);
-  const meta=code&&window.BLOrderDecisionEngine&&window.BLOrderDecisionEngine.ACTION_PRIORITY
-    ?window.BLOrderDecisionEngine.ACTION_PRIORITY[code]:null;
+  if(!code)return '';
+  const OD=window.BLOrderDecisionEngine;
+  if(OD&&typeof OD.priorityLabel==='function'){
+    const label=OD.priorityLabel(code,appLang==='en'?'en':'tr');
+    if(label)return label;
+  }
+  const meta=OD&&OD.ACTION_PRIORITY?OD.ACTION_PRIORITY[code]:null;
   if(!meta)return '';
   return appLang==='en'?meta.en:meta.tr;
 }
 function priorityTone(priority){
   const code=actionPriorityCode(priority);
-  const meta=code&&window.BLOrderDecisionEngine&&window.BLOrderDecisionEngine.ACTION_PRIORITY
-    ?window.BLOrderDecisionEngine.ACTION_PRIORITY[code]:null;
+  const OD=window.BLOrderDecisionEngine;
+  if(code&&OD&&typeof OD.priorityTone==='function')return OD.priorityTone(code);
+  const meta=code&&OD&&OD.ACTION_PRIORITY?OD.ACTION_PRIORITY[code]:null;
   return meta&&meta.tone?meta.tone:'gray';
 }
 // Unified Priority geçişi sırasında eski Priority helper bloğu kaldırılırken
@@ -5974,8 +5990,9 @@ function cellHtml(c,r,cf,tableKey='cp'){
       const clTasks=(r._checklistTasks&&r._checklistTasks[c.checklistItemId])||[];
       const clTaskTitle=clTasks.map(t=>(appLang==='en'?'Awaiting buying feedback':'Buying dönüşü bekleniyor')+` · ${t.talepNo} · ${t.test||''}${t.aciklama?' — '+t.aciklama:''}`).join('\n');
       const clTaskFlag=clTasks.length?`<span class="clTaskFlag" title="${escapeHtml(clTaskTitle)}">Buying ${clTasks.length}</span>`:'';
+      const clTone=window.BLCpChecklistEngine?.statusTone?.(status)||'gray';
       if(!canEdit) return clTasks.length?`<td title="${escapeHtml(clTaskTitle)}">${escapeHtml(label)} ${clTaskFlag}</td>`:viewOnly(label);
-      return `<td class="editTd"><button type="button" class="clStatusTrigger is-${escapeHtml(status)}${clTasks.length?' has-task':''}" data-id="${id}"${editorIdentity} data-item="${escapeHtml(c.checklistItemId||'')}" data-status="${escapeHtml(status)}" aria-haspopup="listbox" aria-expanded="false" title="${escapeHtml(clTaskTitle||(appLang==='en'?'Choose a status':'Durum seçin'))}"><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">${escapeHtml(label)}</span>${clTaskFlag}<span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
+      return `<td class="editTd"><button type="button" class="clStatusTrigger is-${escapeHtml(status)} tone-${escapeHtml(clTone)}${clTasks.length?' has-task':''}" data-id="${id}"${editorIdentity} data-item="${escapeHtml(c.checklistItemId||'')}" data-status="${escapeHtml(status)}" aria-haspopup="listbox" aria-expanded="false" title="${escapeHtml(clTaskTitle||(appLang==='en'?'Choose a status':'Durum seçin'))}"><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">${escapeHtml(label)}</span>${clTaskFlag}<span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
     }
     case 'plmSample': return plmSampleCellHtml(r,tableKey);
     case 'priority': {
@@ -36806,6 +36823,14 @@ async function createHologramRequestExcel(rows){
   showToast(appLang==='en'?'Hologram Excel created; Hologram Check is Ordered.':'Hologram Excel oluşturuldu; Hologram Check: Sipariş Geçildi.');
   return name;
 }
+document.getElementById('cpChecklistRulesBtn')?.addEventListener('click',async()=>{
+  try{
+    await window.BLPerf?.ensureFeature?.('cpAssistant');
+    await window.BLChecklistSupplierSync?.loadShared?.();
+    const rows=Array.isArray(state.cp?.rows)&&state.cp.rows.length?state.cp.rows:ovFilteredCpRows();
+    window.BLCpAssistant?.openStudio?.('queue',{rows});
+  }catch(error){showToast(error.message);}
+});
 document.getElementById('cpHologramRequestBtn')?.addEventListener('click',async()=>{
   const btn=document.getElementById('cpHologramRequestBtn');btn.disabled=true;window.BLTableToolbarActionCleanup?.begin?.(btn);
   try{const name=await createHologramRequestExcel(selectedCpRowsForAction());window.BLTableToolbarActionCleanup?.finish?.(btn,Boolean(name));}

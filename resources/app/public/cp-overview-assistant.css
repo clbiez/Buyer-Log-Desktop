@@ -1,13 +1,4 @@
-/* Buyer Log v9.48 — Bugünün Üretim Öncelikleri
- *
- * ÖLÇÜ VE RENK TOKEN'DAN GELİR. Sabit px yazı boyutu yazma:
- *   · --fs-xs .. --fs-xl hepsi calc(... + var(--ui-font-add)) ile tanımlı,
- *     yani kullanıcının yazı boyutu ayarıyla birlikte büyür. Sabit px yazan
- *     bir kural o ayarı SESSİZCE yok sayar (v9.48'de tam olarak bu oldu:
- *     panel 7.8–9px ile çizilmişti, en küçük token 11px).
- *   · --r-* yarıçapları 0'dır: uygulama kare köşe kullanır.
- *   · Renkler yalnız token'lardan (CLAUDE.md §9).
- */
+/* Buyer Log — Kontrol & Kurallar Merkezi (yalnız yerleşim ve geometri; renk/tipografi ui-components.css'tedir) */
 
 #cpAssistant{display:block;margin-bottom:var(--ui-space-3)}
 #cpAssistant:empty,#cpAssistantAttention:empty,#cpAssistantCoverage:empty{display:none}
@@ -19,8 +10,9 @@
 .cpaSeg{display:inline-flex;overflow:hidden}
 .cpaSeg button{padding:0 12px;height:32px;cursor:pointer}
 
-.cpaBtn{height:32px;padding:0 12px;cursor:pointer}
+.cpaBtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;cursor:pointer;white-space:nowrap}
 .cpaBtn.sm{height:27px;padding:0 10px}
+.cpaBtnBadge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 5px}
 
 .cpaGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:var(--ui-space-3)}
 .cpaGrid.is-single{grid-template-columns:minmax(0,1fr)}
@@ -28,6 +20,9 @@
 .cpaCard>header{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-2);padding:10px var(--ui-space-3)}
 .cpaCardBody{display:grid;gap:10px;padding:var(--ui-space-3)}
 .cpaToggle{width:26px;height:26px;cursor:pointer}
+
+.cpaOverviewPriorities{display:grid;gap:8px;padding:12px;margin-bottom:10px}
+.cpaOverviewPrioHead{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-2);flex-wrap:wrap}
 
 .cpaLayoutEmpty{grid-column:1/-1;padding:var(--ui-space-4);text-align:center}
 .cpaLayoutModal{width:min(720px,94vw);max-height:min(760px,90vh)}
@@ -48,7 +43,7 @@
 .cpaLayoutFooterSpacer{flex:1 1 auto}
 
 .cpaChips{display:flex;gap:6px;flex-wrap:wrap}
-.cpaChip{display:grid;gap:1px;min-width:112px;padding:8px 11px;text-align:left;cursor:pointer}
+.cpaChip{display:grid;gap:1px;min-width:108px;padding:7px 10px;text-align:left;cursor:pointer}
 .cpaChip.is-static{cursor:default}
 .cpaChip:disabled{opacity:.45;cursor:default}
 
@@ -69,9 +64,9 @@
 .cpaTable th.num{text-align:right}
 .cpaTable .act{text-align:right;white-space:nowrap}
 .cpaTable tbody tr[data-cpa-order]{cursor:pointer}
-.cpaTable tbody tr.is-answered{opacity:.5}
+.cpaTable tbody tr.is-answered{opacity:.58}
 
-.cpaPill{display:inline-block;padding:2px 9px}
+.cpaPill{display:inline-flex;align-items:center;gap:5px;padding:2px 9px}
 
 .cpaNote{margin:0}
 .cpaEmpty{margin:0;padding:var(--ui-space-3);text-align:center}
@@ -87,7 +82,6 @@
 .cpaModal>header button{width:30px;height:30px;cursor:pointer}
 .cpaModalBody{display:grid;gap:10px;padding:var(--ui-space-4);overflow:auto}
 .cpaModal>footer{display:flex;justify-content:flex-end;gap:var(--ui-space-2);padding:var(--ui-space-3) var(--ui-space-4)}
-/* PLM numune talebi durumu (plm-sample-requests.js). Yalnız sistem renk token'ları. */
 .cpaPlm{display:inline-flex;align-items:center;gap:4px;padding:1px 7px;white-space:nowrap}.cpDocumentFlow .cpaModal{width:min(700px,90vw);padding:24px}.cpDocumentFlow .cpaModalActions{display:flex;gap:10px;flex-wrap:wrap}
 
 .cpaSettingGroup{display:grid;gap:6px}
@@ -103,18 +97,72 @@
 @media(max-width:1100px){.cpaGrid{grid-template-columns:1fr}.cpaDims{grid-template-columns:1fr}}
 .cpaWarn{margin:0;padding:9px 11px}
 
-/* ---- kural düzenleyici ---- */
+/* ---- Kontrol & Kurallar Merkezi (3 Sekmeli Studio) ---- */
 .cpaRulesModal{width:min(1500px,96vw);min-width:min(1000px,96vw);height:auto;max-height:calc(100vh - 2 * var(--ui-space-5));box-sizing:border-box}
 .cpaRulesModal>header{align-items:center;padding:10px var(--ui-space-4)}
 .cpaRulesModal>header>div{min-width:0}
 .cpaRulesModal>header small{margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cpaRulesModal>header button{display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .cpaRulesModal>header button .ic{width:15px;height:15px}
+.cpaStudioNavBar{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-3);padding:0 var(--ui-space-4);flex-wrap:wrap}
+.cpaStudioTabs{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%;overflow-x:auto}
+.cpaStudioTabs>button{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 12px;cursor:pointer;white-space:nowrap}
+.cpaStudioTabs>button span{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:19px;padding:0 6px}
+.cpaStudioTargetWrap{display:flex;align-items:center;gap:6px;padding:4px 0}
 .cpaRulesBody{display:flex;flex:1 1 auto;min-height:0;flex-direction:column;gap:8px;padding:var(--ui-space-3) var(--ui-space-4);overflow:hidden}
 .cpaRulesModal>footer{align-items:center;justify-content:space-between;gap:var(--ui-space-3);padding:9px var(--ui-space-4)}
 .cpaRulesCount{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-.cpaRulesToolbar{position:sticky;top:calc(-1 * var(--ui-space-3));display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-3);padding:var(--ui-space-3) 0 7px}
+/* ---- Sekme 1: İş Listesi (Hızlı Checklist Masası) ---- */
+.cpaQueueQuickBar{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-2);flex-wrap:wrap;padding:6px 10px}
+.cpaQueueQuickBtns{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cpaQueueFilters{display:grid;gap:7px}
+.cpaQueueQuestionPills{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.cpaQueueQuestionPill{display:inline-flex;align-items:center;gap:6px;height:29px;padding:0 10px;cursor:pointer;white-space:nowrap}
+.cpaQueueFilterRow{display:grid;grid-template-columns:minmax(220px,1.5fr) minmax(170px,1fr) minmax(170px,1fr) auto;gap:8px;align-items:center}
+.cpaQueueFilterRow input,.cpaQueueFilterRow select{width:100%;height:34px;padding:0 9px;box-sizing:border-box}
+.cpaBulkBar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 10px}
+.cpaBulkControls{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.cpaBulkControls select,.cpaBulkControls input{height:30px;padding:0 9px;box-sizing:border-box}
+.cpaBulkControls input{min-width:210px}
+.cpaQueueScroll{flex:1 1 auto;min-height:220px;max-height:none;overflow:auto;overscroll-behavior:contain}
+.cpaQueueTable th{position:sticky;top:0;padding:7px 8px;white-space:nowrap}
+.cpaQueueTable td{vertical-align:middle}
+.cpaQueueSelectCol{width:34px;min-width:34px;text-align:center}
+.cpaQueueSelectCol input{width:16px;height:16px;margin:0;cursor:pointer}
+.cpaQueueStatusSelect{height:29px;min-width:136px;max-width:210px;padding:0 8px;box-sizing:border-box;cursor:pointer}
+.cpaQueueParts{display:grid;gap:4px}
+.cpaQueuePartRow{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+.cpaQueueRowActions{display:inline-flex;align-items:center;gap:5px;justify-content:flex-end}
+
+/* ---- Etiket ve Durum Kataloğu (Öncelik Etiketleri & Checklist Durumları) ---- */
+.cpaCatalogCard{display:grid;gap:8px;padding:9px 11px;flex:0 0 auto}
+.cpaCatalogHead{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-2);flex-wrap:wrap}
+.cpaCatalogHeadTitle{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.cpaTagStrip{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cpaTagItem{display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:2px 6px 2px 8px}
+.cpaTagDot{display:inline-block;width:8px;height:8px;flex:0 0 8px}
+.cpaTagRank{min-width:18px;text-align:center}
+.cpaTagMiniBtn{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;padding:0;cursor:pointer}
+.cpaTagMiniBtn:disabled{opacity:.35;cursor:default}
+.cpaTagEditor{display:grid;gap:8px;padding:9px 10px}
+.cpaTagEditorGrid{display:grid;grid-template-columns:minmax(180px,1.2fr) minmax(180px,1.1fr) auto auto;gap:8px;align-items:end}
+.cpaTagEditorGrid label{display:grid;gap:3px;min-width:0}
+.cpaTagEditorGrid input,.cpaTagEditorGrid select{width:100%;height:32px;padding:0 9px;box-sizing:border-box}
+.cpaToneSwatches{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;min-height:32px}
+.cpaToneSwatch{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 8px;cursor:pointer}
+.cpaTagEditorFoot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+
+/* ---- Kapsam Hazır Seçimleri (Checklist Scope Presets) ---- */
+.cpaScopePresets{display:grid;gap:7px;padding:9px 10px}
+.cpaScopePresetTabs{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.cpaScopePresetBtn{height:30px;padding:0 11px;cursor:pointer}
+.cpaScopeInlineRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cpaScopeInlineRow input{width:76px;height:30px;padding:0 8px;text-align:right;box-sizing:border-box}
+.cpaAutoModeSwitch{display:inline-flex;align-items:center;gap:4px;margin-top:2px}
+.cpaAutoModeSwitch button{height:27px;padding:0 10px;cursor:pointer}
+
+.cpaRulesToolbar{position:sticky;top:calc(-1 * var(--ui-space-3));display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-3);padding:4px 0 6px}
 .cpaRulesTabs{display:inline-flex;align-items:center;overflow:hidden}
 .cpaRulesTabs button{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;cursor:pointer}
 .cpaRulesTabs button span{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 6px}
@@ -123,7 +171,6 @@
 .cpaRuleList{display:flex;flex:1 1 auto;min-height:0;flex-direction:column;gap:7px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding-right:3px}
 
 .cpaRule{display:grid;flex:0 0 auto;min-height:min-content;overflow:hidden}
-/* Actions occupy their own row so titles never overlap the kind label at XL. */
 .cpaRuleBar{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:9px;min-height:48px;padding:5px 8px 5px 10px}
 .cpaRule.is-disabled .cpaRuleSummaryMain,.cpaRule.is-disabled .cpaRuleSummaryMeta{opacity:.55}
 
@@ -134,7 +181,7 @@
 .cpaSwitch input:checked+.cpaSwitchTrack span{transform:translateX(12px)}
 
 .cpaRuleSummary{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0;width:100%;padding:0;text-align:left;cursor:pointer}
-.cpaRuleSummary>.cpaPill{justify-self:start;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cpaRuleSummary>.cpaPill{justify-self:start;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cpaRuleSummaryMain{display:grid;gap:1px;min-width:0}
 .cpaRuleSummaryMain b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cpaRuleSummaryMain small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -162,7 +209,7 @@
 .cpaCondOffset input,.cpaCondOffset select{height:28px!important;padding:0 6px!important}
 .cpaCondToday{display:flex;align-items:center;height:34px;padding:0 9px;box-sizing:border-box}
 .cpaFormulaEditor{display:grid;gap:8px;padding:9px}
-.cpaFormulaEditor textarea{width:100%;min-height:116px;resize:vertical;padding:9px;box-sizing:border-box}
+.cpaFormulaEditor textarea{width:100%;min-height:110px;resize:vertical;padding:9px;box-sizing:border-box}
 .cpaFormulaActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .cpaFormulaDiagnostics{display:flex;flex-wrap:wrap;gap:5px}
 .cpaFormulaDiagnostics span{padding:4px 7px}
@@ -178,7 +225,7 @@
 .cpaValueToggle{display:flex;align-items:center;justify-content:center;height:34px;padding:0;cursor:pointer}
 .cpaValueMenu{position:fixed;display:flex;flex-direction:column;min-width:0;max-width:calc(100vw - 24px);max-height:360px;box-sizing:border-box;padding:7px;overflow:hidden}
 .cpaValueMenu[hidden]{display:none}
-.cpaValueMenu>[data-cpa-value-search]{position:sticky;top:0;flex:0 0 auto;height:32px;margin-bottom:6px}
+.cpaValueMenu>[data-cpa-value-search]{position:sticky;top:0;flex:0 0 auto;height:32px;margin-bottom:6px;width:100%;padding:0 9px;box-sizing:border-box}
 .cpaValueOptions{display:grid;flex:1 1 auto;min-height:0;gap:2px;max-height:var(--cpa-value-options-max-height,260px);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
 .cpaValueOption{display:flex;align-items:center;gap:8px;width:100%;min-height:31px;padding:5px 8px;text-align:left;cursor:pointer;box-sizing:border-box}
 .cpaValueOption input{flex:0 0 auto;width:auto;height:auto;margin:0;padding:0}
@@ -190,7 +237,6 @@
 .cpaRuleBodyActions{display:flex;justify-content:flex-start;padding-top:1px}
 .cpaRuleEmptyNote{padding:8px 10px}
 
-/* v7.221 — sade kural düzenleyici */
 .cpaRulesToolbarActions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .cpaRulesToolbar .cpaRulesNote{margin:0;min-width:0}
 .cpaChecklistSettingsStrip{display:flex;align-items:center;gap:var(--ui-space-3);flex-wrap:wrap;padding:8px 10px}
@@ -206,7 +252,6 @@
 .cpaFieldPickerBtn>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cpaFieldChevron{flex:0 0 auto}
 .cpaFieldGroup{position:sticky;top:0;padding:6px 8px 3px}
-.cpaValueMenu>[data-cpa-value-search]{width:100%;padding:0 9px;box-sizing:border-box}
 .cpaFormulaFields .cpaFieldPicker{width:260px}
 .cpaChoiceGroup{display:flex;flex-wrap:wrap;gap:4px;min-height:34px;align-items:center}
 .cpaChoice{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 9px;cursor:pointer}
@@ -216,10 +261,6 @@
 .cpaRuleWarn{margin:0;padding:8px 10px}
 .cpaRuleUsedBy{margin:0}
 .cpaUsedBy{display:inline-flex;align-items:center;height:24px;padding:0 8px;white-space:nowrap}
-.cpaAiSteps{display:grid;gap:10px;margin:0;padding:9px 9px 9px 28px}
-.cpaAiSteps li{display:grid;gap:5px}
-.cpaAiSteps textarea{width:100%;box-sizing:border-box;resize:vertical;padding:8px}
-.cpaAiRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .cpaAiResult{display:grid;gap:6px;justify-items:start}
 .cpaAiResult:empty{display:none}
 .cpaAiFound{display:grid;gap:3px;width:100%;padding:8px}
@@ -243,6 +284,8 @@
   .cpaRuleHead{grid-template-columns:1fr 1fr}
   .cpaRuleNameField{grid-column:1/-1}
   .cpaRuleQuestionField{grid-column:1/-1}
+  .cpaQueueFilterRow{grid-template-columns:1fr 1fr}
+  .cpaTagEditorGrid{grid-template-columns:1fr 1fr}
 }
 @media(max-width:760px){
   .cpaRulesModal>header small{white-space:normal}
@@ -263,6 +306,7 @@
   .cpaCondValueSpacer,.cpaCondRow>[data-cpa-cond-value],.cpaCondRow .cpaValuePicker{grid-column:1/3}
   .cpaRulesCount{display:none}
   .cpaRulesModal>footer{justify-content:flex-end}
+  .cpaQueueFilterRow,.cpaTagEditorGrid{grid-template-columns:1fr}
 }
 
 /* ---- Orders Requiring Attention: özelleştirilebilir sütunlar ---- */
@@ -342,8 +386,6 @@
   .cpaColumnsQuick{justify-content:flex-start}
 }
 
-/* Öncelik dağılım çubuğu (eski CP Öncelik Radarı'nın yerine). Parçalar arası
-   2px yüzey boşluğu; renk durum paletinden, metin çiplerde. */
 .cpaMix{display:flex;gap:2px;height:12px;overflow:hidden}
 .cpaMixSeg{min-width:4px;padding:0;cursor:pointer}
 
@@ -378,16 +420,15 @@
 .trAi p{margin:0}
 .trAi .cpaBtn{justify-self:start;height:auto;min-height:24px;white-space:normal;text-align:left}
 
-/* Standalone checklist: engine counts remain the only source of status. */
 .cpaChecklistOverview{flex:1 1 auto;min-height:0;overflow:auto;}
 .cpaChecklistOverview>.cpaCard>header{display:none;}
 .cpaChecklistOverview .cpaCardBody{padding:0;}
-.cpaCheckSummary{display:flex;align-items:center;gap:16px;padding:16px;}
-.cpaCheckSummary>div:last-child{display:grid;gap:5px;min-width:0;}
-.cpaCheckRing{display:grid;place-items:center;position:relative;isolation:isolate;flex:0 0 76px;width:76px;height:76px;}
+.cpaCheckSummary{display:flex;align-items:center;gap:16px;padding:14px 16px;}
+.cpaCheckSummary>div:last-child{display:grid;gap:4px;min-width:0;}
+.cpaCheckRing{display:grid;place-items:center;position:relative;isolation:isolate;flex:0 0 72px;width:72px;height:72px;}
 .cpaCheckRing:before{content:'';position:absolute;inset:6px;}
 .cpaCheckTiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
-.cpaCheckTile{display:flex;flex-direction:column;align-items:stretch;gap:9px;min-width:0;padding:12px;text-align:left;cursor:pointer;}
+.cpaCheckTile{display:flex;flex-direction:column;align-items:stretch;gap:8px;min-width:0;padding:12px;text-align:left;cursor:pointer;}
 .cpaCheckTile:hover{transform:translateY(-2px);}
 .cpaCheckTileHead{display:flex;align-items:center;gap:8px;}
 .cpaCheckTileHead b{flex:1;min-width:0;}
@@ -396,15 +437,14 @@
 .cpaCheckTileCounts>span{padding:3px 6px;}
 @container ovw (max-width:520px){.cpaCheckTiles{grid-template-columns:minmax(0,1fr);}.cpaCheckSummary{padding:10px;gap:10px;}}
 @media(prefers-reduced-motion:reduce){.cpaCheckTile:hover{transform:none;}}
-/* v7.0.290 — Moderatör yayını: tüm kullanıcılara uygulanan kurallar */
+
 .cpaRuleFieldset{margin:0;padding:0;min-width:0;display:contents}
 .cpaRuleFieldset[disabled]{display:grid;gap:9px;opacity:.72}
-.cpaManagedStrip{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;padding:8px 12px}
+.cpaManagedStrip{display:flex;flex-direction:column;gap:6px;margin:0 0 8px;padding:8px 12px}
 .cpaManagedRemoved{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .cpaManagedRemoved>b{margin-right:4px}
 .cpaManagedRemovedItem{display:inline-flex;align-items:center;gap:6px;padding:2px 4px 2px 8px}
 .cpaRuleManagedNote{margin:0 0 8px}
-/* v7.0.290 — Test raporu: çoklu set parçası, bileşen ve elle eşleşme doğrulaması */
 .trParts{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;margin-top:4px}
 .trParts>small{flex:1 0 100%}
 .trElementPick{flex-wrap:wrap}
