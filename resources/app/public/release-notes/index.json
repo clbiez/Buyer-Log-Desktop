@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.327",
+      "publishedAt": "2026-11-01",
+      "title": {
+        "tr": "Siparişlerden Koleksiyon ve sade Kontrol Merkezi",
+        "en": "Collection from orders and a simpler Checklist Studio"
+      },
+      "stats": {
+        "features": 3,
+        "improvements": 1,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.327/release.json"
+    },
+    {
       "version": "7.0.325",
       "publishedAt": "2026-11-01",
       "title": {

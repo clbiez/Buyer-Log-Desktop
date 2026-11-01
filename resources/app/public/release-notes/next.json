@@ -1,131 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-01",
+  "publishedAt": "",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Siparişlerden Koleksiyon ve sade Kontrol Merkezi",
-    "en": "Collection from orders and a simpler Checklist Studio"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "CP ve Orders içindeki seçili siparişleri önizleyerek Koleksiyonunuza aktarın. Aynı model ve MB ayında adetler birleştirilir; farklı fiyat, ülke veya tedarikçiler ayrı kalır. Tekrar aktarım koruması ve tek adım geri alma dahildir. Daha sade Genel Bakış özeti, Buyer Log temasıyla belirgin alanlar, uygulamadan önce kural önizlemesi ve aciliyetten bağımsız takip etiketleri.",
-    "en": "Preview selected CP and Orders rows and import them into your Collection. Quantities are combined for the same model and MB month; different prices, countries or suppliers stay separate. Includes duplicate protection and one-step undo. A simpler Overview summary, clear fields in the Buyer Log theme, rule previews before applying changes and tracking tags separate from urgency."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "collection-from-orders",
-      "type": "feature",
-      "module": {
-        "tr": "CP · Orders · Koleksiyon",
-        "en": "CP · Orders · Collection"
-      },
-      "title": {
-        "tr": "Geçmiş siparişlerden Koleksiyon oluştur",
-        "en": "Build Collection from historical orders"
-      },
-      "body": {
-        "tr": "CP ve Orders ekranlarında Araçlar › Siparişlerden Koleksiyon Oluştur ile seçili siparişler önizlenip kendi Koleksiyonunuza aktarılır. Aynı model, MB ayı, sezon, ülke, tedarikçi ve fiyat için adetler toplanır; en erken OPD ve en geç Ex-Factory kullanılır. Farklı FOB veya tedarikçi fiyatları ayrı satır kalır. Onaylı tedarikçi, fiyat, renkler ve kaynak sipariş bilgileri korunur. Daha önce aktarılan siparişler tekrar sayılmaz; yeni siparişler uygun aktarım satırına eklenir. Merch Calendar ile çözülemeyen MB dönemleri birleştirilmez. Kaynak siparişler korunur; aktarım Koleksiyonda tek adımda geri alınabilir.",
-        "en": "In CP and Orders, Tools › Build Collection from Orders previews selected orders before importing them into your own Collection. Quantities are summed for the same model, MB month, season, country, supplier and price, using the earliest OPD and latest Ex-Factory. Different FOB or supplier prices remain separate rows. Confirmed suppliers, prices, colours and source-order information are preserved. Previously imported orders are not counted again; new orders extend the matching imported row. MB periods not resolved by Merch Calendar are kept separate. Source orders are preserved and the import can be undone in one step in Collection."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "collection-from-orders.png",
-        "alt": {
-          "tr": "Gerçek Buyer Log CP ekranında demo siparişlerin Koleksiyon aktarım önizlemesi: aynı model ve MB ayında iki sipariş 350 adet olarak birleştirilmiş, farklı fiyatlı sipariş ayrı satırda.",
-          "en": "Real Buyer Log CP screen with a demo Collection import preview: two orders for the same model and MB month are combined into 350 units, while a different-priced order remains separate."
-        },
-        "caption": {
-          "tr": "100 + 250 adet tek satırda; OPD 1 Eylül, Ex-Factory 15 Aralık. Farklı fiyatlı 50 adet ayrı tutulur.",
-          "en": "100 + 250 units in one row, with September 1 OPD and December 15 Ex-Factory. The 50 units at a different price remain separate."
-        }
-      }
-    },
-    {
-      "id": "checklist-rules-studio",
-      "type": "feature",
-      "module": {
-        "tr": "Kontrol ve Kurallar",
-        "en": "Checklist and Rules"
-      },
-      "title": {
-        "tr": "Üç sekmeli merkez ve özel öncelik etiketleri",
-        "en": "Three-tab studio and custom priority tags"
-      },
-      "body": {
-        "tr": "Genel Bakış veya CP araç çubuğundan İş Listesi, Öncelik Kuralları ve Etiketler, Kontrol Soruları ve Durumlar sekmelerine erişin. Özel etiketlere renk tonu ve aciliyet sırası verin; kurallara bağlayıp sonuçlarını canlı görün. Kural taslaklarını eşleşme ve gerçek etki önizlemesiyle uygulayın, son kural değişikliğini geri alın. Geri alma kayıtlı checklist yanıtlarını değiştirmez. Checklist yanıtları anında kaydedilir. Kişisel ayarlar korunur; Moderatör etiketleri ve durumları ekibe yayımlayabilir.",
-        "en": "Open Work Queue, Priority Rules and Tags, and Checklist Questions and Statuses from Overview or the CP toolbar. Choose custom tag tones and urgency ranks, assign them to rules and see live results. Apply rule drafts after reviewing matches and effective changes, and undo the last rule change. Undo preserves saved checklist answers. Checklist answers save immediately. Personal preferences are preserved; Moderators can publish tags and statuses to the team."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "checklist-rules-studio.png",
-        "alt": {
-          "tr": "Demo verilerle üç sekmeli Kontrol ve Kurallar Merkezi ve özel tedarikçi teyidi öncelik etiketi",
-          "en": "Three-tab Checklist and Rules Studio with a custom supplier confirmation priority tag on demo data"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log ekranı; yalnız üretilmiş demo veriler kullanılmıştır.",
-          "en": "Real Buyer Log screen captured after the change using generated demo data only."
-        }
-      }
-    },
-    {
-      "id": "checklist-compact-overview-and-fields",
-      "type": "improvement",
-      "module": {
-        "tr": "Genel Bakış ve Kontrol Merkezi",
-        "en": "Overview and Checklist Studio"
-      },
-      "title": {
-        "tr": "Sade özet, belirgin alanlar ve kontrollü kural düzenleme",
-        "en": "Compact summary, visible fields and controlled rule editing"
-      },
-      "body": {
-        "tr": "Genel Bakış widget’ı açık kontrol, reddedilen ve aksiyon gereken sipariş sayılarını gösterir; ayrıntılar istenince açılır. Butonlar ve alanlar Buyer Log’un ortak tema çerçevelerini kullanır. Etiket yönetimi ve gelişmiş formül seçenekleri açılır bölümlerdedir; ekip işlemleri menüde toplanır. İş listesi filtreleri kişisel olarak hatırlanır. Kurallar önce taslakta düzenlenir; gerçek etki önizlemesi, Uygula, İptal ve son değişikliği geri alma desteklenir.",
-        "en": "The Overview widget shows open checks, rejected checks and orders needing action; details open on demand. Buttons and fields use the shared Buyer Log theme boundaries. Tag management and advanced formula options live in disclosures; team actions are grouped in a menu. Work Queue filters are remembered per user. Rules are edited as drafts, with effective-change previews, Apply, Discard and undo of the last application."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "checklist-rules-overview.png",
-        "alt": {
-          "tr": "Demo verilerle sade Kontrol ve Kurallar Genel Bakış widget’ı",
-          "en": "Compact Checklist and Rules Overview widget with demo data"
-        },
-        "caption": {
-          "tr": "Gerçek Buyer Log ekranı: üç özet sayı, İş Listesi ve kurallar kısayolu; ayrıntılar kapalı. Yalnız üretilmiş demo veri.",
-          "en": "Real Buyer Log screen: three summary counts, Work Queue and rules shortcuts, with details collapsed. Generated demo data only."
-        }
-      }
-    },
-    {
-      "id": "checklist-independent-tracking-tags",
-      "type": "feature",
-      "module": {
-        "tr": "Öncelik ve Takip Etiketleri",
-        "en": "Urgency and Tracking Tags"
-      },
-      "title": {
-        "tr": "Takip etiketleri aciliyetten bağımsız",
-        "en": "Tracking tags separate from urgency"
-      },
-      "body": {
-        "tr": "Yeni etiket oluştururken Aciliyet önceliği veya Takip etiketi seçin. Takip etiketi, örneğin evrak bekleme aşamasını gösterirken Kritik veya Bugün Aksiyon önceliğini korur. Her iki bilgi İş Listesi ve CP hücrelerinde birlikte görünür; takip etiketleri filtre ve otomasyon eşleşmelerinde kullanılabilir. Mevcut etiketlerin kullanım anlamı korunur.",
-        "en": "Choose Urgency Priority or Tracking Tag when creating a label. A tracking tag can show a stage such as awaiting documents while preserving Critical or Action Today urgency. Both appear together in Work Queue and CP cells; tracking tags can be used in filters and automation matching. Existing tag meanings are preserved."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "checklist-tracking-tags.png",
-        "alt": {
-          "tr": "Demo İş Listesinde öncelik ve evrak bekleme takip etiketi birlikte",
-          "en": "Demo Work Queue with urgency and an awaiting-documents tracking tag together"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log İş Listesi; öncelik ve takip aynı satırda ayrı rozetlerdir. Üretilmiş demo veri.",
-          "en": "Real Buyer Log Work Queue after the change; urgency and tracking appear as separate badges in the same row. Generated demo data."
-        }
-      }
-    }
-  ]
+  "changes": []
 }
