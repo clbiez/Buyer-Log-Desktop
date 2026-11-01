@@ -29,7 +29,7 @@ test('v4.66 collection confirmed columns show muted Best Price fallback',()=>{
 });
 
 test('v4.66 collection synthetic pricing columns join persistent move and resize order',()=>{
-  assert.match(HTML,/const KOL_SYNTHETIC_COL_KEYS = Object\.freeze\(\['__bestPrice__','__confirmedName__','__confirmedPrice__'\]\)/);
+  assert.match(HTML,/const KOL_SYNTHETIC_COL_KEYS = Object\.freeze\(\['__bestPrice__','__confirmedName__','__confirmedPrice__','__previousSeason__','__lfl__','__seasonImpact__'\]\)/);
   assert.match(HTML,/function kolNormalizeDisplayOrder\(order\)/);
   assert.match(HTML,/if\(!kolColOrder\)kolColOrder=kolDefaultDisplayOrder\(\)/);
   assert.match(HTML,/descriptors\.map\(d=>`<col data-kcol="\$\{d\.k\}"/);
