@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.325",
+      "publishedAt": "2026-11-01",
+      "title": {
+        "tr": "Fiyat kıyasları, sezon etkisi ve daha hızlı açılış ve sade harita simgeleri; Görünüm çekmecesi ve köşeden yayılan üçgen geçişi",
+        "en": "Price comparisons, season impact and faster startup and simpler map icons; Appearance drawer and corner-wave triangle transition"
+      },
+      "stats": {
+        "features": 2,
+        "improvements": 5,
+        "fixes": 5
+      },
+      "file": "release-notes/7.0.325/release.json"
+    },
+    {
       "version": "7.0.322",
       "publishedAt": "2026-10-30",
       "title": {
