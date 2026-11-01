@@ -157,3 +157,31 @@ test('a persistent lock-directory rmdir denial still fails closed',()=>{
  try{assert.throws(()=>lease.withFileLeaseSync(file,()=>fs.writeFileSync(file,'1'),{timeoutMs:1000,logger:()=>{}}),{code:'EPERM'});}finally{fs.rmdirSync=original;}
  assert.ok(denied>1,'bounded retry before failing');
 });
+
+// Windows TEST regression 7.0.324: mkdir of a lock directory that a concurrent
+// reclaimer has just removed (delete-pending, handle still open) returns EPERM
+// instead of EEXIST; acquire treated it as fatal and the fenced write failed.
+for(const code of ['EPERM','EACCES','EBUSY'])test('transient lock-directory mkdir '+code+' is retried and the write completes (sync and async)',async()=>{
+ for(const kind of ['Sync','Async']){
+  const file=target(),originalSync=fs.mkdirSync,originalAsync=metadataFs.mkdir;let denied=0;
+  const deny=candidate=>String(candidate)===file+'.write-lock'&&denied<2&&++denied;
+  fs.mkdirSync=function(candidate,...args){if(deny(candidate))throw Object.assign(Error('synthetic transient mkdir denial'),{code});return originalSync.call(this,candidate,...args);};
+  metadataFs.mkdir=async function(candidate,...args){if(deny(candidate))throw Object.assign(Error('synthetic transient mkdir denial'),{code});return originalAsync.call(this,candidate,...args);};
+  try{
+   if(kind==='Sync')lease.withFileLeaseSync(file,()=>fs.writeFileSync(file,'1'),{timeoutMs:1000,logger:()=>{}});
+   else await lease.withFileLeaseAsync(file,async()=>{await metadataFs.writeFile(file,'1');},{timeoutMs:1000,logger:()=>{}});
+  }finally{fs.mkdirSync=originalSync;metadataFs.mkdir=originalAsync;}
+  assert.equal(denied,2,kind);assert.equal(fs.readFileSync(file,'utf8'),'1');assert.equal(fs.existsSync(file+'.write-lock'),false,kind+' lock directory removed after the write');
+ }
+});
+for(const kind of ['Sync','Async'])test('a persistent lock-directory mkdir denial still fails closed ('+kind+')',async()=>{
+ const file=target(),originalSync=fs.mkdirSync,originalAsync=metadataFs.mkdir;let denied=0,entered=false;
+ const deny=candidate=>{if(String(candidate)!==file+'.write-lock')return false;denied++;return true;};
+ fs.mkdirSync=function(candidate,...args){if(deny(candidate))throw Object.assign(Error('synthetic persistent mkdir denial'),{code:'EPERM'});return originalSync.call(this,candidate,...args);};
+ metadataFs.mkdir=async function(candidate,...args){if(deny(candidate))throw Object.assign(Error('synthetic persistent mkdir denial'),{code:'EPERM'});return originalAsync.call(this,candidate,...args);};
+ try{
+  if(kind==='Sync')assert.throws(()=>lease.withFileLeaseSync(file,()=>{entered=true;},{timeoutMs:1000,logger:()=>{}}),{code:'EPERM'});
+  else await assert.rejects(lease.withFileLeaseAsync(file,async()=>{entered=true;},{timeoutMs:1000,logger:()=>{}}),{code:'EPERM'});
+ }finally{fs.mkdirSync=originalSync;metadataFs.mkdir=originalAsync;}
+ assert.ok(denied>1,'bounded retry before failing');assert.equal(entered,false);assert.equal(fs.readFileSync(file,'utf8'),'0');
+});
