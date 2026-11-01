@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.328",
+      "publishedAt": "2026-11-01",
+      "title": {
+        "tr": "SYNC kullanıcıları ve Koleksiyon fiyat kıyasları",
+        "en": "SYNC accounts and Collection price comparisons"
+      },
+      "stats": {
+        "features": 1,
+        "improvements": 2,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.328/release.json"
+    },
+    {
       "version": "7.0.327",
       "publishedAt": "2026-11-01",
       "title": {

@@ -1,131 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-01",
+  "publishedAt": "",
   "bootstrapVisual": false,
   "title": {
-    "tr": "SYNC kullanıcıları ve Koleksiyon fiyat kıyasları",
-    "en": "SYNC accounts and Collection price comparisons"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "Eski sürümlerin kullanıcı izinlerini taşıyan SYNC klasörlerinde kullanıcı listesi ve mevcut şifrelerle giriş uyumluluğu düzeltildi. Koleksiyon Price grubunda filtrelenmiş adet ağırlıklı alt ortalamaları görün. Kompakt görünüm Previous Season, LFL ve Sezon Etkisi göstergelerini tek sütunda toplar. Price Drawer içinden hesapta kullanılan ASAS siparişlerini ortak sağ detay raporunda açın.",
-    "en": "Fixed loading the user directory and signing in with existing passwords when a SYNC folder contains permissions from older releases. See quantity-weighted footer averages across filtered Collection Price rows. Compact combines Previous Season, LFL and Season Impact in one column. Open the underlying ASAS orders from Price Drawer in the shared right-hand detail report."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "shared-sync-legacy-permissions",
-      "type": "fix",
-      "module": {
-        "tr": "Shared Sync ve Giriş",
-        "en": "Shared Sync and Sign-in"
-      },
-      "title": {
-        "tr": "Eski izin kayıtları artık kullanıcı listesini engellemiyor",
-        "en": "Legacy permission records no longer block the user directory"
-      },
-      "body": {
-        "tr": "Eski Buyer Log sürümlerinde bulunan Outlook ve Agent modüllerinin izin kayıtları, yeni bilgisayarda kullanıcı dizininin IAM_REMOTE_INVALID · rev 8 users[0].directPermissions hatasıyla reddedilmesine yol açabiliyordu. SYNC okuyucusu artık geçmişte gerçekten kullanılan bu kayıtları tanır; mevcut kullanıcılar, şifreler ve güncel yetkiler korunarak giriş yapılabilir. Kaldırılmış izinler etkin yetki vermez. Bilinmeyen izinler, dosya bütünlüğü ve son yönetici kontrolleri korunur. Klasör bağlıysa Tekrar Dene ile kullanıcılar yeniden yüklenir.",
-        "en": "Permission records from the Outlook and Agent modules in older Buyer Log releases could cause a new computer to reject the user directory with IAM_REMOTE_INVALID · rev 8 users[0].directPermissions. The SYNC reader now recognizes these historically valid records, allowing sign-in with existing users, passwords and current permissions. Retired permissions grant no active access. Unknown-permission, file-integrity and last-administrator checks remain enforced. If the folder is connected, Retry reloads the users."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "shared-sync-legacy-permissions.png",
-        "alt": {
-          "tr": "Gerçek Buyer Log giriş ekranında eski izinleri içeren revizyon 8’den yüklenen demo.buyer ve üç aktif SYNC kullanıcısı",
-          "en": "Real Buyer Log sign-in screen showing demo.buyer and three active SYNC users loaded from revision 8 with legacy permission records"
-        },
-        "caption": {
-          "tr": "Eski izin kayıtlarını içeren demo SYNC revizyonu 8, kullanıcıları ve ortak verileri yükler; kullanıcı aramada görünür ve mevcut şifresiyle giriş yapar.",
-          "en": "Demo SYNC revision 8 with legacy permission records loads the users and shared data; the account appears in search and signs in with its existing password."
-        }
-      }
-    },
-    {
-      "id": "collection-price-reference-footer",
-      "type": "improvement",
-      "module": {
-        "tr": "Koleksiyon · Price",
-        "en": "Collection · Price"
-      },
-      "title": {
-        "tr": "Fiyat kıyaslarının altında ağırlıklı ortalamalar",
-        "en": "Weighted averages below price comparisons"
-      },
-      "body": {
-        "tr": "Previous Season, LFL ve Sezon Etkisi sütunlarının altında filtreye uyan tüm model/renk satırlarının adet ağırlıklı ortalamaları gösterilir; sayfa değişmesi kapsamı daraltmaz. Kompakt görünümde üç gösterge aynı özet hücresinde yer alır. Detay görünümünde aritmetik ortalama ve eşleşen satırlardaki ağırlıklı fiyatların yüzde farkı da görünür. Sezon Etkisi özeti, bağımsız satır simülasyonlarının önce ve sonra ortalamalarını gösterir. Eksik referanslar ve sıfır/eksik adetler ağırlıklı hesaba katılmaz. Filtre, fiyat ve adet değişiklikleri alt özeti günceller; kaynak yeniden sorgulanmaz.",
-        "en": "Previous Season, LFL and Season Impact now show quantity-weighted averages below their columns across all filtered model/colour rows; pagination does not narrow the scope. Compact combines all three metrics in one summary cell. Detail also shows arithmetic averages and the percentage change between weighted prices on matched rows. The Season Impact summary shows before and after averages of independent row simulations. Missing references and zero/missing quantities are excluded from weighted calculations. Filter, price and quantity edits update the footer without querying the source again."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "collection-reference-footer.png",
-        "alt": {
-          "tr": "Demo Koleksiyon Price sütunlarının altında Previous Season, LFL ve Sezon Etkisi için adet ağırlıklı alt ortalamalar",
-          "en": "Quantity-weighted footer averages for Previous Season, LFL and Season Impact in demo Collection Price columns"
-        },
-        "caption": {
-          "tr": "200 adet × $15,00 ve 600 adet × $20,00 LFL referansının alt ağırlıklı ortalaması $18,75, aritmetik ortalaması $17,50. Referansı olmayan demo satırı hesaba katılmaz.",
-          "en": "LFL references of 200 units at $15.00 and 600 units at $20.00 produce a weighted footer average of $18.75 and an arithmetic average of $17.50. The demo row without a reference is excluded."
-        }
-      }
-    },
-    {
-      "id": "collection-price-combined-compact",
-      "type": "improvement",
-      "module": {
-        "tr": "Koleksiyon · Price",
-        "en": "Collection · Price"
-      },
-      "title": {
-        "tr": "Kompakt görünümde üç fiyat kıyası tek sütunda",
-        "en": "Three price comparisons in one compact column"
-      },
-      "body": {
-        "tr": "Kompakt görünümde Previous Season, LFL ve Sezon Etkisi tek sütunda kendi etiketleriyle gösterilir. Sezon Etkisi satırı önceki ortalama → model eklendikten sonraki ortalama ve yüzde değişimini korur. Alt ağırlıklı ortalamalar aynı sütunda üç satır olarak yer alır. Gizlenen göstergeler birleşik hücreye katılmaz. Birleşik hücre fiyat çekmecesini açar ve kopyalamada üç göstergeyi taşır. Detay ve Maliyet görünümleri ile Excel aktarımı ayrı sütunları kullanmaya devam eder. Hesaplama ve ortak referans önbelleği korunur.",
-        "en": "Compact now shows Previous Season, LFL and Season Impact with their own labels in one column. The Season Impact line retains the before → after average and percentage change. Weighted footer averages appear as three lines in the same column. Hidden metrics are excluded from the combined cell. The cell opens the price drawer and includes all three metrics when copied. Detail, Cost and Excel export continue to use separate columns. Calculations and the shared reference cache are preserved."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "collection-price-combined-compact.png",
-        "alt": {
-          "tr": "Demo Koleksiyon kompakt Price görünümünde Previous Season, LFL ve Sezon Etkisi ile alt ağırlıklı ortalamaları tek sütunda",
-          "en": "Demo Collection compact Price view with Previous Season, LFL, Season Impact and their weighted footer averages in one column"
-        },
-        "caption": {
-          "tr": "Üç gösterge aynı kompakt sütunda; alt özet LFL için $18,75 ve bağımsız sezon etkileri için $10,00 → $17,08 gösterir.",
-          "en": "Three metrics share one compact column; the footer shows $18.75 for LFL and $10.00 → $17.08 for independent season impacts."
-        }
-      }
-    },
-    {
-      "id": "collection-price-reference-order-detail",
-      "type": "feature",
-      "module": {
-        "tr": "Koleksiyon · Price",
-        "en": "Collection · Price"
-      },
-      "title": {
-        "tr": "Fiyat çekmecesinden referans sipariş detayları",
-        "en": "Reference order details from the price drawer"
-      },
-      "body": {
-        "tr": "Price Drawer içinde Previous Season, LFL veya Sezon Etkisi başlığına tıklayarak hesapta kullanılan ASAS siparişlerini mevcut sağ detay raporunda açın. Rapor sipariş/model, üretici, MB ayı, adet, USD FOB, tutar ve ağırlık payını gösterir; arama, sütun seçimi, görseller ve Excel aktarımı ortak arayüzü kullanır. Previous Season önceki sezonun tamamını, LFL önceki yılın aynı MB ayını, Sezon Etkisi mevcut sezonun yalnız model ayından önceki siparişlerini içerir. Simüle edilen koleksiyon modeli yerleşmiş siparişlere eklenmez. Eksik kıyaslarda detay açılmaz. Detayı kapatınca fiyat çekmecesine dönülür. Veriler yalnız istek üzerine yüklenir ve aynı kullanıcı/kaynak/referans için bellekte paylaşılır; kaynak yenilendiğinde temizlenir. Yetki ve satır kapsamı sunucuda denetlenir.",
-        "en": "Click Previous Season, LFL or Season Impact in Price Drawer to open the underlying ASAS orders in the existing right-hand detail report. The report shows order/model, manufacturer, MB month, quantity, USD FOB, value and weight share; search, column selection, images and Excel export use the shared interface. Previous Season includes the full previous season, LFL the same MB month last year, and Season Impact only orders from earlier months of the current season. The simulated collection model is not added to placed orders. Missing comparisons have no detail action. Closing the report returns to the price drawer. Details load on demand and are shared in memory for the same user/source/reference, then cleared on a source refresh. Permissions and row scope are checked on the server."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "collection-price-order-detail.png",
-        "alt": {
-          "tr": "Price Drawer LFL alanından açılan ortak sağ detay raporunda iki demo ASAS siparişi, adet, FOB, tutar ve ağırlık payı",
-          "en": "Shared right-hand report opened from Price Drawer LFL with two demo ASAS orders, quantity, FOB, value and weight share"
-        },
-        "caption": {
-          "tr": "Şubat 2026 LFL referansı: 100 adet × $10,00 ve 100 adet × $20,00; toplam 200 adet, ağırlıklı FOB $15,00, her siparişin ağırlık payı %50.",
-          "en": "February 2026 LFL reference: 100 units at $10.00 and 100 at $20.00; 200 units total, weighted FOB $15.00 and a 50% weight share per order."
-        }
-      }
-    }
-  ]
+  "changes": []
 }
