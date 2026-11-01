@@ -2,6 +2,33 @@
 
 Bu akış mevcut `BuyerLogUpdater` doğrulama, staging, activation, health check ve rollback zincirini kullanır. İstemcideki tek yeni kaynak biçimi `github:OWNER/REPO` değeridir. Bu repo **public ve release-only** olmalıdır; normal kullanıcı hesabı veya token kullanmadan `test/latest.json`, `stable/latest.json` ve GitHub Release ZIP asset'lerini HTTPS üzerinden okur. Source repo private kalabilir. Release repo ağacında yalnız kanal manifestleri ve isteğe bağlı README tutulur; uygulama kaynak ağacı checkout edilmez.
 
+## Kurumsal ağlarda güncelleme / Updates on managed networks
+
+`release-assets.githubusercontent.com` engelli olsa da eski istemciler tam STORE
+ZIP paketini `raw.githubusercontent.com/.../raw-dist/<kanal>/` adresinden alabilir.
+Bu nedenle GitHub güncelleme paketi 100 MiB sınırını aşamaz. Build ve yayın bu
+sınırı zorunlu tutar; TEST/STABLE `latest` ilerlemeden önce **yalnız raw adresinden**
+indirilen paketin boyutu ve SHA-256 değeri doğrulanır. Release CDN'deki başarılı
+bir indirme bu kontrolün yerine geçmez. Büyük eski karşı kanal, küçük kurtarma
+sürümünün yayınını engellemez; yeni hedef sürümün raw kopyası zorunludur.
+
+GitHub paketlerinde son üç görselli sürüm çevrimdışı tutulur. Daha eski sürümlerin
+metinleri yerel kalır; ekran görüntüleri arşiv açıldığında `release-visuals` dalından
+istenir. Her görsel ayrı Git blob'udur; yayın eklemelidir, mevcut bir görselin
+baytlarını değiştiremez. `asset-locations.json` yalnız paketleme sırasında üretilir
+ve çekirdek bütünlük manifestine dahildir. Kaynak arşiv ve imzalanmış eski paketler
+değiştirilmez. GitHub kaynağı olmayan çevrimdışı/klasör paketleri bütün görselleri
+taşımayı sürdürür.
+
+Existing clients can fetch the complete STORE ZIP from the raw mirror even when
+the Release CDN is blocked. GitHub update builds must fit within 100 MiB; publishing
+must verify the raw ZIP's exact size and SHA-256 before advancing either channel.
+The latest three visual releases remain offline. Older descriptions stay local;
+their original images load on demand from the additive, immutable `release-visuals`
+branch. Source archives, existing signed packages and offline/folder builds retain
+their original images. A new version is required to recover clients from 7.0.322;
+rebuilding different bytes under that version is prohibited.
+
 ## Kurulum
 
 1. Public release-only repo oluşturun; varsayılan branch `main` olsun. `test/` ve `stable/` klasörleri ilk yayın sırasında workflow tarafından oluşturulur.

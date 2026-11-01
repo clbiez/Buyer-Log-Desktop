@@ -16,6 +16,30 @@ function core(root,version){const app=path.join(root,'app');for(const d of ['ele
 function response(url,bytes){return {ok:true,url,status:200,text:async()=>bytes.toString('utf8'),body:Readable.toWeb(Readable.from(bytes))};}
 function sha(bytes){return crypto.createHash('sha256').update(bytes).digest('hex');}
 
+test('7.0.320 stages a signed recovery update while the entire Release CDN is blocked',async t=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bl-raw-recovery-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  const bootstrap=core(path.join(root,'bootstrap'),'7.0.320'),candidate=core(path.join(root,'candidate'),'7.0.323');
+  const keys=crypto.generateKeyPairSync('ed25519'),publicKey=keys.publicKey.export({type:'spki',format:'pem'});
+  fs.writeFileSync(path.join(bootstrap,'electron/update/release-signing-keys.json'),JSON.stringify({schemaVersion:1,keys:[{publicKey}]}));
+  const zip=path.join(root,'recovery.zip');createZipFromDirectory(candidate,zip,{rootPrefix:'app'});const bytes=fs.readFileSync(zip);
+  const manifest={schemaVersion:1,channel:'stable',version:'7.0.323',publishedAt:new Date().toISOString(),artifact:'releases/BuyerLog-7.0.323.zip',sha256:sha(bytes),size:bytes.length,minimumUpdaterVersion:'1.0.0'};
+  manifest.signature=require('../electron/update/signature').signManifest(manifest,keys.privateKey.export({type:'pkcs8',format:'pem'}));
+  const seen=[],original=global.fetch;t.after(()=>{global.fetch=original;});
+  global.fetch=async url=>{
+    seen.push(String(url));
+    if(new URL(url).hostname!=='raw.githubusercontent.com')throw Object.assign(new Error('Blocked by organization'),{code:'ORGANIZATION_BLOCKED'});
+    return response(String(url),String(url).includes('latest.json')?Buffer.from(JSON.stringify(manifest)):bytes);
+  };
+  const local=path.join(root,'data/local');fs.mkdirSync(local,{recursive:true});fs.writeFileSync(path.join(local,'BuyerLogLocal.db'),'KEEP BUSINESS DATA');
+  const updater=new BuyerLogUpdater({currentVersion:'7.0.320',appCoreRoot:bootstrap,portableRoot:root,localDataRoot:local,packaged:true});
+  const result=await updater.checkAndStage({baseConfig:{releaseSource:'github:buyer/releases'},channel:'stable'});
+  assert.equal(result.pendingReady,true);assert.equal(result.pendingVersion,'7.0.323');
+  assert.equal(fs.readFileSync(path.join(local,'BuyerLogLocal.db'),'utf8'),'KEEP BUSINESS DATA');
+  assert.ok(seen.every(url=>new URL(url).hostname==='raw.githubusercontent.com'));
+  const events=fs.readFileSync(updater.logFile,'utf8').trim().split('\n').map(JSON.parse);
+  assert.ok(events.some(e=>e.event==='signature-ok'));assert.ok(events.some(e=>e.event==='checksum-ok'));
+});
+
 test('a candidate without the trial writer protocol cannot mutate the DB or activate',t=>{
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-bridge-protocol-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
   const bootstrap=core(path.join(root,'bootstrap'),'7.0.84');
