@@ -1486,6 +1486,7 @@ function drawEdges(ctx,scene,now,animate){
    görünür ve +x yönüne bakar. */
 const MODE_GLYPH_PATHS=Object.freeze({
   sea:'M2 14.2h20l-3.2 5.3H5.4z M5.5 8.6h4.2v4.4H5.5z M10.6 8.6h4.2v4.4h-4.2z M15.8 5.2h3.1v7.8h-3.1z',
+  fleet:'M1 8h10l-1.6 3H2.6z M3 5h5v2H3z M7 3h2v4H7z M13 8h10l-1.6 3h-6.8z M15 5h5v2h-5z M19 3h2v4h-2z M7 18h10l-1.6 3H8.6z M9 15h5v2H9z M13 13h2v4h-2z',
   air:'M21.6 12c0-.9-.8-1.4-1.7-1.4h-4.6L10.2 3.6H8l2.6 7H6.2L4.6 8.4H3l1 3.6-1 3.6h1.6l1.6-2.2h4.4L8 20.4h2.2l5.1-7h4.6c.9 0 1.7-.5 1.7-1.4z',
   road:'M1.8 6.6h12.4v9.6H1.8z M15 9.6h3.9l3.3 3.4v3.2H15z M3.6 18.6a2.1 2.1 0 1 0 4.2 0a2.1 2.1 0 1 0-4.2 0z M15.4 18.6a2.1 2.1 0 1 0 4.2 0a2.1 2.1 0 1 0-4.2 0z',
 });
@@ -1512,14 +1513,9 @@ const ALARM_PERIOD=1400,INTRO_MS=520;
 function flowMotionAllowed(){const root=document.documentElement;return !reducedMotion()&&root.dataset.blMotion!=='off'&&root.dataset.blRender!=='software';}
 function symbolCritical(symbol){return symbol.kind==='node'?symbol.bundle.records.some(r=>r.critical):symbol.kind==='vehicleCluster'?Boolean(symbol.critical):Boolean(symbol.vehicle&&symbol.vehicle.critical);}
 function drawAlarm(ctx,x,y,r,p,now){
-  if(!flowMotionAllowed())return;
-  const beat=(now%ALARM_PERIOD)/ALARM_PERIOD;
-  // Nabız zemini: kalp atışı gibi kısa parlayıp söner.
-  ctx.save();ctx.fillStyle=p.red;ctx.globalAlpha=Math.max(0,.22*(1-beat*2.2));ctx.beginPath();plotSquare(ctx,x,y,r+3);ctx.fill();ctx.restore();
-  for(let i=0;i<2;i++){
-    const phase=(beat+i/2)%1,grow=r+2+phase*15;
-    ctx.save();ctx.strokeStyle=p.red;ctx.globalAlpha=(1-phase)*.9;ctx.lineWidth=2.6-phase*1.6;ctx.beginPath();plotSquare(ctx,x,y,grow);ctx.stroke();ctx.restore();
-  }
+  // Sabit boyutlu köşe noktası; yalnız opaklık hafifçe değişir.
+  const alpha=flowMotionAllowed() ? .8+.2*Math.sin(now/ALARM_PERIOD*Math.PI*2) : 1;
+  ctx.save();ctx.fillStyle=p.red;ctx.globalAlpha=alpha;ctx.beginPath();ctx.arc(x+r,y-r,2.25,0,Math.PI*2);ctx.fill();ctx.restore();
 }
 function symbolScale(symbol,now){
   let scale=1;
@@ -1531,43 +1527,33 @@ function symbolScale(symbol,now){
   if(hover)scale*=1.14;
   return scale;
 }
-function drawVehicleBadge(ctx,x,y,mode,heading,p,frame,r){
+function drawVehicleBadge(ctx,x,y,mode,heading,p,frame,r,glyph=mode){
   const color=modeColor(mode,p);
   ctx.save();ctx.translate(x,y);
   ctx.fillStyle=p.card;ctx.strokeStyle=frame||color;ctx.lineWidth=frame?2:1.3;ctx.beginPath();plotSquare(ctx,0,0,r);ctx.fill();ctx.stroke();
   ctx.fillStyle=color;ctx.globalAlpha=.12;ctx.beginPath();plotSquare(ctx,0,0,r-2);ctx.fill();ctx.globalAlpha=1;
-  if(glyphMode(mode)==='air'&&heading)ctx.rotate(heading);
-  drawModeGlyph(ctx,mode,r*1.45);
+  if(glyphMode(glyph)==='air'&&heading)ctx.rotate(heading);
+  drawModeGlyph(ctx,glyph,r*1.45);
   ctx.restore();
 }
 function drawVehicle(ctx,symbol,p,now){
   const vehicle=symbol.vehicle,color=modeColor(vehicle.mode,p);
   if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.55;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.fillStyle=color;ctx.beginPath();plotSquare(ctx,symbol.anchorX,symbol.anchorY,2);ctx.fill();ctx.restore();}
   const scale=symbolScale(symbol,now),frame=vehicle.overdue?p.yellow:(vehicle.critical?p.red:'');
-  if(vehicle.critical)drawAlarm(ctx,symbol.x,symbol.y,11*scale,p,now);
   ctx.save();ctx.translate(symbol.x,symbol.y);ctx.scale(scale,scale);
   drawVehicleBadge(ctx,0,0,vehicle.mode,symbol.heading,p,frame,11);
   ctx.restore();
+  if(vehicle.critical)drawAlarm(ctx,symbol.x,symbol.y,11*scale,p,now);
 }
-/* Birleşik simge: 2–3 araç yan yana kademeli rozetler; daha fazlasında üç rozet
-   ve "+" işareti. Rozetler araçların gerçek taşıma tipini gösterir. */
+/* Birleşik araçlar: tek araçla aynı boyutta, üç gemili tek filo rozeti.
+   Gerçek taşıma tipleri ve araç sayısı hover/detay özetinde korunur. */
 function drawVehicleCluster(ctx,symbol,p,now){
-  const vehicles=symbol.vehicles||[],shown=vehicles.slice(0,3),more=vehicles.length>3;
   if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.45;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.restore();}
-  const scale=symbolScale(symbol,now),step=7,offset=(shown.length-1)*step/2;
-  if(symbol.critical)drawAlarm(ctx,symbol.x,symbol.y,(10+offset)*scale,p,now);
+  const scale=symbolScale(symbol,now),frame=symbol.overdue?p.yellow:(symbol.critical?p.red:'');
   ctx.save();ctx.translate(symbol.x,symbol.y);ctx.scale(scale,scale);
-  shown.forEach((vehicle,index)=>{
-    const dx=-offset+index*step,dy=offset-index*step,frame=vehicle.overdue?p.yellow:(vehicle.critical?p.red:'');
-    drawVehicleBadge(ctx,dx,dy,vehicle.mode,0,p,frame,9.5);
-  });
-  if(more){
-    const x=offset+9,y=-offset-9;
-    // Gizli araçlar dahil küme durumu: gecikme sarı, kritik kırmızı.
-    ctx.fillStyle=symbol.overdue?p.yellow:(symbol.critical?p.red:p.acc);ctx.beginPath();plotSquare(ctx,x,y,6.5);ctx.fill();
-    ctx.strokeStyle=p.card;ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(x-3.4,y);ctx.lineTo(x+3.4,y);ctx.moveTo(x,y-3.4);ctx.lineTo(x,y+3.4);ctx.stroke();
-  }
+  drawVehicleBadge(ctx,0,0,symbol.mode,0,p,frame,11,'fleet');
   ctx.restore();
+  if(symbol.critical)drawAlarm(ctx,symbol.x,symbol.y,11*scale,p,now);
 }
 const STAGE_META={
   PRODUCTION:{tr:'Üretimde',en:'In production',glyph:'P'},LOADING:{tr:'Yükleme Operasyonları',en:'Loading Operations',glyph:'L'},
@@ -1583,9 +1569,9 @@ function drawNode(ctx,symbol,p,now){
   const bundle=symbol.bundle,baseColor=bundle.kind==='arrival'?p.green:p.acc,radius=symbol.r;
   if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.55;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.restore();}
   ctx.save();ctx.fillStyle=baseColor;ctx.globalAlpha=.95;ctx.beginPath();plotSquare(ctx,symbol.x,symbol.y,radius);ctx.fill();
-  if(bundle.records.some(r=>r.critical)){ctx.globalAlpha=1;ctx.strokeStyle=p.red;ctx.lineWidth=2;ctx.beginPath();plotSquare(ctx,symbol.x,symbol.y,radius+3);ctx.stroke();}
+  if(bundle.records.some(r=>r.critical)){ctx.globalAlpha=1;ctx.strokeStyle=p.red;ctx.lineWidth=1.2;ctx.beginPath();plotSquare(ctx,symbol.x,symbol.y,radius+1.5);ctx.stroke();}
   ctx.restore();
-  if(bundle.records.some(r=>r.critical))drawAlarm(ctx,symbol.x,symbol.y,radius+3,p,now);
+  if(bundle.records.some(r=>r.critical))drawAlarm(ctx,symbol.x,symbol.y,radius+1.5,p,now);
   (symbol.stageIcons||[]).forEach(icon=>drawStageIcon(ctx,icon.x,icon.y,icon.stage,p));
 }
 function drawHoverHighlight(ctx,hit,p,scene,now){

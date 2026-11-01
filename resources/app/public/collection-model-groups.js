@@ -26,7 +26,7 @@
   const groupIdFor = (identity, rows) => `mg_${hash(identity)}_${hash((rows || []).map(rowId).join('\u0000'))}`;
   const singleGroupId = row => `mg_single_${hash(rowId(row) || identityOf(row))}`;
   const COLOR_SPECIFIC_FIELDS = new Set(['quantity', 'img', 'imgRef', 'colour', 'colourCode', 'durum', 'status']);
-  const CALCULATED_FIELDS = new Set(['fob', 'royalty', 'hologramCost', 'exToRetail', '__bestPrice__', '__confirmedName__', '__confirmedPrice__']);
+  const CALCULATED_FIELDS = new Set(['fob', 'royalty', 'hologramCost', 'exToRetail', '__bestPrice__', '__confirmedName__', '__confirmedPrice__', '__previousSeason__', '__lfl__', '__seasonImpact__']);
 
   function fieldMetadata(key) {
     const name = text(key);
