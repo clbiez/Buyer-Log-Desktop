@@ -47,13 +47,16 @@ const crypto = require('crypto');
 const http = require('http');
 const { redactSecrets } = require('../shared/secret-redaction');
 
-const { resolvePortableRoot, desktopPaths, resolveAppUrl, readJsonFile } = require('./portable-paths');
+const { resolvePortableRoot, desktopPaths, resolveAppUrl, readJsonFile, pruneCompileCaches } = require('./portable-paths');
 const { BackendProcess, probeOrigin, ensureConfig, ensureDataTree } = require('./backend');
 const { runFirstRunMigration, healPortableSettings, readMigrationState } = require('./first-run-migration');
 const { inspectPortOwner, closePortOwner } = require('./port-owner');
 const { BuyerLogUpdater } = require('./update/updater');
 const { createLauncherHost } = require('./update/launcher-host');
 const { runInstallRepair, readRepairReport } = require('./install-repair');
+// Onarım raporu için ikinci çekirdek taraması, sunucunun soğuk açılışıyla
+// disk/CPU yarışına girmesin diye ilk ekran açıldıktan sonra başlar.
+const INSTALL_REPAIR_INTEGRITY_DELAY_MS = 20000;
 const { createOabAuthLifecycle } = require('./oab-auth-lifecycle');
 const { createWorkspaceManager } = require('./workspace-manager');
 const { syncShortcutIcons, ensureStableIcon, refreshShellIcons } = require('./shortcut-icon');
@@ -1968,6 +1971,11 @@ function createMainWindow(origin) {
   // Açılış ekranı, ana pencere gerçekten görünür olduğunda kapanır (boşluk kalmaz).
   mainWindow.once('show', closeSplash);
   mainWindow.once('closed', closeSplash);
+  // GPU durumu pencere çizmeye başladıktan sonra yeniden ölçülür (bkz. logGpuDiagnostics).
+  mainWindow.once('show', () => {
+    const timer = setTimeout(() => logGpuDiagnostics('window-shown'), GPU_DIAGNOSTIC_DELAY_MS);
+    if (timer.unref) timer.unref();
+  });
   return mainWindow;
 }
 
@@ -2176,7 +2184,7 @@ function handleBackendLoss() {
 
 /* ------------------------------------------------------------ başlatma akışı */
 
-async function startBuyerLog() {
+async function startBuyerLog(options = {}) {
   lastStartedAt = Date.now();
   showSplash();
   setSplashStep('data');
@@ -2301,6 +2309,9 @@ async function startBuyerLog() {
    * backend answers HTTP — so health is confirmed now instead of after the
    * first tab finishes loading. The renderer hook below stays as a fallback. */
   confirmLauncherHealth();
+  // Kurulum onarımı sunucuyla paralel yürüdü; pencere onun bitmesini bekler
+  // (yeni sürümde eski service worker'ın sayfayı karşılamaması için).
+  if (options.beforeWindow) { try { await options.beforeWindow; } catch (_) {} }
   closeErrorWindow();
   setSplashStep('screens');
   createMainWindow(bound.origin);
@@ -2497,6 +2508,36 @@ function logGpuStatus(reason) {
   try { log('GPU durumu (' + reason + '): ' + JSON.stringify(app.getGPUFeatureStatus())); }
   catch (error) { log('GPU durumu okunamadı: ' + error.message); }
 }
+/* 7.0.323 teşhisi. "ready" anındaki durum GPU süreci başlamadan okunabildiği için
+ * yazılım çiziminin GERÇEK nedenini göstermez. Electron 44 ANGLE'ı electron.exe
+ * içine statik bağlar; libEGL.dll/libGLESv2.dll resmi pakette yoktur ve eksikliği
+ * neden değildir. Neden (sürücü kara listesi, RDP/VDI, GPU süreci çökmesi) ilk
+ * pencere göründükten sonra ölçülen durum + GPU kimlik özeti ile ayrılır.
+ * Yalnız donanım/sürücü kimliği yazılır; kullanıcı veya makine adı yazılmaz. */
+function gpuInfoSummary(info) {
+  const source = info && typeof info === 'object' ? info : {};
+  const devices = Array.isArray(source.gpuDevice) ? source.gpuDevice : [];
+  const aux = source.auxAttributes && typeof source.auxAttributes === 'object' ? source.auxAttributes : {};
+  const pick = (object, keys) => {
+    const out = {};
+    for (const key of keys) if (object && object[key] != null && typeof object[key] !== 'object') out[key] = object[key];
+    return out;
+  };
+  return {
+    devices: devices.slice(0, 4).map(device => pick(device, ['active', 'vendorId', 'deviceId', 'driverVendor', 'driverVersion'])),
+    aux: pick(aux, ['glImplementationParts', 'displayType', 'inProcessGpu', 'sandboxed', 'canSupportThreadedTextureMailbox', 'passthroughCmdDecoder']),
+  };
+}
+function logGpuDiagnostics(reason) {
+  logGpuStatus(reason);
+  try {
+    Promise.resolve(app.getGPUInfo('basic'))
+      .then(info => log('GPU bilgisi (' + reason + '): ' + JSON.stringify(gpuInfoSummary(info))))
+      .catch(error => log('GPU bilgisi okunamadı: ' + (error && error.message)));
+  } catch (error) { log('GPU bilgisi okunamadı: ' + error.message); }
+}
+const GPU_DIAGNOSTIC_DELAY_MS = 5000;
+let gpuInfoUpdateLogged = false;
 
 function registerIpc() {
   // Argümansız, salt okunur: arayüz yalnız yazılım çizimi bilgisini alır.
@@ -3019,8 +3060,9 @@ function bootstrap() {
     applyDownloadPolicy(session.defaultSession);
     registerIpc();
     logGpuStatus('ready');
+    app.on('gpu-info-update', () => { if (!gpuInfoUpdateLogged) { gpuInfoUpdateLogged = true; logGpuStatus('gpu-info-update'); } });
     app.on('child-process-gone', (_event, details) => {
-      if (details && details.type === 'GPU') { log('GPU süreci sonlandı: ' + JSON.stringify(details)); logGpuStatus('gpu-gone'); }
+      if (details && details.type === 'GPU') { log('GPU süreci sonlandı: ' + JSON.stringify(details)); logGpuDiagnostics('gpu-gone'); }
     });
 
     try {
@@ -3029,35 +3071,50 @@ function bootstrap() {
       log('config.json hazırlanamadı: ' + error.message);
     }
 
-    // Tek seferlik kurulum onarımı: yeni sürümün ilk açılışında eski arayüz
-    // önbelleği ve güncellemeyi engelleyen kalıntılar pencere açılmadan temizlenir.
-    try {
-      const repair = await runInstallRepair({
-        localDataRoot: paths.localDataRoot,
-        appCoreRoot: APP_CORE_ROOT,
-        currentVersion: appVersion(),
-        updater,
-        session,
-        packaged: app.isPackaged,
-        log,
-      });
-      if (!repair.skipped) {
-        log('Kurulum onarımı çalıştı: ' + appVersion());
-        repair.integrity.then(() => updateStatusFor('').then(emitUpdateStatus)).catch(() => {});
+    // Tek seferlik kurulum onarımı: yeni sürümün ilk açılışında service worker
+    // kalıntıları ve güncellemeyi engelleyen durum kayıtları pencere açılmadan
+    // temizlenir. Sunucunun soğuk açılışı bu adımı BEKLEMEZ (7.0.323): onarım
+    // Chromium oturumu ve updater durumuyla ilgilidir, backend'e dokunmaz.
+    // Yalnız ana pencere açılmadan önce tamamlanması beklenir (beforeWindow).
+    const installRepairDone = (async () => {
+      try {
+        const repair = await runInstallRepair({
+          localDataRoot: paths.localDataRoot,
+          appCoreRoot: APP_CORE_ROOT,
+          currentVersion: appVersion(),
+          updater,
+          session,
+          packaged: app.isPackaged,
+          integrityDelayMs: INSTALL_REPAIR_INTEGRITY_DELAY_MS,
+          log,
+        });
+        if (!repair.skipped) {
+          log('Kurulum onarımı çalıştı: ' + appVersion());
+          repair.integrity.then(() => updateStatusFor('').then(emitUpdateStatus)).catch(() => {});
+        }
+      } catch (error) {
+        log('Kurulum onarımı atlandı: ' + error.message);
       }
-    } catch (error) {
-      log('Kurulum onarımı atlandı: ' + error.message);
-    }
+    })();
 
     // Güncelleme kontrolü backend/login akışından bağımsızdır. Böylece kullanıcı
     // giriş ekranını görmeden önce bile STABLE manifest kontrolü başlamış olur.
-    scheduleUpdateChecks();
-    scheduleShortcutIconSync();
-    // Etkin deneme varken eşitleme atlanır ve sağlık onayından sonra yeniden planlanır.
-    scheduleLauncherInfrastructureSync(15000);
+    // Onarımın updater durum temizliğinden sonra başlar (eski sıra korunur).
+    void installRepairDone.then(() => {
+      scheduleUpdateChecks();
+      scheduleShortcutIconSync();
+      // Etkin deneme varken eşitleme atlanır ve sağlık onayından sonra yeniden planlanır.
+      scheduleLauncherInfrastructureSync(15000);
+    });
 
-    const started = await startBuyerLog();
+    const started = await startBuyerLog({ beforeWindow: installRepairDone });
     if (!started) log('Başlatma tamamlanamadı; hata ekranı gösteriliyor.');
+    // Eski sürümlerin backend derleme önbelleği açılış yükü bittikten sonra silinir.
+    const pruneTimer = setTimeout(() => {
+      try { const removed = pruneCompileCaches(paths, appVersion()); if (removed) log('Eski derleme önbelleği silindi: ' + removed); }
+      catch (error) { log('Derleme önbelleği temizlenemedi: ' + error.message); }
+    }, 90000);
+    if (pruneTimer.unref) pruneTimer.unref();
   });
 
   process.on('uncaughtException', error => {

@@ -44,6 +44,18 @@ function stampAssetHashes(html, root, versionToken) {
     return hash ? `${attr}${relative}${version}&h=${hash}` : match;
   });
 }
+async function warmFile(file) {
+  try {
+    const stat = await fs.promises.stat(file);
+    if (!stat.isFile()) return false;
+    const tag = `${stat.size}:${stat.mtimeMs}`, hit = hashes.get(file);
+    if (hit && hit.tag === tag) return false;
+    const hash = crypto.createHash('sha256').update(await fs.promises.readFile(file)).digest('hex').slice(0, HASH_LENGTH);
+    if (hashes.size >= MAX_ENTRIES) hashes.clear();
+    hashes.set(file, { tag, hash });
+    return true;
+  } catch (_) { return false; /* ilk istekte senkron yola düşer */ }
+}
 // Açılışta arka planda: ilk GET / özetleri senkron hesaplamak zorunda kalmaz
 // (yavaş disk/antivirüste ~165 dosyanın okunması). Eksik kalan dosya ilk istekte hesaplanır.
 async function warmAssetHashes(html, root, versionToken) {
@@ -52,18 +64,49 @@ async function warmAssetHashes(html, root, versionToken) {
   let warmed = 0;
   for (const match of String(html).matchAll(pattern)) {
     const file = safeFile(root, match[1]);
-    if (!file) continue;
-    try {
-      const stat = await fs.promises.stat(file);
-      if (!stat.isFile()) continue;
-      const tag = `${stat.size}:${stat.mtimeMs}`, hit = hashes.get(file);
-      if (hit && hit.tag === tag) continue;
-      const hash = crypto.createHash('sha256').update(await fs.promises.readFile(file)).digest('hex').slice(0, HASH_LENGTH);
-      if (hashes.size >= MAX_ENTRIES) hashes.clear();
-      hashes.set(file, { tag, hash }); warmed += 1;
-    } catch (_) { /* ilk istekte senkron yola düşer */ }
+    if (file && await warmFile(file)) warmed += 1;
   }
   return warmed;
+}
+
+/* Tembel yüklenen betikler (7.0.323). perf-runtime.js'in yüklediği ~90 betik
+   index.html'de yer almadığı için içerik özeti alamıyor ve her açılışta
+   "no-cache" ile yeniden doğrulanıyordu. Liste perf-runtime.js kaynağından
+   okunur (ikinci bir elle tutulan liste yok); özetler arka planda ısıtılır ve
+   sunulan sayfaya yalnız GÜNCEL içerikle eşleşen özetler yazılır. */
+const LAZY_SCRIPT_PATTERN = /'([A-Za-z0-9_][A-Za-z0-9_\-\/.]*\.js)(?:\?[^']*)?'/g;
+function lazyScriptFiles(perfRuntimeSource) {
+  const out = new Set();
+  for (const match of String(perfRuntimeSource || '').matchAll(LAZY_SCRIPT_PATTERN)) {
+    if (!match[1].includes('..')) out.add(match[1]);
+  }
+  return [...out];
+}
+async function warmFileHashes(root, relatives) {
+  let warmed = 0;
+  for (const relative of relatives || []) {
+    const file = safeFile(root, relative);
+    if (file && await warmFile(file)) warmed += 1;
+  }
+  return warmed;
+}
+// Yalnız önbellekte olan ve boyut/zaman damgası hâlâ tutan özetler: dosya
+// değiştiyse eski özet yayımlanmaz (adres değişmeden bayat kod kalıcılaşmaz).
+function cachedHashMap(root, relatives) {
+  const map = {};
+  for (const relative of relatives || []) {
+    const file = safeFile(root, relative);
+    const hit = file && hashes.get(file);
+    if (!hit) continue;
+    let info;
+    try { info = fs.statSync(file); } catch (_) { continue; }
+    if (`${info.size}:${info.mtimeMs}` === hit.tag) map[relative] = hit.hash;
+  }
+  return map;
+}
+// Satır içi <script type="application/json"> içine güvenle gömülebilir JSON.
+function hashMapJson(map) {
+  return JSON.stringify(map || {}).replace(/</g, '\\u003c');
 }
 function requestHash(requestUrl) {
   try { return new URL(String(requestUrl || ''), 'http://buyerlog.local').searchParams.get('h') || ''; }
@@ -75,4 +118,4 @@ function immutableForRequest(file, requestUrl, stat = null) {
   return Boolean(wanted && wanted.length === HASH_LENGTH && wanted === contentHash(file, stat));
 }
 
-module.exports = { contentHash, stampAssetHashes, warmAssetHashes, immutableForRequest, HASH_LENGTH };
+module.exports = { contentHash, stampAssetHashes, warmAssetHashes, immutableForRequest, HASH_LENGTH, lazyScriptFiles, warmFileHashes, cachedHashMap, hashMapJson };

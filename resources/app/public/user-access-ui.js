@@ -126,7 +126,11 @@
     const notice = sessionStorage.getItem('bl.presetShare.notice');
     if (notice) { sessionStorage.removeItem('bl.presetShare.notice'); setTimeout(() => { if (typeof showToast === 'function') showToast(notice); }, 300); }
   } catch (_) {}
-  function openUserManagement() {
+  async function openUserManagement() {
+    // 7.0.323: ekran betiği ilk açılışta yüklenir (perf-runtime → userManagement).
+    if (!window.BLUserManagement && window.BLPerf && typeof window.BLPerf.ensureFeature === 'function') {
+      try { await window.BLPerf.ensureFeature('userManagement'); } catch (error) { console.warn('Kullanıcı yönetimi yüklenemedi:', error); }
+    }
     if (window.BLUserManagement && typeof window.BLUserManagement.open === 'function') { window.BLUserManagement.open(); return; }
     if (typeof showToast === 'function') showToast(tr('Kullanıcı yönetimi arayüzü yüklenemedi.', 'The user management screen could not be loaded.'));
   }

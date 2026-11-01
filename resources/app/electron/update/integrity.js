@@ -26,7 +26,9 @@ function writeIntegrityManifest(root,options={}){
   return manifest;
 }
 
-/* Ana süreci kilitlememek için dosyalar parça parça doğrulanır. */
+/* Ana süreci kilitlememek için dosyalar eşzamansız okunur (okuma iş parçacığı
+ * havuzunda) ve parça parça doğrulanır; ana iş parçacığında yalnız özet kalır. */
+async function hashFile(file){return crypto.createHash('sha256').update(await fs.promises.readFile(file)).digest('hex');}
 async function verifyIntegrity(root,{version='',batch=200}={}){
   let manifest=null;
   try{manifest=JSON.parse(fs.readFileSync(path.join(root,...MANIFEST_REL.split('/')),'utf8'));}catch(_){return {status:'no-manifest',missing:[],changed:[],checked:0};}
@@ -38,7 +40,7 @@ async function verifyIntegrity(root,{version='',batch=200}={}){
     const [rel,expected]=entries[i];
     if(rel.split('/').includes('..'))continue;
     const full=path.join(root,...rel.split('/'));
-    try{if(hashFileSync(full)!==expected)changed.push(rel);}catch(_){missing.push(rel);}
+    try{if(await hashFile(full)!==expected)changed.push(rel);}catch(_){missing.push(rel);}
     checked+=1;
     if(i%batch===batch-1)await new Promise(resolve=>setImmediate(resolve));
   }

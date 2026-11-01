@@ -4,12 +4,18 @@ const fs=require('fs');
 const os=require('os');
 const path=require('path');
 const cp=require('child_process');
+const crypto=require('crypto');
+const {URL}=require('url');
+const {clearTimeout}=require('timers');
 const APP_ROOT=path.resolve(process.env.BUYER_LOG_RELEASE_APP_ROOT||path.join(__dirname,'../../resources/app'));
 const C=require(path.join(APP_ROOT,'scripts/release-common'));
 const MAX_RAW_MIRROR_BYTES=100*1024*1024;
 const canMirror=manifest=>Number.isSafeInteger(manifest.size)&&manifest.size<=MAX_RAW_MIRROR_BYTES;
+function assertMirrorable(manifest){
+  if(!canMirror(manifest)||manifest.size<=0)C.fail('Update ZIP exceeds the 100 MiB raw mirror limit; existing clients on restricted networks could not update. Reduce the package before publication.','RELEASE_RAW_MIRROR_REQUIRED');
+}
 const {parseReleaseManifest}=require(APP_ROOT+'/electron/update/manifest');
-const {parseGitHubSource,GitHubReleaseProvider}=require(APP_ROOT+'/electron/update/github-provider');
+const {parseGitHubSource,GitHubReleaseProvider,githubRawArtifactUrl,fetchPublic}=require(APP_ROOT+'/electron/update/github-provider');
 const {loadTrustedKeys,verifyManifestSignature}=require(APP_ROOT+'/electron/update/signature');
 /* Clients that bundle trusted keys reject unsigned/mis-signed manifests; refuse to publish one. */
 function assertSignedForClients(manifest){return verifyManifestSignature(manifest,loadTrustedKeys(C.APP_ROOT));}
@@ -73,12 +79,50 @@ async function verifyDownloaded(channel,version,manifest,dir){
   if(actual!==manifest.sha256||fs.statSync(file).size!==manifest.size)C.fail('Remote release artifact SHA/boyut doğrulaması başarısız.','RELEASE_REMOTE_VERIFY');
   return file;
 }
-async function verifyPublicArtifact(channel,manifest,dir){
-  const provider=new GitHubReleaseProvider(`github:${process.env.BUYER_LOG_GITHUB_RELEASE_REPO}`,{artifactTimeoutMs:15*60*1000});
-  const file=path.join(dir,`public-${channel}-${manifest.version}.zip`);
-  await provider.copyArtifact(channel,manifest.artifact,file,manifest.version);
-  if(await C.sha256File(file)!==manifest.sha256||fs.statSync(file).size!==manifest.size)
-    C.fail('Kimlik bilgisi olmadan public artifact doğrulanamadı. Release repo public olmalı.','RELEASE_PUBLIC_VERIFY');
+async function verifyRawMirror(channel,manifest){
+  assertMirrorable(manifest);
+  const url=githubRawArtifactUrl(`github:${process.env.BUYER_LOG_GITHUB_RELEASE_REPO}`,channel,manifest.version,manifest.artifact);
+  const {response,controller,timer}=await fetchPublic(url,15*60*1000);
+  try{
+    if(new URL(response.url).hostname!=='raw.githubusercontent.com'||!response.body)C.fail('Raw update mirror is unavailable.','RELEASE_RAW_MIRROR_VERIFY');
+    const hash=crypto.createHash('sha256');let size=0;
+    for await(const bytes of response.body){size+=bytes.length;if(size>manifest.size)C.fail('Raw update mirror size mismatch.','RELEASE_RAW_MIRROR_VERIFY');hash.update(bytes);}
+    if(size!==manifest.size||hash.digest('hex')!==manifest.sha256)C.fail('Raw update mirror SHA/size verification failed.','RELEASE_RAW_MIRROR_VERIFY');
+  }finally{clearTimeout(timer);controller.abort();}
+}
+function publishVisualAssets(repoDir,assets){
+  const toolsFile=path.join(APP_ROOT,'scripts/release-visual-assets.js');
+  if(!assets){if(!fs.existsSync(toolsFile))return;assets=require(toolsFile).visualAssets(APP_ROOT);}
+  if(!assets.length)return;
+  const branch='release-visuals',previous=remoteHead(repoDir,branch);
+  const worktree=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-release-visuals-'));
+  try{
+    if(previous){run('git',['-C',repoDir,'fetch','origin',branch]);run('git',['-C',repoDir,'worktree','add','--detach',worktree,previous]);}
+    else{
+      run('git',['-C',repoDir,'worktree','add','--detach',worktree,'HEAD']);
+      run('git',['-C',worktree,'switch','--orphan',`visuals-${process.pid}-${Date.now()}`]);
+    }
+    for(const asset of assets){
+      if(!/^\d+\.\d+\.\d+\/[A-Za-z0-9_.-]+\.(png|svg|jpg|jpeg|webp)$/i.test(asset.key)||asset.key.includes('..'))C.fail('Unsafe archive image path.','RELEASE_VISUAL_ASSET_INVALID');
+      const target=path.join(worktree,...asset.key.split('/'));
+      if(fs.existsSync(target)){
+        if(crypto.createHash('sha256').update(fs.readFileSync(target)).digest('hex')!==asset.sha256)C.fail('Published archive image is immutable: '+asset.key,'RELEASE_VISUAL_IMMUTABLE');
+      }else{
+        const bytes=fs.readFileSync(asset.file);
+        if(bytes.length!==asset.size||bytes.length>MAX_RAW_MIRROR_BYTES||crypto.createHash('sha256').update(bytes).digest('hex')!==asset.sha256)C.fail('Archive image changed during publication.','RELEASE_VISUAL_ASSET_INVALID');
+        fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,bytes,{flag:'wx'});
+      }
+    }
+    run('git',['-C',worktree,'add','--',...assets.map(a=>a.key)]);
+    const changed=cp.spawnSync('git',['-C',worktree,'diff','--cached','--quiet'],{stdio:'ignore'}).status;
+    if(changed===1){
+      run('git',['-C',worktree,'-c','user.name=Buyer Log Release Bot','-c','user.email=buyer-log-release-bot@users.noreply.github.com','commit','-m','Archive immutable release visuals']);
+      pushBranch(worktree,branch,{expectedRemote:previous});
+    }else if(changed!==0)C.fail('Archive image diff could not be checked.','RELEASE_GIT_VERIFY');
+  }finally{
+    try{run('git',['-C',repoDir,'worktree','remove','--force',worktree]);}catch(_){}
+    fs.rmSync(worktree,{recursive:true,force:true});
+  }
 }
 function currentLatest(repoDir,channel){
   const file=path.join(repoDir,channel,'latest.json');
@@ -94,6 +138,7 @@ async function downloadMirrorArtifact(channel,manifest,dir){
   return file;
 }
 async function publishRawMirror(repoDir,overrides={}){
+  for(const manifest of Object.values(overrides))assertMirrorable(manifest);
   const manifests={};
   for(const channel of ['test','stable']){
     const manifest=overrides[channel]||currentLatest(repoDir,channel);
@@ -145,7 +190,7 @@ function updateLatest(repoDir,channel,manifest){
 function updateRawMirror(repoDir,channel,manifest,artifact){
   if(!['test','stable'].includes(channel))C.fail('Raw mirror channel geçersiz.','RELEASE_CHANNEL_INVALID');
   if(!fs.existsSync(artifact))C.fail('Raw mirror artifact bulunamadı.','RELEASE_ARTIFACT_MISSING');
-  if(!canMirror(manifest))return {mirrored:false,artifactSource:'github-release'};
+  assertMirrorable(manifest);
   const worktree=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-raw-mirror-'));
   try{
     run('git',['-C',repoDir,'fetch','origin','raw-dist']);
@@ -168,6 +213,7 @@ async function publishTest(repoDir){
   assertCi();const manifest=parseReleaseManifest(C.readJson(path.join(C.DIST_ROOT,'latest.test.json'),null),'test');
   if(manifest.version!==C.readPackage().version)C.fail('Canonical package version manifest ile eşleşmiyor.','RELEASE_VERSION_MISMATCH');
   assertSignedForClients(manifest);
+  assertMirrorable(manifest);
   const artifact=path.join(C.DIST_ROOT,path.posix.basename(manifest.artifact));
   if(await C.sha256File(artifact)!==manifest.sha256||fs.statSync(artifact).size!==manifest.size)C.fail('Local artifact SHA/boyut yanlış.','RELEASE_SHA_MISMATCH');
   const per=path.join(C.DIST_ROOT,`BuyerLog-${manifest.version}.json`);C.atomicWriteJson(per,manifest);
@@ -176,8 +222,9 @@ async function publishTest(repoDir){
     if(!releaseExists('test',manifest.version))gh(['release','create',tag('test',manifest.version),'--title',`Buyer Log TEST ${manifest.version}`,'--notes',`TEST release for ${manifest.version}`]);
     ensureReleaseAssets('test',manifest.version,manifest,[artifact,per],temp);
     await verifyDownloaded('test',manifest.version,manifest,temp);
-    await verifyPublicArtifact('test',manifest,temp);
+    publishVisualAssets(repoDir);
     await publishRawMirror(repoDir,{test:manifest});
+    await verifyRawMirror('test',manifest);
     updateLatest(repoDir,'test',manifest);
   }finally{fs.rmSync(temp,{recursive:true,force:true});}
 }
@@ -197,9 +244,11 @@ async function resumeTest(repoDir,version){
     const manifest=parseReleaseManifest(C.readJson(path.join(temp,name),null),'test');
     if(manifest.version!==version||path.posix.basename(manifest.artifact)!==zip)C.fail('TEST manifest istenen version ile eşleşmiyor.','RELEASE_VERSION_MISMATCH');
     if(!assertSignedForClients(manifest).verified)C.fail('TEST manifest güvenilen anahtarla doğrulanamadı.','RELEASE_SIGNATURE_REQUIRED');
+    assertMirrorable(manifest);
     await verifyDownloaded('test',version,manifest,temp);
-    await verifyPublicArtifact('test',manifest,temp);
+    publishVisualAssets(repoDir);
     await publishRawMirror(repoDir,{test:manifest});
+    await verifyRawMirror('test',manifest);
     updateLatest(repoDir,'test',manifest);
   }finally{fs.rmSync(temp,{recursive:true,force:true});}
 }
@@ -216,6 +265,7 @@ async function promoteStable(repoDir,version){
        the same provider used by installed clients and hash/size verified. */
     const test=parseReleaseManifest(C.readJson(path.join(repoDir,'test','latest.json'),null),'test');
     if(test.version!==version)C.fail('TEST latest istenen version ile eşleşmiyor.','RELEASE_VERSION_MISMATCH');
+    assertMirrorable(test);
     const artifact=path.join(temp,path.posix.basename(test.artifact));
     const provider=new GitHubReleaseProvider(`github:${process.env.BUYER_LOG_GITHUB_RELEASE_REPO}`,{artifactTimeoutMs:15*60*1000});
     await provider.copyArtifact('test',test.artifact,artifact,version);
@@ -230,9 +280,10 @@ async function promoteStable(repoDir,version){
     const remoteDir=path.join(temp,'remote');fs.mkdirSync(remoteDir);
     await verifyDownloaded('stable',version,stable,remoteDir);
     updateRawMirror(repoDir,'stable',stable,artifact);
-    await verifyPublicArtifact('stable',stable,remoteDir);
     if(await C.sha256File(path.join(remoteDir,path.basename(artifact)))!==await C.sha256File(artifact))C.fail('TEST ve STABLE SHA farklı.','RELEASE_PROMOTE_HASH_MISMATCH');
+    publishVisualAssets(repoDir);
     await publishRawMirror(repoDir,{stable});
+    await verifyRawMirror('stable',stable);
     updateLatest(repoDir,'stable',stable);
   }finally{fs.rmSync(temp,{recursive:true,force:true});}
 }
@@ -246,4 +297,4 @@ async function main(){
   C.fail('Kullanım: github-release.js publish-test | resume-test VERSION | promote-stable VERSION','RELEASE_ARG_INVALID');
 }
 if(require.main===module)main().catch(error=>{console.error(`[${error.code||'RELEASE_FAILED'}] ${error.message}`);process.exitCode=1;});
-module.exports={MAX_RAW_MIRROR_BYTES,canMirror,pushBranch,updateRawMirror,tag,releaseAssetNames,ensureReleaseAssets,currentLatest,downloadMirrorArtifact,publishRawMirror,updateLatest,publishTest,resumeTest,promoteStable};
+module.exports={MAX_RAW_MIRROR_BYTES,canMirror,assertMirrorable,publishVisualAssets,verifyRawMirror,pushBranch,updateRawMirror,tag,releaseAssetNames,ensureReleaseAssets,currentLatest,downloadMirrorArtifact,publishRawMirror,updateLatest,publishTest,resumeTest,promoteStable};
