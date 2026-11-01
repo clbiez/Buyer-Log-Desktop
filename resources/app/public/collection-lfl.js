@@ -6,7 +6,7 @@
   const T=(tr,english)=>en()?english:tr;
   const esc=value=>escapeHtml(String(value??''));
   const identity=()=>{const user=typeof state!=='undefined'?state.currentUser:global.BL_USER_CONTEXT;return JSON.stringify([user?.id,user?.iamRevision,user?.dataScope,user?.scopes]);};
-  function session(){const id=identity();if(current?.id!==id)current={id,status:'idle',index:new Map(),pending:null};return current;}
+  function session(){const id=identity();if(current?.id!==id)current={id,status:'idle',index:new Map(),detailRows:new Map(),pending:null};return current;}
   function repaint(){
     if(document.body.dataset.activeTab==='koleksiyon'&&typeof renderKol==='function')renderKol();
     global.BLCollectionPriceDrawer?.refresh?.();
@@ -16,18 +16,24 @@
     if(active.pending)return active.pending;
     if(!rebuild&&active.status!=='idle')return Promise.resolve();
     active.status='loading';
+    active.detailRows=new Map();
     active.pending=(async()=>{
       try{
         const response=await fetch('/api/collection-lfl-reference'+(rebuild?'?rebuild=1':''),{cache:'no-store'});
         const data=await response.json();
         if(!response.ok){active.status=response.status===403?'forbidden':data.code==='SOURCE_FILTER_REQUIRED'?'filter':'error';return;}
-        active.index=new Map((data.references||[]).map(item=>[item.key,item]));active.timelines=Engine.createSeasonTimelines(data.references);active.calculatedAt=data.calculatedAt;active.status='ready';
+        active.index=new Map((data.references||[]).map(item=>[item.key,item]));active.timelines=Engine.createSeasonTimelines(data.references);active.version=String(data.version||'');active.calculatedAt=data.calculatedAt;active.status='ready';
       }catch(_){active.status='error';}
       finally{active.pending=null;if(current===active)repaint();}
     })();
     return active.pending;
   }
   function invalidate(){current=null;if(document.body.dataset.activeTab==='koleksiyon')void ensure();}
+  function projectRow(row,read=kolEffectiveValue){
+    const projected={...row};
+    for(const key of ['season','mag','urunTipi','inStoreMonth','quantity','targetPrice','confirmedManufacturer'])projected[key]=read(row,key);
+    return projected;
+  }
   function sampleWarning(reference){
     const unknownSample=Boolean(reference&&(reference.unidentifiedCount>0||!Number.isInteger(reference.orderCount)||reference.orderCount<1));
     const lowSample=Boolean(reference&&!unknownSample&&reference.orderCount<=3);
@@ -38,8 +44,7 @@
     return {lowSample,warning,warningShort,compactWarning,orderInfo};
   }
   function impactModel(row){
-    const active=session(),projected={...row};
-    for(const key of ['season','mag','urunTipi','inStoreMonth','quantity','targetPrice','confirmedManufacturer'])projected[key]=kolEffectiveValue(row,key);
+    const active=session(),projected=projectRow(row);
     const price=kolSuppFob(projected),result=active.status==='ready'?Engine.seasonImpact(active.timelines,projected,price?.price):{status:active.status};
     const reference=result.status==='ready'?result.reference:null,quality=sampleWarning(reference),month=Engine.budgetMonth(projected,'collection'),season=String(projected.season||''),period=[season,month].filter(Boolean).join(' · ');
     const messages={
@@ -67,8 +72,7 @@
   }
   function model(row,mode='month'){
     if(mode==='impact')return impactModel(row);
-    const active=session(),projected={...row};
-    for(const key of ['season','mag','urunTipi','inStoreMonth','targetPrice','confirmedManufacturer'])projected[key]=kolEffectiveValue(row,key);
+    const active=session(),projected=projectRow(row);
     const season=Engine.previousSeason(projected.season),valid=Boolean(season&&String(projected.mag||'').trim()&&String(projected.urunTipi||'').trim());
     const month=mode==='month'?Engine.previousMonth(Engine.budgetMonth(projected,'collection')):'',period=[season,month].filter(Boolean).join(' · ');
     const reference=valid&&active.status==='ready'?Engine.reference(active.index,projected,mode):null;
@@ -100,16 +104,115 @@
   }
   const modeForKey=key=>key==='__seasonImpact__'?'impact':key==='__previousSeason__'?'season':'month';
   const labelFor=key=>key==='__seasonImpact__'?T('Sezon Etkisi','Season Impact'):key==='__previousSeason__'?'Previous Season':'LFL';
+  const footerKinds=new Set(['previousSeason','lfl','seasonImpact','priceReferences']);
+  function footerSummaries(rows,modes){
+    const active=session(),result=new Map(),groups=global.BLCollectionModelGroups;
+    // Index all model parents once, including parents outside the active filter.
+    const read=groups?.createValueReader?groups.createValueReader(typeof kolRows!=='undefined'?kolRows:rows):kolEffectiveValue;
+    const items=(rows||[]).map(row=>{
+      const projected=projectRow(row,read);let price;
+      if(groups){const pricing=read(row,'pricing')||{},selected=groups.confirmedPricing(projected,pricing,groups.kolParseMoneyNum)||groups.bestPricing(pricing,groups.kolParseMoneyNum),target=groups.kolParseMoneyNum(projected.targetPrice);price=selected?.price??(Number.isFinite(target)&&target>0?target:null);}
+      else price=kolSuppFob(projected)?.price;
+      return {row:projected,price,quantity:projected.quantity};
+    });
+    for(const mode of new Set(modes)){
+      const observations=items.map(item=>{
+        if(active.status!=='ready')return {quantity:item.quantity,reference:null,price:null};
+        if(mode==='impact'){const impact=Engine.seasonImpact(active.timelines,item.row,item.price);return {quantity:item.quantity,reference:impact.status==='ready'?impact.before:null,price:impact.status==='ready'?impact.after:null};}
+        return {quantity:item.quantity,reference:Engine.reference(active.index,item.row,mode)?.average,price:item.price};
+      });
+      result.set(mode,Engine.summarizeComparisons(observations));
+    }
+    return result;
+  }
+  function footerCells(rows,descriptors){
+    const columns=(descriptors||[]).filter(d=>footerKinds.has(d.kind));if(!columns.length)return new Map();
+    const keys=d=>d.kind==='priceReferences'?d.folds||[]:[d.k],summaries=footerSummaries(rows,columns.flatMap(d=>keys(d).map(modeForKey))),cells=new Map();
+    const money=value=>Number.isFinite(value)?`$${esc(kolFormatMoneyDisplay(String(value)))}`:'—';
+    const line=(caption,value)=>`<span class="collectionAverageLine"><span class="collectionFooterCaption">${esc(caption)}</span><strong>${value}</strong></span>`;
+    const value=(s,mode,arithmetic=false)=>{const before=arithmetic?s.arithmeticBefore:s.weightedBefore,after=arithmetic?s.arithmeticAfter:s.weightedAfter;return mode==='impact'&&Number.isFinite(before)&&Number.isFinite(after)?`${money(before)} → ${money(after)}`:money(before);};
+    const title=(s,mode)=>T(`Filtrelenmiş satırların model/renk adediyle ağırlıklı ortalaması. Ağırlıklı hesaba dahil: ${s.usedRows}/${s.totalRows} satır · ${s.quantity} adet. Eksik referans veya sıfır/eksik adet ağırlıklı hesaba katılmaz.`,`Quantity-weighted average of filtered model/colour rows. Included in weighted average: ${s.usedRows}/${s.totalRows} rows · ${s.quantity} units. Missing references and zero/missing quantities are excluded.`)+' '+(mode==='impact'?T('Satırların bağımsız sezon simülasyonlarının önce → sonra özeti.','Before → after summary of independent row-level season simulations.'):T(`Yüzde değişimi, fiyat ve referansı birlikte olan ${s.pairedRows} satırda ağırlıklı güncel fiyat / ağırlıklı referans − 1 ile hesaplanır.`,`Percentage change uses weighted current price / weighted reference − 1 across ${s.pairedRows} rows with both a price and a reference.`));
+    for(const d of columns){
+      let content='',titles=[];
+      for(const key of keys(d)){
+        const mode=modeForKey(key),s=summaries.get(mode);if(!s)continue;
+        titles.push(`${labelFor(key)}: ${title(s,mode)}`);
+        if(d.kind==='priceReferences'){content+=line(`${labelFor(key)} · ${T('Ağ.Ort.','W.Avg')}`,value(s,mode));continue;}
+        content+=line(T('Ağ.Ort.','W.Avg'),value(s,mode))+line(T('Ort.','Avg'),value(s,mode,true));
+        if(Number.isFinite(s.percent)){
+          const rounded=Math.abs(s.percent)<0.005?0:s.percent,text=`${rounded>0?'+':''}${rounded.toLocaleString(en()?'en-GB':'tr-TR',{maximumFractionDigits:2})}%`;
+          content+=line(T('Ağ.% Δ','W.% Δ'),`<span class="kolBestDelta ${rounded<=0?'isAtOrBelowTarget':'isAboveTarget'}">${esc(text)}</span>`);
+        }
+      }
+      cells.set(d.k,`<td class="collectionWeightedAverage" data-kol-footer-key="${esc(d.k)}" title="${esc(titles.join('\n'))}">${content}</td>`);
+    }
+    return cells;
+  }
   const combinedText=(row,keys)=>keys.map(key=>`${labelFor(key)}: ${model(row,modeForKey(key)).text||'—'}`).join(' | ');
   function cell(row,attributes,mode='month'){const m=model(row,mode);return `<td class="kolBestCell kolPriceStripTd" data-kol-drawer="${esc(row.id)}"${attributes} title="${esc(m.detail)}">${content(row,m)}</td>`;}
   function combinedCell(row,attributes,keys){
     const rows=keys.map(key=>{const m=model(row,modeForKey(key));return `<div class="kolPsLine" title="${esc(m.detail)}"><span class="kolPsMeta">${esc(labelFor(key))}</span><b class="${m.reference?'kolPsPrice':'kolPsEmpty'}">${esc(m.averageText||m.emptyText)}</b>${m.percentText?`<span class="kolBestDelta ${m.percent<=0?'isAtOrBelowTarget':'isAboveTarget'}">${esc(m.percentText)}</span>`:''}${m.compactWarning?`<span class="kolPsMeta kolPsWaiting" title="${esc(m.warning)}">${esc(m.compactWarning)}</span>`:''}</div>`;}).join('');
     return `<td class="kolBestCell kolPriceStripTd" data-kol-drawer="${esc(row.id)}"${attributes}><div class="kolPs">${rows}</div></td>`;
   }
+  function detailError(code){
+    const messages={
+      SOURCE_FILTER_REQUIRED:T('Kaynak Veride LFL filtresini tamamlayın.','Complete the LFL filter in Source Data.'),
+      LFL_REFERENCE_STALE:T('LFL kaynağı değişti. Referansları yenileyip detayı yeniden açın.','The LFL source changed. Refresh references and reopen the detail.'),
+      LFL_REFERENCE_NOT_FOUND:T('Bu referans için erişilebilir sipariş bulunamadı.','No accessible orders were found for this reference.'),
+      FORBIDDEN:T('Sipariş detayları için Koleksiyon ve LFL erişimi gerekli.','Collection and LFL access are required for order details.'),
+    };
+    return Object.assign(new Error(messages[code]||T('Sipariş detayları yüklenemedi. Tekrar deneyin.','Could not load order details. Please try again.')),{code});
+  }
+  async function detailData(row,mode,retry=true){
+    if(!['season','month','impact'].includes(mode))throw detailError('INVALID_MODE');
+    await ensure();
+    const active=session(),m=model(row,mode),reference=m.reference;
+    if(!reference)throw new Error(m.message);
+    const cache=active.detailRows,key=reference.key;
+    let task=cache.get(key);
+    if(!task){
+      task=(async()=>{
+        const response=await fetch('/api/collection-lfl-detail',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,version:active.version})});
+        const data=await response.json();
+        if(!response.ok)throw detailError(response.status===403?'FORBIDDEN':data.code);
+        if(session()!==active||active.detailRows!==cache)throw detailError('LFL_DETAIL_CANCELLED');
+        if(data.version!==active.version||data.reference?.key!==key||!Array.isArray(data.rows))throw detailError('LFL_REFERENCE_STALE');
+        return data;
+      })();
+      // Details stay in memory only, bounded by the number of explicitly opened groups.
+      if(cache.size>=12)cache.delete(cache.keys().next().value);
+      cache.set(key,task);
+      task.catch(()=>{if(cache.get(key)===task)cache.delete(key);});
+    }
+    try{return await task;}
+    catch(error){
+      if(retry&&error.code==='LFL_REFERENCE_STALE'&&session()===active){await ensure({rebuild:true});return detailData(row,mode,false);}
+      throw error.code?error:detailError('LOAD_ERROR');
+    }
+  }
+  async function detailReport(row,mode){
+    const data=await detailData(row,mode),m=model(row,mode),projected=projectRow(row),reference=data.reference;
+    if(m.reference?.key!==reference.key||session().version!==data.version)throw detailError('LFL_DETAIL_CANCELLED');
+    const key=mode==='impact'?'__seasonImpact__':mode==='season'?'__previousSeason__':'__lfl__',label=labelFor(key);
+    const fields=global.BLCanonicalFields,number=value=>Number(value).toLocaleString(en()?'en-GB':'tr-TR',{maximumFractionDigits:2});
+    const field=(id,key=id)=>({key,canonicalId:id,label:fields.label(id,en()?'en':'tr'),type:fields.field(id).type,value:source=>fields.value(source,'lfl',id)});
+    const columns=[field('orderCode'),field('modelName'),field('colour'),field('manufacturer'),field('season'),field('mag'),field('category','classification'),
+      {key:'_referenceMonth',label:T('Model Bütçe Ayı','Model Budget Month')},
+      {key:'_referenceQuantity',canonicalId:'orderQuantity',label:T('Sipariş Adedi','Order Quantity'),type:'number',format:number},
+      {key:'_referenceFob',label:'FOB (USD)',type:'number',format:value=>`$${number(value)}`},
+      {key:'_referenceValue',label:T('Tutar (USD)','Value (USD)'),type:'number',format:value=>`$${number(value)}`},
+      {key:'_referenceWeight',label:T('Ağırlık Payı (%)','Weight Share (%)'),type:'number',format:value=>`${number(value)}%`},
+      field('country'),field('buyer'),field('buyingGroup'),field('colourCode'),field('plmId'),field('inStore'),field('orderPlacementDate','opd'),field('license')];
+    const title=`${label} · ${T('Sipariş detayları','Order details')}`;
+    return {storageKey:'collection.price-reference.'+mode,source:'lfl',moduleId:'lfl',pageScope:'koleksiyon',title,
+      subtitle:[projected.modelKod,m.period,projected.mag,projected.urunTipi,sampleWarning(reference).orderInfo,`${number(reference.quantity)} ${T('adet','units')}`,`${T('Ağ.Ort.','W.Avg')} $${number(reference.average)}`].filter(Boolean).join(' · '),
+      note:m.detail+(mode==='impact'?' '+T('Tablo yerleşmiş ASAS siparişlerini gösterir; model yalnız simülasyondur, sipariş satırlarına eklenmez.','The table shows placed ASAS orders; the model is a simulation and is not added to the order rows.') :''),
+      rows:data.rows,columns,defaultVisible:columns.slice(0,12).map(col=>col.key),exactDefaultVisible:true,viewPresets:{extended:columns.map(col=>col.key)},images:true,fileName:'Collection_'+label+'_Orders'};
+  }
   function drawer(row){
     void ensure();
-    const sections=['__previousSeason__','__lfl__','__seasonImpact__'].map(key=>{const m=model(row,modeForKey(key));return `<div class="cpdSection"><header><h4>${esc(labelFor(key))}</h4><span>${esc(key==='__seasonImpact__'?T('Tek model simülasyonu','Single-model simulation'):key==='__previousSeason__'?T('Sezon geneli','Full season'):T('Aynı MB ayı','Same MB month'))}</span></header>${content(row,m)}<p class="cpdNote">${esc(m.reference?m.detail:m.message)}</p></div>`;}).join('');
+    const sections=['__previousSeason__','__lfl__','__seasonImpact__'].map(key=>{const mode=modeForKey(key),m=model(row,mode),action=T('Sipariş detaylarını aç','Open order details');return `<div class="cpdSection"><header><h4><button type="button" class="tbtn" data-cpd-lfl-details="${mode}" title="${esc(action)}" aria-label="${esc(labelFor(key)+': '+action)}"${m.reference?'':' disabled'}>${esc(labelFor(key))} ↗</button></h4><span>${esc(key==='__seasonImpact__'?T('Tek model simülasyonu','Single-model simulation'):key==='__previousSeason__'?T('Sezon geneli','Full season'):T('Aynı MB ayı','Same MB month'))}</span></header>${content(row,m)}<p class="cpdNote">${esc(m.reference?m.detail:m.message)}</p></div>`;}).join('');
     return sections+`<div class="cpdActions"><button type="button" class="tbtn" data-cpd-lfl-refresh${session().status==='loading'?' disabled':''}>${esc(T('Referansları yenile','Refresh references'))}</button></div>`;
   }
-  global.BLCollectionLfl={ensure,invalidate,model,cell,combinedCell,combinedText,modeForKey,drawer,text:(row,mode='month')=>model(row,mode).text};
+  global.BLCollectionLfl={ensure,invalidate,model,cell,combinedCell,combinedText,modeForKey,drawer,detailReport,footerSummaries,footerCells,text:(row,mode='month')=>model(row,mode).text};
 })(window);

@@ -34,17 +34,21 @@ function viewApi(mode) {
 }
 const list = keys => keys.map(k => ({ kind: k.startsWith('__') ? 'synthetic' : 'base', k }));
 
-test('compact folds Previous Season and monthly LFL together; detail/cost keep separate columns',()=>{
- const keys=['targetPrice','__previousSeason__','__lfl__','fob'];
+test('compact folds Previous Season, monthly LFL and Season Impact together; detail/cost keep separate columns',()=>{
+ const keys=['targetPrice','__previousSeason__','__lfl__','__seasonImpact__','fob'];
  const compact=viewApi('compact').kolApplyPriceView(list(keys));
  const reference=compact.find(item=>item.k==='__referenceSummary__');
- assert.deepEqual(plain(reference.folds),['__previousSeason__','__lfl__']);
+ assert.deepEqual(plain(reference.folds),['__previousSeason__','__lfl__','__seasonImpact__']);
+ assert.ok(!compact.some(item=>item.k==='__seasonImpact__'));
  for(const mode of ['detail','cost']){
   const separate=viewApi(mode).kolApplyPriceView(list(keys));
   assert.ok(separate.some(item=>item.k==='__previousSeason__'));
   assert.ok(separate.some(item=>item.k==='__lfl__'));
+  assert.ok(separate.some(item=>item.k==='__seasonImpact__'));
  }
  assert.deepEqual(plain(viewApi('compact').kolApplyPriceView(list(['__lfl__']))[0].folds),['__lfl__']);
+ assert.deepEqual(plain(viewApi('compact').kolApplyPriceView(list(['__seasonImpact__']))[0].folds),['__seasonImpact__']);
+ assert.deepEqual(plain(viewApi('compact').kolApplyPriceView(list(['__seasonImpact__','targetPrice','__lfl__']))[0].folds),['__seasonImpact__','__lfl__']);
  assert.ok(!viewApi('compact').kolApplyPriceView(list(['targetPrice'])).some(item=>item.k==='__referenceSummary__'));
 });
 

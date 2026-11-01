@@ -202,6 +202,22 @@
       &&Math.abs(start.clientY-end.clientY)<=6);
   }
 
+  async function openLflDetails(row,button){
+    const session=state,token=(session.detailToken||0)+1;session.detailToken=token;
+    const label=button.textContent;button.disabled=true;button.setAttribute('aria-busy','true');button.textContent=T('Siparişler yükleniyor…','Loading orders…');
+    // Disabling the focused button can send focus to body; keep Escape and Tab inside the parent dialog while loading.
+    session.panel.focus({preventScroll:true});
+    try{
+      const report=await global.BLCollectionLfl.detailReport(row,button.dataset.cpdLflDetails);
+      if(state!==session||session.detailToken!==token||findRow(session.rowId)!==row)return;
+      const trigger=session.panel.querySelector('[data-cpd-lfl-details="'+CSS.escape(button.dataset.cpdLflDetails)+'"]')||button;
+      global.BLDetailDrawer.open({...report,trigger});
+      global.BLMotionPlus?.play?.('overlay',document.getElementById('blSharedDetailDrawer'));
+    }catch(error){
+      if(state===session&&session.detailToken===token&&error.code!=='LFL_DETAIL_CANCELLED')showToast(error.message||T('Sipariş detayları yüklenemedi.','Could not load order details.'));
+    }finally{if(button.isConnected){button.disabled=false;button.removeAttribute('aria-busy');button.textContent=label;}}
+  }
+
   function onClick(event){
     if(event.target.closest('[data-cpd-lfl-refresh]')){void global.BLCollectionLfl?.ensure({rebuild:true});render();return;}
     if(!state||!state.overlay.contains(event.target))return;
@@ -210,6 +226,7 @@
     if(event.target===state.overlay){if(backdropTap)close();return;}
     if(event.target.closest('[data-cpd-close]')){close();return;}
     const row=findRow(state.rowId);if(!row)return;
+    const referenceDetail=event.target.closest('[data-cpd-lfl-details]');if(referenceDetail){if(!referenceDetail.disabled)void openLflDetails(row,referenceDetail);return;}
     if(event.target.closest('[data-cpd-source-report]')){const snapshot=lineageSnapshot(row),rows=lineageRows(snapshot);close();global.BLDetailDrawer?.open({storageKey:'pricing.source-explanation',title:T('Fiyat kaynak açıklaması','Price source explanation'),rows,images:false,columns:[{key:'field',label:T('Alan / varsayım','Field / assumption')},{key:'value',label:T('Değer','Value')}]});return;}
     const rule=event.target.closest('[data-cpd-rule]');if(rule){const binding=state.binding,id=rule.dataset.cpdRule;if(!global.BLPriceLineageBridge.canManageRules())return;close();global.BLPriceLineageBridge.openRule(binding,id);return;}
     const approve=event.target.closest('[data-cpd-approve]');

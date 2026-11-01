@@ -28,8 +28,8 @@ const server=spawn(process.execPath,['server/server.js'],{cwd:app,env,stdio:['ig
  const context=await browser.newContext({viewport:{width:1920,height:900},reducedMotion:'reduce'});
  const [name,...rest]=cookie.split('=');await context.addCookies([{name,value:rest.join('='),domain:'127.0.0.1',path:'/',httpOnly:true}]);
  await context.addInitScript(()=>{localStorage.setItem('bl.releaseNotes.lastSeenStable.v1','99.0.0');});
- const page=await context.newPage(),errors=[];let requests=0;
- page.on('pageerror',e=>errors.push(e.message));page.on('dialog',dialog=>dialog.dismiss());page.on('request',request=>{if(request.url().includes('/api/collection-lfl-reference'))requests++;});
+ const page=await context.newPage(),errors=[];let requests=0,detailRequests=0;
+ page.on('pageerror',e=>errors.push(e.message));page.on('dialog',dialog=>dialog.dismiss());page.on('request',request=>{if(request.url().includes('/api/collection-lfl-reference'))requests++;if(request.url().includes('/api/collection-lfl-detail'))detailRequests++;});
  await page.goto(base,{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.BLPerf&&typeof switchTab==='function',{timeout:60000});
  await page.getByText(/Buyer Log'a devam et|Continue to Buyer Log/).click({timeout:4000}).catch(()=>{});
  await page.waitForFunction(()=>!document.getElementById('blBootGuard'),{timeout:60000});
@@ -42,28 +42,75 @@ const server=spawn(process.execPath,['server/server.js'],{cwd:app,env,stdio:['ig
  await page.waitForFunction(()=>document.querySelector('td[data-key="__referenceSummary__"]')?.textContent.includes('17,50'));
  assert.match(await page.locator('td[data-key="__referenceSummary__"]').innerText(),/15,00/);
  assert.match(await page.locator('td[data-key="__referenceSummary__"]').innerText(),/⚠ 2 sipariş/);
- assert.match(await page.locator('td[data-key="__seasonImpact__"]').innerText(),/16[,.]67%/);
+ assert.match(await page.locator('td[data-key="__referenceSummary__"]').innerText(),/Sezon Etkisi.*10,00.*11,67.*16[,.]67%/s);
+ assert.equal(await page.locator('td[data-key="__seasonImpact__"]').count(),0);
  const initialRequests=requests;
  await page.evaluate(()=>{for(let i=0;i<4;i++)renderKol();});assert.equal(requests,initialRequests);
  const assets=path.join(app,'public/release-notes/next-assets');fs.mkdirSync(assets,{recursive:true});
  await page.locator('td[data-key="__referenceSummary__"]').scrollIntoViewIfNeeded();
- await page.screenshot({path:path.join(assets,'collection-price-lfl.png')});
- await page.locator('td[data-key="__seasonImpact__"]').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(assets,'collection-season-impact.png')});
+ await page.screenshot({path:path.join(root,'collection-price-lfl.png')});
+ await page.screenshot({path:path.join(root,'collection-season-impact.png')});
  await page.evaluate(()=>{kolRows[0].inStoreMonth='JANUARY 2027';renderKol();});
- assert.match(await page.locator('td[data-key="__seasonImpact__"]').innerText(),/Önceki ay verisi yok/);
+ assert.match(await page.locator('td[data-key="__referenceSummary__"]').innerText(),/Önceki ay verisi yok/);
  await page.evaluate(()=>{kolRows[0].inStoreMonth='FEBRUARY 2027';kolRows[0].quantity='0';renderKol();});
- assert.match(await page.locator('td[data-key="__seasonImpact__"]').innerText(),/Adet gerekli/);
+ assert.match(await page.locator('td[data-key="__referenceSummary__"]').innerText(),/Adet gerekli/);
  await page.evaluate(()=>{kolRows[0].quantity='200';kolRows[0]._sourceOrderCode='CURRENT-1';renderKol();});
- assert.match(await page.locator('td[data-key="__seasonImpact__"]').innerText(),/Siparişe bağlı/);
+ assert.match(await page.locator('td[data-key="__referenceSummary__"]').innerText(),/Siparişe bağlı/);
  await page.evaluate(()=>{delete kolRows[0]._sourceOrderCode;renderKol();});
  const compactCopy=await page.evaluate(()=>kolSpreadsheetRawValue(kolRows[0],'__referenceSummary__'));assert.match(compactCopy,/Previous Season:/);assert.match(compactCopy,/LFL:/);
+ assert.match(compactCopy,/Sezon Etkisi:.*16[,.]67%/);
+ await page.locator('td[data-key="__referenceSummary__"]').dblclick();
+ await page.locator('.cpdDrawer [data-cpd-lfl-refresh]').waitFor();assert.match(await page.locator('.cpdDrawer').innerText(),/Sezon Etkisi/);
+ assert.equal(detailRequests,0,'opening Price Drawer must not fetch source detail rows');
+ const detail=page.locator('#blSharedDetailDrawer');
+ let releaseDetail,detailIntercepted;
+ const interceptedDetail=new Promise(resolve=>{detailIntercepted=resolve;}),heldDetail=new Promise(resolve=>{releaseDetail=resolve;});
+ const holdDetail=async route=>{detailIntercepted();await heldDetail;await route.continue();};
+ await page.route('**/api/collection-lfl-detail',holdDetail);
+ await page.locator('.cpdDrawer [data-cpd-lfl-details="season"]').click();await interceptedDetail;
+ await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>BLCollectionPriceDrawer.isOpen()),false);
+ const releasedResponse=page.waitForResponse(response=>response.url().includes('/api/collection-lfl-detail'));releaseDetail();await (await releasedResponse).finished();
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(resolve)));
+ assert.equal(await page.evaluate(()=>BLDetailDrawer.isOpen()),false,'a delayed detail must not reopen after Price Drawer closes');
+ await page.unroute('**/api/collection-lfl-detail',holdDetail);
+ await page.locator('td[data-key="__referenceSummary__"]').dblclick();await page.locator('.cpdDrawer [data-cpd-lfl-refresh]').waitFor();
+ for(const [mode,count] of [['season',3],['month',2],['impact',4]]){
+  await page.locator(`.cpdDrawer [data-cpd-lfl-details="${mode}"]`).click();
+  await detail.locator('tbody tr[data-id]').first().waitFor();
+  assert.equal(await detail.locator('tbody tr[data-id]').count(),count);
+  const text=await detail.innerText();
+  if(mode==='impact'){assert.match(text,/CURRENT-1/);assert.ok(!text.includes('FUTURE-1'));assert.ok(!text.includes('DEMO-1'));assert.match(text,/simülasyondur/);}
+  else{assert.match(text,/DEMO-1/);assert.ok(!text.includes('CURRENT-1'));if(mode==='month')assert.ok(!text.includes('DEMO-3'));}
+  await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>BLCollectionPriceDrawer.isOpen()),true);
+  assert.equal(await page.evaluate(()=>BLDetailDrawer.isOpen()),false);
+  await page.waitForFunction(mode=>document.activeElement?.dataset.cpdLflDetails===mode,mode);
+ }
+ assert.equal(detailRequests,3);
+ await page.locator('.cpdDrawer [data-cpd-lfl-details="month"]').focus();await page.keyboard.press('Enter');
+ await detail.locator('tbody tr[data-id]').first().waitFor();assert.equal(detailRequests,3,'reopening a reference reuses loaded order details');
+ await detail.locator('[data-bl-detail-search]').fill('DEMO-2');await page.waitForFunction(()=>document.querySelectorAll('#blSharedDetailDrawer tbody tr[data-id]').length===1);
+ await detail.locator('[data-bl-detail-search]').fill('');await page.waitForFunction(()=>document.querySelectorAll('#blSharedDetailDrawer tbody tr[data-id]').length===2);
+ await page.screenshot({path:path.join(assets,'collection-price-order-detail.png')});
+ const detailDownloadReady=page.waitForEvent('download');await detail.locator('[data-bl-detail-excel]').click();await detail.locator('[data-bl-export-mode="all"]').click();
+ const detailDownload=await detailDownloadReady,detailExportFile=path.join(root,'lfl-reference-orders.xlsx');await detailDownload.saveAs(detailExportFile);
+ const detailWorkbook=XLSX.readFile(detailExportFile),detailExportRows=XLSX.utils.sheet_to_json(detailWorkbook.Sheets[detailWorkbook.SheetNames[0]],{header:1});
+ assert.equal(detailExportRows.length,3);assert.match(JSON.stringify(detailExportRows),/DEMO-1/);assert.match(JSON.stringify(detailExportRows),/DEMO-2/);
+ for(const [label,expected] of [['Sipariş Adedi',100],['FOB (USD)',10],['Tutar (USD)',1000],['Ağırlık Payı (%)',50]]){
+  const column=detailExportRows[0].indexOf(label);assert.ok(column>=0);assert.equal(detailExportRows[1][column],expected);
+ }
+ await page.keyboard.press('Escape');await page.evaluate(()=>{applyLanguage('en');BLCollectionPriceDrawer.refresh({force:true});});
+ await page.locator('.cpdDrawer [data-cpd-lfl-details="month"]').click();await detail.locator('tbody tr[data-id]').first().waitFor();
+ assert.match(await detail.locator('#blDetailDrawerTitle').innerText(),/LFL.*Order details/i);
+ assert.match(await detail.innerText(),/Weight Share/i);assert.equal(detailRequests,3);
+ await page.keyboard.press('Escape');await page.evaluate(()=>{applyLanguage('tr');BLCollectionPriceDrawer.refresh({force:true});});
+ await page.evaluate(()=>window.BLCollectionPriceDrawer.close());
  for(const view of ['detail','cost']){
   await page.evaluate(view=>setKolPriceView(view),view);
   assert.match(await page.locator('td[data-key="__lfl__"]').innerText(),/15,00/);
   assert.match(await page.locator('td[data-key="__lfl__"]').innerText(),/Yalnız 2 sipariş/);
   assert.match(await page.locator('td[data-key="__seasonImpact__"]').innerText(),/16[,.]67%/);
   assert.match(await page.locator('td[data-key="__previousSeason__"]').innerText(),/17,50/);
-  if(view==='detail'){await page.locator('td[data-key="__lfl__"]').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(assets,'collection-price-lfl-detail.png')});}
+  if(view==='detail'){await page.locator('td[data-key="__lfl__"]').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(root,'collection-price-lfl-detail.png')});}
  }
  await page.evaluate(()=>{const hidden=new Set(kolHiddenCols);applyTableViewPreset('koleksiyon','all');if(!kolDisplayDescriptors({detail:true}).some(d=>d.k==='__previousSeason__'))throw new Error('Previous Season missing from All');kolHiddenCols=hidden;setKolPriceView('detail');renderKol();});
  await page.evaluate(()=>{kolRows[0].confirmedManufacturer='DEMO B';renderKol();});
@@ -86,7 +133,11 @@ const server=spawn(process.execPath,['server/server.js'],{cwd:app,env,stdio:['ig
  assert.match(await page.locator('td[data-key="__lfl__"]').innerText(),/Kıyaslanacak veri yok/);
  assert.ok(!(await page.locator('td[data-key="__lfl__"]').innerText()).includes('%'));
  await page.evaluate(()=>setKolPriceView('compact'));assert.match(await page.locator('td[data-key="__referenceSummary__"]').innerText(),/Kıyaslanacak veri yok/);
- await page.locator('td[data-key="__referenceSummary__"]').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(assets,'collection-price-lfl-no-data.png')});
+ await page.locator('td[data-key="__referenceSummary__"]').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(root,'collection-price-lfl-no-data.png')});
+ await page.locator('td[data-key="__referenceSummary__"]').dblclick();await page.locator('.cpdDrawer [data-cpd-lfl-details="month"]').waitFor();
+ assert.equal(await page.locator('.cpdDrawer [data-cpd-lfl-details="month"]').isDisabled(),true);
+ assert.equal(await page.locator('.cpdDrawer [data-cpd-lfl-details="season"]').isEnabled(),true);
+ await page.evaluate(()=>BLCollectionPriceDrawer.close());
  await page.evaluate(()=>setKolPriceView('detail'));
  await page.evaluate(()=>{kolRows[0].inStoreMonth='';renderKol();});assert.equal((await page.locator('td[data-key="__lfl__"]').innerText()).trim(),'—');
  await page.evaluate(()=>{kolRows[0].inStoreMonth='FEBRUARY 2027';renderKol();});assert.equal(requests,initialRequests);
@@ -101,6 +152,44 @@ const server=spawn(process.execPath,['server/server.js'],{cwd:app,env,stdio:['ig
  await page.waitForFunction(()=>document.querySelector('.cpdDrawer [data-cpd-lfl-refresh]')?.disabled===false);
  assert.equal(requests,beforeRefresh+1);assert.match(await page.locator('td[data-key="__lfl__"]').innerText(),/-6[,.]7%/);
  await page.screenshot({path:path.join(root,'collection-lfl-drawer-en.png')});
+ await page.evaluate(()=>{
+  window.BLCollectionPriceDrawer.close();applyLanguage('tr');
+  const first=kolRows[0];
+  const independent=patch=>{const row={...first,...patch};for(const key of ['modelGroupId','modelSharedValues','modelGroupIdentity','modelGroupRole','variantId','variantOverrides'])delete row[key];return row;};
+  kolRows=[independent({}),independent({id:91002,plmId:'DEMO-002',modelKod:'DEMO MARCH MODEL',colour:'RED',inStoreMonth:'MARCH 2027',quantity:'600',targetPrice:'25'}),independent({id:91003,plmId:'DEMO-003',modelKod:'DEMO MISSING REFERENCE',mag:'MISSING',quantity:'50000'})];
+  kolColFilters={};kolHealthState.filter='';kolCheckFilter='';document.getElementById('kolSearch').value='';
+  setKolPriceView('detail');renderKol();
+ });
+ const footer=key=>page.locator(`tfoot td[data-kol-footer-key="${key}"]`);
+ assert.match(await footer('__previousSeason__').locator('strong').first().innerText(),/17,50/);
+ assert.match(await footer('__lfl__').locator('strong').first().innerText(),/18,75/);
+ assert.match(await footer('__seasonImpact__').locator('strong').first().innerText(),/10,00.*17,08/);
+ await footer('__seasonImpact__').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(assets,'collection-reference-footer.png')});
+ await page.evaluate(()=>{const missing=kolRows[2];kolRows.push(...Array.from({length:49},(_,i)=>({...missing,id:92000+i,plmId:`DEMO-PAGE-${i}`,modelKod:`DEMO PAGE ${i}`})));const view=_tableRangeViews.get(document.getElementById('kolTable'));view.controller.setSize(50);renderKol();});
+ assert.equal(await page.locator('#kolTable tbody tr[data-id]').count(),50);
+ assert.match(await footer('__lfl__').locator('strong').first().innerText(),/18,75/);
+ await page.evaluate(()=>{kolRows=kolRows.slice(0,3);renderKol();});
+ await page.evaluate(()=>{kolColFilters.inStoreMonth=new Set(['202702']);renderKol();});
+ assert.match(await footer('__lfl__').locator('strong').first().innerText(),/15,00/);
+ await page.evaluate(()=>{kolColFilters={};kolRows[1].quantity='200';renderKol();});
+ assert.match(await footer('__lfl__').locator('strong').first().innerText(),/17,50/);
+ await page.evaluate(()=>{kolRows[1].quantity='600';refreshKolSummaryFooter();});
+ assert.match(await footer('__lfl__').locator('strong').first().innerText(),/18,75/);
+ await page.evaluate(()=>{applyLanguage('en');renderKol();});assert.match(await footer('__lfl__').innerText(),/W\.AVG/i);
+ await page.evaluate(()=>{applyLanguage('tr');setKolPriceView('compact');});assert.match(await footer('__referenceSummary__').innerText(),/18,75/);
+ assert.match(await footer('__referenceSummary__').innerText(),/SEZON ETKİSİ.*10,00.*17,08/s);
+ assert.equal(await page.locator('th[data-kcol="__seasonImpact__"]').count(),0);
+ await footer('__referenceSummary__').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(assets,'collection-price-combined-compact.png')});
+ await page.evaluate(()=>{kolHiddenCols.add('__seasonImpact__');renderKol();});
+ assert.ok(!(await page.locator('tbody td[data-key="__referenceSummary__"]').first().innerText()).includes('Sezon Etkisi'));
+ assert.ok(!(await footer('__referenceSummary__').innerText()).includes('SEZON ETKİSİ'));
+ await page.evaluate(()=>{kolHiddenCols.delete('__seasonImpact__');applyLanguage('en');renderKol();});
+ assert.match(await page.locator('th[data-kcol="__referenceSummary__"]').innerText(),/Season Impact/i);
+ assert.match(await footer('__referenceSummary__').innerText(),/Season Impact/i);
+ await page.evaluate(()=>{applyLanguage('tr');renderKol();});
+ await page.evaluate(()=>{kolColFilters.mag=new Set(['MISSING']);renderKol();});
+ assert.ok(!(await footer('__referenceSummary__').innerText()).includes('$0,00'));
+ assert.equal(requests,beforeRefresh+1,'footer filtering and quantity edits reuse loaded references');
  assert.deepEqual(errors,[],'browser errors');
- console.log('PASS: weighted references and season impact, compact/detail/cost/all, first month and linked-order guards, live price/quantity edits, real Excel export, clipboard, shared cache and EN Price drawer.');console.log('Artifacts: '+root);
+ console.log('PASS: weighted references and season impact, compact/detail/cost/all, live price/quantity edits, weighted footers across filters and pagination, shared ASAS order reports, nested close/focus, delayed-response cancellation, numeric Excel export, lazy detail cache and TR/EN.');console.log('Artifacts: '+root);
 })().catch(error=>{console.error(error);console.error('Server log: '+path.join(root,'server.log'));process.exitCode=1;}).finally(async()=>{if(browser)await browser.close();server.kill();});

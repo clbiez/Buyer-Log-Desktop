@@ -19,14 +19,18 @@
     if(!match||Number(match[2])<=0)return '';
     return match[1]+String(Number(match[2])-1).padStart(match[2].length,'0');
   }
+  function sourceFacts(row){
+    const read=id=>fields.value(row,'lfl',id),season=normalize(read('season')),mag=normalize(read('mag')),category=normalize(read('category'));
+    const price=groups.kolParseMoneyNum(read('fob')),quantity=groups.kolParseQuantityNum(read('orderQuantity'));
+    if(!season||!mag||!category||!Number.isFinite(price)||price<=0||!Number.isFinite(quantity)||quantity<=0)return null;
+    // Use the existing LFL currency convention: domestic FOB is TRY, overseas FOB is USD.
+    return {season,mag,category,price,quantity,currency:lfl.currencyForRow({country:read('country')}),month:budgetMonth(row,'lfl'),order:normalize(read('orderCode'))};
+  }
   function buildReferences(rows){
     const buckets=new Map();
     for(const row of rows||[]){
-      const read=id=>fields.value(row,'lfl',id),season=normalize(read('season')),mag=normalize(read('mag')),category=normalize(read('category'));
-      const price=groups.kolParseMoneyNum(read('fob')),quantity=groups.kolParseQuantityNum(read('orderQuantity'));
-      if(!season||!mag||!category||!Number.isFinite(price)||price<=0||!Number.isFinite(quantity)||quantity<=0)continue;
-      // Use the existing LFL currency convention: domestic FOB is TRY, overseas FOB is USD.
-      const currency=lfl.currencyForRow({country:read('country')}),month=budgetMonth(row,'lfl'),order=normalize(read('orderCode'));
+      const facts=sourceFacts(row);if(!facts)continue;
+      const {season,mag,category,price,quantity,currency,month,order}=facts;
       // Build seasonal and monthly summaries together in one pass over the source snapshot.
       for(const period of month?['',month]:['']){
         const id=key(season,mag,category,currency,period);let bucket=buckets.get(id);
@@ -55,6 +59,19 @@
       }
     }
     return references;
+  }
+  // Called only for an explicitly opened report. Summary and detail share all source eligibility rules.
+  function referenceDetails(rows,reference){
+    if(!reference)return [];
+    const result=[],id=key(reference.season,reference.mag,reference.category,reference.currency);
+    for(const row of rows||[]){
+      const facts=sourceFacts(row);if(!facts)continue;
+      if(key(facts.season,facts.mag,facts.category,facts.currency)!==id)continue;
+      if(reference.throughMonth&&(!facts.month||facts.month>reference.throughMonth))continue;
+      if(reference.month&&facts.month!==reference.month)continue;
+      result.push({...row,_referenceMonth:facts.month,_referenceQuantity:facts.quantity,_referenceFob:facts.price,_referenceValue:facts.price*facts.quantity,_referenceWeight:facts.quantity/reference.quantity*100});
+    }
+    return result;
   }
   function reference(index,row,mode='season'){
     const read=id=>fields.value(row,'collection',id),season=previousSeason(read('season')),mag=normalize(read('mag')),category=normalize(read('category'));
@@ -91,5 +108,20 @@
     const before=reference.average,after=(reference.weightedTotal+price*quantity)/(reference.quantity+quantity);
     return {status:'ready',reference,before,after,delta:after-before,percent:changePercent(after,before),quantity,price,sharePercent:quantity/(reference.quantity+quantity)*100};
   }
-  return {buildReferences,reference,previousSeason,changePercent,budgetMonth,previousMonth,createSeasonTimelines,seasonImpact};
+  function summarizeComparisons(items){
+    let beforeValue=0,quantity=0,usedRows=0,beforeTotal=0,beforeCount=0,afterValue=0,pairedBeforeValue=0,pairedQuantity=0,pairedRows=0,afterTotal=0,afterCount=0;
+    for(const item of items||[]){
+      const before=item.reference,after=item.price,qty=groups.kolParseQuantityNum(item.quantity);
+      if(!Number.isFinite(before)||before<=0)continue;
+      beforeTotal+=before;beforeCount++;
+      const hasAfter=Number.isFinite(after)&&after>0;
+      if(hasAfter){afterTotal+=after;afterCount++;}
+      if(!Number.isFinite(qty)||qty<=0)continue;
+      beforeValue+=before*qty;quantity+=qty;usedRows++;
+      if(hasAfter){pairedBeforeValue+=before*qty;afterValue+=after*qty;pairedQuantity+=qty;pairedRows++;}
+    }
+    const weightedBefore=quantity?beforeValue/quantity:null,weightedAfter=pairedQuantity?afterValue/pairedQuantity:null,pairedBefore=pairedQuantity?pairedBeforeValue/pairedQuantity:null;
+    return {weightedBefore,weightedAfter,arithmeticBefore:beforeCount?beforeTotal/beforeCount:null,arithmeticAfter:afterCount?afterTotal/afterCount:null,percent:changePercent(weightedAfter,pairedBefore),quantity,pairedQuantity,usedRows,pairedRows,totalRows:(items||[]).length};
+  }
+  return {buildReferences,reference,referenceDetails,previousSeason,changePercent,budgetMonth,previousMonth,createSeasonTimelines,seasonImpact,summarizeComparisons};
 });
