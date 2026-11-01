@@ -72,7 +72,7 @@ test('TEST resume republishes only verified signed bytes and never rebuilds or r
   assert.ok(start>0);
   assert.match(body,/C\.readPackage\(\)\.version!==version/);
   assert.match(body,/assertSignedForClients\(manifest\)\.verified/);
-  const order=['verifyDownloaded(','verifyPublicArtifact(','publishRawMirror(','updateLatest('].map(token=>body.indexOf(token));
+  const order=['verifyDownloaded(','publishRawMirror(','verifyRawMirror(','updateLatest('].map(token=>body.indexOf(token));
   assert.ok(order.every(index=>index>0));
   assert.deepEqual([...order].sort((a,b)=>a-b),order);
   assert.doesNotMatch(body,/'release','(?:create|upload)'/);

@@ -9,6 +9,7 @@ const { parseReleaseManifest }=require('../electron/update/manifest');
 const { readJson, atomicWriteJson, ensureDir }=require('../electron/update/json-store');
 const { MANIFEST_REL, writeIntegrityManifest }=require('../electron/update/integrity');
 const bootstrapFiles=require('../electron/manual-patch/files');
+const {ASSET_MAP,planVisualAssets,assertMirrorable}=require('./release-visual-assets');
 
 const APP_ROOT=path.resolve(__dirname,'..');
 const PORTABLE_ROOT=path.resolve(APP_ROOT,'..','..');
@@ -34,7 +35,7 @@ function gitRoot(){try{return childProcess.execFileSync('git',['rev-parse','--sh
 function assertGitClean(){const root=gitRoot();if(!root)return;const status=childProcess.execFileSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8'}).trim();if(status)fail('Git çalışma alanı temiz değil. Release başlamadan değişiklikleri commit/stash edin.','RELEASE_GIT_DIRTY');}
 function baseConfig(){const outer=readJson(path.join(PORTABLE_ROOT,'config.json'),{})||{};return outer.updates&&typeof outer.updates==='object'?outer.updates:{};}
 function releaseSource(cli=''){return String(cli||process.env.BUYER_LOG_RELEASE_SOURCE||baseConfig().releaseSource||'').trim();}
-function excludeRuntime(rel,entry){
+function excludeRuntimeFiles(rel,entry){
   const r=String(rel||'').replace(/\\/g,'/');
   if(bootstrapFiles.excluded(r))return true;
   if(r==='.release-pending.json'||r.startsWith('dist-updates/')||r.startsWith('dist-installer/'))return true;
@@ -53,20 +54,26 @@ async function buildArtifact(version,notes=''){
   if(githubRepo){
     const {parseGitHubSource}=require('../electron/update/github-provider');
     parseGitHubSource(`github:${githubRepo}`);
-    fs.writeFileSync(sourceFile,JSON.stringify({githubSource:`github:${githubRepo}`})+'\n');
   }
   try{fs.rmSync(artifactFile,{force:true});}catch(_){}
-  const generated=[MANIFEST_REL,bootstrapFiles.ANCHOR,...bootstrapFiles.BOOTSTRAP_FILES.filter(file=>file.includes('/kernel/'))];
+  const bundledSource=githubRepo?`github:${githubRepo}`:'';
+  const assetPlan=planVisualAssets(APP_ROOT,bundledSource);
+  const excludeRuntime=(rel,entry)=>excludeRuntimeFiles(rel,entry)||assetPlan.external.has(rel);
+  const generated=[MANIFEST_REL,ASSET_MAP,bootstrapFiles.ANCHOR,...bootstrapFiles.BOOTSTRAP_FILES.filter(file=>file.includes('/kernel/'))];
   const originals=new Map(generated.map(relative=>{const file=path.join(APP_ROOT,...relative.split('/'));return [file,fs.existsSync(file)?fs.readFileSync(file):null];}));
   try{
+    if(githubRepo)fs.writeFileSync(sourceFile,JSON.stringify({githubSource:`github:${githubRepo}`})+'\n');
     const sourceCommit=childProcess.execFileSync('git',['rev-parse','HEAD'],{cwd:APP_ROOT,encoding:'utf8'}).trim();
     bootstrapFiles.stampBootstrap(APP_ROOT,sourceCommit);
+    if(assetPlan.map)atomicWriteJson(path.join(APP_ROOT,ASSET_MAP),assetPlan.map);
+    else fs.rmSync(path.join(APP_ROOT,ASSET_MAP),{force:true});
     writeIntegrityManifest(APP_ROOT,{version,exclude:excludeRuntime});createZipFromDirectory(APP_ROOT,artifactFile,{rootPrefix:'app',exclude:excludeRuntime});
   }finally{
     for(const [file,bytes]of originals){if(bytes)fs.writeFileSync(file,bytes);else fs.rmSync(file,{force:true});}
     if(githubRepo){if(originalSource)fs.writeFileSync(sourceFile,originalSource);else fs.rmSync(sourceFile,{force:true});}
   }
   const sha256=await sha256File(artifactFile),size=fs.statSync(artifactFile).size;
+  if(bundledSource)assertMirrorable({size});
   const manifest={schemaVersion:1,channel:'test',version,publishedAt:new Date().toISOString(),artifact:`releases/${artifactName}`,sha256,size,mandatory:false,releaseNotes:String(notes||'').slice(0,8000),minimumUpdaterVersion:UPDATER_VERSION};
   parseReleaseManifest(manifest,'test');
   const verifyRoot=path.join(DIST_ROOT,`.verify-${process.pid}-${Date.now()}`);

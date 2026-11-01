@@ -1,14 +1,32 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-01",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Kurumsal ağlarda güncelleme yeniden güvenilir",
+    "en": "Reliable updates on managed networks"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Güncelleme paketleri, mevcut istemcilerin erişebildiği alternatif indirme adresine sığacak şekilde hazırlanıyor. Görselli sürüm arşivi korunuyor; geçmiş ekran görüntüleri yalnız açıldığında yükleniyor.",
+    "en": "Update packages now fit the alternative download address supported by existing clients. The visual release archive is preserved; historical screenshots load only when opened."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "raw-mirror-update-compatibility",
+      "type": "fix",
+      "module": {"tr": "Güncelleme ve Sürüm Arşivi", "en": "Updates and Release Archive"},
+      "title": {"tr": "Release indirmesi engelli ağlarda otomatik güncelleme", "en": "Automatic updates where Release downloads are blocked"},
+      "body": {
+        "tr": "GitHub Release indirmeleri kurum tarafından engellendiğinde büyük paketler alternatif raw indirme adresine konamıyor ve uygulama yeni sürümü bulduğu halde indiremiyordu. GitHub güncelleme paketi artık son üç görselli sürümü çevrimdışı taşır; daha önceki sürümlerin açıklamaları yerel kalır, değiştirilmeyen ekran görüntüleri sürüm arşivi açıldığında ayrı görsel arşivinden yüklenir. Böylece mevcut STORE ZIP güncelleyicisiyle uyumluluk korunur. Paket 100 MiB sınırını aşarsa yayın durur. TEST veya STABLE sürümü duyurulmadan önce alternatif adresteki paketin boyutu ve SHA-256 değeri doğrulanır; yalnız Release sunucusuna erişebilmek yeterli sayılmaz. Kullanıcı verileri ve güncellemenin imza, bütünlük, açılış kontrolü ile geri alma denetimleri korunur.",
+        "en": "When an organization blocked GitHub Release downloads, large packages could not be placed at the alternative raw address, so the app found an update but could not download it. GitHub update packages now keep the latest three visual releases offline; earlier descriptions remain local and their unchanged screenshots load from a separate image archive when opened. Compatibility with the existing STORE ZIP updater is preserved. Publication stops if a package exceeds 100 MiB. Before announcing TEST or STABLE, the alternative address must return the exact package size and SHA-256; access to the Release server alone is insufficient. User data and the update signature, integrity, startup health and rollback checks are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "raw-mirror-update-compatibility.png",
+        "alt": {"tr": "Buyer Log 7.0.323 sürüm arşivinde istek üzerine yüklenen geçmiş sürüm görseli ve yerel açıklamalar, demo veri", "en": "Historical visual loaded on demand alongside local descriptions in the Buyer Log 7.0.323 release archive, demo data"},
+        "caption": {"tr": "Sürüm arşivi korunur; son üç sürümün görselleri çevrimdışı, diğer görseller istek üzerine yüklenir.", "en": "The release archive is preserved; the latest three visual releases stay offline and other images load on demand."}
+      }
+    }
+  ]
 }
