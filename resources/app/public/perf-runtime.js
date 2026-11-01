@@ -21,7 +21,17 @@
   // Surum, bu betigin kendi <script src="...?v=X"> etiketinden okunur. Boylece surum
   // numarasi burada ikinci kez elle tutulmaz; set-version.js tek basina yeterlidir.
   const VER=(function(){try{const src=(document.currentScript&&document.currentScript.src)||'';const m=src.match(/[?&]v=([^&]+)/);return m?decodeURIComponent(m[1]):'';}catch(e){return '';}})();
-  function withVersion(src){if(!VER||/[?&]v=/.test(src))return src;return src+(src.includes('?')?'&':'?')+'v='+encodeURIComponent(VER);}
+  /* 7.0.323: sunucu sayfaya tembel betiklerin içerik özetlerini gömer
+     (#blAssetHashes). Özet taşıyan adres kalıcı önbelleğe alınabilir; özeti
+     olmayan dosya eskisi gibi her açılışta yeniden doğrulanır. */
+  const ASSET_HASHES=(function(){try{const el=document.getElementById('blAssetHashes');const map=el?JSON.parse(el.textContent||'{}'):{};return map&&typeof map==='object'&&!Array.isArray(map)?map:{};}catch(e){return {};}})();
+  function withVersion(src){
+    if(!VER||/[?&]v=/.test(src))return src;
+    let out=src+(src.includes('?')?'&':'?')+'v='+encodeURIComponent(VER);
+    const hash=ASSET_HASHES[String(src).split(/[?#]/)[0]];
+    if(typeof hash==='string'&&/^[0-9a-f]{16}$/.test(hash))out+='&h='+hash;
+    return out;
+  }
 
   function scriptKey(src){
     try{return new URL(src,document.baseURI).href;}catch(_){return src;}
@@ -172,10 +182,13 @@
        yüklenmesini beklemez. */
     deferredUi:[
       'lcwai-assistant.js?rev=1','update-test-ui.js?rev=6','user-access-ui.js?rev=APP-UPDATE-V3','formula-engine.js','formula-columns.js','plm-sample-requests-engine.js','plm-sample-requests.js','plm-bom.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
-      'quick-filter-groups.js','kpi-groups.js','user-management.js',
+      'quick-filter-groups.js','kpi-groups.js',
       /* v7.81 — horizon-editor.js kaldırıldı: kişisel ufuk düzenleyicisi
          artık yok, ufuk Veri Yönetimi'nden yönetiliyor. */'override-sync.js','backup-manager.js','fx-calculation-engine.js','fx-import-engine.js','fx.js',
     ],
+    /* 7.0.323 — Kullanıcı yönetimi ekranı (~200 KB) yalnız menüden açıldığında
+       yüklenir; açılış sonrası deferredUi zincirinden çıkarıldı. */
+    userManagement:['user-management.js'],
     /* v7.81 — Veri Yönetimi ekranı açılış kritik yolunda DEĞİLDİR: günlük
        kullanımda hiç açılmayan bir kurulum ekranıdır. Sekmeye ilk geçişte
        yüklenir (§11). */

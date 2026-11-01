@@ -36,6 +36,9 @@ const INSTALL_FOLDER='BuyerLog';
    eski sürüm klasörleri ve kaynak ağacındaki app çekirdeği (çekirdek yalnız
    STABLE artifact'ten gelir). */
 const RUNTIME_DENY=[/^\.git/,/^\.github\//,/^\.buyerlog-versions\//,/^resources\//,/^docs\//,/^data\//,/^CLAUDE\.md$/,/^AGENTS\.md$/,/^manifest\.json$/,/^config\.json$/,/^BuyerLog\.exe$/i,/(^|\/)node_modules\//,/\.md$/i];
+/* Electron 44 ANGLE'ı electron.exe içine statik bağlar: resmi
+   electron-v44.3.0-win32-x64.zip libEGL.dll / libGLESv2.dll İÇERMEZ (7.0.323'te
+   resmi paketle bayt bayt doğrulandı). Bu DLL'ler eksik değildir; eklenmemelidir. */
 const REQUIRED_RUNTIME=['version','icudtl.dat','resources.pak','v8_context_snapshot.bin','snapshot_blob.bin','ffmpeg.dll','locales/tr.pak','locales/en-US.pak'];
 /* Paket içinde asla bulunmaması gereken, kullanıcıya/cihaza ait yollar. */
 const FORBIDDEN=[/^data(\/|$)/,/^config\.json$/,/^\.buyerlog-versions(\/|$)/,/^resources\/app\/server\/data(\/|$)/,/^resources\/app\/(dist-updates|tests|\.desktop-dev)(\/|$)/,/^resources\/app\/\.release-pending\.json$/,/(^|\/)BuyerLogLocal\.db/i,/\.blgbackup$/i];

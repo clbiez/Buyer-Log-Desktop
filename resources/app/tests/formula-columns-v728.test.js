@@ -371,7 +371,8 @@ test('formül betikleri canonical asset etiketiyle yüklenir (önbellek yenilens
   assert.ok(indexHtml.includes('perf-runtime.js?v=__BL_ASSET_VERSION__'), 'perf-runtime canonical asset placeholder taşımalı');
   const { perf } = sources();
   assert.match(perf, /const VER=\(function\(\)\{[\s\S]*?document\.currentScript[\s\S]*?\[?\&\]?v=/, 'sürüm kendi script etiketinden okunmalı');
-  assert.match(perf, /function withVersion\(src\)\{if\(!VER\|\|\/\[\?&\]v=\/\.test\(src\)\)return src;return src\+\(src\.includes\('\?'\)\?'&':'\?'\)\+'v='\+encodeURIComponent\(VER\);\}/, 'her lazy betiğe sürüm eklenmeli');
+  // 7.0.323: sürüm her zaman eklenir; sunucu özet gömdüyse ayrıca &h= eklenir.
+  assert.match(perf, /function withVersion\(src\)\{\s*if\(!VER\|\|\/\[\?&\]v=\/\.test\(src\)\)return src;\s*let out=src\+\(src\.includes\('\?'\)\?'&':'\?'\)\+'v='\+encodeURIComponent\(VER\);/, 'her lazy betiğe sürüm eklenmeli');
   assert.match(perf, /function loadScript\(rawSrc\)\{\s*const src=withVersion\(rawSrc\);/, 'yükleyici withVersion kullanmalı');
 });
 

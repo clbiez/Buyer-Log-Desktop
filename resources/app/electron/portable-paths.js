@@ -181,6 +181,30 @@ function backendEnv(paths, hostEnv = process.env, extra = {}) {
   return Object.assign(env, extra);
 }
 
+/* Backend için Node derleme önbelleği (server/lib/compile-cache.js). Her
+   uygulama sürümü kendi alt klasörünü kullanır; çekirdek her sürümde başka
+   klasörde yaşadığı için eski sürümlerin girdileri işe yaramaz ve
+   pruneCompileCaches ile silinir — önbellek güncellemelerle sınırsız büyümez. */
+function compileCacheRoot(paths) {
+  return path.join(paths.localDataRoot, 'cache', 'node-compile');
+}
+function compileCacheDirectory(paths, appVersion) {
+  const key = String(appVersion || '').replace(/[^0-9A-Za-z.+-]/g, '_').slice(0, 64) || 'current';
+  return path.join(compileCacheRoot(paths), key);
+}
+function pruneCompileCaches(paths, appVersion) {
+  const root = compileCacheRoot(paths);
+  const keep = path.basename(compileCacheDirectory(paths, appVersion));
+  let removed = 0;
+  let entries = [];
+  try { entries = fs.readdirSync(root, { withFileTypes: true }); } catch (_) { return 0; }
+  for (const entry of entries) {
+    if (!entry.isDirectory() || entry.name === keep) continue;
+    try { fs.rmSync(path.join(root, entry.name), { recursive: true, force: true }); removed += 1; } catch (_) {}
+  }
+  return removed;
+}
+
 /* config.json'dan adres. Sunucu aynı dosyayı okuduğu için tek kaynak budur. */
 function resolveAppUrl(config) {
   const source = config && typeof config === 'object' ? config : {};
@@ -192,4 +216,4 @@ function resolveAppUrl(config) {
   return { port: safePort, host: display, origin: 'http://' + display + ':' + safePort };
 }
 
-module.exports = { resolvePortableRoot, desktopPaths, backendEnv, resolveAppUrl, readJsonFile };
+module.exports = { resolvePortableRoot, desktopPaths, backendEnv, resolveAppUrl, readJsonFile, compileCacheDirectory, pruneCompileCaches };

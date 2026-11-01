@@ -16682,6 +16682,7 @@ function ensureOverviewIntakeModule(){
   return overviewIntakeLoadPromise;
 }
 let postUiStartupScheduled=false;
+const EXCEL_ENGINE_LOAD_DEADLINE_MS=1500;
 function schedulePostUiStartupTasks(){
   if(postUiStartupScheduled)return;postUiStartupScheduled=true;
   setTimeout(()=>{
@@ -16699,12 +16700,19 @@ function schedulePostUiStartupTasks(){
       }).catch(error=>console.warn('Gecikmeli arayüz modülleri yüklenemedi:',error));
     }
     void hydrateUserPreferencesAfterUi();
-    window.BLPerf?.mark?.('EXCEL_ENGINE_LOAD_START',{mode:'after-ui'});
     const ensureExcel=window.BLPerf?.ensureLibrary;
     if(typeof ensureExcel!=='function')return;
-    void ensureExcel('xlsx')
-      .then(()=>window.BLPerf?.mark?.('EXCEL_ENGINE_LOAD_READY',{mode:'after-ui'}))
-      .catch(error=>{window.__BL_XLSX_LOAD_ERROR=true;window.BLPerf?.mark?.('EXCEL_ENGINE_LOAD_READY',{mode:'after-ui',failed:true});console.warn('Excel motoru UI sonrasında yüklenemedi:',error);});
+    /* 7.0.323: Excel motoru (~850 KB) ilk kareyle yarışmasın diye tarayıcı boşa
+       çıkınca yüklenir. Üst sınır kısa tutulur: içe/dışa aktarma yolları motorun
+       açılıştan kısa süre sonra hazır olmasına güvenir (bkz. EXCEL_ENGINE_LOAD_DEADLINE_MS). */
+    const loadExcel=()=>{
+      window.BLPerf?.mark?.('EXCEL_ENGINE_LOAD_START',{mode:'after-ui'});
+      void ensureExcel('xlsx')
+        .then(()=>window.BLPerf?.mark?.('EXCEL_ENGINE_LOAD_READY',{mode:'after-ui'}))
+        .catch(error=>{window.__BL_XLSX_LOAD_ERROR=true;window.BLPerf?.mark?.('EXCEL_ENGINE_LOAD_READY',{mode:'after-ui',failed:true});console.warn('Excel motoru UI sonrasında yüklenemedi:',error);});
+    };
+    if(typeof window.requestIdleCallback==='function')window.requestIdleCallback(loadExcel,{timeout:EXCEL_ENGINE_LOAD_DEADLINE_MS});
+    else setTimeout(loadExcel,0);
   },0);
 }
 async function refreshSyncStatusBadge(){

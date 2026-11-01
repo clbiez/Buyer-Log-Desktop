@@ -4,6 +4,7 @@ const INDEX_URL='release-notes/index.json';
 const SEEN_KEY='bl.releaseNotes.lastSeenStable.v1';
 let indexCache=null,dialog=null,state=null,legacyCache=null,lightbox=null;
 let openGeneration=0;
+let assetLocations=null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const lang=()=>{try{return typeof appLang!=='undefined'&&appLang==='en'?'en':'tr';}catch(_){return document.documentElement.lang==='en'?'en':'tr';}};
 const L=(tr,en)=>lang()==='en'?en:tr;
@@ -22,7 +23,23 @@ const ver=()=>String(global.BL_APP_VERSION||'').trim();
 const withVersion=src=>{const v=encodeURIComponent(String(global.BL_ASSET_VERSION||global.BL_APP_VERSION||''));return src+(src.includes('?')?'&':'?')+'v='+v;};
 async function fetchJson(src){const r=await fetch(withVersion(src),{cache:'no-store'});if(!r.ok)throw new Error(String(r.status));return r.json();}
 async function loadIndex(){if(indexCache)return indexCache;try{indexCache=await fetchJson(INDEX_URL);}catch(_){indexCache={schemaVersion:1,releases:[]};}indexCache.releases=(indexCache.releases||[]).filter(x=>x&&x.version&&x.file).sort((a,b)=>cmp(b.version,a.version));return indexCache;}
-async function loadRelease(entry){try{return {...await fetchJson(entry.file),_entry:entry};}catch(_){return null;}}
+async function loadAssetLocations(){
+  if(!assetLocations)assetLocations=(async()=>{
+    try{
+      const value=await fetchJson('release-notes/asset-locations.json');
+      if(value?.schemaVersion===1&&/^https:\/\/raw\.githubusercontent\.com\/[A-Za-z0-9-]+\/[A-Za-z0-9_.-]+\/release-visuals\/$/.test(value.baseUrl)&&value.files&&typeof value.files==='object')return value;
+    }catch(_){}
+    return null;
+  })();
+  return assetLocations;
+}
+async function loadRelease(entry){try{const [release,assets]=await Promise.all([fetchJson(entry.file),loadAssetLocations()]);return {...release,_entry:entry,_assets:assets};}catch(_){return null;}}
+function visualSource(release,visual){
+  const key=release.version+'/'+visual.src,asset=release._assets?.files?.[key];
+  if(asset&&/^[a-f0-9]{64}$/.test(asset.sha256)&&/^\d+\.\d+\.\d+$/.test(release.version)&&/^[A-Za-z0-9_.-]+\.(png|svg|jpg|jpeg|webp)$/i.test(visual.src)&&!visual.src.includes('..'))
+    return release._assets.baseUrl+encodeURIComponent(release.version)+'/'+encodeURIComponent(visual.src)+'?sha256='+asset.sha256;
+  return withVersion('release-notes/'+release.version+'/'+visual.src);
+}
 async function legacyRows(){
   if(legacyCache)return legacyCache;
   try{await global.BLPerf?.ensureFeature?.('versionHistory');}catch(_){}
@@ -104,7 +121,7 @@ function fallbackVisual(release,change,reason){
 function visualHtml(change,release){
   const v=change?.visual;if(!v?.src)return fallbackVisual(release,change);
   if(v.kind==='screenshot'&&!/\.png(?:\?|$)/i.test(String(v.src||'')))return fallbackVisual(release,change,L('Eski veya doğrulanmamış ekran görüntüsü güvenli şekilde gösterilmedi.','An old or unverified screenshot was hidden safely.'));
-  const src=withVersion('release-notes/'+release.version+'/'+v.src),focus=v.focus;
+  const src=visualSource(release,v),focus=v.focus;
   const focusHtml=focus?'<i class="blRnFocus" style="left:'+Number(focus.x)+'%;top:'+Number(focus.y)+'%;width:'+Number(focus.w)+'%;height:'+Number(focus.h)+'%"></i>':'';
   const alt=pick(v.alt)||pick(change.title),caption=pick(v.caption)||L('Gerçek Buyer Log ekranı','Real Buyer Log screen');
   return '<figure class="blRnVisual"><div class="blGuideVisualTop"><span>BUYER LOG</span><span>'+esc(pick(change.module))+'</span></div><button type="button" class="blRnShot" data-rn-zoom aria-label="'+esc(L('Görseli büyüt','Enlarge image'))+'"><img src="'+esc(src)+'" alt="'+esc(alt)+'">'+focusHtml+'<span class="blRnZoomHint" aria-hidden="true">↗ '+esc(L('Büyüt','Enlarge'))+'</span></button><figcaption>'+esc(caption)+'</figcaption></figure>';
