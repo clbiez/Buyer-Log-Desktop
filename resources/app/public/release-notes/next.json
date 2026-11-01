@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-01",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Geçmiş siparişlerden Koleksiyon oluştur",
+    "en": "Build Collection from historical orders"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "CP ve Orders içindeki seçili siparişleri önizleyerek Koleksiyonunuza aktarın. Aynı model ve MB ayında adetler birleştirilir; farklı fiyat, ülke veya tedarikçiler ayrı kalır. Tekrar aktarım koruması ve tek adım geri alma dahildir.",
+    "en": "Preview selected CP and Orders rows and import them into your Collection. Quantities are combined for the same model and MB month; different prices, countries or suppliers stay separate. Includes duplicate protection and one-step undo."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-from-orders",
+      "type": "feature",
+      "module": {
+        "tr": "CP · Orders · Koleksiyon",
+        "en": "CP · Orders · Collection"
+      },
+      "title": {
+        "tr": "Geçmiş siparişlerden Koleksiyon oluştur",
+        "en": "Build Collection from historical orders"
+      },
+      "body": {
+        "tr": "CP ve Orders ekranlarında Araçlar › Siparişlerden Koleksiyon Oluştur ile seçili siparişler önizlenip kendi Koleksiyonunuza aktarılır. Aynı model, MB ayı, sezon, ülke, tedarikçi ve fiyat için adetler toplanır; en erken OPD ve en geç Ex-Factory kullanılır. Farklı FOB veya tedarikçi fiyatları ayrı satır kalır. Onaylı tedarikçi, fiyat, renkler ve kaynak sipariş bilgileri korunur. Daha önce aktarılan siparişler tekrar sayılmaz; yeni siparişler uygun aktarım satırına eklenir. Merch Calendar ile çözülemeyen MB dönemleri birleştirilmez. Kaynak siparişler korunur; aktarım Koleksiyonda tek adımda geri alınabilir.",
+        "en": "In CP and Orders, Tools › Build Collection from Orders previews selected orders before importing them into your own Collection. Quantities are summed for the same model, MB month, season, country, supplier and price, using the earliest OPD and latest Ex-Factory. Different FOB or supplier prices remain separate rows. Confirmed suppliers, prices, colours and source-order information are preserved. Previously imported orders are not counted again; new orders extend the matching imported row. MB periods not resolved by Merch Calendar are kept separate. Source orders are preserved and the import can be undone in one step in Collection."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-from-orders.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP ekranında demo siparişlerin Koleksiyon aktarım önizlemesi: aynı model ve MB ayında iki sipariş 350 adet olarak birleştirilmiş, farklı fiyatlı sipariş ayrı satırda.",
+          "en": "Real Buyer Log CP screen with a demo Collection import preview: two orders for the same model and MB month are combined into 350 units, while a different-priced order remains separate."
+        },
+        "caption": {
+          "tr": "100 + 250 adet tek satırda; OPD 1 Eylül, Ex-Factory 15 Aralık. Farklı fiyatlı 50 adet ayrı tutulur.",
+          "en": "100 + 250 units in one row, with September 1 OPD and December 15 Ex-Factory. The 50 units at a different price remain separate."
+        }
+      }
+    }
+  ]
 }
