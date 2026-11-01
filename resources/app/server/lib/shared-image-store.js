@@ -35,6 +35,7 @@ const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
 const { withFileLeaseAsync, replaceFileWithRetry, getBuyerLogInstanceId } = require('./shared-file-transaction');
+const { hubFiles } = require('./hub-dirent');
 
 const SCHEMA_VERSION = 2;
 const ROOT_FOLDER = 'model-images';
@@ -265,8 +266,7 @@ function createSharedImageStore(options = {}) {
     try { entries = await fsp.readdir(path.join(root, HEADS), { withFileTypes: true }); }
     catch (error) { if (error && (error.code === 'ENOENT' || error.code === 'ENOTDIR')) return []; throw error; }
     const heads = [];
-    for (const entry of entries) {
-      if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
+    for (const entry of await hubFiles(path.join(root, HEADS), entries.filter(item => item.name.endsWith('.json')))) {
       const deviceId = entry.name.slice(0, -5);
       const head = await readJsonSafe(path.join(root, HEADS, entry.name), null);
       heads.push({

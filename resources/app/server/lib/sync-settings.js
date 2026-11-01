@@ -10,6 +10,7 @@ const gzipAsync = promisify(zlib.gzip);
 const gunzipAsync = promisify(zlib.gunzip);
 const { withFileLeaseAsync, replaceFileWithRetry } = require('./shared-file-transaction');
 const { isNetworkPath } = require('./local-path-policy');
+const { hubDirectories, hubFiles } = require('./hub-dirent');
 const { installationFingerprint: defaultInstallationFingerprint } = require('./installation-fingerprint');
 const { createTrialWritePolicy } = require('./update-trial-backend');
 const {
@@ -289,16 +290,16 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
     let entries = [];
     try { entries = await net(() => fsp.readdir(deviceRoot, { withFileTypes: true }), 'ACK klasörü okuma'); } catch (_) { return 0; }
     let checkpointAckSequence = 0;
-    for (const entry of entries) {
-      if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
+    // OneDrive reparse point'leri Dirent'te bağlantı görünebilir (hub-dirent.js).
+    const ackFiles = await hubFiles(deviceRoot, entries.filter(entry => entry.name.endsWith('.json')));
+    for (const entry of ackFiles) {
       try {
         const ack = await net(() => readJson(path.join(deviceRoot, entry.name)), 'Checkpoint ACK okuma');
         checkpointAckSequence = Math.max(checkpointAckSequence, Number(ack && ack.lastContiguousSequence) || 0);
       } catch (_) {}
     }
     const ids = [];
-    for (const entry of entries) {
-      if (!entry.isDirectory() || entry.name === 'packages') continue;
+    for (const entry of await hubDirectories(deviceRoot, entries.filter(entry => entry.name !== 'packages'))) {
       try { if ((await net(() => fsp.readdir(path.join(deviceRoot, entry.name)), 'ACK okuma')).some(name => name.endsWith('.json'))) ids.push(decode(entry.name)); } catch (_) {}
     }
     let marked = ids.length ? (await localDb.markAcknowledged(ids)).marked : 0;
@@ -306,8 +307,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
     let packageEntries = [];
     try { packageEntries = await net(() => fsp.readdir(packageRoot, { withFileTypes: true }), 'Package ACK klasörü okuma'); } catch (_) {}
     let maxAckSequence = 0;
-    for (const entry of packageEntries) {
-      if (!entry.isDirectory()) continue;
+    for (const entry of await hubDirectories(packageRoot, packageEntries)) {
       let names = [];
       try { names = await net(() => fsp.readdir(path.join(packageRoot, entry.name)), 'Package ACK okuma'); } catch (_) { continue; }
       for (const name of names.filter(name => name.endsWith('.json'))) {
@@ -337,8 +337,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
     catch (error) { if (error.code === 'ENOENT') return []; throw error; }
     const days = normalizeRetentionDays(retentionDays), cutoff = days ? Date.now() - days * 86400000 : 0;
     const legacy = [];
-    for (const entry of entries) {
-      if (!entry.isDirectory() || entry.name === encode(deviceId)) continue;
+    for (const entry of await hubDirectories(changesRoot, entries.filter(entry => entry.name !== encode(deviceId)))) {
       const sourceRoot = path.join(changesRoot, entry.name), sourceId = decode(entry.name);
       const head = await readPeerHead(sourceRoot, 'Peer capability okuma');
       if (head && (head.supportsBundleV2 === true || Number(head.packageFormatVersion) >= 2)) continue;
@@ -359,8 +358,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
     catch (error) { if (error.code === 'ENOENT') return []; throw error; }
     const days = normalizeRetentionDays(retentionDays), cutoff = days ? Date.now() - days * 86400000 : 0;
     const unsupported = [];
-    for (const entry of entries) {
-      if (!entry.isDirectory() || entry.name === encode(deviceId)) continue;
+    for (const entry of await hubDirectories(changesRoot, entries.filter(entry => entry.name !== encode(deviceId)))) {
       const sourceRoot = path.join(changesRoot, entry.name), sourceId = decode(entry.name);
       const head = await readPeerHead(sourceRoot, 'Peer gzip capability okuma');
       if (!head || !(head.supportsBundleV2 === true || Number(head.packageFormatVersion) >= 2)) continue;
@@ -615,8 +613,9 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
       let corruptPackages = 0, sourceDevices = [], scannedPackages = 0, skippedDeviceFolders = 0, skippedAppliedPackages = 0;
       try { sourceDevices = await net(() => fsp.readdir(changesRoot, { withFileTypes: true }), 'Cihaz listesi okuma'); }
       catch (error) { if (error.code !== 'ENOENT') throw error; }
+      sourceDevices = await hubDirectories(changesRoot, sourceDevices);
       for (const source of sourceDevices) {
-        if (!source.isDirectory() || source.name === encode(deviceId)) continue;
+        if (source.name === encode(deviceId)) continue;
         const sourceId = decode(source.name), sourceRoot = path.join(changesRoot, source.name); let head = null;
         const checkpoint = Number(checkpoints[sourceId]) || 0;
         head = await readPeerHead(sourceRoot, 'Checkpoint head okuma');
@@ -644,7 +643,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
         }
       }
       sources.sort((a, b) => a.sourceId.localeCompare(b.sourceId) || Number(a.sequence) - Number(b.sequence) || a.type.localeCompare(b.type));
-      emit('SYNC_CHECKPOINT_EVALUATED', { deviceFolders: sourceDevices.filter(item => item.isDirectory()).length, skippedDeviceFolders, scannedPackages, skippedAppliedPackages, newPackages: sources.length });
+      emit('SYNC_CHECKPOINT_EVALUATED', { deviceFolders: sourceDevices.length, skippedDeviceFolders, scannedPackages, skippedAppliedPackages, newPackages: sources.length });
 
       const legacyRoot = path.join(root, 'delta'); let legacyNames = [];
       if (!current.legacyScanComplete) {

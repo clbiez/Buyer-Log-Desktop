@@ -79,4 +79,6 @@ Per-device change packages, checkpoint acknowledgements and health reports have 
 
 Several existing stores remain multi-writer: collection permissions/workspaces, image content indexes and revision allocation, same-user personal backups, and multiple Moderator installations. A filesystem lease serializes clients on one shared SMB filesystem; it cannot guarantee mutual exclusion across separate OneDrive replicas. These larger protocol changes remain explicit follow-up work rather than being described as completed by the ACK reduction.
 
+Detection (not prevention): `server/lib/onedrive-conflict-copies.js` lists possible OneDrive `<name>-<ComputerName>.<ext>` side files in the multi-writer folders above, and the Moderator sees them in Sync › Devices (`/api/sync-health` → `conflictCopies`). It never reads, merges or deletes them. Shared-folder directory scans resolve OneDrive reparse points through `server/lib/hub-dirent.js` instead of trusting `Dirent.isDirectory()/isFile()` alone.
+
 When no Moderator is available, the business checkpoint grows older. Existing deltas remain available for their configured retention period; devices offline beyond that window still require a valid recovery/reseed path.
