@@ -15,6 +15,7 @@ function segment(start,end){
 }
 function transferMapper(){
   const scope={
+    window:{BLCanonicalFields:require('../public/canonical-fields')},
     kolNextId:1,
     norm:value=>String(value??'').trim(),
     toISODate:value=>typeof value==='string'&&/^\d{4}-\d\d-\d\d$/.test(value)?value:'',
@@ -25,17 +26,18 @@ function transferMapper(){
       ?{inStoreWeek:'2027-28',inStoreMonth:'202707',inStore:'2027-07-05'}:null,
     migrateKolRow:row=>row,
   };
-  vm.runInNewContext(segment('function cpRowToKolRow(r){','// ================= "Maliyet Oluştur"')+
+  vm.runInNewContext(segment('function cpRowToKolRow(r,allocateId=true){','// ================= "Maliyet Oluştur"')+
     '\nthis.mapOrder=cpRowToKolRow;this.sourceIdentity=cpKolSourceIdentity;',scope);
   return scope;
 }
-test('CP/Orders Copy opens below the copy-chevron with localized, selection-gated action',()=>{
-  assert.match(APP,/items\.push\(\{label:appLang==='en'\?'Copy to Collection':'Koleksiyona Kopyala'/);
-  assert.match(APP,/if\(\['cp','orders'\]\.includes\(document\.body\.dataset\.activeTab\)\)/);
-  assert.match(APP,/disabled:!transfer\|\|transfer\.disabled,run:\(\)=>transfer\?\.click\(\)/);
+test('CP/Orders Tools contains the shared localized, selection-gated backfill action',()=>{
+  assert.match(APP,/const _selectionActionIds=\['cpCopyToKolBtn'/);
+  assert.match(APP,/appendSharedTableActions\('ordersToolsMenu',_selectionActionIds/);
   assert.match(APP,/ctk\.disabled = !hasActionSelection \|\| !kolWorkspaceCanEdit \|\| !kolIsOwnWorkspace\(\)/);
   assert.doesNotMatch(UI,/placeCopyToCollection/);
-  assert.match(INDEX,/id="cpCopyToKolBtn"[^>]*hidden/);
+  assert.doesNotMatch(INDEX,/id="cpCopyToKolBtn"[^>]*\bhidden\b/);
+  assert.match(INDEX,/data-i18n-en="Build Collection from Orders"/);
+  assert.match(APP,/BLMotionPlus\?\.play\('overlay',overlay\.querySelector\('\.modalCard'\)\)/);
 });
 test('complete supplier, prices, dates and historic LCW MB week/month mapping',()=>{
   const scope=transferMapper();
@@ -86,18 +88,20 @@ test('source identity distinguishes colors and models sharing one order code',()
   assert.equal(scope.sourceIdentity(first,true),scope.sourceIdentity({...first},true));
   assert.equal(scope.sourceIdentity({'PLM ID':'111'},true),'');
 });
-function transferAction(selected,existing=[],options={}){
+async function transferAction(selected,existing=[],options={}){
   const events={},toasts=[];
   const scope={
     appLang:'en',document:{body:{dataset:{activeTab:'orders'}},
       getElementById:()=>({addEventListener:(type,listener)=>{events[type]=listener;}})},
     window:{BLTableToolbarActionCleanup:{begin:()=>{},finish:()=>{}}},
-    kolWorkspaceCanEdit:true,
+    kolWorkspaceCanEdit:true,kolWorkspaceOwnerId:'mine',kolWorkspaceRevision:1,
     kolIsOwnWorkspace:()=>options.own!==false,
     kolRequireWorkspaceEdit:()=>options.editable!==false,
-    selectedCpRowsForAction:()=>selected,
+    cpKolSelectedSourceRows:()=>selected,
+    cpKolBackfillPreview:async()=>{if(options.stale)scope.kolWorkspaceRevision++;return options.accept!==false;},
     kolRows:existing.slice(),kolNextId:99,kolSelected:new Set(),
-    kolUndoStack:[1],kolUndoSummaryStack:[1],
+    kolUndoStack:[1],kolUndoSummaryStack:[1],kolRedoStack:[3],kolRedoSummaryStack:[3],
+    updateKolUndoRedoButtons:()=>{},
     kolPushUndo(){scope.kolUndoStack.push(2);scope.kolUndoSummaryStack.push(2);},
     cpKolSourceIdentity(row,source=false){
       const code=source?row['Order Code']:row._sourceOrderCode;
@@ -108,34 +112,71 @@ function transferAction(selected,existing=[],options={}){
     saveKolRows:()=>options.save!==false,renderKol:()=>{},
     showToast:message=>toasts.push(message),
   };
-  vm.runInNewContext(segment('// CP / Orders: copy selected visible source orders','// ================= DİL SEÇİMİ'),scope);
-  events.click({currentTarget:{}});
+  const engine=require('../public/collection-order-backfill');
+  scope.cpKolBackfillPlan=rows=>engine.plan(rows.map(row=>({key:scope.cpKolSourceIdentity(row,true),row:{...row,id:null,_sourceOrderCode:row['Order Code'],plmId:row['PLM ID'],colourCode:row['C.Code']}})),scope.kolRows,scope.kolRows.map(row=>scope.cpKolSourceIdentity(row)));
+  vm.runInNewContext(segment('let cpKolBackfillBusy=false;','// ================= DİL SEÇİMİ'),scope);
+  await events.click({currentTarget:{}});
   return {scope,toasts};
 }
-test('copy inserts all models of one order but skips only exact imported duplicates',()=>{
+test('copy inserts all models of one order but skips only exact imported duplicates',async()=>{
   const a={'Order Code':'A','PLM ID':'100','C.Code':'RED'};
   const b={'Order Code':'A','PLM ID':'100','C.Code':'BLUE'};
   const c={'Order Code':'A','PLM ID':'200','C.Code':'RED'};
-  const {scope,toasts}=transferAction([a,b,c,a]);
+  const {scope,toasts}=await transferAction([a,b,c,a]);
   assert.equal(scope.kolRows.length,3);
   assert.equal(scope.kolSelected.size,3);
   assert.equal(scope.kolNextId,102);
-  assert.match(toasts.join(' '),/1 existing skipped/);
+  assert.match(toasts.join(' '),/1 duplicates skipped/);
 });
-test('copy does not overwrite existing model or create changes in view-only workspaces',()=>{
+test('copy does not overwrite existing model or create changes in view-only workspaces',async()=>{
   const a={'Order Code':'A','PLM ID':'100','C.Code':'RED'};
-  const first=transferAction([a],[{id:5,_sourceOrderCode:'A',plmId:'100',colourCode:'RED'}]);
+  const first=await transferAction([a],[{id:5,_sourceOrderCode:'A',plmId:'100',colourCode:'RED'}]);
   assert.equal(first.scope.kolRows.length,1);
   assert.equal(first.scope.kolRows[0].id,5);
-  const denied=transferAction([a],[],{editable:false});
+  const denied=await transferAction([a],[],{editable:false});
   assert.equal(denied.scope.kolRows.length,0);
-  const remote=transferAction([a],[],{own:false});
+  const remote=await transferAction([a],[],{own:false});
   assert.equal(remote.scope.kolRows.length,0);
 });
-test('failed local save rolls back new rows and next ID',()=>{
+test('failed local save rolls back new rows, IDs and the complete undo/redo history',async()=>{
   const source={'Order Code':'B','PLM ID':'123','C.Code':'BLACK'};
-  const {scope}=transferAction([source],[],{save:false});
+  const {scope}=await transferAction([source],[],{save:false});
   assert.equal(scope.kolRows.length,0);
   assert.equal(scope.kolNextId,99);
   assert.equal(scope.kolUndoStack.length,1);
+  assert.equal(scope.kolRedoStack[0],3);
+});
+test('cancelled or stale preview does not allocate IDs or write Collection',async()=>{
+  for(const options of [{accept:false},{stale:true}]){
+    const {scope}=await transferAction([{'Order Code':'A','PLM ID':'100'}],[],options);
+    assert.equal(scope.kolRows.length,0);
+    assert.equal(scope.kolNextId,99);
+    assert.equal(scope.kolUndoStack.length,1);
+  }
+});
+test('source lines at different prices remain distinct even with the same order, model and colour',()=>{
+  const scope=transferMapper(),a={'Order Code':'A','PLM ID':'100','C.Code':'RED','FOB ($)':'5.00'};
+  assert.notEqual(scope.sourceIdentity(a,true),scope.sourceIdentity({...a,'FOB ($)':'6.00'},true));
+  assert.notEqual(scope.sourceIdentity(a,true),scope.sourceIdentity({...a,Country:'China'},true));
+  assert.notEqual(scope.sourceIdentity(a,true),scope.sourceIdentity({...a,Manufacturer:'OTHER FACTORY'},true));
+});
+test('source selection is scoped to visible rows in the active screen and permits read-only source orders',()=>{
+  const visible={_id:1,_canEdit:false},hidden={_id:2},order={_id:3};
+  const scope={document:{body:{dataset:{activeTab:'cp'}}},state:{cp:{},orders:{},cpSelected:new Set([1,2]),ordersSelected:new Set([3])},filteredCP:()=>[visible],filteredOrders:()=>[order]};
+  vm.runInNewContext(segment('function cpKolSelectedSourceRows(){','function cpKolBackfillPlan(')+'\nthis.selected=cpKolSelectedSourceRows;',scope);
+  assert.equal(scope.selected().length,1);
+  assert.equal(scope.selected()[0],visible);
+  scope.document.body.dataset.activeTab='orders';
+  assert.equal(scope.selected()[0],order);
+  assert.equal(hidden._id,2);
+});
+test('incremental import updates the matching row in one undo step without allocating a new ID',async()=>{
+  const common={'PLM ID':'100','C.Code':'RED',modelKod:'DEMO',inStoreMonth:'202702',quantity:'100',fob:'5',country:'TR',confirmedManufacturer:'DEMO FACTORY',pricing:{'DEMO FACTORY':'5'}};
+  const first=await transferAction([{'Order Code':'A',...common}]);
+  const second=await transferAction([{'Order Code':'A',...common},{'Order Code':'B',...common,quantity:'250'}],first.scope.kolRows);
+  assert.equal(second.scope.kolRows.length,1);
+  assert.equal(second.scope.kolRows[0].quantity,'350');
+  assert.equal(second.scope.kolRows[0].id,99);
+  assert.equal(second.scope.kolNextId,99);
+  assert.equal(second.scope.kolUndoStack.length,2);
 });

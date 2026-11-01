@@ -45,6 +45,18 @@ test('the compact widget defaults to four rows and preserves custom saved height
  assert.equal(Layout.locate(saved, 'checklistRules').item.h, 9);
 });
 
+test('Overview shows the full attention total beyond the displayed list limit', () => {
+ const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
+ const { extractFunction } = require('./helpers/app-main-functions');
+ const source = fs.readFileSync(path.join(__dirname, '../public/cp-overview-assistant.js'), 'utf8');
+ const render = vm.runInNewContext(`(${extractFunction(source.slice(source.indexOf('function overviewWidgetHtml')), 'overviewWidgetHtml')})`, {
+  state: { model: { orders: Array.from({ length: 6001 }, () => ({ priority: 'CRITICAL', qty: 1 })) } },
+  Engine: require('../public/cp-readiness-engine'), L: (tr, en) => en, esc: String, int: String,
+  openQueueCount: () => 0, prioritiesOverviewBlock: () => '', checklistCard: () => '',
+ });
+ assert.match(render(), /data-cpa-summary-attention><b>6001<\/b>/);
+});
+
 test('preview ignores checklist key order when a draft keeps the same effective states', () => {
  const a = Rules.normalizeRule({ id: 'first', kind: 'checklist', name: 'First', conditions: [{ field: '@qty', operator: 'gt', value: 0 }] });
  const b = Rules.normalizeRule({ id: 'second', kind: 'checklist', name: 'Second', conditions: [{ field: '@qty', operator: 'gt', value: 0 }] });

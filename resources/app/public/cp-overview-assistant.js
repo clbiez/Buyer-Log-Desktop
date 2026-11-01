@@ -722,7 +722,7 @@
   function overviewWidgetHtml() {
     const items = state.checklist?.items || [];
     const rejected = items.reduce((total, item) => total + (item.rejected || 0), 0);
-    const attention = Engine.needsAttention(state.model, { limit: 5000, priorityCatalog: state.priorityCatalog }).length;
+    const attention = Engine.needsAttention(state.model, { limit: 1, priorityCatalog: state.priorityCatalog }).total;
     return `<div class="cpaOverviewCompact">
       <div class="cpaOverviewMetrics" role="group" aria-label="${esc(L('Takip özeti', 'Follow-up summary'))}">
         <button type="button" class="cpaOverviewMetric" data-cpa-queue-scope="openRejected"><b>${int(openQueueCount())}</b><span>${esc(L('Açık kontrol', 'Open checks'))}</span></button>

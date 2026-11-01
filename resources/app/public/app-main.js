@@ -1390,8 +1390,8 @@ const _favoritesAppliedPages = new Set();
 // Seçime bağlı işlemler: eskiden vfBar'daki "Seçilenler" grubunda satır içi
 // duruyorlardı; artık CP/Siparişler araç çubuğundaki "Araçlar" menüsüne taşınırlar.
 // Tekil düğümler oldukları için paylaşılan taşıma sistemine dahil edilmeleri şart.
-const _selectionActionIds=['cpQuotationsBtn','cpCreateOcBtn','cpPriceHistoryBtn','selectedBacklogBtn','cpProdStatusBtn','navToShipping','cpSendPricingBtn','cpRemoveImagesBtn'];
-const _sharedTableActionIds=['undoBtn','redoBtn','cpCopyToKolBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','navFitColumnsBtn','navFreezeBtn','navClearFilters','navColsBtn',..._selectionActionIds];
+const _selectionActionIds=['cpCopyToKolBtn','cpQuotationsBtn','cpCreateOcBtn','cpPriceHistoryBtn','selectedBacklogBtn','cpProdStatusBtn','navToShipping','cpSendPricingBtn','cpRemoveImagesBtn'];
+const _sharedTableActionIds=['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','navFitColumnsBtn','navFreezeBtn','navClearFilters','navColsBtn',..._selectionActionIds];
 function sharedTableActionNode(id){
   const el=document.getElementById(id);
   if(!el) return null;
@@ -1489,7 +1489,7 @@ function syncTableToolbarActions(tab=document.body.dataset.activeTab){
     appendVfProfiles('cpMoreMenu');
   }else if(tab==='orders'){
     appendSharedTableActions('ordersTableActions',['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','navExcelBtn']);
-    // Siparişler ve CP, ortak Kopyala alt menüsündeki Koleksiyona Kopyala eylemini kullanır.
+    // CP and Orders share the same Collection backfill action in Tools.
     appendSharedTableActions('ordersToolsMenu',_selectionActionIds.filter(id=>id!=='cpQuotationsBtn'));
     appendSharedTableActions('ordersMoreMenu',['navFitColumnsBtn','navFreezeBtn']);
     placeSharedActionsBefore('ordersMoreWrap',['navClearFilters']);
@@ -2576,13 +2576,6 @@ document.getElementById('navCopyMenuBtn')?.addEventListener('click',event=>{
     {label:appLang==='en'?'Copy with headers':'Başlıklarla kopyala',run:()=>copyGridSelection(true)},
     {label:appLang==='en'?'Copy without headers':'Başlıksız kopyala',run:()=>copyGridSelection(false)},
   ];
-  // CP and Orders use the same live action, but it belongs under Copy — not Tools.
-  // Keep the original button/handler as the single source of truth.
-  if(['cp','orders'].includes(document.body.dataset.activeTab)){
-    const transfer=document.getElementById('cpCopyToKolBtn');
-    items.push({label:appLang==='en'?'Copy to Collection':'Koleksiyona Kopyala',
-      disabled:!transfer||transfer.disabled,run:()=>transfer?.click()});
-  }
   items.push({label:appLang==='en'?'Clipboard diagnostics':'Pano hata teşhisi',run:openClipboardDiagnostics});
   items.forEach(item=>{
     const node=document.createElement('button');node.type='button';node.setAttribute('role','menuitem');
@@ -30191,6 +30184,9 @@ function kolClearDuplicateCommercialHistory(row){
   row.fob='';
   delete row._pricingRuleId;
   delete row._sourceOrderCode;
+  delete row._sourceOrderIdentity;
+  delete row._sourceOrders;
+  delete row._collectionBackfillKey;
   delete row._styleRowId;
   kolApplyRulePricing(row); // Royalty/Hologram kuraldan yeniden gelir; fiyat yoksa Target Price FOB için kullanılabilir.
   return row;
@@ -39126,47 +39122,49 @@ window.addEventListener('beforeunload', saveEverythingNow);
 // ================= CP → Koleksiyon: "Fiyatlamaya Gönder" (CP'yi hiç değiştirmez) =================
 // CP'deki seçili siparişleri Koleksiyon'a birer kopya olarak ekler; takip yalnızca
 // Koleksiyon'da yapılır — CP'nin kendi verisi/durumu bu işlemle hiç değişmez.
-function cpRowToKolRow(r){
+function cpRowToKolRow(r,allocateId=true){
+  const value=field=>window.BLCanonicalFields.canonicalValue(r,'cp',field);
+  const canonicalText=field=>norm(value(field))||'';
+  const canonicalDate=field=>toISODate(value(field))||'';
   const text=(key)=>norm(r[key])||'';
   const date=(key)=>toISODate(r[key])||'';
-  const manufacturer=text('Manufacturer')||text('Sub-Manufacturer');
-  const subManufacturer=text('Sub-Manufacturer');
-  const sourceFob=r['FOB ($)'];
+  const manufacturer=canonicalText('manufacturer')||canonicalText('subManufacturer');
+  const subManufacturer=canonicalText('subManufacturer');
+  const sourceFob=value('fob');
   const quotedFob=(sourceFob!==null&&sourceFob!==undefined&&String(sourceFob).trim()!=='')
     ?String(sourceFob).trim():'';
-  const supplierFob=(r['Supp. FOB']!==null&&r['Supp. FOB']!==undefined&&String(r['Supp. FOB']).trim()!=='')
-    ?String(r['Supp. FOB']).trim():'';
+  const supplierFob=norm(value('supplierFob'))||'';
   const validQuote=Number.isFinite(kolParseMoneyNum(quotedFob))&&kolParseMoneyNum(quotedFob)>0;
-  const inStoreDate=date('In-Store (Model Budget)');
+  const inStoreDate=canonicalDate('inStore');
   // LCW Merch Calendar, never the browser locale/ISO week, determines MB periods.
   const schedule=inStoreDate?kolScheduleFromWeekMonday(inStoreDate):null;
   const notes=[text('Notes'),text('Ek Not')].filter(Boolean);
-  const orderCode=text('Order Code');
+  const orderCode=canonicalText('orderCode');
   return migrateKolRow({
-    id:kolNextId++,
-    plmId:text('PLM ID'),
-    modelKod:text('Model Name'),
-    lisans:text('License'),
-    licensor:text('Licensor'),
-    urunTipi:text('Category'),
-    productMainDefinition:text('Ürün Tanım'),
-    specialCode:text('Special Code'),
-    line:text('Line'),
-    colourCode:text('C.Code')||text('Colour Code'),
-    colour:text('Colour'),
+    id:allocateId?kolNextId++:null,
+    plmId:canonicalText('plmId'),
+    modelKod:canonicalText('modelName'),
+    lisans:canonicalText('license'),
+    licensor:canonicalText('licensor'),
+    urunTipi:canonicalText('category'),
+    productMainDefinition:canonicalText('productDescription'),
+    specialCode:canonicalText('specialCode'),
+    line:canonicalText('line'),
+    colourCode:canonicalText('colourCode'),
+    colour:canonicalText('colour'),
     fabric:text('Kumaş Tipi')||text('Karışım')||text('Fabric (PLM)'),
     fabricSupplierS7:text('Kumaşçı'),
     fabricSupplierS6:text('Kumaşçı'),
     fit:text('Fit'),
     assortment:text('Assortment'),
-    quantity:r['Order Quantity']!=null?String(r['Order Quantity']):'',
-    mag:text('Merch Alt Grup Kod')||text('MAG'),
-    mmyg:text('Merch Marka Yaş Grup Kod')||text('MMYG'),
-    buyingGroup:text('Buyer Grup (TR)')||text('Buying Group'),
-    buyer:text('Buyer'),
-    season:text('Season'),
-    country:text('Country'),
-    delType:normalizeTransitDelType(r['Del. Type'])||'Gemi',
+    quantity:norm(value('orderQuantity'))||'',
+    mag:canonicalText('mag'),
+    mmyg:canonicalText('mmyg'),
+    buyingGroup:canonicalText('buyingGroup'),
+    buyer:canonicalText('buyer'),
+    season:canonicalText('season'),
+    country:canonicalText('country'),
+    delType:normalizeTransitDelType(value('deliveryType'))||'Gemi',
     buyingSampleManufacturer:manufacturer,
     confirmedManufacturer:manufacturer,
     pricing:manufacturer&&validQuote?{[manufacturer]:quotedFob}:{},
@@ -39174,14 +39172,14 @@ function cpRowToKolRow(r){
     // Source order FOB is retained independently as the Collection FOB value.
     fob:quotedFob,
     targetPrice:supplierFob,
-    exFactory:date('Ex-factory')||date('Original Ex-factory'),
-    retail:date('Retail Date'),
+    exFactory:canonicalDate('exFactory')||date('Original Ex-factory'),
+    retail:canonicalDate('retailDate'),
     inStore:inStoreDate,
     inStoreWeek:schedule?.inStoreWeek||'',
     // Persist a language-neutral period code; rendering localizes TR/EN.
     inStoreMonth:schedule?.inStoreMonth||'',
-    opd:date('OPD'),
-    durum:kolStatusDefaultName(),
+    opd:canonicalDate('orderPlacementDate'),
+    durum:'Sipariş Geçildi', // i18n-ignore: persisted built-in workflow status; rendered by the status catalog.
     not:notes.join(' · '),
     img:null,
     _sourceOrderCode:orderCode,
@@ -39201,12 +39199,18 @@ function cpRowToKolRow(r){
   });
 }
 function cpKolSourceIdentity(row,source=false){
-  const code=norm(source?row['Order Code']:row._sourceOrderCode).toLocaleUpperCase('tr-TR');
+  const fields=window.BLCanonicalFields,module=source?'cp':'collection';
+  const code=norm(source?fields.canonicalValue(row,module,'orderCode'):row._sourceOrderCode).toLocaleUpperCase('tr-TR');
   if(!code)return ''; // No order key: do not silently discard legitimate historic models.
-  const plm=norm(source?row['PLM ID']:row.plmId).toLocaleUpperCase('tr-TR');
-  const model=norm(source?row['Model Name']:row.modelKod).toLocaleUpperCase('tr-TR');
-  const colour=norm(source?(row['C.Code']||row['Colour Code']||row['Colour']):(row.colourCode||row.colour)).toLocaleUpperCase('tr-TR');
-  return JSON.stringify([code,plm||model,colour]);
+  const plm=norm(fields.canonicalValue(row,module,'plmId')).toLocaleUpperCase('tr-TR');
+  const model=norm(fields.canonicalValue(row,module,'modelName')).toLocaleUpperCase('tr-TR');
+  const colour=norm(fields.canonicalValue(row,module,'colourCode')||fields.canonicalValue(row,module,'colour')).toLocaleUpperCase('tr-TR');
+  const price=source?fields.canonicalValue(row,module,'fob'):(row._sourceOrderDetails?.sourceFob??row.fob);
+  const supplierPrice=source?fields.canonicalValue(row,module,'supplierFob'):(row._sourceOrderDetails?.supplierFob??row.targetPrice);
+  const inStore=toISODate(fields.canonicalValue(row,module,'inStore'))||'';
+  const country=fields.normalizedValue(row,module,'country');
+  const manufacturer=norm(source?(fields.canonicalValue(row,module,'manufacturer')||fields.canonicalValue(row,module,'subManufacturer')):(row._sourceOrderDetails?.manufacturer??row.confirmedManufacturer)).toLocaleUpperCase('tr-TR');
+  return JSON.stringify([code,plm||model,colour,kolParseMoneyNum(price)||'',kolParseMoneyNum(supplierPrice)||'',inStore,country,manufacturer]);
 }
 // ================= "Maliyet Oluştur": CP / Koleksiyon → Ön Maliyet =================
 function ocMetaFromCpRow(r){
@@ -39404,51 +39408,88 @@ document.getElementById('kolRemoveImagesBtn')?.addEventListener('click',async ev
 });
 
 // CP / Orders: copy selected visible source orders into the user's own Collection.
-// Do not mutate the source orders, overwrite an existing Collection row, or assume
-// that one order code contains only one model/colour.
-document.getElementById('cpCopyToKolBtn')?.addEventListener('click',event=>{
+// Source orders are read-only inputs. Existing manual Collection rows stay intact.
+function cpKolSelectedSourceRows(){
+  const module=document.body.dataset.activeTab;
+  if(!['cp','orders'].includes(module)||!state[module])return [];
+  const selected=module==='orders'?state.ordersSelected:state.cpSelected;
+  return (module==='orders'?filteredOrders():filteredCP()).filter(row=>selected?.has(row._id));
+}
+function cpKolBackfillPlan(rows){
+  return window.BLCollectionOrderBackfill.plan(rows.map(row=>({key:cpKolSourceIdentity(row,true),row:cpRowToKolRow(row,false)})),
+    kolRows,kolRows.filter(row=>!row._sourceOrders?.length).map(row=>cpKolSourceIdentity(row)));
+}
+function cpKolBackfillPreview(plan,trigger){
+  return new Promise(resolve=>{
+    const overlay=document.createElement('div');overlay.id='cpKolBackfillPreview';overlay.className='warnOverlay blBulkOverlay';overlay.dataset.uiMigrated='dialog';
+    const en=appLang==='en',T=(tr,english)=>en?english:tr;
+    const created=plan.changes.filter(change=>change.existingId==null).length,updated=plan.changes.length-created;
+    const cells=values=>values.map(value=>`<td>${escapeHtml(value??'')}</td>`).join('');
+    const rows=plan.changes.slice(0,100).map(({existingId,row})=>`<tr>${cells([
+      existingId==null?T('Yeni','New'):T('Birleştir','Merge'),row.modelKod,kolMonthDisplay(row.inStoreMonth)||'—',row._sourceOrderDetails?.sourceFob??row.fob,
+      row.country,row.confirmedManufacturer,row.quantity,row.opd||'—',row.exFactory||'—',
+      row._sourceOrders.map(order=>order.orderCode).filter(Boolean).join(', ')])}</tr>`).join('');
+    const missingPeriod=plan.changes.filter(({row})=>!row.inStoreMonth).length;
+    overlay.innerHTML=`<div class="modalCard blBulkCard cpKolBackfillCard" role="dialog" aria-modal="true" aria-labelledby="cpKolBackfillTitle"><div class="modalTitle" id="cpKolBackfillTitle">${T('Siparişlerden Koleksiyon Oluştur','Build Collection from Orders')}</div><div class="blBulkBody"><p>${escapeHtml(T(`${created} yeni satır · ${updated} mevcut satıra ekleme · ${plan.duplicates} tekrar atlandı`,`${created} new rows · ${updated} existing rows extended · ${plan.duplicates} duplicates skipped`))}</p><p>${T('Aynı model ve MB ayında adetler toplanır; en erken OPD ve en geç Ex-Factory alınır. Fiyat, tedarikçi veya ülke farklıysa ayrı satır açılır.','Quantities are summed for the same model and MB month, using the earliest OPD and latest Ex-Factory. Different prices, suppliers or countries create separate rows.')}</p>${missingPeriod?`<p role="status">${escapeHtml(T(`${missingPeriod} satırın MB ayı Merch Calendar ile çözülemedi; bu siparişler ayrı tutulur.`,`${missingPeriod} rows have no MB month resolved by Merch Calendar; these orders are kept separate.`))}</p>`:''}<div class="blBulkTableWrap"><table><thead><tr>${[T('İşlem','Action'),T('Model','Model'),T('MB ayı','MB month'),'FOB ($)',T('Ülke','Country'),T('Onaylı tedarikçi','Confirmed supplier'),T('Adet','Quantity'),'OPD','Ex-Factory',T('Kaynak siparişler','Source orders')].map(label=>`<th>${escapeHtml(label)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>${plan.changes.length>100?`<p>${T('İlk 100 satır gösteriliyor; aktarım tüm satırları kapsar.','Showing the first 100 rows; all rows will be imported.')}</p>`:''}<p>${T('Kaynak siparişler korunur. İşlem Koleksiyonda tek adımda geri alınabilir.','Source orders are preserved. You can undo this operation in one step in Collection.')}</p></div><div class="modalFoot"><button type="button" class="tbtn" data-backfill-cancel>${T('Vazgeç','Cancel')}</button><button type="button" class="tbtn primary" data-backfill-apply>${T('Koleksiyona Aktar','Import into Collection')}</button></div></div>`;
+    const close=accepted=>{window.BLLayerSystem?.closeDialog(overlay);overlay.remove();resolve(accepted);};
+    overlay.querySelector('[data-backfill-cancel]').onclick=()=>close(false);
+    overlay.querySelector('[data-backfill-apply]').onclick=()=>close(true);
+    overlay.addEventListener('click',event=>{if(event.target===overlay)close(false);});
+    document.body.appendChild(overlay);
+    window.BLLayerSystem?.openDialog(overlay,{trigger,onClose:()=>close(false),initialFocus:'[data-backfill-cancel]'});
+    window.BLMotionPlus?.play('overlay',overlay.querySelector('.modalCard'));
+  });
+}
+let cpKolBackfillBusy=false;
+document.getElementById('cpCopyToKolBtn')?.addEventListener('click',async event=>{
   const btn=event.currentTarget;
+  if(cpKolBackfillBusy)return;
+  const menu=btn.closest?.('.toolbarMoreMenu'),trigger=menu?document.getElementById(menu.id.replace(/Menu$/,'Btn')):btn;
+  if(menu){window.BLLayerSystem?.closeMenu(menu);menu.hidden=true;trigger?.setAttribute('aria-expanded','false');}
   if(!kolRequireWorkspaceEdit()||!kolIsOwnWorkspace()){
     if(!kolIsOwnWorkspace())showToast(appLang==='en'?'Open your own Collection workspace before copying.':'Kopyalamadan önce kendi Koleksiyon çalışma alanını aç.');
     window.BLTableToolbarActionCleanup?.finish?.(btn,false);
     return;
   }
-  const rows=selectedCpRowsForAction();
-  if(rows===null){window.BLTableToolbarActionCleanup?.finish?.(btn,false);return;}
+  const rows=cpKolSelectedSourceRows();
   if(!rows.length){
     showToast(appLang==='en'?'Select at least one visible CP/Orders row first.':'Önce CP/Orders içinde görünür en az bir sipariş seç.');
     window.BLTableToolbarActionCleanup?.finish?.(btn,false);return;
   }
-  const existing=new Set(kolRows.map(row=>cpKolSourceIdentity(row)).filter(Boolean));
-  const pending=[];let duplicates=0;
-  rows.forEach(row=>{
-    const key=cpKolSourceIdentity(row,true);
-    if(key&&existing.has(key)){duplicates++;return;}
-    pending.push(row);
-    if(key)existing.add(key);
-  });
-  if(!pending.length){
-    showToast(appLang==='en'?'All selected models are already in Collection.':'Seçili modellerin tamamı Koleksiyonda zaten mevcut.');
+  const plan=cpKolBackfillPlan(rows);
+  if(!plan.changes.length){
+    showToast(appLang==='en'?'All selected orders are already in Collection.':'Seçili siparişlerin tamamı Koleksiyonda zaten mevcut.');
     window.BLTableToolbarActionCleanup?.finish?.(btn,true);return;
   }
-  window.BLTableToolbarActionCleanup?.begin?.(btn);
-  const oldRows=kolRows,oldNextId=kolNextId;
-  kolPushUndo();
-  const created=pending.map(cpRowToKolRow);
-  kolRows=[...created.reverse(),...kolRows];
-  if(!saveKolRows()){
-    kolRows=oldRows;kolNextId=oldNextId;
-    kolUndoStack.pop();kolUndoSummaryStack.pop();
-    window.BLTableToolbarActionCleanup?.finish?.(btn,false);return;
-  }
-  kolSelected=new Set(created.map(row=>row.id));
-  if(document.body.dataset.activeTab==='koleksiyon')renderKol();
-  const missingPeriod=created.filter(row=>row.inStore&&!row.inStoreWeek).length;
-  const info=[appLang==='en'?`${created.length} model(s) copied into Collection`:`${created.length} model Koleksiyona kopyalandı`];
-  if(duplicates)info.push(appLang==='en'?`${duplicates} existing skipped`:`${duplicates} mevcut kayıt atlandı`);
-  if(missingPeriod)info.push(appLang==='en'?`${missingPeriod} MB period(s) need a Merch Calendar entry`:`${missingPeriod} MB dönemi için Merch Calendar kaydı gerekli`);
-  showToast(info.join(' · '));
-  window.BLTableToolbarActionCleanup?.finish?.(btn,true);
+  const owner=kolWorkspaceOwnerId,revision=kolWorkspaceRevision,snapshot=JSON.stringify(kolRows),sourceSnapshot=JSON.stringify(rows);
+  cpKolBackfillBusy=true;
+  try{
+    if(!await cpKolBackfillPreview(plan,trigger||btn)){window.BLTableToolbarActionCleanup?.finish?.(btn);return;}
+    if(!kolWorkspaceCanEdit||!kolIsOwnWorkspace()||owner!==kolWorkspaceOwnerId||revision!==kolWorkspaceRevision||snapshot!==JSON.stringify(kolRows)||sourceSnapshot!==JSON.stringify(cpKolSelectedSourceRows())){
+      showToast(appLang==='en'?'The selection or Collection changed during preview. Open the preview again.':'Önizleme sırasında seçim veya Koleksiyon değişti. Önizlemeyi yeniden açın.');
+      window.BLTableToolbarActionCleanup?.finish?.(btn,false);return;
+    }
+    window.BLTableToolbarActionCleanup?.begin?.(btn);
+    const oldRows=kolRows,oldNextId=kolNextId;
+    const history={undo:kolUndoStack.slice(),summary:kolUndoSummaryStack.slice(),redo:kolRedoStack.slice(),redoSummary:kolRedoSummaryStack.slice()};
+    kolPushUndo();
+    const created=[],updated=new Map();
+    plan.changes.forEach(change=>{
+      const row=change.row;
+      if(change.existingId==null){row.id=kolNextId++;row.modelGroupId='mg_order_backfill_'+row.id;created.push(row);}
+      else updated.set(change.existingId,row);
+    });
+    kolRows=[...created,...kolRows.map(row=>updated.get(row.id)||row)];
+    if(!saveKolRows()){
+      kolRows=oldRows;kolNextId=oldNextId;
+      kolUndoStack=history.undo;kolUndoSummaryStack=history.summary;kolRedoStack=history.redo;kolRedoSummaryStack=history.redoSummary;updateKolUndoRedoButtons();
+      window.BLTableToolbarActionCleanup?.finish?.(btn,false);return;
+    }
+    kolSelected=new Set(plan.changes.map(change=>change.row.id));
+    if(document.body.dataset.activeTab==='koleksiyon')renderKol();
+    showToast(appLang==='en'?`${created.length} new Collection rows · ${updated.size} rows extended · ${plan.duplicates} duplicates skipped. Undo is available in Collection.`:`Koleksiyonda ${created.length} yeni satır · ${updated.size} satıra ekleme · ${plan.duplicates} tekrar atlandı. Koleksiyondan geri alınabilir.`);
+    window.BLTableToolbarActionCleanup?.finish?.(btn,true);
+  }finally{cpKolBackfillBusy=false;}
 });
 
 // ================= DİL SEÇİMİ (TR / EN) =================

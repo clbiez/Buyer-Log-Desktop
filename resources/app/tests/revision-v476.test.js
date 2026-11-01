@@ -47,6 +47,7 @@ test('v4.76 Collection has Special Code and Line as persistent editable columns'
   const productionFunction = name => extractFunction(source, name);
   const saved = new Map();
   const context = {
+    window: { BLCanonicalFields: require('../public/canonical-fields') },
     appLang: 'en', norm: value => String(value == null ? '' : value).trim(), kolNextId: 1,
     toISODate: () => '', kolParseMoneyNum: Number, normalizeTransitDelType: value => value,
     kolStatusDefaultName: () => 'Pending',
