@@ -13428,7 +13428,12 @@ window.BLAIScreenData = {
         if (all) { const seen = new Set(cols.map(col => col && col.k)); cols = cols.concat((info.cols() || []).filter(col => col && !seen.has(col.k))); }
       } else if (info.tableKey === 'koleksiyon') cols = kolDisplayDescriptors({ all, detail: true }); // LCW AI ayrıntılı sütunları okur (Kompakt özet değil)
       else cols = info.cols() || [];
-    } catch (_) { cols = []; }
+    } catch (err) {
+      // Rows without columns would give LCW AI image keys but no data, so a
+      // column-build failure must fail closed and stay diagnosable.
+      console.error(`[LCW AI] ${tab} column context could not be built`, err);
+      return null;
+    }
     // Resolve Collection inheritance once per build. The projected rows are
     // private read-only copies; existing formatters can read their effective
     // fields without rescanning the entire collection for each cell.

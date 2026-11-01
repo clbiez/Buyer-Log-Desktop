@@ -192,3 +192,16 @@ test('Collection context uses one fresh group index per build without per-cell f
   assert.equal(chat.tableContext('koleksiyon', 'all').rows[0][1], 'Updated');
   assert.equal(scans, 2);
 });
+test('a column-build failure is reported and never yields a table without columns', () => {
+  const { env, window, chat, providers } = fixture();
+  const errors = [];
+  env.console = { ...console, error: (...args) => errors.push(args) };
+  env.kolAllOrderedCols = () => { throw new Error('column catalog failed'); };
+  // Rows without columns would send LCW AI image keys and no data; fail closed instead.
+  assert.equal(window.BLAIScreenData.table('koleksiyon', { all: true }), null);
+  assert.equal(chat.tableContext('koleksiyon', 'all'), null);
+  assert.deepEqual(plain(providers.get('koleksiyon').getOptions()), []);
+  assert.ok(errors.length >= 1, 'the failure is logged');
+  assert.ok(errors.every(args => args.some(arg => arg instanceof Error && arg.message === 'column catalog failed')), 'the original error is kept');
+  assert.match(String(errors[0][0]), /koleksiyon/);
+});
