@@ -102,7 +102,8 @@ test('kişisel VARSAYILAN kaldırılınca tüm modüller ortak filtreye döner v
   assert.equal(layerOf(user, 'cp'), 'source');
 });
 
-test('silmeden SONRA yapılan yeni kişisel kayıt normal biçimde yazılır ve kalıcıdır', () => {
+test('silmeden SONRA yapılan yeni kişisel kayıt normal biçimde yazılır ve kalıcıdır', t => {
+  t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-09-01T10:00:00.000Z') });
   const user = newUser();
   prefs.saveHorizon(user, 'cp', personalHorizon());
   prefs.removeKeys(user, [prefs.horizonKey('cp')]);
@@ -110,6 +111,8 @@ test('silmeden SONRA yapılan yeni kişisel kayıt normal biçimde yazılır ve 
 
   const next = personalHorizon();
   next.groups[0].conditions[0].values = ['W7'];
+  // "After" must have a later timestamp, even on a fast temporary filesystem.
+  t.mock.timers.tick(1);
   prefs.saveHorizon(user, 'cp', next);
 
   assert.equal(layerOf(user, 'cp'), 'personal');
