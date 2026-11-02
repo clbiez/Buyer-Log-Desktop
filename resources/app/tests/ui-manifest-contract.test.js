@@ -102,6 +102,12 @@ const sharedFieldBorder = d => d.file==='ui-components.css' && SHARED_FIELD_SELE
  'border-color':['var(--ui-group-divider)']
 }[d.prop]||[]).includes(d.value);
 const sharedNotificationBorder = d => d.file==='ui-components.css' && classicSelector(d.selector)==='.uiFeedback' && d.prop==='border' && d.value==='1px solid var(--ui-group-divider)';
+// Exact shared grid-range rectangle: no new module shadows or broad exemptions.
+const sharedGridRangePerimeter = d => d.file==='ui-components.css'
+ && classicSelector(d.selector)===':is(#cpTable,#ordersTable,.blDetailDrawer .blDetailTable) tbody td.blGridRangeCell, table[role="grid"] tbody td.blGridRangeCell'
+ && d.prop==='box-shadow'
+ && d.value.replace(/\s+/g,' ')==='var(--ui-grid-range-top), var(--ui-grid-range-right), var(--ui-grid-range-bottom), var(--ui-grid-range-left)';
+
 const classicFocus = d => classicFrame(d)&&d.prop==='outline'
  && ['1px solid var(--ui-group-divider)','2px solid var(--ui-accent)'].includes(d.value);
 
@@ -125,10 +131,19 @@ test('Manifest permits only shared classic frames and existing table/print borde
    if(!/:focus/.test(d.selector)&&!cursor&&!classicFocus(d))failures.push(d);
   }
   if(d.prop==='z-index'&&!/^var\(--ui-z-(below|base|data|raised|sticky|sticky-column|chrome|popover|modal|modal-backdrop|rail-backdrop|modal-menu|tooltip|boot)\)$/.test(d.value))failures.push(d);
-  if(d.prop==='box-shadow'&&!/^(none|var\(--ui-shadow-overlay\))$/.test(d.value)&&!classicRowStripe(d)&&!(d.file==='ui-components.css'&&((d.selector==='table thead tr.groupRow th'&&d.value==='inset 0 2px 0 var(--ui-accent)')||(d.selector==='table tbody tr.rowDirty>td:first-child'&&d.value==='inset 3px 0 0 var(--ui-warning)'))))failures.push(d);
+  if(d.prop==='box-shadow'&&!/^(none|var\(--ui-shadow-overlay\))$/.test(d.value)&&!classicRowStripe(d)&&!sharedGridRangePerimeter(d)&&!(d.file==='ui-components.css'&&((d.selector==='table thead tr.groupRow th'&&d.value==='inset 0 2px 0 var(--ui-accent)')||(d.selector==='table tbody tr.rowDirty>td:first-child'&&d.value==='inset 3px 0 0 var(--ui-warning)'))))failures.push(d);
  }
  assert.deepEqual(failures,[]);
  assert.match(read('ui-tokens.css'),/--ui-radius:0;/);
+});
+test('only the shared, four-token grid range perimeter uses a new inset shadow',()=>{
+ const ranges=entries.filter(d=>sharedGridRangePerimeter(d));
+ assert.equal(ranges.length,1, 'Shared range border must be defined once in Manifest');
+ const css=read('ui-components.css');
+ for(const side of ['top','right','bottom','left']) {
+   assert.match(css,new RegExp('td\\.blGridRange'+side[0].toUpperCase()+side.slice(1)+' \\{[\\s\\S]*?--ui-grid-range-'+side+':inset'));
+   assert.match(read('ui-tokens.css'),new RegExp('--ui-grid-range-'+side+':inset 0 0 0 0 transparent'));
+ }
 });
 test('Manifest fonts scale and only transform/opacity may animate',()=>{
  const failures=[];
