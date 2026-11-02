@@ -53,9 +53,9 @@ test('cell-range styling is distinct from row selection and joins four theme-awa
   const patch = ui.slice(ui.lastIndexOf('/* Cell-range selection must remain distinct'));
   assert.ok(patch.startsWith('/* Cell-range selection must remain distinct'), 'New range styles must be present');
   assert.match(patch, /background-color:color-mix\(in srgb,var\(--ui-selected\) 72%,var\(--ui-accent\) 28%\) !important/);
-  assert.match(patch, /box-shadow:[\s\S]*?var\(--bl-grid-range-top,[\s\S]*?var\(--bl-grid-range-left,[\s\S]*?!important/);
+  assert.match(patch, /box-shadow:[\s\S]*?var\(--ui-grid-range-top,[\s\S]*?var\(--ui-grid-range-left,[\s\S]*?!important/);
   for (const side of ['Top','Right','Bottom','Left']) {
-    assert.match(patch, new RegExp('td\\.blGridRange' + side + ' \\{[\\s\\S]*?--bl-grid-range-' + side.toLowerCase() + ':inset'));
+    assert.match(patch, new RegExp('td\\.blGridRange' + side + ' \\{[\\s\\S]*?--ui-grid-range-' + side.toLowerCase() + ':inset'));
   }
   assert.match(ui, /#cpTable td\.blGridActiveCell,html\[data-ui-system="manifest"\] #ordersTable td\.blGridActiveCell\s*\{outline:2px solid var\(--ui-accent\)/);
 });
