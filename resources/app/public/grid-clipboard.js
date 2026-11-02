@@ -110,7 +110,8 @@
 
   function clearPaint(table){
     table?.querySelectorAll?.('.blGridActiveCell,.blGridRangeCell,.blGridRangeEdge,.blGridRangeTop,.blGridRangeRight,.blGridRangeBottom,.blGridRangeLeft').forEach(cell=>{
-      cell.classList.remove('blGridActiveCell','blGridRangeCell','blGridRangeEdge','blGridRangeTop','blGridRangeRight','blGridRangeBottom','blGridRangeLeft');
+      cell.classList.remove('blGridActiveCell','blGridRangeCell','blGridRangeEdge');
+      cell.classList.remove('blGridRangeTop','blGridRangeRight','blGridRangeBottom','blGridRangeLeft');
       cell.setAttribute('aria-selected','false');
     });
   }
