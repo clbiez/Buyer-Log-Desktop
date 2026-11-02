@@ -113,3 +113,17 @@ test('v10.38 geri bildirim yüzeyi token tabanlı, erişilebilir ve küçük ekr
   assert.match(DESIGN, /@media\s*\(prefers-reduced-motion:reduce\)/);
   assert.doesNotMatch(block, /#[0-9a-f]{3,8}\b/i);
 });
+
+
+test('v10.38 bildirim kartı tüm durumlarda ortak tema sınırı ve overlay gölgesini korur', () => {
+  const components = read('public/ui-components.css');
+  const surface = components.match(/html\\[data-ui-system="manifest"\\] \\.uiFeedback \\{([^}]+)\\}/)?.[1];
+  assert.ok(surface, 'ortak uiFeedback görünümü bulunamadı');
+  assert.match(surface, /border:1px solid var\\(--ui-group-divider\\) !important/);
+  assert.match(surface, /box-shadow:var\\(--ui-shadow-overlay\\) !important/);
+  assert.match(surface, /background:var\\(--ui-feedback-surface\\) !important/);
+  for (const kind of ['loading', 'empty', 'info', 'success', 'warning', 'error']) {
+    assert.match(components, new RegExp('\\\\.uiFeedback--' + kind + '\\\\b'), kind + ' durumu ortak yüzeyden türetilmeli');
+  }
+  assert.match(components, /:where\\(body,body \\*\\)\\{border:0;border-radius:var\\(--ui-radius\\);box-shadow:none;/);
+});
