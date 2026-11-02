@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
 const ui = fs.readFileSync('public/ui-components.css', 'utf8');
+const tokens = fs.readFileSync('public/ui-tokens.css', 'utf8');
 const grid = fs.readFileSync('public/grid-clipboard.js', 'utf8');
 
 test('shared grid paints a range independently from the active keyboard cell', () => {
@@ -53,8 +54,13 @@ test('cell-range styling is distinct from row selection and joins four theme-awa
   const patch = ui.slice(ui.lastIndexOf('/* Cell-range selection must remain distinct'));
   assert.ok(patch.startsWith('/* Cell-range selection must remain distinct'), 'New range styles must be present');
   assert.match(patch, /background-color:color-mix\(in srgb,var\(--ui-selected\) 72%,var\(--ui-accent\) 28%\) !important/);
-  assert.match(patch, /box-shadow:[\s\S]*?var\(--ui-grid-range-top,[\s\S]*?var\(--ui-grid-range-left,[\s\S]*?!important/);
+  assert.match(patch, /box-shadow:\s*var\(--ui-grid-range-top\),\s*var\(--ui-grid-range-right\),\s*var\(--ui-grid-range-bottom\),\s*var\(--ui-grid-range-left\)\s*!important/);
+  // Shared tokens initialize every absent side to a neutral inset shadow.
+  // Without these defaults a missing side invalidates the entire shadow list.
+  const rootTokens = tokens.match(/:root\s*\{([^}]+)\}/);
+  assert.ok(rootTokens, 'Canonical root tokens must be present');
   for (const side of ['Top','Right','Bottom','Left']) {
+    assert.match(rootTokens[1], new RegExp('--ui-grid-range-' + side.toLowerCase() + ':\\s*inset 0 0 0 0 transparent\\s*;'));
     assert.match(patch, new RegExp('td\\.blGridRange' + side + ' \\{[\\s\\S]*?--ui-grid-range-' + side.toLowerCase() + ':inset'));
   }
   assert.match(ui, /#cpTable td\.blGridActiveCell,html\[data-ui-system="manifest"\] #ordersTable td\.blGridActiveCell\s*\{outline:2px solid var\(--ui-accent\)/);
