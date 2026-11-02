@@ -345,9 +345,9 @@ function destroyOabSessionWindow() {
   oabSessionAuthorization = '';
   if (win && !win.isDestroyed()) { try { win.destroy(); } catch (_) {} }
 }
-/* Loopback relay: the backend asks Electron main to run a whitelisted PASS
- * report call in the hidden session page. Same per-process bridge secret as
- * the other desktop bridges; only 127.0.0.1, small JSON bodies. */
+/* Loopback relay: whitelisted PASS calls and the shared LCW AI session.
+ * Same per-process bridge secret as the other desktop bridges;
+ * only 127.0.0.1, small JSON bodies. */
 let oabRelayServer = null;
 let oabRelayUrl = '';
 function oabRelaySecretValid(supplied) {
@@ -376,6 +376,10 @@ async function handleOabRelayRequest(req, res) {
     let body = {};
     try { body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}'); } catch (_) { return send(400, { ok:false, code:'INVALID_JSON' }); }
     const route = String(req.url || '').split('?')[0];
+    if (route === '/lcwai/auth') {
+      const result = await acquireLcwAiToken({ interactive: body && body.interactive === true, avoidFingerprint: String(body && body.avoidFingerprint || '') });
+      return send(200, result && result.ok ? { ok:true } : { ok:false, code:result && result.code || 'LCWAI_AUTH_FAILED' });
+    }
     if (route === '/oab/status') return send(200, { ok:true, ready:oabSessionReady() });
     if (route === '/oab/pass-request') {
       const endpoint = String(body && body.endpoint || '');
@@ -1235,6 +1239,7 @@ async function acquireLcwAiToken(options = {}) {
       busy = true;
       try {
         const token = await win.webContents.executeJavaScript(LCWAI_STORAGE_PROBE, true);
+        if (token && options.avoidFingerprint && crypto.createHash('sha256').update(String(token)).digest('hex').slice(0, 12) === options.avoidFingerprint) return;
         // Sunucu iss/azp/exp doğrular; geçersiz token kabul edilmez, beklenir.
         if (token && await pushLcwAiTokenToBackend(token)) { log('LCW AI arka plan oturumu hazır.'); finish({ ok: true, source: 'desktop-sso' }); }
       } catch (_) {} finally { busy = false; }
@@ -2246,6 +2251,7 @@ async function startBuyerLog(options = {}) {
     appCoreRoot: APP_CORE_ROOT,
     desktopBridgeSecret,
     desktopOabRelayUrl,
+    desktopAuthRelayUrl: desktopOabRelayUrl,
     downloadsRoot: app.getPath('downloads'),
     log,
     // A busy first-start sync can delay HTTP responses beyond the immutable

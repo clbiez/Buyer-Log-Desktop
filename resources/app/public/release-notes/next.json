@@ -1,14 +1,35 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-02",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "PLM Sync içinde LCW AI oturumu",
+    "en": "LCW AI session inside PLM Sync"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "PLM baskı analizi LCW AI gerektiğinde Buyer Log'un uygulama içi oturumunu kullanır.",
+    "en": "PLM print analysis uses Buyer Log's embedded session whenever LCW AI is needed."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "plm-lcwai-embedded-session",
+      "type": "fix",
+      "module": { "tr": "PLM Sync · LCW AI", "en": "PLM Sync · LCW AI" },
+      "title": { "tr": "PLM baskı analizi için dış tarayıcı onayı kaldırıldı", "en": "PLM print analysis no longer requires external browser approval" },
+      "body": {
+        "tr": "PLM Sync belirsiz baskı yerleşimleri için LCW AI'a danışırken mevcut Buyer Log oturumunu arka planda açar veya yeniler. Kurumsal giriş gerekirse uygulama içindeki LCW AI penceresi açılır; Edge ve Allow Remote Debugging onayı gerekmez. AI gerekmeyen kayıtlar ek giriş başlatmaz.",
+        "en": "When PLM Sync consults LCW AI about ambiguous print placements, it acquires or renews the existing Buyer Log session in the background. If corporate sign-in is needed, the embedded LCW AI window opens; Edge and Allow Remote Debugging approval are unnecessary. Records that do not need AI trigger no additional sign-in."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-lcwai-embedded-session.png",
+        "alt": { "tr": "Demo PLM senkronu sonrasında LCW AI ile çözümlenen baskı yerleşimi", "en": "Print placement resolved by LCW AI after a demo PLM sync" },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü, yerel demo servisleriyle: belirsiz baskı yerleşimi ortak masaüstü oturum köprüsü üzerinden çözümlendi. Kurumsal SSO canlı kabul testi değildir.",
+          "en": "Actual post-change Buyer Log UI with local demo services: the ambiguous print placement was resolved through the shared desktop session bridge. This is not a live corporate SSO acceptance test."
+        }
+      }
+    }
+  ]
 }

@@ -178,6 +178,7 @@ class BackendProcess {
     this.onUnexpectedExit = typeof options.onUnexpectedExit === 'function' ? options.onUnexpectedExit : () => {};
     this.desktopBridgeSecret = String(options.desktopBridgeSecret || '');
     this.desktopOabRelayUrl = String(options.desktopOabRelayUrl || '');
+    this.desktopAuthRelayUrl = String(options.desktopAuthRelayUrl || '');
     // Oturum çerezlerinin imza anahtarı bu masaüstü oturumu boyunca sabittir:
     // sunucu/gözetmen yeniden başlasa da kullanıcı giriş ekranına düşmez.
     // Yalnız bellekte ve alt süreç ortamında yaşar; diske yazılmaz.
@@ -280,6 +281,7 @@ class BackendProcess {
     if (this.desktopBridgeSecret) env.BUYER_LOG_DESKTOP_BRIDGE_SECRET = this.desktopBridgeSecret;
     // OAB requests are relayed to the hidden signed-in PASS page in Electron main.
     if (this.desktopOabRelayUrl) env.BUYER_LOG_DESKTOP_OAB_RELAY_URL = this.desktopOabRelayUrl;
+    if (this.desktopAuthRelayUrl) env.BUYER_LOG_DESKTOP_AUTH_RELAY_URL = this.desktopAuthRelayUrl;
     env.BUYER_LOG_USER_SESSION_SECRET = this.sessionSecret;
     // Gözetmen bu PID kaybolunca (ör. Görev Yöneticisi) sunucuyu kapatır; öksüz backend kalmaz.
     env.BUYER_LOG_DESKTOP_PARENT_PID = String(process.pid);
