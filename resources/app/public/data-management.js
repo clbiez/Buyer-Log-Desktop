@@ -48,7 +48,6 @@
   let merchCalendar = { configured:false, calendar:null, summary:null };
   let merchBusy = false;
   let merchMessage = '';
-  let view = 'list';           // 'list' | 'matrix'
   let expandedSourceId = '';
   /* Eşleme düzenleyicisi hangi kaynak için açık. Açıkken o kaynağın statik
      sorun listesi çizilmez: aynı iki satırın ekranda iki kez görünmesi
@@ -88,12 +87,6 @@
        İkisi de kullanıcının görmediği katmanlardı ve bu ekranda ayarlanan
        ortak filtreyi sessizce eziyordu. Geriye kullanıcının kendi ayarı ve
        rolünün şablonu kaldı; ikisi de bu rozetten kaldırılabilir/görülebilir. */
-  };
-
-  const LOCAL_REASON = {
-    derived: { tr: 'başka modülün verisinden hesaplanır', en: 'computed from another module’s data' },
-    local: { tr: 'kullanıcının kendi çalışma verisi', en: 'the user’s own working data' },
-    tool: { tr: 'veri taşımaz', en: 'carries no data' },
   };
 
   function shortTime(value) {
@@ -431,6 +424,10 @@
       hint: { tr: 'Tek ortak ufuk. Yenilenirken CP de yenilenir; LFL tek başına da yenilenebilir.', en: 'One shared horizon. CP is refreshed along with it; LFL can also be refreshed on its own.' },
       refresh: { tr: 'Diğer modülleri + CP’yi yenile', en: 'Refresh other modules + CP' },
     },
+    intake: {
+      title: { tr: 'INTAKE', en: 'INTAKE' },
+      hint: { tr: 'Bağımsız kaynak ve filtre; kendi ekranından yenilenir.', en: 'Independent source and filter; refreshes from its own screen.' },
+    },
   };
   const DEFAULT_HORIZON_GROUPS = [
     { id: 'cp', targets: ['cp'] },
@@ -475,21 +472,31 @@
           : `<span class="dmLayer dmLayer--${esc(feed.layer)}" title="${esc(layer.hint[en() ? 'en' : 'tr'])}">${esc(layer[en() ? 'en' : 'tr'])}</span>`) : ''}
       </span>`;
     }).join('');
+    // Kaynak filtresi tek kez görünür; isteğe bağlı modül bağlantıları korunur.
+    const connections = group.targets.map(moduleId => {
+      const module = (model.modules || []).find(entry => entry.id === moduleId);
+      if (!module) return '';
+      return module.feeds.map(feed => model.canManage && !feed.locked ? `<button type="button" class="dmDisconnect" data-toggle="${esc(feed.sourceId)}:${esc(module.id)}" data-next="off"
+          ${busyCell === `${feed.sourceId}:${module.id}` ? 'disabled' : ''}
+          title="${esc(T(`${feed.sourceName} bağlantısını kapat — filtre ve eşleme korunur`, `Disconnect ${feed.sourceName} — filter and mapping are preserved`))}"
+          aria-label="${esc(T(`${feed.sourceName} · ${module.label} bağlantısını kapat`, `Disconnect ${feed.sourceName} · ${module.label}`))}">${esc(feed.sourceName)} · ${esc(module.label)} ×</button>` : '').join('')
+        + connectables(module, group.targets.length > 1);
+    }).join('');
     const needsFilter = group.targets.some(moduleId => ((model.modules || []).find(entry => entry.id === moduleId) || {}).needsFilter);
     return `<div class="dmHorizonRow${needsFilter ? ' hasWarning' : ''}" data-horizon-row="${esc(group.id)}">
       <div class="dmHorizonHead">
         <span class="dmHorizonTitle">${esc(textOf(text.title))}</span>
-        ${group.id === 'cp' ? '' : `<span class="dmHorizonMembers">${esc(members)}</span>`}
+        ${group.id === 'linked' ? `<span class="dmHorizonMembers">${esc(members)}</span>` : ''}
         <span class="dmHorizonHint">${esc(textOf(text.hint))}</span>
         <span class="dmSummarySpacer"></span>
-        <button type="button" class="tbtn" data-refresh-horizon="${esc(group.id)}" ${busy ? 'disabled' : ''}
+        ${text.refresh ? `<button type="button" class="tbtn" data-refresh-horizon="${esc(group.id)}" ${busy ? 'disabled' : ''}
           title="${esc(busy ? T('Bir yenileme zaten sürüyor', 'A refresh is already running') : textOf(text.refresh))}">
-          <svg class="ic"><use href="#i-refresh"/></svg>${esc(textOf(text.refresh))}</button>
+          <svg class="ic"><use href="#i-refresh"/></svg>${esc(textOf(text.refresh))}</button>` : ''}
         ${group.targets.includes('lfl') && group.id !== 'cp' ? `<button type="button" class="tbtn" data-refresh-horizon="lfl" ${busy ? 'disabled' : ''}
           title="${esc(busy ? T('Bir yenileme zaten sürüyor', 'A refresh is already running') : T('Yalnız LFL\'i yenile — LFL IAS\'tan beslenmez; ortak ufukla çalışır', 'Refresh LFL only — LFL is not fed from IAS; it runs with the shared horizon'))}">
           <svg class="ic"><use href="#i-refresh"/></svg>${esc(T('Yalnız LFL', 'LFL only'))}</button>` : ''}
       </div>
-      <div class="dmHorizonFeeds">${feeds || `<span class="dmModuleEmpty">${esc(T('Hiçbir kaynağa bağlı değil', 'Not connected to any source'))}</span>`}
+      <div class="dmHorizonFeeds">${feeds || `<span class="dmModuleEmpty">${esc(T('Hiçbir kaynağa bağlı değil', 'Not connected to any source'))}</span>`}${connections}
         ${needsFilter ? `<span class="dmWarn" title="${esc(T('Sınırsız sorgu çalıştırılamaz; bu ufuk yenilenmeden önce bir filtre gerekir.', 'An unbounded query cannot run; this horizon needs a filter before it can refresh.'))}">${esc(T('filtre gerekli', 'filter required'))}</span>` : ''}
       </div>
       <div class="dmFilterSlot" data-horizon-slot="${esc(group.id)}"></div>
@@ -534,9 +541,9 @@
         <span class="dmPanelTitle">${esc(T('Horizon ve yenileme', 'Horizon and refresh'))}</span>
       </div>
       ${horizonGroupsOf().map(horizonRow).join('')}
+      ${horizonRow({ id: 'intake', targets: ['intake'] })}
       ${mergedNote(merged)}
       ${refreshSettings()}
-      <p class="dmGroupNote">${esc(T('INTAKE bu ufuklara dahil değildir: kendi ekranından ve kendi bağlantısıyla yenilenir.', 'INTAKE is not part of these horizons: it refreshes from its own screen with its own connection.'))}</p>
     </div>`;
   }
 
@@ -555,66 +562,9 @@
     void Promise.resolve(window.loadFromServer(true, group.targets.slice())).then(() => load());
   }
 
-  function moduleRow(module) {
-    if (!module.feeds.length) {
-      /* Bağlanma yolu BURADA DA olmalı. Yalnız dolu satırlara koymak, tamamen
-         kopmuş bir modülü liste görünümünden geri bağlanamaz hâle getiriyordu:
-         kullanıcı "hiçbir kaynağa bağlı değil" yazısını görüp matrise geçmenin
-         gerektiğini tahmin etmek zorunda kalıyordu. */
-      return `<div class="dmModuleRow dmModuleRow--empty">
-        <span class="dmModuleName">${esc(module.label)}</span>
-        <span class="dmModuleFeeds">
-          <span class="dmModuleEmpty">${esc(T('Hiçbir kaynağa bağlı değil', 'Not connected to any source'))}</span>
-          ${connectables(module)}
-        </span>
-      </div>
-      <div class="dmFilterSlot" data-filter-slot="${esc(module.id)}"></div>`;
-    }
-    const feeds = module.feeds.map(feed => {
-      const shared = feed.filterUsedByCount > 1;
-      const name = feed.filterName || (feed.filterBounded ? feed.filterText : T('Filtre yok', 'No filter'));
-      const layer = LAYER[feed.layer];
-      /* Ortak ayar ezildiyse neyin üstüne yazıldığı da söylenir. Yoksa
-         kullanıcı ortak filtreyi değiştirip ekranında hiçbir şey değişmeyince
-         sebebini bulamıyordu. */
-      const overridden = layer && feed.sharedFilterText
-        ? `\n${T('Ezilen ortak filtre', 'Overridden shared filter')}: ${feed.sharedFilterName || feed.sharedFilterText}`
-        : '';
-      return `<span class="dmFeed${feed.enabled ? '' : ' isOff'}">
-        <span class="dmFeedSource">${esc(feed.sourceName)}</span>
-        <button type="button" class="dmFeedFilter${feed.filterBounded ? '' : ' isUnbounded'}"
-          data-open-filter="${esc(module.id)}:${esc(feed.sourceId)}" title="${esc((feed.filterText || T('Filtre tanımlı değil', 'No filter defined')) + overridden)}">
-          ${esc(name)}${shared ? `<span class="dmShared" title="${esc(T(
-          `Bu filtreyi şu an ${feed.filterUsedByCount} modül çalıştırıyor. Düzenlemek ona bağlı ${feed.boundModuleCount} modülü etkiler.`,
-          `${feed.filterUsedByCount} modules currently run this filter. Editing it affects the ${feed.boundModuleCount} modules bound to it.`))}">${feed.filterUsedByCount}×</span>` : ''}
-        </button>
-        ${layer ? (feed.layerRemovable
-          /* KENDİ ayarı olan katman rozetten kaldırılabilir. Eskiden buraya
-             tıklanamıyordu ve ortak filtreyi açmaya çalışan kullanıcı "önce
-             onu kaldırın" uyarısıyla çıkmaza giriyordu — kaldırılacak yer
-             başka bir ekrandı. */
-          ? `<button type="button" class="dmLayer dmLayer--${esc(feed.layer)} isRemovable" data-clear-layer="${esc(module.id)}:${esc(feed.sourceId)}"
-              title="${esc(`${layer.hint[en() ? 'en' : 'tr']}\n${T('Kaldırmak için tıklayın — ortak filtre yeniden geçerli olur.', 'Click to remove — the shared filter takes effect again.')}`)}">${esc(layer[en() ? 'en' : 'tr'])} ×</button>`
-          : `<span class="dmLayer dmLayer--${esc(feed.layer)}" title="${esc(layer.hint[en() ? 'en' : 'tr'])}">${esc(layer[en() ? 'en' : 'tr'])}</span>`) : ''}
-        ${model.canManage && !feed.locked ? `<button type="button" class="dmDisconnect" data-toggle="${esc(feed.sourceId)}:${esc(module.id)}" data-next="off"
-          ${busyCell === `${feed.sourceId}:${module.id}` ? 'disabled' : ''}
-          title="${esc(T(`${feed.sourceName} bağlantısını kapat — filtre ve eşleme korunur`, `Disconnect ${feed.sourceName} — filter and mapping are preserved`))}"
-          aria-label="${esc(T('Bağlantıyı kapat', 'Disconnect'))}">×</button>` : ''}
-        ${feed.locked ? `<span class="dmLockMark" title="${esc(T('Bu bağlantı kapatılamaz', 'This connection cannot be turned off'))}" aria-hidden="true">🔒</span>` : ''}
-        ${feed.linked ? `<span class="dmLinkMark" title="${esc(T('Diğer modüllerin ortak ufkunu kullanır; CP ile birlikte yenilenir', 'Uses the shared Other modules horizon; refreshes together with CP'))}">🔗</span>` : ''}
-      </span>`;
-    }).join('');
-    return `<div class="dmModuleRow${module.needsFilter ? ' hasWarning' : ''}">
-      <span class="dmModuleName">${esc(module.label)}</span>
-      <span class="dmModuleFeeds">${feeds}${connectables(module)}</span>
-      ${module.needsFilter ? `<span class="dmWarn" title="${esc(T('Sınırsız sorgu çalıştırılamaz; bu modül yenilenmeden önce bir filtre gerekir.', 'An unbounded query cannot run; this module needs a filter before it can refresh.'))}">${esc(T('filtre gerekli', 'filter required'))}</span>` : ''}
-    </div>
-    <div class="dmFilterSlot" data-filter-slot="${esc(module.id)}"></div>`;
-  }
-
-  /* Bu modülü besleyebilecek ama şu an bağlı OLMAYAN kaynaklar. Matrise gitmeden
-     bağlanabilmeli; matris ikincil görünüm, liste varsayılan. */
-  function connectables(module) {
+  /* Bu modülü besleyebilecek ama şu an bağlı OLMAYAN kaynaklar.
+     Ortak ufukta düğme hangi modülün bağlantısını açacağını da söyler. */
+  function connectables(module, showModule = false) {
     if (!model.canManage) return '';
     return (model.sources || []).map(source => {
       if (model.matrix.cells[`${source.id}:${module.id}`] !== 'off') return '';
@@ -631,64 +581,10 @@
           : T(`${source.name} ile bağla — sonra bir filtre tanımlaman gerekir`, `Connect ${source.name} — you will need to define a filter`))}">
         ${parked
           ? `↻ ${esc(source.name)} <span class="dmParkedNote">${esc(T('çekilmiyor', 'not pulled'))}</span>`
-          : `+ ${esc(source.name)}`}
+          : `+ ${esc(source.name)}`}${showModule ? ` · ${esc(module.label)}` : ''}
       </button>`;
     }).join('');
   }
-
-  function matrixTable() {
-    // Bağımsız custom database kaynakları modül besleme matrisi değildir;
-    // hepsi 'uygulanamaz' sütunu olarak görünmesin. Kaynak kartında yaşamaya devam eder.
-    const sources = (model.sources || []).filter(source => Array.isArray(source.feedableModules) && source.feedableModules.length);
-    const modules = model.modules;
-    const head = sources.map(source => `<th scope="col" title="${esc(source.connection.catalog)}">${esc(source.name)}</th>`).join('');
-    const rows = modules.map(module => {
-      const cells = sources.map(source => {
-        const state = model.matrix.cells[`${source.id}:${module.id}`] || 'unavailable';
-        const feed = module.feeds.find(entry => entry.sourceId === source.id);
-
-        if (state === 'unavailable') {
-          return `<td class="dmCell dmCell--na" title="${esc(T(`${source.name} bu modülü besleyemez`, `${source.name} cannot feed this module`))}"><span aria-hidden="true">—</span><span class="srOnly">${esc(T('uygulanamaz', 'not applicable'))}</span></td>`;
-        }
-        if (state === 'locked') {
-          /* Açık ama kapatılamaz. Tıklanabilir göstermek, kullanıcının basıp
-             hiçbir şey olmadığını görmesi demekti. */
-          return `<td class="dmCell dmCell--locked" title="${esc(T(
-            `${module.label} bu kaynakta her zaman açıktır; kapatılamaz.`,
-            `${module.label} is always on for this source and cannot be turned off.`))}">
-            <span class="dmPill dmPill--locked">${esc(T('AÇIK', 'ON'))}</span>
-            <span class="dmCellSub">${esc(T('kilitli', 'locked'))}</span>
-          </td>`;
-        }
-
-        const parked = (source.parkedModules || []).find(entry => entry.moduleId === module.id);
-        const disabled = !model.canManage || busyCell === `${source.id}:${module.id}`;
-        return `<td class="dmCell dmCell--${state}">
-          <button type="button" class="dmToggle${state === 'on' ? ' isOn' : ''}"
-            data-toggle="${esc(source.id)}:${esc(module.id)}" data-next="${state === 'on' ? 'off' : 'on'}"
-            ${disabled ? 'disabled' : ''} aria-pressed="${state === 'on'}"
-            title="${esc(state === 'on'
-              ? T('Bağlantıyı kapat — filtre ve eşleme korunur', 'Disconnect — filter and mapping are preserved')
-              : parked ? T(`Tekrar bağla — eski filtren (${parked.filterName || T('adsız', 'unnamed')}) geri gelir`, `Reconnect — your previous filter (${parked.filterName || 'unnamed'}) returns`)
-                : T('Bağla — sonra bir filtre tanımlaman gerekir', 'Connect — you will need to define a filter'))}">
-            ${esc(state === 'on' ? T('AÇIK', 'ON') : T('KAPALI', 'OFF'))}
-          </button>
-          ${state === 'on' && feed && feed.conditionCount ? `<span class="dmCellSub">${feed.conditionCount} ${esc(T('filtre', 'filters'))}</span>` : ''}
-          ${state === 'off' && parked ? `<span class="dmCellSub dmCellSub--parked" title="${esc(T('Ayarların saklandı', 'Your settings were kept'))}">${esc(T('ayarlar saklı', 'settings kept'))}</span>` : ''}
-        </td>`;
-      }).join('');
-      return `<tr><th scope="row">${esc(module.label)}</th>${cells}</tr>`;
-    }).join('');
-    return `<div class="dmMatrixWrap"><table class="dmMatrix">
-      <thead><tr><th scope="col">${esc(T('Modül', 'Module'))}</th>${head}</tr></thead>
-      <tbody>${rows}</tbody>
-    </table></div>
-    <p class="dmMatrixNote">${esc(T('— işareti kapalı bir anahtar değildir: o kaynak o modülü besleyemez. “Kilitli” ise açık ama kapatılamaz.', '— is not a switch that is off: that source cannot feed that module. “Locked” means on but not switchable.'))}</p>`;
-  }
-
-  /* ---------------------------------------------------------------- */
-
-  /* ---------------------------------------------------------------- */
 
   const moduleLabel = moduleId => {
     const found = (model.modules || []).find(entry => entry.id === moduleId);
@@ -1443,25 +1339,6 @@
 
       ${horizonPanel()}
 
-      <div class="dmPanel" data-dm-panel="modules">
-        <div class="dmPanelHead">
-          <span class="dmPanelTitle">${esc(T('Modüller', 'Modules'))}</span>
-          <div class="dmViewToggle" role="group" aria-label="${esc(T('Görünüm', 'View'))}">
-            <button type="button" class="dmViewBtn${view === 'list' ? ' isActive' : ''}" data-view="list" aria-pressed="${view === 'list'}">${esc(T('Liste', 'List'))}</button>
-            <button type="button" class="dmViewBtn${view === 'matrix' ? ' isActive' : ''}" data-view="matrix" aria-pressed="${view === 'matrix'}">${esc(T('Matris', 'Matrix'))}</button>
-          </div>
-        </div>
-        ${view === 'list'
-          ? `<div class="dmModules">${model.modules.map(moduleRow).join('')}</div>`
-          : matrixTable()}
-
-        ${model.localModules.length ? `<div class="dmLocalNote">
-          <span class="dmLabel">${esc(T('Kaynak beslemeyen modüller', 'Modules with no source'))}</span>
-          <span class="dmValue">${model.localModules.map(module =>
-            `<span title="${esc((LOCAL_REASON[module.reason] || {})[en() ? 'en' : 'tr'] || '')}">${esc(module.label)}</span>`).join(' · ')}</span>
-        </div>` : ''}
-      </div>
-
       ${toolsPanel()}
 
       <div class="dmSummary">
@@ -1699,9 +1576,6 @@
 
     const retry = event.target.closest('[data-retry], [data-reload]');
     if (retry) { void load(); return; }
-
-    const viewBtn = event.target.closest('[data-view]');
-    if (viewBtn) { view = viewBtn.dataset.view === 'matrix' ? 'matrix' : 'list'; render(); return; }
 
     /* Silme, kart açma/kapamadan ÖNCE yakalanır. Düğme ayrıntı panelinde
        (kartın kardeşi) duruyor, ama sıra tersine dönerse silme tıklaması
@@ -1969,8 +1843,8 @@
       onClear: feed.layerRemovable ? () => clearPersonalLayer(moduleId, sourceId) : null,
     } : null;
 
-    const rowIndex = model.modules.findIndex(entry => entry.id === moduleId);
-    const slot = slotOverride || root.querySelectorAll('[data-filter-slot]')[rowIndex];
+    const groupId = horizonGroupsOf().find(entry => entry.targets.includes(moduleId))?.id || moduleId;
+    const slot = slotOverride || root.querySelector(`[data-horizon-slot="${CSS.escape(groupId)}"]`);
     if (!slot) return;
 
     void window.BLDataFilterEditor?.open?.(slot, {
@@ -2099,20 +1973,23 @@
     void load();
   }
 
-  /* Bir modül satırına odaklan. Sayfa rozetindeki "Yönet" buraya getirir;
-     kullanıcı hangi satıra bakacağını aramak zorunda kalmamalı. */
+  /* Dış çağrıdaki modülü artık ait olduğu ufuk satırında göster. */
   function focusModule(moduleId) {
     const wanted = String(moduleId || '').trim();
     if (!wanted || !root) return;
     const apply = () => {
       if (!model) return;
-      // Matris görünümünde modül SATIRI yoktur; odaklanma listede anlamlı.
-      if (view !== 'list') { view = 'list'; render(); }
-      const index = model.modules.findIndex(entry => entry.id === wanted);
-      const row = index >= 0 ? root.querySelectorAll('.dmModuleRow')[index] : null;
+      const groupId = horizonGroupsOf().find(entry => entry.targets.includes(wanted))?.id || wanted;
+      const row = root.querySelector(`[data-horizon-row="${CSS.escape(groupId)}"]`);
       if (!row) return;
+      const collapsed = readCollapsedPanels();
+      if (collapsed.delete('refresh')) {
+        writeCollapsedPanels(collapsed);
+        decorateCollapsiblePanels();
+      }
       row.classList.add('isFocused');
       row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      window.BLMotionPlus?.play?.('card', row);
       // Vurgu kalıcı değil: satır bulunduktan sonra ekran normale döner.
       setTimeout(() => row.classList.remove('isFocused'), 2600);
     };

@@ -27,28 +27,19 @@ const multiline = lines => new RegExp(lines.map(escapeRegex).join('\\r?\\n\\s*')
 
 /* ------------------------------------------------------------------ */
 
-test('v7.81 tamamen kopmuş modül liste görünümünden geri bağlanabilir', () => {
-  /* Canlı ölçümde görülen çıkmaz sokak: bağlantısı kalmayan modülün satırı
-     yalnız "Hiçbir kaynağa bağlı değil" yazıyordu ve hiçbir bağlanma yolu
-     sunmuyordu. Kullanıcı matrise geçmesi gerektiğini TAHMİN etmek zorundaydı.
-     Boş satır da connectables() çağırmalı. */
-  const emptyBranch = UI.match(/if \(!module\.feeds\.length\) \{[\s\S]*?\n    \}/);
-  assert.ok(emptyBranch, 'boş modül satırı dalı bulunamadı');
-  assert.match(emptyBranch[0], /connectables\(module\)/,
-    'bağlantısı olmayan modül satırı bağlanma yolu sunmuyor — çıkmaz sokak');
+test('v7.81 tamamen kopmuş modül ufuk satırından geri bağlanabilir', () => {
+  // Boş beslemeler bağlantı denetimini gizlememeli; matris artık yok.
+  const row = UI.slice(UI.indexOf('function horizonRow('), UI.indexOf('const MERGED_NOTE_KEY'));
+  assert.match(row, /connectables\(module, group\.targets\.length > 1\)/);
+  assert.match(row, /\$\{connections\}/);
+  assert.match(row, /Not connected to any source/);
 });
 
-test('v7.81 matris dört hâli birbirinden ayırır', () => {
-  // unavailable / locked / on / off — dördü de ayrı çizilir.
-  assert.match(UI, /state === 'unavailable'/);
-  assert.match(UI, /state === 'locked'/);
-  // İmkânsız ve kilitli hücreler DÜĞME OLMAMALI: tıklanıp hiçbir şey olmaması
-  // (ya da geri sıçraması) kullanıcıya yanlış bir zihinsel model öğretir.
-  const unavailableCell = UI.match(/if \(state === 'unavailable'\) \{[\s\S]*?\n        \}/);
-  const lockedCell = UI.match(/if \(state === 'locked'\) \{[\s\S]*?\n        \}/);
-  assert.ok(unavailableCell && lockedCell);
-  assert.doesNotMatch(unavailableCell[0], /data-toggle/);
-  assert.doesNotMatch(lockedCell[0], /data-toggle/);
+test('v7.81 imkânsız ve kilitli bağlantılar aç/kapat düğmesi olmaz', () => {
+  // Önceki matrisin yetki/kilit sözleşmesi birleşik satırlarda korunur.
+  assert.match(UI, /if \(model\.matrix\.cells\[`\$\{source\.id\}:\$\{module\.id\}`\] !== 'off'\) return '';/);
+  assert.match(UI, /model\.canManage && !feed\.locked \? `<button[^`]*dmDisconnect/);
+  assert.doesNotMatch(UI, /data-view="|function matrixTable\(/);
 });
 
 test('v7.81 kilitli bağlantıda "kopar" düğmesi gösterilmez', () => {
@@ -81,7 +72,7 @@ test('v7.81 yazma isteği KAYNAK BAŞINA revizyon taşır', () => {
 
 test('v7.81 yetkisi olmayan kullanıcıya yazma denetimi çizilmez', () => {
   assert.match(UI, /if \(!model\.canManage\) return '';/);
-  assert.match(UI, /const disabled = !model\.canManage/);
+  assert.match(UI, /model\.canManage && !feed\.locked/);
 });
 
 /* ------------------------------------------------------------------ */
@@ -185,10 +176,12 @@ test('v7.81 odaklanma ikinci bir yükleme başlatmaz', () => {
   assert.match(focus[0], /if \(model && !loadPromise\) apply\(\);/);
 });
 
-test('v7.81 matris görünümündeyken odaklanma listeye geçer', () => {
-  // Matriste modül SATIRI yoktur; aksi hâlde "Yönet" sessizce hiçbir şey yapmaz.
+test('v7.81 odaklanma modülün ufkunu bulur ve kapalı paneli açar', () => {
   const focus = UI.match(/function focusModule\(moduleId\) \{[\s\S]*?\n  \}/);
-  assert.match(focus[0], /if \(view !== 'list'\) \{ view = 'list'; render\(\); \}/);
+  assert.match(focus[0], /entry\.targets\.includes\(wanted\)/);
+  assert.match(focus[0], /data-horizon-row=/);
+  assert.match(focus[0], /collapsed\.delete\('refresh'\)/);
+  assert.match(focus[0], /BLMotionPlus\?\.play\?\.\('card', row\)/);
 });
 
 /* ------------------------------------------------------------------ */
@@ -295,7 +288,7 @@ test('v7.81 düzenleyici yazarken kaynak sürümü taşır', () => {
 test('v7.81 düzenleyici modal-içinde-modal kurmaz', () => {
   // §48: satır içinde açılır, ayrı bir overlay değil.
   assert.doesNotMatch(FILTER_UI, /warnOverlay|modalCard/);
-  assert.match(UI, /data-filter-slot=/);
+  assert.match(UI, /data-horizon-slot=/);
 });
 
 /* ------------------------------------------------------------------ */
