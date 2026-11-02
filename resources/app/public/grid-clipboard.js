@@ -9,6 +9,18 @@
   let dragging=null;
   let bound=false;
 
+  // Only the outside of a rectangular cell selection gets an accent border.
+  // Edge classes are independent of the row-checkbox selection state.
+  function edgeClassesForCell(row,column,range){
+    if(!range||row<range.startRow||row>range.endRow||column<range.startColumn||column>range.endColumn)return [];
+    const edges=[];
+    if(row===range.startRow)edges.push('blGridRangeTop');
+    if(row===range.endRow)edges.push('blGridRangeBottom');
+    if(column===range.startColumn)edges.push('blGridRangeLeft');
+    if(column===range.endColumn)edges.push('blGridRangeRight');
+    return edges;
+  }
+
   function selectionSize(range){
     const rows=range?Math.max(0,range.endRow-range.startRow+1):0;
     const columns=range?Math.max(0,range.endColumn-range.startColumn+1):0;
@@ -97,8 +109,9 @@
   }
 
   function clearPaint(table){
-    table?.querySelectorAll?.('.blGridActiveCell,.blGridRangeCell,.blGridRangeEdge').forEach(cell=>{
+    table?.querySelectorAll?.('.blGridActiveCell,.blGridRangeCell,.blGridRangeEdge,.blGridRangeTop,.blGridRangeRight,.blGridRangeBottom,.blGridRangeLeft').forEach(cell=>{
       cell.classList.remove('blGridActiveCell','blGridRangeCell','blGridRangeEdge');
+      cell.classList.remove('blGridRangeTop','blGridRangeRight','blGridRangeBottom','blGridRangeLeft');
       cell.setAttribute('aria-selected','false');
     });
   }
@@ -115,6 +128,7 @@
       const row=Number(td.dataset.r),column=Number(td.dataset.c);
       if(row<range.startRow||row>range.endRow||column<range.startColumn||column>range.endColumn)return;
       td.classList.add('blGridRangeCell');
+      td.classList.add(...edgeClassesForCell(row,column,range));
       td.setAttribute('aria-selected','true');
       if(row===range.startRow||row===range.endRow||column===range.startColumn||column===range.endColumn)td.classList.add('blGridRangeEdge');
       const id=cellIdentity(td);
@@ -429,5 +443,5 @@
     return setFocus(entry,cell,{focus:false});
   }
 
-  return {resolveRange,buildMatrix,selectionSize,serialize,createDiagnostics,diagnostics,nativeEditingTarget,parseClipboardText,isMultiCellText,planPaste,register,afterRender,clear,copyActive,selectAll,state,restoreActive,prepareContextMenu};
+  return {resolveRange,buildMatrix,selectionSize,edgeClassesForCell,serialize,createDiagnostics,diagnostics,nativeEditingTarget,parseClipboardText,isMultiCellText,planPaste,register,afterRender,clear,copyActive,selectAll,state,restoreActive,prepareContextMenu};
 });
