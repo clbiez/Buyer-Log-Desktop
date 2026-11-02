@@ -62,9 +62,9 @@ function createDesktopAwareProvider({ holder, fallback, desktopRelay }) {
     },
     async login(ownerId, options = {}) {
       const token = holder.get();
-      if (token && (!options.isUsable || options.isUsable(token))) return { token, source: 'desktop-sso' };
+      if (usable(token, options)) return { token, source: 'desktop-sso' };
       if (relayAvailable()) {
-        await desktopRelay.ensureAuth({ interactive: true });
+        await desktopRelay.ensureAuth({ interactive: true, avoidFingerprint: options.avoidFingerprint || '' });
         const refreshed = holder.get();
         if (usable(refreshed, options)) return { token: refreshed, source: 'desktop-sso' };
         throw lcwAiError('SESSION_EXPIRED', { detail: 'desktop-refresh-required' });

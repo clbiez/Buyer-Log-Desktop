@@ -33,6 +33,7 @@ function aiResponse() {
 async function fixture(t, { signin = false, fail = false, rejectFirst = false, staleRefresh = false } = {}) {
   const holder = createDesktopTokenHolder();
   const calls = [], apiCalls = [];
+  const staleToken = token('stale');
   let sequence = 0;
   const main = fs.readFileSync(path.join(__dirname, '../electron/main.js'), 'utf8');
   const handlerSource = main.slice(main.indexOf('async function handleOabRelayRequest'), main.indexOf('function startOabRelay'));
@@ -42,7 +43,7 @@ async function fixture(t, { signin = false, fail = false, rejectFirst = false, s
       calls.push(options);
       if (fail) return { ok: false, code: 'LCWAI_NETWORK' };
       if (signin && !options.interactive) return { ok: false, code: 'LCWAI_SIGNIN_REQUIRED' };
-      holder.set(token(String(staleRefresh ? 1 : ++sequence)));
+      holder.set(staleRefresh ? staleToken : token(String(++sequence)));
       return { ok: true, token: 'must-never-be-returned', source: 'desktop-sso' };
     }
   );
@@ -136,6 +137,8 @@ test('a rejected desktop token is never sent twice when the embedded page cannot
   assert.equal(f.apiCalls.length, 1);
   assert.match(f.store.entry('900001').ai.error, /LCWAI_SESSION_EXPIRED/);
   assert.equal(f.calls.length, 2);
+  await assert.rejects(f.engine.ensureSession('demo'), error => error.code === 'LCWAI_SESSION_EXPIRED');
+  assert.equal(f.apiCalls.length, 1, 'later models must not resurrect the rejected token');
 });
 
 test('desktop bridge failure never falls back to Edge and leaves BOM evidence available', async t => {

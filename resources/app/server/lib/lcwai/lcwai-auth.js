@@ -103,18 +103,19 @@ function createLcwAiAuth(options = {}) {
     const request = (async () => {
       const info = meta.get(key);
       const hadSession = Boolean(info && info.hadSession);
+      const rejected = rejectedFingerprint || (info && info.rejected ? info.fingerprint : '');
       if (!provider || typeof provider.readToken !== 'function') throw lcwAiError(hadSession ? 'SESSION_EXPIRED' : 'AUTH_REQUIRED');
       let result;
       try {
         result = await provider.readToken(ownerId, {
-          avoidFingerprint: rejectedFingerprint || (forceRefresh && info ? info.fingerprint : ''),
-          isUsable: token => { const check = validate(token); return check.ok && check.fingerprint !== rejectedFingerprint; },
+          avoidFingerprint: rejected || (forceRefresh && info ? info.fingerprint : ''),
+          isUsable: token => { const check = validate(token); return check.ok && check.fingerprint !== rejected; },
           fingerprint,
         });
       } catch (error) { throw providerFailure(error, hadSession); }
       const token = stripBearer(result && result.token);
       const check = validate(token);
-      if (!check.ok || (rejectedFingerprint && check.fingerprint === rejectedFingerprint)) {
+      if (!check.ok || (rejected && check.fingerprint === rejected)) {
         if (info) meta.set(key, { ...info, rejected: true });
         throw lcwAiError(hadSession || check.reason === 'expired' ? 'SESSION_EXPIRED' : 'AUTH_REQUIRED');
       }
@@ -146,16 +147,21 @@ function createLcwAiAuth(options = {}) {
     if (!provider || typeof provider.login !== 'function') return Promise.reject(lcwAiError('BROWSER_UNAVAILABLE'));
     const entry = { phase: 'opening', startedAt: new Date(now()).toISOString(), promise: null };
     entry.promise = (async () => {
+      const info = meta.get(key);
+      const rejected = info && info.rejected ? info.fingerprint : '';
       let result;
       try {
         result = await provider.login(ownerId, {
           onPhase: phase => { entry.phase = clean(phase) || entry.phase; },
-          isUsable: token => validate(token).ok,
+          avoidFingerprint: rejected,
+          fingerprint,
+          isUsable: token => { const check = validate(token); return check.ok && check.fingerprint !== rejected; },
           timeoutMs: config.TIMEOUTS.loginMs,
         });
       } catch (error) {
         throw isLcwAiError(error) ? error : lcwAiError('BROWSER_UNAVAILABLE', { detail: error && (error.code || error.message) });
       }
+      if (rejected && fingerprint(stripBearer(result && result.token)) === rejected) throw lcwAiError('SESSION_EXPIRED');
       const check = store(key, result && result.token, result && result.source);
       if (!check.ok) throw lcwAiError(check.reason === 'expired' ? 'SESSION_EXPIRED' : 'LOGIN_TIMEOUT');
       return status(ownerId);
