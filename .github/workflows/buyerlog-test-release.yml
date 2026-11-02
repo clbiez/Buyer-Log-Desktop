@@ -44,6 +44,11 @@ jobs:
     name: Full regression before TEST release
     runs-on: windows-latest
     timeout-minutes: 60
+    # Parallel file workers starved the real HTTP and multi-process lease
+    # regressions on Windows (run 41524608525). Keep every assertion and
+    # deadline, including each test's internal concurrent writers/devices.
+    env:
+      BUYER_LOG_TEST_CONCURRENCY: '1'
     defaults:
       run:
         working-directory: resources/app
