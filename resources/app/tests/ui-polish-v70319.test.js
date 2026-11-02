@@ -69,7 +69,8 @@ test('seçim çubuğu iş mantığı içermez: yalnız sayfadaki düğmeye tıkl
 
 test('Veri Yönetimi panelleri başlıktan katlanır; durum kullanıcıya ayrılmış anahtarda saklanır',()=>{
   const dm=read('data-management.js');
-  for(const key of ['modes','tools','refresh','modules'])assert.match(dm,new RegExp(`data-dm-panel="${key}"`));
+  for(const key of ['modes','tools','refresh'])assert.match(dm,new RegExp(`data-dm-panel="${key}"`));
+  assert.doesNotMatch(dm,/data-dm-panel="modules"/,'Modules are managed in the unified Horizon panel');
   assert.match(dm,/const panelToggle = event\.target\.closest\('\[data-dm-panel-toggle\]'\);/);
   assert.match(dm,/decorateCollapsiblePanels\(\);\s*syncSourceModes\(\);\s*\}/);
   assert.match(read('user-storage.js'),/'bl\.dataManagement\.'/);
