@@ -7246,7 +7246,8 @@ html[data-ui-system="manifest"] .dmModuleRow { font-size: var(--ui-font-sm) !imp
 }
 html[data-ui-system="manifest"] .dmModuleRow:hover { background: var(--ui-row-hover) !important
 }
-html[data-ui-system="manifest"] .dmModuleRow.isFocused { background: var(--ui-selected) !important
+html[data-ui-system="manifest"] .dmModuleRow.isFocused,
+html[data-ui-system="manifest"] .dmHorizonRow.isFocused { background: var(--ui-selected) !important
 }
 html[data-ui-system="manifest"] .dmModuleName { font-weight: 600 !important; color: var(--ui-text) !important
 }
