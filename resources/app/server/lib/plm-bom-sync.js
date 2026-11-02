@@ -72,6 +72,8 @@ function aiTask(analysis) {
 
 async function consultAi(ownerId, analysis, options) {
   const engine = options.aiEngine || getDefaultEngine();
+  // Yalnız gerçekten belirsiz BOM için; ana PLM isteğini tekrar çalıştırmaz.
+  await engine.ensureSession?.(ownerId);
   const ambiguous = analysis.placements.filter(item => item.placement === 'other').map(item => ({
     componentCode: item.componentCode,
     styleBomComponentId: item.styleBomComponentId,

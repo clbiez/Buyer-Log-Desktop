@@ -67,6 +67,27 @@ test('durum: masaüstü token’ı geldiyse ilk durum sorgusu sessizce "bağlı"
   assert.equal(status.state, 'connected');
 });
 
+test('expired desktop token is silently renewed through Electron before a later background request', async () => {
+  let clock = Date.now(), acquisitions = 0;
+  const holder = createDesktopTokenHolder({ now: () => clock });
+  const first = makeToken({ exp: Math.floor(clock / 1000) + 120 });
+  holder.set(first);
+  const provider = createDesktopAwareProvider({ holder, fallback: { readToken() { throw new Error('Unexpected Edge fallback'); } }, desktopRelay: {
+    configured: () => true,
+    desktopMode: () => true,
+    async ensureAuth(options) {
+      acquisitions++;
+      assert.equal(options.interactive, false);
+      holder.set(makeToken({ exp: Math.floor(clock / 1000) + 120 }));
+    },
+  } });
+  const auth = createLcwAiAuth({ provider, now: () => clock });
+  assert.equal(await auth.getAuthorization('u1'), `Bearer ${first}`);
+  clock += 180000;
+  assert.notEqual(await auth.getAuthorization('u1'), `Bearer ${first}`);
+  assert.equal(acquisitions, 1);
+});
+
 test('Electron: gizli (show:false), kalıcı ayrılmış bölüm; yalnız giriş gerekince görünür; IPC token döndürmez', () => {
   const main = fs.readFileSync(path.join(ROOT, 'electron', 'main.js'), 'utf8');
   assert.match(main, /const LCWAI_AUTH_PARTITION = 'persist:buyerlog-lcwai-auth';/);

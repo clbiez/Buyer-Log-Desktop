@@ -11,10 +11,10 @@
  * modüle verilir ve YALNIZ süreç belleğinde tutulur: diske, log'a,
  * renderer'a gitmez.
  *
- * createDesktopAwareProvider(): önce masaüstü token'ı, yoksa mevcut Edge/CDP
- * yolu. Masaüstü kipi bir kez kullanıldıysa, reddedilen token için Edge'e
- * düşülmez (görünür sekme açmamak için); renderer sessiz yenilemeyi
- * masaüstü kabuğuna yaptırır.
+ * createDesktopAwareProvider(): önce masaüstü token'ı, gerektiğinde ortak
+ * köprü üzerinden aynı Electron oturumu yenilenir. Masaüstü kabuğu biliniyorsa
+ * ilk token henüz alınmamış olsa da Edge'e düşülmez. Edge/CDP yalnız
+ * masaüstü kabuğu bulunmayan tarayıcı kipinde kullanılır.
  */
 const { validateAccessToken } = require('./lcwai-auth');
 const { lcwAiError } = require('./lcwai-errors');
@@ -37,22 +37,39 @@ function createDesktopTokenHolder({ now = () => Date.now() } = {}) {
   };
 }
 
-function createDesktopAwareProvider({ holder, fallback }) {
+function createDesktopAwareProvider({ holder, fallback, desktopRelay }) {
+  const relayAvailable = () => Boolean(desktopRelay && desktopRelay.configured());
+  const desktopMode = () => holder.desktopMode || Boolean(desktopRelay && desktopRelay.desktopMode && desktopRelay.desktopMode());
+  function usable(token, options) {
+    return Boolean(token && (!options.avoidFingerprint || (options.fingerprint && options.fingerprint(token) !== options.avoidFingerprint)) && (!options.isUsable || options.isUsable(token)));
+  }
   return {
     passiveAvailable: () => Boolean(holder.get()),
     async readToken(ownerId, options = {}) {
       const token = holder.get();
-      const fingerprint = typeof options.fingerprint === 'function' ? options.fingerprint : () => '';
-      if (token && (!options.avoidFingerprint || fingerprint(token) !== options.avoidFingerprint) && (!options.isUsable || options.isUsable(token))) {
+      if (usable(token, options)) {
         return { token, source: 'desktop-sso' };
       }
-      if (holder.desktopMode) throw lcwAiError('SESSION_EXPIRED', { detail: 'desktop-refresh-required' });
+      if (relayAvailable()) {
+        await desktopRelay.ensureAuth({ interactive: false, avoidFingerprint: options.avoidFingerprint || '' });
+        const refreshed = holder.get();
+        if (usable(refreshed, options)) return { token: refreshed, source: 'desktop-sso' };
+        throw lcwAiError('SESSION_EXPIRED', { detail: 'desktop-refresh-required' });
+      }
+      if (desktopMode()) throw lcwAiError('SESSION_EXPIRED', { detail: 'desktop-refresh-required' });
       if (!fallback || typeof fallback.readToken !== 'function') throw lcwAiError('AUTH_REQUIRED');
       return fallback.readToken(ownerId, options);
     },
     async login(ownerId, options = {}) {
       const token = holder.get();
       if (token && (!options.isUsable || options.isUsable(token))) return { token, source: 'desktop-sso' };
+      if (relayAvailable()) {
+        await desktopRelay.ensureAuth({ interactive: true });
+        const refreshed = holder.get();
+        if (usable(refreshed, options)) return { token: refreshed, source: 'desktop-sso' };
+        throw lcwAiError('SESSION_EXPIRED', { detail: 'desktop-refresh-required' });
+      }
+      if (desktopMode()) throw lcwAiError('SESSION_EXPIRED', { detail: 'desktop-refresh-required' });
       if (!fallback || typeof fallback.login !== 'function') throw lcwAiError('BROWSER_UNAVAILABLE');
       return fallback.login(ownerId, options);
     },

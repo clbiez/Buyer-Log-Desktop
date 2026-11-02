@@ -189,8 +189,21 @@ function createLcwAiEngine(options = {}) {
     return { ...session, activeRequests: ownerRequests(ownerId).size, config: config.publicConfig() };
   }
 
+  /* Sunucudan başlayan işler de aynı masaüstü oturumunu kullanır. Sessiz
+     SSO yetmezse giriş penceresi AI isteğinin zamanlayıcısından önce açılır.
+     Pasif durum sorgusu bu etkileşimli yolu çağırmaz. */
+  async function ensureSession(ownerId) {
+    if (!options.desktopRelay || !options.desktopRelay.desktopMode()) return;
+    if (!options.desktopRelay.configured()) throw lcwAiError('BROWSER_UNAVAILABLE');
+    try { await auth.getAuthorization(ownerId); }
+    catch (error) {
+      if (!['LCWAI_AUTH_REQUIRED', 'LCWAI_SESSION_EXPIRED'].includes(error && error.code)) throw error;
+      await auth.login(ownerId);
+    }
+  }
+
   return {
-    ask, askWithFiles, chat, uploadFile, cancel, getStatus,
+    ask, askWithFiles, chat, uploadFile, cancel, getStatus, ensureSession,
     login: ownerId => auth.login(ownerId),
     disconnect: ownerId => { cancel(ownerId); return auth.disconnect(ownerId); },
     isLcwAiError,
