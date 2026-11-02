@@ -8340,7 +8340,7 @@ html[data-ui-system="manifest"] .sourceToggle {background:transparent !important
 }
 html[data-ui-system="manifest"] .uiFeedbackRegion {z-index:var(--ui-z-tooltip)
 }
-html[data-ui-system="manifest"] .uiFeedback {--ui-feedback-tone:var(--ui-accent);--ui-feedback-surface:var(--ui-surface);background:var(--ui-feedback-surface) !important;color:var(--ui-text) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+html[data-ui-system="manifest"] .uiFeedback {--ui-feedback-tone:var(--ui-accent);--ui-feedback-surface:var(--ui-surface);background:var(--ui-feedback-surface) !important;color:var(--ui-text) !important;border:1px solid var(--ui-group-divider) !important;box-shadow:var(--ui-shadow-overlay) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
 html[data-ui-system="manifest"] .uiFeedback--loading,html[data-ui-system="manifest"] .uiFeedback--info {--ui-feedback-tone:var(--ui-accent);--ui-feedback-surface:color-mix(in srgb,var(--ui-selected) 54%,var(--ui-surface))
 }
