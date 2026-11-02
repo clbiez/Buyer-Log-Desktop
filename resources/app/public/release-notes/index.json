@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.331",
+      "publishedAt": "2026-11-02",
+      "title": {
+        "tr": "Birleşik Horizon yönetimi ve PLM oturumu",
+        "en": "Unified horizon management and PLM session"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 1,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.331/release.json"
+    },
+    {
       "version": "7.0.328",
       "publishedAt": "2026-11-01",
       "title": {

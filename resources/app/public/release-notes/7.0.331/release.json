@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.331",
+  "channel": "stable",
+  "publishedAt": "2026-11-02",
+  "title": {
+    "tr": "Birleşik Horizon yönetimi ve PLM oturumu",
+    "en": "Unified horizon management and PLM session"
+  },
+  "summary": {
+    "tr": "Veri Yönetimi CP, Diğer modüller ve INTAKE satırlarını tek panelde toplar; PLM baskı analizi uygulama içi LCW AI oturumunu kullanır.",
+    "en": "Data Management brings CP, Other modules and INTAKE into one panel; PLM print analysis uses the embedded LCW AI session."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 1,
+    "fixes": 1
+  },
+  "changes": [
+    {
+      "id": "plm-lcwai-embedded-session",
+      "type": "fix",
+      "module": {
+        "tr": "PLM Sync · LCW AI",
+        "en": "PLM Sync · LCW AI"
+      },
+      "title": {
+        "tr": "PLM baskı analizi için dış tarayıcı onayı kaldırıldı",
+        "en": "PLM print analysis no longer requires external browser approval"
+      },
+      "body": {
+        "tr": "PLM Sync belirsiz baskı yerleşimleri için LCW AI'a danışırken mevcut Buyer Log oturumunu arka planda açar veya yeniler. Kurumsal giriş gerekirse uygulama içindeki LCW AI penceresi açılır; Edge ve Allow Remote Debugging onayı gerekmez. AI gerekmeyen kayıtlar ek giriş başlatmaz.",
+        "en": "When PLM Sync consults LCW AI about ambiguous print placements, it acquires or renews the existing Buyer Log session in the background. If corporate sign-in is needed, the embedded LCW AI window opens; Edge and Allow Remote Debugging approval are unnecessary. Records that do not need AI trigger no additional sign-in."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-lcwai-embedded-session.png",
+        "alt": {
+          "tr": "Demo PLM senkronu sonrasında LCW AI ile çözümlenen baskı yerleşimi",
+          "en": "Print placement resolved by LCW AI after a demo PLM sync"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü, yerel demo servisleriyle: belirsiz baskı yerleşimi ortak masaüstü oturum köprüsü üzerinden çözümlendi. Kurumsal SSO canlı kabul testi değildir.",
+          "en": "Actual post-change Buyer Log UI with local demo services: the ambiguous print placement was resolved through the shared desktop session bridge. This is not a live corporate SSO acceptance test."
+        }
+      }
+    },
+    {
+      "id": "unified-horizon-modules",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Horizon ve modüller tek panelde",
+        "en": "Horizons and modules in one panel"
+      },
+      "body": {
+        "tr": "Horizon ve yenileme altında artık CP, Diğer modüller ve INTAKE görünür. Tekrarlanan Modüller paneli ve Liste/Matris seçimi kaldırıldı. Kaynak filtreleri, kişisel filtre katmanları ve isteğe bağlı bağlantı kontrolleri aynı satırlardan yönetilir. CP tek başına, diğer modüller CP ile birlikte yenilenir; INTAKE kendi bağlantısını ve ekranından yenileme akışını korur.",
+        "en": "Horizon and refresh now shows CP, Other modules and INTAKE. The duplicate Modules panel and List/Matrix toggle were removed. Source filters, personal filter layers and optional connection controls are managed from the same rows. CP refreshes on its own, other modules refresh with CP, and INTAKE keeps its own connection and refresh flow on its screen."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "unified-horizon-modules.png",
+        "alt": {
+          "tr": "Demo verili Buyer Log: Horizon ve yenileme altında CP, Diğer modüller ve INTAKE satırları",
+          "en": "Buyer Log with demo data: CP, Other modules and INTAKE rows under Horizon and refresh"
+        },
+        "caption": {
+          "tr": "Gerçek uygulamada değişiklik sonrası görünüm: üç satır tek panelde; altta tekrarlanan Modüller alanı yok. Örnek kaynaklar ve filtreler kullanılmıştır.",
+          "en": "Actual post-change application: three rows in one panel, without the duplicate Modules section below. Uses demo sources and filters."
+        }
+      }
+    }
+  ]
+}
