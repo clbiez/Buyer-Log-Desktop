@@ -15595,20 +15595,20 @@ html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,.blDetailDrawer .blDet
 html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeCell {
   background-color:color-mix(in srgb,var(--ui-selected) 72%,var(--ui-accent) 28%) !important;
   box-shadow:
-    var(--bl-grid-range-top,inset 0 0 0 0 transparent),
-    var(--bl-grid-range-right,inset 0 0 0 0 transparent),
-    var(--bl-grid-range-bottom,inset 0 0 0 0 transparent),
-    var(--bl-grid-range-left,inset 0 0 0 0 transparent) !important;
+    var(--ui-grid-range-top),
+    var(--ui-grid-range-right),
+    var(--ui-grid-range-bottom),
+    var(--ui-grid-range-left) !important;
 }
 html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeTop {
-  --bl-grid-range-top:inset 0 2px 0 0 var(--ui-accent);
+  --ui-grid-range-top:inset 0 2px 0 0 var(--ui-accent);
 }
 html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeRight {
-  --bl-grid-range-right:inset -2px 0 0 0 var(--ui-accent);
+  --ui-grid-range-right:inset -2px 0 0 0 var(--ui-accent);
 }
 html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeBottom {
-  --bl-grid-range-bottom:inset 0 -2px 0 0 var(--ui-accent);
+  --ui-grid-range-bottom:inset 0 -2px 0 0 var(--ui-accent);
 }
 html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeLeft {
-  --bl-grid-range-left:inset 2px 0 0 0 var(--ui-accent);
+  --ui-grid-range-left:inset 2px 0 0 0 var(--ui-accent);
 }
