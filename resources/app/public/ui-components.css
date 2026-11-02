@@ -15587,3 +15587,28 @@ html[data-ui-system="manifest"] .cpaRuleSentence {background:var(--ui-surface-so
 html[data-ui-system="manifest"] .cpaAdvancedModes>summary {font-size:var(--ui-font-xs);color:var(--ui-text-secondary)}
 html[data-ui-system="manifest"] .cpaDraftBadge {background:var(--ui-warning-bg);color:var(--ui-warning)}
 html[data-ui-system="manifest"] .cpaRuleMenuItems {background:var(--ui-surface)}
+
+/* Cell-range selection must remain distinct from checked rows. Four inset edge
+   shadows form ONE outer rectangle without covering internal cell separators,
+   changing table layout or disrupting the active-cell keyboard outline. */
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,.blDetailDrawer .blDetailTable) tbody td.blGridRangeCell,
+html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeCell {
+  background-color:color-mix(in srgb,var(--ui-selected) 72%,var(--ui-accent) 28%) !important;
+  box-shadow:
+    var(--bl-grid-range-top,inset 0 0 0 0 transparent),
+    var(--bl-grid-range-right,inset 0 0 0 0 transparent),
+    var(--bl-grid-range-bottom,inset 0 0 0 0 transparent),
+    var(--bl-grid-range-left,inset 0 0 0 0 transparent) !important;
+}
+html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeTop {
+  --bl-grid-range-top:inset 0 2px 0 0 var(--ui-accent);
+}
+html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeRight {
+  --bl-grid-range-right:inset -2px 0 0 0 var(--ui-accent);
+}
+html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeBottom {
+  --bl-grid-range-bottom:inset 0 -2px 0 0 var(--ui-accent);
+}
+html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeLeft {
+  --bl-grid-range-left:inset 2px 0 0 0 var(--ui-accent);
+}
