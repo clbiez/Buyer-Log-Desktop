@@ -8,7 +8,7 @@ const block=CSS.slice(CSS.indexOf('/* ===== v7.0.319'));
 
 test('vurgu dolgusu yalnız birincil eylemde: segmentler seçim zemini, sekmeler alt çizgi kullanır',()=>{
   assert.match(block,/html:root\[data-ui-system="manifest"\] :is\(\.ovPremiumSegment,[^)]*\.bpaSeg2[^)]*,\.cpaSeg\) > button:is\(\.isActive,\.is-active,\.is-on,\.active,\[aria-pressed="true"\],\[aria-selected="true"\]\) \{background:var\(--ui-selected\) !important;color:var\(--ui-selected-ink\) !important/);
-  assert.match(block,/:is\(\.ovHomePager,\.pdTabs,\.dmLabTabs,\.psaTabs,\.cpaStudioTabs\) > button:is\([^)]*\)::after \{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var\(--ui-accent\)/);
+  assert.match(block,/:is\(\.ovHomePager,\.pdTabs,\.dmLabTabs,\.psaTabs,\.cpaStudioTabs,\.trFocusTabs\) > button:is\([^)]*\)::after \{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var\(--ui-accent\)/);
   assert.match(block,/:is\(\.toolbarMoreMenu,\.railAppearanceMenu,#corporateConnections\) :is\([^)]*\) \{border:0 !important;box-shadow:none !important;background:transparent !important/);
   assert.match(block,/:is\(\.dmTitle,\.autoHeader h2,\.ovInboxHead > b\) \{font:600 var\(--ui-font-xl\)\/1\.15 var\(--ui-font-heading\) !important;letter-spacing:\.6px !important;text-transform:uppercase/);
 });
