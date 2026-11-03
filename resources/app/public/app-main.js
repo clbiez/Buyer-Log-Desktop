@@ -18369,6 +18369,12 @@ function renderBacklog(data){
   window.BLBacklogChart?.onBacklogRendered?.(data);
   // Backlog Genel Bakış (V3) aynı filtreyle satır detayını kendisi toplar.
   window.BLBacklogOverview?.onBacklogRendered?.(data);
+  window.BLBacklogPlanActual?.onBacklogRendered?.(data);
+  /* v9.46 — Analiz paneli AYNI filtreye bağlıdır: Backlog her yeniden
+     çizildiğinde haberdar edilir, filtre imzası değiştiyse satırlarını
+     yeniler. Panel kapalıysa hiçbir şey yapmaz (ek istek yok). */
+  window.BLBacklogAnalysis?.onBacklogRendered?.(data);
+
 
   backlogPivotCols = [];
   const body = document.getElementById('backlogTreeBody');
@@ -18420,10 +18426,6 @@ function renderBacklog(data){
     const pivotCells=backlogPivotCols.map(k=>`<td class="quantityTotalValue">${formatQuantityTotal(pivotTotals[k]?.qty||0)}</td>`).join('');
     foot.innerHTML=`<tr><td class="quantityTotalLabel">${appLang==='en'?'Total':'Toplam'}</td>${pivotCells}<td class="quantityTotalValue">${formatQuantityTotal(data.totalQty)}</td><td></td><td></td></tr>`;
   }
-  /* v9.46 — Analiz paneli AYNI filtreye bağlıdır: Backlog her yeniden
-     çizildiğinde haberdar edilir, filtre imzası değiştiyse satırlarını
-     yeniler. Panel kapalıysa hiçbir şey yapmaz (ek istek yok). */
-  window.BLBacklogAnalysis?.onBacklogRendered?.(data);
 }
 function renderBacklogFlatRows(flat){
   recomputeBacklogRowVisibility(flat);
@@ -19188,6 +19190,7 @@ function backlogSettingsKeyValues(){
   Object.entries(backlogDimFilters).forEach(([dim,set])=>{
     if(set && set.size) kv.push([`Filtre — ${backlogDimLabelUI(dim)||dim}`, [...set].join(', ')]);
   });
+  for(const filter of window.BLBacklogOverview?.queryFilters?.()||[])kv.push([(appLang==='en'?'Analysis filter — ':'Analiz filtresi — ')+(filter.label||filter.header),filter.from||filter.to?[filter.from||'…',filter.to||'…'].join(' → '):(filter.values||[]).map(value=>value===''?(appLang==='en'?'(blank)':'(boş)'):value).join(', ')]);
   kv.push(['Dışa aktarma zamanı', fmtTsForTitle(new Date().toISOString())]);
   kv.push(['', '']);
   return kv;
@@ -19524,6 +19527,7 @@ function backlogV3FilterText(){
   range('Retail',raw.retailFrom,raw.retailTo);range('In Store',raw.inStoreFrom,raw.inStoreTo);range('Exfactory',raw.exFactoryFrom,raw.exFactoryTo);range(en?'Warehouse':'Antrepo',raw.antrepoFrom,raw.antrepoTo);
   if(raw.buyerGrup)parts.push('Buyer Grup: '+raw.buyerGrup);
   if(raw.dimFilters){try{Object.entries(JSON.parse(raw.dimFilters)).forEach(([dim,values])=>{parts.push(`${dim}: ${Array.isArray(values)?values.join(', '):(values&&values.values||[]).join(', ')}`);});}catch(_){}}
+  for(const filter of window.BLBacklogOverview?.queryFilters?.()||[])parts.push(`${filter.label||filter.header}: ${filter.from||filter.to?[filter.from||'…',filter.to||'…'].join(' → '):(filter.values||[]).join(', ')}`);
   return parts.join(' · ');
 }
 async function exportBacklogV3(){
@@ -19651,6 +19655,8 @@ function buildBacklogParams(){
     dimFiltersObj.antrepoDate = {granularity:backlogDateFilter.granularity, values:backlogDateFilter.values};
   }
   if(Object.keys(dimFiltersObj).length) params.dimFilters = JSON.stringify(dimFiltersObj);
+  const analysisFilters=window.BLBacklogOverview?.queryFilters?.()||[];
+  if(analysisFilters.length)params.analysisFilters=JSON.stringify(analysisFilters);
   return params;
 }
 const BACKLOG_DATE_INPUT_IDS=['backlogFrom','backlogTo','backlogInStoreFrom','backlogInStoreTo','backlogExFactoryFrom','backlogExFactoryTo','backlogAntrepoFrom','backlogAntrepoTo'];

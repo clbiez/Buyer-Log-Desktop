@@ -44,7 +44,7 @@ function loadState(){
 function saveState(){try{(window.BLStorage||localStorage).setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){}}
 function fmtDay(iso){const m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}.${m[2]}.${m[1]}`:'—'}
 
-/* ------------------------------------------------ Genel Bakış yerel filtreleri */
+/* ------------------------------------------------ Ortak Backlog analiz filtreleri */
 function overviewFilters(){return Array.isArray(state.filters)?state.filters:[]}
 function filterValueKey(value){
   if(value==null||value==='')return '';
@@ -67,6 +67,9 @@ function filterSourceColumnIds(){
 function overviewQueryParams(){
   const base=queryParams();if(!base)return null;
   const params={...base},extra=filterSourceColumnIds();
+  // Çekmecenin seçenekleri filtre öncesi satırlardan gelir; diğer tüketiciler
+  // aynı kriterleri sunucuda uygular. Böylece seçimler birbirini gizlemez.
+  delete params.analysisFilters;
   if(extra.length){
     const existing=String(params.sourceColumns||'').split(',').map(v=>v.trim()).filter(Boolean);
     params.sourceColumns=[...new Set([...existing,...extra])].join(',');
@@ -121,7 +124,12 @@ function applyOverviewFilters(rows){
   }
   return out;
 }
-function reapplyOverviewFilters(){items=applyOverviewFilters(baseItems||[]);saveState();render();}
+let sharedFilterTimer=0;
+function reapplyOverviewFilters(){
+  items=applyOverviewFilters(baseItems||[]);saveState();render();
+  clearTimeout(sharedFilterTimer);
+  sharedFilterTimer=setTimeout(()=>{if(typeof fetchCurrentBacklog==='function')fetchCurrentBacklog();},140);
+}
 
 
 /* ------------------------------------------------ ortak satır önbelleği */
@@ -451,7 +459,7 @@ function filterRoot(){
   return root;
 }
 async function openFilterPanel(){
-  filterOpen=true;const root=filterRoot();root.hidden=false;requestAnimationFrame(()=>root.classList.add('is-open'));updateFilterButton();renderFilterPanel();
+  filterOpen=true;const root=filterRoot();root.hidden=false;window.BLMotionPlus?.play?.('overlay',root.querySelector('.blvFilterDrawer'));requestAnimationFrame(()=>root.classList.add('is-open'));updateFilterButton();renderFilterPanel();
   try{await ensureFilterCatalog();renderFilterPanel();}catch(_){renderFilterPanel();}
 }
 function closeFilterPanel(){
@@ -505,7 +513,7 @@ function renderFilterPanel(){
   const visibleFields=sourceItems.slice(0,300),editor=overviewFilters().find(f=>f.id===filterEditorId)||null;
   const sourceCount=source=>filterCatalog.filter(field=>field.source===source).length;
   const active=overviewFilters();
-  mount.innerHTML=`<header class="blvFilterHead"><div><span class="blvFilterKicker">${esc(L('BACKLOG GENEL BAKIŞ','BACKLOG OVERVIEW'))}</span><h3 id="blvFilterTitle">${esc(L('Analiz Filtreleri','Analysis Filters'))}</h3><p>${esc(L('Bu filtreler yalnız Genel Bakış analizini etkiler; Backlog ana tablosunu değiştirmez.','These filters affect only Overview analysis; the main Backlog table is unchanged.'))}</p></div><div class="blvFilterHeadActions"><button type="button" data-blvf-reset${active.length?'':' disabled'}>${esc(L('Tümünü sıfırla','Reset all'))}</button><button type="button" data-blvf-close title="${esc(L('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div></header>
+  mount.innerHTML=`<header class="blvFilterHead"><div><span class="blvFilterKicker">${esc(L('BACKLOG ORTAK FİLTRELER','SHARED BACKLOG FILTERS'))}</span><h3 id="blvFilterTitle">${esc(L('Analiz Filtreleri','Analysis Filters'))}</h3><p>${esc(L('Bu filtreler tüm Backlog görünümlerini, Legacy Excel ve Backlog Report çıktılarını etkiler.','These filters apply to all Backlog views, Legacy Excel and Backlog Report exports.'))}</p></div><div class="blvFilterHeadActions"><button type="button" data-blvf-reset${active.length?'':' disabled'}>${esc(L('Tümünü sıfırla','Reset all'))}</button><button type="button" data-blvf-close title="${esc(L('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div></header>
     <div class="blvFilterSummary"><div><b>${n((items||[]).length)}</b><span>/ ${n((baseItems||[]).length)} ${esc(L('satır','rows'))}</span></div><span>${esc(L(`${activeFilterCount()} aktif filtre`,`${activeFilterCount()} active filters`))}</span></div>
     <div class="blvFilterActive">${active.map(filter=>`<button type="button" class="${filter.id===filterEditorId?'is-active':''}" data-blvf-edit="${esc(encodeURIComponent(filter.id))}"><span>${esc(filterSourceLabel(filter.source))}</span><b>${esc(filter.label)}</b><small>${esc(filterCriterionText(filter))}</small></button><button type="button" class="blvFilterRemove" data-blvf-remove="${esc(encodeURIComponent(filter.id))}" title="${esc(L('Filtreyi kaldır','Remove filter'))}"><svg class="ic"><use href="#i-x"/></svg></button>`).join('')||`<span class="blvFilterNoActive">${esc(L('Henüz analiz filtresi eklenmedi.','No analysis filters added yet.'))}</span>`}</div>
     <div class="blvFilterWorkspace"><div class="blvFilterCatalogue"><div class="blvFilterSourceTabs">${['cp','asas','antrepo'].map(source=>`<button type="button" class="${source===filterSource?'is-active':''}" data-blvf-source="${source}">${filterSourceLabel(source)} <b>${n(sourceCount(source))}</b></button>`).join('')}</div><input class="blvFilterSearch" type="search" data-blvf-search value="${esc(filterSearch)}" placeholder="${esc(L('Sütun ara…','Search columns…'))}"><div class="blvFilterColumns">${visibleFields.map(field=>`<button type="button" class="${activeIds.has(field.id)?'is-added':''}" data-blvf-add="${esc(encodeURIComponent(field.id))}" title="${esc(field.header)}"><span>${esc(field.header)}</span><svg class="ic"><use href="#${activeIds.has(field.id)?'i-check':'i-plus'}"/></svg></button>`).join('')||`<div class="blvFilterNoValue">${esc(L('Eşleşen sütun yok.','No matching columns.'))}</div>`}</div>${sourceItems.length>visibleFields.length?`<div class="blvFilterRangeHint">${esc(L(`${sourceItems.length} sütunun ilk 300'ü gösteriliyor. Aramayı kullanın.`,`Showing the first 300 of ${sourceItems.length} columns. Use search.`))}</div>`:''}</div><div class="blvFilterEditor">${renderFilterEditor(editor)}</div></div>`;
@@ -699,6 +707,7 @@ function openExternalItems(externalItems,options){
 /* Excel Backlog V3 seçenekleri ve kırılım tercihi app-main'deki dışa aktarım
    akışına buradan verilir. */
 window.BLBacklogOverview={
+  queryFilters:()=>overviewFilters().filter(filterHasCriteria).map(f=>({...f,values:[...(f.values||[])]})),
   onBacklogRendered,refresh:()=>refresh(true),openItems:openExternalItems,
   exportOptions:()=>({includePlanActual:state.exportPlanActual!==false,includeLegacy:state.exportLegacy!==false,groupBy:state.groupBy}),
   setExportOption:(key,value)=>{if(key==='includePlanActual')state.exportPlanActual=!!value;if(key==='includeLegacy')state.exportLegacy=!!value;saveState();},
