@@ -160,7 +160,7 @@ window.BLBacklogRows={load:loadRows,invalidate:()=>{rowsCache.signature='';rowsC
 function queryParams(){try{return typeof backlogExportQueryParams==='function'?backlogExportQueryParams():null;}catch(_){return null;}}
 function visible(){const c=$('backlogContent');return !!c&&c.style.display!=='none'&&!!c.offsetParent;}
 async function refresh(force){
-  const host=$('backlogOverviewBody');if(!host||!state.open)return;
+  const host=$('backlogOverviewBody');if(!host||(!state.open&&!filterOpen))return;
   const params=overviewQueryParams();if(!params){return;}
   const sig=JSON.stringify(params);
   if(!force&&sig===signature&&baseItems){items=applyOverviewFilters(baseItems);return render();}
@@ -460,7 +460,7 @@ function filterRoot(){
 }
 async function openFilterPanel(){
   filterOpen=true;const root=filterRoot();root.hidden=false;window.BLMotionPlus?.play?.('overlay',root.querySelector('.blvFilterDrawer'));requestAnimationFrame(()=>root.classList.add('is-open'));updateFilterButton();renderFilterPanel();
-  try{await ensureFilterCatalog();renderFilterPanel();}catch(_){renderFilterPanel();}
+  try{await ensureFilterCatalog();await refresh(false);renderFilterPanel();}catch(_){renderFilterPanel();}
 }
 function closeFilterPanel(){
   filterOpen=false;const root=$('blvFilterRoot');if(root){root.classList.remove('is-open');setTimeout(()=>{if(!filterOpen)root.hidden=true;},160);}updateFilterButton();
