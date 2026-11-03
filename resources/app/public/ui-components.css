@@ -1,6 +1,7 @@
 :where(body,body *){border:0;border-radius:var(--ui-radius);box-shadow:none;text-shadow:none;}
 .suppFobPreviewContext,.suppFobPreviewComparison,.suppFobPreviewHelp{font-size:var(--ui-font-xs);color:var(--ui-text-muted);}
-.suppFobPreviewContract{font-size:var(--ui-font-sm);line-height:1.7;color:var(--ui-text-secondary);}
+.suppFobPreviewContract{font-size:var(--ui-font-xs);line-height:1.5;color:var(--ui-text-secondary);}
+.suppFobPreviewDetails summary{font-size:var(--ui-font-xs);color:var(--ui-text-muted);}
 .suppFobPreviewGrid output{font-size:var(--ui-font-xl);font-family:var(--ui-font-mono);font-weight:600;color:var(--ui-accent);}
 .suppFobPreviewStatus{font-size:var(--ui-font-sm);color:var(--ui-danger);}
 :where(body,body *,body *::before,body *::after){animation:none!important;transition:none!important;scroll-behavior:auto!important;}

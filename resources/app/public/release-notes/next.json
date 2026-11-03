@@ -17,15 +17,15 @@
       "module": { "tr": "CP · Siparişler", "en": "CP · Orders" },
       "title": { "tr": "Supp. FOB sağ tık menüsünde mini hesaplayıcı", "en": "Mini calculator in the Supp. FOB context menu" },
       "body": {
-        "tr": "Supp. FOB hücresine sağ tıklayıp yeni üretici fiyatını girin. Siparişin OPD, sezon, ülke, Licensor ve License eşleşmesiyle bulunan sözleşmenin royalty, komisyon ve hologram maliyeti kullanılarak Final FOB anında gösterilir. Mevcut fiyatla farkı görün ve sonucu kopyalayın. Fiyat denemesi siparişi değiştirmez; eksik veya geçersiz sözleşmede hesap sonucu üretilmez.",
-        "en": "Right-click a Supp. FOB cell and enter a new supplier price. Final FOB is shown instantly using royalty, commission and hologram costs from the contract matching the order’s OPD, season, country, Licensor and License. Compare it with the current price and copy the result. Price trials do not change the order; missing or invalid contracts produce no result."
+        "tr": "Supp. FOB hücresine sağ tıklayıp 360 piksel genişliğindeki kompakt kartta yeni üretici fiyatını girin. Final FOB, mevcut fiyat ve farkı yan yana görün; sonuç yanındaki simgeyle kopyalayın. Royalty, komisyon, hologram ve sözleşme bilgileri Hesap detayı altında açılır. Hesap, siparişin OPD, sezon, ülke, Licensor ve License eşleşmesini kullanır. Fiyat denemesi siparişi değiştirmez; eksik veya geçersiz sözleşmede hesap sonucu üretilmez.",
+        "en": "Right-click a Supp. FOB cell and enter a new supplier price in a compact 360-pixel-wide card. View Final FOB, the current price and the difference, and copy the result with the adjacent icon. Expand Calculation details for royalty, commission, hologram and contract information. The calculation uses the order’s OPD, season, country, Licensor and License match. Price trials do not change the order; missing or invalid contracts produce no result."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "supp-fob-quick-calculator.png",
         "alt": { "tr": "Buyer Log demo siparişinde 1,85 USD Supp. FOB için 2,50 USD Final FOB hesabı", "en": "Buyer Log demo order calculating 2.50 USD Final FOB from 1.85 USD Supp. FOB" },
-        "caption": { "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü, yerel demo veriyle: royalty %17 ve YD komisyon %9; yeni Final FOB ve mevcut fiyata göre fark gösteriliyor.", "en": "Actual post-change Buyer Log UI with local demo data: 17% royalty and 9% overseas commission; the new Final FOB and difference from the current price are shown." }
+        "caption": { "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü, yerel demo veriyle: kompakt kartta fiyat girişi, Final FOB, kopyalama ve fiyat farkı görünür; sözleşme detayları kapalıdır.", "en": "Actual post-change Buyer Log UI with local demo data: the compact card shows the price input, Final FOB, copy action and price difference; contract details are collapsed." }
       }
     }
   ]
