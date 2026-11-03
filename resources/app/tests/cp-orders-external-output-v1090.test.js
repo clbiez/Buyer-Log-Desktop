@@ -182,6 +182,8 @@ function imageRuntime(images, probe, natural) {
 function copyBuilderFor(records, cols, images, probe) {
   return asyncFnOf('buildManagedTableStyledCopy', {
     BLTableExport,
+    // Stub the full scoped record source used when selected rows outlive filters.
+    managedSelectionSourceRows: () => records,
     visibleCols: () => cols,
     tableColumnLabel: (tableKey, c) => c.label,
     cellPlainText: (c, r) => r[c.k],
@@ -273,6 +275,18 @@ test('v10.90 tek satır kopyası tek satır yapıştırır ve görseli aynı hü
   const rowHtml = built.html.slice(built.html.lastIndexOf('<tr>'));
   assert.match(rowHtml, /<img src="data:image\/png;base64,/);
   assert.equal((rowHtml.match(/<tr>/g) || []).length, 1);
+});
+
+test('seçili kayıt filtre dışında kalsa bile CP/Orders Copy kayıt kaynağından dışa aktarır', async () => {
+  const rows=records();
+  const build=copyBuilderFor(rows,COLS,new Map());
+  // Görünür filtre yalnız ilk satırı tutar; seçili ikinci kayıt yine kopyalanır.
+  for(const tab of ['cp','orders']){
+    const result=await build(tab,[rows[0]],new Set([2]));
+    assert.equal(result.count,1);
+    assert.match(result.plain,/1002/);
+    assert.doesNotMatch(result.plain,/1001/);
+  }
 });
 
 test('v10.90 görseli olmayan satır sahte placeholder almaz, diğer satırların görseli etkilenmez', async () => {
@@ -423,7 +437,7 @@ test('v10.90 doğrudan XLSX dışa aktarımı tema renklerini serialize etmez', 
   const active = bodyOf('exportActiveTableStyled');
   assert.match(active, /tableKey:'cp'/);
   assert.match(active, /tableKey:'orders'/);
-  assert.match(active, /records:cfg\.rowsFn\?cfg\.rowsFn\(\):null/);
+  assert.match(active, /records:cfg\.rowsFn\?\(cfg\.set\?\.size\?managedSelectionSourceRows\(tab\):cfg\.rowsFn\(\)\):null/);
 });
 
 test('v10.90 XLSX model görselleri viewport/lazy DOM durumuna bağlı değildir', () => {
