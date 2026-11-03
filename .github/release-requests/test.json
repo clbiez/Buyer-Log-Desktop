@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "11cf8f64051d12871d7631d64bac3eadc34bf35f",
-  "release_notes": "TR: Buyer Log TEST 7.0.332 — CP ve Siparişler tablolarında filtre dışında kalan seçili satırlar da Kopyala ve Excel çıktısına dahil edilir. Kompakt seçim çubuğunda filtre dışındaki kayıtları görüntüleyip tek tek kaldırabilir, × ile tüm seçimi temizleyip bildirimin Geri al düğmesiyle geri getirebilirsiniz.\nEN: Buyer Log TEST 7.0.332 — Selected CP and Orders rows outside active filters are now included in Copy and Excel exports. The compact selection bar displays filtered-out rows, lets you remove individual selections or clear all with ×, and offers Undo in the notification.",
-  "request_id": "7.0.332-pr825-20261103"
+  "commit_sha": "429c3c7b9952977b51cb6b8f1777983b49cf6e87",
+  "release_notes": "TR: Buyer Log TEST 7.0.333 — PR #825 ile CP ve Siparişler'de filtre dışındaki seçili satırlar Kopyala/Excel'e dahil; kompakt seçim listesi, tek tek kaldırma, temizleme ve Geri al. PR #826, tam regresyonda bulunan seçim kaynağı ve Excel beklentisi test uyumsuzluklarını giderir ve bunları PR CI kapsamına alır.\nEN: Buyer Log TEST 7.0.333 — PR #825 includes filtered-out CP/Orders selections in Copy/Excel, with compact list, per-row removal, clear and Undo. PR #826 fixes the full-regression isolated selection-source and Excel assertion mismatches and adds them to PR CI.",
+  "request_id": "7.0.333-pr826-validated-full-regression-20261103"
 }
