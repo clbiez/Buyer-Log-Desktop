@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.332",
-  "commit_sha": "11cf8f64051d12871d7631d64bac3eadc34bf35f",
-  "release_notes": "TR: Buyer Log STABLE 7.0.332 — PR #825 ile CP/Siparişler seçimlerinin filtrelerden bağımsız kopyalama ve Excel aktarımı, kompakt seçim listesi ve Geri al. Tam Windows regresyonu ve imzalı TEST yayını doğrulanınca aynı imzalı paket yeniden derlenmeden STABLE'a terfi ettirilir.\nEN: Buyer Log STABLE 7.0.332 — PR #825 enables filter-independent Copy/Excel export for CP/Orders selections, a compact selection list, and Undo. After full Windows regression and signed TEST publication are verified, the identical signed artifact is promoted to STABLE without rebuilding.",
-  "request_id": "7.0.332-pr825-promote-after-test-20261103"
+  "version": "7.0.333",
+  "commit_sha": "429c3c7b9952977b51cb6b8f1777983b49cf6e87",
+  "release_notes": "TR: Buyer Log STABLE 7.0.333 — PR #825'in filtre dışı CP/Sipariş seçimi, Kopyala/Excel ve kompakt seçim çubuğu geliştirmelerini PR #826 regresyon düzeltmeleriyle içerir. İmzalı TEST 7.0.333 paketi tam Windows regresyonundan ve doğrulamadan geçtikten sonra aynı baytlar yeniden derlenmeden STABLE'a taşınır.\nEN: Buyer Log STABLE 7.0.333 — Includes #825 filtered-out CP/Orders selections, Copy/Excel and compact selection bar with #826 regression fixes. Only after full Windows regression and validation of the signed TEST 7.0.333 artifact can identical bytes be promoted to STABLE without rebuilding.",
+  "request_id": "7.0.333-pr826-stable-after-verified-test-20261103"
 }
