@@ -1,16 +1,16 @@
 /* Manifest shared layout. Appearance: ui-tokens.css / ui-components.css. */
 .ic{width:1.1em;height:1.1em;display:inline-block;vertical-align:-0.18em;flex-shrink:0;}
-.suppFobPreviewCard{width:min(94vw,680px);max-height:90vh;display:flex;flex-direction:column;padding:0;}
-.suppFobPreviewHead,.suppFobPreviewFoot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;}
+.suppFobPreviewCard{width:min(94vw,360px);max-height:90vh;display:flex;flex-direction:column;padding:0;}
+.suppFobPreviewHead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;}
 .suppFobPreviewHead>div{min-width:0;}
-.suppFobPreviewContext{margin-top:6px;overflow-wrap:anywhere;}
-.suppFobPreviewBody{padding:0 20px 16px;overflow:auto;display:grid;gap:14px;}
+.suppFobPreviewContext{margin-top:3px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.suppFobPreviewBody{padding:0 12px 10px;overflow:auto;display:grid;gap:8px;}
 .suppFobPreviewContract{white-space:pre-line;overflow-wrap:anywhere;}
-.suppFobPreviewGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
-.suppFobPreviewGrid output{display:block;padding:8px 0;min-height:var(--ui-control-height);}
-.suppFobPreviewHelp{margin:0;}
-.suppFobPreviewFoot{justify-content:flex-end;flex-wrap:wrap;}
-@media(max-width:520px){.suppFobPreviewGrid{grid-template-columns:1fr;}}
+.suppFobPreviewGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.suppFobPreviewResult{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:34px;}
+.suppFobPreviewGrid output{display:block;min-width:0;overflow-wrap:anywhere;}
+.suppFobPreviewDetails summary{cursor:pointer;}
+.suppFobPreviewDetails .suppFobPreviewContract,.suppFobPreviewHelp{margin:8px 0 0;}
 html{scroll-behavior:auto;max-width:100%;overflow-x:hidden}
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0;max-width:100%;overflow-x:clip;-webkit-font-smoothing:antialiased;padding-left:var(--ui-rail-width);}

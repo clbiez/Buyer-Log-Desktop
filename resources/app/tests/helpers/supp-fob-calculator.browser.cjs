@@ -56,6 +56,18 @@ test('Supp. FOB quick calculator in real Buyer Log',async t=>{
       await page.keyboard.press('Escape');assert.equal(await modal.count(),0);
       await page.waitForFunction(()=>document.activeElement.id==='cpTable');
     });
+    await t.test('compact card keeps contract details collapsed and preserves the trial when expanded',async()=>{
+      await open();await input.fill('1,85');
+      const details=modal.locator('details'),summary=details.locator('summary');
+      assert.equal(await details.evaluate(el=>el.open),false);
+      assert.equal(await modal.locator('[data-preview-contract]').isVisible(),false);
+      await summary.focus();await page.keyboard.press('Enter');
+      assert.equal(await details.evaluate(el=>el.open),true);
+      assert.match(await modal.locator('[data-preview-contract]').innerText(),/Royalty 17%/);
+      await page.keyboard.press('Enter');assert.equal(await details.evaluate(el=>el.open),false);
+      assert.equal(await input.inputValue(),'1,85');assert.equal(await output.textContent(),'2,50');
+      await page.keyboard.press('Escape');
+    });
     await t.test('empty, malformed, negative and zero trials clear or replace previous output',async()=>{
       await open();
       for(const value of ['','abc','-1','1,2,3']){
@@ -69,6 +81,7 @@ test('Supp. FOB quick calculator in real Buyer Log',async t=>{
     await t.test('TR, legacy hologram, missing rules, OPD/season mismatch and invalid totals use real matching',async()=>{
       await page.evaluate(()=>{state.cp.rows[0].Country='Türkiye';state.overrides.pricingRules[0].legacyTrHologramCost=0.079;});
       await open();await input.fill('1,85');assert.equal(await output.textContent(),'2,39');
+      await modal.locator('summary').click();
       assert.match(await modal.innerText(),/TR komisyon 3% = 20%/);await page.keyboard.press('Escape');
       for(const patch of [{OPD:'2025-01-01'},{Season:'W9'}]){
         await page.evaluate(patch=>Object.assign(state.cp.rows[0],{OPD:'2026-03-01',Season:'S7'},patch),patch);
@@ -86,8 +99,9 @@ test('Supp. FOB quick calculator in real Buyer Log',async t=>{
         await page.evaluate(({language,theme,size})=>{applyLanguage(language);document.documentElement.dataset.theme=theme;document.documentElement.dataset.uiScale=size;},{language,theme,size});
         await open('cpTable',language);await input.fill('1.85');assert.equal(await output.textContent(),language==='tr'?'2,50':'2.50');
         const geometry=await modal.locator('[role="dialog"]').boundingBox();assert.ok(geometry.x>=0&&geometry.y>=0&&geometry.x+geometry.width<=1440&&geometry.y+geometry.height<=900);
+        assert.ok(geometry.width<=360&&geometry.height<=240,`compact card: ${geometry.width}×${geometry.height}`);
         assert.equal(await modal.evaluate(el=>el.scrollWidth<=el.clientWidth),true);
-        await modal.locator('[data-preview-close]').last().focus();await page.keyboard.press('Tab');
+        await modal.locator('summary').focus();await page.keyboard.press('Tab');
         assert.equal(await modal.locator('[data-preview-close]').first().evaluate(el=>el===document.activeElement),true);
         await page.keyboard.press('Escape');assert.equal(await modal.count(),0);
       }
@@ -97,6 +111,7 @@ test('Supp. FOB quick calculator in real Buyer Log',async t=>{
     await t.test('Orders opens its own row; unrelated cells keep the copy-only menu',async()=>{
       await page.evaluate(()=>{applyLanguage('en');document.querySelectorAll('main section').forEach(s=>s.classList.toggle('active',s.id==='view-orders'));document.body.dataset.activeTab='orders';renderOrdersNow();});
       await open('ordersTable','en');await input.fill('1.85');assert.equal(await output.textContent(),'2.50');
+      await modal.locator('summary').click();
       assert.match(await modal.innerText(),/Price trials do not change the order/);await page.keyboard.press('Escape');
       await page.locator('#ordersTable tbody td[data-key="Country"]').click({button:'right'});
       assert.equal(await page.getByRole('menuitem',{name:'Supp. FOB → Calculate Final FOB'}).count(),0);await page.keyboard.press('Escape');

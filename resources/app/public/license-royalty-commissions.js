@@ -260,13 +260,12 @@
     const cost=value=>value==null?'—':Number(value).toLocaleString(locale,{maximumFractionDigits:3});
     const overlay=document.createElement('div');overlay.id='_suppFobPricePreview';overlay.className='warnOverlay blMotionOverlay';overlay.dataset.uiMigrated='dialog';
     overlay.innerHTML=`<div class="modalCard suppFobPreviewCard" role="dialog" aria-modal="true" aria-labelledby="_suppFobPreviewTitle" aria-describedby="_suppFobPreviewHelp">
-      <div class="suppFobPreviewHead"><div><div class="modalTitle" id="_suppFobPreviewTitle">${T('Supp. FOB Fiyat Kontrolü','Supp. FOB Price Check')}</div><div class="suppFobPreviewContext" data-preview-context></div></div><button type="button" class="pricingRuleBtn ghost" data-preview-close aria-label="${T('Kapat','Close')}">×</button></div>
+      <div class="suppFobPreviewHead"><div><div class="modalTitle" id="_suppFobPreviewTitle">${T('FOB Hesapla','FOB Calculator')}</div><div class="suppFobPreviewContext" data-preview-context></div></div><button type="button" class="pricingRuleBtn ghost iconOnly" data-preview-close aria-label="${T('Kapat','Close')}">×</button></div>
       <div class="suppFobPreviewBody">
-        <div class="suppFobPreviewContract" data-preview-contract></div>
-        <div class="suppFobPreviewGrid"><div class="pricingRuleField"><label for="_suppFobPreviewInput">${T('Yeni Supp. FOB (USD)','New Supp. FOB (USD)')}</label><input id="_suppFobPreviewInput" inputmode="decimal" autocomplete="off" aria-describedby="_suppFobPreviewStatus"></div><div class="pricingRuleField"><label for="_suppFobPreviewFinal">Final FOB (USD)</label><output id="_suppFobPreviewFinal" for="_suppFobPreviewInput" aria-live="polite">—</output></div></div>
+        <div class="suppFobPreviewGrid"><div class="pricingRuleField"><label for="_suppFobPreviewInput">Supp. FOB (USD)</label><input id="_suppFobPreviewInput" inputmode="decimal" autocomplete="off" aria-describedby="_suppFobPreviewStatus"></div><div class="pricingRuleField"><label for="_suppFobPreviewFinal">Final FOB (USD)</label><div class="suppFobPreviewResult"><output id="_suppFobPreviewFinal" for="_suppFobPreviewInput" aria-live="polite">—</output><button type="button" class="pricingRuleBtn ghost iconOnly" data-preview-copy title="${T('Final FOB’u Kopyala','Copy Final FOB')}" aria-label="${T('Final FOB’u Kopyala','Copy Final FOB')}"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg></button></div></div></div>
         <div class="suppFobPreviewComparison" data-preview-comparison></div><div class="suppFobPreviewStatus" id="_suppFobPreviewStatus" role="status"></div>
-        <p class="suppFobPreviewHelp" id="_suppFobPreviewHelp">${T('Fiyat denemesi siparişi değiştirmez. Hesap, siparişin OPD, sezon, ülke ve lisansına uyan sözleşmeyi kullanır.','Price trials do not change the order. The calculation uses the contract matching the order’s OPD, season, country and license.')}</p>
-      </div><div class="suppFobPreviewFoot"><button type="button" class="pricingRuleBtn tonal" data-preview-copy>${T('Final FOB’u Kopyala','Copy Final FOB')}</button><button type="button" class="pricingRuleBtn ghost" data-preview-close>${T('Kapat','Close')}</button></div>
+        <details class="suppFobPreviewDetails"><summary tabindex="0">${T('Hesap detayı','Calculation details')}</summary><div class="suppFobPreviewContract" data-preview-contract></div><p class="suppFobPreviewHelp" id="_suppFobPreviewHelp">${T('Fiyat denemesi siparişi değiştirmez. Hesap, siparişin OPD, sezon, ülke ve lisansına uyan sözleşmeyi kullanır.','Price trials do not change the order. The calculation uses the contract matching the order’s OPD, season, country and license.')}</p></details>
+      </div>
     </div>`;
     const input=overlay.querySelector('#_suppFobPreviewInput'),output=overlay.querySelector('#_suppFobPreviewFinal'),status=overlay.querySelector('#_suppFobPreviewStatus'),copy=overlay.querySelector('[data-preview-copy]');
     const initial=parseSuppFobPreviewValue(currentRow()['Supp. FOB']);input.value=initial==null?'':String(initial).replace('.',appLang==='en'?'.':',');
@@ -277,14 +276,17 @@
       const current=currentRow(),preview=suppFobPricePreview(current,input.value),rule=preview.rule;
       finalFob=preview.finalFob;output.textContent=format(finalFob);copy.disabled=finalFob==null;
       input.setAttribute('aria-invalid',preview.error==='value'?'true':'false');
-      overlay.querySelector('[data-preview-context]').textContent=[current['Order Code'],current['Model Name'],current['C.Code'],current.Licensor,current.License,current.Country,current.Season].filter(Boolean).join(' · ');
+      const context=overlay.querySelector('[data-preview-context]');
+      context.textContent=[current.License,current['Order Code']].filter(Boolean).join(' · ');
+      context.title=[current['Order Code'],current['Model Name'],current['C.Code'],current.Licensor,current.License,current.Country,current.Season].filter(Boolean).join(' · ');
       overlay.querySelector('[data-preview-contract]').textContent=rule
         ?`${T('Sözleşme','Contract')}: ${rule.licensor} · ${rule.license} · OPD ${pricingRuleDateRangeLabel(rule)} · ${normalizePricingRuleSeasons(rule.seasons).length?pricingRuleSeasonLabel(rule):T('Tüm Sezonlar','All Seasons')}\nRoyalty ${rate(rule.royalty)} + ${preview.group==='TR'?'TR':T('YD','Overseas')} ${T('komisyon','commission')} ${rate(commission(rule,current.Country))} = ${rate(effectiveRoyalty(rule,current.Country))} · Hologram ${cost(hologramFor(rule,current.Country))} USD`
         :turknorm(current.Licensor)==='DTR'?T('DTR: Royalty sözleşmesi yok; Final FOB = Supp. FOB.','DTR: No royalty contract; Final FOB = Supp. FOB.'):'';
       const delta=preview.delta==null?'—':`${preview.delta>0?'+':''}${format(preview.delta)}`;
-      overlay.querySelector('[data-preview-comparison]').textContent=`${T('Mevcut Supp. FOB','Current Supp. FOB')}: ${format(parseSuppFobPreviewValue(current['Supp. FOB']))} · ${T('Mevcut Final FOB','Current Final FOB')}: ${format(parseSuppFobPreviewValue(current['FOB ($)']))} · ${T('Fark','Difference')}: ${delta} USD`;
+      overlay.querySelector('[data-preview-comparison]').textContent=`${T('Mevcut FOB','Current FOB')}: ${format(parseSuppFobPreviewValue(current['FOB ($)']))} · ${T('Fark','Difference')}: ${delta} USD`;
       const errors={row:T('Sipariş bulunamadı.','Order not found.'),country:T('Siparişin üretim ülkesi eksik; hesap yapılamıyor.','The order’s production country is missing; calculation is unavailable.'),rule:T('Bu siparişle eşleşen lisans sözleşmesi yok. License Royalty Hesapları altında kontrol edin.','No license contract matches this order. Check License Royalty Calculations.'),value:T('Sıfır veya pozitif bir fiyat girin (örn. 1,85).','Enter a zero or positive price (e.g. 1.85).'),invalid:T('Ülke komisyonu tanımsız veya sözleşme değerleri geçersiz. Toplam oran %100’den küçük olmalı.','The country commission is undefined or contract values are invalid. The total rate must be below 100%.')};
       status.textContent=errors[preview.error]||'';
+      status.hidden=!preview.error;
     }
     input.addEventListener('input',renderPreview);
     overlay.querySelectorAll('[data-preview-close]').forEach(button=>button.addEventListener('click',close));
