@@ -15594,12 +15594,12 @@ html[data-ui-system="manifest"] .cpaAdvancedModes>summary {font-size:var(--ui-fo
 html[data-ui-system="manifest"] .cpaDraftBadge {background:var(--ui-warning-bg);color:var(--ui-warning)}
 html[data-ui-system="manifest"] .cpaRuleMenuItems {background:var(--ui-surface)}
 
-/* Cell-range selection must remain distinct from checked rows. Four inset edge
+/* Cell-range selection uses a soft theme tint, distinct from checked rows. Four inset edge
    shadows form ONE outer rectangle without covering internal cell separators,
    changing table layout or disrupting the active-cell keyboard outline. */
 html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,.blDetailDrawer .blDetailTable) tbody td.blGridRangeCell,
 html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeCell {
-  background-color:color-mix(in srgb,var(--ui-selected) 72%,var(--ui-accent) 28%) !important;
+  background-color:var(--ui-grid-range-bg) !important;
   box-shadow:
     var(--ui-grid-range-top),
     var(--ui-grid-range-right),
@@ -15607,14 +15607,14 @@ html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeCell {
     var(--ui-grid-range-left) !important;
 }
 html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeTop {
-  --ui-grid-range-top:inset 0 2px 0 0 var(--ui-accent);
+  --ui-grid-range-top:inset 0 1px 0 0 var(--ui-grid-range-border);
 }
 html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeRight {
-  --ui-grid-range-right:inset -2px 0 0 0 var(--ui-accent);
+  --ui-grid-range-right:inset -1px 0 0 0 var(--ui-grid-range-border);
 }
 html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeBottom {
-  --ui-grid-range-bottom:inset 0 -2px 0 0 var(--ui-accent);
+  --ui-grid-range-bottom:inset 0 -1px 0 0 var(--ui-grid-range-border);
 }
 html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeLeft {
-  --ui-grid-range-left:inset 2px 0 0 0 var(--ui-accent);
+  --ui-grid-range-left:inset 1px 0 0 0 var(--ui-grid-range-border);
 }

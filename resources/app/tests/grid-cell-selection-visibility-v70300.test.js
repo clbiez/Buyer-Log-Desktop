@@ -51,9 +51,11 @@ test('grid clears previous perimeter classes when a range moves', () => {
 });
 
 test('cell-range styling is distinct from row selection and joins four theme-aware edges', () => {
-  const patch = ui.slice(ui.lastIndexOf('/* Cell-range selection must remain distinct'));
-  assert.ok(patch.startsWith('/* Cell-range selection must remain distinct'), 'New range styles must be present');
-  assert.match(patch, /background-color:color-mix\(in srgb,var\(--ui-selected\) 72%,var\(--ui-accent\) 28%\) !important/);
+  const patch = ui.slice(ui.lastIndexOf('/* Cell-range selection uses a soft theme tint'));
+  assert.ok(patch.startsWith('/* Cell-range selection uses a soft theme tint'), 'Shared range styles must be present');
+  assert.match(patch, /background-color:var\(--ui-grid-range-bg\) !important/);
+  assert.match(tokens, /--ui-grid-range-bg:color-mix\(in srgb,var\(--ui-accent\) 12%,var\(--ui-surface\)\)/);
+  assert.match(tokens, /--ui-grid-range-border:color-mix\(in srgb,var\(--ui-accent\) 50%,var\(--ui-surface\)\)/);
   assert.match(patch, /box-shadow:\s*var\(--ui-grid-range-top\),\s*var\(--ui-grid-range-right\),\s*var\(--ui-grid-range-bottom\),\s*var\(--ui-grid-range-left\)\s*!important/);
   // Shared tokens initialize every absent side to a neutral inset shadow.
   // Without these defaults a missing side invalidates the entire shadow list.
