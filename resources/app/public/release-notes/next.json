@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-03",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Backlog Excel tarih ve dönem doğruluğu",
+    "en": "Accurate Backlog Excel dates and periods"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "LCW Merch ay ve hafta değerleri Excel çıktılarında korunur; takvim değişiklikleri ve boş değerler doğru taşınır.",
+    "en": "LCW Merch months and weeks are preserved in Excel exports, with consistent calendar updates and blank values."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "backlog-merch-calendar-export-integrity",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog · Excel raporları",
+        "en": "Backlog · Excel reports"
+      },
+      "title": {
+        "tr": "Retail Depo ay alanının gün tarihine dönüşmesi düzeltildi",
+        "en": "Retail warehouse month values no longer turn into day dates"
+      },
+      "body": {
+        "tr": "Retail Depo ve diğer tarih alanlarının (Ay)/(Hafta) sütunları metin olarak korunur; örneğin LCW takviminde Ocak 2027 artık 01.01.2027 tarihine dönüşmez. Legacy, detay ve V3 çıktıları ile grafik ve analizler sunucu satırlarıyla aynı Merch Calendar verisini kullanır; takvim değiştirilince önbellekteki eski dönemler kullanılmaz. Boş sayısal değerler boş kalır, gerçek sıfırlar korunur ve Handover kontrol formülleri mantıksal türünü kaybetmez.",
+        "en": "The (Month)/(Week) columns of Retail Warehouse and other date fields retain their text values: January 2027 in the LCW calendar no longer becomes 01.01.2027. Legacy, detail and V3 exports, charts and analyses use the same Merch Calendar data as the server rows; calendar changes invalidate cached periods. Missing numeric values stay blank, actual zeros remain intact, and Handover check formulas keep their boolean type."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-merch-calendar.png",
+        "alt": {
+          "tr": "Demo Backlog detayında Retail Depo ve Model Bütçe tarihleri ile LCW ay ve hafta eşleşmeleri",
+          "en": "Demo Backlog detail with retail warehouse and model budget dates and their LCW months and weeks"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, yalnız demo veriyle. Yüklenen test LCW takviminde 28.12.2026 Ocak 2027 / 1. hafta, 03.05.2026 Nisan 2026 / 18. hafta olarak görünür. Aynı değerler indirilen Legacy, detay ve V3 dosyalarında kontrol edildi.",
+          "en": "Actual post-change Buyer Log using only demo data. In the uploaded test LCW calendar, 28.12.2026 maps to January 2027 / week 1 and 03.05.2026 to April 2026 / week 18. Matching values were checked in downloaded Legacy, detail and V3 files."
+        }
+      }
+    }
+  ]
 }

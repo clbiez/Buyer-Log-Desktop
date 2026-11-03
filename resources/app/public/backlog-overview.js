@@ -145,6 +145,8 @@ function loadRows(params){
   const promise=fetch('/api/backlog-export?'+qs,{credentials:'same-origin'}).then(async res=>{
     const body=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(body&&body.error?body.error:`HTTP ${res.status}`);
+    await window.BLMerchCalendarReady;
+    if(body.merchCalendar)window.BLMerchCalendarRuntime?.apply?.(body.merchCalendar);
     let rows=Array.isArray(body.rows)?body.rows:[];
     const revision=typeof body.rowsRevision==='string'?body.rowsRevision:'';
     if(revision&&revision===rowsCache.lastRevision&&rowsCache.lastRows)rows=rowsCache.lastRows;

@@ -15,7 +15,7 @@ function backlogCellFromValue(value, kind, style) {
     if (d && !isNaN(d)) { cell.t = 'd'; cell.v = d; cell.z = 'dd.mm.yy'; }
     else { cell.t = 's'; cell.v = ''; }
   } else if (kind === 'number') {
-    const n = Number(value);
+    const n = value == null || value === '' ? NaN : Number(value);
     if (Number.isFinite(n)) { cell.t = 'n'; cell.v = n; }
     else { cell.t = 's'; cell.v = ''; }
   } else if (kind === 'boolean') {
