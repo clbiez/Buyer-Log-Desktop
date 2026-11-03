@@ -2536,6 +2536,33 @@ function managedGridHasRange(tab=document.body.dataset.activeTab){
 }
 // İşaretli satır varsa Copy, bayat hücre/aralık durumu render gecikmesiyle
 // hâlâ ayakta kalmış olsa bile satırları esas alır (bkz. registerManagedGridClipboard).
+function managedSelectionSourceRows(tableKey){
+  return partialViewRows(tableKey,state[tableKey]?.rows||[]);
+}
+function managedSelectionSnapshot(tableKey){
+  const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected;
+  const visible=tableKey==='orders'?filteredOrders():filteredCP();
+  const ids=new Set(visible.map(row=>String(row._id)));
+  const rows=managedSelectionSourceRows(tableKey).filter(row=>selectionHasId(selected,row._id));
+  return {rows,hidden:rows.filter(row=>!ids.has(String(row._id))),selected};
+}
+function managedSelectionChange(tableKey,change){
+  const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected,before=[...selected];
+  change(selected);
+  const render=tableKey==='orders'?renderOrders:renderCP;render();window.BLSelectionBar?.refresh();
+  showToast(appLang==='en'?'Selection updated.':'Seçim güncellendi.',{actions:[{id:'undo',label:appLang==='en'?'Undo':'Geri al'}],onAction:id=>{
+    if(id!=='undo')return;
+    const allowed=new Set(managedSelectionSourceRows(tableKey).map(row=>String(row._id)));
+    selected.clear();before.forEach(value=>{if(allowed.has(String(value)))selected.add(value);});render();window.BLSelectionBar?.refresh();
+  }});
+}
+window.BLManagedSelection={
+  clear(tableKey){managedSelectionChange(tableKey,selected=>selected.clear());},
+  snapshot:managedSelectionSnapshot,
+  remove(tableKey,id){
+    managedSelectionChange(tableKey,selected=>{for(const value of selected)if(String(value)===String(id))selected.delete(value);});
+  },
+};
 function managedTableHasCheckedRows(tab){
   if(tab==='cp')return state.cpSelected.size>0;
   if(tab==='orders')return state.ordersSelected.size>0;
@@ -8673,7 +8700,7 @@ async function cpOrdersRecordImageCopyCells(records,dims){
 }
 function cpOrdersImageDims(tableKey){return tableKey==='orders'?ordersImageDims():cpImageDims();}
 async function buildManagedTableStyledCopy(tableKey, rows, selSet){
-  const all=Array.isArray(rows)?rows:[];
+  const all=selSet?.size?managedSelectionSourceRows(tableKey):(Array.isArray(rows)?rows:[]);
   const records=selSet&&selSet.size
     ? all.filter(row=>selSet.has(row._id)||selSet.has(Number(row._id))||selSet.has(String(row._id)))
     : all;
@@ -21915,7 +21942,7 @@ async function exportActiveTableStyled(){
   if(!cfg){ showToast('Bu sayfada dışa aktarılacak tablo yok.'); return; }
   return await exportStyledDomTable(cfg.sel, {
     selectedSet:cfg.set, fileBase:cfg.name, sheetName:cfg.name.replace(/_/g,' ').slice(0,30), idAttr:cfg.idAttr,
-    tableKey:cfg.tableKey, records:cfg.rowsFn?cfg.rowsFn():null, computeFn:cfg.computeFn||null,
+    tableKey:cfg.tableKey, records:cfg.rowsFn?(cfg.set?.size?managedSelectionSourceRows(tab):cfg.rowsFn()):null, computeFn:cfg.computeFn||null,
   });
 }
 

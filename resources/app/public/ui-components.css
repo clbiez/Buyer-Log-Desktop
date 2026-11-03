@@ -15618,3 +15618,14 @@ html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeBottom {
 html[data-ui-system="manifest"] table[role="grid"] tbody td.blGridRangeLeft {
   --ui-grid-range-left:inset 1px 0 0 0 var(--ui-grid-range-border);
 }
+
+/* Compact selection details: anchored to the existing action bar. */
+html[data-ui-system="manifest"] .blSelectionCount {border:0;background:transparent;padding:0;cursor:pointer;}
+html[data-ui-system="manifest"] .blSelectionHidden {background:var(--ui-surface);color:var(--ui-text-secondary);border:0;font:inherit;white-space:nowrap;}
+html[data-ui-system="manifest"] .blSelectionPopover {pointer-events:auto;position:absolute;bottom:100%;margin-bottom:8px;width:360px;max-width:calc(100vw - 24px);background:var(--ui-surface);color:var(--ui-text);box-shadow:var(--ui-shadow-overlay);border:0;}
+html[data-ui-system="manifest"] .blSelectionPopover[hidden] {display:none!important;}
+html[data-ui-system="manifest"] .blSelectionPopoverHead,html[data-ui-system="manifest"] .blSelectionPopoverRow {display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;}
+html[data-ui-system="manifest"] .blSelectionPopoverSummary {padding:0 12px 8px;color:var(--ui-text-secondary);}
+html[data-ui-system="manifest"] .blSelectionPopoverList {max-height:280px;overflow:auto;}
+html[data-ui-system="manifest"] .blSelectionPopoverRow {border-top:0;}
+html[data-ui-system="manifest"] .blSelectionPopoverRow small {display:block;color:var(--ui-text-secondary);margin-top:4px;}

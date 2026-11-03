@@ -95,12 +95,19 @@ test('Filtreleri Temizle diğer araç düğmeleri gibi ortak çerçeveyi kullan�
   assert.doesNotMatch(rule,/border:0/);
 });
 
-test('kapatılan seçim çubuğu seçim boşalıp aynı sayıda yeniden seçilince tekrar görünür',()=>{
+test('× seçimi temizler; aynı sayıda yeni seçim yapıldığında çubuk tekrar görünür',()=>{
   const s=mountBar({cp:1});
+  const cleared=[];
+  s.ctx.window.BLManagedSelection={
+    clear(key){cleared.push(key);s.ctx.state.cpSelected.clear();},
+    snapshot(){return {rows:[],hidden:[]};},
+  };
+  s.fire();
   assert.equal(s.bar.hidden,false);
   s.bar.l.click({target:{closest:()=>({dataset:{selectionDismiss:''}})},stopPropagation(){}});
+  assert.deepEqual(cleared,['cp']);
+  assert.equal(s.ctx.state.cpSelected.size,0);
   assert.equal(s.bar.hidden,true);
-  s.ctx.state.cpSelected.clear();s.fire();
   s.ctx.state.cpSelected.add('other');s.fire();
   assert.equal(s.bar.hidden,false);
 });
