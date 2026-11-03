@@ -12342,9 +12342,16 @@ html[data-ui-system="manifest"] #backlogContent [data-stage="UNKNOWN"],html[data
 }
 html[data-ui-system="manifest"] .blvTipBox .blvTipVal {color:var(--ui-series-color) !important
 }
-html[data-ui-system="manifest"] .blvTile[data-stage] {--ui-metric-color:var(--ui-series-color)
+html[data-ui-system="manifest"] .blvTile {--ui-metric-color:var(--ui-series-color)
 }
 html[data-ui-system="manifest"] .blvTile[data-stage=""] .bpaTileValue {color:var(--ui-text) !important
+}
+/* Overview KPI states override the generic, neutral Plan & Actual card adapter. */
+html[data-ui-system="manifest"] #backlogOverview .blvTile {
+  background:color-mix(in srgb,var(--ui-metric-color,var(--ui-accent)) 8%,var(--ui-surface)) !important;
+}
+html[data-ui-system="manifest"] #backlogOverview .blvTile :is(.bpaTileValue,.bpaTileLabel) {
+  color:var(--ui-metric-color,var(--ui-accent)) !important;
 }
 html[data-ui-system="manifest"] .blvBadge[data-stage="CUSTOMS"] {color:var(--ui-warning) !important
 }

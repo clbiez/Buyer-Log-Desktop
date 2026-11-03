@@ -47,6 +47,10 @@
 .blvModuleToggle .ic{width:18px;height:18px}
 .blvModuleHint{margin-left:4px}
 #backlogOverviewBody{padding:12px}
+/* The loaded-share chart and its text occupy the same grid cell. */
+.blvLoadRing{grid-template-rows:minmax(160px,1fr) auto}
+.blvLoadRing .blvLoadChart{grid-area:1/1;width:160px;height:160px;max-width:100%;align-self:center}
+#backlogOverview .blvLoadRing .bpaRingText{grid-area:1/1;align-self:center}
 
 /* Backlog ekranının genel görünümü: Plan & Actual ile aynı yüzey dili.
    Genel bakış paneli KPI'ları daha zengin gösterdiği için eski iki KPI

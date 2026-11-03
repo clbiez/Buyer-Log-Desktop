@@ -81,6 +81,9 @@ Köşeler `--ui-radius:0`; hiçbir kontrol/kart/çip/sekme 2px’i aşmaz. Daire
 avatar veya durum noktası içindir. Radyo, slider tutamağı, yükleme işareti ve
 grafik noktaları köşelidir. İkonun içindeki mercek ya da coğrafi kürenin dünya
 izdüşümü bir kontrolün hitbox’ı veya veri işaretçisi değildir.
+Kullanıcı tercihiyle Backlog Genel Bakış’ın sol üst yüklenen yüzde göstergesi
+dairesel grafik kullanır; merkezindeki yüzde ve metin korunur. Bu dar istisna
+diğer grafik işaretçilerine veya kart/kontrol köşelerine uygulanmaz.
 
 İzin verilen çizgiler ortak bileşen sözleşmesiyle sınırlıdır:
 

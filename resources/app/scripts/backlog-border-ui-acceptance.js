@@ -55,6 +55,36 @@ function audit(){
   }
   return {counts:results,failures};
 }
+function auditOverview(expectedLoaded){
+  const root=document.querySelector('#backlogOverview'),svg=root.querySelector('.blvLoadChart'),failures=[];
+  if(!svg)return ['loaded-share circular chart is missing'];
+  const arc=svg.querySelector('.bpaRingValue'),track=svg.querySelector('.bpaRingTrack');
+  if(!arc||!track||svg.querySelectorAll('circle').length!==2)return ['loaded-share chart needs a track and value arc'];
+  const value=Number(arc.getAttribute('stroke-dasharray').split(' ')[0]);
+  if(Math.abs(value-expectedLoaded*100)>.00001)failures.push('arc differs from the canonical loaded share');
+  const label=root.querySelector('.bpaRingText'),a=svg.getBoundingClientRect(),b=label.getBoundingClientRect();
+  if(Math.abs(a.x+a.width/2-b.x-b.width/2)>2||Math.abs(a.y+a.height/2-b.y-b.height/2)>2)failures.push('percentage is not centred inside the chart');
+  const shown=Number(label.querySelector('b').textContent.replace('%','').replace(',','.'));
+  if(Math.abs(shown-value)>.051)failures.push('visible percentage differs from the chart');
+  if(svg.getAttribute('aria-hidden')!=='true'||!label.textContent.trim())failures.push('the visible percentage must remain accessible without duplicate SVG text');
+  const palette={PRODUCTION:'--ui-accent',LOADING:'--ui-warning',IN_TRANSIT:'--ui-chart-4',IN_WAREHOUSE:'--ui-success',SHORTAGE:'--ui-danger'};
+  const probe=document.createElement('span');root.appendChild(probe);
+  const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');canvas.width=canvas.height=1;
+  const rgb=color=>{ctx.fillStyle=color;ctx.fillRect(0,0,1,1);return [...ctx.getImageData(0,0,1,1).data].slice(0,3);};
+  const luminance=col=>{const [r,g,b]=col.map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;});return .2126*r+.7152*g+.0722*b;};
+  for(const tile of root.querySelectorAll('.blvTile')){
+    const token=palette[tile.dataset.stage]||'--ui-accent';
+    probe.style.color=`var(${token})`;const expected=getComputedStyle(probe).color;
+    for(const selector of ['.bpaTileValue','.bpaTileLabel']){
+      const actual=getComputedStyle(tile.querySelector(selector)).color;
+      if(actual!==expected)failures.push(`${tile.dataset.stage||'summary'} ${selector} lost its semantic colour`);
+      const foreground=luminance(rgb(actual)),background=luminance(rgb(getComputedStyle(tile).backgroundColor));
+      if((Math.max(foreground,background)+.05)/(Math.min(foreground,background)+.05)<4.5)failures.push(`${selector} contrast below 4.5:1`);
+    }
+  }
+  probe.remove();
+  return failures;
+}
 (async()=>{
   console.log('Artifacts:',root);
   let ready=false;
@@ -79,12 +109,14 @@ function audit(){
   await page.locator('#backlogOverview .bpaTile').first().waitFor();
   await page.evaluate(()=>document.getElementById('backlogPlanActualToggle').click());
   await page.locator('[data-bpa-control="preset"]').waitFor();
+  const expectedLoaded=await page.evaluate(rows=>BLBacklogV3Report.summarize(BLBacklogV3Report.normalizeRows(rows)).loadedPct,original.rows);
   for(const lang of ['tr','en'])for(const theme of ['light','dark'])for(const scale of ['standard','large','xl','compact']){
     await page.evaluate(({lang,theme,scale})=>{applyLanguage(lang);document.documentElement.dataset.theme=theme;document.documentElement.dataset.uiScale=scale;},{lang,theme,scale});
     await page.waitForTimeout(150);
     const result=await page.evaluate(audit),label=`${lang}/${theme}/${scale}`;
     assert.ok(result.counts.frames>=8&&result.counts.actions>=40&&result.counts.fields>=10,`${label}: incomplete rendered screen`);
     assert.deepEqual(result.failures,[],label);results.push({label,...result.counts});
+    assert.deepEqual(await page.evaluate(auditOverview,expectedLoaded),[],`${label}: KPI colours and circular share`);
     await page.locator('[data-range-unit="month"]').click();
     await page.locator('[data-range-unit="week"]').click();
     await page.locator('[data-range-unit="week"]').focus();await page.keyboard.press('Tab');
@@ -113,7 +145,7 @@ function audit(){
   assert.deepEqual(after.rows,original.rows,'appearance controls must not mutate Backlog rows');
   assert.deepEqual(errors,[],'browser errors');
   fs.writeFileSync(path.join(root,'results.json'),JSON.stringify(results,null,2));
-  console.log(`PASS ${results.length} TR/EN × light/dark × four-size screens; field/button/panel borders, focus, filter/detail drawers and unchanged rows`);
+  console.log(`PASS ${results.length} TR/EN × light/dark × four-size screens; semantic KPI colours/contrast, centred circular share, field/button/panel borders, focus, filter/detail drawers and unchanged rows`);
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(async()=>{
   if(browser)await browser.close();
   if(server.exitCode===null){const stopped=new Promise(r=>server.once('exit',r));server.kill('SIGTERM');const timer=setTimeout(()=>server.kill('SIGKILL'),5000);await stopped;clearTimeout(timer);}
