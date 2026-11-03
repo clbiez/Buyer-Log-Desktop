@@ -18616,6 +18616,7 @@ async function exportCurrentBacklogDetail(){
   const btn=document.getElementById('backlogDetailExportBtn'),old=btn?btn.innerHTML:'';
   if(btn){btn.disabled=true;btn.textContent=appLang==='en'?'Preparing…':'Hazırlanıyor…';}
   try{
+    await window.BLMerchCalendarReady;
     const headers=currentBacklogDetailHeaders.length?currentBacklogDetailHeaders:Object.keys(currentBacklogDetailRows[0]||{});
     const wb=XLSX.utils.book_new();
     const includeImages=false;
@@ -19277,7 +19278,7 @@ function backlogExcelCellFromValue(value,kind,style){
     if(d instanceof Date&&!isNaN(d)){cell.v=d;cell.t='d';cell.s={...style,numFmt:'dd.mm.yy',alignment:{horizontal:'right',vertical:'center'}};}
     else{cell.v='';cell.t='s';}
   }else if(kind==='number'){
-    const n=Number(value);
+    const n=value==null||value===''?NaN:Number(value);
     if(Number.isFinite(n)){cell.v=n;cell.t='n';}
     else{cell.v='';cell.t='s';}
   }else if(kind==='boolean'){
@@ -19491,10 +19492,13 @@ async function exportBacklogToExcel(_event,options={}){
   const d0=new Date(); const p=x=>String(x).padStart(2,'0');
   const stamp=`${d0.getFullYear()}${p(d0.getMonth()+1)}${p(d0.getDate())}_${p(d0.getHours())}${p(d0.getMinutes())}`;
   try{
+    await window.BLMerchCalendarReady;
     const res=await fetch('/api/backlog-export?'+qs);
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||res.statusText);}
     const data=await res.json();
     const wb=XLSX.utils.book_new();
+    // Use the same calendar snapshot that produced the server rows/revision.
+    if(data.merchCalendar)window.BLMerchCalendarRuntime?.apply?.(data.merchCalendar);
     // Yol süresi tablosunun yeri BACKLOG formülleri yazılmadan önce bilinmeli:
     // formüller doğrudan o hücrelere bağlanıyor. Tablo, filtre listesinin altına
     // bir boş satır bırakılarak yerleşiyor (başlık satırı + veri satırları).

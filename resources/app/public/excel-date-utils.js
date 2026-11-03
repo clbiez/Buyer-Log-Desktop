@@ -20,6 +20,9 @@
   }
 
   function isPeriodOnlyHeader(header) {
+    // A derived period keeps its source header, including "Gün" / "Date".
+    // The final suffix defines its type before the source words are considered.
+    if (/\((?:Ay|Hafta|Month|Week)\)\s*$/i.test(String(header == null ? '' : header))) return true;
     const key = normalizedHeader(header);
     if (!key) return false;
     if (/\b(HAFTA|HAFTASI|HAFTALARI|WEEK|WEEKS)\b/.test(key)) return true;
@@ -30,7 +33,7 @@
 
   function isDateHeader(header) {
     const key = normalizedHeader(header);
-    if (!key || isPeriodOnlyHeader(key)) return false;
+    if (!key || isPeriodOnlyHeader(header)) return false;
     if (/TARIH/.test(key) || /\b(DATE|DATETIME|TIMESTAMP)\b/.test(key)) return true;
     if (['OPD','RETAIL','YUKLEME ONAYI','BUYING APPROVAL','RETAIL TR WITH VESSEL'].includes(key)) return true;
     if (/\bANTREPO TESLIM\b/.test(key)) return true;
@@ -179,6 +182,9 @@
         const ref = XLSX.utils.encode_cell({ r, c });
         const cell = ws[ref];
         if (!cell || cell.v == null || cell.v === '') continue;
+        // Formula helpers such as _BL_HANDOVER are boolean, even though their
+        // header also contains a word used for actual dates.
+        if (cell.t === 'b' || typeof cell.v === 'boolean') continue;
         if (cell.f) { dateStyle(cell); changed++; continue; }
         if (cell.t === 'd' && cell.v instanceof Date && !isNaN(cell.v)) { writeSerialCell(cell, cell.v); changed++; continue; }
         if (cell.t === 'n' && Number.isFinite(Number(cell.v))) { dateStyle(cell); changed++; continue; }
@@ -253,6 +259,7 @@
         const cell = ws.getRow(r).getCell(c);
         const value = cell.value;
         if (value == null || value === '') continue;
+        if (typeof value === 'boolean' || typeof cell.result === 'boolean') continue;
         if (value instanceof Date && !isNaN(value)) { writeExcelJsSerial(cell, value); changed++; continue; }
         if (typeof value === 'object' && value.formula) { cell.numFmt = DATE_FORMAT; changed++; continue; }
         const parsed = parseDate(value);

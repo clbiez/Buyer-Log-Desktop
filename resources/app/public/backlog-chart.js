@@ -890,6 +890,8 @@
     const res=await root.fetch('/api/backlog-export'+(qs?'?'+qs:''));
     if(!res.ok){ let msg=res.statusText; try{const e=await res.json();msg=e.error||msg;}catch(_){} throw new Error(msg); }
     const data=await res.json();
+    await root.BLMerchCalendarReady;
+    if(data.merchCalendar)root.BLMerchCalendarRuntime?.apply?.(data.merchCalendar);
     cache={signature:sig,headers:normalizeHeaders(data.headers||[],data.rows||[]),rows:Array.isArray(data.rows)?data.rows:[]};
     return cache;
   }

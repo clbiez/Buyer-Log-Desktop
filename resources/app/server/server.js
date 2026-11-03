@@ -8795,6 +8795,7 @@ function backlogRowsCacheKey(id,active,overrides,profile,parts){
     backlogObjectIdentity(antrepoForTarget(active,'backlog')),backlogObjectIdentity(active&&active.cpupdateOverrides),
     overrides&&overrides._revision,overrides&&overrides._revisions||null,overrides&&overrides.antrepoSourceMode||'',
     profile&&profile.id||'',profile&&profile.accessRevision||0,userAccess.localIamRevision(),
+    require('./lib/merch-calendar-store').fingerprint(),
     `${day.getFullYear()}-${day.getMonth()+1}-${day.getDate()}`,parts]);
 }
 function cachedBacklogTemplateRows(key,compute){
@@ -8837,7 +8838,7 @@ app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res
       // rowsRevision: aynı girdiler = aynı satırlar. İstemci aynı revizyonda
       // elindeki normalleştirilmiş/analiz edilmiş veriyi yeniden kullanır.
       const rowsRevision=crypto.createHash('sha1').update(BACKLOG_ROWS_PROCESS_NONCE).update(detailRowsKey).digest('hex');
-      return sendDateSafeJson(res, { headers: exportHeaders, rows: detailRows, totalRows:detailRows.totalRows||detailRows.length, sourceColumns, sourceCatalog, rowsRevision });
+      return sendDateSafeJson(res, { headers: exportHeaders, rows: detailRows, totalRows:detailRows.totalRows||detailRows.length, sourceColumns, sourceCatalog, rowsRevision, merchCalendar:require('./lib/merch-calendar-store').publicProjection() });
     }
     const workerResult=await runExcelTask('writeBacklogWorkbook',{headers:exportHeaders,detailRows,importanceValues:BLOrderImportance.excelValues(overrides.importanceSettings),templatePath:path.join(__dirname,'templates','BACKLOG.xlsx')},{timeoutMs:300000});
     const buffer=Buffer.from(workerResult.data);
