@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.333",
+      "publishedAt": "2026-11-03",
+      "title": {
+        "tr": "Hızlı fiyat kontrolü ve ortak Backlog filtreleri",
+        "en": "Quick price checks and shared Backlog filters"
+      },
+      "stats": {
+        "features": 1,
+        "improvements": 2,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.333/release.json"
+    },
+    {
       "version": "7.0.331",
       "publishedAt": "2026-11-02",
       "title": {

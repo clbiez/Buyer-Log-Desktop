@@ -1,131 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-03",
+  "publishedAt": "",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Hızlı fiyat kontrolü ve ortak Backlog filtreleri",
-    "en": "Quick price checks and shared Backlog filters"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "Supp. FOB hücresinden nihai fiyatı hesaplayın; analiz filtrelerini tüm Backlog ekranlarına ve Excel raporlarına uygulayın.",
-    "en": "Calculate final pricing from the Supp. FOB cell and apply analysis filters across Backlog views and Excel reports."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "supp-fob-quick-calculator",
-      "type": "feature",
-      "module": {
-        "tr": "CP · Siparişler",
-        "en": "CP · Orders"
-      },
-      "title": {
-        "tr": "Supp. FOB sağ tık menüsünde mini hesaplayıcı",
-        "en": "Mini calculator in the Supp. FOB context menu"
-      },
-      "body": {
-        "tr": "Supp. FOB hücresine sağ tıklayıp 360 piksel genişliğindeki kompakt kartta yeni üretici fiyatını girin. Final FOB, mevcut fiyat ve farkı yan yana görün; sonuç yanındaki simgeyle kopyalayın. Royalty, komisyon, hologram ve sözleşme bilgileri Hesap detayı altında açılır. Hesap, siparişin OPD, sezon, ülke, Licensor ve License eşleşmesini kullanır. Fiyat denemesi siparişi değiştirmez; eksik veya geçersiz sözleşmede hesap sonucu üretilmez.",
-        "en": "Right-click a Supp. FOB cell and enter a new supplier price in a compact 360-pixel-wide card. View Final FOB, the current price and the difference, and copy the result with the adjacent icon. Expand Calculation details for royalty, commission, hologram and contract information. The calculation uses the order’s OPD, season, country, Licensor and License match. Price trials do not change the order; missing or invalid contracts produce no result."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "supp-fob-quick-calculator.png",
-        "alt": {
-          "tr": "Buyer Log demo siparişinde 1,85 USD Supp. FOB için 2,50 USD Final FOB hesabı",
-          "en": "Buyer Log demo order calculating 2.50 USD Final FOB from 1.85 USD Supp. FOB"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü, yerel demo veriyle: kompakt kartta fiyat girişi, Final FOB, kopyalama ve fiyat farkı görünür; sözleşme detayları kapalıdır.",
-          "en": "Actual post-change Buyer Log UI with local demo data: the compact card shows the price input, Final FOB, copy action and price difference; contract details are collapsed."
-        }
-      }
-    },
-    {
-      "id": "backlog-shared-analysis-filters",
-      "type": "improvement",
-      "module": {
-        "tr": "Backlog",
-        "en": "Backlog"
-      },
-      "title": {
-        "tr": "Analiz filtreleri tüm Backlog alanlarında ortak",
-        "en": "Shared analysis filters across all Backlog areas"
-      },
-      "body": {
-        "tr": "Analiz Filtreleri çekmecesindeki CP, ASAS ve IAS seçimleri artık ana tabloyu, detayları, grafikleri, teslimat analizini, sunum raporunu, Legacy Excel ve Backlog Report çıktılarını birlikte süzer. Tarih aralıkları ve çoklu seçimler mevcut Backlog filtreleriyle birlikte çalışır; filtreyi temizlemek tüm kapsamı geri getirir. Planlanan ve Gerçekleşen raporu aynı seçimin güncel Backlog sipariş kapsamını kullanır. Kaydedilmiş filtreler yeniden açılışta korunur.",
-        "en": "CP, ASAS and IAS selections in the Analysis Filters drawer now filter the main table, details, charts, delivery analysis, presentation report, Legacy Excel and Backlog Report exports together. Date ranges and multiple selections combine with existing Backlog filters; clearing a filter restores the full scope. Planned vs Actual uses the current Backlog order scope selected by the same filters. Saved filters remain active after reopening."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "backlog-shared-analysis-filters.png",
-        "alt": {
-          "tr": "Demo Backlog verisinde 6S27 sezon filtresiyle 119 satırdan 43 satıra daralan ortak analiz",
-          "en": "Shared analysis narrowed from 119 to 43 rows by the 6S27 season filter on demo Backlog data"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü, demo veriyle. Ortak filtre çekmecesi filtre kapsamını ve seçili sezonun satır sayısını gösterir. Legacy Excel ve Backlog V3 indirmelerinde de aynı 43 satır doğrulandı.",
-          "en": "Actual post-change Buyer Log UI with demo data. The shared filter drawer shows the filter scope and selected season row count. Legacy Excel and Backlog V3 downloads were also verified to contain the same 43 rows."
-        }
-      }
-    },
-    {
-      "id": "soft-grid-cell-selection",
-      "type": "improvement",
-      "module": {
-        "tr": "Tablolar",
-        "en": "Tables"
-      },
-      "title": {
-        "tr": "Daha yumuşak hücre seçimi",
-        "en": "Softer cell selection"
-      },
-      "body": {
-        "tr": "CP, Siparişler ve ortak detay tablolarında hücre seçiminin dolgusu açık ve koyu temada hafifletildi. Seçili aralığın dış sınırı daha sakin renkte 1 piksel çizgiyle gösterilir; aktif hücrenin klavye odağı belirgin kalır.",
-        "en": "Cell selection in CP, Orders and shared detail tables now uses a lighter tint in both light and dark themes. The selected range has a softer 1-pixel perimeter while the active cell keeps its clear keyboard focus indicator."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "soft-grid-cell-selection.png",
-        "alt": {
-          "tr": "Koyu temada hafif dolgulu ve ince sınırlı hücre seçimi",
-          "en": "Subtle cell-selection fill and thin perimeter in the dark theme"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log CP tablosunda demo veriyle 5×5 hücre seçimi; yumuşak dolgu, ince dış sınır ve belirgin aktif hücre.",
-          "en": "Actual post-change Buyer Log CP table with demo data and a 5×5 cell selection: subtle fill, thin perimeter and a clear active cell."
-        }
-      }
-    },
-    {
-      "id": "compact-selection-filter-copy",
-      "type": "fix",
-      "module": {
-        "tr": "CP · Siparişler",
-        "en": "CP · Orders"
-      },
-      "title": {
-        "tr": "Kompakt seçim çubuğunda filtre dışındaki satırlar",
-        "en": "Filtered-out rows in the compact selection bar"
-      },
-      "body": {
-        "tr": "Alt seçim çubuğu filtre dışında kalan satırları gösterir. Seçim sayısına tıklayarak küçük listede satırları görün ve kaldırın. Kopyala ve Excel filtrelerden bağımsız tüm seçili kayıtları alır. × seçimleri temizler; bildirimden geri alabilirsiniz.",
-        "en": "The bottom selection bar shows rows outside the current filters. Click the count to inspect and remove rows in a small list. Copy and Excel include all selected records regardless of filters. × clears selections; undo is available in the notification."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "compact-selection.png",
-        "alt": {
-          "tr": "Buyer Log demo CP tablosunda filtre dışındaki seçimin kompakt listesi",
-          "en": "Compact list of a filtered-out selection in the Buyer Log demo CP table"
-        },
-        "caption": {
-          "tr": "Gerçek Buyer Log arayüzünde demo verilerle değişiklik sonrası seçim çubuğu ve açılır liste.",
-          "en": "Actual post-change Buyer Log selection bar and popup with demo data."
-        }
-      }
-    }
-  ]
+  "changes": []
 }
