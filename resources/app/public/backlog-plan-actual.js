@@ -17,7 +17,7 @@ const pf=new Intl.NumberFormat('tr-TR',{maximumFractionDigits:1,minimumFractionD
 const shortDate=new Intl.DateTimeFormat('tr-TR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 const Report=()=>window.BLPlanActualReport;
 let state=loadState();
-let data=null,loading=false,exporting=false,error='',bound=false;
+let data=null,loading=false,exporting=false,error='',bound=false,querySignature='',refreshGeneration=0;
 // Tooltip ve detay paneli içerikleri her render'da yeniden kurulan kayıtlardan okunur.
 let tips=new Map(),openers=new Map(),seq=0;
 
@@ -134,16 +134,21 @@ function openModule(value){
 async function refresh(){
   const range=rangeIso();
   if(!range){error=L('Geçerli bir başlangıç ve bitiş zamanı seçin.','Choose a valid start and end time.');render();return;}
+  const generation=++refreshGeneration;
   loading=true;error='';render();
   try{
     const win=planWindow();
     const params=new URLSearchParams({from:range.from,to:range.to,planFrom:win.from,planTo:win.to,asOf:String(state.to||'').slice(0,10)});
+    const shared=typeof buildBacklogParams==='function'?buildBacklogParams():{};
+    if(shared.analysisFilters)for(const [key,value] of Object.entries(shared))if(value!=null)params.set(key,String(value));
+    const signature=JSON.stringify(shared);
     const res=await fetch('/api/backlog-plan-actual?'+params.toString(),{cache:'no-store',credentials:'same-origin'});
     const body=await res.json().catch(()=>({}));
+    if(generation!==refreshGeneration)return;
     if(!res.ok)throw new Error(body.error||L('Analiz alınamadı.','Analysis could not be loaded.'));
-    data=body;hydrateFilterValidity();error='';
-  }catch(err){error=String(err&&err.message||err);data=null;}
-  finally{loading=false;render();}
+    data=body;querySignature=signature;hydrateFilterValidity();error='';
+  }catch(err){if(generation===refreshGeneration){error=String(err&&err.message||err);data=null;}}
+  finally{if(generation===refreshGeneration){loading=false;render();}}
 }
 function hydrateFilterValidity(){
   if(!data||!data.catalogs)return;
@@ -530,6 +535,8 @@ function openDrawer(spec){
 function filterText(){
   const labels={buyer:'Buyer',buyingGroup:'Buyer Group',manufacturer:L('Üretici','Manufacturer'),season:L('Sezon','Season'),mag:'MAG',mmyg:'MMYG',productMainDefinition:L('Ürün Ana Tanım','Product Main Definition')};
   const parts=Object.entries(state.filters).filter(([,v])=>v).map(([k,v])=>`${labels[k]||k}: ${v}`);
+  const shared=window.BLBacklogOverview?.queryFilters?.()||[];
+  if(shared.length&&typeof backlogV3FilterText==='function')parts.unshift(backlogV3FilterText());
   if(state.agenda!=='all')parts.push(L('Gündem','Agenda')+': '+state.agenda);
   if(state.scope==='plan')parts.push(L('Yalnız plan penceresi','Plan window only'));
   return parts.join(' · ');
@@ -556,7 +563,8 @@ function buildReport(){
 /* Backlog V3 Excel'i bu raporu kendi çalışma kitabına ekler. Panel hiç
    açılmadıysa veri mevcut dönem/plan penceresi tercihleriyle yüklenir. */
 async function exportReport(){
-  if(!data&&!loading)await refresh();
+  const signature=JSON.stringify(typeof buildBacklogParams==='function'?buildBacklogParams():{});
+  if(!data||signature!==querySignature)await refresh();
   return buildReport();
 }
 async function exportExcel(){
@@ -566,7 +574,8 @@ async function exportExcel(){
   try{
     if(window.BLPerf){await window.BLPerf.ensureLibrary('exceljs');await window.BLPerf.ensureLibrary('jszip').catch(()=>null);}
     if(typeof window.ExcelJS==='undefined')throw new Error(L('Excel kütüphanesi yüklenemedi.','Excel library could not be loaded.'));
-    const report=buildReport();
+    const report=await exportReport();
+    if(!report)return;
     const out=await R.buildXlsx(report,{ExcelJS:window.ExcelJS,JSZip:window.JSZip,lang:lang(),outputType:'blob',onChartError:err=>console.warn('[plan-actual] Excel grafikleri eklenemedi',err)});
     const name=R.fileName(report);
     download(out,name);
@@ -640,5 +649,5 @@ function init(){
   document.addEventListener('bl:language-changed',()=>{if(state.open)render()});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-window.BLBacklogPlanActual={refresh:()=>refresh(),open:()=>openModule(true),close:()=>openModule(false),exportExcel:()=>exportExcel(),exportReport:()=>exportReport()};
+window.BLBacklogPlanActual={onBacklogRendered:()=>{const signature=JSON.stringify(typeof buildBacklogParams==='function'?buildBacklogParams():{});if(signature!==querySignature){++refreshGeneration;data=null;loading=false;if(state.open)void refresh();}},refresh:()=>refresh(),open:()=>openModule(true),close:()=>openModule(false),exportExcel:()=>exportExcel(),exportReport:()=>exportReport()};
 })();

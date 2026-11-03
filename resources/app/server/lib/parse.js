@@ -3035,7 +3035,48 @@ function filterBacklogOrders(asasOrders, antrepoMap, overrides, opts, dimensions
     ? dimFiltered.filter(o => dateValues.includes(backlogDateBucketKey(o, dateGran)))
     : dimFiltered;
 
-  return { filtered, windowed, retailFrom, retailTo, inStoreFrom, inStoreTo, exFactoryFrom, exFactoryTo, antrepoFrom, antrepoTo };
+  return { filtered:filterBacklogAnalysisSegments(filtered, asasOrders, antrepoMap, overrides, opts.analysisFilters), windowed, retailFrom, retailTo, inStoreFrom, inStoreTo, exFactoryFrom, exFactoryTo, antrepoFrom, antrepoTo };
+}
+
+// Analiz çekmecesi, pivot/detay/Excel için aynı operasyon segmentlerini süzer.
+// Alanları istemcinin rowKey/label değerinden değil mevcut katalog kimliğinden çöz.
+function filterBacklogAnalysisSegments(segments, asasOrders, antrepoMap, overrides, rawFilters) {
+  let filters = rawFilters;
+  if (typeof filters === 'string') { try { filters = JSON.parse(filters); } catch { filters = []; } }
+  if (!Array.isArray(filters)) return segments;
+  filters = filters.filter(f => f && ((Array.isArray(f.values) && f.values.length) || f.from || f.to));
+  if (!filters.length) return segments;
+  const catalog = new Map(backlogCustomDimensionContext(asasOrders, antrepoMap).customDimensions.map(c => [c.id, c]));
+  const resolved = filters.map(f => {
+    const header = String(f.id || '').startsWith('cp:') ? String(f.id).slice(3) : '';
+    const column = catalog.get(f.id);
+    return { filter:f, column, key:header && !header.startsWith('_') ? header : column && column.label };
+  });
+  if (resolved.some(f => !f.key)) return [];
+  const valueKey = value => value == null || value === '' ? '' : value instanceof Date ? toISODateLocal(value) : typeof value === 'object' ? JSON.stringify(value) : String(value);
+  const criteria = resolved.map(({filter, column, key}) => ({key, column, from:filter.from || '', to:filter.to || '', values:new Set((Array.isArray(filter.values) ? filter.values : []).map(String))}));
+  const matches = (value, f) => {
+    if (f.from || f.to) {
+      const date = parseDateFlexible(value), day = date && toISODateLocal(date);
+      return !!day && (!f.from || day >= f.from) && (!f.to || day <= f.to);
+    }
+    return f.values.has(valueKey(value));
+  };
+  // Ham kaynak filtreleri pahalı CP/risk/Excel projeksiyonundan önce uygulanır.
+  const raw = criteria.filter(f => f.column), cpFilters = criteria.filter(f => !f.column);
+  const selected = raw.length ? segments.filter(segment => raw.every(f => {
+    const source = f.column.source === 'asas' ? sourceOrderRef(segment) || segment : segment._iasRow;
+    return matches(source && source._sourceFields && source._sourceFields[f.column.header], f);
+  })) : segments;
+  if (!cpFilters.length || !selected.length) return selected;
+  const cpMap = new Map();
+  if (cpFilters.some(f => f.key === 'buying note')) {
+    const orders = [...new Set(selected.map(segment => sourceOrderRef(segment) || segment))];
+    buildCPRowsFromASAS(orders, antrepoMap, overrides).forEach(row => cpMap.set(sourceOrderRef(row), row));
+  }
+  const rows = backlogTemplateRowsFromSegments(selected, overrides, cpMap, []);
+  if (cpFilters.some(f => !Object.prototype.hasOwnProperty.call(rows[0], f.key))) return [];
+  return selected.filter((segment, index) => cpFilters.every(f => matches(rows[index][f.key], f)));
 }
 
 // Her boyut için sipariş kümesinde GERÇEKTEN bulunan değerler.

@@ -8728,7 +8728,7 @@ app.get('/api/backlog', userAccess.requireArea('backlog'), async (req, res) => {
     const dateLevels = antrepoDateLevels ? String(antrepoDateLevels).split(',').filter(Boolean) : undefined;
     let parsedDimFilters = {};
     if (dimFilters) { try { parsedDimFilters = JSON.parse(dimFilters); } catch { parsedDimFilters = {}; } }
-    const params = { retailFrom:retailFrom||'', retailTo:retailTo||'', inStoreFrom:inStoreFrom||'', inStoreTo:inStoreTo||'', exFactoryFrom:exFactoryFrom||'', exFactoryTo:exFactoryTo||'', buyerGrup:buyerGrup||'', groupBy:dims, dimFilters:parsedDimFilters, antrepoFrom:antrepoFrom||'', antrepoTo:antrepoTo||'', antrepoDateLevels:dateLevels||[] };
+    const params = { retailFrom:retailFrom||'', retailTo:retailTo||'', inStoreFrom:inStoreFrom||'', inStoreTo:inStoreTo||'', exFactoryFrom:exFactoryFrom||'', exFactoryTo:exFactoryTo||'', buyerGrup:buyerGrup||'', groupBy:dims, dimFilters:parsedDimFilters, analysisFilters:req.query.analysisFilters, antrepoFrom:antrepoFrom||'', antrepoTo:antrepoTo||'', antrepoDateLevels:dateLevels||[] };
     if (!filterStatus.ready) {
       const overrides = loadOverrides();
       const emptyReport = buildBacklogGrouped([], {}, overrides, params);
@@ -8818,7 +8818,7 @@ app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res
     const dims=groupBy?String(groupBy).split(',').filter(Boolean):[];
     const dateLevels=antrepoDateLevels?String(antrepoDateLevels).split(',').filter(Boolean):undefined;
     let parsedDimFilters={}; if(dimFilters){try{parsedDimFilters=JSON.parse(dimFilters);}catch{}}
-    const filterOpts={retailFrom,retailTo,inStoreFrom,inStoreTo,exFactoryFrom,exFactoryTo,buyerGrup,groupBy:dims,dimFilters:parsedDimFilters,antrepoFrom,antrepoTo,antrepoDateLevels:dateLevels};
+    const filterOpts={retailFrom,retailTo,inStoreFrom,inStoreTo,exFactoryFrom,exFactoryTo,buyerGrup,groupBy:dims,dimFilters:parsedDimFilters,analysisFilters:req.query.analysisFilters,antrepoFrom,antrepoTo,antrepoDateLevels:dateLevels};
     const backlogOrders=userAccess.filterRowsByScope(req.currentUser,ordersForTarget(active,'backlog',overrides));
     const backlogAntrepo=antrepoForTarget(active,'backlog');
     // Excel detayı Backlog ekranıyla AYNI hedef kapsamını ve AYNI aktif filtreleri
@@ -8881,6 +8881,7 @@ app.post('/api/backlog-detail', userAccess.requireAnyArea('backlog','cp','orders
       const list = value => (Array.isArray(value) ? value : (value ? String(value).split(',') : [])).filter(Boolean);
       selector = {
         path: String(body.path),
+        analysisFilters: body.analysisFilters,
         retailFrom: body.retailFrom || '', retailTo: body.retailTo || '',
         inStoreFrom: body.inStoreFrom || '', inStoreTo: body.inStoreTo || '',
         exFactoryFrom: body.exFactoryFrom || '', exFactoryTo: body.exFactoryTo || '',
@@ -9015,10 +9016,22 @@ app.get('/api/backlog-plan-actual', userAccess.requireArea('backlog'), async (re
       });
     }
 
+    let analysisLineIds = null;
+    if (req.query.analysisFilters) {
+      await ensureBacklogRuntime(id);
+      await ensureBacklogSourceFields(id);
+      const active = cacheForUser(id), overrides = effectiveOverridesForUser(id);
+      const orders = userAccess.filterRowsByScope(req.currentUser, ordersForTarget(active, 'backlog', overrides));
+      let dimFilters = {}; try { dimFilters = JSON.parse(req.query.dimFilters || '{}'); } catch (_) {}
+      const rows = buildBacklogTemplateRows(orders, antrepoForTarget(active, 'backlog'), overrides, {...req.query, dimFilters});
+      analysisLineIds = new Set(rows.map(row => backlogPlanActual.lineId(row['Sipariş Kod'], row['Model Adı'], row['Renk Kod'])));
+    }
+    const inAnalysisScope = row => !analysisLineIds || analysisLineIds.has(backlogPlanActual.lineId(row.orderCode || row.ocode, row.modelName, row.colourCode));
+
     // Yetki filtresi snapshot farkından ÖNCE uygulanır. Böylece kullanıcı
     // geçmişte bugün erişemediği Buyer/MAG/MMYG/Buying Group satırlarını da göremez.
-    const startRows = userAccess.filterRowsByScope(req.currentUser, resolved.start.rows);
-    const endRows = userAccess.filterRowsByScope(req.currentUser, resolved.end.rows);
+    const startRows = userAccess.filterRowsByScope(req.currentUser, resolved.start.rows).filter(inAnalysisScope);
+    const endRows = userAccess.filterRowsByScope(req.currentUser, resolved.end.rows).filter(inAnalysisScope);
 
     // Refresh History Kaynak Veri alanına ait ayrı bir UI olabilir; bu API onu
     // doğrudan açmaz. Yalnız analiz aralığındaki detaylar alınır ve aynı Backlog
@@ -9027,7 +9040,7 @@ app.get('/api/backlog-plan-actual', userAccess.requireArea('backlog'), async (re
     const scopedHistory = {
       items:(Array.isArray(historyStore && historyStore.items) ? historyStore.items : []).map(item => ({
         ...item,
-        details:userAccess.filterRowsByScope(req.currentUser, Array.isArray(item && item.details) ? item.details : []),
+        details:userAccess.filterRowsByScope(req.currentUser, Array.isArray(item && item.details) ? item.details : []).filter(inAnalysisScope),
       })),
     };
     const activityResult = backlogPlanActual.collapseHistory(
