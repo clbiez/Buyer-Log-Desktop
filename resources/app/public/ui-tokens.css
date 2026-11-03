@@ -32,6 +32,8 @@
  --ui-motion-fast:100ms;--ui-motion-enter:140ms;--ui-motion-page:340ms;--ui-motion-card:360ms;--ui-motion-table:390ms;--ui-motion-overlay:240ms;--ui-motion-bar:440ms;--ui-motion-theme:560ms;--ui-ease:cubic-bezier(.2,.7,.3,1);
  --ui-shadow-overlay:0 16px 46px color-mix(in srgb,var(--ui-text) 18%,transparent);
  /* Shared inset perimeter shadows for grid-cell rectangle selection. */
+ --ui-grid-range-bg:color-mix(in srgb,var(--ui-accent) 12%,var(--ui-surface));
+ --ui-grid-range-border:color-mix(in srgb,var(--ui-accent) 50%,var(--ui-surface));
  --ui-grid-range-top:inset 0 0 0 0 transparent;--ui-grid-range-right:inset 0 0 0 0 transparent;
  --ui-grid-range-bottom:inset 0 0 0 0 transparent;--ui-grid-range-left:inset 0 0 0 0 transparent;
  --ui-scrim:transparent;--ui-backdrop-blur:6px;

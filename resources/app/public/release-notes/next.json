@@ -68,6 +68,23 @@
           "en": "Actual post-change Buyer Log UI with demo data. The shared filter drawer shows the filter scope and selected season row count. Legacy Excel and Backlog V3 downloads were also verified to contain the same 43 rows."
         }
       }
+    },
+    {
+      "id": "soft-grid-cell-selection",
+      "type": "improvement",
+      "module": { "tr": "Tablolar", "en": "Tables" },
+      "title": { "tr": "Daha yumuşak hücre seçimi", "en": "Softer cell selection" },
+      "body": {
+        "tr": "CP, Siparişler ve ortak detay tablolarında hücre seçiminin dolgusu açık ve koyu temada hafifletildi. Seçili aralığın dış sınırı daha sakin renkte 1 piksel çizgiyle gösterilir; aktif hücrenin klavye odağı belirgin kalır.",
+        "en": "Cell selection in CP, Orders and shared detail tables now uses a lighter tint in both light and dark themes. The selected range has a softer 1-pixel perimeter while the active cell keeps its clear keyboard focus indicator."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "soft-grid-cell-selection.png",
+        "alt": { "tr": "Koyu temada hafif dolgulu ve ince sınırlı hücre seçimi", "en": "Subtle cell-selection fill and thin perimeter in the dark theme" },
+        "caption": { "tr": "Değişiklik sonrası gerçek Buyer Log CP tablosunda demo veriyle 5×5 hücre seçimi; yumuşak dolgu, ince dış sınır ve belirgin aktif hücre.", "en": "Actual post-change Buyer Log CP table with demo data and a 5×5 cell selection: subtle fill, thin perimeter and a clear active cell." }
+      }
     }
   ]
 }
