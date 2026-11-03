@@ -29,8 +29,9 @@ function stageApprovedTarget({baseRoot,sourceRoot,targetRoot,sourceCommit}){
  const paths=cp.execFileSync('git',['diff','--no-renames','--name-only','-z',anchor.sourceCommit,sourceCommit,'--','.'],{cwd:sourceRoot});
  const changes=paths.toString('utf8').split('\0').filter(Boolean).map(full=>{
   if(!full.startsWith(prefix))throw Error('Source delta escaped the application.');
-  const relative=full.slice(prefix.length);S.filePath(relative);
+  const relative=full.slice(prefix.length);
   if(F.excluded(relative))return null;
+  S.filePath(relative);
   if(!S.mutablePath(relative))S.fail('PATCH_BOOTSTRAP_REQUIRED','Bu değişiklik için imzalı tam kurulum gerekli.','This change requires a signed full installation.');
   const tree=git(['ls-tree',sourceCommit,'--',relative]);
   if(tree&&!/^100644 blob [a-f0-9]+\t/.test(tree))throw Error('Only committed regular files may be patched.');

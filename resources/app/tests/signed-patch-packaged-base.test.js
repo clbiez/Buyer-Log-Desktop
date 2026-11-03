@@ -14,6 +14,7 @@ function setup(t,nested=false){
  const commit=()=>{git(['-c','core.autocrlf=false','add','-A']);git(['-c','user.name=Fixture','-c','user.email=fixture@example.invalid','-c','commit.gpgSign=false','commit','-qm','reviewed source']);return git(['rev-parse','HEAD']);};
  const baseCommit=commit(),anchor=F.readBootstrap(f.base);f.write(f.base,F.ANCHOR,JSON.stringify({...anchor,sourceCommit:baseCommit}));
  f.write(f.base,'electron/app-integrity.json',F.integrityBytes(F.inventory(f.base),'7.0.294'));
+ f.write(f.source,'tests/excluded.test.js','source-only regression test');
  f.write(f.source,'public/index.html','<h1>Patched</h1>');f.write(f.source,'server/new.js','new');fs.unlinkSync(path.join(f.source,'public/obsolete.js'));
  const sourceCommit=commit(),targetRoot=path.join(f.root,'target');
  return {...f,git,commit,sourceCommit,targetRoot,stage:()=>stageApprovedTarget({baseRoot:f.base,sourceRoot:f.source,targetRoot,sourceCommit})};
