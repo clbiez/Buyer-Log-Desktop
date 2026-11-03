@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.327",
-  "commit_sha": "76720b2b70d342ad4934fb0425790fe03c644c3f",
-  "release_notes": "TR: Buyer Log STABLE 7.0.327 — Tam Windows regresyonu ve TEST yayın kontrolleri sonrasında aynı imzalı TEST paketini yeniden derlemeden terfi ettirir.\nEN: Buyer Log STABLE 7.0.327 — Promotes the identical signed TEST artifact after full Windows regression and TEST publication checks, without rebuilding.",
-  "request_id": "7.0.327-promote-verified-checklist-studio-20261101"
+  "version": "7.0.332",
+  "commit_sha": "11cf8f64051d12871d7631d64bac3eadc34bf35f",
+  "release_notes": "TR: Buyer Log STABLE 7.0.332 — PR #825 ile CP/Siparişler seçimlerinin filtrelerden bağımsız kopyalama ve Excel aktarımı, kompakt seçim listesi ve Geri al. Tam Windows regresyonu ve imzalı TEST yayını doğrulanınca aynı imzalı paket yeniden derlenmeden STABLE'a terfi ettirilir.\nEN: Buyer Log STABLE 7.0.332 — PR #825 enables filter-independent Copy/Excel export for CP/Orders selections, a compact selection list, and Undo. After full Windows regression and signed TEST publication are verified, the identical signed artifact is promoted to STABLE without rebuilding.",
+  "request_id": "7.0.332-pr825-promote-after-test-20261103"
 }
