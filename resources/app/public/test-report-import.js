@@ -76,7 +76,15 @@
         TEST_REPORT_CONTEXT_TOO_LARGE: T('Bağlam sınırı aşıldı; hiçbir kaynak veya CP satırı kesilmedi. Dosyaları daha küçük gruplarla inceleyin.', 'The context limit was exceeded; no source or CP row was cut. Review smaller document groups.'),
         TEST_REPORT_EVIDENCE_MISSING: T('Kaynak metin bulunamadı; dosyaları yeniden bırakın.', 'Source text is missing; drop the files again.'),
       };
-      throw Object.assign(new Error(known[code] || (payload && payload.error) || (T('İstek başarısız: ', 'Request failed: ') + response.status)), { code: code });
+      const reasons = {
+        empty: T('CP satırları henüz yüklenmedi.', 'CP rows have not loaded yet.'),
+        identity: T('Sipariş kimliği veya erişim kapsamı değişti.', 'An order identity or access scope changed.'),
+        coverage: T('Ekran ve sunucudaki CP satır kapsamı farklı.', 'The page and server have different CP row coverage.'),
+        fields: T('Ekrandaki bir sipariş alanı güncel değil.', 'An order field on the page is out of date.'),
+        checklist: T('Checklist cevapları henüz eşitlenmedi.', 'Checklist answers are not yet synchronised.'),
+      };
+      const detail = code === 'TEST_REPORT_CP_INCOMPLETE' && payload.details && reasons[payload.details.reason];
+      throw Object.assign(new Error((detail ? detail + ' ' : '') + (known[code] || (payload && payload.error) || (T('İstek başarısız: ', 'Request failed: ') + response.status))), { code: code });
     }
     return payload;
   }
@@ -487,7 +495,7 @@
     if (ai.state === 'offline') return '<section class="trAiBar"><b>' + html(T('LCW AI bağlı değil', 'LCW AI is not connected')) + '</b><small>' + html(T('Bağlanırsanız LCW AI raporları inceleyip yapılacakları ve uygun checklist adımını önerir, okunamayan dosyaları okur. Öneriler yalnız sizin onayınızla uygulanır.', 'Once connected, LCW AI reviews the reports, suggests next steps and a fitting checklist step, and reads files Buyer Log could not. Suggestions are applied only with your approval.')) + '</small><button type="button" class="cpaBtn sm primary" data-tr-ai-connect>' + html(T('LCW AI\'a bağlan ve analiz et', 'Connect to LCW AI and analyse')) + '</button></section>';
     if (ai.state === 'error') {
       const cpError = ai.code === 'TEST_REPORT_CP_INCOMPLETE' || ai.code === 'TEST_REPORT_REVIEW_STALE' || ai.code === 'OFFICE_PREVIEW_CHANGED';
-      return '<section class="trAiBar is-error"><b>' + html(cpError ? T('CP bağlamı hazırlanamadı', 'CP context could not be prepared') : T('LCW AI analizi tamamlanamadı', 'LCW AI analysis did not complete')) + '</b><small>' + html(cpError ? T('Dosyalar önizlemede korunuyor. Güncel CP ve checklist verilerini yükleyip yeniden analiz edin.', 'Files are preserved in the preview. Reload current CP and checklist data and analyse again.') : ai.message) + '</small><button type="button" class="cpaBtn sm" ' + (cpError ? 'data-tr-cp-retry' : 'data-tr-ai-retry') + '>' + html(cpError ? T('CP verilerini yükle ve yeniden dene', 'Reload CP data and try again') : T('Tekrar dene', 'Try again')) + '</button></section>';
+      return '<section class="trAiBar is-error"><b>' + html(cpError ? T('CP bağlamı hazırlanamadı', 'CP context could not be prepared') : T('LCW AI analizi tamamlanamadı', 'LCW AI analysis did not complete')) + '</b><small>' + html(cpError ? [ai.message, T('Dosyalar önizlemede korunuyor. Güncel CP ve checklist verilerini yükleyip yeniden analiz edin.', 'Files are preserved in the preview. Reload current CP and checklist data and analyse again.')].filter(Boolean).join(' ') : ai.message) + '</small><button type="button" class="cpaBtn sm" ' + (cpError ? 'data-tr-cp-retry' : 'data-tr-ai-retry') + '>' + html(cpError ? T('CP verilerini yükle ve yeniden dene', 'Reload CP data and try again') : T('Tekrar dene', 'Try again')) + '</button></section>';
     }
     return '<section class="trAiBar is-done"><b>' + html(T('LCW AI analizi hazır', 'LCW AI analysis ready')) + (ai.model ? ' · ' + html(ai.model) : '') + '</b><small>' + html(ai.message || T('Öneriler her raporun satırında; hiçbiri siz uygulamadan seçilmez.', 'Suggestions are shown on each report row; none is applied until you do.')) + '</small><button type="button" class="cpaBtn sm" data-tr-ai-retry>' + html(T('Yeniden analiz et', 'Analyse again')) + '</button></section>';
   }
@@ -639,11 +647,13 @@
   /* -------------------------------------------------------- olaylar */
   async function handleFiles(fileList) {
     if (ui.busy) return;
-    cancelAi();
     const all = Array.from(fileList || []);
     const files = all.filter(function (f) { return ACCEPT.test(f.name || ''); });
     const skipped = all.filter(function (f) { return !ACCEPT.test(f.name || ''); });
     if (!files.length) { toast(T('Desteklenen dosya yok (.msg, .eml, .pdf, görsel).', 'No supported files (.msg, .eml, .pdf, image).')); return; }
+    if (files.length > 30) { toast(T('Tek seferde en fazla 30 dosya bırakılabilir.', 'Up to 30 files can be dropped at once.')); return; }
+    if (files.some(function (file) { return !file.size || file.size > 40 * 1024 * 1024; })) { toast(T('Dosya boş ya da 40 MB sınırını aşıyor.', 'The file is empty or exceeds the 40 MB limit.')); return; }
+    cancelAi();
     ui.busy = true; ui.done = null; render();
     try {
       const payload = { files: [] };
@@ -729,7 +739,18 @@
   }
   function localReviewSnapshot() {
     const cp = currentCpSnapshot(false);
+    // Rendering personal rules may update this display field asynchronously.
+    // Match the server freshness check; the full AI packet still retains it.
+    cp.rows.forEach(function (row) { delete row.fields.Priority; });
+    cp.columns = cp.columns.filter(function (key) { return key !== 'Priority'; });
     return JSON.stringify({ cp: cp, steps: catalog(), statuses: customStatusList() });
+  }
+  async function flushPreferences() {
+    if (!root.BLStorage || typeof root.BLStorage.flushPending !== 'function') return;
+    let timeout;
+    try { await Promise.race([root.BLStorage.flushPending(), new Promise(function (_, reject) { timeout = root.setTimeout(function () { reject(new Error('PREFERENCE_SAVE_TIMEOUT')); }, 8000); })]); }
+    catch (_) { throw Object.assign(new Error(T('Bekleyen ayarlar kaydedilemedi; CP verilerini yükleyip yeniden deneyin.', 'Pending preferences could not be saved; reload CP data and try again.')), { code: 'TEST_REPORT_REVIEW_STALE' }); }
+    finally { root.clearTimeout(timeout); }
   }
   async function runAi(options) {
     const AI = root.BuyerLogAI, Review = root.BLTestReportAssessment;
@@ -743,11 +764,12 @@
     const set = function (patch) { if (active()) { Object.assign(ui.ai, patch); render(); } };
     render();
     try {
-      if (options && options.refreshCp) {
+      if (typeof root.ensureCpLoaded === 'function') {
         set({ progress: T('Güncel CP ve checklist yükleniyor…', 'Loading current CP and checklist…') });
-        if (typeof root.ensureCpLoaded !== 'function' || !await root.ensureCpLoaded({ force: true })) throw new Error(T('CP yüklenemedi; CP ekranını yenileyip tekrar deneyin.', 'CP could not be loaded; refresh the CP screen and try again.'));
-        if (root.BLChecklistSupplierSync && typeof root.BLChecklistSupplierSync.loadShared === 'function') await root.BLChecklistSupplierSync.loadShared();
+        if (!await root.ensureCpLoaded({ force: Boolean(options && options.refreshCp) })) throw Object.assign(new Error(T('CP yüklenemedi; CP ekranını yenileyip tekrar deneyin.', 'CP could not be loaded; refresh the CP screen and try again.')), { code: 'TEST_REPORT_CP_INCOMPLETE' });
         if (!active()) return;
+      }
+      if (options && options.refreshCp) {
         ui.entries = buildEntries([...new Map(ui.entries.map(function (entry) { return [entry.report.talepNo, entry.report]; })).values()]);
         ui.entries.forEach(function (entry) { entry.include = false; });
       }
@@ -755,11 +777,16 @@
       if (status && !status.connected && options && options.interactive) status = await AI.connect();
       if (!active()) return;
       if (!status || !status.connected) { set({ state: 'offline', progress: '' }); return; }
-      if (root.BLStorage && typeof root.BLStorage.flushPending === 'function') {
-        let timeout;
-        try { await Promise.race([root.BLStorage.flushPending(), new Promise(function (_, reject) { timeout = root.setTimeout(function () { reject(new Error('PREFERENCE_SAVE_TIMEOUT')); }, 8000); })]); }
-        catch (_) { throw Object.assign(new Error(T('Bekleyen ayarlar kaydedilemedi; CP verilerini yükleyip yeniden deneyin.', 'Pending preferences could not be saved; reload CP data and try again.')), { code: 'TEST_REPORT_REVIEW_STALE' }); }
-        finally { root.clearTimeout(timeout); }
+      await flushPreferences();
+      if (!active()) return;
+      // Background checklist loading can still be saving promoted local
+      // answers. Finish it before capturing the snapshot/server revision.
+      const sync = root.BLChecklistSupplierSync;
+      if (sync && typeof sync.loadShared === 'function') {
+        set({ progress: T('Checklist cevapları eşitleniyor…', 'Synchronising checklist answers…') });
+        if (!await sync.loadShared()) throw Object.assign(new Error(T('Güncel checklist yüklenemedi; yeniden deneyin.', 'The current checklist could not be loaded; try again.')), { code: 'TEST_REPORT_REVIEW_STALE' });
+        if (typeof sync.syncAnswerChanges === 'function') await sync.syncAnswerChanges();
+        await flushPreferences();
         if (!active()) return;
       }
       const localSnapshot = localReviewSnapshot();
@@ -1070,7 +1097,7 @@
       ui.session = null; ui.entries = []; ui.files = []; ui.done = null;
       const modal = root.document.createElement('div');
       modal.id = '_blTestReportImport';
-      modal.className = 'cpaModalOverlay';
+      modal.className = 'cpaModalOverlay blMotionOverlay';
       modal.innerHTML = '<div class="cpaModal trModal" role="dialog" aria-modal="true" aria-labelledby="_blTestReportTitle">'
         + '<header><div><b id="_blTestReportTitle">' + html(T('Test raporu aktarımı', 'Test report import')) + '</b>'
         + '<small>' + html(T('Önizleme · onaylamadan hiçbir şey yazılmaz', 'Preview · nothing is written until you confirm')) + '</small></div>'

@@ -18,6 +18,7 @@ function safeBusinessData(value) {
 }
 const text=(value,max=300)=>String(value??'').replace(/\s+/g,' ').trim().slice(0,max);
 const fail=(code,statusCode=400)=>Object.assign(new Error(code),{code,statusCode});
+const incompleteCp=(reason,details={})=>Object.assign(fail('TEST_REPORT_CP_INCOMPLETE',409),{details:{reason,...details}});
 const MIME={pdf:'application/pdf',msg:'application/vnd.ms-outlook',eml:'message/rfc822'};
 const sessionFingerprint=session=>require('../operation-utils').hash(JSON.stringify({reports:session.reports,assessment:session.assessment&&{snapshotId:session.assessment.packet.snapshotId,validated:session.assessment.validated},files:[...session.files].map(([id,file])=>({id,name:file.name,hash:file.hash,kind:file.kind}))}));
 function createService({authorizedOrders,authorizedOrdersNow=null,audit=()=>{},sourceRevision=()=>null,reviewContext=null}) {
@@ -168,23 +169,31 @@ function createService({authorizedOrders,authorizedOrdersNow=null,audit=()=>{},s
   async function prepareAssessment(profile,body) {
     const allowed=await authorizedOrders(profile,{write:false}),session=sessionFor(profile,body.sessionId);
     let cp=body.cp;
-    if(!cp||!Array.isArray(cp.rows)||!cp.rows.length||cp.rowCount!==cp.rows.length)throw fail('TEST_REPORT_CP_INCOMPLETE',409);
+    if(!cp||!Array.isArray(cp.rows)||!cp.rows.length||cp.rowCount!==cp.rows.length)throw incompleteCp('empty');
     const keys=new Set(cp.rows.map(row=>row.key));
-    if(keys.size!==cp.rows.length||cp.rows.some(row=>!allowed.has(row.key)||String(allowed.get(row.key).orderCode)!==row.orderCode))throw fail('TEST_REPORT_CP_INCOMPLETE',409);
+    if(keys.size!==cp.rows.length||cp.rows.some(row=>!allowed.has(row.key)||String(allowed.get(row.key).orderCode)!==row.orderCode))throw incompleteCp('identity');
     const canonical=reviewContext?await reviewContext(profile):null;
     // Authority includes closed Orders too. Completeness belongs to the active,
     // scoped CP projection; every submitted row must still be authorized above.
-    if(!canonical&&[...allowed.keys()].some(key=>!keys.has(key)))throw fail('TEST_REPORT_CP_INCOMPLETE',409);
+    if(!canonical&&[...allowed.keys()].some(key=>!keys.has(key)))throw incompleteCp('coverage');
     if(canonical) {
       const clientRows=new Map(cp.rows.map(row=>[row.key,row]));
       const states=row=>Object.fromEntries((row.checklist||[]).map(item=>[item.itemId,{state:item.answer?.state,source:item.answer?.source}]).sort(([a],[b])=>a.localeCompare(b)));
-      if(canonical.cp.rows.length!==cp.rows.length||canonical.cp.rows.some(row=>{
+      if(canonical.cp.rows.length!==cp.rows.length)throw incompleteCp('coverage',{expectedRows:canonical.cp.rows.length,receivedRows:cp.rows.length});
+      for(const row of canonical.cp.rows) {
         const client=clientRows.get(row.key);
-        return !client||Object.entries(row.fields).some(([key,value])=>JSON.stringify(client.fields?.[key])!==JSON.stringify(value))||digest(states(client))!==digest(states(row));
-      }))throw fail('TEST_REPORT_CP_INCOMPLETE',409);
+        if(!client)throw incompleteCp('coverage');
+        // The page overlays personal rules/checklist on the system Priority.
+        // That derived display value is not evidence of stale order data.
+        // Keep all business fields and checklist states strict; send the
+        // canonical fields/rules below, never trust a client-supplied Priority.
+        const changed=Object.entries(row.fields).find(([key,value])=>key!=='Priority'&&JSON.stringify(client.fields?.[key])!==JSON.stringify(value));
+        if(changed)throw incompleteCp('fields',{field:changed[0]});
+        if(digest(states(client))!==digest(states(row)))throw incompleteCp('checklist');
+      }
       cp={...canonical.cp,clientDisplayTable:cp.displayTable};
     }
-    const packet=safeBusinessData({protocol:Assessment.PROTOCOL,caseId:session.id,sources:session.sources||[],cp,
+    const packet=safeBusinessData({protocol:Assessment.PROTOCOL,caseId:session.id,sources:[...new Map((session.sources||[]).map(source=>[source.id,source])).values()],cp,
       checklistSteps:canonical?.checklistSteps||body.checklistSteps||[],checklistStatuses:canonical?.checklistStatuses||body.checklistStatuses||[],
       canonicalRules:canonical?.rules||null,
       previousBuyerLogExtraction:session.reports,previousApprovedReports:store.publicPayload(keys)});
@@ -213,14 +222,17 @@ function createService({authorizedOrders,authorizedOrdersNow=null,audit=()=>{},s
       report.talepNo=item.reportId;
       report.uyarilar=report.uyarilar.filter(w=>w.code!=='missingTalepNo');
       const ids=new Set(item.evidence.map(ref=>ref.sourceId));
-      report.dosyalar=(session.sources||[]).filter(source=>ids.has(source.id)).map(source=>{
+      report.dosyalar=review.packet.sources.filter(source=>ids.has(source.id)).map(source=>{
         const staged=session.files.get(source.fileId);return staged?{ad:source.name,tur:source.kind,boyut:staged.buffer.length,hash:source.hash,stagingId:source.fileId}:null;
       }).filter(Boolean);
       const evidence=item.evidence.map(ref=>{const source=review.packet.sources.find(source=>source.id===ref.sourceId);return {...ref,sourceName:source.name,sourceHash:source.hash};});
       report.aiAssessment={snapshotId:review.packet.snapshotId,orderKey:item.orderKey,step:item.step,status:item.status,scope:item.scope,evidence,component:item.component,labResult:item.labResult,commercialDecision:item.commercialDecision,summary:item.summary,risks:item.risks};
       return report;
     });
-    session.reports=Engine.groupReports(reports);
+    const reviewedIds=new Set(reports.map(report=>report.talepNo));
+    // An unresolved source is still available for the buyer's manual review.
+    // Replace reviewed extractions, retain parser results omitted by the AI.
+    session.reports=Engine.groupReports(session.reports.filter(report=>!reviewedIds.has(report.talepNo)).concat(reports));
     review.validated=validated;staging.persistSession(session);
     audit(profile,'TEST_REPORT_AI_REVIEW',session.id,{snapshotId:review.packet.snapshotId,sources:review.packet.sources.length,orders:review.packet.cp.rows.length,proposals:validated.assessments.length,unresolved:validated.unresolvedSourceIds.length});
     return {ok:true,reports:session.reports,assessment:validated,snapshotId:review.packet.snapshotId};

@@ -47,6 +47,13 @@ test('CP snapshot retains every row and field, original numbers and empty values
   assert.equal(cp.rows[0].fields.Blank, '');
   assert.equal(cp.rows[0].fields._internal, undefined);
 });
+test('CP calendar dates survive the review snapshot without a timezone shift', () => {
+  const date = new Date(2026, 10, 3);
+  const cp = R.cpSnapshot([{'Order Code':'4100001', 'Ex-factory':date, Missing:new Date(NaN)}]);
+  assert.equal(cp.rows[0].fields['Ex-factory'], '2026-11-03');
+  assert.equal(cp.rows[0].fields.Missing, null);
+  assert.ok(cp.columns.includes('Ex-factory'));
+});
 test('unrelated source fragments cannot manufacture a report/order/PASS connection', () => {
   const p=packet();
   p.sources=[{id:'s1',name:'old.pdf',complete:true,pages:[{page:1,text:'Request 366956 Order 1381201 PATCH FABRIC Fail'}]},

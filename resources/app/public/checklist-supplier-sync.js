@@ -2821,10 +2821,10 @@
         try{
           const type=await root.BLLayoutReader.classify(file);
           if(['PRICE_TAG','CARE_LABEL','INNER_BARCODE','MIXED'].includes(type))layouts.push(file);
-          else {if(type==='TEST_REPORT')reports.push(file);else unknown.push(file.name);await root.BLLayoutReader.release(file);}
-        }catch(_){unknown.push(file.name);await root.BLLayoutReader.release(file);}
+          else {reports.push(file);if(type!=='TEST_REPORT')unknown.push(file.name);await root.BLLayoutReader.release(file);}
+        }catch(_){reports.push(file);unknown.push(file.name);await root.BLLayoutReader.release(file);}
       }
-      if(unknown.length)toast(T('Belge türü okunamadı: ','Document type could not be read: ')+unknown.join(', '));
+      if(unknown.length)toast(T('Belge türü belirlenemedi; inceleme önizlemesinde korunuyor: ','Document type could not be determined; preserved in the review preview: ')+unknown.join(', '));
       if(layouts.length){
         if(root.BLPerf)await root.BLPerf.ensureFeature('layoutControl');
         root.BLLayoutControl.open(layouts,{onClose:reports.length?()=>openTestReportImport(reports):null});

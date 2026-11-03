@@ -21,6 +21,13 @@
       const values = {};
       for (const [key, value] of Object.entries(row || {})) {
         if (key.startsWith('_') || typeof value === 'function' || typeof value === 'undefined') continue;
+        // CP dates are local calendar days in both the page and server model.
+        // Keep them before excluding nested objects; ISO UTC can shift the day.
+        if (Object.prototype.toString.call(value) === '[object Date]') {
+          fields.add(key);
+          values[key] = Number.isFinite(value.getTime()) ? [value.getFullYear(), String(value.getMonth() + 1).padStart(2, '0'), String(value.getDate()).padStart(2, '0')].join('-') : null;
+          continue;
+        }
         // Keep image keys such as KOL-3, never the model image bytes.
         if (typeof value === 'string' && /^(?:data:|blob:)/i.test(value)) continue;
         if (value != null && typeof value === 'object') continue;

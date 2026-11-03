@@ -7,6 +7,15 @@ const {fixture,pdfFromItems}=require('./helpers/external-lab-fixture.cjs');
 const profile={id:'demo',displayName:'Demo Buyer'},service=createService({authorizedOrders:async()=>new Map([['po1',{orderCode:'4100001'}]])});
 function mail(pdf){return Buffer.from(['From: supplier@example.test','To: buyer@example.test','Subject: Demo GS TEST REPORT','MIME-Version: 1.0','Content-Type: multipart/mixed; boundary="demo"','','--demo','Content-Type: text/plain; charset=utf-8','','Herewith enclosed DEMO,KNIT-8YD (4100001) GS TEST report for your approval.','--demo','Content-Type: application/pdf; name="Demo-lab.pdf"','Content-Disposition: attachment; filename="Demo-lab.pdf"','Content-Transfer-Encoding: base64','',pdf.toString('base64'),'--demo--',''].join('\r\n'));}
 test.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+test('dropping the same PDF twice creates one review source and valid source coverage',async()=>{
+  const pdf=pdfFromItems(fixture());
+  const parsed=await service.parse(profile,[1,2].map(()=>({name:'Duplicate.pdf',base64:pdf.toString('base64')})));
+  const {packet}=await service.prepareAssessment(profile,{sessionId:parsed.sessionId,cp:{rowCount:1,rows:[{key:'po1',orderCode:'4100001',fields:{}}]},checklistSteps:[],checklistStatuses:[]});
+  assert.equal(packet.sources.length,1);
+  const ids=packet.sources.map(source=>source.id);
+  const checked=require('../public/test-report-assessment').validate({protocol:packet.protocol,caseId:packet.caseId,snapshotId:packet.snapshotId,coveredSourceIds:ids,unresolvedSourceIds:ids,assessments:[]},packet);
+  assert.equal(checked.ok,true);
+});
 test('real PDF extraction and MIME intake read external IDs, preserve parent evidence and deduplicate separate drops',async()=>{
   const pdf=pdfFromItems(fixture()),buffer=mail(pdf);
   const out=await X.processFiles([{name:'Demo.eml',buffer},{name:'Demo-lab.pdf',buffer:pdf}]);
