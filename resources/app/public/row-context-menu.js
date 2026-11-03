@@ -148,11 +148,22 @@
     return items;
   }
 
+  function suppFobCalculatorEntry(config, table, cell) {
+    if (config.module !== 'cp' && config.module !== 'orders') return null;
+    const key = cell.dataset.key || columnKeyOfCell(table, cell);
+    if (key !== 'Supp. FOB' || !window.BLSuppFobCalculator) return null;
+    const row = window.BLGetContextRow?.(config.module, rowIdOfCell(cell));
+    if (!row) return null;
+    return { label: T('Supp. FOB → Final FOB Hesapla', 'Supp. FOB → Calculate Final FOB'), icon: '#i-calculator', run: () => void window.BLSuppFobCalculator.openForRow(row, config.module, table) };
+  }
+
   function openManagedGridCopyMenu(config, table, cell, event) {
     const items = managedClipboardEntries(config, table, cell);
+    const calculator = suppFobCalculatorEntry(config, table, cell);
+    if (calculator) items.unshift(calculator, { separator: true });
     if (!items.length) return false;
     event.preventDefault();
-    render(items, event.clientX, event.clientY, T('Kopyalama', 'Copy'), config.module === 'detail' ? { zIndex: 'var(--ui-z-modal-menu)' } : {});
+    render(items, event.clientX, event.clientY, calculator ? T('Fiyat kontrolü', 'Price check') : T('Kopyalama', 'Copy'), config.module === 'detail' ? { zIndex: 'var(--ui-z-modal-menu)' } : {});
     return true;
   }
 

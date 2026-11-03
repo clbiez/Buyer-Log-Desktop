@@ -29,6 +29,8 @@ jobs:
         run: node --test tests/motion-plus-contract-v20261025.test.js tests/motion-plus-refresh-sync-v20261026.test.js tests/ui-manifest-contract.test.js tests/ui-inline-contract.test.js tests/design-token-guard.test.js
       - name: Clipboard, selection and Data Management layout regression
         run: node --test tests/cp-grid-paste.test.js tests/collection-spreadsheet-wiring.test.js tests/grid-cell-selection-visibility-v70300.test.js tests/ui-polish-v70319.test.js tests/horizon-personal-deletion-persist.test.js
+      - name: Supp. FOB quick calculator and royalty commission regression
+        run: node --test tests/supp-fob-quick-calculator.test.js tests/license-royalty-commission-v2.test.js tests/grid-context-copy-v1052.test.js
       - name: Checklist Worker, formula editor and attention regressions
         run: node --test tests/cp-background-personal-decisions-v249.test.js tests/cp-rule-editor-v980.test.js tests/cp-attention-exclusions-v959.test.js tests/current-ui-regressions-v20260920.test.js
       - name: Thinking Orbs startup and navigation regression
