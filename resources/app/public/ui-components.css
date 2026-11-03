@@ -15294,7 +15294,9 @@ html[data-ui-system="manifest"] .workspaceTableFooter .uiPersistenceRegion{margi
 /* Buyer Log 7.0.294 surface and spreadsheet restoration.
    Deliberately uses Manifest tokens; no separate theme or table logic. */
 html[data-ui-system="manifest"] :is(.panel,.cardBox,.modalCard,.mfrCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.appBlockingCard,.sourcebar,.tablewrap,.cpaFrame,.cpaSeg),
-html[data-ui-system="manifest"] .ovHome > [data-overview-widget] {
+html[data-ui-system="manifest"] .ovHome > [data-overview-widget],
+/* Backlog adapters need the migrated scope to survive the shared panel reset. */
+html[data-ui-system="manifest"] [data-ui-migrated="plan-execute"]:where(#view-backlog,.blvFilterRoot,.bpaDrawerRoot) :is(.panel,.bpaCardBox,.bpaSection,.bpaControlGroup,.bpaRing,.bdaSection,.blvFilterDrawer,.bpaDrawer,.blvExportMenu) {
   border:1px solid var(--ui-group-divider) !important;
 }
 html[data-ui-system="manifest"] :is(.toolbar,.tableActionToolbar) {
@@ -15302,10 +15304,13 @@ html[data-ui-system="manifest"] :is(.toolbar,.tableActionToolbar) {
 }
 html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.gsearch,.profileSelectTrigger,.ovHomePageTab,.ovBreakdownViewBtn,.ovHomeDrawerCard,.oabMultiTrigger,.cpaBtn,.cpaIconBtn,.cpaValueToggle,.cpaTagMiniBtn,.cpaScopePresetBtn,.cpaStatusBtn,.cpaQuestionPill,.cpaToneSwatch,.cpaCheckTile,.cpaOverviewMetric),
 html[data-ui-system="manifest"] :is(.toolbar,.tableActionToolbar) :is(input,select),
-html[data-ui-system="manifest"] .vfBar select {
+html[data-ui-system="manifest"] .vfBar select,
+/* Backlog actions and segments use the same boundary as shared buttons. */
+html[data-ui-system="manifest"] [data-ui-migrated="plan-execute"]:where(#view-backlog,.blvFilterRoot,.bpaDrawerRoot) :is(.bpaTile,.bdaKpi,.bpaTodayBtn,.bpaMore,.bpaChip,.blvQualityChip,.blWorkspaceIconBtn,.blvModuleToggle,.bpaModuleToggle,.bdaTitleToggle,.bdaFoldHead,.bdaLink,.bdaInsightBtn,.bdaChip,.bdaTab,.bpaDrawerMore,.blvFilterHeadActions button,.blvFilterEditorHead button,.blvFilterValueTools button,.blvFilterActive>button,.blvFilterSourceTabs button,.bpaSeg2>button,.backlogChartTypeSwitch>button) {
   border:1px solid var(--ui-group-divider) !important;
 }
-html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.ovHomePageTab,.oabMultiTrigger,.cpaBtn,.cpaIconBtn,.cpaValueToggle,.cpaTagMiniBtn,.cpaScopePresetBtn,.cpaStatusBtn,.cpaQuestionPill,.cpaToneSwatch,.cpaCheckTile,.cpaOverviewMetric):focus-visible {
+html[data-ui-system="manifest"] :is(.navActionBtn,.tbtn,.iconbtn,.upl-btn,.ovHomePageTab,.oabMultiTrigger,.cpaBtn,.cpaIconBtn,.cpaValueToggle,.cpaTagMiniBtn,.cpaScopePresetBtn,.cpaStatusBtn,.cpaQuestionPill,.cpaToneSwatch,.cpaCheckTile,.cpaOverviewMetric):focus-visible,
+html[data-ui-system="manifest"] [data-ui-migrated="plan-execute"]:where(#view-backlog,.blvFilterRoot,.bpaDrawerRoot) button:focus-visible {
   outline:2px solid var(--ui-accent) !important;
   outline-offset:1px;
 }
