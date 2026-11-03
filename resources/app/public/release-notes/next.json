@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "backlog-panel-control-borders",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Backlog alanları ve butonlarının kenarlıkları geri getirildi",
+        "en": "Backlog panels and buttons have visible borders again"
+      },
+      "body": {
+        "tr": "Tarih aralığı, genel bakış, analiz ve pivot panelleri; KPI kartları, görünüm seçimleri ve aksiyon butonları ortak tasarımın ince kenarlıklarını kullanır. Filtre ve sipariş detay çekmeceleri de aynı çerçeveleri taşır. Giriş alanlarının belirgin sınırları ve klavye odağı açık/koyu temada ve dört arayüz boyutunda korunur.",
+        "en": "Date range, overview, analysis and pivot panels, KPI cards, view selectors and action buttons use the shared design’s thin borders. Filter and order detail drawers use the same boundaries. Form field borders and keyboard focus remain visible in light/dark themes and all four interface sizes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-control-borders.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog ekranında tarih aralığı, genel bakış, KPI kartları ve seçim butonlarının kenarlıkları",
+          "en": "Real Buyer Log Backlog screen showing borders on the date range, overview, KPI cards and selection buttons"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, yalnız demo veri. TR/EN, açık/koyu tema ve dört arayüz boyutunda kenarlıklar; klavye odağı, filtre ve detay çekmeceleri kontrol edildi.",
+          "en": "Actual post-change application using demo data only. Borders were checked in TR/EN, light/dark themes and four interface sizes, together with keyboard focus, filter and detail drawers."
+        }
+      }
+    },
+    {
       "id": "document-operations-focus-history",
       "type": "feature",
       "module": {
