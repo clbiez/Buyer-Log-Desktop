@@ -24,6 +24,11 @@ function snapshots(){
 }
 process.on('message',async message=>{try{
  if(message.command==='snapshot')process.send({id:message.id,result:snapshots()});
+ else if(message.command==='seedDocumentReviewModel'){
+  official=official.map((row,i)=>i?row:{...row,plm:'900001'});
+  for(const user of access.allPublicProfiles().filter(user=>['fixture-a','fixture-b','fixture-admin'].includes(user.username)))global.__blSeedAsas(official,user.id,['cp','orders']);
+  access.syncProfiles(official,{authoritative:true});process.send({id:message.id,result:true});
+ }
  else if(message.command==='releaseAutomation'){releaseAutomation?.();releaseAutomation=null;process.send({id:message.id,result:true});}
  else if(message.command==='seedAgentDraft'){const result=require('../../server/lib/automation-email').createDraft({name:'Agent CP namespace fixture',ownerId:message.ownerId,subject:'Scoped agent output',open:false});process.send({id:message.id,result:{filename:result.filename}});}
  else if(message.command==='seedSharedImage'){const result=require('../../server/user-data').saveCollectionImage({rowId:'collection-shared:'+message.ownerId+':fixture',filename:'demo.png',mimeType:'image/png',base64:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l1sAAAAASUVORK5CYII='});process.send({id:message.id,result});}

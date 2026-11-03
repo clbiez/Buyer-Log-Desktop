@@ -2442,14 +2442,15 @@ async function agentPlatformDataset(ownerId, profile, source) {
 
 function cpManagedRulesState(){try{return loadOverrides().cpManagedRules||null;}catch(_){return null;}}
 const cpAgentPreferences=require('./lib/cp-rule-preferences').createCpRulePreferences(userPreferences,userAccess,cpManagedRulesState);
-function cpAgentRevision(profile,{ignoreRefresh=false}={}){
+function cpAgentRevision(profile,{ignoreRefresh=false,qualityReview=false}={}){
   const stamp=file=>{try{const stat=fs.statSync(file);return [stat.mtimeMs,stat.size,stat.ino];}catch(err){if(err.code==='ENOENT')return null;throw err;}};
-  return crypto.createHash('sha256').update(JSON.stringify({loadedAt:ignoreRefresh?null:cacheForUser(profile.id).loadedAt,overrides:effectiveOverridesForUser(profile.id),preferences:userPreferences.load(profile.id),roleEntries:userAccess.roleWorkspaceEntries(profile),calendar:require('./lib/merch-calendar-store').publicProjection(),managedRules:cpManagedRulesState(),actor:userAccess.profileById(profile.id),plmSamples:stamp(require('./lib/plm-sample-requests-store').DEFAULT_FILE),checklist:stamp(require('./lib/checklist-supplier-store').FILE)})).digest('hex');
+  const preferences=userPreferences.load(profile.id);
+  return crypto.createHash('sha256').update(JSON.stringify({loadedAt:ignoreRefresh?null:cacheForUser(profile.id).loadedAt,overrides:effectiveOverridesForUser(profile.id),preferences:qualityReview?require('./lib/test-reports/revision').preferenceProjection(preferences):preferences,roleEntries:userAccess.roleWorkspaceEntries(profile),calendar:require('./lib/merch-calendar-store').publicProjection(),managedRules:cpManagedRulesState(),actor:userAccess.profileById(profile.id),plmSamples:stamp(require('./lib/plm-sample-requests-store').DEFAULT_FILE),checklist:stamp(require('./lib/checklist-supplier-store').FILE)})).digest('hex');
 }
 async function cpAgentData(profile,{loadCpRows=null}={}) {
   profile=userAccess.profileById(profile.id);
   if(!profile||profile.enabled===false||!userAccess.hasArea(profile,'cp'))throw Object.assign(new Error('CP access denied.'),{code:'AREA_FORBIDDEN',statusCode:403});
-  const sourceRevision=cpAgentRevision(profile);
+  const sourceRevision=cpAgentRevision(profile,{qualityReview:Boolean(loadCpRows)});
   const rows=loadCpRows?await loadCpRows(profile):await agentPlatformDataset(profile.id,profile,'cp');
   const CPSource=require('../public/cp-readiness-engine'),ChecklistSource=require('../public/cp-checklist-engine');
   const analysesSource=rows.map(row=>CPSource.analyzeOrder(row)),keysSource=new Set(analysesSource.map(order=>order.orderKey));
@@ -2459,7 +2460,7 @@ async function cpAgentData(profile,{loadCpRows=null}={}) {
   const data={cpRows:rows,cpAvailable:true,checklist:{...payload,answers:scopeEntries(payload.answers),tombstones:scopeEntries(payload.tombstones)}};
   if(!data.cpAvailable)throw Object.assign(new Error('OFFICE_CP_UNAVAILABLE'),{code:'OFFICE_CP_UNAVAILABLE',statusCode:409});
   const priority=cpAgentPreferences.ruleSnapshot(profile,'priority'),checklist=cpAgentPreferences.ruleSnapshot(profile,'checklist');
-  if(sourceRevision!==cpAgentRevision(profile))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+  if(sourceRevision!==cpAgentRevision(profile,{qualityReview:Boolean(loadCpRows)}))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
   const {settings,checklistEnabled,answers,customStatuses}=cpAgentPreferences.context(profile),CP=require('../public/cp-readiness-engine'),Checklist=require('../public/cp-checklist-engine');
   const analyses=data.cpRows.map(row=>CP.analyzeOrder(row)),keys=new Set(analyses.map(order=>order.orderKey)),options=new Set(analyses.map(order=>Checklist.optionIdentity(order)).filter(Boolean).map(key=>'@option:'+key));
   const visible=entries=>Object.fromEntries(Object.entries(entries||{}).filter(([key])=>{const identity=key.slice(0,key.lastIndexOf('::'));return keys.has(identity)||options.has(identity);}));
@@ -5289,7 +5290,7 @@ const agentQualityService=require('./lib/test-reports/service').createService({
   audit:userAccess.appendAudit,
   authorizedOrders:agentQualityAuthorizedOrders,
   authorizedOrdersNow:agentQualityAuthorizedOrdersNow,
-  sourceRevision:cpAgentRevision,
+  sourceRevision:profile=>cpAgentRevision(profile,{qualityReview:true}),
   reviewContext:agentQualityReviewContext,
 });
 /* Paydaş belgesi eşlemesi: sahibin GÖREBİLDİĞİ siparişler ve kanonik CP tarihleri

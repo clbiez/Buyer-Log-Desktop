@@ -15414,11 +15414,11 @@ html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreak
 }
 html:root[data-ui-system="manifest"] :is(.ovPremiumSegment,.ovInboxTabs,.ovBreakdownDims,.gfSegment,.bpaSeg2,.backlogChartTypeSwitch,.sourceModeGroup,.dmViewToggle,.quotationStatusTabs,.lcChips,.cpaSeg) > button:not(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]):hover:not(:disabled) {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
 }
-html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs,.cpaStudioTabs) > button {position:relative;border:0 !important;box-shadow:none !important
+html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs,.cpaStudioTabs,.trFocusTabs) > button {position:relative;border:0 !important;box-shadow:none !important
 }
-html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs,.cpaStudioTabs) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]) {background:transparent !important;color:var(--ui-selected-ink) !important;font-weight:600 !important
+html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs,.cpaStudioTabs,.trFocusTabs) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"]) {background:transparent !important;color:var(--ui-selected-ink) !important;font-weight:600 !important
 }
-html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs,.cpaStudioTabs) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"])::after {content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--ui-accent)
+html:root[data-ui-system="manifest"] :is(.ovHomePager,.pdTabs,.dmLabTabs,.psaTabs,.cpaStudioTabs,.trFocusTabs) > button:is(.isActive,.is-active,.is-on,.active,[aria-pressed="true"],[aria-selected="true"])::after {content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--ui-accent)
 }
 html[data-ui-system="manifest"] .blSegmentGlide {position:fixed;height:2px;background:var(--ui-accent);transform-origin:left center;pointer-events:none;z-index:var(--ui-z-tooltip)
 }
@@ -15629,3 +15629,99 @@ html[data-ui-system="manifest"] .blSelectionPopoverSummary {padding:0 12px 8px;c
 html[data-ui-system="manifest"] .blSelectionPopoverList {max-height:280px;overflow:auto;}
 html[data-ui-system="manifest"] .blSelectionPopoverRow {border-top:0;}
 html[data-ui-system="manifest"] .blSelectionPopoverRow small {display:block;color:var(--ui-text-secondary);margin-top:4px;}
+
+/* Manifest: document operations uses the same surfaces, borders and status tones. */
+html[data-ui-system="manifest"] .trFocusToolbar{}
+html[data-ui-system="manifest"] :is(.trFocusMeta,.trFocusSelection>label,.trFocusMono,.trFocusEyebrow,.trHistoryOpen small,.trHistoryOpen span,.trHistoryFoot,.trFocusEmpty p,.trFocusEmpty small,.trCenterFooter>[data-tr-save-state],.trFocusTechnical,.trFocusLead){color:var(--ui-text-muted)}
+html[data-ui-system="manifest"] .trFocusAnalysis{background:var(--ui-surface)}
+html[data-ui-system="manifest"] .trFocusModel{background:var(--ui-surface-soft)}
+html[data-ui-system="manifest"] .trFocusPicture{background:var(--ui-surface-strong);color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] .trFocusPicture:disabled{opacity:1}
+html[data-ui-system="manifest"] .trFocusIdentity h2{color:var(--ui-text)}
+html[data-ui-system="manifest"] .trFocusAi>.trAi{background:transparent!important}
+html[data-ui-system="manifest"] .trFocusNotice{background:var(--ui-warning-bg);color:var(--ui-warning)}
+html[data-ui-system="manifest"] .trFocusDecision{background:var(--ui-surface-soft);}
+html[data-ui-system="manifest"] .trFocusTabs{background:var(--ui-surface);}
+html[data-ui-system="manifest"] .trFocusTabs button{background:none;color:var(--ui-text-muted)}
+html[data-ui-system="manifest"] .trFocusTabs button[aria-selected="true"]{color:var(--ui-selected-ink)}
+html[data-ui-system="manifest"] .trFocusReport{background:var(--ui-surface-soft)}
+html[data-ui-system="manifest"] .trFocusCenter.is-file-over>.trCenterHeader{background:var(--ui-selected)}
+html[data-ui-system="manifest"] .trFocusCenter>.trCenterHeader .cpaBtn{font-size:var(--ui-font-sm)!important}
+html[data-ui-system="manifest"] .trFocusCenter>.trCenterHeader b{font-size:var(--ui-font-xl)!important}
+html[data-ui-system="manifest"] .trFocusSource{background:var(--ui-surface)}
+html[data-ui-system="manifest"] .trFocusTests th{background:var(--ui-header-bg);color:var(--ui-header-ink)}
+html[data-ui-system="manifest"] .trFocusTests td{}
+html[data-ui-system="manifest"] .trFocusTests td small{color:var(--ui-text-muted)}
+html[data-ui-system="manifest"] .trFocusEvidence{background:var(--ui-surface-soft);}
+html[data-ui-system="manifest"] .trFocusEvidence>b{color:var(--ui-text-muted)}
+html[data-ui-system="manifest"] .trFocusTechnical{}
+html[data-ui-system="manifest"] .trFocusFile{color:var(--ui-text);}
+html[data-ui-system="manifest"] .trFocusFile span{color:var(--ui-accent)}
+html[data-ui-system="manifest"] :is(.trFocusSelection>select,.trFocusMatch input,.trFocusMatch select,.trFocusDecision select,.trFocusNote textarea,.trHistorySearch input){background:var(--ui-surface);color:var(--ui-text);font:inherit}
+html[data-ui-system="manifest"] .trHistoryDrawer{background:var(--ui-surface);box-shadow:var(--ui-shadow-overlay)}
+html[data-ui-system="manifest"] .trHistoryItem{}
+html[data-ui-system="manifest"] .trHistoryOpen{background:none;color:var(--ui-text)}
+html[data-ui-system="manifest"] .trHistoryItem:hover{background:var(--ui-row-hover)}
+html[data-ui-system="manifest"] .trHistoryItem.is-selected{background:var(--ui-selected)}
+html[data-ui-system="manifest"] .trHistoryFoot{}
+html[data-ui-system="manifest"] .trModelPreview{background:var(--ui-surface);color:var(--ui-text);box-shadow:var(--ui-shadow-overlay)}
+html[data-ui-system="manifest"] .trModelPreview::backdrop{background:color-mix(in srgb,var(--ui-canvas) 75%,transparent)}
+
+/* Focus View type and layer hierarchy use shared Manifest tokens. */
+html[data-ui-system="manifest"] .trCenterHeader #_blTestReportTitle{font-family:var(--ui-font-heading);font-size:var(--ui-font-2xl);font-weight:600;line-height:1.2}
+html[data-ui-system="manifest"] .trFocusSelection>label{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trFocusMeta{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trFocusPicture>span{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trFocusIdentity h2{font-family:var(--ui-font-heading);font-size:var(--ui-font-2xl);line-height:1.2}
+html[data-ui-system="manifest"] .trFocusMono{font-family:var(--ui-font-mono);font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trFocusEyebrow{font-size:var(--ui-font-2xs);font-weight:600;letter-spacing:1px}
+html[data-ui-system="manifest"] .trFocusMatch{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trFocusAi>.trAi>b{font-family:var(--ui-font-heading);font-size:var(--ui-font-xl)}
+html[data-ui-system="manifest"] .trFocusAi>.trAi>p{font-size:var(--ui-font-lg);line-height:1.65}
+html[data-ui-system="manifest"] .trFocusAi .trAi>small{font-size:var(--ui-font-sm)}
+html[data-ui-system="manifest"] .trFocusAi .trAi .trWarnings{font-size:var(--ui-font-sm);line-height:1.6}
+html[data-ui-system="manifest"] .trFocusAi .trAi>details{font-size:var(--ui-font-xs);line-height:1.7}
+html[data-ui-system="manifest"] .trFocusLead{font-size:var(--ui-font-lg);line-height:1.65}
+html[data-ui-system="manifest"] .trFocusWarnings p{font-size:var(--ui-font-xs);line-height:1.7}
+html[data-ui-system="manifest"] .trFocusNotice{font-size:var(--ui-font-sm);line-height:1.7}
+html[data-ui-system="manifest"] .trFocusDecision h3{font-family:var(--ui-font-heading);font-size:var(--ui-font-xl)}
+html[data-ui-system="manifest"] .trFocusDecision>label{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trFocusDecision .trInline{font-size:var(--ui-font-xs);line-height:1.6}
+html[data-ui-system="manifest"] .trFocusDecision>.trFocusInclude{font-size:var(--ui-font-sm);line-height:1.65}
+html[data-ui-system="manifest"] .trFocusTabs{z-index:var(--ui-z-raised)}
+html[data-ui-system="manifest"] .trFocusTabs button{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trFocusSource h2{font-family:var(--ui-font-heading);font-size:var(--ui-font-2xl);line-height:1.2}
+html[data-ui-system="manifest"] .trFocusSource h3{font-family:var(--ui-font-heading);font-size:var(--ui-font-xl)}
+html[data-ui-system="manifest"] .trFocusVerdict{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trFocusTests{font-size:var(--ui-font-sm)}
+html[data-ui-system="manifest"] .trFocusTests th{font-size:var(--ui-font-xs);font-weight:500}
+html[data-ui-system="manifest"] .trFocusTests td:first-child{font-weight:500}
+html[data-ui-system="manifest"] .trFocusTests td small{font-weight:400;font-size:var(--ui-font-2xs)}
+html[data-ui-system="manifest"] .trFocusTests td p{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trFocusEvidence{font-size:var(--ui-font-sm);line-height:1.8}
+html[data-ui-system="manifest"] .trFocusEvidence>b{font-size:var(--ui-font-2xs);font-weight:500}
+html[data-ui-system="manifest"] .trFocusTechnical{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trFocusFile{font-size:var(--ui-font-sm)}
+html[data-ui-system="manifest"] .trFocusFile span{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trFocusNote{font-size:var(--ui-font-sm)}
+html[data-ui-system="manifest"] .trFocusSource>.trIssues{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trFocusActivity{font-size:var(--ui-font-sm)}
+html[data-ui-system="manifest"] .trCenterFooter>[data-tr-save-state]{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trFocusEmpty h2{font-family:var(--ui-font-heading);font-size:var(--ui-font-3xl);line-height:1.2}
+html[data-ui-system="manifest"] .trFocusEmpty p{font-size:var(--ui-font-md);line-height:1.85}
+html[data-ui-system="manifest"] .trFocusEmpty small{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trHistoryDrawer{z-index:var(--ui-z-modal)}
+html[data-ui-system="manifest"] .trHistoryHead h2{font-family:var(--ui-font-heading);font-size:var(--ui-font-xl)}
+html[data-ui-system="manifest"] .trHistorySearch input{font-size:var(--ui-font-sm)}
+html[data-ui-system="manifest"] .trHistoryOpen b{font-weight:500;font-size:var(--ui-font-sm)}
+html[data-ui-system="manifest"] .trHistoryOpen small,html[data-ui-system="manifest"] .trHistoryOpen span{font-size:var(--ui-font-xs)}
+html[data-ui-system="manifest"] .trHistoryFoot{font-size:var(--ui-font-xs);line-height:1.7}
+html[data-ui-system="manifest"] .trModelPreview{z-index:var(--ui-z-modal-menu)}
+@media(max-width:1050px){html[data-ui-system="manifest"] .trFocusIdentity h2{font-size:var(--ui-font-xl)}
+}
+@media(max-width:760px){html[data-ui-system="manifest"] .trCenterHeader #_blTestReportTitle{font-size:var(--ui-font-xl)}
+html[data-ui-system="manifest"] .trCenterFooter>[data-tr-save-state]{font-size:var(--ui-font-2xs)}
+html[data-ui-system="manifest"] .trFocusEmpty h2{font-size:var(--ui-font-2xl)}
+html[data-ui-system="manifest"] .trFocusAi>.trAi>p{font-size:var(--ui-font-md)}
+}
+html[data-ui-system="manifest"] .trFocusCenter>.trCenterHeader .cpaBtn{font-size:var(--ui-font-sm)!important}

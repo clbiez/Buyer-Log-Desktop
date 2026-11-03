@@ -523,3 +523,111 @@
 .cpaCatalogDisclosure{flex:0 0 auto;min-width:0}
 .cpaCatalogDisclosureSummary{display:flex;width:100%;justify-content:space-between;box-sizing:border-box}
 .cpaCatalogDisclosure[open]>.cpaCatalogCard{margin-top:var(--ui-space-2)}
+
+/* Focus View geometry. Appearance belongs to shared Manifest. */
+.trModal.trFocusCenter{width:min(1700px,calc(100vw - 32px));height:min(1050px,calc(100dvh - 32px));max-height:calc(100dvh - 32px);display:flex;flex-direction:column;overflow:hidden}
+.trFocusCenter>.trCenterHeader{padding:var(--ui-space-4) var(--ui-space-5);min-height:84px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-4)}
+.trCenterHeader>div:first-child{min-width:0}
+.trCenterHeader small{display:block;margin-top:5px}
+.trCenterActions{display:flex;align-items:center;gap:var(--ui-space-2)}
+.trFocusCenter>.trBody{display:block;position:relative;padding:0;flex:1;min-height:0;overflow:hidden}
+.trFocusWorkspace{display:flex;flex-direction:column;height:100%;min-height:0}
+.trFocusToolbar{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-4);padding:14px var(--ui-space-5);flex-shrink:0}
+.trFocusSelection{display:flex;align-items:center;gap:var(--ui-space-3);min-width:0;flex:1}
+.trFocusSelection>label{flex-shrink:0}
+.trFocusSelection>select{width:min(680px,100%);min-width:180px;height:var(--ui-control-height)}
+.trFocusMeta{white-space:nowrap}
+.trFocusColumns{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,1fr);flex:1;min-height:0}
+.trFocusAnalysis,.trFocusReport{min-width:0;min-height:0;overflow:auto;scrollbar-width:thin}
+.trFocusModel{display:flex;gap:var(--ui-space-5);padding:var(--ui-space-5)}
+.trFocusPicture{width:180px;height:190px;flex-shrink:0;padding:0;display:grid;place-items:center;overflow:hidden}
+.trFocusPicture img{width:100%;height:100%;object-fit:contain}
+.trFocusPicture>span{padding:var(--ui-space-3)}
+.trFocusIdentity{min-width:0;align-self:center}
+.trFocusIdentity h2{margin:8px 0}
+.trFocusMono{overflow-wrap:anywhere;margin:0 0 10px}
+.trFocusMatch{margin-top:12px}
+.trFocusMatch summary{cursor:pointer}
+.trFocusMatch[open]>summary{margin-bottom:10px}
+.trFocusMatch input,.trFocusMatch select{width:100%;margin:5px 0}
+.trFocusMatch .cpaBtn{margin-top:7px}
+.trFocusAi{padding:var(--ui-space-5);display:grid;gap:var(--ui-space-4)}
+.trFocusAi>.trAi{margin:0;padding:0;gap:var(--ui-space-3)}
+.trFocusAi>.trAi>p{margin:0}
+.trFocusAi .trAi .trWarnings{gap:8px}
+.trFocusWarnings:empty{display:none}
+.trFocusWarnings p{margin:0 0 8px}
+.trFocusNotice{padding:var(--ui-space-3);margin:0}
+.trFocusDecision{display:grid;gap:var(--ui-space-3);padding:var(--ui-space-4)}
+.trFocusDecision h3{margin:0}
+.trFocusDecision>label{display:grid;gap:5px}
+.trFocusDecision select{max-width:100%;width:100%;height:var(--ui-control-height)}
+.trFocusDecision .trInline{align-items:flex-start}
+.trFocusDecision>.trFocusInclude{display:flex;align-items:flex-start}
+.trFocusInclude input{margin-top:5px;flex-shrink:0}
+.trFocusTabs{position:sticky;top:0;display:flex;gap:var(--ui-space-5);padding:0 var(--ui-space-5)}
+.trFocusTabs button{min-height:46px;white-space:nowrap;padding:10px 0}
+.trFocusSource{padding:var(--ui-space-5);overflow-wrap:anywhere}
+.trFocusSource h2{margin:8px 0 12px}
+.trFocusSource h3{margin:0 0 16px}
+.trFocusVerdict{display:flex;align-items:center;gap:var(--ui-space-3);margin:18px 0}
+.trFocusTests{width:100%;border-collapse:collapse;table-layout:auto;text-align:left}
+.trFocusTests th,.trFocusTests td{padding:11px 9px;vertical-align:top}
+.trFocusTests td small{display:block;margin-top:4px}
+.trFocusTests td p{margin:5px 0 0}
+.trFocusEvidence{margin:20px 0;padding:var(--ui-space-4)}
+.trFocusEvidence p{margin:8px 0 0}
+.trFocusTechnical{margin-top:18px}
+.trFocusTechnical summary{cursor:pointer;padding:12px 0}
+.trFocusFile{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-3);padding:14px 0;text-decoration:none;overflow-wrap:anywhere}
+.trFocusFile span{flex-shrink:0}
+.trFocusNote{display:grid;gap:var(--ui-space-2);margin:22px 0}
+.trFocusNote textarea{padding:var(--ui-space-3);min-height:170px;width:100%;resize:vertical}
+.trFocusSource>.trIssues{margin-top:18px}
+.trFocusActivity{padding-left:20px;display:grid;gap:18px}
+.trFocusCenter>.trCenterFooter{display:flex;align-items:center;gap:var(--ui-space-3);padding:12px var(--ui-space-5);min-height:60px;flex-shrink:0}
+.trCenterFooter>[data-tr-save-state]{margin-right:auto}
+.trFocusEmpty{margin:auto;max-width:730px;padding:var(--ui-space-6);text-align:left}
+.trFocusEmpty h2{margin:15px 0}
+.trFocusEmpty p{margin:0 0 22px}
+.trFocusEmptyActions{display:flex;gap:var(--ui-space-3);margin-bottom:18px}
+.trHistoryDrawer{position:absolute;left:0;top:0;bottom:0;width:min(390px,90%);display:flex;flex-direction:column}
+.trHistoryHead{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 10px;gap:12px}
+.trHistoryHead h2{margin:0}
+.trHistorySearch{display:block;padding:6px 18px 15px}
+.trHistorySearch input{width:100%;height:var(--ui-control-height);padding:8px 10px}
+.trHistoryList{flex:1;min-height:0;overflow:auto;padding:0 10px}
+.trHistoryItem{display:flex;gap:5px;align-items:center;padding:3px 0}
+.trHistoryOpen{padding:15px 10px;display:grid;gap:7px;flex:1;min-width:0;text-align:left}
+.trHistoryOpen b{overflow-wrap:anywhere}
+.trHistoryFoot{padding:15px 18px;margin:0}
+.trModelPreview{padding:var(--ui-space-4);max-width:90vw;max-height:90dvh}
+.trModelPreview>button{display:block;margin-left:auto}
+.trModelPreview>img{display:block;max-width:80vw;max-height:75dvh;object-fit:contain}
+@media(max-width:1050px){.trFocusModel{gap:var(--ui-space-4);padding:var(--ui-space-4)}
+.trFocusPicture{width:135px;height:150px}
+.trFocusAi,.trFocusSource{padding:var(--ui-space-4)}
+.trFocusToolbar{padding:12px var(--ui-space-4)}
+.trFocusMeta{display:none}
+.trFocusSelection{display:block}
+.trFocusSelection>label{display:block;margin-bottom:5px}
+.trFocusSelection>select{width:100%}
+.trFocusTabs{gap:var(--ui-space-3);padding:0 var(--ui-space-4)}
+}
+@media(max-width:760px){.trModal.trFocusCenter{width:calc(100vw - 12px);height:calc(100dvh - 12px);max-height:calc(100dvh - 12px)}
+.trFocusCenter>.trCenterHeader{padding:12px;min-height:82px;gap:8px;flex-wrap:wrap}
+.trCenterActions{margin-left:auto}
+.trFocusColumns{display:block;overflow:auto}
+.trFocusAnalysis,.trFocusReport{overflow:visible}
+.trFocusTabs{position:static}
+.trFocusCenter>.trCenterFooter{padding:10px;gap:6px;flex-wrap:wrap}
+.trCenterFooter>[data-tr-save-state]{width:100%}
+.trFocusEmpty{padding:24px 18px}
+.trFocusEmptyActions{flex-wrap:wrap}
+.trFocusPicture{width:125px;height:140px}
+}
+.trFocusCenter>.trCenterHeader .cpaBtn{width:auto;padding:0 var(--ui-space-3);flex-shrink:0}
+.trFocusCenter section{display:block}
+.trFocusCenter .trAiBar{display:grid;gap:var(--ui-space-2)}
+.trFocusCenter .trFocusModel{display:flex}
+.trFocusCenter .trFocusAi,.trFocusCenter .trFocusDecision{display:grid}

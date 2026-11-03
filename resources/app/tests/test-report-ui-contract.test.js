@@ -64,10 +64,11 @@ test('CP dışında kalan sipariş yazılmaz; ham kaynakların tamamı LCW AI ta
 });
 
 test('önizleme rapordaki test adlarını görünür gösterir', () => {
-  const ui = read('public/test-report-import.js');
-  assert.match(ui, /function testNames\(report\)/);
-  assert.match(ui, /T\('Test adı: ', 'Test name: '\)/);
-  assert.match(ui, /tests\.join\(', '\)/);
+  const view = require('../public/test-report-focus-view');
+  const rendered = view.render({ T: (_tr,en) => en, entry: { id:'one',report:{ talepNo:'1234',testler:[{ad:'Azo dyes',sonuc:'Pass'},{ad:'Formaldehyde',sonuc:'Fail'}] } },
+    session:'session', options:[],history:[],tab:'report',resultLabel:value=>value,sourceLinks:'',readingDetails:'',evidence:'',descriptions:'',issues:'' });
+  assert.match(rendered,/Azo dyes/);assert.match(rendered,/Formaldehyde/);assert.match(rendered,/Test \/ parameter/);
+  assert.match(rendered,/trFocusTests/);
 });
 
 test('checklist cevabı kaynak alanını taşır; elle seçim kaynaksızdır', () => {

@@ -3,6 +3,7 @@
 const extract=require('./extract');
 const store=require('./store');
 const staging=require('./staging');
+const operations=require('./operations');
 const checklist=require('../checklist-supplier-store');
 const Engine=require('../../../public/test-report-engine');
 const Assessment=require('../../../public/test-report-assessment');
@@ -25,7 +26,7 @@ function createService({authorizedOrders,authorizedOrdersNow=null,audit=()=>{},s
   function assertReviewCurrent(profile,review) {
     if(review.sourceRevision!==sourceRevision(profile)||review.storeRevision!==store.read().revision)throw fail('TEST_REPORT_REVIEW_STALE',409);
   }
-  function sessionFor(profile,id) {const session=staging.getSession(id,profile.id);if(!session)throw fail('TEST_REPORT_SESSION_EXPIRED',410);return session;}
+  function sessionFor(profile,id) {const session=staging.getSession(id,profile.id);if(!session)throw fail('TEST_REPORT_SESSION_EXPIRED',410);if(session.operationId&&operations.assertExists(profile.id,session.operationId).phase==='committed')session.operationReadOnly=true;return session;}
   async function parse(profile,input,options={}) {
     if(!Array.isArray(input)||!input.length)throw fail('VALIDATION_ERROR');
     if(input.length>30)throw fail('TEST_REPORT_TOO_MANY_FILES',413);
@@ -40,11 +41,14 @@ function createService({authorizedOrders,authorizedOrdersNow=null,audit=()=>{},s
     try {
       const out=await extract.processFiles(files,{stage:session.stage});
       session.setReports(out.reports);session.setSources(out.files.flatMap(file=>file.sources||[]));session.setAiCandidates(out.files);
-      return {ok:true,sessionId:session.id,expiresAfterMs:staging.TTL_MS,files:out.files.map(f=>({name:f.name,kind:f.kind,status:f.status,format:f.format,reading:f.reading,warnings:f.warnings,talepNos:f.reports.map(r=>r.talepNo),ai:f.ai?.eligible?{uploadId:f.ai.uploadId,uploadName:f.ai.uploadName,mailText:f.ai.mailText,mailDate:f.ai.mailDate}:null})),reports:out.reports};
+      const result={ok:true,sessionId:session.id,expiresAfterMs:staging.TTL_MS,files:out.files.map(f=>({name:f.name,kind:f.kind,status:f.status,format:f.format,reading:f.reading,warnings:f.warnings,sources:(f.sources||[]).map(source=>({id:source.id,fileId:source.fileId,name:source.name,kind:source.kind})),talepNos:f.reports.map(r=>r.talepNo),ai:f.ai?.eligible?{uploadId:f.ai.uploadId,uploadName:f.ai.uploadName,mailText:f.ai.mailText,mailDate:f.ai.mailDate}:null})),reports:out.reports};
+      if(options.operation===true){const raw=sessionFor(profile,session.id);operations.create(raw,result.files);result.operationId=raw.operationId;}
+      return result;
     }catch(err){staging.dropSession(session.id);throw err;}
   }
   async function prepareCommit(profile,body) {
     const allowed=await authorizedOrders(profile,{write:true}),session=sessionFor(profile,body.sessionId);
+    if(session.operationReadOnly)throw fail('TEST_REPORT_OPERATION_COMMITTED',409);
     /* v7.0.290 — Buyer'ın elle eşleşmesi LCW AI'dan bağımsızdır: AI incelemesi
        tamamlanmasa da (ör. CP kapsamı farkı) buyer raporu bir ya da birden çok
        siparişe, kendi doğruladığı kapsam ve seçtiği durumla bağlayabilir. Her
@@ -109,6 +113,7 @@ function createService({authorizedOrders,authorizedOrdersNow=null,audit=()=>{},s
     if(options.expectedSessionFingerprint && options.expectedSessionFingerprint!==fingerprint)throw fail('TEST_REPORT_PREVIEW_CHANGED',409);
     const assertAuthority=()=>{
       options.assertAuthority?.();
+      if(session.operationId)operations.assertExists(profile.id,session.operationId);
       if(typeof authorizedOrdersNow!=='function')return;
       const current=authorizedOrdersNow(profile,{write:true});
       if(!(current instanceof Map))throw fail('TEST_REPORT_AUTH_UNAVAILABLE',503);
@@ -138,7 +143,7 @@ function createService({authorizedOrders,authorizedOrdersNow=null,audit=()=>{},s
       const latest=sessionFor(profile,body.sessionId);
       if(sessionFingerprint(latest)!==fingerprint)throw fail('TEST_REPORT_PREVIEW_CHANGED',409);
       if(latest.assessment&&assessed)assertReviewCurrent(profile,latest.assessment);
-      assertAuthority();const committed=store.commit(items,body.typeMap||{},profile,attach,{...options,authorizedOrderKeys,assertAuthority});
+      const committed=operations.withCommit(session,()=>{assertAuthority();return store.commit(items,body.typeMap||{},profile,attach,{...options,authorizedOrderKeys,assertAuthority});});
       nativeCommitCompleted=true;return committed;
     });
     // Native preparation can await order scope. Hold the Office guard only for
@@ -160,14 +165,16 @@ function createService({authorizedOrders,authorizedOrdersNow=null,audit=()=>{},s
   function acceptAi(profile,body) {
     return staging.withSessionLease(body.sessionId,profile.id,()=>{
     const session=sessionFor(profile,body.sessionId),candidate=session.aiCandidates.get(text(body.fileName));if(!candidate)throw fail('TEST_REPORT_AI_NOT_CANDIDATE');
+    if(session.operationReadOnly)throw fail('TEST_REPORT_OPERATION_COMMITTED',409);
     const report=Engine.reportFromAiExtract(body.data,{fileName:body.fileName});report.dosyalar=candidate.files.map(f=>({...f}));
     if(report.talepNo)session.reports=Engine.groupReports(session.reports.concat([report]));
-    staging.persistSession(session);audit(profile,'TEST_REPORT_AI_READ',report.talepNo||'-',{file:text(body.fileName,120),confidence:report.aiConfidence});
+    staging.persistSession(session);operations.capture(session);audit(profile,'TEST_REPORT_AI_READ',report.talepNo||'-',{file:text(body.fileName,120),confidence:report.aiConfidence});
     return {ok:true,report:report.talepNo?session.reports.find(r=>r.talepNo===report.talepNo):report};
     });
   }
   async function prepareAssessment(profile,body) {
     const allowed=await authorizedOrders(profile,{write:false}),session=sessionFor(profile,body.sessionId);
+    if(session.operationReadOnly)throw fail('TEST_REPORT_OPERATION_COMMITTED',409);
     let cp=body.cp;
     if(!cp||!Array.isArray(cp.rows)||!cp.rows.length||cp.rowCount!==cp.rows.length)throw incompleteCp('empty');
     const keys=new Set(cp.rows.map(row=>row.key));
@@ -202,12 +209,13 @@ function createService({authorizedOrders,authorizedOrdersNow=null,audit=()=>{},s
     const serialized=JSON.stringify(packet);
     if(Buffer.byteLength(serialized)>19*1024*1024)throw fail('TEST_REPORT_CONTEXT_TOO_LARGE',413);
     session.assessment={packet,authorityHash:digest([...allowed]),sourceRevision:sourceRevision(profile),storeRevision:packet.previousApprovedReports.revision,validated:null};
-    staging.persistSession(session);return {ok:true,packet};
+    staging.persistSession(session);operations.capture(session,'analysing');return {ok:true,packet};
   }
   async function acceptAssessment(profile,body) {
     const allowed=await authorizedOrders(profile,{write:false});
     return staging.withSessionLease(body.sessionId,profile.id,()=>{
     const session=sessionFor(profile,body.sessionId),review=session.assessment;
+    if(session.operationReadOnly)throw fail('TEST_REPORT_OPERATION_COMMITTED',409);
     if(!review||review.packet.snapshotId!==body.snapshotId)throw fail('TEST_REPORT_REVIEW_STALE',409);
     if(digest([...allowed])!==review.authorityHash)throw fail('TEST_REPORT_REVIEW_STALE',409);
     assertReviewCurrent(profile,review);
@@ -233,7 +241,7 @@ function createService({authorizedOrders,authorizedOrdersNow=null,audit=()=>{},s
     // An unresolved source is still available for the buyer's manual review.
     // Replace reviewed extractions, retain parser results omitted by the AI.
     session.reports=Engine.groupReports(session.reports.filter(report=>!reviewedIds.has(report.talepNo)).concat(reports));
-    review.validated=validated;staging.persistSession(session);
+    review.validated=validated;staging.persistSession(session);operations.capture(session,'reviewed');
     audit(profile,'TEST_REPORT_AI_REVIEW',session.id,{snapshotId:review.packet.snapshotId,sources:review.packet.sources.length,orders:review.packet.cp.rows.length,proposals:validated.assessments.length,unresolved:validated.unresolvedSourceIds.length});
     return {ok:true,reports:session.reports,assessment:validated,snapshotId:review.packet.snapshotId};
     });
@@ -252,6 +260,19 @@ function createService({authorizedOrders,authorizedOrdersNow=null,audit=()=>{},s
     }
     return {sessionId,reports:sessionFor(profile,sessionId).reports,aiCalls:results.length};
   }
-  return {parse,prepareCommit,commit,acceptAi,extractAi,prepareAssessment,acceptAssessment,sessionFor};
+  async function resumeOperation(profile,id) {
+    const allowed=await authorizedOrders(profile,{write:false}),archive=operations.load(profile.id,id),review=archive.assessment;
+    const session=staging.resumeSession(profile.id,archive);
+    let reviewCurrent=false;
+    if(review?.validated)try{assertReviewCurrent(profile,review);reviewCurrent=review.authorityHash===digest([...allowed]);}catch(_){}
+    // Historical CP fields and other orders' stored reports must not leak after
+    // an ownership change. Sources belong to the uploading owner; CP rows do not.
+    const packet=review?{protocol:review.packet.protocol,caseId:review.packet.caseId,snapshotId:review.packet.snapshotId,sources:review.packet.sources,
+      cp:{rowCount:review.packet.cp.rows.filter(row=>allowed.has(row.key)).length,rows:review.packet.cp.rows.filter(row=>allowed.has(row.key)),columns:review.packet.cp.columns||[]}}:null;
+    return {ok:true,operationId:id,sessionId:session.id,files:archive.inputFiles,reports:archive.reports,phase:archive.summary.phase,readOnly:session.operationReadOnly,
+      draft:archive.draft.draft,draftRevision:archive.draft.revision,reviewCurrent,
+      ai:review?.validated?{packet,assessment:review.validated}:null};
+  }
+  return {parse,prepareCommit,commit,acceptAi,extractAi,prepareAssessment,acceptAssessment,sessionFor,resumeOperation};
 }
 module.exports={createService,sessionFingerprint};
