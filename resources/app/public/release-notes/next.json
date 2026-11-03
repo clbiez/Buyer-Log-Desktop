@@ -3,14 +3,43 @@
   "publishedAt": "2026-11-03",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Backlog Excel tarih ve dönem doğruluğu",
-    "en": "Accurate Backlog Excel dates and periods"
+    "tr": "Belge Operasyon Merkezi ve rapor doğruluğu",
+    "en": "Document Operations Center and report accuracy"
   },
   "summary": {
-    "tr": "LCW Merch ay ve hafta değerleri Excel çıktılarında korunur; takvim değişiklikleri ve boş değerler doğru taşınır.",
-    "en": "LCW Merch months and weeks are preserved in Excel exports, with consistent calendar updates and blank values."
+    "tr": "CP Araçlar menüsünden açılan Odak Görünümü, model görselini, LCW AI yorumunu ve rapor detaylarını bir araya getirir; incelemeler geçmişten sürdürülebilir.",
+    "en": "Focus View opens from CP Tools, bringing the model image, LCW AI comments and report details together; reviews can be resumed from history."
   },
   "changes": [
+    {
+      "id": "document-operations-focus-history",
+      "type": "feature",
+      "module": {
+        "tr": "CP · Araçlar",
+        "en": "CP · Tools"
+      },
+      "title": {
+        "tr": "Odak Görünümü ile belge incelemesine kaldığınız yerden devam edin",
+        "en": "Resume document review with Focus View"
+      },
+      "body": {
+        "tr": "Belge Operasyon Merkezi CP Araçlar menüsünden açılır. Geniş pencerede eşleşen model görseli ve LCW AI değerlendirmesi, rapor testleri ve kaynak kanıtlarıyla birlikte görünür. Dosyalar, analizler, eşleştirmeler ve notlar kullanıcıya özel inceleme geçmişinde korunur. Pencere kapatıldığında süren analiz devam eder; sayfa yenilendiğinde kayıt yeniden açılabilir. Tamamlanmış kayıtlar salt okunur açılır. Yeniden açılışta yazma onayı tekrar istenir; güncel sipariş, yetki veya checklist değişmişse yeniden analiz gerekir.",
+        "en": "Document Operations Center opens from CP Tools. Its wide workspace displays the matched model image and LCW AI assessment alongside report tests and source evidence. Files, assessments, matches and notes remain in private review history. Analysis continues when the window closes; records can be reopened after a page reload. Completed records open read-only. Reopening requires fresh write consent; order, access or checklist changes require a new assessment."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "document-focus-workspace.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Odak Görünümünde demo model görseli, LCW AI yorumu ve test detayları",
+          "en": "Actual Buyer Log Focus View with demo model image, LCW AI comments and test details"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, sentetik model ve rapor verisi. LCW AI HTTP sınırı test yanıtıyla çalıştırıldı. Araçlar üzerinden açma, kapatıp devam etme, sayfa yenileme sonrası not ve dosya erişimi ile açık onaylı kayıt kontrol edildi.",
+          "en": "Actual application with synthetic model and report data. The LCW AI HTTP boundary returned a test response. Opening via Tools, closing and resuming, access to notes and files after reload, and explicit approval were verified."
+        }
+      }
+    },
     {
       "id": "backlog-merch-calendar-export-integrity",
       "type": "fix",
@@ -37,6 +66,64 @@
         "caption": {
           "tr": "Değişiklik sonrası gerçek Buyer Log, yalnız demo veriyle. Yüklenen test LCW takviminde 28.12.2026 Ocak 2027 / 1. hafta, 03.05.2026 Nisan 2026 / 18. hafta olarak görünür. Aynı değerler indirilen Legacy, detay ve V3 dosyalarında kontrol edildi.",
           "en": "Actual post-change Buyer Log using only demo data. In the uploaded test LCW calendar, 28.12.2026 maps to January 2027 / week 1 and 03.05.2026 to April 2026 / week 18. Matching values were checked in downloaded Legacy, detail and V3 files."
+        }
+      }
+    },
+    {
+      "id": "test-report-ai-context-preparation",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Belge inceleme",
+        "en": "CP · Document review"
+      },
+      "title": {
+        "tr": "LCW AI incelemesinin CP bağlamında takılması düzeltildi",
+        "en": "LCW AI review no longer stalls on the CP context"
+      },
+      "body": {
+        "tr": "Kişisel kurallarla hesaplanan Priority değeri artık eski sipariş verisi sanılmaz. İnceleme, checklist eşitlemesinin ve bekleyen ayar kayıtlarının tamamlanmasını bekler; CP tarihleri gün kaymadan bağlama eklenir. Gerçek sipariş, yetki veya checklist farkları incelemeyi durdurur ve hatanın türü görünür. Öneriler yalnız açık kullanıcı seçimi ve son onayla kaydedilir.",
+        "en": "Priority calculated from personal rules is no longer mistaken for stale order data. Review waits for checklist synchronisation and pending preference saves; CP dates are included without shifting the day. Actual order, access or checklist differences still stop review and show the type of error. Proposals are saved only after explicit selection and final confirmation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-ai-review.png",
+        "alt": {
+          "tr": "Demo sonuç maili için kanıtla doğrulanan inceleme ve checklist değişikliği önizlemesi",
+          "en": "Evidence-validated review and checklist change preview for a demo result email"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log ve demo veri. LCW AI HTTP sınırı test yanıtıyla çalıştırıldı; belge okuma, kaynak doğrulama, onay ve kayıt gerçek uygulamadan geçti. Bu görsel canlı LCW AI bağlantı testi değildir.",
+          "en": "Actual post-change Buyer Log with demo data. The LCW AI HTTP boundary returned a test response; document reading, evidence validation, approval and persistence ran through the actual application. This image does not demonstrate a live LCW AI connection test."
+        }
+      }
+    },
+    {
+      "id": "test-report-source-preservation",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Belge aktarımı",
+        "en": "CP · Document import"
+      },
+      "title": {
+        "tr": "Tanımlanamayan ve tekrar bırakılan belgeler incelemede korunur",
+        "en": "Unclassified and repeated documents remain available for review"
+      },
+      "body": {
+        "tr": "Türü belirlenemeyen veya sınıflandırılamayan PDF'ler artık sessizce elenmez; inceleme önizlemesine aktarılır. Aynı dosyanın tekrar bırakılması AI kapsam doğrulamasını bozmaz. AI'ın çözemediği belgelerde ayrıştırıcının okuduğu rapor ve ekler korunur. Desteklenmeyen, boş veya dosya sınırını aşan yeni bir seçim mevcut incelemeyi iptal etmez.",
+        "en": "PDFs whose type cannot be identified or classified are now retained in the review preview. Repeated drops of the same file no longer break AI source coverage validation. Parser reports and attachments remain available when AI cannot resolve a document. Unsupported, empty or over-limit new selections do not cancel an existing review."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-preserved-sources.png",
+        "alt": {
+          "tr": "İki kez bırakılan demo PDF'nin tek inceleme kaynağı ve çözümlenemeyen AI yanıtından sonra korunan raporu",
+          "en": "A repeated demo PDF retained as one review source, with its parser report preserved after an unresolved AI response"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, yalnız sentetik PDF ve test AI yanıtı. İki dosya bırakıldı; tek kaynak incelendi. AI çözemediğinde rapor önizlemede kalır ve hiçbir durum otomatik yazılmaz.",
+          "en": "Actual Buyer Log with a synthetic PDF and test AI response. Two files were dropped and one source was reviewed. The report remains in the preview when AI cannot resolve it, and no status is written automatically."
         }
       }
     }

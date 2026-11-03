@@ -2,7 +2,7 @@
 /* Test Raporu Aktarımı (sürükle-bırak).
    GET  /api/test-reports          → depolanan raporlar, bağlantılar, tip eşlemesi
    POST /api/test-reports/parse    → dosyaları okur, önizleme için rapor döner
-                                     (hiçbir şey kalıcı yazılmaz)
+                                     (rapor/checklist yazılmaz; özel inceleme arşivi oluşturulabilir)
    POST /api/test-reports/commit   → kullanıcının onayladığı kalemleri yazar,
                                      ekleri checklist ek deposuna koyar
    Yetki: ek yükleme ile aynı alanlar (cp, orders); satır düzenleme yetkisi
@@ -11,6 +11,7 @@
 const {createService}=require('../lib/test-reports/service');
 const store = require('../lib/test-reports/store');
 const staging = require('../lib/test-reports/staging');
+const operations = require('../lib/test-reports/operations');
 
 
 function imageType(buffer) {
@@ -55,8 +56,21 @@ app.get('/api/test-reports/tasks', userAccess.requireAnyArea('cp', 'orders', 'ov
   });
 
 app.post('/api/test-reports/parse', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '160mb' }), async (req, res) => {
-  try {res.set('Cache-Control','no-store').json(await service.parse(req.currentUser,req.body?.files));}
+  try {res.set('Cache-Control','no-store').json(await service.parse(req.currentUser,req.body?.files,{operation:req.body?.operation===true}));}
   catch(err){automationError(res,err,'Test raporları okunamadı.');}
+});
+
+app.get('/api/test-reports/operations',userAccess.requireAnyArea('cp','orders'),(req,res)=>{
+  try{res.set('Cache-Control','private, no-store').json({operations:operations.list(userId(req))});}catch(err){automationError(res,err,'İnceleme geçmişi okunamadı.');}
+});
+app.post('/api/test-reports/operations/:id/resume',userAccess.requireAnyArea('cp','orders'),async(req,res)=>{
+  try{res.set('Cache-Control','private, no-store').json(await service.resumeOperation(req.currentUser,req.params.id));}catch(err){automationError(res,err,'İnceleme açılamadı.');}
+});
+app.put('/api/test-reports/operations/:id/draft',userAccess.requireAnyArea('cp','orders'),express.json({limit:'128kb'}),(req,res)=>{
+  try{res.set('Cache-Control','private, no-store').json(operations.saveDraft(userId(req),req.params.id,req.body||{}));}catch(err){automationError(res,err,'İnceleme taslağı kaydedilemedi.');}
+});
+app.delete('/api/test-reports/operations/:id',userAccess.requireAnyArea('cp','orders'),(req,res)=>{
+  try{const result=operations.remove(userId(req),req.params.id);staging.dropOperationSessions(userId(req),req.params.id);res.set('Cache-Control','private, no-store').json(result);}catch(err){automationError(res,err,'İnceleme silinemedi.');}
 });
 
 /* LCW AI'a yüklenecek geçici dosya (yalnız oturumu açan kullanıcı). */
@@ -65,6 +79,8 @@ app.get('/api/test-reports/staged/:sessionId/:fileId', userAccess.requireAnyArea
     const file = session && session.files.get(String(req.params.fileId || ''));
     if (!file) return res.status(404).json({ error: 'Dosya bulunamadı.', code: 'TEST_REPORT_STAGED_NOT_FOUND' });
     const type = file.kind === 'pdf' ? 'application/pdf' : file.kind === 'image' ? imageType(file.buffer) : 'application/octet-stream';
+    res.attachment(file.name);
+    if (['pdf','image'].includes(file.kind)) res.set('Content-Disposition', res.get('Content-Disposition').replace(/^attachment/, 'inline'));
     res.set('Cache-Control', 'private, no-store').type(type).send(file.buffer);
   });
 

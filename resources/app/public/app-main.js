@@ -1391,6 +1391,14 @@ const _favoritesAppliedPages = new Set();
 // duruyorlardı; artık CP/Siparişler araç çubuğundaki "Araçlar" menüsüne taşınırlar.
 // Tekil düğümler oldukları için paylaşılan taşıma sistemine dahil edilmeleri şart.
 const _selectionActionIds=['cpCopyToKolBtn','cpQuotationsBtn','cpCreateOcBtn','cpPriceHistoryBtn','selectedBacklogBtn','cpProdStatusBtn','navToShipping','cpSendPricingBtn','cpRemoveImagesBtn'];
+document.getElementById('cpDocumentReviewBtn')?.addEventListener('click',async event=>{
+  const button=event.currentTarget;button.disabled=true;
+  const menu=document.getElementById('cpToolsMenu');if(menu)menu.hidden=true;
+  document.getElementById('cpToolsBtn')?.setAttribute('aria-expanded','false');
+  try{await window.BLPerf.ensureFeature('testReportImport');await window.BLTestReportImport.open();}
+  catch(error){showToast((appLang==='en'?'Document center could not be opened: ':'Belge merkezi açılamadı: ')+(error.message||error));}
+  finally{button.disabled=false;}
+});
 const _sharedTableActionIds=['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','navFitColumnsBtn','navFreezeBtn','navClearFilters','navColsBtn',..._selectionActionIds];
 function sharedTableActionNode(id){
   const el=document.getElementById(id);

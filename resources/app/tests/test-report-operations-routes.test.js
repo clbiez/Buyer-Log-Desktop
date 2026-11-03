@@ -1,0 +1,30 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'bl-report-history-http-'));process.env.BUYER_LOG_SERVER_DATA_ROOT=root;
+const express=require('express'),register=require('../server/routes/test-report-routes');
+const {createService}=require('../server/lib/test-reports/service');
+const app=express(),service=createService({authorizedOrders:async()=>new Map()});
+app.use((req,res,next)=>{req.currentUser={id:req.headers['x-owner']||'one'};next();});
+register(app,{express,service,authorizedOrders:async()=>new Map(),userAccess:{requireAnyArea:()=> (req,res,next)=>req.currentUser.id==='disabled'?res.status(403).end():next(),appendAudit:()=>{}},automationError:(res,error)=>res.status(error.statusCode||500).json({code:error.code})});
+let server,base;
+test.before(async()=>{server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));base='http://127.0.0.1:'+server.address().port;});
+test.after(async()=>{await new Promise(resolve=>server.close(resolve));fs.rmSync(root,{recursive:true,force:true});});
+async function call(url,{owner='one',method='GET',body}={}){const response=await fetch(base+'/api/test-reports'+url,{method,headers:{'x-owner':owner,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});return {status:response.status,body:await response.json().catch(()=>null)};}
+test('history, resume, draft and staged originals are isolated to the uploader and the existing area permission',async()=>{
+ const parsed=await call('/parse',{method:'POST',body:{operation:true,files:[{name:'mail.eml',base64:Buffer.from('From: lab@example.test\r\nSubject: evidence\r\n\r\nOwner original evidence').toString('base64')}]}});
+ assert.equal(parsed.status,200);const id=parsed.body.operationId;
+ assert.equal((await call('/operations')).body.operations.length,1);assert.equal((await call('/operations',{owner:'other'})).body.operations.length,0);
+ assert.equal((await call('/operations',{owner:'disabled'})).status,403);
+ assert.equal((await call('/operations/'+id+'/resume',{method:'POST',owner:'other'})).status,404);
+ assert.equal((await call('/operations/'+id+'/draft',{method:'PUT',owner:'other',body:{expectedRevision:0,draft:{note:'foreign'}}})).status,404);
+ const resumed=await call('/operations/'+id+'/resume',{method:'POST'});assert.equal(resumed.status,200);
+ const fileId=resumed.body.files[0].sources[0].fileId;
+ assert.equal((await call('/staged/'+resumed.body.sessionId+'/'+fileId,{owner:'other'})).status,404);
+ assert.equal((await call('/staged/'+resumed.body.sessionId+'/'+fileId)).status,200);
+ const original=await fetch(base+'/api/test-reports/staged/'+resumed.body.sessionId+'/'+fileId);
+ assert.match(original.headers.get('content-disposition'),/mail\.eml/);
+ assert.equal((await call('/operations/'+id,{method:'DELETE',owner:'other'})).status,404);
+ assert.equal((await call('/operations/'+id,{method:'DELETE'})).status,200);
+ assert.equal((await call('/staged/'+resumed.body.sessionId+'/'+fileId)).status,404);
+ assert.equal((await call('/operations/'+id+'/resume',{method:'POST'})).status,404);
+});

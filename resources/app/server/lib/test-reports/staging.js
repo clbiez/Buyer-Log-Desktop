@@ -95,9 +95,17 @@ function getSession(id, userId) {
   return session;
 }
 function dropSession(id) { removeSession(String(id || '')); }
+function dropOperationSessions(owner,operationId){for(const [id,session] of sessions)if(session.userId===String(owner)&&session.operationId===operationId)removeSession(id);}
+function resumeSession(owner,archive) {
+  const created=createSession(owner),session=sessions.get(created.id);
+  Object.assign(session,{operationId:archive.operationId,inputFiles:archive.inputFiles,files:archive.files,bytes:archive.bytes,
+    reports:archive.reports,sources:archive.sources,aiCandidates:archive.aiCandidates,assessment:archive.assessment,
+    operationReadOnly:archive.summary.phase==='committed'});
+  return session;
+}
 function withSessionLease(id,owner,operation) {
   const session=getSession(id,owner);if(!session)throw Object.assign(new Error('Staged session expired.'),{code:'TEST_REPORT_SESSION_EXPIRED',statusCode:410});
   return session.durable?withFileLeaseSync(path.join(diskPath(id),'session.json'),operation):operation();
 }
 
-module.exports = { createSession, getSession, dropSession, persistSession, withSessionLease, TTL_MS };
+module.exports = { createSession, getSession, dropSession, persistSession, withSessionLease, resumeSession, dropOperationSessions, TTL_MS };

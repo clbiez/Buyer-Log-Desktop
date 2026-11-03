@@ -45,6 +45,26 @@ test('already stale client fields cannot acquire a new server revision',async()=
   const ready=await authoritative.prepareAssessment(profile,{sessionId:parsed.sessionId,cp:canonical});
   assert.equal(ready.packet.cp.rows[0].fields.Last,1000);
 });
+test('personal Priority overlay is not mistaken for stale business data',async()=>{
+  const {parsed}=await prepare();
+  const canonical=structuredClone(cp);canonical.rows[0].fields.Priority='ON_TRACK';
+  const client=structuredClone(canonical);client.rows[0].fields.Priority='CRITICAL';
+  const authoritative=createService({authorizedOrders:async()=>orders,reviewContext:async()=>({cp:canonical,checklistSteps:[],checklistStatuses:[]})});
+  const ready=await authoritative.prepareAssessment(profile,{sessionId:parsed.sessionId,cp:client});
+  assert.equal(ready.packet.cp.rows[0].fields.Priority,'ON_TRACK','review uses authoritative business data');
+  client.rows[0].fields.Last=1000;
+  await assert.rejects(authoritative.prepareAssessment(profile,{sessionId:parsed.sessionId,cp:client}),{code:'TEST_REPORT_CP_INCOMPLETE'});
+});
+test('an unresolved AI read preserves the original parser report and staged evidence',async()=>{
+  const {fixture,pdfFromItems}=require('./helpers/external-lab-fixture.cjs');
+  const parsed=await service.parse(profile,[{name:'parsed.pdf',base64:pdfFromItems(fixture()).toString('base64')}]);
+  assert.ok(parsed.reports.length,'fixture must have a real parser result');
+  const {packet}=await service.prepareAssessment(profile,{sessionId:parsed.sessionId,cp,checklistSteps:[],checklistStatuses:[]});
+  const ids=packet.sources.map(source=>source.id);
+  const accepted=await service.acceptAssessment(profile,{sessionId:parsed.sessionId,snapshotId:packet.snapshotId,data:{protocol:packet.protocol,caseId:packet.caseId,snapshotId:packet.snapshotId,coveredSourceIds:ids,unresolvedSourceIds:ids,assessments:[]}});
+  assert.equal(accepted.reports[0].talepNo,parsed.reports[0].talepNo);
+  assert.deepEqual(accepted.reports[0].dosyalar,parsed.reports[0].dosyalar);
+});
 test('complete active CP can be reviewed when order authority also includes closed orders',async()=>{
   const {parsed}=await prepare();
   const allowed=new Map([...orders,['closed',{orderCode:'1381000'}]]);

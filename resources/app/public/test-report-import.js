@@ -23,7 +23,7 @@
   // One text bundle plus at most four originals per LCW AI request.
   const NEW_ITEM = '__new__';
   const MAX_ATTACHMENTS = 40;
-  const ui = { modal: null, busy: false, session: null, store: null, entries: [], files: [], typeMap: {}, newTypeMap: {}, decision: null, done: null, seq: 0, ai: { state: 'idle', message: '', progress: '', reviews: {}, model: '', read: {} }, aiRun: 0 };
+  const ui = { operationId: '', ownerId: '', history: [], historyOpen: false, historyQuery: '', activeEntry: '', note: '', tab: 'report', draftRevision: 0, savedDraft: '', readOnly: false, phase: '', modal: null, busy: false, session: null, store: null, entries: [], files: [], typeMap: {}, newTypeMap: {}, decision: null, done: null, seq: 0, ai: { state: 'idle', message: '', progress: '', reviews: {}, model: '', read: {} }, aiRun: 0 };
 
   function isEn() { return String((root.document && root.document.documentElement.lang) || root.appLang || 'tr').toLowerCase().startsWith('en'); }
   function T(tr, en) { return isEn() ? en : tr; }
@@ -41,7 +41,7 @@
 
   async function ensureDeps() {
     if (root.BLPerf && typeof root.BLPerf.ensureFeature === 'function') await root.BLPerf.ensureFeature('cpAssistant');
-    if (!E() || !root.BLTestReportAssessment || !assistant() || typeof assistant().computeDecisionsForRows !== 'function') {
+    if (!E() || !root.BLTestReportAssessment || !root.BLTestReportFocusView || !assistant() || typeof assistant().computeDecisionsForRows !== 'function') {
       throw new Error(T('Test raporu motoru yüklenemedi.', 'The test report engine could not be loaded.'));
     }
   }
@@ -75,8 +75,21 @@
         TEST_REPORT_AI_CONTRACT_INVALID: T('LCW AI yanıtının kaynak kanıtı doğrulanamadı; yeniden analiz edin.', 'Source evidence in the LCW AI response could not be verified; analyse again.'),
         TEST_REPORT_CONTEXT_TOO_LARGE: T('Bağlam sınırı aşıldı; hiçbir kaynak veya CP satırı kesilmedi. Dosyaları daha küçük gruplarla inceleyin.', 'The context limit was exceeded; no source or CP row was cut. Review smaller document groups.'),
         TEST_REPORT_EVIDENCE_MISSING: T('Kaynak metin bulunamadı; dosyaları yeniden bırakın.', 'Source text is missing; drop the files again.'),
+        TEST_REPORT_OPERATION_NOT_FOUND: T('İnceleme bulunamadı veya bu kullanıcıya ait değil.', 'The review was not found or belongs to another user.'),
+        TEST_REPORT_OPERATION_CONFLICT: T('Taslak başka bir pencerede değişti. Bu penceredeki notlar korunuyor; güncel kaydı geçmişten açın.', 'The draft changed in another window. Notes in this window are preserved; open the latest record from history.'),
+        TEST_REPORT_OPERATION_CAPACITY: T('İnceleme geçmişi sınırına ulaşıldı. Gereksiz eski kayıtları geçmişten silin.', 'Review history capacity was reached. Delete unneeded old records from history.'),
+        TEST_REPORT_OPERATION_COMMITTED: T('Kaydedilen inceleme geçmiş görünümünde açıktır.', 'The saved review is open in history view.'),
+        TEST_REPORT_OPERATION_INVALID: T('İnceleme kaydı veya kaynak dosyası doğrulanamadı.', 'The review record or source file could not be verified.'),
       };
-      throw Object.assign(new Error(known[code] || (payload && payload.error) || (T('İstek başarısız: ', 'Request failed: ') + response.status)), { code: code });
+      const reasons = {
+        empty: T('CP satırları henüz yüklenmedi.', 'CP rows have not loaded yet.'),
+        identity: T('Sipariş kimliği veya erişim kapsamı değişti.', 'An order identity or access scope changed.'),
+        coverage: T('Ekran ve sunucudaki CP satır kapsamı farklı.', 'The page and server have different CP row coverage.'),
+        fields: T('Ekrandaki bir sipariş alanı güncel değil.', 'An order field on the page is out of date.'),
+        checklist: T('Checklist cevapları henüz eşitlenmedi.', 'Checklist answers are not yet synchronised.'),
+      };
+      const detail = code === 'TEST_REPORT_CP_INCOMPLETE' && payload.details && reasons[payload.details.reason];
+      throw Object.assign(new Error((detail ? detail + ' ' : '') + (known[code] || (payload && payload.error) || (T('İstek başarısız: ', 'Request failed: ') + response.status))), { code: code });
     }
     return payload;
   }
@@ -245,6 +258,7 @@
   }
   function plan(entry) {
     const out = { ready: false, reason: '', current: 'open', next: '', suggested: null, manual: '', userOwned: false, notAsked: false, step: null, skippedDecisions: 0 };
+    if (ui.readOnly) { out.reason = T('Kaydedilmiş inceleme · salt okunur.', 'Saved review · read only.'); return out; }
     const existing = assistantState() && assistantState().answers && assistantState().answers[answerKey(entry.chosen, entry.itemId)];
     out.current = existing ? Checklist().normalizeStatus(existing.state) || 'open' : 'open';
     /* v7.0.290 — Elle eşleşme LCW AI'dan bağımsızdır. AI incelemesi yoksa,
@@ -448,11 +462,11 @@
   }
   /* LCW AI yönlendirmesi: özet, yapılacak işler, riskler, önerilen adım. */
   function aiReviewHtml(entry) {
-    const review = entry.report.talepNo ? (entry.manualMatch ? entry.originReview : (aiReady() ? reviewFor(entry) : null)) : null;
+    const review = entry.report.talepNo ? (entry.manualMatch ? entry.originReview : reviewFor(entry)) : null;
     if (!review) return '';
-    let out = '<div class="trAi"><b>' + html(T('LCW AI önerisi', 'LCW AI suggestion')) + '</b>';
+    let out = '<div class="trAi"><b>' + html(T('LCW AI değerlendirmesi', 'LCW AI assessment')) + '</b>';
     if (entry.manualMatch) out += '<small><b>' + html(T('Elle seçilen PO · kapsam kullanıcı tarafından doğrulanmalı.', 'Manually selected PO · the buyer must verify scope.')) + '</b></small><small>' + html(T('Aşağıdaki AI incelemesinin asıl PO’su: ', 'Original PO of the AI review below: ') + (review.orderCode || '—')) + '</small>';
-    out += '<small>' + html(T('Bileşen: ', 'Component: ') + (review.component || '—') + ' · ' + T('Laboratuvar: ', 'Laboratory: ') + (review.labResult || '—')) + '</small>';
+    out += '<small>' + html(T('Bileşen: ', 'Component: ') + (review.component || '—') + ' · ' + T('Laboratuvar sonucu: ', 'Lab result: ') + (review.labResult || '—')) + '</small>';
     if (review.commercialDecision) out += '<small>' + html(T('Ticari karar: ', 'Commercial decision: ') + review.commercialDecision) + '</small>';
     if (review.summary) out += '<p>' + html(review.summary) + '</p>';
     if (review.evidence && review.evidence.length) out += '<details><summary>' + html(T('Kaynak kanıtlarını göster', 'Show source evidence')) + '</summary>' + review.evidence.map(function (ref) {
@@ -487,7 +501,7 @@
     if (ai.state === 'offline') return '<section class="trAiBar"><b>' + html(T('LCW AI bağlı değil', 'LCW AI is not connected')) + '</b><small>' + html(T('Bağlanırsanız LCW AI raporları inceleyip yapılacakları ve uygun checklist adımını önerir, okunamayan dosyaları okur. Öneriler yalnız sizin onayınızla uygulanır.', 'Once connected, LCW AI reviews the reports, suggests next steps and a fitting checklist step, and reads files Buyer Log could not. Suggestions are applied only with your approval.')) + '</small><button type="button" class="cpaBtn sm primary" data-tr-ai-connect>' + html(T('LCW AI\'a bağlan ve analiz et', 'Connect to LCW AI and analyse')) + '</button></section>';
     if (ai.state === 'error') {
       const cpError = ai.code === 'TEST_REPORT_CP_INCOMPLETE' || ai.code === 'TEST_REPORT_REVIEW_STALE' || ai.code === 'OFFICE_PREVIEW_CHANGED';
-      return '<section class="trAiBar is-error"><b>' + html(cpError ? T('CP bağlamı hazırlanamadı', 'CP context could not be prepared') : T('LCW AI analizi tamamlanamadı', 'LCW AI analysis did not complete')) + '</b><small>' + html(cpError ? T('Dosyalar önizlemede korunuyor. Güncel CP ve checklist verilerini yükleyip yeniden analiz edin.', 'Files are preserved in the preview. Reload current CP and checklist data and analyse again.') : ai.message) + '</small><button type="button" class="cpaBtn sm" ' + (cpError ? 'data-tr-cp-retry' : 'data-tr-ai-retry') + '>' + html(cpError ? T('CP verilerini yükle ve yeniden dene', 'Reload CP data and try again') : T('Tekrar dene', 'Try again')) + '</button></section>';
+      return '<section class="trAiBar is-error"><b>' + html(cpError ? T('CP bağlamı hazırlanamadı', 'CP context could not be prepared') : T('LCW AI analizi tamamlanamadı', 'LCW AI analysis did not complete')) + '</b><small>' + html(cpError ? [ai.message, T('Dosyalar önizlemede korunuyor. Güncel CP ve checklist verilerini yükleyip yeniden analiz edin.', 'Files are preserved in the preview. Reload current CP and checklist data and analyse again.')].filter(Boolean).join(' ') : ai.message) + '</small><button type="button" class="cpaBtn sm" ' + (cpError ? 'data-tr-cp-retry' : 'data-tr-ai-retry') + '>' + html(cpError ? T('CP verilerini yükle ve yeniden dene', 'Reload CP data and try again') : T('Tekrar dene', 'Try again')) + '</button></section>';
     }
     return '<section class="trAiBar is-done"><b>' + html(T('LCW AI analizi hazır', 'LCW AI analysis ready')) + (ai.model ? ' · ' + html(ai.model) : '') + '</b><small>' + html(ai.message || T('Öneriler her raporun satırında; hiçbiri siz uygulamadan seçilmez.', 'Suggestions are shown on each report row; none is applied until you do.')) + '</small><button type="button" class="cpaBtn sm" data-tr-ai-retry>' + html(T('Yeniden analiz et', 'Analyse again')) + '</button></section>';
   }
@@ -585,85 +599,222 @@
         return '<li><b>' + html(f.name) + '</b> — ' + html(reasons.join(' ') || T('Tanınmadı.', 'Not recognised.')) + '</li>';
       }).join('') + '</ul></section>';
   }
-  function render() {
-    if (!ui.modal) return;
-    ui.modal.querySelector('#_blTestReportTitle').textContent = T('Test raporu aktarımı', 'Test report import');
-    ui.modal.querySelector('header small').textContent = T('Önizleme · onaylamadan hiçbir şey yazılmaz', 'Preview · nothing is written until you confirm');
-    ui.modal.querySelector('footer [data-tr-close]').textContent = T('Kapat', 'Close');
-    const body = ui.modal.querySelector('[data-tr-body]');
-    const footer = ui.modal.querySelector('[data-tr-commit]');
-    if (ui.done) {
-      body.innerHTML = '<div class="trDone"><b>' + html(T('Aktarım tamamlandı', 'Import complete')) + '</b><ul class="trWarnings">' + ui.done.map(function (line) { return '<li>' + html(line) + '</li>'; }).join('') + '</ul></div>';
-      footer.hidden = true;
-      return;
-    }
-    const drop = '<label class="trDrop" data-tr-drop><input type="file" data-tr-input multiple accept=".msg,.eml,.pdf,.png,.jpg,.jpeg,.webp" hidden>'
-      + '<b>' + html(T('Test raporları ve Lab Dip / ROS maillerini buraya bırakın', 'Drop test reports and Lab Dip / ROS e-mails here')) + '</b>'
-      + '<small>' + html(T('.msg, .eml, .pdf ve rapor fotoğrafı · Outlook\'tan sürükleme dosya üretmezse maili .msg olarak kaydedip bırakın · ya da dosya seçmek için tıklayın', '.msg, .eml, .pdf and report photos · If dragging from Outlook gives no file, save the mail as .msg and drop it · or click to choose files')) + '</small></label>';
-    if (ui.busy) {
-      body.innerHTML = drop + '<p class="trMuted" role="status">' + html(T('Dosyalar okunuyor…', 'Reading files…')) + '</p>';
-      footer.disabled = true;
-      return;
-    }
-    if (!ui.session) { body.innerHTML = drop; footer.disabled = true; return; }
-    ui.ai.cpChanged = Boolean(ui.ai.packet && ui.ai.localSnapshot !== localReviewSnapshot());
-    const plans = ui.entries.map(plan);
-    const rowsHtml = ui.entries.map(function (entry, index) {
-      const p = plans[index], r = entry.report, tests = testNames(r);
-      const canSelect = p.ready && Boolean(p.next);
-      return '<tr class="' + (canSelect ? '' : 'is-blocked') + '">'
-        + '<td><input type="checkbox" data-tr-include="' + entry.id + '"' + (entry.include && canSelect ? ' checked' : '') + (canSelect ? '' : ' disabled') + ' aria-label="' + html(T('Bu raporu yaz', 'Write this report')) + '"></td>'
-        + '<td><b>' + html(r.talepNo || '—') + '</b>' + (entry.fromAi ? ' <span class="trBadge tone-blue">' + html(T('LCW AI okudu', 'Read by LCW AI')) + '</span>' : '') + '<small>' + html(r.talepTipi || '') + '</small>' + (r.lab || r.raporTarihiIso ? '<small>' + html([r.lab, (r.raporTarihiIso || '').slice(0, 10)].filter(Boolean).join(' · ')) + '</small>' : '') + '<small>' + html([entry.scope ? entry.scope.orderCode : r.siparisKodu, r.modelAdi, r.renk].filter(Boolean).join(' · ')) + '</small>'
-        + (E().orderScopeNeedsReview(r) ? '<small><b>' + html(T('Rapor kapsamını doğrulayın: ', 'Verify report scope: ')) + '</b>' + html(E().orderScopes(r).map(function (s) { return s.orderCode; }).join(', ')) + '</small>' : '')
-        + (entry.scope && entry.scope.requiresReview ? '<small class="trBadge tone-orange">' + html(entry.scope.confidence === 'candidate' ? T('Doğrulanmamış numara · sipariş olduğunu doğrulayın', 'Unverified number · verify it is an order') : T('Ek sipariş · kapsamı doğrulayıp işaretleyin', 'Additional order · verify scope and tick')) + '</small>' : '')
-        + (E().reportDescriptions(r).length ? '<details><summary>' + html(T('Açıklama / kaynak kanıtı', 'Description / source evidence')) + '</summary>' + E().reportDescriptions(r).map(function (d) { return '<small>' + html(d) + '</small>'; }).join('') + '</details>' : '')
-        + (tests.length ? '<small><b>' + html(T('Test adı: ', 'Test name: ')) + '</b>' + html(tests.join(', ')) + '</small>' : '') + '</td>'
-        + '<td>' + resultBadge(r) + testDetailsHtml(r) + '</td>'
-        + '<td>' + levelBadge(entry) + '</td>'
-        + '<td>' + rowCell(entry) + '</td>'
-        + '<td>' + (entry.ignored ? '<span class="trMuted">—</span>' : (entry.partOf ? '<b>' + html(itemLabel(entry.itemId)) + '</b>' : '<select data-tr-item="' + entry.id + '">' + itemOptions(entry.itemId, entry) + '</select>') + partPicker(entry)) + '</td>'
-        + '<td>' + changeCell(entry, p) + '</td>'
-        + '<td>' + warningsCell(entry, p) + '<div class="trFiles">' + filesCell(r) + '</div></td></tr>';
-    }).join('');
-    const conflict = selectionConflicts(plans);
-    const notice = conflict ? '<p role="alert">' + html(T('Aynı rapor/PO iki kez veya aynı checklist için farklı durumlar seçildi. Tekrarlanan seçimi kaldırın.', 'The same report/PO was selected twice or checklist statuses conflict. Remove the duplicate selection.')) + '</p>' : '';
-    const unresolved = (ui.ai.unresolved || []).map(function (id) { return ui.ai.packet.sources.find(function (s) { return s.id === id; }); }).filter(Boolean);
-    const missing = unresolved.length ? '<section class="trIssues"><b>' + html(T('Çözümlenemeyen kaynaklar', 'Unresolved sources')) + '</b><ul class="trWarnings">' + unresolved.map(function (source) { return '<li>' + html(source.name) + '</li>'; }).join('') + '</ul></section>' : '';
-    body.innerHTML = drop + summaryHtml(plans) + aiStatusHtml() + fileReadingHtml() + notice + missing + fileIssuesHtml() + typeMappingHtml()
-      + (ui.entries.length ? '<div class="trTableWrap"><table class="cpaTable trTable"><thead><tr><th></th><th>' + html(T('Talep', 'Request')) + '</th><th>' + html(T('Sonuç', 'Result')) + '</th><th>' + html(T('Eşleşme', 'Match')) + '</th><th>' + html(T('Satır', 'Row')) + '</th><th>' + html(T('Checklist adımı', 'Checklist step')) + '</th><th>' + html(T('Değişiklik', 'Change')) + '</th><th>' + html(T('Uyarılar ve eklenecek dosyalar', 'Warnings and files to attach')) + '</th></tr></thead><tbody>' + rowsHtml + '</tbody></table></div>' : '');
-    const ready = plans.filter(function (p, i) { return p.ready && p.next && ui.entries[i].include; }).length;
-    footer.disabled = !ready || conflict;
-    footer.textContent = T('Onayla ve yaz', 'Confirm and write') + ' (' + ready + ')';
+  function currentOwner() { return String(root.BL_USER_CONTEXT && root.BL_USER_CONTEXT.id || root.state && root.state.currentUser && root.state.currentUser.id || ''); }
+  function activeEntry() { return ui.entries.find(function (entry) { return entry.id === ui.activeEntry; }) || ui.entries[0] || null; }
+  function draftPayload() {
+    return { note: ui.note || '', tab: ui.tab || 'report', activeEntry: String(Math.max(0, ui.entries.indexOf(activeEntry()))), typeMap: ui.newTypeMap || {},
+      entries: ui.entries.map(function (entry) { return { reportId: entry.report.talepNo, scope: entry.scope && entry.scope.orderCode || '', chosen: entry.chosen, itemId: entry.itemId, status: entry.status || '', element: entry.element || '', manual: Boolean(entry.manualMatch), manualAdded: Boolean(entry.manualAdded), partOf: entry.partOf ? String(ui.entries.findIndex(function (parent) { return parent.id === entry.partOf; })) : '' }; }) };
   }
+  function saveIndicator() {
+    const label = ui.modal && ui.modal.querySelector('[data-tr-save-state]');
+    if (label) label.textContent = ui.saveError ? T('Taslak kaydedilemedi · notlar bu pencerede korunuyor', 'Draft save failed · notes are preserved in this window') : ui.draftPromise || ui.draftTimer ? T('Taslak kaydediliyor…', 'Saving draft…') : ui.operationId ? T('Taslak kaydedildi · kapatıp devam edebilirsiniz', 'Draft saved · close and resume anytime') : T('Dosyalar ve taslaklar inceleme geçmişinde korunur', 'Files and drafts are retained in review history');
+  }
+  async function flushDraft() {
+    if (ui.draftTimer) { root.clearTimeout(ui.draftTimer); ui.draftTimer = null; }
+    if (!ui.operationId || ui.restoring || ui.ownerId !== currentOwner()) return;
+    if (ui.draftPromise) { await ui.draftPromise; return flushDraft(); }
+    const payload = draftPayload(), serialized = JSON.stringify(payload);
+    if (serialized === ui.savedDraft) return;
+    const operationId = ui.operationId, owner = ui.ownerId;
+    const pending = jsonFetch(API + '/operations/' + encodeURIComponent(operationId) + '/draft', { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expectedRevision: ui.draftRevision || 0, draft: payload }) }).then(function (saved) {
+        if (ui.operationId === operationId && ui.ownerId === owner && owner === currentOwner()) { ui.draftRevision = saved.revision; ui.savedDraft = serialized; ui.saveError = ''; }
+      }).catch(function (error) { if (ui.operationId === operationId && owner === currentOwner()) ui.saveError = error.message; throw error; }).finally(function () { if (ui.draftPromise === pending) ui.draftPromise = null; saveIndicator(); });
+    ui.draftPromise = pending;
+    saveIndicator();
+    await ui.draftPromise;
+  }
+  function scheduleDraft() {
+    if (!ui.operationId || ui.restoring || ui.busy || ui.saveError || ui.ownerId !== currentOwner()) return;
+    if (JSON.stringify(draftPayload()) === ui.savedDraft) return;
+    if (ui.draftTimer) root.clearTimeout(ui.draftTimer);
+    ui.draftTimer = root.setTimeout(function () { ui.draftTimer = null; flushDraft().catch(function (error) { toast(error.message); }); }, 350);
+  }
+  function phaseLabel(phase) {
+    return ({ parsed: T('Belge okundu', 'Document read'), analysing: T('Analizi sürdür', 'Resume analysis'), reviewed: T('İnceleme hazır', 'Review ready'), committed: T('Kaydedildi', 'Saved') })[phase] || T('İnceleme', 'Review');
+  }
+  async function refreshHistory() {
+    const owner = ui.ownerId;
+    const result = await jsonFetch(API + '/operations');
+    if (owner === ui.ownerId && owner === currentOwner()) ui.history = result.operations || [];
+  }
+  function packetMatchesPage(packet) {
+    if (!packet) return false;
+    const current = currentCpSnapshot(false), rows = new Map(current.rows.map(function (row) { return [row.key, row]; }));
+    return packet.cp.rows.length === current.rows.length && packet.cp.rows.every(function (row) {
+      const client = rows.get(row.key);
+      const states = function (record) { return Object.fromEntries((record.checklist || []).map(function (item) { return [item.itemId, { state: item.answer && item.answer.state, source: item.answer && item.answer.source }]; }).sort(function (a, b) { return a[0].localeCompare(b[0]); })); };
+      return client && Object.entries(row.fields || {}).every(function (pair) { return pair[0] === 'Priority' || JSON.stringify(client.fields[pair[0]]) === JSON.stringify(pair[1]); }) && JSON.stringify(states(client)) === JSON.stringify(states(row));
+    });
+  }
+  function restoreEntries(reports, assessment, draft) {
+    const bases = buildEntries(reports || []), reviewed = (assessment && assessment.assessments || []).map(function (review) {
+      const base = bases.find(function (entry) { return entry.report.talepNo === review.reportId && (entry.scope && entry.scope.orderCode || entry.report.siparisKodu) === review.orderCode; }) || bases.find(function (entry) { return entry.report.talepNo === review.reportId; });
+      if (!base) return null;
+      const entry = Object.assign({}, base, { id: 'r' + ui.seq++, chosen: review.orderKey || '', itemId: review.step || base.itemId });
+      const row = cpRows().find(function (row) { const a = analysisFor(row); return a && a.orderKey === review.orderKey; });
+      if (row) { entry.candidates = [{ key: review.orderKey, row: row }]; entry.ignored = false; entry.match = { level: 'partial', reason: 'ai', candidates: entry.candidates }; }
+      entry.scope = { orderCode: review.orderCode, requiresReview: review.scope !== 'verified', confidence: review.scope === 'verified' ? 'labelled' : 'candidate' };
+      return entry;
+    }).filter(Boolean);
+    bases.forEach(function (base) { if (!reviewed.some(function (entry) { return entry.report.talepNo === base.report.talepNo; })) reviewed.push(base); });
+    const descriptors = draft && draft.entries || [];
+    if (!descriptors.length) { ui.entries = reviewed; }
+    else ui.entries = descriptors.flatMap(function (saved) {
+      const base = reviewed.find(function (entry) { return entry.report.talepNo === saved.reportId && (entry.scope && entry.scope.orderCode || '') === saved.scope; }) || reviewed.find(function (entry) { return entry.report.talepNo === saved.reportId; });
+      if (!base) return [];
+      const entry = Object.assign({}, base, { id: 'r' + ui.seq++ });
+      if (saved.manual || saved.manualAdded || saved.chosen !== entry.chosen) changeMatch(entry, saved.chosen);
+      entry.manualAdded = saved.manualAdded === true;
+      entry.chosen = saved.chosen || '';
+      entry.itemId = saved.itemId || '';
+      entry.status = statusIdList().includes(saved.status) ? saved.status : '';
+      entry.element = Checklist().Components.elementName(saved.element || '');
+      entry.draftIndex = descriptors.indexOf(saved);
+      return [entry];
+    });
+    ui.entries.forEach(function (entry) {
+      const saved = descriptors[entry.draftIndex];
+      const parent = saved && saved.partOf !== '' && ui.entries.find(function (candidate) { return candidate.draftIndex === Number(saved.partOf); });
+      entry.partOf = parent && parent !== entry && parent.report.talepNo === entry.report.talepNo ? parent.id : '';
+    });
+    ui.entries.forEach(function (entry) { delete entry.draftIndex; });
+    // Saved choices are drafts, never restored approval or overwrite consent.
+    ui.entries.forEach(function (entry) { entry.include = false; entry.reviewVerified = false; entry.override = false; });
+    ui.activeEntry = (ui.entries[Number(draft && draft.activeEntry) || 0] || ui.entries[0] || {}).id || '';
+  }
+  async function resumeOperation(id, options) {
+    if (!options && (ui.busy || ui.ai.state === 'running')) { toast(T('İşlem sürüyor; bitmesini bekleyin veya analizi durdurun.', 'An operation is running; wait for it or stop the assessment.')); return; }
+    await flushDraft();
+    const owner = ui.ownerId;
+    ui.restoring = true; render();
+    try {
+      const sync = root.BLChecklistSupplierSync;
+      if (sync && typeof sync.loadShared === 'function') {
+        if (!await sync.loadShared()) throw new Error(T('Güncel checklist yüklenemedi; yeniden deneyin.', 'The current checklist could not be loaded; try again.'));
+        if (typeof sync.syncAnswerChanges === 'function') await sync.syncAnswerChanges();
+      }
+      await flushPreferences();
+      if (owner !== currentOwner()) return;
+      const result = await jsonFetch(API + '/operations/' + encodeURIComponent(id) + '/resume', { method: 'POST' });
+      if (owner !== ui.ownerId || owner !== currentOwner()) return;
+      ui.operationId = result.operationId; ui.session = result.sessionId; ui.files = result.files || []; ui.readOnly = result.readOnly === true; ui.phase = result.phase;
+      ui.store = await jsonFetch(API);
+      if (owner !== currentOwner()) return;
+      ui.note = result.draft && result.draft.note || ''; ui.tab = result.draft && result.draft.tab || 'report'; ui.newTypeMap = result.draft && result.draft.typeMap || {};
+      ui.draftRevision = result.draftRevision; ui.saveError = ''; ui.done = result.readOnly ? [T('Bu inceleme daha önce kaydedildi. Rapor ve kaynaklar geçmişte korunuyor.', 'This review was saved previously. Reports and sources remain in history.')] : null;
+      const assessment = result.ai && result.ai.assessment, packet = result.ai && result.ai.packet;
+      ui.ai = { state: assessment ? 'done' : 'idle', message: '', progress: '', model: '', reviews: Object.fromEntries((assessment && assessment.assessments || []).map(function (review) { return [root.BLTestReportAssessment.keyOf(review), review]; })),
+        packet: packet || null, unresolved: assessment && assessment.unresolvedSourceIds || [], read: {}, localSnapshot: result.reviewCurrent && packetMatchesPage(packet) ? localReviewSnapshot() : '' };
+      restoreEntries(result.reports, assessment, result.draft);
+      (packet && packet.sources || []).forEach(function (source) {
+        const review = (assessment && assessment.assessments || []).find(function (item) { return item.evidence.some(function (ref) { return ref.sourceId === source.id; }); });
+        if (review) ui.ai.read[source.name] = { ok: true, talepNo: review.reportId };
+      });
+      ui.historyOpen = false; ui.savedDraft = JSON.stringify(draftPayload());
+      await refreshHistory();
+    } finally { ui.restoring = false; render(); }
+    root.BLMotionPlus && root.BLMotionPlus.play('card', ui.modal && ui.modal.querySelector('.trFocusColumns'));
+  }
+  function sourceFiles(entry) {
+    const files = new Map();
+    (ui.ai.packet && ui.ai.packet.sources || []).forEach(function (source) { if (source.fileId) files.set(source.fileId, { id: source.fileId, name: source.name, kind: source.kind }); });
+    (entry ? [entry] : ui.entries).forEach(function (item) { (item.report.dosyalar || []).forEach(function (file) { if (file.stagingId) files.set(file.stagingId, { id: file.stagingId, name: file.ad, kind: file.tur }); }); });
+    ui.files.forEach(function (file) { (file.sources || []).forEach(function (source) { if (source.fileId) files.set(source.fileId, { id: source.fileId, name: source.name, kind: source.kind }); }); if (file.ai && file.ai.uploadId) files.set(file.ai.uploadId, { id: file.ai.uploadId, name: file.name, kind: file.kind }); });
+    return [...files.values()];
+  }
+  function sourceLinks(entry) {
+    return sourceFiles(entry).map(function (file) { return '<a class="trFocusFile" href="' + API + '/staged/' + encodeURIComponent(ui.session) + '/' + encodeURIComponent(file.id) + '" target="_blank" rel="noopener">' + html(file.name) + '<span>' + html(T('Orijinali aç', 'Open original')) + ' ↗</span></a>'; }).join('') || '<p class="trMuted">' + html(T('Kaynak dosyalar analiz hazır olduğunda burada görünür.', 'Source files appear here when the assessment is ready.')) + '</p>';
+  }
+  function modelSource(entry) {
+    const row = entry && rowFor(entry);
+    if (!row || typeof root.tableRowImageSource !== 'function') return '';
+    const source = root.tableRowImageSource(row).source || '';
+    try { const url = new URL(source, root.location.origin); if (url.origin === root.location.origin && url.pathname.startsWith('/api/')) return url.href; } catch (_) {}
+    return /^(?:blob:|data:image\/(?:png|jpe?g|webp);base64,)/i.test(source) ? source : '';
+  }
+  function focusEvidence(entry) {
+    const review = entry && reviewFor(entry);
+    return (review && review.evidence || []).map(function (ref, i) {
+      const source = ui.ai.packet && ui.ai.packet.sources.find(function (item) { return item.id === ref.sourceId; });
+      return '<blockquote class="trFocusEvidence"><b>' + html(T('Kaynak kanıtı ', 'Source evidence ') + '[' + (i + 1) + '] · ' + (source && source.name || ref.sourceId) + ' · ' + (ref.page > 0 ? T('Sayfa ', 'Page ') + ref.page : T('E-posta metni', 'Email text'))) + '</b><p>' + html(ref.quote) + '</p></blockquote>';
+    }).join('');
+  }
+  function render() {
+    scheduleDraft();
+    if (!ui.modal) return;
+    const View = root.BLTestReportFocusView;
+    if (!View) return;
+    ui.modal.querySelector('#_blTestReportTitle').textContent = T('Belge Operasyon Merkezi', 'Document Operations Center');
+    ui.modal.querySelector('header small').textContent = T('Test raporu · e-posta · Lab Dip / ROS', 'Test report · email · Lab Dip / ROS');
+    ui.modal.querySelector('[data-tr-history-label]').textContent = T('Geçmiş', 'History');
+    ui.modal.querySelector('[data-tr-pick-label]').textContent = T('Belge ekle', 'Add document');
+    ui.modal.querySelector('footer [data-tr-close]').textContent = T('Kapat', 'Close');
+    ui.ai.cpChanged = Boolean(ui.ai.packet && ui.ai.localSnapshot !== localReviewSnapshot());
+    const entry = activeEntry(), row = entry && rowFor(entry), p = entry && plan(entry), canonical = root.BLCanonicalFields;
+    const field = function (id, fallback) { return row ? canonical ? canonical.value(row, 'cp', id) : value(row, fallback) : ''; };
+    const plans = ui.entries.map(plan), conflict = selectionConflicts(plans);
+    const body = ui.modal.querySelector('[data-tr-body]'), footer = ui.modal.querySelector('[data-tr-commit]');
+    const query = text(ui.historyQuery).toLocaleLowerCase(lang());
+    body.innerHTML = View.render({ T: T, entry: entry, session: ui.session, busy: ui.busy || ui.restoring, operationId: ui.operationId, historyOpen: ui.historyOpen, query: ui.historyQuery || '',
+      history: (ui.history || []).filter(function (item) { return !query || [item.name, (item.reports || []).join(' ')].join(' ').toLocaleLowerCase(lang()).includes(query); }).map(function (item) { return Object.assign({}, item, { phaseLabel: item.id === ui.operationId && ui.ai.state === 'running' ? T('Analiz sürüyor', 'Assessment running') : phaseLabel(item.phase) }); }),
+      readOnly: ui.readOnly, stale: !ui.readOnly && ui.ai.cpChanged, phaseLabel: phaseLabel(ui.phase), done: ui.done, tab: ui.tab || 'report', note: ui.note || '',
+      modelName: field('modelName', ['Model Name']), orderCode: field('orderCode', ['Order Code']), colour: field('colour', ['Colour']), image: modelSource(entry),
+      options: ui.entries.map(function (item) { return { id: item.id, label: [item.report.talepNo, item.scope && item.scope.orderCode || item.report.siparisKodu, item.itemId ? itemLabel(item.itemId) : ''].filter(Boolean).join(' · ') }; }), filesCount: ui.files.length, entriesCount: ui.entries.length,
+      matchBadge: entry ? levelBadge(entry) : '', matchControls: entry ? ui.readOnly ? html(rowLabel(row)) : rowCell(entry) : '',
+      aiBar: ui.readOnly ? '' : aiStatusHtml(), aiReview: entry ? aiReviewHtml(entry) : '',
+      warnings: entry ? '<div class="trFocusWarnings">' + (entry.report.uyarilar || []).filter(function (warning) { return !['aiNote', 'aiExtracted'].includes(warning.code); }).map(function (warning) { return '<p>' + html(E().warningText(warning, lang())) + '</p>'; }).join('') + '</div>' : '',
+      itemOptions: entry ? itemOptions(entry.itemId, entry) : '', partControls: entry ? partPicker(entry) : '', changeControls: entry ? changeCell(entry, p) : '',
+      canSelect: !ui.busy && !ui.readOnly && p && p.ready && Boolean(p.next), included: entry && entry.include,
+      sourceLinks: sourceLinks(entry), readingDetails: fileReadingHtml(), resultBadge: entry ? resultBadge(entry.report) : '', resultLabel: function (result) { return E().resultLabel(result, lang()); },
+      evidence: focusEvidence(entry), descriptions: entry ? E().reportDescriptions(entry.report).map(function (description) { return '<p>' + html(description) + '</p>'; }).join('') : '',
+      issues: (conflict ? '<p role="alert">' + html(T('Tekrarlanan hedefleri veya çelişen durumları düzeltin.', 'Resolve duplicate targets or conflicting statuses.')) + '</p>' : '') + fileIssuesHtml() + (entry && !entry.itemId ? typeMappingHtml() : '') });
+    const ready = plans.filter(function (item, i) { return item.ready && item.next && ui.entries[i].include; }).length;
+    footer.hidden = ui.readOnly; footer.disabled = ui.busy || ui.restoring || !ready || conflict; footer.textContent = T('Onayla ve yaz', 'Confirm and write') + ' (' + ready + ')';
+    ui.modal.querySelector('[data-tr-pick]').disabled = ui.busy || ui.restoring || ui.ai.state === 'running';
+    saveIndicator();
+    const revealKey = ui.operationId + ':' + (entry && entry.chosen || '');
+    if (revealKey !== ui.revealKey) { ui.revealKey = revealKey; root.BLMotionPlus && root.BLMotionPlus.play('card', body.querySelector('.trFocusModel')); }
+  }
+
 
   /* -------------------------------------------------------- olaylar */
   async function handleFiles(fileList) {
-    if (ui.busy) return;
-    cancelAi();
+    if (ui.busy || ui.restoring) return;
+    if (ui.ai.state === 'running') { toast(T('Analiz sürüyor. Bitmesini bekleyin veya analizi durdurun.', 'An assessment is running. Wait for it or stop it.')); return; }
     const all = Array.from(fileList || []);
     const files = all.filter(function (f) { return ACCEPT.test(f.name || ''); });
     const skipped = all.filter(function (f) { return !ACCEPT.test(f.name || ''); });
     if (!files.length) { toast(T('Desteklenen dosya yok (.msg, .eml, .pdf, görsel).', 'No supported files (.msg, .eml, .pdf, image).')); return; }
+    if (files.length > 30) { toast(T('Tek seferde en fazla 30 dosya bırakılabilir.', 'Up to 30 files can be dropped at once.')); return; }
+    if (files.some(function (file) { return !file.size || file.size > 40 * 1024 * 1024; })) { toast(T('Dosya boş ya da 40 MB sınırını aşıyor.', 'The file is empty or exceeds the 40 MB limit.')); return; }
+    try { await flushDraft(); } catch (error) { toast(error.message); return; }
+    cancelAi();
+    const owner = currentOwner();
     ui.busy = true; ui.done = null; render();
     try {
-      const payload = { files: [] };
+      const payload = { files: [], operation: true };
       for (const file of files) payload.files.push({ name: file.name, base64: await fileBase64(file) });
+      if (owner !== currentOwner()) return;
       const responses = await Promise.all([
         jsonFetch(API + '/parse', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }),
         jsonFetch(API),
       ]);
       const parsed = responses[0];
+      if (owner !== currentOwner()) return;
       ui.store = responses[1];
       ui.session = parsed.sessionId;
+      ui.operationId = parsed.operationId || ''; ui.readOnly = false; ui.note = ''; ui.tab = 'report'; ui.draftRevision = 0; ui.savedDraft = ''; ui.saveError = ''; ui.phase = 'parsed';
       ui.files = parsed.files.concat(skipped.map(function (f) { return { name: f.name, status: 'unsupported', warnings: [{ code: 'unsupported' }] }; }));
       ui.newTypeMap = {};
       ui.entries = buildEntries(parsed.reports || []);
+      ui.activeEntry = (ui.entries[0] || {}).id || '';
       ui.ai = { state: 'idle', message: '', progress: '', reviews: {}, model: '', read: {} };
+      if (ui.operationId) await refreshHistory();
     } catch (error) {
       toast(T('Test raporları okunamadı: ', 'Test reports could not be read: ') + (error.message || error));
     } finally {
-      ui.busy = false;
-      render();
+      if (owner === currentOwner()) { ui.busy = false; render(); }
     }
     if (ui.session) runAi({ interactive: false });
   }
@@ -729,25 +880,37 @@
   }
   function localReviewSnapshot() {
     const cp = currentCpSnapshot(false);
+    // Rendering personal rules may update this display field asynchronously.
+    // Match the server freshness check; the full AI packet still retains it.
+    cp.rows.forEach(function (row) { delete row.fields.Priority; });
+    cp.columns = cp.columns.filter(function (key) { return key !== 'Priority'; });
     return JSON.stringify({ cp: cp, steps: catalog(), statuses: customStatusList() });
+  }
+  async function flushPreferences() {
+    if (!root.BLStorage || typeof root.BLStorage.flushPending !== 'function') return;
+    let timeout;
+    try { await Promise.race([root.BLStorage.flushPending(), new Promise(function (_, reject) { timeout = root.setTimeout(function () { reject(new Error('PREFERENCE_SAVE_TIMEOUT')); }, 8000); })]); }
+    catch (_) { throw Object.assign(new Error(T('Bekleyen ayarlar kaydedilemedi; CP verilerini yükleyip yeniden deneyin.', 'Pending preferences could not be saved; reload CP data and try again.')), { code: 'TEST_REPORT_REVIEW_STALE' }); }
+    finally { root.clearTimeout(timeout); }
   }
   async function runAi(options) {
     const AI = root.BuyerLogAI, Review = root.BLTestReportAssessment;
-    if (!AI || !Review || !ui.session || ui.busy) return;
-    const run = ++ui.aiRun, sessionId = ui.session;
+    if (!AI || !Review || !ui.session || ui.busy || ui.readOnly) return;
+    const run = ++ui.aiRun, sessionId = ui.session, owner = currentOwner();
     if (ui.ai.controller) ui.ai.controller.abort();
     const controller = new AbortController();
     ui.entries.forEach(function (entry) { entry.include = false; entry.reviewVerified = false; entry.status = ''; });
     ui.ai = { state: 'running', message: '', progress: '', reviews: {}, read: {}, model: '', controller: controller, packet: null };
-    const active = function () { return run === ui.aiRun && sessionId === ui.session; };
+    const active = function () { return run === ui.aiRun && sessionId === ui.session && owner === currentOwner(); };
     const set = function (patch) { if (active()) { Object.assign(ui.ai, patch); render(); } };
     render();
     try {
-      if (options && options.refreshCp) {
+      if (typeof root.ensureCpLoaded === 'function') {
         set({ progress: T('Güncel CP ve checklist yükleniyor…', 'Loading current CP and checklist…') });
-        if (typeof root.ensureCpLoaded !== 'function' || !await root.ensureCpLoaded({ force: true })) throw new Error(T('CP yüklenemedi; CP ekranını yenileyip tekrar deneyin.', 'CP could not be loaded; refresh the CP screen and try again.'));
-        if (root.BLChecklistSupplierSync && typeof root.BLChecklistSupplierSync.loadShared === 'function') await root.BLChecklistSupplierSync.loadShared();
+        if (!await root.ensureCpLoaded({ force: Boolean(options && options.refreshCp) })) throw Object.assign(new Error(T('CP yüklenemedi; CP ekranını yenileyip tekrar deneyin.', 'CP could not be loaded; refresh the CP screen and try again.')), { code: 'TEST_REPORT_CP_INCOMPLETE' });
         if (!active()) return;
+      }
+      if (options && options.refreshCp) {
         ui.entries = buildEntries([...new Map(ui.entries.map(function (entry) { return [entry.report.talepNo, entry.report]; })).values()]);
         ui.entries.forEach(function (entry) { entry.include = false; });
       }
@@ -755,11 +918,16 @@
       if (status && !status.connected && options && options.interactive) status = await AI.connect();
       if (!active()) return;
       if (!status || !status.connected) { set({ state: 'offline', progress: '' }); return; }
-      if (root.BLStorage && typeof root.BLStorage.flushPending === 'function') {
-        let timeout;
-        try { await Promise.race([root.BLStorage.flushPending(), new Promise(function (_, reject) { timeout = root.setTimeout(function () { reject(new Error('PREFERENCE_SAVE_TIMEOUT')); }, 8000); })]); }
-        catch (_) { throw Object.assign(new Error(T('Bekleyen ayarlar kaydedilemedi; CP verilerini yükleyip yeniden deneyin.', 'Pending preferences could not be saved; reload CP data and try again.')), { code: 'TEST_REPORT_REVIEW_STALE' }); }
-        finally { root.clearTimeout(timeout); }
+      await flushPreferences();
+      if (!active()) return;
+      // Background checklist loading can still be saving promoted local
+      // answers. Finish it before capturing the snapshot/server revision.
+      const sync = root.BLChecklistSupplierSync;
+      if (sync && typeof sync.loadShared === 'function') {
+        set({ progress: T('Checklist cevapları eşitleniyor…', 'Synchronising checklist answers…') });
+        if (!await sync.loadShared()) throw Object.assign(new Error(T('Güncel checklist yüklenemedi; yeniden deneyin.', 'The current checklist could not be loaded; try again.')), { code: 'TEST_REPORT_REVIEW_STALE' });
+        if (typeof sync.syncAnswerChanges === 'function') await sync.syncAnswerChanges();
+        await flushPreferences();
         if (!active()) return;
       }
       const localSnapshot = localReviewSnapshot();
@@ -829,6 +997,7 @@
       });
       ui.ai.reviews = Object.fromEntries(accepted.assessment.assessments.map(function (review) { return [Review.keyOf(review), review]; }));
       ui.ai.packet = packet; ui.ai.localSnapshot = localSnapshot;
+      ui.phase = 'reviewed';
       packet.sources.forEach(function (source) {
         const review = accepted.assessment.assessments.find(function (item) { return item.evidence.some(function (ref) { return ref.sourceId === source.id; }); });
         if (review) ui.ai.read[source.name] = { ok: true, talepNo: review.reportId };
@@ -841,6 +1010,7 @@
       const unresolved = accepted.assessment.unresolvedSourceIds.length;
       set({ state: 'done', progress: '', model: model, unresolved: accepted.assessment.unresolvedSourceIds,
         message: T(packet.sources.length + ' kaynak ve ' + packet.cp.rows.length + ' CP satırı gönderildi. ' + unresolved + ' kaynak çözümlenemedi. Öneriler seçilmedi; kanıtları inceleyip onaylayın.', packet.sources.length + ' sources and ' + packet.cp.rows.length + ' CP rows supplied. ' + unresolved + ' sources unresolved. Proposals remain unselected; review the evidence and approve.') });
+      if (ui.operationId) refreshHistory().catch(function () {});
     } catch (error) {
       if (!active()) return;
       const message = typeof AI.errorText === 'function' && error.code && String(error.code).startsWith('LCWAI_') ? AI.errorText(error) : error.message || String(error);
@@ -881,6 +1051,7 @@
     return { id: a.id, filename: a.filename, originalName: a.originalName, mimeType: a.mimeType, size: a.size, addedAt: a.addedAt };
   }
   async function commit() {
+    if (ui.readOnly) return;
     ui.ai.cpChanged = Boolean(ui.ai.packet && ui.ai.localSnapshot !== localReviewSnapshot());
     const plans = ui.entries.map(plan);
     if (selectionConflicts(plans)) { toast(T('Tekrarlanan rapor/PO seçimini veya çelişen checklist durumlarını düzeltin.', 'Resolve duplicate report/PO selections or conflicting checklist statuses.')); return; }
@@ -969,7 +1140,10 @@
       ];
       if (kept) ui.done.push(T(kept + ' adımda kullanıcı girişi korundu.', 'User entry kept on ' + kept + ' steps.'));
       if (skippedDecisions) ui.done.push(T(skippedDecisions + ' karar daha önce işlendiği için tekrar işlenmedi.', skippedDecisions + ' decisions were already imported and were not applied again.'));
-      ui.session = null;
+      if (result.operationArchiveWarning) ui.done.push(T('Rapor kaydedildi ancak geçmiş kaydı güncellenemedi. Aynı raporu yeniden onaylamadan önce kayıtlı raporu kontrol edin.', 'The report was saved, but history could not be updated. Check the saved report before approving it again.'));
+      const done = ui.done;
+      if (ui.operationId) { await resumeOperation(ui.operationId, { afterCommit: true }); ui.done = done; }
+      else ui.session = null;
     } catch (error) {
       toast(T('Test raporları yazılamadı: ', 'Test reports could not be written: ') + (error.message || error));
     } finally {
@@ -979,12 +1153,27 @@
   }
 
   function bind(modal) {
-    const close = function () { if (ui.busy) return; if (ui.ai.state === 'running') cancelAi(); modal.remove(); ui.modal = null; };
+    const close = function () { flushDraft().catch(function (error) { toast(error.message); }); modal.remove(); ui.modal = null; if (ui.trigger && ui.trigger.isConnected) ui.trigger.focus(); };
     modal.querySelectorAll('[data-tr-close]').forEach(function (b) { b.onclick = close; });
-    modal.addEventListener('keydown', function (event) { if (event.key === 'Escape') close(); });
+    modal.addEventListener('keydown', function (event) {
+      if (root.document.querySelector('dialog[open]')) return;
+      if (event.key === 'Escape') { event.preventDefault(); if (ui.historyOpen) { ui.historyOpen = false; render(); } else close(); }
+      if (event.key === 'Tab') {
+        const region = ui.historyOpen ? modal.querySelector('.trHistoryDrawer') : modal;
+        const nodes = Array.from(region.querySelectorAll('button,a[href],input,select,textarea,summary')).filter(function (node) { return !node.disabled && node.getClientRects().length; });
+        const first = nodes[0], last = nodes[nodes.length - 1];
+        if (event.shiftKey && root.document.activeElement === first) { event.preventDefault(); if (last) last.focus(); }
+        else if (!event.shiftKey && root.document.activeElement === last) { event.preventDefault(); if (first) first.focus(); }
+      }
+      if (['ArrowLeft', 'ArrowRight'].includes(event.key) && event.target.matches('[data-tr-tab]')) {
+        event.preventDefault(); const tabs = Array.from(modal.querySelectorAll('[data-tr-tab]')); const at = tabs.indexOf(event.target); tabs[(at + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length].click();
+      }
+    });
     modal.addEventListener('input', function (event) {
       if (ui.busy) return;
       const input = event.target;
+      if (input.matches('[data-tr-note]')) { ui.note = input.value; scheduleDraft(); saveIndicator(); return; }
+      if (input.matches('[data-tr-history-search]')) { const at = input.selectionStart; ui.historyQuery = input.value; render(); const next = modal.querySelector('[data-tr-history-search]'); next.focus(); if (next.setSelectionRange) try { next.setSelectionRange(at, at); } catch (_) {} return; }
       if (!input.dataset.trSearch) return;
       const entry = ui.entries.find(function (e) { return e.id === input.dataset.trSearch; });
       entry.matchQuery = input.value;
@@ -993,6 +1182,7 @@
     modal.addEventListener('change', function (event) {
       if (ui.busy) return;
       const t = event.target;
+      if (t.matches('[data-tr-active]')) { ui.activeEntry = t.value; render(); root.BLMotionPlus && root.BLMotionPlus.play('card', modal.querySelector('.trFocusColumns')); return; }
       if (t.matches('[data-tr-input]')) { handleFiles(t.files); t.value = ''; return; }
       const find = function (id) { return ui.entries.find(function (e) { return e.id === id; }); };
       if (t.dataset.trInclude) { find(t.dataset.trInclude).include = t.checked; render(); return; }
@@ -1016,6 +1206,28 @@
       }
     });
     modal.addEventListener('click', function (event) {
+      if (event.target.closest('[data-tr-pick]')) { modal.querySelector('[data-tr-input]').click(); return; }
+      if (event.target.closest('[data-tr-history]')) { ui.historyOpen = !ui.historyOpen; if (ui.historyOpen) refreshHistory().then(function () { render(); const input = modal.querySelector('[data-tr-history-search]'); if (input) input.focus(); }).catch(function (error) { toast(error.message); }); render(); root.BLMotionPlus && root.BLMotionPlus.play('overlay', modal.querySelector('.trHistoryDrawer')); return; }
+      const operation = event.target.closest('[data-tr-operation]');
+      if (operation) { resumeOperation(operation.dataset.trOperation).catch(function (error) { toast(error.message); }); return; }
+      const removeOperation = event.target.closest('[data-tr-delete]');
+      if (removeOperation) {
+        if (ui.busy || ui.ai.state === 'running') { toast(T('İşlem sürerken geçmiş kaydı silinemez.', 'History records cannot be deleted while an operation is running.')); return; }
+        if (!root.confirm(T('Bu inceleme kaydı ve arşivdeki dosyaları silinsin mi? Checklist kayıtları etkilenmez.', 'Delete this review record and its archived files? Checklist records are unaffected.'))) return;
+        const id = removeOperation.dataset.trDelete;
+        flushDraft().then(function () { return jsonFetch(API + '/operations/' + encodeURIComponent(id), { method: 'DELETE' }); }).then(function () {
+          if (id === ui.operationId) { cancelAi(); ui.operationId = ''; ui.session = null; ui.entries = []; ui.files = []; ui.note = ''; ui.readOnly = false; ui.done = null; }
+          return refreshHistory();
+        }).then(render).catch(function (error) { toast(error.message); }); return;
+      }
+      const tab = event.target.closest('[data-tr-tab]');
+      if (tab) { ui.tab = tab.dataset.trTab; render(); modal.querySelector('[data-tr-tab="' + ui.tab + '"]').focus(); return; }
+      if (event.target.closest('[data-tr-model-preview]')) {
+        const source = modelSource(activeEntry()); if (!source) return;
+        const dialog = root.document.createElement('dialog'); dialog.className = 'trModelPreview';
+        dialog.innerHTML = '<button type="button" class="cpaBtn" aria-label="' + html(T('Kapat', 'Close')) + '">×</button><img src="' + html(source) + '" alt="' + html(T('Eşleşen model', 'Matched model')) + '">';
+        root.document.body.appendChild(dialog); dialog.querySelector('button').onclick = function () { dialog.close(); }; dialog.addEventListener('close', function () { dialog.remove(); const button = ui.modal && ui.modal.querySelector('[data-tr-model-preview]'); if (button) button.focus(); }); dialog.showModal(); root.BLMotionPlus && root.BLMotionPlus.play('overlay', dialog); return;
+      }
       if (ui.busy) return;
       const add = event.target.closest('[data-tr-add-po]');
       if (add) { addPo(ui.entries.find(function (e) { return e.id === add.dataset.trAddPo; })); render(); return; }
@@ -1051,12 +1263,13 @@
     modal.addEventListener('dragover', function (event) {
       if (!event.dataTransfer || [].indexOf.call(event.dataTransfer.types || [], 'Files') < 0) return;
       event.preventDefault(); event.stopPropagation();
-      const zone = modal.querySelector('[data-tr-drop]'); if (zone) zone.classList.add('is-over');
+      modal.querySelector('.trFocusCenter').classList.add('is-file-over');
     });
-    modal.addEventListener('dragleave', function () { const zone = modal.querySelector('[data-tr-drop]'); if (zone) zone.classList.remove('is-over'); });
+    modal.addEventListener('dragleave', function (event) { if (!modal.contains(event.relatedTarget)) modal.querySelector('.trFocusCenter').classList.remove('is-file-over'); });
     modal.addEventListener('drop', function (event) {
       if (!event.dataTransfer) return;
       event.preventDefault(); event.stopPropagation();
+      modal.querySelector('.trFocusCenter').classList.remove('is-file-over');
       const files = event.dataTransfer.files;
       if (!files || !files.length) { toast(T('Bırakılan öğe dosya içermiyor. Outlook\'tan maili .msg olarak kaydedip bırakın.', 'The dropped item has no file. Save the e-mail from Outlook as .msg and drop it.')); return; }
       handleFiles(files);
@@ -1066,26 +1279,44 @@
 
   async function open(files) {
     await ensureDeps();
+    const owner = currentOwner();
+    if (ui.ownerId !== owner) {
+      if (ui.draftTimer) root.clearTimeout(ui.draftTimer); ui.draftTimer = null; ui.draftPromise = null;
+      cancelAi(); if (ui.modal) ui.modal.remove(); ui.modal = null; ui.session = null; ui.operationId = ''; ui.entries = []; ui.files = []; ui.note = ''; ui.history = []; ui.done = null; ui.readOnly = false; ui.savedDraft = ''; ui.saveError = ''; ui.busy = false; ui.restoring = false; ui.ownerId = owner;
+    }
+    if (typeof root.ensureCpLoaded === 'function' && !await root.ensureCpLoaded()) throw new Error(T('CP yüklenemedi.', 'CP could not be loaded.'));
     if (!ui.modal) {
-      ui.session = null; ui.entries = []; ui.files = []; ui.done = null;
+      ui.trigger = root.document.activeElement.closest('#cpToolsMenu') ? root.document.querySelector('#cpToolsBtn') : root.document.activeElement;
       const modal = root.document.createElement('div');
       modal.id = '_blTestReportImport';
-      modal.className = 'cpaModalOverlay';
-      modal.innerHTML = '<div class="cpaModal trModal" role="dialog" aria-modal="true" aria-labelledby="_blTestReportTitle">'
-        + '<header><div><b id="_blTestReportTitle">' + html(T('Test raporu aktarımı', 'Test report import')) + '</b>'
-        + '<small>' + html(T('Önizleme · onaylamadan hiçbir şey yazılmaz', 'Preview · nothing is written until you confirm')) + '</small></div>'
-        + '<button type="button" data-tr-close aria-label="' + html(T('Kapat', 'Close')) + '">×</button></header>'
+      modal.className = 'cpaModalOverlay blMotionOverlay';
+      modal.innerHTML = '<div class="cpaModal trModal trFocusCenter" role="dialog" aria-modal="true" aria-labelledby="_blTestReportTitle">'
+        + '<header class="trCenterHeader"><div><b id="_blTestReportTitle">' + html(T('Belge Operasyon Merkezi', 'Document Operations Center')) + '</b>'
+        + '<small>' + html(T('Test raporu · e-posta · Lab Dip / ROS', 'Test report · email · Lab Dip / ROS')) + '</small></div>'
+        + '<div class="trCenterActions"><button type="button" class="cpaBtn" data-tr-history><span data-tr-history-label>' + html(T('Geçmiş', 'History')) + '</span></button>'
+        + '<button type="button" class="cpaBtn primary" data-tr-pick><span data-tr-pick-label>' + html(T('Belge ekle', 'Add document')) + '</span></button>'
+        + '<label class="sr-only" data-tr-drop><input type="file" data-tr-input multiple accept=".msg,.eml,.pdf,.png,.jpg,.jpeg,.webp" aria-label="' + html(T('İnceleme dosyaları', 'Review files')) + '"></label>'
+        + '<button type="button" data-tr-close aria-label="' + html(T('Kapat', 'Close')) + '">×</button></div></header>'
         + '<div class="cpaModalBody trBody" data-tr-body></div>'
-        + '<footer><button type="button" class="cpaBtn" data-tr-close>' + html(T('Kapat', 'Close')) + '</button>'
+        + '<footer class="trCenterFooter"><span data-tr-save-state></span><button type="button" class="cpaBtn" data-tr-close>' + html(T('Kapat', 'Close')) + '</button>'
         + '<button type="button" class="cpaBtn primary" data-tr-commit disabled>' + html(T('Onayla ve yaz', 'Confirm and write')) + '</button></footer></div>';
       root.document.body.appendChild(modal);
       ui.modal = modal;
       bind(modal);
     }
     render();
+    await refreshHistory();
     if (files && files.length) await handleFiles(files);
+    else if (!ui.session && !ui.busy && ui.history.length) await resumeOperation(ui.history[0].id);
+    render();
+    const first = ui.modal && ui.modal.querySelector('[data-tr-history]'); if (first) first.focus();
   }
 
-  root.BLTestReportImport = { open: open, runAi: runAi, extractWithAI: extractWithAI, _ui: ui, _plan: plan, _aiDone: aiDone, _changeMatch: changeMatch, _addPo: addPo, _togglePart: togglePart, _selectionConflicts: selectionConflicts };
+  root.BLTestReportImport = { open: open, runAi: runAi, extractWithAI: extractWithAI, resumeOperation: resumeOperation, flushDraft: flushDraft, _ui: ui, _plan: plan, _aiDone: aiDone, _changeMatch: changeMatch, _addPo: addPo, _togglePart: togglePart, _selectionConflicts: selectionConflicts };
+  if (root.addEventListener) root.addEventListener('bl:user-access-applied', function () {
+    if (ui.ownerId === currentOwner()) return;
+    ui.aiRun += 1; if (ui.ai.controller) ui.ai.controller.abort(); if (ui.draftTimer) root.clearTimeout(ui.draftTimer);
+    if (ui.modal) ui.modal.remove(); Object.assign(ui, { modal: null, busy: false, restoring: false, ownerId: currentOwner(), session: null, operationId: '', entries: [], files: [], history: [], note: '', savedDraft: '', saveError: '', draftPromise: null, readOnly: false, done: null, ai: { state: 'idle', message: '', reviews: {}, read: {} } });
+  });
   if (root.MutationObserver && root.document) new root.MutationObserver(function () { if (ui.modal) render(); }).observe(root.document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 })(typeof window !== 'undefined' ? window : globalThis);

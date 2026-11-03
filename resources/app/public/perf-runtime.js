@@ -170,7 +170,7 @@
     exceptionInbox:['backlog-delivery-engine.js','cp-readiness-engine.js','exception-inbox.js','exception-inbox-view.js'],
     /* Test Raporu Aktarımı: yalnız menüden açılınca ya da CP'ye dosya
        bırakılınca yüklenir. Saf motor görünümden ÖNCE gelir. */
-    testReportImport:['lcwai-assistant.js?rev=1','test-report-engine.js?rev=3','test-report-assessment.js?rev=1','test-report-import.js?rev=5'],
+    testReportImport:['lcwai-assistant.js?rev=1','test-report-engine.js?rev=3','test-report-assessment.js?rev=1','test-report-focus-view.js?rev=1','test-report-import.js?rev=6'],
     // Overview'un ilk çizimine gerekmeyen yardımcılar UI_READY sonrasında
     // ortak lazy-loader ile yüklenir. Sekmeye geçiş bunları aynı promise ile
     // bekler; böylece işlevler kaybolmaz, yalnız açılış kritik yolundan çıkar.
