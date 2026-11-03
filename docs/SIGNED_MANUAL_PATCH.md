@@ -113,6 +113,17 @@ Git kaynak ağacını imzalar. İkinci ve sonraki yamalar önceki imzalı manife
 gerektirir; geçmiş dosya özetleri kümülatif taşınır. Yalnız belge veya sürüm notu
 değişikliği tekrar yama üretmez. Aynı sıra farklı baytlarla değiştirilemez.
 
+Üretici, imzası doğrulanmış tam kurulum tabanını korur ve tabanın kaynak
+commitinden onaylanan commit'e yalnız `public/` ve `server/` değişikliklerini
+uygular. Paketlenmiş bağımlılıklar, yayın kaynağı ayarı ve değişmeyen arşiv
+görselleri kaynak checkout'u ile değiştirilmez. Kaynakta değişen korumalı
+uygulama dosyaları yine tam kurulum gerektirir.
+
+The producer stages the verified full installation and overlays only committed
+public/server changes since its signed source anchor. It preserves packaged
+dependencies, release-source configuration and unchanged mirrored visuals.
+A committed change to a protected app file still requires a full installation.
+
 The producer requires a clean exact source commit. Each subsequent sequence
 requires its signed predecessor and carries cumulative prior hashes, including
 reverted files. Documentation-only changes cannot republish runtime. Existing

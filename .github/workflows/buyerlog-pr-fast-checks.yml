@@ -48,7 +48,7 @@ jobs:
       - name: Raw update compatibility and immutable visual archive
         run: node --test ../../.github/tests/release-distribution.test.js tests/release-visual-assets.test.js tests/release-visual-assets-runtime.test.js tests/github-release-provider-v7084.test.js
       - name: Patch source and backup path contracts
-        run: node --test tests/signed-patch-producer-cli.test.js tests/user-data-owned-temp.test.js
+        run: node --test tests/signed-patch-producer-cli.test.js tests/signed-patch-packaged-base.test.js tests/signed-patch-publication-policy.test.js tests/user-data-owned-temp.test.js
       - name: Signed patch launch, tampering and rollback integration
         run: node --test tests/manual-patch-v3-desktop.test.js
       - name: Clock-skew and seeded synchronization scenarios
