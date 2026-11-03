@@ -72,8 +72,14 @@
     {
       "id": "soft-grid-cell-selection",
       "type": "improvement",
-      "module": { "tr": "Tablolar", "en": "Tables" },
-      "title": { "tr": "Daha yumuşak hücre seçimi", "en": "Softer cell selection" },
+      "module": {
+        "tr": "Tablolar",
+        "en": "Tables"
+      },
+      "title": {
+        "tr": "Daha yumuşak hücre seçimi",
+        "en": "Softer cell selection"
+      },
       "body": {
         "tr": "CP, Siparişler ve ortak detay tablolarında hücre seçiminin dolgusu açık ve koyu temada hafifletildi. Seçili aralığın dış sınırı daha sakin renkte 1 piksel çizgiyle gösterilir; aktif hücrenin klavye odağı belirgin kalır.",
         "en": "Cell selection in CP, Orders and shared detail tables now uses a lighter tint in both light and dark themes. The selected range has a softer 1-pixel perimeter while the active cell keeps its clear keyboard focus indicator."
@@ -82,8 +88,43 @@
         "kind": "screenshot",
         "capture": "post-change",
         "src": "soft-grid-cell-selection.png",
-        "alt": { "tr": "Koyu temada hafif dolgulu ve ince sınırlı hücre seçimi", "en": "Subtle cell-selection fill and thin perimeter in the dark theme" },
-        "caption": { "tr": "Değişiklik sonrası gerçek Buyer Log CP tablosunda demo veriyle 5×5 hücre seçimi; yumuşak dolgu, ince dış sınır ve belirgin aktif hücre.", "en": "Actual post-change Buyer Log CP table with demo data and a 5×5 cell selection: subtle fill, thin perimeter and a clear active cell." }
+        "alt": {
+          "tr": "Koyu temada hafif dolgulu ve ince sınırlı hücre seçimi",
+          "en": "Subtle cell-selection fill and thin perimeter in the dark theme"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log CP tablosunda demo veriyle 5×5 hücre seçimi; yumuşak dolgu, ince dış sınır ve belirgin aktif hücre.",
+          "en": "Actual post-change Buyer Log CP table with demo data and a 5×5 cell selection: subtle fill, thin perimeter and a clear active cell."
+        }
+      }
+    },
+    {
+      "id": "compact-selection-filter-copy",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler",
+        "en": "CP · Orders"
+      },
+      "title": {
+        "tr": "Kompakt seçim çubuğunda filtre dışındaki satırlar",
+        "en": "Filtered-out rows in the compact selection bar"
+      },
+      "body": {
+        "tr": "Alt seçim çubuğu filtre dışında kalan satırları gösterir. Seçim sayısına tıklayarak küçük listede satırları görün ve kaldırın. Kopyala ve Excel filtrelerden bağımsız tüm seçili kayıtları alır. × seçimleri temizler; bildirimden geri alabilirsiniz.",
+        "en": "The bottom selection bar shows rows outside the current filters. Click the count to inspect and remove rows in a small list. Copy and Excel include all selected records regardless of filters. × clears selections; undo is available in the notification."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "compact-selection.png",
+        "alt": {
+          "tr": "Buyer Log demo CP tablosunda filtre dışındaki seçimin kompakt listesi",
+          "en": "Compact list of a filtered-out selection in the Buyer Log demo CP table"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzünde demo verilerle değişiklik sonrası seçim çubuğu ve açılır liste.",
+          "en": "Actual post-change Buyer Log selection bar and popup with demo data."
+        }
       }
     }
   ]
