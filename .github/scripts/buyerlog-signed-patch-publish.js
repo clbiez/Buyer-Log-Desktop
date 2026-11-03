@@ -18,6 +18,37 @@ function assertSource(c){
  const actual=cp.execFileSync('git',['rev-parse','HEAD'],{cwd:APP,encoding:'utf8'}).trim();
  if(actual!==c.source)throw Error('Working source is not the explicitly approved SHA.');
 }
+// Build a release target from the verified packaged base. Packaged dependencies,
+// release-source configuration and mirrored visual assets are not a raw checkout.
+// Only committed mutable app changes since the signed bootstrap are overlaid.
+function stageApprovedTarget({baseRoot,sourceRoot,targetRoot,sourceCommit}){
+ const git=args=>cp.execFileSync('git',args,{cwd:sourceRoot,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+ if(git(['rev-parse','HEAD'])!==sourceCommit||git(['status','--porcelain','--untracked-files=normal','--','.']))throw Error('Approved source must be clean and pinned.');
+ const anchor=F.readBootstrap(baseRoot),prefix=git(['rev-parse','--show-prefix']);
+ git(['cat-file','-e',anchor.sourceCommit+'^{commit}']);
+ const paths=cp.execFileSync('git',['diff','--no-renames','--name-only','-z',anchor.sourceCommit,sourceCommit,'--','.'],{cwd:sourceRoot});
+ const changes=paths.toString('utf8').split('\0').filter(Boolean).map(full=>{
+  if(!full.startsWith(prefix))throw Error('Source delta escaped the application.');
+  const relative=full.slice(prefix.length);S.filePath(relative);
+  if(F.excluded(relative))return null;
+  if(!S.mutablePath(relative))S.fail('PATCH_BOOTSTRAP_REQUIRED','Bu değişiklik için imzalı tam kurulum gerekli.','This change requires a signed full installation.');
+  const tree=git(['ls-tree',sourceCommit,'--',relative]);
+  if(tree&&!/^100644 blob [a-f0-9]+\t/.test(tree))throw Error('Only committed regular files may be patched.');
+  if(!tree)return {relative,bytes:null};
+  const expected=cp.execFileSync('git',['show',sourceCommit+':'+prefix+relative],{cwd:sourceRoot});
+  if(F.sha(F.bytes(sourceRoot,relative))!==F.sha(expected))throw Error('Source file differs from the approved commit.');
+  return {relative,bytes:expected};
+ }).filter(Boolean);
+ if(fs.existsSync(targetRoot))throw Error('The patch staging target must not exist.');
+ // Inventory rejects symlinks before recursively copying the signed base.
+ F.inventory(baseRoot);fs.cpSync(baseRoot,targetRoot,{recursive:true,errorOnExist:true,force:false});
+ for(const change of changes){
+  const destination=path.join(targetRoot,...change.relative.split('/'));
+  if(change.bytes===null){if(fs.existsSync(destination)){F.regularFile(targetRoot,change.relative);fs.unlinkSync(destination);}}
+  else {fs.mkdirSync(path.dirname(destination),{recursive:true});fs.writeFileSync(destination,change.bytes);}
+ }
+ return changes.map(change=>change.relative);
+}
 function prepare(c){
  assertSource(c);fs.mkdirSync(c.root,{recursive:true});const input=path.join(c.root,'base');fs.mkdirSync(input);
  run(['release','download',`stable-v${c.baseVersion}`,'--repo',c.repo,'--pattern',`BuyerLog-${c.baseVersion}.zip`,'--pattern',`BuyerLog-${c.baseVersion}.json`,'--dir',input]);
@@ -36,7 +67,14 @@ function prepare(c){
 }
 function build(c){
  assertSource(c);const previous=c.sequence>1?['--previous',path.join(c.root,'previous',`BuyerLog-SignedPatch-${c.baseVersion}-${c.sequence-1}.json`)]:[];
- return require(path.join(APP,'scripts/signed-manual-patch')).main(['--base-app',path.join(c.root,'unpacked/app'),'--source-app',APP,'--out',path.join(c.root,'out'),'--sequence',String(c.sequence),'--source-commit',c.source,'--notes',path.join(c.root,'notes.json'),...previous]);
+ const baseRoot=path.join(c.root,'unpacked/app'),sourceRoot=path.join(c.root,'target');
+ stageApprovedTarget({baseRoot,sourceRoot:APP,targetRoot:sourceRoot,sourceCommit:c.source});
+ const producer=require(path.join(APP,'scripts/signed-manual-patch'));
+ const previousManifest=c.sequence>1?F.readJsonStrict(previous[1]):null;
+ const acceptedBefore=producer.historyFrom(previousManifest,baseRoot,c.sequence);
+ if(!process.env.BUYER_LOG_RELEASE_SIGNING_KEY)throw Error('A publisher signing key is required.');
+ return producer.buildPatch({baseRoot,sourceRoot,out:path.join(c.root,'out'),sequence:c.sequence,sourceCommit:c.source,
+  releaseNotes:F.readJsonStrict(path.join(c.root,'notes.json')),previousManifest,acceptedBefore,privateKey:process.env.BUYER_LOG_RELEASE_SIGNING_KEY});
 }
 function publish(c){
  assertSource(c);const name=`BuyerLog-SignedPatch-${c.baseVersion}-${c.sequence}`,out=path.join(c.root,'out'),manifest=F.readJsonStrict(path.join(out,name+'.json'));
@@ -55,4 +93,4 @@ function publish(c){
  console.log(`Verified immutable signed publication: ${c.repo}/${c.tag}. Legacy, TEST and STABLE feeds were not changed.`);
 }
 if(require.main===module){try{const action=process.argv[2],c=config();if(action==='prepare')prepare(c);else if(action==='build')build(c);else if(action==='publish')publish(c);else throw Error('Unknown publication action');}catch(error){console.error(`[SIGNED_PATCH_PUBLISH_FAILED] ${error.message}`);process.exitCode=1;}}
-module.exports={config,prepare,build,publish};
+module.exports={config,prepare,stageApprovedTarget,build,publish};
