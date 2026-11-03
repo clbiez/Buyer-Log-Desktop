@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "76720b2b70d342ad4934fb0425790fe03c644c3f",
-  "release_notes": "TR: Buyer Log TEST 7.0.327 — CP ve Orders içindeki seçili siparişleri önizleyerek Koleksiyonunuza aktarın. Aynı model ve MB ayında adetler birleştirilir; farklı fiyat, ülke veya tedarikçiler ayrı kalır. Tekrar aktarım koruması ve tek adım geri alma dahildir. Daha sade Genel Bakış özeti, Buyer Log temasıyla belirgin alanlar, uygulamadan önce kural önizlemesi ve aciliyetten bağımsız takip etiketleri.\nEN: Buyer Log TEST 7.0.327 — Preview selected CP and Orders rows and import them into your Collection. Quantities are combined for the same model and MB month; different prices, countries or suppliers stay separate. Includes duplicate protection and one-step undo. A simpler Overview summary, clear fields in the Buyer Log theme, rule previews before applying changes and tracking tags separate from urgency.",
-  "request_id": "7.0.327-checklist-studio-worker-plm-20261101"
+  "commit_sha": "11cf8f64051d12871d7631d64bac3eadc34bf35f",
+  "release_notes": "TR: Buyer Log TEST 7.0.332 — CP ve Siparişler tablolarında filtre dışında kalan seçili satırlar da Kopyala ve Excel çıktısına dahil edilir. Kompakt seçim çubuğunda filtre dışındaki kayıtları görüntüleyip tek tek kaldırabilir, × ile tüm seçimi temizleyip bildirimin Geri al düğmesiyle geri getirebilirsiniz.\nEN: Buyer Log TEST 7.0.332 — Selected CP and Orders rows outside active filters are now included in Copy and Excel exports. The compact selection bar displays filtered-out rows, lets you remove individual selections or clear all with ×, and offers Undo in the notification.",
+  "request_id": "7.0.332-pr825-20261103"
 }
