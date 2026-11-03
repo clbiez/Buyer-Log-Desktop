@@ -210,9 +210,9 @@ function waitForBoot(){return new Promise(resolve=>{if(bootReady())return setTim
 async function showUnseen(){
   const generation=++openGeneration,current=ver(),last=readSeen(),plan=automaticPlan((await loadIndex()).releases,current,last);
   if(!plan)return;
-  const releases=(await Promise.all(plan.entries.map(loadRelease))).filter(Boolean);if(!releases.length)return;
+  const releases=(await Promise.all(plan.candidates.map(loadRelease))).filter(Boolean);if(!releases.length)return;
   await waitForBoot();if(generation!==openGeneration)return;
-  ensureDialog();state={auto:true,summary:true,plan,releases,index:0,ackVersion:current};await renderState();if(!dialog.open)dialog.showModal();dialog.querySelector('[data-rn-summary-close]')?.focus();
+  ensureDialog();state={auto:true,summary:false,plan,releases,index:0,ackVersion:current};await renderState();if(!dialog.open)dialog.showModal();dialog.querySelector('[data-rn-close]')?.focus();
 }
 function bind(){
   const btn=document.getElementById('appVersionBtn');if(btn&&!btn.dataset.rnBound){btn.dataset.rnBound='1';btn.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openArchive();},true);btn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openArchive();}},true);}

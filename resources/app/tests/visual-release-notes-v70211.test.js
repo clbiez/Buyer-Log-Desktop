@@ -38,6 +38,32 @@ test('users several stable versions behind can expand unseen chronological chang
   assert.match(JS,/changes\.length<6/);
 });
 
+test('post-update screen opens directly on every new visual detail card, without summary click',async()=>{
+  const vm=require('node:vm');
+  const begin=JS.indexOf('async function showUnseen(){');
+  const end=JS.indexOf('function bind(){',begin);
+  assert.ok(begin>=0&&end>begin,'automatic release-notes opener must exist');
+  const requested=[],focuses=[];
+  const plan={candidates:[{version:'7.0.331'},{version:'7.0.332'},{version:'7.0.333'}],entries:[{version:'7.0.333'}]};
+  const context={
+    openGeneration:0,state:null,
+    ver:()=> '7.0.333',readSeen:()=> '7.0.330',loadIndex:async()=>({releases:[]}),
+    automaticPlan:()=>plan,
+    loadRelease:async entry=>{requested.push(entry.version);return {...entry,changes:[{visual:{kind:'screenshot',src:'change.png'}}]};},
+    waitForBoot:async()=>{},ensureDialog:()=>{},renderState:async()=>{
+      assert.equal(context.state.summary,false,'summary must not be the first screen');
+      assert.equal(context.state.releases.length,3,'keep the full unseen change history');
+      assert.equal(context.state.index,0,'open on first detail card');
+    },
+    dialog:{open:false,showModal(){this.open=true;},querySelector(selector){return {focus(){focuses.push(selector);}};}}
+  };
+  await vm.runInNewContext(JS.slice(begin,end)+'; showUnseen();',context);
+  assert.deepEqual(requested,['7.0.331','7.0.332','7.0.333']);
+  assert.equal(context.dialog.open,true);
+  assert.deepEqual(focuses,['[data-rn-close]']);
+  assert.equal(context.state.ackVersion,'7.0.333');
+});
+
 test('release archive sorts legacy two-part versions below newer semantic versions',()=>{
   const start=JS.indexOf('function versionParts(v){');
   const end=JS.indexOf('const ver=',start);
