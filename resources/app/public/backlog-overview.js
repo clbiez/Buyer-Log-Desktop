@@ -194,8 +194,8 @@ function opener(spec){const id='o'+(++seq);openers.set(id,spec);return id}
 function tipHtml(title,lines,hint){return `<div class="bpaTipTitle">${esc(title)}</div>${lines.map(([k,v,stage])=>`<div class="bpaTipLine"><span>${esc(k)}</span><b${stage?` data-stage="${stage}" class="blvTipVal"`:''}>${esc(v)}</b></div>`).join('')}${hint?`<div class="bpaTipHint">${esc(hint)}</div>`:''}`}
 function stageLabel(key){return R().stageLabel(key,lang())}
 function ring(value){
-  const v=Math.max(0,Math.min(1,Number(value)||0));
-  return `<div class="uiMeasure" aria-hidden="true"><i style="transform:scaleX(${v})"></i></div>`;
+  const raw=Number(value),v=Number.isFinite(raw)?Math.max(0,Math.min(1,raw)):0;
+  return `<svg class="blvLoadChart" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><circle class="bpaRingTrack" cx="80" cy="80" r="66"/><circle class="bpaRingValue" cx="80" cy="80" r="66" pathLength="100" stroke-dasharray="${v*100} 100" transform="rotate(-90 80 80)"/></svg>`;
 }
 function hero(s){
   const st=s.stages;
@@ -203,7 +203,7 @@ function hero(s){
   const by=(title,filter)=>opener({title,subtitle:L('Backlog genel bakış','Backlog overview'),items:items.filter(filter)});
   const share=v=>pct(s.qty?v/s.qty:null);
   return `<div class="bpaHero">
-    <div class="bpaRing">${ring(s.loadedPct)}<div class="bpaRingText"><b>${esc(pct(s.loadedPct))}</b><span>${esc(L('yüklendi','loaded'))}</span></div><div class="bpaRingSub">${esc(L(`${n(s.orders)} sipariş · ${n(s.lines)} satır`,`${n(s.orders)} orders · ${n(s.lines)} lines`))}</div></div>
+    <div class="bpaRing blvLoadRing blMotionEnter">${ring(s.loadedPct)}<div class="bpaRingText"><b>${esc(pct(s.loadedPct))}</b><span>${esc(L('yüklendi','loaded'))}</span></div><div class="bpaRingSub">${esc(L(`${n(s.orders)} sipariş · ${n(s.lines)} satır`,`${n(s.orders)} orders · ${n(s.lines)} lines`))}</div></div>
     <div class="bpaTiles">
       ${tile(n(s.qty),L('Toplam adet','Total qty'),L(`${n(s.rows)} operasyon satırı`,`${n(s.rows)} operational rows`),'',by(L('Tüm Backlog','Entire Backlog'),()=>true))}
       ${tile(n(st.PRODUCTION),stageLabel('PRODUCTION'),share(st.PRODUCTION),'PRODUCTION',by(stageLabel('PRODUCTION'),it=>it.stage==='PRODUCTION'))}

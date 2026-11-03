@@ -12,6 +12,64 @@
   },
   "changes": [
     {
+      "id": "backlog-kpi-semantic-colors",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog · Genel bakış",
+        "en": "Backlog · Overview"
+      },
+      "title": {
+        "tr": "Üst özet kartlarının durum renkleri geri getirildi",
+        "en": "Summary cards show their status colours again"
+      },
+      "body": {
+        "tr": "Genel bakışın üst kartlarındaki sayı ve etiketler yeniden durum rengini kullanır: üretim mavi, yükleme kehribar, transit kahverengi, depo yeşil ve risk kırmızı. Hafif renkli zeminler ortak tema paletinden gelir; mevcut kenarlıklar ve tıklayarak detay açma korunur.",
+        "en": "Values and labels in the overview summary cards use their status colours again: blue for production, amber for loading, brown for transit, green for warehouse and red for risk. Lightly tinted surfaces use the shared theme palette; existing borders and click-to-open details remain available."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-kpi-colors-and-ring.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog ekranında durum renkli üst kartlar ve merkezinde yüzde bulunan dairesel yüklenme grafiği",
+          "en": "Actual Buyer Log Backlog screen with status-coloured summary cards and a circular loaded-share chart with its percentage in the centre"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, yalnız demo veri. Renk kontrastı, grafik-yüzde eşleşmesi ve merkez hizalaması TR/EN, açık/koyu tema ve dört boyutta kontrol edildi.",
+          "en": "Actual post-change application using demo data only. Colour contrast, chart-percentage consistency and centre alignment were checked in TR/EN, light/dark themes and four interface sizes."
+        }
+      }
+    },
+    {
+      "id": "backlog-loaded-share-ring",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog · Genel bakış",
+        "en": "Backlog · Overview"
+      },
+      "title": {
+        "tr": "Yüklenen oranı dairesel grafikte gösterilir",
+        "en": "Loaded share is displayed in a circular chart"
+      },
+      "body": {
+        "tr": "Sol üstteki yüklenen yüzde göstergesi, aynı Backlog toplamından hesaplanan dairesel grafikle gösterilir. Yüzde ve açıklama grafiğin merkezinde, sipariş ve satır sayısı altında kalır. Grafik açık/koyu temayı, dört boyutu ve azaltılmış hareket tercihini izler; rapor hesaplaması değişmez.",
+        "en": "The loaded-share percentage at the upper left appears in a circular chart using the same Backlog summary. The percentage and description stay in the centre, with order and line counts below. The chart follows light/dark themes, four sizes and reduced-motion preferences; report calculations remain unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-kpi-colors-and-ring.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog ekranında durum renkli üst kartlar ve merkezinde yüzde bulunan dairesel yüklenme grafiği",
+          "en": "Actual Buyer Log Backlog screen with status-coloured summary cards and a circular loaded-share chart with its percentage in the centre"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, yalnız demo veri. Renk kontrastı, grafik-yüzde eşleşmesi ve merkez hizalaması TR/EN, açık/koyu tema ve dört boyutta kontrol edildi.",
+          "en": "Actual post-change application using demo data only. Colour contrast, chart-percentage consistency and centre alignment were checked in TR/EN, light/dark themes and four interface sizes."
+        }
+      }
+    },
+    {
       "id": "backlog-panel-control-borders",
       "type": "fix",
       "module": {

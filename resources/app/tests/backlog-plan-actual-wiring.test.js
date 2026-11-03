@@ -82,13 +82,28 @@ test('plan realisation view: plan window, grouped bars with tooltip + drawer, Ex
   assert.doesNotMatch(CSS,/var\(--bad\)|var\(--ok\)|var\(--warn\)/,'undefined tone tokens must not be used');
 });
 
-test('Backlog completion measures use linear bars and keep percentage labels',()=>{
-  const OVERVIEW=read('public/backlog-overview.js');
-  for(const source of [OVERVIEW,UI]){
-    assert.match(source,/class="uiMeasure" aria-hidden="true"/);
-    assert.match(source,/transform:scaleX\(/);
-    assert.match(source,/class="bpaRingText"/);
-    assert.doesNotMatch(source,/<circle\b/);
-  }
+test('Plan and Actual keeps its linear measure and percentage label',()=>{
+  assert.match(UI,/class="uiMeasure" aria-hidden="true"/);
+  assert.match(UI,/transform:scaleX\(/);
+  assert.match(UI,/class="bpaRingText"/);
+  assert.doesNotMatch(UI,/<circle\b/);
   assert.match(VISUAL,/\.uiMeasure>i\{[^}]*transform-origin:left/);
+});
+
+test('Overview circular loaded share clamps invalid values and preserves the visible percentage',()=>{
+  const OVERVIEW=read('public/backlog-overview.js');
+  const start=OVERVIEW.indexOf('function ring(value){'),end=OVERVIEW.indexOf('\nfunction hero(',start);
+  assert.ok(start>=0&&end>start);
+  const ring=new Function(OVERVIEW.slice(start,end)+';return ring;')();
+  for(const [input,expected] of [[0,0],[.25,25],[.5,50],[1,100],[-.1,0],[1.2,100],[null,0],[NaN,0],[Infinity,0]]){
+    const svg=ring(input);
+    assert.match(svg,/<svg[^>]*aria-hidden="true"/);
+    assert.equal((svg.match(/<circle\b/g)||[]).length,2);
+    assert.match(svg,/pathLength="100"/);
+    const dash=svg.match(/stroke-dasharray="([\d.]+) 100"/);
+    assert.ok(dash,'value arc must encode the same percentage as the summary');
+    assert.equal(Number(dash[1]),expected);
+    assert.doesNotMatch(svg,/NaN|Infinity|uiMeasure/);
+  }
+  assert.match(OVERVIEW,/class="bpaRingText"[^]*?pct\(s\.loadedPct\)/);
 });
