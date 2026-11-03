@@ -35,7 +35,7 @@ function stageApprovedTarget({baseRoot,sourceRoot,targetRoot,sourceCommit}){
   const tree=git(['ls-tree',sourceCommit,'--',relative]);
   if(tree&&!/^100644 blob [a-f0-9]+\t/.test(tree))throw Error('Only committed regular files may be patched.');
   if(!tree)return {relative,bytes:null};
-  const expected=cp.execFileSync('git',['show',sourceCommit+':'+prefix+relative],{cwd:sourceRoot});
+  const expected=cp.execFileSync('git',['show',sourceCommit+':'+prefix+relative],{cwd:sourceRoot,maxBuffer:128*1024*1024});
   if(F.sha(F.bytes(sourceRoot,relative))!==F.sha(expected))throw Error('Source file differs from the approved commit.');
   return {relative,bytes:expected};
  }).filter(Boolean);

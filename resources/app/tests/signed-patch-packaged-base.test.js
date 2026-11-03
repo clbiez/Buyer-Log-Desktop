@@ -39,3 +39,9 @@ test('tracked immutable changes require a full installation and cannot be hidden
  assert.throws(()=>stageApprovedTarget({baseRoot:f.base,sourceRoot:f.source,targetRoot:f.targetRoot,sourceCommit}),{code:'PATCH_BOOTSTRAP_REQUIRED'});
  assert.equal(fs.existsSync(f.targetRoot),false);
 });
+
+test('real-sized application files are verified without truncating Git blob output',t=>{
+ const f=setup(t),value=Buffer.alloc(1200000,65);f.write(f.source,'public/large.js',value);const sourceCommit=f.commit();
+ stageApprovedTarget({baseRoot:f.base,sourceRoot:f.source,targetRoot:f.targetRoot,sourceCommit});
+ assert.equal(F.sha(F.bytes(f.targetRoot,'public/large.js')),F.sha(value));
+});
