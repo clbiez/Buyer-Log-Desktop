@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Overview sayfaları arasında yönlü kayma",
+    "en": "Directional slides between Overview pages"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır.",
+    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "overview-page-slide",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Overview sayfaları arasında yönlü kayma",
+        "en": "Directional slides between Overview pages"
+      },
+      "body": {
+        "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır.",
+        "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-page-slide.png",
+        "alt": {
+          "tr": "Overview sayfası sola doğru kayarak açılırken",
+          "en": "Overview page sliding in from the left"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo oturumunda kayma animasyonu sırasında yakalandı.",
+          "en": "Actual post-change Buyer Log, captured during the slide animation in an isolated demo session."
+        }
+      }
+    }
+  ]
 }

@@ -9,7 +9,7 @@ function harness({reduced=false,hidden=false,off=false}={}){
   const node=(tag='TD',x=10,y=20)=>({
     tagName:tag,isConnected:true,hidden:false,textContent:'Saved data',dataset:{},
     getBoundingClientRect:()=>box(x,y),closest:()=>null,matches:()=>false,querySelector:()=>null,
-    animate(frames,options){calls.push({tag,frames,options});return {cancel(){},addEventListener(){}};}
+    animate(frames,options){const call={tag,frames,options,cancelled:false};calls.push(call);return {cancel(){call.cancelled=true;},addEventListener(){}};}
   });
   const cells=[node('TD',10,20),node('TD',90,20),node('TD',10,50),node('TD',90,50)];
   const rows=[{cells:cells.slice(0,2)},{cells:cells.slice(2,4)}];
@@ -76,6 +76,38 @@ test('Motion+ never creates full-table observers, infinite animations or new har
  assert.doesNotMatch(css,/#[0-9a-f]{3,8}\b|rgba?\(|gradient\(/i);
  assert.doesNotMatch(css,/animation:[^;]*(?:infinite|loop)/i);
  assert.match(script,/blMotion!=='off'/);
+});
+
+test('Overview page slides follow direction, shared timing and cancellation',()=>{
+ const h=harness();
+ h.root.getComputedStyle=()=>({getPropertyValue:()=> '420ms'});
+ for(const [kind,x] of [['page-next',48],['page-prev',-48]]){
+   const animation=h.root.BLMotionPlus.play(kind,h.view);
+   const call=h.calls.at(-1);
+   assert.equal(call.frames[0].transform,`translate3d(${x}px,0,0)`);
+   assert.equal(call.frames[1].transform,'translate3d(0,0,0)');
+   assert.equal(call.options.duration,420);
+   assert.equal(call.options.fill,'none','no persistent transform after the slide');
+   assert.equal(call.options.iterations,undefined,'page slides never loop');
+   animation.cancel();assert.equal(call.cancelled,true);
+ }
+ h.root.BLMotionPlus.play('page-next',h.view);
+ h.root.BLMotionPlus.setEnabled(false);
+ assert.equal(h.calls.at(-1).cancelled,true,'disabling motion cancels an in-flight slide');
+});
+
+test('Overview page slides respect motion and visibility preferences',()=>{
+ for(const config of [{reduced:true},{hidden:true},{off:true}]){
+   const h=harness(config);
+   assert.equal(h.root.BLMotionPlus.play('page-next',h.view),null);
+   assert.equal(h.root.BLMotionPlus.play('page-prev',h.view),null);
+   assert.equal(h.calls.length,0);
+ }
+ const h=harness();h.doc.body.dataset.activeTab='overview';
+ h.doc.documentElement.dataset.overviewMotion='paused';
+ assert.equal(h.root.BLMotionPlus.play('page-next',h.view),null);
+ h.doc.documentElement.dataset.overviewMotion='playing';h.view.hidden=true;
+ assert.equal(h.root.BLMotionPlus.play('page-prev',h.view),null);
 });
 
 test('KPI counter does not overlap Motion+ and returns the exact canonical string',()=>{
