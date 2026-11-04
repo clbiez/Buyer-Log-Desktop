@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "intake-overview-navigation-load",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış · INTAKE",
+        "en": "Overview · INTAKE"
+      },
+      "title": {
+        "tr": "INTAKE'in başka bir sekmeden gelindiğinde boş kalması düzeltildi",
+        "en": "INTAKE now loads when opening Overview from another tab"
+      },
+      "body": {
+        "tr": "Uygulama Siparişler gibi başka bir modülde açıldığında, Genel Bakış'a sonradan geçiş INTAKE'i de başlatır. Tablo, Yenile, filtreler ve pivot ayarları kullanılabilir; sekmeye tekrar dönüşte modül ve düğme olayları çoğaltılmaz. Diğer sekmelerde INTAKE yüklenmez ve snapshot yoksa rapor yalnız widget görünür olduğunda sorgulanır.",
+        "en": "When the app starts in another module such as Orders, switching to Overview also initializes INTAKE. Its table, Refresh, filters and pivot settings are available; returning to the tab does not duplicate the module or button handlers. INTAKE stays unloaded in other tabs, and without a snapshot the report is queried only when the widget is visible."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "intake-overview-navigation.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log'da Siparişler'den Genel Bakış'a geçiş sonrası demo satırlarıyla açılan INTAKE tablosu",
+          "en": "Actual Buyer Log INTAKE table with demo rows after navigating from Orders to Overview"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, izole sunucu ve yalnız sentetik INTAKE HTTP yanıtları. TR/EN düğmeler, snapshot yükleme, görünürken sorgulama, tekrar giriş ve hata sonrası Yenile kontrol edildi; canlı veritabanı bağlantısı kullanılmadı.",
+          "en": "Actual post-change app on an isolated server with synthetic INTAKE HTTP responses only. TR/EN controls, snapshot loading, visible-widget querying, repeated entry and recovery with Refresh were checked; no live database connection was used."
+        }
+      }
+    },
+    {
       "id": "backlog-kpi-semantic-colors",
       "type": "fix",
       "module": {
