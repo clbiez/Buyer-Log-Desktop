@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "copy-current-table-row-order",
+      "type": "fix",
+      "module": {
+        "tr": "CP / Sipariş · Kopyalama",
+        "en": "CP / Orders · Copy"
+      },
+      "title": {
+        "tr": "Seçili satırlar güncel tablo sırasıyla kopyalanır",
+        "en": "Selected rows copy in the current table order"
+      },
+      "body": {
+        "tr": "Satırları seçtikten sonra sıralama sütununu veya yönünü değiştirdiğinizde kopyalama son tablo sırasını kullanır. Seçili satırlar paneli ve Excel çıktısı da aynı sırayı izler; filtre dışında kalan seçimler korunur.",
+        "en": "After selecting rows, changing the sort column or direction makes Copy use the latest table order. The selected rows panel and Excel export follow the same order; selections outside the current filters remain included."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "copy-current-table-order.png",
+        "alt": {
+          "tr": "Demo CP tablosunda Ex-factory sırası ile aynı sırayı izleyen seçili satırlar paneli",
+          "en": "Demo CP table and selected rows panel following the same Ex-factory order"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, yalnız demo veri. Seçimden sonra artan ve azalan sıralama ile filtre değiştirme durumlarında CP ve Sipariş panosunun HTML ve metin satır sırası kontrol edildi.",
+          "en": "Actual post-change Buyer Log using demo data only. CP and Orders clipboard HTML and text row order were checked after changing ascending/descending sorting and filters following selection."
+        }
+      }
+    },
+    {
       "id": "intake-overview-navigation-load",
       "type": "fix",
       "module": {

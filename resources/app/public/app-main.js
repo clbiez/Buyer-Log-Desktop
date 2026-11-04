@@ -2546,7 +2546,10 @@ function managedGridHasRange(tab=document.body.dataset.activeTab){
 // İşaretli satır varsa Copy, bayat hücre/aralık durumu render gecikmesiyle
 // hâlâ ayakta kalmış olsa bile satırları esas alır (bkz. registerManagedGridClipboard).
 function managedSelectionSourceRows(tableKey){
-  return partialViewRows(tableKey,state[tableKey]?.rows||[]);
+  const rows=partialViewRows(tableKey,state[tableKey]?.rows||[]);
+  const sort=tableKey==='orders'?state.ordersSort:state.cpSort;
+  // Seçim filtre dışında da korunur; çıktı her işlemde güncel tablo sırasını izler.
+  return sort?.key?sortRows(rows,sort.key,sort.dir):rows;
 }
 function managedSelectionSnapshot(tableKey){
   const selected=tableKey==='orders'?state.ordersSelected:state.cpSelected;
