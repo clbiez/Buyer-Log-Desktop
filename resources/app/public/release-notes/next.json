@@ -3,14 +3,72 @@
   "publishedAt": "2026-11-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Lisans kartları, belge operasyonları ve rapor doğruluğu",
-    "en": "License cards, document operations and report accuracy"
+    "tr": "Hafif karartma, menü gölgesi ve Lisans Kartları",
+    "en": "Subtle dimming, navigation shadow and License Cards"
   },
   "summary": {
-    "tr": "Royalty işlemleri Lisans Kartlarında birleşir; manuel kartlar, kategori oranları ve hızlı FOB hesabı eklenir. CP Araçlar menüsünden açılan Odak Görünümü, model görselini, LCW AI yorumunu ve rapor detaylarını bir araya getirir; incelemeler geçmişten sürdürülebilir.",
-    "en": "Royalty operations are unified in License Cards with manual cards, category rates and a quick FOB calculator. Focus View opens from CP Tools, bringing the model image, LCW AI comments and report details together; reviews can be resumed from history."
+    "tr": "Bulanık arka planlara hafif karartma, açılan sol menüye kenar gölgesi eklendi. Royalty işlemleri Lisans Kartlarında birleşir; manuel kartlar, kategori oranları ve hızlı FOB hesabı eklenir. CP Araçlar menüsünden açılan Odak Görünümü, model görselini, LCW AI yorumunu ve rapor detaylarını bir araya getirir; incelemeler geçmişten sürdürülebilir.",
+    "en": "Blurred backgrounds now include subtle dimming, and expanded navigation casts an edge shadow. Royalty operations are unified in License Cards with manual cards, category rates and a quick FOB calculator. Focus View opens from CP Tools, bringing the model image, LCW AI comments and report details together; reviews can be resumed from history."
   },
   "changes": [
+    {
+      "id": "sidebar-blur-edge-shadow",
+      "type": "fix",
+      "module": {
+        "tr": "Genel arayüz",
+        "en": "Application UI"
+      },
+      "title": {
+        "tr": "Açılan sol menünün kenar gölgesi tamamlandı",
+        "en": "Expanded navigation now casts an edge shadow"
+      },
+      "body": {
+        "tr": "Dar sol menü fare veya klavyeyle genişlediğinde bulanık çalışma alanına hafif bir kenar gölgesi düşürür. Menü kapanınca gölge ve karartma kalkar. Sabit geniş menü çalışma alanını karartmaz; azaltılmış hareket tercihi korunur.",
+        "en": "When the collapsed navigation expands with the pointer or keyboard, a subtle edge shadow separates it from the blurred workspace. Closing removes the shadow and dimming. Pinned expanded navigation does not dim the workspace, and reduced motion is respected."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "workspace-blur-rail.png",
+        "alt": {
+          "tr": "Açılan sol menünün kenar gölgesi tamamlandı",
+          "en": "Expanded navigation now casts an edge shadow"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "workspace-blur-soft-dimming",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel arayüz",
+        "en": "Application UI"
+      },
+      "title": {
+        "tr": "Bulanık arka planlara hafif karartma eklendi",
+        "en": "Blurred backgrounds now include subtle dimming"
+      },
+      "body": {
+        "tr": "Tüm ekranlarda pencere ve çekmece açıldığında arka plan hafifçe kararır. Açık ve koyu tema aynı ortak katmanı kullanır; iç içe pencerelerde karartma katlanmaz. Kapanışta çalışma alanı netliğine ve parlaklığına döner; yazılım çiziminde karartma bulanıklık olmadan çalışır.",
+        "en": "Opening a dialog or drawer subtly dims the background across all screens. Light and dark themes share one layer, so nested dialogs do not compound the dimming. Closing restores workspace clarity and brightness; software rendering uses dimming without blur."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "workspace-blur-dialog.png",
+        "alt": {
+          "tr": "Bulanık arka planlara hafif karartma eklendi",
+          "en": "Blurred backgrounds now include subtle dimming"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
     {
       "id": "row-note-copy-spacing",
       "type": "fix",
