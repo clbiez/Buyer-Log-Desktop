@@ -36,7 +36,7 @@ jobs:
       - name: Checklist Worker, formula editor and attention regressions
         run: node --test tests/cp-background-personal-decisions-v249.test.js tests/cp-rule-editor-v980.test.js tests/cp-attention-exclusions-v959.test.js tests/current-ui-regressions-v20260920.test.js
       - name: Thinking Orbs startup and navigation regression
-        run: node --test tests/boot-thinking-orb-v20260929.test.js tests/startup-guide-v20260930.test.js tests/navigation-revisit-perf-v250.test.js
+        run: node --test tests/boot-thinking-orb-v20260929.test.js tests/startup-guide-v20260930.test.js tests/navigation-revisit-perf-v250.test.js tests/intake-ui-controls.test.js
       - name: Global Flow startup curtain and performance visibility
         run: node --test tests/startup-global-flow-curtain.test.js tests/today-feature-performance-v20260926.test.js
       - name: LCW AI embedded session and PLM BOM regression

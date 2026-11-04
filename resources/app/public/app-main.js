@@ -2287,6 +2287,7 @@ function switchTab(tab){
     }).catch(err=>showToast(err&&err.message||String(err)));
   }
   if(tab==='overview')void ensureOverviewOabModule();
+  if(tab==='overview')void ensureOverviewIntakeModule();
   /* v7.81 — Veri Yönetimi. Lazy: ilk geçişte yüklenir, açılışta değil.
      Sekmeden çıkılıp geri dönülürse modül zaten yüklüdür ve yalnız tazelenir. */
   if(tab==='source'){
