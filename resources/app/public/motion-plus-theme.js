@@ -293,7 +293,7 @@
 
   /* ---- giriş noktası: BLMotionPlus.theme() çağırır ---- */
   let active=null,token=0;
-  function finishActive(){const a=active;active=null;if(a)a.stop();}
+  function finishActive(){++token;const a=active;active=null;if(a)a.stop();}
   function track(handle,layer){
     if(!handle){layer?.remove();return;}
     const prior=handle.onstop;
@@ -301,19 +301,30 @@
     active=handle;
   }
   // true: geçişi bu modül üstlendi (update kendisi çağırır). false: çağıran daireyi/anlık yolu kullanır.
-  function run(update,origin){
-    const pref=settings(),fx=effectById(pref.effect),D=SPEEDS[pref.speed-1]/1000;
+  function run(update,origin,options){
+    const pref=settings();if(options?.startup)pref.effect='chain';
+    const fx=effectById(pref.effect),D=SPEEDS[pref.speed-1]/1000;
     if(typeof update!=='function'||!fx||fx.id==='circle')return false;
+    const apply=update;let applied=false;
+    update=()=>{if(applied)return;applied=true;apply();};
     finishActive();const mine=++token;
     if(!fx.capture){const handle=grain(update,D);if(!handle)return false;track(handle,null);return true;}
-    const capture=root.buyerLogDesktop?.captureView;
+    const capture=options?.shot?()=>options.shot:root.buyerLogDesktop?.captureView;
     if(typeof capture!=='function')return false;
     const W=Math.round(root.innerWidth||0),H=Math.round(root.innerHeight||0);
     if(!W||!H)return false;
     const o=originPoint(origin,W,H);
     const paper=root.getComputedStyle(html).getPropertyValue('--ui-surface-strong').trim()||'#888';
-    Promise.resolve().then(()=>capture(W,H)).then(shot=>{
-      if(mine!==token){update();return;}
+    const grab=()=>{
+      if(!options?.startup||options.shot)return capture(W,H);
+      // A failed desktop capture must never leave the Continue button inert.
+      return new Promise(resolve=>{
+        const timeout=root.setTimeout(()=>resolve(null),650);
+        Promise.resolve().then(()=>capture(W,H)).then(resolve,()=>resolve(null)).finally(()=>root.clearTimeout(timeout));
+      });
+    };
+    Promise.resolve().then(grab).then(shot=>{
+      if(mine!==token||root.BLMotionPlus?.enabled?.()===false||html.dataset.blRender==='software'){update();return;}
       const frame=frameFromShot(shot,W,H);
       if(!frame){update();return;}
       // Eski kare ekranı örterken tema altta değişir; aynı karede çizildiği için yanıp sönmez.

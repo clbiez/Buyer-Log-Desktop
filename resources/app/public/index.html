@@ -114,13 +114,14 @@
   function dismiss(){
     if(dismissed)return;dismissed=true;
     var el=guard();var refocus=el&&el.contains(document.activeElement);
-    if(el){
-      el.dataset.leaving='1';el.setAttribute('aria-hidden','true');
-      var reduce=false;try{reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){}
-      if(reduce)el.remove();else setTimeout(function(){el.remove();},340);
+    if(el)el.inert=true;
+    function reveal(){
+      if(el){el.dataset.leaving='1';el.setAttribute('aria-hidden','true');el.remove();}
+      window.dispatchEvent(new CustomEvent('bl:startup-complete'));
+      if(refocus)document.getElementById('corporateConnectionsBtn')?.focus({preventScroll:true});
     }
-    window.dispatchEvent(new CustomEvent('bl:startup-complete'));
-    if(refocus)document.getElementById('corporateLcwAiBtn')?.focus({preventScroll:true});
+    if(window.BLMotionPlus?.startup?.(reveal))return;
+    reveal();
   }
   async function recover(reason){
     if(finished||recovering)return;recovering=true;lastFailure=reason||lastFailure||'startup-timeout';
