@@ -16552,6 +16552,15 @@ document.addEventListener('pointerdown',e=>closeOtherToolbarAndColumnPopups(e.ta
     }
   });
 });
+// Ayrı Excel simgesi mevcut dışa aktarımı çalıştırır; ok çekmeceyi açar.
+[['cpExcelExportBtn','navExcelBtn'],['kolExcelExportBtn','kolExportImgBtn']].forEach(([buttonId,targetId])=>{
+  const button=document.getElementById(buttonId),target=document.getElementById(targetId);
+  if(!button||!target)return;
+  const sync=()=>{button.disabled=target.disabled;};
+  sync();
+  new MutationObserver(sync).observe(target,{attributes:true,attributeFilter:['disabled']});
+  button.addEventListener('click',()=>{if(!target.disabled)target.click();});
+});
 // Excel çekmecesi bir işlem seçilince kapanır; alt menü tetikleyicisi (Checklist) açık bırakır.
 [['cpExcelBtn','cpExcelMenu'],['kolExcelBtn','kolExcelMenu']].forEach(([btnId,menuId])=>{
   document.getElementById(menuId)?.addEventListener('click',e=>{

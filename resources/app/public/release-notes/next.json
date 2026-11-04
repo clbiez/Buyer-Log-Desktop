@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "excel-split-buttons",
+      "type": "improvement",
+      "module": {
+        "tr": "CP · Koleksiyon · Excel",
+        "en": "CP · Collection · Excel"
+      },
+      "title": {
+        "tr": "Excel simgesi ve menü oku ayrı düğmelerde",
+        "en": "Excel icon and menu arrow have separate buttons"
+      },
+      "body": {
+        "tr": "CP ve Koleksiyon araç çubuklarında Excel düğmesi Kopyala düzenini kullanır. Excel simgesi tabloyu doğrudan dışa aktarır; yanındaki ayrı ok oluşturma, içe aktarma ve şablon menüsünü açar. Siparişler ve diğer sayfalardaki doğrudan Excel aktarımı korunur.",
+        "en": "The CP and Collection Excel buttons follow the Copy layout. The Excel icon exports the table directly; the separate arrow opens workbook creation, import and template actions. Direct Excel export in Orders and other pages remains available."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "excel-split-buttons.png",
+        "alt": {
+          "tr": "Demo CP ekranında ayrı Excel aktarım düğmesi, menü oku ve açık Excel menüsü",
+          "en": "Demo CP screen with separate Excel export button, menu arrow and open Excel menu"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, yalnız demo veri. Ayrı tıklama alanları, doğrudan aktarım yönlendirmesi, pasif durum ve menü açma kontrol edildi.",
+          "en": "Actual post-change Buyer Log using demo data only. Separate hit areas, direct export delegation, disabled state and menu opening were checked."
+        }
+      }
+    },
+    {
       "id": "oab-internal-browser-report-recovery",
       "type": "fix",
       "module": {
