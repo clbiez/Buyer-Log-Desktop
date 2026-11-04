@@ -1354,11 +1354,15 @@ async function loadFromModelConnections(items, options = {}) {
     else
     try { parsedLfl = parseLFLRows(lflEntry.run.rows, connectionLabel(selected.asas)); }
     catch (err) {
-      parsedLfl = { rows: [], meta: { rowCount: 0, warnings: [`LFL verisi model sonucundan üretilemedi: ${err.message}`], dimensions: {} } };
+      connectionWarnings.push(`LFL verisi model sonucundan üretilemedi; son başarılı LFL verisi korundu. / LFL could not be parsed from the model result; the last successful LFL data was preserved: ${err.message}`);
+      parsedLfl = { rows: null, meta: null };
     }
   }
-  const enrichedLflRows = Array.isArray(parsedLfl.rows) ? parsedLfl.rows : [];
-  parsedLfl = { ...parsedLfl, rows: enrichedLflRows, meta: withFabricDimensions(parsedLfl.meta, enrichedLflRows || []) };
+  // null means this refresh has no LFL replacement (for example CP-only).
+  // Turning it into [] would erase the last successful LFL source on publish.
+  if (Array.isArray(parsedLfl.rows)) {
+    parsedLfl = { ...parsedLfl, meta: withFabricDimensions(parsedLfl.meta, parsedLfl.rows) };
+  }
 
   // 3) Antrepo (IAS) yalnız CP, Orders ve Backlog için çalışır. Sipariş kodu daraltması
   //    yoktur: her kapsam kendi koşullarının döndürdüğü tüm satırları getirir ve

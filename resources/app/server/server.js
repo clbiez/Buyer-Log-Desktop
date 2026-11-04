@@ -12076,6 +12076,7 @@ require('./routes/lfl-routes')(app, {
   loadFromModels,
   modelImageIdentityOrders,
   runExcelTask,
+  saveRuntimeModelSnapshot,
   sendDateSafeJson,
   sourceFilterReadiness,
   sourceFilterReadinessMessage,

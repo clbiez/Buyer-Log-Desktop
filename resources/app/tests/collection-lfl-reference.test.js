@@ -113,7 +113,7 @@ test('reference endpoint checks Collection/LFL permissions and filters rows befo
  const register=require('../server/routes/lfl-routes');
  let readiness=true,loads=0,captured;
  const runtime={lflLoadedAt:'snapshot',lflRows:[order(),order({buyer:'not-authorized',fob:99})]};
- register(app,{userAccess:{requireArea:area=>{guards.push(area);return ()=>{};},publicProfile:user=>({...user,scopes:{mags:['CU4E']}}),localIamRevision:()=>1,filterRowsByScope:(_user,rows)=>rows.filter(row=>row.buyer!=='not-authorized')},sourceUserId:()=> 'source-user',sourceFilterReadiness:()=>({ready:readiness}),ensureDataLoaded:async()=>{loads++;},cacheForUser:()=>runtime,collectionLflCache:{get:async args=>{captured=args;return {references:Engine.buildReferences(await args.loadRows())};}},sendDateSafeJson:(res,data)=>res.json(data),apiError:(_res,error)=>{throw error;}});
+ register(app,{userAccess:{requireArea:area=>{guards.push(area);return ()=>{};},publicProfile:user=>({...user,scopes:{mags:['CU4E']}}),localIamRevision:()=>1,filterRowsByScope:(_user,rows)=>rows.filter(row=>row.buyer!=='not-authorized')},sourceUserId:()=> 'source-user',sourceFilterReadiness:()=>({ready:readiness}),ensureDataLoaded:async()=>{loads++;},cacheForUser:()=>runtime,collectionLflCache:{read:async()=>null,get:async args=>{captured=args;return {references:Engine.buildReferences(await args.loadRows())};}},sendDateSafeJson:(res,data)=>res.json(data),apiError:(_res,error)=>{throw error;}});
  assert.deepEqual(guards.slice(0,2),['koleksiyon','lfl']);
  const handler=routes.get('/api/collection-lfl-reference').at(-1),res={set(){},status(code){this.code=code;return this;},json(data){this.data=data;return this;}};
  await handler({currentUser:{id:'user-a'},query:{}},res);
@@ -123,7 +123,7 @@ test('reference endpoint checks Collection/LFL permissions and filters rows befo
  readiness=false;await handler({currentUser:{id:'user-a'},query:{}},res);assert.equal(res.code,409);assert.equal(loads,0);
 });
 
-test('cache coalesces concurrent requests, persists aggregates and invalidates only on source/scope changes',async()=>{
+test('cache coalesces concurrent requests, persists aggregates and replaces them only on explicit refresh',async()=>{
  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'collection-lfl-'));let loads=0;
  const args={identity:'user-a-scope-1',version:'source-1',loadRows:async()=>{loads++;return [order()];}};
  try{
@@ -131,9 +131,9 @@ test('cache coalesces concurrent requests, persists aggregates and invalidates o
   const [first,second]=await Promise.all([cache.get(args),cache.get(args)]);
   assert.strictEqual(first,second);assert.equal(loads,1);
   assert.deepEqual(await createReferenceCache({directory}).get(args),first);assert.equal(loads,1);
-  await cache.get({...args,version:'source-2'});assert.equal(loads,2);
-  await cache.get({...args,identity:'user-b-scope-1'});assert.equal(loads,3);
-  await cache.get({...args,rebuild:true});assert.equal(loads,4);
+  await cache.get({...args,version:'source-2'});assert.equal(loads,1);
+  await cache.get({...args,identity:'user-b-scope-1'});assert.equal(loads,2);
+  await cache.get({...args,rebuild:true});assert.equal(loads,3);
   assert.ok(!fs.readFileSync(path.join(directory,fs.readdirSync(directory)[0]),'utf8').includes('orderCode'));
  }finally{fs.rmSync(directory,{recursive:true,force:true});}
 });
