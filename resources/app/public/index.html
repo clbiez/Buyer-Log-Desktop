@@ -899,7 +899,8 @@
           <!-- "Excel": dışarı Excel üreten ve Excel alan işlemler tek çekmecede. Düğme kimlikleri ve işlevleri aynıdır. -->
           <button type="button" id="cpChecklistRulesBtn" class="tbtn" data-tb-priority="utility" data-tb-compact="icon" title="Kontrol listesi, öncelik kuralları ve etiketleri yönet" data-i18n-title-tr="Kontrol listesi, öncelik kuralları ve etiketleri yönet" data-i18n-title-en="Manage checklist, priority rules and tags"><svg class="ic"><use href="#i-checklist"/></svg><span data-i18n-tr="Kontrol &amp; Kurallar" data-i18n-en="Checklist &amp; Rules">Kontrol &amp; Kurallar</span></button>
           <div class="toolbarMoreWrap blExcelWrap" id="cpExcelWrap" data-tb-priority="utility" data-tb-overflow="never">
-            <button type="button" class="tbtn blExcelTrigger" id="cpExcelBtn" title="Excel oluştur, içe aktar ve şablonlar" data-i18n-title-tr="Excel oluştur, içe aktar ve şablonlar" data-i18n-title-en="Create, import and template Excel workbooks" aria-haspopup="true" aria-expanded="false" aria-controls="cpExcelMenu"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Excel" data-i18n-en="Excel">Excel</span><svg class="ic blMenuChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+            <button type="button" class="tbtn blExcelExport" id="cpExcelExportBtn" title="Tabloyu Excel'e aktar" data-i18n-title-tr="Tabloyu Excel'e aktar" data-i18n-title-en="Export table to Excel"><svg class="ic" aria-hidden="true"><use href="#i-file-export"/></svg></button>
+            <button type="button" class="tbtn blExcelTrigger gridClipboardMenuBtn" id="cpExcelBtn" title="Excel oluştur, içe aktar ve şablonlar" data-i18n-title-tr="Excel oluştur, içe aktar ve şablonlar" data-i18n-title-en="Create, import and template Excel workbooks" aria-haspopup="true" aria-expanded="false" aria-controls="cpExcelMenu">▾</button>
             <div class="toolbarMoreMenu blExcelMenu" id="cpExcelMenu" hidden>
               <div class="toolbarMoreLabel" data-i18n-tr="Excel oluştur" data-i18n-en="Create Excel">Excel oluştur</div>
               <span class="blExcelTableSlot" data-excel-table-slot hidden></span>
@@ -1075,7 +1076,8 @@
              kullanılamazsa yedek/offline yol olarak kalır (bkz. §28). -->
         <!-- "Excel": dışarı Excel üreten ve Excel alan işlemler tek çekmecede. Düğme kimlikleri ve işlevleri aynıdır. -->
         <div class="toolbarMoreWrap blExcelWrap" id="kolExcelWrap" data-tb-priority="utility" data-tb-overflow="never">
-          <button type="button" class="tbtn blExcelTrigger" id="kolExcelBtn" title="Excel oluştur, içe aktar ve şablonlar" data-i18n-title-tr="Excel oluştur, içe aktar ve şablonlar" data-i18n-title-en="Create, import and template Excel workbooks" aria-haspopup="true" aria-expanded="false" aria-controls="kolExcelMenu"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Excel" data-i18n-en="Excel">Excel</span><svg class="ic blMenuChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+          <button type="button" class="tbtn blExcelExport" id="kolExcelExportBtn" title="Tabloyu Excel'e aktar" data-i18n-title-tr="Tabloyu Excel'e aktar" data-i18n-title-en="Export table to Excel"><svg class="ic" aria-hidden="true"><use href="#i-file-export"/></svg></button>
+          <button type="button" class="tbtn blExcelTrigger gridClipboardMenuBtn" id="kolExcelBtn" title="Excel oluştur, içe aktar ve şablonlar" data-i18n-title-tr="Excel oluştur, içe aktar ve şablonlar" data-i18n-title-en="Create, import and template Excel workbooks" aria-haspopup="true" aria-expanded="false" aria-controls="kolExcelMenu">▾</button>
           <div class="toolbarMoreMenu blExcelMenu" id="kolExcelMenu" hidden>
             <div class="toolbarMoreLabel" data-i18n-tr="Excel oluştur" data-i18n-en="Create Excel">Excel oluştur</div>
             <span class="blExcelTableSlot" data-excel-table-slot hidden></span>
