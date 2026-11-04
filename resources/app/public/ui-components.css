@@ -5582,7 +5582,7 @@ html[data-ui-system="manifest"] .tableActionToolbar .tbtn:not(.primary):not(.tab
 html[data-ui-system="manifest"] .tableActionToolbar .toolbarMoreWrap>.tbtn:has(>svg.ic)::after,html[data-ui-system="manifest"] .tableActionToolbar .toolbarMoreWrap>.navActionBtn:has(>svg.ic)::after {
   border-right:0 !important;border-bottom:0 !important
 }
-html[data-ui-system="manifest"] .blTip {z-index:var(--ui-z-tooltip);background:var(--ui-text) !important;color:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;
+html[data-ui-system="manifest"] .blTip {z-index:var(--ui-z-tooltip);background:var(--ui-surface) !important;color:var(--ui-text) !important;box-shadow:var(--ui-shadow-overlay) !important;
   font-size:var(--ui-font-xs) !important;line-height:1.35;
   transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
@@ -14470,7 +14470,7 @@ html[data-ui-system="manifest"] .backlogChartCrosshairV,html[data-ui-system="man
 }
 html[data-ui-system="manifest"] .backlogChartCrosshair.is-pinned .backlogChartCrosshairV,html[data-ui-system="manifest"] .backlogChartCrosshair.is-pinned .backlogChartCrosshairH {background:color-mix(in srgb,var(--ui-accent) 72%,transparent) !important
 }
-html[data-ui-system="manifest"] .backlogChartCrosshairValue {background:var(--ui-text) !important;color:var(--ui-surface) !important;font:700 var(--ui-font-2xs) var(--ui-font-body) !important
+html[data-ui-system="manifest"] .backlogChartCrosshairValue {background:var(--ui-surface) !important;color:var(--ui-text) !important;font:700 var(--ui-font-2xs) var(--ui-font-body) !important
 }
 html[data-ui-system="manifest"] .backlogChartTooltip {background:color-mix(in srgb,var(--ui-surface) 96%,transparent) !important;color:var(--ui-text) !important;font:var(--ui-font-2xs) var(--ui-font-body) !important
 }
