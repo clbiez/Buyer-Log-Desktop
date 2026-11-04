@@ -128,7 +128,9 @@
       if (!counts.has(value) && counts.size >= MAX_DISTINCT) continue;
       counts.set(value, (counts.get(value) || 0) + 1);
     }
-    return [...counts.entries()].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0]), 'tr'));
+    const entries=[...counts.entries()],rules=window.BLBusinessRules;
+    const chronological=entries.some(([value])=>rules.chronologyParts(value));
+    return entries.sort((a,b)=>chronological?rules.compareChronologicalValues(a[0],b[0]):b[1]-a[1]||String(a[0]).localeCompare(String(b[0]),'tr'));
   }
 
   function activeValues(tableKey, key) {

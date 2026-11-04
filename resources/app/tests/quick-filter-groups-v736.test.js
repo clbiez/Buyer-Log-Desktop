@@ -47,6 +47,7 @@ global.document = {
   body: { appendChild() {} },
 };
 global.window = global;
+global.BLBusinessRules = require('../public/business-rules');
 global.escapeHtml = value => String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 global.BLStorage = { getItem: key => store[key] || null, setItem: (key, value) => { store[key] = value; } };
 global.appLang = 'tr';

@@ -78,7 +78,7 @@ function buildSuggestions(){
   try{if(typeof refreshSubmfrList==='function')refreshSubmfrList();if(typeof _submfrValsCache!=='undefined')_submfrValsCache.forEach(v=>add(mfrs,v));}catch(e){}
   try{if(typeof kolManufacturers!=='undefined')kolManufacturers.forEach(v=>add(mfrs,v.name));}catch(e){}
   (records||[]).forEach(r=>{add(mfrs,r.meta?.manufacturer);add(countries,r.meta?.country);add(seasons,r.meta?.season);add(licenses,r.meta?.license);add(categories,r.meta?.category);});
-  const fill=(id,values)=>{const el=$(id);if(el)el.innerHTML=[...values].filter(Boolean).sort((a,b)=>a.localeCompare(b,'tr')).map(v=>`<option value="${safe(v)}"></option>`).join('');};
+  const fill=(id,values)=>{const el=$(id);if(el)el.innerHTML=[...values].filter(Boolean).sort(BLBusinessRules.compareChronologicalValues).map(v=>`<option value="${safe(v)}"></option>`).join('');};
   fill('ocModelOptions',models.keys());fill('ocManufacturerOptions',mfrs);fill('ocCountryOptions',countries);fill('ocSeasonOptions',seasons);fill('ocLicenseOptions',licenses);fill('ocCategoryOptions',categories);
 }
 let ocMetaSuggestDrop=null,ocMetaSuggestInput=null,ocMetaSuggestIndex=-1;

@@ -79,7 +79,7 @@ test('ana katalog ASAS modelinden ufuk/kaynak filtresi OLMADAN DISTINCT okunur v
     assert.doesNotMatch(query, /FILTER|CALCULATETABLE|KEEPFILTERS|TREATAS/, 'katalog okuması ufuk/kaynak filtresi taşımamalı');
   }
   assert.deepEqual(snapshot.catalogs.license, ['DRAGON BALL', 'Garfield', 'One Piece']);
-  assert.deepEqual(snapshot.catalogs.season, ['S7', 'W6']);
+  assert.deepEqual(snapshot.catalogs.season, ['W6', 'S7']);
   assert.deepEqual(snapshot.catalogs.country, [parse.countryEN('ÇİN'), parse.countryEN('TÜRKİYE')].sort((a, b) => a.localeCompare(b, 'tr-TR')));
   assert.notEqual(parse.countryEN('ÇİN'), 'ÇİN', 'ülke, sipariş satırlarıyla aynı İngilizce yazıma çevrilmeli');
   assert.deepEqual(snapshot.catalogs.productMainDefinition, ['T-SHIRT']);

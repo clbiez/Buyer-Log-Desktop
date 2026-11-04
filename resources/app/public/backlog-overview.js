@@ -97,7 +97,7 @@ function distinctFilterValues(filter){
     counts.set(key,(counts.get(key)||0)+1);
   }
   return [...counts.entries()].map(([value,count])=>({value,count,label:value===''?L('(boş)','(blank)'):value}))
-    .sort((a,b)=>a.label.localeCompare(b.label,lang()==='en'?'en':'tr',{numeric:true,sensitivity:'base'}));
+    .sort((a,b)=>BLBusinessRules.compareChronologicalValues(a.value,b.value));
 }
 /* Özel sipariş kapsamı: Tümü · yalnız özel (BTS, Bayram …) · yalnız Regular. */
 function importanceScope(){return ['special','regular'].includes(state.importanceScope)?state.importanceScope:'all'}

@@ -7,6 +7,7 @@
    değerler (yok) canlı okuyucu fonksiyonla okunur. */
 module.exports = function registerHorizonRoutes(app, deps) {
   const {
+    BLBusinessRules,
     USER_WORKSPACE_MODULES,
     apiError,
     cacheForUser,
@@ -312,7 +313,7 @@ app.get('/api/horizon/values', async (req, res) => {
           if (value) seen.add(value);
         }
       }
-      return res.set('Cache-Control', 'no-store').json({ok:true,field,target,values:[...seen].sort((a,b)=>a.localeCompare(b,'tr',{sensitivity:'base'})),rowCount:Array.isArray(snapshot&&snapshot.rows)?snapshot.rows.length:0,truncated:false,source:'intake-snapshot-fallback',warning:databaseError||'INTAKE canlı kaynağı kullanılamadı.'});
+      return res.set('Cache-Control', 'no-store').json({ok:true,field,target,values:[...seen].sort(BLBusinessRules.compareChronologicalValues),rowCount:Array.isArray(snapshot&&snapshot.rows)?snapshot.rows.length:0,truncated:false,source:'intake-snapshot-fallback',warning:databaseError||'INTAKE canlı kaynağı kullanılamadı.'});
     }
     if (explicitConnection && explicitConnection.role === 'antrepo') {
       return res.set('Cache-Control', 'no-store').json({
@@ -330,7 +331,7 @@ app.get('/api/horizon/values', async (req, res) => {
       seen.add(value);
       if (seen.size >= 2000) break;
     }
-    const values = [...seen].sort((a, b) => a.localeCompare(b, 'tr', { sensitivity: 'base' }));
+    const values = [...seen].sort(BLBusinessRules.compareChronologicalValues);
     res.set('Cache-Control', 'no-store').json({
       ok: true, field, target, values, rowCount: rows.length,
       truncated: seen.size >= 2000,
