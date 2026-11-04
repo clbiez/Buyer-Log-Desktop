@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Overview kaymaları ve katlanan açılış geçişleri",
-    "en": "Overview slides and folding startup transitions"
+    "tr": "Arayüz geçişleri ve dengeli sol navigasyon",
+    "en": "UI transitions and balanced sidebar navigation"
   },
   "summary": {
-    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır.",
-    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect."
+    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi.",
+    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved."
   },
   "changes": [
     {
@@ -95,6 +95,64 @@
         "caption": {
           "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; demo verilerle katlanma sırasında yakalandı.",
           "en": "Actual post-change Buyer Log UI, captured during folding with demo data."
+        }
+      }
+    },
+    {
+      "id": "sidebar-centered-icon-column",
+      "type": "fix",
+      "module": {
+        "tr": "Sol navigasyon",
+        "en": "Sidebar navigation"
+      },
+      "title": {
+        "tr": "Dar menü simgeleri tüm boyutlarda ortalanır",
+        "en": "Collapsed menu icons are centered at every size"
+      },
+      "body": {
+        "tr": "Çakışan kenar boşluğu kuralları kaldırıldı. Modül simgeleri, logo, menü düğmesi ve Görünüm simgesi aynı merkez eksenini kullanır. Fare veya klavyeyle geçici genişlemede modül simgeleri ve satırlar yer değiştirmez; çalışma alanı kaymaz. Seçili bölüm ince bir göstergeyle belirginleşir; uzun adlar üç noktayla kısaltılır.",
+        "en": "Conflicting padding rules were removed. Module icons, the logo, menu toggle and Appearance icon share one center axis. Temporary expansion with the pointer or keyboard keeps module icons and rows in place without shifting the workspace. A subtle marker identifies the selected module, and long names use ellipsis."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sidebar-centered-icons.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log dar sol menüsünde ortalanmış simgeler",
+          "en": "Centered icons in the actual Buyer Log collapsed sidebar"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, izole demo verisi. İki tema, dört boyut ve TR/EN kontrol edildi.",
+          "en": "Actual post-change application with isolated demo data. Both themes, four sizes and TR/EN were checked."
+        }
+      }
+    },
+    {
+      "id": "sidebar-keyboard-appearance-polish",
+      "type": "improvement",
+      "module": {
+        "tr": "Sol navigasyon · Görünüm",
+        "en": "Sidebar · Appearance"
+      },
+      "title": {
+        "tr": "Klavye ve Görünüm menüsü daha tutarlı",
+        "en": "More consistent keyboard navigation and Appearance settings"
+      },
+      "body": {
+        "tr": "Modüller ve Görünüm eylemleri arasında ok, Home ve End tuşlarıyla gezinilir; odak değişimi modülü açmaz. Escape Görünüm menüsünü kapatıp odağı düğmeye döndürür. Kısa pencerelerde ayarlar ekrana sığar ve kendi içinde kayar. Tema efekti seçenekleri ve hız açıklaması dil değişimini anında izler. Daraltma düğmesinin erişilebilir adı ve ipucu seçili dile uygun kalır; azaltılmış hareket korunur.",
+        "en": "Arrow, Home and End keys move through modules and Appearance actions without activating modules. Escape closes Appearance and restores focus to its trigger. Settings fit short windows and scroll internally. Theme effect options and speed descriptions follow language changes immediately. The collapse button's accessible name and tooltip stay in the selected language, and reduced motion is respected."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sidebar-appearance-short.png",
+        "alt": {
+          "tr": "Kısa Buyer Log penceresine sığan İngilizce Görünüm ayarları",
+          "en": "English Appearance settings fitting a short Buyer Log window"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, 960×480 pencere ve izole demo verisi. Açık ayarlarda dil değişimi ve klavye odağı kontrol edildi.",
+          "en": "Actual post-change application at 960×480 with isolated demo data. Language switching in open settings and keyboard focus were checked."
         }
       }
     }
