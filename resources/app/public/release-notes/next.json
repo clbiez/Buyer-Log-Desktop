@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-04",
+  "publishedAt": "2026-11-03",
   "bootstrapVisual": false,
   "title": {
     "tr": "Belge Operasyon Merkezi ve rapor doğruluğu",
@@ -37,6 +37,64 @@
         "caption": {
           "tr": "Değişiklik sonrası gerçek uygulama, izole demo verisi ve kontrollü rapor yanıtı. Yenileme tamamlandı; filtre seçimi ve rapor görünümü korundu.",
           "en": "Actual post-change application with isolated demo data and a controlled report response. Refresh completed with the filter selection and report view preserved."
+        }
+      }
+    },
+    {
+      "id": "copy-current-table-row-order",
+      "type": "fix",
+      "module": {
+        "tr": "CP / Sipariş · Kopyalama",
+        "en": "CP / Orders · Copy"
+      },
+      "title": {
+        "tr": "Seçili satırlar güncel tablo sırasıyla kopyalanır",
+        "en": "Selected rows copy in the current table order"
+      },
+      "body": {
+        "tr": "Satırları seçtikten sonra sıralama sütununu veya yönünü değiştirdiğinizde kopyalama son tablo sırasını kullanır. Seçili satırlar paneli ve Excel çıktısı da aynı sırayı izler; filtre dışında kalan seçimler korunur.",
+        "en": "After selecting rows, changing the sort column or direction makes Copy use the latest table order. The selected rows panel and Excel export follow the same order; selections outside the current filters remain included."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "copy-current-table-order.png",
+        "alt": {
+          "tr": "Demo CP tablosunda Ex-factory sırası ile aynı sırayı izleyen seçili satırlar paneli",
+          "en": "Demo CP table and selected rows panel following the same Ex-factory order"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, yalnız demo veri. Seçimden sonra artan ve azalan sıralama ile filtre değiştirme durumlarında CP ve Sipariş panosunun HTML ve metin satır sırası kontrol edildi.",
+          "en": "Actual post-change Buyer Log using demo data only. CP and Orders clipboard HTML and text row order were checked after changing ascending/descending sorting and filters following selection."
+        }
+      }
+    },
+    {
+      "id": "intake-overview-navigation-load",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış · INTAKE",
+        "en": "Overview · INTAKE"
+      },
+      "title": {
+        "tr": "INTAKE'in başka bir sekmeden gelindiğinde boş kalması düzeltildi",
+        "en": "INTAKE now loads when opening Overview from another tab"
+      },
+      "body": {
+        "tr": "Uygulama Siparişler gibi başka bir modülde açıldığında, Genel Bakış'a sonradan geçiş INTAKE'i de başlatır. Tablo, Yenile, filtreler ve pivot ayarları kullanılabilir; sekmeye tekrar dönüşte modül ve düğme olayları çoğaltılmaz. Diğer sekmelerde INTAKE yüklenmez ve snapshot yoksa rapor yalnız widget görünür olduğunda sorgulanır.",
+        "en": "When the app starts in another module such as Orders, switching to Overview also initializes INTAKE. Its table, Refresh, filters and pivot settings are available; returning to the tab does not duplicate the module or button handlers. INTAKE stays unloaded in other tabs, and without a snapshot the report is queried only when the widget is visible."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "intake-overview-navigation.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log'da Siparişler'den Genel Bakış'a geçiş sonrası demo satırlarıyla açılan INTAKE tablosu",
+          "en": "Actual Buyer Log INTAKE table with demo rows after navigating from Orders to Overview"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, izole sunucu ve yalnız sentetik INTAKE HTTP yanıtları. TR/EN düğmeler, snapshot yükleme, görünürken sorgulama, tekrar giriş ve hata sonrası Yenile kontrol edildi; canlı veritabanı bağlantısı kullanılmadı.",
+          "en": "Actual post-change app on an isolated server with synthetic INTAKE HTTP responses only. TR/EN controls, snapshot loading, visible-widget querying, repeated entry and recovery with Refresh were checked; no live database connection was used."
         }
       }
     },

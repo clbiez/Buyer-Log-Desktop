@@ -52,6 +52,12 @@ test('INTAKE Overview yüzeyi kendi kontrolleri ve lazy loader ile bağlıdır',
   assert.match(app, /ensureOverviewIntakeModule/);
 });
 
+test('INTAKE başka bir sekmede açılan oturumda da Genel Bakışa geçildiğinde yüklenir', () => {
+  const switchTab = app.slice(app.indexOf('function switchTab(tab){'), app.indexOf('\nfunction ', app.indexOf('function switchTab(tab){') + 1));
+  assert.ok(/if\(tab==='overview'\)\s*(?:\{\s*)?void ensureOverviewIntakeModule\(\)/.test(switchTab),
+    'Yalnız açılış zamanlayıcısı yeterli değildir: Genel Bakışa her giriş INTAKE lazy loaderını çağırmalı');
+});
+
 test('INTAKE bağlantı ayarları ana veri offline olsa da yerel sunucudan yüklenir', () => {
   assert.match(app, /function modelConnectionApiAvailable\(\)/);
   assert.match(app, /location\.protocol==='http:'\|\|location\.protocol==='https:'/);
