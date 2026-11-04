@@ -40112,6 +40112,7 @@ function applyLanguage(lang){
     else if(tab==='manufacturers' && typeof window.renderManufacturersLanguage==='function') window.renderManufacturersLanguage();
     else if(tab==='licensecards') window.BLLicenseCardsPage?.renderLanguage?.();
     else if(tab==='quotations'||tab==='pricinghistory') window.BLPricingDesk?.renderLanguage?.();
+    else if(tab==='source') window.BLDataManagement?.refreshLanguage?.();
     if(typeof renderKolScopeFilters==='function' && document.getElementById('kolScopeFilters')) renderKolScopeFilters();
   }catch(e){}
   // Ufuk rozeti sunucu verisinden değil, o anki dilden metin üretir; dil

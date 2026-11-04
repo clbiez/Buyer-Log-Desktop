@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Horizon filtreleri tek çekmecede",
+    "en": "Horizon filters in one drawer"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Veri Yönetimi'ndeki CP, Diğer modüller ve INTAKE horizon filtreleri, Backlog Analiz Filtreleri düzenindeki tek bir çekmecede düzenlenir. ASAS sütunu seçildiğinde IAS karşılığı otomatik önerilir, elle seçilen eşleme hatırlanır; VEYA grupları ve tüm işleçler Gelişmiş kipte kalır.",
+    "en": "CP, Other modules and INTAKE horizon filters in Data Management are edited in a single drawer with the Backlog Analysis Filters layout. Picking an ASAS column suggests its IAS counterpart automatically and manual mappings are remembered; OR groups and all operators remain in Advanced mode."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "horizon-filter-drawer",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Horizon filtreleri Backlog filtre düzeniyle tek çekmecede",
+        "en": "Horizon filters in one drawer with the Backlog filter layout"
+      },
+      "body": {
+        "tr": "Horizon panelindeki \"Filtreyi düzenle\" ya da filtre adı, CP / Diğer modüller / INTAKE sekmeli çekmeceyi açar. Basit kipte soldan ASAS veya IAS sütunu seçilir, değerler database listesinden işaretlenir; tarih alanları aralıkla filtrelenir. Her kartta IAS karşılığı otomatik eşlenir, gerekirse elle değiştirilir veya IAS için ayrı değerler seçilir; elle seçim hatırlanır. VEYA grupları ve diğer işleçler Gelişmiş kipte düzenlenir. Kaydetmek veriyi yenilemez.",
+        "en": "\"Edit filter\" or the filter name in the Horizon panel opens a drawer with CP / Other modules / INTAKE tabs. In Simple mode you pick an ASAS or IAS column on the left and tick values from the database list; date fields are filtered by range. Each card maps its IAS counterpart automatically; you can change it, choose separate IAS values, and manual choices are remembered. OR groups and other operators are edited in Advanced mode. Saving does not refresh data."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "horizon-filter-drawer.png",
+        "alt": {
+          "tr": "Horizon filtreleri çekmecesinde ASAS Marka filtresi ve IAS karşılığı",
+          "en": "ASAS Brand filter and its IAS counterpart in the Horizon filters drawer"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    }
+  ]
 }

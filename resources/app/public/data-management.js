@@ -489,6 +489,9 @@
         ${group.id === 'linked' ? `<span class="dmHorizonMembers">${esc(members)}</span>` : ''}
         <span class="dmHorizonHint">${esc(textOf(text.hint))}</span>
         <span class="dmSummarySpacer"></span>
+        ${horizonFeeds(group).length ? `<button type="button" class="tbtn dmHorizonEdit" data-open-horizon="${esc(group.id)}"
+          title="${esc(T('Bu ufkun ASAS / IAS filtresini çekmecede düzenle', 'Edit this horizon\'s ASAS / IAS filter in the drawer'))}">
+          <svg class="ic"><use href="#i-filter"/></svg>${esc(T('Filtreyi düzenle', 'Edit filter'))}</button>` : ''}
         ${text.refresh ? `<button type="button" class="tbtn" data-refresh-horizon="${esc(group.id)}" ${busy ? 'disabled' : ''}
           title="${esc(busy ? T('Bir yenileme zaten sürüyor', 'A refresh is already running') : textOf(text.refresh))}">
           <svg class="ic"><use href="#i-refresh"/></svg>${esc(textOf(text.refresh))}</button>` : ''}
@@ -499,7 +502,6 @@
       <div class="dmHorizonFeeds">${feeds || `<span class="dmModuleEmpty">${esc(T('Hiçbir kaynağa bağlı değil', 'Not connected to any source'))}</span>`}${connections}
         ${needsFilter ? `<span class="dmWarn" title="${esc(T('Sınırsız sorgu çalıştırılamaz; bu ufuk yenilenmeden önce bir filtre gerekir.', 'An unbounded query cannot run; this horizon needs a filter before it can refresh.'))}">${esc(T('filtre gerekli', 'filter required'))}</span>` : ''}
       </div>
-      <div class="dmFilterSlot" data-horizon-slot="${esc(group.id)}"></div>
     </div>`;
   }
 
@@ -1356,6 +1358,8 @@
        uygula. Bu çağrı olmadan düğmeler doğru yerde ama HEPSİ pasif görünürdü —
        kullanıcı hangi modun seçili olduğunu göremezdi. */
     void feature('fx').then(()=>window.BLFX.load(true)).then(()=>window.BLFX.renderFolderSync(root.querySelector('[data-fx-folder-sync]'))).catch(()=>{});
+    // Açık Horizon çekmecesinin sekme/kaynak başlığı yeni modelle güncellenir (içerik korunur).
+    if (horizonDrawer) renderDrawerHead();
     decorateCollapsiblePanels();
     syncSourceModes();
   }
@@ -1638,11 +1642,12 @@
     const filter = event.target.closest('[data-open-filter]');
     if (filter) {
       const [moduleId, sourceId] = String(filter.dataset.openFilter).split(':');
-      // Horizon panelinden açılan düzenleyici o ufkun satırında açılır.
-      const horizonSlot = filter.dataset.horizonGroup
-        ? root.querySelector(`[data-horizon-slot="${filter.dataset.horizonGroup}"]`) : null;
-      openFilterEditor(moduleId, sourceId, horizonSlot);
+      // v2026-11-04 — Düzenleyici satır içinde değil, Horizon çekmecesinde açılır.
+      openHorizonDrawer(filter.dataset.horizonGroup || moduleId, moduleId, sourceId);
+      return;
     }
+    const horizonEdit = event.target.closest('[data-open-horizon]');
+    if (horizonEdit) openHorizonDrawer(horizonEdit.dataset.openHorizon);
   }
 
   /* KİŞİSEL KATMANI KALDIR.
@@ -1815,6 +1820,170 @@
     return null;
   }
 
+  /* =================================================================
+     HORIZON ÇEKMECESİ (v2026-11-04, kullanıcı kararı)
+
+     "CP ve geri kalanların filtre horizonunu daha şık, daha pratik bir yerde
+     yapmak istiyorum." Kararlar: tek yer Veri Yönetimi; CP, Diğer modüller ve
+     INTAKE ayrı sekmeler; yalnız Kaydet (yenileme ayrı kalır).
+
+     Görünüm Backlog Analiz Filtreleri çekmecesinin ortak kabuğudur
+     (.blvFilterRoot/.blvFilterDrawer); ikinci bir çekmece stili üretilmez.
+     İçerik ortak filtre düzenleyicisidir (BLDataFilterEditor): eşleme,
+     hatırlama ve kayıt aynı yoldan geçer. Çekmece body'ye eklenir: panel
+     yeniden çizildiğinde açık düzenleyici kaybolmaz. */
+  let horizonDrawer = null;   // {groupId, moduleId, sourceId, opener}
+  const drawerGroups = () => [...horizonGroupsOf(), { id: 'intake', targets: ['intake'] }];
+  const drawerGroup = groupId => drawerGroups().find(entry => entry.id === groupId)
+    || drawerGroups().find(entry => entry.targets.includes(groupId)) || null;
+
+  function ensureHorizonDrawer() {
+    let element = document.getElementById('dmHorizonDrawer');
+    if (element) return element;
+    element = document.createElement('div');
+    element.id = 'dmHorizonDrawer';
+    element.className = 'blvFilterRoot dmHorizonDrawer';
+    element.dataset.uiMigrated = 'dialog';
+    element.hidden = true;
+    element.innerHTML = `<div class="blvFilterScrim" data-dmh-close></div>
+      <aside class="blvFilterDrawer dmHorizonAside" role="dialog" aria-modal="true" aria-labelledby="dmHorizonTitle">
+        <div class="blvFilterMount"><header class="blvFilterHead dmHorizonHead" data-dmh-head></header>
+          <div class="dmHorizonMount" data-dmh-mount></div></div>
+      </aside>`;
+    document.body.appendChild(element);
+    element.addEventListener('click', onDrawerClick);
+    element.addEventListener('keydown', onDrawerKeydown);
+    // TR/EN: açılış ekranındaki dil seçimi bu olayı yayar; uygulama içi değişim refreshLanguage'i çağırır.
+    document.addEventListener('bl:language-changed', refreshLanguage);
+    return element;
+  }
+
+  function renderDrawerHead() {
+    const element = document.getElementById('dmHorizonDrawer');
+    const group = horizonDrawer && drawerGroup(horizonDrawer.groupId);
+    if (!element || !group || !model) return;
+    const text = HORIZON_TEXT[group.id] || HORIZON_TEXT.linked;
+    const tabs = drawerGroups().map(entry => {
+      const label = textOf((HORIZON_TEXT[entry.id] || HORIZON_TEXT.linked).title);
+      const active = entry.id === group.id;
+      return `<button type="button" id="dmHorizonTab-${esc(entry.id)}" class="dmLabTab${active ? ' isActive' : ''}" role="tab" aria-selected="${active}"
+        aria-controls="dmHorizonPanel" tabindex="${active ? '0' : '-1'}" data-dmh-tab="${esc(entry.id)}">${esc(label)}</button>`;
+    }).join('');
+    /* Kaynak çipleri yalnız ufkun düzenleyicide görünenden FAZLA kaynağı
+       varsa çıkar (ör. ikinci bir ASAS bağlantısı); yaygın ASAS+IAS
+       durumunda iki kaynak zaten yan yana düzenlenir. */
+    const feeds = horizonFeeds(group);
+    const paired = horizonDrawer.moduleId ? horizonPairFor(horizonDrawer.moduleId, horizonDrawer.sourceId) : null;
+    const shown = new Set(paired ? [paired.primary.sourceId, paired.pair.sourceId] : [horizonDrawer.sourceId]);
+    const sources = feeds.length > shown.size ? `<div class="dmViewToggle dmHorizonSources" role="group" aria-label="${esc(T('Düzenlenen kaynak', 'Edited source'))}">${feeds.map(({ moduleId, feed }) =>
+      `<button type="button" class="${shown.has(feed.sourceId) ? 'is-active' : ''}" aria-pressed="${shown.has(feed.sourceId)}"
+        data-dmh-source="${esc(moduleId)}:${esc(feed.sourceId)}">${esc(feed.sourceName)}</button>`).join('')}</div>` : '';
+    const members = group.id === 'linked' ? group.targets.map(moduleLabel).join(' · ') : '';
+    element.querySelector('[data-dmh-head]').innerHTML = `<div class="dmHorizonHeadTop">
+        <div><span class="blvFilterKicker">${esc(T('VERİ KAYNAĞI HORIZON', 'DATA SOURCE HORIZON'))}</span>
+          <h3 id="dmHorizonTitle">${esc(T('Horizon filtreleri', 'Horizon filters'))}</h3>
+          <p>${esc(textOf(text.hint))}${members ? ` ${esc(T('Üyeler', 'Members'))}: ${esc(members)}.` : ''} ${esc(T('Kaydetmek veriyi yenilemez; yenilemeyi Horizon panelinden başlatın.', 'Saving does not refresh data; start the refresh from the Horizon panel.'))}</p></div>
+        <div class="blvFilterHeadActions"><button type="button" data-dmh-close title="${esc(T('Kapat', 'Close'))}" aria-label="${esc(T('Kapat', 'Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div>
+      </div>
+      <div class="dmLabTabs dmHorizonTabs" data-bl-tabs="line" role="tablist" aria-label="${esc(T('Horizon seçimi', 'Horizon selection'))}">${tabs}</div>
+      ${sources}`;
+  }
+
+  function openHorizonDrawer(groupId, moduleId = '', sourceId = '') {
+    const group = drawerGroup(groupId);
+    if (!group || !model) return;
+    if (!moduleId || !sourceId) {
+      const feeds = horizonFeeds(group);
+      const live = feeds.filter(({ feed }) => feed.enabled !== false);
+      const pick = live.find(({ feed }) => feed.sourceRole === 'asas') || live[0] || feeds[0];
+      moduleId = pick ? pick.moduleId : '';
+      sourceId = pick ? pick.feed.sourceId : '';
+    }
+    const element = ensureHorizonDrawer();
+    const wasOpen = !element.hidden && Boolean(horizonDrawer);
+    const opener = wasOpen ? horizonDrawer.opener : document.activeElement;
+    horizonDrawer = { groupId: group.id, moduleId, sourceId, opener };
+    element.hidden = false;
+    if (!wasOpen) {
+      window.BLMotionPlus?.play?.('overlay', element.querySelector('.dmHorizonAside'));
+      requestAnimationFrame(() => element.classList.add('is-open'));
+    }
+    renderDrawerHead();
+    const mountEl = element.querySelector('[data-dmh-mount]');
+    mountEl.id = 'dmHorizonPanel';
+    mountEl.setAttribute('role', 'tabpanel');
+    mountEl.setAttribute('aria-labelledby', `dmHorizonTab-${group.id}`);
+    if (!moduleId) {
+      window.BLDataFilterEditor?.close?.({ silent: true });
+      mountEl.innerHTML = `<div class="blvFilterEditorEmpty"><svg class="ic"><use href="#i-filter"/></svg>
+        <b>${esc(T('Bu ufuk hiçbir kaynağa bağlı değil', 'This horizon is not connected to any source'))}</b>
+        <span>${esc(T('Önce Horizon panelinden bir kaynak bağlayın.', 'Connect a source from the Horizon panel first.'))}</span></div>`;
+    } else {
+      openFilterEditor(moduleId, sourceId, mountEl);
+    }
+    if (!wasOpen) requestAnimationFrame(() => element.querySelector('[data-dmh-tab].isActive')?.focus({ preventScroll: true }));
+  }
+
+  // fromEditor: düzenleyici kendisi kapandı (iptal/kayıt); sorulacak bir şey kalmadı.
+  function closeHorizonDrawer(fromEditor = false) {
+    const element = document.getElementById('dmHorizonDrawer');
+    if (!element || element.hidden || !horizonDrawer) return true;
+    if (!fromEditor) {
+      // Kayıt sürerken çekmece kapanmaz: sonuç ve eşleme hafızası yarım kalmasın.
+      if (window.BLDataFilterEditor?.isBusy?.()) return false;
+      if (window.BLDataFilterEditor?.isDirty?.() && !window.confirm(T('Kaydedilmemiş filtre değişiklikleri kaybolacak. Kapatılsın mı?', 'Unsaved filter changes will be lost. Close anyway?'))) return false;
+      window.BLDataFilterEditor?.close?.({ silent: true });
+    }
+    const { opener, groupId } = horizonDrawer;
+    horizonDrawer = null;
+    window.BLDataPicker?.close?.();
+    element.classList.remove('is-open');
+    setTimeout(() => { if (!horizonDrawer) element.hidden = true; }, 180);
+    // Tetikleyiciye odak dönüşü; panel yeniden çizildiyse aynı ufkun düğmesine.
+    const target = opener && opener.isConnected ? opener : root && root.querySelector(`[data-open-horizon="${CSS.escape(groupId)}"]`);
+    target?.focus?.({ preventScroll: true });
+    return true;
+  }
+
+  function switchHorizon(groupId, moduleId = '', sourceId = '') {
+    if (window.BLDataFilterEditor?.isBusy?.()) return;
+    if (window.BLDataFilterEditor?.isDirty?.() && !window.confirm(T('Kaydedilmemiş filtre değişiklikleri kaybolacak. Devam edilsin mi?', 'Unsaved filter changes will be lost. Continue?'))) return;
+    openHorizonDrawer(groupId, moduleId, sourceId);
+  }
+
+  function onDrawerClick(event) {
+    if (event.target.closest('[data-dmh-close]')) { closeHorizonDrawer(); return; }
+    const tab = event.target.closest('[data-dmh-tab]');
+    if (tab) { if (!horizonDrawer || tab.dataset.dmhTab !== horizonDrawer.groupId) switchHorizon(tab.dataset.dmhTab); return; }
+    const source = event.target.closest('[data-dmh-source]');
+    if (source && horizonDrawer) {
+      const [moduleId, sourceId] = String(source.dataset.dmhSource).split(':');
+      switchHorizon(horizonDrawer.groupId, moduleId, sourceId);
+    }
+  }
+
+  function onDrawerKeydown(event) {
+    const element = document.getElementById('dmHorizonDrawer');
+    if (!element || element.hidden) return;
+    if (event.key === 'Escape') {
+      // Açık seçici varsa yalnız üst katman (seçici) kapanır.
+      if (document.getElementById('_dmPicker')) { window.BLDataPicker?.close?.(); return; }
+      event.preventDefault();
+      closeHorizonDrawer();
+      return;
+    }
+    // Ok/Home/End sekme odağını ortak tab-system.js taşır (role="tab").
+    if (event.key !== 'Tab') return;
+    // Odak çekmecenin içinde kalır (DESIGN_SYSTEM: Tab/Shift+Tab sınırı).
+    const focusable = [...element.querySelectorAll('.dmHorizonAside :is(button, input, select, textarea, [tabindex]):not([disabled]):not([tabindex="-1"])')]
+      .filter(node => node.offsetParent !== null);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  }
+
   function openFilterEditor(moduleId, sourceId, slotOverride = null) {
     const paired = slotOverride ? horizonPairFor(moduleId, sourceId) : null;
     if (paired) { moduleId = paired.moduleId; sourceId = paired.primary.sourceId; }
@@ -1843,8 +2012,8 @@
       onClear: feed.layerRemovable ? () => clearPersonalLayer(moduleId, sourceId) : null,
     } : null;
 
-    const groupId = horizonGroupsOf().find(entry => entry.targets.includes(moduleId))?.id || moduleId;
-    const slot = slotOverride || root.querySelector(`[data-horizon-slot="${CSS.escape(groupId)}"]`);
+    // v2026-11-04 — Tek düzenleme yeri Horizon çekmecesidir (openHorizonDrawer).
+    const slot = slotOverride;
     if (!slot) return;
 
     void window.BLDataFilterEditor?.open?.(slot, {
@@ -1887,6 +2056,8 @@
          filtreye ayrılamaz (sunucu da LINK_FIXED ile reddeder); düzenleyicide
          "ayır" seçeneği yoktur. */
       layerNote,
+      // İptal, kayıt ya da katman kaldırma düzenleyiciyi kapatır; çekmece de onunla kapanır.
+      onClosed: () => closeHorizonDrawer(true),
       labelOf: id => {
         const found = (model.modules || []).find(entry => entry.id === id);
         return found ? found.label : id;
@@ -2032,5 +2203,13 @@
     else void load().then(apply);
   }
 
-  window.BLDataManagement = { mount, reload: load, focusModule, focusSource, openTool: openToolById };
+  /* TR/EN: dil değişince açık Horizon çekmecesi (başlık + düzenleyici) aktif dille
+     yeniden çizilir. Sayfanın tamamı yeniden kurulmaz: açık sihirbaz/eşleme durumu korunur. */
+  function refreshLanguage() {
+    if (!horizonDrawer) return;
+    renderDrawerHead();
+    window.BLDataFilterEditor?.refreshLanguage?.();
+  }
+
+  window.BLDataManagement = { mount, reload: load, focusModule, focusSource, openTool: openToolById, refreshLanguage };
 })();

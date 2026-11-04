@@ -663,6 +663,588 @@
     </p>`;
   }
 
+  /* ---------------------------------------------------------------- */
+  /* v2026-11-04 — BASİT KİP (kullanıcı kararı)
+
+     "Backlog analizi filtresindeki ASAS ve IAS filtreleme alanını beğeniyorum;
+     database filtreleme modülünü ona benzetelim. ASAS karşılığı IAS alanlarını
+     otomatik önerme, eşleme ve hatırlama kalsın."
+
+     Basit kip Backlog Analiz Filtreleri düzenidir: üstte aktif filtre kartları,
+     solda kaynak sekmeli sütun kataloğu, sağda onay kutulu değer listesi ya da
+     tarih/sayı aralığı. Durum (groups, pair.links, pair.extras) Gelişmiş kiple
+     AYNIDIR; yalnız çizim değişir. Eşleme, hatırlama ve kayıt aynı işlevlerden
+     geçer (rematch, syncPair, savePair) — ikinci bir mantık yoktur.
+
+     Basit kip yalnız tek grup + in/between/gte/lte işleçleriyle ifade edilebilen
+     filtreyi gösterir. VEYA grubu, diğer işleçler ya da ASAS/IAS arasında farklı
+     işleç varsa Basit kip kapanır ve filtre Gelişmiş kipte açılır: basitleştirmek
+     için koşul silinmez ya da anlamı değiştirilmez.
+
+     Değer listesi database'den gelir (/api/horizon/values) ve adet SAYISI
+     YOKTUR (kullanıcı kararı: önce ölçülecek). */
+  const SIMPLE_OPS = ['in', 'between', 'gte', 'lte'];
+  // Kişisel tercih: user-storage.js 'bl.dataManagement.' önekini kullanıcıya ayırır.
+  const MODE_KEY = 'bl.dataManagement.horizonFilterMode.v1';
+  const VALUE_LIMIT = 2000;
+  const VISIBLE_LIMIT = 300;
+  let viewMode = 'simple';
+  let selectedKey = '';          // 'p:<koşul id>' (düzenlenen kaynak) · 'x:<grup>:<sıra>' (yalnız eş)
+  let catalogSide = 'primary';   // 'primary' | 'pair'
+  let catalogSearch = '';
+  const valueSearches = new Map(); // liste anahtarı → arama metni
+  const valueCache = new Map();    // kaynak|tablo|sütun|alan|arama → {loading, values, truncated, note}
+  let valueSearchTimer = null;
+  let baseline = '';
+  let onClosed = null;
+
+  const storage = () => window.BLStorage || window.localStorage;
+  function readMode() {
+    try { return storage().getItem(MODE_KEY) === 'advanced' ? 'advanced' : 'simple'; } catch (_) { return 'simple'; }
+  }
+  function writeMode(value) {
+    try { storage().setItem(MODE_KEY, value); } catch (_) { /* tercih yalnız kolaylık */ }
+  }
+
+  const pairName = () => (pair && pair.sourceName) || 'IAS';
+  /* Basit kipte canlı database sütunu yalnız adıyla görünür; tablo ayrı bir
+     ipucu satırıdır (kart başlığı "Dim_Urun · Sezon" yerine "Sezon"). */
+  const fieldLabel = (condition, sourceId) => {
+    const meta = fieldMeta(condition, sourceId);
+    if (meta && meta.dynamic && meta.name) return meta.name;
+    return meta ? ((en() ? meta.en : meta.tr) || condition.field) : (condition.name || condition.field || '');
+  };
+  const isRange = op => ['range', 'from', 'to'].includes(operatorArity(op));
+  const rangeOp = (from, to) => (from && to ? 'between' : (from ? 'gte' : (to ? 'lte' : 'between')));
+
+  /* Basit kipe engel olan durum; boş metin = Basit kip kullanılabilir. */
+  function simpleBlocker() {
+    if (groups.length > 1) return T('filtrede VEYA grubu var', 'the filter has OR groups');
+    const conditions = (groups[0] ? groups[0].conditions : []).filter(condition => condition.field);
+    if (conditions.some(condition => !SIMPLE_OPS.includes(condition.op))) return T('gelişmiş bir işleç kullanılıyor', 'an advanced operator is used');
+    if (pair) {
+      if (pair.extras.slice(1).some(list => list && list.length)) {
+        return T(`yalnız ${pairName()} tarafında VEYA grubu var`, `there is an OR group only on the ${pairName()} side`);
+      }
+      if ((pair.extras[0] || []).some(condition => !SIMPLE_OPS.includes(condition.op))) {
+        return T(`${pairName()} tarafında gelişmiş bir işleç var`, `the ${pairName()} side uses an advanced operator`);
+      }
+      if (conditions.some(condition => {
+        const link = pair.links.get(condition.id);
+        return link && link.condition && link.condition.op !== condition.op;
+      })) return T(`${context.sourceName} ve ${pairName()} işleçleri farklı`, `${context.sourceName} and ${pairName()} use different operators`);
+    }
+    return '';
+  }
+  const simpleActive = () => viewMode === 'simple' && !simpleBlocker();
+
+  /* Kayıt öncesi "değişti mi" imzası: sekme değiştirirken ya da çekmece
+     kapanırken kaydedilmemiş iş sessizce kaybolmasın. */
+  /* Yalnız kullanıcının değiştirdiği anlam imzalanır: değer listesi yüklenince
+     koşula damgalanan alan tipi (valueType) "kaydedilmemiş değişiklik" sayılmaz. */
+  const meaning = condition => (condition ? [condition.table || '', condition.name || '', condition.field || '', condition.op,
+    (condition.values || []).slice(), condition.from || '', condition.to || ''] : null);
+  function signature() {
+    const links = pair ? [...pair.links.entries()].map(([id, link]) => [id, meaning(link.condition), link.valuesEdited]) : null;
+    return JSON.stringify({
+      groups: groups.map(group => group.conditions.filter(condition => condition.field).map(meaning)),
+      links, extras: pair ? pair.extras.map(list => (list || []).map(meaning)) : null, filterName,
+    });
+  }
+  function isDirty() { return Boolean(host && context && baseline && signature() !== baseline); }
+
+  function resolveKey(key) {
+    const text = String(key || '');
+    if (text.startsWith('p:')) {
+      const id = text.slice(2);
+      for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
+        const index = groups[groupIndex].conditions.findIndex(condition => condition.id === id);
+        if (index >= 0) return { kind: 'p', groupIndex, index, condition: groups[groupIndex].conditions[index], sourceId: context.sourceId };
+      }
+      return null;
+    }
+    if (text.startsWith('q:')) {
+      const base = resolveKey(`p:${text.slice(2)}`);
+      const link = base && pair && pair.links.get(base.condition.id);
+      return link && link.condition ? { kind: 'q', base, link, condition: link.condition, sourceId: pair.sourceId } : null;
+    }
+    if (text.startsWith('x:') && pair) {
+      const [groupIndex, at] = text.slice(2).split(':').map(Number);
+      const condition = pair.extras[groupIndex] && pair.extras[groupIndex][at];
+      return condition ? { kind: 'x', groupIndex, index: at, condition, sourceId: pair.sourceId } : null;
+    }
+    return null;
+  }
+  function firstKey() {
+    const first = (groups[0] ? groups[0].conditions : []).find(condition => condition.field);
+    if (first) return `p:${first.id}`;
+    return pair && (pair.extras[0] || []).length ? 'x:0:0' : '';
+  }
+  // Liste değiştikten sonra: düzenlenen kaynakta eş senkronlanır; eşte "elle değişti" işaretlenir.
+  function touched(ref) {
+    if (!ref) return;
+    if (ref.kind === 'p') syncPair(ref.condition);
+    if (ref.kind === 'q') ref.link.valuesEdited = true;
+  }
+
+  function cacheKey(condition, sourceId, q) {
+    return [sourceId, condition.table || '', condition.name || '', condition.field, q || ''].join('|');
+  }
+  /* Değerler pickValue ile AYNI uçtan ve aynı parametrelerle okunur; alan tipi
+     koşula aynı şekilde damgalanır. */
+  function ensureValues(condition, sourceId, q = '') {
+    const key = cacheKey(condition, sourceId, q);
+    if (valueCache.has(key)) return valueCache.get(key);
+    const entry = { loading: true, values: [], truncated: false, note: '' };
+    valueCache.set(key, entry);
+    const meta = fieldMeta(condition, sourceId);
+    const params = new URLSearchParams({ target: context.moduleId, sourceId, field: condition.field, limit: String(VALUE_LIMIT) });
+    if (meta && meta.dynamic) { params.set('table', meta.table || ''); params.set('column', meta.name || ''); }
+    if (q) params.set('q', q);
+    void (async () => {
+      try {
+        const response = await fetch(`/api/horizon/values?${params}`, { cache: 'no-store' });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) throw new Error(payload.error || '');
+        entry.values = (Array.isArray(payload.values) ? payload.values : []).map(value => String(value));
+        entry.truncated = Boolean(payload.truncated);
+        if (payload.valueType) { condition.valueType = payload.valueType; condition.valueTypeSource = 'schema'; }
+        if (payload.source && payload.source !== 'database') {
+          entry.note = T('Liste yüklü veriden geliyor; eksik olabilir.', 'List comes from loaded data; it may be incomplete.');
+        }
+      } catch (_) {
+        // Hata kaydı önbellekte kalır: her yeniden çizim yeni istek atmasın; çekmece yeniden açılınca denenir.
+        entry.note = T('Değerler okunamadı; aşağıya elle yazabilirsiniz.', 'Values could not be read; you can type them below.');
+      }
+      entry.loading = false;
+      if (host) render();
+    })();
+    return entry;
+  }
+
+  function valueView(listKey, condition, sourceId) {
+    const q = String(valueSearches.get(listKey) || '').trim();
+    const base = ensureValues(condition, sourceId, '');
+    // Liste kesildiyse arama sunucuya itilir (debounce onInput'ta).
+    const searched = q && base.truncated ? valueCache.get(cacheKey(condition, sourceId, q)) : null;
+    const entry = searched || base;
+    const selected = new Set((condition.values || []).map(String));
+    const pool = [...new Set([...(condition.values || []).map(String), ...entry.values])];
+    const fq = foldText(q);
+    const matched = pool.filter(value => !fq || foldText(value).includes(fq))
+      .sort((a, b) => Number(selected.has(b)) - Number(selected.has(a)));
+    return { entry, base, q, selected, matched, visible: matched.slice(0, VISIBLE_LIMIT) };
+  }
+
+  function valueListHtml(listKey, condition, sourceId) {
+    const view = valueView(listKey, condition, sourceId);
+    const loading = view.entry.loading || (view.q && view.base.truncated && !valueCache.get(cacheKey(condition, sourceId, view.q)));
+    const rows = view.visible.map(value => `<label class="blvFilterValue">
+        <input type="checkbox" data-dmf-value="${esc(listKey)}" data-dmf-v="${esc(encodeURIComponent(value))}"${view.selected.has(value) ? ' checked' : ''}>
+        <span title="${esc(value)}">${esc(value)}</span></label>`).join('');
+    return `<div class="blvFilterValueTools">
+        <input type="search" data-dmf-value-search="${esc(listKey)}" value="${esc(valueSearches.get(listKey) || '')}" placeholder="${esc(T('Değer ara…', 'Search values…'))}" autocomplete="off">
+        <button type="button" data-dmf-all-visible="${esc(listKey)}">${esc(T('Görünenleri seç', 'Select visible'))}</button>
+        <button type="button" data-dmf-none="${esc(listKey)}">${esc(T('Seçimi kaldır', 'Clear selection'))}</button>
+      </div>
+      <div class="blvFilterValues dmfValueList">${rows
+        || `<div class="blvFilterNoValue">${esc(loading ? T('Değerler database\'den okunuyor…', 'Reading values from the database…') : T('Eşleşen değer yok.', 'No matching values.'))}</div>`}</div>
+      <label class="dmfFreeValue"><span>${esc(T('Listede yoksa yazın, Enter ile ekleyin', 'Not in the list? Type it and press Enter'))}</span>
+        <input type="text" data-dmf-free="${esc(listKey)}" autocomplete="off" placeholder="${esc(T('değer', 'value'))}"></label>
+      ${view.matched.length > view.visible.length ? `<div class="blvFilterRangeHint">${esc(T(`${view.matched.length} değerin ilk ${VISIBLE_LIMIT}'ü gösteriliyor. Aramayı daraltın.`, `Showing the first ${VISIBLE_LIMIT} of ${view.matched.length} values. Refine the search.`))}</div>` : ''}
+      ${view.base.truncated && !view.q ? `<div class="blvFilterRangeHint">${esc(T('Database listesi kısaltıldı; aradığınız değer için aramayı kullanın.', 'The database list was shortened; use search to find a value.'))}</div>` : ''}
+      ${view.entry.note ? `<div class="blvFilterRangeHint is-warn">${esc(view.entry.note)}</div>` : ''}`;
+  }
+
+  function rangeHtml(listKey, condition, readOnly = false) {
+    const type = condition.valueType === 'date' ? 'date' : 'text';
+    if (readOnly) {
+      return `<div class="blvFilterRangeHint">${esc([condition.from || '…', condition.to || '…'].join(' → '))}</div>`;
+    }
+    return `<div class="blvFilterDateGrid">
+      <label><span>${esc(T('Başlangıç', 'From'))}</span><input type="${type}" data-dmf-range="${esc(listKey)}:from" value="${esc(condition.from || '')}"></label>
+      <label><span>${esc(T('Bitiş', 'To'))}</span><input type="${type}" data-dmf-range="${esc(listKey)}:to" value="${esc(condition.to || '')}"></label>
+    </div>
+    <div class="blvFilterRangeHint">${esc(T('Tek uç boş bırakılırsa o yöne sınır konmaz.', 'Leave one end empty for an open-ended range.'))}</div>`;
+  }
+
+  function criterionText(condition) {
+    if (isRange(condition.op)) {
+      return condition.from || condition.to ? [condition.from || '…', condition.to || '…'].join(' → ') : T('Aralık seçilmedi', 'No range selected');
+    }
+    const values = condition.values || [];
+    if (!values.length) return T('Değer seçilmedi', 'No value selected');
+    return values.length <= 2 ? values.join(', ') : T(`${values.length} değer`, `${values.length} values`);
+  }
+  const conditionEmpty = condition => (isRange(condition.op) ? !(condition.from || condition.to) : !(condition.values || []).length);
+
+  function cardPairText(condition) {
+    const link = pair && pair.links.get(condition.id);
+    if (!link || link.matching) return T('karşılık aranıyor…', 'looking for the counterpart…');
+    if (link.failed) return T('karşılık alınamadı — seçin', 'counterpart not retrieved — choose');
+    if (!link.condition) return T(`${pairName()}'ta uygulanmaz`, `not applied in ${pairName()}`);
+    const label = fieldLabel(link.condition, pair.sourceId);
+    return link.valuesEdited ? `${label} · ${criterionText(link.condition)}` : label;
+  }
+
+  function cardsHtml() {
+    const cards = [];
+    (groups[0] ? groups[0].conditions : []).forEach((condition, index) => {
+      if (!condition.field) return;
+      const key = `p:${condition.id}`;
+      const link = pair && pair.links.get(condition.id);
+      const warn = conditionEmpty(condition) || (link && (link.failed || link.stale));
+      cards.push(`<div class="dmfCard${key === selectedKey ? ' is-active' : ''}${warn ? ' is-warn' : ''}" role="listitem">
+        <button type="button" class="dmfCardMain" data-dmf-select="${esc(key)}">
+          <span class="dmfCardSource">${esc(context.sourceName)}</span>
+          <b>${esc(fieldLabel(condition))}</b>
+          <small>${esc(criterionText(condition))}</small>
+          ${pair ? `<span class="dmfCardPair">↔ ${esc(pairName())}: ${esc(cardPairText(condition))}</span>` : ''}
+        </button>
+        <button type="button" class="blvFilterRemove" data-drop-condition="0:${index}" title="${esc(T('Filtreyi kaldır', 'Remove filter'))}" aria-label="${esc(T('Filtreyi kaldır', 'Remove filter'))}"><svg class="ic"><use href="#i-x"/></svg></button>
+      </div>`);
+    });
+    if (pair) {
+      (pair.extras[0] || []).forEach((condition, at) => {
+        const key = `x:0:${at}`;
+        cards.push(`<div class="dmfCard isExtra${key === selectedKey ? ' is-active' : ''}${conditionEmpty(condition) ? ' is-warn' : ''}" role="listitem">
+          <button type="button" class="dmfCardMain" data-dmf-select="${esc(key)}">
+            <span class="dmfCardSource">${esc(pairName())}</span>
+            <b>${esc(fieldLabel(condition, pair.sourceId))}</b>
+            <small>${esc(criterionText(condition))}</small>
+            <span class="dmfCardPair">${esc(T(`yalnız ${pairName()} koşulu`, `${pairName()}-only condition`))}</span>
+          </button>
+          <button type="button" class="blvFilterRemove" data-pair-drop-extra="0:${at}" title="${esc(T('Filtreyi kaldır', 'Remove filter'))}" aria-label="${esc(T('Filtreyi kaldır', 'Remove filter'))}"><svg class="ic"><use href="#i-x"/></svg></button>
+        </div>`);
+      });
+    }
+    return cards.join('');
+  }
+
+  function selectableFields(sourceId) {
+    const all = fieldsFor(sourceId);
+    const physical = all.filter(entry => entry && entry.dynamic && entry.table && entry.name);
+    return physical.length ? physical : all;
+  }
+
+  function catalogHtml() {
+    const sides = [{ id: 'primary', name: context.sourceName, sourceId: context.sourceId }]
+      .concat(pair ? [{ id: 'pair', name: pair.sourceName, sourceId: pair.sourceId }] : []);
+    const side = sides.find(entry => entry.id === catalogSide) || sides[0];
+    const used = new Set();
+    if (side.id === 'primary') (groups[0] ? groups[0].conditions : []).forEach(condition => condition.field && used.add(condition.field));
+    else {
+      (pair.extras[0] || []).forEach(condition => used.add(condition.field));
+      pair.links.forEach(link => { if (link && link.condition) used.add(link.condition.field); });
+    }
+    const q = foldText(catalogSearch);
+    const list = selectableFields(side.sourceId)
+      .filter(entry => !q || [entry.header, entry.tr, entry.en, entry.table, entry.name].some(text => foldText(text).includes(q)))
+      .sort((a, b) => Number(used.has(b.header)) - Number(used.has(a.header)));
+    const visible = list.slice(0, VISIBLE_LIMIT);
+    const schemaError = (fieldsCache.get(fieldsKey(side.sourceId)) || {}).schemaError || '';
+    return `<div class="blvFilterCatalogue dmfCatalogue">
+      ${sides.length > 1 ? `<div class="blvFilterSourceTabs dmfSourceTabs" role="group" aria-label="${esc(T('Sütun kaynağı', 'Column source'))}">${sides.map(entry => `<button type="button" class="${entry.id === side.id ? 'is-active' : ''}" aria-pressed="${entry.id === side.id}" data-dmf-side="${entry.id}">${esc(entry.name)} <b>${selectableFields(entry.sourceId).length}</b></button>`).join('')}</div>` : ''}
+      <input class="blvFilterSearch" type="search" data-dmf-col-search value="${esc(catalogSearch)}" placeholder="${esc(T('Sütun ara…', 'Search columns…'))}" autocomplete="off">
+      <div class="blvFilterColumns">${visible.map(entry => {
+        const added = used.has(entry.header);
+        const hint = entry.dynamic ? [entry.table, entry.name].filter(Boolean).join(' · ') : T('mantıksal alan', 'logical field');
+        return `<button type="button" class="${added ? 'is-added' : ''}" data-dmf-add-field="${esc(encodeURIComponent(entry.header))}" title="${esc(hint)}">
+          <span>${esc(entry.dynamic ? entry.name || entry.header : ((en() ? entry.en : entry.tr) || entry.header))}${entry.dynamic && entry.table ? `<small class="dmfColTable">${esc(entry.table)}</small>` : ''}</span>
+          <svg class="ic"><use href="#${added ? 'i-check' : 'i-plus'}"/></svg></button>`;
+      }).join('') || `<div class="blvFilterNoValue">${esc(T('Eşleşen sütun yok.', 'No matching columns.'))}</div>`}</div>
+      ${list.length > visible.length ? `<div class="blvFilterRangeHint">${esc(T(`${list.length} sütunun ilk ${VISIBLE_LIMIT}'ü gösteriliyor. Aramayı kullanın.`, `Showing the first ${VISIBLE_LIMIT} of ${list.length} columns. Use search.`))}</div>` : ''}
+      ${side.id === 'pair' ? `<div class="blvFilterRangeHint">${esc(T(`Buradan eklenen sütun yalnız ${pairName()} filtresine girer.`, `A column added here goes into the ${pairName()} filter only.`))}</div>` : ''}
+      ${schemaError ? `<div class="blvFilterRangeHint is-warn">${esc(schemaError)}</div>` : ''}
+    </div>`;
+  }
+
+  /* Değer listesi ya da aralık; tarih/sayı alanında ikisi arasında seçim. */
+  function criterionControls(listKey, condition, sourceId) {
+    const canRange = ['date', 'number'].includes(condition.valueType) || isRange(condition.op);
+    const range = isRange(condition.op);
+    const toggle = canRange ? `<div class="dmViewToggle dmfKindToggle" role="group" aria-label="${esc(T('Filtre tipi', 'Filter type'))}">
+        <button type="button" class="${range ? '' : 'is-active'}" aria-pressed="${!range}" data-dmf-kind="${esc(listKey)}" data-kind="list">${esc(T('Değer listesi', 'Value list'))}</button>
+        <button type="button" class="${range ? 'is-active' : ''}" aria-pressed="${range}" data-dmf-kind="${esc(listKey)}" data-kind="range">${esc(T('Aralık', 'Range'))}</button>
+      </div>` : '';
+    return toggle + (range ? rangeHtml(listKey, condition) : valueListHtml(listKey, condition, sourceId));
+  }
+
+  function pairBox(ref) {
+    const { condition, index } = ref;
+    const pairRef = `0:${index}`;
+    const link = pair.links.get(condition.id);
+    let body;
+    if (!link || link.matching) {
+      body = `<p class="dmfPairStatus">${esc(T('karşılık aranıyor…', 'looking for the counterpart…'))}</p>`;
+    } else if (link.failed) {
+      body = `<button type="button" class="dmfField" data-pick-pair-field="${pairRef}"><span><em>${esc(T('karşılık alınamadı — seçin', 'counterpart not retrieved — choose'))}</em></span></button>
+        <span class="dmfMapTag is-warn">⚠</span>`;
+    } else {
+      const tag = ORIGIN[link.origin] || { tr: link.origin, en: link.origin };
+      const target = link.condition;
+      body = `<div class="dmfPairPick">
+          <button type="button" class="dmfField" data-pick-pair-field="${pairRef}"
+            title="${esc(T(`${pairName()} karşılığını seç veya değiştir; elle seçim hatırlanır`, `Select or change the ${pairName()} counterpart; a manual choice is remembered`))}">
+            <span>${target ? esc(fieldLabel(target, pair.sourceId)) : `<em>${esc(T(`${pairName()}'ta uygulanmaz`, `not applied in ${pairName()}`))}</em>`}</span>
+            ${target && (target.table || target.name) ? `<span class="dmfFieldPhysical">${esc([target.table, target.name].filter(Boolean).join(' · '))}</span>` : ''}
+          </button>
+          <span class="dmfMapTag is-${esc(link.origin)}">${esc(tag[en() ? 'en' : 'tr'])}</span>
+          ${link.stale ? `<span class="dmfMapTag is-warn" title="${esc(T(`Hatırlanan ${pairName()} sütunu canlı şemada yok; otomatik öneri kullanıldı.`, `The remembered ${pairName()} column is not in the live schema; the automatic suggestion was used.`))}">⚠</span>` : ''}
+        </div>`;
+      if (target) {
+        const range = isRange(target.op);
+        if (!link.valuesEdited) {
+          body += `<p class="dmfPairStatus">${esc(T(`${context.sourceName} ile aynı ${range ? 'aralık' : 'değerler'} uygulanır.`, `The same ${range ? 'range' : 'values'} as ${context.sourceName} apply.`))}</p>
+            ${range ? `<p class="dmfPairStatus">${esc(T(`${pairName()} için farklı aralık gerekiyorsa Gelişmiş kipi kullanın.`, `Use Advanced mode if ${pairName()} needs a different range.`))}</p>`
+              : `<button type="button" class="tbtn" data-dmf-pair-custom="${esc(condition.id)}">${esc(T(`${pairName()} değerlerini ayrı seç`, `Choose ${pairName()} values separately`))}</button>`}`;
+        } else {
+          body += `<div class="dmfPairCustomHead"><span>${esc(T(`${pairName()} için ayrı ${range ? 'aralık' : 'değerler'}`, `Separate ${range ? 'range' : 'values'} for ${pairName()}`))}</span>
+              <button type="button" class="tbtn" data-pair-sync="${pairRef}">${esc(T(`${context.sourceName} ile eşitle`, `Sync with ${context.sourceName}`))}</button></div>
+            ${range ? rangeHtml(`q:${condition.id}`, target, true) : valueListHtml(`q:${condition.id}`, target, pair.sourceId)}`;
+        }
+      }
+    }
+    return `<section class="dmfPairBox" aria-label="${esc(T(`${pairName()} karşılığı`, `${pairName()} counterpart`))}">
+      <div class="dmfPairBoxHead"><span class="blvFilterKicker">↔ ${esc(pairName())}</span>
+        <span>${esc(T('otomatik eşlenir, elle değiştirilebilir', 'matched automatically, can be changed manually'))}</span></div>
+      ${body}
+    </section>`;
+  }
+
+  function simpleEditor() {
+    const ref = resolveKey(selectedKey);
+    if (!ref) {
+      const names = [context.sourceName].concat(pair ? [pair.sourceName] : []).join(T(' veya ', ' or '));
+      return `<div class="blvFilterEditorEmpty"><svg class="ic"><use href="#i-filter"/></svg>
+        <b>${esc(T('Bir sütun seçin', 'Select a column'))}</b>
+        <span>${esc(T(`Soldaki ${names} sütunlarından birini seçerek filtre ekleyin.`, `Choose a ${names} column on the left to add a filter.`))}</span></div>`;
+    }
+    const { condition } = ref;
+    const sourceLabel = ref.kind === 'x' ? T(`${pairName()} · yalnız ${pairName()}`, `${pairName()} · ${pairName()} only`) : context.sourceName;
+    const meta = fieldMeta(condition, ref.sourceId);
+    const physical = meta && meta.dynamic ? [meta.table, meta.name].filter(Boolean).join(' · ') : (condition.table ? [condition.table, condition.name].filter(Boolean).join(' · ') : '');
+    return `<div class="blvFilterEditorHead"><div><span>${esc(sourceLabel)}</span><h4>${esc(fieldLabel(condition, ref.sourceId))}</h4>
+        ${physical ? `<small class="dmfFieldPhysical">${esc(physical)}</small>` : ''}</div>
+        <button type="button" data-dmf-clear="${esc(selectedKey)}">${esc(T('Temizle', 'Clear'))}</button></div>
+      ${criterionControls(selectedKey, condition, ref.sourceId)}
+      ${ref.kind === 'p' && pair ? pairBox(ref) : ''}`;
+  }
+
+  function simpleBody() {
+    if (!groups.length) groups.push({ id: uid(), conditions: [] });
+    if (pair && !pair.extras.length) pair.extras.push([]);
+    if (!resolveKey(selectedKey)) selectedKey = firstKey();
+    const cards = cardsHtml();
+    return `<div class="dmfSimple">
+      <div class="dmfActive" role="list" aria-label="${esc(T('Aktif filtreler', 'Active filters'))}">${cards
+        || `<span class="blvFilterNoActive">${esc(T('Henüz filtre yok — soldan bir sütun seçin.', 'No filters yet — pick a column on the left.'))}</span>`}</div>
+      <div class="blvFilterWorkspace dmfWorkspace">${catalogHtml()}<div class="blvFilterEditor dmfEditorPane">${simpleEditor()}</div></div>
+    </div>`;
+  }
+
+  function modeToggle(blocker, simple) {
+    return `<div class="dmViewToggle dmfModeToggle" role="group" aria-label="${esc(T('Düzenleme kipi', 'Editing mode'))}">
+      <button type="button" class="${simple ? 'is-active' : ''}" aria-pressed="${simple}" data-dmf-mode="simple"${blocker ? ' disabled' : ''}
+        title="${esc(blocker ? T(`Basit kip kullanılamıyor: ${blocker}`, `Simple mode is unavailable: ${blocker}`) : T('Sütun seç, değerleri işaretle', 'Pick a column, tick the values'))}">${esc(T('Basit', 'Simple'))}</button>
+      <button type="button" class="${simple ? '' : 'is-active'}" aria-pressed="${!simple}" data-dmf-mode="advanced"
+        title="${esc(T('VEYA grupları ve tüm işleçler', 'OR groups and all operators'))}">${esc(T('Gelişmiş', 'Advanced'))}</button>
+    </div>`;
+  }
+
+  /* Basit kip etkileşimleri. Döner: olay işlendiyse true. */
+  function onSimpleClick(event) {
+    const mode = event.target.closest('[data-dmf-mode]');
+    if (mode) {
+      const next = mode.dataset.dmfMode === 'advanced' ? 'advanced' : 'simple';
+      if (next === 'simple' && simpleBlocker()) return true;
+      if (next === 'simple' && groups[0]) groups[0].conditions = groups[0].conditions.filter(condition => condition.field);
+      viewMode = next; writeMode(next); render();
+      return true;
+    }
+    const side = event.target.closest('[data-dmf-side]');
+    if (side) { catalogSide = side.dataset.dmfSide === 'pair' && pair ? 'pair' : 'primary'; catalogSearch = ''; render(); return true; }
+    const select = event.target.closest('[data-dmf-select]');
+    if (select) { selectedKey = select.dataset.dmfSelect; render(); return true; }
+
+    const add = event.target.closest('[data-dmf-add-field]');
+    if (add) {
+      const header = decodeURIComponent(add.dataset.dmfAddField || '');
+      const sourceId = catalogSide === 'pair' && pair ? pair.sourceId : context.sourceId;
+      const meta = fieldsFor(sourceId).find(entry => entry.header === header);
+      if (!meta) return true;
+      const fresh = () => ({
+        id: uid(), table: meta.dynamic ? meta.table || '' : '', name: meta.dynamic ? meta.name || '' : '', field: meta.header,
+        op: meta.type === 'date' ? 'between' : 'in', valueType: meta.type || 'text', valueTypeSource: meta.typeSource || '',
+        values: [], from: '', to: '',
+      });
+      if (sourceId === context.sourceId) {
+        if (!groups.length) groups.push({ id: uid(), conditions: [] });
+        const existing = groups[0].conditions.find(condition => condition.field === header);
+        if (existing) { selectedKey = `p:${existing.id}`; render(); return true; }
+        const condition = fresh();
+        groups[0].conditions.push(condition);
+        selectedKey = `p:${condition.id}`;
+        render();
+        // IAS karşılığı otomatik aranır (hatırlanan eşleme önce) — Gelişmiş kiple aynı yol.
+        void rematch(condition);
+      } else {
+        if (!pair.extras.length) pair.extras.push([]);
+        const at = pair.extras[0].findIndex(condition => condition.field === header);
+        if (at >= 0) { selectedKey = `x:0:${at}`; render(); return true; }
+        pair.extras[0].push(fresh());
+        selectedKey = `x:0:${pair.extras[0].length - 1}`;
+        render();
+      }
+      return true;
+    }
+
+    const clear = event.target.closest('[data-dmf-clear]');
+    if (clear) {
+      const ref = resolveKey(clear.dataset.dmfClear);
+      if (ref) { ref.condition.values = []; ref.condition.from = ''; ref.condition.to = ''; touched(ref); }
+      render();
+      return true;
+    }
+    const kind = event.target.closest('[data-dmf-kind]');
+    if (kind) {
+      const ref = resolveKey(kind.dataset.dmfKind);
+      if (ref) {
+        const range = kind.dataset.kind === 'range';
+        if (range !== isRange(ref.condition.op)) {
+          ref.condition.op = range ? 'between' : 'in';
+          ref.condition.values = []; ref.condition.from = ''; ref.condition.to = '';
+          touched(ref);
+        }
+      }
+      render();
+      return true;
+    }
+    const allVisible = event.target.closest('[data-dmf-all-visible]');
+    if (allVisible) {
+      const ref = resolveKey(allVisible.dataset.dmfAllVisible);
+      if (ref) {
+        const view = valueView(allVisible.dataset.dmfAllVisible, ref.condition, ref.sourceId);
+        ref.condition.values = [...new Set([...(ref.condition.values || []), ...view.visible])].slice(0, 500);
+        touched(ref);
+      }
+      render();
+      return true;
+    }
+    const none = event.target.closest('[data-dmf-none]');
+    if (none) {
+      const ref = resolveKey(none.dataset.dmfNone);
+      if (ref) { ref.condition.values = []; touched(ref); }
+      render();
+      return true;
+    }
+    const custom = event.target.closest('[data-dmf-pair-custom]');
+    if (custom && pair) {
+      const link = pair.links.get(custom.dataset.dmfPairCustom);
+      if (link && link.condition) link.valuesEdited = true;
+      render();
+      return true;
+    }
+    return false;
+  }
+
+  function onSimpleChange(event) {
+    const box = event.target.closest('[data-dmf-value]');
+    if (box) {
+      const ref = resolveKey(box.dataset.dmfValue);
+      if (!ref) return true;
+      const value = decodeURIComponent(box.dataset.dmfV || '');
+      const set = new Set(ref.condition.values || []);
+      if (box.checked) set.add(value); else set.delete(value);
+      ref.condition.values = [...set];
+      touched(ref);
+      render();
+      return true;
+    }
+    const range = event.target.closest('[data-dmf-range]');
+    if (range) {
+      const text = String(range.dataset.dmfRange);
+      const side = text.slice(text.lastIndexOf(':') + 1);
+      const ref = resolveKey(text.slice(0, text.lastIndexOf(':')));
+      if (!ref || !['from', 'to'].includes(side)) return true;
+      // Ortak tarih bileşeni (enhanceDateInput) görünen GG.AA.YY kutusunu ekler; değer daima ISO native alandan okunur.
+      ref.condition[side] = String((range._nativeDateInput || range).value || '').trim();
+      // İşleç doldurulan uçtan türetilir; eş de aynı işleci alır (syncPair).
+      ref.condition.op = rangeOp(ref.condition.from, ref.condition.to);
+      touched(ref);
+      render();
+      return true;
+    }
+    return false;
+  }
+
+  function addFreeValue(input) {
+    const ref = resolveKey(input.dataset.dmfFree);
+    const value = String(input.value || '').trim();
+    if (!ref || !value) return;
+    if (!(ref.condition.values || []).includes(value)) ref.condition.values = [...(ref.condition.values || []), value];
+    touched(ref);
+    render();
+    requestAnimationFrame(() => host && host.querySelector(`[data-dmf-free="${CSS.escape(input.dataset.dmfFree)}"]`)?.focus({ preventScroll: true }));
+  }
+
+  // Yeniden çizimde arama kutusu odağını ve imlecini korur.
+  function refocus(selector, position) {
+    if (typeof requestAnimationFrame !== 'function') return;
+    requestAnimationFrame(() => {
+      const input = host && host.querySelector(selector);
+      if (!input) return;
+      input.focus({ preventScroll: true });
+      try { input.setSelectionRange(position, position); } catch (_) { /* type=search bazı motorlarda desteklemez */ }
+    });
+  }
+
+  function onSimpleInput(event) {
+    if (event.target.matches && event.target.matches('[data-dmf-col-search]')) {
+      catalogSearch = event.target.value || '';
+      const position = event.target.selectionStart;
+      render();
+      refocus('[data-dmf-col-search]', position);
+      return true;
+    }
+    if (event.target.matches && event.target.matches('[data-dmf-value-search]')) {
+      const listKey = event.target.dataset.dmfValueSearch;
+      valueSearches.set(listKey, event.target.value || '');
+      const position = event.target.selectionStart;
+      render();
+      refocus(`[data-dmf-value-search="${CSS.escape(listKey)}"]`, position);
+      /* Kesilmiş listede arama sunucuya gider; her tuşta değil, duraksayınca. */
+      clearTimeout(valueSearchTimer);
+      valueSearchTimer = setTimeout(() => {
+        const ref = resolveKey(listKey);
+        const q = String(valueSearches.get(listKey) || '').trim();
+        if (!ref || !q || !host) return;
+        const base = valueCache.get(cacheKey(ref.condition, ref.sourceId, ''));
+        if (base && base.truncated) { ensureValues(ref.condition, ref.sourceId, q); render(); }
+      }, 350);
+      return true;
+    }
+    return false;
+  }
+
+  function onKeydown(event) {
+    if (event.key === 'Enter' && event.target.matches && event.target.matches('[data-dmf-free]')) {
+      event.preventDefault();
+      addFreeValue(event.target);
+    }
+  }
+
+  // Basit kipte değeri seçilmemiş liste koşulu kaydedilmez: hiçbir satırı tutmayan filtre üretirdi.
+  function simpleSaveBlocker() {
+    if (!simpleActive()) return '';
+    const empty = [];
+    (groups[0] ? groups[0].conditions : []).forEach(condition => {
+      if (condition.field && conditionEmpty(condition)) empty.push(fieldLabel(condition));
+    });
+    if (pair) (pair.extras[0] || []).forEach(condition => { if (conditionEmpty(condition)) empty.push(`${pairName()} · ${fieldLabel(condition, pair.sourceId)}`); });
+    return empty.length ? T(`Değer ya da aralık seçilmemiş: ${empty.join(', ')}`, `No value or range selected: ${empty.join(', ')}`) : '';
+  }
+
   function render() {
     if (!host) return;
     const shared = (context.sharedWith || []).length;
@@ -670,10 +1252,20 @@
        kapsam yalnız Diğer modüllerin kendi içindedir ve birlikte güncellenir. */
     // Ortak varsayılanı yazmak herkesi etkiler; yalnız yönetim yetkisiyle görünür.
     const canShare = context.canShare === true;
+    const blocker = simpleBlocker();
+    const simple = viewMode === 'simple' && !blocker;
+    // Odak/kaydırma yeniden çizimde korunur (Backlog çekmecesiyle aynı davranış).
+    const scroll = host.querySelector ? {
+      columns: host.querySelector('.blvFilterColumns')?.scrollTop || 0,
+      values: [...host.querySelectorAll('.dmfValueList')].map(el => el.scrollTop),
+      editor: host.querySelector('.dmfEditorPane')?.scrollTop || 0,
+      body: host.querySelector('.dmfBody')?.scrollTop || 0,
+    } : null;
 
-    host.innerHTML = `<div class="dmFilterEditor" role="region" aria-label="${esc(context.moduleLabel)}">
+    host.innerHTML = `<div class="dmFilterEditor${simple ? ' isSimple' : ''}" role="region" aria-label="${esc(context.moduleLabel)}">
       <div class="dmfHead">
-        <span class="dmfTitle">${esc(context.moduleLabel)} — ${esc(context.sourceName)}</span>
+        <span class="dmfTitle">${esc(context.moduleLabel)} — ${esc(context.sourceName)}${pair ? ` ⇄ ${esc(pair.sourceName)}` : ''}</span>
+        ${modeToggle(blocker, simple)}
         ${canShare ? `<label class="dmfNameField">
           <span class="dmLabel">${esc(T('Ortak filtre adı', 'Shared filter name'))}</span>
           <input type="text" id="_dmfName" value="${esc(filterName)}" maxlength="80"
@@ -681,16 +1273,21 @@
         </label>` : ''}
       </div>
 
+      <div class="dmfBody">
       ${layerBanner()}
 
       ${canShare ? templateBar() : ''}
 
       ${pair ? '' : mappingPanel()}
 
-      ${pair ? `<div class="dmfPairHead">
+      ${viewMode === 'simple' && blocker ? `<p class="dmfMessage is-info dmfModeNote">${esc(T(
+        `Bu filtre Gelişmiş kipte açıldı: ${blocker}. Koşullar olduğu gibi korunur.`,
+        `This filter opened in Advanced mode: ${blocker}. The conditions are kept as they are.`))}</p>` : ''}
+
+      ${pair ? `${simple ? '' : `<div class="dmfPairHead">
         <span>${esc(context.sourceName)}</span>
         <span>${esc(pair.sourceName)} · ${esc(T('otomatik eşlenir, elle değiştirilebilir', 'matched automatically, can be changed manually'))}</span>
-      </div>
+      </div>`}
       ${pair.layerNote ? `<p class="dmfMapSkip">${esc(T(
         `${pair.sourceName} tarafı sizin "${pair.layerNote}" filtrenizden başlar. "Herkes için kaydet" bunu herkesin ortak ${pair.sourceName} filtresi yapar.`,
         `The ${pair.sourceName} side starts from your "${pair.layerNote}" filter. "Save for everyone" makes it everyone's shared ${pair.sourceName} filter.`))}</p>` : ''}
@@ -700,7 +1297,7 @@
         `Bu filtreyi ${shared} modül daha kullanıyor: ${(context.sharedWith || []).map(id => context.labelOf(id)).join(', ')}`,
         `${shared} more modules use this filter: ${(context.sharedWith || []).map(id => context.labelOf(id)).join(', ')}`))}</p>` : ''}
 
-      <div class="dmfGroups">
+      ${simple ? simpleBody() : `<div class="dmfGroups">
         ${groups.map((group, groupIndex) => `
           ${groupIndex > 0 ? `<div class="dmfOr">${esc(T('VEYA', 'OR'))}</div>` : ''}
           <div class="dmfGroup">
@@ -713,10 +1310,11 @@
             </div>
           </div>`).join('')}
         ${extraOnlyGroups()}
+      </div>`}
       </div>
 
       <div class="dmfFoot">
-        <button type="button" class="dmfAdd" data-add-group>+ ${esc(T('VEYA grubu ekle', 'Add OR group'))}</button>
+        ${simple ? '' : `<button type="button" class="dmfAdd" data-add-group>+ ${esc(T('VEYA grubu ekle', 'Add OR group'))}</button>`}
         <span class="dmfSpacer"></span>
         ${message ? `<span class="dmfMessage is-${esc(messageTone)}">${esc(message)}</span>` : ''}
         <button type="button" class="tbtn" data-cancel ${busy ? 'disabled' : ''}>${esc(T('İptal', 'Cancel'))}</button>
@@ -731,6 +1329,15 @@
           ${esc(T('Kaydet (yalnız benim için)', 'Save (just for me)'))}</button>
       </div>
     </div>`;
+    if (scroll && typeof requestAnimationFrame === 'function') {
+      const columns = host.querySelector('.blvFilterColumns');
+      if (columns) columns.scrollTop = scroll.columns;
+      host.querySelectorAll('.dmfValueList').forEach((el, index) => { el.scrollTop = scroll.values[index] || 0; });
+      const pane = host.querySelector('.dmfEditorPane');
+      if (pane) pane.scrollTop = scroll.editor;
+      const body = host.querySelector('.dmfBody');
+      if (body) body.scrollTop = scroll.body;
+    }
   }
 
   /* ---------------------------------------------------------------- */
@@ -885,6 +1492,8 @@
   }
 
   async function save(mode, extraWarning = '') {
+    const blocked = simpleSaveBlocker();
+    if (blocked) { message = blocked; messageTone = 'bad'; render(); return; }
     if (pair) { await savePair(mode); return; }
     busy = true; message = ''; render();
     try {
@@ -986,6 +1595,7 @@
 
   function onClick(event) {
     if (onPairClick(event)) return;
+    if (onSimpleClick(event)) return;
     const cancel = event.target.closest('[data-cancel]');
     if (cancel) { close(); return; }
 
@@ -1108,6 +1718,7 @@
   }
 
   function onChange(event) {
+    if (onSimpleChange(event)) return;
     const op = event.target.closest('[data-op]');
     if (op) {
       const condition = conditionAt(op.dataset.op);
@@ -1135,23 +1746,31 @@
   }
 
   function onInput(event) {
-    if (event.target && event.target.id === '_dmfName') filterName = event.target.value;
+    if (event.target && event.target.id === '_dmfName') { filterName = event.target.value; return; }
+    if (event.target) onSimpleInput(event);
   }
 
   /* ---------------------------------------------------------------- */
 
-  function close() {
+  /* silent: yeni bir açılış eskisini kapatırken çekmece kapanmaz. */
+  function close(options = {}) {
     closePicker();
+    clearTimeout(valueSearchTimer);
+    const closed = onClosed;
+    onClosed = null;
     if (!host) return;
     host.innerHTML = '';
     host.classList.remove('isOpen');
     host.removeEventListener('click', onClick);
     host.removeEventListener('change', onChange);
     host.removeEventListener('input', onInput);
+    host.removeEventListener('keydown', onKeydown);
     host = null;
     context = null;
     pair = null;
     busy = false;
+    baseline = '';
+    if (!options.silent && typeof closed === 'function') closed();
   }
 
   /**
@@ -1160,10 +1779,17 @@
    *                          definition, filterName, sharedWith, labelOf, onSaved}
    */
   async function open(container, options = {}) {
-    close();
+    close({ silent: true });
     host = container;
     context = { ...options, labelOf: options.labelOf || (id => id) };
     onSaved = options.onSaved || null;
+    onClosed = typeof options.onClosed === 'function' ? options.onClosed : null;
+    viewMode = readMode();
+    selectedKey = '';
+    catalogSide = 'primary';
+    catalogSearch = '';
+    valueSearches.clear();
+    valueCache.clear();
     filterName = String(options.filterName || '');
     busy = false;
     message = '';
@@ -1176,6 +1802,7 @@
     host.addEventListener('click', onClick);
     host.addEventListener('change', onChange);
     host.addEventListener('input', onInput);
+    host.addEventListener('keydown', onKeydown);
     host.innerHTML = `<p class="dmfEmpty">${esc(T('Alanlar yükleniyor…', 'Loading fields…'))}</p>`;
 
     templateMessage = '';
@@ -1208,10 +1835,15 @@
         messageTone = 'warn';
       }
     }
+    if (!host) return;
     render();
+    baseline = signature();
     // Motion+ (DESIGN_SYSTEM §6): düzenleyici ortak kart hareketiyle açılır.
     if (host) window.BLMotionPlus?.play?.('card', host);
   }
 
-  window.BLDataFilterEditor = { open, close };
+  // TR/EN: açık düzenleyici dil değişiminde aktif dille yeniden çizilir.
+  function refreshLanguage() { if (host && context) render(); }
+
+  window.BLDataFilterEditor = { open, close, isDirty, isBusy: () => Boolean(host && busy), refreshLanguage };
 })();
