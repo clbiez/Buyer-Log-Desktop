@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Arayüz geçişleri ve dengeli sol navigasyon · daha hızlı PLM Sync",
-    "en": "UI transitions and balanced sidebar navigation · faster PLM Sync"
+    "tr": "Arayüz geçişleri ve dengeli sol navigasyon · daha hızlı PLM Sync · donmayan güncelleme açılışı",
+    "en": "UI transitions and balanced sidebar navigation · faster PLM Sync · freeze-free update startup"
   },
   "summary": {
-    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir. Hover bilgi kutuları ve grafik değer etiketleri seçili temanın renklerini izler. Veri Yönetimi'ndeki CP, Diğer modüller ve INTAKE horizon filtreleri, IAS karşılığını otomatik öneren tek bir çekmecede düzenlenir. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir.",
-    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values. Hover information boxes and chart value labels follow the selected theme colors. CP, Other modules and INTAKE horizon filters in Data Management are edited in a single drawer that suggests IAS counterparts automatically. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data."
+    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir. Hover bilgi kutuları ve grafik değer etiketleri seçili temanın renklerini izler. Veri Yönetimi'ndeki CP, Diğer modüller ve INTAKE horizon filtreleri, IAS karşılığını otomatik öneren tek bir çekmecede düzenlenir. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir. Güncellemeden sonra giriş ekranı açılırken yaşanan donma giderildi. BuyerLog.exe başlar başlamaz görünen açılış bildirimi güncelleme adımlarını gösterir; giriş sonrası açılış perdesi modüller hazır olmadan geçilmez ve Buyer Log'un hangi aşamada olduğunu söyler.",
+    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values. Hover information boxes and chart value labels follow the selected theme colors. CP, Other modules and INTAKE horizon filters in Data Management are edited in a single drawer that suggests IAS counterparts automatically. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data. The freeze while the sign-in screen opened after an update is fixed. The launch notice that appears as soon as BuyerLog.exe starts now lists the update steps; after sign-in the startup curtain cannot be passed before the modules are ready and tells you which stage Buyer Log is in."
   },
   "changes": [
     {
@@ -439,6 +439,64 @@
         "alt": {
           "tr": "PLM Operasyon Merkezi’nde durdurulan PLM BOM ve Artwork işi",
           "en": "A stopped PLM BOM and artwork job in the PLM Operations Center"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "launcher-update-steps-no-freeze",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış ve güncelleme",
+        "en": "Startup and updates"
+      },
+      "title": {
+        "tr": "Güncelleme sonrası açılış donmuyor, adımlar görünüyor",
+        "en": "Post-update startup no longer freezes and shows its steps"
+      },
+      "body": {
+        "tr": "Güncellemeden sonraki ilk açılışta güncelleme altyapısının dosya doğrulaması, giriş ekranı açılırken programı kilitliyordu. Doğrulama artık arka plan iş parçacığında ve açılış yükü bittikten sonra çalışır; aynı klasör ikinci kez taranmaz. BuyerLog.exe başlatıldığı anda görünen bildirim; mevcut ve yeni sürüm doğrulaması, veri yedeği ve etkinleştirme adımlarını, geçen süreyi ve uzun süren adımda kapatmama uyarısını gösterir.",
+        "en": "On the first launch after an update, the update infrastructure's file verification locked the program while the sign-in screen opened. Verification now runs on a background thread after the startup load, and the same folder is not scanned twice. The notice that appears as soon as BuyerLog.exe starts shows current and new version verification, the data backup and activation steps, the elapsed time and a do-not-close warning when a step takes long."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "launcher-update-steps.png",
+        "alt": {
+          "tr": "Güncelleme uygulanırken açılış bildirimi: doğrulama tamamlandı, veriler yedekleniyor",
+          "en": "Launch notice while applying an update: verification done, backing up data"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log açılış bildirimi, izole demo kurulumuyla.",
+          "en": "Actual post-change Buyer Log launch notice with an isolated demo setup."
+        }
+      }
+    },
+    {
+      "id": "startup-curtain-waits-for-modules",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış ekranı",
+        "en": "Startup screen"
+      },
+      "title": {
+        "tr": "Açılış perdesi modüller hazır olunca açılır",
+        "en": "The startup curtain opens when modules are ready"
+      },
+      "body": {
+        "tr": "Giriş sonrası \"Biliyor muydunuz?\" ekranında Devam düğmesi; kullanıcı bilgileri, başlangıç ekranı ve CP, Siparişler ve Koleksiyon modülleri hazırlanmadan görünmez. Hangi aşamada olunduğu ve hangi modülün hazırlandığı (ör. Siparişler 2/3) ekranda yazar. Perde açıkken modüller beklemesiz art arda hazırlanır. Bir modül 90 saniyede bitmezse arka planda tamamlanmak üzere devam etmenize izin verilir; sonradan açılan sekmeler beklemez.",
+        "en": "On the \"Did you know?\" screen after sign-in, Continue appears only when user information, the initial screen and the CP, Orders and Collection modules are ready. The current stage and the module being prepared (e.g. Orders 2/3) are shown on screen. While the curtain is open, modules are prepared back to back. If a module is not done within 90 seconds you may continue while it finishes in the background; tabs opened later do not wait."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-curtain-modules-wait.png",
+        "alt": {
+          "tr": "Açılış perdesi Siparişler modülünü hazırlarken Devam düğmesi olmadan bekliyor",
+          "en": "Startup curtain waiting without Continue while the Orders module is prepared"
         },
         "caption": {
           "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",

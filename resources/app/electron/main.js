@@ -53,6 +53,7 @@ const { runFirstRunMigration, healPortableSettings, readMigrationState } = requi
 const { inspectPortOwner, closePortOwner } = require('./port-owner');
 const { BuyerLogUpdater } = require('./update/updater');
 const { createLauncherHost } = require('./update/launcher-host');
+const { verifyPackagedCoreAsync } = require('./update/core-verify-async');
 const { runInstallRepair, readRepairReport } = require('./install-repair');
 // Onarım raporu için ikinci çekirdek taraması, sunucunun soğuk açılışıyla
 // disk/CPU yarışına girmesin diye ilk ekran açıldıktan sonra başlar.
@@ -528,24 +529,36 @@ function confirmLauncherHealth(attempt = 0) {
 /* Güncelleme altyapısı (launcher) yalnız sağlığı kanıtlanmış ve bütünlüğü
  * doğrulanmış çekirdekten, deneme (trial) bittikten sonra eşitlenir. Eski 1.0/1.1
  * kurulumlar burada bir kez stage-0 host'a geçer; sonraki açılışta yeni
- * launcher etkinleşir. Başarısızlık açılışı etkilemez, güncelleme panelinde görünür. */
+ * launcher etkinleşir. Başarısızlık açılışı etkilemez, güncelleme panelinde görünür.
+ *
+ * Her sürüm yeni bir launcher kimliği taşıdığı için (bootstrap.json kaynak commit'i)
+ * bu eşitleme güncellemeden sonraki İLK açılışta her seferinde çalışır. Ön kontrol
+ * kurulum + etkin çekirdeğin tam SHA-256 taramasıdır (~165 MB × 2). Eskiden sağlık
+ * onayından 5 sn sonra ana süreçte senkron yapılıyor ve tam giriş ekranı açılırken
+ * pencereyi donduruyordu. Tarama artık işçi iş parçacığında yürür ve sunucunun soğuk
+ * açılışıyla disk yarışına girmemek için açılış yükü bittikten sonra başlar. */
+const LAUNCHER_SYNC_AFTER_HEALTH_MS = 45000;
 let launcherHost = null;
 let launcherSyncTimer = null;
-function scheduleLauncherInfrastructureSync(delayMs = 5000) {
-  if (!launcherHost || !app.isPackaged || launcherSyncTimer) return;
+let launcherSyncRunning = false;
+function scheduleLauncherInfrastructureSync(delayMs = LAUNCHER_SYNC_AFTER_HEALTH_MS) {
+  if (!launcherHost || !app.isPackaged || launcherSyncTimer || launcherSyncRunning) return;
   launcherSyncTimer = setTimeout(() => {
     launcherSyncTimer = null;
-    try {
-      if (updater && updater.state().activation) return;
-      const result = launcherHost.install({ sourceCore: APP_CORE_ROOT, sourceVersion: appVersion() });
-      if (result.changed) {
-        log('Güncelleme altyapısı hazırlandı: launcher ' + result.version + ' (sonraki açılışta etkin).');
+    try { if (updater && updater.state().activation) return; } catch (_) { return; }
+    launcherSyncRunning = true;
+    const started = Date.now();
+    void launcherHost.installAsync({ sourceCore: APP_CORE_ROOT, sourceVersion: appVersion() }, { verifyCore: verifyPackagedCoreAsync })
+      .then(result => {
+        if (!result.changed) return;
+        log('Güncelleme altyapısı hazırlandı: launcher ' + result.version + ' (sonraki açılışta etkin) · ' + (Date.now() - started) + ' ms.');
         updateStatusFor('').then(emitUpdateStatus).catch(() => {});
-      }
-    } catch (error) {
-      log('Güncelleme altyapısı yükseltilemedi: ' + (error.code || '') + ' ' + error.message);
-      updateStatusFor('').then(emitUpdateStatus).catch(() => {});
-    }
+      })
+      .catch(error => {
+        log('Güncelleme altyapısı yükseltilemedi: ' + (error.code || '') + ' ' + error.message);
+        updateStatusFor('').then(emitUpdateStatus).catch(() => {});
+      })
+      .finally(() => { launcherSyncRunning = false; });
   }, delayMs);
   if (launcherSyncTimer.unref) launcherSyncTimer.unref();
 }
@@ -3130,7 +3143,7 @@ function bootstrap() {
       scheduleUpdateChecks();
       scheduleShortcutIconSync();
       // Etkin deneme varken eşitleme atlanır ve sağlık onayından sonra yeniden planlanır.
-      scheduleLauncherInfrastructureSync(15000);
+      scheduleLauncherInfrastructureSync();
     });
 
     const started = await startBuyerLog({ beforeWindow: installRepairDone });

@@ -16856,16 +16856,34 @@ function backgroundWarmupSteps(){
     {module:'koleksiyon',enabled:true,ready:()=>collectionCatalogsReady(state.collectionCatalogs),load:()=>ensureCollectionCatalogLoaded({deferRender:true})},
   ];
 }
+/* Açılış perdesi (genel kültür ekranı) ilk pencerede bu ön yükleme bitmeden
+   geçilemez: kullanıcı girişten sonra açacağı modülleri hazır bulur. Perde
+   görünürken kullanıcı ekranla çalışmadığından adımlar arasındaki nezaket
+   beklemesi kısaltılır; perde kapandıktan sonra eski yumuşak tempo sürer.
+   Her adım perdeye "hangi modül hazırlanıyor" bilgisini gönderir. */
+const BACKGROUND_WARMUP_CURTAIN_GAP_MS=60;
+function backgroundWarmupCurtainVisible(){return Boolean(document.getElementById('blBootGuard'));}
+function finishStartupModules(){
+  window.BLBootGuard?.ready?.('modules');
+}
 function scheduleBackgroundModuleWarmup(){
   if(backgroundWarmupStarted)return;backgroundWarmupStarted=true;
   const steps=backgroundWarmupSteps();
-  const idle=fn=>typeof window.requestIdleCallback==='function'?window.requestIdleCallback(fn,{timeout:4000}):setTimeout(fn,0);
+  // Yetkisiz alan, zorunlu kaynak filtresi veya zaten yüklü veri için istek atılmaz.
+  const eligible=step=>step.enabled&&!step.ready()&&window.BLCanAccessArea?.(step.module)===true;
+  const total=steps.filter(eligible).length;let index=0;
+  const gap=()=>backgroundWarmupCurtainVisible()?BACKGROUND_WARMUP_CURTAIN_GAP_MS:BACKGROUND_WARMUP_GAP_MS;
+  const idle=fn=>{
+    if(backgroundWarmupCurtainVisible()||typeof window.requestIdleCallback!=='function'){setTimeout(fn,0);return;}
+    window.requestIdleCallback(fn,{timeout:4000});
+  };
   const next=()=>{
     const step=steps.shift();
-    if(!step){window.BLPerf?.mark?.('BACKGROUND_WARMUP_DONE');window.dispatchEvent(new CustomEvent('bl:background-warmup-done'));return;}
-    // Yetkisiz alan, zorunlu kaynak filtresi veya zaten yüklü veri için istek atılmaz.
-    if(!step.enabled||step.ready()||window.BLCanAccessArea?.(step.module)!==true){next();return;}
+    if(!step){window.BLPerf?.mark?.('BACKGROUND_WARMUP_DONE');window.dispatchEvent(new CustomEvent('bl:background-warmup-done'));finishStartupModules();return;}
+    if(!eligible(step)){next();return;}
+    index++;
     window.BLPerf?.mark?.('BACKGROUND_WARMUP_START',{module:step.module});
+    window.dispatchEvent(new CustomEvent('bl:startup-progress',{detail:{stage:'modules',module:step.module,index,total:Math.max(total,index)}}));
     // Veri zaten bellekteyse (ör. açılış sekmesi CP idi) tablo çizilmiş olabilir; yalnız
     // bu adımda ilk kez yüklenen tablo "çizilmemiş" sayılır.
     const loadedBefore=step.module==='cp'?Boolean(state.cp):step.module==='orders'?Boolean(state.orders):true;
@@ -16874,9 +16892,9 @@ function scheduleBackgroundModuleWarmup(){
       // Kullanıcı yükleme sırasında modüle geçtiyse switchTab çizimi zaten üstlendi.
       if(ok===true&&!loadedBefore&&currentActiveTab()!==step.module)backgroundWarmupUnrendered.add(step.module);
     }).catch(error=>console.warn('Arka plan ön yükleme:',step.module,error))
-      .finally(()=>setTimeout(()=>idle(next),BACKGROUND_WARMUP_GAP_MS));
+      .finally(()=>setTimeout(()=>idle(next),gap()));
   };
-  setTimeout(()=>idle(next),BACKGROUND_WARMUP_GAP_MS);
+  setTimeout(()=>idle(next),gap());
 }
 // Await only the primary projection of the opening screen. Secondary Overview
 // widgets, off-screen modules, images and Excel engines remain on demand.
@@ -16928,7 +16946,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     window.dispatchEvent(new CustomEvent('bl:primary-screen-ready'));
     // Erişim katmanı yüklendikten sonra yalnız yetkili modüller ön yüklenir.
     if(primaryScreenReady)void window.BLPerf._loadScript('user-access-ui.js?rev=APP-UPDATE-V3')
-      .then(scheduleBackgroundModuleWarmup).catch(error=>console.warn('Arka plan ön yükleme başlatılamadı:',error));
+      .then(scheduleBackgroundModuleWarmup).catch(error=>{console.warn('Arka plan ön yükleme başlatılamadı:',error);finishStartupModules();});
     schedulePostUiStartupTasks();
     if(currentActiveTab()==='overview')void ensureOverviewCpDependency();
     if(state.overviewDeferred&&currentActiveTab()==='overview')void ensureOverviewLoaded();

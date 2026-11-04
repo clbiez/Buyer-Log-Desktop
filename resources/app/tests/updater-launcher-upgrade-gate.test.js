@@ -94,6 +94,9 @@ test('stage-0 stays dependency-free and the launcher core has no load-time side 
 test('the desktop main process wires the launcher installer into the updater and syncs only outside a trial',()=>{
   const main=fs.readFileSync(path.join(__dirname,'..','electron','main.js'),'utf8');
   assert.match(main,/updater = new BuyerLogUpdater\(\{\s*launcherHost,/);
-  assert.match(main,/if \(updater && updater\.state\(\)\.activation\) return;\s*const result = launcherHost\.install\(\{ sourceCore: APP_CORE_ROOT, sourceVersion: appVersion\(\) \}\);/);
+  assert.match(main,/try \{ if \(updater && updater\.state\(\)\.activation\) return; \} catch \(_\) \{ return; \}\s*launcherSyncRunning = true;/);
+  // The post-update sync verifies cores off the main thread (it froze the sign-in window).
+  assert.match(main,/launcherHost\.installAsync\(\{ sourceCore: APP_CORE_ROOT, sourceVersion: appVersion\(\) \}, \{ verifyCore: verifyPackagedCoreAsync \}\)/);
+  assert.doesNotMatch(main,/launcherHost\.install\(\{/,'the synchronous installer is not used by the desktop main process');
   assert.match(main,/if \(ok\) \{ launcherHealthConfirmed = true;[^\n]*scheduleLauncherInfrastructureSync\(\);/);
 });

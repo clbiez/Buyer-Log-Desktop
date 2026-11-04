@@ -100,16 +100,17 @@ function createLauncherHost(options={}){
 
   // Geri dönüş hedefi olabilecek çekirdekler yeni launcher'ın açılış
   // doğrulamasından geçmezse geçiş yapılmaz: launcher hiçbir kurulumu açılamaz bırakmaz.
-  function preflight(source){
-    verifyPackagedCore(source.sourceCore,source.sourceVersion);
-    const lifecycle=createLauncherState({bootstrapCore,portableRoot});
-    try{verifyPackagedCore(bootstrapCore,lifecycle.packageVersion(bootstrapCore));}
-    catch(error){throw hostError('UPDATE_LAUNCHER_BOOTSTRAP_UNVERIFIED','Kurulum klasörü dosyaları imzalı paketle eşleşmiyor; güncelleme altyapısı otomatik yükseltilmedi. Temiz imzalı tam paket kurun.','Installation files do not match the signed package; the update infrastructure was not upgraded automatically. Install a clean signed full package.',{cause:error});}
-    const current=lifecycle.currentPointer(),relative=path.relative(lifecycle.versionsRoot,current.appCoreRoot);
-    if(path.resolve(current.appCoreRoot)!==bootstrapCore&&!relative.split(path.sep)[0].startsWith('manual-')){
-      try{verifyPackagedCore(current.appCoreRoot,current.version);}
-      catch(error){throw hostError('UPDATE_LAUNCHER_CURRENT_UNVERIFIED','Çalışan sürümün dosyaları değişmiş; güncelleme altyapısı yükseltilmedi.','Files of the running version changed; the update infrastructure was not upgraded.',{cause:error});}
-    }
+  // Aynı klasör bir kez taranır: çalışan çekirdekten eşitlemede kaynak ile etkin
+  // çekirdek aynıdır; ~165 MB'lık tam SHA-256 taraması iki kez yapılmaz.
+  function preflightChecks(source){
+    const lifecycle=createLauncherState({bootstrapCore,portableRoot}),sourceRoot=path.resolve(source.sourceCore);
+    const checks=[{core:sourceRoot,version:source.sourceVersion,wrap:null}];
+    if(path.resolve(bootstrapCore)!==sourceRoot)checks.push({core:bootstrapCore,version:lifecycle.packageVersion(bootstrapCore),
+      wrap:error=>hostError('UPDATE_LAUNCHER_BOOTSTRAP_UNVERIFIED','Kurulum klasörü dosyaları imzalı paketle eşleşmiyor; güncelleme altyapısı otomatik yükseltilmedi. Temiz imzalı tam paket kurun.','Installation files do not match the signed package; the update infrastructure was not upgraded automatically. Install a clean signed full package.',{cause:error})});
+    const current=lifecycle.currentPointer(),currentRoot=path.resolve(current.appCoreRoot),relative=path.relative(lifecycle.versionsRoot,current.appCoreRoot);
+    if(currentRoot!==path.resolve(bootstrapCore)&&currentRoot!==sourceRoot&&!relative.split(path.sep)[0].startsWith('manual-'))checks.push({core:current.appCoreRoot,version:current.version,
+      wrap:error=>hostError('UPDATE_LAUNCHER_CURRENT_UNVERIFIED','Çalışan sürümün dosyaları değişmiş; güncelleme altyapısı yükseltilmedi.','Files of the running version changed; the update infrastructure was not upgraded.',{cause:error})});
+    return checks;
   }
   function writeLauncherFolder(source){
     ensureDir(managedRoot);
@@ -169,43 +170,70 @@ function createLauncherHost(options={}){
 
   /* Kaynak çekirdeğin launcher'ını kurar. Kaynak, çalışan sağlıklı çekirdek ya da
    * updater'ın imzalı manifest + SHA-256 ile doğruladığı hazırlanmış çekirdektir.
-   * Dönüş: {changed, version, id, restartRequired}. */
-  function install({sourceCore,sourceVersion,force=false,ignoreRecentFailure=false}={}){
-    let source=null;
+   * Dönüş: {changed, version, id, restartRequired}.
+   * install() doğrulamayı çağıran iş parçacığında yapar; installAsync() aynı adımları
+   * verilen eşzamansız doğrulayıcıyla (ör. işçi iş parçacığı) yürütür. Masaüstü ana
+   * süreci açılıştan hemen sonra installAsync kullanır: senkron tarama giriş ekranı
+   * açılırken pencereyi "yanıt vermiyor" durumunda donduruyordu. */
+  function planInstall(ctx,{sourceCore,sourceVersion,force=false,ignoreRecentFailure=false}={}){
+    const source=ctx.source=sourceLauncher(sourceCore,sourceVersion);
+    if(!source)return {result:{changed:false,reason:'no-launcher'}};
+    if(!force&&!needsInstall(source))return {result:{changed:false,version:effectiveVersion(),id:installedLauncher()?.id||runningId}};
+    // Kalıcı engel (değiştirilmiş/yazılamayan kurulum) her açılışta tam
+    // bütünlük taraması yaptırmasın; aynı kaynak için günde bir deneme yeter.
+    const recent=readJsonFile(reportFile)?.lastError;
+    if(!force&&!ignoreRecentFailure&&recent&&recent.sourceId===source.id&&Date.now()-Date.parse(recent.at)<RETRY_AFTER_MS)return {result:{changed:false,skipped:'recent-failure',code:recent.code}};
+    const pointer=readPointer();
+    if(pointer.failed&&pointer.failed[source.id])throw hostError('UPDATE_LAUNCHER_REJECTED','Bu güncelleme altyapısı bu bilgisayarda daha önce açılamadı; önceki altyapı kullanılıyor.','This update infrastructure failed to start on this computer before; the previous one remains in use.');
+    return {source,pointer,force};
+  }
+  function commitInstall({source,pointer,force}){
+    // Bekleme sırasında başka bir yol aynı launcher'ı kurduysa tekrar yazılmaz.
+    if(!force&&installedLauncher()?.id===source.id)return {changed:false,version:effectiveVersion(),id:source.id};
+    const folder=writeLauncherFolder(source);
+    ensureStage0(F.bytes(folder,HOST_ENTRY));
+    const latest=readPointer();
+    if(latest.failed&&latest.failed[source.id])throw hostError('UPDATE_LAUNCHER_REJECTED','Bu güncelleme altyapısı bu bilgisayarda daha önce açılamadı; önceki altyapı kullanılıyor.','This update infrastructure failed to start on this computer before; the previous one remains in use.');
+    const base=latest.schemaVersion===1?latest:pointer;
+    const old=base.current&&verifyManaged(base.current)?base.current:null;
+    const next={schemaVersion:1,
+      current:{id:source.id,version:source.launcherVersion,sourceVersion:source.sourceVersion,files:source.files,installedAt:now(),confirmedAt:null},
+      previous:old&&old.id!==source.id&&old.confirmedAt?old:(base.previous&&verifyManaged(base.previous)?base.previous:null),
+      failed:base.failed&&typeof base.failed==='object'?base.failed:{}};
+    atomicWriteJson(pointerFile,next);
+    try{fs.unlinkSync(path.join(updaterRoot,'launcher-boot.json'));}catch(_){}
+    cleanup(next);
+    report({lastError:null,lastInstall:{id:source.id,version:source.launcherVersion,sourceVersion:source.sourceVersion,at:now()}});
+    return {changed:true,version:source.launcherVersion,id:source.id,restartRequired:true};
+  }
+  function installFailure(error,ctx,sourceVersion){
+    const code=String(error.code||'UPDATE_LAUNCHER_UPGRADE_FAILED');
+    report({lastError:{code:/^UPDATE_/.test(code)?code:'UPDATE_LAUNCHER_UPGRADE_FAILED',message:String(error.message||error).slice(0,500),sourceVersion:String(sourceVersion||''),sourceId:ctx.source?.id||'',at:now()}});
+    return /^UPDATE_/.test(code)?error:Object.assign(error,{code:'UPDATE_LAUNCHER_UPGRADE_FAILED'});
+  }
+  function checkFailure(check,error){return check.wrap?check.wrap(error):error;}
+  function install(options={}){
+    const ctx={source:null};
     try{
-      source=sourceLauncher(sourceCore,sourceVersion);
-      if(!source)return {changed:false,reason:'no-launcher'};
-      if(!force&&!needsInstall(source)){return {changed:false,version:effectiveVersion(),id:installedLauncher()?.id||runningId};}
-      // Kalıcı engel (değiştirilmiş/yazılamayan kurulum) her açılışta tam
-      // bütünlük taraması yaptırmasın; aynı kaynak için günde bir deneme yeter.
-      const recent=readJsonFile(reportFile)?.lastError;
-      if(!force&&!ignoreRecentFailure&&recent&&recent.sourceId===source.id&&Date.now()-Date.parse(recent.at)<RETRY_AFTER_MS)return {changed:false,skipped:'recent-failure',code:recent.code};
-      const pointer=readPointer();
-      if(pointer.failed&&pointer.failed[source.id])throw hostError('UPDATE_LAUNCHER_REJECTED','Bu güncelleme altyapısı bu bilgisayarda daha önce açılamadı; önceki altyapı kullanılıyor.','This update infrastructure failed to start on this computer before; the previous one remains in use.');
-      preflight(source);
-      const folder=writeLauncherFolder(source);
-      ensureStage0(F.bytes(folder,HOST_ENTRY));
-      const old=pointer.current&&verifyManaged(pointer.current)?pointer.current:null;
-      const next={schemaVersion:1,
-        current:{id:source.id,version:source.launcherVersion,sourceVersion:source.sourceVersion,files:source.files,installedAt:now(),confirmedAt:null},
-        previous:old&&old.id!==source.id&&old.confirmedAt?old:(pointer.previous&&verifyManaged(pointer.previous)?pointer.previous:null),
-        failed:pointer.failed&&typeof pointer.failed==='object'?pointer.failed:{}};
-      atomicWriteJson(pointerFile,next);
-      try{fs.unlinkSync(path.join(updaterRoot,'launcher-boot.json'));}catch(_){}
-      cleanup(next);
-      report({lastError:null,lastInstall:{id:source.id,version:source.launcherVersion,sourceVersion:source.sourceVersion,at:now()}});
-      return {changed:true,version:source.launcherVersion,id:source.id,restartRequired:true};
-    }catch(error){
-      const code=String(error.code||'UPDATE_LAUNCHER_UPGRADE_FAILED');
-      report({lastError:{code:/^UPDATE_/.test(code)?code:'UPDATE_LAUNCHER_UPGRADE_FAILED',message:String(error.message||error).slice(0,500),sourceVersion:String(sourceVersion||''),sourceId:source?.id||'',at:now()}});
-      throw /^UPDATE_/.test(code)?error:Object.assign(error,{code:'UPDATE_LAUNCHER_UPGRADE_FAILED'});
-    }
+      const plan=planInstall(ctx,options);if(plan.result)return plan.result;
+      for(const check of preflightChecks(plan.source)){try{verifyPackagedCore(check.core,check.version);}catch(error){throw checkFailure(check,error);}}
+      return commitInstall(plan);
+    }catch(error){throw installFailure(error,ctx,options.sourceVersion);}
+  }
+  async function installAsync(options={},{verifyCore=null}={}){
+    const verify=typeof verifyCore==='function'?verifyCore:async(core,version)=>verifyPackagedCore(core,version);
+    const ctx={source:null};
+    try{
+      const plan=planInstall(ctx,options);if(plan.result)return plan.result;
+      for(const check of preflightChecks(plan.source)){try{await verify(check.core,check.version);}catch(error){throw checkFailure(check,error);}}
+      return commitInstall(plan);
+    }catch(error){throw installFailure(error,ctx,options.sourceVersion);}
   }
   function status(){
     const installed=installedLauncher(),saved=readJsonFile(reportFile);
     return {running:runningVersion,hosted:Boolean(runningHost),installed:installed?installed.version:null,effective:effectiveVersion(),
       restartRequired:Boolean(installed&&installed.id!==runningId),lastError:saved&&saved.lastError||null};
   }
-  return {readLauncherInfo,sourceLauncher,needsInstall,installedLauncher,effectiveVersion,install,status,ensureStage0,pointerFile,managedRoot};
+  return {readLauncherInfo,sourceLauncher,needsInstall,installedLauncher,effectiveVersion,install,installAsync,status,ensureStage0,pointerFile,managedRoot};
 }
 module.exports={createLauncherHost,readLauncherInfo,LAUNCHER_FILES};
