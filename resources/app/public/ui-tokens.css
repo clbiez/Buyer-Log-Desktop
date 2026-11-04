@@ -37,6 +37,7 @@
  --ui-grid-range-top:inset 0 0 0 0 transparent;--ui-grid-range-right:inset 0 0 0 0 transparent;
  --ui-grid-range-bottom:inset 0 0 0 0 transparent;--ui-grid-range-left:inset 0 0 0 0 transparent;
  --ui-scrim:transparent;--ui-backdrop-blur:6px;
+ --ui-backdrop-tint:rgba(0,0,0,.06);--ui-shadow-rail:8px 0 22px -8px rgba(0,0,0,.22);
  /* Shared stack bands. Nested dialogs use 201–299; menus and notices stay above. */
  --ui-z-sticky:30;--ui-z-sticky-column:31;--ui-z-chrome:40;--ui-z-popover:100;--ui-z-modal:200;--ui-z-modal-backdrop:199;--ui-z-rail-backdrop:99;--ui-z-boot:500;
  --ui-z-below:-1;--ui-z-base:0;--ui-z-data:1;--ui-z-raised:2;--ui-z-modal-menu:300;--ui-z-tooltip:400;
@@ -56,6 +57,7 @@
 }
 :root[data-theme="dark"]{
  color-scheme:dark;
+ --ui-backdrop-tint:rgba(0,0,0,.12);--ui-shadow-rail:8px 0 22px -8px rgba(0,0,0,.4);
  --ui-canvas:#171c22;--ui-rail:#14191f;--ui-surface:#20262e;--ui-surface-soft:#252d36;--ui-surface-strong:#303a46;
  --ui-text:#f0f3f6;--ui-text-secondary:#bdc8d4;--ui-text-muted:#a0adba;
  --ui-accent:#8fbfe8;--ui-accent-hover:#acd0ed;--ui-selected:#294056;--ui-selected-ink:#d5eafd;--ui-on-accent:#14202a;

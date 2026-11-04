@@ -17,7 +17,12 @@ test('software compositing removes blur and the table wave but keeps page motion
   const motion=read('public/motion-plus.js'),css=read('public/ui-components.css');
   assert.match(motion,/if\(html\.dataset\.blRender==='software'\)return 0;/);
   assert.match(motion,/if\(profile&&profile\.softwareCompositing===true\)html\.dataset\.blRender='software';/);
-  assert.match(css,/html\[data-bl-render="software"\] \.blWorkspaceBlur\[data-blur\]\{backdrop-filter:none;background:color-mix\(in srgb,var\(--ui-text\) 8%,transparent\);\}/);
+  assert.match(css,/html\[data-bl-render="software"\] \.blWorkspaceBlur\{backdrop-filter:none;\}/);
+  // GPU and software share one black tint. The empty data-blur attribute must
+  // never leave a veil over the closed workspace; active modes explicitly show it.
+  assert.match(css,/\.blWorkspaceBlur\{[^}]*background:var\(--ui-backdrop-tint\);opacity:0;/);
+  for(const mode of ['dialog','rail'])assert.ok(css.includes(`.blWorkspaceBlur[data-blur="${mode}"]{opacity:1;`));
+  assert.doesNotMatch(css,/\.blWorkspaceBlur\[data-blur\]\{/);
   const enterPage=motion.slice(motion.indexOf('function enterPage(view){'),motion.indexOf('function activate(force){'));
   assert.doesNotMatch(enterPage,/blRender/);
 });
