@@ -49,7 +49,7 @@ test('server: imported (CP update) Supp. FOB follows the current contract; a del
 
 test('client: imported Supp. FOB is recalculated from the current rule in every loaded view', () => {
   const src=read('public/app-main.js'),start=src.indexOf('function importedSuppFob(row)'),end=src.indexOf('function applyLicensorRulesToLoadedRows()');
-  const ctx={state:{overrides:{suppfobmap:{'1':7},suppfobmetamap:{'1':{source:'manual',origin:'cpupdate'}}}},normalizeSuppFobMeta:m=>m&&typeof m==='object'?{...m}:null,lineKeyOfRow:()=>'',
+  const ctx={window:{BLCanonicalFields:require('../public/canonical-fields')},state:{overrides:{suppfobmap:{'1':7},suppfobmetamap:{'1':{source:'manual',origin:'cpupdate'}}}},normalizeSuppFobMeta:m=>m&&typeof m==='object'?{...m}:null,lineKeyOfRow:()=>'',
     hasManualSuppFob:()=>true,editableValuesEqual:(a,b)=>a===b,turknorm:v=>String(v||'').toUpperCase(),toNum:Number,automaticSuppFobRuleMeta:r=>r?{source:'rule',ruleId:r.id}:null,priced:{value:9.1,rule:{id:'r'}}};
   ctx.calculateSuppFobFromRule=()=>ctx.priced;vm.createContext(ctx);vm.runInContext(src.slice(start,end),ctx);
   const row={'Order Code':'1','Supp. FOB':7,_suppFobMeta:{source:'manual',origin:'cpupdate'},Licensor:'ERMODA'};

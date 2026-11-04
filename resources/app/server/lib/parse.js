@@ -819,14 +819,14 @@ function pricingRuleSeasonMatches(rule, season) {
   return !!key && seasons.some(v => pricingKeyPart(v) === key);
 }
 // Exact licensor first; a merged licensor name ("ERMODA UK LTD" → "ERMODA") is the fallback.
-function findSuppFobRule(rules, opd, country, season, manufacturer, license, merges) {
+function findSuppFobRule(rules, opd, country, season, manufacturer, license, merges, category) {
   const day = dateOrdinal(opd);
   const countryGroup = pricingCountryGroup(country);
   const ck = pricingKeyPart(license);
-  return BLBusinessRules.findRuleByLicensor(rules, manufacturer, r => {
+  return BLBusinessRules.findRuleByLicensor(BLBusinessRules.prioritizeCategoryRules(rules), manufacturer, r => {
     const start = dateOrdinal(r && r.opdStart), end = dateOrdinal(r && r.opdEnd);
     const dateMatches = (start == null && end == null) || (day != null && (start == null || day >= start) && (end == null || day <= end));
-    return dateMatches && pricingRuleSeasonMatches(r, season) &&
+    return dateMatches && BLBusinessRules.pricingRuleCategoryMatches(r,category) && pricingRuleSeasonMatches(r, season) &&
       BLBusinessRules.pricingRuleCommissionForCountry(r, countryGroup) != null &&
       pricingKeyPart(r && r.license) === ck;
   }, merges, r => r && (r.manufacturer != null ? r.manufacturer : r.licensor), license);
@@ -834,8 +834,8 @@ function findSuppFobRule(rules, opd, country, season, manufacturer, license, mer
 const decimalFraction = BLBusinessRules.decimalFraction;
 const roundFractionHalfUp = BLBusinessRules.roundFractionHalfUp;
 const calculateSuppFobWithRule = BLBusinessRules.calculateSuppFobWithRule;
-function calculateSuppFobByRule(fob, opd, country, season, manufacturer, license, rules, merges) {
-  const rule = findSuppFobRule(rules, opd, country, season, manufacturer, license, merges);
+function calculateSuppFobByRule(fob, opd, country, season, manufacturer, license, rules, merges, category) {
+  const rule = findSuppFobRule(rules, opd, country, season, manufacturer, license, merges, category);
   if (!rule) return { value: null, rule: null };
   return { value: calculateSuppFobWithRule(fob, rule, country), rule };
 }
@@ -2144,7 +2144,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     const hasSuppfobOverride = overrideHas(ov.suppfobmap, o);
     const suppfobOverride = overrideGet(ov.suppfobmap, o);
     const suppFobMeta = normalizeSuppFobMeta(overrideGet(ov.suppfobmetamap || {}, o));
-    const priced = calculateSuppFobByRule(fobRounded, o.opd, o.countryRaw, o.season, licensor, o.license, ov.pricingRules, ov.licensorMerges);
+    const priced = calculateSuppFobByRule(fobRounded, o.opd, o.countryRaw, o.season, licensor, o.license, ov.pricingRules, ov.licensorMerges, o.category);
     // A value imported from a CP update file (or stored without a source) is not a deliberate
     // manual price: the current License Royalty contract wins over it automatically.
     const isImportedSuppFob = hasSuppfobOverride && (!suppFobMeta || suppFobMeta.origin === 'cpupdate');
@@ -2320,7 +2320,7 @@ function buildOrderSummaryRowsFromASAS(asasOrders, antrepoMap, overrides) {
     const fobRounded = isFinite(o.fob) ? roundHalfUp(o.fob, 2) : null;
     const hasSuppfobOverride = overrideHas(ov.suppfobmap, o);
     const suppFobMeta = normalizeSuppFobMeta(overrideGet(ov.suppfobmetamap || {}, o));
-    const priced = calculateSuppFobByRule(fobRounded, o.opd, o.countryRaw, o.season, licensor, o.license, ov.pricingRules, ov.licensorMerges);
+    const priced = calculateSuppFobByRule(fobRounded, o.opd, o.countryRaw, o.season, licensor, o.license, ov.pricingRules, ov.licensorMerges, o.category);
     // A value imported from a CP update file (or stored without a source) is not a deliberate
     // manual price: the current License Royalty contract wins over it automatically.
     const isImportedSuppFob = hasSuppfobOverride && (!suppFobMeta || suppFobMeta.origin === 'cpupdate');
@@ -3606,7 +3606,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
 }
 
 module.exports = {
-  pricingLicensorForLicense, automaticRuleMeta,
+  calculateSuppFobByRule, findSuppFobRule, pricingLicensorForLicense, automaticRuleMeta,
   countryEN,
   parseASASWorkbook, parseASASRows, parseFabricWorkbook, applyFabricEntries, applyFabricEntriesToLflRows, parseAntrepoWorkbook, parseAntrepoRows, parseCPUpdateWorkbook,
   buildCPRowsFromASAS, buildOrdersRowsFromASAS, buildSharedOrderProjectionRowsFromASAS, buildOverviewSummaryRowsFromASAS, buildOrderSummaryRowsFromASAS, buildBacklogOperationalRows, buildBacklogGrouped, buildBacklogDetailRows, buildBacklogTemplateRows, backlogCustomDimensionContext, computeFlags, applyFormulas, deriveOperationalStatus, shouldWaitForRetail, isShortageStatus, isWarehouseShortageStatus, backlogRemainderStatus, findAntrepoHit, findAntrepoHits, backlogOrderQuantityFromAntrepo, backlogProductionRemainder, PRODUCTION_REMAINDER_TOLERANCE_RATE, SHORTAGE_REMAINDER_RATE, SHORTAGE_STATUS, WAREHOUSE_STATUS, WAREHOUSE_SHORTAGE_STATUS, BACKLOG_DIM_LABELS,

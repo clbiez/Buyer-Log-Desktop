@@ -46,7 +46,7 @@ test('Supp. FOB quick calculator in real Buyer Log',async t=>{
       await page.locator('[data-preview-copy]').click();
       await page.waitForFunction(async()=>await navigator.clipboard.readText()==='2,50');
       assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'2,50');
-      assert.equal(await snapshot(),before);assert.equal(writes.length,writeCount);
+      assert.equal(await snapshot(),before);assert.equal(writes.length,writeCount,JSON.stringify(writes.slice(writeCount)));
       assert.deepEqual(await page.evaluate(()=>[...state.cpSelected]),[1]);
       if(process.env.SUPP_FOB_SCREENSHOT){
         // Allow shared Motion+ and transient startup/copy notifications to settle.

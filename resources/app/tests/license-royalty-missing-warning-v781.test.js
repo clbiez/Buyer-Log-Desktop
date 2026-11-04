@@ -151,6 +151,7 @@ test('Koleksiyon: Non-DTR + kural VAR → FOB royalty ile hesaplanır', () => {
 
 function loadSuppFobRuleMissing({ rule = null, manual = false } = {}) {
   return loadFn('suppFobRuleMissing', {
+    window:{BLCanonicalFields:require('../public/canonical-fields')},
     turknorm,
     hasManualSuppFob: () => manual,
     findSuppFobRule: () => rule,

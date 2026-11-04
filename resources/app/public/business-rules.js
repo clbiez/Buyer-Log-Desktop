@@ -730,6 +730,26 @@
     return out.sort((a, b) => a.localeCompare(b, 'tr'));
   }
 
+  // Empty scope is the existing general contract; specific categories override it.
+  const pricingRuleCategories = rule => normalizeRoyaltySeasons(rule && rule.categories);
+  function pricingRuleCategoryMatches(rule, category) {
+    const values = pricingRuleCategories(rule);
+    return !values.length || values.some(value => turkNorm(value) === turkNorm(category));
+  }
+  function pricingRuleCategoryScopesOverlap(a, b) {
+    const aa=pricingRuleCategories(a),bb=pricingRuleCategories(b);
+    if (!aa.length || !bb.length) return !aa.length && !bb.length;
+    return aa.some(value => bb.some(other => turkNorm(value) === turkNorm(other)));
+  }
+  function restoreOmittedCategoryScopes(incoming,existing){
+    const byId=new Map((existing||[]).map(rule=>[String(rule.id),rule]));
+    return Array.isArray(incoming)?incoming.map(rule=>rule&&typeof rule==='object'&&!Object.hasOwn(rule,'categories')&&byId.has(String(rule.id))
+      ?{...rule,categories:pricingRuleCategories(byId.get(String(rule.id)))}:rule):incoming;
+  }
+  function prioritizeCategoryRules(rules) {
+    return [...(rules || [])].sort((a,b)=>Number(!!pricingRuleCategories(b).length)-Number(!!pricingRuleCategories(a).length));
+  }
+
   function royaltyMigrationConditionKey(rule) {
     return [
       norm(rule && rule.opdStart),
@@ -737,6 +757,7 @@
       normalizeRoyaltySeasons(rule && rule.seasons != null ? rule.seasons : rule && rule.season).map(turkNorm).join('~'),
       turkNorm(rule && (rule.licensor != null ? rule.licensor : rule.manufacturer)),
       turkNorm(rule && rule.license),
+      pricingRuleCategories(rule).map(turkNorm).join("~"),
     ].join('|');
   }
 
@@ -970,6 +991,7 @@
     pricingRuleCommissionForCountry,
     pricingRuleEffectiveRoyalty,
     pricingRuleHologramForCountry,
+    restoreOmittedCategoryScopes, pricingRuleCategories, pricingRuleCategoryMatches, pricingRuleCategoryScopesOverlap, prioritizeCategoryRules,
     migrateLicenseRoyaltyRules,
     decimalFraction,
     roundFractionHalfUp,

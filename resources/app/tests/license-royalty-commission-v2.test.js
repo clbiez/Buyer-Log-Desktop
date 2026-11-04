@@ -50,20 +50,19 @@ test('tek taraflı eski kayıt diğer ülkeye yanlışlıkla uygulanmaz', () => 
   assert.equal(rules.calculateFinalFobWithRule(1, rule, 'TR'), null);
 });
 
-test('arayüz ülke satırını kaldırır, TR/YD komisyon ve çift Final FOB gösterir', () => {
-  assert.match(INDEX, /license-royalty-commissions\.js/);
-  assert.match(UI, /id="_ruleTrCommission"/);
-  assert.match(UI, /id="_ruleYdCommission"/);
-  assert.match(UI, /id="_ruleCheckFinalYd"/);
-  assert.match(UI, /id="_ruleCheckFinalTr"/);
-  assert.doesNotMatch(UI, /id="_ruleCountry"/);
-  assert.match(UI, /Royalty % \+ Ülke Komisyonu %/);
+test('unified cards expose country commissions and both Final FOB directions', () => {
+  const cards=fs.readFileSync(path.join(ROOT,'public/license-cards.js'),'utf8');
+  assert.match(INDEX,/license-royalty-commissions\.js/);
+  assert.match(cards,/num\('trCommission','%'\)/);assert.match(cards,/num\('ydCommission','%'\)/);
+  assert.match(cards,/lcQuickYd/);assert.match(cards,/lcQuickTr/);
+  assert.match(UI,/switchTab\('licensecards'\)/);
+  assert.doesNotMatch(UI,/id="_ruleCountry"|id="_suppFobRulesModal"/);
 });
 
 test('sunucu yeni komisyon alanlarını saklar ve countryGroup zorunluluğunu kaldırır', () => {
   const start = SERVER.indexOf("app.put('/api/pricing-rules'");
   const end = SERVER.indexOf('const normalizeTransitDelType', start);
-  assert.match(SERVER.slice(start,end), /resource-rule-service[^\n]*normalizePricingRules\(incoming\)/);
+  assert.match(SERVER.slice(start,end), /resource-rule-service[^\n]*normalizePricingRules\(incoming,\{existing:before\.pricingRules/);
   const block = fs.readFileSync(path.join(ROOT,'server/lib/resource-rule-service.js'),'utf8');
   assert.match(block, /migrateLicenseRoyaltyRules\(incoming\)/);
   assert.match(block, /trCommission: nullablePercent\(r\.trCommission\)/);

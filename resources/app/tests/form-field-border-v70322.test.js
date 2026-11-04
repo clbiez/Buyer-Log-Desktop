@@ -38,10 +38,8 @@ test('value-showing custom pickers share the field boundary; grid cell triggers 
   for(const cell of ['clStatusTrigger','delTypeTrigger','impTrigger','kolPeriodPickerBtn'])assert.doesNotMatch(body,new RegExp(cell));
 });
 
-test('License Royalty dialog renders its own TR/EN pairs instead of the dictionary fallback',()=>{
-  const src=read('license-royalty-commissions.js'),a=src.indexOf("const T=(tr,en)=>appLang==='en'?en:tr;"),b=src.indexOf('function renderRules(){');
-  assert.ok(a>0&&b>a);const end=src.indexOf('\n',b),modal=src.slice(a,end);
-  for(const pair of ["T('Uygula','Apply')","T('TR Komisyon %','TR Commission %')","T('YD Komisyon %','Overseas Commission %')","T('Kuralları Kaydet','Save Rules')","T('Tümüne Uygula','Apply to All')"])assert.ok(modal.includes(pair),pair);
-  // Görünen Türkçe metin yalnız T(...) çiftinde ya da appLang dalında kalır.
-  assert.doesNotMatch(stripPairs(modal),/>[^<>{}]*[çğıöşüÇĞİÖŞÜ][^<>{}]*</);
+test('unified license royalty workspace renders direct TR/EN pairs',()=>{
+  const src=read('license-cards.js');
+  for(const pair of ["T('Uygula','Apply')","T('TR kom.','TR comm.')","T('YD kom.','Intl comm.')","T('Kaydet','Save')","T('Tümüne uygula','Apply to all')","T('Kategori oranı ekle','Add category rates')"])assert.ok(src.includes(pair),pair);
+  assert.doesNotMatch(stripPairs(src),/>[^<>{}]*[çğıöşüÇĞİÖŞÜ][^<>{}]*</);
 });
