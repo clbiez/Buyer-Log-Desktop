@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-03",
+  "publishedAt": "2026-11-04",
   "bootstrapVisual": false,
   "title": {
     "tr": "Belge Operasyon Merkezi ve rapor doğruluğu",
@@ -11,6 +11,35 @@
     "en": "Focus View opens from CP Tools, bringing the model image, LCW AI comments and report details together; reviews can be resumed from history."
   },
   "changes": [
+    {
+      "id": "row-note-copy-spacing",
+      "type": "fix",
+      "module": {
+        "tr": "Satır notları · Pano",
+        "en": "Row notes · Clipboard"
+      },
+      "title": {
+        "tr": "Notlar fazladan boş satır olmadan kopyalanır",
+        "en": "Notes copy without extra blank lines"
+      },
+      "body": {
+        "tr": "Sipariş, Koleksiyon ve Not Defteri düzenleyicilerinden seçili metin kopyalanırken baştaki ve sondaki boş satırlar temizlenir. Not içindeki satır araları, kısmi seçim, metin biçimi ve görseller korunur; kayıtlı not değiştirilmez.",
+        "en": "Copying selected content from the Order, Collection and Notebook editors removes leading and trailing blank lines. Internal line breaks, partial selections, text formatting and images are preserved; the saved note is unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "row-note-copy-spacing.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Not Defterine satır notundan yapıştırılan asd metni",
+          "en": "The asd text pasted from a row note into the actual Buyer Log Notebook"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, yalnız demo veri. İki baş ve bir son boş satır içeren not kopyalanıp Not Defterine yapıştırıldı; sonuç tek satır asd.",
+          "en": "Actual post-change application with demo data only. A note with two leading and one trailing blank line was copied and pasted into Notebook; the result is a single asd line."
+        }
+      }
+    },
     {
       "id": "excel-split-buttons",
       "type": "improvement",
