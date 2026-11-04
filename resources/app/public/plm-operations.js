@@ -22,6 +22,7 @@
 
   const KIND_LABEL = {
     'plm-sync': { tr: 'PLM verisi', en: 'PLM data' },
+    'plm-bom': { tr: 'PLM BOM ve Artwork', en: 'PLM BOM and artwork' },
     'plm-links': { tr: 'Model linki', en: 'Model links' },
     'plm-images': { tr: 'Model görseli', en: 'Model images' },
     'plm-files': { tr: 'Teknik föy', en: 'Technical sheets' },

@@ -24,7 +24,15 @@ const { extractJsonObject } = require('./lcwai/lcwai-prompt');
 
 const BOM_FETCH_CONCURRENCY = 5;
 const MAX_AI_PER_SYNC = 50;
+/* LCW AI motoru kullanıcı başına sınırlı sayıda eşzamanlı istek kabul eder
+   (lcwai-config LIMITS.maxConcurrentPerOwner). BOM analizi bir slotu her
+   zaman kullanıcının kendi LCW AI sohbetine bırakır. */
+const AI_CONCURRENCY = 2;
+const AI_BUSY_RETRIES = 4;
+const AUTH_ERROR_CODES = new Set(['CORENECTUM_API_TOKEN_INVALID', 'CORENECTUM_API_TOKEN_REQUIRED']);
 
+function isAuthError(error) { return Boolean(error && AUTH_ERROR_CODES.has(error.code)); }
+function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 function clean(value, max = 500) {
   return String(value == null ? '' : value).replace(/[\u0000\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 }
@@ -70,6 +78,18 @@ function aiTask(analysis) {
   ].join('\n');
 }
 
+async function askWithBusyRetry(engine, ownerId, input, options) {
+  for (let attempt = 0; ; attempt += 1) {
+    try { return await engine.ask(ownerId, input); }
+    catch (error) {
+      // Başka bir LCW AI isteği slotu tutuyorsa bekleyip yeniden denenir.
+      const busy = error && error.code === 'LCWAI_BUSY';
+      if (!busy || attempt >= AI_BUSY_RETRIES || (typeof options.isCancelled === 'function' && options.isCancelled())) throw error;
+      await wait((Number(options.aiBusyDelayMs) >= 0 ? Number(options.aiBusyDelayMs) : 1500) * (attempt + 1));
+    }
+  }
+}
+
 async function consultAi(ownerId, analysis, options) {
   const engine = options.aiEngine || getDefaultEngine();
   // Yalnız gerçekten belirsiz BOM için; ana PLM isteğini tekrar çalıştırmaz.
@@ -87,7 +107,7 @@ async function consultAi(ownerId, analysis, options) {
     placement: item.placement,
     printType: item.printType,
   }));
-  const result = await engine.ask(ownerId, {
+  const result = await askWithBusyRetry(engine, ownerId, {
     source: 'plm-bom',
     task: aiTask(analysis),
     context: {
@@ -97,7 +117,7 @@ async function consultAi(ownerId, analysis, options) {
     },
     lang: options.language === 'en' ? 'en' : 'tr',
     reasoningLevel: 'High',
-  });
+  }, options);
   const parsed = extractJsonObject(result && result.text);
   if (!parsed) throw Object.assign(new Error('LCW AI BOM analizi geçerli JSON döndürmedi.'), { code: 'PLM_BOM_AI_INVALID_JSON' });
   return { parsed, result };
@@ -151,9 +171,16 @@ async function syncPlmBoms(records, options = {}) {
   const fetched = [];
   const failed = [];
   const recordOverrides = new Map();
+  const isCancelled = typeof options.isCancelled === 'function' ? options.isCancelled : () => false;
+  /* Oturum düşerse kalan her BOM aynı 401'i alır: ilk yetki hatasında yeni
+     istek başlatılmaz. İptalde de öyle. Tamamlanan BOM'lar yine kaydedilir. */
+  let authError = null;
+  const stopped = () => Boolean(authError) || isCancelled();
+  const skipped = [];
   let done = 0;
 
   await mapLimit(targets, Number(options.fetchConcurrency) || BOM_FETCH_CONCURRENCY, async target => {
+    if (stopped()) { skipped.push(target); return; }
     try {
       if (setStyleApi.isSetStyle(target.productType)) {
         const associationPayload = await getJson(
@@ -215,6 +242,7 @@ async function syncPlmBoms(records, options = {}) {
         fetched.push({ target, kind: 'single', analysis: { ...analysis, styleId: target.styleId }, fingerprint: analysis.fingerprint });
       }
     } catch (error) {
+      if (isAuthError(error)) { authError = authError || error; skipped.push(target); return; }
       failed.push({
         plmId: target.plmId,
         styleId: target.styleId,
@@ -242,6 +270,7 @@ async function syncPlmBoms(records, options = {}) {
     let ai = { status: 'not-needed', model: '', consultedAt: null, confidence: '', notes: [], error: '' };
     if (!next.needsAi) return { analysis: next, ai };
     if(options.allowAi===false)return {analysis:next,ai:{...ai,status:'deferred',error:'AI not authorized for this sync.'}};
+    if (stopped()) return { analysis: next, ai: { ...ai, status: 'deferred', error: authError ? 'CoreNectum authorization ended during this sync.' : 'Sync cancelled before AI consultation.' } };
     if (aiConsulted >= maxAiPerSync) {
       return { analysis: next, ai: { ...ai, status: 'deferred', error: 'AI consultation limit reached for this sync.' } };
     }
@@ -277,7 +306,7 @@ async function syncPlmBoms(records, options = {}) {
     return { analysis: next, ai };
   }
 
-  for (const item of fetched) {
+  await mapLimit(fetched, Math.max(1, Number(options.aiConcurrency) || AI_CONCURRENCY), async item => {
     const { target } = item;
     const old = snapshot.models && snapshot.models[target.plmId];
 
@@ -307,7 +336,7 @@ async function syncPlmBoms(records, options = {}) {
           })),
         });
       }
-      continue;
+      return;
     }
 
     let entry;
@@ -420,6 +449,19 @@ async function syncPlmBoms(records, options = {}) {
     if (entry.hasPrint) withPrint += 1;
     entries.set(target.plmId, entry);
     toSave.push(entry);
+  });
+
+  /* Yetki biterse işlenemeyen modeller kullanıcıya görünür biçimde
+     raporlanır; iptalde atlananlar hata sayılmaz. */
+  if (authError) {
+    for (const target of skipped) {
+      failed.push({
+        plmId: target.plmId,
+        styleId: target.styleId,
+        code: clean(authError.code, 80),
+        error: clean(authError.message, 500) || 'CoreNectum yetkilendirmesi sona erdi.',
+      });
+    }
   }
 
   /* Fetch hatası eski başarılı kaydı SİLMEZ; UI son bilinen kanıtı göstermeye
@@ -437,6 +479,9 @@ async function syncPlmBoms(records, options = {}) {
   options.assertAuthority?.();
   const saved = toSave.length ? store.saveResults(toSave) : { written: 0, revision: snapshot._revision || 0, updatedAt: snapshot._updatedAt || null };
   return {
+    stopped: authError ? 'auth' : isCancelled() ? 'cancelled' : null,
+    stopError: authError,
+    skipped: skipped.length,
     requested: targets.length,
     fetched: fetched.length,
     changed: toSave.length,
@@ -455,6 +500,8 @@ async function syncPlmBoms(records, options = {}) {
 module.exports = {
   BOM_FETCH_CONCURRENCY,
   MAX_AI_PER_SYNC,
+  AI_CONCURRENCY,
+  isAuthError,
   targetsFromRecords,
   aggregateSetFingerprint,
   aiTask,

@@ -21,7 +21,7 @@
   const PLM_KEY = 'artworkDetailPlm';
   const FRESH_MS = 20000;
   const BATCH = 500;
-  const state = { cache: new Map(), meta: new Map(), fetchedAt: 0, inflight: null, timer: 0, patchedRender: false, bound: false, rendering: false };
+  const state = { cache: new Map(), meta: new Map(), fetchedAt: 0, revision: 0, inflight: null, timer: 0, patchedRender: false, bound: false, rendering: false };
 
   const isEn = () => String(document.documentElement.lang || '').toLowerCase().startsWith('en')
     || (typeof global.appLang !== 'undefined' && global.appLang === 'en');
@@ -129,21 +129,36 @@
     }
     return ids;
   }
+  async function postBatch(body) {
+    const response = await fetch('/api/plm-sync/bom/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      body: JSON.stringify(body),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.ok) throw new Error(payload.error || response.statusText);
+    return payload;
+  }
   async function fetchEntries(ids) {
     const list = [...ids];
     const out = {};
+    let revision = 0;
     for (let i = 0; i < list.length; i += BATCH) {
-      const response = await fetch('/api/plm-sync/bom/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        cache: 'no-store',
-        body: JSON.stringify({ plmIds: list.slice(i, i + BATCH) }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload.ok) throw new Error(payload.error || response.statusText);
+      const payload = await postBatch({ plmIds: list.slice(i, i + BATCH) });
+      // Partiler arasında depo yazılırsa en eski revision saklanır (temkinli).
+      const current = Number(payload.revision) || 0;
+      revision = i === 0 ? current : Math.min(revision, current);
       Object.assign(out, payload.entries || {});
     }
-    return out;
+    return { entries: out, revision };
+  }
+  /* Bayatlık süresi dolduğunda bütün ID'leri yeniden çekmeden önce depo
+     revision'ı sorulur; depo yazılmadıysa elimizdeki özetler günceldir. */
+  async function unchangedSince(revision) {
+    if (!revision) return false;
+    try { return Boolean((await postBatch({ plmIds: [], ifRevision: revision })).notModified); }
+    catch (_) { return false; }
   }
   /* BOM özetlerini yerel depodan tazeler (uzak PLM/AI çağrısı yapmaz).
      Değer değiştiyse Koleksiyon yeniden çizilir. */
@@ -156,12 +171,16 @@
     if (!ids.size) return Promise.resolve(project());
     state.inflight = (async () => {
       try {
-        const entries = await fetchEntries(ids);
+        if (stale && !options.force && !missingIds().size && await unchangedSince(state.revision)) {
+          state.fetchedAt = Date.now();
+          return project();
+        }
+        const { entries, revision } = await fetchEntries(ids);
         for (const id of ids) {
           state.cache.set(id, entries[id] || null);
           state.meta.set(id, entries[id] || null);
         }
-        if (stale) state.fetchedAt = Date.now();
+        if (stale) { state.fetchedAt = Date.now(); state.revision = revision; }
       } catch (_) {
         return 0;
       } finally {

@@ -1,14 +1,73 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Daha hızlı PLM Sync",
+    "en": "Faster PLM Sync"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir.",
+    "en": "The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "plm-sync-two-phase",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · PLM Sync",
+        "en": "Collection · PLM Sync"
+      },
+      "title": {
+        "tr": "PLM Sync önizlemesi BOM’u beklemeden açılır",
+        "en": "PLM Sync preview opens without waiting for BOM"
+      },
+      "body": {
+        "tr": "Model alanları PLM’den gelir gelmez önizleme açılır ve onayınızla uygulanır. BOM okuma ve LCW AI baskı analizi PLM Operasyon Merkezi’nde “PLM BOM ve Artwork” işi olarak arka planda sürer; bitince Artwork Detayı kendiliğinden güncellenir. Set Style kumaş bilgisi yine önizlemeden önce okunur. PLM partileri ve LCW AI danışmaları sınırlı paralellikle yürür; Artwork sütunu yalnız gereken özet veriyi okur ve değişmeyen veriyi yeniden taşımaz.",
+        "en": "The preview opens as soon as model fields arrive from PLM and is applied with your approval. BOM reading and LCW AI print analysis continue in the background as a “PLM BOM and artwork” job in the PLM Operations Center; Artwork Detail refreshes automatically when it finishes. Set Style fabric is still read before the preview. PLM batches and LCW AI consultations run with bounded parallelism; the Artwork column reads only the summary it needs and does not re-send unchanged data."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-sync-two-phase.png",
+        "alt": {
+          "tr": "PLM Sync alanları uygulandı, PLM BOM ve Artwork işi arka planda sürüyor",
+          "en": "PLM Sync fields applied while the PLM BOM and artwork job runs in the background"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "plm-sync-stop-and-session",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · PLM Sync",
+        "en": "Collection · PLM Sync"
+      },
+      "title": {
+        "tr": "Durdur PLM Sync’i gerçekten durdurur",
+        "en": "Stop really stops PLM Sync"
+      },
+      "body": {
+        "tr": "PLM Operasyon Merkezi’nde Durdur’a basıldığında yeni PLM ve LCW AI isteği başlatılmaz; o ana kadar okunan BOM’lar korunur. CoreNectum oturumu iş sırasında biterse kalan istekler boşuna gönderilmez, okunanlar kaydedilir ve iş açık bir hatayla biter. Süresi dolmak üzere olan masaüstü oturumu için, uzun bir PLM işi başlamadan sessiz yenileme denenir.",
+        "en": "Pressing Stop in the PLM Operations Center starts no new PLM or LCW AI requests, and BOMs read so far are kept. If the CoreNectum session ends mid-job, the remaining requests are not sent in vain, the BOMs already read are saved and the job ends with a clear error. For a desktop session close to expiry, a silent refresh is attempted before a long PLM job starts."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-sync-stop.png",
+        "alt": {
+          "tr": "PLM Operasyon Merkezi’nde durdurulan PLM BOM ve Artwork işi",
+          "en": "A stopped PLM BOM and artwork job in the PLM Operations Center"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    }
+  ]
 }

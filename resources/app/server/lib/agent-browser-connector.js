@@ -2241,7 +2241,8 @@ async function collectCoreNectumStyleLinksDirect(ownerId,candidates,options,trai
       const next=fallbacks.find(size=>size<codes.length&&size>0);
       /* Match PLM_Image_Test_v2: auth failures are terminal, while transport/
          HTTP/batch failures step down 100 -> 50 -> 20 before giving up. */
-      const authFailure=error&&['CORENECTUM_API_TOKEN_INVALID','CORENECTUM_API_TOKEN_REQUIRED'].includes(error.code);
+      // İptal de bölünmez: her alt parti aynı iptal hatasını verirdi.
+      const authFailure=error&&['CORENECTUM_API_TOKEN_INVALID','CORENECTUM_API_TOKEN_REQUIRED','PLM_JOB_CANCELLED'].includes(error.code);
       if(!authFailure&&next){for(const child of coreNectumStyleApi.splitBatches(codes,next))await scanBatch(child);return;}
       throw error;
     }
@@ -2249,7 +2250,14 @@ async function collectCoreNectumStyleLinksDirect(ownerId,candidates,options,trai
     if(typeof options?.onProgress==='function')await Promise.resolve(options.onProgress({phase:'PLM verisi alınıyor',current:Math.min(processed,requested.length),total:requested.length,model:codes[codes.length-1]||''})).catch(()=>{});
   };
   try{
-    for(const batch of coreNectumStyleApi.splitBatches(requested,coreNectumStyleApi.STYLE_LIST_BATCH_SIZE))await scanBatch(batch);
+    /* Partiler sınırlı eşzamanlılıkla sorulur. Partiler ayrık PLM kümeleri
+       taşıdığı için sonuç sırası eşlemeyi etkilemez; ilk hatadan sonra yeni
+       parti başlatılmaz ve hata aynen yükseltilir. */
+    const batches=coreNectumStyleApi.splitBatches(requested,coreNectumStyleApi.STYLE_LIST_BATCH_SIZE);
+    let cursor=0,firstError=null;
+    const worker=async()=>{while(!firstError&&cursor<batches.length){const batch=batches[cursor++];try{await scanBatch(batch);}catch(error){firstError=firstError||error;}}};
+    await Promise.all(Array.from({length:Math.min(Math.max(1,Number(coreNectumStyleApi.STYLE_LIST_CONCURRENCY)||1),batches.length)},worker));
+    if(firstError)throw firstError;
     const links=[],failed=[];
     for(const plmId of requested){
       if(ambiguous.has(plmId)){failed.push({plmId,error:'Aynı PLM ID için birden fazla çelişen CoreNectum kaydı bulundu.',code:'CORENECTUM_STYLE_AMBIGUOUS'});continue;}
