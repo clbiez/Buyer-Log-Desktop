@@ -27996,7 +27996,7 @@ function renderKolSummaryFooter(table,rows,descriptors,{pictureVisible=false}={}
     if(d.kind==='base'&&d.k==='ydLanded'){cells.push(kolAverageFooter(ydLandedAvg,ydLandedArithmetic,L('Overseas Landed'),{weightedChangePct:ydLandedWeightedChange}));return;}
     if(d.kind==='base'&&d.k==='trLanded'){cells.push(kolAverageFooter(trLandedAvg,trLandedArithmetic,L('TR Landed')));return;}
     if(d.kind==='base'&&d.k==='quantity'){cells.push(`<td class="quantityTotalValue" title="${escapeHtml(appLang==='en'?'Filtered quantity total':'Filtrelenmiş adet toplamı')}">${formatQuantityTotal(quantityTotal)}</td>`);return;}
-    if(!modelPlaced&&((d.kind==='base'&&d.k==='modelKod')||!descriptors.some(x=>x.kind==='base'&&x.k==='modelKod'))&&!metricDescriptor(d)){cells.push(`<td class="collectionModelCount">${escapeHtml(modelText)}</td>`);modelPlaced=true;return;}
+    if(!modelPlaced&&((d.kind==='base'&&d.k==='modelKod')||!descriptors.some(x=>x.kind==='base'&&x.k==='modelKod'))&&!metricDescriptor(d)){cells.push(`<td class="collectionModelCount"><span>${escapeHtml(modelText)}</span></td>`);modelPlaced=true;return;}
     cells.push('<td></td>');
   });
   foot.innerHTML=`<tr class="collectionSummaryRow">${cells.join('')}</tr>`;
