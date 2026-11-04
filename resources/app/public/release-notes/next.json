@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Belge Operasyon Merkezi ve rapor doğruluğu",
-    "en": "Document Operations Center and report accuracy"
+    "tr": "Lisans kartları, belge operasyonları ve rapor doğruluğu",
+    "en": "License cards, document operations and report accuracy"
   },
   "summary": {
-    "tr": "CP Araçlar menüsünden açılan Odak Görünümü, model görselini, LCW AI yorumunu ve rapor detaylarını bir araya getirir; incelemeler geçmişten sürdürülebilir.",
-    "en": "Focus View opens from CP Tools, bringing the model image, LCW AI comments and report details together; reviews can be resumed from history."
+    "tr": "Royalty işlemleri Lisans Kartlarında birleşir; manuel kartlar, kategori oranları ve hızlı FOB hesabı eklenir. CP Araçlar menüsünden açılan Odak Görünümü, model görselini, LCW AI yorumunu ve rapor detaylarını bir araya getirir; incelemeler geçmişten sürdürülebilir.",
+    "en": "Royalty operations are unified in License Cards with manual cards, category rates and a quick FOB calculator. Focus View opens from CP Tools, bringing the model image, LCW AI comments and report details together; reviews can be resumed from history."
   },
   "changes": [
     {
@@ -37,6 +37,122 @@
         "caption": {
           "tr": "Değişiklik sonrası gerçek uygulama, yalnız demo veri. İki baş ve bir son boş satır içeren not kopyalanıp Not Defterine yapıştırıldı; sonuç tek satır asd.",
           "en": "Actual post-change application with demo data only. A note with two leading and one trailing blank line was copied and pasted into Notebook; the result is a single asd line."
+        }
+      }
+    },
+    {
+      "id": "license-cards-unified-royalty",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans Kartları",
+        "en": "License Cards"
+      },
+      "title": {
+        "tr": "Royalty işlemleri Lisans Kartlarında birleştirildi",
+        "en": "Royalty operations are unified in License Cards"
+      },
+      "body": {
+        "tr": "Royalty Calculations bağlantıları artık Lisans Kartlarını açar. Aynı sözleşme kayıtları, geçmiş dönemler ve ülkeye özel eski hologram tutarları korunur. Sözleşme tablosunda sütun filtreleri, sıralama, eşleşen CP sayısı, Uygula, Tümüne uygula ve açık sözleşme silme işlemleri bulunur; birleşik lisansör adlarının kartları ayrıca düzenlenebilir. Silme yalnız açık seçim ve güncel kart doğrulamasıyla yapılır.",
+        "en": "Royalty Calculations links now open License Cards. The same contract records, historical periods and legacy country-specific hologram amounts are retained. The contract table includes column filters, sorting, CP match counts, Apply, Apply to all and explicit contract deletion; cards belonging to merged licensor names can be edited separately. Deletion requires an explicit choice and a current card token."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-contracts.png",
+        "alt": {
+          "tr": "Gerçek Lisans Kartları sözleşme tablosunda kategori oranları, filtreler, sıralama ve hesaplama işlemleri",
+          "en": "Actual License Cards contract table with category rates, filters, sorting and calculation actions"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; yalnız demo veri. Kaydetme, çakışmada taslağı koruma, arama, hesaplama ve iki dilde arayüz tarayıcıda kontrol edildi.",
+          "en": "Actual post-change Buyer Log using only demo data. Saving, draft preservation on conflicts, search, calculation and both interface languages were checked in the browser."
+        }
+      }
+    },
+    {
+      "id": "license-cards-manual-create",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans Kartları",
+        "en": "License Cards"
+      },
+      "title": {
+        "tr": "Lisans kartı elle eklenebilir",
+        "en": "License cards can be added manually"
+      },
+      "body": {
+        "tr": "Yeni lisans kartı düğmesinden lisans adı ve isteğe bağlı lisansör girilerek kart oluşturulur; ASAS kaydı beklenmez. Aynı kart ikinci kez eklenemez. Kart, diğer kartları ve sözleşmeleri değiştirmeden ortak kayıt ve eşitleme yoluyla saklanır.",
+        "en": "New license card creates a card from a license name and optional licensor without waiting for an ASAS record. Duplicate cards are rejected. Creation uses the shared persistence and synchronization path while retaining other cards and contracts."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-manual.png",
+        "alt": {
+          "tr": "Yeni lisans kartı formu ve mevcut kategori sözleşmeleri",
+          "en": "New license card form alongside existing category contracts"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; yalnız demo veri. Kaydetme, çakışmada taslağı koruma, arama, hesaplama ve iki dilde arayüz tarayıcıda kontrol edildi.",
+          "en": "Actual post-change Buyer Log using only demo data. Saving, draft preservation on conflicts, search, calculation and both interface languages were checked in the browser."
+        }
+      }
+    },
+    {
+      "id": "license-cards-fixed-tools-search-calculator",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans Kartları",
+        "en": "License Cards"
+      },
+      "title": {
+        "tr": "Üst araçlar, tablo içi kaydırma ve minimal FOB hesabı",
+        "en": "Top actions, internal table scrolling and a minimal FOB calculator"
+      },
+      "body": {
+        "tr": "Üretici atlası, seçime ilişkin işlemler ve ana araçlar tablonun üstündedir; tablo kendi içinde kayar. Arama CP ile aynı motoru kullanır: ERMO; BRAW birlikte, virgülle ayrılan seçenekler alternatif olarak aranır; dışlama ve parantezli gruplar da korunur. Minimal hesaplama alanında Supp. FOB, Final FOB YD ve Final FOB TR birbirinden hesaplanır. Kayıtlı veya açıkça taslak olarak işaretli sözleşmelerle yapılan deneme sipariş fiyatını değiştirmez.",
+        "en": "Supplier atlas, selection actions and main tools stay above an internally scrolling table. Search uses the CP engine: ERMO; BRAW searches together, while comma-separated terms are alternatives; exclusion and parenthesized groups are retained. The minimal calculator solves Supp. FOB, Final FOB Overseas and Final FOB TR in either direction. Trials using saved or explicitly marked draft contracts do not change order prices."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-unified.png",
+        "alt": {
+          "tr": "Üstte sabit araçlar, minimal üç yönlü FOB hesabı ve kendi içinde kayan Lisans Kartları tablosu",
+          "en": "Top actions, minimal three-way FOB calculator and an internally scrolling License Cards table"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; yalnız demo veri. Kaydetme, çakışmada taslağı koruma, arama, hesaplama ve iki dilde arayüz tarayıcıda kontrol edildi.",
+          "en": "Actual post-change Buyer Log using only demo data. Saving, draft preservation on conflicts, search, calculation and both interface languages were checked in the browser."
+        }
+      }
+    },
+    {
+      "id": "license-cards-category-rates",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans Kartları",
+        "en": "License Cards"
+      },
+      "title": {
+        "tr": "Kategoriye göre royalty ve komisyon oranları",
+        "en": "Royalty and commission rates by category"
+      },
+      "body": {
+        "tr": "Sözleşmeye kategori kapsamı eklenebilir: örneğin Home %3, T-shirt %5. Her kapsamda royalty, TR ve YD komisyonları ayrı girilir. Eşleşen kategori sözleşmesi genel orandan önce uygulanır; diğer kategoriler genel oranı kullanır. CP, Orders, Collection ve Endeksmatik aynı kapsamı izler. Yeni dönem yalnız aynı kategori, sezon ve ülke kapsamındaki önceki dönemi kapatır. Eski istemci kayıtları kategori kapsamını veya genel yedek sözleşmeyi sessizce silemez.",
+        "en": "Contracts can have category scopes, such as Home 3% and T-shirt 5%. Royalty, TR commission and overseas commission are entered separately for each scope. A matching category contract takes precedence; other categories use the general rate. CP, Orders, Collection and Endeksmatik share the scope. New periods close a preceding period only for the same category, season and country scope. Legacy client writes cannot silently remove category scopes or their general fallback contract."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-unified.png",
+        "alt": {
+          "tr": "Genel sözleşme ile birlikte Home yüzde 3 ve T-shirt yüzde 5 kategori sözleşmeleri",
+          "en": "General contract alongside Home 3 percent and T-shirt 5 percent category contracts"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; yalnız demo veri. Kaydetme, çakışmada taslağı koruma, arama, hesaplama ve iki dilde arayüz tarayıcıda kontrol edildi.",
+          "en": "Actual post-change Buyer Log using only demo data. Saving, draft preservation on conflicts, search, calculation and both interface languages were checked in the browser."
         }
       }
     },

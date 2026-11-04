@@ -5,9 +5,9 @@ const api=require('../public/business-rules');
 function helpers(findSuppFobRule=()=>null){
   const start=source.indexOf('  function parseSuppFobPreviewValue('),end=source.indexOf('  let openingPricePreview=',start);
   assert.ok(start>=0&&end>start,'quick calculator helpers exist');
-  return new Function('api','findSuppFobRule','norm','turknorm',source.slice(start,end)+';return {parseSuppFobPreviewValue,suppFobPricePreview};')(api,findSuppFobRule,v=>String(v??'').trim(),v=>String(v??'').trim().toUpperCase());
+  return new Function('api','findSuppFobRule','norm','turknorm','window',source.slice(start,end)+';return {parseSuppFobPreviewValue,suppFobPricePreview};')(api,findSuppFobRule,v=>String(v??'').trim(),v=>String(v??'').trim().toUpperCase(),{BLCanonicalFields:require('../public/canonical-fields')});
 }
-const row={_id:7,OPD:'2026-03-01',Season:'S7',Country:'Bangladesh',Licensor:'DEMO',License:'DEMO LICENSE','Supp. FOB':1.68,'FOB ($)':2.27};
+const row={_id:7,OPD:'2026-03-01',Season:'S7',Country:'Bangladesh',Licensor:'DEMO',License:'DEMO LICENSE',Category:'Home','Supp. FOB':1.68,'FOB ($)':2.27};
 const rule={id:'demo',royalty:17,trCommission:3,ydCommission:9,hologramCost:0};
 test('comma and dot decimals work; empty, negative, grouped and malformed input never becomes a price',()=>{
   const {parseSuppFobPreviewValue:parse}=helpers();
@@ -19,7 +19,7 @@ test('preview uses the exact order dimensions and the shared country commission 
   const before=JSON.stringify({row,rule});let args;
   const {suppFobPricePreview:preview}=helpers((...values)=>{args=values;return rule;});
   const result=preview(row,'1,85');
-  assert.deepEqual(args,[row.OPD,row.Country,row.Season,row.Licensor,row.License]);
+  assert.deepEqual(args,[row.OPD,row.Country,row.Season,row.Licensor,row.License,row.Category]);
   assert.equal(result.finalFob,2.5);assert.equal(result.delta,0.23);assert.equal(result.group,'YD');
   assert.equal(preview({...row,Country:'Türkiye'},'1.85').finalFob,2.31);
   assert.equal(JSON.stringify({row,rule}),before);

@@ -11710,7 +11710,7 @@ function pricingRuleMatchesValues(rule,opd,country,season,licensor,license){
     turknorm(licensor)===turknorm(rule&&rule.licensor)&&turknorm(license)===turknorm(rule&&rule.license);
 }
 function pricingRuleMatchesRow(rule,row){
-  return !!row&&pricingRuleMatchesValues(rule,row.OPD,row.Country,row.Season,row.Licensor,row.License);
+  return !!row&&pricingRuleMatchesValues(rule,row.OPD,row.Country,row.Season,row.Licensor,row.License,window.BLCanonicalFields.canonicalValue(row,'cp','category'));
 }
 function findSuppFobRule(opd,country,season,licensor,license){
   return (state.overrides.pricingRules||[]).find(r=>pricingRuleMatchesValues(r,opd,country,season,licensor,license))||null;
@@ -11775,19 +11775,19 @@ function suppFobRuleMissing(row){
   const licensor=turknorm(row.Licensor);
   if(!licensor||licensor==='DTR') return false;
   if(hasManualSuppFob(row)) return false;
-  return !findSuppFobRule(row.OPD,row.Country,row.Season,row.Licensor,row.License);
+  return !findSuppFobRule(row.OPD,row.Country,row.Season,row.Licensor,row.License,window.BLCanonicalFields.canonicalValue(row,'cp','category'));
 }
 /* Uyarı metni tek yerden: hücre başlığı (title) ve rozet aynı cümleyi
    kullansın, iki ayrı yerde tutulup birbirinden ayrı düşmesin. */
 function suppFobRuleMissingText(){
   return appLang==='en'
-    ? 'No License Royalty calculation matches this order (Non-DTR). Supp. FOB cannot be calculated — define the rule under License Royalty Calculations.'
-    : 'Bu sipariş için eşleşen License Royalty hesabı yok (Non-DTR). Supp. FOB hesaplanamıyor — License Royalty Calculations altında kuralı tanımlayın.';
+    ? 'No License Royalty calculation matches this order (Non-DTR). Supp. FOB cannot be calculated — define the rule in License Cards.'
+    : 'Bu sipariş için eşleşen License Royalty hesabı yok (Non-DTR). Supp. FOB hesaplanamıyor — Lisans Kartları içinde kuralı tanımlayın.';
 }
 function suppFobHoverText(row){
   if(!row || turknorm(row.Licensor)==='DTR' || row['Supp. FOB']==null || row['Supp. FOB']==='') return '';
   const meta=suppFobMetaForRow(row);
-  const currentRule=findSuppFobRule(row.OPD,row.Country,row.Season,row.Licensor,row.License);
+  const currentRule=findSuppFobRule(row.OPD,row.Country,row.Season,row.Licensor,row.License,window.BLCanonicalFields.canonicalValue(row,'cp','category'));
   const rule=currentRule || (meta&&meta.source==='rule' ? meta : null);
   const automatic=isSuppFobAutoCalculated(row);
   const lines=[automatic ? (meta&&meta.applied ? 'Otomatik hesaplandı (Apply)' : 'Otomatik hesaplandı') : 'Elle girildi'];
@@ -11860,7 +11860,7 @@ function recalcSuppFobForRow(row){
   const imported=importedSuppFob(row);
   if(!imported&&hasManualSuppFob(row)) return false;
   const prev=row['Supp. FOB'];
-  const priced=calculateSuppFobFromRule(row['FOB ($)'],row.OPD,row.Country,row.Season,row.Licensor,row.License);
+  const priced=calculateSuppFobFromRule(row['FOB ($)'],row.OPD,row.Country,row.Season,row.Licensor,row.License,window.BLCanonicalFields.canonicalValue(row,'cp','category'));
   if(imported&&priced.value==null){
     row['Supp. FOB']=imported.value;row._suppFobRule=null;row._suppFobMeta=imported.meta;row._suppFobOverride=true;row._suppFobManual=true;
     return !editableValuesEqual(prev,imported.value);
@@ -11929,7 +11929,7 @@ async function persistPricingRules(rules,{expectedRevision=state.storeRevisions.
   let syncResult=syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
   try{
     if(window.SERVER_BACKED){
-      const res=await fetch('/api/pricing-rules',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':String(expectedRevision),...(window.BL_CLIENT_ID?{'X-Client-Id':window.BL_CLIENT_ID}:{})},body:JSON.stringify({rules:clean})});
+      const res=await fetch('/api/pricing-rules',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':String(expectedRevision),...(window.BL_CLIENT_ID?{'X-Client-Id':window.BL_CLIENT_ID}:{})},body:JSON.stringify({rules:clean,categorySchemaVersion:1})});
       const data=await res.json().catch(()=>({}));
       if(!res.ok){ const err=new Error(res.status===409?(appLang==='en'?'Royalty rules changed while this window was open. Your draft is preserved; close and reopen to edit the current rules.':'Bu pencere açıkken royalty kuralları değişti. Taslağınız korunuyor; güncel kuralları düzenlemek için pencereyi kapatıp yeniden açın.'):(data.error||res.statusText));err.code=data.code;err.status=res.status;throw err; }
       applyIncomingPricingRules(data.rules||clean,data.revision);
@@ -23947,7 +23947,7 @@ function endeksmatikDefaultAdjustment(){
 function endeksmatikRoyaltyRule(mode,row){
   try{
     const rule=mode==='orders'||mode==='cp'
-      ?findSuppFobRule(...['orderPlacementDate','country','season','licensor','license'].map(id=>window.BLCanonicalFields.canonicalValue(row,mode,id)))
+      ?findSuppFobRule(...['orderPlacementDate','country','season','licensor','license','category'].map(id=>window.BLCanonicalFields.canonicalValue(row,mode,id)))
       :kolFindPricingRule(row);
     if(!rule)return null;
     const royalty=Number(rule.royalty), hologramCost=Number(rule.hologramCost);
@@ -27552,6 +27552,7 @@ function kolPricingRuleContext(row){
     season: norm(row&&row.season) || norm(cp&&cp.Season),
     licensor: norm(row&&row.licensor) || norm(cp&&cp.Licensor),
     license: norm(row&&row.lisans) || norm(cp&&cp.License),
+    category: norm(window.BLCanonicalFields.canonicalValue(row,'collection','category')) || norm(cp&&window.BLCanonicalFields.canonicalValue(cp,'cp','category')),
   };
 }
 function kolPricingRuleDimensionMatches(rule,ctx,countryGroupOverride=''){
@@ -27615,8 +27616,8 @@ function kolTrLicenseRuleMissingText(row){
       : `TR Royalty çözülemiyor: bu satırda ${missing.join(', ')} boş. TR Landed hesaplanmadı.`;
   }
   return appLang==='en'
-    ? 'No TR License Royalty calculation matches this model. TR Landed is not calculated — define a Country Group = TR rule under License Royalty Calculations.'
-    : 'Bu model için eşleşen TR License Royalty hesabı yok. TR Landed hesaplanmadı — License Royalty Calculations altında Country Group = TR kuralını tanımlayın.';
+    ? 'No TR License Royalty calculation matches this model. TR Landed is not calculated — define a Country Group = TR rule in License Cards.'
+    : 'Bu model için eşleşen TR License Royalty hesabı yok. TR Landed hesaplanmadı — Lisans Kartları içinde Country Group = TR kuralını tanımlayın.';
 }
 /* Uyarının NEDENİNİ de söyler: kural hiç tanımlı değil mi, yoksa eşleşme
    için gereken alanlar (Ülke / License) bu satırda boş mu? İkisi de aynı
@@ -27635,8 +27636,8 @@ function kolLicenseRuleMissingText(row){
       : `Royalty çözülemiyor: bu satırda ${missing.join(', ')} boş olduğu için hiçbir License Royalty hesabı eşleşemez. FOB hesaplanmadı.`;
   }
   return appLang==='en'
-    ? 'No License Royalty calculation matches this model (Non-DTR). FOB is not calculated — define the rule under License Royalty Calculations.'
-    : 'Bu model için eşleşen License Royalty hesabı yok (Non-DTR). FOB hesaplanmadı — License Royalty Calculations altında kuralı tanımlayın.';
+    ? 'No License Royalty calculation matches this model (Non-DTR). FOB is not calculated — define the rule in License Cards.'
+    : 'Bu model için eşleşen License Royalty hesabı yok (Non-DTR). FOB hesaplanmadı — Lisans Kartları içinde kuralı tanımlayın.';
 }
 function kolPricingRuleTitle(row){
   const rule=kolFindPricingRule(row);
@@ -29666,15 +29667,15 @@ function priceLineageSnapshot(row,module='collection',provenance={}){
     if(k.ruleInvalid)blockers.push(kolPricingRuleInvalidText());else if(k.ruleMissing)blockers.push(kolLicenseRuleMissingText(effective));if(k.trRuleInvalid)blockers.push(kolPricingRuleInvalidText(true));else if(k.trRuleMissing)blockers.push(kolTrLicenseRuleMissingText(effective));
     return window.BLPriceLineage.snapshot({module,record:[row.modelKod,row.plmId,row.colourCode].filter(Boolean).join(' · '),source:{kind:k.supp?.source||'missing',name:k.supp?.name||'',amount:k.ydBaseFob,origin:provenance.origin||'',at:provenance.at||null,requestId:provenance.requestId||'',lineId:provenance.lineId||''},values:{suppFob:k.ydBaseFob,overseasLanded:k.ydLanded,trLanded:k.trLanded},rule:ruleFields(rule),trRule:ruleFields(k.trRule),fx:{...fx,rate:k.fx,manual:k.fxIsManual},revisions:{collection:kolWorkspaceRevision,row:Number(row._rev)||0,pricingRules:Number(revisions.pricingRules)||0},blockers,precedence:'confirmed > best > target'});
   }
-  const meta=suppFobMetaForRow(row),rule=findSuppFobRule(row.OPD,row.Country,row.Season,row.Licensor,row.License),manual=hasManualSuppFob(row);
+  const meta=suppFobMetaForRow(row),rule=findSuppFobRule(row.OPD,row.Country,row.Season,row.Licensor,row.License,window.BLCanonicalFields.canonicalValue(row,'cp','category')),manual=hasManualSuppFob(row);
   return window.BLPriceLineage.snapshot({module,record:[row['Order Code'],row['Model Name'],row['C.Code']].filter(value=>value!=null&&value!=='').join(' · '),source:{kind:meta?.origin==='cpupdate'?'cp-update':manual?'manual':isSuppFobAutoCalculated(row)?'rule':turknorm(row.Licensor)==='DTR'?'dtr':'missing',amount:row['Supp. FOB'],origin:meta?.origin||'',at:null},values:{suppFob:row['Supp. FOB'],fob:row['FOB ($)']},rule:ruleFields(rule),revisions:{orders:Number(revisions.orders)||0,suppFob:Number(revisions.suppFob)||0,pricingRules:Number(revisions.pricingRules)||0},blockers:suppFobRuleMissing(row)?[suppFobRuleMissingText()]:[]});
 }
 window.BLPriceLineageBridge={binding:priceLineageBinding,resolve:priceLineageResolve,snapshot:priceLineageSnapshot,canManageRules:()=>window.BLHasPermission?.('manageBusinessRules')===true,
-  openRule(binding,id){const row=priceLineageResolve(binding);if(!row||!window.BLHasPermission?.('manageBusinessRules'))return false;const snapshot=priceLineageSnapshot(row,binding.module);if(id&&![snapshot.rule?.id,snapshot.trRule?.id].includes(id))return false;openSuppFobRulesModal();const select=document.getElementById('_ruleCheckRule');if(select&&id){select.value=id;select.dispatchEvent(new Event('change',{bubbles:true}));}return true;}
+  openRule(binding,id){const row=priceLineageResolve(binding);if(!row||!window.BLHasPermission?.('manageBusinessRules'))return false;const snapshot=priceLineageSnapshot(row,binding.module);if(id&&![snapshot.rule?.id,snapshot.trRule?.id].includes(id))return false;void openSuppFobRulesModal(id);return true;}
 };
 function contextualCommandRule(ctx){
   const row=ctx.rows[0];if(!row)return null;
-  return ctx.module==='koleksiyon'?kolFindPricingRule(row):findSuppFobRule(...['orderPlacementDate','country','season','licensor','license'].map(id=>window.BLCanonicalFields.canonicalValue(row,ctx.module,id)));
+  return ctx.module==='koleksiyon'?kolFindPricingRule(row):findSuppFobRule(...['orderPlacementDate','country','season','licensor','license','category'].map(id=>window.BLCanonicalFields.canonicalValue(row,ctx.module,id)));
 }
 function contextualCommandButton(id){const button=document.getElementById(id);return button&&!button.disabled&&!button.hidden&&button.style.display!=='none'&&button.getAttribute('aria-disabled')!=='true'?button:null;}
 function contextualCommandLabel(tr,en){return appLang==='en'?en:tr;}
@@ -29696,7 +29697,7 @@ window.BLContextCommands=window.BLContextualCommands.create({snapshot:contextual
   {id:'price-detail',when:ctx=>ctx.module==='koleksiyon',label:()=>contextualCommandLabel('Fiyat ayrıntısını aç','Open price details'),guard:contextOne,run:ctx=>window.BLCollectionPriceDrawer?.open(ctx.rows[0])},
   {id:'price-lineage',when:ctx=>ctx.module!=='koleksiyon',label:()=>contextualCommandLabel('Bu fiyat nereden geliyor?','Why this value?'),guard:contextOne,run:ctx=>window.BLCollectionPriceDrawer?.openCp(ctx.rows[0],ctx.module)},
   {id:'pricing-rule',label:()=>contextualCommandLabel('İlgili fiyat kuralını incele','Inspect the matching pricing rule'),guard:ctx=>contextOne(ctx)||(!window.BLHasPermission?.('manageBusinessRules')?contextualCommandLabel('İş kuralı yönetim yetkisi gerekli.','Business-rule management permission is required.'):'')||(!contextualCommandRule(ctx)?contextualCommandLabel('Bu kayıt için eşleşen fiyat kuralı yok.','No pricing rule matches this record.'):''),run:ctx=>{
-    const rule=contextualCommandRule(ctx);openSuppFobRulesModal();const select=document.getElementById('_ruleCheckRule');if(select&&rule){select.value=rule.id;select.dispatchEvent(new Event('change',{bubbles:true}));}return true;
+    const rule=contextualCommandRule(ctx);void openSuppFobRulesModal(rule?.id);return true;
   }},
   {id:'create-costing',label:()=>contextualCommandLabel('Seçili kayıttan maliyet oluştur','Create costing from the selected record'),guard:ctx=>contextOne(ctx)||contextArea('opencosting')||(ctx.module==='koleksiyon'&&!kolWorkspaceCanEdit||ctx.module==='cp'&&ctx.rows[0]?._canEdit===false?contextualCommandLabel('Bu kayıt salt okunur.','This record is read-only.'):'')||(!contextualCommandButton(ctx.module==='koleksiyon'?'kolCreateOcBtn':'cpCreateOcBtn')?contextualCommandLabel('Maliyet oluşturma işlemi şu an kullanılamıyor.','Create costing is not available right now.'):''),run:ctx=>{contextualCommandButton(ctx.module==='koleksiyon'?'kolCreateOcBtn':'cpCreateOcBtn')?.click();return true;}},
   {id:'existing-report',label:ctx=>ctx.module==='koleksiyon'?contextualCommandLabel('Mevcut fiyat raporunu aç','Open the existing price report'):contextualCommandLabel('Seçili siparişin Backlog raporunu aç','Open Backlog report for the selected order'),guard:ctx=>contextOne(ctx)||contextArea(ctx.module==='koleksiyon'?'koleksiyon':'backlog')||(!contextualCommandButton(ctx.module==='koleksiyon'?'kolPriceHistoryBtn':'selectedBacklogBtn')?contextualCommandLabel('Rapor işlemi şu an kullanılamıyor.','The report action is not available right now.'):''),prepare:ctx=>ctx.module==='koleksiyon'?window.BLPerf.ensureFeature('collectionTools'):Promise.resolve(),run:ctx=>{contextualCommandButton(ctx.module==='koleksiyon'?'kolPriceHistoryBtn':'selectedBacklogBtn')?.click();return true;}}
@@ -30131,6 +30132,14 @@ window.BLManufacturerDataBridge={
 };
 // Lisans istatistikleri yalnız yüklü projection'ı okur; sorgu/yükleme başlatmaz.
 window.BLLicenseDataBridge={
+  matches(rule){
+    const self=window.BLLicenseDataBridge,rows=state.cp?.rows||[],version=_unifiedPriorityTableRevision.cp;
+    if(self.matchRows!==rows||self.matchVersion!==version){self.matchRows=rows;self.matchVersion=version;self.matchCache=new Map();}
+    const key=JSON.stringify(rule);if(!self.matchCache.has(key)){if(self.matchCache.size>500)self.matchCache.clear();self.matchCache.set(key,rows.filter(row=>pricingRuleMatchesRow(rule,row)).length);}
+    return self.matchCache.get(key);
+  },
+  async applyRule(id){await ensureCpLoaded();const rule=(state.overrides.pricingRules||[]).find(r=>r.id===id);return rule?applySuppFobRuleToMatchingOrders(rule):Promise.resolve(0);},
+  async applyAll(){await ensureCpLoaded();return applyAllSuppFobRules(state.overrides.pricingRules||[]);},
   loadedRows(){
     const module=state.orders?'orders':'cp',rows=(state[module]&&state[module].rows)||[];
     return {rows,module,version:module==='orders'?window.BLManufacturerDataBridge.version():`cp:${_unifiedPriorityTableRevision.cp}`};

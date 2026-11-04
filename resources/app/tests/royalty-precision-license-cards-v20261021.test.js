@@ -106,15 +106,12 @@ test('kart özeti bugün geçerli tüm sezon kapsamlarını gösterir', () => {
   assert.deepEqual(E.currentContracts([], '2026-10-21'), []);
 });
 
-test('License Royalty Calculations kaydedilmemiş değişikliği sessizce atmaz ve eşleşme sayısını önbellekler', () => {
-  const ui = read('public/license-royalty-commissions.js');
-  assert.match(ui, /function requestClose\(\)\{if\(\(snapshot\(\)!==savedSnapshot\|\|formPending\(\)\)&&!confirm\(/);
-  assert.match(ui, /'Discard unsaved License Royalty changes\?':'Kaydedilmemiş License Royalty değişiklikleri bırakılsın mı\?'/);
-  assert.doesNotMatch(ui, /if\(e\.key==='Escape'\)modal\.remove\(\)/);
-  assert.doesNotMatch(ui, /_rulesClose'\)\.forEach\(b=>b\.addEventListener\('click',\(\)=>modal\.remove\(\)\)\)/);
-  assert.match(ui, /const counts=new Map\(working\.map\(r=>\[r\.id,matchCount\(r\)\]\)\)/);
-  assert.match(ui, /countCache=new WeakMap\(\)/);
-  assert.match(read('public/index.html'), /license-royalty-commissions\.js\?v=__BL_ASSET_VERSION__&rev=2/);
+test('unified royalty keeps drafts on card navigation and caches match counts', () => {
+  const ui=read('public/license-cards.js'),app=read('public/app-main.js');
+  assert.match(ui,/drafts:new Map\(\)/);assert.match(ui,/only the card's/);
+  assert.match(ui,/current\.editToken!==d\.editToken/);
+  assert.match(app,/matchCache=new Map\(\)/);assert.match(app,/self\.matchCache\.has\(key\)/);
+  assert.match(read('public/license-royalty-commissions.js'),/switchTab\('licensecards'\)/);
 });
 
 test('lisans keşfi CP’de elle seçilen Licensor’ı kullanır; lisansörsüz eski yer tutucu gizlenir', () => {
@@ -147,9 +144,13 @@ test('lisans keşfi CP’de elle seçilen Licensor’ı kullanır; lisansörsüz
 });
 
 
-test('liste görünümünde yeni dönemin başlangıcı değişince otomatik kapatılan dönem onu izler', () => {
-  const ui = read('public/license-cards.js');
-  assert.match(ui, /d\.period=next\.closed\.length\?\{id:next\.rule\.id,closed:next\.closed\}:null/);
-  assert.match(ui, /if\(k==='opdStart'&&d\.period\?\.id===r\.id\)\{const end=E\.previousDay\(el\.value\)/);
-  assert.match(ui, /prev\.opdEnd=end/);
+test('new period scope and date edits reconcile only matching predecessor scopes', () => {
+  const ui=read('public/license-cards.js');assert.match(ui,/previous\.opdEnd=E\.periodEnd\(original,r\)/);
+  const old={id:'old',opdStart:'2026-01-01',opdEnd:'',seasons:[],categories:[],trCommission:2,ydCommission:4};
+  const next={...old,id:'next',opdStart:'2026-11-04'};
+  assert.equal(E.periodEnd(old,next),'2026-11-03');
+  for(const patch of [{categories:['Home']},{seasons:['Summer']},{trCommission:null}]){
+    assert.equal(E.periodEnd(old,{...next,...patch}), '');assert.equal(E.periodEnd(old,{...next,...patch,opdStart:'2027-01-01'}),'');
+  }
+  assert.equal(E.periodEnd({...old,opdEnd:'2026-06-01'},next),'2026-06-01');
 });

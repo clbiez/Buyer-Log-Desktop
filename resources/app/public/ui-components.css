@@ -15737,3 +15737,9 @@ html[data-ui-system="manifest"] .trFocusEmpty h2{font-size:var(--ui-font-2xl)}
 html[data-ui-system="manifest"] .trFocusAi>.trAi>p{font-size:var(--ui-font-md)}
 }
 html[data-ui-system="manifest"] .trFocusCenter>.trCenterHeader .cpaBtn{font-size:var(--ui-font-sm)!important}
+
+/* Unified license workspace: shared surfaces, typography and data layer. */
+html[data-ui-system="manifest"] .lcQuick,html[data-ui-system="manifest"] .lcCreate{background:var(--ui-surface-soft) !important}
+html[data-ui-system="manifest"] .lcQuick small{font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important}
+html[data-ui-system="manifest"] .lcContractFilters{z-index:var(--ui-z-data);background:var(--ui-surface) !important}
+html[data-ui-system="manifest"] .lcContractIdentity>span{color:var(--ui-text-muted) !important}

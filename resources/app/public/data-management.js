@@ -729,7 +729,7 @@
             en: 'Collection TR and Overseas landed cost multipliers.' },
           run: () => openLandedMultipliersModal() },
         { id: 'royalty', requires: 'manageBusinessRules', icon: 'i-calculator',
-          label: { tr: 'License Royalty', en: 'License Royalty' },
+          label: { tr: 'Lisans Kartları', en: 'License Cards' },
           hint: { tr: 'OPD tarih aralığı, sezon, üretim ülkesi, Licensor ve License bazlı royalty ve hologram hesapları.',
             en: 'Royalty and hologram calculations by OPD date range, season, production country, Licensor and License.' },
           run: () => openSuppFobRulesModal() },

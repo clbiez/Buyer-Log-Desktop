@@ -28,9 +28,9 @@ function normalizeLandedMultipliers(value){
 function findRule(ctx,countryGroup,helpers){
   const {api,rules,matches,freshness}=helpers,group=api.pricingRuleCountryGroup(countryGroup);
   if(!group||!ctx.licensor||!ctx.license)return null;
-  const candidates=(rules||[]).filter(rule=>matches(rule,ctx)&&api.pricingRuleCommissionForCountry(rule,group)!=null);
+  const candidates=(rules||[]).filter(rule=>matches(rule,ctx)&&(!api.pricingRuleCategoryMatches||api.pricingRuleCategoryMatches(rule,ctx.category))&&api.pricingRuleCommissionForCountry(rule,group)!=null);
   if(!candidates.length)return null;
-  return [...candidates].sort((a,b)=>{const af=freshness(a),bf=freshness(b);return bf.start-af.start||bf.end-af.end||String(b.id||'').localeCompare(String(a.id||''),'tr');})[0]||null;
+  return [...candidates].sort((a,b)=>{const af=freshness(a),bf=freshness(b);return Number(!!b.categories?.length)-Number(!!a.categories?.length)||bf.start-af.start||bf.end-af.end||String(b.id||'').localeCompare(String(a.id||''),'tr');})[0]||null;
 }
 function createRuleResolver(helpers){
   let currentRules,currentRevision,currentLength,cache=new Map();
@@ -38,7 +38,7 @@ function createRuleResolver(helpers){
     find(ctx,countryGroup,rules,revision){
       if(rules!==currentRules||revision!==currentRevision||rules.length!==currentLength){currentRules=rules;currentRevision=revision;currentLength=rules.length;cache=new Map();}
       const group=helpers.api.pricingRuleCountryGroup(countryGroup);
-      const key=JSON.stringify([ctx.country,ctx.season,ctx.licensor,ctx.license,group]);
+      const key=JSON.stringify([ctx.country,ctx.season,ctx.licensor,ctx.license,group,ctx.category]);
       if(cache.has(key))return cache.get(key);
       const value=findRule(ctx,countryGroup,{...helpers,rules});
       if(cache.size>=512)cache.delete(cache.keys().next().value);

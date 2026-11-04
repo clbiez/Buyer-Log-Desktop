@@ -10442,8 +10442,8 @@ app.put('/api/pricing-rules', userAccess.requireArea('source'), userAccess.requi
   try {
     const incoming = (req.body || {}).rules;
     if (!Array.isArray(incoming)) return res.status(400).json({ error: 'rules (dizi) zorunlu.' });
-    const rules = require('./lib/resource-rule-service').normalizePricingRules(incoming);
     const before = loadOverrides();
+    const rules = require('./lib/resource-rule-service').normalizePricingRules(incoming,{existing:before.pricingRules||[],categorySchemaVersion:req.body?.categorySchemaVersion});
     const previousRules = Array.isArray(before.pricingRules) ? before.pricingRules : [];
     const previousById = new Map(previousRules.map(rule => [String(rule && rule.id || ''), rule]));
     const nextById = new Map(rules.map(rule => [String(rule && rule.id || ''), rule]));

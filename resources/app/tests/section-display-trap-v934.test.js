@@ -80,6 +80,7 @@ test('v9.34 <section>’a display veren kurallar biliniyor', () => {
   assert.deepEqual(granting.sort(), [
     '.blBulkBody section',
     '.iamWizard>section',
+    '.trFocusCenter section',
     'section',
     'section.active',
   ], 'section’a display veren kural kümesi değişti — CLAUDE.md’deki notu güncelleyin');
