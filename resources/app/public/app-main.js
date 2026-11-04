@@ -38925,9 +38925,52 @@ function renderTodoDetail(){
   bindTodoEditor();
 }
 function richNoteHtml(editor){return editor.innerText.trim()||editor.querySelector('img')?todoSanitize(editor.innerHTML):'';}
+// Copy only the selected note fragment, without editor layout or empty edge lines.
+// Work on a clone so copying never changes the saved note or the undo history.
+function trimRichNoteClipboard(fragment){
+  const trim=(parent,start)=>{
+    let node;
+    while((node=start?parent.firstChild:parent.lastChild)){
+      if(node.nodeType===3){
+        node.data=node.data.replace(start?/^(?:[ \t]*\r?\n)+/:/(?:\r?\n[ \t]*)+$/g,'');
+        if(node.data!=='')break;
+      }else if(node.nodeType===1){
+        if(node.tagName==='IMG')break;
+        trim(node,start);
+        if(node.childNodes.length)break;
+      }
+      node.remove();
+    }
+  };
+  trim(fragment,true);trim(fragment,false);
+}
+function copyRichNoteSelection(event,editor){
+  if(event.defaultPrevented||!event.clipboardData)return;
+  const selection=window.getSelection();
+  if(!selection||!selection.rangeCount||selection.isCollapsed)return;
+  const range=selection.getRangeAt(0);
+  if(!editor.contains(range.startContainer)||!editor.contains(range.endContainer))return;
+  const fragment=document.createElement('div');
+  fragment.append(range.cloneContents());
+  // A range inside bold/coloured text does not clone its formatting ancestors.
+  let ancestor=range.commonAncestorContainer;
+  if(ancestor?.nodeType===3)ancestor=ancestor.parentElement;
+  for(;ancestor&&ancestor!==editor;ancestor=ancestor.parentElement){
+    const wrapper=ancestor.cloneNode(false);
+    wrapper.append(...fragment.childNodes);fragment.replaceChildren(wrapper);
+  }
+  // Sanitize first: clipboard HTML must not include controls or editor styles.
+  fragment.innerHTML=todoSanitize(fragment.innerHTML);
+  trimRichNoteClipboard(fragment);
+  const plain=selection.toString().replace(/^(?:[ \t]*\r?\n)+|(?:\r?\n[ \t]*)+$/g,'');
+  event.clipboardData.setData('text/plain',plain);
+  event.clipboardData.setData('text/html',fragment.innerHTML);
+  event.preventDefault();
+}
 function bindRichNoteEditor(host,ta,accept=()=>true){
   const t=todoText();
   if(ta){
+    ta.addEventListener('copy',event=>copyRichNoteSelection(event,ta));
     let savedRange=null;
     const remember=()=>{
       const selection=window.getSelection();
