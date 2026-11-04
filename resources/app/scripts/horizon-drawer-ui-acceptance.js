@@ -128,6 +128,13 @@ let browser;
   await drawer.locator('.blvFilterValue', { hasText: 'DEMO B' }).first().click();
   await settled();
   assert.match(await drawer.locator('.dmfPairBox').textContent(), /Siparis Bilgileri · Marka/);
+  // Klavye: Space ile işaretlenen onay kutusunda odak kalır; ikinci Space işareti kaldırır.
+  const demoA = '.dmfEditorPane > .dmfValueList input[data-dmf-v="DEMO%20A"]';
+  await drawer.locator(demoA).focus();
+  await page.keyboard.press('Space');
+  assert.equal(await page.evaluate(selector => document.activeElement === document.querySelector(selector), demoA), true, 'odak onay kutusunda kalmalı');
+  await page.keyboard.press('Space');
+  assert.equal(await drawer.locator(demoA).isChecked(), false, 'ikinci Space seçimi kaldırmalı');
   await drawer.locator('[data-dmf-pair-custom]').click();
   await drawer.locator('.dmfPairBox .blvFilterValue', { hasText: 'DEMO C' }).click();
   await page.waitForTimeout(300);

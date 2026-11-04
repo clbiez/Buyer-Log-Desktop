@@ -33,7 +33,7 @@ const FIELDS = {
 const VALUES = { Sezon: ['W26', 'S27'], 'Sezon Kod': ['W26', 'S27'], Marka: ['A', 'B', 'C'], Vasita: ['Gemi', 'Uçak'] };
 const OPS = [{ id: 'in', arity: 'list' }, { id: 'notIn', arity: 'list' }, { id: 'between', arity: 'range' }, { id: 'gte', arity: 'from' }, { id: 'lte', arity: 'to' }, { id: 'contains', arity: 'single' }];
 
-function editor({ left, right = null, storage = null, valuesFail = null }) {
+function editor({ left, right = null, storage = null, valuesFail = null, values = null }) {
   const posts = [];
   const listeners = {};
   const host = { innerHTML: '', classList: { add() {}, remove() {} }, addEventListener: (type, fn) => { listeners[type] = fn; }, removeEventListener() {} };
@@ -43,6 +43,7 @@ function editor({ left, right = null, storage = null, valuesFail = null }) {
     const query = new URLSearchParams(String(url).split('?')[1] || '');
     if (String(url).startsWith('/api/horizon/fields')) return json({ ok: true, fields: FIELDS[query.get('sourceId')] || [], operators: OPS });
     if (String(url).startsWith('/api/horizon/values') && valuesFail) { valuesFail(); return { ok: false, status: 502, json: async () => ({ ok: false, error: 'SSAS' }) }; }
+    if (String(url).startsWith('/api/horizon/values') && values) return values(query);
     if (String(url).startsWith('/api/horizon/values')) return json({ ok: true, values: VALUES[query.get('column') || query.get('field')] || [], source: 'database' });
     if (url === '/api/horizon/field-match') {
       await tick(2);
@@ -73,6 +74,7 @@ function editor({ left, right = null, storage = null, valuesFail = null }) {
   return {
     posts, host, store, ed, closedCount: () => closed,
     setLang: language => vm.runInContext(`var appLang = ${JSON.stringify(language)};`, context),
+    context, listeners,
     open: () => ed.open(host, {
       sourceId: 'asas', sourceName: 'ASAS', sourceRole: 'asas', moduleId: 'cp', moduleLabel: 'CP', revision: 'r1', canShare: true,
       definition: left, sharedWith: [], onClosed: () => { closed += 1; },
@@ -253,4 +255,44 @@ test('TR/EN: açık çekmece ve düzenleyici dil değişiminde yeniden çizilir'
   ed.ed.refreshLanguage();
   assert.match(ed.host.innerHTML, />Advanced</);
   assert.doesNotMatch(ed.host.innerHTML, /Gelişmiş|Kaydet \(yalnız benim için\)/);
+});
+
+/* Codex incelemesi (PR #839) — doğrulanan iki bulgu. */
+test('klavye: onay kutusu Space ile değişince yeniden çizimde odak aynı kutuya döner', async () => {
+  const ed = editor({ left: { table: 'ASAS', groups: [{ id: 'g', conditions: [C('a', 'Marka', ['A'])] }] } });
+  const focused = [];
+  ed.host.contains = () => true;
+  ed.host.querySelector = selector => (selector.startsWith('input[') ? { focus: () => focused.push(selector), setSelectionRange() {} } : null);
+  ed.host.querySelectorAll = () => [];
+  await ed.open();
+  await tick(5);
+  const box = { tagName: 'INPUT', attributes: [{ name: 'type', value: 'checkbox' }, { name: 'data-dmf-value', value: 'p:a' }, { name: 'data-dmf-v', value: 'B' }], selectionStart: null };
+  ed.context.document = { activeElement: box };
+  focused.length = 0;
+  ed.tick('p:a', 'B', true);
+  assert.deepEqual(focused, ['input[data-dmf-value="p:a"][data-dmf-v="B"]'], 'odak yeni DOM\'daki aynı onay kutusuna döner');
+});
+
+test('ilk değer listesi yüklenirken yazılan arama, liste kesik dönünce sunucuya gider', async () => {
+  const asked = [];
+  let releaseBase;
+  const ed = editor({
+    left: { table: 'ASAS', groups: [{ id: 'g', conditions: [C('a', 'Marka', [])] }] },
+    values: async query => {
+      asked.push(query.get('q') || '');
+      if (!query.get('q')) await new Promise(resolve => { releaseBase = resolve; });
+      return { ok: true, status: 200, json: async () => ({ ok: true, values: query.get('q') ? ['ZZ-2500'] : ['A'], truncated: !query.get('q'), source: 'database' }) };
+    },
+  });
+  const opening = ed.open();
+  await tick(5);
+  // Liste daha yüklenmeden kullanıcı arar ve duraksar.
+  ed.listeners.input({ target: { matches: selector => selector === '[data-dmf-value-search]', dataset: { dmfValueSearch: 'p:a' }, value: 'ZZ' } });
+  await tick(400);
+  assert.deepEqual(asked, [''], 'ilk liste bitmeden sunucu araması kararı verilmez');
+  releaseBase();
+  await opening;
+  await tick(10);
+  assert.deepEqual(asked, ['', 'ZZ'], 'liste kesik dönünce bekleyen arama sunucuya gider');
+  assert.match(ed.host.innerHTML, /data-dmf-v="ZZ-2500"/);
 });

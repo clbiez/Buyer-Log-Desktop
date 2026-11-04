@@ -817,6 +817,7 @@
         entry.note = T('Değerler okunamadı; aşağıya elle yazabilirsiniz.', 'Values could not be read; you can type them below.');
       }
       entry.loading = false;
+      if (!q && entry.truncated) runPendingSearches();
       if (host) render();
     })();
     return entry;
@@ -1184,44 +1185,60 @@
     if (!ref || !value) return;
     if (!(ref.condition.values || []).includes(value)) ref.condition.values = [...(ref.condition.values || []), value];
     touched(ref);
-    render();
-    requestAnimationFrame(() => host && host.querySelector(`[data-dmf-free="${CSS.escape(input.dataset.dmfFree)}"]`)?.focus({ preventScroll: true }));
+    render(); // odak render içinde aynı kutuya döner (captureFocus/restoreFocus)
   }
 
-  // Yeniden çizimde arama kutusu odağını ve imlecini korur.
-  function refocus(selector, position) {
-    if (typeof requestAnimationFrame !== 'function') return;
-    requestAnimationFrame(() => {
-      const input = host && host.querySelector(selector);
-      if (!input) return;
-      input.focus({ preventScroll: true });
-      try { input.setSelectionRange(position, position); } catch (_) { /* type=search bazı motorlarda desteklemez */ }
+  /* YENİDEN ÇİZİMDE ODAK KORUNUR (Codex incelemesi, PR #839).
+     Düzenleyici innerHTML ile baştan çizilir; odaktaki öğe (onay kutusu, arama
+     kutusu, aralık alanı…) kaybolursa klavye kullanıcısı Space ile seçmeye
+     devam edemez ve Tab çekmeceden alttaki sayfaya kaçar. Odaktaki öğe data-*
+     nitelikleriyle tanınır ve yeni DOM'daki karşılığına odak/imleç geri verilir. */
+  const attrValue = value => String(value).replace(/["\\]/g, '\\$&');
+  function captureFocus() {
+    if (typeof document === 'undefined' || !host || typeof host.contains !== 'function') return null;
+    const active = document.activeElement;
+    if (!active || active === host || !host.contains(active)) return null;
+    const attrs = [...(active.attributes || [])].filter(attr => attr.name.startsWith('data-') && attr.name !== 'data-date-enhanced');
+    if (!attrs.length) return null;
+    let start = null;
+    let end = null;
+    try { start = active.selectionStart; end = active.selectionEnd; } catch (_) { /* onay kutusu: imleç yok */ }
+    return { selector: String(active.tagName || '').toLowerCase() + attrs.map(attr => `[${attr.name}="${attrValue(attr.value)}"]`).join(''), start, end };
+  }
+  function restoreFocus(state) {
+    if (!state || !host || typeof host.querySelector !== 'function') return;
+    const element = host.querySelector(state.selector);
+    if (!element || typeof element.focus !== 'function') return;
+    element.focus({ preventScroll: true });
+    if (state.start != null) {
+      try { element.setSelectionRange(state.start, state.end); } catch (_) { /* type=search bazı motorlarda desteklemez */ }
+    }
+  }
+
+  /* Kesilmiş listede arama sunucuya gider. İlk liste henüz yüklenirken yazılan
+     arama da kaybolmaz: liste "kesildi" diye dönünce bekleyen aramalar çalışır. */
+  function runPendingSearches() {
+    valueSearches.forEach((text, listKey) => {
+      const q = String(text || '').trim();
+      const ref = q && resolveKey(listKey);
+      if (!ref) return;
+      const base = valueCache.get(cacheKey(ref.condition, ref.sourceId, ''));
+      if (base && !base.loading && base.truncated) ensureValues(ref.condition, ref.sourceId, q);
     });
   }
 
   function onSimpleInput(event) {
     if (event.target.matches && event.target.matches('[data-dmf-col-search]')) {
       catalogSearch = event.target.value || '';
-      const position = event.target.selectionStart;
       render();
-      refocus('[data-dmf-col-search]', position);
       return true;
     }
     if (event.target.matches && event.target.matches('[data-dmf-value-search]')) {
-      const listKey = event.target.dataset.dmfValueSearch;
-      valueSearches.set(listKey, event.target.value || '');
-      const position = event.target.selectionStart;
+      valueSearches.set(event.target.dataset.dmfValueSearch, event.target.value || '');
       render();
-      refocus(`[data-dmf-value-search="${CSS.escape(listKey)}"]`, position);
-      /* Kesilmiş listede arama sunucuya gider; her tuşta değil, duraksayınca. */
+      // Her tuşta değil, duraksayınca.
       clearTimeout(valueSearchTimer);
-      valueSearchTimer = setTimeout(() => {
-        const ref = resolveKey(listKey);
-        const q = String(valueSearches.get(listKey) || '').trim();
-        if (!ref || !q || !host) return;
-        const base = valueCache.get(cacheKey(ref.condition, ref.sourceId, ''));
-        if (base && base.truncated) { ensureValues(ref.condition, ref.sourceId, q); render(); }
-      }, 350);
+      valueSearchTimer = setTimeout(() => { if (host) { runPendingSearches(); render(); } }, 350);
       return true;
     }
     return false;
@@ -1261,6 +1278,7 @@
       editor: host.querySelector('.dmfEditorPane')?.scrollTop || 0,
       body: host.querySelector('.dmfBody')?.scrollTop || 0,
     } : null;
+    const focus = captureFocus();
 
     host.innerHTML = `<div class="dmFilterEditor${simple ? ' isSimple' : ''}" role="region" aria-label="${esc(context.moduleLabel)}">
       <div class="dmfHead">
@@ -1338,6 +1356,7 @@
       const body = host.querySelector('.dmfBody');
       if (body) body.scrollTop = scroll.body;
     }
+    restoreFocus(focus);
   }
 
   /* ---------------------------------------------------------------- */
