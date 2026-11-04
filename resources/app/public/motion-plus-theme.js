@@ -363,7 +363,8 @@
     select.addEventListener('change',()=>{save({effect:select.value});syncControls();});
     speed.addEventListener('input',()=>{save({speed:Number(speed.value)});syncControls();});
     size.addEventListener('input',()=>{save({size:Number(size.value)});syncControls();});
-    doc.addEventListener('bl:language-changed',syncControls);
+    // applyLanguage updates html.lang; dynamic options/outputs must follow it too.
+    if(root.MutationObserver)new root.MutationObserver(syncControls).observe(html,{attributes:true,attributeFilter:['lang']});
     syncControls();
   }
   root.BLMotionPlusTheme=Object.freeze({EFFECTS,SPEEDS,DEFAULTS,settings,save,run,finish:finishActive,collapse:()=>setExpanded(false)});

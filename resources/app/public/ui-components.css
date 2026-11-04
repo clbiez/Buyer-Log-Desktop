@@ -5221,7 +5221,9 @@ html[data-ui-system="manifest"] nav.tabs button:hover {background:color-mix(in s
 }
 html[data-ui-system="manifest"] nav.tabs button.active .ic {color:var(--ui-selected-ink) !important
 }
-html[data-ui-system="manifest"] nav.tabs button.active::before {background:transparent !important
+html[data-ui-system="manifest"] nav.tabs button.active::before {background:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] nav.tabs button:focus-visible {outline-offset:-2px
 }
 html[data-ui-system="manifest"] .railFoot button {font-weight:400 !important;color:var(--ui-text-secondary) !important
 }
@@ -14619,12 +14621,11 @@ html[data-ui-system="manifest"] #shipSecondaryToolbar>:is(.tbtn,.colPanelWrap>.t
 }
 
 /* Manifest pilot components. Existing IDs/classes remain behavior hooks. */
-html[data-ui-system="manifest"] .rail{padding:23px 14px 14px;transition:none !important;}
-html[data-ui-system="manifest"] .railTop{padding:0 4px 20px;margin-bottom:8px;}
+html[data-ui-system="manifest"] .rail{transition:none !important;}
 html[data-ui-system="manifest"] .brandName{font-family:var(--ui-font-heading);font-size:var(--ui-font-lg);font-weight:600;letter-spacing:-.025em;}
 html[data-ui-system="manifest"] .brandMark--image{background:var(--ui-text);width:30px;height:34px;display:grid;place-items:center;}
 html[data-ui-system="manifest"] .brandMarkImage{opacity:1;object-fit:contain;}
-html[data-ui-system="manifest"] .railGroupLabel{font-size:var(--ui-font-2xs);font-weight:500;letter-spacing:.08em;padding:18px 10px 8px;color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] .railGroupLabel{font-size:var(--ui-font-2xs);font-weight:500;letter-spacing:.08em;color:var(--ui-text-muted);}
 html[data-ui-system="manifest"] :is(nav.tabs button,.railFoot button):where(button){color:var(--ui-text-secondary);background:transparent;transition:none !important;}
 html[data-ui-system="manifest"] nav.tabs button.active{color:var(--ui-selected-ink);background:var(--ui-selected);font-weight:700;}
 html[data-ui-system="manifest"] nav.tabs button::after{content:none;}

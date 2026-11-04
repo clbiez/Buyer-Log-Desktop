@@ -434,9 +434,9 @@
   <div class="railTop">
     <div class="brandMark brandMark--image" title="Buyer Log"><img class="brandMarkImage" src="icons/icon-mark.png?v=__BL_ASSET_VERSION__" alt="BL" width="34" height="34" decoding="async"></div>
     <div class="brandName">Buyer Log<small id="appVersionBtn" class="appVersionBtn" role="button" tabindex="0" title="Sürüm geçmişini gör" data-i18n-title-tr="Sürüm geçmişini gör" data-i18n-title-en="View version history">Version __BL_DISPLAY_VERSION__</small></div>
-    <button class="railCollapse" id="railCollapse" title="Menüyü daralt" data-i18n-title-tr="Menüyü daralt" data-i18n-title-en="Collapse menu"><svg class="ic"><use href="#i-layout-sidebar-left-collapse"/></svg></button>
+    <button type="button" class="railCollapse" id="railCollapse" aria-controls="railModules" title="Menüyü daralt" data-i18n-title-tr="Menüyü daralt" data-i18n-title-en="Collapse menu"><svg class="ic" aria-hidden="true"><use href="#i-layout-sidebar-left-collapse"/></svg></button>
   </div>
-  <nav class="tabs" aria-label="Ana modüller" data-i18n-aria-label-tr="Ana modüller" data-i18n-aria-label-en="Main modules">
+  <nav class="tabs" id="railModules" aria-label="Ana modüller" data-i18n-aria-label-tr="Ana modüller" data-i18n-aria-label-en="Main modules">
     <span class="railGroupLabel" data-i18n-tr="Ana Sayfa" data-i18n-en="Home">Ana Sayfa</span>
     <button data-tab="overview" class="active" title="Overview" aria-current="page"><svg class="ic"><use href="#i-bl-n01"/></svg><span data-i18n-tr="Overview" data-i18n-en="Overview">Overview</span></button>
     <button data-tab="lcwai" title="LCW AI — genel asistan" data-i18n-title-tr="LCW AI — genel asistan" data-i18n-title-en="LCW AI — general assistant"><svg class="ic"><use href="#i-robot"/></svg><span data-i18n-tr="LCW AI" data-i18n-en="LCW AI">LCW AI</span></button>
@@ -1668,6 +1668,8 @@
       : (min?'Menüyü genişlet':'Menüyü daralt');
     collapseBtn.title=title;
     collapseBtn.setAttribute('aria-label',title);
+    collapseBtn.dataset.i18nTitleTr=min?'Menüyü genişlet':'Menüyü daralt';
+    collapseBtn.dataset.i18nTitleEn=min?'Expand menu':'Collapse menu';
   }
   collapseBtn?.addEventListener('click',()=>{
     const html=document.documentElement;
@@ -1683,6 +1685,15 @@
   document.addEventListener('pointerdown',()=>{keyboardRail=false;rail?.classList.remove('railKeyboardOpen');},true);
   rail?.addEventListener('focusin',()=>{if(keyboardRail)rail.classList.add('railKeyboardOpen');});
   rail?.addEventListener('focusout',event=>{if(!rail.contains(event.relatedTarget))rail.classList.remove('railKeyboardOpen');});
+  // Shared focus navigation; selecting a module still requires Enter/Space.
+  document.getElementById('railModules')?.addEventListener('keydown',event=>{
+    if(event.altKey||event.ctrlKey||event.metaKey||!event.target.matches('button[data-tab]'))return;
+    const buttons=[...event.currentTarget.querySelectorAll('button[data-tab]')].filter(b=>!b.disabled&&b.getAttribute('aria-disabled')!=='true'&&b.getClientRects().length);
+    const index=window.BLTabSystem?.nextTabIndex(buttons.indexOf(event.target),buttons.length,event.key,'vertical');
+    if(index==null)return;
+    event.preventDefault();keyboardRail=true;rail.classList.add('railKeyboardOpen');buttons[index].focus();
+  });
+  new MutationObserver(syncRailIcon).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
   syncRailIcon();
 
   /* v7.81 — Kaynak Veri şeridi kaldırıldı; konumlandırma ve aç-kapat kodu
@@ -1697,12 +1708,25 @@
     const trigger=document.getElementById('railAppearanceBtn'),menu=document.getElementById('railAppearanceMenu');
     if(!trigger||!menu)return;
     // Çekmece düğmenin hemen üstünde, sol kenarıyla hizalı açılır ve alttan yukarı kayar.
-    const place=()=>{const r=trigger.getBoundingClientRect();menu.style.left=Math.round(r.left)+'px';menu.style.bottom=Math.max(8,Math.round(window.innerHeight-r.top+4))+'px';};
+    const place=()=>{const r=trigger.getBoundingClientRect();menu.style.left=Math.round(r.left)+'px';menu.style.bottom=Math.max(8,Math.round(window.innerHeight-r.top+4))+'px';menu.style.maxHeight=Math.max(0,Math.floor(r.top-12))+'px';};
     const setOpen=open=>{
       menu.hidden=!open;trigger.setAttribute('aria-expanded',open?'true':'false');
       if(open){window.BLMotionPlusTheme?.collapse?.();place();window.BLMotionPlus?.play?.('drawer',menu);}
     };
     trigger.addEventListener('click',event=>{event.stopPropagation();setOpen(menu.hidden);});
+    const menuButtons=()=>[...menu.querySelectorAll('button')].filter(b=>!b.disabled&&b.getClientRects().length);
+    trigger.addEventListener('keydown',event=>{
+      if(!['ArrowDown','ArrowUp'].includes(event.key)||event.altKey||event.ctrlKey||event.metaKey)return;
+      event.preventDefault();setOpen(true);
+      const buttons=menuButtons();(event.key==='ArrowUp'?buttons.at(-1):buttons[0])?.focus();
+    });
+    menu.addEventListener('keydown',event=>{
+      if(!event.target.matches('button')||event.altKey||event.ctrlKey||event.metaKey)return;
+      const buttons=menuButtons(),index=window.BLTabSystem?.nextTabIndex(buttons.indexOf(event.target),buttons.length,event.key,'vertical');
+      if(index==null)return;
+      event.preventDefault();buttons[index].focus();
+    });
+    rail.addEventListener('focusout',event=>{if(!rail.contains(event.relatedTarget))setOpen(false);});
     document.addEventListener('click',event=>{if(!menu.hidden&&!menu.contains(event.target)&&!trigger.contains(event.target))setOpen(false);});
     document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!menu.hidden){setOpen(false);trigger.focus();}});
     window.addEventListener('resize',()=>{if(!menu.hidden)place();},{passive:true});
