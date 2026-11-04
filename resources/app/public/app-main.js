@@ -15675,7 +15675,9 @@ let topRefreshMenuSequence=0;
 window.BLInvalidateRefreshGroups=items=>{ window.BL_REFRESH_GROUPS=Array.isArray(items)?items:null; authoritativeLinkedRefreshTargets=null; };
 function closeTopRefreshMenu(){ topRefreshMenuSequence++;document.getElementById('_topRefreshMenu')?.remove(); if(topRefreshMenuCleanup){topRefreshMenuCleanup();topRefreshMenuCleanup=null;} }
 async function openTopRefreshMenu(anchor){
+  const wasOpen=Boolean(document.getElementById('_topRefreshMenu'));
   closeTopRefreshMenu();
+  if(wasOpen)return;
   if(window.BL_REFRESH_BUSY){openRefreshStagesModal();return;}
   const requestSequence=topRefreshMenuSequence;
   try{await syncLinkedRefreshMembers();}
@@ -15713,21 +15715,57 @@ async function openTopRefreshMenu(anchor){
     return `${sourceRelativeTime(clock.toISOString())}${time?` · ${time}`:''}`;
   };
   if(window.BL_REFRESH_BUSY){ openRefreshStagesModal(); return; }
-  const busy=Boolean(window.BL_REFRESH_BUSY);
-  menu.innerHTML=options.map(([key,label,targets])=>`<button type="button" data-refresh-scope="${key}"${busy?' disabled':''}><span class="topRefreshLabel">${escapeHtml(label)}</span><span class="topRefreshWhen">${escapeHtml(stamp(targets))}</span><svg class="ic"><use href="#i-refresh"/></svg></button>`).join('')
-    +`<button type="button" class="topRefreshStop" data-stop-refresh${busy?'':' disabled'}><span class="topRefreshLabel">${escapeHtml(appLang==='en'?'Stop Refresh':'Yenilemeyi Durdur')}</span><svg class="ic"><use href="#i-x"/></svg></button>`;
+  const codes={cp:'CP',linked:'ALL',orders:'ORD',backlog:'BL',lfl:'LFL',priceanalysis:'PSA'};
+  menu.setAttribute('role','menu');
+  menu.setAttribute('aria-label',appLang==='en'?'Refresh scope':'Yenileme kapsamı');
+  menu.innerHTML='<svg class="topRefreshBranches" aria-hidden="true"><path/></svg><div class="topRefreshSquares">'
+    +options.map(([key,label,targets])=>`<button type="button" role="menuitem" data-refresh-scope="${key}" aria-label="${escapeHtml(label+' · '+stamp(targets))}" aria-describedby="topRefreshDetail"><span class="topRefreshLabel">${codes[key]||key.toUpperCase()}</span></button>`).join('')
+    +'</div><div class="topRefreshDetail" id="topRefreshDetail" role="tooltip"><span class="topRefreshFullLabel"></span><span class="topRefreshWhen"></span></div>';
   document.body.appendChild(menu);
-  const place=()=>{const r=anchor.getBoundingClientRect(),w=menu.offsetWidth||190;menu.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w))+'px';menu.style.top=Math.min(innerHeight-(menu.offsetHeight||260)-8,r.bottom+8)+'px';};
-  const run=async key=>{closeTopRefreshMenu();if(window.BL_REFRESH_BUSY)return;const option=options.find(([candidate])=>candidate===key);if(option)return loadFromServer(true,option[2].slice());};
-  menu.querySelectorAll('[data-refresh-scope]').forEach(btn=>btn.addEventListener('click',()=>run(btn.dataset.refreshScope)));
-  menu.querySelector('[data-stop-refresh]')?.addEventListener('click',()=>{requestRefreshCancel();closeTopRefreshMenu();});
-  const outside=e=>{if(!menu.contains(e.target)&&e.target!==anchor&&!anchor.contains(e.target))closeTopRefreshMenu();}; const esc=e=>{if(e.key==='Escape')closeTopRefreshMenu();};
-  document.addEventListener('pointerdown',outside,true);document.addEventListener('keydown',esc);window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
-  topRefreshMenuCleanup=()=>{document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',esc);window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
-  // Açık sayfanın satırı odaklanır: Enter tek tuşla doğru yenilemeyi başlatır.
+  anchor.setAttribute('aria-haspopup','menu');anchor.setAttribute('aria-expanded','true');anchor.setAttribute('aria-controls',menu.id);
+  const buttons=Array.from(menu.querySelectorAll('[data-refresh-scope]'));
+  const detail=menu.querySelector('.topRefreshDetail');
+  const describe=button=>{
+    const option=options.find(([key])=>key===button.dataset.refreshScope);if(!option)return;
+    detail.querySelector('.topRefreshFullLabel').textContent=option[1];
+    detail.querySelector('.topRefreshWhen').textContent=stamp(option[2]);
+  };
+  const place=()=>{
+    const r=anchor.getBoundingClientRect(),w=menu.offsetWidth;
+    const left=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2));
+    menu.style.left=left+'px';menu.style.top=r.bottom+'px';
+    const svg=menu.querySelector('svg'),branchHeight=buttons[0].offsetTop;
+    const centers=buttons.map(button=>button.offsetLeft+button.offsetWidth/2);
+    svg.setAttribute('viewBox',`0 0 ${w} ${branchHeight}`);
+    svg.querySelector('path').setAttribute('d',`M${r.left+r.width/2-left} 0V28H${centers[0]}M${centers[0]} 28H${centers[centers.length-1]}${centers.map(x=>`M${x} 28V${branchHeight}`).join('')}`);
+    detail.style.left=Math.max(8-left,Math.min(innerWidth-8-left-detail.offsetWidth,(r.left+r.width/2-left)-detail.offsetWidth/2))+'px';
+  };
+  const run=async key=>{closeTopRefreshMenu();anchor.focus();if(window.BL_REFRESH_BUSY)return;const option=options.find(([candidate])=>candidate===key);if(option)return loadFromServer(true,option[2].slice());};
+  buttons.forEach(btn=>{
+    btn.addEventListener('click',()=>run(btn.dataset.refreshScope));
+    btn.addEventListener('focus',()=>describe(btn));btn.addEventListener('pointerenter',()=>describe(btn));
+  });
+  const outside=e=>{if(!menu.contains(e.target)&&!anchor.contains(e.target))closeTopRefreshMenu();};
+  const keys=e=>{
+    if(e.key==='Escape'){e.preventDefault();closeTopRefreshMenu();anchor.focus();return;}
+    if(!menu.contains(e.target))return;
+    const i=buttons.indexOf(document.activeElement);let next;
+    if(e.key==='ArrowRight'||e.key==='ArrowDown')next=(i+1)%buttons.length;
+    if(e.key==='ArrowLeft'||e.key==='ArrowUp')next=(i+buttons.length-1)%buttons.length;
+    if(e.key==='Home')next=0;if(e.key==='End')next=buttons.length-1;
+    if(next!==undefined){e.preventDefault();buttons[next].focus();}
+    if(e.key==='Tab'){anchor.focus();closeTopRefreshMenu();}
+  };
+  document.addEventListener('pointerdown',outside,true);document.addEventListener('keydown',keys);window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
+  topRefreshMenuCleanup=()=>{anchor.setAttribute('aria-expanded','false');document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',keys);window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
   const activeTab=currentActiveTab();
-  const focusKey=(options.find(([key,,targets])=>key!=='all'&&targets.includes(activeTab))||[])[0]||'';
-  place();requestAnimationFrame(()=>(focusKey&&menu.querySelector(`[data-refresh-scope="${focusKey}"]`)||menu.querySelector('button'))?.focus());
+  const focusKey=(options.find(([key,,targets])=>key!=='linked'&&targets.includes(activeTab))
+    ||options.find(([,,targets])=>targets.includes(activeTab))||options[0])[0];
+  const initial=buttons.find(button=>button.dataset.refreshScope===focusKey)||buttons[0];
+  describe(initial);place();
+  window.BLMotionPlus?.play('branch',menu.querySelector('svg'));
+  buttons.forEach(button=>window.BLMotionPlus?.play('overlay',button));
+  requestAnimationFrame(()=>{if(menu.isConnected)initial.focus();});
 }
 // Yenileme sürerken aynı düğmeye tekrar basmak Refresh Stages panelini gösterir.
 

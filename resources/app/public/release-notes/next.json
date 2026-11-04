@@ -157,6 +157,35 @@
       }
     },
     {
+      "id": "refresh-fine-branches",
+      "type": "improvement",
+      "module": {
+        "tr": "Yenileme",
+        "en": "Refresh"
+      },
+      "title": {
+        "tr": "Yenileme seçenekleri ince çizgilerle dallanıyor",
+        "en": "Refresh options unfold into fine branches"
+      },
+      "body": {
+        "tr": "Yenileme butonu aşağıya uzanan ince çizgilerle CP, ALL ve LFL gibi kısa kodlu kareleri açar. Tam kapsam ve son yenileme zamanı odaklanan karenin altında görünür. Kapsamlar mevcut ayarlardan okunur; klavye, azaltılmış hareket ve işlem sırasındaki aşama görünümü korunur.",
+        "en": "The refresh button unfolds downward into short-code squares such as CP, ALL and LFL, connected by fine lines. Full scope and last refresh time appear below the focused square. Scopes follow current settings; keyboard navigation, reduced motion and the in-progress stages view are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "refresh-fine-branches.png",
+        "alt": {
+          "tr": "Buyer Log üst çubuğundan aşağı dallanan yenileme kareleri",
+          "en": "Refresh squares branching below the Buyer Log top bar"
+        },
+        "caption": {
+          "tr": "İzole demo verilerle çalışan Buyer Log’da ince dallanma menüsü.",
+          "en": "Fine branches menu in Buyer Log running with isolated demo data."
+        }
+      }
+    },
+    {
       "id": "chronological-season-filter",
       "type": "fix",
       "module": {
