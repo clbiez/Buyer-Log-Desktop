@@ -153,6 +153,7 @@ modüller `perf-runtime` lazy sözleşmesine uyar.
   eylem. Yükleme için sabit kare durum işareti; emoji ve dekoratif spinner yok.
 - Modal/çekmece: adlandırılmış dialog, ilk odak, Tab/Shift+Tab sınırı, Escape
   ve tetikleyiciye odak dönüşü. İç içe pencerede yalnız üst katman kapanır.
+- Yenileme kapsam menüsü: kullanıcı tercihiyle üst çubuktan aşağı ince hatlarla dallanan, kısa kodlu ayrı karelerdir. Kareler ve odak ipucu ortak yüzey, sınır ve gölge tokenlarını kullanır; arka planda kapsayıcı panel yoktur. Hat Motion+ `branch`, kareler `overlay` ile açılır.
 - Popover/menü: ortak yüzey; ok/Home/End, disabled öğe atlama ve Escape.
   Çerçeve ve gölge yalnız menü kabındadır; öğeler çerçevesiz satırdır, hover
   `--ui-surface-strong`. Aynı işi yapan eylemler tek çekmecede toplanır (ör.
