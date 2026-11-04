@@ -126,6 +126,9 @@ function createOabAuthLifecycle(options = {}) {
       setPhase('login-required');
       return snapshot();
     }
+    // Validation can be the actual report (tens of seconds). Navigating the
+    // viewer while it runs aborts that fetch and repeats expensive PASS work.
+    if (candidateBusy) return snapshot();
 
     let parsed;
     try { parsed = new URL(current); } catch (_) { return snapshot(); }

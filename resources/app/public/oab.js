@@ -368,9 +368,9 @@
     const input = source && typeof source === 'object' ? source : {};
     const cleanRef = value => String(value == null ? '' : value).replace(/[\u0000\r\n]/g, '').trim().slice(0, 200);
     const context = {
-      seasonRef: cleanRef(input.seasonRef),
-      merchSubGroupRef: cleanRef(input.merchSubGroupRef),
-      buyerGroupRef: cleanRef(input.buyerGroupRef),
+      seasonRef: cleanRef(input.seasonRef ?? input.seasonRefs?.[0]),
+      merchSubGroupRef: cleanRef(input.merchSubGroupRef ?? input.merchSubGroupRefs?.[0]),
+      buyerGroupRef: cleanRef(input.buyerGroupRef ?? input.buyerGroupRefs?.[0]),
     };
     return Object.fromEntries(Object.entries(context).filter(([, value]) => Boolean(value)));
   }
@@ -1289,6 +1289,7 @@
     }, 900);
     let retryAfterAuth = false;
     try {
+      oabAuthContextFromRequest('/api/oab/batch', { body:JSON.stringify(oabCurrentSelection(forceRefresh)) });
       const single = S.seasonRefs.length === 1 && S.magRefs.length === 1 && !S.allBuyerGroups && S.buyerGroupRefs.length === 1;
       if (single) {
         oabSetActivity('fetch');
@@ -1305,7 +1306,7 @@
       // hâlde reddedilen token her turda PASS sekmesini yeniden açtırıyordu.
       if (!authRetried && oabIsAuthErrorCode(err && err.code)) {
         try {
-          await oabEnsureAuthentication();
+          await oabEnsureAuthentication(oabLastAuthContext);
           retryAfterAuth = true;
         } catch (authError) {
           oabShowRetry(oabReportErrorMessage(authError), () => oabFetchReport(forceRefresh));
@@ -1413,6 +1414,7 @@
   async function oabRunBatch(forceRefresh) {
     const plan = await OABApi.plan(oabCurrentSelection(forceRefresh));
     S.plan = plan; oabRenderPlanBar();
+    if (plan.authContext) oabLastAuthContext = oabNormalizeAuthContext(plan.authContext);
     if (!plan.combinationCount) {
       oabSetStatus(oabT('Seçilen filtreler OAB metadata ile eşleşen hiçbir kombinasyon üretmiyor.', 'The selected filters produce no combination that matches the OAB metadata.'), 'error');
       return;
