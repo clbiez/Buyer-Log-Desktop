@@ -14,21 +14,34 @@
   function ensure({rebuild=false}={}){
     const active=session();
     if(active.pending)return active.pending;
-    if(!rebuild&&active.status!=='idle')return Promise.resolve();
-    active.status='loading';
+    if(!rebuild&&!active.invalidated&&active.status!=='idle')return Promise.resolve();
+    active.invalidated=false;
+    const hadReference=active.status==='ready';
+    if(!hadReference)active.status='loading';
+    active.refreshError='';
     active.detailRows=new Map();
     active.pending=(async()=>{
       try{
         const response=await fetch('/api/collection-lfl-reference'+(rebuild?'?rebuild=1':''),{cache:'no-store'});
         const data=await response.json();
-        if(!response.ok){active.status=response.status===403?'forbidden':data.code==='SOURCE_FILTER_REQUIRED'?'filter':'error';return;}
+        if(!response.ok){
+          if(response.status===403){active.status='forbidden';active.index=new Map();active.timelines=null;}
+          else if(hadReference){active.status='ready';active.refreshError=data.code||'LOAD_ERROR';}
+          else active.status=data.code==='SOURCE_FILTER_REQUIRED'?'filter':'error';
+          return;
+        }
         active.index=new Map((data.references||[]).map(item=>[item.key,item]));active.timelines=Engine.createSeasonTimelines(data.references);active.version=String(data.version||'');active.calculatedAt=data.calculatedAt;active.status='ready';
-      }catch(_){active.status='error';}
+      }catch(_){active.status=hadReference?'ready':'error';active.refreshError='LOAD_ERROR';}
       finally{active.pending=null;if(current===active)repaint();}
     })();
     return active.pending;
   }
-  function invalidate(){current=null;if(document.body.dataset.activeTab==='koleksiyon')void ensure();}
+  function invalidate(){
+    // Source refreshes may clear their own runtime; retain displayed references
+    // until a new durable response has successfully replaced them.
+    const active=session();active.detailRows=new Map();active.invalidated=true;
+    if(document.body.dataset.activeTab==='koleksiyon')void ensure({rebuild:false});
+  }
   function projectRow(row,read=kolEffectiveValue){
     const projected={...row};
     for(const key of ['season','mag','urunTipi','inStoreMonth','quantity','targetPrice','confirmedManufacturer'])projected[key]=read(row,key);
@@ -157,13 +170,13 @@
   function detailError(code){
     const messages={
       SOURCE_FILTER_REQUIRED:T('Kaynak Veride LFL filtresini tamamlayın.','Complete the LFL filter in Source Data.'),
-      LFL_REFERENCE_STALE:T('LFL kaynağı değişti. Referansları yenileyip detayı yeniden açın.','The LFL source changed. Refresh references and reopen the detail.'),
+      LFL_REFERENCE_STALE:T('LFL kaynağı değişti. Kayıtlı referanslar korunuyor; güncel detay için Referansları yenile düğmesini kullanın.','The LFL source changed. Saved references are preserved; use Refresh references for current details.'),
       LFL_REFERENCE_NOT_FOUND:T('Bu referans için erişilebilir sipariş bulunamadı.','No accessible orders were found for this reference.'),
       FORBIDDEN:T('Sipariş detayları için Koleksiyon ve LFL erişimi gerekli.','Collection and LFL access are required for order details.'),
     };
     return Object.assign(new Error(messages[code]||T('Sipariş detayları yüklenemedi. Tekrar deneyin.','Could not load order details. Please try again.')),{code});
   }
-  async function detailData(row,mode,retry=true){
+  async function detailData(row,mode){
     if(!['season','month','impact'].includes(mode))throw detailError('INVALID_MODE');
     await ensure();
     const active=session(),m=model(row,mode),reference=m.reference;
@@ -186,7 +199,6 @@
     }
     try{return await task;}
     catch(error){
-      if(retry&&error.code==='LFL_REFERENCE_STALE'&&session()===active){await ensure({rebuild:true});return detailData(row,mode,false);}
       throw error.code?error:detailError('LOAD_ERROR');
     }
   }
@@ -212,7 +224,12 @@
   function drawer(row){
     void ensure();
     const sections=['__previousSeason__','__lfl__','__seasonImpact__'].map(key=>{const mode=modeForKey(key),m=model(row,mode),action=T('Sipariş detaylarını aç','Open order details');return `<div class="cpdSection"><header><h4><button type="button" class="tbtn" data-cpd-lfl-details="${mode}" title="${esc(action)}" aria-label="${esc(labelFor(key)+': '+action)}"${m.reference?'':' disabled'}>${esc(labelFor(key))} ↗</button></h4><span>${esc(key==='__seasonImpact__'?T('Tek model simülasyonu','Single-model simulation'):key==='__previousSeason__'?T('Sezon geneli','Full season'):T('Aynı MB ayı','Same MB month'))}</span></header>${content(row,m)}<p class="cpdNote">${esc(m.reference?m.detail:m.message)}</p></div>`;}).join('');
-    return sections+`<div class="cpdActions"><button type="button" class="tbtn" data-cpd-lfl-refresh${session().status==='loading'?' disabled':''}>${esc(T('Referansları yenile','Refresh references'))}</button></div>`;
+    const active=session(),note=active.refreshError
+      ?(active.refreshError==='LFL_REFERENCE_INCOMPLETE'
+        ?T('Kaynak boş veya eksik olduğu için yenilenemedi. Kayıtlı referanslar korundu; LFL kaynak kapsamını kontrol edin.','Refresh could not complete because the source is empty or incomplete. Saved references were preserved; check the LFL source scope.')
+        :T('Referanslar yenilenemedi. Kayıtlı değerler korundu; tekrar deneyebilirsiniz.','Could not refresh references. Saved values were preserved; you can retry.'))
+      :T('Referanslar kalıcı saklanır. Güncellemek için Referansları yenile düğmesini kullanın.','References are saved permanently. Use Refresh references to update them.');
+    return sections+`<p class="cpdNote" role="status">${esc(note)}</p><div class="cpdActions"><button type="button" class="tbtn" data-cpd-lfl-refresh${active.pending||active.status==='loading'?' disabled':''}>${esc(T('Referansları yenile','Refresh references'))}</button></div>`;
   }
   global.BLCollectionLfl={ensure,invalidate,model,cell,combinedCell,combinedText,modeForKey,drawer,detailReport,footerSummaries,footerCells,text:(row,mode='month')=>model(row,mode).text};
 })(window);

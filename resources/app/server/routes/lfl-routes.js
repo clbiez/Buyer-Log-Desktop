@@ -16,6 +16,7 @@ module.exports = function registerLflRoutes(app, deps) {
     loadFromModels,
     modelImageIdentityOrders,
     runExcelTask,
+    saveRuntimeModelSnapshot,
     sendDateSafeJson,
     sourceFilterReadiness,
     sourceFilterReadinessMessage,
@@ -34,14 +35,23 @@ async function collectionReferenceSource(req,res){
     if(!runtime.lflLoadedAt){res.status(409).json({code:'LFL_SOURCE_UNAVAILABLE'});return null;}
     return {id,runtime,rows:runtime.lflRows||[],version:runtime.lflLoadedAt};
 }
-function collectionReferenceSnapshot(req,source,rebuild=false){
+function collectionReferenceIdentity(req){
     const profile=userAccess.publicProfile(req.currentUser);
-    const identity=JSON.stringify([source.id,profile.id,userAccess.localIamRevision(),profile.dataScope,profile.scopes,profile.delegatedUserIds]);
-    return collectionLflCache.get({identity,version:source.version,rebuild,loadRows:()=>userAccess.filterRowsByScope(req.currentUser,source.rows)});
+    // Login and unrelated IAM writes change the global revision. Scope identity
+    // follows the effective row permissions instead, including delegated scope.
+    return JSON.stringify([sourceUserId(req),profile.id,'scope-v1',profile.dataScope,profile.scopes,profile.delegatedUserIds]);
+}
+function collectionReferenceSnapshot(req,source,rebuild=false){
+    return collectionLflCache.get({identity:collectionReferenceIdentity(req),version:source.version,rebuild,loadRows:()=>userAccess.filterRowsByScope(req.currentUser,source.rows)});
 }
 // Collection reads shared summaries; source order rows are requested only for a clicked detail report.
 app.get('/api/collection-lfl-reference', userAccess.requireArea('koleksiyon'), userAccess.requireArea('lfl'), async (req,res)=>{
   try{
+    res.set('Cache-Control','no-store');
+    if(req.query.rebuild!=='1'){
+      const saved=await collectionLflCache.read({identity:collectionReferenceIdentity(req)});
+      if(saved)return sendDateSafeJson(res,saved);
+    }
     const source=await collectionReferenceSource(req,res);if(!source)return;
     const snapshot=await collectionReferenceSnapshot(req,source,req.query.rebuild==='1');
     sendDateSafeJson(res,snapshot);
@@ -55,6 +65,7 @@ app.post('/api/collection-lfl-detail',userAccess.requireArea('koleksiyon'),userA
     const source=await collectionReferenceSource(req,res);if(!source)return;
     if(version!==String(source.version))return res.status(409).json({code:'LFL_REFERENCE_STALE'});
     const snapshot=await collectionReferenceSnapshot(req,source);
+    if(version!==snapshot.version)return res.status(409).json({code:'LFL_REFERENCE_STALE'});
     // Never trust client dimensions: the key must exist in the current user's scoped summary.
     const reference=snapshot.references.find(item=>item.key===key);
     if(!reference)return res.status(404).json({code:'LFL_REFERENCE_NOT_FOUND'});
@@ -102,19 +113,24 @@ app.post('/api/lfl/refresh', userAccess.requireArea('lfl'), async (req, res) => 
   catch (err) { apiError(res, err, 'LFL veri modeli yenilenemedi.'); }
   finally{lflRefreshInFlight.delete(id);}
 });
-// Kullanıcının seçtiği LFL dosyası yalnız o kullanıcının çalışma önbelleğine yüklenir.
+// Kullanıcının seçtiği LFL dosyası yalnız o kullanıcının kalıcı snapshot'ına yazılır.
 app.post('/api/lfl/upload', userAccess.requireArea('lfl'), async (req, res) => {
   try {
-    const id=sourceUserId(req), runtime=cacheForUser(id);
+    const id=sourceUserId(req);
+    const pending=initialDataLoadPromises.get(id);if(pending)await pending;
+    await ensureDataLoaded(id);
     const { name, dataBase64 } = req.body || {};
     if (!dataBase64) return res.status(400).json({ error: 'dataBase64 alanı zorunlu.', code: 'VALIDATION_ERROR' });
     const buf = Buffer.from(dataBase64, 'base64');
     const exact = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
     const parsed = await runExcelTask('parseLflBuffer', { data: exact }, { timeoutMs: 300000, serializationKey: `source:${id}` });
-    runtime.lflRows = Array.isArray(parsed.rows) ? parsed.rows : [];
-    runtime.lflMeta = withFabricDimensions(parsed.meta, runtime.lflRows);
-    runtime.lflLoadedAt = new Date().toISOString();
-    runtime.sources = { ...(runtime.sources || {}), lfl: name || 'Yüklenen dosya' };
+    const runtime=cacheForUser(id);
+    const next={...runtime,loadedAt:runtime.loadedAt||new Date().toISOString(),
+      lflRows:Array.isArray(parsed.rows)?parsed.rows:[],lflLoadedAt:new Date().toISOString(),
+      sources:{...(runtime.sources||{}),lfl:name||'Yüklenen dosya'}};
+    next.lflMeta=withFabricDimensions(parsed.meta,next.lflRows);
+    await saveRuntimeModelSnapshot(id,next);
+    Object.assign(runtime,next);
     userAccess.appendAudit(req.currentUser,'LFL_UPLOAD',name||'uploaded',{rowCount:Number(parsed.meta&&parsed.meta.rowCount)||0});
     const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
     const imageAwareRows=attachModelImageIdentities(scopedRows,modelImageIdentityOrders(runtime));

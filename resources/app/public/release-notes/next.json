@@ -7,10 +7,27 @@
     "en": "UI transitions and balanced sidebar navigation"
   },
   "summary": {
-    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır.",
-    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode."
+    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir.",
+    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values."
   },
   "changes": [
+    {
+      "id": "collection-lfl-durable-references",
+      "type": "fix",
+      "module": {"tr": "Koleksiyon", "en": "Collection"},
+      "title": {"tr": "Previous Season ve LFL verileri kaybolmaz", "en": "Previous Season and LFL data stays available"},
+      "body": {
+        "tr": "Koleksiyonun Previous Season, LFL ve Sezon Etkisi referansları kullanıcı ve gerçek erişim kapsamına göre kalıcı saklanır. Yeniden giriş, uygulamayı kapatıp açma ve yalnız CP gibi başka bir kaynağı yenileme bu değerleri silmez. Referansları yenile düğmesi yeni veriyi kaydeder; kaynak boşsa, eski referans grupları eksikse veya kayıt başarısızsa mevcut değerler korunur ve çekmecede bilgi gösterilir. Kaynak sürümü değiştiğinde sipariş detayları referansları kendiliğinden değiştirmez; güncel detaylar için önce referansları yenileyin. Elle yüklenen LFL kaynak verisi de yeniden açılış için kaydedilir.",
+        "en": "Collection's Previous Season, LFL and Season Impact references are saved permanently for each user and effective access scope. Signing in again, restarting the app or refreshing another source such as CP does not clear these values. Refresh references saves new data; if the source is empty, previous reference groups are missing or saving fails, existing values are preserved and the drawer explains the issue. When the source revision changes, order details do not automatically replace references; refresh references first for current details. Manually uploaded LFL source data is also saved for the next startup."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-lfl-persistence.png",
+        "alt": {"tr": "Eksik kaynakla yenileme sonrasında korunan Previous Season ve LFL değerleri", "en": "Previous Season and LFL values preserved after refreshing an incomplete source"},
+        "caption": {"tr": "Gerçek Buyer Log, izole demo verisi: yenileme başarısız olsa da kayıtlı referanslar korunur.", "en": "Actual Buyer Log with isolated demo data: saved references survive a failed refresh."}
+      }
+    },
     {
       "id": "overview-page-slide",
       "type": "improvement",
