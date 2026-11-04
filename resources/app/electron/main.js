@@ -147,8 +147,8 @@ const OAB_STORED_TOKENS_READER = `const readStoredOabTokens = () => {
         text = typeof parsed === 'string' ? parsed : String(parsed && (parsed.access_token || parsed.accessToken) || '');
       } catch (_) { return ''; }
     }
-    text = text.trim().replace(/^bearer\s+/i, '');
-    return text.length >= 20 && !/\s/.test(text) ? 'Bearer ' + text : '';
+    text = text.trim().replace(/^bearer\\s+/i, '');
+    return text.length >= 20 && !/\\s/.test(text) ? 'Bearer ' + text : '';
   };
   const stores = [];
   try { if (typeof localStorage !== 'undefined' && localStorage) stores.push(localStorage); } catch (_) {}
@@ -164,7 +164,7 @@ const OAB_STORED_TOKENS_READER = `const readStoredOabTokens = () => {
     try {
       for (let index = 0; index < store.length; index += 1) {
         const key = String(store.key(index) || '');
-        if (/^oidc\.user:/i.test(key)) add(extract(store.getItem(key)));
+        if (/^oidc\\.user:/i.test(key)) add(extract(store.getItem(key)));
       }
     } catch (_) {}
   }
@@ -252,36 +252,39 @@ async function validateOabSessionInPage(page, authorization, selection) {
 }
 const OAB_PAGE_REQUEST_TIMEOUT_MS = 120000;
 function oabPassRequestExpression(url, body, fallbackAuthorization, options = {}) {
-  const config = JSON.stringify({ url, body: body == null ? {} : body, fallback: String(fallbackAuthorization || ''), pendingAfterMs: Math.max(0, Number(options.pendingAfterMs) || 0) });
+  const config = JSON.stringify({ url, body: body == null ? {} : body, fallback: String(fallbackAuthorization || ''), pendingAfterMs: Math.max(0, Number(options.pendingAfterMs) || 0), timeoutMs:120000 });
   return `(async () => {
     const cfg = ${config};
     ${OAB_STORED_TOKENS_READER}
     const candidates = [...readStoredOabTokens()];
     if (cfg.fallback && !candidates.includes(cfg.fallback)) candidates.push(cfg.fallback);
     if (!candidates.length) return { ok:false, status:0, code:'OAB_AUTH_REQUIRED' };
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), cfg.pendingAfterMs || cfg.timeoutMs);
+    const startedAt = Date.now();
     let last = null;
-    for (const authorization of candidates) {
-      const controller = cfg.pendingAfterMs ? new AbortController() : null;
-      const timer = controller ? setTimeout(() => controller.abort(), cfg.pendingAfterMs) : null;
-      let response;
-      try {
-        response = await fetch(cfg.url, {
-          method:'POST', credentials:'omit', cache:'no-store', signal:controller ? controller.signal : undefined,
+    try {
+      for (const authorization of candidates) {
+        const response = await fetch(cfg.url, {
+          method:'POST', credentials:'omit', cache:'no-store', signal:controller.signal,
+          redirect:'error',
           headers:{ Accept:'application/json', 'Content-Type':'application/json', Authorization:authorization },
           body:JSON.stringify(cfg.body),
         });
-      } catch (error) {
-        if (controller && controller.signal.aborted) return { ok:false, status:0, code:'OAB_PENDING' };
-        throw error;
-      } finally {
-        if (timer) clearTimeout(timer);
+        const headersAt = Date.now();
+        const text = await response.text();
+        let json = null; try { json = text ? JSON.parse(text) : null; } catch (_) {}
+        last = { ok:response.ok, status:response.status, json,
+          timings:{ headersMs:headersAt-startedAt, bodyMs:Date.now()-headersAt, totalMs:Date.now()-startedAt } };
+        if (response.status !== 401 && response.status !== 403) return last;
       }
-      const text = await response.text();
-      let json = null; try { json = text ? JSON.parse(text) : null; } catch (_) {}
-      last = { ok:response.ok, status:response.status, json };
-      if (response.status !== 401 && response.status !== 403) return last;
+      return last;
+    } catch (error) {
+      if (controller.signal.aborted) return { ok:false, status:0, code:cfg.pendingAfterMs ? 'OAB_PENDING' : 'OAB_TIMEOUT' };
+      throw error;
+    } finally {
+      clearTimeout(timer);
     }
-    return last;
   })()`;
 }
 function oabWindowOnPass(win) {
@@ -300,6 +303,7 @@ async function runOabPageRequest(win, endpoint, body, fallbackAuthorization, opt
       win.webContents.executeJavaScript(oabPassRequestExpression(`${OAB_PASS_API_ROOT}/${endpoint}`, body, fallbackAuthorization, options), true),
       timeout,
     ]);
+    if (result && result.timings) log('OAB PASS HTTP ' + result.status + ': headers=' + result.timings.headersMs + 'ms, body=' + result.timings.bodyMs + 'ms, total=' + result.timings.totalMs + 'ms');
     return result && typeof result === 'object' ? result : { ok:false, status:0, code:'OAB_NO_RESPONSE' };
   } catch (_) {
     return { ok:false, status:0, code:'OAB_PAGE_REQUEST_FAILED' };
@@ -1426,11 +1430,15 @@ async function acquireOabAuthorization(options = {}) {
       if (authWindow && authWindow !== keptWindow && !authWindow.isDestroyed()) { try { authWindow.close(); } catch (_) {} }
       if (oabAuthWindow === authWindow) oabAuthWindow = null;
     };
+    let authorizationBusy = false;
     const finishAuthorizationNow = async (authorization, source, target) => {
       if (settled || !authorization) return false;
       const page = oabWindowOnPass(target) ? target : authWindow;
       // Validate in the signed-in PASS page itself (browser network stack).
-      const result = await validateOabSessionInPage(page, authorization, oabSelectionFromViewerUrl(targetViewerUrl()));
+      let result;
+      authorizationBusy = true;
+      try { result = await validateOabSessionInPage(page, authorization, oabSelectionFromViewerUrl(targetViewerUrl())); }
+      finally { authorizationBusy = false; }
       if (!result || !result.ok) {
         log('OAB oturum adayı doğrulanamadı: ' + (result && (result.code || ('HTTP ' + result.status)) || 'OAB_AUTH_FAILED'));
         return false;
@@ -1553,7 +1561,7 @@ async function acquireOabAuthorization(options = {}) {
       flowState.abort = () => finishFailure('OAB_AUTH_CANCELLED', 'OAB kullanıcı girişi iptal edildi.');
 
       const loadLoginTarget = async (url, allowFallback = true) => {
-        if (settled || navigationBusy || !authWindow || authWindow.isDestroyed()) return false;
+        if (settled || authorizationBusy || navigationBusy || !authWindow || authWindow.isDestroyed()) return false;
         navigationBusy = true;
         try {
           await authWindow.loadURL(url);
@@ -1599,11 +1607,11 @@ async function acquireOabAuthorization(options = {}) {
         return true;
       };
       const pulseLifecycle = async () => {
-        if (settled || !lifecycle || !authWindow || authWindow.isDestroyed()) return;
+        if (settled || authorizationBusy || !lifecycle || !authWindow || authWindow.isDestroyed()) return;
         // A token already present in PASS storage wins over every heuristic
         // below: a signed-in session must never be sent back to the login page.
         if (await probeStoredAuthorization()) return;
-        if (settled || authWindow.isDestroyed()) return;
+        if (settled || authorizationBusy || authWindow.isDestroyed()) return;
         let url = '';
         try { url = authWindow.webContents.getURL(); } catch (_) { return; }
         const signIn = await oabWindowLooksLikeSignIn(authWindow);
@@ -1617,7 +1625,7 @@ async function acquireOabAuthorization(options = {}) {
         if (settled || !flowState.interactive || forceFresh || loginRequiredKnown || closeRequested) return;
         if (await probeStoredAuthorization()) return;
         const state = lifecycle && lifecycle.snapshot();
-        if (state && state.candidateBusy) {
+        if (authorizationBusy || state && state.candidateBusy) {
           silentProbeTimer = setTimeout(() => { void recoverStaleSilentProbe(); }, 1000);
           silentProbeTimer.unref?.();
           return;
@@ -1663,6 +1671,7 @@ async function acquireOabAuthorization(options = {}) {
         autoHideMenuBar: true, backgroundColor: '#ffffff',
         webPreferences: {
           partition: OAB_AUTH_PARTITION,
+          backgroundThrottling: false,
           nodeIntegration: false,
           contextIsolation: true,
           sandbox: true,
@@ -1777,6 +1786,7 @@ async function acquireOabAuthorization(options = {}) {
             backgroundColor:'#ffffff',
             webPreferences: {
               partition: OAB_AUTH_PARTITION,
+              backgroundThrottling:false,
               nodeIntegration:false,
               contextIsolation:true,
               sandbox:true,

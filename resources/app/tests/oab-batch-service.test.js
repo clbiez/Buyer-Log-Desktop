@@ -15,6 +15,12 @@ function fixture(options={}){
  return{service,owner,other,users,cache,calls,writes,audits,capability:()=>capability};
 }
 const selection={seasonRefs:['S6'],merchSubGroupRefs:['M'],buyerGroupRefs:['A','B']};
+test('all-buyer plan supplies a valid filtered auth context without a PASS request',()=>{
+ const f=fixture(),plan=f.service.plan({...selection,buyerGroupRefs:[],allBuyerGroups:true});
+ assert.deepEqual(plan.authContext,{seasonRef:'S6',merchSubGroupRef:'M',buyerGroupRef:'A'});
+ assert.equal(f.calls.length,0);
+ assert.equal(f.service.plan({...selection,seasonRefs:['missing']}).authContext,null);
+});
 async function done(f){for(let i=0;i<100;i++){const result=f.service.status(f.owner);if(!result.job?.running)return result;await new Promise(resolve=>setImmediate(resolve));}throw Error('job did not settle');}
 function liveJob(f){return f.service.start(f.owner,selection,{transport:'desktop'});}
 test('native shared plan uses existing metadata, worst-case estimates, skips and cached counts',()=>{const f=fixture({capability:'unknown'}),a=f.service.plan(selection);assert.equal(a.combinationCount,2);assert.equal(a.requestCount,1);assert.equal(a.worstCaseRequestCount,2);assert.equal(a.batchUnproven,true);assert.equal(a.worstCaseSeconds,batch.estimateSeconds(2));assert.equal(a.maxCombinations,400);assert.equal(f.calls.length,0);const skipped=f.service.plan({...selection,seasonRefs:['missing']});assert.equal(skipped.combinationCount,0);assert.equal(skipped.skippedCount,1);});

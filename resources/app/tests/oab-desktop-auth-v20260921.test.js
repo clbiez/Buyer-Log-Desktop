@@ -87,7 +87,7 @@ test('desktop OAB sign-in is detected from PASS storage, not only from a report 
   const MAIN = fs.readFileSync(path.join(ROOT, 'electron', 'main.js'), 'utf8');
   assert.match(MAIN, /const OAB_STORAGE_PROBE = `/);
   assert.match(MAIN, /\['access_token', 'accessToken'\]/);
-  assert.match(MAIN, /oidc\\\.user:/);
+  assert.match(MAIN, /oidc\\\\\.user:/);
   const flow = between(MAIN, 'async function acquireOabAuthorization', 'async function clearOabAuthSession');
   assert.match(flow, /executeJavaScript\(OAB_STORAGE_PROBE, true\)/);
   assert.match(flow, /finishAuthorization\(authorization, 'PASS storage', target\)/);

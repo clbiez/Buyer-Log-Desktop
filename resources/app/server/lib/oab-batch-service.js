@@ -308,7 +308,11 @@ function oabBuildPlan(body) {
 }
 
   function publicPlan(built) {
-    return {ok:!built.error,error:built.error||undefined,combinationCount:built.combinationCount,requestCount:built.requestCount,cachedCount:built.cachedCount,pendingCount:built.pendingCount,estimateSeconds:built.estimateSeconds,worstCaseRequestCount:built.worstCaseRequestCount,worstCaseSeconds:built.worstCaseSeconds,batchUnproven:built.batchUnproven,useBatched:built.useBatched,capability:built.capability,skipped:built.skipped.slice(0,200),skippedCount:built.skipped.length,maxCombinations:OAB_BATCH_MAX_COMBINATIONS};
+    // Use a metadata-validated combination for sign-in, including "all buyers"
+    // and selections whose first Season/MAG pair has no matching buyers.
+    const first = built.plan.combinations[0];
+    const authContext = first ? {seasonRef:first.seasonRef,merchSubGroupRef:first.merchSubGroupRef,buyerGroupRef:first.buyerGroupRef} : null;
+    return {ok:!built.error,error:built.error||undefined,authContext,combinationCount:built.combinationCount,requestCount:built.requestCount,cachedCount:built.cachedCount,pendingCount:built.pendingCount,estimateSeconds:built.estimateSeconds,worstCaseRequestCount:built.worstCaseRequestCount,worstCaseSeconds:built.worstCaseSeconds,batchUnproven:built.batchUnproven,useBatched:built.useBatched,capability:built.capability,skipped:built.skipped.slice(0,200),skippedCount:built.skipped.length,maxCombinations:OAB_BATCH_MAX_COMBINATIONS};
   }
   function plan(body={}) {return publicPlan(oabBuildPlan(body));}
   function startPlanState(profile,body,transport,current) {

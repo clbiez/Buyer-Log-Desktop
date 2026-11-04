@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "oab-internal-browser-report-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Overview · OAB",
+        "en": "Overview · OAB"
+      },
+      "title": {
+        "tr": "OAB raporu beklerken gereksiz yere yeniden başlatılmaz",
+        "en": "OAB reports stay running while results are pending"
+      },
+      "body": {
+        "tr": "Get OAB ve Yenile sırasında çalışan rapor, oturum kurtarma mekanizmasının sayfayı tekrar yüklemesiyle kesilmez. Gizli iç tarayıcı arka plan kısıtlaması olmadan çalışır; oturum okuma ve istek zaman aşımı düzeltildi. Çoklu seçimde ve tüm Buyer Group’lar seçildiğinde giriş yenileme geçerli bir filtre kombinasyonunu korur. Dış tarayıcı veya Allow Remote Debugging ayarı gerekmez.",
+        "en": "During Get OAB and Refresh, an active report is no longer interrupted by page reloads from session recovery. The hidden internal browser runs without background throttling; session reading and request timeouts are corrected. Sign-in recovery keeps a valid filter combination for multiple selections and all Buyer Groups. No external browser or Allow Remote Debugging setting is required."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-internal-browser-refreshed.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log OAB ekranında demo verisiyle tamamlanan yenileme ve OAB hazır durumu",
+          "en": "Actual Buyer Log OAB screen showing a completed refresh with demo data and the OAB ready state"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, izole demo verisi ve kontrollü rapor yanıtı. Yenileme tamamlandı; filtre seçimi ve rapor görünümü korundu.",
+          "en": "Actual post-change application with isolated demo data and a controlled report response. Refresh completed with the filter selection and report view preserved."
+        }
+      }
+    },
+    {
       "id": "copy-current-table-row-order",
       "type": "fix",
       "module": {
