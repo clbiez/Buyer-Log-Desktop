@@ -3,14 +3,159 @@
   "publishedAt": "2026-11-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Daha hızlı PLM Sync",
-    "en": "Faster PLM Sync"
+    "tr": "Arayüz geçişleri, dengeli sol navigasyon ve daha hızlı PLM Sync",
+    "en": "UI transitions, balanced sidebar navigation and faster PLM Sync"
   },
   "summary": {
-    "tr": "Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir.",
-    "en": "The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data."
+    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir.",
+    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data."
   },
   "changes": [
+    {
+      "id": "overview-page-slide",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Overview sayfaları arasında yönlü kayma",
+        "en": "Directional slides between Overview pages"
+      },
+      "body": {
+        "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır.",
+        "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-page-slide.png",
+        "alt": {
+          "tr": "Overview sayfası sola doğru kayarak açılırken",
+          "en": "Overview page sliding in from the left"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo oturumunda kayma animasyonu sırasında yakalandı.",
+          "en": "Actual post-change Buyer Log, captured during the slide animation in an isolated demo session."
+        }
+      }
+    },
+    {
+      "id": "startup-login-folding",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Girişten genel kültüre katlanan üçgenler",
+        "en": "Folding triangles from sign-in to trivia"
+      },
+      "body": {
+        "tr": "Masaüstünde başarılı girişten sonra giriş ekranı, sol alt köşeden yayılan sırayla katlanan üçgenlerle genel kültür ekranını açar. Parola görüntü yakalanmadan temizlenir; tek kare yalnız aynı pencerenin kısa ömürlü belleğinde bir kez kullanılır. Yakalama başarısızsa giriş bekletilmez.",
+        "en": "After a successful desktop sign-in, the sign-in screen folds into triangles in sequence from the bottom-left corner to reveal the trivia screen. The password is cleared before capture; the single frame is used once from short-lived memory in the same window. Capture failure does not block sign-in."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-login-folding.png",
+        "alt": {
+          "tr": "İzole demo oturumunda giriş ekranı üçgenler halinde katlanırken alttan genel kültür kartı görünüyor; parola alanı boş.",
+          "en": "In an isolated demo session, the sign-in screen folds into triangles to reveal the trivia card underneath; the password field is empty."
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; demo verilerle katlanma sırasında yakalandı.",
+          "en": "Actual post-change Buyer Log UI, captured during folding with demo data."
+        }
+      }
+    },
+    {
+      "id": "startup-trivia-folding",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Genel kültürden Buyer Log’a aynı üçgen geçişi",
+        "en": "The same triangle transition from trivia to Buyer Log"
+      },
+      "body": {
+        "tr": "Buyer Log’a devam et düğmesi, genel kültür ekranının kendisini tema geçişiyle aynı üçgen motorunda sırayla katlayarak çalışma alanını açar. Kayıtlı hız ve üçgen boyutu kullanılır; tema efekti tercihi değişmez. Klavye odağı görünen Bağlantılar düğmesine döner. Hazır olma kapıları ve kullanıcının Devam kararı korunur. Hareket azaltıldığında, kapatıldığında, yazılım çiziminde veya yakalama yoksa ekran anında açılır.",
+        "en": "Continue to Buyer Log folds the trivia screen itself in sequence using the same triangle engine as theme transitions, revealing the workspace. Saved speed and triangle size are used without changing the chosen theme effect. Keyboard focus returns to the visible Connections button. Readiness gates and the explicit Continue step are preserved. Reduced motion, disabled motion, software rendering or unavailable capture open the screen immediately."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-trivia-folding.png",
+        "alt": {
+          "tr": "İzole demo oturumunda genel kültür ekranının sol altından sırayla katlanan üçgenler Buyer Log çalışma alanını açıyor.",
+          "en": "In an isolated demo session, triangles folding in sequence from the bottom-left of the trivia screen reveal the Buyer Log workspace."
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; demo verilerle katlanma sırasında yakalandı.",
+          "en": "Actual post-change Buyer Log UI, captured during folding with demo data."
+        }
+      }
+    },
+    {
+      "id": "sidebar-centered-icon-column",
+      "type": "fix",
+      "module": {
+        "tr": "Sol navigasyon",
+        "en": "Sidebar navigation"
+      },
+      "title": {
+        "tr": "Dar menü simgeleri tüm boyutlarda ortalanır",
+        "en": "Collapsed menu icons are centered at every size"
+      },
+      "body": {
+        "tr": "Çakışan kenar boşluğu kuralları kaldırıldı. Modül simgeleri, logo, menü düğmesi ve Görünüm simgesi aynı merkez eksenini kullanır. Fare veya klavyeyle geçici genişlemede modül simgeleri ve satırlar yer değiştirmez; çalışma alanı kaymaz. Seçili bölüm ince bir göstergeyle belirginleşir; uzun adlar üç noktayla kısaltılır.",
+        "en": "Conflicting padding rules were removed. Module icons, the logo, menu toggle and Appearance icon share one center axis. Temporary expansion with the pointer or keyboard keeps module icons and rows in place without shifting the workspace. A subtle marker identifies the selected module, and long names use ellipsis."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sidebar-centered-icons.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log dar sol menüsünde ortalanmış simgeler",
+          "en": "Centered icons in the actual Buyer Log collapsed sidebar"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, izole demo verisi. İki tema, dört boyut ve TR/EN kontrol edildi.",
+          "en": "Actual post-change application with isolated demo data. Both themes, four sizes and TR/EN were checked."
+        }
+      }
+    },
+    {
+      "id": "sidebar-keyboard-appearance-polish",
+      "type": "improvement",
+      "module": {
+        "tr": "Sol navigasyon · Görünüm",
+        "en": "Sidebar · Appearance"
+      },
+      "title": {
+        "tr": "Klavye ve Görünüm menüsü daha tutarlı",
+        "en": "More consistent keyboard navigation and Appearance settings"
+      },
+      "body": {
+        "tr": "Modüller ve Görünüm eylemleri arasında ok, Home ve End tuşlarıyla gezinilir; odak değişimi modülü açmaz. Escape Görünüm menüsünü kapatıp odağı düğmeye döndürür. Kısa pencerelerde ayarlar ekrana sığar ve kendi içinde kayar. Tema efekti seçenekleri ve hız açıklaması dil değişimini anında izler. Daraltma düğmesinin erişilebilir adı ve ipucu seçili dile uygun kalır; azaltılmış hareket korunur.",
+        "en": "Arrow, Home and End keys move through modules and Appearance actions without activating modules. Escape closes Appearance and restores focus to its trigger. Settings fit short windows and scroll internally. Theme effect options and speed descriptions follow language changes immediately. The collapse button's accessible name and tooltip stay in the selected language, and reduced motion is respected."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sidebar-appearance-short.png",
+        "alt": {
+          "tr": "Kısa Buyer Log penceresine sığan İngilizce Görünüm ayarları",
+          "en": "English Appearance settings fitting a short Buyer Log window"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, 960×480 pencere ve izole demo verisi. Açık ayarlarda dil değişimi ve klavye odağı kontrol edildi.",
+          "en": "Actual post-change application at 960×480 with isolated demo data. Language switching in open settings and keyboard focus were checked."
+        }
+      }
+    },
     {
       "id": "plm-sync-two-phase",
       "type": "improvement",

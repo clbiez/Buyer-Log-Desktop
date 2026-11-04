@@ -14,7 +14,7 @@ function setup({stored,desktop}={}){
   const document={documentElement:html,readyState:'complete',body:{appendChild:n=>body.push(n)},createElement:el,getElementById:()=>null,addEventListener(){},elementFromPoint:()=>null};
   const window={document,innerWidth:8,innerHeight:4,localStorage:{getItem:k=>storage.has(k)?storage.get(k):null,setItem:(k,v)=>storage.set(k,v)},
     getComputedStyle:()=>({getPropertyValue:()=>'#dde',backgroundColor:'rgb(1, 2, 3)',color:'rgb(4, 5, 6)'}),
-    requestAnimationFrame:cb=>{frames.push(cb);return frames.length;},cancelAnimationFrame(){},buyerLogDesktop:desktop};
+    requestAnimationFrame:cb=>{frames.push(cb);return frames.length;},cancelAnimationFrame(){},setTimeout,clearTimeout,buyerLogDesktop:desktop};
   const ctx={window,ImageData:function(data,w,h){this.data=data;this.width=w;this.height=h;},performance:{now:()=>0},Promise,Math,Object,Number,String,JSON,Uint8ClampedArray,Uint32Array,Float32Array};
   vm.createContext(ctx);vm.runInContext(SOURCE,ctx);
   return{api:window.BLMotionPlusTheme,storage,body,frames,window};
@@ -57,6 +57,26 @@ test('failed or mismatched capture updates immediately without a layer',async()=
     assert.equal(s.api.run(()=>updates++),true);await settle();
     assert.equal(updates,1);assert.equal(s.body.length,0);
   }
+});
+test('startup reuses the triangle canvas even when the saved theme effect is circle, without changing the preference',async()=>{
+  const s=setup({stored:{effect:'circle',speed:2,size:40},desktop:{captureView:async(w,h)=>shot(w,h)}});
+  let updates=0;
+  assert.equal(s.api.run(()=>updates++,null,{startup:true}),true);await settle();
+  assert.equal(updates,1);assert.equal(s.body.length,1);assert.equal(s.api.settings().effect,'circle');
+  s.api.finish();assert.equal(s.body.length,0);
+});
+test('disabling motion while a capture is pending applies content without a late overlay',async()=>{
+  const s=setup({desktop:{captureView:async(w,h)=>shot(w,h)}});let updates=0;
+  s.api.run(()=>updates++,null,{startup:true});s.window.BLMotionPlus={enabled:()=>false};await settle();
+  assert.equal(updates,1);assert.equal(s.body.length,0);
+});
+test('a hanging startup capture falls back once; a late bitmap cannot cover the opened app',async()=>{
+  let complete,timeout,updates=0;
+  const s=setup({desktop:{captureView:()=>new Promise(resolve=>complete=resolve)}});
+  s.window.setTimeout=fn=>{timeout=fn;return 1;};s.window.clearTimeout=()=>{};
+  s.api.run(()=>updates++,null,{startup:true});await settle();
+  assert.equal(updates,0);timeout();await settle();assert.equal(updates,1);assert.equal(s.body.length,0);
+  complete(shot(8,4));await settle();assert.equal(updates,1);assert.equal(s.body.length,0);
 });
 test('a newer request supersedes a pending capture',async()=>{
   const order=[];const s=setup({stored:{effect:'blow'},desktop:{captureView:async(w,h)=>shot(w,h)}});

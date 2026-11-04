@@ -8,8 +8,8 @@ const ROOT=path.join(__dirname,'..');
 const read=name=>fs.readFileSync(path.join(ROOT,'public',name),'utf8');
 const INDEX=read('index.html'),APP=read('app-main.js'),GUIDE=read('buyerlog-guide.js');
 const DATA=require('../public/buyerlog-guide-data.js');
-// Continue fades the curtain out, then removes it.
-function finishFade(h){const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.leaving,'1');assert.equal(g.isConnected,true);for(const [id,t] of [...h.timers])if(t.ms===340){h.timers.delete(id);t.fn();}}
+// Without the desktop capture bridge, Continue reveals the app immediately.
+function finishDismissal(h){assert.equal(h.nodes.has('blBootGuard'),false);}
 function guardHarness(search=''){
   const listeners={},nodes=new Map(),timers=new Map();let tick=0,stops=0,reloads=0;
   function node(id=''){
@@ -27,6 +27,17 @@ function guardHarness(search=''){
   win.BLBootGuard.mount();
   return {win,doc,nodes,timers,listeners,get stops(){return stops;},get reloads(){return reloads;},profile(){nodes.set('currentUserInitials',{textContent:'AB'});nodes.set('accessModeBadge',{textContent:'Buyer'});win.dispatchEvent({type:'bl:user-access-applied',detail:{id:'sample',displayName:'Example User'}});}};
 }
+test('Continue keeps the trivia screen until capture, then completes exactly once and restores visible keyboard focus',()=>{
+  const h=guardHarness(),pending=[];let completed=0;
+  h.win.BLMotionPlus={startup:update=>{pending.push(update);return true;}};
+  h.win.addEventListener('bl:startup-complete',()=>completed++);
+  const target={focus(){h.doc.activeElement=target;}};h.nodes.set('corporateConnectionsBtn',target);
+  h.win.BLBootGuard.ready('core');h.win.BLBootGuard.ready('data');h.profile();
+  const guard=h.nodes.get('blBootGuard');h.doc.activeElement=guard;
+  h.win.BLBootGuard.continue();h.win.BLBootGuard.continue();
+  assert.equal(pending.length,1);assert.equal(guard.inert,true);assert.equal(guard.isConnected,true);assert.equal(completed,0);
+  pending[0]();assert.equal(guard.isConnected,false);assert.equal(completed,1);assert.equal(h.doc.activeElement,target);
+});
 function guideHarness(profile=null){
   const events={},timers=[];
   const win={BLGuideData:DATA,BL_USER_CONTEXT:profile,addEventListener:(name,fn)=>{(events[name]??=[]).push(fn);}};
@@ -43,7 +54,7 @@ test('core markup and data wait for the authenticated profile but not a slow pag
   h.win.BLBootGuard.ready('ui');assert.equal(g.dataset.ready,'1');
   const button=g.card.children.find(c=>c.dataset.bootContinue);assert.ok(button);assert.equal(h.doc.activeElement,button);
   let completed=0;h.win.addEventListener('bl:startup-complete',()=>completed++);assert.equal(completed,0);
-  button.onclick();assert.equal(completed,1);finishFade(h);assert.ok(!h.nodes.has('blBootGuard'));
+  button.onclick();assert.equal(completed,1);finishDismissal(h);assert.ok(!h.nodes.has('blBootGuard'));
   h.win.BLBootGuard.continue();assert.equal(completed,1,'a second Continue during the fade is ignored');
 });
 test('a stale startupWarm address no longer auto-dismisses the curtain',()=>{
@@ -67,7 +78,7 @@ test('hard startup gates work regardless of arrival order and UI readiness is in
     h.win.BLBootGuard.ready('ui');assert.equal(h.nodes.get('blBootGuard').dataset.ready,undefined);
     order.forEach((key,i)=>{if(key==='profile')h.profile();else h.win.BLBootGuard.ready(key==='core'?undefined:key);assert.equal(h.nodes.get('blBootGuard').dataset.ready,i<2?undefined:'1');});
     h.win.BLBootGuard.ready('ui');h.win.BLBootGuard.ready();assert.equal(h.stops,1,'startup orb stops once after all hard gates finish');
-    assert.equal(h.nodes.get('blBootGuard').card.children.filter(c=>c.dataset.bootContinue).length,1);h.win.BLBootGuard.continue();finishFade(h);assert.ok(!h.nodes.has('blBootGuard'));
+    assert.equal(h.nodes.get('blBootGuard').card.children.filter(c=>c.dataset.bootContinue).length,1);h.win.BLBootGuard.continue();finishDismissal(h);assert.ok(!h.nodes.has('blBootGuard'));
   }
 });
 test('an absent/incomplete profile cannot release the curtain',()=>{
@@ -81,7 +92,7 @@ test('slow startup shows information without an automatic 12-second reload; boun
 });
 test('late successful preparation recovers from the timed-out curtain without reloading',()=>{
   const h=guardHarness();[...h.timers.values()].find(t=>t.ms===120000).fn();h.profile();['core','data','ui'].forEach(k=>h.win.BLBootGuard.ready(k));
-  const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.ready,'1');assert.equal(g.dataset.failed,undefined);h.win.BLBootGuard.continue();finishFade(h);assert.ok(!h.nodes.has('blBootGuard'));assert.equal(h.reloads,0);
+  const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.ready,'1');assert.equal(g.dataset.failed,undefined);h.win.BLBootGuard.continue();finishDismissal(h);assert.ok(!h.nodes.has('blBootGuard'));assert.equal(h.reloads,0);
 });
 test('a late page-projection failure cannot regress an already ready shell',()=>{
   const h=guardHarness();h.win.BLBootGuard.ready();h.win.BLBootGuard.ready('data');h.profile();

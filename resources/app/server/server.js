@@ -495,7 +495,7 @@ app.get('/api/auth-status', auth.statusHandler);
 // Fixed UI-only allowlist. No wildcard and no user data is exposed here.
 // İçerik özeti eşleşen istek kalıcı önbelleğe alınabilir (lib/static-asset-hash).
 const publicAssetCacheControl = (req, file) => immutableForRequest(file, req.originalUrl || req.url) ? 'public, max-age=31536000, immutable' : 'no-cache';
-for (const file of ['giris.css', 'ui-tokens.css', 'ui-components.css', 'ui-appearance.js']) {
+for (const file of ['giris.css', 'ui-tokens.css', 'ui-components.css', 'ui-appearance.js', 'motion-plus-theme.js', 'motion-plus.js']) {
   app.get('/' + file, (req, res) => {
     const full = path.join(__dirname, '..', 'public', file);
     res.set('Cache-Control', publicAssetCacheControl(req, full));
