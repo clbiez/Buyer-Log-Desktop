@@ -32,6 +32,8 @@ contextBridge.exposeInMainWorld('buyerLogDesktop', {
   // Motion+ tema geçişi: yalnız bu sayfanın görünür karesi, CSS piksel boyutunda
   // ham BGRA bayt olarak döner (bkz. main.js buyerlog:capture-view).
   captureView: (width, height) => ipcRenderer.invoke('buyerlog:capture-view', { width: Number(width) || 0, height: Number(height) || 0 }),
+  prepareStartupTransition: (width, height) => ipcRenderer.invoke('buyerlog:startup-transition', { action:'prepare', width:Number(width)||0, height:Number(height)||0 }),
+  takeStartupTransition: () => ipcRenderer.invoke('buyerlog:startup-transition', { action:'take' }),
   workspace: {
     openModule: (moduleId) => ipcRenderer.invoke('buyerlog:workspace-open-module', String(moduleId || '')),
     showModuleContextMenu: (moduleId, language) => ipcRenderer.invoke('buyerlog:workspace-show-module-context-menu', {

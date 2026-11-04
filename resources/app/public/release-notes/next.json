@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Overview sayfaları arasında yönlü kayma",
-    "en": "Directional slides between Overview pages"
+    "tr": "Overview kaymaları ve katlanan açılış geçişleri",
+    "en": "Overview slides and folding startup transitions"
   },
   "summary": {
-    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır.",
-    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred."
+    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır.",
+    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect."
   },
   "changes": [
     {
@@ -37,6 +37,64 @@
         "caption": {
           "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo oturumunda kayma animasyonu sırasında yakalandı.",
           "en": "Actual post-change Buyer Log, captured during the slide animation in an isolated demo session."
+        }
+      }
+    },
+    {
+      "id": "startup-login-folding",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Girişten genel kültüre katlanan üçgenler",
+        "en": "Folding triangles from sign-in to trivia"
+      },
+      "body": {
+        "tr": "Masaüstünde başarılı girişten sonra giriş ekranı, sol alt köşeden yayılan sırayla katlanan üçgenlerle genel kültür ekranını açar. Parola görüntü yakalanmadan temizlenir; tek kare yalnız aynı pencerenin kısa ömürlü belleğinde bir kez kullanılır. Yakalama başarısızsa giriş bekletilmez.",
+        "en": "After a successful desktop sign-in, the sign-in screen folds into triangles in sequence from the bottom-left corner to reveal the trivia screen. The password is cleared before capture; the single frame is used once from short-lived memory in the same window. Capture failure does not block sign-in."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-login-folding.png",
+        "alt": {
+          "tr": "İzole demo oturumunda giriş ekranı üçgenler halinde katlanırken alttan genel kültür kartı görünüyor; parola alanı boş.",
+          "en": "In an isolated demo session, the sign-in screen folds into triangles to reveal the trivia card underneath; the password field is empty."
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; demo verilerle katlanma sırasında yakalandı.",
+          "en": "Actual post-change Buyer Log UI, captured during folding with demo data."
+        }
+      }
+    },
+    {
+      "id": "startup-trivia-folding",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Genel kültürden Buyer Log’a aynı üçgen geçişi",
+        "en": "The same triangle transition from trivia to Buyer Log"
+      },
+      "body": {
+        "tr": "Buyer Log’a devam et düğmesi, genel kültür ekranının kendisini tema geçişiyle aynı üçgen motorunda sırayla katlayarak çalışma alanını açar. Kayıtlı hız ve üçgen boyutu kullanılır; tema efekti tercihi değişmez. Klavye odağı görünen Bağlantılar düğmesine döner. Hazır olma kapıları ve kullanıcının Devam kararı korunur. Hareket azaltıldığında, kapatıldığında, yazılım çiziminde veya yakalama yoksa ekran anında açılır.",
+        "en": "Continue to Buyer Log folds the trivia screen itself in sequence using the same triangle engine as theme transitions, revealing the workspace. Saved speed and triangle size are used without changing the chosen theme effect. Keyboard focus returns to the visible Connections button. Readiness gates and the explicit Continue step are preserved. Reduced motion, disabled motion, software rendering or unavailable capture open the screen immediately."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-trivia-folding.png",
+        "alt": {
+          "tr": "İzole demo oturumunda genel kültür ekranının sol altından sırayla katlanan üçgenler Buyer Log çalışma alanını açıyor.",
+          "en": "In an isolated demo session, triangles folding in sequence from the bottom-left of the trivia screen reveal the Buyer Log workspace."
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; demo verilerle katlanma sırasında yakalandı.",
+          "en": "Actual post-change Buyer Log UI, captured during folding with demo data."
         }
       }
     }

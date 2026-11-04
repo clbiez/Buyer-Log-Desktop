@@ -207,11 +207,19 @@ düğmeden üflenen / rüzgârda savrulan toz, taneli çözülme veya daire. Hı
 altta gerçek DOM'dur, kare yalnız bellekte ve geçiş boyunca yaşar. Yakalama
 yoksa (tarayıcı kipi) veya başarısızsa daire / anlık yol kullanılır. Taneli
 çözülme ve daire View Transitions ile çalışır (eski ve yeni kare kompozitörde
-birleşir, tablo hücreleri tek tek boyanmaz). Açılışta,
-sistem temasında, reduced-motion / `data-bl-motion='off'` / görünmez sekmede,
+birleşir, tablo hücreleri tek tek boyanmaz). Tema ilk uygulanırken,
+sistem teması değişiminde, reduced-motion / `data-bl-motion='off'` / görünmez sekmede,
 yazılım çiziminde (`data-bl-render='software'`) veya API yoksa geçiş anlıktır.
 Ard arda istekte son seçim kazanır. Başka modül kendi tema animasyonunu,
-otomatik parıltıyı veya sürekli efekti eklemez. **Thinking Orbs istisnası:**
+otomatik parıltıyı veya sürekli efekti eklemez.
+
+Giriş → genel kültür → uygulama geçişleri de `BLMotionPlus.startup` ile aynı
+`chain` üçgen motorunu, kayıtlı hız ve boyutu kullanır; tema tercihi değişmez.
+Giriş karesi parola temizlendikten sonra yalnız kendi masaüstü penceresinde,
+15 saniyelik tek kullanımlık bellekte taşınır. Tarayıcıda/yakalama hatasında
+bekletmeden devam edilir; reduced-motion, kapalı hareket ve yazılım çiziminde
+üçgenler çalışmaz. Hazır olma kapıları ve kullanıcının Devam kararı korunur.
+**Thinking Orbs istisnası:**
 7.0.294'ten gelen Breathing (açılış/bekleme) ve Working (harita yüklemesi)
 canvas bileşenleri yalnız gerçekten çalışan `thinking`/loading durumu boyunca
 semantik işlem göstergesi olarak kullanılabilir. Her orb görünmez sekme, ekran

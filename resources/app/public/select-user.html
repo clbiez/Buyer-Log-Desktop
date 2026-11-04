@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="/giris.css">
 <script src="/i18n-dictionary.js"></script>
 <script src="/i18n-runtime.js"></script>
+<script src="/motion-plus-theme.js"></script>
+<script src="/motion-plus.js"></script>
 <link rel="icon" type="image/png" sizes="128x128" href="/icons/icon-mark.png">
 </head>
 <body data-ui-migrated="login">
@@ -822,11 +824,9 @@
       // Authentication success is enough to enter Buyer Log. Shared Sync and
       // Collection image bootstrap continue best-effort in the background.
       void runUserBootstrap();
-      // Fade the sign-in card out; the next page's curtain fades in from the same background.
-      document.documentElement.classList.add('blLeaving');
-      let reduceMotion = false;
-      try { reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) {}
-      if (!reduceMotion) await new Promise(resolve => setTimeout(resolve, 280));
+      // Clear even a revealed password before capturing the departing sign-in screen.
+      $('password').value = '';
+      await window.BLMotionPlus?.prepareNavigation?.();
       location.replace('/');
       return;
     } catch (error) {
