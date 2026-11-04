@@ -26,10 +26,10 @@
       işaretlenir.
    =================================================================== */
 (function attachManufacturerCards(root, factory) {
-  const api = factory();
+  const api = factory(typeof module==='object'&&module.exports?require('./business-rules'):root.BLBusinessRules);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.BLManufacturerCards = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function createManufacturerCards() {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function createManufacturerCards(businessRules) {
   'use strict';
 
   const DAY = 86400000;
@@ -446,7 +446,7 @@
       countries: topEntries(card.countries, card.quantity, 5),
       mags: topEntries(card.mags, card.quantity, 30),
       fabric: topEntries(card.fabric, card.quantity, 5),
-      seasons: [...card.seasons].sort(),
+      seasons: [...card.seasons].sort(businessRules.compareSeasonNumberThenLetter),
       licensors: topEntries(card.licensors, card.licensedOrders, 5).map(item => ({ name: item.name, orders: item.qty })),
       licensedOrders: card.licensedOrders,
       monthly: [...card.monthly.values()],

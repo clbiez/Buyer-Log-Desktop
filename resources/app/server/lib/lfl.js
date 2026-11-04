@@ -1,4 +1,5 @@
 const BLDateDimension = require('../../public/date-dimension');
+const BLBusinessRules = require('../../public/business-rules');
 let _xlsx = null;
 function getXLSX() { if (!_xlsx) { _xlsx = require('xlsx'); try { require('../../public/excel-date-utils').installSheetJsHooks(_xlsx); } catch (_) {} } return _xlsx; }
 
@@ -477,7 +478,7 @@ function attachModelImageIdentities(rows, orders) {
 }
 
 function uniqueSorted(rows, key) {
-  return [...new Set(rows.map(row => norm(row[key])).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'tr', { numeric: true }));
+  return [...new Set(rows.map(row => norm(row[key])).filter(Boolean))].sort(BLBusinessRules.compareChronologicalValues);
 }
 function parseLFLWorkbook(workbook) {
   const detected = workbook.SheetNames

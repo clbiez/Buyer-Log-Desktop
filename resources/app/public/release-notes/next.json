@@ -155,6 +155,64 @@
           "en": "Actual post-change application at 960×480 with isolated demo data. Language switching in open settings and keyboard focus were checked."
         }
       }
+    },
+    {
+      "id": "chronological-season-filter",
+      "type": "fix",
+      "module": {
+        "tr": "Filtreler ve tablolar",
+        "en": "Filters and tables"
+      },
+      "title": {
+        "tr": "Kronolojik sezon sıralaması",
+        "en": "Chronological season ordering"
+      },
+      "body": {
+        "tr": "Sezonlar filtrelerde ve tablolarda yıl ve sezon sırasına göre karşılaştırılır: S5, W5, S6, W6, S7, W7. Azalan sıralama aynı kronolojiyi tersine çevirir. Koleksiyon, CP, Siparişler, LFL ve dinamik analiz filtreleri ortak kuralı kullanır.",
+        "en": "Filters and tables compare seasons by year with Summer before Winter: S5, W5, S6, W6, S7, W7. Descending sorting reverses the same chronology. Collection, CP, Orders, LFL and dynamic analysis filters share this rule."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "chronological-season-filter.png",
+        "alt": {
+          "tr": "Kronolojik sezon sıralaması gösteren gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log showing chronological season ordering"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisiyle doğrulandı.",
+          "en": "Actual post-change Buyer Log, verified with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "chronological-month-filter",
+      "type": "fix",
+      "module": {
+        "tr": "Filtreler ve tablolar",
+        "en": "Filters and tables"
+      },
+      "title": {
+        "tr": "MB aylarında takvim sırası",
+        "en": "Calendar ordering for budget months"
+      },
+      "body": {
+        "tr": "MB ayı ve ay içeren dinamik filtreler alfabetik sıra yerine yıl ve ay sırasını kullanır. JUNE 2027, JULY 2027’den önce gelir; Türkçe ve İngilizce ay adları ile sayısal ay kodları aynı kronolojide değerlendirilir.",
+        "en": "Budget months and dynamic month filters use year and month order. JUNE 2027 precedes JULY 2027; Turkish and English month names and numeric period keys follow the same chronology."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "chronological-month-filter.png",
+        "alt": {
+          "tr": "MB aylarında takvim sırası gösteren gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log showing calendar ordering for budget months"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisiyle doğrulandı.",
+          "en": "Actual post-change Buyer Log, verified with isolated demo data."
+        }
+      }
     }
   ]
 }

@@ -3072,7 +3072,7 @@ app.get('/api/automations/dataset-fields', userAccess.requireArea('automations')
   }catch(err){automationError(res,err,'Dataset alanları okunamadı.');}
 });
 app.get('/api/automations/dataset-values', userAccess.requireArea('automations'), async (req,res) => {
-  try{const source=String(req.query&&req.query.source||'').trim().toLowerCase(),field=String(req.query&&req.query.field||'').trim();if(!['cp','orders','backlog','lfl','collection','asas','ias','intake'].includes(source)||!automationPublicFieldName(field))return res.json({source,field,values:[]});const rows=await automationSourceRows(req.currentUser.id,req.currentUser,source,null),seen=new Set(),values=[];for(const row of rows){const raw=automationFieldValue(row,field),value=automationComparableValue(raw).trim();if(!value||seen.has(value))continue;seen.add(value);values.push(value);if(values.length>=300)break;}values.sort((a,b)=>a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'}));res.set('Cache-Control','no-store').json({source,field,values,truncated:seen.size>=300});}catch(err){automationError(res,err,'Alan değerleri okunamadı.');}
+  try{const source=String(req.query&&req.query.source||'').trim().toLowerCase(),field=String(req.query&&req.query.field||'').trim();if(!['cp','orders','backlog','lfl','collection','asas','ias','intake'].includes(source)||!automationPublicFieldName(field))return res.json({source,field,values:[]});const rows=await automationSourceRows(req.currentUser.id,req.currentUser,source,null),seen=new Set(),values=[];for(const row of rows){const raw=automationFieldValue(row,field),value=automationComparableValue(raw).trim();if(!value||seen.has(value))continue;seen.add(value);values.push(value);if(values.length>=300)break;}values.sort(BLBusinessRules.compareChronologicalValues);res.set('Cache-Control','no-store').json({source,field,values,truncated:seen.size>=300});}catch(err){automationError(res,err,'Alan değerleri okunamadı.');}
 });
 app.post('/api/automations/recipes', userAccess.requireArea('automations'), express.json({limit:'2mb'}), (req,res) => {try{const value=automationNormalizePayload(req.body||{},req.currentUser.id),saved=automationRecipeStore.createRecipe(req.currentUser.id,value);userAccess.appendAudit(req.currentUser,'AUTOMATION_CREATE',saved.result.id,{name:saved.result.name,purpose:saved.result.purpose,source:saved.result.source,steps:saved.result.steps.length});res.status(201).json({ok:true,recipe:saved.result,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'Otomasyon oluşturulamadı.');}});
 app.put('/api/automations/recipes/:id', userAccess.requireArea('automations'), express.json({limit:'2mb'}), (req,res) => {try{const value=automationNormalizePayload(req.body||{},req.currentUser.id),saved=automationRecipeStore.updateRecipe(req.currentUser.id,req.params.id,value);userAccess.appendAudit(req.currentUser,'AUTOMATION_UPDATE',saved.result.id,{name:saved.result.name,purpose:saved.result.purpose,source:saved.result.source,steps:saved.result.steps.length});res.json({ok:true,recipe:saved.result,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'Otomasyon güncellenemedi.');}});
@@ -5866,7 +5866,7 @@ app.post('/api/intake/distinct', userAccess.requireAnyArea('overview'), userAcce
     const searchKey = search.toLocaleLowerCase('tr-TR');
     const values = [...new Set((result.rows || []).map(row => intakeDistinctValue(Object.values(row || {})[0])).filter(Boolean))]
       .filter(value => searchInDax || !searchKey || value.toLocaleLowerCase('tr-TR').includes(searchKey))
-      .sort((a, b) => a.localeCompare(b, 'tr'));
+      .sort(BLBusinessRules.compareChronologicalValues);
     res.json({ ok: true, fieldId: field.id, values, valueType, provider: result.provider || '', fromCache: false });
   } catch (err) {
     const failure = intakeErrorResponse(err);
@@ -8282,7 +8282,7 @@ function buildCollectionCatalogs(orderRows) {
   }
   const result = {};
   for (const [key, values] of Object.entries(buckets)) {
-    result[key] = [...values.values()].sort((a, b) => a.localeCompare(b, 'tr-TR', { numeric: true, sensitivity: 'base' }));
+    result[key] = [...values.values()].sort(BLBusinessRules.compareChronologicalValues);
   }
   return result;
 }
@@ -11205,7 +11205,7 @@ async function queryModelDistinctValues(body, limit = 5000) {
       return first == null ? '' : String(first).trim();
     }))]
       .filter(value => searchInDax || !searchKey || value.toLocaleLowerCase('tr-TR').includes(searchKey))
-      .sort((a, b) => a.localeCompare(b, 'tr'));
+      .sort(BLBusinessRules.compareChronologicalValues);
     const values = allValues.slice(offset, offset + limit);
     return {
       ok: true, table, field, values, valueType,

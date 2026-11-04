@@ -1,9 +1,9 @@
 /* Buyer Log v2.92 — shared, dependency-free business rules for browser and Node.js */
 (function attachBuyerLogBusinessRules(root, factory) {
-  const api = factory();
+  const api = factory(typeof module==='object'&&module.exports?require('./chronological-values'):root.BLChronologicalValues);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.BLBusinessRules = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function createBuyerLogBusinessRules() {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function createBuyerLogBusinessRules(chronology) {
   'use strict';
 
   const DEFAULT_TRANSIT_DAYS = Object.freeze({
@@ -881,6 +881,8 @@
     return roundFractionHalfUp(num, den, 2);
   }
 
+  const {monthParts,chronologyParts,compareChronologicalValues,compareSeasonLists,compareChronologicalPaths}=chronology;
+
   // Main CP/Koleksiyon policy: numeric generation first; for the same generation S precedes W.
   function seasonNumberLetterParts(value) {
     const raw = norm(value);
@@ -894,44 +896,22 @@
   }
 
   function compareSeasonNumberThenLetter(a, b) {
-    const left = seasonNumberLetterParts(a);
-    const right = seasonNumberLetterParts(b);
-    return (left.number - right.number)
-      || (left.letterRank - right.letterRank)
-      || left.raw.localeCompare(right.raw, 'tr', { numeric: true, sensitivity: 'base' });
+    return compareChronologicalValues(a, b);
   }
 
-  // Programın kanonik sezon sırası — en yeniden en eskiye:
-  //   ... > W11 > S11 > W10 > S10 > W9 > S9 > ... > W6 > S6 > ...
-  // Yani önce kuşak numarası BÜYÜKTEN küçüğe, aynı numarada W önce S sonra gelir.
-  // (compareSeasonNumberThenLetter bunun tersi yönde çalışır ve S'yi öne alır; o
-  // yüzden ayrı bir karşılaştırıcı gerekti.) Sezon listelenen her yerde — hızlı
-  // filtre çipleri dahil — bu sıra kullanılır.
+  // Descending table order is the reverse of the same chronology.
   function compareSeasonNewestFirst(a, b) {
-    const left = seasonNumberLetterParts(a);
-    const right = seasonNumberLetterParts(b);
-    if (left.number !== right.number) {
-      // Tanınmayan/numarasız değerler (POSITIVE_INFINITY) her zaman en sona.
-      if (!Number.isFinite(left.number)) return 1;
-      if (!Number.isFinite(right.number)) return -1;
-      return right.number - left.number;
-    }
-    // Aynı kuşakta W (letterRank 1) önce, S (letterRank 0) sonra gelmeli.
-    if (left.letterRank !== right.letterRank) return right.letterRank - left.letterRank;
-    return left.raw.localeCompare(right.raw, 'tr', { numeric: true, sensitivity: 'base' });
+    return compareChronologicalValues(a, b, -1);
   }
 
-  // Existing LFL policy: keep each textual prefix series together, then sort its numeric suffix.
+  // Prefix parsing is retained for like-for-like previous-year selection.
   function seasonPrefixParts(value) {
     const match = norm(value).match(/^(.*?)(\d+)\s*$/);
     return match ? { prefix: match[1], number: Number(match[2]) } : null;
   }
 
   function compareSeasonPrefixThenNumber(a, b) {
-    const left = seasonPrefixParts(a);
-    const right = seasonPrefixParts(b);
-    if (left && right && left.prefix === right.prefix) return left.number - right.number;
-    return String(a).localeCompare(String(b), 'tr', { numeric: true });
+    return compareSeasonNumberThenLetter(a, b);
   }
 
   function previousSeasonByPrefix(current, seasons) {
@@ -998,6 +978,11 @@
     calculateSuppFobWithRule,
     calculateFinalFobWithRule,
     seasonNumberLetterParts,
+    monthParts,
+    chronologyParts,
+    compareChronologicalValues,
+    compareSeasonLists,
+    compareChronologicalPaths,
     compareSeasonNumberThenLetter,
     compareSeasonNewestFirst,
     seasonPrefixParts,

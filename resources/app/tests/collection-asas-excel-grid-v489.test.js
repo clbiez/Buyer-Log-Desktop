@@ -21,8 +21,8 @@ function extractBetween(source, startText, endText) {
 
 test('v4.89 Collection option catalogs are produced once from ASAS-backed Orders rows', () => {
   const block = extractBetween(SERVER, 'const COLLECTION_CATALOG_FIELDS', 'async function buildResponse');
-  const factory = new Function('canonicalFields', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,COLLECTION_CATALOG_SCHEMA_VERSION,collectionCatalogsComplete,buildCollectionCatalogs};`);
-  const { COLLECTION_CATALOG_FIELDS, COLLECTION_CATALOG_SCHEMA_VERSION, collectionCatalogsComplete, buildCollectionCatalogs } = factory(canonicalFields);
+  const factory = new Function('canonicalFields','BLBusinessRules', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,COLLECTION_CATALOG_SCHEMA_VERSION,collectionCatalogsComplete,buildCollectionCatalogs};`);
+  const { COLLECTION_CATALOG_FIELDS, COLLECTION_CATALOG_SCHEMA_VERSION, collectionCatalogsComplete, buildCollectionCatalogs } = factory(canonicalFields,require('../public/business-rules'));
 
   assert.equal(COLLECTION_CATALOG_FIELDS.category, 'Category');
   assert.equal(COLLECTION_CATALOG_FIELDS.mag, 'Merch Alt Grup Kod');

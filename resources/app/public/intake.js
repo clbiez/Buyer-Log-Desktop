@@ -142,6 +142,8 @@
   }
 
   function intakeCompareValues(field, left, right) {
+    const rules=window.BLBusinessRules;
+    if(rules && (rules.monthParts(left)||rules.monthParts(right))) return rules.compareChronologicalValues(left,right);
     if (intakeIsPeriodField(field)) {
       const leftMonth = intakeMonthRank(left);
       const rightMonth = intakeMonthRank(right);
@@ -149,7 +151,7 @@
       if (leftMonth >= 0 && rightMonth < 0) return -1;
       if (leftMonth < 0 && rightMonth >= 0) return 1;
     }
-    return clean(left).localeCompare(clean(right), isEnglish() ? 'en' : 'tr', { numeric: true, sensitivity: 'base' });
+    return rules.compareChronologicalValues(left,right);
   }
 
   function intakeIsCurrentBudgetField(field) {
@@ -935,7 +937,7 @@
       void saveView(next);
     });
     void requestJson('/api/intake/distinct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fieldId: field.id, sourceUniqueName: field.sourceUniqueName, limit: 500 }) })
-      .then(result => { const values = Array.isArray(result.values) ? result.values : localValues; availableValues=[...new Set([...values, ...selected])].sort((a, b) => a.localeCompare(b, isEnglish() ? 'en' : 'tr', { numeric: true })); draw(); })
+      .then(result => { const values = Array.isArray(result.values) ? result.values : localValues; availableValues=[...new Set([...values, ...selected])].sort((a,b)=>intakeCompareValues(field,a,b)); draw(); })
       .catch(error => {
         if (localValues.length) return;
         // Yalnız gerçek kaynak kesintisi "canlı kaynak yok" olarak anlatılır;
