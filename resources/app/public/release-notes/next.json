@@ -271,6 +271,35 @@
           "en": "The sidebar uses the same light shadow color as dialogs and drawers. Actual Buyer Log screen with demo data."
         }
       }
+    },
+    {
+      "id": "collection-model-footer",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Model Name sütununun altındaki taşma düzeltildi",
+        "en": "Fixed model names showing through the table footer"
+      },
+      "body": {
+        "tr": "Koleksiyon tablosunda alt özet bandının arka planı korunur; Model Name sütunundaki satırlar kaydırma sırasında bandın içinden görünmez. Tekrarlanan model sayısı metni gizli kalır.",
+        "en": "The Collection summary footer keeps its background, preventing Model Name rows from showing through while scrolling. The duplicate model count text remains hidden."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-model-footer.png",
+        "alt": {
+          "tr": "Demo modellerin altındaki kesintisiz Koleksiyon özet bandı",
+          "en": "Continuous Collection summary footer below demo models"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
     }
   ]
 }

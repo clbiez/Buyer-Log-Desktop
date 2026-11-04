@@ -15288,7 +15288,8 @@ html[data-ui-system="manifest"] dialog::backdrop{background:var(--ui-scrim) !imp
 html[data-ui-system="manifest"][data-rail="min"] .rail{z-index:var(--ui-z-popover);}
 
 html[data-ui-system="manifest"] #kolSaveState:has([data-persistence-state="local"]){display:none!important;}
-html[data-ui-system="manifest"] #kolTable tfoot .collectionModelCount{visibility:hidden;}
+/* Keep the sticky footer background opaque while hiding the duplicate count. */
+html[data-ui-system="manifest"] #kolTable tfoot .collectionModelCount>span{visibility:hidden;}
 
 html[data-ui-system="manifest"] .workspaceTableFooter{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-2);flex-wrap:wrap;}
 html[data-ui-system="manifest"] .workspaceTableFooter .uiPersistenceRegion{margin:0;padding:0;}

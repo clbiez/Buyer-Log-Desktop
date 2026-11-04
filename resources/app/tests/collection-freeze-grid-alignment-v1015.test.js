@@ -43,3 +43,12 @@ test('Collection spreadsheet positioning does not override frozen body cells', (
   assert.match(html, /collection-spreadsheet\.css\?v=__BL_ASSET_VERSION__&rev=[A-Za-z0-9._-]+/,
     'the browser must receive the corrected freeze rule instead of a cached stylesheet');
 });
+
+test('Collection summary hides only the duplicate count text, preserving the footer cell paint', () => {
+  const css = read('public/ui-components.css');
+  const source = read('public/app-main.js');
+  assert.match(source, /<td class="collectionModelCount"><span>\$\{escapeHtml\(modelText\)\}<\/span><\/td>/);
+  assert.match(css, /#kolTable tfoot \.collectionModelCount>span\{visibility:hidden;\}/);
+  assert.doesNotMatch(css, /#kolTable tfoot \.collectionModelCount\{visibility:hidden;\}/,
+    'hiding the entire cell exposes scrolling model names underneath the sticky footer');
+});
