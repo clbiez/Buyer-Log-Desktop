@@ -1,5 +1,4 @@
 'use strict';
-const BLBusinessRules=require('../../public/business-rules');
 
 /* Sayfa Horizon'u route'ları (alanlar, değerler, önizleme, kullanıcıdan kopyalama)
    server.js'ten birebir taşındı (davranış değişikliği yok). Kayıt, server.js'te
@@ -8,6 +7,7 @@ const BLBusinessRules=require('../../public/business-rules');
    değerler (yok) canlı okuyucu fonksiyonla okunur. */
 module.exports = function registerHorizonRoutes(app, deps) {
   const {
+    BLBusinessRules,
     USER_WORKSPACE_MODULES,
     apiError,
     cacheForUser,

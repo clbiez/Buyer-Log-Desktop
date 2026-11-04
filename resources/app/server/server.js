@@ -3891,6 +3891,7 @@ require('./routes/preset-share-routes')(app, {
    =================================================================== */
 // ---- Sayfa Horizon'u route'ları (alanlar, değerler, önizleme, kullanıcıdan kopyalama) → server/routes/horizon-routes.js ----
 require('./routes/horizon-routes')(app, {
+  BLBusinessRules,
   USER_WORKSPACE_MODULES,
   apiError,
   cacheForUser,
