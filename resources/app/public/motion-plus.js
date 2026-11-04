@@ -147,6 +147,11 @@
   }
   function play(kind,element){
     if(!element||!enabled())return null;
+    // Overview page navigation: one finite slide of the existing grid, without
+    // cloning widgets or moving the toolbar. Shared cancellation owns its lifetime.
+    if(kind==='page-next'||kind==='page-prev')return animate(element,
+      [{opacity:.5,transform:'translate3d('+(kind==='page-next'?48:-48)+'px,0,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],
+      {duration:duration('page')});
     if(kind==='card')return animate(element,[{opacity:.6,transform:'translate3d(-5px,-3px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('card')});
     if(kind==='overlay')return animate(element,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('overlay')});
     // Alttan açılan çekmece: içerik aşağıdan yukarı doğru açılır ve yerine kayar.
