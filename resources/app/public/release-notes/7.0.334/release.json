@@ -1,0 +1,543 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.334",
+  "channel": "stable",
+  "publishedAt": "2026-11-04",
+  "title": {
+    "tr": "Hafif karartma, menü gölgesi ve Lisans Kartları",
+    "en": "Subtle dimming, navigation shadow and License Cards"
+  },
+  "summary": {
+    "tr": "Bulanık arka planlara hafif karartma, açılan sol menüye kenar gölgesi eklendi. Royalty işlemleri Lisans Kartlarında birleşir; manuel kartlar, kategori oranları ve hızlı FOB hesabı eklenir. CP Araçlar menüsünden açılan Odak Görünümü, model görselini, LCW AI yorumunu ve rapor detaylarını bir araya getirir; incelemeler geçmişten sürdürülebilir.",
+    "en": "Blurred backgrounds now include subtle dimming, and expanded navigation casts an edge shadow. Royalty operations are unified in License Cards with manual cards, category rates and a quick FOB calculator. Focus View opens from CP Tools, bringing the model image, LCW AI comments and report details together; reviews can be resumed from history."
+  },
+  "stats": {
+    "features": 3,
+    "improvements": 5,
+    "fixes": 10
+  },
+  "changes": [
+    {
+      "id": "sidebar-blur-edge-shadow",
+      "type": "fix",
+      "module": {
+        "tr": "Genel arayüz",
+        "en": "Application UI"
+      },
+      "title": {
+        "tr": "Açılan sol menünün kenar gölgesi tamamlandı",
+        "en": "Expanded navigation now casts an edge shadow"
+      },
+      "body": {
+        "tr": "Dar sol menü fare veya klavyeyle genişlediğinde bulanık çalışma alanına hafif bir kenar gölgesi düşürür. Menü kapanınca gölge ve karartma kalkar. Sabit geniş menü çalışma alanını karartmaz; azaltılmış hareket tercihi korunur.",
+        "en": "When the collapsed navigation expands with the pointer or keyboard, a subtle edge shadow separates it from the blurred workspace. Closing removes the shadow and dimming. Pinned expanded navigation does not dim the workspace, and reduced motion is respected."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "workspace-blur-rail.png",
+        "alt": {
+          "tr": "Açılan sol menünün kenar gölgesi tamamlandı",
+          "en": "Expanded navigation now casts an edge shadow"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "workspace-blur-soft-dimming",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel arayüz",
+        "en": "Application UI"
+      },
+      "title": {
+        "tr": "Bulanık arka planlara hafif karartma eklendi",
+        "en": "Blurred backgrounds now include subtle dimming"
+      },
+      "body": {
+        "tr": "Tüm ekranlarda pencere ve çekmece açıldığında arka plan hafifçe kararır. Açık ve koyu tema aynı ortak katmanı kullanır; iç içe pencerelerde karartma katlanmaz. Kapanışta çalışma alanı netliğine ve parlaklığına döner; yazılım çiziminde karartma bulanıklık olmadan çalışır.",
+        "en": "Opening a dialog or drawer subtly dims the background across all screens. Light and dark themes share one layer, so nested dialogs do not compound the dimming. Closing restores workspace clarity and brightness; software rendering uses dimming without blur."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "workspace-blur-dialog.png",
+        "alt": {
+          "tr": "Bulanık arka planlara hafif karartma eklendi",
+          "en": "Blurred backgrounds now include subtle dimming"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "row-note-copy-spacing",
+      "type": "fix",
+      "module": {
+        "tr": "Satır notları · Pano",
+        "en": "Row notes · Clipboard"
+      },
+      "title": {
+        "tr": "Notlar fazladan boş satır olmadan kopyalanır",
+        "en": "Notes copy without extra blank lines"
+      },
+      "body": {
+        "tr": "Sipariş, Koleksiyon ve Not Defteri düzenleyicilerinden seçili metin kopyalanırken baştaki ve sondaki boş satırlar temizlenir. Not içindeki satır araları, kısmi seçim, metin biçimi ve görseller korunur; kayıtlı not değiştirilmez.",
+        "en": "Copying selected content from the Order, Collection and Notebook editors removes leading and trailing blank lines. Internal line breaks, partial selections, text formatting and images are preserved; the saved note is unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "row-note-copy-spacing.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Not Defterine satır notundan yapıştırılan asd metni",
+          "en": "The asd text pasted from a row note into the actual Buyer Log Notebook"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, yalnız demo veri. İki baş ve bir son boş satır içeren not kopyalanıp Not Defterine yapıştırıldı; sonuç tek satır asd.",
+          "en": "Actual post-change application with demo data only. A note with two leading and one trailing blank line was copied and pasted into Notebook; the result is a single asd line."
+        }
+      }
+    },
+    {
+      "id": "license-cards-unified-royalty",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans Kartları",
+        "en": "License Cards"
+      },
+      "title": {
+        "tr": "Royalty işlemleri Lisans Kartlarında birleştirildi",
+        "en": "Royalty operations are unified in License Cards"
+      },
+      "body": {
+        "tr": "Royalty Calculations bağlantıları artık Lisans Kartlarını açar. Aynı sözleşme kayıtları, geçmiş dönemler ve ülkeye özel eski hologram tutarları korunur. Sözleşme tablosunda sütun filtreleri, sıralama, eşleşen CP sayısı, Uygula, Tümüne uygula ve açık sözleşme silme işlemleri bulunur; birleşik lisansör adlarının kartları ayrıca düzenlenebilir. Silme yalnız açık seçim ve güncel kart doğrulamasıyla yapılır.",
+        "en": "Royalty Calculations links now open License Cards. The same contract records, historical periods and legacy country-specific hologram amounts are retained. The contract table includes column filters, sorting, CP match counts, Apply, Apply to all and explicit contract deletion; cards belonging to merged licensor names can be edited separately. Deletion requires an explicit choice and a current card token."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-contracts.png",
+        "alt": {
+          "tr": "Gerçek Lisans Kartları sözleşme tablosunda kategori oranları, filtreler, sıralama ve hesaplama işlemleri",
+          "en": "Actual License Cards contract table with category rates, filters, sorting and calculation actions"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; yalnız demo veri. Kaydetme, çakışmada taslağı koruma, arama, hesaplama ve iki dilde arayüz tarayıcıda kontrol edildi.",
+          "en": "Actual post-change Buyer Log using only demo data. Saving, draft preservation on conflicts, search, calculation and both interface languages were checked in the browser."
+        }
+      }
+    },
+    {
+      "id": "license-cards-manual-create",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans Kartları",
+        "en": "License Cards"
+      },
+      "title": {
+        "tr": "Lisans kartı elle eklenebilir",
+        "en": "License cards can be added manually"
+      },
+      "body": {
+        "tr": "Yeni lisans kartı düğmesinden lisans adı ve isteğe bağlı lisansör girilerek kart oluşturulur; ASAS kaydı beklenmez. Aynı kart ikinci kez eklenemez. Kart, diğer kartları ve sözleşmeleri değiştirmeden ortak kayıt ve eşitleme yoluyla saklanır.",
+        "en": "New license card creates a card from a license name and optional licensor without waiting for an ASAS record. Duplicate cards are rejected. Creation uses the shared persistence and synchronization path while retaining other cards and contracts."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-manual.png",
+        "alt": {
+          "tr": "Yeni lisans kartı formu ve mevcut kategori sözleşmeleri",
+          "en": "New license card form alongside existing category contracts"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; yalnız demo veri. Kaydetme, çakışmada taslağı koruma, arama, hesaplama ve iki dilde arayüz tarayıcıda kontrol edildi.",
+          "en": "Actual post-change Buyer Log using only demo data. Saving, draft preservation on conflicts, search, calculation and both interface languages were checked in the browser."
+        }
+      }
+    },
+    {
+      "id": "license-cards-fixed-tools-search-calculator",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans Kartları",
+        "en": "License Cards"
+      },
+      "title": {
+        "tr": "Üst araçlar, tablo içi kaydırma ve minimal FOB hesabı",
+        "en": "Top actions, internal table scrolling and a minimal FOB calculator"
+      },
+      "body": {
+        "tr": "Üretici atlası, seçime ilişkin işlemler ve ana araçlar tablonun üstündedir; tablo kendi içinde kayar. Arama CP ile aynı motoru kullanır: ERMO; BRAW birlikte, virgülle ayrılan seçenekler alternatif olarak aranır; dışlama ve parantezli gruplar da korunur. Minimal hesaplama alanında Supp. FOB, Final FOB YD ve Final FOB TR birbirinden hesaplanır. Kayıtlı veya açıkça taslak olarak işaretli sözleşmelerle yapılan deneme sipariş fiyatını değiştirmez.",
+        "en": "Supplier atlas, selection actions and main tools stay above an internally scrolling table. Search uses the CP engine: ERMO; BRAW searches together, while comma-separated terms are alternatives; exclusion and parenthesized groups are retained. The minimal calculator solves Supp. FOB, Final FOB Overseas and Final FOB TR in either direction. Trials using saved or explicitly marked draft contracts do not change order prices."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-unified.png",
+        "alt": {
+          "tr": "Üstte sabit araçlar, minimal üç yönlü FOB hesabı ve kendi içinde kayan Lisans Kartları tablosu",
+          "en": "Top actions, minimal three-way FOB calculator and an internally scrolling License Cards table"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; yalnız demo veri. Kaydetme, çakışmada taslağı koruma, arama, hesaplama ve iki dilde arayüz tarayıcıda kontrol edildi.",
+          "en": "Actual post-change Buyer Log using only demo data. Saving, draft preservation on conflicts, search, calculation and both interface languages were checked in the browser."
+        }
+      }
+    },
+    {
+      "id": "license-cards-category-rates",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans Kartları",
+        "en": "License Cards"
+      },
+      "title": {
+        "tr": "Kategoriye göre royalty ve komisyon oranları",
+        "en": "Royalty and commission rates by category"
+      },
+      "body": {
+        "tr": "Sözleşmeye kategori kapsamı eklenebilir: örneğin Home %3, T-shirt %5. Her kapsamda royalty, TR ve YD komisyonları ayrı girilir. Eşleşen kategori sözleşmesi genel orandan önce uygulanır; diğer kategoriler genel oranı kullanır. CP, Orders, Collection ve Endeksmatik aynı kapsamı izler. Yeni dönem yalnız aynı kategori, sezon ve ülke kapsamındaki önceki dönemi kapatır. Eski istemci kayıtları kategori kapsamını veya genel yedek sözleşmeyi sessizce silemez.",
+        "en": "Contracts can have category scopes, such as Home 3% and T-shirt 5%. Royalty, TR commission and overseas commission are entered separately for each scope. A matching category contract takes precedence; other categories use the general rate. CP, Orders, Collection and Endeksmatik share the scope. New periods close a preceding period only for the same category, season and country scope. Legacy client writes cannot silently remove category scopes or their general fallback contract."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-unified.png",
+        "alt": {
+          "tr": "Genel sözleşme ile birlikte Home yüzde 3 ve T-shirt yüzde 5 kategori sözleşmeleri",
+          "en": "General contract alongside Home 3 percent and T-shirt 5 percent category contracts"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; yalnız demo veri. Kaydetme, çakışmada taslağı koruma, arama, hesaplama ve iki dilde arayüz tarayıcıda kontrol edildi.",
+          "en": "Actual post-change Buyer Log using only demo data. Saving, draft preservation on conflicts, search, calculation and both interface languages were checked in the browser."
+        }
+      }
+    },
+    {
+      "id": "excel-split-buttons",
+      "type": "improvement",
+      "module": {
+        "tr": "CP · Koleksiyon · Excel",
+        "en": "CP · Collection · Excel"
+      },
+      "title": {
+        "tr": "Excel simgesi ve menü oku ayrı düğmelerde",
+        "en": "Excel icon and menu arrow have separate buttons"
+      },
+      "body": {
+        "tr": "CP ve Koleksiyon araç çubuklarında Excel düğmesi Kopyala düzenini kullanır. Excel simgesi tabloyu doğrudan dışa aktarır; yanındaki ayrı ok oluşturma, içe aktarma ve şablon menüsünü açar. Siparişler ve diğer sayfalardaki doğrudan Excel aktarımı korunur.",
+        "en": "The CP and Collection Excel buttons follow the Copy layout. The Excel icon exports the table directly; the separate arrow opens workbook creation, import and template actions. Direct Excel export in Orders and other pages remains available."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "excel-split-buttons.png",
+        "alt": {
+          "tr": "Demo CP ekranında ayrı Excel aktarım düğmesi, menü oku ve açık Excel menüsü",
+          "en": "Demo CP screen with separate Excel export button, menu arrow and open Excel menu"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, yalnız demo veri. Ayrı tıklama alanları, doğrudan aktarım yönlendirmesi, pasif durum ve menü açma kontrol edildi.",
+          "en": "Actual post-change Buyer Log using demo data only. Separate hit areas, direct export delegation, disabled state and menu opening were checked."
+        }
+      }
+    },
+    {
+      "id": "oab-internal-browser-report-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Overview · OAB",
+        "en": "Overview · OAB"
+      },
+      "title": {
+        "tr": "OAB raporu beklerken gereksiz yere yeniden başlatılmaz",
+        "en": "OAB reports stay running while results are pending"
+      },
+      "body": {
+        "tr": "Get OAB ve Yenile sırasında çalışan rapor, oturum kurtarma mekanizmasının sayfayı tekrar yüklemesiyle kesilmez. Gizli iç tarayıcı arka plan kısıtlaması olmadan çalışır; oturum okuma ve istek zaman aşımı düzeltildi. Çoklu seçimde ve tüm Buyer Group’lar seçildiğinde giriş yenileme geçerli bir filtre kombinasyonunu korur. Dış tarayıcı veya Allow Remote Debugging ayarı gerekmez.",
+        "en": "During Get OAB and Refresh, an active report is no longer interrupted by page reloads from session recovery. The hidden internal browser runs without background throttling; session reading and request timeouts are corrected. Sign-in recovery keeps a valid filter combination for multiple selections and all Buyer Groups. No external browser or Allow Remote Debugging setting is required."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-internal-browser-refreshed.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log OAB ekranında demo verisiyle tamamlanan yenileme ve OAB hazır durumu",
+          "en": "Actual Buyer Log OAB screen showing a completed refresh with demo data and the OAB ready state"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, izole demo verisi ve kontrollü rapor yanıtı. Yenileme tamamlandı; filtre seçimi ve rapor görünümü korundu.",
+          "en": "Actual post-change application with isolated demo data and a controlled report response. Refresh completed with the filter selection and report view preserved."
+        }
+      }
+    },
+    {
+      "id": "copy-current-table-row-order",
+      "type": "fix",
+      "module": {
+        "tr": "CP / Sipariş · Kopyalama",
+        "en": "CP / Orders · Copy"
+      },
+      "title": {
+        "tr": "Seçili satırlar güncel tablo sırasıyla kopyalanır",
+        "en": "Selected rows copy in the current table order"
+      },
+      "body": {
+        "tr": "Satırları seçtikten sonra sıralama sütununu veya yönünü değiştirdiğinizde kopyalama son tablo sırasını kullanır. Seçili satırlar paneli ve Excel çıktısı da aynı sırayı izler; filtre dışında kalan seçimler korunur.",
+        "en": "After selecting rows, changing the sort column or direction makes Copy use the latest table order. The selected rows panel and Excel export follow the same order; selections outside the current filters remain included."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "copy-current-table-order.png",
+        "alt": {
+          "tr": "Demo CP tablosunda Ex-factory sırası ile aynı sırayı izleyen seçili satırlar paneli",
+          "en": "Demo CP table and selected rows panel following the same Ex-factory order"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, yalnız demo veri. Seçimden sonra artan ve azalan sıralama ile filtre değiştirme durumlarında CP ve Sipariş panosunun HTML ve metin satır sırası kontrol edildi.",
+          "en": "Actual post-change Buyer Log using demo data only. CP and Orders clipboard HTML and text row order were checked after changing ascending/descending sorting and filters following selection."
+        }
+      }
+    },
+    {
+      "id": "intake-overview-navigation-load",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış · INTAKE",
+        "en": "Overview · INTAKE"
+      },
+      "title": {
+        "tr": "INTAKE'in başka bir sekmeden gelindiğinde boş kalması düzeltildi",
+        "en": "INTAKE now loads when opening Overview from another tab"
+      },
+      "body": {
+        "tr": "Uygulama Siparişler gibi başka bir modülde açıldığında, Genel Bakış'a sonradan geçiş INTAKE'i de başlatır. Tablo, Yenile, filtreler ve pivot ayarları kullanılabilir; sekmeye tekrar dönüşte modül ve düğme olayları çoğaltılmaz. Diğer sekmelerde INTAKE yüklenmez ve snapshot yoksa rapor yalnız widget görünür olduğunda sorgulanır.",
+        "en": "When the app starts in another module such as Orders, switching to Overview also initializes INTAKE. Its table, Refresh, filters and pivot settings are available; returning to the tab does not duplicate the module or button handlers. INTAKE stays unloaded in other tabs, and without a snapshot the report is queried only when the widget is visible."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "intake-overview-navigation.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log'da Siparişler'den Genel Bakış'a geçiş sonrası demo satırlarıyla açılan INTAKE tablosu",
+          "en": "Actual Buyer Log INTAKE table with demo rows after navigating from Orders to Overview"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, izole sunucu ve yalnız sentetik INTAKE HTTP yanıtları. TR/EN düğmeler, snapshot yükleme, görünürken sorgulama, tekrar giriş ve hata sonrası Yenile kontrol edildi; canlı veritabanı bağlantısı kullanılmadı.",
+          "en": "Actual post-change app on an isolated server with synthetic INTAKE HTTP responses only. TR/EN controls, snapshot loading, visible-widget querying, repeated entry and recovery with Refresh were checked; no live database connection was used."
+        }
+      }
+    },
+    {
+      "id": "backlog-kpi-semantic-colors",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog · Genel bakış",
+        "en": "Backlog · Overview"
+      },
+      "title": {
+        "tr": "Üst özet kartlarının durum renkleri geri getirildi",
+        "en": "Summary cards show their status colours again"
+      },
+      "body": {
+        "tr": "Genel bakışın üst kartlarındaki sayı ve etiketler yeniden durum rengini kullanır: üretim mavi, yükleme kehribar, transit kahverengi, depo yeşil ve risk kırmızı. Hafif renkli zeminler ortak tema paletinden gelir; mevcut kenarlıklar ve tıklayarak detay açma korunur.",
+        "en": "Values and labels in the overview summary cards use their status colours again: blue for production, amber for loading, brown for transit, green for warehouse and red for risk. Lightly tinted surfaces use the shared theme palette; existing borders and click-to-open details remain available."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-kpi-colors-and-ring.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog ekranında durum renkli üst kartlar ve merkezinde yüzde bulunan dairesel yüklenme grafiği",
+          "en": "Actual Buyer Log Backlog screen with status-coloured summary cards and a circular loaded-share chart with its percentage in the centre"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, yalnız demo veri. Renk kontrastı, grafik-yüzde eşleşmesi ve merkez hizalaması TR/EN, açık/koyu tema ve dört boyutta kontrol edildi.",
+          "en": "Actual post-change application using demo data only. Colour contrast, chart-percentage consistency and centre alignment were checked in TR/EN, light/dark themes and four interface sizes."
+        }
+      }
+    },
+    {
+      "id": "backlog-loaded-share-ring",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog · Genel bakış",
+        "en": "Backlog · Overview"
+      },
+      "title": {
+        "tr": "Yüklenen oranı dairesel grafikte gösterilir",
+        "en": "Loaded share is displayed in a circular chart"
+      },
+      "body": {
+        "tr": "Sol üstteki yüklenen yüzde göstergesi, aynı Backlog toplamından hesaplanan dairesel grafikle gösterilir. Yüzde ve açıklama grafiğin merkezinde, sipariş ve satır sayısı altında kalır. Grafik açık/koyu temayı, dört boyutu ve azaltılmış hareket tercihini izler; rapor hesaplaması değişmez.",
+        "en": "The loaded-share percentage at the upper left appears in a circular chart using the same Backlog summary. The percentage and description stay in the centre, with order and line counts below. The chart follows light/dark themes, four sizes and reduced-motion preferences; report calculations remain unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-kpi-colors-and-ring.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog ekranında durum renkli üst kartlar ve merkezinde yüzde bulunan dairesel yüklenme grafiği",
+          "en": "Actual Buyer Log Backlog screen with status-coloured summary cards and a circular loaded-share chart with its percentage in the centre"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, yalnız demo veri. Renk kontrastı, grafik-yüzde eşleşmesi ve merkez hizalaması TR/EN, açık/koyu tema ve dört boyutta kontrol edildi.",
+          "en": "Actual post-change application using demo data only. Colour contrast, chart-percentage consistency and centre alignment were checked in TR/EN, light/dark themes and four interface sizes."
+        }
+      }
+    },
+    {
+      "id": "backlog-panel-control-borders",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Backlog alanları ve butonlarının kenarlıkları geri getirildi",
+        "en": "Backlog panels and buttons have visible borders again"
+      },
+      "body": {
+        "tr": "Tarih aralığı, genel bakış, analiz ve pivot panelleri; KPI kartları, görünüm seçimleri ve aksiyon butonları ortak tasarımın ince kenarlıklarını kullanır. Filtre ve sipariş detay çekmeceleri de aynı çerçeveleri taşır. Giriş alanlarının belirgin sınırları ve klavye odağı açık/koyu temada ve dört arayüz boyutunda korunur.",
+        "en": "Date range, overview, analysis and pivot panels, KPI cards, view selectors and action buttons use the shared design’s thin borders. Filter and order detail drawers use the same boundaries. Form field borders and keyboard focus remain visible in light/dark themes and all four interface sizes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-control-borders.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog ekranında tarih aralığı, genel bakış, KPI kartları ve seçim butonlarının kenarlıkları",
+          "en": "Real Buyer Log Backlog screen showing borders on the date range, overview, KPI cards and selection buttons"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, yalnız demo veri. TR/EN, açık/koyu tema ve dört arayüz boyutunda kenarlıklar; klavye odağı, filtre ve detay çekmeceleri kontrol edildi.",
+          "en": "Actual post-change application using demo data only. Borders were checked in TR/EN, light/dark themes and four interface sizes, together with keyboard focus, filter and detail drawers."
+        }
+      }
+    },
+    {
+      "id": "document-operations-focus-history",
+      "type": "feature",
+      "module": {
+        "tr": "CP · Araçlar",
+        "en": "CP · Tools"
+      },
+      "title": {
+        "tr": "Odak Görünümü ile belge incelemesine kaldığınız yerden devam edin",
+        "en": "Resume document review with Focus View"
+      },
+      "body": {
+        "tr": "Belge Operasyon Merkezi CP Araçlar menüsünden açılır. Geniş pencerede eşleşen model görseli ve LCW AI değerlendirmesi, rapor testleri ve kaynak kanıtlarıyla birlikte görünür. Dosyalar, analizler, eşleştirmeler ve notlar kullanıcıya özel inceleme geçmişinde korunur. Pencere kapatıldığında süren analiz devam eder; sayfa yenilendiğinde kayıt yeniden açılabilir. Tamamlanmış kayıtlar salt okunur açılır. Yeniden açılışta yazma onayı tekrar istenir; güncel sipariş, yetki veya checklist değişmişse yeniden analiz gerekir.",
+        "en": "Document Operations Center opens from CP Tools. Its wide workspace displays the matched model image and LCW AI assessment alongside report tests and source evidence. Files, assessments, matches and notes remain in private review history. Analysis continues when the window closes; records can be reopened after a page reload. Completed records open read-only. Reopening requires fresh write consent; order, access or checklist changes require a new assessment."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "document-focus-workspace.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Odak Görünümünde demo model görseli, LCW AI yorumu ve test detayları",
+          "en": "Actual Buyer Log Focus View with demo model image, LCW AI comments and test details"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, sentetik model ve rapor verisi. LCW AI HTTP sınırı test yanıtıyla çalıştırıldı. Araçlar üzerinden açma, kapatıp devam etme, sayfa yenileme sonrası not ve dosya erişimi ile açık onaylı kayıt kontrol edildi.",
+          "en": "Actual application with synthetic model and report data. The LCW AI HTTP boundary returned a test response. Opening via Tools, closing and resuming, access to notes and files after reload, and explicit approval were verified."
+        }
+      }
+    },
+    {
+      "id": "backlog-merch-calendar-export-integrity",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog · Excel raporları",
+        "en": "Backlog · Excel reports"
+      },
+      "title": {
+        "tr": "Retail Depo ay alanının gün tarihine dönüşmesi düzeltildi",
+        "en": "Retail warehouse month values no longer turn into day dates"
+      },
+      "body": {
+        "tr": "Retail Depo ve diğer tarih alanlarının (Ay)/(Hafta) sütunları metin olarak korunur; örneğin LCW takviminde Ocak 2027 artık 01.01.2027 tarihine dönüşmez. Legacy, detay ve V3 çıktıları ile grafik ve analizler sunucu satırlarıyla aynı Merch Calendar verisini kullanır; takvim değiştirilince önbellekteki eski dönemler kullanılmaz. Boş sayısal değerler boş kalır, gerçek sıfırlar korunur ve Handover kontrol formülleri mantıksal türünü kaybetmez.",
+        "en": "The (Month)/(Week) columns of Retail Warehouse and other date fields retain their text values: January 2027 in the LCW calendar no longer becomes 01.01.2027. Legacy, detail and V3 exports, charts and analyses use the same Merch Calendar data as the server rows; calendar changes invalidate cached periods. Missing numeric values stay blank, actual zeros remain intact, and Handover check formulas keep their boolean type."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-merch-calendar.png",
+        "alt": {
+          "tr": "Demo Backlog detayında Retail Depo ve Model Bütçe tarihleri ile LCW ay ve hafta eşleşmeleri",
+          "en": "Demo Backlog detail with retail warehouse and model budget dates and their LCW months and weeks"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, yalnız demo veriyle. Yüklenen test LCW takviminde 28.12.2026 Ocak 2027 / 1. hafta, 03.05.2026 Nisan 2026 / 18. hafta olarak görünür. Aynı değerler indirilen Legacy, detay ve V3 dosyalarında kontrol edildi.",
+          "en": "Actual post-change Buyer Log using only demo data. In the uploaded test LCW calendar, 28.12.2026 maps to January 2027 / week 1 and 03.05.2026 to April 2026 / week 18. Matching values were checked in downloaded Legacy, detail and V3 files."
+        }
+      }
+    },
+    {
+      "id": "test-report-ai-context-preparation",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Belge inceleme",
+        "en": "CP · Document review"
+      },
+      "title": {
+        "tr": "LCW AI incelemesinin CP bağlamında takılması düzeltildi",
+        "en": "LCW AI review no longer stalls on the CP context"
+      },
+      "body": {
+        "tr": "Kişisel kurallarla hesaplanan Priority değeri artık eski sipariş verisi sanılmaz. İnceleme, checklist eşitlemesinin ve bekleyen ayar kayıtlarının tamamlanmasını bekler; CP tarihleri gün kaymadan bağlama eklenir. Gerçek sipariş, yetki veya checklist farkları incelemeyi durdurur ve hatanın türü görünür. Öneriler yalnız açık kullanıcı seçimi ve son onayla kaydedilir.",
+        "en": "Priority calculated from personal rules is no longer mistaken for stale order data. Review waits for checklist synchronisation and pending preference saves; CP dates are included without shifting the day. Actual order, access or checklist differences still stop review and show the type of error. Proposals are saved only after explicit selection and final confirmation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-ai-review.png",
+        "alt": {
+          "tr": "Demo sonuç maili için kanıtla doğrulanan inceleme ve checklist değişikliği önizlemesi",
+          "en": "Evidence-validated review and checklist change preview for a demo result email"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log ve demo veri. LCW AI HTTP sınırı test yanıtıyla çalıştırıldı; belge okuma, kaynak doğrulama, onay ve kayıt gerçek uygulamadan geçti. Bu görsel canlı LCW AI bağlantı testi değildir.",
+          "en": "Actual post-change Buyer Log with demo data. The LCW AI HTTP boundary returned a test response; document reading, evidence validation, approval and persistence ran through the actual application. This image does not demonstrate a live LCW AI connection test."
+        }
+      }
+    },
+    {
+      "id": "test-report-source-preservation",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Belge aktarımı",
+        "en": "CP · Document import"
+      },
+      "title": {
+        "tr": "Tanımlanamayan ve tekrar bırakılan belgeler incelemede korunur",
+        "en": "Unclassified and repeated documents remain available for review"
+      },
+      "body": {
+        "tr": "Türü belirlenemeyen veya sınıflandırılamayan PDF'ler artık sessizce elenmez; inceleme önizlemesine aktarılır. Aynı dosyanın tekrar bırakılması AI kapsam doğrulamasını bozmaz. AI'ın çözemediği belgelerde ayrıştırıcının okuduğu rapor ve ekler korunur. Desteklenmeyen, boş veya dosya sınırını aşan yeni bir seçim mevcut incelemeyi iptal etmez.",
+        "en": "PDFs whose type cannot be identified or classified are now retained in the review preview. Repeated drops of the same file no longer break AI source coverage validation. Parser reports and attachments remain available when AI cannot resolve a document. Unsupported, empty or over-limit new selections do not cancel an existing review."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-preserved-sources.png",
+        "alt": {
+          "tr": "İki kez bırakılan demo PDF'nin tek inceleme kaynağı ve çözümlenemeyen AI yanıtından sonra korunan raporu",
+          "en": "A repeated demo PDF retained as one review source, with its parser report preserved after an unresolved AI response"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, yalnız sentetik PDF ve test AI yanıtı. İki dosya bırakıldı; tek kaynak incelendi. AI çözemediğinde rapor önizlemede kalır ve hiçbir durum otomatik yazılmaz.",
+          "en": "Actual Buyer Log with a synthetic PDF and test AI response. Two files were dropped and one source was reviewed. The report remains in the preview when AI cannot resolve it, and no status is written automatically."
+        }
+      }
+    }
+  ]
+}

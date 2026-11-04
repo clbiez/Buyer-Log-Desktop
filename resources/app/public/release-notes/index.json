@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.334",
+      "publishedAt": "2026-11-04",
+      "title": {
+        "tr": "Hafif karartma, menü gölgesi ve Lisans Kartları",
+        "en": "Subtle dimming, navigation shadow and License Cards"
+      },
+      "stats": {
+        "features": 3,
+        "improvements": 5,
+        "fixes": 10
+      },
+      "file": "release-notes/7.0.334/release.json"
+    },
+    {
       "version": "7.0.333",
       "publishedAt": "2026-11-03",
       "title": {
