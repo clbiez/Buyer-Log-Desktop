@@ -2927,22 +2927,14 @@ html[data-ui-system="manifest"] .toolbarMoreDivider {background:var(--ui-row-div
 }
 html[data-ui-system="manifest"] .toolbarMoreLabel {font-size:var(--ui-font-2xs) !important;font-weight:700 !important;letter-spacing:.06em;text-transform:uppercase;color:var(--ui-text-muted) !important
 }
-html[data-ui-system="manifest"] .topRefreshMenu {z-index:var(--ui-z-modal-menu);background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important
-}
-html[data-ui-system="manifest"] .topRefreshMenu button {background:transparent !important;color:var(--ui-text) !important;font-size:var(--ui-font-xs) !important;font-weight:650 !important
-}
-html[data-ui-system="manifest"] .topRefreshMenu button:hover,html[data-ui-system="manifest"] .topRefreshMenu button:focus-visible {background:var(--ui-row-hover) !important
-}
-html[data-ui-system="manifest"] .topRefreshLabel {line-height:1.3
-}
-html[data-ui-system="manifest"] .topRefreshWhen {font-size:var(--ui-font-2xs) !important;font-weight:500 !important;color:var(--ui-text-muted) !important
-}
-html[data-ui-system="manifest"] .topRefreshMenu button:last-child {color:var(--ui-accent) !important
-}
-html[data-ui-system="manifest"] .topRefreshGroupHead {font-size:var(--ui-font-2xs) !important;font-weight:700 !important;letter-spacing:.6px;text-transform:uppercase;color:var(--ui-text-muted) !important
-}
-html[data-ui-system="manifest"] .topRefreshMenu .topRefreshStop {color:var(--ui-danger) !important
-}
+html[data-ui-system="manifest"] .topRefreshMenu {z-index:var(--ui-z-popover);background:transparent !important;box-shadow:none !important;border:0 !important;}
+html[data-ui-system="manifest"] .topRefreshBranches {fill:none;stroke:var(--ui-accent);stroke-width:1;}
+html[data-ui-system="manifest"] .topRefreshMenu button {background:var(--ui-surface) !important;color:var(--ui-text) !important;font:600 var(--ui-font-sm) var(--ui-font-mono) !important;border:1px solid var(--ui-group-divider) !important;box-shadow:var(--ui-shadow-overlay);}
+html[data-ui-system="manifest"] .topRefreshMenu button:hover,html[data-ui-system="manifest"] .topRefreshMenu button:focus-visible {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;}
+html[data-ui-system="manifest"] .topRefreshMenu [data-refresh-scope="linked"] {position:relative;}
+html[data-ui-system="manifest"] .topRefreshMenu [data-refresh-scope="linked"]::after {content:"";position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--ui-accent);}
+html[data-ui-system="manifest"] .topRefreshDetail {background:var(--ui-surface);color:var(--ui-text-secondary);border:1px solid var(--ui-group-divider);box-shadow:var(--ui-shadow-overlay);font-size:var(--ui-font-xs);}
+html[data-ui-system="manifest"] .topRefreshWhen {font-size:var(--ui-font-2xs);color:var(--ui-text-muted);}
 html[data-ui-system="manifest"] .modelConnScopeLimit {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important
 }
 html[data-ui-system="manifest"] .modelConnFieldPick {background:var(--ui-surface) !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important

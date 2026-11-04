@@ -67,6 +67,8 @@ const classicFrame = d => {
    '.miniTable tbody td',
    '.rail .brandMark--image',
    '#currentUserBtn',
+   '.topRefreshMenu button',
+   '.topRefreshDetail',
    'thead tr.groupRow th',
    'thead tr.colRow th.groupBoundary'
  ];
