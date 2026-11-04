@@ -48,7 +48,9 @@ boştur; UI CSS dosyalarında ham renk borcu yoktur.
 ortak paneller, kartlar, modüller ve düğmeler `--ui-group-divider` ile ince 1px
 sınıra sahiptir. Araç çubuğu ve tablo satırı ayraçları `--ui-row-divider`
 kullanır. Gölge yalnız geçici, üstte duran yüzey için
-`--ui-shadow-overlay` değeridir. Her karta gölge yoktur.
+`--ui-shadow-overlay` değeridir. Geçici genişleyen navigasyon `--ui-shadow-rail`
+geometrisini kullanır; ikisi aynı `--ui-shadow-color` rengini paylaşır. Bu renk
+karanlık temada aydınlık, açık temada koyudur. Her karta gölge yoktur.
 Mor/indigo, neon, gradyan yazı, glassmorphism ve süs ışıması kullanılmaz.
 Durumlar renk yanında metin, simge veya sayıyla açıklanır.
 

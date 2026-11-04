@@ -7,8 +7,8 @@
     "en": "UI transitions and balanced sidebar navigation"
   },
   "summary": {
-    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi.",
-    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved."
+    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır.",
+    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode."
   },
   "changes": [
     {
@@ -240,6 +240,35 @@
         "caption": {
           "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisiyle doğrulandı.",
           "en": "Actual post-change Buyer Log, verified with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "unified-dark-surface-shadows",
+      "type": "fix",
+      "module": {
+        "tr": "Görünüm ve navigasyon",
+        "en": "Appearance and navigation"
+      },
+      "title": {
+        "tr": "Karanlık temada tutarlı aydınlık gölgeler",
+        "en": "Consistent light shadows in dark mode"
+      },
+      "body": {
+        "tr": "Daraltılmış sol navigasyon fare veya klavyeyle geçici açıldığında siyah kalan kenar gölgesi düzeltildi. Navigasyon, açılır menüler, pencereler ve çekmeceler aynı tema duyarlı gölge rengini paylaşır; karanlık temada aydınlık, açık temada koyu gölge kullanılır.",
+        "en": "Fixed the black edge shadow when the collapsed sidebar temporarily expands with the mouse or keyboard. Navigation, pop-up menus, dialogs and drawers share one theme-aware shadow color: light in dark mode and dark in light mode."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "unified-dark-shadow-rail.png",
+        "alt": {
+          "tr": "Karanlık temada aydınlık kenar gölgesiyle geçici genişleyen sol navigasyon",
+          "en": "Temporarily expanded sidebar with a light edge shadow in dark mode"
+        },
+        "caption": {
+          "tr": "Sol navigasyon, pencereler ve çekmecelerle aynı aydınlık gölge rengini kullanır. Demo verisiyle gerçek Buyer Log ekranı.",
+          "en": "The sidebar uses the same light shadow color as dialogs and drawers. Actual Buyer Log screen with demo data."
         }
       }
     }
