@@ -5,7 +5,7 @@ const app=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8'),p
 const norm=v=>String(v??'').trim();
 function nativeFunction(name){const start=app.indexOf('function '+name+'(');assert.ok(start>=0,name);const end=app.indexOf('\n}',start);assert.ok(end>start,name);return app.slice(start,end+2);}
 function nativeUi(overrides,fx,cpRows=[]){
- const context={window:{BLBusinessRules:Business,BLCollectionPricingEngine:Engine},state:{overrides,cp:{rows:cpRows}},norm,turknorm:Business.turkNorm,dateOrdinal:parse.dateOrdinal,coerceDateLoose:parse.parseDateOnly,sameOrderCode:(a,b)=>parse.orderCodeKey(a)===parse.orderCodeKey(b),kolParseMoneyNum:Groups.kolParseMoneyNum,kolConfirmedPricing:r=>Groups.confirmedPricing(r,r.pricing,Groups.kolParseMoneyNum),kolBestPricing:r=>Groups.bestPricing(r.pricing,Groups.kolParseMoneyNum),editableValuesEqual:(a,b)=>a===b,api:Business,effectiveRoyalty:Business.pricingRuleEffectiveRoyalty,hologramFor:Business.pricingRuleHologramForCountry};
+ const context={window:{BLCanonicalFields:require('../public/canonical-fields'),BLBusinessRules:Business,BLCollectionPricingEngine:Engine},state:{overrides,cp:{rows:cpRows}},norm,turknorm:Business.turkNorm,dateOrdinal:parse.dateOrdinal,coerceDateLoose:parse.parseDateOnly,sameOrderCode:(a,b)=>parse.orderCodeKey(a)===parse.orderCodeKey(b),kolParseMoneyNum:Groups.kolParseMoneyNum,kolConfirmedPricing:r=>Groups.confirmedPricing(r,r.pricing,Groups.kolParseMoneyNum),kolBestPricing:r=>Groups.bestPricing(r.pricing,Groups.kolParseMoneyNum),editableValuesEqual:(a,b)=>a===b,api:Business,effectiveRoyalty:Business.pricingRuleEffectiveRoyalty,hologramFor:Business.pricingRuleHologramForCountry};
  context.BLFX={monthKey:date=>{const d=date||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');},snapshotForMonth:month=>({base:fx.base,dir:'per_base',rates:Fx.resolveMonth(month,fx).rates}),convert:Fx.convert};
  vm.createContext(context);vm.runInContext('const KOL_TR_LANDED_MULT=1.05,KOL_YD_LANDED_MULT=1.11;',context);
  for(const name of ['normalizeKolLandedMultipliers','kolDefaultLandedMultipliers','kolSourceCpRow','kolPricingRuleContext','normalizePricingRuleSeasons','pricingRuleSeasonMatches','kolPricingRuleFreshness','kolLandedIsNonDtr','licensorStatusUnresolved','kolAutoLicensorState','kolLicensorUnresolvedState','kolLicenseRuleMissing','kolTrLicenseRuleMissing','kolSuppFob','kolAutoFx','kolFormatPercentDisplay','kolFormatHologramDisplay','kolFormatMoneyDisplay','kolComputeFobFromConfirmed'])vm.runInContext(nativeFunction(name),context);
@@ -88,4 +88,14 @@ test('fractional contract royalty keeps full precision and Collection FOB matche
  assert.equal(Engine.formatRatePercent(21),'21,00%');
  assert.equal(Engine.formatRatePercent(0.1+0.2),'0,30%');
  assert.equal(Engine.formatRatePercent(''),'');
+});
+
+test('category overrides match UI/server and never share cached contracts across categories',()=>{
+ const pricingRules=[contract,{...contract,id:'home',categories:['Home'],royalty:3,trCommission:1,ydCommission:2},{...contract,id:'tee',categories:['T-shirt'],royalty:5,trCommission:2,ydCommission:3}],overrides={pricingRules};
+ const ui=nativeUi(overrides,fx),server=createPricingCalculation({rows:[row],overrides,fx});
+ for(const [category,id,total] of [['Home','home',5],['T-shirt','tee',8],['Other','demo',20],['Home','home',5]]){
+   const candidate={...row,urunTipi:category};assert.equal(ui.kolFindPricingRule(candidate).id,id);
+   ui.kolApplyRulePricing(candidate);const calculated=server.calculate(candidate);assert.equal(calculated.ruleId,id);
+   assert.equal(calculated.royaltyPct,total);assert.equal(Number(candidate.fob.replace(',','.')),calculated.finalFob);
+ }
 });

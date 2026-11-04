@@ -197,3 +197,24 @@
 .lcClipCopy{opacity:0}
 .lcRow:hover .lcClipCopy,.lcClipCopy:focus-visible,.lcClipCopy.isOn{opacity:1}
 .lcClipBar{display:flex;align-items:center;gap:8px;margin:0 0 var(--ui-space-2);padding:5px 10px}.lcClipBar span{flex:1}
+
+/* The workspace owns its vertical scroll; every primary action stays above it. */
+body[data-active-tab="licensecards"] main{height:calc(100dvh - var(--ui-topbar-height));box-sizing:border-box;padding-bottom:var(--ui-space-2);overflow:hidden}
+#view-licensecards.active{height:100%;min-height:0;overflow:hidden}
+.licenseCardsPage{height:100%;min-height:0}
+.lcPage{height:100%;min-height:0;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;padding-bottom:var(--ui-space-2)}
+.lcToolbar,.lcSelectionBar,.lcQuick,.lcCreate,.lcNotice{flex-shrink:0}
+.lcTable{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+.lcSelectionBar{position:static;margin:0 0 var(--ui-space-2);padding:0;transform:none;opacity:1;pointer-events:auto;flex-wrap:wrap}
+.lcQuick,.lcCreate{display:flex;align-items:end;gap:var(--ui-space-2);padding:var(--ui-space-2);margin-bottom:var(--ui-space-2)}
+.lcQuick .lcField{flex:1;min-width:85px}.lcQuick .lcQuickRule{flex:2.5;min-width:200px}
+.lcQuick .lcField input,.lcQuick .lcField select,.lcCreate .lcField input{width:100%;min-width:0;box-sizing:border-box}
+.lcQuick small{max-width:140px}
+.lcContractHead,.lcContract{grid-template-columns:76px 118px 118px minmax(90px,1fr) minmax(100px,1fr) repeat(4,minmax(65px,.5fr)) 190px;min-width:1200px}
+.lcPaneWide{min-width:0;overflow-x:auto}
+@media(max-width:850px){.lcQuick,.lcCreate{flex-wrap:wrap}.lcQuick small{max-width:none}.lcToolbar .lcChips{flex-basis:100%}}
+.lcContractFilters{display:grid;grid-template-columns:repeat(10,minmax(85px,1fr)) auto;gap:var(--ui-space-2);position:sticky;top:0;padding:var(--ui-space-2);min-width:1200px}
+.lcContractFilters input{min-width:0;width:100%;box-sizing:border-box}
+.lcContractIdentity{display:flex;align-items:center;gap:var(--ui-space-2);padding:var(--ui-space-2) 0}
+.lcContractIdentity b{min-width:140px}
+.lcHead[hidden]{display:none}

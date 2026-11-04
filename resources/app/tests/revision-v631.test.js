@@ -60,8 +60,8 @@ test('v6.33 royalty rules store Licensor again; matching no longer migrates it t
   assert.equal(Object.hasOwn(JSON.parse(result.stdout)[0], 'manufacturer'), false);
 
   const client = read('public/app-main.js');
-  assert.match(client, /pricingRuleMatchesValues\(rule,row\.OPD,row\.Country,row\.Season,row\.Licensor,row\.License\)/);
-  assert.match(read('public/index.html'), /License Royalty Calculations/);
+  assert.match(client, /pricingRuleMatchesValues\(rule,row\.OPD,row\.Country,row\.Season,row\.Licensor,row\.License,window\.BLCanonicalFields\.canonicalValue\(row,'cp','category'\)\)/);
+  assert.match(read('public/index.html'), /data-i18n-en="License Cards"/);
 });
 
 test('v6.31 keeps Colour Code as text in every principal Excel export path', () => {

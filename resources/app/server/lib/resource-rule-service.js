@@ -68,7 +68,13 @@ function normalizeTransitRules(incoming){
     });
 return rules;
 }
-function normalizePricingRules(incoming){
+function normalizePricingRules(incoming,options={}){
+    const previous=options.existing||[];
+    if(options.categorySchemaVersion!==1 && previous.some(rule=>BLBusinessRules.pricingRuleCategories(rule).length) && previous.some(rule=>!incoming.some(next=>String(next?.id)===String(rule.id)))){
+      throw Object.assign(new Error('Kategori sözleşmeleri güncel Lisans Kartları ekranından silinmelidir. / Delete category contracts from the current License Cards screen.'),{code:'PRICING_CATEGORY_VERSION_REQUIRED',statusCode:409});
+    }
+    incoming=BLBusinessRules.restoreOmittedCategoryScopes(incoming,previous);
+    if(incoming.some(rule=>rule?.categories!=null&&(!Array.isArray(rule.categories)||rule.categories.length>100||rule.categories.some(value=>typeof value!=='string'||value.length>200))))throw Object.assign(new Error('Geçerli kategori listesi girin. / Enter a valid category list.'),{code:'LICENSE_RULES_INVALID',statusCode:400});
     const migrated = BLBusinessRules.migrateLicenseRoyaltyRules(incoming);
     const nullablePercent = value => {
       if (value == null || String(value).trim() === '') return null;
@@ -84,6 +90,7 @@ function normalizePricingRules(incoming){
       id: String(r.id || ('rule-' + Date.now() + '-' + i)),
       opdStart: normalizePricingRuleDate(r.opdStart),
       opdEnd: normalizePricingRuleDate(r.opdEnd),
+      categories: BLBusinessRules.pricingRuleCategories(r),
       seasons: normalizePricingRuleSeasons(r.seasons != null ? r.seasons : r.season),
       licensor: String(r.licensor != null ? r.licensor : (r.manufacturer || '')).trim(),
       license: String(r.license || '').trim(),
@@ -116,7 +123,7 @@ function normalizePricingRules(incoming){
           && a.license.toLocaleUpperCase('tr-TR') === b.license.toLocaleUpperCase('tr-TR');
         const sameCountrySide = (a.trCommission != null && b.trCommission != null)
           || (a.ydCommission != null && b.ydCommission != null);
-        if (sameKey && sameCountrySide && pricingRuleSeasonSetsOverlap(a, b) && pricingRuleDateRangesOverlap(a, b)) {
+        if (sameKey && sameCountrySide && BLBusinessRules.pricingRuleCategoryScopesOverlap(a,b) && pricingRuleSeasonSetsOverlap(a, b) && pricingRuleDateRangesOverlap(a, b)) {
           throw Object.assign(new Error('Royalty date/season ranges overlap.'),{code:'PRICING_RULE_OVERLAP',statusCode:400});
         }
       }

@@ -21,6 +21,6 @@ test('actual adapter exposes native prerequisites without invoking costing or an
  ui.sb.document.body.dataset.activeTab='koleksiyon';ui.sb.kolRows=[{id:10,modelKod:'',plmId:''}];assert.equal(ui.commands().find(x=>x.id==='context.linked-order').reason,'Enter a PLM ID or model name first.');assert.deepEqual(ui.prepared,[]);
 });
 test('matching pricing rule uses the existing editor and selects its current rule',async()=>{
- const ui=boot();let opened=0,changed=0;const select={value:'',dispatchEvent:()=>changed++};ui.sb.findSuppFobRule=()=>({id:'rule-current'});ui.sb.openSuppFobRulesModal=()=>opened++;ui.sb.Event=class Event{};ui.buttons.set('_ruleCheckRule',select);
- await ui.commands().find(x=>x.id==='context.pricing-rule').run();assert.equal(opened,1);assert.equal(select.value,'rule-current');assert.equal(changed,1);ui.sb.permission=false;assert.equal(ui.commands().find(x=>x.id==='context.pricing-rule').disabled,true);
+ const ui=boot();const opened=[];ui.sb.findSuppFobRule=()=>({id:'rule-current'});ui.sb.openSuppFobRulesModal=id=>opened.push(id);
+ await ui.commands().find(x=>x.id==='context.pricing-rule').run();assert.deepEqual(opened,['rule-current']);ui.sb.permission=false;assert.equal(ui.commands().find(x=>x.id==='context.pricing-rule').disabled,true);
 });

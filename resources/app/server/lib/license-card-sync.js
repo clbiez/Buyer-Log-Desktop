@@ -23,7 +23,7 @@ function stageChange(overrides, change) {
   for(const card of change.cards||(change.card?[change.card]:[])){
     const fields={profile:profileSnapshot(card)};
     const contracts=change.contractsByCard?.[card.id]||change.contracts;
-    if(contracts)fields.contracts={pair:cards.pairKey(card.license,card.licensor),rules:clone(contracts)};
+    if(contracts)fields.contracts={categorySchemaVersion:1,pair:cards.pairKey(card.license,card.licensor),rules:clone(contracts)};
     stage(card.id,fields);
   }
   if(change.initialized)stage('state',{initialized:true,lastImportedAt:change.lastImportedAt||null});
@@ -33,8 +33,10 @@ function stageChange(overrides, change) {
   return {...overrides,licenseCardOutbox:outbox};
 }
 
-function replaceContracts(existing, incoming, card, deps){
+function replaceContracts(existing, incoming, card, deps, options={}){
   const pair=cards.pairKey(card.license,card.licensor),isPair=rule=>cards.pairKey(rule.license,rule.licensor)===pair;
+  // Legacy peers can deduplicate a category with the general rule. Preserve every omitted contract in that pair.
+  if(options.categorySchemaVersion!==1&&existing.some(rule=>isPair(rule)&&rule.categories?.length)){const ids=new Set(incoming.map(rule=>rule.id));incoming=[...incoming,...existing.filter(rule=>isPair(rule)&&!ids.has(rule.id))];}
   // A peer message is a complete snapshot; local card editing retains history
   // before publishing it. A deletion in the legacy calculator must also arrive.
   cards.mergeRules(existing.filter(rule=>!isPair(rule)),incoming,card,deps);
@@ -116,8 +118,8 @@ function applyRecords(overrides, records, deps) {
     const card = state.items[byId.get(id)];
     if (card && record.contracts) {
       if (record.contracts.pair !== cards.pairKey(card.license, card.licensor)) throw new Error('LICENSE_CARD_SYNC_CONTRACT_PAIR');
-      const normalized = cards.normalizeRules(record.contracts.rules, card, deps);
-      const merged = replaceContracts(next.pricingRules || [], normalized, card, deps);
+      const normalized = cards.normalizeRules(require('../../public/business-rules').restoreOmittedCategoryScopes(record.contracts.rules,next.pricingRules||[]), card, deps);
+      const merged = replaceContracts(next.pricingRules || [], normalized, card, deps,record.contracts);
       if (JSON.stringify(merged) !== JSON.stringify(next.pricingRules || [])) { next.pricingRules = merged; rulesChanged = true; }
       const fingerprint=digest(record.contracts);
       if(checkpoint.contracts!==fingerprint){checkpoint.contracts=fingerprint;metadataChanged=true;}

@@ -40,23 +40,24 @@
   }
   const seasonsOf=rule=>(Array.isArray(rule&&rule.seasons)?rule.seasons:(rule&&rule.season?[rule.season]:[])).map(key).filter(Boolean);
   const sides=rule=>[rule&&rule.trCommission!=null&&text(rule.trCommission)!==''?'TR':'',rule&&rule.ydCommission!=null&&text(rule.ydCommission)!==''?'YD':''].filter(Boolean);
+  function periodEnd(previous,next){
+    const same=(a,b)=>JSON.stringify(a.map(key).sort())===JSON.stringify(b.map(key).sort());
+    const start=date(next.opdStart),from=date(previous.opdStart),to=date(previous.opdEnd);
+    if(!start||from===null||to===null||(from&&from>=start)||(to&&to<start)
+      ||!same(previous.categories||[],next.categories||[])||!same(seasonsOf(previous),seasonsOf(next))||!same(sides(previous),sides(next)))return previous.opdEnd||'';
+    return previousDay(start);
+  }
   // Yeni dönem: oranlar en güncel sözleşmeden kopyalanır (0 royalty ile
   // yanlışlıkla kaydedilmez) ve aynı kapsamdaki açık önceki dönem bir gün
   // önce kapatılır; aksi hâlde sunucu çakışma nedeniyle kaydı reddeder.
-  function nextContractPeriod(rules,card,day=today(),id=`license-rule-${Date.now()}-${Math.random().toString(36).slice(2,9)}`){
+  function nextContractPeriod(rules,card,day=today(),id=`license-rule-${Date.now()}-${Math.random().toString(36).slice(2,9)}`,baseId){
     const list=(Array.isArray(rules)?rules:[]).map(rule=>({...rule}));
-    const base=latestContract(list,day),start=date(day)||today(),end=previousDay(start);
-    const next={id,license:card.license,licensor:card.licensor,opdStart:start,opdEnd:'',seasons:base?[...(Array.isArray(base.seasons)?base.seasons:(base.season?[base.season]:[]))]:[],
-      royalty:base?base.royalty:null,trCommission:base?base.trCommission??null:0,ydCommission:base?base.ydCommission??null:0,hologramCost:base?base.hologramCost??0:0};
+    const base=list.find(rule=>rule.id===baseId)||latestContract(list,day),start=date(day)||today(),end=previousDay(start);
+    const next={...(base||{}),id,license:card.license,licensor:card.licensor,opdStart:start,opdEnd:'',seasons:base?[...(Array.isArray(base.seasons)?base.seasons:(base.season?[base.season]:[]))]:[],
+      categories:base?[...(base.categories||[])]:[],royalty:base?base.royalty:null,trCommission:base?base.trCommission??null:0,ydCommission:base?base.ydCommission??null:0,hologramCost:base?base.hologramCost??0:0};
     if(next.trCommission==null&&next.ydCommission==null){next.trCommission=0;next.ydCommission=0;}
-    const nextSeasons=seasonsOf(next),nextSides=sides(next),closed=[];
-    for(const rule of list){
-      const from=date(rule.opdStart),to=date(rule.opdEnd),ruleSeasons=seasonsOf(rule);
-      if(from===null||to===null||(from&&from>=start)||(to&&to<start))continue;
-      if(nextSeasons.length&&ruleSeasons.length&&!ruleSeasons.some(s=>nextSeasons.includes(s)))continue;
-      if(!sides(rule).some(side=>nextSides.includes(side)))continue;
-      rule.opdEnd=end;closed.push(rule.id);
-    }
+    const closed=[];
+    for(const rule of list){const end=periodEnd(rule,next);if(end!==(rule.opdEnd||'')){rule.opdEnd=end;closed.push(rule.id);}}
     return {rules:[next,...list],rule:next,closed};
   }
   /* ---- License list (rows, inline rates, compact approval map) ---- */
@@ -136,13 +137,13 @@
     return [...automatic,...manual].sort((a,b)=>a.names[0].localeCompare(b.names[0],'tr'));
   }
   function rows(cards,{query='',licensor=null,status='all',sort={key:'license',dir:'asc'},day=today(),merges=null,mergeKey=null,groupKey=null}={}){
-    const q=key(query);
+    const search=typeof globalThis!=='undefined'?globalThis.BLTableSearch:null,terms=search?.parseTerms(query),q=key(query);
     const list=groupCards(cards,{merges,mergeKey,groupKey,day}).map(({card,merged,mergeKey:mk})=>{
       const primary=primaryContract(card.rules,day),map=mapSummary(card);
       return {card,id:card.id,license:text(card.license),licensor:text(card.licensor),image:cardImage(card)||merged.map(cardImage).find(Boolean)||'',primary,map,hasAtlas:Boolean(card.processAtlas),merged,mergeKey:mk};
     }).filter(row=>{
       const names=[row.licensor,...row.merged.map(c=>text(c.licensor))];
-      if(q&&!key(`${row.license} ${names.join(' ')}`).includes(q))return false;
+      if(search? !search.matches(`${row.license} ${names.join(' ')}`,terms,{plainMode:'contains'}):q&&!key(`${row.license} ${names.join(' ')}`).includes(q))return false;
       if(licensor!=null&&!names.some(n=>key(n)===licensor))return false;
       if(status==='active')return row.primary.status==='active';
       if(status==='missing')return row.primary.status!=='active';
@@ -209,5 +210,5 @@
     for(const k of new Set([...Object.keys(a),...Object.keys(b)])){const seen=new Set();out[k]=[...(a[k]||[]),...(b[k]||[])].filter(o=>o&&!seen.has(o.value)&&seen.add(o.value));}
     return out;
   }
-  return Object.freeze({RATE_FIELDS,APPROVERS,cardImage,primaryContract,parseRate,rateError,mapSummary,licensorOptions,groupCards,mergeSummary,pasteMap,rows,latestContract,currentContracts,nextContractPeriod,previousDay,contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
+  return Object.freeze({periodEnd,RATE_FIELDS,APPROVERS,cardImage,primaryContract,parseRate,rateError,mapSummary,licensorOptions,groupCards,mergeSummary,pasteMap,rows,latestContract,currentContracts,nextContractPeriod,previousDay,contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
 });

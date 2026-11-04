@@ -138,7 +138,7 @@ test('Pricing rules değişikliği canlı istemcilere revision sinyali gönderir
 });
 
 test('Server pricing calculation row Licensor alanını kullanır; Manufacturer ile yanlış join yapılmaz', () => {
-  assert.match(PARSE, /calculateSuppFobByRule\(fobRounded, o\.opd, o\.countryRaw, o\.season, licensor, o\.license, ov\.pricingRules, ov\.licensorMerges\)/);
+  assert.match(PARSE, /calculateSuppFobByRule\(fobRounded, o\.opd, o\.countryRaw, o\.season, licensor, o\.license, ov\.pricingRules, ov\.licensorMerges, o\.category\)/);
   assert.doesNotMatch(PARSE, /calculateSuppFobByRule\(fobRounded, o\.opd, o\.countryRaw, o\.season, o\.manufacturer, o\.license, ov\.pricingRules(?:, ov\.licensorMerges)?\)/);
 });
 

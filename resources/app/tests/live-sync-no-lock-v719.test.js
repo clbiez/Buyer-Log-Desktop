@@ -94,7 +94,7 @@ test('v7.19 farklı satırlar ayrı yamalar olarak kalır', () => {
 });
 
 test('v7.19 yama olayı yalnız görebilen aboneye, yalnız görebildiği satırlarla gider', async t => {
-  t.mock.timers.enable({ apis: ['setTimeout'] });
+  t.mock.timers.enable({ apis: ['setTimeout','Date'], now: Date.UTC(2026,10,4,0,0,9,500) });
   const izinli = fakeSubscriber('kapsam-ici');
   const yasakli = fakeSubscriber('kapsam-disi');
   const a = liveEvents.addClient(izinli.res, 'c-izinli', { req: { user: 'izinli' } });
@@ -118,7 +118,9 @@ test('v7.19 yama olayı yalnız görebilen aboneye, yalnız görebildiği satır
   assert.equal(gelen[0].rowPatches[0].orderCode, 100);
   // §32: kapsam dışı abone HİÇBİR ŞEY almamalı — boş olay bile değil.
   assert.equal(yasakli.events().length, 0, 'kapsam dışı aboneye alan değeri gitmemeli');
-  const gonderilen = JSON.stringify(izinli.events());
+  // The public timestamp may contain 12.5 (seconds.milliseconds); inspect row values for the leak.
+  assert.ok(gelen[0].at.includes('12.5'));
+  const gonderilen = JSON.stringify(gelen.flatMap(event => event.rowPatches || []));
   assert.ok(!gonderilen.includes('12.5'), 'başka kapsamın Supp. FOB değeri sızmamalı');
 
   liveEvents.removeClient(a); liveEvents.removeClient(b);

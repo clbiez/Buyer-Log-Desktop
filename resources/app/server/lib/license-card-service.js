@@ -98,6 +98,7 @@ function createLicenseCardService(deps){
    });
    const syncPending=await published(profile,change);await notify(profile,change,saved,{originClientId});return {saved,syncPending,cards:change.cards};
  }
+ const create=(profile,body,opts)=>writeCards(profile,current=>{const r=cards.createCard(current,body);return {overrides:r.overrides,cards:[r.card]};},opts);
  const setLicensor=(profile,id,body,opts)=>writeCards(profile,current=>{const r=cards.setLicensor(current,id,body);return {overrides:r.overrides,cards:[r.card]};},opts);
  const saveTemplate=(profile,body,opts)=>writeCards(profile,current=>{const r=cards.saveTemplate(current,body);return {overrides:r.overrides,cards:r.cards,stageTemplates:cards.templatesOf(r.overrides)};},opts);
  const setLicensorMerge=(profile,body,opts)=>writeCards(profile,current=>{const r=cards.setLicensorMerge(current,body);return {overrides:r.overrides,cards:[],rulesChanged:true,licensorMerges:cards.licensorMergesOf(r.overrides)};},opts);
@@ -110,6 +111,6 @@ function createLicenseCardService(deps){
    return {migrated,syncPending:result.syncPending};
  }
  const deleteTemplate=(profile,id,body,opts)=>writeCards(profile,current=>{const r=cards.deleteTemplate(current,id,body);return {overrides:r.overrides,cards:r.cards,stageTemplates:cards.templatesOf(r.overrides)};},opts);
- return {read,discovery,discover,updatePreview,update,updateAtlasBatch,setLicensor,setLicensorMerge,migrateAssets,saveTemplate,deleteTemplate,inverseSnapshot,restore,snapshot:()=>sectionSnapshot(load())};
+ return {create,read,discovery,discover,updatePreview,update,updateAtlasBatch,setLicensor,setLicensorMerge,migrateAssets,saveTemplate,deleteTemplate,inverseSnapshot,restore,snapshot:()=>sectionSnapshot(load())};
 }
 module.exports={createLicenseCardService,sectionSnapshot};

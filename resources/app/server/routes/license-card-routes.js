@@ -29,7 +29,7 @@ module.exports = function registerLicenseCardRoutes(app, deps) {
     return result;
   }
 app.get('/api/license-cards', area, async (req, res) => {
-    try { const result = await importCards(req, false); send(req, res, result.saved, { syncPending: result.syncPending }); } catch (err) { error(res, err); }
+    try { const result = await importCards(req, false); send(req, res, result.saved, { syncPending: result.syncPending }); } catch (err) { if(err.code==='LICENSE_SOURCE_UNAVAILABLE'&&cards.stateOf(loadOverrides()).items.length)send(req,res,loadOverrides());else error(res, err); }
   });
 // Content-addressed card images: immutable, cached by the browser for good.
 app.get('/api/license-cards/assets/:name', area, async (req, res) => {
@@ -44,6 +44,13 @@ app.get('/api/license-cards/assets/:name', area, async (req, res) => {
 app.get('/api/license-cards/atlas-library', area, (req, res) => {
     res.set('Cache-Control', 'no-store');
     res.json(require('../lib/license-atlas-library.json'));
+  });
+app.post('/api/license-cards', area, permission, async (req,res)=>{
+    try {
+      const result=await service.create(req.currentUser,req.body||{},{assertAuthority:authority(req,true),originClientId:clientId(req)});
+      userAccess.appendAudit(req.currentUser,'LICENSE_CARD_CREATE',result.cards[0].id,{revision:cards.revisionOf(result.saved,'licenseCards')});
+      send(req,res,result.saved,{syncPending:result.syncPending,cardId:result.cards[0].id});
+    } catch(err){error(res,err);}
   });
 app.post('/api/license-cards/refresh', area, permission, async (req, res) => {
     try { const result = await importCards(req, true); send(req, res, result.saved, { added: result.added, resolved: result.resolved || 0, discovered: result.discovered || 0, sourceStamp: result.sourceStamp || '', syncPending: result.syncPending }); } catch (err) { error(res, err); }

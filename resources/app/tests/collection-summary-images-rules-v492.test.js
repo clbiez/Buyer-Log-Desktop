@@ -66,7 +66,7 @@ test('v4.92 License Royalty Rules lives under Source Settings and is removed fro
   assert.match(sourceMenu, /id: 'royalty'/);
   assert.match(sourceMenu, /openSuppFobRulesModal\(\)/);
   // Etiket korunur; yalnız artık bir düğme metni değil, araç satırının adı.
-  assert.match(sourceMenu, /'License Royalty'/);
+  assert.match(sourceMenu, /'License Cards'/);
   assert.doesNotMatch(INDEX, /id="cpSuppFobRulesBtn"/);
   // Bağlama tek kimliğe değil, [data-license-royalty] özniteliğine geçti:
   // aynı ekranı açan birden fazla giriş noktası artık tek yerden bağlanıyor.

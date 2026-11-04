@@ -120,6 +120,15 @@ function appendDiscovered(overrides, pairs, now = new Date().toISOString()) {
   return { overrides: next, added };
 }
 
+function createCard(overrides, body, now = new Date().toISOString()) {
+  const license=text(body?.license),licensor=text(body?.licensor);
+  if (!license || !canonical.token(license) || license.length>200 || licensor.length>200) fail('LICENSE_CARD_INVALID','Lisans adı zorunlu; adlar en fazla 200 karakter olabilir. / License name is required; names may contain up to 200 characters.');
+  if (catalogue(overrides).some(card=>pairKey(card.license,card.licensor)===pairKey(license,licensor) || card.id===cardId(license,licensor))) fail('LICENSE_CARD_EXISTS','Bu lisans kartı zaten var. / This license card already exists.',409);
+  const state=clone(stateOf(overrides)),card={id:cardId(license,licensor),license,licensor,...Object.fromEntries(Object.keys(PROFILE_LIMITS).map(field=>[field,''])),symbolDataUrl:'',createdAt:now,updatedAt:now};
+  state.items.push(card);
+  return {card,overrides:{...overrides,licenseCards:state,_revisions:{...(overrides._revisions||{}),licenseCards:revisionOf(overrides,'licenseCards')+1}}};
+}
+
 function rasterDimensions(bytes, mime) {
   if (mime === 'png' && bytes.length >= 33 && bytes.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex')) && bytes.toString('ascii', 12, 16) === 'IHDR') {
     return [bytes.readUInt32BE(16), bytes.readUInt32BE(20)];
@@ -189,6 +198,7 @@ function normalizeRules(incoming, card, deps) {
   const nullableNumber = value => value == null || text(value) === '' ? null : numeric(value);
   const requiredNumber = value => value == null || text(value) === '' ? NaN : numeric(value);
   return rules.map(raw => {
+    if(raw.categories!=null&&(!Array.isArray(raw.categories)||raw.categories.length>100||raw.categories.some(value=>typeof value!=='string'||value.length>200)))fail('LICENSE_RULES_INVALID','Geçerli kategori listesi girin. / Enter a valid category list.');
     if ((raw.license && pairKey(raw.license, raw.licensor || card.licensor) !== pairKey(card.license, card.licensor)) || (raw.licensor && canonical.token(raw.licensor) !== canonical.token(card.licensor))) fail('LICENSE_RULE_SCOPE', 'Kural bu lisans ve lisansöre ait olmalı. / Rule must belong to this license and licensor.');
     const date = field => {
       const value = text(raw[field]), normalized = deps.normalizePricingRuleDate(value);
@@ -196,6 +206,7 @@ function normalizeRules(incoming, card, deps) {
       return normalized;
     };
     const rule = { id: text(raw.id) || 'license-rule-' + crypto.randomUUID(), opdStart: date('opdStart'), opdEnd: date('opdEnd'),
+      categories: businessRules.pricingRuleCategories(raw),
       seasons: deps.normalizePricingRuleSeasons(raw.seasons != null ? raw.seasons : raw.season), license: card.license, licensor: card.licensor,
       royalty: requiredNumber(raw.royalty), trCommission: nullableNumber(raw.trCommission), ydCommission: nullableNumber(raw.ydCommission), hologramCost: requiredNumber(raw.hologramCost),
       legacyTrHologramCost: nullableNumber(raw.legacyTrHologramCost), legacyYdHologramCost: nullableNumber(raw.legacyYdHologramCost),
@@ -203,6 +214,7 @@ function normalizeRules(incoming, card, deps) {
     const commissions = [rule.trCommission, rule.ydCommission].filter(value => value != null);
     if (!card.licensor || rule.id.length > 200 || rule.seasons.length > 100 || rule.seasons.some(season => season.length > 200)
       || (rule.opdStart && rule.opdEnd && rule.opdStart > rule.opdEnd)
+      || rule.categories.length > 100 || rule.categories.some(value=>value.length>200)
       || !Number.isFinite(rule.royalty) || rule.royalty < 0 || rule.royalty > 100
       || !commissions.length || commissions.some(value => !Number.isFinite(value) || value < 0 || value + rule.royalty > 100)
       || !Number.isFinite(rule.hologramCost) || rule.hologramCost < 0
@@ -224,7 +236,7 @@ function mergeRules(existing, incoming, card, deps) {
   const associated = merged.filter(rule => pairKey(rule.license, rule.licensor) === cardKey);
   for (let i = 0; i < associated.length; i++) for (let j = i + 1; j < associated.length; j++) {
     const a = associated[i], b = associated[j], sameCountry = (a.trCommission != null && b.trCommission != null) || (a.ydCommission != null && b.ydCommission != null);
-    if (sameCountry && deps.pricingRuleSeasonSetsOverlap(a, b) && deps.pricingRuleDateRangesOverlap(a, b)) fail('LICENSE_RULE_OVERLAP', 'Aynı ülke ve sezon için OPD aralıkları çakışamaz. / OPD periods cannot overlap for the same country and season.');
+    if (sameCountry && businessRules.pricingRuleCategoryScopesOverlap(a,b) && deps.pricingRuleSeasonSetsOverlap(a, b) && deps.pricingRuleDateRangesOverlap(a, b)) fail('LICENSE_RULE_OVERLAP', 'Aynı ülke ve sezon için OPD aralıkları çakışamaz. / OPD periods cannot overlap for the same country and season.');
   }
   return merged;
 }
@@ -251,7 +263,7 @@ function updateCard(overrides, id, body, deps, now = new Date().toISOString()) {
   const scoped = Object.hasOwn(body, 'editToken') || Object.hasOwn(body, 'atlasToken');
   if (Object.hasOwn(body, 'atlasToken')) {
     const keys = body.profile && typeof body.profile === 'object' ? Object.keys(body.profile) : [];
-    if (Object.hasOwn(body, 'editToken') || Object.hasOwn(body, 'rules') || keys.length !== 1 || keys[0] !== 'processAtlas') fail('LICENSE_ATLAS_INVALID', 'Harita belirteci yalnız harita kaydında kullanılır. / The map token applies only to a map save.');
+    if (Object.hasOwn(body, 'editToken') || (Object.hasOwn(body, 'rules') || Object.hasOwn(body, 'deletedRuleIds')) || keys.length !== 1 || keys[0] !== 'processAtlas') fail('LICENSE_ATLAS_INVALID', 'Harita belirteci yalnız harita kaydında kullanılır. / The map token applies only to a map save.');
     if (typeof body.atlasToken !== 'string' || body.atlasToken !== atlasToken(state.items[index])) {
       fail('REVISION_CONFLICT', 'Açılan harita değişti; güncel kaydı açın. / The opened map changed; open the current record.', 409);
     }
@@ -260,16 +272,20 @@ function updateCard(overrides, id, body, deps, now = new Date().toISOString()) {
       fail('REVISION_CONFLICT', 'Açılan kart değişti; güncel kaydı açın. / The opened card changed; open the current record.', 409);
     }
   } else assertRevision(body.revision != null ? body.revision : body.expectedRevision, revisionOf(overrides, 'licenseCards'), 'licenseCards');
-  const profile = body.profile == null ? Object.fromEntries(Object.entries(body).filter(([key]) => !['revision','expectedRevision','pricingRevision','expectedPricingRevision','rules','editToken','atlasToken'].includes(key))) : body.profile;
+  const profile = body.profile == null ? Object.fromEntries(Object.entries(body).filter(([key]) => !['revision','expectedRevision','pricingRevision','expectedPricingRevision','rules','deletedRuleIds','editToken','atlasToken'].includes(key))) : body.profile;
   const normalized = normalizeProfile(profile);
   if (normalized.processAtlas) normalized.processAtlas = linkTemplates(normalized.processAtlas, templatesOf(overrides).items);
   state.items[index] = { ...state.items[index], ...normalized, updatedAt: now };
   const next = { ...overrides, licenseCards: state, _revisions: { ...(overrides._revisions || {}), licenseCards: revisionOf(overrides, 'licenseCards') + 1 } };
   let rulesChanged = false;
-  if (Object.hasOwn(body, 'rules')) {
+  if (Object.hasOwn(body, 'rules') || Object.hasOwn(body,'deletedRuleIds')) {
     if (!scoped) assertRevision(body.pricingRevision != null ? body.pricingRevision : body.expectedPricingRevision, revisionOf(overrides, 'pricingRules'), 'pricingRules');
     const existing = Array.isArray(overrides.pricingRules) ? overrides.pricingRules : [];
-    const rules = mergeRules(existing, normalizeRules(body.rules, state.items[index], deps), state.items[index], deps);
+    const deleted=body.deletedRuleIds || [];
+    if (!Array.isArray(deleted) || deleted.length>500 || deleted.some(id=>typeof id!=='string' || !existing.some(rule=>rule.id===id && pairKey(rule.license,rule.licensor)===pairKey(state.items[index].license,state.items[index].licensor)))) fail('LICENSE_RULE_SCOPE','Silinecek sözleşme bu karta ait olmalı. / The contract to delete must belong to this card.');
+    const incoming=normalizeRules(businessRules.restoreOmittedCategoryScopes(body.rules || [],existing), state.items[index], deps);
+    if(incoming.some(rule=>deleted.includes(rule.id))) fail('LICENSE_RULES_INVALID','Aynı sözleşme hem kaydedilip hem silinemez. / A contract cannot be saved and deleted together.');
+    const rules = mergeRules(existing.filter(rule=>!deleted.includes(rule.id)), incoming, state.items[index], deps);
     rulesChanged = JSON.stringify(existing) !== JSON.stringify(rules);
     if (rulesChanged) { next.pricingRules = rules; next._revisions.pricingRules = revisionOf(overrides, 'pricingRules') + 1; }
   }
@@ -463,4 +479,4 @@ function responseOf(overrides, canEdit) {
     lastImportedAt: state.lastImportedAt, stageTemplates: templatesOf(overrides).items, licensorMerges: { split: licensorMergesOf(overrides).split, entries: licensorMergesOf(overrides).entries }, canEdit: Boolean(canEdit) };
 }
 
-module.exports = { PROFILE_LIMITS, MAX_SYMBOL_BYTES, pairKey, cardId, stateOf, catalogue, visibleCatalogue, discoveryRowsFromOrders, setLicensor, templatesOf, licensorMergesOf, setLicensorMerge, normalizeTemplate, applyTemplate, linkTemplates, propagateTemplate, saveTemplate, deleteTemplate, revisionOf, assertRevision, discoverPairs, appendDiscovered, validateSymbol, normalizeProfile, normalizeRules, mergeRules, updateCard, responseOf };
+module.exports = { createCard, PROFILE_LIMITS, MAX_SYMBOL_BYTES, pairKey, cardId, stateOf, catalogue, visibleCatalogue, discoveryRowsFromOrders, setLicensor, templatesOf, licensorMergesOf, setLicensorMerge, normalizeTemplate, applyTemplate, linkTemplates, propagateTemplate, saveTemplate, deleteTemplate, revisionOf, assertRevision, discoverPairs, appendDiscovered, validateSymbol, normalizeProfile, normalizeRules, mergeRules, updateCard, responseOf };
