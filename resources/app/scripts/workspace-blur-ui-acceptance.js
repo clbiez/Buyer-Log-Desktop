@@ -46,7 +46,26 @@ async function api(url,body){
   await page.waitForFunction(()=>!document.getElementById('blBootGuard'),null,{timeout:60000});
 
   const read=()=>page.evaluate(()=>{const e=document.querySelector('.blWorkspaceBlur'),c=getComputedStyle(e),r=document.querySelector('.rail');return {state:e.dataset.blur,mode:e.dataset.mode,opacity:Number(c.opacity),background:c.backgroundColor,filter:c.backdropFilter,shadow:getComputedStyle(r).boxShadow,left:e.getBoundingClientRect().left,railRight:r.getBoundingClientRect().right,count:document.querySelectorAll('.blWorkspaceBlur').length,transition:c.transitionDuration};});
-  const check=async(state)=>{await page.waitForFunction(state=>document.querySelector('.blWorkspaceBlur').dataset.blur===state,state);const s=await read();assert.equal(s.opacity,state?1:0,JSON.stringify(s));assert.equal(s.count,1);if(state)assert.match(s.background,/rgba\(0, 0, 0, 0\.(06|12)\)/);return s;};
+  // Compare rendered outer shadows, including dynamically opened/lazy surfaces.
+  const auditShadows=async label=>{
+    const result=await page.evaluate(()=>{
+      const probe=document.createElement('div');probe.style.boxShadow='var(--ui-shadow-overlay)';document.body.append(probe);
+      const color=s=>s.match(/^(?:rgba?|color)\([^)]*\)/)?.[0];
+      const expected=color(getComputedStyle(probe).boxShadow);probe.remove();
+      const checked=[],bad=[];
+      for(const el of document.querySelectorAll('body *')){
+        const rect=el.getBoundingClientRect();if(!rect.width||!rect.height)continue;
+        const style=getComputedStyle(el),shadow=style.boxShadow;
+        if(style.visibility==='hidden'||shadow==='none'||shadow.includes('inset'))continue;
+        const item={element:el.id||el.className,shadow};checked.push(item);
+        if(color(shadow)!==expected)bad.push(item);
+      }
+      return {expected,checked,bad};
+    });
+    results.push({label,...result});assert.deepEqual(result.bad,[],label+' must use the shared shadow color');
+    return result;
+  };
+  const check=async(state)=>{await page.waitForFunction(state=>document.querySelector('.blWorkspaceBlur').dataset.blur===state,state);const s=await read();assert.equal(s.opacity,state?1:0,JSON.stringify(s));assert.equal(s.count,1);if(state)await auditShadows(state);if(state)assert.match(s.background,/rgba\(0, 0, 0, 0\.(06|12)\)/);return s;};
   await page.mouse.move(1400,900);
   await page.evaluate(()=>{document.activeElement?.blur();document.documentElement.dataset.rail='min';});
   const tabs=await page.locator('.rail button[data-tab]').evaluateAll(es=>es.map(e=>e.dataset.tab));
@@ -57,26 +76,57 @@ async function api(url,body){
     await page.mouse.move(1400,900);await check('');
   }
   await page.evaluate(()=>switchTab('cp'));await page.waitForTimeout(300);
-  for(const lang of ['tr','en'])for(const theme of ['light','dark'])for(const scale of ['compact','standard','large','xl'])for(const render of ['gpu','software']){
+  for(const lang of ['tr','en'])for(const theme of ['dark','light'])for(const scale of ['compact','standard','large','xl'])for(const render of ['gpu','software']){
     await page.evaluate(({lang,theme,scale,render})=>{applyLanguage(lang);Object.assign(document.documentElement.dataset,{theme,uiScale:scale,blRender:render});},{lang,theme,scale,render});
     await page.locator('.rail').hover();let s=await check('rail');assert.notEqual(s.shadow,'none');assert.equal(s.filter,render==='software'?'none':'blur(6px)');
     await page.mouse.move(1400,900);await check('');
     // Use the real keyboard expansion path.
     await page.keyboard.press('Tab');await page.locator('.rail button[data-tab="cp"]').focus();s=await check('rail');assert.notEqual(s.shadow,'none');
     await page.evaluate(()=>{document.activeElement.blur();document.querySelector('.rail').classList.remove('railKeyboardOpen');});await check('');
+    for(const [trigger,menu] of [['railAppearanceBtn','railAppearanceMenu'],['corporateConnectionsBtn','corporateConnections']]){
+      await page.evaluate(id=>document.getElementById(id).click(),trigger);
+      await page.locator('#'+menu).waitFor({state:'visible'});await auditShadows(menu);
+      await page.keyboard.press('Escape');await page.mouse.move(1400,900);
+    }
     await page.evaluate(()=>openNotesEditor(state.cp.rows[0]._id,'Notes'));
     s=await check('dialog');assert.equal(s.left,0);assert.equal(s.filter,render==='software'?'none':'blur(6px)');
     await page.keyboard.press('Tab');assert.ok(await page.locator('#_notesEditorModal').evaluate(e=>e.contains(document.activeElement)));
-    if(lang==='tr'&&theme==='light'&&scale==='standard'&&render==='gpu')await page.screenshot({path:app+'/public/release-notes/next-assets/workspace-blur-dialog.png'});
+    if(lang==='tr'&&theme==='dark'&&scale==='standard'&&render==='gpu')await page.screenshot({path:path.join(root,'dark-shadow-dialog.png')});
     await page.keyboard.press('Escape');await check('');
   }
+  // Initialize lazy navigation modules and audit both themes, including closed-surface rules.
+  for(const theme of ['light','dark']){
+    await page.evaluate(theme=>{document.documentElement.dataset.theme=theme;},theme);
+    for(const tab of tabs){
+      await page.evaluate(tab=>switchTab(tab),tab);await page.waitForTimeout(250);
+      await page.locator('.rail').hover();await auditShadows(theme+'/'+tab);await page.mouse.move(1400,900);
+    }
+  }
+  const shadowRules=await page.evaluate(()=>{
+    const checked=[],bad=[];
+    function visit(rules){for(const rule of rules){
+      if(rule.cssRules)visit(rule.cssRules);
+      const value=rule.style?.getPropertyValue('box-shadow');
+      if(!value||value==='none'||value.includes('inset')||value.includes('--ui-grid-range-'))continue;
+      const item={selector:rule.selectorText,value};checked.push(item);
+      if(!/^var\(--ui-shadow-(overlay|rail)\)$/.test(value.trim()))bad.push(item);
+    }}
+    for(const sheet of document.styleSheets)visit(sheet.cssRules);
+    return {checked,bad};
+  });
+  fs.writeFileSync(path.join(root,'shadow-audit.json'),JSON.stringify({results,shadowRules},null,2));
+  for(const selector of ['.rail','.modalCard','.tableFieldsDrawer','.railAppearanceMenu']){
+    assert.ok(shadowRules.checked.some(rule=>rule.selector.includes(selector)),selector+' shadow rule was audited');
+  }
+  assert.deepEqual(shadowRules.bad,[]);
+  await page.evaluate(()=>switchTab('cp'));
   // Every registered custom backdrop has the same single tint; no second scrim.
   const registered=fs.readFileSync(app+'/public/workspace-blur.js','utf8').match(/const surfaces='([^']+)'/)[1].split(',');
   const contract=await page.evaluate(selectors=>selectors.map(selector=>({selector,colors:[...document.querySelectorAll(selector)].map(e=>getComputedStyle(e).backgroundColor)})),registered);
   fs.writeFileSync(path.join(root,'surface-audit.json'),JSON.stringify(contract,null,2));
-  await page.evaluate(()=>{applyLanguage('tr');Object.assign(document.documentElement.dataset,{theme:'light',uiScale:'standard',blRender:'gpu'});});
+  await page.evaluate(()=>{applyLanguage('tr');Object.assign(document.documentElement.dataset,{theme:'dark',uiScale:'standard',blRender:'gpu'});});
   await page.locator('.rail').hover();await check('rail');
-  await page.screenshot({path:app+'/public/release-notes/next-assets/workspace-blur-rail.png'});
+  await page.screenshot({path:path.join(root,'dark-shadow-rail.png')});
   await page.mouse.move(1400,900);await check('');
   // Nested actual dialogs retain one dim layer until the final close.
   await page.evaluate(()=>openNotesEditor(state.cp.rows[0]._id,'Notes'));await check('dialog');
@@ -93,7 +143,7 @@ async function api(url,body){
   await page.mouse.move(1400,900);await page.waitForTimeout(300);assert.equal((await read()).opacity,0);
   await page.evaluate(()=>document.documentElement.dataset.blMotion='off');assert.equal((await read()).transition,'0s');
   assert.deepEqual(errors,[],'browser errors');
-  console.log('PASS',tabs.length,'screens; TR/EN x 2 themes x 4 sizes x GPU/software; hover/keyboard; real notes dialog; nested native dialog; pinned rail; reduced/off/normal motion; repeated close clears dim');
+  console.log('PASS',tabs.length,'screens;',shadowRules.checked.length,'shadow rules;',results.length,'rendered shadow audits; TR/EN x 2 themes x 4 sizes x GPU/software; hover/keyboard; real notes dialog; nested native dialog; pinned rail; reduced/off/normal motion; repeated close clears dim');
 })().catch(e=>{console.error(e);process.exitCode=1;}).finally(async()=>{
   if(browser)await browser.close();
   if(server.exitCode===null){const stopped=new Promise(r=>server.once('exit',r));server.kill('SIGTERM');const timer=setTimeout(()=>server.kill('SIGKILL'),5000);await stopped;clearTimeout(timer);}
