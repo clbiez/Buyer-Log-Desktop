@@ -365,7 +365,7 @@ function loadOabJs() {
   // oab.js, ortak tablo aramasını app-main.js'in kurduğu global üzerinden okur.
   // Tarayıcıda app-main.js eager yüklendiği için sıra güvenlidir; sahte window
   // ile çalışırken bu globali gerçek uygulama kaynağından besliyoruz.
-  const window = runner({ BLTableSearch: createTableSearch() }, fakeDocument, fakeFetch, () => {}, 'tr', {});
+  const window = runner({ BLBusinessRules: require('../public/business-rules'), BLTableSearch: createTableSearch() }, fakeDocument, fakeFetch, () => {}, 'tr', {});
   return { window, elements };
 }
 
@@ -762,7 +762,7 @@ test('OAB: uygulama açılışını sahte DOM ile simüle edince ayarlar modalı
   };
   const runner = new Function('window', 'document', 'fetch', 'showToast', 'appLang', 'globalThis',
     `${OAB_JS}\nreturn window;`);
-  runner({ BLTableSearch: createTableSearch() }, fakeDocument, async () => ({ ok: true, json: async () => ({ ok: true, status: { connected: false } }) }), () => {}, 'tr', {});
+  runner({ BLBusinessRules: require('../public/business-rules'), BLTableSearch: createTableSearch() }, fakeDocument, async () => ({ ok: true, json: async () => ({ ok: true, status: { connected: false } }) }), () => {}, 'tr', {});
   assert.equal(appended, false, 'oabInit çalıştıktan hemen sonra hiçbir modal DOM\'a eklenmemiş olmalı');
 });
 

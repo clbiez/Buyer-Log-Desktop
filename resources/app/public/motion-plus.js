@@ -147,6 +147,7 @@
   }
   function play(kind,element){
     if(!element||!enabled())return null;
+    if(kind==='branch')return animate(element,[{opacity:0,transform:'scaleY(0)'},{opacity:1,transform:'scaleY(1)'}],{duration:duration('overlay')});
     // Overview page navigation: one finite slide of the existing grid, without
     // cloning widgets or moving the toolbar. Shared cancellation owns its lifetime.
     if(kind==='page-next'||kind==='page-prev')return animate(element,

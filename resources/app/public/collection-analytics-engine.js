@@ -1,8 +1,8 @@
 (function(root,factory){
-  const api=factory(typeof module==='object'&&module.exports?require('./model-option-stats.js'):root.BLModelOptionStats);
+  const api=factory(typeof module==='object'&&module.exports?require('./model-option-stats.js'):root.BLModelOptionStats,typeof module==='object'&&module.exports?require('./business-rules.js'):root.BLBusinessRules);
   if(typeof module==='object'&&module.exports)module.exports=api;
   else root.BLCollectionAnalyticsEngine=api;
-})(typeof globalThis!=='undefined'?globalThis:this,function(modelOptionStats){
+})(typeof globalThis!=='undefined'?globalThis:this,function(modelOptionStats,businessRules){
   'use strict';
   const text=value=>String(value==null?'':value).trim();
   function observationValue(item,key){
@@ -82,7 +82,7 @@
     return {rows,columns,value(row,column){const items=cells.get(`${row}\u0000${column}`)||[];return metric==='models'?stats(items).modelCount:stats(items)[metric];},items(row,column){return cells.get(`${row}\u0000${column}`)||[];}};
   }
   function relationships(observations){
-    const seasons=[...new Set(observations.map(item=>text(item.season)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true,sensitivity:'base'}));
+    const seasons=[...new Set(observations.map(item=>text(item.season)).filter(Boolean))].sort(businessRules.compareChronologicalValues);
     if(seasons.length<2)return {available:false,seasons,newManufacturers:[],newBuyerManufacturerPairs:[]};
     const previous=seasons[seasons.length-2],current=seasons[seasons.length-1];
     const currentItems=observations.filter(item=>text(item.season)===current),previousItems=observations.filter(item=>text(item.season)===previous);

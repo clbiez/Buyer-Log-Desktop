@@ -1,7 +1,7 @@
 (function(root,factory){
-  if(typeof module==='object'&&module.exports)module.exports=factory();
-  else root.BLOverviewGlobalFlow=factory();
-})(typeof window!=='undefined'?window:globalThis,function(){
+  if(typeof module==='object'&&module.exports)module.exports=factory(require('./chronological-values'));
+  else root.BLOverviewGlobalFlow=factory(root.BLChronologicalValues);
+})(typeof window!=='undefined'?window:globalThis,function(businessRules){
 'use strict';
 
 /* Global Flow Map — parsiyel bazlı sevkiyat motoru.
@@ -399,7 +399,7 @@ function aggregateRecords(records){
 }
 function uniqueValues(records,key){
   const set=new Set();(records||[]).forEach(r=>{const value=clean(r&&r[key]);if(value)set.add(value);});
-  return [...set].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true,sensitivity:'base'}));
+  return [...set].sort(businessRules.compareChronologicalValues);
 }
 
 function parseDateMs(value){

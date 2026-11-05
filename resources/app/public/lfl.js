@@ -480,9 +480,9 @@
   }
   function toggleReadyPanel(){const panel=$('lflReadyFiltersPanel'),btn=$('lflReadyFiltersBtn');if(!panel||!btn)return;const open=panel.hidden;closePanels();closeBreakdownPanel();closeCustomComparePanels();panel.hidden=!open;btn.setAttribute('aria-expanded',open?'true':'false');if(open)renderReadyPanel();}
   function seasonParts(value){return BLBusinessRules.seasonPrefixParts(value);}
-  function seasonSort(a,b){return BLBusinessRules.compareSeasonPrefixThenNumber(a,b);}
+  function seasonSort(a,b){return BLBusinessRules.compareSeasonNumberThenLetter(a,b);}
   function previousSeason(current,seasons){return BLBusinessRules.previousSeasonByPrefix(current,seasons);}
-  function unique(values){return [...new Set((values||[]).filter(isUsableValue))].sort((a,b)=>String(a).localeCompare(String(b),'tr',{numeric:true}));}
+  function unique(values){return [...new Set((values||[]).filter(isUsableValue))].sort(BLBusinessRules.compareChronologicalValues);}
   function monthLabel(value){const m=norm(value).match(/^(\d{4})-(\d{2})$/);return m?`${MONTH_NAMES[Number(m[2])-1]||m[2]} ${m[1]}`:value;}
   function shiftMonth(value,amount){const m=norm(value).match(/^(\d{4})-(\d{2})$/);return m?`${Number(m[1])+amount}-${m[2]}`:value;}
   function filterMetaLabel(dim){
@@ -925,7 +925,7 @@
   function compareTableValues(a,b,type='text'){
     if(type==='number'){const av=num(a),bv=num(b);if(av==null&&bv==null)return 0;if(av==null)return 1;if(bv==null)return -1;return av-bv;}
     if(type==='date')return String(a||'').localeCompare(String(b||''));
-    return String(a??'').localeCompare(String(b??''),'tr-TR',{numeric:true,sensitivity:'base'});
+    return BLBusinessRules.compareChronologicalValues(a,b);
   }
   const LEGACY_MANUFACTURER_VOLUME_CLASS='lflManufacturerVolumeValues'; // compatibility marker for prior UI tests
   const LFL_CP_TABLE_KEYS={group:'lflGroup',manufacturer:'lflManufacturer',customCompare:'lflCustomCompare',currentDetail:'lflCurrentDetail',compareDetail:'lflCompareDetail'};
@@ -941,7 +941,7 @@
   function sortFrameworkRows(rows,viewName,columns){
     const view=state.tableViews[viewName]||emptyTableView();if(!view.sortKey)return rows.slice();
     const col=columns.find(item=>item.key===view.sortKey);if(!col)return rows.slice();
-    return rows.slice().sort((a,b)=>compareTableValues(a[view.sortKey],b[view.sortKey],col.type==='number'?'number':col.type)*view.dir||compareTableValues(a[columns[0].key],b[columns[0].key],'text'));
+    return rows.slice().sort((a,b)=>(col.type==='number'||col.type==='date'?compareTableValues(a[view.sortKey],b[view.sortKey],col.type)*view.dir:BLBusinessRules.compareChronologicalValues(a[view.sortKey],b[view.sortKey],view.dir))||compareTableValues(a[columns[0].key],b[columns[0].key],'text'));
   }
   function frameworkCellHtml(columns,col,row){
     const def=columns.find(item=>item.key===col.k)||{},source=row._source||row;
@@ -2302,7 +2302,7 @@
     openDrilldown(observations,title){const rows=(observations||[]).map(item=>item.row||item.raw||item);openLflPortfolioModal({title:title||'LFL',currentRows:rows,previousRows:[],currentSeason:'',compareSeason:''});}
   };
   window.BLLFLCatalog={
-    values(field){const rowKey=field==='category'?'classification':field==='inStoreMonth'?'inStoreMonth':field;return unique((state.serverRows||[]).map(row=>norm(row&&row[rowKey])).filter(isUsableValue)).sort((a,b)=>a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'}));},
+    values(field){const rowKey=field==='category'?'classification':field==='inStoreMonth'?'inStoreMonth':field;return unique((state.serverRows||[]).map(row=>norm(row&&row[rowKey])).filter(isUsableValue)).sort(BLBusinessRules.compareChronologicalValues);},
     async ensureLoaded(){if(!state.serverRows.length&&!state.loading)await load(false);return this.values('category');}
   };
   window.__lflTest={countryCurrency,countryIdentity,dimensionIdentity,resolveDimensionLabel,normalizeDateField,rowPeriodMonth,comparisonColumnHeader,dateFieldLabel,filterRows,fxRateReport,selectedFxMonths,dtrTypeForRow,summary,dtrScopeText,manufacturerVolumes,customCompareValue,customCompareOptionsFromRows,customComparisonRows,multiComparisonRows,quantityTotal,uniqueOrderCount,groupValue,breakdownValue,breakdownDimLabel,breakdownDims:()=>[...BREAKDOWN_DIMS,...new Set(state.breakdown.filter(isAsasBreakdownDim))],filterDims:()=>[...FILTER_DIMS],fabricDetailColumns,detailColumns,showFabricDetails:()=>!!state.showFabricDetails,matchesSearch,pct,comparablePct,metricBetween,comparablePeriodRows,comparableMetricBetweenRows,normalizeComparisonScenario,freezeScenarioScope,scenarioComparisonResult,scenarioPeriodLabel,scenarioScopeLabel,scenarioDateField,refreshComparisonScenarios,trialScope,trialDraftFromModel,trialValidation,trialValidationDetails,trialScopeNotices,trialRowFrom,trialImpactFor,trialConfiguredCount,trialActiveCount,openTrialPanel};

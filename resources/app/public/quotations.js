@@ -1210,7 +1210,7 @@
           else if(aValid) comparison=-1;
           else if(bValid) comparison=1;
         }else{
-          comparison=qFilterValue(req,a.item,col.key).localeCompare(qFilterValue(req,b.item,col.key),'tr',{numeric:true,sensitivity:'base'});
+          comparison=BLBusinessRules.compareChronologicalValues(qFilterValue(req,a.item,col.key),qFilterValue(req,b.item,col.key));
         }
         return comparison?comparison*tableState.sort.dir:a.index-b.index;
       });
@@ -1231,7 +1231,7 @@
     if(typeof closeHeaderFilter==='function') closeHeaderFilter();
     const col=qTableCol(key); if(!col) return;
     const tableState=qTableState(req), universe=qRowsPassingFilters(req,key);
-    const values=[...new Set(universe.map(item=>qFilterValue(req,item,key)))].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true,sensitivity:'base'}));
+    const values=[...new Set(universe.map(item=>qFilterValue(req,item,key)))].sort(BLBusinessRules.compareChronologicalValues);
     const current=tableState.filters[key];
     const orderedValues=values.slice().sort((a,b)=>Number(Boolean(current?.has(b)))-Number(Boolean(current?.has(a))));
     const panel=document.createElement('div'); panel.className='colFilterPanel quotationColFilterPanel';panel.dataset.uiMigrated='commercial';
@@ -2471,7 +2471,7 @@
       </div>
       <div class="qhTools">
         <input type="search" id="qhSearch" placeholder="${qhEsc(en?'Model, category, PLM ID, season, in-store…':'Model, kategori, PLM ID, sezon, in-store…')}">
-        <select id="qhSeason"><option value="">${qhEsc(en?'All seasons':'Tüm sezonlar')}</option>${[...new Set(models.map(m=>m.season).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr-TR',{sensitivity:'base'})).map(value=>`<option value="${qhEsc(value)}">${qhEsc(value)}</option>`).join('')}</select>
+        <select id="qhSeason"><option value="">${qhEsc(en?'All seasons':'Tüm sezonlar')}</option>${[...new Set(models.map(m=>m.season).filter(Boolean))].sort(BLBusinessRules.compareSeasonNumberThenLetter).map(value=>`<option value="${qhEsc(value)}">${qhEsc(value)}</option>`).join('')}</select>
         <select id="qhMfr"><option value="">${qhEsc(en?'All manufacturers':'Tüm üreticiler')}</option>${manufacturers.map(m=>`<option value="${qhEsc(m)}">${qhEsc(m)}</option>`).join('')}</select>
         <label class="qhChk"><input type="checkbox" id="qhUnder"> ${qhEsc(en?'Only at/below target':'Yalnız hedefin altındakiler')}</label>
         <span class="qhCount" id="qhCount"></span>
@@ -2510,8 +2510,8 @@
     }
     function cmp(a,b){
       if(sortKey==='model') return a.model.localeCompare(b.model,'tr-TR',{numeric:true,sensitivity:'base'});
-      if(sortKey==='season') return String(a.season).localeCompare(String(b.season),'tr-TR',{numeric:true,sensitivity:'base'});
-      if(sortKey==='inStoreMonth') return String(a.inStoreMonth).localeCompare(String(b.inStoreMonth),'tr-TR',{numeric:true,sensitivity:'base'});
+      if(sortKey==='season') return BLBusinessRules.compareChronologicalValues(a.season,b.season);
+      if(sortKey==='inStoreMonth') return BLBusinessRules.compareChronologicalValues(a.inStoreMonth,b.inStoreMonth);
       if(sortKey==='category') return String(a.category).localeCompare(String(b.category),'tr-TR',{numeric:true,sensitivity:'base'});
       if(sortKey==='quantity') return (Number(a.quantity)||0)-(Number(b.quantity)||0);
       if(sortKey==='target') return (a.target||0)-(b.target||0);
@@ -2821,7 +2821,7 @@
     const value=id=>qNorm(host.querySelector(id)?.value),model=value('[data-ph-model]'),mfr=value('[data-ph-mfr]'),cat=value('[data-ph-category]'),season=value('[data-ph-season]'),inStoreMonth=value('[data-ph-in-store-month]'),query=value('[data-ph-search]').toLocaleLowerCase('tr-TR');
     return data.filter(r=>(!model||r.model===model)&&(!mfr||r.manufacturer===mfr)&&(!cat||r.category===cat)&&(!season||r.season===season)&&(!inStoreMonth||r.inStoreMonth===inStoreMonth)&&(!query||`${r.model} ${r.manufacturer} ${r.category} ${r.season} ${r.inStoreMonth} ${r.plmId}`.toLocaleLowerCase('tr-TR').includes(query)));
   }
-  function qHistoryOptions(values,label){return `<option value="">${qEsc(label)}</option>${[...new Set(values.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'})).map(v=>`<option value="${qEsc(v)}">${qEsc(v)}</option>`).join('')}`;}
+  function qHistoryOptions(values,label){return `<option value="">${qEsc(label)}</option>${[...new Set(values.filter(Boolean))].sort(BLBusinessRules.compareChronologicalValues).map(v=>`<option value="${qEsc(v)}">${qEsc(v)}</option>`).join('')}`;}
   function qHistoryChart(records){
     const sorted=[...records].sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt))).slice(-24);if(!sorted.length)return `<div class="pricingEmptyState">${qEsc(qLang('Grafik için fiyat kaydı yok.','No price records for the chart.'))}</div>`;
     const prices=sorted.map(r=>r.price).filter(Number.isFinite),min=Math.min(...prices),max=Math.max(...prices),range=Math.max(.01,max-min),w=420,h=170,pad=24;

@@ -3,14 +3,43 @@
   "publishedAt": "2026-11-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Arayüz geçişleri, dengeli sol navigasyon ve daha hızlı PLM Sync",
-    "en": "UI transitions, balanced sidebar navigation and faster PLM Sync"
+    "tr": "Arayüz geçişleri ve dengeli sol navigasyon · daha hızlı PLM Sync",
+    "en": "UI transitions and balanced sidebar navigation · faster PLM Sync"
   },
   "summary": {
-    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir.",
-    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data."
+    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir. Hover bilgi kutuları ve grafik değer etiketleri seçili temanın renklerini izler. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir.",
+    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values. Hover information boxes and chart value labels follow the selected theme colors. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data."
   },
   "changes": [
+    {
+      "id": "collection-lfl-durable-references",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Previous Season ve LFL verileri kaybolmaz",
+        "en": "Previous Season and LFL data stays available"
+      },
+      "body": {
+        "tr": "Koleksiyonun Previous Season, LFL ve Sezon Etkisi referansları kullanıcı ve gerçek erişim kapsamına göre kalıcı saklanır. Yeniden giriş, uygulamayı kapatıp açma ve yalnız CP gibi başka bir kaynağı yenileme bu değerleri silmez. Referansları yenile düğmesi yeni veriyi kaydeder; kaynak boşsa, eski referans grupları eksikse veya kayıt başarısızsa mevcut değerler korunur ve çekmecede bilgi gösterilir. Kaynak sürümü değiştiğinde sipariş detayları referansları kendiliğinden değiştirmez; güncel detaylar için önce referansları yenileyin. Elle yüklenen LFL kaynak verisi de yeniden açılış için kaydedilir.",
+        "en": "Collection's Previous Season, LFL and Season Impact references are saved permanently for each user and effective access scope. Signing in again, restarting the app or refreshing another source such as CP does not clear these values. Refresh references saves new data; if the source is empty, previous reference groups are missing or saving fails, existing values are preserved and the drawer explains the issue. When the source revision changes, order details do not automatically replace references; refresh references first for current details. Manually uploaded LFL source data is also saved for the next startup."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-lfl-persistence.png",
+        "alt": {
+          "tr": "Eksik kaynakla yenileme sonrasında korunan Previous Season ve LFL değerleri",
+          "en": "Previous Season and LFL values preserved after refreshing an incomplete source"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: yenileme başarısız olsa da kayıtlı referanslar korunur.",
+          "en": "Actual Buyer Log with isolated demo data: saved references survive a failed refresh."
+        }
+      }
+    },
     {
       "id": "overview-page-slide",
       "type": "improvement",
@@ -153,6 +182,180 @@
         "caption": {
           "tr": "Değişiklik sonrası gerçek uygulama, 960×480 pencere ve izole demo verisi. Açık ayarlarda dil değişimi ve klavye odağı kontrol edildi.",
           "en": "Actual post-change application at 960×480 with isolated demo data. Language switching in open settings and keyboard focus were checked."
+        }
+      }
+    },
+    {
+      "id": "refresh-fine-branches",
+      "type": "improvement",
+      "module": {
+        "tr": "Yenileme",
+        "en": "Refresh"
+      },
+      "title": {
+        "tr": "Yenileme seçenekleri ince çizgilerle dallanıyor",
+        "en": "Refresh options unfold into fine branches"
+      },
+      "body": {
+        "tr": "Yenileme butonu aşağıya uzanan ince çizgilerle CP, ALL ve LFL gibi kısa kodlu kareleri açar. Tam kapsam ve son yenileme zamanı odaklanan karenin altında görünür. Kapsamlar mevcut ayarlardan okunur; klavye, azaltılmış hareket ve işlem sırasındaki aşama görünümü korunur.",
+        "en": "The refresh button unfolds downward into short-code squares such as CP, ALL and LFL, connected by fine lines. Full scope and last refresh time appear below the focused square. Scopes follow current settings; keyboard navigation, reduced motion and the in-progress stages view are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "refresh-fine-branches.png",
+        "alt": {
+          "tr": "Buyer Log üst çubuğundan aşağı dallanan yenileme kareleri",
+          "en": "Refresh squares branching below the Buyer Log top bar"
+        },
+        "caption": {
+          "tr": "İzole demo verilerle çalışan Buyer Log’da ince dallanma menüsü.",
+          "en": "Fine branches menu in Buyer Log running with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "chronological-season-filter",
+      "type": "fix",
+      "module": {
+        "tr": "Filtreler ve tablolar",
+        "en": "Filters and tables"
+      },
+      "title": {
+        "tr": "Kronolojik sezon sıralaması",
+        "en": "Chronological season ordering"
+      },
+      "body": {
+        "tr": "Sezonlar filtrelerde ve tablolarda yıl ve sezon sırasına göre karşılaştırılır: S5, W5, S6, W6, S7, W7. Azalan sıralama aynı kronolojiyi tersine çevirir. Koleksiyon, CP, Siparişler, LFL ve dinamik analiz filtreleri ortak kuralı kullanır.",
+        "en": "Filters and tables compare seasons by year with Summer before Winter: S5, W5, S6, W6, S7, W7. Descending sorting reverses the same chronology. Collection, CP, Orders, LFL and dynamic analysis filters share this rule."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "chronological-season-filter.png",
+        "alt": {
+          "tr": "Kronolojik sezon sıralaması gösteren gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log showing chronological season ordering"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisiyle doğrulandı.",
+          "en": "Actual post-change Buyer Log, verified with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "chronological-month-filter",
+      "type": "fix",
+      "module": {
+        "tr": "Filtreler ve tablolar",
+        "en": "Filters and tables"
+      },
+      "title": {
+        "tr": "MB aylarında takvim sırası",
+        "en": "Calendar ordering for budget months"
+      },
+      "body": {
+        "tr": "MB ayı ve ay içeren dinamik filtreler alfabetik sıra yerine yıl ve ay sırasını kullanır. JUNE 2027, JULY 2027’den önce gelir; Türkçe ve İngilizce ay adları ile sayısal ay kodları aynı kronolojide değerlendirilir.",
+        "en": "Budget months and dynamic month filters use year and month order. JUNE 2027 precedes JULY 2027; Turkish and English month names and numeric period keys follow the same chronology."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "chronological-month-filter.png",
+        "alt": {
+          "tr": "MB aylarında takvim sırası gösteren gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log showing calendar ordering for budget months"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisiyle doğrulandı.",
+          "en": "Actual post-change Buyer Log, verified with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "unified-dark-surface-shadows",
+      "type": "fix",
+      "module": {
+        "tr": "Görünüm ve navigasyon",
+        "en": "Appearance and navigation"
+      },
+      "title": {
+        "tr": "Karanlık temada tutarlı aydınlık gölgeler",
+        "en": "Consistent light shadows in dark mode"
+      },
+      "body": {
+        "tr": "Daraltılmış sol navigasyon fare veya klavyeyle geçici açıldığında siyah kalan kenar gölgesi düzeltildi. Navigasyon, açılır menüler, pencereler ve çekmeceler aynı tema duyarlı gölge rengini paylaşır; karanlık temada aydınlık, açık temada koyu gölge kullanılır.",
+        "en": "Fixed the black edge shadow when the collapsed sidebar temporarily expands with the mouse or keyboard. Navigation, pop-up menus, dialogs and drawers share one theme-aware shadow color: light in dark mode and dark in light mode."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "unified-dark-shadow-rail.png",
+        "alt": {
+          "tr": "Karanlık temada aydınlık kenar gölgesiyle geçici genişleyen sol navigasyon",
+          "en": "Temporarily expanded sidebar with a light edge shadow in dark mode"
+        },
+        "caption": {
+          "tr": "Sol navigasyon, pencereler ve çekmecelerle aynı aydınlık gölge rengini kullanır. Demo verisiyle gerçek Buyer Log ekranı.",
+          "en": "The sidebar uses the same light shadow color as dialogs and drawers. Actual Buyer Log screen with demo data."
+        }
+      }
+    },
+    {
+      "id": "collection-model-footer",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Model Name sütununun altındaki taşma düzeltildi",
+        "en": "Fixed model names showing through the table footer"
+      },
+      "body": {
+        "tr": "Koleksiyon tablosunda alt özet bandının arka planı korunur; Model Name sütunundaki satırlar kaydırma sırasında bandın içinden görünmez. Tekrarlanan model sayısı metni gizli kalır.",
+        "en": "The Collection summary footer keeps its background, preventing Model Name rows from showing through while scrolling. The duplicate model count text remains hidden."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-model-footer.png",
+        "alt": {
+          "tr": "Demo modellerin altındaki kesintisiz Koleksiyon özet bandı",
+          "en": "Continuous Collection summary footer below demo models"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "theme-aware-hover-information",
+      "type": "fix",
+      "module": {
+        "tr": "Arayüz ve grafikler",
+        "en": "Interface and charts"
+      },
+      "title": {
+        "tr": "Hover bilgi kutuları seçili temayı izler",
+        "en": "Hover information follows the selected theme"
+      },
+      "body": {
+        "tr": "Koleksiyon, CP, Siparişler ve diğer ortak araç çubuklarındaki bilgi kutuları ile Backlog grafiklerinin değer etiketleri artık seçili temanın yüzey ve metin renklerini kullanır. Karanlık temada açık kalan kutular düzeltildi; açık kutunun rengi tema değiştiğinde de anında güncellenir.",
+        "en": "Information boxes in Collection, CP, Orders and other shared toolbars, together with Backlog chart value labels, now use the selected theme’s surface and text colors. Fixed pale boxes in dark mode; an open box also follows theme changes immediately."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "dark-hover-tooltip.png",
+        "alt": {
+          "tr": "Karanlık temada koyu yüzeyle gösterilen Koleksiyon Yapıştır bilgi kutusu",
+          "en": "Collection Paste tooltip using a dark surface in dark mode"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
         }
       }
     },

@@ -25,6 +25,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const BLBusinessRules = require('../../public/business-rules');
 
 const MASTER_CATALOG_FIELDS = Object.freeze([
   Object.freeze({ key: 'category', header: 'Ürün Klasman', label: 'Category' }),
@@ -61,7 +62,7 @@ function uniqueSorted(values) {
     if (key && !seen.has(key)) seen.set(key, value);
   }
   return [...seen.values()]
-    .sort((a, b) => a.localeCompare(b, 'tr-TR', { numeric: true, sensitivity: 'base' }))
+    .sort(BLBusinessRules.compareChronologicalValues)
     .slice(0, MAX_VALUES_PER_FIELD);
 }
 

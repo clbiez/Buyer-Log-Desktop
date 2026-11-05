@@ -40,7 +40,9 @@ test('v10.30 sol ray modülleri görev temelli ve çevrilebilir gruplar altında
   const labels = [...INDEX.matchAll(/class="railGroupLabel"[^>]*data-i18n-en="([^"]+)"/g)].map(match => match[1]);
   assert.deepEqual(labels, ['Home', 'Plan &amp; Execute', 'Commercial', 'Operations', 'System']);
   assert.match(CSS, /nav\.tabs>\.railGroupLabel\{display:block/);
-  assert.match(CSS, /html\[data-rail="min"\] nav\.tabs>\.railGroupLabel\{display:none/);
+  // Keep label slots while collapsed so hover/keyboard expansion cannot move rows.
+  assert.match(CSS, /nav\.tabs>\.railGroupLabel\{[^}]*flex:0 0 auto;[^}]*height:/);
+  assert.match(CSS, /html\[data-rail="min"\] \.rail:not\(:hover\):not\(\.railKeyboardOpen\) nav\.tabs>\.railGroupLabel\{visibility:hidden/);
 });
 
 test('v10.30 Interface Size dört adlandırılmış preset ile ilk boyamada ve etkileşimde uygulanır', () => {
@@ -65,5 +67,5 @@ test('v10.30 ölçek yalnız fontu değil ortak kabuk, kontrol ve tablo geometri
   assert.match(CSS, /\.iconbtn\{[^}]*width:var\(--ui-icon-control-size\);height:var\(--ui-icon-control-size\)/);
   assert.match(CSS, /thead th\{[^}]*padding:var\(--ui-table-head-padding\) 10px/);
   assert.match(CSS, /tbody td\{[^}]*padding:var\(--ui-table-cell-padding\) 10px/);
-  assert.match(DESIGN, /nav\.tabs button\{height:var\(--ui-rail-item-height\)/);
+  assert.match(DESIGN, /nav\.tabs button\{[^}]*height:var\(--ui-rail-item-height\);min-height:var\(--ui-rail-item-height\);flex:0 0 var\(--ui-rail-item-height\)/);
 });

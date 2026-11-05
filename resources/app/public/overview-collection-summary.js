@@ -1,7 +1,7 @@
 (function(root, factory){
-  if(typeof module==='object' && module.exports) module.exports=factory(require('./model-option-stats.js'));
-  else root.BLOverviewCollectionSummary=factory(root.BLModelOptionStats);
-})(typeof window!=='undefined'?window:globalThis, function(modelOptionStats){
+  if(typeof module==='object' && module.exports) module.exports=factory(require('./model-option-stats.js'),require('./business-rules.js'));
+  else root.BLOverviewCollectionSummary=factory(root.BLModelOptionStats,root.BLBusinessRules);
+})(typeof window!=='undefined'?window:globalThis, function(modelOptionStats,businessRules){
   'use strict';
 
   const DEFAULT_FIELDS=Object.freeze({
@@ -15,44 +15,8 @@
     return text(row&&row[actual]);
   };
   const uniqueSorted=values=>[...new Set((values||[]).map(text).filter(Boolean))]
-    .sort((a,b)=>a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'}));
-  // Collection stores legacy numeric and localized names (e.g. 2027-06,
-  // JUNE 2027, HAZİRAN 2027). Parse the complete value, never an arbitrary
-  // numeric substring, so unrelated/invalid values cannot become fake dates.
-  const MONTH_ALIASES=[
-    ['ocak','oca','january','jan'],
-    ['subat','sub','february','feb'],
-    ['mart','mar','march'],
-    ['nisan','nis','april','apr'],
-    ['mayis','may'],
-    ['haziran','haz','june','jun'],
-    ['temmuz','tem','july','jul'],
-    ['agustos','agu','august','aug'],
-    ['eylul','eyl','september','sept','sep'],
-    ['ekim','eki','october','oct'],
-    ['kasim','kas','november','nov'],
-    ['aralik','ara','december','dec'],
-  ];
-  const monthNumber=name=>{
-    const token=text(name).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ı/g,'i').toLowerCase().replace(/\.$/,'');
-    const index=MONTH_ALIASES.findIndex(aliases=>aliases.includes(token));
-    return index<0?null:index+1;
-  };
-  const monthParts=value=>{
-    const raw=text(value).replace(/\s+/g,' ');
-    const valid=(year,month)=>{
-      const y=Number(year),m=Number(month);
-      return Number.isInteger(y)&&y>=1900&&y<=9999&&Number.isInteger(m)&&m>=1&&m<=12?{year:y,month:m}:null;
-    };
-    let match=raw.match(/^(\d{4})[-./\s]?(\d{1,2})(?:[-./\s]\d{1,2})?$/);
-    if(match)return valid(match[1],match[2]);
-    match=raw.match(/^(\d{1,2})[-./\s](\d{4})$/);
-    if(match)return valid(match[2],match[1]);
-    match=raw.match(/^([^\d]+?)[\s,./-]+(\d{4})$/);
-    if(match)return valid(match[2],monthNumber(match[1]));
-    match=raw.match(/^(\d{4})[\s,./-]+([^\d]+)$/);
-    return match?valid(match[1],monthNumber(match[2])):null;
-  };
+    .sort(businessRules.compareChronologicalValues);
+  const monthParts=businessRules.monthParts;
   const monthDistance=(value,now)=>{
     const parts=monthParts(value);
     if(!parts)return Number.POSITIVE_INFINITY;
@@ -71,7 +35,7 @@
     return text(valueFor(row,actual))||'—';
   };
   const pathKey=path=>JSON.stringify(path);
-  const comparePath=(a,b)=>a.join(' / ').localeCompare(b.join(' / '),'tr-TR',{numeric:true,sensitivity:'base'});
+  const comparePath=businessRules.compareChronologicalPaths;
   const modelKeyFor=(row,index,fields)=>typeof modelOptionStats?.modelKey==='function'
     ?modelOptionStats.modelKey(row,index)
     :fieldValue(row,'model',fields);

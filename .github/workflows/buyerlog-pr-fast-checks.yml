@@ -29,6 +29,8 @@ jobs:
         run: node --test tests/motion-plus-contract-v20261025.test.js tests/motion-plus-refresh-sync-v20261026.test.js tests/motion-plus-theme-transitions.test.js tests/startup-sequential-triangles.test.js tests/ui-manifest-contract.test.js tests/ui-inline-contract.test.js tests/design-token-guard.test.js tests/workspace-blur-drawer-v20261029.test.js tests/render-profile-software-compositing.test.js
       - name: Clipboard, selection and Data Management layout regression
         run: node --test tests/cp-grid-paste.test.js tests/collection-spreadsheet-wiring.test.js tests/grid-cell-selection-visibility-v70300.test.js tests/compact-selection-filter-copy.test.js tests/cp-orders-external-output-v1090.test.js tests/ui-polish-v70319.test.js tests/horizon-personal-deletion-persist.test.js tests/row-note-clipboard-spacing.test.js
+      - name: Chronological season and budget-month filters and table sorting
+        run: node --test tests/chronological-sorting.test.js tests/business-rules.test.js tests/collection-mb-month-locale-filter.test.js tests/quick-filter-groups-v736.test.js
       - name: Shared Backlog analysis filters, detail and export scope
         run: node --test tests/backlog-shared-analysis-filters.test.js tests/backlog-overview-filters-v20261002.test.js tests/backlog-plan-actual-wiring.test.js
       - name: Supp. FOB quick calculator and royalty commission regression
