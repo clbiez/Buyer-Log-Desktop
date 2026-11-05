@@ -48,6 +48,8 @@ jobs:
         run: node --test tests/startup-global-flow-curtain.test.js tests/today-feature-performance-v20260926.test.js
       - name: LCW AI embedded session and PLM BOM regression
         run: node --test tests/lcwai-desktop-relay.test.js tests/lcwai-desktop-session.test.js tests/plm-bom-sync.test.js tests/plm-sync-two-phase.test.js tests/plm-sync-colours-retry.test.js tests/collection-artwork-detail.test.js
+      - name: Excel import AI validation and canonical import regression
+        run: node --test tests/excel-import-ai.test.js tests/excel-import-plan-v1060.test.js tests/excel-import-mapping-match-v1060.test.js tests/collection-excel-import-actions-v20260920.test.js
       - name: Release version, lock, SBOM and artifact bytes
         run: |
           node --test tests/dependency-inventory-metadata.test.js

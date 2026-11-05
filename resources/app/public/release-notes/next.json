@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "excel-import-lcw-ai",
+      "type": "feature",
+      "module": {
+        "tr": "Excel İçe Aktarma",
+        "en": "Excel Import"
+      },
+      "title": {
+        "tr": "Excel eşleme ve veri kontrolünde LCW AI",
+        "en": "LCW AI for Excel mapping and data review"
+      },
+      "body": {
+        "tr": "Import your Excel içinden seçili sayfanın örnek satırlarını LCW AI ile inceleyin. Sütun eşlemeleri, eşleşme alanları ve güvenli biçim düzeltmeleri önce önerilir; hücrelerin önce/sonra değerleri sayfalı listede gösterilir. Öneri kabul edildiğinde mevcut aktarım önizlemesi yenilenir ve değişiklikler geri alınabilir. Eksik kimlikler, belirsiz eşleşmeler, tekrarlar ve farklı para birimleri otomatik değiştirilmez. Kayıt yalnız son aktarım onayıyla yapılır.",
+        "en": "Review sample rows from the selected sheet with LCW AI in Import your Excel. Column mappings, match fields and safe format corrections are proposed first, with paginated before/after cell values. Accepting a suggestion rebuilds the existing import preview and supports undo. Missing identifiers, ambiguous matches, duplicates and foreign currencies are never changed automatically. Data is saved only after final import approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "excel-import-lcw-ai.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log içinde LCW AI eşleme önerisi ve iki fiyat hücresinin önce/sonra önizlemesi",
+          "en": "LCW AI mapping suggestion and before/after preview of two price cells in the actual Buyer Log"
+        },
+        "caption": {
+          "tr": "İzole demo Excel ile gerçek uygulama; LCW AI yanıtı kabul testi için taklit edildi. Sütun önerisi ve yerel doğrulayıcının ürettiği hücre düzeltmeleri gösteriliyor.",
+          "en": "Actual app with an isolated demo workbook; the LCW AI response was stubbed for acceptance testing. Shows the column suggestion and cell corrections produced by the local validator."
+        }
+      }
+    },
+    {
       "id": "backlog-analysis-scope-performance",
       "type": "improvement",
       "module": {

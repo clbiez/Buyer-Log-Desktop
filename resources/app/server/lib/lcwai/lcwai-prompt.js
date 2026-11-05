@@ -37,6 +37,15 @@ const CONTRACTS = Object.freeze({
       operationsJson: { type: 'string', required: true, max: 12000, hint: { tr: 'JSON işlem dizisi. Yalnız context.operations listesindeki işlemler; iş verisi, HTML, CSS veya JS üretme. Alanlar context.fields içinden seçilir.', en: 'JSON operation array. Only operations listed in context.operations; never produce business values, HTML, CSS or JS. Choose fields from context.fields.' } } }),
     example: { explanation: '…', operationsJson: '[{"op":"resizeSection","target":"header","value":64},{"op":"setReflow","value":"large"}]' },
   }),
+  'excel-import': Object.freeze({
+    label: { tr: 'Excel içe aktarma', en: 'Excel import' },
+    fields: Object.freeze({
+      explanation: { type: 'string', required: true, max: 2000 },
+      operationsJson: { type: 'string', required: true, max: 16000 },
+      warnings: { type: 'string[]', max: 500, items: 20 },
+    }),
+    example: { explanation: '…', operationsJson: '[{"op":"map","columnId":"col:0","targetId":"plmId","action":"match"}]', warnings: [] },
+  }),
   'fx-kur-layout': Object.freeze({
     label:{tr:'KUR tablosu düzeni',en:'KUR table layout'},
     fields:Object.freeze({
@@ -360,6 +369,11 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
       lines.push(english
         ? 'External lab formats (SGS, Intertek and others): keep the printed alphanumeric Report No, section suffix and original PO. Read every summary conclusion and appendix; a page of PASS values alone is not overall or commercial approval. If a covering e-mail omits the report reference, cite its attached PDF and the e-mail together only when the packet parentId and attachment hash link them and the same PO is printed in both. A request for approval is not approval. Missing or unassessed results stay unresolved.'
         : 'Harici laboratuvar biçimlerinde (SGS, Intertek vb.) basılı harfli Report No, bölüm eki ve PO değerini koru. Tüm sonuç özetlerini ve ekleri oku; tek sayfadaki PASS değerleri genel veya ticari onay değildir. Üst mailde rapor referansı yoksa yalnız paketin parentId ve ek hash bağı doğruladığı ve aynı PO her ikisinde de basılı olduğu durumda PDF ile maili birlikte kanıt göster. Onay isteği onay değildir. Eksik veya değerlendirilmemiş sonuçları açık bırak.');
+    } else if (key === 'excel-import') {
+      lines.push(english ? 'Reply with ONE JSON object only. Write explanation and warnings in English.' : 'Yalnız TEK JSON nesnesi döndür. explanation ve warnings Türkçe olsun.');
+      lines.push(english
+        ? 'Inspect the supplied Excel sample and full-sheet local validation summary. State that AI coverage is sampled; never claim to have read omitted rows or fields. Explain mapping problems, missing identifiers, duplicates, invalid dates/numbers and concrete next actions. operationsJson is a JSON array using ONLY context.operations: map an existing columnId to an existing canonical field id with action match/update/ignore; match sets mapped fieldIds; normalize requests deterministic format cleanup for a writable non-identity column (whitespace, valid date/number formats, currency marks). Use match for identity fields. Currency marks may only be stripped when they match field.currency; never convert currencies, report a mismatched unit. Never invent or replace business values, identifiers, leading zeros, formulas or missing data. Never choose ambiguous targets, resolve duplicates, enable blank clearing, create fields, execute code or persist data. If uncertain, return [] and explain what the user must verify. Buyer Log validates all operations, previews each correction and requires user approval before import.'
+        : 'Verilen Excel örneğini ve tüm seçili satırları kapsayan yerel doğrulama özetini incele. AI kapsamının örneklem olduğunu belirt; gönderilmeyen satır veya alanları okuduğunu söyleme. Eşleme sorunlarını, eksik kimlikleri, tekrarları, geçersiz tarih/sayıları ve somut sonraki işleri açıkla. operationsJson yalnız context.operations kullanan JSON dizisidir: map mevcut columnId değerini mevcut kanonik alan kimliğine match/update/ignore işlemiyle bağlar; match eşlenmiş fieldIds belirler; normalize yazılabilir ve kimlik olmayan sütunda deterministik biçim temizliği ister (boşluklar, geçerli tarih/sayı biçimleri, para birimi işaretleri). Kimlik alanlarında match kullan. Para birimi işareti yalnız field.currency ile aynıysa temizlenebilir; para birimi dönüştürme, birim uyuşmazlığını bildir. İş değeri, kimlik, baştaki sıfır, formül veya eksik veri uydurma/değiştirme. Belirsiz hedef seçme, tekrar çözme, boşla silmeyi açma, alan oluşturma, kod çalıştırma veya veri kaydetme. Emin değilsen [] döndür ve kullanıcının neyi doğrulaması gerektiğini açıkla. Buyer Log tüm işlemleri doğrular, her düzeltmeyi önizler ve aktarım öncesi kullanıcı onayı ister.');
     } else if (key === 'test-report-extract') {
       lines.push(english
         ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Copy every value exactly as printed in the attached report or e-mail (original language and spelling); only "explanation" should be English.'
