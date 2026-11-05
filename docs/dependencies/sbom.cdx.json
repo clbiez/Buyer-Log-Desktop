@@ -6,7 +6,7 @@
     "component": {
       "type": "application",
       "name": "buyer-log-desktop",
-      "version": "7.0.335"
+      "version": "7.0.336"
     },
     "properties": [
       {
@@ -19,7 +19,7 @@
       },
       {
         "name": "buyerlog:package-lock-sha256",
-        "value": "3d83c80b7cedc7d199623a4fb1d8c1b9fa5a9a3926a221560c2abcf8e45ca664"
+        "value": "de3d4e7609333a116c06359383989ea151a8661f35b7f82fe1ea67aa52abdf09"
       }
     ]
   },

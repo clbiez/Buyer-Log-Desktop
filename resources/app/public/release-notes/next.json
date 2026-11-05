@@ -3,14 +3,43 @@
   "publishedAt": "2026-11-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Arayüz geçişleri ve dengeli sol navigasyon · daha hızlı PLM Sync · donmayan güncelleme açılışı",
-    "en": "UI transitions and balanced sidebar navigation · faster PLM Sync · freeze-free update startup"
+    "tr": "Koleksiyon referansları için buyer ülke filtresi · Arayüz geçişleri ve dengeli sol navigasyon · daha hızlı PLM Sync · donmayan güncelleme açılışı",
+    "en": "Buyer country filter for Collection references · UI transitions and balanced sidebar navigation · faster PLM Sync · freeze-free update startup"
   },
   "summary": {
-    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir. Hover bilgi kutuları ve grafik değer etiketleri seçili temanın renklerini izler. Veri Yönetimi'ndeki CP, Diğer modüller ve INTAKE horizon filtreleri, IAS karşılığını otomatik öneren tek bir çekmecede düzenlenir. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir. Güncellemeden sonra giriş ekranı açılırken yaşanan donma giderildi. BuyerLog.exe başlar başlamaz görünen açılış bildirimi güncelleme adımlarını gösterir; giriş sonrası açılış perdesi modüller hazır olmadan geçilmez ve Buyer Log'un hangi aşamada olduğunu söyler.",
-    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values. Hover information boxes and chart value labels follow the selected theme colors. CP, Other modules and INTAKE horizon filters in Data Management are edited in a single drawer that suggests IAS counterparts automatically. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data. The freeze while the sign-in screen opened after an update is fixed. The launch notice that appears as soon as BuyerLog.exe starts now lists the update steps; after sign-in the startup curtain cannot be passed before the modules are ready and tells you which stage Buyer Log is in."
+    "tr": "Koleksiyon fiyat çekmecesindeki Ülke filtresi ile her buyer çalışmadığı üretim ülkelerini Previous Season, LFL ve Sezon Etkisi hesaplarından çıkarabilir. Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir. Hover bilgi kutuları ve grafik değer etiketleri seçili temanın renklerini izler. Veri Yönetimi'ndeki CP, Diğer modüller ve INTAKE horizon filtreleri, IAS karşılığını otomatik öneren tek bir çekmecede düzenlenir. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir. Güncellemeden sonra giriş ekranı açılırken yaşanan donma giderildi. BuyerLog.exe başlar başlamaz görünen açılış bildirimi güncelleme adımlarını gösterir; giriş sonrası açılış perdesi modüller hazır olmadan geçilmez ve Buyer Log'un hangi aşamada olduğunu söyler.",
+    "en": "With the Country filter in the Collection price drawer, each buyer can exclude production countries they do not work with from Previous Season, LFL and Season Impact. When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values. Hover information boxes and chart value labels follow the selected theme colors. CP, Other modules and INTAKE horizon filters in Data Management are edited in a single drawer that suggests IAS counterparts automatically. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data. The freeze while the sign-in screen opened after an update is fixed. The launch notice that appears as soon as BuyerLog.exe starts now lists the update steps; after sign-in the startup curtain cannot be passed before the modules are ready and tells you which stage Buyer Log is in."
   },
   "changes": [
+    {
+      "id": "collection-lfl-country-filter",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Previous Season, LFL ve Sezon Etkisi için buyer ülke filtresi",
+        "en": "Buyer country filter for Previous Season, LFL and Season Impact"
+      },
+      "body": {
+        "tr": "Fiyat çekmecesindeki yeni Ülke filtresinde her buyer çalışmadığı üretim ülkelerini (ör. Fas, Mısır) listeden seçerek Previous Season, LFL ve Sezon Etkisi hesaplarından çıkarır; seçilen ülkeler etiket olarak görünür ve tek tıkla kaldırılır. Kural buyer'ın Koleksiyon'una aittir: başka bir buyer bu modellere bakarken, Çoklu görünüm dahil, hesaplar model sahibinin kuralına göre yapılır ve kural yalnız görüntülenir. Hücreler, alt toplam satırı, Excel çıktısı ve sipariş detayları aynı kuralı izler. Kaynak veri değişmez; Türkiye siparişleri TRY olduğu için bu USD hesaplarına zaten dahil değildir.",
+        "en": "In the new Country filter in the price drawer, each buyer picks the production countries they do not work with (e.g. Morocco, Egypt) to exclude them from Previous Season, LFL and Season Impact; selected countries appear as tags and can be removed with one click. The rule belongs to the buyer's Collection: when another buyer views these models, including the Multi view, calculations follow the model owner's rule, which is view-only for them. Cells, the footer row, Excel export and order details follow the same rule. Source data is not changed; Türkiye orders are in TRY and are never part of these USD calculations."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-lfl-country-filter.png",
+        "alt": {
+          "tr": "Fas ve Mısır hariç tutulduktan sonra yeniden hesaplanan Previous Season ve LFL değerleri, ülke seçici ve etiketler",
+          "en": "Previous Season and LFL recalculated after excluding Morocco and Egypt, with the country picker and tags"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: DEMO BUYER A Koleksiyonu için Fas ve Mısır hesaplardan çıkarıldı.",
+          "en": "Actual Buyer Log with isolated demo data: Morocco and Egypt are excluded for DEMO BUYER A's Collection."
+        }
+      }
+    },
     {
       "id": "collection-lfl-durable-references",
       "type": "fix",

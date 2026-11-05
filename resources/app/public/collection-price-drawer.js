@@ -226,6 +226,7 @@
     if(event.target===state.overlay){if(backdropTap)close();return;}
     if(event.target.closest('[data-cpd-close]')){close();return;}
     const row=findRow(state.rowId);if(!row)return;
+    if(event.target.closest('[data-cpd-lfl-country-remove]')){if(global.BLCollectionLfl?.onDrawerClick?.(event.target,row))render();return;}
     const referenceDetail=event.target.closest('[data-cpd-lfl-details]');if(referenceDetail){if(!referenceDetail.disabled)void openLflDetails(row,referenceDetail);return;}
     if(event.target.closest('[data-cpd-source-report]')){const snapshot=lineageSnapshot(row),rows=lineageRows(snapshot);close();global.BLDetailDrawer?.open({storageKey:'pricing.source-explanation',title:T('Fiyat kaynak açıklaması','Price source explanation'),rows,images:false,columns:[{key:'field',label:T('Alan / varsayım','Field / assumption')},{key:'value',label:T('Değer','Value')}]});return;}
     const rule=event.target.closest('[data-cpd-rule]');if(rule){const binding=state.binding,id=rule.dataset.cpdRule;if(!global.BLPriceLineageBridge.canManageRules())return;close();global.BLPriceLineageBridge.openRule(binding,id);return;}
@@ -257,7 +258,10 @@
       state.backdropTap=false;
     });
     overlay.addEventListener('click',onClick);
-    panel.addEventListener('change',event=>{const input=event.target.closest('[data-cpd-field]');if(input)commitField(input);});
+    panel.addEventListener('change',event=>{
+      if(event.target.closest('[data-cpd-lfl-country-add]')){const row=findRow(state?.rowId);if(row&&global.BLCollectionLfl?.onDrawerChange?.(event.target,row))render();return;}
+      const input=event.target.closest('[data-cpd-field]');if(input)commitField(input);
+    });
     panel.addEventListener('keydown',event=>{const input=event.target.closest('[data-cpd-field]');if(input&&event.key==='Enter'){event.preventDefault();commitField(input);}});
     render();
     global.BLLayerSystem?.openDialog?.(overlay,{onClose:close});

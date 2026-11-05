@@ -66,6 +66,8 @@ jobs:
       # runs with dependencies installed in the full test environment.
       - name: Checklist denied writes, journal durability and CP first load
         run: node --test tests/checklist-forbidden-retry-v20261027.test.js tests/checklist-durability.test.js
+      - name: Collection LFL references and buyer country filter
+        run: node --test tests/collection-lfl-country-filter.test.js tests/collection-lfl-reference.test.js tests/collection-lfl-detail.test.js
       - name: Validate nonempty pending release notes
         run: |
           node -e "const n=require('./public/release-notes/next.json');if(n.changes?.length)require('./scripts/release-notes').validateNext();else if(n.publishedAt)throw Error('Empty pending notes must have blank publishedAt')"

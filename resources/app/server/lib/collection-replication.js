@@ -197,6 +197,10 @@ function mergeRowFields(base, local, remote, rowId, conflicts) {
   }
   return out;
 }
+function mergeSetting(base, local, remote) {
+  const value = item => (Array.isArray(item) ? item : []);
+  return sameValue(value(local), value(base)) ? value(remote) : value(local);
+}
 function mergeKeyedList(base, local, remote) {
   if (sameValue(local, remote) || sameValue(local, base)) return remote;
   if (sameValue(remote, base)) return local;
@@ -253,6 +257,8 @@ function mergeCollectionWorkspaces(base, local, remote) {
     manufacturers: mergeKeyedList(base && base.manufacturers, local && local.manufacturers, remote && remote.manufacturers),
     customColumns: mergeKeyedList(base && base.customColumns, local && local.customColumns, remote && remote.customColumns),
     statusCatalog: mergeKeyedList(base && base.statusCatalog, local && local.statusCatalog, remote && remote.statusCatalog),
+    // Owner-level setting: a local change since the merge base wins over an unchanged remote.
+    lflCountryExclusions: mergeSetting(base && base.lflCountryExclusions, local && local.lflCountryExclusions, remote && remote.lflCountryExclusions),
     nextId,
     _revision: Math.max(Number(local && local._revision) || 0, Number(remote && remote._revision) || 0) + 1,
     _updatedAt: new Date().toISOString(),

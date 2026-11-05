@@ -9318,6 +9318,10 @@ html[data-ui-system="manifest"] .cpdInput input {background:var(--ui-surface) !i
 }
 html[data-ui-system="manifest"] .cpdInput input:disabled {background:var(--ui-surface-soft) !important;color:var(--ui-text-muted) !important
 }
+html[data-ui-system="manifest"] .cpdInput select {background:var(--ui-surface) !important;color:var(--ui-text) !important;font:600 var(--ui-font-sm) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .cpdCountryChip {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-size:var(--ui-font-xs) !important;font-weight:600 !important
+}
 @media (prefers-reduced-motion:reduce) {
 html[data-ui-system="manifest"] .kolPsTrack>i,html[data-ui-system="manifest"] .kolHealthChip,html[data-ui-system="manifest"] .cpdOffer {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
