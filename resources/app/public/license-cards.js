@@ -16,11 +16,41 @@
   const locale=()=>isEn()?'en-US':'tr-TR';
   const nf=(n,d=2)=>new Intl.NumberFormat(locale(),{maximumFractionDigits:d}).format(n);
   const PROFILE=['contactName','contactEmail','portalUrl','portalUsername','accessReference','workingNotes','artworkBrief'];
+  // BLStorage scopes this existing favorites namespace to the signed-in account
+  // and synchronizes it through /api/user-preferences, never the shared card store.
+  const FAVORITES_KEY='buyerlog.favorites.licenseCards.v1';
   const S={host:null,data:null,pending:null,loading:false,stale:false,error:'',loadError:null,query:'',licensor:null,status:'all',sort:{key:'license',dir:'asc'},
-    selected:new Set(),expanded:'',drafts:new Map(),renderQueued:false,animate:true,flash:new Set(),exporting:false,stats:new Map(),writes:0,mapBase:null};
+    selected:new Set(),favorites:new Set(),favoritesOnly:false,expanded:'',drafts:new Map(),renderQueued:false,animate:true,flash:new Set(),exporting:false,stats:new Map(),writes:0,mapBase:null};
   const visible=()=>S.host&&S.host.getClientRects().length>0;
   const cardOf=id=>S.data?.cards?.find(c=>c.id===id)||null;
   const canEdit=()=>Boolean(S.data?.canEdit);
+
+  function readFavorites(){
+    try{const ids=JSON.parse(window.BLStorage?.getItem(FAVORITES_KEY)||'[]');S.favorites=new Set(Array.isArray(ids)?ids.filter(id=>typeof id==='string'):[]);}
+    catch(_){S.favorites=new Set();}
+  }
+  const rowIds=row=>[row.id,...(row.merged||[]).map(c=>c.id)];
+  const isFavorite=row=>rowIds(row).some(id=>S.favorites.has(id));
+  const allRows=()=>E.rows(S.data?.cards||[],mergeOpts());
+  async function toggleFavorite(id){
+    // Merge with the account's hydrated list even if the first click arrives
+    // before startup hydration completes on a browser with an empty cache.
+    if(typeof hydrateUserPreferencesAfterUi==='function')await hydrateUserPreferencesAfterUi();
+    readFavorites();
+    const row=allRows().find(r=>r.id===id);if(!row)return;
+    const next=new Set(S.favorites);
+    if(isFavorite(row))for(const key of rowIds(row))next.delete(key);else next.add(row.id);
+    try{
+      if(!window.BLStorage?.setItem)throw new Error('PREFERENCE_STORAGE_UNAVAILABLE');
+      window.BLStorage.setItem(FAVORITES_KEY,JSON.stringify([...next]));
+    }catch(_){toast(T('Favoriler kaydedilemedi. Yeniden deneyin.','Favorites could not be saved. Please retry.'),'warning');return;}
+    render();
+    S.host.querySelector(`[data-lc-act="favorite"][data-id="${CSS.escape(id)}"]`)?.focus();
+  }
+  async function selectFavorites(){
+    if(typeof hydrateUserPreferencesAfterUi==='function')await hydrateUserPreferencesAfterUi();
+    readFavorites();for(const row of allRows().filter(isFavorite))S.selected.add(row.id);render();
+  }
 
   function failMessage(error){
     if(error?.code==='REVISION_CONFLICT'&&S.templateWrite)return T('Taslak başka yerde değişti. Taslaklar yenilendi; yeniden açıp uygulayın.','The template changed elsewhere. Templates were refreshed; reopen it and reapply.');
@@ -160,7 +190,7 @@
     const d=S.drafts.get(row.id),dirty=isDirty(d),rule=d?ruleOf(d,d.primaryId):row.primary.rule,status=rule?E.ruleStatus(rule,E.today()):'none';
     const open=S.expanded===row.id,cls=['lcRow',open?'isOpen':'',dirty?'isDirty':'',d?.conflict?'isConflict':'',S.flash.has(row.id)?'isSaved':'',S.selected.has(row.id)?'isSelected':''].filter(Boolean).join(' ');
     return `<div class="${cls}" data-row="${esc(row.id)}" style="--i:${Math.min(i,24)}">
-      <label class="lcCheck"><input type="checkbox" data-lc-select="${esc(row.id)}" ${S.selected.has(row.id)?'checked':''} aria-label="${esc(T('Üretici atlası için seç','Select for supplier atlas'))}"></label>
+      <span class="lcPick"><label class="lcCheck"><input type="checkbox" data-lc-select="${esc(row.id)}" ${S.selected.has(row.id)?'checked':''} aria-label="${esc(T('Üretici atlası için seç','Select for supplier atlas'))}"></label><button type="button" class="lcIconBtn lcFavorite" data-lc-act="favorite" data-id="${esc(row.id)}" aria-pressed="${isFavorite(row)}" title="${esc(T(isFavorite(row)?'Favorilerimden çıkar':'Favorilerime ekle',isFavorite(row)?'Remove from my favorites':'Add to my favorites'))}" aria-label="${esc(row.license+' · '+(row.licensor||'—')+' — '+T(isFavorite(row)?'Favorilerimden çıkar':'Favorilerime ekle',isFavorite(row)?'Remove from my favorites':'Add to my favorites'))}"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></button></span>
       ${thumb(row,d)}
       <button type="button" class="lcName" data-lc-act="expand" data-id="${esc(row.id)}" aria-expanded="${open}"><b data-no-i18n>${esc(row.license)}</b><small data-no-i18n>${esc(seasons(rule))} · ${esc(rule?.categories?.join(', ')||T('Tüm kategoriler','All categories'))}</small></button>
       ${licensorCell(row)}
@@ -223,7 +253,7 @@
     </div></div>`;
   }
   function currentRows(){
-    const cards=S.data?.cards||[],rows=E.rows(cards,{query:S.query,licensor:S.licensor,status:S.status,sort:S.sort,...mergeOpts()});
+    const cards=S.data?.cards||[],rows=E.rows(cards,{query:S.query,licensor:S.licensor,status:S.status,sort:S.sort,...mergeOpts()}).filter(row=>!S.favoritesOnly||isFavorite(row));
     // A draft whose card disappeared stays visible (blocked) until the user discards it.
     for(const [id,d] of S.drafts){
       if(!cards.some(c=>c.id===id))rows.unshift({...E.rows([d.snapshot])[0],card:d.snapshot});
@@ -245,7 +275,7 @@
     S.creating=true;S.createError='';render();
     try{
       const result=await api('/api/license-cards',{method:'POST',body:JSON.stringify(S.newCard)});
-      accept(result);S.newCard=null;S.query='';S.licensor=null;S.status='all';S.expanded=result.cardId;
+      accept(result);S.newCard=null;S.query='';S.licensor=null;S.status='all';S.favoritesOnly=false;S.expanded=result.cardId;
       toast(T('Lisans kartı eklendi.','License card added.'),'success');
     }catch(error){S.createError=failMessage(error);}
     finally{S.creating=false;render();}
@@ -303,6 +333,7 @@
   }
   function render(){
     if(!visible())return;
+    readFavorites();
     // Never rebuild under the user's cursor; re-render once focus leaves the list.
     const active=document.activeElement;
     if(S.host.contains(active)&&/^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)&&active.id!=='lcSearch'&&active.dataset?.lcContractFilter==null&&active.type!=='checkbox'&&S.host.querySelector('.lcPage')){S.renderQueued=true;return;}
@@ -321,7 +352,7 @@
       }
       return;
     }
-    const rows=currentRows(),n=counts(),opts=E.licensorOptions(S.data.cards),selectedVisible=rows.filter(r=>S.selected.has(r.id)).length;
+    const rows=currentRows(),n=counts(),opts=E.licensorOptions(S.data.cards),selectedVisible=rows.filter(r=>S.selected.has(r.id)).length,favoriteCount=allRows().filter(isFavorite).length;
     const chip=(key,tr,en,count)=>`<button type="button" class="lcChip" data-lc-status="${key}" aria-pressed="${S.status===key}">${esc(T(tr,en))}<small>${count}</small></button>`;
     const head=(key,tr,en,cls='')=>`<button type="button" class="lcSort ${cls}" data-lc-sort="${key}" ${['royalty','hologramCost'].includes(key)?'lang="en"':''} aria-sort="${S.sort.key===key?(S.sort.dir==='asc'?'ascending':'descending'):'none'}">${esc(T(tr,en))}${S.sort.key===key?`<svg class="ic"><use href="#i-chevron-${S.sort.dir==='asc'?'up':'down'}"/></svg>`:''}</button>`;
     S.host.innerHTML=`<div class="lcPage">
@@ -329,6 +360,7 @@
         <button type="button" class="lcBtn" data-lc-act="contractView" aria-pressed="${Boolean(S.contractView)}">${esc(S.contractView?T('Kart tablosu','Card table'):T('Sözleşme tablosu','Contract table'))}</button>
         <label class="lcSearch"><svg class="ic"><use href="#i-search"/></svg><input id="lcSearch" type="search" value="${esc(S.query)}" placeholder="${esc(T('Lisans veya lisansör ara…','Search license or licensor…'))}" aria-label="${esc(T('Lisans ara','Search licenses'))}"></label>
         <select id="lcLicensor" class="lcSelect" aria-label="${esc(T('Lisansör filtresi','Licensor filter'))}"><option value="">${esc(T('Tüm lisansörler','All licensors'))}</option>${opts.map(o=>`<option value="${o.value?esc(o.value):'__none__'}" ${(S.licensor===o.value)?'selected':''}>${esc(o.value?o.label:T('Lisansörü olmayanlar','Without licensor'))}</option>`).join('')}</select>
+        <div class="lcChips"><button type="button" class="lcChip" data-lc-act="favoritesOnly" aria-pressed="${S.favoritesOnly}"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg>${esc(T('Favorilerim','My favorites'))}<small>${favoriteCount}</small></button></div>
         <div class="lcChips" role="group" aria-label="${esc(T('Durum','Status'))}">${chip('all','Tümü','All',n.all)}${chip('active','Güncel sözleşme','Current contract',n.active)}${chip('missing','Sözleşmesi olmayan','No current contract',n.missing)}${chip('noLicensor','Lisansörsüz','No licensor',n.noLicensor)}${chip('noMap','Haritasız','No map',n.noMap)}</div>
         <span class="lcSpacer"></span>
         ${canEdit()?`<button type="button" class="lcBtn primary" data-lc-act="newCard"><svg class="ic"><use href="#i-plus"/></svg>${esc(T('Yeni lisans kartı','New license card'))}</button><button type="button" class="lcBtn" data-lc-act="applyAll" ${S.applying?'disabled':''}>${esc(T('Tümüne uygula','Apply to all'))}</button>`:''}
@@ -340,18 +372,19 @@
       ${S.clip?`<div class="lcClipBar" role="status"><svg class="ic"><use href="#i-copy"/></svg><span>${esc(T(`Kopyalanan harita: ${S.clip.license} · ${S.clip.licensor||'—'} (${S.clip.steps} adım). Hedef satırda yapıştır simgesine basın veya satırları seçip toplu yapıştırın.`,`Copied map: ${S.clip.license} · ${S.clip.licensor||'—'} (${S.clip.steps} steps). Press the paste icon on a row, or select rows and paste to all.`))}</span><button type="button" class="lcBtn sm" data-lc-act="clearClip">${esc(T('Bırak','Clear'))}</button></div>`:''}
       ${S.loadError?`<div class="lcNotice" role="alert"><span>${esc(T('Önceki yüklenen kartlar gösteriliyor; güncelleme tamamlanamadı.','Showing previously loaded cards; the update did not complete.'))} ${esc(failMessage(S.loadError))}</span><button type="button" class="lcBtn sm" data-lc-act="retry">${esc(T('Yeniden dene','Retry'))}</button></div>`:''}
       ${S.error?`<div class="lcNotice" role="alert">${esc(S.error)}</div>`:''}${S.data.syncPending?`<div class="lcNotice" role="status">${esc(T('Kaydedildi; diğer kullanıcılara aktarım bekliyor ve otomatik yeniden denenir.','Saved; sharing with other users is pending and retried automatically.'))}</div>`:''}
-      <div class="lcSelectionBar isOn">
+      <div class="lcSelectionBar isOn${S.animate?' blMotionEnter':''}">
+        <button type="button" class="lcBtn" data-lc-act="selectFavorites" ${!favoriteCount?'disabled':''} title="${esc(T('Filtrelerden bağımsız tüm favorilerimi mevcut seçime ekle','Add all my favorites to the current selection, regardless of filters'))}"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg>${esc(T('Favorileri seç','Select favorites'))}</button>
         <button type="button" class="lcBtn primary" data-lc-act="export" ${S.exporting||!S.selected.size?'disabled':''}><svg class="ic"><use href="#i-file-export"/></svg>${esc(S.exporting?T('Hazırlanıyor…','Preparing…'):T('Üretici atlası oluştur','Create supplier atlas'))}</button>
         ${S.clip&&canEdit()?`<button type="button" class="lcBtn" data-lc-act="pasteSelected" ${S.pasting?'disabled':''}><svg class="ic"><use href="#i-copy-plus"/></svg>${esc(T('Haritayı seçilenlere yapıştır','Paste map to selected'))}</button>`:''}
         <button type="button" class="lcBtn" data-lc-act="clearSelection" ${!S.selected.size?'disabled':''}>${esc(T('Seçimi temizle','Clear selection'))}</button>
-        <b>${S.selected.size} ${esc(T('lisans seçildi','licenses selected'))}</b><small>${esc(T('Seçtiğiniz satırlar üretici atlasına girer.','The selected rows go into the supplier atlas.'))}</small>
+        <b>${S.selected.size} ${esc(T('lisans seçildi','licenses selected'))}</b><small>${esc(T('Yıldızlar size özeldir. Seçtiğiniz satırlar üretici atlasına girer.','Stars are personal. The selected rows go into the supplier atlas.'))}</small>
       </div>
       <div class="lcTable${S.animate?' isEntering':''}" role="table" aria-label="${esc(T('Lisans kartları','License cards'))}">
         <div class="lcHead" role="row" ${S.contractView?'hidden':''}>
-          <label class="lcCheck"><input type="checkbox" data-lc-select-all ${rows.length&&selectedVisible===rows.length?'checked':''} aria-label="${esc(T('Listelenenlerin tümünü seç','Select all listed'))}"></label>
+          <span class="lcPick"><label class="lcCheck"><input type="checkbox" data-lc-select-all ${rows.length&&selectedVisible===rows.length?'checked':''} aria-label="${esc(T('Listelenenlerin tümünü seç','Select all listed'))}"></label><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></span>
           <span></span>${head('license','Lisans','License')}${head('licensor','Lisansör','Licensor')}${head('royalty','Royalty','Royalty','isNum')}${head('trCommission','TR kom.','TR comm.','isNum')}${head('ydCommission','YD kom.','Intl comm.','isNum')}${head('hologramCost','Hologram','Hologram','isNum')}<span>${esc(T('Geçerlilik','Validity'))}</span>${head('map','Onay haritası','Approval map')}<span></span>
         </div>
-        ${S.contractView?contractsHtml(rows):rows.map(rowHtml).join('')||`<div class="lcEmpty"><svg class="ic"><use href="#i-license-cards"/></svg><b>${esc(S.query||S.licensor!=null||S.status!=='all'?T('Eşleşen lisans yok','No matching licenses'):T('Henüz lisans kartı yok','No license cards yet'))}</b><span>${esc(S.query||S.licensor!=null||S.status!=='all'?T('Arama veya filtreleri değiştirin.','Change the search or filters.'):T('ASAS kaynağını kontrol edip yenileyin.','Check the ASAS source and refresh.'))}</span></div>`}
+        ${S.contractView?contractsHtml(rows):rows.map(rowHtml).join('')||`<div class="lcEmpty"><svg class="ic"><use href="#i-license-cards"/></svg><b>${esc(S.query||S.licensor!=null||S.status!=='all'||S.favoritesOnly?T('Eşleşen lisans yok','No matching licenses'):T('Henüz lisans kartı yok','No license cards yet'))}</b><span>${esc(S.favoritesOnly?T('Lisans satırındaki yıldızla kendi favorilerinizi ekleyin veya filtreleri değiştirin.','Use the star on a license row to add your own favorites, or change the filters.'):S.query||S.licensor!=null||S.status!=='all'?T('Arama veya filtreleri değiştirin.','Change the search or filters.'):T('ASAS kaynağını kontrol edip yenileyin.','Check the ASAS source and refresh.'))}</span></div>`}
       </div>
 
     </div>`;
@@ -552,6 +585,9 @@
   }
   function act(el){
     const a=el.dataset.lcAct,id=el.dataset.id;
+    if(a==='favorite')return toggleFavorite(id);
+    if(a==='favoritesOnly'){S.favoritesOnly=!S.favoritesOnly;S.animate=true;return render();}
+    if(a==='selectFavorites')return selectFavorites();
     if(a==='contractView'){S.contractView=!S.contractView;return render();}
     if(a==='clearContractFilters'){S.contractFilters={};return render();}
     if(a==='openContract')return window.BLLicenseCardsPage.openRule(el.dataset.ruleId);
@@ -687,11 +723,15 @@
   window.initLicenseCardsPage=()=>{
     S.host=document.getElementById('licenseCardsPage');if(!visible())return;
     bind();
+    // Startup hydrates preferences after the first paint. Refresh stars when that
+    // finishes too, so a fast visit cannot keep an empty device cache on screen.
+    if(typeof hydrateUserPreferencesAfterUi==='function')void hydrateUserPreferencesAfterUi().then(()=>render());
     if(!S.data||S.stale)return load();render();
   };
+  window.addEventListener?.('storage',event=>{if(event.key===null||event.key===window.BLStorage?.actualKey?.(FAVORITES_KEY))render();});
   window.addEventListener?.('beforeunload',event=>{if([...S.drafts.values()].some(isDirty)||S.newCard&&(S.newCard.license||S.newCard.licensor)){event.preventDefault();event.returnValue='';}});
   window.BLLicenseCardsPage={
-    openRule(id){S.contractView=false;const card=S.data?.cards?.find(c=>(c.rules||[]).some(r=>r.id===id));if(!card)return;S.query='';S.licensor=null;S.status='all';S.expanded=card.id;const draft=ensureDraft(card.id);draft.primaryId=id;render();S.host.querySelector(`[data-detail="${CSS.escape(card.id)}"]`)?.scrollIntoView({block:'nearest'});},
+    openRule(id){S.contractView=false;const card=S.data?.cards?.find(c=>(c.rules||[]).some(r=>r.id===id));if(!card)return;S.query='';S.licensor=null;S.status='all';S.favoritesOnly=false;S.expanded=card.id;const draft=ensureDraft(card.id);draft.primaryId=id;render();S.host.querySelector(`[data-detail="${CSS.escape(card.id)}"]`)?.scrollIntoView({block:'nearest'});},
     invalidate(){S.stale=true;S.stats.clear();if(![...S.drafts.values()].some(d=>d.saving)&&visible())return load();},
     renderLanguage(){render();},
   };
