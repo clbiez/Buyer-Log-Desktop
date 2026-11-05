@@ -205,6 +205,15 @@ Hareket paleti yalnız `ui-tokens.css` üzerinden gelir: 100/140 ms temel kontro
 Easing ortak cubic-bezier ile izlenir. Hareket içerik, geometri ve iş verisi
 üzerinde kalıcı değişiklik yapmaz.
 
+**Modüller arası kademeli akış:** Başlık, özetler ve görünür ana içerik en çok
+beş ayrı blok halinde sırayla girer. Ortak `--ui-motion-flow:440ms`,
+`--ui-motion-stagger:40ms` ve `--ui-motion-distance:14px` tokenları kullanılır.
+Tablolar tek bloktur; aynı girişte hücre dalgası veya iç içe kart animasyonu
+eklenmez. Lazy çizim için sınırlı tekrarlar yalnız henüz girmemiş blokları alır.
+Gezinme, hareketi kapatma ve görünmez sekme önceki akışı iptal eder; içerikle
+etkileşim, odak veya kaydırma sırasında akış durur. Seçili/düzenlenen veri
+blokları atlanır; aynı modüle tıklama, filtre ve veri yenilemesi akışı tekrarlamaz.
+
 **Tema geçişi:** Kullanıcı temayı değiştirdiğinde `BLMotionPlus.theme(update, origin)`
 Görünüm menüsünde seçilen efekti çalıştırır (`motion-plus-theme.js`,
 `BLMotionPlusTheme`; ayar kullanıcıya ayrılmış `lcw.themeTransition.v1` (BLStorage)): sırayla
@@ -245,7 +254,7 @@ Taşıma simgeleri (gemi/uçak/tır) `MODE_GLYPH_PATHS` tek kaynağından gelir;
 1 araç tek rozet, birden fazla araç aynı boyutta üç küçük gemi içeren tek filo
 rozetidir; gerçek taşıma tipleri ve araç sayısı hover/detay özetinde korunur.
 
-**Sol üstten dalga:** Aktif tablodaki sadece ilk iki görünür gridin
+**Sol üstten dalga (kademeli akış dışında kalan eski yüzeyler):** Aktif tablodaki sadece ilk iki görünür gridin
 kaydırma alanında görünen satır ve sütunlarında tek giriş efekti uygulanır. Hücreler diagonal gecikmeyle
 `--ui-selected` renginden özgün görünümüne döner; yatay/dikey kaydırma, seçim,
 hücre düzenleme, veri değişimi ve export tetiklemez. Aktif/seçilmiş/düzenlenen
