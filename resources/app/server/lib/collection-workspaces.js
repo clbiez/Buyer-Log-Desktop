@@ -458,6 +458,18 @@ function normalizeManufacturers(value) {
 function normalizeCustomColumns(value) {
   return (Array.isArray(value) ? value : []).slice(0, MAX_CUSTOM_COLUMNS).map(item => cleanObject(item));
 }
+/* Buyer (owner) rule: production countries left out of Collection Previous
+   Season / LFL / Season Impact references. Owner workspace data, so it travels
+   with the owner's replica and every viewer sees the owner's rule. Canonical
+   country codes only; an absent payload field always keeps the current rule. */
+function normalizeLflCountryExclusions(value) {
+  const list = Array.isArray(value) ? value : [];
+  const codes = list.map(item => String(item == null ? '' : item).trim().toUpperCase()).filter(code => /^[A-Z0-9]{1,40}$/.test(code));
+  return [...new Set(codes)].sort().slice(0, 60);
+}
+function payloadLflCountryExclusions(payload, current) {
+  return normalizeLflCountryExclusions(payload && Object.prototype.hasOwnProperty.call(payload, 'lflCountryExclusions') ? payload.lflCountryExclusions : current && current.lflCountryExclusions);
+}
 function normalizeStatusCatalog(value, rows) {
   return collectionStatusCatalog.normalize(value, { rowStatuses: normalizeRows(rows).map(row => row && row.durum) });
 }
@@ -470,6 +482,7 @@ function defaultWorkspace(ownerId) {
     manufacturers: [],
     customColumns: [],
     statusCatalog: collectionStatusCatalog.seed(),
+    lflCountryExclusions: [],
     nextId: 1,
     _legacyRecovery: {},
     _revision: 0,
@@ -488,6 +501,7 @@ function normalizeWorkspace(ownerId, raw) {
       manufacturers: normalizeManufacturers(raw && raw.manufacturers),
       customColumns: normalizeCustomColumns(raw && raw.customColumns),
       statusCatalog: normalizeStatusCatalog(raw && raw.statusCatalog, rows),
+      lflCountryExclusions: normalizeLflCountryExclusions(raw && raw.lflCountryExclusions),
       nextId: Math.max(1, Number(raw && raw.nextId) || 1),
       _revision: Math.max(0, Number(raw && raw._revision) || 0),
     });
@@ -525,6 +539,7 @@ function saveWorkspace(ownerId, payload, expectedRevision = null) {
     manufacturers: normalizeManufacturers(payload && payload.manufacturers),
     customColumns: normalizeCustomColumns(payload && payload.customColumns),
     statusCatalog: normalizeStatusCatalog(sourceCatalog, rows),
+    lflCountryExclusions: payloadLflCountryExclusions(payload, current),
     nextId: Math.max(Number(payload && payload.nextId) || 1, 1 + rows.reduce((max, row) => Math.max(max, Number(row && row.id) || 0), 0)),
     _legacyRecovery: cleanObject(payload && payload._legacyRecovery && Object.keys(payload._legacyRecovery).length ? payload._legacyRecovery : current._legacyRecovery),
     _revision: current._revision + 1,
@@ -568,7 +583,8 @@ function rowKeyOf(row, index) {
 function structuralChange(before, after) {
   return JSON.stringify(before.customColumns || []) !== JSON.stringify(after.customColumns || [])
     || JSON.stringify(before.manufacturers || []) !== JSON.stringify(after.manufacturers || [])
-    || JSON.stringify(before.statusCatalog || []) !== JSON.stringify(after.statusCatalog || []);
+    || JSON.stringify(before.statusCatalog || []) !== JSON.stringify(after.statusCatalog || [])
+    || JSON.stringify(before.lflCountryExclusions || []) !== JSON.stringify(after.lflCountryExclusions || []);
 }
 /* Satır karşılaştırması SIĞ yapılır, JSON.stringify ile DEĞİL.
 
@@ -647,6 +663,7 @@ async function saveWorkspaceAsync(ownerId, payload, expectedRevision = null, opt
       manufacturers: normalizeManufacturers(payload && payload.manufacturers),
       customColumns: normalizeCustomColumns(payload && payload.customColumns),
       statusCatalog: normalizeStatusCatalog(sourceCatalog, rows),
+      lflCountryExclusions: payloadLflCountryExclusions(payload, current),
       nextId: Math.max(Number(payload && payload.nextId) || 1, 1 + rows.reduce((max, row) => Math.max(max, Number(row && row.id) || 0), 0)),
       _legacyRecovery: cleanObject(payload && payload._legacyRecovery && Object.keys(payload._legacyRecovery).length ? payload._legacyRecovery : current._legacyRecovery),
       _revision: current._revision + 1,
@@ -700,6 +717,7 @@ function structureSignature(workspace) {
     columns: workspace.customColumns || [],
     manufacturers: workspace.manufacturers || [],
     statusCatalog: workspace.statusCatalog || [],
+    lflCountryExclusions: workspace.lflCountryExclusions || [],
   });
 }
 
@@ -813,6 +831,7 @@ function applyRowChanges(current, change) {
     manufacturers: current.manufacturers || [],
     customColumns: current.customColumns || [],
     statusCatalog: normalizeStatusCatalog(current.statusCatalog, survivors),
+    lflCountryExclusions: normalizeLflCountryExclusions(current.lflCountryExclusions),
     nextId: current.nextId || 1,
     _legacyRecovery: cleanObject(current._legacyRecovery),
     _revision: current._revision,
@@ -831,6 +850,7 @@ function applyRowChanges(current, change) {
     if (Array.isArray(structure.manufacturers)) saved.manufacturers = normalizeManufacturers(structure.manufacturers);
     if (Array.isArray(structure.customColumns)) saved.customColumns = normalizeCustomColumns(structure.customColumns);
     if (Array.isArray(structure.statusCatalog)) saved.statusCatalog = normalizeStatusCatalog(structure.statusCatalog, saved.rows);
+    if (Array.isArray(structure.lflCountryExclusions)) saved.lflCountryExclusions = normalizeLflCountryExclusions(structure.lflCountryExclusions);
     if (Array.isArray(structure.order)) {
       // Sıra yalnız VERİLEN id'lerle yeniden dizilir; listede olmayan satırlar
       // DÜŞÜRÜLMEZ, sonuna eklenir. Sessiz satır kaybı olmaz (§142).
@@ -960,7 +980,7 @@ function clearAllRowImages() {
 module.exports = {
   attachDeltaStore,
   listOwnerIds, countRowImages, clearAllRowImages,
-  loadWorkspace, saveWorkspace, saveWorkspaceAsync, diffWorkspaceRows,
+  loadWorkspace, saveWorkspace, saveWorkspaceAsync, diffWorkspaceRows, normalizeLflCountryExclusions,
   applyRowChanges, applyRowChangesAsync, rowRev, rowId,
   normalizeWorkspace,documentId,defaultWorkspace, normalizeStatusCatalog, safeId, workspaceFile, replaceWorkspaceReplica, MAX_PATCH_ROWS,
   SHARED_COLLECTION_OWNER, ensureSharedWorkspace, mergePersonalBackupIntoShared, recoverSharedWorkspaceIntoOwner, mirrorWorkspace,

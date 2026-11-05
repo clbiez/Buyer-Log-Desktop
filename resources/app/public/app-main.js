@@ -22597,6 +22597,25 @@ let kolWorkspaceSharedMode=false;
 let kolWorkspaceMode='single';
 let kolWorkspaceSelectedOwnerIds=new Set([kolWorkspaceOwnerId]);
 const KOL_SCOPE_PREF_KEY='lcw.koleksiyon.scope.v1';
+/* Buyer ülke kuralı: sahibin (buyer) Koleksiyon çalışma alanı verisidir; sahibin
+   replikasıyla taşınır, böylece başka bir buyer bu modellere bakarken de sahibin
+   kuralına göre Previous Season / LFL / Sezon Etkisi görür. */
+let kolLflCountryExclusions=[];
+let kolLflCountryExclusionsByOwner=new Map();
+function kolNormalizeLflCountryExclusions(value){return [...new Set((Array.isArray(value)?value:[]).map(item=>String(item??'').trim().toUpperCase()).filter(code=>/^[A-Z0-9]{1,40}$/.test(code)))].sort().slice(0,60);}
+function kolWorkspaceOwnerName(ownerId){const item=kolWorkspaceList.find(entry=>String(entry.ownerId)===String(ownerId));return norm(item&&item.ownerName)||String(ownerId||'');}
+// The rule that applies to a Collection row: its owner's rule, never the viewer's.
+function kolLflCountryRuleFor(row){
+  if(kolWorkspaceMode==='multi'){const ownerId=String(row&&row._collectionOwnerId||'');return {ownerId,ownerName:norm(row&&row._collectionOwnerName)||ownerId,countries:kolLflCountryExclusionsByOwner.get(ownerId)||[],canEdit:false};}
+  return {ownerId:String(kolWorkspaceOwnerId||''),ownerName:kolWorkspaceOwnerName(kolWorkspaceOwnerId),countries:kolLflCountryExclusions,canEdit:Boolean(kolWorkspaceCanEdit)};
+}
+function kolSetLflCountryExclusions(countries){
+  if(kolWorkspaceMode==='multi'||!kolRequireWorkspaceEdit())return false;
+  const next=kolNormalizeLflCountryExclusions(countries);
+  if(kolValueEqual(next,kolLflCountryExclusions))return true;
+  kolLflCountryExclusions=next;
+  return saveKolRows()!==false;
+}
 let kolPermissionState=null;
 let kolScopeOutsideClickBound=false;
 let kolWorkspaceSaveTimer=null;
@@ -22676,7 +22695,7 @@ function kolPersistPendingWorkspace(status='pending'){
       schemaVersion:kolBaseline?.ownerId===kolWorkspaceOwnerId?2:1,ownerId:kolWorkspaceOwnerId,baseRevision:kolBaseline?.structureBaseRevision??kolWorkspaceRevision,status,
       baseRows:kolBaseline?.ownerId===kolWorkspaceOwnerId?[...kolBaseline.rows.values()].map(kolPersistableRow):undefined,baseStructure:kolBaseline?.ownerId===kolWorkspaceOwnerId?kolBaseline.structure:undefined,
       expectedExistingIds:[...(kolBaseline?.expectedExistingIds||[])],expectedNewIds:[...(kolBaseline?.expectedNewIds||[])],
-      rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturers,customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,
+      rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturers,customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),lflCountryExclusions:kolLflCountryExclusions||[],nextId:kolNextId,
       updatedAt:new Date().toISOString(),
     }));
     const prior=kolSaveFeedbackByOwner.get(kolWorkspaceOwnerId);
@@ -22714,7 +22733,7 @@ function kolMergePendingWorkspace(pending){
   }
   let baseStructure={};try{baseStructure=JSON.parse(pending.baseStructure||'{}');}catch(_){}
   const freshStructure=JSON.parse(fresh.structure||'{}');
-  const localStructure={columns:pending.customColumns||[],manufacturers:pending.manufacturers||[],statusCatalog:pending.statusCatalog||[],order:pending.rows.map(kolRowKey)};
+  const localStructure={columns:pending.customColumns||[],manufacturers:pending.manufacturers||[],statusCatalog:pending.statusCatalog||[],order:pending.rows.map(kolRowKey),lflCountryExclusions:Array.isArray(pending.lflCountryExclusions)?pending.lflCountryExclusions:baseStructure.lflCountryExclusions||[]};
   const choose=(key)=>hasBase&&!kolValueEqual(localStructure[key],baseStructure[key]||[])?localStructure[key]:freshStructure[key]||[];
   const order=choose('order'),ordered=[];
   for(const id of order){const row=merged.get(String(id));if(row){ordered.push(row);merged.delete(String(id));}}
@@ -22722,8 +22741,9 @@ function kolMergePendingWorkspace(pending){
   kolRows=kolNormalizeModelGroups(ordered.map(migrateKolRow));
   kolManufacturers=choose('manufacturers');kolCustomCols=kolNormalizeCustomCols(choose('columns'));
   kolStatusCatalog=kolNormalizeStatusCatalog(choose('statusCatalog'),kolRows);
+  kolLflCountryExclusions=kolNormalizeLflCountryExclusions(choose('lflCountryExclusions'));
   kolBaseline={...fresh,rows:baselineRows,expectedExistingIds,expectedNewIds};
-  if(hasBase&&['columns','manufacturers','statusCatalog','order'].some(key=>!kolValueEqual(localStructure[key],baseStructure[key]||[])))kolBaseline.structureBaseRevision=Number(pending.baseRevision)||0;
+  if(hasBase&&['columns','manufacturers','statusCatalog','order','lflCountryExclusions'].some(key=>!kolValueEqual(localStructure[key],baseStructure[key]||[])))kolBaseline.structureBaseRevision=Number(pending.baseRevision)||0;
 }
 function kolRestorePendingWorkspace(){
   const pending=kolReadPendingWorkspace(kolWorkspaceOwnerId);
@@ -22743,7 +22763,7 @@ function kolPersistableRow(row){
   delete next._serverPlmImageUrl;
   return next;
 }
-function kolWorkspacePayload(){return {rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,expectedRevision:kolWorkspaceRevision};}
+function kolWorkspacePayload(){return {rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),lflCountryExclusions:kolLflCountryExclusions||[],nextId:kolNextId,expectedRevision:kolWorkspaceRevision};}
 
 /* ===================================================================
    v7.22 — YALNIZ DEĞİŞEN SATIRLAR GÖNDERİLİR.
@@ -22763,7 +22783,7 @@ function kolWorkspacePayload(){return {rows:kolRows.map(kolPersistableRow),manuf
 let kolBaseline=null; // { rows:Map(id→satır kopyası), structure:string, ownerId }
 function kolRowKey(row){const id=row&&row.id;return id==null||id===''?'':String(id);}
 function kolStructureSignature(){
-  return JSON.stringify({columns:kolCustomCols||[],manufacturers:kolManufacturers||[],statusCatalog:kolStatusEntries(),order:kolRows.map(kolRowKey)});
+  return JSON.stringify({columns:kolCustomCols||[],manufacturers:kolManufacturers||[],statusCatalog:kolStatusEntries(),order:kolRows.map(kolRowKey),lflCountryExclusions:kolLflCountryExclusions||[]});
 }
 function kolCaptureBaseline(){
   const rows=new Map();
@@ -22854,7 +22874,7 @@ function kolCollectChanges(){
   const change={upserts,deletes,nextId:kolNextId,expectedExistingIds:upserts.filter(existing).map(kolRowKey),expectedNewIds:upserts.filter(row=>!existing(row)).map(kolRowKey)};
   if(structureChanged){
     change.baseRevision=kolBaseline.structureBaseRevision??kolWorkspaceRevision;
-    change.structure={manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),order:kolRows.map(kolRowKey).filter(Boolean)};
+    change.structure={manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),order:kolRows.map(kolRowKey).filter(Boolean),lflCountryExclusions:kolLflCountryExclusions||[]};
   }
   return change;
 }
@@ -22906,6 +22926,7 @@ function kolApplyWorkspace(workspace,access){
   kolWorkspaceRevision=Number(workspace&&workspace._revision)||0;kolWorkspaceCanEdit=Boolean(access&&access.canEdit);
   const rawRows=Array.isArray(workspace&&workspace.rows)?workspace.rows:[];
   kolStatusCatalog=kolNormalizeStatusCatalog(workspace&&workspace.statusCatalog,rawRows);
+  kolLflCountryExclusions=kolNormalizeLflCountryExclusions(workspace&&workspace.lflCountryExclusions);kolLflCountryExclusionsByOwner=new Map();
   kolRows=kolNormalizeModelGroups(rawRows.map(migrateKolRow));
   kolManufacturers=Array.isArray(workspace&&workspace.manufacturers)?workspace.manufacturers:[];
   const rawCustomCols=Array.isArray(workspace&&workspace.customColumns)?workspace.customColumns:[];
@@ -22936,6 +22957,7 @@ async function kolRebaseOwnWorkspace(ownerId){
     manufacturers:kolManufacturers||[],
     statusCatalog:kolStatusEntries(),
     order:localRows.map(kolRowKey).filter(Boolean),
+    lflCountryExclusions:kolLflCountryExclusions||[],
   };
   kolPersistPendingWorkspace('rebasing');
 
@@ -22950,6 +22972,7 @@ async function kolRebaseOwnWorkspace(ownerId){
     manufacturers:Array.isArray(remote.manufacturers)?remote.manufacturers:[],
     statusCatalog:Array.isArray(remote.statusCatalog)?remote.statusCatalog:[],
     order:remoteRows.map(kolRowKey).filter(Boolean),
+    lflCountryExclusions:kolNormalizeLflCountryExclusions(remote.lflCountryExclusions),
   };
 
   const merged=[];
@@ -22985,6 +23008,7 @@ async function kolRebaseOwnWorkspace(ownerId){
   kolCustomCols=kolNormalizeCustomCols(choose(localStructure.columns,baseStructure.columns||[],remoteStructure.columns));
   kolManufacturers=choose(localStructure.manufacturers,baseStructure.manufacturers||[],remoteStructure.manufacturers);
   kolStatusCatalog=kolNormalizeStatusCatalog(choose(localStructure.statusCatalog,baseStructure.statusCatalog||[],remoteStructure.statusCatalog),merged);
+  kolLflCountryExclusions=kolNormalizeLflCountryExclusions(choose(localStructure.lflCountryExclusions,baseStructure.lflCountryExclusions||[],remoteStructure.lflCountryExclusions));
 
   const localOrderChanged=!kolValueEqual(localStructure.order,baseStructure.order||[]);
   const wanted=localOrderChanged?localStructure.order:remoteStructure.order;
@@ -23049,12 +23073,12 @@ async function kolSaveWorkspaceNow(saveOptions){
           if(item.kind==='removed'){kolBaseline.rows.delete(key);continue;}
           if(sent)kolBaseline.rows.set(key,{...sent,_rev:Number(item.rev)||sent._rev});
         }
-        if(payload.structure){kolBaseline.structure=JSON.stringify({columns:payload.structure.customColumns||[],manufacturers:payload.structure.manufacturers||[],statusCatalog:payload.structure.statusCatalog||[],order:payload.structure.order||[]});delete kolBaseline.structureBaseRevision;}
+        if(payload.structure){kolBaseline.structure=JSON.stringify({columns:payload.structure.customColumns||[],manufacturers:payload.structure.manufacturers||[],statusCatalog:payload.structure.statusCatalog||[],order:payload.structure.order||[],lflCountryExclusions:payload.structure.lflCountryExclusions||[]});delete kolBaseline.structureBaseRevision;}
         if(Array.isArray(data.conflicts)&&data.conflicts.length)ownConflictRebased=kolReportConflicts(data.conflicts);
       }else{
         kolWorkspaceRevision=Number(data.workspace&&data.workspace._revision)||kolWorkspaceRevision;
         const serverRows=new Map();for(const row of Array.isArray(data.workspace&&data.workspace.rows)?data.workspace.rows:[]){const key=kolRowKey(row);if(key)serverRows.set(key,{...row});}
-        kolBaseline={ownerId:kolWorkspaceOwnerId,rows:serverRows,structure:JSON.stringify({columns:data.workspace&&data.workspace.customColumns||[],manufacturers:data.workspace&&data.workspace.manufacturers||[],statusCatalog:data.workspace&&data.workspace.statusCatalog||[],order:(data.workspace&&data.workspace.rows||[]).map(kolRowKey)})};
+        kolBaseline={ownerId:kolWorkspaceOwnerId,rows:serverRows,structure:JSON.stringify({columns:data.workspace&&data.workspace.customColumns||[],manufacturers:data.workspace&&data.workspace.manufacturers||[],statusCatalog:data.workspace&&data.workspace.statusCatalog||[],order:(data.workspace&&data.workspace.rows||[]).map(kolRowKey),lflCountryExclusions:kolNormalizeLflCountryExclusions(data.workspace&&data.workspace.lflCountryExclusions)})};
       }
       const dirty=kolHasDirtyWorkspace();
       if(dirty)kolPersistPendingWorkspace(Array.isArray(data.conflicts)&&data.conflicts.length?'conflict':'pending');
@@ -23136,9 +23160,10 @@ function kolPersistScope(){
 function kolApplyCombinedWorkspaces(items){
   kolWorkspaceMode='multi';kolWorkspaceOwnerId='__multi__';kolWorkspaceRevision=0;kolWorkspaceCanEdit=false;
   const manufacturers=new Set(),custom=new Map(),catalog=[],rowStatuses=[];let syntheticId=-1;
-  kolRows=[];
+  kolRows=[];kolLflCountryExclusions=[];kolLflCountryExclusionsByOwner=new Map();
   (items||[]).forEach(item=>{
     const owner=item&&item.owner||{},workspace=item&&item.workspace||{};
+    kolLflCountryExclusionsByOwner.set(String(owner.id||''),kolNormalizeLflCountryExclusions(workspace.lflCountryExclusions));
     (workspace.manufacturers||[]).forEach(name=>{if(norm(name))manufacturers.add(norm(name));});
     (workspace.customColumns||[]).forEach(col=>{if(col&&col.k&&!custom.has(col.k))custom.set(col.k,col);});
     (workspace.statusCatalog||[]).forEach(entry=>catalog.push(entry));
@@ -26505,6 +26530,7 @@ function kolGroupSummaryMoneyDisplay(column,value,members,valueOf,{currencySymbo
 }
 function kolGroupSummaryFormatBaseValue(column,row,value){
   if(value==null||value==='')return '';
+  if(column.k==='fabric')return kolFabricDisplay(value);
   const schema=columnSchemaFor(column,[row]);
   if(column.date)return fmtDate(value)||'';
   if(column.inStorePeriod==='week')return kolWeekDisplay(value,row?.inStore);
