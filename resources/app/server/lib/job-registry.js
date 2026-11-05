@@ -57,6 +57,7 @@ function describeJob(job, now) {
     ratePerMinute: rate > 0 ? Math.round(rate * 60 * 10) / 10 : 0,
     etaMs,
     cancelRequested: !!job.cancelRequested,
+    waitingAuth: !!job.waitingAuth,
     failureCount: job.failures.length,
     error: job.error || null,
     running: !TERMINAL.has(job.status),
@@ -137,6 +138,8 @@ function createJobRegistry(options = {}) {
     if (patch.succeeded !== undefined) job.succeeded = count(patch.succeeded);
     if (patch.failed !== undefined) job.failed = count(patch.failed);
     if (patch.activeModel !== undefined) job.activeModel = clean(patch.activeModel);
+    // İş, kullanıcının CoreNectum oturumunu yenilemesini bekliyor (iş durmadı).
+    if (patch.waitingAuth !== undefined) job.waitingAuth = patch.waitingAuth === true;
     job.updatedAt = clock();
     return job;
   }

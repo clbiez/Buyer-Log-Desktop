@@ -7,8 +7,8 @@
     "en": "Buyer country filter for Collection references · UI transitions and balanced sidebar navigation · faster PLM Sync · freeze-free update startup"
   },
   "summary": {
-    "tr": "Koleksiyon fiyat çekmecesindeki Ülke filtresi ile her buyer çalışmadığı üretim ülkelerini Previous Season, LFL ve Sezon Etkisi hesaplarından çıkarabilir. Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir. Hover bilgi kutuları ve grafik değer etiketleri seçili temanın renklerini izler. Veri Yönetimi'ndeki CP, Diğer modüller ve INTAKE horizon filtreleri, IAS karşılığını otomatik öneren tek bir çekmecede düzenlenir. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir. Güncellemeden sonra giriş ekranı açılırken yaşanan donma giderildi. BuyerLog.exe başlar başlamaz görünen açılış bildirimi güncelleme adımlarını gösterir; giriş sonrası açılış perdesi modüller hazır olmadan geçilmez ve Buyer Log'un hangi aşamada olduğunu söyler. Birden fazla renk opsiyonlu modeller daraltıldığında Kumaş sütunu da kayıtlı kartın kısa özetini gösterir. Parsiyel sevkiyatı olan CP siparişlerinde Belge Operasyon Merkezi'nin LCW AI kontrolü artık \"CP bağlamı hazırlanamadı\" hatasıyla durmaz. Öncelik ve kontrol kurallarındaki \"LCW AI’dan Destek Al\" yeniden çalışır.",
-    "en": "With the Country filter in the Collection price drawer, each buyer can exclude production countries they do not work with from Previous Season, LFL and Season Impact. When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values. Hover information boxes and chart value labels follow the selected theme colors. CP, Other modules and INTAKE horizon filters in Data Management are edited in a single drawer that suggests IAS counterparts automatically. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data. The freeze while the sign-in screen opened after an update is fixed. The launch notice that appears as soon as BuyerLog.exe starts now lists the update steps; after sign-in the startup curtain cannot be passed before the modules are ready and tells you which stage Buyer Log is in. The Fabric column now shows saved card summaries when models with multiple colour options are collapsed. Document Operations Center's LCW AI check no longer stops with \"CP context could not be prepared\" for CP orders with partial shipments. \"Get help from LCW AI\" in priority and checklist rules works again."
+    "tr": "Koleksiyon fiyat çekmecesindeki Ülke filtresi ile her buyer çalışmadığı üretim ülkelerini Previous Season, LFL ve Sezon Etkisi hesaplarından çıkarabilir. Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir. Hover bilgi kutuları ve grafik değer etiketleri seçili temanın renklerini izler. Veri Yönetimi'ndeki CP, Diğer modüller ve INTAKE horizon filtreleri, IAS karşılığını otomatik öneren tek bir çekmecede düzenlenir. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir. Güncellemeden sonra giriş ekranı açılırken yaşanan donma giderildi. BuyerLog.exe başlar başlamaz görünen açılış bildirimi güncelleme adımlarını gösterir; giriş sonrası açılış perdesi modüller hazır olmadan geçilmez ve Buyer Log'un hangi aşamada olduğunu söyler. Birden fazla renk opsiyonlu modeller daraltıldığında Kumaş sütunu da kayıtlı kartın kısa özetini gösterir. Parsiyel sevkiyatı olan CP siparişlerinde Belge Operasyon Merkezi'nin LCW AI kontrolü artık \"CP bağlamı hazırlanamadı\" hatasıyla durmaz. Öncelik ve kontrol kurallarındaki \"LCW AI’dan Destek Al\" yeniden çalışır. PLM Sync modelin bütün renklerini getirir ve hata aldığında kaldığı yerden yeniden dener.",
+    "en": "With the Country filter in the Collection price drawer, each buyer can exclude production countries they do not work with from Previous Season, LFL and Season Impact. When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values. Hover information boxes and chart value labels follow the selected theme colors. CP, Other modules and INTAKE horizon filters in Data Management are edited in a single drawer that suggests IAS counterparts automatically. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data. The freeze while the sign-in screen opened after an update is fixed. The launch notice that appears as soon as BuyerLog.exe starts now lists the update steps; after sign-in the startup curtain cannot be passed before the modules are ready and tells you which stage Buyer Log is in. The Fabric column now shows saved card summaries when models with multiple colour options are collapsed. Document Operations Center's LCW AI check no longer stops with \"CP context could not be prepared\" for CP orders with partial shipments. \"Get help from LCW AI\" in priority and checklist rules works again. PLM Sync brings every colour of a model and retries from where it stopped after an error."
   },
   "changes": [
     {
@@ -617,6 +617,64 @@
         "caption": {
           "tr": "Gerçek Buyer Log, izole demo verisi: kural isteği LCW AI’a gider ve doğrulanmış öneri uygulanmaya hazırdır.",
           "en": "Actual Buyer Log with isolated demo data: the rule request reaches LCW AI and a validated suggestion is ready to apply."
+        }
+      }
+    },
+    {
+      "id": "plm-sync-all-colours",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · PLM Sync",
+        "en": "Collection · PLM Sync"
+      },
+      "title": {
+        "tr": "PLM Sync modelin bütün renklerini getirir",
+        "en": "PLM Sync brings every colour of the model"
+      },
+      "body": {
+        "tr": "Aynı modelin her Koleksiyon renk satırı artık PLM’deki kendi rengiyle güncellenir; diğer renkler ilk rengin verisiyle karışmaz. PLM’de olup Koleksiyon’da olmayan renkler önizlemede ayrıca listelenir ve onayınızla modelin renk grubuna yeni satır olarak eklenir. Koleksiyon’daki rengi PLM’de bulunamayan satır artık hata vermez: model alanları güncellenir, renk korunur. Aynı eşleşme PLM Excel ve seçili model aktarımında da geçerlidir.",
+        "en": "Each Collection colour row of a model is now updated from its own colour in PLM; other colours no longer inherit the first colour’s data. Colours that exist in PLM but not in Collection are listed separately in the preview and, with your approval, added as new rows in the model’s colour group. A row whose colour is not found in PLM no longer reports an error: model fields are updated and the colour is kept. The same matching also applies to PLM Excel and selected-model imports."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-sync-new-colours.png",
+        "alt": {
+          "tr": "PLM Sync önizlemesinde Koleksiyon’da olmayan renkler ve ekleme seçeneği",
+          "en": "PLM Sync preview listing colours missing in Collection with the option to add them"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "plm-sync-retry-resume",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · PLM Sync",
+        "en": "Collection · PLM Sync"
+      },
+      "title": {
+        "tr": "PLM Sync hatada durmaz, kaldığı yerden yeniden dener",
+        "en": "PLM Sync keeps going and retries from where it stopped"
+      },
+      "body": {
+        "tr": "PLM verisi, BOM ve LCW AI adımlarında geçici bir hata işi durdurmaz: yalnız başarısız modeller, başarılı olanlar yeniden sorulmadan, artan beklemeyle en az 3 kez daha denenir; ilerleme PLM Operasyon Merkezi’nde görünür. Kalıcı olarak okunamayan model diğerlerini etkilemez ve ayrıca raporlanır. CoreNectum oturumu arka plan işi sırasında biterse iş durmaz; oturumu yenilemeniz beklenir ve iş kaldığı yerden sürer.",
+        "en": "A temporary error in the PLM data, BOM or LCW AI steps no longer stops the job: only the failed models are retried at least 3 more times with increasing waits, without re-reading the successful ones; progress is shown in the PLM Operations Center. A model that cannot be read permanently does not affect the others and is reported separately. If the CoreNectum session ends during the background job, the job waits for you to renew the session and continues where it stopped."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-sync-retry.png",
+        "alt": {
+          "tr": "PLM Operasyon Merkezi’nde yeniden denenen PLM BOM işi",
+          "en": "A PLM BOM job being retried in the PLM Operations Center"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
         }
       }
     }

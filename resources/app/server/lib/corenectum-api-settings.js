@@ -15,6 +15,10 @@
  */
 
 const tokens = new Map();
+/* Token kuşağı: her yeni/değişen yetkide artar. Sır değildir; yalnız bir 401'in
+   hangi yetkiyle alındığını ayırt etmek içindir (eşzamanlı isteklerde geç
+   dönen eski-token 401'i, tamamlanmış bir yenilemeyi beklemeye yol açmasın). */
+let tokenGeneration = 0;
 let desktopToken = '';
 let desktopTokenUpdatedAt = 0;
 let desktopStyleListTemplate = null;
@@ -183,6 +187,7 @@ function assertToken(normalized) {
 function saveToken(userId, token) {
   const normalized = assertToken(normalizeToken(token));
   tokens.set(userKey(userId), normalized);
+  tokenGeneration += 1;
   return publicSettings(userId);
 }
 function clearToken(userId) {
@@ -190,7 +195,9 @@ function clearToken(userId) {
   return publicSettings(userId);
 }
 function setDesktopToken(token) {
-  desktopToken = assertToken(normalizeToken(token));
+  const next = assertToken(normalizeToken(token));
+  if (next !== desktopToken) tokenGeneration += 1;
+  desktopToken = next;
   desktopTokenUpdatedAt = Date.now();
   return publicSettings('desktop');
 }
@@ -201,10 +208,11 @@ function clearDesktopToken() {
   return publicSettings('desktop');
 }
 function hasDesktopToken() { return Boolean(desktopToken); }
+function currentTokenGeneration() { return tokenGeneration; }
 
 module.exports = {
   normalizeToken, getToken, publicSettings, tokenExpiresAt, saveToken, clearToken,
-  setDesktopToken, clearDesktopToken, hasDesktopToken,
+  setDesktopToken, clearDesktopToken, hasDesktopToken, currentTokenGeneration,
   sanitizeStyleListTemplate, paginateStyleListTemplate,
   setDesktopStyleListTemplate, getStyleListTemplate, clearDesktopStyleListTemplate,
 };

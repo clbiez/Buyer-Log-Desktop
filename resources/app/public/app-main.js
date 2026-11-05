@@ -31304,12 +31304,14 @@ function kolApplyApprovedPlmUpdate(item){return window.BLCollectionModelGroups.k
    Eşleme/yazma HER ZAMAN kolBuildPlmImportPlan + kolApplyApprovedPlmUpdate'tir
    — PLM Excel importer'la TAM AYNI motor (bkz. kolPlmNormalizeDirectRecord).
 
-   GÜVENLİK KURALI: PLM Sync yalnız GÜNCELLER, hiçbir zaman YENİ Koleksiyon
-   modeli OLUŞTURMAZ ve hiçbir zaman bir Koleksiyon satırını SİLMEZ. Bu yüzden
-   kolBuildPlmImportPlan'ın "creates" ve "ambiguous" kovaları burada
-   KULLANILMAZ — Sync yalnız PLM ID'si zaten Koleksiyon'da olan satırlarla
-   ilgilenir; PLM'de bulunamayan bir kayıt "not found" olarak raporlanır,
-   Koleksiyon satırına DOKUNULMAZ (§21). */
+   GÜVENLİK KURALI: PLM Sync hiçbir zaman YENİ Koleksiyon modeli (yeni PLM ID)
+   OLUŞTURMAZ ve hiçbir zaman bir Koleksiyon satırını SİLMEZ. Sync yalnız PLM
+   ID'si zaten Koleksiyon'da olan satırlarla ilgilenir; PLM'de bulunamayan bir
+   kayıt "not found" olarak raporlanır, Koleksiyon satırına DOKUNULMAZ (§21).
+   Tek istisna (kullanıcı kararı): mevcut bir modelin PLM'de olup Koleksiyon'da
+   olmayan RENKLERİ önizlemede ayrıca listelenir ve yalnız kullanıcı onaylarsa
+   o modelin renk grubuna yeni renk satırı olarak eklenir. "ambiguous" kovası
+   burada yine kullanılmaz. */
 function kolPlmSyncCandidateRows(){
   return kolRows.filter(row=>norm(row&&row.plmId));
 }
@@ -31337,8 +31339,31 @@ async function kolPlmSyncFetchRecords(plmIds,button,language=''){
     if(span)span.textContent=appLang==='en'?'Checking PLM API connection…':'PLM API bağlantısı kontrol ediliyor…';
     if(!await ensureCoreNectumApiConnection())return null;
     if(span)span.textContent=appLang==='en'?`Getting ${plmIds.length} model(s) from PLM…`:`${plmIds.length} model PLM'den alınıyor…`;
-    return kolPlmWatchBomJob(await plmJsonRequest('/api/plm-sync/fetch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plmIds,bomMode:'background',language:language==='tr'?'tr':language==='en'?'en':''})}));
+    return kolPlmWatchBomJob(await kolPlmFetchWithRetry({plmIds,bomMode:'background',language:language==='tr'?'tr':language==='en'?'en':''},span));
   } finally { stopProgress(); if(span)span.textContent=old; }
+}
+/* Kullanıcı kararı: PLM verisi alınırken geçici bir hata (ağ, zaman aşımı,
+   CoreNectum 5xx) işi durdurmaz; istek en az 3 kez daha, artan beklemeyle
+   denenir. Oturum hatası plmJsonRequest'in mevcut oturum kurtarmasından geçer;
+   iptal ve doğrulama hataları yeniden denenmez. */
+const KOL_PLM_FETCH_RETRIES=3,KOL_PLM_FETCH_RETRY_DELAYS_MS=[2000,5000,10000];
+function kolPlmTransientFetchError(error){
+  const code=String(error&&error.code||'');
+  if(['PLM_JOB_CANCELLED','VALIDATION_ERROR','PLM_ID_REQUIRED','CORENECTUM_SELECTED_ITEMS_EMPTY','CORENECTUM_STYLE_LIST_TAB_MISSING','CORENECTUM_STYLE_LIST_TAB_OTHER_PROFILE','BROWSER_PROFILE_UNBOUND'].includes(code))return false;
+  // Oturum hatasında plmJsonRequest kurtarmayı zaten denedi; giriş penceresi tekrar tekrar açılmaz.
+  return !coreNectumAuthenticationError(error);
+}
+async function kolPlmFetchWithRetry(body,span){
+  let lastError=null;
+  for(let attempt=0;attempt<=KOL_PLM_FETCH_RETRIES;attempt+=1){
+    if(attempt){
+      if(span)span.textContent=appLang==='en'?`PLM error · retrying (${attempt}/${KOL_PLM_FETCH_RETRIES})…`:`PLM hatası · yeniden deneniyor (${attempt}/${KOL_PLM_FETCH_RETRIES})…`;
+      await new Promise(resolve=>setTimeout(resolve,KOL_PLM_FETCH_RETRY_DELAYS_MS[Math.min(attempt-1,KOL_PLM_FETCH_RETRY_DELAYS_MS.length-1)]));
+    }
+    try{return await plmJsonRequest('/api/plm-sync/fetch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
+    catch(error){lastError=error;if(!kolPlmTransientFetchError(error))throw error;}
+  }
+  throw lastError;
 }
 /* İki fazlı PLM Sync: alan önizlemesi BOM/LCW AI'ı beklemez. Sunucu kalan
    BOM + AI analizini bir arka plan işinde (PLM Operasyon Merkezi'nde görünür)
@@ -31361,6 +31386,7 @@ function kolPlmWatchBomJob(fetchResult){
     }
     showToast((appLang==='en'?`PLM BOM finished for ${total} model(s) · Artwork Detail refreshed`:`PLM BOM ${total} model için tamamlandı · Artwork Detayı güncellendi`)+failText+'.',{icon:false,duration:9000});
   };
+  let authPrompted=false;
   const tick=async()=>{
     let job=null;
     try{
@@ -31370,6 +31396,15 @@ function kolPlmWatchBomJob(fetchResult){
       job=data&&data.job||null;
     }catch(_){}
     if(job&&!job.running)return finish(job);
+    /* İş CoreNectum oturumunun yenilenmesini bekliyor: oturum kurtarması
+       burada bir kez başlatılır; yeni yetki gelince iş kaldığı yerden sürer. */
+    if(job&&job.waitingAuth&&!authPrompted){
+      authPrompted=true;
+      showToast(appLang==='en'?'CoreNectum session expired during PLM BOM. Renew the session; the job will continue where it stopped.':'PLM BOM sırasında CoreNectum oturumu sona erdi. Oturumu yenileyin; iş kaldığı yerden sürecek.',{icon:false,duration:9000});
+      if(coreNectumDesktopAuthAvailable())runCoreNectumAutoAuth({interactive:true,force:true}).catch(()=>{});
+      else openCoreNectumApiSettings({required:true}).catch(()=>{});
+    }
+    if(job&&!job.waitingAuth)authPrompted=false;
     if(Date.now()-startedAt>KOL_PLM_BOM_WATCH_MAX_MS)return;
     setTimeout(()=>{void tick();},KOL_PLM_BOM_POLL_MS);
   };
@@ -31390,7 +31425,7 @@ async function kolPlmFetchSelectedRecords(button,language=''){
        preflight'ı (/browser/prepare) burada özellikle çağrılmaz. */
     if(!await ensureCoreNectumApiConnection())return null;
     if(span)span.textContent=appLang==='en'?'Reading selections from the open PLM tab…':'Açık PLM sekmesindeki seçimler okunuyor…';
-    return kolPlmWatchBomJob(await plmJsonRequest('/api/plm-sync/fetch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({selectedOnly:true,existingBrowserOnly:true,bomMode:'background',language:language==='tr'?'tr':language==='en'?'en':''})}));
+    return kolPlmWatchBomJob(await kolPlmFetchWithRetry({selectedOnly:true,existingBrowserOnly:true,bomMode:'background',language:language==='tr'?'tr':language==='en'?'en':''},span));
   } finally { stopProgress(); if(span)span.textContent=old; }
 }
 const KOL_PLM_DIRECT_MAPPED_FIELDS=['plmId','modelKod','specialCode','seasonRaw','magRaw','mmygRaw','buyingGroup','categoryRaw','lineRaw','fabric','fit','colourCode','colour'];
@@ -31422,6 +31457,7 @@ async function importSelectedKolPlmModels(button,{downloadFile=false,language=''
     created=kolLinkImportedColourVariants(created);
     if(created.length)kolRows=[...created,...kolRows];
     kolSelected=new Set([...created.map(row=>row.id),...decisions.approved.map(item=>item.target.id)]);
+    kolPlmJoinColourRowsToModels(kolPlmNewColourRowIds(created));
     saveKolRows();renderKol();renderCP();renderOrders();
     kolFabricCardsAfterImport([...created,...decisions.approved.map(item=>item.target)]);
     const teachable=translated.translationInfo?.reviewedMappings||[];
@@ -32276,6 +32312,7 @@ async function kolPlmListImportRun(button,config,{quietWhenEmpty=false}={}){
   created=kolLinkImportedColourVariants(created);
   if(created.length)kolRows=[...created,...kolRows];
   kolSelected=new Set([...created.map(row=>row.id),...decisions.approved.map(item=>item.target.id)]);
+  kolPlmJoinColourRowsToModels(kolPlmNewColourRowIds(created));
   saveKolRows();renderKol();renderCP();renderOrders();
   kolFabricCardsAfterImport([...created,...decisions.approved.map(item=>item.target)]);
   const teachable=translated.translationInfo?.reviewedMappings||[];
@@ -32321,25 +32358,87 @@ window.BLPlmListImportFlow={open:openKolPlmListImport,run:kolPlmListImportRun,pe
    fetchResult.failed hangisinin PLM'de bulunamadığını söyler. İkisinde de
    yoksa (ağ/parse hatası PLM tarafında sessiz kaldıysa) "error" sayılır —
    hiçbir model sessizce kaybolmaz (§22). */
+/* Eşleşme RENK SATIRI bazındadır: aynı PLM ID'nin her Koleksiyon renk satırı
+   PLM'deki kendi rengiyle karşılaştırılır (eskiden PLM ID başına tek eşleşme
+   tutuluyor, diğer renk satırları ilk rengin verisine bağlanıyordu).
+   - Rengi PLM'de olmayan satır hata değildir: model düzeyindeki alanları
+     (renk dışı) PLM'den güncellenir ve "PLM'de olmayan renk" olarak raporlanır.
+   - PLM'de olup Koleksiyon'da olmayan renkler yeni renk satırı ADAYIDIR;
+     yalnız önizlemede kullanıcı onaylarsa eklenir. PLM Sync hiçbir zaman yeni
+     MODEL (yeni PLM ID) oluşturmaz ve satır silmez. */
+const KOL_PLM_COLOUR_FIELDS=new Set(['colourCode','colour']);
+function kolPlmSyncModelLevelItem(row,parsed,knownByKey){
+  const changes=[];
+  PLM_MANAGED_FIELDS().forEach(fieldKey=>{
+    if(KOL_PLM_COLOUR_FIELDS.has(fieldKey))return;
+    const to=kolImportReadField(parsed,fieldKey);if(!to)return;
+    const from=kolImportReadField(row,fieldKey);if(from!==to)changes.push({key:fieldKey,label:kolImportFieldLabel(fieldKey,knownByKey||{}),from,to});
+  });
+  return {target:row,parsed,changes,hasImage:false,matchedByPlm:true,colourMissing:true};
+}
 function kolPlmSyncBuildSummary(targetRows,parsedRows,fetchResult){
   const plan=kolBuildPlmImportPlan(parsedRows);
-  const byPlm=new Map();
-  plan.existing.forEach(item=>{const key=kolPlmNormalizeId(item.target&&item.target.plmId);if(key&&!byPlm.has(key))byPlm.set(key,item);});
+  const byTarget=new Map();
+  plan.existing.forEach(item=>{const id=item.target&&item.target.id;if(id!=null&&!byTarget.has(id))byTarget.set(id,item);});
+  const parsedByPlm=new Map();
+  (parsedRows||[]).forEach(parsed=>{const key=kolPlmNormalizeId(parsed&&parsed.plmId);if(!key)return;if(!parsedByPlm.has(key))parsedByPlm.set(key,[]);parsedByPlm.get(key).push(parsed);});
   const notFoundPlm=new Set((fetchResult.failed||[]).map(item=>kolPlmNormalizeId(item&&item.plmId)));
-  const changed=[],unchanged=[],notFound=[],errors=[];
+  const changed=[],unchanged=[],notFound=[],errors=[],colourMissing=[];
   targetRows.forEach(row=>{
     const key=kolPlmNormalizeId(row.plmId);
-    const item=byPlm.get(key);
+    const item=byTarget.get(row.id);
     if(item){(item.changes.length?changed:unchanged).push(item);return;}
+    const candidates=parsedByPlm.get(key)||[];
+    if(candidates.length){
+      const modelItem=kolPlmSyncModelLevelItem(row,candidates[0],plan.knownByKey);
+      if(norm(row.colourCode||row.colour))colourMissing.push({plmId:row.plmId,modelKod:row.modelKod,colourCode:norm(row.colourCode),colour:norm(row.colour)});
+      (modelItem.changes.length?changed:unchanged).push(modelItem);return;
+    }
     if(notFoundPlm.has(key)){notFound.push({plmId:row.plmId,modelKod:row.modelKod});return;}
     errors.push({plmId:row.plmId,modelKod:row.modelKod,error:appLang==='en'?'No PLM response for this model.':'Bu model için PLM yanıtı alınamadı.'});
   });
-  return {checked:targetRows.length,changed,unchanged,notFound,errors};
+  const targetPlm=new Set(targetRows.map(row=>kolPlmNormalizeId(row.plmId)).filter(Boolean));
+  const newColours=plan.creates.filter(parsed=>parsed&&parsed._plmNewColour&&targetPlm.has(kolPlmNormalizeId(parsed.plmId)));
+  return {checked:targetRows.length,changed,unchanged,notFound,errors,colourMissing,newColours};
 }
-// PLM Sync çalıştıktan sonra her hedef satıra bırakılan iz (§17/18). Bugün
-// tabloda ayrı bir kolon açılmıyor ama veri modeli scheduler/Automation
-// Studio tarafından ("Never synced / Up to date / Needs refresh / Sync
-// failed") ileride kullanılabilecek şekilde HAZIR tutulur.
+/* Onaylanan yeni renkler, Excel/seçili içe aktarmayla aynı yeni satır adımından
+   geçer ve mevcut modelin renk grubuna kullanıcı "modelleri birleştir"
+   işleminin kullandığı aynı mergeGroups yoluyla bağlanır. */
+function kolPlmSyncAddNewColours(newColours){
+  if(!Array.isArray(newColours)||!newColours.length)return [];
+  let created=newColours.map(parsed=>{const row={...parsed};delete row._plmNewColour;row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;return kolApplyNewModelDefaults(migrateKolRow(row));});
+  kolRows=[...kolRows,...created];
+  kolPlmJoinColourRowsToModels(created.map(row=>row.id));
+  const ids=new Set(created.map(row=>row.id));
+  return kolRows.filter(row=>ids.has(row.id));
+}
+/* Mevcut bir modelin yeni renk satırlarını o modelin renk grubuna bağlar.
+   mergeGroups satırları KOPYALAR: çağıran, bu adımdan sonra eski satır
+   referanslarına yazmamalıdır (kayıttan hemen önce çağrılır). */
+function kolPlmJoinColourRowsToModels(rowIds){
+  const wanted=new Set((rowIds||[]).map(String));
+  if(!wanted.size)return;
+  // Yeni satırlar önce kendi model kimliklerini alır; birleştirme yalnız
+  // gruplanmış satırlar arasında çalışır.
+  kolRows=kolNormalizeModelGroups(kolRows);
+  const api=window.BLCollectionModelGroups;
+  const byPlm=new Map();
+  kolRows.forEach(row=>{if(!wanted.has(String(row.id)))return;const key=kolPlmNormalizeId(row.plmId);if(!key)return;if(!byPlm.has(key))byPlm.set(key,[]);byPlm.get(key).push(row.id);});
+  byPlm.forEach((ids,key)=>{
+    const createdIds=new Set(ids.map(String));
+    const siblings=kolRows.filter(row=>kolPlmNormalizeId(row.plmId)===key&&!createdIds.has(String(row.id)));
+    const anchor=siblings.find(row=>row.modelGroupRole==='parent')||siblings[0];
+    if(!anchor||!api?.mergeGroups)return;
+    // Model düzeyindeki Buyer Log değerleri (fiyatlama, bütçe ayı…) mevcut modelden gelir.
+    if(api.inheritModelValues){
+      const baseline=kolApplyNewModelDefaults(migrateKolRow({id:0}));
+      kolRows.filter(row=>createdIds.has(String(row.id))).forEach(row=>api.inheritModelValues(row,anchor,kolRows,{baseline,keep:PLM_MANAGED_FIELDS()}));
+    }
+    const result=api.mergeGroups(kolRows,[anchor.id,...ids],anchor.id);
+    if(result&&result.changed)kolRows=kolNormalizeModelGroups(result.rows);
+  });
+}
+function kolPlmNewColourRowIds(rows){return (rows||[]).filter(row=>row&&row._plmNewColour).map(row=>{delete row._plmNewColour;return row.id;});}
 function kolPlmSyncStampStatus(targetRows,summary,{applied}){
   const now=new Date().toISOString();
   const changedIds=new Set(summary.changed.map(item=>item.target.id));
@@ -32496,17 +32595,21 @@ function showPlmSyncPreview(mode,summary){
       <div class="plmImportBody">
         ${summary.changed.length?`<h4>${escapeHtml(en?'Changes to apply':'Uygulanacak değişiklikler')}</h4>${modelRows}`
           :`<div class="plmExistingNotice">${escapeHtml(en?'No field changes were found.':'Alan değişikliği bulunamadı.')}</div>`}
+        ${(summary.newColours||[]).length?`<h4>${escapeHtml(en?'Colours in PLM that are missing in Collection':'PLM’de olup Koleksiyon’da olmayan renkler')}</h4>
+          <label class="plmSyncNewColours"><input type="checkbox" data-plmsync-newcolours checked> ${escapeHtml(en?`Add ${summary.newColours.length} colour row(s) to their existing models`:`${summary.newColours.length} renk satırını mevcut modellerine ekle`)}</label>
+          <div class="muted">${escapeHtml(summary.newColours.map(item=>`PLM ${item.plmId} · ${item.colour||item.colourCode}${item.colour&&item.colourCode?` (${item.colourCode})`:''}`).join(' · '))}</div>`:''}
+        ${(summary.colourMissing||[]).length?`<h4>${escapeHtml(en?'Collection colours not found in PLM':'Koleksiyon’da olup PLM’de bulunmayan renkler')}</h4><div class="muted">${escapeHtml((en?'Model fields are still updated; the colour is kept. ':'Model alanları yine güncellenir; renk korunur. ')+summary.colourMissing.map(item=>`PLM ${item.plmId} · ${item.colour||item.colourCode}`).join(' · '))}</div>`:''}
         ${summary.notFound.length?`<h4>${escapeHtml(en?'PLM record not found':'PLM kaydı bulunamadı')}</h4><div class="muted">${escapeHtml(summary.notFound.map(item=>item.plmId).join(', '))}</div>`:''}
         ${summary.errors.length?`<h4>${escapeHtml(en?'Errors':'Hatalar')}</h4><div class="muted">${escapeHtml(summary.errors.map(item=>`${item.plmId}: ${item.error}`).join(' · '))}</div>`:''}
       </div>
-      <div class="verHistFoot"><button type="button" class="tbtn" data-plmsyncact="cancel">${escapeHtml(en?'Cancel':'Vazgeç')}</button>${summary.changed.length?`<button type="button" class="tbtn primary" data-plmsyncact="apply">${escapeHtml(en?`Apply ${summary.changed.length} update(s)`:`${summary.changed.length} güncellemeyi uygula`)}</button>`:''}</div>
+      <div class="verHistFoot"><button type="button" class="tbtn" data-plmsyncact="cancel">${escapeHtml(en?'Cancel':'Vazgeç')}</button>${summary.changed.length||(summary.newColours||[]).length?`<button type="button" class="tbtn primary" data-plmsyncact="apply">${escapeHtml(summary.changed.length?(en?`Apply ${summary.changed.length} update(s)`:`${summary.changed.length} güncellemeyi uygula`):(en?'Apply':'Uygula'))}</button>`:''}</div>
     </div>`;
     document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
     let settled=false;
     const key=event=>{if(event.key==='Escape')finish(false);};
-    const finish=ok=>{if(settled)return;settled=true;document.removeEventListener('keydown',key);modal.remove();resolve(ok);};
+    const finish=ok=>{if(settled)return;settled=true;const addColours=Boolean(modal.querySelector('[data-plmsync-newcolours]')?.checked);document.removeEventListener('keydown',key);modal.remove();resolve(ok?{ok:true,addColours}:false);};
     modal.addEventListener('click',event=>{const btn=event.target.closest('[data-plmsyncact]');if(btn)finish(btn.dataset.plmsyncact==='apply');else if(event.target===modal)finish(false);});
     document.addEventListener('keydown',key);
   });
@@ -32569,7 +32672,7 @@ async function kolPlmSyncRun(mode,button,options={}){
       summary=kolPlmSyncFilterSummaryByColumns(summary,choice.keys);
     }
   }
-  if(!summary.changed.length){
+  if(!summary.changed.length&&!(summary.newColours||[]).length){
     kolPlmSyncStampStatus(targetRows,summary,{applied:false});
     // Alan değişikliği olmasa bile görseller eksik olabilir — tek buton
     // vaadi gereği görsel adımı yine de çalışır.
@@ -32585,11 +32688,12 @@ async function kolPlmSyncRun(mode,button,options={}){
   kolPushUndo();
   summary.changed.forEach(kolApplyApprovedPlmUpdate);
   kolPlmSyncStampStatus(targetRows,summary,{applied:true});
+  const addedColours=approved.addColours?kolPlmSyncAddNewColours(summary.newColours):[];
   // PLM Excel importer'ıyla BİREBİR AYNI kayıt/çizim adımları — davranış
   // farkı oluşmasın diye burada FAZLADAN bir adım (ör. fiyat kuralı
   // yeniden hesaplama) eklenmez.
   saveKolRows();renderKol();renderCP();renderOrders();
-  kolFabricCardsAfterImport(summary.changed.map(item=>item.target));
+  kolFabricCardsAfterImport([...summary.changed.map(item=>item.target),...addedColours]);
   // Görseller alan yazımından SONRA çekilir: yazma hızlı ve geri alınabilir
   // (kolPushUndo) iken görsel indirme uzun sürebilir; kullanıcı tabloyu
   // güncellenmiş halde görürken indirme devam eder.
@@ -32597,8 +32701,9 @@ async function kolPlmSyncRun(mode,button,options={}){
   const message=appLang==='en'
     ?`${summary.checked} checked · ${summary.changed.length} updated · ${summary.unchanged.length} unchanged${summary.notFound.length?` · ${summary.notFound.length} not found`:''}${summary.errors.length?` · ${summary.errors.length} error(s)`:''}.`
     :`${summary.checked} kontrol edildi · ${summary.changed.length} güncellendi · ${summary.unchanged.length} değişmedi${summary.notFound.length?` · ${summary.notFound.length} bulunamadı`:''}${summary.errors.length?` · ${summary.errors.length} hata`:''}.`;
-  showToast(message+kolPlmSyncArtworkSuffix(artworkChanged)+kolPlmSyncBomSuffix(fetchResult)+kolPlmSyncImageSuffix(images),{icon:false,duration:12000});
-  return {ok:true,applied:summary.changed.length,summary,images};
+  const colourSuffix=addedColours.length?(appLang==='en'?` · ${addedColours.length} new colour row(s) added`:` · ${addedColours.length} yeni renk satırı eklendi`):'';
+  showToast(message+colourSuffix+kolPlmSyncArtworkSuffix(artworkChanged)+kolPlmSyncBomSuffix(fetchResult)+kolPlmSyncImageSuffix(images),{icon:false,duration:12000});
+  return {ok:true,applied:summary.changed.length,addedColours:addedColours.length,summary,images};
 }
 async function kolPlmSyncRefreshArtwork(){
   try{const api=window.BLCollectionArtworkDetail;return api&&typeof api.refresh==='function'?(Number(await api.refresh())||0):0;}catch(_){return 0;}
@@ -32706,6 +32811,7 @@ async function importKolPlmExcelFile(file){
       delete pair.row._plmImage;delete pair.row._plmImportRow;
     }
     kolSelected=new Set([...created.map(row=>row.id),...decisions.approved.map(item=>item.target.id)]);
+    kolPlmJoinColourRowsToModels(kolPlmNewColourRowIds(created));
     saveKolRows();renderKol();renderCP();renderOrders();
     kolFabricCardsAfterImport([...created,...decisions.approved.map(item=>item.target)]);
     // Legacy test anchor: await kolPlmSaveApprovedTranslations(translationReview.mappings)
