@@ -35,21 +35,20 @@ test('country exclusion recomputes season, same-month and cumulative references 
  assert.ok(Math.abs(details.reduce((sum,row)=>sum+row._referenceWeight,0)-100)<1e-9,'weights use the filtered quantity');
 });
 
-test('buyer rules: own rule wins over the all-buyers default and codes are normalised',()=>{
- const rules=[{buyer:'*',countries:['tr']},{buyer:'Demo Buyer',countries:['eg','ma','MA']}];
- assert.deepEqual(Engine.countryRuleFor(rules,' demo buyer '),['EG','MA']);
- assert.deepEqual(Engine.countryRuleFor(rules,'Other Buyer'),['TR']);
- assert.deepEqual(Engine.countryRuleFor(rules,''),['TR']);
- assert.deepEqual(Engine.countryRuleFor([],'Demo Buyer'),[]);
- assert.deepEqual(Engine.countryList(new Set([' ma ','',null,'EG'])),['EG','MA']);
+test('country codes are normalised once for rules and requests',()=>{
+ assert.deepEqual(Engine.countryList(new Set([' ma ','',null,'EG','eg'])),['EG','MA']);
+ assert.deepEqual(Engine.countryList('MA'),[]);
 });
 
-function harness(stored){
- const storage=new Map(stored?[[ 'lcw.koleksiyon.analytics.lflCountryRules.v1',JSON.stringify(stored)]]:[]),requests=[];
- const context={window:null,appLang:'tr',state:{currentUser:{id:'buyer'}},document:{body:{dataset:{activeTab:'overview'}}},BLCollectionLflEngine:Engine,BLCanonicalFields:require('../public/canonical-fields'),
-  BLStorage:{getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,String(value))},
+// The owner rule comes from app-main (owner workspace data); here a minimal owner map stands in.
+function harness(owners={}){
+ const requests=[],saves=[],state={mode:'single',ownerId:'buyer-a',canEdit:true,owners:Object.fromEntries(Object.entries(owners).map(([id,list])=>[id,[...list]]))};
+ const names={'buyer-a':'Demo Buyer A','buyer-b':'Demo Buyer B'};
+ const context={window:null,appLang:'tr',state:{currentUser:{id:'buyer-a'}},document:{body:{dataset:{activeTab:'overview'}}},BLCollectionLflEngine:Engine,BLCanonicalFields:require('../public/canonical-fields'),
   escapeHtml:value=>String(value).replace(/[&<>"']/g,'_'),kolFormatMoneyDisplay:value=>Number(value).toFixed(2),
   kolEffectiveValue:(row,key)=>row[key],kolSuppFob:row=>({price:Number(row.targetPrice),source:'target'}),
+  kolLflCountryRuleFor:row=>{const ownerId=state.mode==='multi'?row._collectionOwnerId:state.ownerId;return {ownerId,ownerName:names[ownerId]||ownerId,countries:state.owners[ownerId]||[],canEdit:state.mode!=='multi'&&state.canEdit};},
+  kolSetLflCountryExclusions:countries=>{if(state.mode==='multi'||!state.canEdit)return false;state.owners[state.ownerId]=[...countries];saves.push([...countries]);return true;},
   fetch:async(url,options)=>{
    const references=Engine.buildReferences(source);
    if(url.startsWith('/api/collection-lfl-reference'))return {ok:true,json:async()=>({version:'v1',references})};
@@ -58,29 +57,95 @@ function harness(stored){
    return {ok:true,json:async()=>({version:'v1',reference:Engine.excludeCountries(stored,body.excludedCountries),rows:Engine.referenceDetails(source,stored,body.excludedCountries)})};
   }};
  context.window=context;vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/collection-lfl.js'),'utf8'),context);
- return {ui:context.BLCollectionLfl,context,storage,requests};
+ return {ui:context.BLCollectionLfl,context,state,requests,saves};
 }
+const ALL=(1000+2000+8000)/400;
 
-test('Collection cells, footer and detail requests follow the row buyer country rule',async()=>{
- const {ui,context,storage,requests}=harness({rules:[{buyer:'Demo Buyer',countries:['MA','EG']}]});await ui.ensure();
- const mine={id:1,...candidate,buyer:'Demo Buyer',targetPrice:12},other={id:2,...candidate,buyer:'Other Buyer',targetPrice:12};
- assert.equal(ui.model(mine,'season').reference.average,10);
- assert.equal(ui.model(other,'season').reference.average,(1000+2000+8000)/400,'buyers without a rule keep every country');
- assert.match(ui.model(mine,'season').detail,/Hariç ülkeler: .*EG.*MA/);
- assert.equal(ui.model(mine,'impact').impact.before,10);
- assert.equal(ui.footerSummaries([mine],['season']).get('season').weightedBefore,10);
- const report=await ui.detailReport(mine,'season');
- assert.deepEqual([...requests[0].excludedCountries],['EG','MA']);assert.deepEqual(report.rows.map(row=>row.orderCode),['DEMO-1']);
- const owned={id:3,...candidate,_collectionOwnerName:'Demo Buyer',targetPrice:12};
- assert.equal(ui.model(owned,'season').reference.average,10,'shared workspaces fall back to the owner name');
- const html=ui.drawer(mine);
- assert.match(html,/Ülke filtresi/);assert.match(html,/data-cpd-lfl-country="MA" checked/);assert.match(html,/data-cpd-lfl-country="CN"(?! checked)/);
- assert.equal(ui.setCountryRule('Demo Buyer',[]),true);
- assert.equal(JSON.parse(storage.get('lcw.koleksiyon.analytics.lflCountryRules.v1')).rules.length,0);
- assert.equal(ui.model(mine,'season').reference.average,(1000+2000+8000)/400);
- assert.equal(ui.setCountryRule('*',['CN']),true);
- assert.equal(ui.model(other,'season').reference.average,(2000+8000)/300,'the all-buyers default applies without a buyer rule');
- context.appLang='en';assert.match(ui.drawer(other),/Country filter/);assert.match(ui.model(other,'season').detail,/Excluded countries/);
+test('cells, footer and details follow the row owner rule, not the viewer',async()=>{
+ const {ui,context,state,requests}=harness({'buyer-a':['MA','EG']});await ui.ensure();
+ const row={id:1,...candidate,targetPrice:12};
+ assert.equal(ui.model(row,'season').reference.average,10);
+ assert.match(ui.model(row,'season').detail,/Hariç ülkeler: .*EG.*MA/);
+ assert.equal(ui.model(row,'impact').impact.before,10);
+ assert.equal(ui.footerSummaries([row],['season']).get('season').weightedBefore,10);
+ const report=await ui.detailReport(row,'season');
+ assert.deepEqual([...requests[0].excludedCountries],['EG','MA']);assert.deepEqual(report.rows.map(item=>item.orderCode),['DEMO-1']);
+ // Buyer A views buyer B's models: B's rule (none) applies, not A's own rule.
+ state.mode='multi';
+ const ofB={id:-1,...candidate,targetPrice:12,_collectionOwnerId:'buyer-b',_collectionOwnerName:'Demo Buyer B'},ofA={...ofB,id:-2,_collectionOwnerId:'buyer-a'};
+ assert.equal(ui.model(ofB,'season').reference.average,ALL);
+ assert.equal(ui.model(ofA,'season').reference.average,10);
+ assert.equal(ui.footerSummaries([ofA,ofB],['season']).get('season').weightedBefore,(10*100+ALL*100)/200,'each row uses its owner rule');
+ const html=ui.drawer(ofB);
+ assert.match(html,/Buyer: Demo Buyer B/);assert.doesNotMatch(html,/data-cpd-lfl-country-add/,'another buyer rule is view-only');assert.match(html,/yalnız görüntülenir/);
+ context.appLang='en';assert.match(ui.drawer(ofA),/Country filter/);assert.match(ui.model(ofA,'season').detail,/Excluded countries/);
+});
+
+test('drawer offers a country picker and chips for the owner rule only',async()=>{
+ const {ui,state,saves}=harness({'buyer-a':['MA']});await ui.ensure();
+ const row={id:1,...candidate,targetPrice:12};
+ let html=ui.drawer(row);
+ assert.match(html,/data-cpd-lfl-country-add/);
+ assert.match(html,/<option value="CN">/);assert.match(html,/<option value="EG">/);assert.doesNotMatch(html,/<option value="MA">/,'selected countries are not offered again');
+ assert.match(html,/data-cpd-lfl-country-remove="MA"/);assert.doesNotMatch(html,/data-cpd-lfl-country-remove="CN"/,'no list of unselected countries');
+ const select={value:'EG',closest:selector=>selector==='[data-cpd-lfl-country-add]'?select:null};
+ assert.equal(ui.onDrawerChange(select,row),true);assert.deepEqual(saves.at(-1),['EG','MA']);
+ assert.equal(ui.model(row,'season').reference.average,10);
+ const remove={dataset:{cpdLflCountryRemove:'MA'}},target={closest:selector=>selector==='[data-cpd-lfl-country-remove]'?remove:null};
+ assert.equal(ui.onDrawerClick(target,row),true);assert.deepEqual(saves.at(-1),['EG']);
+ state.canEdit=false;html=ui.drawer(row);
+ assert.doesNotMatch(html,/data-cpd-lfl-country-add|data-cpd-lfl-country-remove/);
+ assert.equal(ui.onDrawerClick(target,row),true);assert.deepEqual(saves.at(-1),['EG'],'view-only access never writes');
+});
+
+test('owner workspace keeps the rule across full saves, row saves, structure changes and replication merges',async()=>{
+ const os=require('node:os'),root=fs.mkdtempSync(path.join(os.tmpdir(),'collection-country-ws-'));
+ const previous={server:process.env.BUYER_LOG_SERVER_DATA_ROOT,local:process.env.BUYER_LOG_LOCAL_DATA_ROOT,data:process.env.BUYER_LOG_DATA_ROOT};
+ process.env.BUYER_LOG_SERVER_DATA_ROOT=path.join(root,'server');process.env.BUYER_LOG_LOCAL_DATA_ROOT=path.join(root,'local');process.env.BUYER_LOG_DATA_ROOT=path.join(root,'app');
+ const clear=()=>Object.keys(require.cache).filter(key=>key.includes(`${path.sep}server${path.sep}`)).forEach(key=>delete require.cache[key]);
+ clear();
+ try{
+  const store=require('../server/lib/collection-workspaces');
+  let saved=store.saveWorkspace('demo-owner',{rows:[{id:1,modelKod:'DEMO'}],lflCountryExclusions:['eg','MA','bad code','MA']});
+  assert.deepEqual(saved.lflCountryExclusions,['EG','MA']);
+  saved=store.saveWorkspace('demo-owner',{rows:[{id:1,modelKod:'DEMO 2'}]});
+  assert.deepEqual(saved.lflCountryExclusions,['EG','MA'],'an older full save without the field keeps the rule');
+  saved=(await store.saveWorkspaceAsync('demo-owner',{rows:saved.rows})).saved;
+  assert.deepEqual(saved.lflCountryExclusions,['EG','MA']);
+  let result=await store.applyRowChangesAsync('demo-owner',{upserts:[{...saved.rows[0],modelKod:'DEMO 3'}]});
+  assert.deepEqual(result.saved.lflCountryExclusions,['EG','MA'],'row edits keep the rule');
+  const before=result.saved._revision;
+  result=await store.applyRowChangesAsync('demo-owner',{structure:{lflCountryExclusions:['MA']}});
+  assert.equal(result.changed,true);assert.equal(result.saved._revision,before+1);assert.equal(result.rowPatches,null,'viewers reload the owner structure');
+  assert.deepEqual(store.loadWorkspace('demo-owner').lflCountryExclusions,['MA']);
+  result=await store.applyRowChangesAsync('demo-owner',{structure:{manufacturers:['DEMO MFR']}});
+  assert.deepEqual(result.saved.lflCountryExclusions,['MA'],'an older structure save without the field keeps the rule');
+  assert.equal(store.diffWorkspaceRows({rows:[],lflCountryExclusions:[]},{rows:[],lflCountryExclusions:['MA']}),null);
+  const {mergeCollectionWorkspaces:mergeWorkspaces}=require('../server/lib/collection-replication');
+  {
+   const base={rows:[],lflCountryExclusions:['MA']};
+   assert.deepEqual(mergeWorkspaces(base,{rows:[],lflCountryExclusions:['EG','MA']},{rows:[],lflCountryExclusions:['MA']}).workspace.lflCountryExclusions,['EG','MA'],'local change wins over an unchanged remote');
+   assert.deepEqual(mergeWorkspaces(base,{rows:[],lflCountryExclusions:['MA']},{rows:[],lflCountryExclusions:[]}).workspace.lflCountryExclusions,[],'remote change is adopted');
+  }
+ }finally{
+  for(const [key,name] of [['server','BUYER_LOG_SERVER_DATA_ROOT'],['local','BUYER_LOG_LOCAL_DATA_ROOT'],['data','BUYER_LOG_DATA_ROOT']]){if(previous[key]==null)delete process.env[name];else process.env[name]=previous[key];}
+  clear();fs.rmSync(root,{recursive:true,force:true});
+ }
+});
+
+test('app-main persists the owner rule through every Collection structure path',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
+ for(const pattern of [
+  /function kolStructureSignature\(\)\{\s*return JSON\.stringify\(\{[^}]*lflCountryExclusions:kolLflCountryExclusions/,
+  /change\.structure=\{[^}]*lflCountryExclusions:kolLflCountryExclusions/,
+  /function kolWorkspacePayload\(\)\{return \{[^}]*lflCountryExclusions:kolLflCountryExclusions/,
+  /statusCatalog:kolStatusEntries\(\),lflCountryExclusions:kolLflCountryExclusions\|\|\[\],nextId:kolNextId,\s*updatedAt/,
+  /kolLflCountryExclusions=kolNormalizeLflCountryExclusions\(choose\('lflCountryExclusions'\)\)/,
+  /kolLflCountryExclusions=kolNormalizeLflCountryExclusions\(choose\(localStructure\.lflCountryExclusions/,
+  /kolLflCountryExclusions=kolNormalizeLflCountryExclusions\(workspace&&workspace\.lflCountryExclusions\)/,
+  /kolLflCountryExclusionsByOwner\.set\(String\(owner\.id\|\|''\),kolNormalizeLflCountryExclusions\(workspace\.lflCountryExclusions\)\)/,
+ ])assert.match(source,pattern);
+ assert.match(source,/function kolLflCountryRuleFor\(row\)\{\s*if\(kolWorkspaceMode==='multi'\)\{[^\n]*canEdit:false\}/,'multi-buyer view is read-only and per owner');
 });
 
 test('saved schema-4 summaries stay available and upgrade only from the same complete source revision',async()=>{

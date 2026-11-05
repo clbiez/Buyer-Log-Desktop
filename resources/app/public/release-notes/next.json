@@ -23,20 +23,20 @@
         "en": "Buyer country filter for Previous Season, LFL and Season Impact"
       },
       "body": {
-        "tr": "Fiyat çekmecesindeki yeni Ülke filtresi ile her buyer çalışmadığı üretim ülkelerini (ör. Fas, Mısır) Previous Season, LFL ve Sezon Etkisi hesaplarından çıkarabilir. Kural satırın buyer'ına göre uygulanır; buyer kuralı yoksa “Tüm buyerlar” varsayılanı kullanılır. Hücreler, alt toplam satırı, Excel çıktısı ve sipariş detayları aynı filtreyi izler; hariç ülkeler açıklamada gösterilir. Seçim hesabınızla saklanır, kaynak veri değişmez. Türkiye siparişleri TRY olduğu için bu USD hesaplarına zaten dahil değildir.",
-        "en": "With the new Country filter in the price drawer, each buyer can exclude production countries they do not work with (e.g. Morocco, Egypt) from Previous Season, LFL and Season Impact. The rule follows the row's buyer; without a buyer rule the “All buyers” default applies. Cells, the footer row, Excel export and order details follow the same filter, and excluded countries are listed in the explanation. The choice is saved with your account and source data is not changed. Türkiye orders are in TRY and are never part of these USD calculations."
+        "tr": "Fiyat çekmecesindeki yeni Ülke filtresinde her buyer çalışmadığı üretim ülkelerini (ör. Fas, Mısır) listeden seçerek Previous Season, LFL ve Sezon Etkisi hesaplarından çıkarır; seçilen ülkeler etiket olarak görünür ve tek tıkla kaldırılır. Kural buyer'ın Koleksiyon'una aittir: başka bir buyer bu modellere bakarken, Çoklu görünüm dahil, hesaplar model sahibinin kuralına göre yapılır ve kural yalnız görüntülenir. Hücreler, alt toplam satırı, Excel çıktısı ve sipariş detayları aynı kuralı izler. Kaynak veri değişmez; Türkiye siparişleri TRY olduğu için bu USD hesaplarına zaten dahil değildir.",
+        "en": "In the new Country filter in the price drawer, each buyer picks the production countries they do not work with (e.g. Morocco, Egypt) to exclude them from Previous Season, LFL and Season Impact; selected countries appear as tags and can be removed with one click. The rule belongs to the buyer's Collection: when another buyer views these models, including the Multi view, calculations follow the model owner's rule, which is view-only for them. Cells, the footer row, Excel export and order details follow the same rule. Source data is not changed; Türkiye orders are in TRY and are never part of these USD calculations."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "collection-lfl-country-filter.png",
         "alt": {
-          "tr": "Fas ve Mısır hariç tutulduktan sonra yeniden hesaplanan Previous Season ve LFL değerleri ile Ülke filtresi",
-          "en": "Previous Season and LFL recalculated after excluding Morocco and Egypt, with the Country filter"
+          "tr": "Fas ve Mısır hariç tutulduktan sonra yeniden hesaplanan Previous Season ve LFL değerleri, ülke seçici ve etiketler",
+          "en": "Previous Season and LFL recalculated after excluding Morocco and Egypt, with the country picker and tags"
         },
         "caption": {
-          "tr": "Gerçek Buyer Log, izole demo verisi: DEMO BUYER için Fas ve Mısır hesaplardan çıkarıldı.",
-          "en": "Actual Buyer Log with isolated demo data: Morocco and Egypt are excluded for DEMO BUYER."
+          "tr": "Gerçek Buyer Log, izole demo verisi: DEMO BUYER A Koleksiyonu için Fas ve Mısır hesaplardan çıkarıldı.",
+          "en": "Actual Buyer Log with isolated demo data: Morocco and Egypt are excluded for DEMO BUYER A's Collection."
         }
       }
     },

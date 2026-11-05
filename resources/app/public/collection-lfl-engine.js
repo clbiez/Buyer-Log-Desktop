@@ -54,13 +54,6 @@
       ...(reference.throughMonth?{firstMonth:firstMonths[0]||reference.firstMonth,undatedCount:sum('undatedCount')}:{}),
       average:weightedTotal/quantity,byCountry:kept,excludedCountries:codes.filter(code=>reference.byCountry.some(item=>item.country===code))};
   }
-  // Rules: [{buyer:'*'|name,countries:[codes]}]. A buyer-specific rule wins over the all-buyers default.
-  function countryRuleFor(rules,buyer){
-    const list=Array.isArray(rules)?rules:[],name=normalize(buyer);
-    const own=name?list.find(rule=>rule&&rule.buyer!=='*'&&normalize(rule.buyer)===name):null;
-    const rule=own||list.find(rule=>rule&&rule.buyer==='*');
-    return rule?countryList(rule.countries):[];
-  }
   function buildReferences(rows){
     const buckets=new Map();
     for(const row of rows||[]){
@@ -167,5 +160,5 @@
     const weightedBefore=quantity?beforeValue/quantity:null,weightedAfter=pairedQuantity?afterValue/pairedQuantity:null,pairedBefore=pairedQuantity?pairedBeforeValue/pairedQuantity:null;
     return {weightedBefore,weightedAfter,arithmeticBefore:beforeCount?beforeTotal/beforeCount:null,arithmeticAfter:afterCount?afterTotal/afterCount:null,percent:changePercent(weightedAfter,pairedBefore),quantity,pairedQuantity,usedRows,pairedRows,totalRows:(items||[]).length};
   }
-  return {buildReferences,reference,referenceDetails,excludeCountries,countryRuleFor,countryList,previousSeason,changePercent,budgetMonth,previousMonth,createSeasonTimelines,seasonImpact,summarizeComparisons};
+  return {buildReferences,reference,referenceDetails,excludeCountries,countryList,previousSeason,changePercent,budgetMonth,previousMonth,createSeasonTimelines,seasonImpact,summarizeComparisons};
 });

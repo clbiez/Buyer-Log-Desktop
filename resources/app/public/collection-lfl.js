@@ -6,33 +6,24 @@
   const T=(tr,english)=>en()?english:tr;
   const esc=value=>escapeHtml(String(value??''));
   const identity=()=>{const user=typeof state!=='undefined'?state.currentUser:global.BL_USER_CONTEXT;return JSON.stringify([user?.id,user?.iamRevision,user?.dataScope,user?.scopes]);};
-  function session(){const id=identity();if(current?.id!==id){current={id,status:'idle',index:new Map(),detailRows:new Map(),pending:null,countries:[]};rulesCache=null;}return current;}
+  function session(){const id=identity();if(current?.id!==id){current={id,status:'idle',index:new Map(),detailRows:new Map(),pending:null,countries:[]};}return current;}
   /* BUYER ÜLKE KURALI: her buyer kendi çalışmadığı üretim ülkelerini Previous Season, LFL ve
-     Sezon Etkisi referanslarından çıkarır. Kural kişisel tercihtir (hesapla eşitlenir); kaynak
-     veri ve kalıcı referans özetleri değişmez, hariç tutma ülke kırılımı üzerinden hesaplanır. */
-  const RULES_KEY='lcw.koleksiyon.analytics.lflCountryRules.v1';
-  let rulesCache=null;
-  function countryRules(){
-    if(rulesCache)return rulesCache;
-    let parsed=[];
-    try{const raw=JSON.parse(global.BLStorage?.getItem(RULES_KEY)||'null');parsed=Array.isArray(raw?.rules)?raw.rules:[];}catch(_){parsed=[];}
-    rulesCache=parsed.filter(rule=>rule&&typeof rule.buyer==='string'&&rule.buyer.trim()).map(rule=>({buyer:rule.buyer==='*'?'*':rule.buyer.trim(),countries:Engine.countryList(rule.countries)})).filter(rule=>rule.countries.length);
-    return rulesCache;
+     Sezon Etkisi referanslarından çıkarır. Kural satırın sahibinin (buyer) Koleksiyon verisidir:
+     başka bir buyer bu modellere bakarken de sahibin kuralı uygulanır. Kaynak veri ve kalıcı
+     referans özetleri değişmez; hariç tutma ülke kırılımı üzerinden hesaplanır. */
+  const NO_RULE=Object.freeze({ownerId:'',ownerName:'',countries:[],canEdit:false});
+  function ruleFor(row){
+    const rule=typeof global.kolLflCountryRuleFor==='function'?global.kolLflCountryRuleFor(row):null;
+    return rule?{...NO_RULE,...rule,countries:Engine.countryList(rule.countries)}:NO_RULE;
   }
-  const ruleId=buyer=>buyer==='*'?'*':String(buyer||'').trim().toLocaleUpperCase('tr-TR');
-  function setCountryRule(buyer,countries){
-    const name=buyer==='*'?'*':String(buyer||'').trim();if(!name)return false;
-    const codes=Engine.countryList(countries),rules=countryRules().filter(rule=>ruleId(rule.buyer)!==ruleId(name));
-    if(codes.length)rules.push({buyer:name,countries:codes});
-    try{global.BLStorage?.setItem(RULES_KEY,JSON.stringify({rules}));}catch(_){return false;}
-    rulesCache=rules;
+  function setOwnerCountries(countries){
+    if(typeof global.kolSetLflCountryExclusions!=='function'||global.kolSetLflCountryExclusions(Engine.countryList(countries))===false)return false;
     session().detailRows=new Map();
     repaint();
     return true;
   }
-  const rowBuyer=(row,read=kolEffectiveValue)=>String(read(row,'buyer')||row?._collectionOwnerName||'').trim();
   // Saved pre-country summaries cannot be filtered; they are shown unchanged until references are refreshed.
-  const excludedFor=(row,read)=>session().countryAware?Engine.countryRuleFor(countryRules(),rowBuyer(row,read)):[];
+  const excludedFor=row=>session().countryAware?ruleFor(row).countries:[];
   const countryNames=new Map();
   function countryName(code){
     if(!code)return T('Bilinmiyor','Unknown');
@@ -80,7 +71,7 @@
   }
   function projectRow(row,read=kolEffectiveValue){
     const projected={...row};
-    for(const key of ['season','mag','urunTipi','inStoreMonth','quantity','targetPrice','confirmedManufacturer','buyer'])projected[key]=read(row,key);
+    for(const key of ['season','mag','urunTipi','inStoreMonth','quantity','targetPrice','confirmedManufacturer'])projected[key]=read(row,key);
     return projected;
   }
   function sampleWarning(reference){
@@ -164,7 +155,7 @@
       const projected=projectRow(row,read);let price;
       if(groups){const pricing=read(row,'pricing')||{},selected=groups.confirmedPricing(projected,pricing,groups.kolParseMoneyNum)||groups.bestPricing(pricing,groups.kolParseMoneyNum),target=groups.kolParseMoneyNum(projected.targetPrice);price=selected?.price??(Number.isFinite(target)&&target>0?target:null);}
       else price=kolSuppFob(projected)?.price;
-      return {row:projected,price,quantity:projected.quantity,excluded:excludedFor(row,read)};
+      return {row:projected,price,quantity:projected.quantity,excluded:excludedFor(row)};
     });
     for(const mode of new Set(modes)){
       const observations=items.map(item=>{
@@ -259,30 +250,31 @@
       note:m.detail+(mode==='impact'?' '+T('Tablo yerleşmiş ASAS siparişlerini gösterir; model yalnız simülasyondur, sipariş satırlarına eklenmez.','The table shows placed ASAS orders; the model is a simulation and is not added to the order rows.') :''),
       rows:data.rows,columns,defaultVisible:columns.slice(0,12).map(col=>col.key),exactDefaultVisible:true,viewPresets:{extended:columns.map(col=>col.key)},images:true,fileName:'Collection_'+label+'_Orders'};
   }
-  let ruleScope='buyer';
   function countryRuleHtml(row){
-    const buyer=rowBuyer(row),scope=buyer&&ruleScope==='buyer'?'buyer':'*',target=scope==='buyer'?buyer:'*';
-    const own=countryRules().find(rule=>ruleId(rule.buyer)===ruleId(target)),selected=new Set(own?own.countries:[]);
-    const active=session(),codes=[...new Set([...(active.countries||[]),...selected])].sort((a,b)=>countryName(a).localeCompare(countryName(b),en()?'en':'tr'));
-    const applied=excludedFor(row),fallback=scope==='buyer'&&!own&&applied.length;
-    const options=`<option value="buyer"${scope==='buyer'?' selected':''}${buyer?'':' disabled'}>${esc(buyer?T(`Bu buyer: ${buyer}`,`This buyer: ${buyer}`):T('Satırda buyer yok','No buyer on this row'))}</option><option value="*"${scope==='*'?' selected':''}>${esc(T('Tüm buyerlar (varsayılan)','All buyers (default)'))}</option>`;
-    const boxes=codes.length?codes.map(code=>`<label class="cpdCountry"><input type="checkbox" data-cpd-lfl-country="${esc(code)}"${selected.has(code)?' checked':''}> ${esc(countryName(code))}</label>`).join(''):`<p class="cpdEmpty">${esc(active.status==='ready'?T('Referanslarda üretim ülkesi bulunamadı.','No production countries were found in the references.'):T('Ülkeler referanslar yüklenince listelenir.','Countries are listed once references load.'))}</p>`;
+    const rule=ruleFor(row),active=session(),selected=new Set(rule.countries),byName=(a,b)=>countryName(a).localeCompare(countryName(b),en()?'en':'tr');
+    const available=(active.countries||[]).filter(code=>!selected.has(code)).sort(byName);
+    const owner=rule.ownerName||rule.ownerId||'—';
+    const chips=rule.countries.length?`<ul class="cpdCountryChips">${[...rule.countries].sort(byName).map(code=>`<li class="cpdCountryChip"><span>${esc(countryName(code))}</span>${rule.canEdit?`<button type="button" class="tbtn" data-cpd-lfl-country-remove="${esc(code)}" aria-label="${esc(T(`Kaldır: ${countryName(code)}`,`Remove: ${countryName(code)}`))}">×</button>`:''}</li>`).join('')}</ul>`:`<p class="cpdEmpty">${esc(T('Hariç ülke yok; tüm ülkeler hesaba katılıyor.','No excluded countries; all countries are included.'))}</p>`;
+    const picker=rule.canEdit?`<label class="cpdInput"><span>${esc(T('Hesaba katılmayacak ülke','Country to exclude'))}</span><select data-cpd-lfl-country-add${available.length?'':' disabled'}><option value="">${esc(available.length?T('Ülke seçin…','Choose a country…'):active.status==='ready'?T('Eklenecek ülke yok','No country to add'):T('Ülkeler yükleniyor…','Loading countries…'))}</option>${available.map(code=>`<option value="${esc(code)}">${esc(countryName(code))}</option>`).join('')}</select></label>`:'';
     const legacy=active.status==='ready'&&!active.countryAware;
-    const status=legacy?T('Kayıtlı referanslar ülke kırılımı içermiyor; filtrenin uygulanması için Referansları yenile düğmesini kullanın.','Saved references have no country breakdown; use Refresh references to apply the filter.'):applied.length?exclusionText(applied)+(fallback?' · '+T('Tüm buyerlar kuralından','From the all-buyers rule'):''):T('Tüm ülkeler hesaba katılıyor.','All countries are included.');
-    return `<div class="cpdSection cpdCountryRule"><header><h4>${esc(T('Ülke filtresi','Country filter'))}</h4><span>${esc(T('Previous Season · LFL · Sezon Etkisi','Previous Season · LFL · Season Impact'))}</span></header>
-      <label class="cpdInput"><span>${esc(T('Kural kapsamı','Rule scope'))}</span><select data-cpd-lfl-country-scope>${options}</select></label>
-      <fieldset class="cpdCountryList"><legend>${esc(T('Hesaba katılmayacak üretim ülkeleri','Production countries to exclude'))}</legend>${boxes}</fieldset>
-      <p class="cpdNote" role="status">${esc(status)}</p>
-      <p class="cpdNote">${esc(T('Seçim bu buyer\'ın tüm satırlarına anında uygulanır ve hesabınızla saklanır. Buyer kuralı yoksa “Tüm buyerlar” kuralı kullanılır. Türkiye siparişleri TRY olduğu için bu USD hesaplarına zaten girmez.','The choice applies immediately to all rows of this buyer and is saved with your account. Without a buyer rule, the “All buyers” rule is used. Türkiye orders are in TRY and are never part of these USD calculations.'))}</p></div>`;
+    const status=legacy?T('Kayıtlı referanslar ülke kırılımı içermiyor; filtrenin uygulanması için Referansları yenile düğmesini kullanın.','Saved references have no country breakdown; use Refresh references to apply the filter.'):'';
+    const note=rule.canEdit
+      ?T(`Kural ${owner} buyer'ına aittir ve bu Koleksiyon'un tüm modellerine uygulanır; bu modellere bakan diğer kullanıcılar da aynı kurala göre görür. Türkiye siparişleri TRY olduğu için bu USD hesaplarına zaten girmez.`,`The rule belongs to buyer ${owner} and applies to every model in this Collection; other users viewing these models see the same rule. Türkiye orders are in TRY and are never part of these USD calculations.`)
+      :T(`Kural ${owner} buyer'ına aittir; yalnız görüntülenir. Hesaplar bu buyer'ın kuralına göre yapılır.`,`The rule belongs to buyer ${owner} and is view-only here. Calculations follow this buyer's rule.`);
+    return `<div class="cpdSection cpdCountryRule"><header><h4>${esc(T('Ülke filtresi','Country filter'))}</h4><span>${esc(T(`Buyer: ${owner}`,`Buyer: ${owner}`))}</span></header>
+      ${picker}${chips}${status?`<p class="cpdNote" role="status">${esc(status)}</p>`:''}
+      <p class="cpdNote">${esc(note)}</p></div>`;
   }
   function onDrawerChange(target,row){
-    const scope=target.closest('[data-cpd-lfl-country-scope]');
-    if(scope){ruleScope=scope.value==='*'?'*':'buyer';return true;}
-    const box=target.closest('[data-cpd-lfl-country]');if(!box)return false;
-    const panel=box.closest('.cpdCountryRule'),buyer=rowBuyer(row),scopeValue=panel?.querySelector('[data-cpd-lfl-country-scope]')?.value;
-    const name=scopeValue==='buyer'&&buyer?buyer:'*';
-    const codes=[...(panel?panel.querySelectorAll('[data-cpd-lfl-country]:checked'):[])].map(input=>input.dataset.cpdLflCountry);
-    if(!setCountryRule(name,codes))global.showToast?.(T('Ülke filtresi kaydedilemedi.','Could not save the country filter.'));
+    const select=target.closest('[data-cpd-lfl-country-add]');if(!select)return false;
+    const code=select.value,rule=ruleFor(row);
+    if(code&&rule.canEdit&&!setOwnerCountries([...rule.countries,code]))global.showToast?.(T('Ülke filtresi kaydedilemedi.','Could not save the country filter.'));
+    return true;
+  }
+  function onDrawerClick(target,row){
+    const button=target.closest('[data-cpd-lfl-country-remove]');if(!button)return false;
+    const rule=ruleFor(row),code=button.dataset.cpdLflCountryRemove;
+    if(rule.canEdit&&!setOwnerCountries(rule.countries.filter(item=>item!==code)))global.showToast?.(T('Ülke filtresi kaydedilemedi.','Could not save the country filter.'));
     return true;
   }
   function drawer(row){
@@ -295,5 +287,5 @@
       :T('Referanslar kalıcı saklanır. Güncellemek için Referansları yenile düğmesini kullanın.','References are saved permanently. Use Refresh references to update them.');
     return sections+countryRuleHtml(row)+`<p class="cpdNote" role="status">${esc(note)}</p><div class="cpdActions"><button type="button" class="tbtn" data-cpd-lfl-refresh${active.pending||active.status==='loading'?' disabled':''}>${esc(T('Referansları yenile','Refresh references'))}</button></div>`;
   }
-  global.BLCollectionLfl={ensure,invalidate,model,cell,combinedCell,combinedText,modeForKey,drawer,onDrawerChange,countryRules,setCountryRule,detailReport,footerSummaries,footerCells,text:(row,mode='month')=>model(row,mode).text};
+  global.BLCollectionLfl={ensure,invalidate,model,cell,combinedCell,combinedText,modeForKey,drawer,onDrawerChange,onDrawerClick,detailReport,footerSummaries,footerCells,text:(row,mode='month')=>model(row,mode).text};
 })(window);

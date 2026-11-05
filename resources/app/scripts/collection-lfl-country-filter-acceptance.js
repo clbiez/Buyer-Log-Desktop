@@ -46,21 +46,31 @@ async function upload(data){const workbook=XLSX.utils.book_new();XLSX.utils.book
  await page.getByText(/Buyer Log'a devam et|Continue to Buyer Log/).click({timeout:4000}).catch(()=>{});
  await page.waitForFunction(()=>!document.getElementById('blBootGuard'),{timeout:60000});
  await page.evaluate(async()=>{switchTab('koleksiyon');await window.BLPerf.ensureFeature('collectionTools');});
- await page.evaluate(()=>{
-  applyLanguage('tr');kolRows=[{id:91001,plmId:'DEMO-001',modelKod:'DEMO LFL MODEL',buyer:'DEMO BUYER',season:'S7',mag:'CU4E',urunTipi:'K.KOL LİSANS',inStoreMonth:'FEBRUARY 2027',country:'CHINA',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'BLUE'}];
+ const demoRow={id:91001,plmId:'DEMO-001',modelKod:'DEMO LFL MODEL',buyer:'DEMO BUYER',season:'S7',mag:'CU4E',urunTipi:'K.KOL LİSANS',inStoreMonth:'FEBRUARY 2027',country:'CHINA',quantity:'200',targetPrice:'14',pricing:{},durum:'',colour:'BLUE'};
+ const show=async rows=>page.evaluate(rows=>{
+  applyLanguage('tr');if(rows)kolRows=rows;
+  // Demo owner name only: release visuals never show a real account name.
+  kolWorkspaceList=kolWorkspaceList.map(item=>item.ownerId==='moderator'?{...item,ownerName:'DEMO BUYER A'}:item);
   kolColOrder=kolDefaultDisplayOrder();kolHiddenCols=new Set(kolColDefs().map(col=>col.k).filter(key=>!['modelKod','buyer','season','mag','urunTipi','targetPrice','inStoreMonth'].includes(key)));kolPictureHidden=true;kolColFilters={};kolHealthState.filter='';renderKol();
- });
+ },rows);
+ await show([demoRow]);
  const summary='td[data-key="__referenceSummary__"]';
  await page.waitForFunction(selector=>document.querySelector(selector)?.textContent.includes('22,50'),summary);
  await page.locator(summary).dblclick();
- await page.locator('.cpdDrawer [data-cpd-lfl-country="MA"]').check();
- await page.locator('.cpdDrawer [data-cpd-lfl-country="EG"]').check();
+ const picker='.cpdDrawer [data-cpd-lfl-country-add]';
+ const offered=await page.locator(picker+' option').evaluateAll(options=>options.map(option=>option.value).filter(Boolean).sort());
+ assert.deepEqual(offered,['CN','EG','MA'],'only production countries from the references are offered');
+ await page.locator(picker).selectOption('MA');
+ await page.locator(picker).selectOption('EG');
  await page.waitForFunction(selector=>document.querySelector(selector)?.textContent.includes('10,00'),summary);
  const text=await page.locator('.cpdDrawer').innerText();
  assert.match(text,/Hariç ülkeler: .*Mısır.*Fas|Hariç ülkeler: .*Fas.*Mısır/);assert.match(text,/\$10,00/);
- const saved=await page.evaluate(()=>JSON.parse(BLStorage.getItem('lcw.koleksiyon.analytics.lflCountryRules.v1')));
- assert.deepEqual(saved,{rules:[{buyer:'DEMO BUYER',countries:['EG','MA']}]});
- console.log('PASS buyer rule recalculates Collection references and is stored per user');
+ assert.deepEqual(await page.locator(picker+' option').evaluateAll(options=>options.map(option=>option.value).filter(Boolean)),['CN'],'selected countries leave the picker');
+ assert.equal(await page.locator('.cpdDrawer [data-cpd-lfl-country-remove]').count(),2);
+ let workspace=null;
+ for(let i=0;i<50;i++){workspace=(await api('/api/collection-workspaces/moderator')).workspace;if(JSON.stringify(workspace.lflCountryExclusions)==='["EG","MA"]')break;await new Promise(resolve=>setTimeout(resolve,200));}
+ assert.deepEqual(workspace.lflCountryExclusions,['EG','MA'],'the rule is saved in the owner Collection workspace');
+ console.log('PASS owner rule recalculates Collection references and is saved in the owner workspace');
  await page.evaluate(()=>{
   const body=document.querySelector('.cpdBody'),section=document.querySelector('[data-cpd-lfl-details="season"]').closest('.cpdSection');
   body.scrollTop+=section.getBoundingClientRect().top-body.getBoundingClientRect().top-8;
@@ -69,10 +79,24 @@ async function upload(data){const workbook=XLSX.utils.book_new();XLSX.utils.book
  await page.screenshot({path:path.join(assets,'collection-lfl-country-filter.png')});
  await page.evaluate(()=>{applyLanguage('en');BLCollectionPriceDrawer.refresh({force:true});});
  const english=await page.locator('.cpdDrawer').innerText();
- assert.match(english,/Country filter/);assert.match(english,/Excluded countries/);
- await page.locator('.cpdDrawer [data-cpd-lfl-country="MA"]').uncheck();
- await page.locator('.cpdDrawer [data-cpd-lfl-country="EG"]').uncheck();
- await page.waitForFunction(selector=>document.querySelector(selector)?.textContent.includes('22.50')||document.querySelector(selector)?.textContent.includes('22,50'),summary);
+ assert.match(english,/Country filter/);assert.match(english,/Excluded countries/);assert.match(english,/Buyer: DEMO BUYER A/);
+ await page.evaluate(()=>BLCollectionPriceDrawer.close?.());await page.keyboard.press('Escape').catch(()=>{});
+ // Another buyer's models: every row follows its own owner's rule and the drawer is view-only.
+ await page.evaluate(row=>{
+  kolApplyCombinedWorkspaces([
+   {owner:{id:'moderator',displayName:'DEMO BUYER A'},workspace:{rows:[{...row,id:1,modelKod:'MODEL OF A'}],lflCountryExclusions:['EG','MA']}},
+   {owner:{id:'demo-buyer-b',displayName:'DEMO BUYER B'},workspace:{rows:[{...row,id:2,modelKod:'MODEL OF B'}],lflCountryExclusions:[]}},
+  ]);
+ },demoRow);
+ await show(null);
+ const cellText=async model=>page.evaluate(model=>{const tr=[...document.querySelectorAll('tr')].find(item=>item.textContent.includes(model));return tr?.querySelector('td[data-key="__referenceSummary__"]')?.textContent||'';},model);
+ await page.waitForFunction(()=>document.querySelectorAll('td[data-key="__referenceSummary__"]').length>=2);
+ assert.match(await cellText('MODEL OF A'),/10,00/);assert.match(await cellText('MODEL OF B'),/22,50/);
+ await page.locator('tr',{hasText:'MODEL OF B'}).locator(summary).dblclick();
+ const viewOnly=await page.locator('.cpdDrawer').innerText();
+ assert.match(viewOnly,/Buyer: DEMO BUYER B/);assert.match(viewOnly,/yalnız görüntülenir/);
+ assert.equal(await page.locator(picker).count(),0,'another buyer rule cannot be edited from the multi-buyer view');
+ console.log('PASS multi-buyer view applies each owner rule and keeps it view-only');
  assert.deepEqual(errors,[],'browser errors');
- console.log('PASS TR/EN drawer and clearing the rule restores all countries');console.log('Artifacts: '+root);
+ console.log('PASS TR/EN drawer');console.log('Artifacts: '+root);
 })().catch(error=>{console.error(error);console.error('Server log: '+path.join(root,'server.log'));process.exitCode=1;}).finally(async()=>{if(browser)await browser.close();if(server)await stop();fs.closeSync(log);});
