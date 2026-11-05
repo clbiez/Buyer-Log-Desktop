@@ -79,9 +79,12 @@ test('v9.34 <section>’a display veren kurallar biliniyor', () => {
     .map(match => match[1].trim());
   assert.deepEqual(granting.sort(), [
     '.blBulkBody section',
+    '.cpaPlainColumns>section',
     '.iamWizard>section',
     '.trFocusCenter section',
     'section',
     'section.active',
   ], 'section’a display veren kural kümesi değişti — CLAUDE.md’deki notu güncelleyin');
+  assert.match(readCss('cp-overview-assistant.css'), /\.cpaPlainColumns>section\{display:grid;/,
+    'Studio sections must explicitly override the global section display trap');
 });
