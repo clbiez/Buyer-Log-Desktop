@@ -133,7 +133,7 @@ test('Collection PLM SYNC (Model Details) force-refreshes Artwork Detail even wh
   const body = APP.slice(start, APP.indexOf('async function kolPlmSyncButtonRun(', start));
   const refresh = body.indexOf('kolPlmSyncRefreshArtwork()');
   assert.ok(refresh > body.indexOf('kolPlmSyncFetchRecords('), 'artwork refresh runs after the fetch wrote plm-bom.json');
-  assert.ok(refresh < body.indexOf('if(!summary.changed.length){'), 'refresh must not depend on Model Details field changes');
+  assert.ok(refresh < body.indexOf('if(!summary.changed.length&&!(summary.newColours||[]).length){'), 'refresh must not depend on Model Details field changes');
   assert.match(APP, /function kolPlmSyncRefreshArtwork\(\)\{[^]*?BLCollectionArtworkDetail[^]*?\.refresh\(\)/);
 });
 

@@ -194,6 +194,7 @@ test('iki fazlı PLM Sync alanları hemen döndürür; BOM arka plan işi olur v
     upsertPlmStyleLinks: () => ({ links: {} }),
     userAccess: { appendAudit() {} },
     plmJobs, withPlmJob,
+    bomAuthWait: { waitMs: 60, pollMs: 10 },
     agentBrowserConnector: {
       async collectCoreNectumStyleLinks(_owner, items, options) {
         connectorOptions = options;
@@ -208,8 +209,9 @@ test('iki fazlı PLM Sync alanları hemen döndürür; BOM arka plan işi olur v
   assert.equal(result.bom.requested, 0, 'Set Style olmayan modellerin BOM’u ön planda okunmaz');
   assert.ok(result.bomJob && result.bomJob.jobId, 'arka plan BOM işi başlatılır');
   assert.equal(result.bomJob.total, 2);
-  // Test ortamında CoreNectum yetkisi yok: arka plan işi çökmeden "başarısız" biter.
-  await new Promise(resolve => setTimeout(resolve, 50));
+  // Test ortamında CoreNectum yetkisi yok: iş önce oturum yenilemesini bekler,
+  // yeni yetki gelmezse çökmeden "başarısız" biter.
+  await new Promise(resolve => setTimeout(resolve, 300));
   const job = jobs.get(result.bomJob.jobId);
   assert.equal(job.kind, 'plm-bom');
   assert.equal(job.status, 'failed');
@@ -257,8 +259,8 @@ test('varsayılan (inline) fetch eski tek adımlı davranışı korur; arka plan
 
 test('Koleksiyon akışları arka plan BOM modunu ister ve işi izleyip Artwork’ü tazeler', () => {
   const app = read('public/app-main.js');
-  assert.match(app, /body:JSON\.stringify\(\{plmIds,bomMode:'background'/);
-  assert.match(app, /selectedOnly:true,existingBrowserOnly:true,bomMode:'background'/);
+  assert.match(app, /kolPlmFetchWithRetry\(\{plmIds,bomMode:'background'/);
+  assert.match(app, /kolPlmFetchWithRetry\(\{selectedOnly:true,existingBrowserOnly:true,bomMode:'background'/);
   assert.match(app, /function kolPlmWatchBomJob\(fetchResult\)/);
   assert.match(app, /\/api\/plm-jobs\/\$\{encodeURIComponent\(jobId\)\}/);
   assert.match(app, /BLCollectionArtworkDetail\?\.refresh\?\.\(\)/);

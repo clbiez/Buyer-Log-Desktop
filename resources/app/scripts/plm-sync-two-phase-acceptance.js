@@ -20,6 +20,11 @@ const jwtPart = value => Buffer.from(JSON.stringify(value)).toString('base64url'
 env.BUYER_LOG_CORENECTUM_BEARER_TOKEN = `${jwtPart({ alg: 'none' })}.${jwtPart({ exp: 1893456000, sub: 'demo' })}.demo-signature`;
 env.BL_DEMO_CORENECTUM_LOG = path.join(root, 'corenectum-calls.json');
 env.BL_DEMO_BOM_DELAY_MS = String(process.env.BL_DEMO_BOM_DELAY_MS || 2500);
+// İlk istekler bilerek 503 döner: iş durmamalı, kaldığı yerden yeniden denemeli.
+env.BL_DEMO_STYLE_LIST_FAIL_FIRST = '3';
+env.BL_DEMO_BOM_FAIL_FIRST = '0';
+env.BL_DEMO_BOM_FAIL_PLM = '4110';
+env.BL_DEMO_BOM_FAIL_PLM_TIMES = '4';
 env.NODE_OPTIONS = `${env.NODE_OPTIONS || ''} --require ${path.join(app, 'scripts', 'fixtures', 'corenectum-demo-mock.cjs')}`.trim();
 const ASSETS = path.join(app, 'public', 'release-notes', 'next-assets');
 fs.mkdirSync(ASSETS, { recursive: true });
@@ -74,11 +79,28 @@ async function bomJobs() { return (await (await api('/api/plm-jobs?scope=koleksi
   const previewMs = Date.now() - started;
   const runningAtPreview = (await bomJobs()).filter(job => job.running);
   assert.equal(runningAtPreview.length, 1, 'BOM arka plan işi önizleme açıkken sürer');
+  // Her demo modelin PLM'de 3 rengi var; Koleksiyon'daki tek renksiz satır ilk renge
+  // bağlanır, diğer 2 renk yeni renk satırı olarak önerilir.
+  const newColours = page.locator('#_plmSyncPreviewModal [data-plmsync-newcolours]');
+  assert.equal(await newColours.isChecked(), true);
+  assert.match(await page.locator('#_plmSyncPreviewModal').innerText(), new RegExp(`${CODES.length * 2} renk satırını mevcut modellerine ekle`));
+  await page.locator('#_plmSyncPreviewModal .plmSyncNewColours').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: path.join(ASSETS, 'plm-sync-new-colours.png') });
   await page.locator('#_plmSyncPreviewModal [data-plmsyncact="apply"]').click();
   console.log('step 2', Date.now() - started);
   const run = await page.evaluate(() => window.__plmRun);
   console.log('step 3', Date.now() - started);
   assert.equal(run.ok, true); assert.equal(run.applied, CODES.length, 'tüm modeller güncellendi');
+  assert.equal(run.addedColours, CODES.length * 2, 'eksik renkler eklendi');
+  const colourShape = await page.evaluate(() => {
+    const byPlm = new Map();
+    kolRows.forEach(row => { if (!byPlm.has(row.plmId)) byPlm.set(row.plmId, []); byPlm.get(row.plmId).push(row); });
+    return [...byPlm.values()].map(rows => ({ colours: rows.map(row => row.colourCode).sort().join(','), groups: new Set(rows.map(row => row.modelGroupId)).size }));
+  });
+  assert.equal(colourShape.length, CODES.length);
+  assert.ok(colourShape.every(item => item.colours === 'J0G,Q2K,Q6K' && item.groups === 1), JSON.stringify(colourShape.slice(0, 3)));
+  const failures = calls();
+  assert.equal(failures.failedStyleList, 3, 'Style List geçici hatası yeniden denenerek aşıldı');
   const fields = await page.evaluate(() => kolRows.map(row => ({ plmId: row.plmId, modelKod: row.modelKod, fabric: row.fabric })));
   assert.ok(fields.every(row => row.modelKod.startsWith('DEMO-') && /Cotton/.test(row.fabric)), JSON.stringify(fields.slice(0, 3)));
   await page.evaluate(() => window.BLPlmOps?.open?.());
@@ -89,9 +111,23 @@ async function bomJobs() { return (await (await api('/api/plm-jobs?scope=koleksi
   console.log('step 4', Date.now() - started);
 
   // Faz 2 biter → Artwork Detayı yerel BOM deposundan tazelenir.
-  for (let i = 0; i < 120 && (await bomJobs()).some(job => job.running); i++) await sleep(500);
+  let retryShot = false;
+  for (let i = 0; i < 240 && (await bomJobs()).some(job => job.running); i++) {
+    const current = (await bomJobs()).find(job => job.running);
+    if (!retryShot && current && /yeniden deneniyor/.test(current.phase || '')) {
+      retryShot = true;
+      await page.evaluate(() => window.BLPlmOps?.open?.());
+      await page.waitForFunction(() => /yeniden deneniyor/.test(document.getElementById('plmOpsPanel')?.innerText || ''), null, { timeout: 5000 });
+      await page.screenshot({ path: path.join(ASSETS, 'plm-sync-retry.png') });
+    }
+    await sleep(250);
+  }
+  assert.ok(retryShot, 'BOM yeniden deneme turu panelde görüldü');
   const finished = (await bomJobs())[0];
   assert.equal(finished.status, 'succeeded', JSON.stringify(finished));
+  assert.equal(finished.failureCount, 0, 'BOM geçici hatası kaldığı yerden yeniden denenerek aşıldı');
+  assert.equal(calls().failedBom, 4, 'tek modelin 4 hatası: HTTP denemeleri tükendi, yeniden deneme turunda okundu');
+  const bomBefore = calls().bom;
   const bomMs = Date.now() - started;
   console.log('bom finished', bomMs);
   await page.waitForFunction(() => kolRows.filter(row => String(row.artworkDetail || '').includes('Pigment')).length > 0, null, { timeout: 15000 });
@@ -116,6 +152,7 @@ async function bomJobs() { return (await (await api('/api/plm-jobs?scope=koleksi
     await sleep(250);
   }
   assert.ok(await page.evaluate(() => window.__plmRun2Done), 'ikinci çalıştırma tamamlandı');
+  assert.equal(await page.evaluate(() => kolRows.length), CODES.length * 3, 'ikinci çalıştırma yeni satır üretmez');
   console.log('step 5', Date.now() - started);
   await page.evaluate(() => window.BLPlmOps?.open?.());
   for (let i = 0; i < 60 && (await bomJobs()).find(item => item.id === job.id).running; i++) await sleep(250);
@@ -124,14 +161,14 @@ async function bomJobs() { return (await (await api('/api/plm-jobs?scope=koleksi
   const cancelled = (await bomJobs()).find(item => item.id === job.id);
   assert.equal(cancelled.status, 'cancelled', JSON.stringify(cancelled));
   assert.equal(afterCancel, atCancel, 'iptalden sonra yeni BOM isteği atılmadı');
-  assert.ok(afterCancel - CODES.length < CODES.length, 'ikinci çalıştırma bütün BOM’ları okumadan durdu');
-  assert.equal(cancelled.processed, afterCancel - CODES.length, 'panel yalnız gerçekten okunan modelleri işlenmiş sayar');
+  assert.ok(afterCancel - bomBefore < CODES.length, 'ikinci çalıştırma bütün BOM’ları okumadan durdu');
+  assert.equal(cancelled.processed, afterCancel - bomBefore, 'panel yalnız gerçekten okunan modelleri işlenmiş sayar');
   await page.waitForTimeout(600);
   await page.screenshot({ path: path.join(ASSETS, 'plm-sync-stop.png') });
   console.log('step 6', Date.now() - started);
 
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ ok: true, previewMs, bomMs, calls: calls(), secondRunBomCalls: afterCancel - CODES.length, models: CODES.length }));
+  console.log(JSON.stringify({ ok: true, previewMs, bomMs, calls: calls(), models: CODES.length, rows: CODES.length * 3 }));
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => {
   if (browser) await browser.close().catch(() => {});
   server.kill();

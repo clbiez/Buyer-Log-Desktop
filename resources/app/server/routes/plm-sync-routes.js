@@ -3,6 +3,30 @@
 const plmBomSync = require('../lib/plm-bom-sync');
 const plmBomStore = require('../lib/plm-bom-store');
 const setStyleApi = require('../lib/corenectum-set-style-api');
+const coreNectumApiSettings = require('../lib/corenectum-api-settings');
+
+/* Arka plan BOM işi oturum düşünce durmaz: istemci (iş izleyicisi) oturumu
+   yeniler, iş yeni yetkiyi görünce kaldığı yerden sürer. */
+const AUTH_WAIT_MS = 3 * 60 * 1000;
+const AUTH_POLL_MS = 1500;
+function waitForFreshToken(profile, job, { waitMs = AUTH_WAIT_MS, pollMs = AUTH_POLL_MS, language = '' } = {}) {
+  const failing = coreNectumApiSettings.getToken(profile.id);
+  job.report({ waitingAuth: true, phase: language === 'en' ? 'Waiting for the CoreNectum session to be renewed' : 'CoreNectum oturumunun yenilenmesi bekleniyor' });
+  const deadline = Date.now() + waitMs;
+  return new Promise(resolve => {
+    const tick = () => {
+      if (job.cancelled()) { job.report({ waitingAuth: false }); return resolve(false); }
+      const current = coreNectumApiSettings.getToken(profile.id);
+      if (current && current !== failing) {
+        job.report({ waitingAuth: false, phase: language === 'en' ? 'Reading PLM BOM' : 'PLM BOM okunuyor' });
+        return resolve(true);
+      }
+      if (Date.now() >= deadline) { job.report({ waitingAuth: false }); return resolve(false); }
+      setTimeout(tick, pollMs);
+    };
+    setTimeout(tick, pollMs);
+  });
+}
 
 /* Koleksiyon doğrudan PLM senkronu ve QTX route'ları
    server.js'ten birebir taşındı (davranış değişikliği yok). Kayıt, server.js'te
@@ -464,7 +488,7 @@ function createPlmFetchService(deps){
      ile izleyip bitince Artwork/Fabric projeksiyonunu tazeler. Kullanıcının
      düğme ilerlemesine (setModelOperationProgress) yazmaz; o alan o anda
      başka bir işleme ait olabilir. */
-  function startBackgroundBom(profile, records, { scope, language, allowAi, assertAuthority }) {
+  function startBackgroundBom(profile, records, { scope, language, allowAi, assertAuthority, authWait = deps.bomAuthWait }) {
     let jobId = '';
     const run = withPlmJob({ currentUser: profile }, {
       kind: 'plm-bom', scope, total: records.length,
@@ -475,6 +499,7 @@ function createPlmFetchService(deps){
       const result = await plmBomSync.syncPlmBoms(records, {
         ownerId: profile.id, assertAuthority, allowAi, language,
         isCancelled: job.cancelled,
+        waitForAuth: () => waitForFreshToken(profile, job, { language, ...(authWait || {}) }),
         onProgress: progress => job.report({
           phase: progress && progress.phase,
           processed: progress && progress.current,
@@ -501,3 +526,4 @@ function createPlmFetchService(deps){
   return {fetch};
 }
 module.exports.createPlmFetchService=createPlmFetchService;
+module.exports.waitForFreshToken=waitForFreshToken;

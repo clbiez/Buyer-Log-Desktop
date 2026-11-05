@@ -164,7 +164,7 @@ test('Koleksiyon PLM Sync alan değişikliği olmasa BİLE görsel adımını ç
   const end = APP.indexOf('async function kolPlmSyncButtonRun', start);
   const block = APP.slice(start, end);
   // "hepsi güncel" erken dönüş yolunda da görsel adımı var.
-  const earlyReturn = block.indexOf('if(!summary.changed.length){');
+  const earlyReturn = block.indexOf('if(!summary.changed.length&&!(summary.newColours||[]).length){');
   const imageInEarly = block.indexOf('kolPlmSyncImageStep', earlyReturn);
   assert.ok(earlyReturn >= 0 && imageInEarly > earlyReturn, 'erken dönüşte görsel adımı yok');
   // Görsel hatası alan güncellemesini geri aldırmamalı.

@@ -211,7 +211,7 @@ test('BOM fetch hatası daha önce saklanan başarılı kaydı silmez', async ()
   }]);
   const result = await bomSync.syncPlmBoms(
     [{ plmId: '2133719', styleId: '2538477' }],
-    { ownerId: 'u1', store, postJson: async () => { throw Object.assign(new Error('network'), { code: 'X' }); } }
+    { ownerId: 'u1', store, retryDelaysMs: [0], postJson: async () => { throw Object.assign(new Error('network'), { code: 'X' }); } }
   );
   assert.equal(result.failed.length, 1);
   assert.equal(result.entries.get('2133719').summary.includes('Ön: 1'), true);

@@ -443,6 +443,10 @@ function kolBuildPlmImportPlan(kolRows,parsedRows,helpers){
   });
 
   const existing=[],creates=[],ambiguous=[],inputDuplicates=[],seenInputPlm=new Set();
+  // Rengi olmayan tek Koleksiyon satırı yalnız PLM'nin İLK rengine bağlanır;
+  // aynı modelin diğer renkleri o satırı ezmez, yeni renk satırı adayıdır.
+  const claimedUncoloured=new Set();
+  const markNewColour=parsed=>{parsed._plmNewColour=true;creates.push(parsed);};
   (parsedRows||[]).forEach(parsed=>{
     const plm=kolPlmNormalizeId(parsed.plmId),key=kolImportMatchKey(parsed.plmId,parsed.modelKod);
     // Aynı PLM ID PLM Excel içinde birden fazla kez geçerse Koleksiyon'da ikinci bir
@@ -453,11 +457,17 @@ function kolBuildPlmImportPlan(kolRows,parsedRows,helpers){
     const plmTargets=plm?(byPlm.get(plm)||[]):[];
     let target=null;
     if(plmTargets.length===1){
-      const only=plmTargets[0];
-      if(!parsedColour||!kolPlmImportColourKey(only)||kolPlmImportColourKey(only)===parsedColour)target=only;
+      const only=plmTargets[0],onlyColour=kolPlmImportColourKey(only);
+      if(!onlyColour&&parsedColour){
+        if(claimedUncoloured.has(only)){markNewColour(parsed);return;}
+        claimedUncoloured.add(only);target=only;
+      }else if(!parsedColour||!onlyColour||onlyColour===parsedColour)target=only;
+      else {markNewColour(parsed);return;} // aynı modelin Koleksiyon'da olmayan rengi
     }else if(plmTargets.length>1){
       const colourMatches=parsedColour?plmTargets.filter(row=>kolPlmImportColourKey(row)===parsedColour):[];
       if(colourMatches.length===1)target=colourMatches[0];
+      // Her satırın rengi belli ve bu renk hiçbirinde yok: tahmin değil, yeni renk.
+      else if(parsedColour&&!colourMatches.length&&plmTargets.every(row=>kolPlmImportColourKey(row))){markNewColour(parsed);return;}
       else {
       const modelKey=turknorm(norm(parsed.modelKod));
       const exact=plmTargets.filter(row=>turknorm(norm(row.modelKod))===modelKey);
