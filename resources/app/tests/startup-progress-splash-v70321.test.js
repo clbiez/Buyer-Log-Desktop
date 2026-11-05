@@ -25,11 +25,12 @@ const splash = fs.readFileSync(path.join(ELECTRON, 'splash.html'), 'utf8');
 const launcherSource = fs.readFileSync(path.join(ELECTRON, 'launcher-core.js'), 'utf8');
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
-function launcherNotice(state) {
+function launcherNotice(state, { savedLanguage = '', locale = '' } = {}) {
   const notices = [];
   const app = Object.assign(new EventEmitter(), {
     isPackaged: true, setPath() {}, requestSingleInstanceLock: () => true,
     whenReady: () => Promise.resolve(), exit() {}, quit() {}, relaunch() {},
+    getPreferredSystemLanguages: () => (locale ? [locale] : []),
   });
   class Notice extends EventEmitter {
     constructor(options) { super(); this.options = options; this.webContents = new EventEmitter(); notices.push(this); }
@@ -46,10 +47,10 @@ function launcherNotice(state) {
     __dirname: '/trusted/electron', module: { exports: {} }, global: {}, setTimeout, clearTimeout, setImmediate,
     process: { env: {}, execPath: '/portable/BuyerLog.exe', pid: 1 },
     require: name => {
-      if (name === 'fs') return { readFileSync: () => '{"launcherVersion":"1.2.0"}', mkdirSync() {}, appendFileSync() {} };
+      if (name === 'fs') return { readFileSync: file => String(file).endsWith('desktop-ui-language.json') ? (savedLanguage ? JSON.stringify({ language: savedLanguage }) : '{}') : '{"launcherVersion":"1.2.0"}', mkdirSync() {}, appendFileSync() {} };
       if (name === 'path') return path;
       if (name === 'electron') return { app, BrowserWindow: Notice, dialog: { showErrorBox() {} } };
-      if (name === './portable-paths') return { resolvePortableRoot: () => '/portable', desktopPaths: () => ({ electronProfileRoot: '/profile' }) };
+      if (name === './portable-paths') return { resolvePortableRoot: () => '/portable', desktopPaths: () => ({ electronProfileRoot: '/profile', localDataRoot: '/portable/data/local' }) };
       if (name === './update/launcher-state') return { createLauncherState: () => lifecycle };
       if (name === './update/semver') return { compareSemver: () => 0 };
       if (name === './manual-patch/manager') return { createInstalledManager: () => ({}) };
@@ -63,27 +64,44 @@ function launcherNotice(state) {
   return notices;
 }
 
-test('launcher bildirimi bekleyen güncellemede "Güncelleme uygulanıyor" ve kapatmama uyarısı gösterir', async () => {
+test('launcher bildirimi bekleyen güncellemede "Güncelleme uygulanıyor", kapatmama uyarısı ve güncelleme adımlarını gösterir', async () => {
   const notices = launcherNotice({ pending: { ready: true, appCoreRoot: '/pending', version: '7.0.321' } });
   await tick();
   const html = decodeURIComponent(notices[0].url);
   assert.match(html, /Güncelleme uygulanıyor…/);
-  assert.match(html, /Applying the update…/);
   assert.match(html, /Lütfen kapatmayın/);
-  assert.match(html, /Please do not close Buyer Log/);
   assert.doesNotMatch(html, /Buyer Log açılıyor…/);
+  // Güncellemeden sonra yapılan launcher adımları sırasıyla görünür.
+  const steps = [...html.matchAll(/<li data-step="([a-z-]+)"/g)].map(match => match[1]);
+  assert.deepEqual(steps, ['verify-current', 'verify-new', 'backup', 'activate', 'start']);
+  for (const text of ['Mevcut sürüm doğrulanıyor', 'Yeni sürüm doğrulanıyor', 'Verileriniz yedekleniyor', 'Yeni sürüm etkinleştiriliyor', 'Buyer Log başlatılıyor']) assert.ok(html.includes(text), text);
   assert.match(html, /prefers-reduced-motion:reduce\)\{i::after\{animation:none/);
+  assert.match(html, /script-src 'unsafe-inline'/);
+  assert.doesNotMatch(html, /https?:\/\//, 'the notice loads nothing from outside');
+  const englishNotices = launcherNotice({ pending: { ready: true, appCoreRoot: '/pending', version: '7.0.321' } }, { savedLanguage: 'en' });
+  await tick();
+  const english = decodeURIComponent(englishNotices[0].url);
+  assert.match(english, /Applying the update…/);
+  assert.match(english, /Please do not close Buyer Log/);
+  for (const text of ['Verifying the current version', 'Verifying the new version', 'Backing up your data', 'Activating the new version', 'Starting Buyer Log']) assert.ok(english.includes(text), text);
 });
 
-test('launcher bildirimi onaylanmamış denemede geri alma metnini, normal açılışta eski metni gösterir', async () => {
+test('launcher bildirimi onaylanmamış denemede geri alma metnini, normal açılışta açılış metnini kayıtlı/sistem dilinde gösterir', async () => {
   const rollback = launcherNotice({ activation: { status: 'trial', version: '7.0.321' }, pending: null });
   await tick();
   assert.match(decodeURIComponent(rollback[0].url), /Önceki sürüme dönülüyor…/);
-  assert.match(decodeURIComponent(rollback[0].url), /Returning to the previous version…/);
+  assert.match(decodeURIComponent(rollback[0].url), /Önceki sürüm ve veriler geri yükleniyor/);
+  const rollbackEn = launcherNotice({ activation: { status: 'trial', version: '7.0.321' }, pending: null }, { locale: 'en-GB' });
+  await tick();
+  assert.match(decodeURIComponent(rollbackEn[0].url), /Returning to the previous version…/);
   const normal = launcherNotice({ pending: null });
   await tick();
   assert.match(decodeURIComponent(normal[0].url), /Buyer Log açılıyor…/);
-  assert.match(decodeURIComponent(normal[0].url), /Buyer Log is opening…/);
+  assert.match(decodeURIComponent(normal[0].url), /Program dosyaları doğrulanıyor/);
+  const normalEn = launcherNotice({ pending: null }, { savedLanguage: 'en', locale: 'tr-TR' });
+  await tick();
+  assert.match(decodeURIComponent(normalEn[0].url), /Buyer Log is opening…/);
+  assert.match(decodeURIComponent(normalEn[0].url), /lang="en"/);
 });
 
 test('sunucu [PERF] işaretleri yalnız tam satırdan ve yalnız ad olarak açılış adımına iletilir', () => {

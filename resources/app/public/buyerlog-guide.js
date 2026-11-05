@@ -44,7 +44,7 @@
   }
   function content(item,full=false){return `${illustration(item)}<div class="blGuideCopy"><div class="blGuideEyebrow">${esc(field(moduleFor(item.module),'label'))}</div><h2>${esc(field(item,'title'))}</h2><p>${esc(field(item,'summary'))}</p><div class="blGuidePath">${esc(field(item,'path'))}</div><ol class="blGuideSteps">${item.steps[lang()].map((s,i)=>`<li><span>${i+1}</span><div>${esc(s)}</div></li>`).join('')}</ol>${full&&field(item,'note')?`<p class="blGuideNote">${esc(field(item,'note'))}</p>`:''}</div>`;}
   // The curtain no longer opens on its own: a Continue button appears when ready.
-  function startupHint(){return bootRoot?.dataset?.ready?t('Okumanızı bitirdiğinizde devam edebilirsiniz.','Continue whenever you have finished reading.'):t('Kullanıcı bilgileriniz ve başlangıç ekranı hazır olduğunda Devam düğmesi görünecek.','A Continue button appears when your user information and initial screen are ready.');}
+  function startupHint(){return bootRoot?.dataset?.ready?t('Okumanızı bitirdiğinizde devam edebilirsiniz.','Continue whenever you have finished reading.'):t('Kullanıcı bilgileriniz, başlangıç ekranı ve modüller hazır olduğunda Devam düğmesi görünecek.','A Continue button appears when your user information, initial screen and modules are ready.');}
   function startupHeading(){return trivia?t('BİLİYOR MUYDUNUZ?','DID YOU KNOW?'):t('BEKLERKEN KEŞFEDİN','DISCOVER WHILE YOU WAIT');}
   // Trivia is not access-scoped, so its deck is built once per startup.
   function refreshDeck(){if(trivia)return;const current=deck[tipIndex]?.id,eligible=available(),ids=new Set(eligible.map(c=>c.id)),existing=new Set(deck.map(c=>c.id));deck=deck.filter(c=>ids.has(c.id)).concat(shuffle(eligible.filter(c=>!existing.has(c.id))));tipIndex=Math.max(0,deck.findIndex(c=>c.id===current));}
@@ -63,7 +63,7 @@
     bootRoot=root;root.classList.add('blBootWithGuide');trivia=global.BLTrivia||null;if(trivia)root.classList.add('blBootWithTrivia');refreshDeck();
     const card=root.querySelector('.blBootCard');if(!card)return;
     card.insertAdjacentHTML('afterbegin',`<div class="blBootBrand">BUYER LOG <span>${t('Çalışma alanınız hazırlanıyor','Preparing your workspace')}</span></div>`);
-    const stages=`<p class="blBootHint" data-boot-hint>${startupHint()}</p><div class="blBootStages" aria-label="${esc(t('Hazırlık adımları','Startup stages'))}"><span data-boot-stage="data">${t('Başlangıç verisi','Initial data')}</span><span data-boot-stage="ui">${t('Ekran','Screen')}</span><span data-boot-stage="profile">${t('Kullanıcı bilgileri','User information')}</span></div>`;
+    const stages=`<p class="blBootHint" data-boot-hint>${startupHint()}</p><div class="blBootStages" aria-label="${esc(t('Hazırlık adımları','Startup stages'))}"><span data-boot-stage="data">${t('Başlangıç verisi','Initial data')}</span><span data-boot-stage="ui">${t('Ekran','Screen')}</span><span data-boot-stage="profile">${t('Kullanıcı bilgileri','User information')}</span><span data-boot-stage="modules">${t('Modüller','Modules')}</span></div><p class="blBootDetail" data-boot-detail aria-live="polite"></p>`;
     if(trivia){
       // Trivia cards carry their own navigation; the footer keeps only the guide link and the Continue slot.
       card.insertAdjacentHTML('beforeend',`${stages}<div class="blBootTipHeading"><span>${startupHeading()}</span></div><div class="blBootTip" data-boot-tip></div><div class="blBootTipFooter"><button type="button" class="blBootLink" data-tip-guide>${t('Kullanım Rehberi','User Guide')} ↗</button><span class="blBootContinueSlot" data-boot-continue-slot></span></div>`);
@@ -87,6 +87,7 @@
     set('[data-boot-stage="data"]',t('Başlangıç verisi','Initial data'));
     set('[data-boot-stage="ui"]',t('Ekran','Screen'));
     set('[data-boot-stage="profile"]',t('Kullanıcı bilgileri','User information'));
+    set('[data-boot-stage="modules"]',t('Modüller','Modules'));
     set('.blBootTipHeading > span',startupHeading());
     set('[data-tip-guide]',t('Kullanım Rehberi','User Guide')+' ↗');
     set('[data-boot-retry]',t('Tekrar dene','Retry'));

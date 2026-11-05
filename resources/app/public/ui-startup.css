@@ -19,6 +19,11 @@ html[data-ui-system="manifest"] #blBootGuard .blBootStages span{font:400 var(--u
 html[data-ui-system="manifest"] #blBootGuard .blBootStages span::before{content:'□';margin-right:8px;}
 html[data-ui-system="manifest"] #blBootGuard .blBootStages span[data-done="true"]{background:var(--ui-selected);color:var(--ui-selected-ink);}
 html[data-ui-system="manifest"] #blBootGuard .blBootStages span[data-done="true"]::before{content:'✓';}
+/* The stage Buyer Log is working on right now; the line below names the exact step. */
+html[data-ui-system="manifest"] #blBootGuard .blBootStages span[data-active="true"]{background:var(--ui-surface-strong);color:var(--ui-text);font-weight:600;}
+html[data-ui-system="manifest"] #blBootGuard .blBootStages span[data-active="true"]::before{content:'›';}
+html[data-ui-system="manifest"] #blBootGuard .blBootDetail{margin:-14px 0 20px;min-height:1.4em;color:var(--ui-text-secondary);font:400 var(--ui-font-xs)/1.4 var(--ui-font-mono);}
+html[data-ui-system="manifest"] #blBootGuard .blBootDetail:empty{display:none;}
 html[data-ui-system="manifest"] #blBootGuard[data-ready="1"] [data-boot-message]::before{content:'✓ ';color:var(--ui-success);}
 html[data-ui-system="manifest"] #blBootGuard .blBootContinue{background:var(--ui-accent);color:var(--ui-on-accent);font-weight:600;padding:12px 22px;}
 html[data-ui-system="manifest"] #blBootGuard .blBootContinue:hover{background:var(--ui-accent-hover);color:var(--ui-on-accent);}
