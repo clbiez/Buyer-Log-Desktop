@@ -7,8 +7,8 @@
     "en": "Workspace and module transition improvements"
   },
   "summary": {
-    "tr": "Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi.",
-    "en": "License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu."
+    "tr": "Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. Excel içe aktarmaya LCW AI eşleme, veri kontrolü ve önizlemeli biçim düzeltme desteği eklendi.",
+    "en": "License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. Excel import now supports LCW AI mapping, data review and previewed format corrections."
   },
   "changes": [
     {
@@ -211,6 +211,35 @@
         "caption": {
           "tr": "Gerçek Buyer Log, izole demo oturumu. Tek açılış ve hızlı yeniden açma davranışı tarayıcıda animasyon sayısıyla doğrulandı.",
           "en": "Actual Buyer Log in an isolated demo session. Single entrance and fast reopening were verified by counting browser animations."
+        }
+      }
+    },
+    {
+      "id": "excel-import-lcw-ai",
+      "type": "feature",
+      "module": {
+        "tr": "Excel İçe Aktarma",
+        "en": "Excel Import"
+      },
+      "title": {
+        "tr": "Excel eşleme ve veri kontrolünde LCW AI",
+        "en": "LCW AI for Excel mapping and data review"
+      },
+      "body": {
+        "tr": "Import your Excel içinden seçili sayfanın örnek satırlarını LCW AI ile inceleyin. Sütun eşlemeleri, eşleşme alanları ve güvenli biçim düzeltmeleri önce önerilir; hücrelerin önce/sonra değerleri sayfalı listede gösterilir. Öneri kabul edildiğinde mevcut aktarım önizlemesi yenilenir ve değişiklikler geri alınabilir. Eksik kimlikler, belirsiz eşleşmeler, tekrarlar ve farklı para birimleri otomatik değiştirilmez. Kayıt yalnız son aktarım onayıyla yapılır.",
+        "en": "Review sample rows from the selected sheet with LCW AI in Import your Excel. Column mappings, match fields and safe format corrections are proposed first, with paginated before/after cell values. Accepting a suggestion rebuilds the existing import preview and supports undo. Missing identifiers, ambiguous matches, duplicates and foreign currencies are never changed automatically. Data is saved only after final import approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "excel-import-lcw-ai.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log içinde LCW AI eşleme önerisi ve iki fiyat hücresinin önce/sonra önizlemesi",
+          "en": "LCW AI mapping suggestion and before/after preview of two price cells in the actual Buyer Log"
+        },
+        "caption": {
+          "tr": "İzole demo Excel ile gerçek uygulama; LCW AI yanıtı kabul testi için taklit edildi. Sütun önerisi ve yerel doğrulayıcının ürettiği hücre düzeltmeleri gösteriliyor.",
+          "en": "Actual app with an isolated demo workbook; the LCW AI response was stubbed for acceptance testing. Shows the column suggestion and cell corrections produced by the local validator."
         }
       }
     }

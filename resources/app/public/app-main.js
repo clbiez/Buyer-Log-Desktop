@@ -29651,7 +29651,7 @@ const CP_IMPORT_IDENTITY_FIELDS=[
 const CP_IMPORT_WRITABLE_FIELDS=[
   {id:'Sub-Manufacturer',label:'Sub-Mfr',dataType:'text',aliases:['Sub-Manufacturer','Sub Mfr','Alt Üretici']},
   {id:'Licensor',label:'Licensor',dataType:'text',aliases:['Licensor','Lisansör']},
-  {id:'Supp. FOB',label:'Supp. FOB',dataType:'currency',aliases:['Supp. FOB','Supplier FOB','Tedarikçi FOB']},
+  {id:'Supp. FOB',label:'Supp. FOB',dataType:'currency',currency:'USD',aliases:['Supp. FOB','Supplier FOB','Tedarikçi FOB']},
   {id:'Ex-factory',label:'Ex-factory',dataType:'date',aliases:['Ex-factory','Ex Factory','Exfactory','Ex-Fabrika']},
   {id:'Retail Date',label:'Retail Date',dataType:'date',aliases:['Retail Date','Retail','Perakende Tarihi']},
   {id:'In-Store (Model Budget)',label:'In-Store',dataType:'date',aliases:['In-Store','In Store','In-Store (Model Budget)','Mağaza Tarihi']},
@@ -29754,6 +29754,7 @@ function kolImportFields(){
       label:L(column.label),
       labelEn:column.label,
       dataType:kolImportFieldType(column),
+      currency:column.money?'USD':column.moneyLocal?'TRY':'',
       writable:true,
       identity:KOL_IMPORT_IDENTITY_KEYS.includes(column.k),
       custom:Boolean(column.custom),
@@ -40167,6 +40168,7 @@ function applyLanguage(lang){
   if(document.documentElement) document.documentElement.lang = appLang;
   window.BLOutputEditor?.refreshLanguage();
   window.BLLayoutControl?.refreshLanguage();
+  window.BLExcelImportWizard?.refreshLanguage();
   saveLang();
   applyStaticI18n();
   if(typeof syncThemeButtonTitle==='function') syncThemeButtonTitle();
