@@ -17,6 +17,7 @@
 .dmSub { margin: 2px 0 0; }
 .dmHeadActions { display: flex; gap: 6px; flex-shrink: 0; }
 .dmSectionLabel { margin-top: 2px; }
+.dmConnectionBody { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 12px; }
 
 /* --- Corporate Integration Lab --- */
 .dmLabPanel { display: flex; flex-direction: column; min-width: 0; }

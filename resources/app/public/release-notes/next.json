@@ -3,14 +3,43 @@
   "publishedAt": "2026-11-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Giriş geçişi ve karşılaştırma ülkeleri",
-    "en": "Sign-in transition and comparison countries"
+    "tr": "Giriş geçişi, karşılaştırma ülkeleri ve Veri Yönetimi",
+    "en": "Sign-in transition, comparison countries and Data Management"
   },
   "summary": {
-    "tr": "Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez.",
-    "en": "Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list."
+    "tr": "Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır.",
+    "en": "Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section."
   },
   "changes": [
+    {
+      "id": "data-management-collapsed-sections",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Daraltılmış bölümler ve birleşik bağlantı yönetimi",
+        "en": "Collapsed sections and unified connection management"
+      },
+      "body": {
+        "tr": "Entegrasyon laboratuvarı, bağlantı kartları ve veri eşleştirme ayarları Bağlantı ve yapılandırma başlığı altında birlikte açılır ve kapanır. Bu bölüm, Kaynak modu, Horizon ve yenileme ve Araçlar ilk kullanımda daraltılmış gelir; sonraki açma-kapama tercihleriniz hatırlanır. Diğer ekranlardan bir kaynağa, modüle veya araca gidildiğinde ilgili bölüm otomatik açılır.",
+        "en": "The integration lab, connection cards and data matching settings expand and collapse together under Connections and configuration. This section, Source mode, Horizon and refresh, and Tools start collapsed on first use; subsequent expand/collapse preferences are remembered. Navigating to a source, module or tool from another screen automatically expands its section."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-management-collapsed-sections.png",
+        "alt": {
+          "tr": "Veri Yönetimi ekranında başlangıçta daraltılmış dört bölüm",
+          "en": "Four initially collapsed sections in Data Management"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo oturumu: Bağlantı ve yapılandırma, Kaynak modu, Horizon ve yenileme ve Araçlar kapalı başlar.",
+          "en": "Actual Buyer Log in an isolated demo session: Connections and configuration, Source mode, Horizon and refresh, and Tools start collapsed."
+        }
+      }
+    },
     {
       "id": "startup-login-no-flash",
       "type": "fix",
