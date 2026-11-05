@@ -38,7 +38,7 @@ function motion({reduced=false,hidden=false,off=false,software=false}={}){
   const calls=[],doc={readyState:'loading',visibilityState:hidden?'hidden':'visible',body:{dataset:{}},documentElement:{dataset:{blMotion:off?'off':'on',blRender:software?'software':'gpu'}},addEventListener(){},getElementById:()=>({dataset:{}})};
   const root={document:doc,innerWidth:8,innerHeight:4,matchMedia:()=>({matches:reduced}),setTimeout,clearTimeout,BLMotionPlusTheme:{run:(...args)=>{calls.push(args);return true;}},buyerLogDesktop:{takeStartupTransition:async()=>({width:8,height:4,bgra:[]})}};
   vm.runInNewContext(read('public/motion-plus.js'),{window:root});
-  return {root,calls,api:root.BLMotionPlus};
+  return {root,doc,calls,api:root.BLMotionPlus};
 }
 test('both startup transitions force the shared chain renderer; all motion guards bypass it',async()=>{
   const s=motion(),update=()=>{};
@@ -60,9 +60,46 @@ test('login clears revealed credentials before capture; startup captures before 
   assert.ok(tail.indexOf('prepareNavigation')<tail.indexOf("location.replace('/')"));
   assert.doesNotMatch(tail.slice(0,tail.indexOf('return;')),/blLeaving|280/);
   const index=read('public/index.html'),dismiss=index.slice(index.indexOf('function dismiss(){'),index.indexOf('async function recover('));
-  assert.match(read('public/motion-plus.js'),/if\(doc\.getElementById\?\.\('blBootGuard'\)\)arrive\(\);/);
+  assert.doesNotMatch(read('public/motion-plus.js'),/if\(doc\.getElementById\?\.\('blBootGuard'\)\)arrive\(\);/);
   assert.match(dismiss,/BLMotionPlus\?\.startup\?\.\(reveal\)/);assert.match(dismiss,/function reveal\(\)\{[\s\S]*el\.remove\(\)/);
   const main=read('electron/main.js'),ipc=main.slice(main.indexOf("ipcMain.handle('buyerlog:startup-transition'"),main.indexOf("ipcMain.handle('buyerlog:workspace-snapshot'"));
   assert.match(ipc,/trustedBuyerLogIpcSender\(event\)/);assert.match(ipc,/pathname!=='\/select-user.html'/);assert.match(ipc,/startupTransition\.take\(event.sender\)/);
   assert.doesNotMatch(read('electron/startup-transition.js'),/writeFile|console\.|localStorage|sessionStorage/);
+});
+
+const settle=()=>new Promise(resolve=>setImmediate(resolve));
+test('arrival holds the first trivia paint until the login canvas covers it, and runs only once',async()=>{
+  const s=motion();let take,release,takes=0;
+  s.root.buyerLogDesktop.takeStartupTransition=()=>{takes++;return new Promise(resolve=>take=resolve);};
+  s.root.BLMotionPlusTheme.run=(update)=>{release=update;return true;};
+  const arriving=s.api.arrive();
+  assert.equal(s.doc.documentElement.dataset.blStartupArrival,'pending');
+  await settle();take({width:8,height:4});await arriving;
+  assert.equal(s.doc.documentElement.dataset.blStartupArrival,'pending','canvas must be installed before trivia is revealed');
+  release();assert.equal(s.doc.documentElement.dataset.blStartupArrival,undefined);
+  await s.api.arrive();assert.equal(takes,1,'DOMContentLoaded must not replay arrival');
+});
+test('arrival timeout releases trivia and a late login frame never covers it',async()=>{
+  const s=motion();let take,timeout;
+  s.root.setTimeout=fn=>{timeout=fn;return 1;};s.root.clearTimeout=()=>{};
+  s.root.buyerLogDesktop.takeStartupTransition=()=>new Promise(resolve=>take=resolve);
+  const arriving=s.api.arrive();await settle();timeout();await arriving;
+  assert.equal(s.doc.documentElement.dataset.blStartupArrival,undefined);
+  take({width:8,height:4});await settle();assert.equal(s.calls.length,0);
+});
+test('missing, rejected or disabled arrival opens trivia without a held paint',async()=>{
+  for(const take of [async()=>null,async()=>{throw Error('ipc');}]){
+    const s=motion();s.root.buyerLogDesktop.takeStartupTransition=take;await s.api.arrive();
+    assert.equal(s.doc.documentElement.dataset.blStartupArrival,undefined);assert.equal(s.calls.length,0);
+  }
+  for(const config of [{reduced:true},{hidden:true},{off:true},{software:true}]){
+    const s=motion(config);await s.api.arrive();assert.equal(s.doc.documentElement.dataset.blStartupArrival,undefined);
+  }
+});
+test('real document starts arrival at body mount, before DOMContentLoaded and the first trivia paint',()=>{
+  const index=read('public/index.html'),head=index.slice(0,index.indexOf('</head>'));
+  assert.ok(head.includes('src="motion-plus-theme.js?'));
+  assert.ok(head.includes('src="motion-plus.js?'));
+  assert.match(index,/<script>window.BLBootGuard\?\.mount\(\);window.BLMotionPlus\?\.arrive\(\);<\/script>/);
+  assert.match(read('public/ui-startup.css'),/html\[data-bl-startup-arrival="pending"\] body\{[^}]*opacity:0/);
 });

@@ -1,3 +1,6 @@
+/* Keep the destination unpainted until the one-shot login canvas is installed.
+   Motion+ releases this hold on every fallback, with a 650 ms upper bound. */
+html[data-bl-startup-arrival="pending"] body{opacity:0!important;pointer-events:none;}
 /* Same token source as sign-in and application; readiness remains gate driven. */
 html[data-ui-system="manifest"] #blBootGuard{position:fixed;inset:0;z-index:var(--ui-z-boot);display:flex;align-items:safe center;justify-content:center;overflow:auto;background:var(--ui-canvas);color:var(--ui-text);font:400 var(--ui-font-base)/1.45 var(--ui-font-body);}
 html[data-ui-system="manifest"] #blBootGuard .blBootCard{min-width:250px;max-width:1050px;width:min(1050px,calc(100vw - 48px));margin:24px;padding:32px;text-align:left;background:var(--ui-surface);border:0;border-radius:var(--ui-radius);box-shadow:none;}

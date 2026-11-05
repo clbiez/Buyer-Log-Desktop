@@ -64,7 +64,11 @@ test('seçim çubuğu yalnız seçim varken görünür, gerçek düğmelerin pas
 test('seçim çubuğu iş mantığı içermez: yalnız sayfadaki düğmeye tıklar',()=>{
   assert.match(BAR,/const target=doc\.getElementById\(button\.dataset\.selectionTarget\|\|''\);\s*if\(target&&!target\.disabled\)target\.click\(\);/);
   assert.doesNotMatch(BAR,/fetch\(|\.delete\(|\.clear\(\)|localStorage/);
-  assert.match(HTML,/<script src="motion-plus\.js\?v=__BL_ASSET_VERSION__"><\/script>\n<script src="selection-action-bar\.js\?v=__BL_ASSET_VERSION__"><\/script>/);
+  // Motion+ is defined in the head for the first startup paint; the selection
+  // bar still loads once, after its motion API and the application shell.
+  assert.equal((HTML.match(/<script src="selection-action-bar\.js\?/g)||[]).length,1);
+  assert.ok(HTML.indexOf('src="motion-plus.js?')<HTML.indexOf('src="selection-action-bar.js?'));
+  assert.ok(HTML.indexOf('src="app-main.js?')<HTML.indexOf('src="selection-action-bar.js?'));
 });
 
 test('Veri Yönetimi panelleri başlıktan katlanır; durum kullanıcıya ayrılmış anahtarda saklanır',()=>{

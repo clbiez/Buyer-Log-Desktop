@@ -174,7 +174,7 @@
      olarak yayılır. Hareket kapalıysa, yazılım çizimindeyse veya View
      Transitions yoksa false döner ve çağıran anlık yolu kullanır. */
   let themeTransition=null;
-  let startupTicket=0;
+  let startupTicket=0,arrivalStarted=false;
   // Startup changes content through the same triangle mesh as theme changes.
   // The login frame crosses navigation only in the desktop host's short-lived memory.
   function startup(update,shot){
@@ -195,12 +195,24 @@
     catch(_){}finally{expired=true;root.clearTimeout(timeout);}
   }
   async function arrive(){
+    // Called synchronously at body mount, before trivia can paint. Only the first
+    // arrival may consume the one-shot login frame, including on slow documents.
+    if(arrivalStarted)return;arrivalStarted=true;
     const mine=++startupTicket,take=root.buyerLogDesktop?.takeStartupTransition;
-    if(typeof take!=='function')return;
+    if(typeof take!=='function'||!enabled()||html.dataset.blRender==='software')return;
+    html.dataset.blStartupArrival='pending';
+    let timeout,expired=false;
+    const reveal=()=>{expired=true;root.clearTimeout(timeout);delete html.dataset.blStartupArrival;};
     try{
-      const shot=await take(),guard=doc.getElementById('blBootGuard');
-      if(shot&&mine===startupTicket&&guard&&!guard.dataset.leaving)startup(()=>{},shot);
+      const shot=await Promise.race([
+        take(),
+        new Promise(resolve=>{timeout=root.setTimeout(()=>{reveal();resolve(null);},650);})
+      ]),guard=doc.getElementById('blBootGuard');
+      // startup invokes reveal only after the old frame has covered the viewport;
+      // failures, motion guards and expired IPC take the immediate path instead.
+      if(!expired&&shot&&mine===startupTicket&&guard&&!guard.dataset.leaving&&startup(reveal,shot))return;
     }catch(_){}
+    reveal();
   }
   function theme(update,origin){
     if(typeof update!=='function'||!enabled()||html.dataset.blRender==='software')return false;
@@ -293,7 +305,6 @@
     else activate(true); // activate restores any in-progress refresh after cancellation.
   }
   function mount(){
-    if(doc.getElementById?.('blBootGuard'))arrive();
     bindActivityControls();
     doc.addEventListener('pointerdown',rememberSegment,true);
     doc.addEventListener('click',slideSegment);
