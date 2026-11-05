@@ -81,21 +81,26 @@ test('cells, footer and details follow the row owner rule, not the viewer',async
  context.appLang='en';assert.match(ui.drawer(ofA),/Country filter/);assert.match(ui.model(ofA,'season').detail,/Excluded countries/);
 });
 
-test('drawer offers a country picker and chips for the owner rule only',async()=>{
- const {ui,state,saves}=harness({'buyer-a':['MA']});await ui.ensure();
+test('drawer toggles countries in one collapsed checkbox list, including saved countries absent from the source',async()=>{
+ const {ui,state,saves}=harness({'buyer-a':['MA','BD']});await ui.ensure();
  const row={id:1,...candidate,targetPrice:12};
  let html=ui.drawer(row);
- assert.match(html,/data-cpd-lfl-country-add/);
- assert.match(html,/<option value="CN">/);assert.match(html,/<option value="EG">/);assert.doesNotMatch(html,/<option value="MA">/,'selected countries are not offered again');
- assert.match(html,/data-cpd-lfl-country-remove="MA"/);assert.doesNotMatch(html,/data-cpd-lfl-country-remove="CN"/,'no list of unselected countries');
- const select={value:'EG',closest:selector=>selector==='[data-cpd-lfl-country-add]'?select:null};
- assert.equal(ui.onDrawerChange(select,row),true);assert.deepEqual(saves.at(-1),['EG','MA']);
+ assert.match(html,/<details class="cpdCountryPicker">/);
+ assert.doesNotMatch(html,/cpdCountryChip|country-add|country-remove|<select/);
+ assert.match(html,/data-cpd-lfl-country="CN"/);
+ assert.match(html,/data-cpd-lfl-country="MA" checked/);
+ assert.match(html,/data-cpd-lfl-country="BD" checked/,'saved exclusions remain removable if absent from the source');
+ const checkbox={dataset:{cpdLflCountry:'EG'},checked:true,closest:selector=>selector==='[data-cpd-lfl-country]'?checkbox:null};
+ assert.equal(ui.onDrawerChange(checkbox,row),true);assert.deepEqual(saves.at(-1),['BD','EG','MA']);
  assert.equal(ui.model(row,'season').reference.average,10);
- const remove={dataset:{cpdLflCountryRemove:'MA'}},target={closest:selector=>selector==='[data-cpd-lfl-country-remove]'?remove:null};
- assert.equal(ui.onDrawerClick(target,row),true);assert.deepEqual(saves.at(-1),['EG']);
+ checkbox.dataset.cpdLflCountry='MA';checkbox.checked=false;
+ assert.equal(ui.onDrawerChange(checkbox,row),true);assert.deepEqual(saves.at(-1),['BD','EG']);
+ checkbox.dataset.cpdLflCountry='BD';
+ ui.onDrawerChange(checkbox,row);assert.deepEqual(saves.at(-1),['EG']);
  state.canEdit=false;html=ui.drawer(row);
- assert.doesNotMatch(html,/data-cpd-lfl-country-add|data-cpd-lfl-country-remove/);
- assert.equal(ui.onDrawerClick(target,row),true);assert.deepEqual(saves.at(-1),['EG'],'view-only access never writes');
+ assert.match(html,/data-cpd-lfl-country="EG" checked disabled/);
+ checkbox.checked=true;checkbox.dataset.cpdLflCountry='CN';
+ assert.equal(ui.onDrawerChange(checkbox,row),true);assert.deepEqual(saves.at(-1),['EG'],'view-only access never writes');
 });
 
 test('owner workspace keeps the rule across full saves, row saves, structure changes and replication merges',async()=>{
@@ -212,4 +217,18 @@ test('a schema-4 upgrade keeps the saved values when the same-key source no long
   assert.equal(kept.schema,4);assert.equal(kept.references.find(item=>!item.month&&!item.throughMonth).average,20);
   rows=full;assert.equal((await createReferenceCache({directory}).get(args)).schema,5,'a complete identical source upgrades');
  }finally{fs.rmSync(directory,{recursive:true,force:true});}
+});
+
+
+test('returning country choices to the saved state clears the redundant draft without a server write',async()=>{
+ const app=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
+ const save=app.slice(app.indexOf('async function kolSaveWorkspaceNow'),app.indexOf('function kolQueueWorkspaceSave'));
+ const cleared=[];
+ const context={clearTimeout(){},kolWorkspaceSaveTimer:null,kolWorkspaceCanEdit:true,kolWorkspaceSaving:false,kolWorkspaceOwnerId:'buyer-a',kolWorkspacePending:true,kolWorkspaceRevision:3,
+  kolCollectChanges:()=>({empty:true}),kolClearPendingWorkspace:owner=>cleared.push(owner)};
+ vm.createContext(context);vm.runInContext(save,context);
+ const result=await context.kolSaveWorkspaceNow();
+ assert.equal(result.unchanged,true);assert.deepEqual(cleared,['buyer-a']);assert.equal(context.kolWorkspacePending,false);
+ // An empty prepared subset cannot discard a draft for other unsaved changes.
+ cleared.length=0;await context.kolSaveWorkspaceNow({preparedChange:{empty:true}});assert.deepEqual(cleared,[]);
 });

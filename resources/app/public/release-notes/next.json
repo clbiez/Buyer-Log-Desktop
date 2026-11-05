@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Fiyat kıyasında tikli ülke seçimi",
+    "en": "Checkbox country selection in price comparisons"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez.",
+    "en": "In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-lfl-country-checkboxes",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Fiyat kıyasında tikli ülke seçimi",
+        "en": "Checkbox country selection in price comparisons"
+      },
+      "body": {
+        "tr": "Previous Season, LFL ve Sezon Etkisi için hesaba katılmayacak ülkeleri aynı listede tikleyin veya tikini kaldırın. Seçim sırasında liste açık kalır; Escape veya liste dışına tıklama listeyi kapatır. Seçili ülke etiketleri kaldırıldı. Buyer kuralı ve diğer kullanıcıların yalnız görüntüleme yetkisi korunur.",
+        "en": "Check or uncheck countries to exclude from Previous Season, LFL and Season Impact in the same list. The list stays open while selecting; Escape or a click outside closes it. Selected-country tags have been removed. The buyer rule and other users’ view-only access are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-lfl-country-checkboxes.png",
+        "alt": {
+          "tr": "Fiyat çekmecesinde Fas ve Mısır tikli ülke listesi",
+          "en": "Country list in the price drawer with Morocco and Egypt checked"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: ülkeler aynı listeden seçilir; altta tekrarlanan etiketler yoktur.",
+          "en": "Actual Buyer Log with isolated demo data: countries are selected in one list without duplicate tags underneath."
+        }
+      }
+    }
+  ]
 }
