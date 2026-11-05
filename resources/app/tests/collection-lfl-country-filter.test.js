@@ -186,3 +186,30 @@ test('legacy summaries without country sums are never presented as filtered',asy
  assert.doesNotMatch(ui.model(row,'season').detail,/Hariç ülkeler/);
  assert.match(ui.drawer(row),/Referansları yenile düğmesini kullanın/);
 });
+
+test('every Collection baseline structure carries the country rule, so a save never leaves the workspace dirty',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
+ const literal=[...source.matchAll(/structure(?:=|:)JSON\.stringify\(\{[^\n]*?\}\)/g)].map(match=>match[0]);
+ assert.ok(literal.length>=2,'PATCH and PUT acknowledgement baselines are found');
+ for(const text of literal)assert.match(text,/lflCountryExclusions:/,text.slice(0,120));
+ // Key order must equal kolStructureSignature(), which the dirty check compares byte for byte.
+ const keys=text=>[...text.matchAll(/(columns|manufacturers|statusCatalog|order|lflCountryExclusions):/g)].map(match=>match[1]);
+ const signature=source.match(/function kolStructureSignature\(\)\{\s*return JSON\.stringify\(\{([^\n]*)\}\);/)[1];
+ for(const text of literal)assert.deepEqual(keys(text),keys(signature));
+});
+
+test('a schema-4 upgrade keeps the saved values when the same-key source no longer reproduces them',async()=>{
+ const os=require('node:os'),{createReferenceCache}=require('../server/lib/collection-lfl-reference');
+ const directory=fs.mkdtempSync(path.join(os.tmpdir(),'collection-lfl-upgrade-sum-'));
+ const full=[order({orderCode:'A',fob:10}),order({orderCode:'B',fob:30})];let rows=full;
+ const args={identity:'same-key-user',version:'rev-1',loadRows:async()=>rows};
+ try{
+  await createReferenceCache({directory}).get(args);
+  const file=path.join(directory,fs.readdirSync(directory).find(name=>name.endsWith('.json'))),saved=JSON.parse(fs.readFileSync(file,'utf8'));
+  saved.schema=4;saved.references=saved.references.map(({byCountry,...item})=>item);fs.writeFileSync(file,JSON.stringify(saved));
+  rows=[full[0]];
+  const kept=await createReferenceCache({directory}).get(args);
+  assert.equal(kept.schema,4);assert.equal(kept.references.find(item=>!item.month&&!item.throughMonth).average,20);
+  rows=full;assert.equal((await createReferenceCache({directory}).get(args)).schema,5,'a complete identical source upgrades');
+ }finally{fs.rmSync(directory,{recursive:true,force:true});}
+});

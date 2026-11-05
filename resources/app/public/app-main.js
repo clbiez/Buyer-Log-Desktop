@@ -23073,12 +23073,12 @@ async function kolSaveWorkspaceNow(saveOptions){
           if(item.kind==='removed'){kolBaseline.rows.delete(key);continue;}
           if(sent)kolBaseline.rows.set(key,{...sent,_rev:Number(item.rev)||sent._rev});
         }
-        if(payload.structure){kolBaseline.structure=JSON.stringify({columns:payload.structure.customColumns||[],manufacturers:payload.structure.manufacturers||[],statusCatalog:payload.structure.statusCatalog||[],order:payload.structure.order||[]});delete kolBaseline.structureBaseRevision;}
+        if(payload.structure){kolBaseline.structure=JSON.stringify({columns:payload.structure.customColumns||[],manufacturers:payload.structure.manufacturers||[],statusCatalog:payload.structure.statusCatalog||[],order:payload.structure.order||[],lflCountryExclusions:payload.structure.lflCountryExclusions||[]});delete kolBaseline.structureBaseRevision;}
         if(Array.isArray(data.conflicts)&&data.conflicts.length)ownConflictRebased=kolReportConflicts(data.conflicts);
       }else{
         kolWorkspaceRevision=Number(data.workspace&&data.workspace._revision)||kolWorkspaceRevision;
         const serverRows=new Map();for(const row of Array.isArray(data.workspace&&data.workspace.rows)?data.workspace.rows:[]){const key=kolRowKey(row);if(key)serverRows.set(key,{...row});}
-        kolBaseline={ownerId:kolWorkspaceOwnerId,rows:serverRows,structure:JSON.stringify({columns:data.workspace&&data.workspace.customColumns||[],manufacturers:data.workspace&&data.workspace.manufacturers||[],statusCatalog:data.workspace&&data.workspace.statusCatalog||[],order:(data.workspace&&data.workspace.rows||[]).map(kolRowKey)})};
+        kolBaseline={ownerId:kolWorkspaceOwnerId,rows:serverRows,structure:JSON.stringify({columns:data.workspace&&data.workspace.customColumns||[],manufacturers:data.workspace&&data.workspace.manufacturers||[],statusCatalog:data.workspace&&data.workspace.statusCatalog||[],order:(data.workspace&&data.workspace.rows||[]).map(kolRowKey),lflCountryExclusions:kolNormalizeLflCountryExclusions(data.workspace&&data.workspace.lflCountryExclusions)})};
       }
       const dirty=kolHasDirtyWorkspace();
       if(dirty)kolPersistPendingWorkspace(Array.isArray(data.conflicts)&&data.conflicts.length?'conflict':'pending');

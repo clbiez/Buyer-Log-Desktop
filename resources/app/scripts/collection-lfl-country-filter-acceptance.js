@@ -70,6 +70,8 @@ async function upload(data){const workbook=XLSX.utils.book_new();XLSX.utils.book
  let workspace=null;
  for(let i=0;i<50;i++){workspace=(await api('/api/collection-workspaces/moderator')).workspace;if(JSON.stringify(workspace.lflCountryExclusions)==='["EG","MA"]')break;await new Promise(resolve=>setTimeout(resolve,200));}
  assert.deepEqual(workspace.lflCountryExclusions,['EG','MA'],'the rule is saved in the owner Collection workspace');
+ await page.waitForFunction(()=>!kolWorkspaceSaving&&!kolWorkspaceSaveTimer&&!kolHasDirtyWorkspace(),null,{timeout:15000});
+ assert.equal(await page.evaluate(()=>localStorage.getItem(kolWorkspacePendingKey(kolWorkspaceOwnerId))),null,'the acknowledged save leaves no pending draft');
  console.log('PASS owner rule recalculates Collection references and is saved in the owner workspace');
  await page.evaluate(()=>{
   const body=document.querySelector('.cpdBody'),section=document.querySelector('[data-cpd-lfl-details="season"]').closest('.cpdSection');

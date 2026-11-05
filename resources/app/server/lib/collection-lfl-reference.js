@@ -6,6 +6,11 @@ const digest=value=>crypto.createHash('sha256').update(String(value)).digest('he
 // No order rows, source refreshes, timers or shared writes.
 // Schema 5 adds per-production-country partial sums so buyer country rules can exclude countries.
 const SCHEMA=5,LEGACY_SCHEMA=4;
+const close=(a,b)=>Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<=1e-9*Math.max(1,Math.abs(a),Math.abs(b));
+function sameSummaries(saved,rebuilt){
+  const byKey=new Map(rebuilt.map(item=>[item.key,item]));
+  return saved.every(item=>{const next=byKey.get(item.key);return Boolean(next)&&close(next.quantity,item.quantity)&&close(next.average,item.average)&&next.count===item.count&&next.orderCount===item.orderCount&&(next.unidentifiedCount||0)===(item.unidentifiedCount||0);});
+}
 function createReferenceCache({directory}){
   const memory=new Map(),pending=new Map();
   function remember(id,snapshot){
@@ -41,6 +46,8 @@ function createReferenceCache({directory}){
       try{sourceRows=await loadRows();}catch(error){if(upgrade)return saved;throw error;}
       const snapshot={schema:SCHEMA,version:revision,calculatedAt:upgrade?saved.calculatedAt:new Date().toISOString(),references:Engine.buildReferences(sourceRows)};
       const keys=new Set(snapshot.references.map(item=>item.key));
+      // An upgrade must reproduce every saved summary exactly; a same-key but smaller source keeps the saved values.
+      if(upgrade&&!sameSummaries(saved.references,snapshot.references))return saved;
       if(saved&&saved.references.some(item=>!keys.has(item.key))){
         if(upgrade)return saved;
         throw Object.assign(new Error('LFL kaynağı eksik; kayıtlı referanslar korundu. / The LFL source is incomplete; saved references were preserved.'),{code:'LFL_REFERENCE_INCOMPLETE',statusCode:409});
