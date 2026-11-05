@@ -4,6 +4,8 @@ const Engine=require('../../public/collection-lfl-engine');
 const digest=value=>crypto.createHash('sha256').update(String(value)).digest('hex');
 // Durable, scoped summaries. Ordinary reads never replace a successful snapshot.
 // No order rows, source refreshes, timers or shared writes.
+// Schema 5 adds per-production-country partial sums so buyer country rules can exclude countries.
+const SCHEMA=5,LEGACY_SCHEMA=4;
 function createReferenceCache({directory}){
   const memory=new Map(),pending=new Map();
   function remember(id,snapshot){
@@ -15,7 +17,8 @@ function createReferenceCache({directory}){
     if(memory.has(id))return memory.get(id);
     try{
       const saved=JSON.parse(await fs.readFile(path.join(directory,id+'.json'),'utf8'));
-      if(saved.schema===4&&typeof saved.version==='string'&&Array.isArray(saved.references)&&saved.references.length)return remember(id,saved);
+      // Schema 4 (no country sums) stays readable: it is upgraded only from an available, complete source.
+      if((saved.schema===SCHEMA||saved.schema===LEGACY_SCHEMA)&&typeof saved.version==='string'&&Array.isArray(saved.references)&&saved.references.length)return remember(id,saved);
     }catch(error){if(error.code!=='ENOENT'&&!(error instanceof SyntaxError))throw error;}
     return null;
   }
@@ -29,10 +32,17 @@ function createReferenceCache({directory}){
     }
     const task=(async()=>{
       const saved=await read({identity});
-      if(saved&&!rebuild)return saved;
-      const snapshot={schema:4,version:revision,calculatedAt:new Date().toISOString(),references:Engine.buildReferences(await loadRows())};
+      if(saved&&!rebuild&&saved.schema===SCHEMA)return saved;
+      // A legacy upgrade is never a refresh: any source problem keeps the saved values.
+      const upgrade=Boolean(saved&&!rebuild);
+      // Upgrade only from the same source revision; newer source data still needs an explicit refresh.
+      if(upgrade&&saved.version!==revision)return saved;
+      let sourceRows;
+      try{sourceRows=await loadRows();}catch(error){if(upgrade)return saved;throw error;}
+      const snapshot={schema:SCHEMA,version:revision,calculatedAt:upgrade?saved.calculatedAt:new Date().toISOString(),references:Engine.buildReferences(sourceRows)};
       const keys=new Set(snapshot.references.map(item=>item.key));
       if(saved&&saved.references.some(item=>!keys.has(item.key))){
+        if(upgrade)return saved;
         throw Object.assign(new Error('LFL kaynağı eksik; kayıtlı referanslar korundu. / The LFL source is incomplete; saved references were preserved.'),{code:'LFL_REFERENCE_INCOMPLETE',statusCode:409});
       }
       // Empty first reads are retryable; they are never a durable reference.

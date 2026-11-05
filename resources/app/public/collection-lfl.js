@@ -6,7 +6,43 @@
   const T=(tr,english)=>en()?english:tr;
   const esc=value=>escapeHtml(String(value??''));
   const identity=()=>{const user=typeof state!=='undefined'?state.currentUser:global.BL_USER_CONTEXT;return JSON.stringify([user?.id,user?.iamRevision,user?.dataScope,user?.scopes]);};
-  function session(){const id=identity();if(current?.id!==id)current={id,status:'idle',index:new Map(),detailRows:new Map(),pending:null};return current;}
+  function session(){const id=identity();if(current?.id!==id){current={id,status:'idle',index:new Map(),detailRows:new Map(),pending:null,countries:[]};rulesCache=null;}return current;}
+  /* BUYER ÜLKE KURALI: her buyer kendi çalışmadığı üretim ülkelerini Previous Season, LFL ve
+     Sezon Etkisi referanslarından çıkarır. Kural kişisel tercihtir (hesapla eşitlenir); kaynak
+     veri ve kalıcı referans özetleri değişmez, hariç tutma ülke kırılımı üzerinden hesaplanır. */
+  const RULES_KEY='lcw.koleksiyon.analytics.lflCountryRules.v1';
+  let rulesCache=null;
+  function countryRules(){
+    if(rulesCache)return rulesCache;
+    let parsed=[];
+    try{const raw=JSON.parse(global.BLStorage?.getItem(RULES_KEY)||'null');parsed=Array.isArray(raw?.rules)?raw.rules:[];}catch(_){parsed=[];}
+    rulesCache=parsed.filter(rule=>rule&&typeof rule.buyer==='string'&&rule.buyer.trim()).map(rule=>({buyer:rule.buyer==='*'?'*':rule.buyer.trim(),countries:Engine.countryList(rule.countries)})).filter(rule=>rule.countries.length);
+    return rulesCache;
+  }
+  const ruleId=buyer=>buyer==='*'?'*':String(buyer||'').trim().toLocaleUpperCase('tr-TR');
+  function setCountryRule(buyer,countries){
+    const name=buyer==='*'?'*':String(buyer||'').trim();if(!name)return false;
+    const codes=Engine.countryList(countries),rules=countryRules().filter(rule=>ruleId(rule.buyer)!==ruleId(name));
+    if(codes.length)rules.push({buyer:name,countries:codes});
+    try{global.BLStorage?.setItem(RULES_KEY,JSON.stringify({rules}));}catch(_){return false;}
+    rulesCache=rules;
+    session().detailRows=new Map();
+    repaint();
+    return true;
+  }
+  const rowBuyer=(row,read=kolEffectiveValue)=>String(read(row,'buyer')||row?._collectionOwnerName||'').trim();
+  // Saved pre-country summaries cannot be filtered; they are shown unchanged until references are refreshed.
+  const excludedFor=(row,read)=>session().countryAware?Engine.countryRuleFor(countryRules(),rowBuyer(row,read)):[];
+  const countryNames=new Map();
+  function countryName(code){
+    if(!code)return T('Bilinmiyor','Unknown');
+    const lang=en()?'en':'tr',id=lang+':'+code;
+    if(countryNames.has(id))return countryNames.get(id);
+    let label=code;
+    try{const name=new Intl.DisplayNames([lang],{type:'region'}).of(code);if(name&&name!==code)label=`${name} (${code})`;}catch(_){}
+    countryNames.set(id,label);return label;
+  }
+  const exclusionText=codes=>codes.length?T(`Hariç ülkeler: ${codes.map(countryName).join(', ')}`,`Excluded countries: ${codes.map(countryName).join(', ')}`):'';
   function repaint(){
     if(document.body.dataset.activeTab==='koleksiyon'&&typeof renderKol==='function')renderKol();
     global.BLCollectionPriceDrawer?.refresh?.();
@@ -30,7 +66,7 @@
           else active.status=data.code==='SOURCE_FILTER_REQUIRED'?'filter':'error';
           return;
         }
-        active.index=new Map((data.references||[]).map(item=>[item.key,item]));active.timelines=Engine.createSeasonTimelines(data.references);active.version=String(data.version||'');active.calculatedAt=data.calculatedAt;active.status='ready';
+        active.index=new Map((data.references||[]).map(item=>[item.key,item]));active.countryAware=(data.references||[]).some(item=>Array.isArray(item.byCountry));active.countries=[...new Set((data.references||[]).filter(item=>item.currency==='USD').flatMap(item=>(item.byCountry||[]).map(part=>part.country)))].filter(Boolean).sort();active.timelines=Engine.createSeasonTimelines(data.references);active.version=String(data.version||'');active.calculatedAt=data.calculatedAt;active.status='ready';
       }catch(_){active.status=hadReference?'ready':'error';active.refreshError='LOAD_ERROR';}
       finally{active.pending=null;if(current===active)repaint();}
     })();
@@ -44,7 +80,7 @@
   }
   function projectRow(row,read=kolEffectiveValue){
     const projected={...row};
-    for(const key of ['season','mag','urunTipi','inStoreMonth','quantity','targetPrice','confirmedManufacturer'])projected[key]=read(row,key);
+    for(const key of ['season','mag','urunTipi','inStoreMonth','quantity','targetPrice','confirmedManufacturer','buyer'])projected[key]=read(row,key);
     return projected;
   }
   function sampleWarning(reference){
@@ -58,7 +94,7 @@
   }
   function impactModel(row){
     const active=session(),projected=projectRow(row);
-    const price=kolSuppFob(projected),result=active.status==='ready'?Engine.seasonImpact(active.timelines,projected,price?.price):{status:active.status};
+    const excluded=excludedFor(row),price=kolSuppFob(projected),result=active.status==='ready'?Engine.seasonImpact(active.timelines,projected,price?.price,excluded):{status:active.status};
     const reference=result.status==='ready'?result.reference:null,quality=sampleWarning(reference),month=Engine.budgetMonth(projected,'collection'),season=String(projected.season||''),period=[season,month].filter(Boolean).join(' · ');
     const messages={
       dimensions:T('Sezon, MAG ve Klasman gerekli.','Season, MAG and Classification are required.'),
@@ -80,15 +116,16 @@
     const scope=reference?T(`${reference.firstMonth}–${reference.throughMonth} · ${reference.quantity} adet`,`${reference.firstMonth}–${reference.throughMonth} · ${reference.quantity} units`):'';
     const addition=reference?T(`Model: ${result.quantity} adet × ${money(result.price)} · ${source}`,`Model: ${result.quantity} units × ${money(result.price)} · ${source}`):'';
     const formula=T('Yeni ortalama = (mevcut tutar + model fiyatı × model adedi) / (mevcut adet + model adedi). Etki = (yeni ortalama / mevcut ortalama − 1) × 100. Aynı sezon, MAG, Klasman ve USD; yalnız modelin MB ayından önceki aylar. Her satır tek başına simüle edilir.','New average = (existing value + model price × model quantity) / (existing quantity + model quantity). Impact = (new average / existing average − 1) × 100. Same season, MAG, Classification and USD; only months before the model MB month. Each row is simulated independently.');
-    const detail=reference?[period,`${projected.mag} · ${projected.urunTipi}`,scope,addition,`${averageText} · ${percentText}`,quality.orderInfo,quality.warning,undated,formula].filter(Boolean).join('\n'):message;
-    return {reference,season,month,period,percent:result.percent,percentText,averageText,source,message,detail,noData,emptyText,...quality,text:reference?[period,averageText,percentText,addition,quality.warning,undated].filter(Boolean).join(' · '):message,impact:result};
+    const countries=exclusionText(excluded);
+    const detail=reference?[period,`${projected.mag} · ${projected.urunTipi}`,scope,addition,`${averageText} · ${percentText}`,quality.orderInfo,quality.warning,undated,countries,formula].filter(Boolean).join('\n'):[message,countries].filter(Boolean).join('\n');
+    return {reference,season,month,period,percent:result.percent,percentText,averageText,source,message,detail,noData,emptyText,excluded,...quality,text:reference?[period,averageText,percentText,addition,quality.warning,undated,countries].filter(Boolean).join(' · '):message,impact:result};
   }
   function model(row,mode='month'){
     if(mode==='impact')return impactModel(row);
     const active=session(),projected=projectRow(row);
     const season=Engine.previousSeason(projected.season),valid=Boolean(season&&String(projected.mag||'').trim()&&String(projected.urunTipi||'').trim());
     const month=mode==='month'?Engine.previousMonth(Engine.budgetMonth(projected,'collection')):'',period=[season,month].filter(Boolean).join(' · ');
-    const reference=valid&&active.status==='ready'?Engine.reference(active.index,projected,mode):null;
+    const excluded=excludedFor(row),reference=valid&&active.status==='ready'?Engine.reference(active.index,projected,mode,excluded):null;
     const price=kolSuppFob(projected),percent=reference?Engine.changePercent(price?.price,reference.average):null;
     const source=price?({confirmed:'Confirmed Price',best:'Best Price',target:'Target Price'}[price.source]||''):'';
     const rounded=percent==null?null:Math.abs(percent)<0.05?0:percent;
@@ -106,9 +143,10 @@
     else if(active.status!=='ready')message=T('LFL referansı yükleniyor…','Loading LFL reference…');
     else if(!reference)message=T(`Kıyaslanacak veri yok. ${period} için MAG + Klasman ile eşleşen USD siparişi bulunamadı.`,`No comparison data. No USD orders matching MAG + Classification were found for ${period}.`);
     const explanation=(mode==='month'?T('Önceki yılın aynı MB ayı + MAG + Klasman için adet ağırlıklı FOB ortalaması.','Quantity-weighted FOB average for the same MB month last year + MAG + Classification.'):T('Önceki sezonun tüm ayları + MAG + Klasman için adet ağırlıklı FOB ortalaması.','Quantity-weighted FOB average for all months of the previous season + MAG + Classification.'))+' '+T('Yalnız USD siparişleri. Fark = (geçerli fiyat / ortalama − 1) × 100.','USD orders only. Change = (applicable price / average − 1) × 100.');
-    const detail=reference?[`${period} · ${projected.mag} · ${projected.urunTipi}`,`${orderInfo?orderInfo+' · ':''}${reference.count} ${T('kayıt','records')} · ${reference.quantity.toLocaleString(en()?'en-GB':'tr-TR')} ${T('adet','units')}`,source+(price?`: $${kolFormatMoneyDisplay(String(price.price))}`:''),warning,explanation].filter(Boolean).join('\n'):message;
-    const text=reference?[period,averageText,percentText,source,orderInfo,warning].filter(Boolean).join(' · '):noData?`${period} · ${emptyText}`:'';
-    return {reference,season,month,period,percent,percentText,averageText,source,message,detail,text,noData,emptyText,lowSample,warning,warningShort,compactWarning};
+    const countries=exclusionText(excluded);
+    const detail=reference?[`${period} · ${projected.mag} · ${projected.urunTipi}`,`${orderInfo?orderInfo+' · ':''}${reference.count} ${T('kayıt','records')} · ${reference.quantity.toLocaleString(en()?'en-GB':'tr-TR')} ${T('adet','units')}`,source+(price?`: $${kolFormatMoneyDisplay(String(price.price))}`:''),warning,countries,explanation].filter(Boolean).join('\n'):[message,countries].filter(Boolean).join('\n');
+    const text=reference?[period,averageText,percentText,source,orderInfo,warning,countries].filter(Boolean).join(' · '):noData?`${period} · ${emptyText}`:'';
+    return {reference,season,month,period,percent,percentText,averageText,source,message,detail,text,noData,emptyText,excluded,lowSample,warning,warningShort,compactWarning};
   }
   function content(row,m=model(row)){
     if(!m.reference)return `<span class="kolPsEmpty" title="${esc(m.message)}">${esc(m.emptyText)}</span>`;
@@ -126,13 +164,13 @@
       const projected=projectRow(row,read);let price;
       if(groups){const pricing=read(row,'pricing')||{},selected=groups.confirmedPricing(projected,pricing,groups.kolParseMoneyNum)||groups.bestPricing(pricing,groups.kolParseMoneyNum),target=groups.kolParseMoneyNum(projected.targetPrice);price=selected?.price??(Number.isFinite(target)&&target>0?target:null);}
       else price=kolSuppFob(projected)?.price;
-      return {row:projected,price,quantity:projected.quantity};
+      return {row:projected,price,quantity:projected.quantity,excluded:excludedFor(row,read)};
     });
     for(const mode of new Set(modes)){
       const observations=items.map(item=>{
         if(active.status!=='ready')return {quantity:item.quantity,reference:null,price:null};
-        if(mode==='impact'){const impact=Engine.seasonImpact(active.timelines,item.row,item.price);return {quantity:item.quantity,reference:impact.status==='ready'?impact.before:null,price:impact.status==='ready'?impact.after:null};}
-        return {quantity:item.quantity,reference:Engine.reference(active.index,item.row,mode)?.average,price:item.price};
+        if(mode==='impact'){const impact=Engine.seasonImpact(active.timelines,item.row,item.price,item.excluded);return {quantity:item.quantity,reference:impact.status==='ready'?impact.before:null,price:impact.status==='ready'?impact.after:null};}
+        return {quantity:item.quantity,reference:Engine.reference(active.index,item.row,mode,item.excluded)?.average,price:item.price};
       });
       result.set(mode,Engine.summarizeComparisons(observations));
     }
@@ -181,11 +219,11 @@
     await ensure();
     const active=session(),m=model(row,mode),reference=m.reference;
     if(!reference)throw new Error(m.message);
-    const cache=active.detailRows,key=reference.key;
-    let task=cache.get(key);
+    const cache=active.detailRows,key=reference.key,excluded=m.excluded||[],cacheKey=key+'|'+excluded.join(',');
+    let task=cache.get(cacheKey);
     if(!task){
       task=(async()=>{
-        const response=await fetch('/api/collection-lfl-detail',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,version:active.version})});
+        const response=await fetch('/api/collection-lfl-detail',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,version:active.version,excludedCountries:excluded})});
         const data=await response.json();
         if(!response.ok)throw detailError(response.status===403?'FORBIDDEN':data.code);
         if(session()!==active||active.detailRows!==cache)throw detailError('LFL_DETAIL_CANCELLED');
@@ -194,8 +232,8 @@
       })();
       // Details stay in memory only, bounded by the number of explicitly opened groups.
       if(cache.size>=12)cache.delete(cache.keys().next().value);
-      cache.set(key,task);
-      task.catch(()=>{if(cache.get(key)===task)cache.delete(key);});
+      cache.set(cacheKey,task);
+      task.catch(()=>{if(cache.get(cacheKey)===task)cache.delete(cacheKey);});
     }
     try{return await task;}
     catch(error){
@@ -221,6 +259,32 @@
       note:m.detail+(mode==='impact'?' '+T('Tablo yerleşmiş ASAS siparişlerini gösterir; model yalnız simülasyondur, sipariş satırlarına eklenmez.','The table shows placed ASAS orders; the model is a simulation and is not added to the order rows.') :''),
       rows:data.rows,columns,defaultVisible:columns.slice(0,12).map(col=>col.key),exactDefaultVisible:true,viewPresets:{extended:columns.map(col=>col.key)},images:true,fileName:'Collection_'+label+'_Orders'};
   }
+  let ruleScope='buyer';
+  function countryRuleHtml(row){
+    const buyer=rowBuyer(row),scope=buyer&&ruleScope==='buyer'?'buyer':'*',target=scope==='buyer'?buyer:'*';
+    const own=countryRules().find(rule=>ruleId(rule.buyer)===ruleId(target)),selected=new Set(own?own.countries:[]);
+    const active=session(),codes=[...new Set([...(active.countries||[]),...selected])].sort((a,b)=>countryName(a).localeCompare(countryName(b),en()?'en':'tr'));
+    const applied=excludedFor(row),fallback=scope==='buyer'&&!own&&applied.length;
+    const options=`<option value="buyer"${scope==='buyer'?' selected':''}${buyer?'':' disabled'}>${esc(buyer?T(`Bu buyer: ${buyer}`,`This buyer: ${buyer}`):T('Satırda buyer yok','No buyer on this row'))}</option><option value="*"${scope==='*'?' selected':''}>${esc(T('Tüm buyerlar (varsayılan)','All buyers (default)'))}</option>`;
+    const boxes=codes.length?codes.map(code=>`<label class="cpdCountry"><input type="checkbox" data-cpd-lfl-country="${esc(code)}"${selected.has(code)?' checked':''}> ${esc(countryName(code))}</label>`).join(''):`<p class="cpdEmpty">${esc(active.status==='ready'?T('Referanslarda üretim ülkesi bulunamadı.','No production countries were found in the references.'):T('Ülkeler referanslar yüklenince listelenir.','Countries are listed once references load.'))}</p>`;
+    const legacy=active.status==='ready'&&!active.countryAware;
+    const status=legacy?T('Kayıtlı referanslar ülke kırılımı içermiyor; filtrenin uygulanması için Referansları yenile düğmesini kullanın.','Saved references have no country breakdown; use Refresh references to apply the filter.'):applied.length?exclusionText(applied)+(fallback?' · '+T('Tüm buyerlar kuralından','From the all-buyers rule'):''):T('Tüm ülkeler hesaba katılıyor.','All countries are included.');
+    return `<div class="cpdSection cpdCountryRule"><header><h4>${esc(T('Ülke filtresi','Country filter'))}</h4><span>${esc(T('Previous Season · LFL · Sezon Etkisi','Previous Season · LFL · Season Impact'))}</span></header>
+      <label class="cpdInput"><span>${esc(T('Kural kapsamı','Rule scope'))}</span><select data-cpd-lfl-country-scope>${options}</select></label>
+      <fieldset class="cpdCountryList"><legend>${esc(T('Hesaba katılmayacak üretim ülkeleri','Production countries to exclude'))}</legend>${boxes}</fieldset>
+      <p class="cpdNote" role="status">${esc(status)}</p>
+      <p class="cpdNote">${esc(T('Seçim bu buyer\'ın tüm satırlarına anında uygulanır ve hesabınızla saklanır. Buyer kuralı yoksa “Tüm buyerlar” kuralı kullanılır. Türkiye siparişleri TRY olduğu için bu USD hesaplarına zaten girmez.','The choice applies immediately to all rows of this buyer and is saved with your account. Without a buyer rule, the “All buyers” rule is used. Türkiye orders are in TRY and are never part of these USD calculations.'))}</p></div>`;
+  }
+  function onDrawerChange(target,row){
+    const scope=target.closest('[data-cpd-lfl-country-scope]');
+    if(scope){ruleScope=scope.value==='*'?'*':'buyer';return true;}
+    const box=target.closest('[data-cpd-lfl-country]');if(!box)return false;
+    const panel=box.closest('.cpdCountryRule'),buyer=rowBuyer(row),scopeValue=panel?.querySelector('[data-cpd-lfl-country-scope]')?.value;
+    const name=scopeValue==='buyer'&&buyer?buyer:'*';
+    const codes=[...(panel?panel.querySelectorAll('[data-cpd-lfl-country]:checked'):[])].map(input=>input.dataset.cpdLflCountry);
+    if(!setCountryRule(name,codes))global.showToast?.(T('Ülke filtresi kaydedilemedi.','Could not save the country filter.'));
+    return true;
+  }
   function drawer(row){
     void ensure();
     const sections=['__previousSeason__','__lfl__','__seasonImpact__'].map(key=>{const mode=modeForKey(key),m=model(row,mode),action=T('Sipariş detaylarını aç','Open order details');return `<div class="cpdSection"><header><h4><button type="button" class="tbtn" data-cpd-lfl-details="${mode}" title="${esc(action)}" aria-label="${esc(labelFor(key)+': '+action)}"${m.reference?'':' disabled'}>${esc(labelFor(key))} ↗</button></h4><span>${esc(key==='__seasonImpact__'?T('Tek model simülasyonu','Single-model simulation'):key==='__previousSeason__'?T('Sezon geneli','Full season'):T('Aynı MB ayı','Same MB month'))}</span></header>${content(row,m)}<p class="cpdNote">${esc(m.reference?m.detail:m.message)}</p></div>`;}).join('');
@@ -229,7 +293,7 @@
         ?T('Kaynak boş veya eksik olduğu için yenilenemedi. Kayıtlı referanslar korundu; LFL kaynak kapsamını kontrol edin.','Refresh could not complete because the source is empty or incomplete. Saved references were preserved; check the LFL source scope.')
         :T('Referanslar yenilenemedi. Kayıtlı değerler korundu; tekrar deneyebilirsiniz.','Could not refresh references. Saved values were preserved; you can retry.'))
       :T('Referanslar kalıcı saklanır. Güncellemek için Referansları yenile düğmesini kullanın.','References are saved permanently. Use Refresh references to update them.');
-    return sections+`<p class="cpdNote" role="status">${esc(note)}</p><div class="cpdActions"><button type="button" class="tbtn" data-cpd-lfl-refresh${active.pending||active.status==='loading'?' disabled':''}>${esc(T('Referansları yenile','Refresh references'))}</button></div>`;
+    return sections+countryRuleHtml(row)+`<p class="cpdNote" role="status">${esc(note)}</p><div class="cpdActions"><button type="button" class="tbtn" data-cpd-lfl-refresh${active.pending||active.status==='loading'?' disabled':''}>${esc(T('Referansları yenile','Refresh references'))}</button></div>`;
   }
-  global.BLCollectionLfl={ensure,invalidate,model,cell,combinedCell,combinedText,modeForKey,drawer,detailReport,footerSummaries,footerCells,text:(row,mode='month')=>model(row,mode).text};
+  global.BLCollectionLfl={ensure,invalidate,model,cell,combinedCell,combinedText,modeForKey,drawer,onDrawerChange,countryRules,setCountryRule,detailReport,footerSummaries,footerCells,text:(row,mode='month')=>model(row,mode).text};
 })(window);

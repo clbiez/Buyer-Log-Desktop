@@ -257,7 +257,10 @@
       state.backdropTap=false;
     });
     overlay.addEventListener('click',onClick);
-    panel.addEventListener('change',event=>{const input=event.target.closest('[data-cpd-field]');if(input)commitField(input);});
+    panel.addEventListener('change',event=>{
+      if(event.target.closest('[data-cpd-lfl-country],[data-cpd-lfl-country-scope]')){const row=findRow(state?.rowId);if(row&&global.BLCollectionLfl?.onDrawerChange?.(event.target,row))render();return;}
+      const input=event.target.closest('[data-cpd-field]');if(input)commitField(input);
+    });
     panel.addEventListener('keydown',event=>{const input=event.target.closest('[data-cpd-field]');if(input&&event.key==='Enter'){event.preventDefault();commitField(input);}});
     render();
     global.BLLayerSystem?.openDialog?.(overlay,{onClose:close});

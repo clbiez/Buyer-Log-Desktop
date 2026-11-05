@@ -146,7 +146,7 @@ test('older disk caches are rebuilt once to include cumulative season summaries'
   const file=path.join(directory,fs.readdirSync(directory)[0]),old=JSON.parse(fs.readFileSync(file,'utf8'));
   old.schema=3;old.references=[];fs.writeFileSync(file,JSON.stringify(old));
   const snapshot=await createReferenceCache({directory}).get(args);
-  assert.equal(loads,2);assert.equal(snapshot.schema,4);assert.ok(snapshot.references.some(item=>item.throughMonth==='2026-02'&&item.orderCount===1));
+  assert.equal(loads,2);assert.equal(snapshot.schema,5);assert.ok(snapshot.references.some(item=>item.throughMonth==='2026-02'&&item.orderCount===1));
   await createReferenceCache({directory}).get(args);assert.equal(loads,2);
  }finally{fs.rmSync(directory,{recursive:true,force:true});}
 });
