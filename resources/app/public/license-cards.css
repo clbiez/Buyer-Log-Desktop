@@ -63,7 +63,6 @@
 .lcRowTools .lcIconBtn{width:var(--ui-control-height);height:var(--ui-control-height)}
 .lcRowSave{display:none;gap:2px}
 .lcRow.isDirty .lcRowSave{display:inline-flex}
-.lcRow.isOpen .lcExpand .ic{transform:rotate(180deg)}
 .lcRowMsg{grid-column:3/-1;margin:0 0 6px;padding:4px 8px}
 
 /* Expanded row */
@@ -216,6 +215,25 @@ body[data-active-tab="licensecards"] main{height:calc(100dvh - var(--ui-topbar-h
 .lcContractHead,.lcContract{grid-template-columns:76px 118px 118px minmax(90px,1fr) minmax(100px,1fr) repeat(4,minmax(65px,.5fr)) 190px;min-width:1200px}
 .lcPaneWide{min-width:0;overflow-x:auto}
 @media(max-width:850px){.lcQuick,.lcCreate{flex-wrap:wrap}.lcQuick small{max-width:none}.lcToolbar .lcChips{flex-basis:100%}}
+/* Card editing owns a compact dialog; the list never grows an inline form. */
+.lcEditor.lcDetail{width:min(920px,calc(100vw - 32px));min-width:0;max-width:none;max-height:calc(100dvh - 48px);padding:0;box-sizing:border-box}
+.lcEditor:not([open]){display:none}
+.lcEditor[open]{display:flex;flex-direction:column}
+.lcEditorHead{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--ui-space-3);padding:var(--ui-space-3) var(--ui-space-4);flex:none}
+.lcEditorHead h2{margin:2px 0}
+.lcEditor .lcIconBtn{width:var(--ui-control-height);height:var(--ui-control-height);flex:none}
+.lcEditor .lcDetailIn{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);padding:var(--ui-space-3) var(--ui-space-4);gap:var(--ui-space-4);overflow:auto;overscroll-behavior:contain}
+.lcEditor .lcPaneWide{overflow:visible}
+.lcEditor .lcEditorContract{grid-template-columns:repeat(4,minmax(0,1fr));min-width:0;gap:var(--ui-space-2);padding:var(--ui-space-2)}
+.lcContractTools{grid-column:1/-1;display:flex;align-items:center;gap:var(--ui-space-2)}
+.lcHistory{display:grid;gap:var(--ui-space-2)}
+.lcHistoryToggle{align-self:flex-start}
+.lcEditor .lcDetailFoot{display:flex;flex:none;padding:var(--ui-space-3) var(--ui-space-4)}
+.lcEditor .lcCover.lcThumb{width:60px;height:34px;flex:none}
+.lcEditor .lcMapList{max-height:132px;overflow:auto}
+.lcEditor .lcFields textarea{min-height:44px}
+.lcEditor .lcNotice{flex:none;margin:0 var(--ui-space-4)}
+@media(max-width:720px){.lcEditor .lcDetailIn{grid-template-columns:1fr}.lcEditor .lcEditorContract{grid-template-columns:repeat(2,minmax(0,1fr))}.lcEditor .lcDetailFoot>span{display:none}}
 .lcContractFilters{display:grid;grid-template-columns:repeat(10,minmax(85px,1fr)) auto;gap:var(--ui-space-2);position:sticky;top:0;padding:var(--ui-space-2);min-width:1200px}
 .lcContractFilters input{min-width:0;width:100%;box-sizing:border-box}
 .lcContractIdentity{display:flex;align-items:center;gap:var(--ui-space-2);padding:var(--ui-space-2) 0}

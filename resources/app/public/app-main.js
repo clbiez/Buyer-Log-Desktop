@@ -783,7 +783,8 @@ function openDateCalendarPopup(display){
   _dateCalendarPopup.setAttribute('aria-label','Tarih seçimi');
   // Hücre editörünün popup içine tıklanınca blur ile kapanmasını önle.
   _dateCalendarPopup.addEventListener('mousedown',e=>e.preventDefault());
-  document.body.appendChild(_dateCalendarPopup);
+  // Keep the calendar inside a native modal's top layer so its days stay clickable.
+  (display.closest('dialog:modal')||document.body).appendChild(_dateCalendarPopup);
   renderDateCalendarPopup();
 }
 document.addEventListener('mousedown',e=>{

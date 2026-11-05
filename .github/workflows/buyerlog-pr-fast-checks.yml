@@ -37,7 +37,7 @@ jobs:
       - name: Supp. FOB quick calculator and royalty commission regression
         run: node --test tests/supp-fob-quick-calculator.test.js tests/license-royalty-commission-v2.test.js tests/grid-context-copy-v1052.test.js
       - name: Unified license cards, category pricing and legacy peer compatibility
-        run: node --test tests/license-cards-unified.test.js tests/collection-pricing-engine.test.js tests/royalty-precision-license-cards-v20261021.test.js
+        run: node --test tests/license-cards-unified.test.js tests/license-cards-editor.test.js tests/collection-pricing-engine.test.js tests/royalty-precision-license-cards-v20261021.test.js
       - name: Checklist Worker, formula editor and attention regressions
         run: node --test tests/cp-background-personal-decisions-v249.test.js tests/cp-rule-editor-v980.test.js tests/cp-studio-workspace.test.js tests/cp-attention-exclusions-v959.test.js tests/current-ui-regressions-v20260920.test.js
       - name: Thinking Orbs startup and navigation regression

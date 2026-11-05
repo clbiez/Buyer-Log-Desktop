@@ -67,3 +67,25 @@ test('a delayed image upload cannot attach to a replacement draft',async()=>{
  p.t().act({dataset:{lcAct:'discard',id:'demo'}});p.edit('royalty','21');finish('data:image/webp;base64,AAAA');await uploading;
  assert.equal(p.state.drafts.get('demo').cover,undefined);
 });
+
+test('card editor is a separate dialog with optional history and licensor form',async()=>{
+ const p=page(),data=initial();data.cards[0].rules.push({...clone(rule),id:'past',opdStart:'2025-01-01',opdEnd:'2025-12-31'});p.remote(data);await p.open();
+ p.t().act({dataset:{lcAct:'expand',id:'demo'}});
+ assert.match(p.host.html,/<dialog[^>]+class="lcEditor lcDetail"/);
+ assert.doesNotMatch(p.host.html,/data-lc-profile="artworkBrief"|data-lc-new-licensor=|data-lc-rule="past"/);
+ p.t().act({dataset:{lcAct:'history',id:'demo'}});assert.match(p.host.html,/data-lc-rule="past"/);
+ p.t().act({dataset:{lcAct:'toggleLicensor',id:'demo'}});assert.match(p.host.html,/data-lc-new-licensor="demo"/);
+});
+
+test('closing and reopening a card retains its draft and resets optional sections',async()=>{
+ const p=page();await p.open();p.t().act({dataset:{lcAct:'expand',id:'demo'}});p.edit('royalty','21');
+ p.t().act({dataset:{lcAct:'history',id:'demo'}});p.t().act({dataset:{lcAct:'closeEditor',id:'demo'}});
+ assert.doesNotMatch(p.host.html,/<dialog/);assert.equal(p.state.drafts.get('demo').rules[0].royalty,21);
+ p.t().act({dataset:{lcAct:'expand',id:'demo'}});assert.equal(p.state.historyOpen,false);assert.match(p.host.html,/value="21"/);
+});
+
+test('hidden history and retired artwork brief survive saving the selected contract',async()=>{
+ const p=page(),data=initial();data.cards[0].artworkBrief='Existing brief';data.cards[0].rules.push({...clone(rule),id:'past',opdStart:'2025-01-01',opdEnd:'2025-12-31'});p.remote(data);await p.open();
+ p.t().act({dataset:{lcAct:'expand',id:'demo'}});p.edit('royalty','22');await p.t().save('demo');
+ assert.deepEqual(p.body.rules.map(r=>r.id),['rate']);assert.deepEqual(p.body.profile,{});
+});

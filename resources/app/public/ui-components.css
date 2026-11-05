@@ -10125,6 +10125,18 @@ html[data-ui-system="manifest"] .lcRowMsg {background:var(--ui-warning-bg) !impo
 }
 html[data-ui-system="manifest"] .lcDetail {background:var(--ui-surface-soft) !important;animation:none !important
 }
+html[data-ui-system="manifest"] .lcEditor {border:0;color:var(--ui-text);box-shadow:var(--ui-shadow-overlay);font:400 var(--ui-font-sm) var(--ui-font-body)
+}
+html[data-ui-system="manifest"] .lcEditor::backdrop {background:transparent
+}
+html[data-ui-system="manifest"] .lcEditorHead,html[data-ui-system="manifest"] .lcEditor .lcDetailFoot {background:var(--ui-surface)
+}
+html[data-ui-system="manifest"] .lcEditorHead small,html[data-ui-system="manifest"] .lcEditorHead div>span {color:var(--ui-text-muted)
+}
+html[data-ui-system="manifest"] .lcEditorHead h2 {font:600 var(--ui-font-lg) var(--ui-font-heading)
+}
+html[data-ui-system="manifest"] .lcEditor .lcCover.lcThumb {font:600 var(--ui-font-sm) var(--ui-font-heading) !important
+}
 html[data-ui-system="manifest"] .lcPane>header b {font:600 var(--ui-font-md) var(--ui-font-heading) !important
 }
 html[data-ui-system="manifest"] .lcPane>header small {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important

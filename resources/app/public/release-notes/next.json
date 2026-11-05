@@ -416,6 +416,35 @@
           "en": "A frame of the staggered-row entrance in an actual Buyer Log session with isolated synthetic data. Data, headers and scroll positions are preserved."
         }
       }
+    },
+    {
+      "id": "license-card-compact-editor",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Kompakt lisans kartı düzenleme penceresi",
+        "en": "Compact license card editor"
+      },
+      "body": {
+        "tr": "Lisans kartını ayrı bir pencerede düzenleyin. İlk açılışta yalnız seçili sözleşme görünür; geçmiş ve diğer sözleşmeler ile ek lisansör formu kendi düğmeleriyle açılır. Artwork brief alanı kaldırıldı ve görsel önizlemesi listedeki küçük görselle aynı boyuta getirildi. Kapatma taslağı korur, Vazgeç değişiklikleri geri alır.",
+        "en": "Edit a license card in a separate dialog. Only the selected contract appears initially; history, other contracts and the additional licensor form open with their own buttons. The artwork brief field has been removed and the image preview matches the list thumbnail size. Closing keeps the draft; Cancel discards edits."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-card-compact-editor.png",
+        "alt": {
+          "tr": "Kapalı sözleşme geçmişi ve lisansör formuyla kompakt lisans kartı penceresi",
+          "en": "Compact license card dialog with contract history and additional licensor form collapsed"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzünde izole demo verisi. Küçük görsel, tek sözleşme ve sabit kaydetme alanı.",
+          "en": "Actual Buyer Log UI with isolated demo data, showing the thumbnail, one contract and fixed save actions."
+        }
+      }
     }
   ]
 }
