@@ -106,7 +106,8 @@ test('Backlog screen wiring: overview panel, Excel Legacy + Excel Backlog V3 wit
   assert.match(APP, /if\(typeof options\.onLegacyWorkbook==='function'\)\{await options\.onLegacyWorkbook\(/);
   assert.match(APP, /window\.BLBacklogPlanActual\?\.exportReport\?\.\(\)/);
   assert.match(DELIVERY, /window\.BLBacklogRows\.load\(params\)/);
-  assert.match(OVERVIEW, /window\.BLBacklogRows\.invalidate\(\);signature='';/);
+  assert.match(OVERVIEW, /sourceRevision!==data.rowsInputRevision/);
+  assert.match(OVERVIEW, /window\.BLBacklogRows\.invalidate\(\)/);
   assert.equal((STORAGE.match(/'lcw\.backlog\.overview\.'/g) || []).length, 2);
   assert.doesNotMatch(CSS, /#fff|var\(--bad\)|var\(--ok\)/);
 });

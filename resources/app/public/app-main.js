@@ -17497,7 +17497,7 @@ function backlogExportQueryParams(){
     if(value==null||value===''||(Array.isArray(value)&&!value.length))continue;
     params[key]=typeof value==='object'&&!Array.isArray(value)?JSON.stringify(value):Array.isArray(value)?value.join(','):value;
   }
-  const source=[...new Set([...backlogSelectedSourceIds(),...backlogChartSourceIds()])];
+  const source=[...new Set([...backlogSelectedSourceIds(),...backlogChartSourceIds(),...(window.BLBacklogOverview?.sourceColumnIds?.()||[])])];
   if(source.length)params.sourceColumns=source.join(',');
   return params;
 }
@@ -17704,6 +17704,16 @@ let backlogDateFilter = {};
 let backlogDimValues = {};        // {dim: [tüm değerler]} — tarih penceresi içinde
 let backlogDimValuesActive = {};  // {dim: [halen veri getiren değerler]}
 let backlogCustomDimensions = []; // ASAS / Antrepo ham tablo başlıkları
+const backlogDimensionRequests=new Map();
+async function ensureBacklogDimensionValues(dim){
+  if(!lastBacklogData?.dimensionsDeferred || Object.hasOwn(backlogDimValues,dim))return;
+  const params={...buildBacklogParams(),groupBy:'',valueDimensions:dim},key=backlogQueryString(params),generation=backlogFetchGeneration;
+  let promise=backlogDimensionRequests.get(key);
+  if(!promise){promise=fetchJSON('/api/backlog?'+key).catch(error=>{backlogDimensionRequests.delete(key);throw error;});backlogDimensionRequests.set(key,promise);}
+  const data=await promise;
+  if(generation!==backlogFetchGeneration)throw new Error(appLang==='en'?'Backlog filters changed. Open the filter again.':'Backlog filtreleri değişti. Filtreyi yeniden açın.');
+  Object.assign(backlogDimValues,data.dimValues||{});Object.assign(backlogDimValuesActive,data.dimValuesActive||{});
+}
 function backlogValuesFor(dim){ return Array.isArray(backlogDimValues[dim]) ? backlogDimValues[dim] : []; }
 function backlogActiveSetFor(dim){ return new Set(Array.isArray(backlogDimValuesActive[dim]) ? backlogDimValuesActive[dim] : []); }
 function backlogSelectionSize(dim){
@@ -18128,7 +18138,7 @@ function openBacklogPivotSettings(){
   modal.querySelector('#backlogSettingsAddRow')?.addEventListener('click',()=>{syncDraftAxes();const field=backlogSettingsFirstUnusedField(modal,fields);if(!field){showToast(appLang==='en'?'No unused Backlog field is available.':'Eklenebilecek kullanılmamış Backlog alanı yok.');return;}draft.rows.push(field);renderAxes();});
   modal.querySelector('#backlogSettingsAddColumn')?.addEventListener('click',()=>{syncDraftAxes();const field=backlogSettingsFirstUnusedField(modal,fields);if(!field){showToast(appLang==='en'?'No unused Backlog field is available.':'Eklenebilecek kullanılmamış Backlog alanı yok.');return;}draft.columns.push(field);renderAxes();});
   modal.querySelector('#backlogSettingsAddFilter')?.addEventListener('click',()=>{const used=new Set(draft.filterDims);const field=fields.find(dim=>!used.has(dim));if(!field){showToast(appLang==='en'?'No unused filter field is available.':'Eklenebilecek kullanılmamış filtre alanı yok.');return;}draft.filterDims.push(field);renderFilters();});
-  modal.addEventListener('click',event=>{
+  modal.addEventListener('click',async event=>{
     const remove=event.target.closest?.('[data-backlog-config-remove]');
     if(remove&&modal.contains(remove)){const row=remove.closest('.oabConfigRow'),list=row?.parentElement;row?.remove();backlogSettingsRefreshOrderButtons(list);syncDraftAxes();return;}
     const move=event.target.closest?.('[data-backlog-config-move]');
@@ -18138,6 +18148,8 @@ function openBacklogPivotSettings(){
     const valuesBtn=event.target.closest?.('[data-backlog-filter-values]');
     if(valuesBtn&&modal.contains(valuesBtn)){
       const row=valuesBtn.closest('[data-backlog-filter-row]'),dim=row?.dataset.filterDim;if(!dim)return;
+      try{valuesBtn.disabled=true;await ensureBacklogDimensionValues(dim);}catch(error){showToast(error.message);return;}finally{valuesBtn.disabled=false;}
+      if(!modal.isConnected)return;
       if(dim==='antrepoDate'){
         openValueFilterPanel({anchorEl:valuesBtn,title:backlogDimLabelUI(dim),granularities:['year','month','week','day'],currentGran:draft.dateFilter.granularity||'month',values:gran=>((backlogDimValues.antrepoDate&&backlogDimValues.antrepoDate[gran])||[]),activeValues:gran=>new Set((backlogDimValuesActive.antrepoDate&&backlogDimValuesActive.antrepoDate[gran])||[]),selected:draft.dateFilter.granularity?new Set(draft.dateFilter.values||[]):new Set(),labelFor:(v,gran)=>dateBucketLabel(v,gran),onApply:(vals,gran)=>{draft.dateFilter=vals.size?{granularity:gran,values:[...vals]}:{};renderFilters();},onRemove:()=>{draft.dateFilter={};renderFilters();}});
       }else{
@@ -18183,7 +18195,9 @@ function openBacklogPivotSettings(){
 // Backlog boyut filtresi artık CP'deki sütun filtresiyle aynı bileşeni kullanır:
 // Ara, Tümü/Temizle, Uygula, Geçerli Seçime Ekle, Filtreyi Kaldır — ve Antrepo
 // Giriş Tarihi'nde Yıl/Ay/Hafta/Gün akordiyonu.
-function openBacklogDimFilterPanel(dim, btnEl){
+async function openBacklogDimFilterPanel(dim, btnEl){
+  try{if(btnEl)btnEl.disabled=true;await ensureBacklogDimensionValues(dim);}catch(error){showToast(error.message);return;}finally{if(btnEl)btnEl.disabled=false;}
+  if(btnEl&&!btnEl.isConnected)return;
   const isDate = dim==='antrepoDate';
   const afterChange = ()=>{
     renderBacklogDimOrder();
@@ -19384,15 +19398,11 @@ async function backlogWorkbookBufferWithImages(wb,rows,includeImages){
 }
 window.BLBacklogChartContext={
   prepareQuery:()=>fetchBacklogSourceColumns(),
-  queryParams:()=>{
-    const raw=buildBacklogParams(),params={format:'json'};
-    for(const [key,value] of Object.entries(raw||{})){
-      if(value==null||value===''||(Array.isArray(value)&&!value.length))continue;
-      params[key]=typeof value==='object'&&!Array.isArray(value)?JSON.stringify(value):Array.isArray(value)?value.join(','):value;
-    }
+  queryParams:(allColumns=false)=>{
+    const params=backlogExportQueryParams();
     // Ayar penceresinde ASAS/Antrepo dahil tüm mevcut başlıklar seçilebilir olmalı.
     const allSource=backlogExportSourceCatalog().map(item=>item.id);
-    if(allSource.length)params.sourceColumns=[...new Set(allSource)].join(',');
+    if(allColumns&&allSource.length)params.sourceColumns=[...new Set(allSource)].join(',');
     return params;
   },
   toast:message=>showToast(message),
@@ -19549,6 +19559,7 @@ function applyBacklogData(data){
   // Filtre listeleri Backlog'un KENDİ veri kümesinden gelir (CP'den değil).
   if(data && data.dimValues) backlogDimValues = data.dimValues;
   if(data && data.dimValuesActive) backlogDimValuesActive = data.dimValuesActive;
+  backlogDimensionRequests.clear();
   renderBacklog(data);
   backlogLoadedOnce=true;
   renderBacklogDimOrder();
@@ -19588,6 +19599,7 @@ async function prefetchBacklogForRefresh(){
 // pivottan farklı bir satır kümesi gösterir.
 function buildBacklogParams(){
   const params = {
+    lazyDimensions:'1',
     retailFrom: document.getElementById('backlogFrom').value || undefined,
     retailTo: document.getElementById('backlogTo').value || undefined,
     inStoreFrom: document.getElementById('backlogInStoreFrom').value || undefined,

@@ -75,14 +75,11 @@ test('delivery analysis refresh is independent of pivot grouping',()=>{
   const body=app.slice(start,end);
   assert.ok(body.indexOf('window.BLBacklogAnalysis?.onBacklogRendered')<body.indexOf('if(!data.tree)'));
 });
-test('shared filter drawer can load its values while Overview is collapsed',async()=>{
+test('shared filter drawer loads column values without fetching overview rows while collapsed',async()=>{
   const source=fs.readFileSync(require.resolve('../public/backlog-overview.js'),'utf8');
-  const start=source.indexOf('async function refresh(force)'),end=source.indexOf('\nlet pendingTimer',start);
-  let loads=0;
-  const sandbox={$:()=>({}),state:{open:false},filterOpen:true,overviewQueryParams:()=>({format:'json'}),signature:'',baseItems:null,items:null,loading:false,error:'',render:()=>{},window:{},loadRows:async()=>{loads++;return [];},R:()=>({normalizeRows:rows=>rows}),normalizedRows:null,applyOverviewFilters:rows=>rows};
-  await vm.runInNewContext(source.slice(start,end)+'\nrefresh(false)',sandbox);
+  const start=source.indexOf('async function openFilterPanel()'),end=source.indexOf('\nfunction closeFilterPanel',start);
+  let loads=0;const field={id:'cp:Sezon'};
+  const sandbox={filterOpen:false,filterRoot:()=>({querySelector:()=>null,classList:{add(){}},hidden:true}),window:{},requestAnimationFrame:fn=>fn(),updateFilterButton(){},renderFilterPanel(){},ensureFilterCatalog:async()=>{},ensureFilterValues:async f=>{assert.equal(f,field);loads++;},overviewFilters:()=>[field],filterEditorId:field.id,refresh:()=>{throw Error('Full row request is unnecessary for filter values');}};
+  await vm.runInNewContext(source.slice(start,end)+'\nopenFilterPanel()',sandbox);
   assert.equal(loads,1);
-  sandbox.filterOpen=false;
-  await vm.runInNewContext('refresh(false)',sandbox);
-  assert.equal(loads,1,'closed panels must remain lazy');
 });

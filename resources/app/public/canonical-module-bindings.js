@@ -35,6 +35,19 @@
     Object.keys(ASAS_RUNTIME_KEYS).forEach(function(fieldId){extendBinding(moduleId,fieldId,ASAS_RUNTIME_KEYS[fieldId]);});
   });
 
+  // Backlog predicate pushdown reads parser rows through an explicit binding.
+  // Only order-level fields with the same report semantics belong here.
+  var backlogOrderKeys={season:'season',buyer:'buyer',buyingGroup:'buyerGrup',manufacturer:'manufacturer',license:'license',line:'line',category:'category',colour:'colour',colourCode:'ccode',modelName:'model',orderCode:'ocode',specialCode:'ozel',country:'countryRaw',orderPlacementDate:'opd',retailDate:'retail',inStore:'mb'};
+  var backlogReportKeys={season:'Sezon',buyer:'Buyer',buyingGroup:'Buyer Grup (TR)',manufacturer:'Üretici',license:'Lisans',line:'Line',category:'Ürün Klasman',colour:'Renk',colourCode:'Renk Kod',modelName:'Model Adı',orderCode:'Sipariş Kod',specialCode:'Özel Kod 1',country:'Siparişin Üretildiği Ülke',orderPlacementDate:'Sipariş Yerleştirme MerchTarih',retailDate:'Retail Depo Tarih Yıl Ay Gün',inStore:'Model Bütçe Tarih Yıl Ay Gün'}; // i18n-ignore
+  var runtimeBindings={},reportBindings={};
+  Object.keys(backlogOrderKeys).forEach(function(id){
+    var binding=fields.bindingFor('backlog',id);
+    runtimeBindings[id]={keys:[backlogOrderKeys[id]],semantic:binding.semantic};
+    reportBindings[id]={keys:[backlogReportKeys[id]],semantic:binding.semantic};
+  });
+  fields.registerModule('backlogOrder',runtimeBindings);
+  fields.registerModule('backlogReportFilter',reportBindings);
+
   // Module-specific bindings intentionally stay outside source/import parsers.
   // They describe only how cross-module consumers read existing rows.
   fields.registerModule('quotations',{

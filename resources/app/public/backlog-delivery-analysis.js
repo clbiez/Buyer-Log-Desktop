@@ -184,20 +184,25 @@
     };
   }
 
+  let refreshGeneration=0,sourceRevision='';
   async function refresh(force) {
     if (!state.open) return;
+    const generation=++refreshGeneration;
     const signature = currentSignature();
-    if (!force && state.rows && signature === state.rowsSignature) { computeModel(); render(); return; }
+    if (!force && state.rows && signature === state.rowsSignature) { state.loading=false;state.error='';computeModel(); render(); return; }
     state.loading = true; state.error = ''; render();
     try {
-      state.rows = await fetchRows();
+      if(force)window.BLBacklogRows?.invalidate?.();
+      const rows=await fetchRows();if(generation!==refreshGeneration)return;
+      state.rows = rows;
       state.rowsSignature = signature;
       computeModel();
     } catch (error) {
+      if(generation!==refreshGeneration)return;
       state.error = error && error.message ? error.message : String(error);
       state.rows = null; state.model = null;
     } finally {
-      state.loading = false; render();
+      if(generation===refreshGeneration){state.loading = false; render();}
     }
   }
 
@@ -637,6 +642,8 @@
   }
 
   function onBacklogRendered() {
+    const revision=backlogSnapshot()?.rowsInputRevision||'';
+    if(!revision || revision!==sourceRevision){sourceRevision=revision;state.rows=null;state.rowsSignature='';}
     // Filtre değişmişse satırlar bayattır; imza karşılaştırması yeniden çekmeye karar verir.
     void refresh(false);
   }
