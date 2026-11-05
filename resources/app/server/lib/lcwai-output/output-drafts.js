@@ -17,7 +17,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const MAX_PER_OWNER = 40;
+const { isExpired } = require('./output-retention');
 const ID_RE = /^[a-f0-9]{24}$/;
 
 function defaultRoot() {
@@ -31,6 +31,7 @@ function createDraftStore(options = {}) {
   // Sahip kimliği klasör adına doğrudan yazılmaz (yol enjeksiyonu yok).
   const ownerDir = ownerId => path.join(root(), crypto.createHash('sha256').update(String(ownerId || 'default')).digest('hex').slice(0, 32));
   const fileOf = (ownerId, id) => path.join(ownerDir(ownerId), `${id}.json`);
+  const lastPrunedAt = new Map();
 
   function write(file, value) {
     fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -39,15 +40,23 @@ function createDraftStore(options = {}) {
     fs.renameSync(temp, file);
   }
 
-  /* En eski taslaklar silinir; kullanıcı başına üst sınır. */
+  /* Son oluşturma/düzenlemeden itibaren 60 gün; adet sınırıyla erken silme yok. */
   function prune(ownerId) {
     const dir = ownerDir(ownerId);
+    const at = now();
+    const last = lastPrunedAt.get(dir);
+    // Görsel içeren büyük taslakları her yeni dosyada tekrar okumayız.
+    if (last != null && at.getTime() >= last && at.getTime() - last < 24 * 60 * 60 * 1000) return;
     let names = [];
     try { names = fs.readdirSync(dir).filter(name => /^[a-f0-9]{24}\.json$/.test(name)); } catch (_) { return; }
-    if (names.length <= MAX_PER_OWNER) return;
-    const stats = names.map(name => { try { return { name, at: fs.statSync(path.join(dir, name)).mtimeMs }; } catch (_) { return { name, at: 0 }; } });
-    stats.sort((a, b) => a.at - b.at);
-    for (const item of stats.slice(0, stats.length - MAX_PER_OWNER)) { try { fs.unlinkSync(path.join(dir, item.name)); } catch (_) {} }
+    lastPrunedAt.set(dir, at.getTime());
+    for (const name of names) {
+      const file = path.join(dir, name);
+      try {
+        const draft = JSON.parse(fs.readFileSync(file, 'utf8'));
+        if (draft && draft.owner === String(ownerId || 'default') && isExpired(draft, at)) fs.unlinkSync(file);
+      } catch (_) { /* Okunamayan taslağı silme. */ }
+    }
   }
 
   function create(ownerId, draft) {
@@ -63,7 +72,7 @@ function createDraftStore(options = {}) {
     if (!ID_RE.test(key)) return null;
     let draft = null;
     try { draft = JSON.parse(fs.readFileSync(fileOf(ownerId, key), 'utf8')); } catch (_) { return null; }
-    return draft && draft.owner === String(ownerId || 'default') ? draft : null;
+    return draft && draft.owner === String(ownerId || 'default') && !isExpired(draft, now()) ? draft : null;
   }
 
   function update(ownerId, id, patch) {
@@ -77,4 +86,4 @@ function createDraftStore(options = {}) {
   return { create, get, update, root };
 }
 
-module.exports = { createDraftStore, MAX_PER_OWNER };
+module.exports = { createDraftStore };

@@ -194,6 +194,7 @@
     output: { format: '', orientation: 'portrait', detail: 'standard', template: '' },
     // Çıktı şablonları: hazır (sunucu) + kişisel + ekip (/api/lcwai/output-templates).
     templates: { builtIn: [], personal: [], shared: [] },
+    viewingOutputs: false, outputFiles: [], outputsLoading: false, outputsError: false,
     // Mesajda ekran adı geçerse o ekranın verisi otomatik eklenir.
     autoContext: true,
   };
@@ -301,6 +302,29 @@
     } catch (_) { return false; }
   }
 
+  function deleteConversation(id) {
+    if (state.busy || !state.conversations.some(conv => conv.id === id)) return false;
+    state.conversations = state.conversations.filter(conv => conv.id !== id);
+    if (state.activeId === id) {
+      state.activeId = state.conversations[0]?.id || '';
+      if (!state.activeId) newConversation();
+    }
+    persistConversations();
+    renderList(); renderMessages();
+    return true;
+  }
+
+  async function loadOutputs() {
+    const api = AI();
+    if (!api || !api.listOutputs || state.outputsLoading) return;
+    state.outputsLoading = true;
+    state.outputsError = false;
+    renderMessages();
+    try { state.outputFiles = await api.listOutputs(); }
+    catch (_) { state.outputsError = true; }
+    finally { state.outputsLoading = false; if (state.viewingOutputs) renderMessages(); }
+  }
+
   /* ---------------- Otomatik bağlam ----------------
      Kullanıcı "Backlog'da…", "CP'deki…", "bu ekranda…" dediğinde ve elle
      bağlam eklemediyse ilgili ekranın verisi otomatik eklenir. Konu
@@ -378,7 +402,7 @@
           <p class="lcwaiNote">${esc(L('Sohbet geçmişi bu kullanıcı için bu cihazda saklanır.', 'Chat history is kept for this user on this device.'))}</p>
         </aside>
         <div class="lcwaiChatMain">
-          <header class="lcwaiChatHead"><div><b>LCW AI</b> <small class="lcwaiModel" data-chat-model>${esc(AI() ? AI().modelLabel : 'GPT-6 Sol')}</small></div><div class="lcwaiChatHeadActions"><button type="button" class="lcwaiBtn lcwaiLayoutControlBtn" data-layout-control>✓ ${esc(L('Layout Kontrol', 'Layout Control'))}</button><div class="lcwaiChatConn" data-chat-conn></div></div></header>
+          <header class="lcwaiChatHead"><div><b>LCW AI</b> <small class="lcwaiModel" data-chat-model>${esc(AI() ? AI().modelLabel : 'GPT-6 Sol')}</small></div><div class="lcwaiChatHeadActions"><button type="button" class="lcwaiBtn" data-chat-outputs aria-pressed="false">${esc(L('Dosyalarım', 'My files'))}</button><button type="button" class="lcwaiBtn lcwaiLayoutControlBtn" data-layout-control>✓ ${esc(L('Layout Kontrol', 'Layout Control'))}</button><div class="lcwaiChatConn" data-chat-conn></div></div></header>
           <div class="lcwaiChatMessages" data-chat-messages role="log" aria-live="polite"></div>
           <form class="lcwaiComposer" data-chat-form>
             <div class="lcwaiOutputBar" data-chat-output>
@@ -503,6 +527,7 @@
       draftId: file.draftId,
       onTemplatesChanged: setTemplates,
       onRendered: record => {
+        if (!conv || !state.conversations.includes(conv)) { loadOutputs(); return; }
         // Düzenlenmiş dosya aynı sohbete yeni bir kart olarak eklenir.
         conv.messages.push({ role: 'ai', text: L('Düzenlenmiş dosya oluşturuldu.', 'The edited file was created.'), file: { ...record, draftId: record.draftId || file.draftId } });
         persistConversations();
@@ -680,7 +705,7 @@
   function renderList() {
     const list = $('[data-chat-list]');
     if (!list) return;
-    list.innerHTML = state.conversations.filter(conv => conv.messages.length).map(conv => `<button type="button" class="lcwaiChatItem${conv.id === state.activeId ? ' is-active' : ''}" data-chat-open="${esc(conv.id)}" title="${esc(conv.title)}">${esc(conv.title || L('Yeni sohbet', 'New chat'))}</button>`).join('')
+    list.innerHTML = state.conversations.filter(conv => conv.messages.length).map(conv => `<div class="lcwaiChatRow"><button type="button" class="lcwaiChatItem${conv.id === state.activeId && !state.viewingOutputs ? ' is-active' : ''}" data-chat-open="${esc(conv.id)}" title="${esc(conv.title)}">${esc(conv.title || L('Yeni sohbet', 'New chat'))}</button><button type="button" class="lcwaiBtn is-link" data-chat-delete="${esc(conv.id)}" aria-label="${esc(L(`Sohbeti sil: ${conv.title || 'Yeni sohbet'}`, `Delete chat: ${conv.title || 'New chat'}`))}" title="${esc(L('Sohbeti sil', 'Delete chat'))}"${state.busy ? ' disabled' : ''}>×</button></div>`).join('')
       || `<p class="lcwaiNote">${esc(L('Henüz sohbet yok.', 'No chats yet.'))}</p>`;
   }
 
@@ -701,6 +726,16 @@
   function renderMessages() {
     const box = $('[data-chat-messages]');
     if (!box) return;
+    const composer = $('[data-chat-form]'), outputs = $('[data-chat-outputs]');
+    if (composer) composer.hidden = state.viewingOutputs;
+    if (outputs) {
+      outputs.textContent = state.viewingOutputs ? L('Sohbete dön', 'Back to chat') : L('Dosyalarım', 'My files');
+      outputs.setAttribute('aria-pressed', String(state.viewingOutputs));
+    }
+    if (state.viewingOutputs) {
+      box.innerHTML = `<div class="blMotionEnter"><b>${esc(L('Dosyalarım · Son 60 gün', 'My files · Last 60 days'))}</b><p class="lcwaiNote">${esc(L('Dosyalar ve düzenlenebilir taslaklar bu cihazda 60 gün saklanır. Sohbeti silmek dosyaları silmez. Düzenlediğinizde taslağın 60 günlük süresi yenilenir.', 'Files and editable drafts are kept on this device for 60 days. Deleting a chat keeps its files. Editing renews the draft’s 60-day period.'))}</p><button type="button" class="lcwaiBtn" data-outputs-refresh${state.outputsLoading ? ' disabled' : ''}>${esc(L('Yenile', 'Refresh'))}</button></div>${state.outputsLoading ? `<p class="lcwaiNote">${esc(L('Dosyalar yükleniyor…', 'Loading files…'))}</p>` : state.outputsError ? `<p class="lcwaiMsgError">${esc(L('Dosyalar yüklenemedi. Yeniden deneyin.', 'Files could not be loaded. Try again.'))}</p>` : state.outputFiles.length ? state.outputFiles.map(file => fileCardHtml(file)).join('') : `<p class="lcwaiNote">${esc(L('Son 60 günde oluşturulmuş dosya yok.', 'No files created in the last 60 days.'))}</p>`}`;
+      return;
+    }
     const conv = activeConversation();
     if (!conv.messages.length) {
       box.innerHTML = emptyStateHtml();
@@ -781,6 +816,7 @@
     const send = $('[data-chat-send]'), cancel = $('[data-chat-cancel]');
     if (send) send.disabled = busy;
     if (cancel) cancel.hidden = !busy;
+    renderList();
   }
 
   /* ---------------- Bağlam menüsü ---------------- */
@@ -944,8 +980,23 @@
       else if (window.BLPerf?.ensureFeature) window.BLPerf.ensureFeature('layoutControl').then(openLayout).catch(() => { if (typeof showToast === 'function') showToast(L('Layout Kontrol modülü yüklenemedi.','Layout Control module could not be loaded.'), { kind: 'error' }); });
       return;
     }
-    if (target.matches('[data-chat-new]')) { if (!state.busy) { newConversation(); renderList(); renderMessages(); input.focus(); } return; }
-    if (target.matches('[data-chat-open]')) { if (!state.busy) { state.activeId = target.dataset.chatOpen; renderList(); renderMessages(); } return; }
+    if (target.matches('[data-chat-new]')) { if (!state.busy) { state.viewingOutputs = false; newConversation(); renderList(); renderMessages(); input.focus(); } return; }
+    if (target.matches('[data-chat-open]')) { if (!state.busy) { state.viewingOutputs = false; state.activeId = target.dataset.chatOpen; renderList(); renderMessages(); } return; }
+    if (target.matches('[data-chat-delete]')) {
+      const conv = state.conversations.find(item => item.id === target.dataset.chatDelete);
+      if (!state.busy && conv && window.confirm(L('Bu cihazdaki sohbet silinsin mi? Oluşturulan dosyalar Dosyalarım’da kalır.', 'Delete this chat from this device? Created files stay in My files.'))) {
+        deleteConversation(conv.id);
+        ($('[data-chat-open]') || $('[data-chat-new]'))?.focus();
+      }
+      return;
+    }
+    if (target.matches('[data-chat-outputs]')) {
+      state.viewingOutputs = !state.viewingOutputs;
+      renderList(); renderMessages();
+      if (state.viewingOutputs) loadOutputs();
+      return;
+    }
+    if (target.matches('[data-outputs-refresh]')) { loadOutputs(); return; }
     if (target.matches('[data-chat-file]')) { fileInput.click(); return; }
     if (target.matches('[data-output-format]')) {
       state.output.format = target.dataset.outputFormat;
@@ -957,8 +1008,9 @@
     }
     if (target.matches('[data-output-templates]')) { openTemplateManager(); return; }
     if (target.matches('[data-file-edit]')) {
-      const conv = activeConversation();
-      const file = conv.messages.map(message => message && message.file).find(item => item && String(item.id) === String(target.dataset.fileEdit));
+      const conv = state.viewingOutputs ? null : activeConversation();
+      const files = conv ? conv.messages.map(message => message && message.file) : state.outputFiles;
+      const file = files.find(item => item && String(item.id) === String(target.dataset.fileEdit));
       if (file && file.draftId) openEditor(file, conv);
       return;
     }
@@ -966,7 +1018,8 @@
       const api = AI();
       const opening = target.matches('[data-file-open]');
       const id = opening ? target.dataset.fileOpen : target.dataset.fileReveal;
-      const file = activeConversation().messages.map(message => message && message.file).find(item => item && String(item.id) === String(id));
+      const files = state.viewingOutputs ? state.outputFiles : activeConversation().messages.map(message => message && message.file);
+      const file = files.find(item => item && String(item.id) === String(id));
       if (api) (opening ? api.openOutput(id, file && file.fileName) : api.revealOutput(id, file && file.fileName)).catch(error => { if (typeof showToast === 'function') showToast(api.errorText(error), { kind: 'error' }); });
       return;
     }
@@ -1093,6 +1146,10 @@
     if (api) api.getStatus().then(status => { state.status = status; renderConnection(); }).catch(() => { state.status = { state: 'disconnected' }; renderConnection(); });
   }
 
+  function refreshLanguage() {
+    if (state.mounted) { renderList(); renderMessages(); }
+  }
+
   window.initLcwAiChat = initLcwAiChat;
-  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, openEditor, openTemplateManager, loadTemplates, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, resolveRecords, modelImageSheetPlan, modelImageSheetsContext, uploadModelImageSheets, addFiles, persistConversations, restoreConversations };
+  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, openEditor, openTemplateManager, loadTemplates, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, resolveRecords, modelImageSheetPlan, modelImageSheetsContext, uploadModelImageSheets, addFiles, persistConversations, restoreConversations, deleteConversation, refreshLanguage };
 })();
