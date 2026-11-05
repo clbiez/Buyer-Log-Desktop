@@ -18,7 +18,8 @@ function harness({reduced=false,off=false,hidden=false,late=false}={}){
   const header=new Element('header','workspaceContextBar'),summary=new Element('summary','kpirow');
   const filters=new Element('filters','activeFilterBar'),toolbar=new Element('toolbar','tableActionToolbar');
   const cell=new Element('cell');cell.tagName='TD';
-  const grid=new Element('grid','table');grid.tagName='TABLE';grid.tBodies=[{rows:[{cells:[cell]}]}];
+  const row=new Element('row');row.tagName='TR';row.cells=[cell];
+  const grid=new Element('grid','table');grid.tagName='TABLE';grid.tBodies=[{rows:[row]}];
   const table=new Element('table','tablewrap',[grid]);grid.closest=selector=>selector==='.tablewrap'?table:null;
   const panel=new Element('panel','panel',[header,filters,toolbar,table]);
   const view=new Element('view','',[summary,panel]);if(late)view.children=[];
@@ -45,8 +46,9 @@ function harness({reduced=false,off=false,hidden=false,late=false}={}){
 
 test('module entry follows header, summaries and content, with one animation per block',()=>{
   const h=harness();h.flush();
-  assert.deepEqual(h.calls.map(c=>c.name),['header','summary','filters','toolbar','table']);
-  assert.deepEqual(h.calls.map(c=>c.options.delay),[0,40,80,120,160]);
+  assert.deepEqual(h.calls.map(c=>c.name),['header','summary','filters','toolbar','row']);
+  assert.deepEqual(h.calls.slice(0,4).map(c=>c.options.delay),[0,40,80,120]);
+  assert.equal(h.calls[4].options.delay,390*.18);
   assert.ok(h.calls.every(c=>c.options.duration+c.options.delay<=440));
   assert.equal(h.calls[0].frames[0].transform,'translate3d(0,14px,0)');
   assert.equal(h.calls[0].options.fill,'backwards','delayed blocks stay hidden until their turn, without a persistent transform');
@@ -57,7 +59,8 @@ test('module entry follows header, summaries and content, with one animation per
 });
 test('late lazy content enters once, without replaying already visible blocks',()=>{
   const h=harness({late:true});assert.equal(h.calls.length,0);h.ready();h.flush();
-  assert.equal(h.calls.filter(c=>c.name==='table').length,1);
+  assert.equal(h.calls.filter(c=>c.name==='row').length,1);
+  assert.equal(h.calls.filter(c=>c.name==='table').length,0,'table parents stay still');
   assert.equal(h.calls.filter(c=>c.name==='header').length,1);
 });
 test('fast navigation cancels the old sequence and leaves only the current module running',()=>{
@@ -75,8 +78,8 @@ test('editing, selection and interaction keep the data block stable',()=>{
   assert.ok(h.calls.length>0);assert.equal(h.calls.filter(c=>c.name==='table').length,0);
   const a=harness();a.flush();const editor=new a.Element('editor');editor.tagName='INPUT';a.table.children.push(editor);a.emit('focusin',editor);assert.ok(a.calls.every(c=>c.cancelled));
 });
-test('table entry is atomic and a selected table never falls back to a cell wave',()=>{
-  for(const editing of [false,true]){const h=harness({late:true});h.table.editing=editing;h.ready();h.flush();assert.equal(h.calls.filter(c=>c.name==='cell').length,0);}
+test('table rows never overlap a moving parent or fall back to a cell wave',()=>{
+  for(const editing of [false,true]){const h=harness({late:true});h.table.editing=editing;h.ready();h.flush();assert.equal(h.calls.filter(c=>c.name==='cell'||c.name==='table').length,0);}
 });
 test('settled empty states animate while loading placeholders stay still',()=>{
   const h=harness({late:true});h.table.classList.add('empty');h.table.querySelector=selector=>selector==='.uiState--empty,.uiState--error'?{}:null;h.ready();h.flush();
@@ -88,7 +91,7 @@ test('a visible empty lazy host does not consume the later content entrance',()=
   h.tick();assert.equal(h.calls.length,0,'an empty host stays unanimated while its module is loading');
   // No new module activation; its already scheduled readiness retries find the content.
   host.children=[h.header,h.summary,h.table];host.textContent='loaded';h.flush();
-  assert.deepEqual(h.calls.map(c=>c.name),['header','summary','table']);
+  assert.deepEqual(h.calls.map(c=>c.name),['header','summary','row']);
 });
 test('the real shell page title leads the flow when a module has no local heading',()=>{
   const h=harness(),title=new h.Element('shell-title');h.flush();h.doc.getElementById=id=>id==='pageTitle'?title:null;

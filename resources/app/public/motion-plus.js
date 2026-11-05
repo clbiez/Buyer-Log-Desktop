@@ -1,6 +1,6 @@
 /* Buyer Log Motion+ · shared motion language (DESIGN_SYSTEM.md §6).
    Geometry, DOM ownership, tab state and business data never change here.
-   Page/cell effects are finite. An active Refresh indicator runs only while its
+   Page/row effects are finite. An active Refresh indicator runs only while its
    refresh busy class is present; no animation loops/observers of table cells. */
 (function(root){
   'use strict';
@@ -8,7 +8,7 @@
   const html=doc.documentElement;
   const reduce=()=>Boolean(root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
   const enabled=()=>!reduce()&&doc.visibilityState!=='hidden'&&html.dataset.blMotion!=='off'&&!(doc.body?.dataset?.activeTab==='overview'&&html.dataset.overviewMotion==='paused');
-  const SPEED=Object.freeze({page:340,card:360,table:390,overlay:240,bar:440,theme:560,flow:440,stagger:40,distance:14});
+  const SPEED=Object.freeze({page:340,card:360,table:390,overlay:240,bar:440,theme:560,flow:440,stagger:40,distance:14,'table-distance':10});
   const EASE='cubic-bezier(.2,.75,.25,1)';
   const duration=name=>{
     const css=root.getComputedStyle?.(html).getPropertyValue('--ui-motion-'+name);
@@ -18,6 +18,7 @@
   const TAB='main > section.active';
   const PAGE_HEADER='.ovDashboardToolbar,.workspaceContextBar,.bpaHero,.pricingWorkspaceHeader,.kolHeader,.psaHeader,.psaHead,.mfrHeader,.mfpHead,.lcHeader,.lcHead,.dmHead,.lcwaiChatHead';
   const PAGE_SUMMARY='.kpirow,.psaKpis,.pdKpis,.bpaKpis';
+  const ROW_GUARD='.blGridActiveCell,.blGridSelectedCell,.kolSpreadsheetActiveCell,.kolActiveGridCell,[aria-selected="true"],[contenteditable="true"],input:focus,textarea:focus,select:focus';
   const OVERLAYS='dialog[open],[role="dialog"][aria-hidden="false"],.colPanel.show,.vfMenu.show,.vfMenu.open,.toolbarMoreMenu:not([hidden]),.userMenu:not([hidden])';
   // Controls follow their real busy states; only an active refresh keeps rotating.
   // One-shot click feedback and other Motion+ effects remain finite.
@@ -26,7 +27,7 @@
   const ACTIVITY_CONTROLS=REFRESH_IDS.map(id=>[id,'spinning','refresh']).concat([['syncStatusBadge','is-syncing','sync']]);
   const SYNC_CONTROLS='#syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,[data-plm-sync-category]';
   const activityAnimations=new Map();
-  let generation=0,activeTab='',lastWave=-1,overlayFrame=null,overlayBefore=null;
+  let generation=0,activeTab='',overlayFrame=null,overlayBefore=null;
   const pending=new Set(),animations=new Set(),pageAnimations=new Set();
   let pageFlow=null;
   const visible=el=>{
@@ -63,45 +64,46 @@
     const id=root.setTimeout(()=>{pending.delete(id);fn();},ms);
     pending.add(id);
   }
-  function waveTable(view,token){
-    if(!enabled()||token!==generation||lastWave===token)return 0;
-    if(pageFlow?.stopped)return 0;
-    // Yazılım çiziminde (VDI/RDP) yüzlerce hücre animasyonu işlemciye düşer; sayfa ve kart hareketleri kalır.
+  function enterTableRows(view,token){
+    if(!enabled()||token!==generation||!pageFlow||pageFlow.view!==view||pageFlow.stopped)return 0;
+    // Software compositing keeps table data still, as it did for the cell wave.
     if(html.dataset.blRender==='software')return 0;
+    if(pageFlow.tables.length>=2)return 0;
     const tables=Array.from(view.querySelectorAll('table')).slice(0,12).filter(visible).slice(0,2);
-    // Önce yalnız ölçülür, sonra animasyonlar başlatılır. Her animate() stili
-    // kirletip sonraki hücre ölçümünü zorunlu yeniden yerleşime çeviriyordu
-    // (CP çiziminde 0,45–0,75 sn). Seçilen hücreler ve gecikmeler aynıdır.
+    // Batch geometry reads before writes. A bounded probe avoids scanning thousands
+    // of offscreen rows when navigation restores a deep saved scroll position.
     const queue=[];
     for(const table of tables){
-      // A table already entering as a single block must not also animate its cells.
-      if(pageFlow&&(table.closest?.('.tablewrap')||pageFlow.seen.some(block=>block===table||block.contains?.(table))))continue;
+      if(pageFlow.tables.includes(table)||pageFlow.tables.length>=2)continue;
       const tbody=table.tBodies?.[0]||table.querySelector('tbody');
       if(!tbody)continue;
       const host=table.closest?.('.tablewrap')?.getBoundingClientRect();
-      const rows=Array.from(tbody.rows||tbody.children).filter(row=>Array.from(row.cells||row.children).some(visible));
-      for(let rowIndex=0;rowIndex<rows.length;rowIndex++){
-        const cells=Array.from(rows[rowIndex].cells||rows[rowIndex].children);
-        for(let col=0;col<cells.length;col++){
-          const cell=cells[col];
-          const bounds=cell.getBoundingClientRect();
-          if(cell.tagName!=='TD'||!visible(cell)||(host&&(bounds.right<=host.left||bounds.left>=host.right||bounds.bottom<=host.top||bounds.top>=host.bottom))||
-             cell.matches('.blGridActiveCell,.blGridSelectedCell,.kolSpreadsheetActiveCell,.kolActiveGridCell,[aria-selected="true"],[contenteditable="true"]')||
-             cell.querySelector('input:focus,textarea:focus,select:focus,[contenteditable="true"]:focus')||cell.style?.backgroundColor||cell.style?.background)continue;
-          queue.push([cell,Math.min(200,rowIndex*23+col*12)]);
-        }
+      let scanned=0,index=0;
+      for(const row of tbody.rows||tbody.children||[]){
+        if(index>=6||scanned++>=128)break;
+        if(row.tagName!=='TR'||!row.isConnected||row.hidden||row.closest?.('[hidden],[aria-hidden="true"]'))continue;
+        const bounds=row.getBoundingClientRect();
+        if(bounds.width<=0||bounds.height<=0||bounds.bottom<=0||bounds.top>=root.innerHeight||bounds.right<=0||bounds.left>=root.innerWidth||
+           (host&&(bounds.right<=host.left||bounds.left>=host.right||bounds.bottom<=host.top||bounds.top>=host.bottom)))continue;
+        if(!Array.from(row.cells||row.children||[]).some(cell=>cell.tagName==='TD'))continue;
+        const order=index++;
+        if(row.matches?.(ROW_GUARD)||row.querySelector?.(ROW_GUARD))continue;
+        queue.push([row,order]);
+      }
+      // Mark even protected rows as seen: clearing a selection must not replay entry.
+      if(index)pageFlow.tables.push(table);
+    }
+    const ms=duration('table'),distance=duration('table-distance');
+    const easing=root.getComputedStyle?.(html).getPropertyValue('--ui-ease').trim()||EASE;
+    let count=0;
+    for(const [row,order] of queue){
+      const a=start(row,[{opacity:0,transform:'translate3d(0,'+distance+'px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],
+        {duration:ms*.52,delay:ms*(.18+order*.06),fill:'backwards',easing});
+      if(a){
+        a.id='bl-motion-table-row';count++;pageAnimations.add(a);
+        for(const event of ['finish','cancel'])a.addEventListener?.(event,()=>pageAnimations.delete(a),{once:true});
       }
     }
-    const ms=duration('table');
-    let count=0;
-    for(const [cell,delay] of queue){
-      // A brief tint travels from the top-left; no cell values or selection classes change.
-      if(start(cell,[
-        {opacity:.72,backgroundColor:'var(--ui-selected)',transform:'translate3d(-2px,-1px,0)'},
-        {opacity:1,backgroundColor:'transparent',transform:'translate3d(0,0,0)'}
-      ],{duration:ms,delay}))count++;
-    }
-    if(count)lastWave=token;
     return count;
   }
   function stopPageFlow(){
@@ -118,19 +120,22 @@
       for(const el of Array.from(parent.children||[])){
         if(++scanned>64)return;
         if(anchors.includes(el)||!visible(el)||el.matches?.('script,style,dialog,.uiState--loading,[aria-busy="true"]'))continue;
+        if(el.matches?.('table'))continue;
         if(el.matches?.('.empty')&&!el.querySelector?.('.uiState--empty,.uiState--error'))continue;
         // A min-height lazy host can be visible before it has rendered any content.
         if(!el.textContent?.trim()&&!el.querySelector?.('svg,canvas,img,table,input,button'))continue;
         // Unwrap layout containers, never table rows/cells or individual widgets.
         const anchored=anchors.some(anchor=>el.contains?.(anchor));
+        const hasTable=Boolean(el.querySelector?.('table'));
         const pageHost=depth===0&&el.children?.length&&!el.matches?.('.panel,.tablewrap,.empty,table,svg,canvas,[role="toolbar"],[class*="Toolbar"],[class*="toolbar"]');
-        if(depth<4&&(anchored||pageHost||el.matches?.('.ovDashboardGrid'))){visit(el,depth+1);}
-        else if(!el.querySelector?.('.uiState--loading,[aria-busy="true"]'))body.push(el);
+        if(depth<4&&(anchored||pageHost||hasTable||el.matches?.('.ovDashboardGrid'))){visit(el,depth+1);}
+        else if(!hasTable&&!el.querySelector?.('.uiState--loading,[aria-busy="true"]'))body.push(el);
       }
     }
     visit(view,0);
     const blocks=[];
     for(const el of [...anchors,...body]){
+      if(el.matches?.('table')||el.querySelector?.('table'))continue;
       if(blocks.some(parent=>parent===el||parent.contains?.(el)))continue;
       if(el.querySelector?.('input:focus,textarea:focus,select:focus,[contenteditable="true"]:focus,.blGridActiveCell,.blGridSelectedCell,.kolSpreadsheetActiveCell,.kolActiveGridCell,td[aria-selected="true"],[role="gridcell"][aria-selected="true"]'))continue;
       blocks.push(el);
@@ -139,7 +144,7 @@
   }
   function enterPage(view){
     if(!enabled()||!pageFlow||pageFlow.stopped||pageFlow.view!==view)return;
-    // Measure the small visible block set before any writes; large tables are atomic.
+    // Table ancestors stay still; their bounded row entrance is coordinated separately.
     const flow=pageFlow,blocks=pageBlocks(view).filter(el=>!flow.seen.some(seen=>seen===el||seen.contains?.(el)||el.contains?.(seen))).slice(0,Math.max(0,5-flow.seen.length));
     const step=duration('stagger'),distance=duration('distance');
     const ms=Math.max(1,duration('flow')-(blocks.length-1)*step);
@@ -162,14 +167,12 @@
     generation++;
     const token=generation;
     cancelPending();
-    pageFlow={view,seen:[],stopped:false};
+    pageFlow={view,seen:[],tables:[],stopped:false};
     restoreActivityControls(); // Tab changes must not silence a running refresh.
     enterPage(view);
+    enterTableRows(view,token);
     // Lazy modules may paint after navigation. Bounded retries only add unseen blocks.
-    for(const delay of [120,400,840])later(()=>{if(token===generation&&visible(view))enterPage(view);},delay);
-    later(()=>{if(token===generation&&visible(view))waveTable(view,token);},185);
-    // Initial async render can deliver the table after the first paint.
-    later(()=>{if(token===generation&&visible(view))waveTable(view,token);},840);
+    for(const delay of [120,400,840])later(()=>{if(token===generation&&visible(view)){enterPage(view);enterTableRows(view,token);}},delay);
   }
   const openOverlays=()=>Array.from(doc.querySelectorAll(OVERLAYS)).filter(visible);
   function hasEntrance(el){
@@ -406,7 +409,7 @@
       else restoreActivityControls();
     });
     activate(true);
-    // Masaüstünde GPU yoksa bulanıklık ve hücre dalgası hafifletilir (ui-components.css).
+    // Masaüstünde GPU yoksa bulanıklık ve tablo hareketi hafifletilir (ui-components.css).
     Promise.resolve(root.buyerLogDesktop?.renderProfile?.()).then(profile=>{
       if(profile&&profile.softwareCompositing===true)html.dataset.blRender='software';
     }).catch(()=>{});

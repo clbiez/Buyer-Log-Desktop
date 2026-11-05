@@ -210,8 +210,10 @@ Easing ortak cubic-bezier ile izlenir. Hareket içerik, geometri ve iş verisi
 **Modüller arası kademeli akış:** Başlık, özetler ve görünür ana içerik en çok
 beş ayrı blok halinde sırayla girer. Ortak `--ui-motion-flow:440ms`,
 `--ui-motion-stagger:40ms` ve `--ui-motion-distance:14px` tokenları kullanılır.
-Tablolar tek bloktur; aynı girişte hücre dalgası veya iç içe kart animasyonu
-eklenmez. Lazy çizim için sınırlı tekrarlar yalnız henüz girmemiş blokları alır.
+Tablo başlığı, kaydırma alanı ve tabloyu içeren üst bloklar sabit kalır;
+tablo gövdesi aşağıdaki sıralı satır girişiyle açılır. Aynı girişte üst blok,
+hücre dalgası veya iç içe kart animasyonu eklenmez. Lazy çizim için sınırlı
+tekrarlar yalnız henüz girmemiş blokları ve tabloları alır.
 Gezinme, hareketi kapatma ve görünmez sekme önceki akışı iptal eder; içerikle
 etkileşim, odak veya kaydırma sırasında akış durur. Seçili/düzenlenen veri
 blokları atlanır; aynı modüle tıklama, filtre ve veri yenilemesi akışı tekrarlamaz.
@@ -256,17 +258,21 @@ Taşıma simgeleri (gemi/uçak/tır) `MODE_GLYPH_PATHS` tek kaynağından gelir;
 1 araç tek rozet, birden fazla araç aynı boyutta üç küçük gemi içeren tek filo
 rozetidir; gerçek taşıma tipleri ve araç sayısı hover/detay özetinde korunur.
 
-**Sol üstten dalga (kademeli akış dışında kalan eski yüzeyler):** Aktif tablodaki sadece ilk iki görünür gridin
-kaydırma alanında görünen satır ve sütunlarında tek giriş efekti uygulanır. Hücreler diagonal gecikmeyle
-`--ui-selected` renginden özgün görünümüne döner; yatay/dikey kaydırma, seçim,
-hücre düzenleme, veri değişimi ve export tetiklemez. Aktif/seçilmiş/düzenlenen
-hücreler atlanır. Yeni sayfa aktivasyonunda tekrar çalışabilir; scroll,
-filtre seçimi veya her veri yaması bir dalga başlatmaz.
+**Sıralı satırlar:** Modül girişinde ilk iki görünür tablonun en çok altışar
+görünür veri satırı, `--ui-motion-table:390ms` toplam süre ve
+`--ui-motion-table-distance:10px` ile sırayla belirir. Satır başına süre
+toplamın %52'si, ilk gecikme %18'i ve satırlar arası aralık %6'sıdır.
+Yalnız `opacity/transform` değişir; hücre renkleri, metin, başlıklar ve seçim
+korunur. Aktif/seçili/düzenlenen hücre içeren satırın tamamı atlanır.
+Tablo başına en çok 128 satır ölçülür; derin kayıtlı kaydırma konumunda bu
+sınırda görünür satır yoksa hareket atlanır. Ölçümler animasyonlardan önce
+toplanır. Kaydırma, filtre, veri yaması ve export yeni giriş başlatmaz;
+etkileşim devam eden satır hareketini iptal eder. Yazılım çiziminde tablo
+hareket etmez; yeni modül aktivasyonunda uygun satırlar yeniden girebilir.
 
 **Erişilebilirlik/performans:** `prefers-reduced-motion`, görünmeyen sekme ve
 `data-bl-motion='off'` tüm hareketi devre dışı bırakır. Hareketler sayfa
-geçişinde iptal edilir; `opacity/transform` tercih edilir. Yalnız tablo girişinde
-kısa süreli token tabanlı `backgroundColor` WAAPI istisnası vardır. Grafik ve
+geçişinde iptal edilir; tablo girişinde yalnız `opacity/transform` kullanılır. Grafik ve
 kartlar görünürlükle sınırlı, en çok 14/16 öğe üzerinden animasyon alır.
 Aynı yeni görünür işlevin TR/EN karşılığı, 2 tema × 4 boyut, reduced-motion,
 klavye/scroll ve veri doğruluğu regresyonları teslim koşuludur.

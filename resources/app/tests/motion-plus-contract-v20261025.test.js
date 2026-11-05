@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const publicRoot=path.join(__dirname,'..','public'),read=f=>fs.readFileSync(path.join(publicRoot,f),'utf8');
 
-function harness({reduced=false,hidden=false,off=false}={}){
+function harness({reduced=false,hidden=false,off=false,activeCell=false}={}){
   const calls=[],timeouts=new Map();let next=0;
   const box=(x=10,y=20)=>({x,y,left:x,top:y,right:x+80,bottom:y+30,width:80,height:30});
   const node=(tag='TD',x=10,y=20)=>({
@@ -12,7 +12,9 @@ function harness({reduced=false,hidden=false,off=false}={}){
     animate(frames,options){const call={tag,frames,options,cancelled:false};calls.push(call);return {cancel(){call.cancelled=true;},addEventListener(){}};}
   });
   const cells=[node('TD',10,20),node('TD',90,20),node('TD',10,50),node('TD',90,50)];
-  const rows=[{cells:cells.slice(0,2)},{cells:cells.slice(2,4)}];
+  if(activeCell)cells[0].matches=()=>true;
+  const rows=[node('TR',10,20),node('TR',10,50)];
+  rows.forEach((row,i)=>{row.cells=cells.slice(i*2,i*2+2);row.querySelector=selector=>row.cells.find(cell=>cell.matches(selector))||null;});
   const table=node('TABLE');table.tBodies=[{rows}];
   const card=node('DIV');
   const view=node('SECTION');
@@ -48,24 +50,25 @@ test('Motion+ loads after canonical styles before first paint and mounts control
  assert.match(fs.readFileSync(path.resolve(publicRoot,'..','..','..','DESIGN_SYSTEM.md'),'utf8'),/Motion\+ zorunlu hareket sözleşmesidir/);
  assert.doesNotMatch(read('kpi-motion.js'),/data\.uiSystem==='manifest'.*overview/);
 });
-test('Diagonal table wave is bounded, starts top-left and never modifies cell text',()=>{
+test('Table entrance staggers rows, preserves cell text and only replays on activation',()=>{
  const h=harness();h.flush();
- const wave=h.calls.filter(x=>x.tag==='TD');
- assert.equal(wave.length,4);
- assert.equal(wave[0].options.delay,0);
- assert.equal(wave[1].options.delay,12);
- assert.equal(wave[2].options.delay,23);
- assert.equal(wave[3].options.delay,35);
+ const rows=h.calls.filter(x=>x.tag==='TR');
+ assert.equal(rows.length,2);
+ assert.equal(rows[0].options.delay,390*.18);
+ assert.equal(rows[1].options.delay,390*(.18+.06));
  assert.deepEqual(h.cells.map(c=>c.textContent),Array(4).fill('Saved data'));
- assert.equal(wave[0].frames[0].backgroundColor,'var(--ui-selected)');
+ assert.equal(rows[0].frames[0].transform,'translate3d(0,10px,0)');
+ assert.equal(rows[0].frames[0].opacity,0);
+ assert.equal(rows[0].options.fill,'backwards');
+ assert.equal(h.calls.filter(x=>x.tag==='TD').length,0,'no individual cell effects');
  h.root.BLMotionPlus.activate(false);h.flush();
- assert.equal(h.calls.filter(x=>x.tag==='TD').length,4,'same active tab cannot repeat on redraw');
+ assert.equal(h.calls.filter(x=>x.tag==='TR').length,2,'same active tab cannot repeat on redraw');
  h.root.BLMotionPlus.activate(true);h.flush();
- assert.equal(h.calls.filter(x=>x.tag==='TD').length,8,'explicit activation may replay');
+ assert.equal(h.calls.filter(x=>x.tag==='TR').length,4,'explicit activation may replay');
 });
 test('Active cell is skipped and reduced motion, hidden tab and opt-out bypass animation',()=>{
- const a=harness();a.cells[0].matches=()=>true;a.flush();
- assert.equal(a.calls.filter(c=>c.tag==='TD').length,3);
+ const a=harness({activeCell:true});a.flush();
+ assert.equal(a.calls.filter(c=>c.tag==='TR').length,1,'the whole active row stays still');
  for(const config of [{reduced:true},{hidden:true},{off:true}]){
    const h=harness(config);h.flush();
    assert.equal(h.calls.length,0,JSON.stringify(config));

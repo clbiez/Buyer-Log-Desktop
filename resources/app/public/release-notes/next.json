@@ -7,8 +7,8 @@
     "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history · Backlog performance"
   },
   "summary": {
-    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur.",
-    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices."
+    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır.",
+    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still."
   },
   "changes": [
     {
@@ -255,8 +255,8 @@
         "en": "Staggered flow between modules"
       },
       "body": {
-        "tr": "Modül değiştirirken önce başlık, ardından özetler ve ana içerik 40 ms aralıklarla, toplam 440 ms içinde açılır. Tablolar tek blok halinde girer. Aynı modüle tıklama ve veri yenileme geçişi tekrarlamaz; hızlı gezinme eski hareketi iptal eder. Seçim, düzenleme, kaydırma ve azaltılmış hareket tercihi korunur.",
-        "en": "Switching modules reveals the header, summaries and main content in 40 ms steps within 440 ms. Tables enter as single blocks. Clicking the same module or refreshing data does not repeat the transition; rapid navigation cancels the previous motion. Selection, editing, scrolling and reduced-motion preferences are preserved."
+        "tr": "Modül değiştirirken önce başlık, ardından özetler ve ana içerik 40 ms aralıklarla, toplam 440 ms içinde açılır. Tablo üst kapsayıcıları sabit kalır; veri satırları ayrı sıralı giriş kullanır. Aynı modüle tıklama ve veri yenileme geçişi tekrarlamaz; hızlı gezinme eski hareketi iptal eder. Seçim, düzenleme, kaydırma ve azaltılmış hareket tercihi korunur.",
+        "en": "Switching modules reveals the header, summaries and main content in 40 ms steps within 440 ms. Table ancestors stay still; data rows use a separate staggered entrance. Clicking the same module or refreshing data does not repeat the transition; rapid navigation cancels the previous motion. Selection, editing, scrolling and reduced-motion preferences are preserved."
       },
       "visual": {
         "kind": "screenshot",
@@ -356,6 +356,35 @@
         "caption": {
           "tr": "Gerçek çıktı düzenleyici: 45 dosya arasındaki en eski demo raporu açıldı ve bağlantı olmadan güncellenmiş dosya oluşturuldu.",
           "en": "Actual output editor: the oldest of 45 demo reports was opened and an updated file was created offline."
+        }
+      }
+    },
+    {
+      "id": "table-staggered-rows",
+      "type": "improvement",
+      "module": {
+        "tr": "Tablo geçişleri",
+        "en": "Table transitions"
+      },
+      "title": {
+        "tr": "Tablolar sıralı satırlarla açılır",
+        "en": "Tables enter with staggered rows"
+      },
+      "body": {
+        "tr": "Modül değiştirirken ilk iki görünür tablonun en çok altışar görünür veri satırı hafifçe yükselerek sırayla belirir. Eski hücre renk dalgası kaldırıldı; tablo başlığı, kaydırma alanı ve hücre renkleri sabit kalır. Seçili veya düzenlenen satırlar atlanır. Aynı modüle tıklama ve veri yenileme hareketi tekrarlamaz; etkileşim ve hızlı gezinme önceki hareketi iptal eder. Azaltılmış harekette ve yazılım çiziminde tablo doğrudan görünür.",
+        "en": "When switching modules, up to six visible data rows in each of the first two visible tables enter sequentially with a subtle lift. The old cell tint wave is removed; table headers, scroll containers and cell colours stay still. Selected or edited rows are skipped. Clicking the same module or refreshing data does not replay the entrance; interaction and rapid navigation cancel old effects. Reduced motion and software compositing show the table immediately."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-staggered-rows.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP tablosunda sabit başlık altında sırayla beliren veri satırları",
+          "en": "Data rows entering in sequence beneath the fixed header in the actual Buyer Log CP table"
+        },
+        "caption": {
+          "tr": "İzole sentetik verili gerçek Buyer Log oturumunda sıralı satır girişinin bir karesi. Veri, başlık ve kaydırma konumu korunur.",
+          "en": "A frame of the staggered-row entrance in an actual Buyer Log session with isolated synthetic data. Data, headers and scroll positions are preserved."
         }
       }
     }
