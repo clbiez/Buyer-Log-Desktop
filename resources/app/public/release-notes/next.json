@@ -7,8 +7,8 @@
     "en": "UI transitions and balanced sidebar navigation · faster PLM Sync · freeze-free update startup"
   },
   "summary": {
-    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir. Hover bilgi kutuları ve grafik değer etiketleri seçili temanın renklerini izler. Veri Yönetimi'ndeki CP, Diğer modüller ve INTAKE horizon filtreleri, IAS karşılığını otomatik öneren tek bir çekmecede düzenlenir. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir. Güncellemeden sonra giriş ekranı açılırken yaşanan donma giderildi. BuyerLog.exe başlar başlamaz görünen açılış bildirimi güncelleme adımlarını gösterir; giriş sonrası açılış perdesi modüller hazır olmadan geçilmez ve Buyer Log'un hangi aşamada olduğunu söyler.",
-    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values. Hover information boxes and chart value labels follow the selected theme colors. CP, Other modules and INTAKE horizon filters in Data Management are edited in a single drawer that suggests IAS counterparts automatically. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data. The freeze while the sign-in screen opened after an update is fixed. The launch notice that appears as soon as BuyerLog.exe starts now lists the update steps; after sign-in the startup curtain cannot be passed before the modules are ready and tells you which stage Buyer Log is in."
+    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir. Hover bilgi kutuları ve grafik değer etiketleri seçili temanın renklerini izler. Veri Yönetimi'ndeki CP, Diğer modüller ve INTAKE horizon filtreleri, IAS karşılığını otomatik öneren tek bir çekmecede düzenlenir. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir. Güncellemeden sonra giriş ekranı açılırken yaşanan donma giderildi. BuyerLog.exe başlar başlamaz görünen açılış bildirimi güncelleme adımlarını gösterir; giriş sonrası açılış perdesi modüller hazır olmadan geçilmez ve Buyer Log'un hangi aşamada olduğunu söyler. Parsiyel sevkiyatı olan CP siparişlerinde Belge Operasyon Merkezi'nin LCW AI kontrolü artık \"CP bağlamı hazırlanamadı\" hatasıyla durmaz.",
+    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values. Hover information boxes and chart value labels follow the selected theme colors. CP, Other modules and INTAKE horizon filters in Data Management are edited in a single drawer that suggests IAS counterparts automatically. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data. The freeze while the sign-in screen opened after an update is fixed. The launch notice that appears as soon as BuyerLog.exe starts now lists the update steps; after sign-in the startup curtain cannot be passed before the modules are ready and tells you which stage Buyer Log is in. Document Operations Center's LCW AI check no longer stops with \"CP context could not be prepared\" for CP orders with partial shipments."
   },
   "changes": [
     {
@@ -501,6 +501,35 @@
         "caption": {
           "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
           "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "document-review-partial-shipments",
+      "type": "fix",
+      "module": {
+        "tr": "Belge Operasyon Merkezi",
+        "en": "Document Operations Center"
+      },
+      "title": {
+        "tr": "LCW AI kontrolü parsiyelli siparişlerde çalışır",
+        "en": "LCW AI check works for partially shipped orders"
+      },
+      "body": {
+        "tr": "Sürükle-bırakla eklenen test raporu ve sonuç maillerinin LCW AI analizi, IAS parsiyeli olan bir CP siparişi bulunduğunda \"CP bağlamı hazırlanamadı · Ekrandaki bir sipariş alanı güncel değil\" hatasıyla duruyordu; CP verilerini yeniden yüklemek de sorunu çözmüyordu. CP ekranının parsiyellerden kendisinin özetlediği durum, antrepo tarihi, vasıta ve handover değerleri artık eski veri sayılmaz; LCW AI her zaman sunucudaki güncel değerlerle çalışır ve CP ekranında görünen değerler değişmez. CP verisi gerçekten eskimişse inceleme bir kez kendiliğinden yenilenip yeniden denenir; sorun sürerse hata mesajı güncel olmayan sütunun adını gösterir.",
+        "en": "LCW AI analysis of dragged-and-dropped test reports and result e-mails stopped with \"CP context could not be prepared · An order field on the page is out of date\" whenever a CP order had IAS partial shipments, and reloading CP data did not help. The status, warehouse arrival date, vehicle and handover values that the CP screen summarises from partials are no longer treated as stale data; LCW AI always works with the current server values and the values shown on the CP screen are unchanged. If CP data is genuinely out of date, the review reloads it once and retries automatically; if the problem persists, the error names the out-of-date column."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "document-review-partial-shipments.png",
+        "alt": {
+          "tr": "Parsiyel sevkiyatlı demo sipariş için tamamlanan LCW AI belge incelemesi",
+          "en": "Completed LCW AI document review for a partially shipped demo order"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: üretim bakiyesi ve iki IAS parsiyeli siparişte analiz ilk denemede hazır.",
+          "en": "Actual Buyer Log with isolated demo data: analysis is ready on the first attempt for an order with a production remainder and two IAS partials."
         }
       }
     }

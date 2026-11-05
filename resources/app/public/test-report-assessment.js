@@ -14,6 +14,14 @@
     if (value && typeof value === 'object' && !Array.isArray(value)) return value;
     try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null; } catch (_) { return null; }
   }
+  // Display values the page derives itself; never evidence of stale order data.
+  // Priority carries personal rule overlays. The scalar logistic summary is
+  // rebuilt by the page from the server's _logisticSegments with its own main
+  // segment choice (first IAS partial), while the server keeps the production
+  // remainder first; for a partially shipped order they legitimately differ.
+  // The review packet always carries the server's canonical values.
+  const PAGE_DERIVED_FIELDS = Object.freeze(['Priority', 'STATUS', 'Ant. Arrival', 'Del. Type', 'HANDOVER Tarihi']);
+  const pageDerived = key => PAGE_DERIVED_FIELDS.indexOf(key) >= 0;
   function cpSnapshot(rows, options) {
     const opts = options || {};
     const fields = new Set();
@@ -152,5 +160,5 @@
     if (focus.some(id => !unresolved.includes(id) && !assessments.some(item => item.evidence.some(ref => ref.sourceId === id)))) errors.push('unaccounted-source');
     return { ok: !errors.length, errors: [...new Set(errors)], assessments, unresolvedSourceIds: unresolved };
   }
-  return { PROTOCOL, cpSnapshot, batches, validate, keyOf, identifier };
+  return { PROTOCOL, PAGE_DERIVED_FIELDS, pageDerived, cpSnapshot, batches, validate, keyOf, identifier };
 });

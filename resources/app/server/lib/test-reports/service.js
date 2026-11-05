@@ -190,11 +190,12 @@ function createService({authorizedOrders,authorizedOrdersNow=null,audit=()=>{},s
       for(const row of canonical.cp.rows) {
         const client=clientRows.get(row.key);
         if(!client)throw incompleteCp('coverage');
-        // The page overlays personal rules/checklist on the system Priority.
-        // That derived display value is not evidence of stale order data.
-        // Keep all business fields and checklist states strict; send the
-        // canonical fields/rules below, never trust a client-supplied Priority.
-        const changed=Object.entries(row.fields).find(([key,value])=>key!=='Priority'&&JSON.stringify(client.fields?.[key])!==JSON.stringify(value));
+        // The page derives Priority (personal rules) and the scalar logistic
+        // summary (from _logisticSegments) itself; see PAGE_DERIVED_FIELDS.
+        // Those display values are not evidence of stale order data. Keep all
+        // other business fields and checklist states strict; send the canonical
+        // fields/rules below, never trust a client-supplied derived value.
+        const changed=Object.entries(row.fields).find(([key,value])=>!Assessment.pageDerived(key)&&JSON.stringify(client.fields?.[key])!==JSON.stringify(value));
         if(changed)throw incompleteCp('fields',{field:changed[0]});
         if(digest(states(client))!==digest(states(row)))throw incompleteCp('checklist');
       }
