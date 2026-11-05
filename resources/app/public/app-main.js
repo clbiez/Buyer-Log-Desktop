@@ -22875,7 +22875,13 @@ async function kolSaveWorkspaceNow(saveOptions){
   if(kolWorkspaceSaving){kolWorkspacePending=true;const activeResult=await kolWorkspaceSavePromise;return kolWorkspacePending?kolSaveWorkspaceNow(options):activeResult;}
   const ownerId=kolWorkspaceOwnerId;
   const change=options.preparedChange||kolCollectChanges();
-  if(change&&change.empty){kolWorkspacePending=false;return {ok:true,durable:true,unchanged:true,primaryAcknowledged:true,revision:kolWorkspaceRevision};}
+  if(change&&change.empty){
+    kolWorkspacePending=false;
+    // A quick toggle back to the acknowledged baseline leaves no change to save.
+    // A prepared subset can be empty while unrelated local edits still need their draft.
+    if(!options.preparedChange)kolClearPendingWorkspace(ownerId);
+    return {ok:true,durable:true,unchanged:true,primaryAcknowledged:true,revision:kolWorkspaceRevision};
+  }
   const payload=JSON.parse(JSON.stringify(change||kolWorkspacePayload()));
   const rowMode=Boolean(change);
   if(rowMode&&options.atomic===true)payload.atomic=true;

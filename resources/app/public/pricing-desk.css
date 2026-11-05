@@ -287,11 +287,15 @@ td.kolPriceStripTd:hover .kolManualBtn,td.kolPriceStripTd:focus-within .kolManua
 .cpdInput{display:flex;flex-direction:column;gap:3px}
 .cpdInput input{height:var(--ui-control-height);padding:0 8px}
 .cpdTarget{max-width:160px;margin-top:6px}
-.cpdInput select{height:var(--ui-control-height);padding:0 8px}
 .cpdCountryRule .cpdInput{max-width:280px}
-.cpdCountryChips{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;padding:0}
-.cpdCountryChip{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:2px 4px 2px 10px}
-.cpdCountryChip>.tbtn{min-width:24px;height:24px;padding:0}
+.cpdCountryPicker>summary{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;min-height:var(--ui-control-height);padding:0 8px;cursor:pointer;list-style:none}
+.cpdCountryPicker>summary::-webkit-details-marker{display:none}
+.cpdCountryPicker>summary::after{content:'▾'}
+.cpdCountryPicker[open]>summary::after{content:'▴'}
+.cpdCountryList{max-height:240px;overflow:auto;padding:4px}
+.cpdCountryList label{display:flex;align-items:center;gap:8px;min-height:var(--ui-control-height-small);padding:4px 8px;cursor:pointer}
+.cpdCountryList input[type=checkbox]{width:16px;height:16px;flex:0 0 auto;margin:0;padding:0}
+
 .cpdLineage dl{margin:0;display:grid;gap:6px}
 .cpdLineage dl>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .cpdLineage dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
