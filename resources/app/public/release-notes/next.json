@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Kişisel lisans favorileri ve arayüz iyileştirmeleri",
-    "en": "Personal license favorites and interface improvements"
+    "tr": "Kişisel lisans favorileri ve arayüz iyileştirmeleri ve Kural Studio",
+    "en": "Personal license favorites and interface improvements and Rules Studio"
   },
   "summary": {
-    "tr": "Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır.",
-    "en": "License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section."
+    "tr": "Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada.",
+    "en": "License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first."
   },
   "changes": [
     {
@@ -124,6 +124,35 @@
         "caption": {
           "tr": "Gerçek Buyer Log, izole demo verisi: ülkeler aynı listeden seçilir; altta tekrarlanan etiketler yoktur.",
           "en": "Actual Buyer Log with isolated demo data: countries are selected in one list without duplicate tags underneath."
+        }
+      }
+    },
+    {
+      "id": "checklist-rules-studio-workspace",
+      "type": "improvement",
+      "module": {
+        "tr": "Kontrol ve Kurallar",
+        "en": "Checklist & Rules"
+      },
+      "title": {
+        "tr": "LCW AI odaklı sade kural çalışma alanı",
+        "en": "A simpler rule workspace with LCW AI first"
+      },
+      "body": {
+        "tr": "Öncelik kuralları ve kontrol soruları soldaki listeden aranır ve etkinliğe göre süzülür. Sağda yalnız seçilen kayıt açılır; LCW AI görünür başlar, koşulların sade özeti ve gerçek sipariş etkisi gösterilir. Elle düzenleme gerektiğinde açılır. AI önerisi önce taslağa alınır, kontrol edilip kaydedilene kadar kurallara uygulanmaz.",
+        "en": "Search and filter priority rules and checklist questions in the list on the left. Only the selected item opens on the right, with LCW AI visible first, a plain-language condition summary and live order impact. Manual editing opens when needed. AI suggestions first enter a draft and take effect only after review and saving."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-rules-studio-workspace.png",
+        "alt": {
+          "tr": "Solda kural listesi, sağda LCW AI ve seçili kuralın sade özeti",
+          "en": "Rule list on the left, LCW AI and the selected rule’s plain summary on the right"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: seçili kural, LCW AI ile düzenleme ve kontrol sonrası kaydetme.",
+          "en": "Actual Buyer Log with isolated demo data: selected rule, LCW AI editing and saving after review."
         }
       }
     }

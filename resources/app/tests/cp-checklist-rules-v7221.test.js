@@ -318,7 +318,7 @@ test('Studio tür kısayolları doğru sekmeyi açar; silme bağımlılık uyar�
   const view = read('public/cp-overview-assistant.js');
   assert.match(view, /function openRules\(\) \{ openRuleManager\('priority'\); \}/);
   assert.match(view, /function openSettings\(\) \{ openRuleManager\('checklist'\); \}/);
-  assert.match(view, /const visible = rulesFor\(activeTab\);/);
+  assert.match(view, /const all = rulesFor\(kind\);/);
   assert.match(view, /function confirmDelete\(rule, forAll = false\)/);
   assert.match(view, /Rules\.dependentsOf\(rule, state\.rules\)/);
   assert.match(view, /if \(!confirmDelete\(rule\)\) return;/);
