@@ -5,7 +5,7 @@ function harness({reduced=false,hidden=false,off=false}={}){
  const calls=[],media={matches:reduced,addEventListener(){}},listeners={};
  function node(height=180){
   const values=new Map(),attrs={};
-  const el={hidden:false,inert:false,isConnected:true,children:[],attrs,
+  const el={hidden:false,inert:false,isConnected:true,children:[],attrs,dataset:{},
    style:{getPropertyValue:k=>values.get(k)?.[0]||'',getPropertyPriority:k=>values.get(k)?.[1]||'',setProperty:(k,v,p='')=>values.set(k,[v,p]),removeProperty:k=>values.delete(k)},
    getBoundingClientRect:()=>({left:0,right:400,top:30,bottom:30+height,width:400,height:el.hidden&&values.get('display')?.[1]!=='important'?0:height}),
    closest:()=>null,matches:()=>false,contains:x=>x===el||el.children.includes(x),setAttribute:(k,v)=>attrs[k]=v,
@@ -17,7 +17,7 @@ function harness({reduced=false,hidden=false,off=false}={}){
  vm.runInNewContext(read('motion-plus.js'),{window:root});
  const panel=node();panel.parentElement=node();panel.children=Array.from({length:12},()=>node(20));
  const trigger={focus(){doc.activeElement=trigger;},isConnected:true,hidden:false,closest:()=>null,getBoundingClientRect:()=>({left:0,right:400,top:0,bottom:30,width:400,height:30})};
- return {root,doc,calls,panel,trigger,media};
+ return {root,doc,calls,panel,trigger,media,listeners,node};
 }
 test('shared disclosure animates actual opening and closing; state, values and DOM identity survive',()=>{
  const h=harness(),{panel,root,calls,trigger}=h,children=panel.children.slice();panel.hidden=true;
@@ -66,4 +66,16 @@ test('native details preserve native semantics and floating pickers, using share
  assert.match(css,/data-bl-disclosure="overlay"/);assert.match(css,/prefers-reduced-motion:reduce/);
  assert.match(read('ui-tokens.css'),/--ui-motion-disclosure-step:32ms/);assert.match(js,/doc\.addEventListener\('toggle'/);
  assert.doesNotMatch(js,/subtree\s*:\s*true|setInterval\(/);
+});
+test('closing native details removes its editors from Tab order and restores original inert state on reopen',()=>{
+ const h=harness({off:true});h.listeners.DOMContentLoaded();
+ const summary=h.node(20),body=h.node(),editor=h.node(20),details=h.node();
+ summary.tagName='SUMMARY';summary.focus=()=>{h.doc.activeElement=summary;};
+ body.children=[editor];details.tagName='DETAILS';details.children=[summary,body];details.querySelector=()=>summary;
+ h.doc.activeElement=editor;details.open=false;h.listeners.toggle({target:details});
+ assert.equal(body.inert,true);assert.equal(h.doc.activeElement,summary);
+ details.open=true;h.listeners.toggle({target:details});assert.equal(body.inert,false);
+ const locked=h.node();locked.inert=true;details.children=[summary,locked];
+ details.open=false;h.listeners.toggle({target:details});details.open=true;h.listeners.toggle({target:details});
+ assert.equal(locked.inert,true,'an existing read-only body remains inert');
 });

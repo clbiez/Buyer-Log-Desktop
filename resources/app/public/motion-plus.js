@@ -27,7 +27,7 @@
   const ACTIVITY_CONTROLS=REFRESH_IDS.map(id=>[id,'spinning','refresh']).concat([['syncStatusBadge','is-syncing','sync']]);
   const SYNC_CONTROLS='#syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,[data-plm-sync-category]';
   const activityAnimations=new Map();
-  const disclosures=new WeakMap(),activeDisclosures=new Set(),nativeDisclosures=new WeakMap();
+  const disclosures=new WeakMap(),activeDisclosures=new Set(),nativeDisclosures=new WeakMap(),nativeInert=new WeakMap();
   let generation=0,activeTab='',overlayFrame=null,overlayBefore=null;
   const pending=new Set(),animations=new Set(),pageAnimations=new Set();
   let pageFlow=null;
@@ -468,6 +468,12 @@
     doc.addEventListener('toggle',event=>{
       const details=event.target;
       if(details?.tagName!=='DETAILS')return;
+      const content=Array.from(details.children||[]).filter(child=>child.tagName!=='SUMMARY');
+      for(const child of content){
+        if(!nativeInert.has(child))nativeInert.set(child,Boolean(child.inert));
+        if(!details.open&&child.contains?.(doc.activeElement))details.querySelector?.('summary')?.focus?.({preventScroll:true});
+        child.inert=details.open?nativeInert.get(child):true;
+      }
       for(const effect of nativeDisclosures.get(details)||[])effect.cancel();
       const effects=[];nativeDisclosures.set(details,effects);
       const floating=Array.from(details.children||[]).some(child=>child.tagName!=='SUMMARY'&&['absolute','fixed'].includes(root.getComputedStyle?.(child).position));
