@@ -1,7 +1,7 @@
 /* Buyer Log — License cards (list view).
    One row per card (license × licensor; several licensors never merge). Royalty,
-   commissions and hologram of the row's contract are edited in place; the expanded
-   row holds every contract, contact/portal details and the image. Rows are selected
+   commissions and hologram of the row's contract are edited in place; a compact
+   dialog holds the selected contract, optional history, contact details and image. Rows are selected
    for the supplier atlas; the approval map opens in BLLicenseMapEditor.
    Drafts are per card and guarded by the card's editToken: background refreshes never
    discard a draft, and only a verified change to that card blocks its save. */
@@ -20,7 +20,7 @@
   // and synchronizes it through /api/user-preferences, never the shared card store.
   const FAVORITES_KEY='buyerlog.favorites.licenseCards.v1';
   const S={host:null,data:null,pending:null,loading:false,stale:false,error:'',loadError:null,query:'',licensor:null,status:'all',sort:{key:'license',dir:'asc'},
-    selected:new Set(),favorites:new Set(),favoritesOnly:false,expanded:'',drafts:new Map(),renderQueued:false,animate:true,flash:new Set(),exporting:false,stats:new Map(),writes:0,mapBase:null};
+    selected:new Set(),favorites:new Set(),favoritesOnly:false,expanded:'',historyOpen:false,addLicensorOpen:false,drafts:new Map(),renderQueued:false,animate:true,flash:new Set(),exporting:false,stats:new Map(),writes:0,mapBase:null};
   const visible=()=>S.host&&S.host.getClientRects().length>0;
   const cardOf=id=>S.data?.cards?.find(c=>c.id===id)||null;
   const canEdit=()=>Boolean(S.data?.canEdit);
@@ -192,7 +192,7 @@
     return `<div class="${cls}" data-row="${esc(row.id)}" style="--i:${Math.min(i,24)}">
       <span class="lcPick"><label class="lcCheck"><input type="checkbox" data-lc-select="${esc(row.id)}" ${S.selected.has(row.id)?'checked':''} aria-label="${esc(T('Üretici atlası için seç','Select for supplier atlas'))}"></label><button type="button" class="lcIconBtn lcFavorite" data-lc-act="favorite" data-id="${esc(row.id)}" aria-pressed="${isFavorite(row)}" title="${esc(T(isFavorite(row)?'Favorilerimden çıkar':'Favorilerime ekle',isFavorite(row)?'Remove from my favorites':'Add to my favorites'))}" aria-label="${esc(row.license+' · '+(row.licensor||'—')+' — '+T(isFavorite(row)?'Favorilerimden çıkar':'Favorilerime ekle',isFavorite(row)?'Remove from my favorites':'Add to my favorites'))}"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></button></span>
       ${thumb(row,d)}
-      <button type="button" class="lcName" data-lc-act="expand" data-id="${esc(row.id)}" aria-expanded="${open}"><b data-no-i18n>${esc(row.license)}</b><small data-no-i18n>${esc(seasons(rule))} · ${esc(rule?.categories?.join(', ')||T('Tüm kategoriler','All categories'))}</small></button>
+      <button type="button" class="lcName" aria-haspopup="dialog" data-lc-act="expand" data-id="${esc(row.id)}" aria-expanded="${open}"><b data-no-i18n>${esc(row.license)}</b><small data-no-i18n>${esc(seasons(rule))} · ${esc(rule?.categories?.join(', ')||T('Tüm kategoriler','All categories'))}</small></button>
       ${licensorCell(row)}
       ${rateCell(row,d,'royalty','%')}${rateCell(row,d,'trCommission','%')}${rateCell(row,d,'ydCommission','%')}${rateCell(row,d,'hologramCost','$')}
       <span class="lcPeriod">${rule?`${statusBadge(status)}<small>${esc(range(rule))}${row.primary.extraActive?` · +${row.primary.extraActive} ${esc(T('kapsam','scopes'))}`:''}</small>`:(canEdit()&&row.licensor?`<button type="button" class="lcBtn sm" data-lc-act="addContract" data-id="${esc(row.id)}"><svg class="ic"><use href="#i-plus"/></svg>${esc(T('Sözleşme ekle','Add contract'))}</button>`:statusBadge('none'))}</span>
@@ -200,10 +200,10 @@
       <span class="lcRowTools">
         <span class="lcRowSave"><button type="button" class="lcIconBtn isPrimary" data-lc-act="save" data-id="${esc(row.id)}" title="${esc(T('Kaydet (Enter)','Save (Enter)'))}" ${d?.saving||d?.conflict?'disabled':''}><svg class="ic"><use href="#i-check"/></svg></button><button type="button" class="lcIconBtn" data-lc-act="discard" data-id="${esc(row.id)}" title="${esc(T('Geri al (Esc)','Revert (Esc)'))}"><svg class="ic"><use href="#i-arrow-back-up"/></svg></button></span>
         <button type="button" class="lcIconBtn" data-lc-act="map" data-id="${esc(row.id)}" title="${esc(T('Haritayı düzenle','Edit map'))}"><svg class="ic"><use href="#i-binary-tree-2"/></svg></button>
-        <button type="button" class="lcIconBtn lcExpand" data-lc-act="expand" data-id="${esc(row.id)}" aria-expanded="${open}" title="${esc(T('Ayrıntılar','Details'))}"><svg class="ic"><use href="#i-chevron-down"/></svg></button>
+        <button type="button" class="lcIconBtn lcExpand" aria-haspopup="dialog" data-lc-act="expand" data-id="${esc(row.id)}" aria-expanded="${open}" title="${esc(T('Kartı düzenle','Edit card'))}" aria-label="${esc(T('Kartı düzenle','Edit card'))}"><svg class="ic"><use href="#i-edit"/></svg></button>
       </span>
       ${d?.error||d?.conflict?`<div class="lcRowMsg" role="alert">${esc(d.conflict?T('Kayıt başka yerde değişti; değişiklikleriniz korunuyor.','The record changed elsewhere; your edits are kept.'):d.error)}${d.conflict?` <button type="button" class="lcLink" data-lc-act="reopen" data-id="${esc(row.id)}">${esc(T('Güncel kaydı aç','Open current record'))}</button>`:''}</div>`:''}
-    </div>${open?detailHtml(row,d):''}`;
+    </div>`;
   }
   function contractRow(card,d,r){
     const id=esc(r.id),dis=!canEdit()||d?.saving||d?.conflict?'disabled':'',status=E.ruleStatus(r,E.today());
@@ -223,34 +223,53 @@
     const st=S.stats.get(key);
     return `<div class="lcStats"><span><b>${nf(st.orders,0)}</b>${esc(T('sipariş','orders'))}</span><span><b>${nf(st.quantity,0)}</b>${esc(T('adet','units'))}</span><span><b>${nf(st.lines,0)}</b>${esc(T('satır','lines'))}</span></div><small class="lcMuted">${esc(st.module==='cp'?T('Yüklenmiş CP verisi.','Loaded CP data.'):T('Yüklenmiş Orders verisi.','Loaded Orders data.'))}</small>`;
   }
+  function editorContract(card,d,r){
+    const dis=!canEdit()||d?.saving||d?.conflict?'disabled':'',id=esc(r.id),cid=esc(card.id);
+    const field=(key,label,value,type='text',placeholder='')=>`<label class="lcField"><span>${esc(label)}</span><input type="${type}" data-lc-rule="${id}" data-lc-key="${key}" data-id="${cid}" value="${esc(value)}" placeholder="${esc(placeholder)}" ${dis}></label>`;
+    const rate=(key,label,suffix)=>`<div class="lcField"><span>${esc(label)}</span><label class="lcRateCell"><input class="lcRate" data-lc-rule="${id}" data-lc-key="${key}" data-id="${cid}" inputmode="decimal" value="${esc(fmtRate(r[key]))}" aria-label="${esc(label)}" ${dis}><span>${suffix}</span></label></div>`;
+    return `<div class="lcContract lcEditorContract"><div class="lcContractTools">${statusBadge(E.ruleStatus(r,E.today()))}<span class="lcSpacer"></span><button type="button" class="lcBtn sm" data-lc-act="checkRule" data-rule-id="${id}">${esc(T('Hesapla','Calculate'))}</button>${canEdit()&&!d?.conflict?`<button type="button" class="lcBtn sm" data-lc-act="applyRule" data-id="${cid}" data-rule-id="${id}" ${dis}>${esc(T('Uygula','Apply'))}</button><button type="button" class="lcIconBtn" data-lc-act="deleteRule" data-id="${cid}" data-rule-id="${id}" title="${esc(T('Sözleşmeyi sil','Delete contract'))}" aria-label="${esc(T('Sözleşmeyi sil','Delete contract'))}" ${dis}><svg class="ic"><use href="#i-trash"/></svg></button>`:''}</div>
+      ${field('opdStart',T('OPD başlangıç','OPD start'),r.opdStart||'','date')}${field('opdEnd',T('OPD bitiş','OPD end'),r.opdEnd||'','date')}${field('seasons',T('Sezonlar','Seasons'),(r.seasons||[]).join(', '),'text',T('Tüm sezonlar','All seasons'))}${field('categories',T('Kategoriler','Categories'),(r.categories||[]).join(', '),'text',T('Tüm kategoriler','All categories'))}
+      ${rate('royalty','Royalty','%')}${rate('trCommission',T('TR kom.','TR comm.'),'%')}${rate('ydCommission',T('YD kom.','Intl comm.'),'%')}${rate('hologramCost','Hologram','$')}</div>`;
+  }
+  // Closing keeps pending card edits; Cancel explicitly discards them.
+  function closeEditor(){
+    const id=S.expanded;S.expanded='';S.historyOpen=false;S.addLicensorOpen=false;
+    document.activeElement?.blur?.();render();
+    S.host.querySelector(`[data-row="${CSS.escape(id)}"] .lcName`)?.focus?.({preventScroll:true});
+  }
   function detailHtml(row,d){
     const card=row.card,rules=(d?d.rules:card.rules)||[],profile=d?d.profile:profileOf(card),dis=!canEdit()||d?.saving||d?.conflict?'disabled':'';
+    const primary=rules.find(r=>r.id===d?.primaryId)||E.primaryContract(rules).rule;
     const sorted=[...rules].sort((a,b)=>String(b.opdStart||'').localeCompare(String(a.opdStart||'')));
+    const others=sorted.filter(r=>r.id!==primary?.id),historyCount=others.length+(row.merged||[]).reduce((n,m)=>n+(m.rules||[]).length,0);
     const input=(k,label,type='text',max=200)=>`<label class="lcField"><span>${esc(label)}</span><input type="${type}" data-lc-profile="${k}" data-id="${esc(card.id)}" value="${esc(profile[k]||'')}" maxlength="${max}" ${dis}></label>`;
     const area=(k,label,max)=>`<label class="lcField lcWide"><span>${esc(label)}</span><textarea rows="2" data-lc-profile="${k}" data-id="${esc(card.id)}" maxlength="${max}" ${dis}>${esc(profile[k]||'')}</textarea></label>`;
     const cover=d&&d.cover!==undefined?d.cover:row.image,portal=E.portalHref(profile.portalUrl);
-    return `<div class="lcDetail" data-detail="${esc(card.id)}"><div class="lcDetailIn">
-      ${canEdit()?`<footer class="lcDetailFoot"><span>${esc(T('Değişiklikler tüm yetkili kullanıcılarla paylaşılır.','Changes are shared with all authorized users.'))}</span><button type="button" class="lcBtn" data-lc-act="discard" data-id="${esc(card.id)}">${esc(T('Vazgeç','Cancel'))}</button><button type="button" class="lcBtn primary" data-lc-act="save" data-id="${esc(card.id)}" ${d?.saving||d?.conflict?'disabled':''}>${esc(d?.saving?T('Kaydediliyor…','Saving…'):T('Kaydet','Save'))}</button></footer>`:''}
-      <section class="lcPane lcPaneWide"><header><b>${esc(T('Sözleşmeler','Contracts'))}</b><small>${esc(T('OPD tarihi, sezon ve kategoriye göre uygulanır. Genel oran diğer kategorileri kapsar.','Applied by OPD date, season and category. General rates cover other categories.'))}</small>${canEdit()&&card.licensor?`<button type="button" class="lcBtn sm" data-lc-act="addPeriod" data-id="${esc(card.id)}" ${dis}><svg class="ic"><use href="#i-plus"/></svg>${esc(T('Yeni dönem','New period'))}</button><button type="button" class="lcBtn sm" data-lc-act="addCategory" data-id="${esc(card.id)}" ${dis}>${esc(T('Kategori oranı ekle','Add category rates'))}</button>`:''}</header>
+    return `<dialog class="lcEditor lcDetail" data-detail="${esc(card.id)}" aria-labelledby="lcEditorTitle">
+      <header class="lcEditorHead"><div><small>${esc(T('Lisans kartı','License card'))}</small><h2 id="lcEditorTitle" data-no-i18n>${esc(card.license)}</h2><span data-no-i18n>${esc(card.licensor||T('Lisansör yok','No licensor'))}</span></div><button type="button" class="lcIconBtn" data-lc-act="closeEditor" aria-label="${esc(T('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></header>
+      ${d?.error||d?.conflict?`<div class="lcNotice" role="alert">${esc(d.conflict?T('Kayıt başka yerde değişti; değişiklikleriniz korunuyor.','The record changed elsewhere; your edits are kept.'):d.error)}${d.conflict?`<button type="button" class="lcBtn sm" data-lc-act="reopen" data-id="${esc(card.id)}">${esc(T('Güncel kaydı aç','Open current record'))}</button>`:''}</div>`:''}
+      <div class="lcDetailIn">
+      <section class="lcPane lcPaneWide"><header><b>${esc(T('Seçili sözleşme','Selected contract'))}</b><span class="lcSpacer"></span>${canEdit()&&card.licensor?`<button type="button" class="lcBtn sm" data-lc-act="addPeriod" data-id="${esc(card.id)}" ${dis}><svg class="ic"><use href="#i-plus"/></svg>${esc(T('Yeni dönem','New period'))}</button><button type="button" class="lcBtn sm" data-lc-act="addCategory" data-id="${esc(card.id)}" ${dis}>${esc(T('Kategori oranı ekle','Add category rates'))}</button>`:''}</header>
         ${d?.note?`<p class="lcNote" role="status">${esc(d.note)}</p>`:''}
-        <div class="lcContractHead"><span></span><span>${esc(T('OPD başlangıç','OPD start'))}</span><span>${esc(T('OPD bitiş','OPD end'))}</span><span>${esc(T('Sezonlar','Seasons'))}</span><span>${esc(T('Kategoriler','Categories'))}</span><span lang="en">Royalty</span><span>${esc(T('TR kom.','TR comm.'))}</span><span>${esc(T('YD kom.','Intl comm.'))}</span><span lang="en">Hologram</span><span>${esc(T('İşlemler','Actions'))}</span></div>
-        ${sorted.map(r=>contractRow(card,d,r)).join('')}${(row.merged||[]).map(m=>(m.rules||[]).length?`<p class="lcMergedHead">${esc(T(`Birleşik ad “${m.licensor}” sözleşmeleri (yalnız görüntüleme; bu adla gelen siparişlerde önce bunlar uygulanır)`,`Contracts of merged name “${m.licensor}” (view only; orders with this name use these first)`))}</p><button type="button" class="lcBtn sm" data-lc-act="openContract" data-rule-id="${esc(m.rules[0].id)}">${esc(T('Bu kartı düzenle','Edit this card'))}</button>${[...m.rules].sort((a,b)=>String(b.opdStart||'').localeCompare(String(a.opdStart||''))).map(r=>contractRow(m,{conflict:true},r)).join('')}`:'').join('')}${sorted.length?'':`<p class="lcMuted">${esc(card.licensor?T('Henüz sözleşme yok.','No contracts yet.'):T('Sözleşme eklemek için lisansör gerekli (CP’de seçin veya ASAS’tan yenileyin).','A licensor is required to add a contract (pick it in CP or refresh from ASAS).'))}</p>`}
+        ${primary?editorContract(card,d,primary):''}
+        ${historyCount?`<button type="button" class="lcBtn sm lcHistoryToggle" data-lc-act="history" aria-expanded="${S.historyOpen}" aria-controls="lcContractHistory">${esc(S.historyOpen?T('Geçmişi ve diğer sözleşmeleri gizle','Hide history and other contracts'):T('Geçmiş ve diğer sözleşmeler','History and other contracts'))} (${historyCount})</button>`:''}
+        ${S.historyOpen?`<div id="lcContractHistory" class="lcHistory blMotionEnter">${others.map(r=>editorContract(card,d,r)).join('')}${(row.merged||[]).map(m=>(m.rules||[]).length?`<p class="lcMergedHead">${esc(T(`Birleşik ad “${m.licensor}” sözleşmeleri (yalnız görüntüleme; bu adla gelen siparişlerde önce bunlar uygulanır)`,`Contracts of merged name “${m.licensor}” (view only; orders with this name use these first)`))}</p><button type="button" class="lcBtn sm" data-lc-act="openContract" data-rule-id="${esc(m.rules[0].id)}">${esc(T('Bu kartı düzenle','Edit this card'))}</button>${[...m.rules].sort((a,b)=>String(b.opdStart||'').localeCompare(String(a.opdStart||''))).map(r=>editorContract(m,{conflict:true},r)).join('')}`:'').join('')}</div>`:''}${sorted.length?'':`<p class="lcMuted">${esc(card.licensor?T('Henüz sözleşme yok.','No contracts yet.'):T('Sözleşme eklemek için lisansör gerekli (CP’de seçin veya ASAS’tan yenileyin).','A licensor is required to add a contract (pick it in CP or refresh from ASAS).'))}</p>`}
       </section>
-      <section class="lcPane"><header><b>${esc(T('Lisansör ve portal','Licensor and portal'))}</b></header>
+      <section class="lcPane"><header><b>${esc(T('Lisansör ve portal','Licensor and portal'))}</b>${canEdit()&&card.licensor?`<button type="button" class="lcBtn sm" data-lc-act="toggleLicensor" aria-expanded="${S.addLicensorOpen}" aria-controls="lcAddLicensor">${esc(T('Lisansör ekle','Add licensor'))}</button>`:''}</header>
         ${(row.merged||[]).length?`<div class="lcMergedInfo"><span class="lcFieldLabel">${esc(T('Bu satırda birleşen lisansör adları','Licensor names merged in this row'))}</span><span class="lcMergeNames"><span class="lcMergeName">${esc(card.licensor)}</span>${row.merged.map(m=>`<i>≡</i><span class="lcMergeName">${esc(m.licensor)}</span>`).join('')}</span>${canEdit()?`<button type="button" class="lcBtn sm" data-lc-act="mergeSplit" data-key="${esc(row.mergeKey)}" ${S.merging?'disabled':''}>${esc(T('Ayır','Split'))}</button>`:''}</div>`:''}
-        ${canEdit()&&card.licensor?`<div class="lcAddLicensor"><span class="lcFieldLabel">${esc(T('Başka lisansör için satır ekle','Add a row for another licensor'))}</span><div class="lcInline"><input data-lc-new-licensor="${esc(card.id)}" list="lcLicensorList" maxlength="200" placeholder="${esc(T('Lisansör adı','Licensor name'))}" aria-label="${esc(T('Yeni lisansör','New licensor'))}" ${S.assigning?'disabled':''}><button type="button" class="lcBtn sm" data-lc-act="addLicensor" data-id="${esc(card.id)}" ${S.assigning?'disabled':''}><svg class="ic"><use href="#i-plus"/></svg>${esc(T('Satır ekle','Add row'))}</button></div><label class="lcCopy"><input type="checkbox" data-lc-copy="${esc(card.id)}" checked>${esc(T('İletişim, görsel ve onay haritasını kopyala','Copy contact, image and approval map'))}</label></div>`:''}
+        ${canEdit()&&card.licensor&&S.addLicensorOpen?`<div id="lcAddLicensor" class="lcAddLicensor blMotionEnter"><span class="lcFieldLabel">${esc(T('Başka lisansör için satır ekle','Add a row for another licensor'))}</span><div class="lcInline"><input data-lc-new-licensor="${esc(card.id)}" list="lcLicensorList" maxlength="200" placeholder="${esc(T('Lisansör adı','Licensor name'))}" aria-label="${esc(T('Yeni lisansör','New licensor'))}" ${S.assigning?'disabled':''}><button type="button" class="lcBtn sm" data-lc-act="addLicensor" data-id="${esc(card.id)}" ${S.assigning?'disabled':''}><svg class="ic"><use href="#i-plus"/></svg>${esc(T('Satır ekle','Add row'))}</button></div><label class="lcCopy"><input type="checkbox" data-lc-copy="${esc(card.id)}" checked>${esc(T('İletişim, görsel ve onay haritasını kopyala','Copy contact, image and approval map'))}</label></div>`:''}
         <div class="lcFields">
         ${input('contactName',T('İlgili kişi','Contact person'))}${input('contactEmail',T('E-posta','Email'),'email',320)}${input('portalUrl',T('Portal','Portal'),'url',2048)}${input('portalUsername',T('Portal kullanıcı adı','Portal username'))}${input('accessReference',T('Şifre yöneticisi kaydı','Password manager record'),'text',1000)}
-        ${area('workingNotes',T('Çalışma notları','Working notes'),12000)}${area('artworkBrief',T('Artwork brief','Artwork brief'),6000)}</div>
+        ${area('workingNotes',T('Çalışma notları','Working notes'),12000)}</div>
         ${portal?`<a class="lcLink" href="${esc(portal)}" target="_blank" rel="noopener noreferrer">${esc(T('Portalı aç','Open portal'))} ↗</a>`:''}<small class="lcMuted">${esc(T('Parolayı burada saklamayın; şifre yöneticisi kayıt adını yazın.','Do not store passwords here; enter the password manager record name.'))}</small></section>
       <section class="lcPane"><header><b>${esc(T('Görsel ve harita','Image and map'))}</b></header>
-        <div class="lcCover">${cover?`<img src="${esc(cover)}" alt="${esc(T('Lisans görseli','License image'))}">`:`<span data-no-i18n>${esc(initials(card.license))}</span>`}</div>
+        <div class="lcCover lcThumb">${cover?`<img src="${esc(cover)}" alt="${esc(T('Lisans görseli','License image'))}">`:`<span data-no-i18n>${esc(initials(card.license))}</span>`}</div>
         ${canEdit()?`<div class="lcInline"><label class="lcBtn sm${dis?' isDisabled':''}"><svg class="ic"><use href="#i-picture"/></svg>${esc(cover?T('Görseli değiştir','Change image'):T('Görsel yükle','Upload image'))}<input type="file" accept="image/png,image/jpeg,image/webp" data-lc-cover="${esc(card.id)}" hidden ${dis}></label>${cover?`<button type="button" class="lcBtn sm" data-lc-act="removeCover" data-id="${esc(card.id)}" ${dis}>${esc(T('Kaldır','Remove'))}</button>`:''}</div>`:''}
         <ol class="lcMapList">${row.map.map(s=>`<li class="ap-${esc(s.approver)}"><i></i><span>${esc(s.title||'—')}</span><small>${esc(T(...APPROVER[s.approver]))}${s.test?' · Test':''}</small></li>`).join('')||`<li class="lcMuted">${esc(T('Onay haritası tanımlanmadı.','No approval map yet.'))}</li>`}</ol>
         <button type="button" class="lcBtn sm" data-lc-act="map" data-id="${esc(card.id)}"><svg class="ic"><use href="#i-binary-tree-2"/></svg>${esc(T('Haritayı düzenle','Edit map'))}</button>
         ${statsHtml(card)}</section>
 
-    </div></div>`;
+    </div>${canEdit()?`<footer class="lcDetailFoot"><span>${esc(T('Değişiklikler tüm yetkili kullanıcılarla paylaşılır.','Changes are shared with all authorized users.'))}</span><button type="button" class="lcBtn" data-lc-act="cancelEditor" data-id="${esc(card.id)}">${esc(T('Vazgeç','Cancel'))}</button><button type="button" class="lcBtn primary" data-lc-act="save" data-id="${esc(card.id)}" ${d?.saving||d?.conflict?'disabled':''}>${esc(d?.saving?T('Kaydediliyor…','Saving…'):T('Kaydet','Save'))}</button></footer>`:''}</dialog>`;
   }
   function currentRows(){
     const cards=S.data?.cards||[],rows=E.rows(cards,{query:S.query,licensor:S.licensor,status:S.status,sort:S.sort,...mergeOpts()}).filter(row=>!S.favoritesOnly||isFavorite(row));
@@ -338,6 +357,9 @@
     const active=document.activeElement;
     if(S.host.contains(active)&&/^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)&&active.id!=='lcSearch'&&active.dataset?.lcContractFilter==null&&active.type!=='checkbox'&&S.host.querySelector('.lcPage')){S.renderQueued=true;return;}
     S.renderQueued=false;
+    const oldEditor=S.host.querySelector('.lcEditor'),sameEditor=oldEditor?.dataset.detail===S.expanded;
+    const editorScroll=oldEditor?.querySelector('.lcDetailIn')?.scrollTop||0;
+    if(oldEditor){window.BLLayerSystem?.closeDialog(oldEditor,{restoreFocus:false});oldEditor.close();}
     const scrollTop=S.host.querySelector('.lcTable')?.scrollTop||0,scrollLeft=S.host.querySelector('.lcTable')?.scrollLeft||0;
     const searchFocus=active?.id==='lcSearch',filterFocus=active?.dataset?.lcContractFilter,caret=searchFocus||filterFocus!=null?active.selectionStart:null;
     if(!S.data){
@@ -352,7 +374,7 @@
       }
       return;
     }
-    const rows=currentRows(),n=counts(),opts=E.licensorOptions(S.data.cards),selectedVisible=rows.filter(r=>S.selected.has(r.id)).length,favoriteCount=allRows().filter(isFavorite).length;
+    const rows=currentRows(),editorRow=rows.find(r=>r.id===S.expanded),n=counts(),opts=E.licensorOptions(S.data.cards),selectedVisible=rows.filter(r=>S.selected.has(r.id)).length,favoriteCount=allRows().filter(isFavorite).length;
     const chip=(key,tr,en,count)=>`<button type="button" class="lcChip" data-lc-status="${key}" aria-pressed="${S.status===key}">${esc(T(tr,en))}<small>${count}</small></button>`;
     const head=(key,tr,en,cls='')=>`<button type="button" class="lcSort ${cls}" data-lc-sort="${key}" ${['royalty','hologramCost'].includes(key)?'lang="en"':''} aria-sort="${S.sort.key===key?(S.sort.dir==='asc'?'ascending':'descending'):'none'}">${esc(T(tr,en))}${S.sort.key===key?`<svg class="ic"><use href="#i-chevron-${S.sort.dir==='asc'?'up':'down'}"/></svg>`:''}</button>`;
     S.host.innerHTML=`<div class="lcPage">
@@ -386,12 +408,22 @@
         </div>
         ${S.contractView?contractsHtml(rows):rows.map(rowHtml).join('')||`<div class="lcEmpty"><svg class="ic"><use href="#i-license-cards"/></svg><b>${esc(S.query||S.licensor!=null||S.status!=='all'||S.favoritesOnly?T('Eşleşen lisans yok','No matching licenses'):T('Henüz lisans kartı yok','No license cards yet'))}</b><span>${esc(S.favoritesOnly?T('Lisans satırındaki yıldızla kendi favorilerinizi ekleyin veya filtreleri değiştirin.','Use the star on a license row to add your own favorites, or change the filters.'):S.query||S.licensor!=null||S.status!=='all'?T('Arama veya filtreleri değiştirin.','Change the search or filters.'):T('ASAS kaynağını kontrol edip yenileyin.','Check the ASAS source and refresh.'))}</span></div>`}
       </div>
-
+      ${editorRow?detailHtml(editorRow,S.drafts.get(editorRow.id)):''}
     </div>`;
     const all=S.host.querySelector('[data-lc-select-all]');if(all)all.indeterminate=selectedVisible>0&&selectedVisible<rows.length;
     const table=S.host.querySelector('.lcTable');if(table){table.scrollTop=scrollTop;table.scrollLeft=scrollLeft;}
     S.animate=false;S.flash.clear();
     runQuick();
+    const editor=S.host.querySelector('.lcEditor');
+    if(editor){
+      editor.showModal();editor.addEventListener('cancel',event=>{event.preventDefault();closeEditor();});
+      window.BLLayerSystem?.openDialog(editor,{onClose:()=>{
+        if(editor.querySelector('.dateCalendarPopup')&&typeof closeDateCalendarPopup==='function')return closeDateCalendarPopup(true);
+        closeEditor();
+      },initialFocus:S.editorFocus||'[data-lc-act="closeEditor"]'});S.editorFocus=null;
+      editor.querySelector('.lcDetailIn').scrollTop=sameEditor?editorScroll:0;
+      if(!sameEditor)window.BLMotionPlus?.play('overlay',editor);
+    }
     if(filterFocus!=null){const input=S.host.querySelector(`[data-lc-contract-filter="${CSS.escape(filterFocus)}"]`);input?.focus();input?.setSelectionRange(caret,caret);}
     if(searchFocus){const input=document.getElementById('lcSearch');input.focus();input.setSelectionRange(caret,caret);}
   }
@@ -594,13 +626,17 @@
     if(a==='newCard'){S.newCard=S.newCard?null:{license:'',licensor:''};return render();}
     if(a==='createCard')return createCard();
     if(a==='quickClear'){S.quick={source:'supp',values:{},ruleId:S.quick?.ruleId||''};return render();}
-    if(a==='checkRule'){S.quick={source:'supp',values:{},ruleId:el.dataset.ruleId};render();document.getElementById('lcQuickSupp')?.focus();return;}
+    if(a==='checkRule'){if(S.expanded)closeEditor();S.quick={source:'supp',values:{},ruleId:el.dataset.ruleId};render();document.getElementById('lcQuickSupp')?.focus();return;}
     if(a==='applyAll'||a==='applyRule')return applyRules(a==='applyRule'?id:'',el.dataset.ruleId);
     if(a==='deleteRule'){const d=ensureDraft(id);if(!d||d.saving||d.conflict)return;if(!confirm(T('Bu sözleşme silinsin mi? Kaydetmeden önce Vazgeç ile geri alabilirsiniz.','Delete this contract? You can cancel before saving.')))return;const period=d.periods?.[el.dataset.ruleId];if(period){for(const original of period.originalRules){const previous=ruleOf(d,original.id);if(previous)previous.opdEnd=original.opdEnd||'';}delete d.periods[el.dataset.ruleId];if(d.period?.id===el.dataset.ruleId)d.period=null;d.note='';}d.rules=d.rules.filter(r=>r.id!==el.dataset.ruleId);if(d.snapshot.rules.some(r=>r.id===el.dataset.ruleId))d.deletedRuleIds.push(el.dataset.ruleId);d.primaryId=E.primaryContract(d.rules).rule?.id||'';render();return;}
     if(a==='retry')return load(Boolean(S.loadErrorRefresh));
     if(a==='refresh'&&canEdit())return load(true);
-    if(a==='expand'){S.expanded=S.expanded===id?'':id;return render();}
-    if(a==='map')return openMap(id);
+    if(a==='expand'){S.expanded=id;S.historyOpen=false;S.addLicensorOpen=false;return render();}
+    if(a==='closeEditor')return closeEditor();
+    if(a==='cancelEditor'){dropDraft(id);return closeEditor();}
+    if(a==='history'){S.historyOpen=!S.historyOpen;S.editorFocus='[data-lc-act="history"]';return render();}
+    if(a==='toggleLicensor'){S.addLicensorOpen=!S.addLicensorOpen;S.editorFocus=S.addLicensorOpen?'[data-lc-new-licensor]':'[data-lc-act="toggleLicensor"]';return render();}
+    if(a==='map'){if(S.expanded)closeEditor();return openMap(id);}
     if(a==='templates')return openTemplates();
     if(a==='merges'){S.mergesOpen=!S.mergesOpen||Boolean(el.dataset.key&&!el.classList.contains('lcBtn'));S.mergeFocus=el.dataset.key||'';return render();}
     if(a==='mergeSplit'||a==='mergeJoin')return setMerge(el.dataset.key,a==='mergeSplit');
@@ -620,15 +656,15 @@
       const c=cardOf(id),d=ensureDraft(id);if(!c||!d||d.saving||d.conflict||!c.licensor)return;
       const base=ruleOf(d,d.primaryId)||E.primaryContract(d.rules).rule;
       const r={...(base?copy(base):{royalty:null,trCommission:0,ydCommission:0,hologramCost:0,seasons:[],opdStart:'',opdEnd:''}),id:`license-rule-${crypto.randomUUID()}`,license:c.license,licensor:c.licensor,categories:[]};
-      d.rules.push(r);d.newRuleBaselines[r.id]=copy(r);d.primaryId=r.id;d.note=T('Yeni satırın kategorisini ve oranlarını girin. Genel sözleşme korunur.','Enter the new row’s category and rates. The general contract is kept.');S.expanded=id;render();
+      d.rules.push(r);d.newRuleBaselines[r.id]=copy(r);d.primaryId=r.id;d.note=T('Yeni satırın kategorisini ve oranlarını girin. Genel sözleşme korunur.','Enter the new row’s category and rates. The general contract is kept.');S.expanded=id;S.editorFocus=`[data-lc-rule="${CSS.escape(r.id)}"][data-lc-key="categories"]`;render();
       S.host.querySelector(`[data-lc-rule="${CSS.escape(r.id)}"][data-lc-key="categories"]`)?.focus();return;
     }
     if(a==='addContract'||a==='addPeriod'){
       const c=cardOf(id),d=ensureDraft(id);if(!c||!d||d.conflict||!c.licensor)return;
       const originalRules=copy(d.rules),next=E.nextContractPeriod(d.rules,c,E.today(),undefined,d.primaryId);d.rules=next.rules;d.primaryId=next.rule.id;d.period=next.closed.length?{id:next.rule.id,closed:next.closed,originalRules:originalRules.filter(r=>next.closed.includes(r.id))}:null;if(d.period)d.periods[next.rule.id]=d.period;d.newRuleBaselines[next.rule.id]=copy(next.rule);
       d.note=next.closed.length?T(`Yeni dönem güncel oranlarla eklendi; önceki açık dönem ${E.previousDay(next.rule.opdStart)} tarihinde kapatıldı. Kaydetmeden önce kontrol edin.`,`The new period copies the current rates; the previous open period now ends on ${E.previousDay(next.rule.opdStart)}. Review before saving.`):'';
-      S.expanded=id;render();
-      S.host.querySelector(`[data-row="${CSS.escape(id)}"] [data-lc-rate="royalty"]`)?.focus();return;
+      S.expanded=id;S.editorFocus=`[data-lc-rule="${CSS.escape(next.rule.id)}"][data-lc-key="opdStart"]`;render();
+      S.host.querySelector(`.lcEditor [data-lc-rule="${CSS.escape(next.rule.id)}"][data-lc-key="opdStart"]`)?.focus();return;
     }
     if(a==='removeCover'){const d=ensureDraft(id);if(d){d.cover='';render();}}
   }
@@ -708,6 +744,7 @@
       if(el.dataset.lcLicensor!=null&&el.value.trim())setLicensor(el.dataset.lcLicensor,el.value,'assign');
     });
     S.host.addEventListener('keydown',e=>{
+      if(e.target.closest?.('.lcEditor')&&e.key==='Escape')return;
       if(e.key==='Enter'&&e.target.dataset?.lcNewLicensor!=null){e.preventDefault();return S.host.querySelector(`[data-lc-act="addLicensor"][data-id="${CSS.escape(e.target.dataset.lcNewLicensor)}"]`)?.click();}
       if(e.key==='Enter'&&e.target.dataset?.lcLicensor!=null){e.preventDefault();return e.target.blur();}
       const el=e.target,id=el.dataset?.id;if(!id||!(el.dataset.lcRate!=null||el.dataset.lcRule!=null||el.dataset.lcProfile))return;
@@ -731,7 +768,7 @@
   window.addEventListener?.('storage',event=>{if(event.key===null||event.key===window.BLStorage?.actualKey?.(FAVORITES_KEY))render();});
   window.addEventListener?.('beforeunload',event=>{if([...S.drafts.values()].some(isDirty)||S.newCard&&(S.newCard.license||S.newCard.licensor)){event.preventDefault();event.returnValue='';}});
   window.BLLicenseCardsPage={
-    openRule(id){S.contractView=false;const card=S.data?.cards?.find(c=>(c.rules||[]).some(r=>r.id===id));if(!card)return;S.query='';S.licensor=null;S.status='all';S.favoritesOnly=false;S.expanded=card.id;const draft=ensureDraft(card.id);draft.primaryId=id;render();S.host.querySelector(`[data-detail="${CSS.escape(card.id)}"]`)?.scrollIntoView({block:'nearest'});},
+    openRule(id){S.contractView=false;const card=S.data?.cards?.find(c=>(S.drafts.get(c.id)?.rules||c.rules||[]).some(r=>r.id===id));if(!card)return;S.query='';S.licensor=null;S.status='all';S.favoritesOnly=false;S.expanded=card.id;S.historyOpen=false;S.addLicensorOpen=false;document.activeElement?.blur?.();const draft=ensureDraft(card.id);draft.primaryId=id;render();},
     invalidate(){S.stale=true;S.stats.clear();if(![...S.drafts.values()].some(d=>d.saving)&&visible())return load();},
     renderLanguage(){render();},
   };
