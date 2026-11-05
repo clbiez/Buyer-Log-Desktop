@@ -31,7 +31,6 @@
 .lcPick{display:flex;align-items:center;gap:var(--ui-space-1)}
 .lcPick>.ic{width:14px;height:14px;margin:0 8px}
 .lcFavorite{width:var(--ui-control-height);height:var(--ui-control-height)}
-.lcFavorite[aria-pressed="true"] .ic{fill:currentColor}
 .lcThumb{width:60px;height:34px;display:grid;place-items:center;overflow:hidden}
 .lcThumb img{width:100%;height:100%;object-fit:cover}
 .lcRow:hover .lcThumb img{transform:scale(1.06)}

@@ -9990,6 +9990,8 @@ html[data-ui-system="manifest"] .lcIconBtn:hover:not(:disabled) {background:var(
 }
 html[data-ui-system="manifest"] .lcIconBtn.isPrimary {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
 }
+html[data-ui-system="manifest"] .lcFavorite[aria-pressed="true"] .ic {fill:currentColor
+}
 html[data-ui-system="manifest"] .lcIconBtn.isPrimary:hover:not(:disabled) {background:var(--ui-accent-hover) !important;color:var(--ui-on-accent) !important
 }
 html[data-ui-system="manifest"] .lcLink {background:none !important;color:var(--ui-selected-ink) !important;font:600 var(--ui-font-xs) var(--ui-font-body) !important;text-decoration:underline
