@@ -110,6 +110,11 @@ diğer grafik işaretçilerine veya kart/kontrol köşelerine uygulanmaz.
    üzerinde `--ui-group-divider` ile 1px sınır; giriş alanları `--ui-field-border` (§5). Checkbox'ta durum
    okunabilirliği, kullanıcı avatarında logo ile eşit `--ui-mark-radius` köşe uygulanır.
 7. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
+8. Sütun dondurmanın tek sahibi `public/table-freeze.js` (`BLTableFreeze`):
+   konum, ofset ve katman sırası (kayan gövde < `--ui-z-frozen-cell` < kayan
+   başlık `--ui-z-sticky` < donmuş başlık `--ui-z-sticky-column`) yalnız orada
+   üretilir. Donmuş alanın kenarı 2px `--ui-group-divider` iç çizgisidir. Modül
+   CSS'i `frzL` hücrelerine konum, `z-index` veya zemin yaması eklemez.
 
 Tablo başlıkları `--ui-header-*`, ana grup bandı `--ui-group-header-*` kullanır.
 OAB ve INTAKE ilk açılışta grafik yerine pivot/tablo gösterir; grafik
@@ -177,6 +182,7 @@ aynı tokenları kullanır. Modül CSS’i bu durumlara ayrı renk/çerçeve ica
 | Token | Seviye | Amaç |
 | --- | ---: | --- |
 | `--ui-z-below/base/data/raised` | -1 / 0 / 1 / 2 | yerel veri geometrisi |
+| `--ui-z-frozen-cell` | 20 | dondurulmuş gövde/alt bilgi hücresi (yalnız `table-freeze.js`) |
 | `--ui-z-sticky` | 30 | sabit tablo başlığı |
 | `--ui-z-sticky-column` | 31 | dondurulmuş başlık sütunu |
 | `--ui-z-chrome` | 40 | uygulama rayı/üst çubuk |

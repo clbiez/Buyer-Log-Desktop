@@ -311,7 +311,6 @@ body.lflSplitDragging{cursor:col-resize;user-select:none;}
 #view-lfl .lflManufacturerVolumeCard .lflSectionHead{padding-bottom:12px;}
 #view-lfl .lflCustomCompareTableWrap table,#view-lfl .lflDetailCard table{min-width:0;}
 #view-lfl .lflCustomCompareTableWrap table th:first-child,#view-lfl .lflCustomCompareTableWrap table td:first-child{position:static;}
-#view-lfl .lflCustomCompareTableWrap table th.frzL,#view-lfl .lflCustomCompareTableWrap table td.frzL{position:sticky;}
 #view-lfl .lflAnalysisGrid .lflTableWrap{max-height:470px;}
 #view-lfl .lflTableWrap .empty{padding:28px 16px;text-align:center;}
 #view-lfl .lflSectionHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}

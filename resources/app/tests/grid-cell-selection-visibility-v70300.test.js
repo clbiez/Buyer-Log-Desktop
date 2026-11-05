@@ -17,7 +17,8 @@ test('CP Tracker and Orders selected cells have a soft surface, even on frozen a
   const rule = ui.match(/html\[data-ui-system="manifest"\] #cpTable tbody td\.blGridRangeCell,\s*html\[data-ui-system="manifest"\] #ordersTable tbody td\.blGridRangeCell\s*\{([^}]+)\}/);
   assert.ok(rule, 'Shared selected-range rule must address the cell, not the whole row');
   assert.match(rule[1], /background-color:\s*var\(--ui-selected\)\s*!important/);
-  assert.match(ui, /#cpTable tbody td\.frzL,html\[data-ui-system="manifest"\] #ordersTable tbody td\.frzL/);
+  // Donmuş hücre zemini düşük özgüllüklüdür (:where); seçim zemini donmuş hücrede de görünür.
+  assert.match(fs.readFileSync('public/table-freeze.js', 'utf8'), /out\.push\(':where\(' \+ t \+ '>tbody>' \+ plain/);
   assert.match(ui, /#cpTable tbody tr:hover>td/);
 });
 

@@ -7273,130 +7273,21 @@ function setFreeze(tableKey, left){
   else state.freeze[tableKey] = { left: count };
   saveFreezeState();
 }
-/* Sticky ofsetin kaynağı, colgroup stil genişliği değil, tarayıcının gerçekten
-   yerleştirdiği başlık hücreleri olmalıdır. Tablo kapsayıcıya yayıldığında
-   fixed-layout kolonlar stil genişliğinden farklı ölçülebilir; eski yaklaşım
-   bu farkı doğrudan overlap olarak gösteriyordu. */
-function freezeColumnWidths(table,withChk){
-  if(!table)return [];
-  const header=table.querySelector('thead tr.colRow');
-  const headerCells=header?[...header.children].filter(cell=>!cell.classList.contains('groupSpacer')&&(withChk||!cell.classList.contains('chkTh'))):[];
-  const measured=headerCells.map(cell=>cell.getBoundingClientRect().width);
-  if(measured.length&&measured.every(width=>Number.isFinite(width)&&width>0))return measured;
-  return [...table.querySelectorAll('colgroup col')].map(col=>col.getBoundingClientRect().width||parseFloat(col.style.width)||0);
-}
-// Tabloya sticky sınıf/ofsetlerini uygular. Her render sonrası çağrılır.
+/* Dondurma düzeni tek motordadır: public/table-freeze.js (BLTableFreeze).
+   Ofsetler donmuş başlık hücrelerinin GERÇEK genişliğinden üretilir ve
+   ResizeObserver ile canlı tutulur (görsel boyutu, görsel yüklemesi, gizli
+   sekmede çizim, sütun genişliği). Gövde satırlarına hücre hücre sınıf/ofset
+   basılmaz; kademeli çizim, sanal kaydırma ve tek satır yenilemesi ayrıca
+   dondurma işi gerektirmez. `withChk` imza uyumluluğu için kalır; seçim kutusu
+   sütunu başlıktan okunur. */
 function applyFreeze(tableId, tableKey, withChk){
   const table=document.getElementById(tableId);
-  if(!table)return;
+  if(!table||!window.BLTableFreeze)return null;
   // Koleksiyon ana başlık bandı dondurma sınırında bölünür; sınır değiştiyse bant
   // yeniden çizilir (renderKol bu fonksiyonu yeni sınırla tekrar çağırır).
   const kolGroupRow=tableId==='kolTable'?table.querySelector('thead tr.kolGroupRow'):null;
-  if(kolGroupRow&&Number(kolGroupRow.dataset.freezeLeft)!==Number(getFreeze(tableKey).left)&&typeof renderKol==='function'){renderKol();return;}
-  table.querySelectorAll('.frzL').forEach(el=>{
-    el.classList.remove('frzL','frzLEdge');
-    el.style.left='';
-  });
-  const wrap=table.closest('.tablewrap');
-  const widths=freezeColumnWidths(table,withChk);
-  const chkOffset=withChk?1:0;
-  const dataCount=Math.max(0,widths.length-chkOffset);
-  const left=Math.min(dataCount,getFreeze(tableKey).left);
-  if(wrap)wrap.classList.toggle('hasFreeze',Boolean(left));
-  if(!left)return;
-
-  const leftCount=Math.min(widths.length,chkOffset+left);
-  const leftOffsets=[];let acc=0;
-  for(let i=0;i<leftCount;i++){leftOffsets.push(acc);acc+=widths[i]||0;}
-
-  const applySimpleRow=tr=>{
-    const cells=[...tr.children];
-    if(!cells.length||cells.some(cell=>cell.colSpan>1))return;
-    for(let i=0;i<leftCount&&i<cells.length;i++){
-      cells[i].classList.add('frzL');
-      cells[i].style.left=(leftOffsets[i]||0)+'px';
-      if(i===leftCount-1)cells[i].classList.add('frzLEdge');
-    }
-  };
-
-  const groupRow=table.querySelector('thead tr.groupRow');
-  if(groupRow){
-    const spacer=groupRow.querySelector('.groupSpacer');
-    if(spacer&&withChk){
-      spacer.classList.add('frzL');
-      spacer.style.left='0px';
-    }
-    const dataWidths=widths.slice(chkOffset);
-    groupRow.querySelectorAll('th[data-start][data-end]').forEach(cell=>{
-      const first=Math.max(0,Number(cell.dataset.start)||0);
-      const last=Math.max(first,Number(cell.dataset.end)||first);
-      if(last>=left)return;
-      let offset=withChk?(widths[0]||0):0;
-      for(let i=0;i<first;i++)offset+=dataWidths[i]||0;
-      cell.classList.add('frzL');
-      cell.style.left=offset+'px';
-      if(last===left-1)cell.classList.add('frzLEdge');
-    });
-  }
-
-  table.querySelectorAll('thead tr:not(.groupRow),tbody tr,tfoot tr').forEach(applySimpleRow);
-}
-
-// Yerinde düzenleme sırasında yalnız bir satırın HTML'i yenilenir. Tam tablo render'ı
-// çalışmadığı için o satırın sticky sınıfları/ofsetleri kaybolmamalıdır. Bu yardımcı,
-// mevcut colgroup genişliklerini ve kaydedilmiş freeze durumunu kullanarak yalnızca
-// verilen satıra dondurma düzenini yeniden uygular.
-function applyFreezeToRow(tableId, tableKey, tr, withChk){
-  const table=document.getElementById(tableId);
-  if(!table||!tr)return;
-  [...tr.children].forEach(cell=>{
-    cell.classList.remove('frzL','frzLEdge');
-    cell.style.left='';
-  });
-  const widths=freezeColumnWidths(table,withChk);
-  if(!widths.length)return;
-  const chkOffset=withChk?1:0,dataCount=Math.max(0,widths.length-chkOffset);
-  const left=Math.min(dataCount,getFreeze(tableKey).left);
-  if(!left)return;
-  const leftCount=Math.min(widths.length,chkOffset+left);
-  const leftOffsets=[];let acc=0;
-  for(let i=0;i<leftCount;i++){leftOffsets.push(acc);acc+=widths[i]||0;}
-  const cells=[...tr.children];
-  if(cells.some(c=>c.colSpan>1))return;
-  for(let i=0;i<leftCount&&i<cells.length;i++){
-    cells[i].classList.add('frzL');
-    cells[i].style.left=leftOffsets[i]+'px';
-    if(i===leftCount-1)cells[i].classList.add('frzLEdge');
-  }
-}
-
-// Dondurma düzeni (hangi hücreler, hangi ofsetlerle) satır başına yeniden hesaplanmak
-// yerine çizim başında BİR KEZ çıkarılır. Kademeli çizimde sonradan eklenen satırlar da
-// aynı planı kullanır; böylece tablo dolarken donmuş sütunlar hizasız görünmez ve
-// çizim sonunda 10.000 satırı yeniden gezen tek büyük görev oluşmaz.
-function freezeLayoutFor(table, tableKey, withChk){
-  if(!table)return null;
-  const widths=freezeColumnWidths(table,withChk);
-  if(!widths.length)return null;
-  const chkOffset=withChk?1:0,dataCount=Math.max(0,widths.length-chkOffset);
-  const left=Math.min(dataCount,getFreeze(tableKey).left);
-  if(!left)return null;
-  const leftCount=Math.min(widths.length,chkOffset+left);
-  const leftOffsets=[];let acc=0;
-  for(let i=0;i<leftCount;i++){leftOffsets.push(acc);acc+=widths[i]||0;}
-  return {leftCount,leftOffsets};
-}
-
-function applyFreezePlanToRow(plan, tr){
-  if(!plan||!tr)return;
-  const cells=tr.children;
-  if(!cells.length)return;
-  for(let i=0;i<cells.length;i++){if(cells[i].colSpan>1)return;}
-  for(let i=0;i<plan.leftCount&&i<cells.length;i++){
-    cells[i].classList.add('frzL');
-    cells[i].style.left=plan.leftOffsets[i]+'px';
-    if(i===plan.leftCount-1)cells[i].classList.add('frzLEdge');
-  }
+  if(kolGroupRow&&Number(kolGroupRow.dataset.freezeLeft)!==Number(getFreeze(tableKey).left)&&typeof renderKol==='function'){renderKol();return window.BLTableFreeze.info(table);}
+  return window.BLTableFreeze.apply(table,{count:getFreeze(tableKey).left});
 }
 
 // Kademeli çizimde tablo, kalan satırlar boşta kalan zamanda eklenirken kısa bir süre
@@ -7412,18 +7303,16 @@ function flushPendingTableRenders(){
 }
 window.BLFlushTableRenders = flushPendingTableRenders;
 
-/* --- Dondurma seçim kipi: tek sınır + lazer çizgisi --- */
-let _freezePick = null; // {tableId,tableKey,trigger,hoverIndex,laser}
+/* --- Dondurma seçim kipi: tek sınır + lazer çizgisi (BLTableFreeze.startPick) --- */
+let _freezePick = null; // {tableId,tableKey,trigger}
 function freezeText(){
   const en=appLang==='en';
   return {
-    pick:en?'Move over the table and click a column boundary.':'Tablo üzerinde gez ve dondurmak istediğin sütuna tıkla.',
+    pick:en?'Move over the table and click the last column to freeze. Esc cancels.':'Tablo üzerinde gez ve dondurmak istediğin son sütuna tıkla. Esc ile vazgeç.',
     done:n=>en?`${n} columns frozen on the left.`:`Soldan ${n} sütun donduruldu.`,
     cleared:en?'Freeze removed.':'Dondurma kaldırıldı.',
+    tooWide:en?'The frozen area would cover the visible table. Pick fewer or narrower columns.':'Dondurulan alan görünür tabloyu kaplıyor. Daha az veya daha dar sütun seç.',
   };
-}
-function freezeHeaderCells(table){
-  return table?[...table.querySelectorAll('thead tr.colRow th:not(.chkTh):not(.groupSpacer)')]:[];
 }
 function freezeTriggerFor(tableId,explicit=null){
   if(explicit)return explicit;
@@ -7444,22 +7333,17 @@ function syncFreezeButtonState(){
   const armed=Boolean(_freezePick&&info&&_freezePick.tableKey===info.tableKey);
   freezeSetTriggerState(btn,active||armed);
 }
-function freezeRemoveLaser(pick=_freezePick){
-  if(!pick)return;
-  pick.laser?.remove();
-  pick.laser=null;
-  const table=document.getElementById(pick.tableId);
-  table?.querySelectorAll('.freezeHover').forEach(el=>el.classList.remove('freezeHover'));
+function freezeReleasePick(){
+  const pick=_freezePick;
+  _freezePick=null;
+  if(pick)freezeSetTriggerState(pick.trigger,Boolean(getFreeze(pick.tableKey).left));
+  syncFreezeButtonState();
+  return pick;
 }
 function freezeCancel(){
   if(!_freezePick){syncFreezeButtonState();return;}
-  const pick=_freezePick;
-  const table=document.getElementById(pick.tableId);
-  table?.closest('.tablewrap')?.classList.remove('freezePick');
-  freezeRemoveLaser(pick);
-  _freezePick=null;
-  freezeSetTriggerState(pick.trigger,Boolean(getFreeze(pick.tableKey).left));
-  syncFreezeButtonState();
+  freezeReleasePick();
+  window.BLTableFreeze?.cancelPick();
 }
 function freezeRefreshTable(tableId,tableKey){
   const info=(typeof activeTableInfo==='function')?activeTableInfo():null;
@@ -7467,53 +7351,26 @@ function freezeRefreshTable(tableId,tableKey){
     info.rerender();
     return;
   }
-  const table=document.getElementById(tableId);
-  applyFreeze(tableId,tableKey,Boolean(table?.querySelector('thead .chkTh')));
+  applyFreeze(tableId,tableKey,true);
 }
-function freezeColumnAtX(table,clientX){
-  const cells=freezeHeaderCells(table);
-  for(let i=0;i<cells.length;i++){
-    const rect=cells[i].getBoundingClientRect();
-    if(rect.width>0&&clientX>=rect.left&&clientX<=rect.right)return {index:i,cell:cells[i]};
-  }
-  return null;
-}
-function freezeEnsureLaser(pick,table){
-  if(pick.laser&&pick.laser.isConnected)return pick.laser;
-  const wrap=table.closest('.tablewrap');if(!wrap)return null;
-  const line=document.createElement('div');
-  line.className='freezeLaser';
-  line.setAttribute('aria-hidden','true');
-  wrap.appendChild(line);
-  pick.laser=line;
-  return line;
-}
-function freezeMoveLaser(event){
-  if(!_freezePick)return;
-  const table=document.getElementById(_freezePick.tableId);if(!table)return;
-  const rect=table.getBoundingClientRect();
-  if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom){
-    _freezePick.hoverIndex=null;
-    if(_freezePick.laser)_freezePick.laser.hidden=true;
-    table.querySelectorAll('.freezeHover').forEach(el=>el.classList.remove('freezeHover'));
-    return;
-  }
-  const hit=freezeColumnAtX(table,event.clientX);
-  if(!hit)return;
-  _freezePick.hoverIndex=hit.index;
-  table.querySelectorAll('.freezeHover').forEach(el=>el.classList.remove('freezeHover'));
-  hit.cell.classList.add('freezeHover');
-  const wrap=table.closest('.tablewrap'),line=freezeEnsureLaser(_freezePick,table);
-  if(!wrap||!line)return;
-  const wrapRect=wrap.getBoundingClientRect(),cellRect=hit.cell.getBoundingClientRect();
-  line.hidden=false;
-  line.style.left=`${cellRect.right-wrapRect.left+wrap.scrollLeft}px`;
-  line.style.top=`${table.offsetTop}px`;
-  line.style.height=`${table.offsetHeight}px`;
+function freezeCommitPick(count){
+  const pick=freezeReleasePick();
+  if(!pick)return;
+  const previous=getFreeze(pick.tableKey).left;
+  setFreeze(pick.tableKey,count);
+  freezeRefreshTable(pick.tableId,pick.tableKey);
+  const result=window.BLTableFreeze?.info(document.getElementById(pick.tableId));
+  if(result&&result.suspended){
+    setFreeze(pick.tableKey,previous);
+    freezeRefreshTable(pick.tableId,pick.tableKey);
+    showToast(freezeText().tooWide);
+  }else showToast(freezeText().done(count));
+  freezeSetTriggerState(pick.trigger,Boolean(getFreeze(pick.tableKey).left));
+  syncFreezeButtonState();
 }
 function freezeStartFor(tableId,tableKey,trigger=null){
   const table=document.getElementById(tableId);
-  if(!table){showToast(appLang==='en'?'Table not found.':'Tablo bulunamadı.');return false;}
+  if(!table||!window.BLTableFreeze){showToast(appLang==='en'?'Table not found.':'Tablo bulunamadı.');return false;}
   const actualTrigger=freezeTriggerFor(tableId,trigger);
   const alreadyFrozen=Boolean(getFreeze(tableKey).left);
   const alreadyArmed=Boolean(_freezePick&&_freezePick.tableId===tableId);
@@ -7528,8 +7385,8 @@ function freezeStartFor(tableId,tableKey,trigger=null){
   }
   freezeCancel();
   if(typeof flushPendingTableRenders==='function')flushPendingTableRenders();
-  _freezePick={tableId,tableKey,trigger:actualTrigger,hoverIndex:null,laser:null};
-  table.closest('.tablewrap')?.classList.add('freezePick');
+  _freezePick={tableId,tableKey,trigger:actualTrigger};
+  window.BLTableFreeze.startPick(table,{onPick:freezeCommitPick,onCancel:freezeReleasePick});
   freezeSetTriggerState(actualTrigger,true);
   syncFreezeButtonState();
   showToast(freezeText().pick);
@@ -7540,25 +7397,6 @@ function freezeStart(){
   if(!info||!info.tableSel){showToast(appLang==='en'?'Open a table first.':'Önce bir tablo aç.');return;}
   freezeStartFor(String(info.tableSel).replace('#',''),info.tableKey,document.getElementById('navFreezeBtn'));
 }
-document.addEventListener('pointermove',freezeMoveLaser,true);
-document.addEventListener('click',event=>{
-  if(!_freezePick)return;
-  const table=document.getElementById(_freezePick.tableId);
-  if(!table||!table.contains(event.target)||_freezePick.hoverIndex==null)return;
-  event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
-  const pick=_freezePick;
-  const count=pick.hoverIndex+1;
-  setFreeze(pick.tableKey,count);
-  freezeCancel();
-  freezeRefreshTable(pick.tableId,pick.tableKey);
-  freezeSetTriggerState(pick.trigger,true);
-  syncFreezeButtonState();
-  showToast(freezeText().done(count));
-},true);
-document.addEventListener('keydown',event=>{
-  if(!_freezePick)return;
-  if(event.key==='Escape'){event.preventDefault();freezeCancel();}
-});
 
 function groupedColumnBoundaryKeys(cols){
   const keys=new Set();
@@ -7601,9 +7439,9 @@ function seedVirtualRowHeight(table){
   const legacy=parseFloat(rootStyle.getPropertyValue('--cp-row-h'));
   return Number.isFinite(legacy)&&legacy>0?legacy:0;
 }
-function setupVirtualizedBody(tbody, table, rows, buildRow, colCount, freezePlan){
+function setupVirtualizedBody(tbody, table, rows, buildRow, colCount){
   const scrollHost = table.closest('.tablewrap') || table.parentElement;
-  const state = { rows, buildRow, colCount, freezePlan, rowHeight: seedVirtualRowHeight(table), renderedStart: -1, renderedEnd: -1 };
+  const state = { rows, buildRow, colCount, rowHeight: seedVirtualRowHeight(table), renderedStart: -1, renderedEnd: -1 };
 
   // Excel dışa aktarma / hücre kopyalama canlı DOM'dan okur; pencereli çizimde
   // DOM'da her an yalnız görünen satırlar bulunur. flushPendingTableRenders()
@@ -7860,7 +7698,6 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   const renderToken=(tbody._renderToken||0)+1; tbody._renderToken=renderToken;
   // Bu tbody için yarım kalmış bir çizim varsa artık geçersiz: token değişti.
   _pendingTableRenders.delete(tbody);
-  const freezePlan=freezeLayoutFor(table, tableKey, withChk);
   const buildRow=(r,rowIdx)=>{
     const cf = opts.computeFn ? opts.computeFn(r) : null;
     const tr = document.createElement('tr');
@@ -7874,7 +7711,6 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
     tr.innerHTML = rowHtml;
     const tds=tr.children,offset=withChk?1:0;
     for(let ci=0;ci<cols.length;ci++){const td=tds[ci+offset];if(td){td.dataset.r=rowIdx;td.dataset.c=ci;td.dataset.key=cols[ci].k;if(groupBoundaryKeys.has(cols[ci].k))td.classList.add('groupBoundary');if((tableKey==='cp'||tableKey==='orders')&&cols[ci].k==='STATUS'){td.classList.add('backlogStatusDrilldownCell');const hint=appLang==='en'?'Double-click to view all partial shipments':'Tüm parsiyelleri görmek için çift tıklayın';td.title=[td.title,hint].filter(Boolean).join(' · ');}}}
-    applyFreezePlanToRow(freezePlan, tr);
     if(typeof opts.rowPostBuildFn==='function') opts.rowPostBuildFn(tr,r,rowIdx,cols);
     if(typeof opts.detailRowHtmlFn==='function'){
       const detailHtml=opts.detailRowHtmlFn(r,cols,withChk,rowIdx);
@@ -7889,7 +7725,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   };
   const canVirtualize = opts.virtualize===true && !opts.hasExpandedRows && rows.length>VIRTUALIZE_ROW_THRESHOLD;
   if(canVirtualize){
-    setupVirtualizedBody(tbody, table, rows, buildRow, cols.length+(withChk?1:0), freezePlan);
+    setupVirtualizedBody(tbody, table, rows, buildRow, cols.length+(withChk?1:0));
   } else {
     tbody._virtualState = null;
     if(!rows.length&&opts.emptyText){BLImageRuntime.release(tbody);tbody.innerHTML='';const tr=document.createElement('tr');tr.innerHTML=`<td colspan="${Math.max(1,cols.length+(withChk?1:0))}" class="empty">${escapeHtml(opts.emptyText)}</td>`;tbody.appendChild(tr);}
@@ -7998,7 +7834,7 @@ window.BLTableFramework={
   filterState(tableKey){return state.colFilters[tableKey]||{};},
   closeFilter(){closeHeaderFilter();},
   startFreeze(tableId,tableKey,trigger){return freezeStartFor(tableId,tableKey,trigger||null);},
-  clearFreeze(tableId,tableKey){freezeCancel();setFreeze(tableKey,0);applyFreeze(tableId,tableKey,false);syncFreezeButtonState();},
+  clearFreeze(tableId,tableKey){freezeCancel();setFreeze(tableKey,0);applyFreeze(tableId,tableKey,true);syncFreezeButtonState();},
   isFrozen(tableKey){return Boolean(getFreeze(tableKey).left);},
 };
 
@@ -9852,7 +9688,6 @@ function refreshCpRowOnly(id){
     const cpOffset=1,cpVisible=visibleCols('cp');cpVisible.forEach((c,ci)=>{const td=trCP.children[ci+cpOffset];if(td){td.dataset.r=trCP.sectionRowIndex;td.dataset.c=ci;td.dataset.key=c.k;if(c.k==='STATUS'){td.classList.add('backlogStatusDrilldownCell');const hint=appLang==='en'?'Double-click to view all partial shipments':'Tüm parsiyelleri görmek için çift tıklayın';td.title=[td.title,hint].filter(Boolean).join(' · ');}}});applyGroupedBoundariesToRow(trCP,cpVisible,cpOffset);
     if(state.cpDirty.has(id)) trCP.classList.add('rowDirty'); else trCP.classList.remove('rowDirty');
     trCP.classList.toggle('rowViewOnly',row._canEdit===false);
-    applyFreezeToRow('cpTable','cp',trCP,true);
     const existingDetail=trCP.nextElementSibling&&trCP.nextElementSibling.classList.contains('cpLogisticDetailRow')?trCP.nextElementSibling:null;
     if(existingDetail)existingDetail.remove();
     const detail=cpLogisticDetailRowElement(row,cpVisible,true);
@@ -29252,7 +29087,6 @@ function renderKol(){
   // Koleksiyon her çizimde tbody/thead'i yeniden kurar; kayıtlı dondurma planını
   // yeni DOM'a yeniden uygula ve seçim kipi açıksa vurguyu koru.
   applyFreeze('kolTable','koleksiyon',true);
-  if(_freezePick?.tableId==='kolTable') freezeHighlight();
   if(typeof fitTableHeights==='function')setTimeout(fitTableHeights,0);
   try{window.BL_QUOTATIONS?.syncCollectionPricingUI?.();}catch(_){}
   try{window.BLCollectionPriceDrawer?.refresh?.();}catch(_){}

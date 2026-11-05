@@ -91,6 +91,7 @@ test('v4.78 right-button drag pans the nearest scrollable areas', () => {
 test('v4.78 freeze state stores only a left boundary and toggles off from the same button', () => {
   assert.match(INDEX, /return \{ left: Math\.max\(0,Number\(f&&f\.left\)\|\|0\)\|0, right: 0 \}/);
   assert.match(INDEX, /if\(alreadyFrozen\|\|alreadyArmed\)\{[\s\S]*setFreeze\(tableKey,0\)/);
-  assert.match(INDEX, /freezeColumnAtX\(table,event\.clientX\)/);
+  // Sütun isabeti ortak dondurma motorunda: tek sınır, imlecin altındaki başlık hücresi.
+  assert.match(fs.readFileSync(path.join(ROOT, 'public', 'table-freeze.js'), 'utf8'), /var hit = pickTarget\(pick\.table, event\.clientX\);/);
   assert.doesNotMatch(INDEX, /doneLR|pickTwo|freezeApply/);
 });

@@ -6,7 +6,8 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const INDEX = (fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8'));
 const QUOT = fs.readFileSync(path.join(ROOT, 'public', 'quotations.js'), 'utf8');
-const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
+const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','table-freeze.css'] );
+const ENGINE = fs.readFileSync(path.join(ROOT, 'public', 'table-freeze.js'), 'utf8');
 
 test('CP kopyalama yalnız yaprak sütun başlıklarını kullanır', () => {
   assert.match(INDEX, /leafHeadersOnly:info\.tableKey==='cp'/);
@@ -54,8 +55,8 @@ test('TPs profil menüleri modalın üzerinde açılır', () => {
 });
 
 test('Koleksiyon dondurma fiziksel yaprak başlıklarını kullanır ve her çizimde uygulanır', () => {
-  assert.match(INDEX, /function freezeHeaderCells\(table\)/);
-  assert.match(INDEX, /th:not\(\.chkTh\):not\(\.groupSpacer\)/);
+  assert.match(ENGINE, /function dataHeaderCells\(table\)/);
+  assert.match(ENGINE, /!cell\.classList\.contains\('chkTh'\) && !cell\.classList\.contains\('groupSpacer'\)/);
   assert.match(INDEX, /applyFreeze\('kolTable','koleksiyon',true\)/);
   assert.match(INDEX, /freezeStartFor\(String\(info\.tableSel\)\.replace\('#',''\),info\.tableKey/);
 });
@@ -63,7 +64,7 @@ test('Koleksiyon dondurma fiziksel yaprak başlıklarını kullanır ve her çiz
 test('dondurma seçiminde tek sütun sınırı lazerle gösterilir ve buton kırmızı vurgulanır', () => {
   assert.match(CSS, /\.freezeLaser\{[^}]*width:2px/s);
   for(const selector of [".navActionBtn.freezeOn",".lflCpTableTool.freezeOn"]) assert.ok(CSS.includes(selector));
-  assert.match(INDEX, /freezeColumnAtX\(table,event\.clientX\)/);
+  assert.match(ENGINE, /var hit = pickTarget\(pick\.table, event\.clientX\);/);
   assert.match(INDEX, /setFreeze\(pick\.tableKey,count\)/);
   assert.doesNotMatch(CSS, /freezeClosed|freezeOpen|freezeBar/);
 });
