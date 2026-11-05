@@ -4,7 +4,7 @@
 // the next measurement with a previous model's garbage collection.
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const files=new Set(['business-rules.js','order-decision-engine.js','backlog-delivery-engine.js','cp-readiness-engine.js','cp-decision-runtime.js','cp-decision-worker.js']);
+const files=new Set(['chronological-values.js','business-rules.js','order-decision-engine.js','backlog-delivery-engine.js','cp-readiness-engine.js','cp-decision-runtime.js','cp-decision-worker.js']);
 const server=http.createServer((req,res)=>{
   const file=new URL(req.url,'http://localhost').pathname.slice(1);
   if(!file){res.setHeader('Content-Type','text/html; charset=utf-8');res.end('<!doctype html><title>CP local benchmark</title>');return;}

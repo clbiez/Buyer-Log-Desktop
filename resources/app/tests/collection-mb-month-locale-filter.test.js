@@ -15,6 +15,7 @@ function between(start,end){
 }
 function collectionContext(){
   const sandbox={
+    BLBusinessRules:require('../public/business-rules'),
     appLang:'tr',
     norm:value=>String(value==null?'':value).trim(),
     turknorm:value=>String(value==null?'':value).toUpperCase().replace(/[İŞÇÖÜĞ]/g,x=>({'İ':'I','Ş':'S','Ç':'C','Ö':'O','Ü':'U','Ğ':'G'}[x])).replace(/\s+/g,' ').trim(),

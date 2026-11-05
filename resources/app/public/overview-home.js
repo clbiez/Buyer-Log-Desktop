@@ -23,7 +23,7 @@
   const INTERACTIVE='button,a,input,select,textarea,label,summary,[role="button"],[role="tab"],[contenteditable="true"],canvas';
   const NARROW_QUERY='(max-width: 900px)';
 
-  let previousLayout=null;
+  let previousLayout=null,pageSlide=null;
   let state=null,editing=false,selectedKey='',session=null,longPress=null,wheelAccum=0,wheelTimer=0;
   const reducedMotion=()=>{try{return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){return false;}};
   const isNarrow=()=>{try{return window.matchMedia(NARROW_QUERY).matches;}catch(_){return false;}};
@@ -77,6 +77,7 @@
     });
   }
   function apply({animate=false,preview=null,skipKey=''}={}){
+    pageSlide?.cancel();pageSlide=null;
     const g=grid();if(!g)return;
     const view=preview||state,pageIndex=view.page,page=view.pages[pageIndex]||{items:[]};
     const before=animate?snapshotRects():null;
@@ -166,7 +167,7 @@
     const dir=direction||(target>state.page?1:-1);
     state=L.setPage(state,target);persist();apply();
     const g=grid();
-    if(g&&!reducedMotion()){g.classList.remove('ovHomeSlideNext','ovHomeSlidePrev');void g.offsetWidth;g.classList.add(dir>0?'ovHomeSlideNext':'ovHomeSlidePrev');setTimeout(()=>g.classList.remove('ovHomeSlideNext','ovHomeSlidePrev'),260);}
+    if(g&&!editing&&!session)pageSlide=window.BLMotionPlus?.play(dir>0?'page-next':'page-prev',g)||null;
   }
   function highlight(key){
     const el=widgetEl(key);if(!el)return;

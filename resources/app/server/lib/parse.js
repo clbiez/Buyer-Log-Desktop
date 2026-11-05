@@ -2923,9 +2923,10 @@ function buildBacklogTree(orders, dims, dimIdx, antrepoDateLevels, dimensions=BA
   if(!getter) return buildBacklogTree(orders, dims, dimIdx+1, antrepoDateLevels, dimensions);
   const groups = {};
   orders.forEach(o=>{ const k = getter(o); (groups[k]=groups[k]||[]).push(o); });
+  const chronological=Object.keys(groups).some(value=>BLBusinessRules.chronologyParts(value));
   return Object.entries(groups)
     .map(([label, sub])=>backlogNode(label, sub, buildBacklogTree(sub, dims, dimIdx+1, antrepoDateLevels, dimensions)))
-    .sort((a,b)=> b.qty-a.qty);
+    .sort((a,b)=>chronological?BLBusinessRules.compareChronologicalValues(a.label,b.label):b.qty-a.qty);
 }
 
 // Bir pivot düğümü. Düğümün ALTINDAKİ SATIRLAR düğümün üstünde taşınır, ancak
@@ -3111,7 +3112,7 @@ function backlogDimValues(orders, dimensions=BACKLOG_DIMENSIONS) {
       const value = accessor(order);
       if (value != null && value !== '') seen.add(String(value));
     }
-    out[dim] = [...seen].sort((a, b) => String(a).localeCompare(String(b), 'tr'));
+    out[dim] = [...seen].sort(BLBusinessRules.compareChronologicalValues);
   }
   out.antrepoDate = backlogDateValues(orders);
   return out;

@@ -231,7 +231,7 @@
   OABLocalFilterEngine.prototype.distinctValues = function (fieldName) {
     const values = new Set();
     this.rows.forEach(row => { const v = row ? row[fieldName] : undefined; if (v != null && v !== '') values.add(String(v)); });
-    return [...values].sort((a, b) => a.localeCompare(b, 'tr'));
+    return [...values].sort(global.BLBusinessRules.compareChronologicalValues);
   };
   OABLocalFilterEngine.prototype.apply = function (filters) {
     const active = Object.entries(filters || {}).filter(([, set]) => set && set.size);
@@ -965,7 +965,7 @@
     oabEl('oabAuthBar').innerHTML = ''; oabEl('oabAuthBar').hidden = true;
     try {
       const data = await OABApi.seasons();
-      S.seasons = data.seasons || [];
+      S.seasons = (data.seasons || []).slice().sort((a,b)=>global.BLBusinessRules.compareSeasonNumberThenLetter(oabOptionLabel(a),oabOptionLabel(b)));
       S.metadataInfo = data.metadata || S.metadataInfo;
       oabMultiRenderLabel('season');
       trigger.disabled = false;
@@ -1896,9 +1896,10 @@
     const na = typeof a === 'number' ? a : toSafeNumber(a);
     const nb = typeof b === 'number' ? b : toSafeNumber(b);
     if (na != null && nb != null && /^[-+]?\s*[\d.,\s]+$/.test(String(a)) && /^[-+]?\s*[\d.,\s]+$/.test(String(b))) return na - nb;
+    if(global.BLBusinessRules.chronologyParts(a)||global.BLBusinessRules.chronologyParts(b))return global.BLBusinessRules.compareChronologicalValues(a,b);
     const ta = oabTemporalSortKey(a), tb = oabTemporalSortKey(b);
     if (ta != null && tb != null && ta !== tb) return ta - tb;
-    return String(a).localeCompare(String(b), 'tr', { numeric: true, sensitivity: 'base' });
+    return global.BLBusinessRules.compareChronologicalValues(a,b);
   }
   OABDataUtils.smartCompare = oabSmartCompare;
 

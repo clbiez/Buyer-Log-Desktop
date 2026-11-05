@@ -8,10 +8,10 @@
    Fiyat kıyasları yalnız seçilen TEK para biriminde yapılır; hacim kıyasları tüm
    kayıtları kullanır. */
 (function(root,factory){
-  const api=factory();
+  const api=factory(typeof module==='object'&&module.exports?require('./business-rules'):root.BLBusinessRules);
   if(typeof module==='object'&&module.exports)module.exports=api;
   if(root)root.BLPriceSupplierInsights=api;
-})(typeof globalThis!=='undefined'?globalThis:this,function(){
+})(typeof globalThis!=='undefined'?globalThis:this,function(businessRules){
   'use strict';
 
   const DIMENSIONS=['manufacturer','country','classification','productGroup','productMainDefinition','mag','mmyg','buyingGroup','buyer'];
@@ -73,8 +73,8 @@
   }
 
   function seasonCompare(a,b){
-    const rules=typeof globalThis!=='undefined'&&globalThis.BLBusinessRules;
-    if(rules&&typeof rules.compareSeasonPrefixThenNumber==='function')return rules.compareSeasonPrefixThenNumber(a,b);
+    const rules=businessRules;
+    if(rules&&typeof rules.compareSeasonNumberThenLetter==='function')return rules.compareSeasonNumberThenLetter(a,b);
     return String(a).localeCompare(String(b),'tr',{numeric:true});
   }
   function seasons(dataset){
@@ -82,7 +82,7 @@
     return [...set].sort(seasonCompare);
   }
   function previousSeason(current,list){
-    const rules=typeof globalThis!=='undefined'&&globalThis.BLBusinessRules;
+    const rules=businessRules;
     if(rules&&typeof rules.previousSeasonByPrefix==='function')return rules.previousSeasonByPrefix(current,list)||'';
     const index=list.indexOf(current);return index>0?list[index-1]:'';
   }
@@ -133,7 +133,7 @@
   }
   function dimensionValues(dataset,dim){
     const map=isColumnDim(dim)?columnLabels(dataset,columnName(dim)):dataset.labels&&dataset.labels[dim];if(!map)return [];
-    return [...map.values()].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true,sensitivity:'base'}));
+    return [...map.values()].sort(businessRules.compareChronologicalValues);
   }
   function availableDimensions(dataset,list){return list.filter(dim=>dataset.labels&&dataset.labels[dim]&&dataset.labels[dim].size>0);}
   function periodValues(dataset,dateField,season=''){

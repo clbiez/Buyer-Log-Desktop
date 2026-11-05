@@ -6743,7 +6743,7 @@ function uniqueColValues(tableKey, key){
     else vals.add(cellPlainText(col,r));
   });
   const out=[...vals];
-  return ((tableKey==='cp'||tableKey==='orders')&&key==='Priority')?out.sort((a,b)=>priorityRank(a)-priorityRank(b)):out.sort();
+  return ((tableKey==='cp'||tableKey==='orders')&&key==='Priority')?out.sort((a,b)=>priorityRank(a)-priorityRank(b)):out.sort(BLBusinessRules.compareChronologicalValues);
 }
 function uniqueDateBuckets(tableKey, key, gran){
   const vals = new Set(); rowsForFilterUniverse(tableKey, key).forEach(r=>{
@@ -9084,7 +9084,7 @@ function sortWithFacet(vals, validSet){
   return [...vals].sort((a,b)=>{
     const av = validSet.has(a), bv = validSet.has(b);
     if(av!==bv) return av?-1:1;
-    return String(a).localeCompare(String(b),'tr');
+    return BLBusinessRules.compareChronologicalValues(a,b);
   });
 }
 function facetChecklistHtml(vals, validSet, selected, checkboxClass){
@@ -9097,7 +9097,7 @@ function facetChecklistHtml(vals, validSet, selected, checkboxClass){
 function uniqueVals(rows,key){
   return facetCacheValue(rows,`unique\u0000${key}`,()=>{
     const values=new Set();for(const row of rows){const value=norm(row&&row[key]);if(value)values.add(value);}
-    return [...values].sort();
+    return [...values].sort(BLBusinessRules.compareChronologicalValues);
   });
 }
 function fillSelect(id, vals){
@@ -9368,11 +9368,10 @@ function qfgFinish(moduleKey,hostId,rerender){
 function quickCountEntries(counts){
   return Object.entries(counts||{}).filter(([,n])=>Number(n)>0).sort((a,b)=>b[1]-a[1]);
 }
-// Sezon çipleri sayıya göre değil, programın kanonik sezon sırasına göre dizilir:
-// en yeni kuşaktan eskiye, aynı kuşakta önce W sonra S (W11>S11>W10>S10>…).
+// Season filters follow chronological order: S5, W5, S6, W6, S7, W7.
 function quickSeasonEntries(counts){
   return Object.entries(counts||{}).filter(([,n])=>Number(n)>0)
-    .sort((a,b)=>BLBusinessRules.compareSeasonNewestFirst(a[0],b[0]));
+    .sort((a,b)=>compareSeasonValues(a[0],b[0]));
 }
 function sortRows(rows,key,dir){
   const privateKey=(COLS_BY_TABLE.cp||[]).some(col=>col.k===key&&col.personalNote)
@@ -9380,13 +9379,13 @@ function sortRows(rows,key,dir){
   return [...rows].sort((a,b)=>{
     let x=privateKey?readPrivateOrderNote(a,key):a[key], y=privateKey?readPrivateOrderNote(b,key):b[key];
     if(key==='Priority')return (priorityRank(x)-priorityRank(y))*dir;
-    if(String(key).toLocaleLowerCase('tr-TR')==='season') return compareSeasonValues(x,y)*dir;
+    if(String(key).toLocaleLowerCase('tr-TR')==='season') return BLBusinessRules.compareChronologicalValues(x,y,dir);
     const column=(COLS_BY_TABLE.cp||[]).find(item=>item.k===key)||(COLS_BY_TABLE.orders||[]).find(item=>item.k===key);
     const schema=columnSchemaFor(column||{k:key},rows);
     const sx=schema&&schema.sortValue(x), sy=schema&&schema.sortValue(y);
     if(sx!=null && sy!=null && schema&&schema.sortType==='number') return (sx-sy)*dir;
     if(sx!=null && sy!=null && schema&&schema.sortType==='date') return (sx-sy)*dir;
-    return norm(x).localeCompare(norm(y),'tr',{numeric:true,sensitivity:'base'})*dir;
+    return BLBusinessRules.compareChronologicalValues(x,y,dir);
   });
 }
 /* Boş tablo yönlendirmesi: kaynakta hiç satır yoksa Veri Yönetimi'ne, filtreler
@@ -11471,7 +11470,7 @@ function renderOverviewNow(){
       seasonMap[season].qty += (toNum(r['Order Quantity'])||0);
       seasonMap[season].count++;
     });
-    const seasonRows = Object.entries(seasonMap).sort((a,b)=>b[1].count-a[1].count);
+    const seasonRows = Object.entries(seasonMap).sort((a,b)=>compareSeasonValues(a[0],b[0]));
     breakdown.season={codes:actionPriorityCodes(),labels:Object.fromEntries(actionPriorityCodes().map(code=>[code,priorityDisplay(code)])),rows:seasonRows.map(([label,data])=>({label,count:data.count,qty:data.qty,priorities:data.priorities}))};
     const tblSeason = document.getElementById('tblSeason');
     const seasonQtyTotal=seasonRows.reduce((sum,[,d])=>sum+(Number(d.qty)||0),0);
@@ -11666,7 +11665,7 @@ function pricingRuleDateRangeLabel(rule){
   return `${start?fmtDate(start):'−∞'} – ${end?fmtDate(end):'+∞'}`;
 }
 function pricingRuleSeasonLabel(rule){
-  const seasons=normalizePricingRuleSeasons((rule&&rule.seasons)!=null?rule.seasons:(rule&&rule.season));
+  const seasons=normalizePricingRuleSeasons((rule&&rule.seasons)!=null?rule.seasons:(rule&&rule.season)).sort(BLBusinessRules.compareSeasonNumberThenLetter);
   return seasons.length?seasons.join(', '):L('Tüm Sezonlar');
 }
 function normalizePricingRules(rules){
@@ -12081,7 +12080,7 @@ function openSuppFobRulesModal(){
   const cpRows=state.cp&&state.cp.rows||[], orderRows=overviewSummaryRows(), asasRows=state.asasOrders||[];
   const licensors=[...new Set(cpRows.map(r=>norm(r.Licensor)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
   const licenses=[...new Set(cpRows.map(r=>norm(r.License)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
-  const seasonOptions=[...new Set([...cpRows.map(r=>norm(r.Season)),...orderRows.map(r=>norm(r.Season)),...asasRows.map(r=>norm(r.season)),...working.flatMap(r=>r.seasons||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
+  const seasonOptions=[...new Set([...cpRows.map(r=>norm(r.Season)),...orderRows.map(r=>norm(r.Season)),...asasRows.map(r=>norm(r.season)),...working.flatMap(r=>r.seasons||[])].filter(Boolean))].sort(BLBusinessRules.compareChronologicalValues);
   const modal=document.createElement('div'); modal.id='_suppFobRulesModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="_suppFobRulesTitle" style="width:min(97vw,1340px);max-height:92vh;display:flex;flex-direction:column;padding:0;">
     <div style="padding:16px 20px;border:0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
@@ -12162,7 +12161,7 @@ function openSuppFobRulesModal(){
   const $=id=>modal.querySelector('#'+id);
   const opdStart=$('_ruleOpdStart'),opdEnd=$('_ruleOpdEnd'),seasonBtn=$('_ruleSeasonBtn'),seasonPanel=$('_ruleSeasonPanel'),country=$('_ruleCountry'),licensor=$('_ruleLicensor'),license=$('_ruleLicense'),royalty=$('_ruleRoyalty'),hologram=$('_ruleHologram');
   function renderSeasonPicker(){
-    const options=[...new Set([...seasonOptions,...selectedSeasons])].sort((a,b)=>a.localeCompare(b,'tr'));
+    const options=[...new Set([...seasonOptions,...selectedSeasons])].sort(BLBusinessRules.compareChronologicalValues);
     seasonPanel.innerHTML=options.length?options.map(v=>`<label class="pricingRuleSeasonOption"><input type="checkbox" value="${escapeHtml(v)}" ${selectedSeasons.has(v)?'checked':''}> <span>${escapeHtml(v)}</span></label>`).join(''):'<div style="padding:8px;color:var(--ui-text-muted);font-size:var(--ui-font-xs);">Sezon verisi bulunamadı. Boş seçim tüm sezonlara uygulanır.</div>';
     seasonPanel.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{ if(inp.checked) selectedSeasons.add(inp.value); else selectedSeasons.delete(inp.value); updateSeasonButton(); }));
     updateSeasonButton();
@@ -12203,7 +12202,7 @@ function openSuppFobRulesModal(){
         const as=a.opdStart?dateOrdinal(a.opdStart):-Infinity, bs=b.opdStart?dateOrdinal(b.opdStart):-Infinity;
         const ae=a.opdEnd?dateOrdinal(a.opdEnd):Infinity, be=b.opdEnd?dateOrdinal(b.opdEnd):Infinity;
         cmp=as-bs||ae-be;
-      } else if(ruleSort.key==='seasons') cmp=compareText(pricingRuleSeasonLabel(a),pricingRuleSeasonLabel(b));
+      } else if(ruleSort.key==='seasons') cmp=BLBusinessRules.compareSeasonLists(a.seasons||a.season,b.seasons||b.season);
       else if(ruleSort.key==='countryGroup'||ruleSort.key==='licensor'||ruleSort.key==='license') cmp=compareText(a[ruleSort.key],b[ruleSort.key]);
       else if(ruleSort.key==='royalty'||ruleSort.key==='hologramCost') cmp=Number(a[ruleSort.key])-Number(b[ruleSort.key]);
       else if(ruleSort.key==='matches') cmp=(matchCounts.get(a.id)||0)-(matchCounts.get(b.id)||0);
@@ -12678,7 +12677,7 @@ function openTransitRulesModal(){
   let working=normalizeTransitRules(state.overrides.transitRules).map(r=>({...r,seasons:[...(r.seasons||[])],countries:[...(r.countries||[])]}));
   let editingId=null, formType='Gemi', listFilter={q:'',type:'*'}, analysisTypes=[];
   const cpRows=(state.cp&&state.cp.rows)||[],orderRows=overviewSummaryRows(),asasRows=state.asasOrders||[];
-  const seasonOptions=[...new Set([...cpRows.map(r=>norm(r.Season)),...orderRows.map(r=>norm(r.Season)),...asasRows.map(r=>norm(r.season)),...working.flatMap(r=>r.seasons||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
+  const seasonOptions=[...new Set([...cpRows.map(r=>norm(r.Season)),...orderRows.map(r=>norm(r.Season)),...asasRows.map(r=>norm(r.season)),...working.flatMap(r=>r.seasons||[])].filter(Boolean))].sort(BLBusinessRules.compareChronologicalValues);
   const countryOptions=()=>[...new Set([...cpRows.map(r=>norm(r.Country)),...orderRows.map(r=>norm(r.Country)),...asasRows.map(r=>norm(countryEN(r.countryRaw))),...working.flatMap(r=>r.countries||[]),...(window.BLTransitAnalysisUI?.knownCountries?.()||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
   const modal=document.createElement('div');modal.id='_transitRulesModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard trxModal" role="dialog" aria-modal="true" aria-labelledby="_transitRulesTitle">
@@ -12725,7 +12724,7 @@ function openTransitRulesModal(){
     const btn=root.querySelector('.trxPickBtn'),panel=root.querySelector('.trxPickPanel'),list=root.querySelector('.trxPickList'),search=root.querySelector('.trxPickSearch');
     const label=()=>{const t=root.querySelector('.trxPickText');const v=[...selected];t.textContent=!v.length?allLabel:v.length<=2?v.join(', '):`${v.length} ${itemLabel}`;btn.title=v.length?v.join(', '):allLabel;btn.classList.toggle('has-value',v.length>0);};
     const draw=()=>{
-      const all=[...new Set([...optionsFn(),...selected])].sort((a,b)=>a.localeCompare(b,'tr'));
+      const all=[...new Set([...optionsFn(),...selected])].sort(BLBusinessRules.compareChronologicalValues);
       const q=turknorm(query),shown=all.filter(v=>!q||turknorm(v).includes(q));
       list.innerHTML=shown.length?shown.map(v=>`<label class="trxPickOption"><input type="checkbox" class="trxCheck" value="${escapeHtml(v)}" ${selected.has(v)?'checked':''}><span>${escapeHtml(v)}</span></label>`).join(''):`<div class="trxPickNone">${escapeHtml(tl('Eşleşen değer yok. Yazdığınızı Enter ile ekleyebilirsiniz.','No matching value. Press Enter to add what you typed.'))}</div>`;
       list.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{if(inp.checked)selected.add(inp.value);else selected.delete(inp.value);label();}));
@@ -15676,7 +15675,9 @@ let topRefreshMenuSequence=0;
 window.BLInvalidateRefreshGroups=items=>{ window.BL_REFRESH_GROUPS=Array.isArray(items)?items:null; authoritativeLinkedRefreshTargets=null; };
 function closeTopRefreshMenu(){ topRefreshMenuSequence++;document.getElementById('_topRefreshMenu')?.remove(); if(topRefreshMenuCleanup){topRefreshMenuCleanup();topRefreshMenuCleanup=null;} }
 async function openTopRefreshMenu(anchor){
+  const wasOpen=Boolean(document.getElementById('_topRefreshMenu'));
   closeTopRefreshMenu();
+  if(wasOpen)return;
   if(window.BL_REFRESH_BUSY){openRefreshStagesModal();return;}
   const requestSequence=topRefreshMenuSequence;
   try{await syncLinkedRefreshMembers();}
@@ -15714,21 +15715,57 @@ async function openTopRefreshMenu(anchor){
     return `${sourceRelativeTime(clock.toISOString())}${time?` · ${time}`:''}`;
   };
   if(window.BL_REFRESH_BUSY){ openRefreshStagesModal(); return; }
-  const busy=Boolean(window.BL_REFRESH_BUSY);
-  menu.innerHTML=options.map(([key,label,targets])=>`<button type="button" data-refresh-scope="${key}"${busy?' disabled':''}><span class="topRefreshLabel">${escapeHtml(label)}</span><span class="topRefreshWhen">${escapeHtml(stamp(targets))}</span><svg class="ic"><use href="#i-refresh"/></svg></button>`).join('')
-    +`<button type="button" class="topRefreshStop" data-stop-refresh${busy?'':' disabled'}><span class="topRefreshLabel">${escapeHtml(appLang==='en'?'Stop Refresh':'Yenilemeyi Durdur')}</span><svg class="ic"><use href="#i-x"/></svg></button>`;
+  const codes={cp:'CP',linked:'ALL',orders:'ORD',backlog:'BL',lfl:'LFL',priceanalysis:'PSA'};
+  menu.setAttribute('role','menu');
+  menu.setAttribute('aria-label',appLang==='en'?'Refresh scope':'Yenileme kapsamı');
+  menu.innerHTML='<svg class="topRefreshBranches" aria-hidden="true"><path/></svg><div class="topRefreshSquares">'
+    +options.map(([key,label,targets])=>`<button type="button" role="menuitem" data-refresh-scope="${key}" aria-label="${escapeHtml(label+' · '+stamp(targets))}" aria-describedby="topRefreshDetail"><span class="topRefreshLabel">${codes[key]||key.toUpperCase()}</span></button>`).join('')
+    +'</div><div class="topRefreshDetail" id="topRefreshDetail" role="tooltip"><span class="topRefreshFullLabel"></span><span class="topRefreshWhen"></span></div>';
   document.body.appendChild(menu);
-  const place=()=>{const r=anchor.getBoundingClientRect(),w=menu.offsetWidth||190;menu.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w))+'px';menu.style.top=Math.min(innerHeight-(menu.offsetHeight||260)-8,r.bottom+8)+'px';};
-  const run=async key=>{closeTopRefreshMenu();if(window.BL_REFRESH_BUSY)return;const option=options.find(([candidate])=>candidate===key);if(option)return loadFromServer(true,option[2].slice());};
-  menu.querySelectorAll('[data-refresh-scope]').forEach(btn=>btn.addEventListener('click',()=>run(btn.dataset.refreshScope)));
-  menu.querySelector('[data-stop-refresh]')?.addEventListener('click',()=>{requestRefreshCancel();closeTopRefreshMenu();});
-  const outside=e=>{if(!menu.contains(e.target)&&e.target!==anchor&&!anchor.contains(e.target))closeTopRefreshMenu();}; const esc=e=>{if(e.key==='Escape')closeTopRefreshMenu();};
-  document.addEventListener('pointerdown',outside,true);document.addEventListener('keydown',esc);window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
-  topRefreshMenuCleanup=()=>{document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',esc);window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
-  // Açık sayfanın satırı odaklanır: Enter tek tuşla doğru yenilemeyi başlatır.
+  anchor.setAttribute('aria-haspopup','menu');anchor.setAttribute('aria-expanded','true');anchor.setAttribute('aria-controls',menu.id);
+  const buttons=Array.from(menu.querySelectorAll('[data-refresh-scope]'));
+  const detail=menu.querySelector('.topRefreshDetail');
+  const describe=button=>{
+    const option=options.find(([key])=>key===button.dataset.refreshScope);if(!option)return;
+    detail.querySelector('.topRefreshFullLabel').textContent=option[1];
+    detail.querySelector('.topRefreshWhen').textContent=stamp(option[2]);
+  };
+  const place=()=>{
+    const r=anchor.getBoundingClientRect(),w=menu.offsetWidth;
+    const left=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2));
+    menu.style.left=left+'px';menu.style.top=r.bottom+'px';
+    const svg=menu.querySelector('svg'),branchHeight=buttons[0].offsetTop;
+    const centers=buttons.map(button=>button.offsetLeft+button.offsetWidth/2);
+    svg.setAttribute('viewBox',`0 0 ${w} ${branchHeight}`);
+    svg.querySelector('path').setAttribute('d',`M${r.left+r.width/2-left} 0V28H${centers[0]}M${centers[0]} 28H${centers[centers.length-1]}${centers.map(x=>`M${x} 28V${branchHeight}`).join('')}`);
+    detail.style.left=Math.max(8-left,Math.min(innerWidth-8-left-detail.offsetWidth,(r.left+r.width/2-left)-detail.offsetWidth/2))+'px';
+  };
+  const run=async key=>{closeTopRefreshMenu();anchor.focus();if(window.BL_REFRESH_BUSY)return;const option=options.find(([candidate])=>candidate===key);if(option)return loadFromServer(true,option[2].slice());};
+  buttons.forEach(btn=>{
+    btn.addEventListener('click',()=>run(btn.dataset.refreshScope));
+    btn.addEventListener('focus',()=>describe(btn));btn.addEventListener('pointerenter',()=>describe(btn));
+  });
+  const outside=e=>{if(!menu.contains(e.target)&&!anchor.contains(e.target))closeTopRefreshMenu();};
+  const keys=e=>{
+    if(e.key==='Escape'){e.preventDefault();closeTopRefreshMenu();anchor.focus();return;}
+    if(!menu.contains(e.target))return;
+    const i=buttons.indexOf(document.activeElement);let next;
+    if(e.key==='ArrowRight'||e.key==='ArrowDown')next=(i+1)%buttons.length;
+    if(e.key==='ArrowLeft'||e.key==='ArrowUp')next=(i+buttons.length-1)%buttons.length;
+    if(e.key==='Home')next=0;if(e.key==='End')next=buttons.length-1;
+    if(next!==undefined){e.preventDefault();buttons[next].focus();}
+    if(e.key==='Tab'){anchor.focus();closeTopRefreshMenu();}
+  };
+  document.addEventListener('pointerdown',outside,true);document.addEventListener('keydown',keys);window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
+  topRefreshMenuCleanup=()=>{anchor.setAttribute('aria-expanded','false');document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',keys);window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
   const activeTab=currentActiveTab();
-  const focusKey=(options.find(([key,,targets])=>key!=='all'&&targets.includes(activeTab))||[])[0]||'';
-  place();requestAnimationFrame(()=>(focusKey&&menu.querySelector(`[data-refresh-scope="${focusKey}"]`)||menu.querySelector('button'))?.focus());
+  const focusKey=(options.find(([key,,targets])=>key!=='linked'&&targets.includes(activeTab))
+    ||options.find(([,,targets])=>targets.includes(activeTab))||options[0])[0];
+  const initial=buttons.find(button=>button.dataset.refreshScope===focusKey)||buttons[0];
+  describe(initial);place();
+  window.BLMotionPlus?.play('branch',menu.querySelector('svg'));
+  buttons.forEach(button=>window.BLMotionPlus?.play('overlay',button));
+  requestAnimationFrame(()=>{if(menu.isConnected)initial.focus();});
 }
 // Yenileme sürerken aynı düğmeye tekrar basmak Refresh Stages panelini gösterir.
 
@@ -18458,7 +18495,7 @@ function renderBacklog(data){
     }
     const keySet = new Set();
     rowsFlat.forEach(r=>Object.keys(r.colTotals).forEach(k=>keySet.add(k)));
-    backlogPivotCols = [...keySet].sort((a,b)=>String(a).localeCompare(String(b),'tr'));
+    backlogPivotCols = [...keySet].sort((a,b)=>BLBusinessRules.compareChronologicalPaths(String(a).split(' / '),String(b).split(' / ')));
     flat = rowsFlat;
   } else {
     flat = flattenBacklogTree(data.tree, 0, '', []);
@@ -24611,7 +24648,7 @@ function kolUniqueCatalogValues(values){
     const value=norm(raw),key=kolCatalogIdentity(value);
     if(key&&!seen.has(key)){seen.add(key);out.push(value);}
   });
-  return out.sort((a,b)=>String(a).localeCompare(String(b),'tr-TR',{numeric:true,sensitivity:'base'}));
+  return out.sort(BLBusinessRules.compareChronologicalValues);
 }
 /* KOLEKSİYON ANA VERİ KATALOĞU (ASAS veri modeli, filtresiz).
    state.collectionCatalogs yalnız kullanıcının OKUNMUŞ ve ufuk/kapsam
@@ -26088,8 +26125,7 @@ function kolCompareRowsForActiveSort(a,b,rowsForSchema){
   const col=kolColDefs().find(c=>c.k===kolSort.key);
   let x=kolSort.key==='exToRetail'?kolExToRetailDays(a):kolEffectiveValue(a,kolSort.key);
   let y=kolSort.key==='exToRetail'?kolExToRetailDays(b):kolEffectiveValue(b,kolSort.key);
-  if(kolSort.key==='season') return compareSeasonValues(x,y)*kolSort.dir;
-  if(kolSort.key==='inStoreMonth'){x=kolMonthCode(x)||norm(x);y=kolMonthCode(y)||norm(y);}
+  if(kolSort.key==='season'||kolSort.key==='inStoreMonth') return BLBusinessRules.compareChronologicalValues(x,y,kolSort.dir);
   if(col?.checklist) return (KOL_CHECKLIST_STATUSES.indexOf(kolChecklistStatus(x))-KOL_CHECKLIST_STATUSES.indexOf(kolChecklistStatus(y)))*kolSort.dir;
   const schema=columnSchemaFor(col,rowsForSchema||[]);
   if(schema&&(schema.sortType==='number'||schema.sortType==='date')){ x=schema.sortValue(x); y=schema.sortValue(y); }
@@ -26103,7 +26139,7 @@ function kolCompareRowsForActiveSort(a,b,rowsForSchema){
   const xEmpty=x==null||x===''||Number.isNaN(x), yEmpty=y==null||y===''||Number.isNaN(y);
   if(xEmpty!==yEmpty) return xEmpty?1:-1;
   if(typeof x==='number'&&typeof y==='number') return (x-y)*kolSort.dir;
-  return norm(x).localeCompare(norm(y),'tr',{numeric:true,sensitivity:'base'})*kolSort.dir;
+  return BLBusinessRules.compareChronologicalValues(x,y,kolSort.dir);
 }
 function kolGroupMembersIndex(rows){
   const index=new Map();
@@ -27960,7 +27996,7 @@ function renderKolSummaryFooter(table,rows,descriptors,{pictureVisible=false}={}
     if(d.kind==='base'&&d.k==='ydLanded'){cells.push(kolAverageFooter(ydLandedAvg,ydLandedArithmetic,L('Overseas Landed'),{weightedChangePct:ydLandedWeightedChange}));return;}
     if(d.kind==='base'&&d.k==='trLanded'){cells.push(kolAverageFooter(trLandedAvg,trLandedArithmetic,L('TR Landed')));return;}
     if(d.kind==='base'&&d.k==='quantity'){cells.push(`<td class="quantityTotalValue" title="${escapeHtml(appLang==='en'?'Filtered quantity total':'Filtrelenmiş adet toplamı')}">${formatQuantityTotal(quantityTotal)}</td>`);return;}
-    if(!modelPlaced&&((d.kind==='base'&&d.k==='modelKod')||!descriptors.some(x=>x.kind==='base'&&x.k==='modelKod'))&&!metricDescriptor(d)){cells.push(`<td class="collectionModelCount">${escapeHtml(modelText)}</td>`);modelPlaced=true;return;}
+    if(!modelPlaced&&((d.kind==='base'&&d.k==='modelKod')||!descriptors.some(x=>x.kind==='base'&&x.k==='modelKod'))&&!metricDescriptor(d)){cells.push(`<td class="collectionModelCount"><span>${escapeHtml(modelText)}</span></td>`);modelPlaced=true;return;}
     cells.push('<td></td>');
   });
   foot.innerHTML=`<tr class="collectionSummaryRow">${cells.join('')}</tr>`;
@@ -28083,7 +28119,7 @@ function openKolHeaderFilter(key, anchorEl){
   const monthFacet=key==='inStoreMonth';
   const allEntries=[...new Set(baseRows.map(r=>kolFilterValue(r,key)))].map(raw=>({
     raw,display:monthFacet?(kolMonthDisplay(raw)||raw):(meta.select?L(raw):raw)
-  })).sort((a,b)=>monthFacet?String(a.raw).localeCompare(String(b.raw)):String(a.display).localeCompare(String(b.display),'tr'));
+  })).sort((a,b)=>BLBusinessRules.compareChronologicalValues(monthFacet?a.raw:a.display,monthFacet?b.raw:b.display));
   const allVals=allEntries.map(entry=>entry.display);
   const rawByDisplay=new Map(allEntries.map(entry=>[entry.display,entry.raw]));
   const current = kolColFilters[key];
@@ -28202,7 +28238,7 @@ function renderKolQuickFilters(){
     const scoped = kolQuickScoped(dim.key);
     const counts = {};
     scoped.forEach(r=>{ const v = (dim.key==='inStoreMonth'?kolFilterValue(r,dim.key):norm(r[dim.key])) || '—'; counts[v] = (counts[v]||0)+1; });
-    const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    const entries = Object.entries(counts).sort((a,b)=>dim.key==='season'||dim.key==='inStoreMonth'?BLBusinessRules.compareChronologicalValues(a[0],b[0]):b[1]-a[1]);
     if(!entries.length) return;
     html += `<span class="kpiGroupLabel">${escapeHtml(L(dim.label))}</span>`;
     entries.forEach(([val,n])=>{

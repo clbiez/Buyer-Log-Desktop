@@ -253,7 +253,7 @@
       const value = String(row && row[field] || '').trim();
       if (value && !seen.has(OI.fold(value))) seen.set(OI.fold(value), value);
     });
-    return [...seen.values()].sort((a, b) => a.localeCompare(b, 'tr', { numeric: true }));
+    return [...seen.values()].sort(BLBusinessRules.compareChronologicalValues);
   }
   function usageCounts() {
     const counts = new Map();

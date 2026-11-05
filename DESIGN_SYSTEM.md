@@ -48,7 +48,9 @@ boştur; UI CSS dosyalarında ham renk borcu yoktur.
 ortak paneller, kartlar, modüller ve düğmeler `--ui-group-divider` ile ince 1px
 sınıra sahiptir. Araç çubuğu ve tablo satırı ayraçları `--ui-row-divider`
 kullanır. Gölge yalnız geçici, üstte duran yüzey için
-`--ui-shadow-overlay` değeridir. Her karta gölge yoktur.
+`--ui-shadow-overlay` değeridir. Geçici genişleyen navigasyon `--ui-shadow-rail`
+geometrisini kullanır; ikisi aynı `--ui-shadow-color` rengini paylaşır. Bu renk
+karanlık temada aydınlık, açık temada koyudur. Her karta gölge yoktur.
 Mor/indigo, neon, gradyan yazı, glassmorphism ve süs ışıması kullanılmaz.
 Durumlar renk yanında metin, simge veya sayıyla açıklanır.
 
@@ -153,6 +155,7 @@ modüller `perf-runtime` lazy sözleşmesine uyar.
   eylem. Yükleme için sabit kare durum işareti; emoji ve dekoratif spinner yok.
 - Modal/çekmece: adlandırılmış dialog, ilk odak, Tab/Shift+Tab sınırı, Escape
   ve tetikleyiciye odak dönüşü. İç içe pencerede yalnız üst katman kapanır.
+- Yenileme kapsam menüsü: kullanıcı tercihiyle üst çubuktan aşağı ince hatlarla dallanan, kısa kodlu ayrı karelerdir. Kareler ve odak ipucu ortak yüzey, sınır ve gölge tokenlarını kullanır; arka planda kapsayıcı panel yoktur. Hat Motion+ `branch`, kareler `overlay` ile açılır.
 - Popover/menü: ortak yüzey; ok/Home/End, disabled öğe atlama ve Escape.
   Çerçeve ve gölge yalnız menü kabındadır; öğeler çerçevesiz satırdır, hover
   `--ui-surface-strong`. Aynı işi yapan eylemler tek çekmecede toplanır (ör.
@@ -207,11 +210,19 @@ düğmeden üflenen / rüzgârda savrulan toz, taneli çözülme veya daire. Hı
 altta gerçek DOM'dur, kare yalnız bellekte ve geçiş boyunca yaşar. Yakalama
 yoksa (tarayıcı kipi) veya başarısızsa daire / anlık yol kullanılır. Taneli
 çözülme ve daire View Transitions ile çalışır (eski ve yeni kare kompozitörde
-birleşir, tablo hücreleri tek tek boyanmaz). Açılışta,
-sistem temasında, reduced-motion / `data-bl-motion='off'` / görünmez sekmede,
+birleşir, tablo hücreleri tek tek boyanmaz). Tema ilk uygulanırken,
+sistem teması değişiminde, reduced-motion / `data-bl-motion='off'` / görünmez sekmede,
 yazılım çiziminde (`data-bl-render='software'`) veya API yoksa geçiş anlıktır.
 Ard arda istekte son seçim kazanır. Başka modül kendi tema animasyonunu,
-otomatik parıltıyı veya sürekli efekti eklemez. **Thinking Orbs istisnası:**
+otomatik parıltıyı veya sürekli efekti eklemez.
+
+Giriş → genel kültür → uygulama geçişleri de `BLMotionPlus.startup` ile aynı
+`chain` üçgen motorunu, kayıtlı hız ve boyutu kullanır; tema tercihi değişmez.
+Giriş karesi parola temizlendikten sonra yalnız kendi masaüstü penceresinde,
+15 saniyelik tek kullanımlık bellekte taşınır. Tarayıcıda/yakalama hatasında
+bekletmeden devam edilir; reduced-motion, kapalı hareket ve yazılım çiziminde
+üçgenler çalışmaz. Hazır olma kapıları ve kullanıcının Devam kararı korunur.
+**Thinking Orbs istisnası:**
 7.0.294'ten gelen Breathing (açılış/bekleme) ve Working (harita yüklemesi)
 canvas bileşenleri yalnız gerçekten çalışan `thinking`/loading durumu boyunca
 semantik işlem göstergesi olarak kullanılabilir. Her orb görünmez sekme, ekran

@@ -91,10 +91,10 @@ test('half-up rounding handles positive and negative midpoint values consistentl
   }
 });
 
-test('season policies remain explicit instead of silently changing LFL behavior', () => {
+test('season lists share chronology while LFL keeps same-season previous-year selection', () => {
   const values = ['W5', 'S5', 'W4', 'S4'];
   assert.deepEqual([...values].sort(rules.compareSeasonNumberThenLetter), ['S4', 'W4', 'S5', 'W5']);
-  assert.deepEqual([...values].sort(rules.compareSeasonPrefixThenNumber), ['S4', 'S5', 'W4', 'W5']);
+  assert.deepEqual([...values].sort(rules.compareSeasonPrefixThenNumber), ['S4', 'W4', 'S5', 'W5']);
   assert.equal(rules.previousSeasonByPrefix('W5', values), 'W4');
   assert.equal(rules.previousSeasonByPrefix('S5', values), 'S4');
 });

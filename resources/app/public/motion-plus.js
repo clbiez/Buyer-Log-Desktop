@@ -147,6 +147,12 @@
   }
   function play(kind,element){
     if(!element||!enabled())return null;
+    if(kind==='branch')return animate(element,[{opacity:0,transform:'scaleY(0)'},{opacity:1,transform:'scaleY(1)'}],{duration:duration('overlay')});
+    // Overview page navigation: one finite slide of the existing grid, without
+    // cloning widgets or moving the toolbar. Shared cancellation owns its lifetime.
+    if(kind==='page-next'||kind==='page-prev')return animate(element,
+      [{opacity:.5,transform:'translate3d('+(kind==='page-next'?48:-48)+'px,0,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],
+      {duration:duration('page')});
     if(kind==='card')return animate(element,[{opacity:.6,transform:'translate3d(-5px,-3px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('card')});
     if(kind==='overlay')return animate(element,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('overlay')});
     // Alttan açılan çekmece: içerik aşağıdan yukarı doğru açılır ve yerine kayar.
@@ -168,6 +174,34 @@
      olarak yayılır. Hareket kapalıysa, yazılım çizimindeyse veya View
      Transitions yoksa false döner ve çağıran anlık yolu kullanır. */
   let themeTransition=null;
+  let startupTicket=0;
+  // Startup changes content through the same triangle mesh as theme changes.
+  // The login frame crosses navigation only in the desktop host's short-lived memory.
+  function startup(update,shot){
+    ++startupTicket;
+    if(typeof update!=='function'||!enabled()||html.dataset.blRender==='software')return false;
+    try{return root.BLMotionPlusTheme?.run?.(update,null,{startup:true,shot})===true;}catch(_){return false;}
+  }
+  async function prepareNavigation(){
+    if(!enabled()||html.dataset.blRender==='software')return;
+    const prepare=root.buyerLogDesktop?.prepareStartupTransition;
+    if(typeof prepare!=='function')return;
+    let timeout,expired=false;
+    try{await Promise.race([(async()=>{
+      // Let the emptied password field paint; hidden/throttled tabs have a bounded wait.
+      await new Promise(resolve=>root.requestAnimationFrame(()=>root.requestAnimationFrame(resolve)));
+      if(!expired&&enabled())await prepare(Math.round(root.innerWidth),Math.round(root.innerHeight));
+    })(),new Promise(resolve=>{timeout=root.setTimeout(resolve,650);})]);}
+    catch(_){}finally{expired=true;root.clearTimeout(timeout);}
+  }
+  async function arrive(){
+    const mine=++startupTicket,take=root.buyerLogDesktop?.takeStartupTransition;
+    if(typeof take!=='function')return;
+    try{
+      const shot=await take(),guard=doc.getElementById('blBootGuard');
+      if(shot&&mine===startupTicket&&guard&&!guard.dataset.leaving)startup(()=>{},shot);
+    }catch(_){}
+  }
   function theme(update,origin){
     if(typeof update!=='function'||!enabled()||html.dataset.blRender==='software')return false;
     try{if(root.BLMotionPlusTheme?.run?.(update,origin))return true;}catch(_){}
@@ -259,6 +293,7 @@
     else activate(true); // activate restores any in-progress refresh after cancellation.
   }
   function mount(){
+    if(doc.getElementById?.('blBootGuard'))arrive();
     bindActivityControls();
     doc.addEventListener('pointerdown',rememberSegment,true);
     doc.addEventListener('click',slideSegment);
@@ -279,12 +314,12 @@
     root.addEventListener?.('bl:startup-complete',()=>activate(true));
     root.addEventListener?.('bl:overview-motion-changed',()=>{if(enabled())activate(true);else cancelPending();});
     doc.addEventListener('visibilitychange',()=>{
-      if(doc.visibilityState==='hidden')cancelPending();
+      if(doc.visibilityState==='hidden'){cancelPending();root.BLMotionPlusTheme?.finish?.();}
       else restoreActivityControls();
     });
     const media=root.matchMedia?.('(prefers-reduced-motion: reduce)');
     media?.addEventListener?.('change',()=>{
-      if(reduce())cancelPending();
+      if(reduce()){cancelPending();root.BLMotionPlusTheme?.finish?.();}
       else restoreActivityControls();
     });
     activate(true);
@@ -293,7 +328,7 @@
       if(profile&&profile.softwareCompositing===true)html.dataset.blRender='software';
     }).catch(()=>{});
   }
-  root.BLMotionPlus=Object.freeze({enabled,play,theme,activate,setEnabled,speeds:SPEED});
+  root.BLMotionPlus=Object.freeze({enabled,play,theme,startup,prepareNavigation,arrive,activate,setEnabled,speeds:SPEED});
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',mount,{once:true});
   else mount();
 })(typeof window!=='undefined'?window:globalThis);

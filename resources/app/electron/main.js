@@ -2581,6 +2581,16 @@ function registerIpc() {
       return { width: out.width, height: out.height, bgra: image.toBitmap() };
     } catch (_) { return null; }
   });
+  const startupTransition=require('./startup-transition').createStartupTransition();
+  ipcMain.handle('buyerlog:startup-transition', (event,payload={}) => {
+    if (!trustedBuyerLogIpcSender(event)) return null;
+    if(payload.action==='take')return startupTransition.take(event.sender);
+    // Only the sign-in document may stage a frame for the next document.
+    if(payload.action!=='prepare'||softwareCompositing())return false;
+    let pathname='';try{pathname=new URL(event.sender.getURL()).pathname;}catch(_){}
+    if(pathname!=='/select-user.html')return false;
+    return startupTransition.prepare(event.sender,Math.round(Number(payload.width)||0),Math.round(Number(payload.height)||0));
+  });
   ipcMain.handle('buyerlog:workspace-snapshot', event => {
     if (!workspace || !workspace.windowForShellContents(event.sender)) return null;
     return workspace.shellSnapshot(event);

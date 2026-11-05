@@ -5,6 +5,7 @@ const zlib=require('node:zlib');
 const {promisify}=require('node:util');
 const parse=require('./lib/parse');
 const canonicalFields=require('./lib/canonical-fields');
+const BLBusinessRules=require('../public/business-rules');
 
 const gzip=promisify(zlib.gzip);
 const CATALOG_FIELDS={category:'category',mag:'mag',mmyg:'mmyg',buyingGroup:'buyingGroup',buyer:'buyer',season:'season',license:'license',licensor:'licensor',country:'country',line:'line',productMainDefinition:'productDescription'};
@@ -31,7 +32,7 @@ function catalogs(rows){
     const value=String(raw==null?'':raw).trim();if(!value)continue;
     const identity=value.toLocaleUpperCase('tr-TR').replace(/[^A-Z0-9ÇĞİÖŞÜ]+/g,'');if(identity&&!buckets[key].has(identity))buckets[key].set(identity,value);
   }
-  return Object.fromEntries(Object.entries(buckets).map(([key,values])=>[key,[...values.values()].sort((a,b)=>a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'}))]));
+  return Object.fromEntries(Object.entries(buckets).map(([key,values])=>[key,[...values.values()].sort(BLBusinessRules.compareChronologicalValues)]));
 }
 async function main(){
   const started=Date.now(),data=workerData||{},editable=new Set((data.editableOrderCodes||[]).map(String));

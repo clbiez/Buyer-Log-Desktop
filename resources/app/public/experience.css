@@ -1,15 +1,7 @@
 /* Manifest shared layout. Appearance: ui-tokens.css / ui-components.css. */
-.rail{padding:14px 10px 10px;gap:4px;}
-.railTop{padding:1px 3px 15px;margin-bottom:9px;}
 .rail .brandMark::after{content:none;}
 .rail .brandMark.brandMark--image,[data-theme] .rail .brandMark.brandMark--image{overflow:visible;}
 .rail .brandMarkImage{width:34px;height:34px;display:block;object-fit:contain;}
-nav.tabs{gap:2px;padding-right:0;scrollbar-gutter:auto;}
-nav.tabs>.railGroupLabel{padding:12px 11px 5px;}
-nav.tabs button{padding:0 10px;gap:10px;}
-.railFoot{padding-top:9px;}
-html[data-rail="min"] .rail{padding-inline:6px;}
-html[data-rail="min"] nav.tabs button,html[data-rail="min"] .railFoot button{width:calc(var(--ui-rail-collapsed-width) - 14px);}
 
 .appTop{gap:9px;padding-inline:clamp(12px,1.4vw,22px);}
 .blSteelInitials{white-space:nowrap;

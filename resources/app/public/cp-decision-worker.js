@@ -2,7 +2,7 @@
 'use strict';
 let importsReady=false;
 try{
-  importScripts('business-rules.js','order-decision-engine.js','backlog-delivery-engine.js','cp-readiness-engine.js');
+  importScripts('chronological-values.js','business-rules.js','order-decision-engine.js','backlog-delivery-engine.js','cp-readiness-engine.js');
   importsReady=true;
 }catch(_){/* The runtime falls back to the same engines already loaded in the UI. */}
 let context, analyses=[], rowCache=new Map();

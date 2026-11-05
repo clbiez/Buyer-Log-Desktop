@@ -50,13 +50,18 @@ test('detail endpoint requires both areas, source readiness, the current version
 
 function uiHarness(){
  const source=[order(),order({orderCode:'OLD-2',quantity:300,fob:20}),order({orderCode:'CURRENT',season:'S7',inStoreMonth:'2027-01'})];
- const state={version:'v1',referenceRequests:0,detailRequests:0,fail:false,gate:null};
+ const state={version:'v1',referenceRequests:0,detailRequests:0,fail:false,gate:null,referenceGate:null,referenceFailure:null};
  const context={window:null,appLang:'tr',state:{currentUser:{id:'buyer'}},document:{body:{dataset:{activeTab:'overview'}}},
   BLCollectionLflEngine:Engine,BLCanonicalFields:require('../public/canonical-fields'),escapeHtml:value=>String(value).replace(/[&<>"']/g,'_'),kolFormatMoneyDisplay:value=>Number(value).toFixed(2),
   kolEffectiveValue:(row,key)=>row.effective?.[key]??row[key],kolSuppFob:row=>({price:Number(row.targetPrice),source:'target'}),
   fetch:async(url,options)=>{
    const references=Engine.buildReferences(source);
-   if(url.startsWith('/api/collection-lfl-reference')){state.referenceRequests++;return {ok:true,json:async()=>({version:state.version,references})};}
+   if(url.startsWith('/api/collection-lfl-reference')){
+    state.referenceRequests++;if(state.referenceGate)await state.referenceGate;
+    if(state.referenceFailure==='network')throw Error('network failure');
+    if(state.referenceFailure)return {ok:false,status:state.referenceFailure==='FORBIDDEN'?403:409,json:async()=>({code:state.referenceFailure})};
+    return {ok:true,json:async()=>({version:state.version,references})};
+   }
    assert.equal(url,'/api/collection-lfl-detail');assert.equal(options.method,'POST');state.detailRequests++;
    if(state.gate)await state.gate;
    if(state.fail)throw new Error('network failure');
@@ -89,9 +94,11 @@ test('detail reports load on click, coalesce by reference and reuse the shared r
  assert.equal(state.referenceRequests,2);assert.equal(state.detailRequests,3,'detail rows are never reused across users');
 });
 
-test('source revisions refresh once on stale details, explicit refresh invalidates cached rows and failed requests remain retryable',async()=>{
+test('stale details preserve saved references until explicit refresh, and failed detail requests remain retryable',async()=>{
  const {ui,state}=uiHarness();await ui.ensure();state.version='v2';
- const report=await ui.detailReport(candidate,'month');assert.equal(report.rows.length,2);assert.equal(state.referenceRequests,2);assert.equal(state.detailRequests,2);
+ await assert.rejects(ui.detailReport(candidate,'month'),error=>error.code==='LFL_REFERENCE_STALE');
+ assert.equal(state.referenceRequests,1,'opening a stale detail never replaces saved references');
+ await ui.ensure({rebuild:true});const report=await ui.detailReport(candidate,'month');assert.equal(report.rows.length,2);assert.equal(state.referenceRequests,2);assert.equal(state.detailRequests,2);
  await ui.ensure({rebuild:true});await ui.detailReport(candidate,'month');assert.equal(state.detailRequests,3);
  await ui.ensure({rebuild:true});state.fail=true;
  await assert.rejects(ui.detailReport(candidate,'month'),/Sipariş detayları yüklenemedi/);
@@ -108,4 +115,20 @@ test('an in-flight detail response cannot cross a user change or a reference ref
  let releaseAgain;state.gate=new Promise(resolve=>{releaseAgain=resolve;});
  const outdated=ui.detailReport(candidate,'month');await new Promise(resolve=>setImmediate(resolve));await ui.ensure({rebuild:true});releaseAgain();
  await assert.rejects(outdated,error=>error.code==='LFL_DETAIL_CANCELLED');
+});
+
+test('reference values remain visible during refresh, failed refresh and source invalidation',async()=>{
+ const {ui,context,state}=uiHarness();await ui.ensure();const average=ui.model(candidate).reference.average;
+ let release;state.referenceGate=new Promise(resolve=>{release=resolve;});
+ const pending=ui.ensure({rebuild:true});
+ assert.equal(ui.model(candidate).reference.average,average);assert.match(ui.drawer(candidate),/data-cpd-lfl-refresh disabled/);
+ state.referenceFailure='LFL_REFERENCE_INCOMPLETE';release();await pending;
+ assert.equal(ui.model(candidate).reference.average,average);assert.match(ui.drawer(candidate),/Kayıtlı referanslar korundu/);
+ context.appLang='en';assert.match(ui.drawer(candidate),/Saved references were preserved/);
+ state.referenceGate=null;state.referenceFailure='network';await ui.ensure({rebuild:true});
+ assert.equal(ui.model(candidate).reference.average,average);assert.match(ui.drawer(candidate),/Saved values were preserved/);
+ ui.invalidate();assert.equal(ui.model(candidate).reference.average,average);await ui.ensure();
+ assert.equal(ui.model(candidate).reference.average,average);
+ state.referenceFailure=null;await ui.ensure({rebuild:true});assert.equal(ui.model(candidate).reference.average,average);
+ state.referenceFailure='FORBIDDEN';await ui.ensure({rebuild:true});assert.equal(ui.model(candidate).reference,null,'revoked permissions hide saved data');
 });

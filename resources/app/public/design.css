@@ -11,17 +11,11 @@
 .quotationCard::after,.lflDetailCard::after{
   content:"";position:absolute;inset:-1px;pointer-events:none;
 }
-.rail{padding:20px 14px;gap:2px;}
-.railTop{padding-bottom:20px;margin-bottom:16px;}
 .rail .brandMark{position:relative;
 }
 .rail .brandMark::after{
   content:"";position:absolute;inset:-1px;pointer-events:none;
 }
-nav.tabs{gap:1px;}
-nav.tabs button{height:var(--ui-rail-item-height);min-height:var(--ui-rail-item-height);}
-.railFoot{gap:1px;}
-.railFoot button{height:var(--ui-rail-footer-height);min-height:var(--ui-rail-footer-height);}
 .gsearch{
   height:30px;
 }

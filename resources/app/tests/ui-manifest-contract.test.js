@@ -67,6 +67,8 @@ const classicFrame = d => {
    '.miniTable tbody td',
    '.rail .brandMark--image',
    '#currentUserBtn',
+   '.topRefreshMenu button',
+   '.topRefreshDetail',
    'thead tr.groupRow th',
    'thead tr.colRow th.groupBoundary'
  ];
@@ -192,7 +194,7 @@ test('Unauthenticated asset serving is a fixed UI-only list before auth gates',(
  const server=fs.readFileSync(path.join(__dirname,'..','server','server.js'),'utf8');
  const start=server.indexOf('// Fixed UI-only allowlist.'),end=server.indexOf('// Kullanıcı seçimi ekranı',start),block=server.slice(start,end);
  assert.ok(start>0&&start<server.indexOf('app.use(auth.requireAuth)'));
- assert.match(block,/\['giris\.css', 'ui-tokens\.css', 'ui-components\.css', 'ui-appearance\.js'\]/);
+ assert.match(block,/\['giris\.css', 'ui-tokens\.css', 'ui-components\.css', 'ui-appearance\.js', 'motion-plus-theme\.js', 'motion-plus\.js'\]/);
  assert.doesNotMatch(block,/express\.static|req\.path|\*|\.json|\.xlsx/);
  assert.match(block,/IBMPlexSans\.woff2/);
 });

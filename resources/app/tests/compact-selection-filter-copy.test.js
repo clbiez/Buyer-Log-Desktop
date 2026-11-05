@@ -4,7 +4,7 @@ const source=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8'
 const helper=source.slice(source.indexOf('function managedSelectionSourceRows('),source.indexOf('function managedSelectionChange('));
 const sortHelper=source.slice(source.indexOf('function sortRows('),source.indexOf('/* Boş tablo yönlendirmesi:'));
 function selectionApi(state,scope=rows=>rows,visible=()=>[]){
- const sortRows=new Function('COLS_BY_TABLE','columnSchemaFor','norm',sortHelper+';return sortRows;')({cp:[],orders:[]},()=>null,value=>String(value??''));
+ const sortRows=new Function('BLBusinessRules','COLS_BY_TABLE','columnSchemaFor','norm',sortHelper+';return sortRows;')(require('../public/business-rules'),{cp:[],orders:[]},()=>null,value=>String(value??''));
  return new Function('state','partialViewRows','filteredCP','filteredOrders','selectionHasId','sortRows',helper+';return {managedSelectionSourceRows,managedSelectionSnapshot};')(state,(key,rows)=>scope(rows),visible,visible,(selected,id)=>[...selected].some(value=>String(value)===String(id)),sortRows);
 }
 for(const key of ['cp','orders']){
