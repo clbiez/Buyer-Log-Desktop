@@ -26530,6 +26530,7 @@ function kolGroupSummaryMoneyDisplay(column,value,members,valueOf,{currencySymbo
 }
 function kolGroupSummaryFormatBaseValue(column,row,value){
   if(value==null||value==='')return '';
+  if(column.k==='fabric')return kolFabricDisplay(value);
   const schema=columnSchemaFor(column,[row]);
   if(column.date)return fmtDate(value)||'';
   if(column.inStorePeriod==='week')return kolWeekDisplay(value,row?.inStore);

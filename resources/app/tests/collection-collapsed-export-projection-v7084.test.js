@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const Groups = require('../public/collection-model-groups.js');
+const FabricCards = require('../public/fabric-cards-engine.js');
 
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
@@ -54,6 +55,7 @@ function loadEngine(rows,collapsed){
   const ctx={
     Map,Set,Number,String,Math,console,
     appLang:'en',kolRows:rows,
+    kolFabricApi:()=>FabricCards,kolFabricCards:new Map(),
     kolEffectiveValue:(row,key)=>Groups.effectiveValue(row,key,ctx.kolRows),
     kolParseQuantityNum:number,kolParseMoneyNum:number,
     kolFormatQuantityDisplay:value=>Math.trunc(Number(value)).toLocaleString('tr-TR'),
@@ -78,7 +80,8 @@ function loadEngine(rows,collapsed){
     });
   };
   vm.createContext(ctx);
-  vm.runInContext(`${block}\nglobalThis.__projection=kolCollectionExportProjection;globalThis.__text=kolCollectionExportCellText;globalThis.__selected=kolCollectionProjectionSelected;`,ctx);
+  const fabricDisplay=between('const kolFabricDisplayCache=new Map();','/* Kumaş hücresinin içi:');
+  vm.runInContext(`${fabricDisplay}\n${block}\nglobalThis.__projection=kolCollectionExportProjection;globalThis.__text=kolCollectionExportCellText;globalThis.__selected=kolCollectionProjectionSelected;`,ctx);
   return ctx;
 }
 
@@ -123,4 +126,45 @@ test('Collection copy/export call sites share the projection rather than raw par
 test('spreadsheet Ctrl+C takes the rendered canonical summary display for collapsed cells only',()=>{
   assert.match(SHEET,/function valueForCoord\(coord,liveRows=null\)\{[^}]*dataset\?\.kolGroupSummary==='1'[^}]*kolSummaryDisplay/);
   assert.match(SHEET,/bridge\(\)\?\.rawValue\?\.\(row,coord\.key\)/,'expanded/non-summary cells preserve existing raw clipboard behavior');
+});
+
+for(const lang of ['tr','en'])test(`collapsed fabric uses the same ${lang} card summary as expanded rows and keeps raw data`,()=>{
+  let rows=makeRows();
+  const raw='3859-Suprem,30/1 Ne Compact Penye Pamuk,150 gsm,%100 Pamuk';
+  rows=Groups.clearVariantOverride(rows,rows.find(row=>row.colour==='GREY').id,'fabric');
+  rows=Groups.setSharedValue(rows,rows[0].modelGroupId,'fabric',raw);
+  const ctx=loadEngine(rows,new Set([String(rows[0].modelGroupId)]));
+  ctx.appLang=lang;
+  ctx.kolFabricCards.set('3859',{code:'3859',summary:'Süprem · 30/1 Ne · 150 gsm · %100 Pamuk',summaryEn:'Single Jersey · 30/1 Ne · 150 gsm · 100% Cotton'});
+  const before=JSON.stringify(rows),record=ctx.__projection(rows,descriptors)[0];
+  const text=ctx.__text(descriptors.find(d=>d.k==='fabric'),record);
+  assert.equal(text,FabricCards.displayText(raw,ctx.kolFabricCards,lang));
+  assert.doesNotMatch(text,/Compact Penye/);
+  assert.equal(JSON.stringify(rows),before,'view projection must preserve canonical PLM fabric');
+});
+
+test('collapsed fabric includes distinct effective colour overrides and falls back for a missing card',()=>{
+  let rows=makeRows();
+  const raw='3859-Suprem,30/1 Ne Compact Penye Pamuk,150 gsm,%100 Pamuk';
+  rows=Groups.clearVariantOverride(rows,rows.find(row=>row.colour==='GREY').id,'fabric');
+  rows=Groups.setSharedValue(rows,rows[0].modelGroupId,'fabric',raw);
+  const grey=rows.find(row=>row.colour==='GREY');
+  const missing='9999-Uncatalogued fabric';
+  rows=Groups.setVariantOverride(rows,grey.id,'fabric',missing);
+  const ctx=loadEngine(rows,new Set([String(rows[0].modelGroupId)]));
+  ctx.kolFabricCards.set('3859',{summary:'Süprem',summaryEn:'Single Jersey'});
+  const text=ctx.__text(descriptors.find(d=>d.k==='fabric'),ctx.__projection(rows,descriptors)[0]);
+  assert.equal(text,'Single Jersey · '+missing);
+});
+
+test('collapsed multipart fabric preserves part labels and card summaries',()=>{
+  let rows=makeRows();
+  const raw='A - 3859-Long jersey information / B - 2832-Long rib information';
+  rows=Groups.clearVariantOverride(rows,rows.find(row=>row.colour==='GREY').id,'fabric');
+  rows=Groups.setSharedValue(rows,rows[0].modelGroupId,'fabric',raw);
+  const ctx=loadEngine(rows,new Set([String(rows[0].modelGroupId)]));
+  ctx.kolFabricCards.set('3859',{summary:'Süprem',summaryEn:'Single Jersey'});
+  ctx.kolFabricCards.set('2832',{summary:'Ribana',summaryEn:'Rib'});
+  const text=ctx.__text(descriptors.find(d=>d.k==='fabric'),ctx.__projection(rows,descriptors)[0]);
+  assert.equal(text,'A · 3859 · Single Jersey / B · 2832 · Rib');
 });
