@@ -252,16 +252,17 @@ test('v9.48 hesaplama motorlarında AI iş mantığı yok', () => {
 
 /* KULLANICI BİLDİRİMİ (v9.50): kural editörü bütün kuralları açık kart olarak
    alt alta çizdiği için özellikle 1366×768 ekranda koşullar görünmüyordu.
-   Çözüm: geniş modal + tür sekmeleri + tek-açık accordion. İş mantığı aynı kalır. */
-test('v9.50 kural penceresi geniş ve tek-açık accordion kullanır; v7.221 Rules yalnız öncelik kuralı gösterir', () => {
+   Güncel çözüm: geniş modal + tür sekmeleri + solda liste, sağda tek editör. İş mantığı aynı kalır. */
+test('Studio solda liste ve sağda tek seçili editör kullanır; kural türleri ayrı kalır', () => {
   assert.match(VIEW, /class="cpaModal cpaRulesModal cpaStudioModal cpaFrame"/);
   // Studio keeps rule types separate via three named tabs and type-specific shortcuts.
   assert.doesNotMatch(VIEW, /data-cpa-rules-tab=/);
   assert.match(VIEW, /function openRules\(\) \{ openRuleManager\('priority'\); \}/);
   assert.match(VIEW, /function openSettings\(\) \{ openRuleManager\('checklist'\); \}/);
   assert.match(VIEW, /let expandedRuleId = String\(opts\.ruleId \|\| ''\)/);
-  assert.match(VIEW, /expandedRuleId = expandedRuleId === id \? '' : id/);
-  assert.match(VIEW, /visible\.map\(rule => ruleBlock\(rule, view\)\)/);
+  assert.match(VIEW, /expandedRuleId = button\.dataset\.cpaRuleSelect/);
+  assert.match(VIEW, /ruleBlock\(selectedRule, view\)/);
+  assert.doesNotMatch(VIEW, /\.map\(rule => ruleBlock\(/);
   assert.match(CSS, /\.cpaRulesModal\{[^}]*width:min\(1500px,96vw\)[^}]*height:auto[^}]*max-height:calc\(100vh\s*-\s*2\s*\*\s*var\(--ui-space-5\)\)/);
   assert.match(CSS, /\.cpaRulesBody\{[^}]*overflow:hidden/);
 });
@@ -291,7 +292,7 @@ test('kural satırı built-in dahil düzenleme ve silme aksiyonlarını gösteri
   assert.match(VIEW, /class="cpaBuiltIn"/);
   assert.match(VIEW, /data-cpa-rule-edit/);
   assert.match(VIEW, /data-cpa-rule-delete/);
-  assert.match(VIEW, /class="cpaRuleChevron"/);
+  assert.match(VIEW, /data-cpa-rule-select/);
   assert.match(VIEW, /deletedRuleIds: state\.deletedRuleIds\.filter\(id => defaults\.has\(id\)\)/);
   assert.match(VIEW, /Rules\.effectiveRules\(personalRules, state\.deletedRuleIds, state\.managed\)/);
   assert.match(CSS, /\.cpaRuleBar\{[^}]*min-height:48px/);

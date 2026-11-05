@@ -15598,6 +15598,27 @@ html[data-ui-system="manifest"] .cpaAdvancedModes>summary {font-size:var(--ui-fo
 html[data-ui-system="manifest"] .cpaDraftBadge {background:var(--ui-warning-bg);color:var(--ui-warning)}
 html[data-ui-system="manifest"] .cpaRuleMenuItems {background:var(--ui-surface)}
 
+/* Checklist Studio uses Manifest surfaces for its library and selected editor. */
+html[data-ui-system="manifest"] .cpaRuleLibrary {background:var(--ui-surface-soft)}
+html[data-ui-system="manifest"] .cpaLibraryItem {background:transparent;color:var(--ui-text);font-family:var(--ui-font-body)}
+html[data-ui-system="manifest"] .cpaLibraryItem:hover {background:var(--ui-row-hover)}
+html[data-ui-system="manifest"] .cpaLibraryItem.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important}
+html[data-ui-system="manifest"] .cpaLibraryItem:focus-visible {outline:2px solid var(--ui-accent);outline-offset:-3px}
+html[data-ui-system="manifest"] .cpaLibraryItem>b {font-size:var(--ui-font-sm);font-weight:600}
+html[data-ui-system="manifest"] :is(.cpaLibraryItem>small,.cpaLibraryMeta,.cpaLibraryFoot,.cpaLibrarySearch>span) {font-size:var(--ui-font-xs);color:var(--ui-text-muted)}
+html[data-ui-system="manifest"] .cpaLibraryFilters .cpaBtn.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important}
+html[data-ui-system="manifest"] .cpaRuleDetail>.cpaRule {border:0 !important}
+html[data-ui-system="manifest"] .cpaRuleDetail .cpaRuleBar {background:var(--ui-surface) !important}
+html[data-ui-system="manifest"] .cpaRuleDetail .cpaRuleSummaryMain b {font:600 var(--ui-font-xl)/1.15 var(--ui-font-heading) !important}
+html[data-ui-system="manifest"] .cpaRuleDetail .cpaSwitch>span:last-child {font-size:var(--ui-font-xs);color:var(--ui-text-secondary)}
+html[data-ui-system="manifest"] .cpaAiFirst {background:var(--ui-surface-soft)}
+html[data-ui-system="manifest"] .cpaAiFirst .lcwaiAssist {background:transparent;border:0}
+html[data-ui-system="manifest"] .cpaPlainSummary h3 {font:600 var(--ui-font-xl)/1.15 var(--ui-font-heading)}
+html[data-ui-system="manifest"] .cpaPlainColumns h4 {font-size:var(--ui-font-xs);font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ui-text-muted)}
+html[data-ui-system="manifest"] .cpaPlainColumns li {font-size:var(--ui-font-sm)}
+html[data-ui-system="manifest"] .cpaPlainColumns :is(p,small) {font-size:var(--ui-font-xs);color:var(--ui-text-muted)}
+html[data-ui-system="manifest"] .cpaRuleDetail .cpaAdvancedModes>summary {font-size:var(--ui-font-sm);color:var(--ui-selected-ink)}
+
 /* Cell-range selection uses a soft theme tint, distinct from checked rows. Four inset edge
    shadows form ONE outer rectangle without covering internal cell separators,
    changing table layout or disrupting the active-cell keyboard outline. */

@@ -520,6 +520,51 @@
 .cpTrackingTag{margin-inline-start:4px}
 @media(max-width:760px){.cpaOverviewMetrics{grid-template-columns:1fr}.cpaDraftActions{justify-content:flex-start}.cpaStudioModal>footer .cpaNote{max-width:none}}
 
+/* Studio workspace: the library and the selected editor scroll independently;
+   the shared save/close footer always stays in view. */
+.cpaRuleWorkspace{display:grid;grid-template-columns:minmax(230px,290px) minmax(0,1fr);flex:1 1 auto;min-height:0;overflow:hidden}
+.cpaRuleLibrary{display:flex;flex-direction:column;min-width:0;min-height:0}
+.cpaLibraryHead{display:grid;gap:var(--ui-space-3);padding:var(--ui-space-4)}
+.cpaLibrarySearch{display:grid;gap:var(--ui-space-1);min-width:0}
+.cpaLibrarySearch input{width:100%;min-width:0;height:var(--ui-control-height);padding:0 var(--ui-space-2);box-sizing:border-box}
+.cpaLibraryFilters{display:flex;gap:var(--ui-space-1);flex-wrap:wrap}
+.cpaLibraryList{gap:0;padding:0}
+.cpaLibraryItem{display:grid;height:auto;white-space:normal;flex:0 0 auto;gap:var(--ui-space-2);width:100%;min-width:0;padding:var(--ui-space-4);text-align:left;cursor:pointer}
+.cpaLibraryItem>b,.cpaLibraryItem>small{overflow-wrap:anywhere}
+.cpaLibraryMeta{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-2);min-width:0}
+.cpaLibraryMeta .cpaPill{max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cpaLibraryFoot{padding:var(--ui-space-3) var(--ui-space-4)}
+.cpaRuleDetail{display:block;min-width:0;min-height:0;overflow:auto;overscroll-behavior:contain}
+.cpaRuleDetail .cpaRuleBar{grid-template-columns:minmax(0,1fr) auto;gap:var(--ui-space-3);padding:var(--ui-space-4) var(--ui-space-5)}
+.cpaRuleDetail .cpaSwitch{grid-column:2;grid-row:1;display:flex;align-items:center;gap:var(--ui-space-2);width:auto}
+.cpaRuleDetail .cpaRuleSummary{grid-column:1;grid-row:1;display:flex;flex-direction:column;align-items:flex-start;gap:var(--ui-space-2)}
+.cpaRuleDetail .cpaRuleSummaryMain{order:-1}
+.cpaRuleDetail .cpaRuleSummaryMain b{white-space:normal}
+.cpaRuleDetail .cpaRuleSummaryMain small,.cpaRuleDetail .cpaRuleSummaryMeta{display:none}
+.cpaRuleDetail .cpaRuleActions{grid-column:1/-1;justify-content:flex-start}
+.cpaRuleDetail .cpaRuleBody{padding:var(--ui-space-5);gap:var(--ui-space-5)}
+.cpaAiFirst{display:grid;gap:var(--ui-space-3);padding:var(--ui-space-4);min-width:0}
+.cpaAiFirst .lcwaiAssist{padding:0}
+.cpaAiFirst .lcwaiHead{padding-top:0}
+.cpaAiFirst .lcwaiModel{margin-left:auto}
+.cpaAiFirst .lcwaiField textarea{min-height:80px;resize:vertical}
+.cpaPlainSummary{display:grid;gap:var(--ui-space-4);min-width:0}
+.cpaPlainSummary h3,.cpaPlainSummary h4,.cpaPlainSummary p{margin:0}
+.cpaPlainColumns{display:grid;grid-template-columns:1fr 1fr;gap:var(--ui-space-5)}
+.cpaPlainColumns>section{display:grid;align-content:start;gap:var(--ui-space-3);padding-top:var(--ui-space-3);min-width:0}
+.cpaPlainColumns ul{display:grid;gap:var(--ui-space-2);margin:0;padding-left:var(--ui-space-4)}
+.cpaPlainColumns li,.cpaPlainColumns p{overflow-wrap:anywhere}
+.cpaPlainColumns .cpaPill{justify-self:start;white-space:normal}
+.cpaManualFields{display:grid;gap:var(--ui-space-4);padding-top:var(--ui-space-4)}
+.cpaRuleDetail .cpaRuleHead{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.cpaRuleDetail .cpaRuleQuestionField,.cpaRuleDetail .cpaRuleEvidenceFields{grid-column:1/-1}
+.cpaRuleDetail .cpaAdvancedModes>summary{padding:var(--ui-space-3) 0}
+.cpaRuleDetail .cpaRulePreview{padding:var(--ui-space-4);gap:var(--ui-space-2)}
+.cpaRuleDetail .cpaCondRow{grid-template-columns:minmax(150px,1.2fr) minmax(110px,.8fr) minmax(120px,1fr) 28px 28px}
+.cpaRuleDetail .cpaCondLabels{display:none}
+@media(max-width:1100px){.cpaRuleWorkspace{grid-template-columns:240px minmax(0,1fr)}.cpaRuleDetail .cpaRuleBody{padding:var(--ui-space-4)}.cpaRuleDetail .cpaCondRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 28px 28px}.cpaRuleDetail .cpaCondRow>.cpaCondOperand:first-child{grid-column:1/-1}.cpaPlainColumns{grid-template-columns:1fr}}
+@media(max-width:760px){.cpaRuleWorkspace{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}.cpaLibraryHead{padding:var(--ui-space-3);gap:var(--ui-space-2)}.cpaLibraryList{flex-direction:row;overflow-x:auto;overflow-y:hidden;max-height:150px}.cpaLibraryItem{width:240px;padding:var(--ui-space-3)}.cpaLibraryFoot{display:none}.cpaLibrarySearch>span{display:none}.cpaRuleDetail .cpaRuleBar{padding:var(--ui-space-3)}.cpaRuleDetail .cpaRuleHead,.cpaRuleDetail .cpaRuleReasons{grid-template-columns:minmax(0,1fr)}.cpaRuleDetail .cpaRuleQuestionField,.cpaRuleDetail .cpaRuleEvidenceFields{grid-column:auto}.cpaAiFirst{padding:var(--ui-space-3)}.cpaRuleDetail .cpaRuleBody{gap:var(--ui-space-4)}.cpaRulesTopBar small{display:none}}
+
 .cpaCatalogDisclosure{flex:0 0 auto;min-width:0}
 .cpaCatalogDisclosureSummary{display:flex;width:100%;justify-content:space-between;box-sizing:border-box}
 .cpaCatalogDisclosure[open]>.cpaCatalogCard{margin-top:var(--ui-space-2)}

@@ -1673,6 +1673,9 @@
       return ids.map(value => ({ value, label: priorityLabel(value) }));
     }
     if (fieldId === '@transitRuleMissing') return values.map(value => ({ value, label: value === 'true' ? L('Evet', 'Yes') : L('Hayır', 'No') }));
+    const delivery = window.BLBacklogDeliveryEngine;
+    const labels = fieldId === '@stage' ? delivery?.STAGE_LABELS : fieldId === '@deliveryOutcome' ? delivery?.OUTCOME_LABELS : null;
+    if (labels) return values.map(value => ({ value, label: labels[lang()]?.[value] || value }));
     return values.map(value => ({ value, label: String(value).replace(/_/g, ' ') }));
   }
 
@@ -1835,10 +1838,17 @@
       return option ? option.label : value;
     };
     const operandLabel = operand => {
-      if (operand.type === 'field') return fieldLabel(operand.field, rule);
-      if (operand.type === 'today') return L('bugün', 'today');
-      const list = Array.isArray(operand.value) ? operand.value : [operand.value];
-      return ['checklist', 'rule', 'enum'].includes(kind) ? list.map(enumLabel).join(', ') : list.join(', ');
+      let label;
+      if (operand.type === 'field') label = fieldLabel(operand.field, rule);
+      else if (operand.type === 'today') label = L('bugün', 'today');
+      else {
+        const list = Array.isArray(operand.value) ? operand.value : [operand.value];
+        label = ['checklist', 'rule', 'enum'].includes(kind) ? list.map(enumLabel).join(', ') : list.join(', ');
+      }
+      const offset = Number(operand.offset?.value) || 0;
+      if (offset) label += ` ${offset > 0 ? '+' : '−'} ${Math.abs(offset)} ${operand.offset.unit === 'weeks' ? L('hafta', 'weeks') : L('gün', 'days')}`;
+      if (operand.offsetField) label += ` + ${fieldLabel(operand.offsetField, rule)}`;
+      return label;
     };
     const needsValue = !['empty', 'notEmpty'].includes(item.operator);
     return [operandLabel(item.left), operatorLabel(item.operator), needsValue ? operandLabel(item.right) : '']
@@ -1982,6 +1992,26 @@
     return (state.priorityCatalog || defaultCatalog()).filter(entry => entry.id !== 'ON_TRACK');
   }
 
+  function rulePlainSummary(rule) {
+    // A formula may not be representable as basic conditions. Never describe
+    // an old basic-condition cache as the currently evaluated formula.
+    const synced = rule.mode === 'formula' ? Rules.formulaToConditions(rule.formula || '') : null;
+    const conditions = rule.mode === 'formula' ? synced?.conditions : rule.conditions;
+    const match = synced ? synced.match : rule.match;
+    const when = conditions
+      ? (conditions.length ? `<ul>${conditions.map(condition => `<li>${esc(conditionSummary(condition, rule).replace(/ · /g, ' '))}</li>`).join('')}</ul>`
+        : `<p>${esc(L('Koşul yok; hiçbir siparişe uygulanmaz.', 'No conditions; no orders will match.'))}</p>`)
+      : `<p>${esc(L('Özel bir formül kullanılıyor. Ayrıntıları elle düzenleme bölümünde inceleyebilirsiniz.', 'A custom formula is in use. Review it in the manual editing section.'))}</p>`;
+    const outcome = rule.kind === 'priority' ? ruleBadge(rule) : questionOf(rule) || ruleName(rule);
+    return `<div class="cpaPlainSummary" data-cpa-plain-summary>
+      <h3>${esc(L('Kuralın sade özeti', 'Your rule in plain language'))}</h3>
+      <div class="cpaPlainColumns"><section><h4>${esc(L('01 / Ne zaman?', '01 / When?'))}</h4>${when}
+        ${conditions?.length ? `<small>${esc(match === 'any' ? L('Koşullardan biri yeterli.', 'Any one condition is enough.') : L('Koşulların tümü sağlandığında çalışır.', 'Runs when all conditions match.'))}</small>` : ''}</section>
+      <section><h4>${esc(L('02 / Ne olsun?', '02 / Then?'))}</h4><span class="cpaPill tone-${esc(ruleTone(rule))}">${esc(outcome)}</span>
+        <p>${esc(rule.kind === 'priority' ? L('Siparişe bu etiket verilir.', 'The order receives this tag.') : L('CP tablosunda ve İş Listesi’nde bu kontrol açılır.', 'This check opens in CP and the Work Queue.'))}</p>
+        ${rule.kind === 'checklist' && rule.autoStatus ? `<p>${esc(L('Otomatik durum ataması açık:', 'Automatic status assignment enabled:'))} ${esc(Checklist.statusLabel(rule.autoStatus, lang()))}</p>` : ''}</section></div></div>`;
+  }
+
   function ruleBlock(rule, view) {
     const isOpen = view.expandedRuleId === rule.id;
     const targets = selectablePriorityTargets();
@@ -2085,7 +2115,7 @@
     const showConditionBuilder = rule.kind !== 'checklist' || scopeInfo.preset === 'custom' || uiMode !== 'basic';
     const modeTab = (mode, label) => `<button type="button" id="cpa-rule-mode-${mode}-${esc(rule.id)}" role="tab" data-cpa-rule-mode="${mode}" aria-controls="cpa-rule-mode-panel-${esc(rule.id)}" aria-selected="${uiMode === mode ? 'true' : 'false'}" tabindex="${uiMode === mode ? '0' : '-1'}" class="${uiMode === mode ? 'is-on' : ''}">${esc(label)}</button>`;
     const modeEditor = `<div class="cpaRuleModeTabs" data-bl-tabs="segment" role="tablist" aria-label="${esc(L('Koşul yazma biçimi', 'How to write the condition'))}">
-          ${modeTab('basic', L('Basit', 'Simple'))}${modeTab('formula', L('Formül', 'Formula'))}${modeTab('ai', L('LCW AI’dan Destek Al', 'Get help from LCW AI'))}
+          ${modeTab('basic', L('Basit', 'Simple'))}${modeTab('formula', L('Formül', 'Formula'))}
         </div>`;
     const displayFormula = Rules.formulaToDisplay(rule.formula || '', catalogFor(rule), lang());
     const formulaEditor = `<div class="cpaFormulaEditor">
@@ -2122,7 +2152,7 @@
       || `<p class="cpaNote cpaRuleEmptyNote">${esc(L('Koşul yok — bu kural hiçbir siparişe uygulanmaz.', 'No conditions — this rule matches nothing.'))}</p>`}
         </div>
         <div class="cpaRuleBodyActions"><button type="button" class="cpaBtn sm" data-cpa-cond-add>+ ${esc(L('Koşul ekle', 'Add condition'))}</button></div>`;
-    const panel = uiMode === 'ai' ? aiEditor : uiMode === 'formula' ? formulaEditor : basicEditor;
+    const panel = uiMode === 'formula' ? formulaEditor : basicEditor;
     const warnings = [
       dangling.length ? `<p class="cpaRuleWarn">${esc(L('Bu kural silinmiş bir başlığa bağlı; o koşul hiçbir siparişte sağlanmaz. Koşulu güncelleyin.', 'This rule refers to a deleted item; that condition never matches. Update the condition.'))}</p>` : '',
       cycle.length ? `<p class="cpaRuleWarn">${esc(L(`Döngüsel bağlantı: ${ruleNames(cycle)} bu kurala geri bağlı. Döngüdeki koşul sağlanmaz sayılır.`, `Circular link: ${ruleNames(cycle)} points back to this rule. The looped condition is treated as not matching.`))}</p>` : '',
@@ -2132,12 +2162,20 @@
     const body = isOpen ? `<div class="cpaRuleBody" id="cpa-rule-body-${esc(rule.id)}">
         ${readOnly ? `<p class="cpaNote cpaRuleManagedNote">${esc(L('Bu kural Moderatör tarafından tüm kullanıcılara uygulanır; yalnız Moderatör değiştirebilir.', 'The Moderator applies this rule to all users; only the Moderator can change it.'))}</p>` : ''}
         <fieldset class="cpaRuleFieldset"${readOnly ? ' disabled' : ''}>
+        <section class="cpaAiFirst cpaFrame" aria-label="${esc(L('LCW AI’dan Destek Al', 'Get help from LCW AI'))}">
+          <p class="cpaNote">${esc(L('Ne istediğinizi kendi cümlenizle yazın. Formül bilmenize gerek yok.', 'Describe what you need in your own words. No formula knowledge needed.'))}</p>
+          ${aiEditor}
+        </section>
+        ${rulePlainSummary(rule)}
+        <details class="cpaAdvancedModes" data-cpa-manual-editor${view.isManualOpen(rule) ? ' open' : ''}><summary>${esc(L('Koşulları kendim düzenlemek istiyorum', 'I want to edit the conditions myself'))}</summary>
+        <div class="cpaManualFields">
         <div class="cpaRuleHead">${editorFields}</div>
         ${reasonFields}
         ${scopePresetSelect}
         <p class="cpaRuleSentence">${esc((rule.conditions || []).map(condition => conditionSummary(condition, rule)).join(rule.match === 'any' ? L(' veya ', ' or ') : L(' ve ', ' and ')))} → ${esc(rule.kind === 'priority' ? ruleBadge(rule) : ruleName(rule))}</p>
-        ${showConditionBuilder ? `<details class="cpaAdvancedModes"${uiMode !== 'basic' ? ' open' : ''}><summary>${esc(L('Gelişmiş: Formül / LCW AI', 'Advanced: Formula / LCW AI'))}</summary>${modeEditor}</details><div class="cpaRuleModePanel" id="cpa-rule-mode-panel-${esc(rule.id)}" role="tabpanel" aria-labelledby="cpa-rule-mode-${uiMode}-${esc(rule.id)}" tabindex="0">${panel}</div>` : `<div class="cpaRuleModePanel" id="cpa-rule-mode-panel-${esc(rule.id)}" role="tabpanel" aria-labelledby="cpa-rule-mode-${uiMode}-${esc(rule.id)}" tabindex="0" hidden></div>`}
+        ${showConditionBuilder ? `${modeEditor}<div class="cpaRuleModePanel" id="cpa-rule-mode-panel-${esc(rule.id)}" role="tabpanel" aria-labelledby="cpa-rule-mode-${uiMode}-${esc(rule.id)}" tabindex="0">${panel}</div>` : ''}
         ${automaticStatusFields}
+        </div></details>
         </fieldset>
         <div class="cpaRulePreview" data-cpa-rule-preview aria-live="polite">${previewHtml(rule)}</div>
         ${warnings}
@@ -2156,12 +2194,13 @@
         <label class="cpaSwitch" title="${esc(L('Kuralı aç / kapat', 'Enable / disable rule'))}">
           <input type="checkbox" data-cpa-rule-enabled ${rule.enabled ? 'checked' : ''}${readOnly ? ' disabled' : ''} aria-label="${esc(L('Kuralı etkinleştir', 'Enable rule'))}">
           <span class="cpaSwitchTrack" aria-hidden="true"><span></span></span>
+          <span>${esc(rule.enabled ? L('Etkin', 'Active') : L('Kapalı', 'Disabled'))}</span>
         </label>
-        <button type="button" class="cpaRuleSummary" data-cpa-rule-toggle aria-expanded="${isOpen ? 'true' : 'false'}" aria-controls="cpa-rule-body-${esc(rule.id)}">
+        <div class="cpaRuleSummary">
           <span class="cpaPill tone-${esc(ruleTone(rule))}">${esc(ruleBadge(rule))}</span>
           <span class="cpaRuleSummaryMain"><b>${esc(ruleName(rule))}</b><small>${esc(ruleSummary(rule))}</small></span>
           <span class="cpaRuleSummaryMeta">${esc(countText)} · ${esc(matchText)}</span>
-        </button>
+        </div>
         <div class="cpaRuleActions">
           ${dangling.length ? `<span class="cpaPill tone-red" title="${esc(L('Silinmiş bir başlığa bağlı koşul var', 'A condition refers to a deleted item'))}">⚠ ${esc(L('Eksik bağlantı', 'Missing link'))}</span>` : ''}
           ${dependents.length ? `<span class="cpaUsedBy" title="${esc(L(`Kullanan: ${ruleNames(dependents)}`, `Used by: ${ruleNames(dependents)}`))}">${esc(L(`${dependents.length} kuralda kullanılıyor`, `Used in ${dependents.length}`))}</span>` : ''}
@@ -2171,7 +2210,6 @@
           ${moderatorActions ? `<details class="cpaRuleMenu"><summary class="cpaBtn sm" aria-label="${esc(L('Ekip işlemleri', 'Team actions'))}">⋯</summary><div class="cpaRuleMenuItems">${moderatorActions}</div></details>` : ''}
           ${readOnly ? '' : `<button type="button" class="cpaIconBtn" data-cpa-rule-edit title="${esc(L('Kuralı düzenle', 'Edit rule'))}" aria-label="${esc(L('Kuralı düzenle', 'Edit rule'))}"><svg class="ic"><use href="#i-pencil"/></svg></button>
           ${rule.managed === true ? '' : `<button type="button" class="cpaIconBtn cpaDangerIcon" data-cpa-rule-delete title="${esc(L('Yalnız benden sil', 'Delete only for me'))}" aria-label="${esc(L('Yalnız benden sil', 'Delete only for me'))}"><svg class="ic"><use href="#i-trash"/></svg></button>`}`}
-          <button type="button" class="cpaRuleChevron" data-cpa-rule-toggle aria-label="${esc(isOpen ? L('Kuralı daralt', 'Collapse rule') : L('Kuralı genişlet', 'Expand rule'))}" aria-expanded="${isOpen ? 'true' : 'false'}"><svg class="ic"><use href="#i-chevron-down"/></svg></button>
         </div>
       </header>
       ${body}
@@ -2328,6 +2366,11 @@
     let catalogOpen = false;
 
     let expandedRuleId = String(opts.ruleId || '');
+    const ruleSearch = { priority: '', checklist: '' };
+    const ruleFilter = { priority: 'all', checklist: 'all' };
+    const selectedRules = { priority: '', checklist: '' };
+    const manualEditors = new Set();
+    let ruleAssistant = null;
     let statusTimer = 0;
     let debounceTimer = 0;
     const uiModes = new Map();
@@ -2444,7 +2487,7 @@
     const scrollToRule = id => requestAnimationFrame(() => {
       const row = modal.querySelector(`[data-cpa-rule="${CSS.escape(id)}"]`);
       row?.scrollIntoView({ block: 'nearest' });
-      row?.querySelector('[data-cpa-rule-name], [data-cpa-rule-question]')?.focus();
+      row?.querySelector('[data-lcwai-request]')?.focus();
     });
     function openValueMenu(picker, menu) {
       closeValueMenu();
@@ -2479,7 +2522,7 @@
     }
     function stageRuleChange(rule) {
       const dirty = dirtyRules().length;
-      setStatus(dirty ? L(`${dirty} kural taslağı · Uygula ile kaydedilir`, `${dirty} rule drafts · Apply to save`) : '', '');
+      setStatus(dirty ? L(`${dirty} kural taslağı · Kaydetmeyi bekliyor`, `${dirty} rule drafts · Awaiting save`) : '', '');
       syncRuleSummaryDom(modal.querySelector(`[data-cpa-rule="${CSS.escape(rule.id)}"]`), rule);
       const apply = modal.querySelector('[data-cpa-apply-drafts]'); if (apply) apply.disabled = applyingRules || !dirty;
       const discard = modal.querySelector('[data-cpa-discard-drafts]'); if (discard) { discard.disabled = applyingRules || !dirty; discard.hidden = !dirty; }
@@ -2572,7 +2615,7 @@
     };
     const isAdvanced = (rule, index, condition) =>
       advancedConditions.has(`${rule.id}:${index}`) || conditionHasAdvancedData(condition);
-    const view = { get expandedRuleId() { return expandedRuleId; }, modeOf, aiDraftOf, isAdvanced, isDirty: isDirtyRule };
+    const view = { get expandedRuleId() { return expandedRuleId; }, modeOf, aiDraftOf, isAdvanced, isDirty: isDirtyRule, isManualOpen: rule => manualEditors.has(rule.id) };
 
     function setStatus(message, tone) {
       const node = modal.querySelector('[data-cpa-rules-status]');
@@ -2918,38 +2961,81 @@
       </section>`;
     }
 
+    function matchingLibraryRules(kind) {
+      const query = ruleSearch[kind].trim().toLocaleLowerCase(locale());
+      return rulesFor(kind).filter(rule => (ruleFilter[kind] === 'all'
+        || (ruleFilter[kind] === 'enabled' ? rule.enabled : !rule.enabled))
+        && (!query || `${ruleName(rule)} ${ruleBadge(rule)}`.toLocaleLowerCase(locale()).includes(query)));
+    }
+
+    function ruleLibraryItems(kind) {
+      const visible = matchingLibraryRules(kind);
+      return visible.map(rule => `<button type="button" class="cpaFrame cpaLibraryItem${expandedRuleId === rule.id ? ' is-on' : ''}" data-cpa-rule-select="${esc(rule.id)}" aria-pressed="${expandedRuleId === rule.id}">
+          <span class="cpaLibraryMeta"><span>${esc(rule.enabled ? L('Etkin', 'Active') : L('Kapalı', 'Disabled'))}</span><span class="cpaPill tone-${esc(ruleTone(rule))}">${esc(ruleBadge(rule))}</span></span>
+          <b data-cpa-library-name>${esc(ruleName(rule))}</b>
+          <small>${esc(rule.mode === 'formula' ? L('Özel koşul', 'Custom condition') : ruleSummary(rule))}</small>
+          <span class="cpaLibraryMeta"><span>${esc(rule.managed ? L('Ekip', 'Team') : L('Kişisel', 'Personal'))}</span>${isDirtyRule(rule) ? `<span class="cpaDraftBadge">${esc(L('Taslak', 'Draft'))}</span>` : ''}</span>
+        </button>`).join('') || `<p class="cpaEmpty">${esc(L('Sonuç bulunamadı. Aramayı veya filtreyi değiştirin.', 'No results. Change your search or filter.'))}</p>`;
+    }
+
+    function refreshRuleLibrary() {
+      const list = modal.querySelector('[data-cpa-rule-library]');
+      if (!list) return;
+      list.innerHTML = ruleLibraryItems(activeTab);
+      const count = modal.querySelector('[data-cpa-rule-visible-count]');
+      if (count) count.textContent = int(matchingLibraryRules(activeTab).length);
+      modal.querySelectorAll('[data-cpa-rule-filter]').forEach(button => {
+        const on = button.dataset.cpaRuleFilter === ruleFilter[activeTab];
+        button.classList.toggle('is-on', on); button.setAttribute('aria-pressed', String(on));
+      });
+      bindRuleLibrary();
+    }
+
+    function bindRuleLibrary() {
+      modal.querySelectorAll('[data-cpa-rule-select]').forEach(button => button.onclick = () => {
+        expandedRuleId = button.dataset.cpaRuleSelect;
+        selectedRules[activeTab] = expandedRuleId;
+        draw();
+        modal.querySelector(`[data-cpa-rule-select="${CSS.escape(expandedRuleId)}"]`)?.focus();
+        window.BLMotionPlus?.play('card', modal.querySelector('.cpaRuleDetail'));
+      });
+    }
+
     function rulesTabHtml(kind) {
-      const visible = rulesFor(activeTab);
+      const all = rulesFor(kind);
+      const selectedRule = all.find(rule => rule.id === expandedRuleId)
+        || all.find(rule => rule.id === selectedRules[kind]) || all[0];
+      expandedRuleId = selectedRule?.id || '';
+      selectedRules[kind] = expandedRuleId;
       const templates = ruleTemplates(kind);
       const deletedBuiltIns = Rules.DEFAULT_RULES.filter(rule => rule.kind === kind && state.deletedRuleIds.includes(rule.id));
       const deletedGlobal = isModerator() ? (state.managed.deletedRuleIds || []).filter(Boolean) : [];
       const topCatalog = kind === 'priority' ? priorityCatalogHtml() : checklistStatusCatalogHtml();
-      const addLabel = kind === 'priority' ? L('Yeni Öncelik Kuralı', 'New Priority Rule') : L('Yeni Kontrol Sorusu', 'New Checklist Question');
+      const addLabel = kind === 'priority' ? L('LCW AI ile Yeni Kural', 'New Rule with LCW AI') : L('LCW AI ile Yeni Soru', 'New Question with LCW AI');
       return `<div class="cpaStudioRulesPane">
-        <details class="cpaCatalogDisclosure"${catalogOpen || prioEditor || statusEditor ? ' open' : ''}><summary class="cpaBtn cpaCatalogDisclosureSummary">${esc(kind === 'priority' ? L('Öncelik ve takip etiketlerini yönet', 'Manage urgency and tracking tags') : L('Checklist durumlarını yönet', 'Manage checklist statuses'))}<span aria-hidden="true">▾</span></summary>${topCatalog}</details>
         <div class="cpaRulesTopBar">
-          <div>
-            <b>${esc(kind === 'priority' ? L('Öncelik Kuralları', 'Priority Rules') : L('Kontrol Soruları', 'Checklist Questions'))} (${int(visible.length)})</b>
-            <small>${esc(kind === 'priority'
-              ? L('Koşulu sağlayan siparişi seçtiğiniz öncelik etiketine yükseltir.', 'Escalates matching orders to the selected priority tag.')
-              : L('Koşulu sağlayan siparişler için CP tablosunda ve İş Listesi’nde kontrol sorusu açar.', 'Opens a check question in CP and Work Queue for matching orders.'))}</small>
-          </div>
+          <div><b>${esc(kind === 'priority' ? L('Kurallarınız, tek bir çalışma alanında', 'Your rules, in one workspace') : L('Doğru soruyu, doğru zamanda sorun', 'Ask the right question at the right time'))}</b>
+            <small>${esc(L('Soldan bir kayıt seçin veya ne istediğinizi yazarak yeni bir taslak hazırlayın.', 'Select an item on the left or describe what you need to prepare a new draft.'))}</small></div>
           <div class="cpaRulesTopActions">
-            ${kind === 'priority' ? `<button type="button" class="cpaBtn sm" data-cpa-priority-add>+ ${esc(L('Etiket Ekle', 'Add Tag'))}</button>` : `<button type="button" class="cpaBtn sm" data-cpa-status-add>+ ${esc(L('Durum Ekle', 'Add Status'))}</button>`}
-            <details class="cpaTemplatesMenu">
-              <summary class="cpaBtn sm">${esc(L('Hazır Şablondan Ekle', 'Add from Template'))} ▾</summary>
-              <div class="cpaTemplatesPopover">${templates.map(tpl =>
-                `<button type="button" class="cpaTemplateChoice" data-cpa-template="${esc(tpl.id)}"><b>${esc(tpl.title)}</b><small>${esc(tpl.hint)}</small></button>`).join('')}</div>
-            </details>
-            <button type="button" class="cpaBtn sm primary" data-cpa-new-rule>+ ${esc(addLabel)}</button>
+            <details class="cpaTemplatesMenu"><summary class="cpaBtn sm">${esc(L('Hazır örnekler', 'Ready-made examples'))} ▾</summary>
+              <div class="cpaTemplatesPopover">${templates.map(tpl => `<button type="button" class="cpaTemplateChoice" data-cpa-template="${esc(tpl.id)}"><b>${esc(tpl.title)}</b><small>${esc(tpl.hint)}</small></button>`).join('')}</div></details>
+            <button type="button" class="cpaBtn primary" data-cpa-new-rule>+ ${esc(addLabel)}</button>
           </div>
         </div>
-        <div class="cpaRuleList">${visible.length ? visible.map(rule => ruleBlock(rule, view)).join('')
-          : `<p class="cpaEmpty">${esc(kind === 'priority' ? L('Henüz öncelik kuralı yok.', 'No priority rules yet.') : L('Henüz kontrol sorusu yok.', 'No checklist questions yet.'))}</p>`}</div>
-        ${deletedBuiltIns.length ? `<div class="cpaRestoreBar"><span class="cpaNote">${esc(L('Gizlenen yerleşik başlıklar:', 'Hidden built-in items:'))}</span>
-          ${deletedBuiltIns.map(item => `<button type="button" class="cpaBtn sm ghost" data-cpa-restore-builtin="${esc(item.id)}">↺ ${esc(ruleName(item))}</button>`).join('')}</div>` : ''}
-        ${deletedGlobal.length ? `<div class="cpaRestoreBar"><span class="cpaNote">${esc(L('Tüm kullanıcılardan silinen kimlikler:', 'Deleted for all users:'))}</span>
-          ${deletedGlobal.map(id => `<button type="button" class="cpaBtn sm ghost" data-cpa-restore-all="${esc(id)}">↺ ${esc(id)}</button>`).join('')}</div>` : ''}
+        <details class="cpaCatalogDisclosure"${catalogOpen || prioEditor || statusEditor ? ' open' : ''}><summary class="cpaBtn cpaCatalogDisclosureSummary">${esc(kind === 'priority' ? L('Etiket ayarları', 'Tag settings') : L('Yanıt durumu ayarları', 'Response status settings'))}<span aria-hidden="true">▾</span></summary>${topCatalog}</details>
+        <div class="cpaRuleWorkspace cpaFrame">
+          <aside class="cpaRuleLibrary" aria-label="${esc(L('Kayıtlı kurallar', 'Saved rules'))}">
+            <div class="cpaLibraryHead"><div class="cpaRowBetween"><b>${esc(kind === 'priority' ? L('Kurallarım', 'My rules') : L('Kontrol sorularım', 'My checklist questions'))}</b><span data-cpa-rule-visible-count>${int(matchingLibraryRules(kind).length)}</span></div>
+              <label class="cpaLibrarySearch"><span>${esc(L('Listede ara', 'Search the list'))}</span><input type="search" data-cpa-rule-search value="${esc(ruleSearch[kind])}" placeholder="${esc(L('Kural adı veya etiket…', 'Rule name or tag…'))}"></label>
+              <div class="cpaLibraryFilters" role="group" aria-label="${esc(L('Kural durumu', 'Rule status'))}">${[['all', L('Tümü', 'All')], ['enabled', L('Etkin', 'Active')], ['disabled', L('Kapalı', 'Disabled')]].map(([id, label]) => `<button type="button" class="cpaBtn sm${ruleFilter[kind] === id ? ' is-on' : ''}" data-cpa-rule-filter="${id}" aria-pressed="${ruleFilter[kind] === id}">${esc(label)}</button>`).join('')}</div>
+            </div>
+            <div class="cpaRuleList cpaLibraryList" data-cpa-rule-library>${ruleLibraryItems(kind)}</div>
+            <small class="cpaLibraryFoot">${esc(L(`${int(all.length)} kayıt · ${int(all.filter(rule => rule.enabled).length)} etkin`, `${int(all.length)} items · ${int(all.filter(rule => rule.enabled).length)} active`))}</small>
+          </aside>
+          <section class="cpaRuleDetail" aria-label="${esc(L('Seçilen kuralın ayarları', 'Selected rule settings'))}">${selectedRule ? ruleBlock(selectedRule, view) : `<div class="cpaStudioEmptyBox"><h3>${esc(L('İlk kuralınızı LCW AI ile hazırlayın', 'Prepare your first rule with LCW AI'))}</h3><p class="cpaNote">${esc(L('Yeni Kural düğmesine basın ve ne istediğinizi kendi cümlenizle yazın.', 'Choose New Rule and describe what you need in your own words.'))}</p><button type="button" class="cpaBtn" data-cpa-new-rule>${esc(addLabel)}</button></div>`}</section>
+        </div>
+        ${deletedBuiltIns.length ? `<div class="cpaRestoreBar"><span class="cpaNote">${esc(L('Gizlenen yerleşik başlıklar:', 'Hidden built-in items:'))}</span>${deletedBuiltIns.map(item => `<button type="button" class="cpaBtn sm ghost" data-cpa-restore-builtin="${esc(item.id)}">↺ ${esc(ruleName(item))}</button>`).join('')}</div>` : ''}
+        ${deletedGlobal.length ? `<div class="cpaRestoreBar"><span class="cpaNote">${esc(L('Tüm kullanıcılardan silinen kimlikler:', 'Deleted for all users:'))}</span>${deletedGlobal.map(id => `<button type="button" class="cpaBtn sm ghost" data-cpa-restore-all="${esc(id)}">↺ ${esc(id)}</button>`).join('')}</div>` : ''}
       </div>`;
     }
 
@@ -2975,6 +3061,9 @@
         const sm = summaryBtn.querySelector('.cpaRuleSummaryMain small');
         if (sm) sm.textContent = ruleSummary(rule);
       }
+      const plain = row.querySelector('[data-cpa-plain-summary]');
+      if (plain) plain.outerHTML = rulePlainSummary(rule);
+      refreshRuleLibrary();
       const sentence = row.querySelector('.cpaRuleSentence');
       if (sentence) sentence.textContent = (rule.conditions || []).map(condition => conditionSummary(condition, rule)).join(rule.match === 'any' ? L(' veya ', ' or ') : L(' ve ', ' and ')) + ' → ' + (rule.kind === 'priority' ? ruleBadge(rule) : ruleName(rule));
       const previewNode = row.querySelector('[data-cpa-rule-preview]');
@@ -3102,13 +3191,15 @@
         return;
       }
       const draft = aiDraftOf(rule);
-      AI.mountAssistant(host, {
+      ruleAssistant = AI.mountAssistant(host, {
         source: 'rules',
+        initialRequest: draft.request,
+        onRequestChange: text => { draft.request = text; },
         title: L('LCW AI ile Kural Oluştur', 'Build Rule with LCW AI'),
         placeholder: rule.kind === 'checklist'
           ? L('Örn. Lisanslı modellerde yüklemeye 21 gün kala sorulsun…', 'e.g. Ask for licensed styles when 21 days remain before loading…')
           : L('Örn. Yüklemeye 10 günden az kalan ve PPS onaylanmamış siparişler…', 'e.g. Orders with less than 10 days to load and PPS not approved…'),
-        applyLabel: L('Kurala Uygula', 'Apply to Rule'),
+        applyLabel: L('Taslağa Ekle', 'Add to Draft'),
         // Shared panel contract: buildRequest(text) → { task, context, guide }.
         // A misnamed hook threw before any request and surfaced only as
         // "The LCW AI request could not be completed"; task is mandatory.
@@ -3136,7 +3227,10 @@
           const rawPriority = result && result.data && result.data.priority ? String(result.data.priority).trim() : '';
           const validPrio = selectablePriorityTargets().some(item => item.id === rawPriority) ? rawPriority : '';
           const probe = Object.assign(Object.create(Object.getPrototypeOf(rule)), rule, {
-            enabled: true, mode: 'formula', formula,
+            enabled: true,
+            ...(rule.kind === 'checklist' && draft.purpose === 'auto'
+              ? { autoStatus: draft.autoStatus || 'approved', autoMode: 'formula', autoFormula: formula }
+              : { mode: 'formula', formula }),
             ...(validPrio && rule.kind === 'priority' ? { target: validPrio } : {}),
           });
           const preview = rulePreview(probe);
@@ -3144,6 +3238,7 @@
           return {
             ok: true,
             code: display,
+            html: rulePlainSummary(probe) + `<div class="cpaRulePreview">${previewHtml(probe)}</div>`,
             explanation: picked.explanation || '',
             summary: preview ? L(`Canlı önizleme: ${int(preview.count)} / ${int(preview.total)} sipariş eşleşiyor.`, `Live preview: matches ${int(preview.count)} / ${int(preview.total)} orders.`) : '',
             value: { formula, priority: validPrio },
@@ -3152,7 +3247,7 @@
         onApply: ({ formula, priority }) => {
           applyAiFormula(rule, formula, draft);
           if (priority && rule.kind === 'priority') rule.target = priority;
-          draft.applied = L('LCW AI önerisi taslağa eklendi. Kaydetmek için Uygula’ya basın.', 'LCW AI suggestion added to draft. Choose Apply to save.');
+          draft.applied = L('LCW AI önerisi taslağa eklendi. Önizlemeyi kontrol edip kaydedin.', 'LCW AI suggestion added to draft. Review the preview and save.');
           draft.error = '';
           stageRuleChange(rule);
           draw();
@@ -3173,6 +3268,18 @@
     }
 
     function bindRules() {
+      bindRuleLibrary();
+      modal.querySelector('[data-cpa-rule-search]')?.addEventListener('input', event => {
+        ruleSearch[activeTab] = event.target.value.slice(0, 200); refreshRuleLibrary();
+      });
+      modal.querySelectorAll('[data-cpa-rule-filter]').forEach(button => button.onclick = () => {
+        ruleFilter[activeTab] = button.dataset.cpaRuleFilter; refreshRuleLibrary();
+      });
+      const manual = modal.querySelector('[data-cpa-manual-editor]');
+      if (manual) manual.ontoggle = () => {
+        if (!manual.isConnected) return;
+        if (manual.open) manualEditors.add(ruleIdOf(manual)); else manualEditors.delete(ruleIdOf(manual));
+      };
       modal.querySelectorAll('[data-cpa-rule-delete-all]').forEach(el => el.onclick = async () => {
         if (!isModerator()) return;
         const rule = findRule(ruleIdOf(el));
@@ -3210,8 +3317,10 @@
 
       modal.querySelectorAll('[data-cpa-rule-toggle],[data-cpa-rule-edit]').forEach(el => el.onclick = () => {
         const id = ruleIdOf(el);
-        expandedRuleId = expandedRuleId === id ? '' : id;
+        expandedRuleId = id;
+        manualEditors.add(id);
         draw();
+        modal.querySelector('[data-cpa-rule-name]')?.focus();
       });
 
       modal.querySelectorAll('[data-cpa-rule-enabled]').forEach(el => el.onchange = () => {
@@ -3267,6 +3376,7 @@
           }, { kind, priorityCatalog: state.priorityCatalog });
         ruleDrafts.set(created.id, created); draftBases.set(created.id, '');
         expandedRuleId = created.id;
+        ruleSearch[kind] = ''; ruleFilter[kind] = 'all'; catalogOpen = false; prioEditor = null; statusEditor = null;
         stageRuleChange(created);
         draw();
         scrollToRule(created.id);
@@ -3279,6 +3389,7 @@
         const created = Rules.normalizeRule({ ...tpl.rule, kind }, { kind, priorityCatalog: state.priorityCatalog });
         ruleDrafts.set(created.id, created); draftBases.set(created.id, '');
         expandedRuleId = created.id;
+        ruleSearch[kind] = ''; ruleFilter[kind] = 'all'; catalogOpen = false; prioEditor = null; statusEditor = null;
         stageRuleChange(created);
         draw();
         scrollToRule(created.id);
@@ -4164,8 +4275,9 @@
 
     function closeStudio() {
       if (applyingRules) { setStatus(L('Kural kaydı sürüyor; tamamlanmasını bekleyin.', 'Saving rule changes; please wait.'), ''); return false; }
-      if ((dirtyRules().length || invalidRuleDrafts.size) && typeof confirm === 'function' && !confirm(L('Kaydedilmemiş kural taslakları var. Uygulamadan kapatılsın mı?', 'There are unapplied rule drafts. Close without applying them?'))) return false;
+      if ((dirtyRules().length || invalidRuleDrafts.size) && typeof confirm === 'function' && !confirm(L('Kaydedilmemiş kural taslakları var. Kaydetmeden kapatılsın mı?', 'There are unsaved rule drafts. Close without saving them?'))) return false;
       rememberQueueView();
+      ruleAssistant?.destroy(); ruleAssistant = null;
       closeValueMenu({ remove: true });
       document.removeEventListener('pointerdown', onValueOutsidePointer, true);
       document.removeEventListener('scroll', onValueViewportChange, true);
@@ -4180,6 +4292,7 @@
     }
 
     function draw() {
+      ruleAssistant?.destroy(); ruleAssistant = null;
       for (const [id, draft] of ruleDrafts) if (ruleSignature(draft) === draftBases.get(id) && ruleSignature(state.rules.find(rule => rule.id === id)) !== draftBases.get(id)) { ruleDrafts.delete(id); draftBases.delete(id); }
       rememberQueueView();
       closeValueMenu({ remove: true });
@@ -4219,11 +4332,11 @@
           ${panelHtml}
         </div>
         <footer>
-          <span class="cpaNote">${esc(L('Kural taslakları Uygula ile kaydedilir. Checklist yanıtları anında kaydedilir.', 'Apply saves rule drafts. Checklist answers save immediately.'))}</span>
+          <span class="cpaNote">${esc(L('Kural taslakları siz kaydedene kadar uygulanmaz. Kontrol yanıtları anında kaydedilir.', 'Rule drafts take effect when you save. Checklist responses save immediately.'))}</span>
           <div class="cpaDraftActions">
           ${lastRuleApply ? `<button type="button" class="cpaBtn" data-cpa-undo-rules ${dirtyRules().length || applyingRules ? 'disabled' : ''} title="${esc(L('Kural tanımını geri alır; kaydedilmiş checklist yanıtlarını değiştirmez.', 'Restores rule definitions; saved checklist answers are preserved.'))}">${esc(L('Son Kural Değişikliğini Geri Al', 'Undo Last Rule Change'))}</button>` : ''}
           <button type="button" class="cpaBtn" data-cpa-discard-drafts ${dirtyRules().length && !applyingRules ? '' : 'disabled hidden'}>${esc(L('Taslakları İptal Et', 'Discard Drafts'))}</button>
-          <button type="button" class="cpaBtn primary" data-cpa-apply-drafts ${dirtyRules().length && !applyingRules ? '' : 'disabled'} ${activeTab === 'queue' && !dirtyRules().length ? 'hidden' : ''}>${esc(applyingRules ? L('Kaydediliyor…', 'Saving…') : L('Değişiklikleri Uygula', 'Apply Changes'))}</button>
+          <button type="button" class="cpaBtn primary" data-cpa-apply-drafts ${dirtyRules().length && !applyingRules ? '' : 'disabled'} ${activeTab === 'queue' && !dirtyRules().length ? 'hidden' : ''}>${esc(applyingRules ? L('Kaydediliyor…', 'Saving…') : L('Kontrol Ettim, Kaydet', 'Reviewed, Save'))}</button>
           <button type="button" class="cpaBtn" data-cpa-studio-close>${esc(L('Kapat', 'Close'))}</button></div>
         </footer>
       </div>`;
@@ -4252,7 +4365,7 @@
         if (expandedRuleId) {
           const openRule = findRule(expandedRuleId);
           const openRow = modal.querySelector(`[data-cpa-rule="${CSS.escape ? CSS.escape(expandedRuleId) : expandedRuleId}"]`);
-          if (openRow && openRule && modeOf(openRule) === 'ai') {
+          if (openRow && openRule) {
             renderAiResult(openRow, openRule); mountRuleLcwAi(openRow, openRule);
           }
         }
