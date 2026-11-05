@@ -654,8 +654,8 @@
       <div class="dmPanelHead">
         <span class="dmPanelTitle">${esc(T('Kaynak modu', 'Source mode'))}</span>
         <span class="dmsHint">${esc(T(
-          'Excel seçiliyse aşağıdaki model bağlantısı hiç sorgulanmaz.',
-          'When Excel is selected, the model connection below is never queried.'))}</span>
+          'Excel seçiliyse model bağlantısı hiç sorgulanmaz.',
+          'When Excel is selected, the model connection is never queried.'))}</span>
       </div>
       ${SOURCE_MODES.map(group => `<div class="dmModeRow">
         <span class="dmModeText">
@@ -1312,9 +1312,14 @@
     const unsupported = model.support && model.support.supported === false;
 
     root.innerHTML = `
+      <div class="dmPanel dmConnections" data-dm-panel="connections">
+        <div class="dmPanelHead">
+          <span class="dmPanelTitle">${esc(T('Bağlantı ve yapılandırma', 'Connections and configuration'))}</span>
+        </div>
+        <div class="dmConnectionBody">
       <div class="dmHead">
         <div>
-          <h2 class="dmTitle">Corporate Integration Lab</h2>
+          <h2 class="dmTitle">${esc(T('Kurumsal Entegrasyon Laboratuvarı', 'Corporate Integration Lab'))}</h2>
           <p class="dmSub">${esc(T('Tüm entegrasyonları tek platformda, gerçek kanıtlarla tanıla ve yönet.', 'Diagnose and manage every integration on one platform with real evidence.'))}</p>
         </div>
         <div class="dmHeadActions">
@@ -1329,15 +1334,16 @@
       ${unsupported ? `<div class="dmNotice">${esc(T('Veri modeli sorguları yalnız Windows üzerinde çalışır; bu makinede bağlantı sınanamaz.', 'Data-model queries run on Windows only; connections cannot be tested on this machine.'))}</div>` : ''}
       ${(model.warnings || []).map(text => `<div class="dmNotice dmNotice--warn">${esc(text)}</div>`).join('')}
 
-      ${sourceModePanel()}
-
-      <div class="dmSectionLabel">${esc(T('Bağlantı ve yapılandırma', 'Connections and configuration'))}</div>
       <div class="dmSources">${model.sources.map(sourceCard).join('')}</div>
       ${expandedSourceId && model.sources.some(source => source.id === expandedSourceId)
         ? sourceDetail(model.sources.find(source => source.id === expandedSourceId)) : ''}
 
       ${matchRuleRow()}
       <div class="dmMatchSlot" data-matchrule-slot></div>
+        </div>
+      </div>
+
+      ${sourceModePanel()}
 
       ${horizonPanel()}
 
@@ -1366,16 +1372,29 @@
 
   /* Paneller başlıktan açılıp kapanır; seçim bu tarayıcıda kullanıcı başına
      hatırlanır. İçerik DOM'da kalır, yalnız gizlenir: durum ve olaylar bozulmaz. */
-  const COLLAPSED_PANELS_KEY = 'bl.dataManagement.collapsedPanels';
+  // Yeni bölüm düzeni ilk kullanımda kapalıdır; eski açık tercihler taşınmaz.
+  const COLLAPSED_PANELS_KEY = 'bl.dataManagement.collapsedPanels.v2';
+  const DEFAULT_COLLAPSED_PANELS = ['connections', 'modes', 'refresh', 'tools'];
+  let collapsedPanels = null;
   function readCollapsedPanels() {
+    if (collapsedPanels) return new Set(collapsedPanels);
     try {
       const store = window.BLStorage || window.localStorage;
-      const value = JSON.parse(store.getItem(COLLAPSED_PANELS_KEY) || '[]');
-      return new Set(Array.isArray(value) ? value.filter(key => typeof key === 'string') : []);
-    } catch (_) { return new Set(); }
+      const value = JSON.parse(store.getItem(COLLAPSED_PANELS_KEY) || 'null');
+      collapsedPanels = new Set(Array.isArray(value) ? value.filter(key => DEFAULT_COLLAPSED_PANELS.includes(key)) : DEFAULT_COLLAPSED_PANELS);
+    } catch (_) { collapsedPanels = new Set(DEFAULT_COLLAPSED_PANELS); }
+    return new Set(collapsedPanels);
   }
   function writeCollapsedPanels(keys) {
+    // Depolama kapalı olsa da oturum içindeki açma/kapatma çalışır.
+    collapsedPanels = new Set(keys);
     try { (window.BLStorage || window.localStorage).setItem(COLLAPSED_PANELS_KEY, JSON.stringify([...keys])); } catch (_) {}
+  }
+  function expandPanel(key) {
+    const collapsed = readCollapsedPanels();
+    if (!collapsed.delete(key)) return;
+    writeCollapsedPanels(collapsed);
+    decorateCollapsiblePanels();
   }
   function decorateCollapsiblePanels() {
     const collapsed = readCollapsedPanels();
@@ -2177,6 +2196,7 @@
     if (!wanted || !root) return;
     const apply = () => {
       if (!model || !model.sources.some(entry => entry.id === wanted)) return;
+      expandPanel('connections');
       expandedSourceId = wanted;
       render();
       if (options.openMapping) { openMappingEditor(wanted, options.mappingRepair || null); return; }
@@ -2196,6 +2216,7 @@
       ?.closest('.dmToolRow')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     const apply = () => {
       if (!model) return;
+      expandPanel('tools');
       if (openTool === wanted) { reveal(); return; }
       void runTool(wanted).then(reveal);
     };
