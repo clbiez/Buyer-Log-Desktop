@@ -1394,13 +1394,20 @@
     const collapsed = readCollapsedPanels();
     if (!collapsed.delete(key)) return;
     writeCollapsedPanels(collapsed);
-    decorateCollapsiblePanels();
+    decorateCollapsiblePanels(key);
   }
-  function decorateCollapsiblePanels() {
+  function decorateCollapsiblePanels(animateKey) {
     const collapsed = readCollapsedPanels();
     root.querySelectorAll('.dmPanel[data-dm-panel]').forEach(panel => {
       const head = panel.querySelector(':scope > .dmPanelHead');
       if (!head) return;
+      let body = panel.querySelector(':scope > .dmPanelBody');
+      if (!body) {
+        body = document.createElement('div');
+        body.className = 'dmPanelBody';
+        Array.from(panel.children).filter(child => child !== head).forEach(child => body.appendChild(child));
+        panel.appendChild(body);
+      }
       const key = panel.dataset.dmPanel;
       const isCollapsed = collapsed.has(key);
       panel.classList.toggle('isCollapsed', isCollapsed);
@@ -1417,15 +1424,17 @@
       toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
       toggle.setAttribute('aria-label', label);
       toggle.title = label;
+      body.id = 'dm-panel-body-' + key;
+      toggle.setAttribute('aria-controls', body.id);
+      if (window.BLMotionPlus?.disclosure) window.BLMotionPlus.disclosure(body, !isCollapsed, { trigger: toggle, initial: key !== animateKey });
+      else body.hidden = isCollapsed;
     });
   }
   function togglePanel(key) {
     const collapsed = readCollapsedPanels();
     if (collapsed.has(key)) collapsed.delete(key); else collapsed.add(key);
     writeCollapsedPanels(collapsed);
-    decorateCollapsiblePanels();
-    const panel = root.querySelector(`.dmPanel[data-dm-panel="${key}"]`);
-    if (panel && !panel.classList.contains('isCollapsed')) window.BLMotionPlus?.play?.('overlay', panel);
+    decorateCollapsiblePanels(key);
   }
 
   /* ---------------------------------------------------------------- */

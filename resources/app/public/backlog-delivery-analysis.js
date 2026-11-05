@@ -236,7 +236,7 @@
     return `<div class="bdaSection bdaFold${extraClass ? ` ${extraClass}` : ''}${open ? ' is-open' : ''}" data-fold="${esc(key)}">
       <button type="button" class="bdaFoldHead" data-fold-toggle="${esc(key)}" aria-expanded="${open ? 'true' : 'false'}">
         <span class="bdaH">${esc(title)}</span>${summary ? `<span class="bdaFoldSummary">${esc(summary)}</span>` : ''}<svg class="ic bdaFoldChevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
-      </button><div class="bdaFoldBody">`;
+      </button><div class="bdaFoldBody" ${open ? '' : 'hidden'}>`;
   }
 
   function kpiCard(key, measure, total, tone) {
@@ -443,7 +443,11 @@
     if (!host) return;
     state.open = true;
     host.hidden = false;
-    if (state.collapsed) { host.innerHTML = renderHeader(); bind(host); return; }
+    if (state.collapsed) {
+      const head = host.querySelector(':scope > .bdaHead');
+      if (head) head.outerHTML = renderHeader(); else host.innerHTML = renderHeader();
+      bind(host); return;
+    }
     if (state.loading) { host.innerHTML = `${renderHeader()}<div class="bdaMuted bdaPad">${esc(L('Analiz hesaplanıyor…', 'Calculating analysis…'))}</div>`; bind(host); return; }
     if (state.error) { host.innerHTML = `${renderHeader()}<div class="bdaError">${esc(state.error)}</div>`; bind(host); return; }
     const model = state.model;
@@ -464,6 +468,7 @@
 
   /* --------------------------------------------------------------- olaylar */
   function bind(host) {
+    host.querySelectorAll(':scope > :not(.bdaHead)').forEach(body => { body.hidden = state.collapsed; });
     host.querySelectorAll('[data-fold-toggle]').forEach(button => {
       button.addEventListener('click', () => {
         const key = button.dataset.foldToggle;
@@ -472,6 +477,9 @@
         state.folds[key] = open;
         if (section) section.classList.toggle('is-open', open);
         button.setAttribute('aria-expanded', open ? 'true' : 'false');
+        const body = section?.querySelector('.bdaFoldBody');
+        if (window.BLMotionPlus?.disclosure) window.BLMotionPlus.disclosure(body, open, { trigger: button });
+        else if (body) body.hidden = !open;
         save();
       });
     });
@@ -490,7 +498,17 @@
       button.addEventListener('click', () => {
         const action = button.dataset.action;
         if (action === 'refresh') { void refresh(true); return; }
-        if (action === 'toggleAnalysis') { state.collapsed = !state.collapsed; save(); render(); return; }
+        if (action === 'toggleAnalysis') {
+          state.collapsed = !state.collapsed; save();
+          const open = !state.collapsed;
+          if (open) render();
+          button.setAttribute('aria-expanded', String(open));
+          host.querySelectorAll(':scope > :not(.bdaHead)').forEach(body => {
+            if (window.BLMotionPlus?.disclosure) window.BLMotionPlus.disclosure(body, open, { trigger: host.querySelector('[data-action="toggleAnalysis"]'), ...(open ? { fromHeight: 0 } : {}) });
+            else body.hidden = !open;
+          });
+          return;
+        }
         if (action === 'toggleAutomate') { state.automate = !state.automate; render(); return; }
         if (action === 'copy') { copySummary(); return; }
         if (action === 'settings') { openSettings(); return; }

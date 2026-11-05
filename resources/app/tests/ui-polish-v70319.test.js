@@ -78,7 +78,9 @@ test('Veri Yönetimi panelleri başlıktan katlanır; durum kullanıcıya ayrıl
   assert.match(dm,/const panelToggle = event\.target\.closest\('\[data-dm-panel-toggle\]'\);/);
   assert.match(dm,/decorateCollapsiblePanels\(\);\s*syncSourceModes\(\);\s*\}/);
   assert.match(read('user-storage.js'),/'bl\.dataManagement\.'/);
-  assert.match(block,/\.dmPanel\.isCollapsed > :not\(\.dmPanelHead\) \{display:none !important/);
+  assert.match(block,/\.dmPanelBody\[hidden\] \{display:none !important/);
+  assert.match(dm,/BLMotionPlus\.disclosure\(body, !isCollapsed/);
+  assert.match(dm,/toggle\.setAttribute\('aria-controls', body\.id\)/);
 });
 
 test('harita ülke etiketleri düğüm ve araç işaretlerinin üstüne yazılmaz',()=>{

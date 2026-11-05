@@ -4688,7 +4688,7 @@ function renderTableFieldsMenu(menu,tableKey){
       const state=n===0?'none':n===entry.keys.length?'all':'some';
       return tableFieldsCheckbox(`data-table-fields-group-preset="${preset}" data-group="${escapeHtml(entry.group)}"`,state,`${entry.label} · ${tableViewPresetName(preset)}`);
     }).join('');
-    const columns=open?entry.keys.map(key=>{
+    const columns=entry.keys.map(key=>{
       const meta=tableFieldsColumn(tableKey,key);
       const actions=[
         meta.kind==='formula'?`<button type="button" class="tableFieldsIcon isFx" data-table-fields-formula="${escapeHtml(key)}" title="${escapeHtml(formulaColumnTooltip(meta.col,tableKey))}" aria-label="${escapeHtml(en?'Edit formula':'Formülü düzenle')}">fx</button>`:'',
@@ -4698,8 +4698,8 @@ function renderTableFieldsMenu(menu,tableKey){
       const checks=TABLE_FIELDS_PRESETS.map(preset=>tableFieldsCheckbox(`data-table-fields-preset="${preset}" data-key="${escapeHtml(key)}"`,presetSets[preset].has(key)?'all':'none',`${meta.label} · ${tableViewPresetName(preset)}`)).join('');
       const draggable=!meta.fixed&&entry.keys.length>1;
       return `<div class="tableFieldsColumn${hidden.has(key)?' isHiddenNow':''}${meta.userLabel?' hasUserLabel':''}" data-table-fields-col="${escapeHtml(key)}" data-group="${escapeHtml(entry.group)}"${draggable?' draggable="true"':''}><span class="tableFieldsDrag${draggable?'':' isDisabled'}" aria-hidden="true">⋮⋮</span><span class="tableFieldsColumnName" title="${escapeHtml(meta.label)}">${meta.kind==='personalNote'?'🔒 ':''}${escapeHtml(meta.label)}</span><span class="tableFieldsActions">${actions}</span><span class="tableFieldsChecks">${checks}</span></div>`;
-    }).join(''):'';
-    return `<div class="tableFieldsGroup is-${mode}${open?' isOpen':''}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--ui-accent)'}"><div class="tableFieldsGroupRow"><button type="button" class="tableFieldsGroupToggle" data-table-fields-toggle="${escapeHtml(entry.group)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b>${escapeHtml(entry.label)}</b><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button><button type="button" class="tableFieldsModeBtn is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(modeTitle)}">${escapeHtml(modeLabel)}</button><span class="tableFieldsChecks">${groupChecks}</span></div>${columns?`<div class="tableFieldsColumns">${columns}</div>`:''}</div>`;
+    }).join('');
+    return `<div class="tableFieldsGroup is-${mode}${open?' isOpen':''}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--ui-accent)'}"><div class="tableFieldsGroupRow"><button type="button" class="tableFieldsGroupToggle" data-table-fields-toggle="${escapeHtml(entry.group)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b>${escapeHtml(entry.label)}</b><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button><button type="button" class="tableFieldsModeBtn is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(modeTitle)}">${escapeHtml(modeLabel)}</button><span class="tableFieldsChecks">${groupChecks}</span></div>${columns?`<div class="tableFieldsColumns" ${open?'':'hidden'}>${columns}</div>`:''}</div>`;
   }).join('');
   const addButtons=[];
   if(tableKey==='cp'||tableKey==='orders'){
@@ -4718,8 +4718,10 @@ function renderTableFieldsMenu(menu,tableKey){
   menu.querySelectorAll('[data-table-fields-toggle]').forEach(button=>button.addEventListener('click',()=>{
     const group=button.dataset.tableFieldsToggle;
     if(expanded.has(group))expanded.delete(group);else expanded.add(group);
-    renderTableFieldsMenu(menu,tableKey);
-    menu.querySelector(`[data-table-fields-toggle="${CSS.escape(group)}"]`)?.focus();
+    const open=expanded.has(group),body=button.closest('.tableFieldsGroup')?.querySelector('.tableFieldsColumns');
+    button.setAttribute('aria-expanded',String(open));button.querySelector('use')?.setAttribute('href',open?'#i-chevron-down':'#i-chevron-right');
+    button.closest('.tableFieldsGroup')?.classList.toggle('isOpen',open);
+    if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(body,open,{trigger:button});else if(body)body.hidden=!open;
   }));
   menu.querySelectorAll('[data-table-fields-group]').forEach(button=>button.addEventListener('click',()=>{
     const group=button.dataset.tableFieldsGroup;
@@ -35412,8 +35414,10 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
       group.hidden=visible===0;
       const open=query?visible>0:expandedGroups.has(entry.group);
       group.classList.toggle('isOpen',open);
-      group.querySelector('.mailTopicFieldGroupRows').hidden=!open;
+      const body=group.querySelector('.mailTopicFieldGroupRows');
       const toggle=group.querySelector('[data-mail-field-toggle]');toggle.setAttribute('aria-expanded',open?'true':'false');
+      if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(body,open,{trigger:toggle,initial:!group.dataset.blDisclosureReady});else body.hidden=!open;
+      group.dataset.blDisclosureReady='true';
     }
   }
   search.addEventListener('input',updateFieldGroups);only.addEventListener('change',updateFieldGroups);

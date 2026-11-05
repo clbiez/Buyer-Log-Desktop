@@ -125,7 +125,7 @@ function syncMoveButtons(){
 function openModule(value){
   state.open=value;saveState();
   const host=$('backlogPlanActual'),mod=moduleEl(),toggle=$('backlogPlanActualToggle');
-  if(host)host.hidden=!value;
+  if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(host,value,{trigger:toggle});else if(host)host.hidden=!value;
   if(mod)mod.classList.toggle('is-open',value);
   if(toggle)toggle.setAttribute('aria-expanded',value?'true':'false');
   if(!value)closeDrawer();

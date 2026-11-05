@@ -125,7 +125,8 @@ test('Appearance opens as a drawer above its button; Theme transition stays coll
   const motion=read('public/motion-plus.js');
   assert.match(motion,/kind==='drawer'\)return entrance\(element,\[\{clipPath:'inset\(100% 0 0 0\)'/);
   assert.match(motion,/kind==='expand'\)return animate\(element,\[\{height:'0px'/);
-  assert.match(SOURCE,/if\(open\)root\.BLMotionPlus\?\.play\?\.\('expand',body\)/);
+  assert.match(SOURCE,/root\.BLMotionPlus\.disclosure\(body,open,\{trigger:toggle\}\)/);
+  assert.doesNotMatch(SOURCE,/if\(open\)root\.BLMotionPlus\?\.play\?\.\('expand',body\)/, 'theme settings use the same opening and closing profile');
 });
 test('triangle safety limit follows the last scheduled triangle, so a slow wide chain is never cut short',()=>{
   const body=SOURCE.slice(SOURCE.indexOf('function triangles('),SOURCE.indexOf('/* ---- taneli çözülme'));

@@ -168,6 +168,7 @@
   }
   function applyPivotLayout(){
     if(!pivotWorkspace||!pivotPanel||!pivotRadarCard)return;
+    const disclosureParts=[...pivotPanel.querySelectorAll(':scope > .backlogTreeToolbar,:scope > .tablewrap'),...pivotRadarCard.querySelectorAll('.backlogRadarBody')].map(body=>({body,height:body.getBoundingClientRect().height}));
     pivotPanel.classList.toggle('is-collapsed',!!state.pivotCollapsed);
     pivotRadarCard.classList.toggle('is-collapsed',!!state.pivotRadarCollapsed);
     pivotPanel.style.order=state.radarFirst?'3':'1';
@@ -191,6 +192,13 @@
     }
     pivotPanel.querySelector('[data-bl-layout="pivot-collapse"]')?.setAttribute('aria-expanded',String(!state.pivotCollapsed));
     pivotRadarCard.querySelector('[data-bl-layout="radar-collapse"]')?.setAttribute('aria-expanded',String(!state.pivotRadarCollapsed));
+    for(const {body,height} of disclosureParts){
+      const pivot=pivotPanel.contains(body),open=!(pivot?state.pivotCollapsed:state.pivotRadarCollapsed);
+      const trigger=(pivot?pivotPanel:pivotRadarCard).querySelector('[data-bl-layout$="collapse"]');
+      if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(body,open,{trigger,fromHeight:height,initial:!body.dataset.blDisclosureReady});
+      else body.hidden=!open;
+      body.dataset.blDisclosureReady='true';
+    }
   }
   function swapPivot(){state.radarFirst=!state.radarFirst;save();applyPivotLayout();}
   function bindPivotControls(){

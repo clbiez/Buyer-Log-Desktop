@@ -15507,7 +15507,7 @@ html[data-ui-system="manifest"] .dmPanelToggle .ic {width:14px;height:14px
 }
 html[data-ui-system="manifest"] .dmPanel.isCollapsed .dmPanelToggle .ic {transform:rotate(-90deg)
 }
-html[data-ui-system="manifest"] .dmPanel.isCollapsed > :not(.dmPanelHead) {display:none !important
+html[data-ui-system="manifest"] .dmPanelBody[hidden] {display:none !important
 }
 html[data-ui-system="manifest"] .dmPanel > .dmPanelHead:has(> .dmPanelToggle) {justify-content:flex-start
 }
