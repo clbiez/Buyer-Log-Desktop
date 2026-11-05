@@ -2223,6 +2223,15 @@ html[data-ui-system="manifest"] .tablewrap.freezePick :is(#cpTable,#ordersTable,
 }
 html[data-ui-system="manifest"] .freezeLaser {z-index:var(--ui-z-sticky-column);background:var(--ui-accent) !important
 }
+/* İki bölmeli dondurma: bölme sınırı alan çerçevesi rengini alır, sürüklenirken vurgulanır. */
+html[data-ui-system="manifest"] .tablewrap>.blFreezePane {z-index:var(--ui-z-sticky-column)
+}
+html[data-ui-system="manifest"] .blFreezePaneDivider::after {background:var(--ui-field-border)
+}
+html[data-ui-system="manifest"] .blFreezePaneDivider:hover::after,html[data-ui-system="manifest"] .blFreezePaneDivider.isDragging::after {background:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .blFreezePaneBar {background:var(--ui-surface-strong)
+}
 html[data-ui-system="manifest"] .navActionBtn.freezeOn {background:color-mix(in srgb,var(--ui-danger) 12%,var(--ui-surface)) !important;color:var(--ui-danger) !important
 }
 html[data-ui-system="manifest"] .navActionBtn.freezeOn:hover {background:color-mix(in srgb,var(--ui-danger) 18%,var(--ui-surface)) !important

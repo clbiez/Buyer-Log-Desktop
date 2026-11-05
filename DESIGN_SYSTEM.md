@@ -113,7 +113,9 @@ diğer grafik işaretçilerine veya kart/kontrol köşelerine uygulanmaz.
 8. Sütun dondurmanın tek sahibi `public/table-freeze.js` (`BLTableFreeze`):
    konum, ofset ve katman sırası (kayan gövde < `--ui-z-frozen-cell` < kayan
    başlık `--ui-z-sticky` < donmuş başlık `--ui-z-sticky-column`) yalnız orada
-   üretilir. Donmuş alanın kenarı 2px `--ui-group-divider` iç çizgisidir. Modül
+   üretilir. Donmuş sol bölme ile sağ tablo bağımsız yatay kayar: bölme sınırı
+   sürüklenebilir 2px `--ui-field-border` ayırıcıdır (sürüklerken `--ui-accent`),
+   donmuş bölmenin kendi kaydırma çubuğu yalnız sol bölmenin altındadır. Modül
    CSS'i `frzL` hücrelerine konum, `z-index` veya zemin yaması eklemez.
 
 Tablo başlıkları `--ui-header-*`, ana grup bandı `--ui-group-header-*` kullanır.
