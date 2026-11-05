@@ -7,8 +7,8 @@
     "en": "UI transitions and balanced sidebar navigation · faster PLM Sync"
   },
   "summary": {
-    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir. Hover bilgi kutuları ve grafik değer etiketleri seçili temanın renklerini izler. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir.",
-    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values. Hover information boxes and chart value labels follow the selected theme colors. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data."
+    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir. Hover bilgi kutuları ve grafik değer etiketleri seçili temanın renklerini izler. Veri Yönetimi'ndeki CP, Diğer modüller ve INTAKE horizon filtreleri, IAS karşılığını otomatik öneren tek bir çekmecede düzenlenir. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir.",
+    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values. Hover information boxes and chart value labels follow the selected theme colors. CP, Other modules and INTAKE horizon filters in Data Management are edited in a single drawer that suggests IAS counterparts automatically. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data."
   },
   "changes": [
     {
@@ -352,6 +352,35 @@
         "alt": {
           "tr": "Karanlık temada koyu yüzeyle gösterilen Koleksiyon Yapıştır bilgi kutusu",
           "en": "Collection Paste tooltip using a dark surface in dark mode"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "horizon-filter-drawer",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Horizon filtreleri Backlog filtre düzeniyle tek çekmecede",
+        "en": "Horizon filters in one drawer with the Backlog filter layout"
+      },
+      "body": {
+        "tr": "Horizon panelindeki \"Filtreyi düzenle\" ya da filtre adı, CP / Diğer modüller / INTAKE sekmeli çekmeceyi açar. Basit kipte soldan ASAS veya IAS sütunu seçilir, değerler database listesinden işaretlenir; tarih alanları aralıkla filtrelenir. Her kartta IAS karşılığı otomatik eşlenir, gerekirse elle değiştirilir veya IAS için ayrı değerler seçilir; elle seçim hatırlanır. VEYA grupları ve diğer işleçler Gelişmiş kipte düzenlenir. Kaydetmek veriyi yenilemez.",
+        "en": "\"Edit filter\" or the filter name in the Horizon panel opens a drawer with CP / Other modules / INTAKE tabs. In Simple mode you pick an ASAS or IAS column on the left and tick values from the database list; date fields are filtered by range. Each card maps its IAS counterpart automatically; you can change it, choose separate IAS values, and manual choices are remembered. OR groups and other operators are edited in Advanced mode. Saving does not refresh data."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "horizon-filter-drawer.png",
+        "alt": {
+          "tr": "Horizon filtreleri çekmecesinde ASAS Marka filtresi ve IAS karşılığı",
+          "en": "ASAS Brand filter and its IAS counterpart in the Horizon filters drawer"
         },
         "caption": {
           "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",

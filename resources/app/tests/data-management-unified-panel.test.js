@@ -19,7 +19,7 @@ function harness(language = 'tr', canManage = true) {
   }));
   const model = { canManage, sources, modules, mergedFilters: [], matrix: { cells: {} } };
   for (const module of modules) for (const source of sources) model.matrix.cells[`${source.id}:${module.id}`] = 'unavailable';
-  const slots = Object.fromEntries(['cp', 'linked', 'intake'].map(id => [`[data-horizon-slot="${id}"]`, { id }]));
+  const slots = Object.fromEntries(['cp', 'linked', 'intake'].map(id => [`[data-horizon-mount="${id}"]`, { id }]));
   const root = {
     querySelector: selector => slots[selector] || null,
     querySelectorAll: () => Object.values(slots),
@@ -32,7 +32,7 @@ function harness(language = 'tr', canManage = true) {
   };
   const context = vm.createContext({ window, appLang: language, CSS: { escape: value => value } });
   const instrumented = source.replace(/\}\)\(\);\s*$/, `
-    window.testPanel = { horizonPanel, openFilterEditor, refreshHorizon,
+    window.testPanel = { horizonPanel, openFilterEditor, refreshHorizon, drawerGroup, horizonFeeds,
       setup: (payload, host) => { model = payload; root = host; } };
   })();`);
   vm.runInContext(instrumented, context);
@@ -52,9 +52,13 @@ test('one panel renders CP, shared modules and independent INTAKE with one sourc
   assert.doesNotMatch(source, /data-dm-panel="modules"|data-view="|function matrixTable\(/);
 });
 
-test('INTAKE filter opens its own slot even though it is sixth in the read model', () => {
-  const { api, calls } = harness();
-  api.openFilterEditor('intake', 'intake');
+test('INTAKE filter opens its own drawer tab even though it is sixth in the read model', () => {
+  const { api, calls, root } = harness();
+  // v2026-11-04 — Çekmece sekmesi INTAKE ufkunu ve onun tek kaynağını seçer.
+  assert.equal(api.drawerGroup('intake').id, 'intake');
+  assert.deepEqual(JSON.parse(JSON.stringify(api.horizonFeeds(api.drawerGroup('intake')).map(entry => entry.feed.sourceId))), ['intake']);
+  assert.equal(api.drawerGroup('orders').id, 'linked');
+  api.openFilterEditor('intake', 'intake', root.querySelector('[data-horizon-mount="intake"]'));
   assert.equal(calls.length, 1);
   assert.equal(calls[0].slot.id, 'intake');
   assert.equal(calls[0].context.moduleId, 'intake');

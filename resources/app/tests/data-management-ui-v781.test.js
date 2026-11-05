@@ -193,7 +193,8 @@ const SERVER = require('./helpers/server-source')();
 test('v7.81 filtre çipi artık eski 1.619 satırlık modalı açmıyor', () => {
   const branch = UI.match(/const filter = event\.target\.closest\('\[data-open-filter\]'\);[\s\S]*?\n    \}/);
   assert.ok(branch, 'filtre dalı bulunamadı');
-  assert.match(branch[0], /openFilterEditor\(moduleId, sourceId(?:, horizonSlot)?\)/);
+  // v2026-11-04 — çip ortak düzenleyiciyi Horizon çekmecesinde açar.
+  assert.match(branch[0], /openHorizonDrawer\(filter\.dataset\.horizonGroup \|\| moduleId, moduleId, sourceId\)/);
   assert.doesNotMatch(branch[0], /openDataSourceAndFilters/);
 });
 
@@ -286,9 +287,11 @@ test('v7.81 düzenleyici yazarken kaynak sürümü taşır', () => {
 });
 
 test('v7.81 düzenleyici modal-içinde-modal kurmaz', () => {
-  // §48: satır içinde açılır, ayrı bir overlay değil.
+  // §48: düzenleyici kendi overlay'ini kurmaz. v2026-11-04 (kullanıcı kararı):
+  // Veri Yönetimi sayfasındaki tek Horizon çekmecesine monte edilir.
   assert.doesNotMatch(FILTER_UI, /warnOverlay|modalCard/);
-  assert.match(UI, /data-horizon-slot=/);
+  assert.match(UI, /openFilterEditor\(moduleId, sourceId, mountEl\)/);
+  assert.doesNotMatch(UI, /data-horizon-slot=/);
 });
 
 /* ------------------------------------------------------------------ */
