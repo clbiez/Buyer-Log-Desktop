@@ -88,7 +88,10 @@
         fields: T('Ekrandaki bir sipariş alanı güncel değil.', 'An order field on the page is out of date.'),
         checklist: T('Checklist cevapları henüz eşitlenmedi.', 'Checklist answers are not yet synchronised.'),
       };
-      const detail = code === 'TEST_REPORT_CP_INCOMPLETE' && payload.details && reasons[payload.details.reason];
+      const reason = code === 'TEST_REPORT_CP_INCOMPLETE' && payload.details && reasons[payload.details.reason];
+      // Name the stale CP column (data key, not UI text) so a residual drift is diagnosable.
+      const field = reason && payload.details.reason === 'fields' && typeof payload.details.field === 'string' ? payload.details.field.slice(0, 80) : '';
+      const detail = reason ? reason + (field ? ' (' + field + ')' : '') : '';
       throw Object.assign(new Error((detail ? detail + ' ' : '') + (known[code] || (payload && payload.error) || (T('İstek başarısız: ', 'Request failed: ') + response.status))), { code: code });
     }
     return payload;
@@ -644,7 +647,7 @@
     return packet.cp.rows.length === current.rows.length && packet.cp.rows.every(function (row) {
       const client = rows.get(row.key);
       const states = function (record) { return Object.fromEntries((record.checklist || []).map(function (item) { return [item.itemId, { state: item.answer && item.answer.state, source: item.answer && item.answer.source }]; }).sort(function (a, b) { return a[0].localeCompare(b[0]); })); };
-      return client && Object.entries(row.fields || {}).every(function (pair) { return pair[0] === 'Priority' || JSON.stringify(client.fields[pair[0]]) === JSON.stringify(pair[1]); }) && JSON.stringify(states(client)) === JSON.stringify(states(row));
+      return client && Object.entries(row.fields || {}).every(function (pair) { return root.BLTestReportAssessment.pageDerived(pair[0]) || JSON.stringify(client.fields[pair[0]]) === JSON.stringify(pair[1]); }) && JSON.stringify(states(client)) === JSON.stringify(states(row));
     });
   }
   function restoreEntries(reports, assessment, draft) {
@@ -880,10 +883,12 @@
   }
   function localReviewSnapshot() {
     const cp = currentCpSnapshot(false);
-    // Rendering personal rules may update this display field asynchronously.
-    // Match the server freshness check; the full AI packet still retains it.
-    cp.rows.forEach(function (row) { delete row.fields.Priority; });
-    cp.columns = cp.columns.filter(function (key) { return key !== 'Priority'; });
+    // Page-derived display fields (Priority, scalar logistic summary) may be
+    // re-rendered asynchronously. Match the server freshness check; the full
+    // AI packet still retains them.
+    const derived = root.BLTestReportAssessment.pageDerived;
+    cp.rows.forEach(function (row) { Object.keys(row.fields).forEach(function (key) { if (derived(key)) delete row.fields[key]; }); });
+    cp.columns = cp.columns.filter(function (key) { return !derived(key); });
     return JSON.stringify({ cp: cp, steps: catalog(), statuses: customStatusList() });
   }
   async function flushPreferences() {
@@ -1013,6 +1018,12 @@
       if (ui.operationId) refreshHistory().catch(function () {});
     } catch (error) {
       if (!active()) return;
+      // Page CP data can genuinely lag the live server projection (another
+      // writer, background refresh). The documented remedy is a forced CP
+      // reload; perform it once automatically before asking the buyer.
+      if (error.code === 'TEST_REPORT_CP_INCOMPLETE' && !(options && options.refreshCp) && !controller.signal.aborted) {
+        return runAi(Object.assign({}, options || {}, { refreshCp: true }));
+      }
       const message = typeof AI.errorText === 'function' && error.code && String(error.code).startsWith('LCWAI_') ? AI.errorText(error) : error.message || String(error);
       set({ state: 'error', progress: '', message: message, code: error.code || '' });
     }

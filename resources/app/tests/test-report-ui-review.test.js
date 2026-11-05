@@ -34,3 +34,19 @@ test('rendered Priority changes do not invalidate review; business field changes
     assert.equal(events.includes('/api/test-reports/ai-assessment'),field==='Priority');
   }
 });
+test('stale page CP is reloaded once automatically; a persisting drift names the stale column',async()=>{
+  for(const persists of [false,true]) {
+    const {context,events}=fixture(),fetch=context.fetch,loads=[];let rejected=0;
+    context.ensureCpLoaded=async options=>{loads.push(Boolean(options&&options.force));return true;};
+    context.fetch=async(url,options)=>{
+      if(url.endsWith('prepare-review')&&(persists||!rejected)){rejected++;events.push(url);return {ok:false,status:409,json:async()=>({code:'TEST_REPORT_CP_INCOMPLETE',details:{reason:'fields',field:'Ant. Arrival'}})};}
+      return fetch(url,options);
+    };
+    await context.BLTestReportImport.runAi();
+    const ui=context.BLTestReportImport._ui;
+    assert.deepEqual(loads,[false,true],'exactly one forced CP reload, never a loop');
+    assert.equal(rejected,persists?2:1);
+    if(persists){assert.equal(ui.ai.state,'error');assert.equal(ui.ai.code,'TEST_REPORT_CP_INCOMPLETE');assert.match(ui.ai.message,/\(Ant\. Arrival\)/);assert.ok(!events.includes('AI'));}
+    else {assert.equal(ui.ai.state,'done');assert.ok(events.includes('/api/test-reports/ai-assessment'));}
+  }
+});
