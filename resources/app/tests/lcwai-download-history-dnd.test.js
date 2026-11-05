@@ -114,6 +114,29 @@ test('LCW AI accepts external files through the same intake path used by file pi
   assert.match(require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css','lcwai-assistant.css']), /\.lcwaiChatPage\.is-file-drag \.lcwaiComposer/);
 });
 
+test('LCW AI deletes active/inactive history durably and keeps a valid selection', () => {
+  const storage = new Map();
+  const chat = loadChat(storage).chat;
+  chat._state.conversations = ['a', 'b', 'c'].map(id => ({ id, title: id, messages: [{ role: 'user', text: id }] }));
+  chat._state.activeId = 'a';
+  assert.equal(chat.deleteConversation('b'), true);
+  assert.equal(chat._state.activeId, 'a');
+  assert.equal(chat.deleteConversation('a'), true);
+  assert.equal(chat._state.activeId, 'c');
+  const restored = loadChat(storage).chat;
+  assert.equal(restored.restoreConversations(), true);
+  assert.deepEqual(Array.from(restored._state.conversations, item => item.id), ['c']);
+  chat._state.busy = true;
+  assert.equal(chat.deleteConversation('c'), false, 'akış sırasında silme engellenir');
+  chat._state.busy = false;
+  assert.equal(chat.deleteConversation('missing'), false);
+  assert.equal(chat.deleteConversation('c'), true);
+  assert.equal(chat._state.conversations.length, 1, 'son sohbet silinince boş sohbet açılır');
+  assert.equal(chat._state.conversations[0].messages.length, 0);
+  assert.equal(storage.get('bl.lcwai.history.v1'), '[]');
+  assert.equal(loadChat(storage).chat.restoreConversations(), false);
+});
+
 test('LCW AI history storage is user-scoped but deliberately not synced through user-preferences', () => {
   const storage = read('public/user-storage.js');
   assert.match(storage, /'bl\.lcwai\.history\.'/);

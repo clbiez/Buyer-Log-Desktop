@@ -350,7 +350,7 @@ app.post('/api/lcwai/output-templates/:id/copy', express.json({ limit: '4kb' }),
      Renderer dosyaya yalnız kimlik ile ulaşır; yol kabul edilmez. */
 app.get('/api/lcwai/outputs', (req, res) => {
     try {
-      res.set('Cache-Control', 'no-store').json({ ok: true, outputs: outputsOf().list(ownerOf(req), 20) });
+      res.set('Cache-Control', 'no-store').json({ ok: true, outputs: outputsOf().list(ownerOf(req)) });
     } catch (error) { fail(res, error); }
   });
 
