@@ -42,7 +42,8 @@ test('Backlog panels reuse rows of an unchanged server revision instead of re-no
   assert.match(server, /const rowsRevision=crypto\.createHash\('sha1'\)\.update\(BACKLOG_ROWS_PROCESS_NONCE\)\.update\(detailRowsKey\)/);
   assert.match(server, /sourceColumns, sourceCatalog, rowsRevision, merchCalendar:/);
   const overview = read('public/backlog-overview.js');
-  assert.match(overview, /if\(revision&&revision===rowsCache\.lastRevision&&rowsCache\.lastRows\)rows=rowsCache\.lastRows;/);
+  assert.match(overview, /previous=rowsRevisions\.get\(sig\)/);
+  assert.match(overview, /if\(revision&&previous\?\.revision===revision\)rows=previous.rows;/);
   assert.match(overview, /if\(!\(rows===normalizedRows&&baseItems\)\)baseItems=R\(\)\.normalizeRows\(rows\);/);
   const analysis = read('public/backlog-delivery-analysis.js');
   assert.match(analysis, /if \(!\(modelInputs && modelInputs\.rows === allRows && modelInputs\.key === key && state\.model\)\)/);

@@ -171,8 +171,10 @@ test('v4.39 Backlog Excel aktif Backlog kapsamı ve filtrelerini kullanır', () 
   const start = source.indexOf("app.get('/api/backlog-export'");
   const end = source.indexOf("app.post('/api/backlog-detail'", start);
   const route = source.slice(start, end);
-  assert.match(route, /ordersForTarget\(active,'backlog',overrides\)/);
-  assert.match(route, /antrepoForTarget\(active,'backlog'\)/);
+  assert.match(route, /const prepared=backlogQueryForRequest\(req,filterOpts\)/);
+  const helper=source.slice(source.indexOf('function backlogQueryForRequest('),start);
+  assert.match(helper, /userAccess\.filterRowsByScope\(req.currentUser,filterRowsByEffectiveHorizon\(req.currentUser,'backlog',ordersForTarget\(active,'backlog',overrides\)\)\)/);
+  assert.match(helper, /antrepoForTarget\(active,'backlog'\)/);
   assert.match(route, /buildBacklogTemplateRows\(backlogOrders,backlogAntrepo,overrides,filterOpts,sourceColumns,/);
   assert.doesNotMatch(route, /buildBacklogTemplateRows\(active\.asasOrders/);
 });

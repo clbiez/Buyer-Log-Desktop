@@ -2961,7 +2961,7 @@ function backlogNodeAtPath(tree, path) {
 // Bu yardımcı; Retail, Antrepo, Buying Group ve boyut filtrelerini tek bir yerde
 // uygular. Böylece aynı Sipariş Koduna ait fakat filtre dışındaki renk/tarih satırları
 // Excel detayına yanlışlıkla geri eklenmez.
-function filterBacklogOrders(asasOrders, antrepoMap, overrides, opts, dimensions=BACKLOG_DIMENSIONS) {
+function filterBacklogOrders(asasOrders, antrepoMap, overrides, opts, dimensions=BACKLOG_DIMENSIONS, includeWindowed=false, custom=null) {
   opts = opts || {};
   const retailFrom = opts.retailFrom ? parseDateFlexible(opts.retailFrom) : null;
   const retailTo = opts.retailTo ? parseDateFlexible(opts.retailTo) : null;
@@ -2971,7 +2971,23 @@ function filterBacklogOrders(asasOrders, antrepoMap, overrides, opts, dimensions
   // Backlog filtreleri artık ASAS sipariş satırlarını değil, sıfırdan oluşturulan
   // operasyon satırlarını süzer. Her IAS parsiyeli ve varsa üretim bakiyesi ayrı
   // satırdır; ekran, detay ve Excel aynı satır kümesini kullanır.
-  const operationalRows = buildBacklogOperationalRows(asasOrders, antrepoMap, overrides);
+  const criteria = resolveBacklogAnalysisFilters(asasOrders, antrepoMap, opts.analysisFilters, custom);
+  const early = includeWindowed ? [] : criteria.filter(f => f.orderValue);
+  const safeDimensions=new Set(['ageGroup','merch','season','country','buyer','buyerGrup','category','manufacturer','line',...(custom?.customDimensions||[]).filter(column=>column.source==='asas').map(column=>column.id)]);
+  const earlyDimensions=includeWindowed?[]:Object.entries(opts.dimFilters||{}).filter(([id,values])=>safeDimensions.has(id)&&Array.isArray(values)&&values.some(value=>value!=null&&value!=='')).map(([id,values])=>[dimensions[id],new Set(values.filter(value=>value!=null&&value!==''))]);
+  const orderDateWindows=[['mb',opts.inStoreFrom,opts.inStoreTo],['ex',opts.exFactoryFrom,opts.exFactoryTo]].map(([field,from,to])=>[field,from&&parseDateFlexible(from),to&&parseDateFlexible(to)]);
+  const inputOrders = (Array.isArray(asasOrders) ? asasOrders : []).filter(order => {
+    const retail=toDateOnly(order.retail);
+    if(!retail || retailFrom && retail<retailFrom || retailTo && retail>retailTo)return false;
+    for(const [field,start,end] of orderDateWindows){
+      if(!start&&!end)continue;
+      const date=toDateOnly(order[field]);
+      if(!date || start&&date<start || end&&date>end)return false;
+    }
+    if(!includeWindowed && buyerGrupFilterSet && !buyerGrupFilterSet.has(turknorm(order.buyerGrup)))return false;
+    return early.every(f=>matchesBacklogAnalysisValue(f.orderValue(order),f)) && earlyDimensions.every(([getter,values])=>values.has(getter(order)));
+  });
+  const operationalRows = buildBacklogOperationalRows(inputOrders, antrepoMap, overrides);
   operationalRows.forEach(segment => {
     const order = sourceOrderRef(segment) || segment;
     segment._subManufacturer = backlogSubManufacturer(order, overrides);
@@ -3036,48 +3052,92 @@ function filterBacklogOrders(asasOrders, antrepoMap, overrides, opts, dimensions
     ? dimFiltered.filter(o => dateValues.includes(backlogDateBucketKey(o, dateGran)))
     : dimFiltered;
 
-  return { filtered:filterBacklogAnalysisSegments(filtered, asasOrders, antrepoMap, overrides, opts.analysisFilters), windowed, retailFrom, retailTo, inStoreFrom, inStoreTo, exFactoryFrom, exFactoryTo, antrepoFrom, antrepoTo };
+  return { filtered:filterBacklogAnalysisSegments(filtered, asasOrders, antrepoMap, overrides, opts.analysisFilters, criteria), windowed, retailFrom, retailTo, inStoreFrom, inStoreTo, exFactoryFrom, exFactoryTo, antrepoFrom, antrepoTo };
 }
 
 // Analiz çekmecesi, pivot/detay/Excel için aynı operasyon segmentlerini süzer.
 // Alanları istemcinin rowKey/label değerinden değil mevcut katalog kimliğinden çöz.
-function filterBacklogAnalysisSegments(segments, asasOrders, antrepoMap, overrides, rawFilters) {
+function backlogAnalysisValueKey(value) {
+  return value == null || value === '' ? '' : value instanceof Date ? toISODateLocal(value) : typeof value === 'object' ? JSON.stringify(value) : String(value);
+}
+function backlogNoteValue(order,overrides,includeInactive=false){
+  return includeInactive || Number(order && order.kalan)>0 ? (overrideGet(overrides && overrides.notesmap,order)||{}).Notes||'' : '';
+}
+function matchesBacklogAnalysisValue(value, f) {
+  if (f.from || f.to) {
+    const date = parseDateFlexible(value), day = date && toISODateLocal(date);
+    return !!day && (!f.from || day >= f.from) && (!f.to || day <= f.to);
+  }
+  return f.values.has(backlogAnalysisValueKey(value));
+}
+function resolveBacklogAnalysisFilters(asasOrders, antrepoMap, rawFilters, custom=null) {
   let filters = rawFilters;
   if (typeof filters === 'string') { try { filters = JSON.parse(filters); } catch { filters = []; } }
-  if (!Array.isArray(filters)) return segments;
+  if (!Array.isArray(filters)) return [];
   filters = filters.filter(f => f && ((Array.isArray(f.values) && f.values.length) || f.from || f.to));
-  if (!filters.length) return segments;
-  const catalog = new Map(backlogCustomDimensionContext(asasOrders, antrepoMap).customDimensions.map(c => [c.id, c]));
-  const resolved = filters.map(f => {
+  if (!filters.length) return [];
+  const catalog = new Map((custom || backlogCustomDimensionContext(asasOrders, antrepoMap)).customDimensions.map(c => [c.id, c]));
+  return filters.map(f => {
     const header = String(f.id || '').startsWith('cp:') ? String(f.id).slice(3) : '';
     const column = catalog.get(f.id);
-    return { filter:f, column, key:header && !header.startsWith('_') ? header : column && column.label };
+    const key=header && !header.startsWith('_') ? header : column && column.label;
+    const canonicalId=header && BLCanonicalFields.canonicalId('backlogReportFilter',header);
+    const binding=canonicalId && BLCanonicalFields.bindingFor('backlogReportFilter',canonicalId);
+    let orderValue=null;
+    if(column && column.source==='asas')orderValue=order=>order && order._sourceFields && order._sourceFields[column.header];
+    else if(binding && binding.keys.includes(header))orderValue=order=>{
+      const value=BLCanonicalFields.value(order,'backlogOrder',canonicalId);
+      return canonicalId==='country'?countryEN(value):value;
+    };
+    return {key,column,orderValue,from:f.from||'',to:f.to||'',values:new Set((Array.isArray(f.values)?f.values:[]).map(String))};
   });
-  if (resolved.some(f => !f.key)) return [];
-  const valueKey = value => value == null || value === '' ? '' : value instanceof Date ? toISODateLocal(value) : typeof value === 'object' ? JSON.stringify(value) : String(value);
-  const criteria = resolved.map(({filter, column, key}) => ({key, column, from:filter.from || '', to:filter.to || '', values:new Set((Array.isArray(filter.values) ? filter.values : []).map(String))}));
-  const matches = (value, f) => {
-    if (f.from || f.to) {
-      const date = parseDateFlexible(value), day = date && toISODateLocal(date);
-      return !!day && (!f.from || day >= f.from) && (!f.to || day <= f.to);
-    }
-    return f.values.has(valueKey(value));
-  };
+}
+function filterBacklogAnalysisSegments(segments, asasOrders, antrepoMap, overrides, rawFilters, resolved=null) {
+  const criteria=resolved || resolveBacklogAnalysisFilters(asasOrders,antrepoMap,rawFilters);
+  if(!criteria.length)return segments;
+  if(criteria.some(f=>!f.key))return [];
   // Ham kaynak filtreleri pahalı CP/risk/Excel projeksiyonundan önce uygulanır.
-  const raw = criteria.filter(f => f.column), cpFilters = criteria.filter(f => !f.column);
+  const raw = criteria.filter(f => f.column || f.orderValue || f.key==='buying note'), cpFilters = criteria.filter(f => !raw.includes(f));
   const selected = raw.length ? segments.filter(segment => raw.every(f => {
+    const order=sourceOrderRef(segment) || segment;
+    if(f.orderValue)return matchesBacklogAnalysisValue(f.orderValue(order),f);
+    if(f.key==='buying note')return matchesBacklogAnalysisValue(backlogNoteValue(order,overrides),f);
     const source = f.column.source === 'asas' ? sourceOrderRef(segment) || segment : segment._iasRow;
-    return matches(source && source._sourceFields && source._sourceFields[f.column.header], f);
+    return matchesBacklogAnalysisValue(source && source._sourceFields && source._sourceFields[f.column.header], f);
   })) : segments;
   if (!cpFilters.length || !selected.length) return selected;
-  const cpMap = new Map();
-  if (cpFilters.some(f => f.key === 'buying note')) {
-    const orders = [...new Set(selected.map(segment => sourceOrderRef(segment) || segment))];
-    buildCPRowsFromASAS(orders, antrepoMap, overrides).forEach(row => cpMap.set(sourceOrderRef(row), row));
-  }
-  const rows = backlogTemplateRowsFromSegments(selected, overrides, cpMap, []);
+  const rows = backlogTemplateRowsFromSegments(selected, overrides, null, []);
   if (cpFilters.some(f => !Object.prototype.hasOwnProperty.call(rows[0], f.key))) return [];
-  return selected.filter((segment, index) => cpFilters.every(f => matches(rows[index][f.key], f)));
+  return selected.filter((segment, index) => cpFilters.every(f => matchesBacklogAnalysisValue(rows[index][f.key], f)));
+}
+
+function prepareBacklogQuery(asasOrders,antrepoMap,overrides,opts={},custom=null,includeWindowed=false){
+  custom=custom || backlogCustomDimensionContext(asasOrders,antrepoMap);
+  return {...filterBacklogOrders(asasOrders,antrepoMap,overrides,opts,custom.dimensions,includeWindowed,custom),custom};
+}
+function buildBacklogFilterValues(asasOrders,antrepoMap,overrides,opts,id,prepared=null){
+  const query=prepared || prepareBacklogQuery(asasOrders,antrepoMap,overrides,{...opts,analysisFilters:undefined});
+  const f=resolveBacklogAnalysisFilters(asasOrders,antrepoMap,[{id,values:['']}],query.custom)[0];
+  if(!f || !f.key)throw new Error('Unknown Backlog filter field');
+  let values;
+  if(f.orderValue)values=query.filtered.map(segment=>f.orderValue(sourceOrderRef(segment)||segment));
+  else if(f.column)values=query.filtered.map(segment=>segment._iasRow && segment._iasRow._sourceFields && segment._iasRow._sourceFields[f.column.header]);
+  else if(f.key==='buying note')values=query.filtered.map(segment=>backlogNoteValue(sourceOrderRef(segment)||segment,overrides));
+  else {
+    const rows=backlogTemplateRowsFromSegments(query.filtered,overrides,null,[]);
+    if(rows.length&&!Object.hasOwn(rows[0],f.key))throw new Error('Unknown Backlog filter field');
+    values=rows.map(row=>row[f.key]);
+  }
+  const dayIso=require('../../public/backlog-v3-report').dayIso;
+  const counts=new Map(),sample=[],days=[];
+  for(const value of values){
+    const key=backlogAnalysisValueKey(value);counts.set(key,(counts.get(key)||0)+1);
+    if(value!=null && value!=='' && sample.length<160)sample.push(value);
+    const day=dayIso(value);if(day)days.push(day);
+  }
+  const kind=sample.length ? (sample.filter(value=>dayIso(value)).length/sample.length>=.8?'date':'values') : /tarih|date|factory|arrival|depo|store|opd|handover/i.test(f.key)?'date':'values';
+  days.sort();
+  return {id,kind,totalRows:values.length,min:days[0]||'',max:days[days.length-1]||'',values:[...counts].map(([value,count])=>({value,count})).sort((a,b)=>BLBusinessRules.compareChronologicalValues(a.value,b.value))};
 }
 
 // Her boyut için sipariş kümesinde GERÇEKTEN bulunan değerler.
@@ -3103,9 +3163,9 @@ function backlogDateValues(orders) {
   return out;
 }
 
-function backlogDimValues(orders, dimensions=BACKLOG_DIMENSIONS) {
+function backlogDimValues(orders, dimensions=BACKLOG_DIMENSIONS, requested=null) {
   const out = {};
-  for (const dim of Object.keys(dimensions)) {
+  for (const dim of (requested || Object.keys(dimensions)).filter(dim=>dimensions[dim])) {
     const seen = new Set();
     const accessor = dimensions[dim];
     for (const order of orders) {
@@ -3114,16 +3174,18 @@ function backlogDimValues(orders, dimensions=BACKLOG_DIMENSIONS) {
     }
     out[dim] = [...seen].sort(BLBusinessRules.compareChronologicalValues);
   }
-  out.antrepoDate = backlogDateValues(orders);
+  if(!requested || requested.includes('antrepoDate'))out.antrepoDate = backlogDateValues(orders);
   return out;
 }
 
 // groupBy: örn. ['status','antrepoDate'] — sıralama, gruplama hiyerarşisinin sırasını belirler.
-function buildBacklogGrouped(asasOrders, antrepoMap, overrides, opts) {
+function buildBacklogGrouped(asasOrders, antrepoMap, overrides, opts, prepared=null) {
   opts = opts || {};
-  const custom = backlogCustomDimensionContext(asasOrders, antrepoMap);
+  const requested=opts.lazyDimensions ? (Array.isArray(opts.valueDimensions)?opts.valueDimensions:[]) : null;
+  const query=prepared || prepareBacklogQuery(asasOrders,antrepoMap,overrides,opts,null,!opts.lazyDimensions || requested.length>0);
+  const custom = query.custom;
   const dims = (opts.groupBy || []).filter(d => custom.dimensions[d] || d === 'antrepoDate');
-  const { filtered, windowed, retailFrom, retailTo, inStoreFrom, inStoreTo, exFactoryFrom, exFactoryTo, antrepoFrom, antrepoTo } = filterBacklogOrders(asasOrders, antrepoMap, overrides, opts, custom.dimensions);
+  const { filtered, windowed, retailFrom, retailTo, inStoreFrom, inStoreTo, exFactoryFrom, exFactoryTo, antrepoFrom, antrepoTo } = query;
 
   const antrepoDateLevels = (opts.antrepoDateLevels && opts.antrepoDateLevels.length) ? opts.antrepoDateLevels : ['year','month','week','day'];
   const tree = dims.length ? buildBacklogTree(filtered, dims, 0, antrepoDateLevels, custom.dimensions) : null;
@@ -3145,8 +3207,9 @@ function buildBacklogGrouped(asasOrders, antrepoMap, overrides, opts) {
     totalOrders: countDistinctOrders(filtered),
     // Filtre panelleri için: tüm seçenekler (tarih penceresi içinde) ve şu anki
     // filtrelerden sonra hâlâ veri getiren değerler.
-    dimValues: backlogDimValues(windowed, custom.dimensions),
-    dimValuesActive: backlogDimValues(filtered, custom.dimensions),
+    dimValues: backlogDimValues(windowed, custom.dimensions,requested),
+    dimValuesActive: backlogDimValues(filtered, custom.dimensions,requested),
+    dimensionsDeferred:!!opts.lazyDimensions,
     totalRows: filtered.length,
     tree,
   };
@@ -3228,21 +3291,9 @@ function buildBacklogDetailRows(asasOrders, antrepoMap, overrides, selector, opt
     source = node ? node._list : filtered;
   }
 
-  // Rapor penceresi ile Backlog Excel'i AYNI eşlemeyi kullanır (bkz.
-  // backlogTemplateRowsFromSegments). CP notu yalnız bu detayda görünen
-  // siparişler için çözülür; tüm sipariş kümesi için CP kurmak gereksiz olurdu.
-  const orderRefs = [];
-  const seenOrders = new Set();
-  source.forEach(segment => {
-    const order = sourceOrderRef(segment) || segment;
-    if (order && !seenOrders.has(order)) { seenOrders.add(order); orderRefs.push(order); }
-  });
-  const cpMap = new Map();
-  buildCPRowsFromASAS(orderRefs, antrepoMap, overrides).forEach(row => {
-    const ref = sourceOrderRef(row);
-    if (ref) cpMap.set(ref, row);
-  });
-  return backlogTemplateRowsFromSegments(source, overrides, cpMap).map(row => {
+  // Rapor ve Excel aynı segment eşlemesini ve CP'nin satır anahtarlı not
+  // kaydını kullanır; not okumak için CP lojistik/fiyat projeksiyonu kurulmaz.
+  return backlogTemplateRowsFromSegments(source, overrides, null).map(row => {
     // _backlogExcel yalnız Excel yazıcısının işine yarar; iç meta istenmediyse
     // yanıtı şişirmesin. Rapor penceresi (includeInternalMeta) aynı satırları
     // standart Backlog Excel'ine aktarır: meta olmadan _BL_ACTUAL_ANTREPO /
@@ -3320,7 +3371,6 @@ function backlogTransitOverdueInfo({ isPartial, isInWarehouse, isRetailWaiting, 
 }
 
 function buildBacklogTemplateRows(asasOrders, antrepoMap, overrides, filterOrOcodes, extraColumns, options = {}) {
-  const customDimensions = backlogCustomDimensionContext(asasOrders, antrepoMap).dimensions;
   const sourceSegments = Array.isArray(filterOrOcodes)
     ? (() => {
         const wanted = new Set((filterOrOcodes || []).map(v => orderCodeKey(v)).filter(Boolean));
@@ -3330,18 +3380,15 @@ function buildBacklogTemplateRows(asasOrders, antrepoMap, overrides, filterOrOco
           overrides
         );
       })()
-    : filterBacklogOrders(asasOrders, antrepoMap, overrides, filterOrOcodes || {}, customDimensions).filtered;
+    : (options.queryContext || prepareBacklogQuery(asasOrders,antrepoMap,overrides,filterOrOcodes || {})).filtered;
 
   const requestedLimit = Number(options && options.limit);
   const selectedSegments = Number.isFinite(requestedLimit) && requestedLimit > 0
     ? sourceSegments.slice(0, Math.floor(requestedLimit))
     : sourceSegments;
 
-  // Kullanıcı notları CP'den okunmaya devam eder; ASAS–IAS statü, miktar, tarih ve
-  // vasıta kararlarının hiçbiri CP/Sipariş Özeti satırından alınmaz.
-  // Önceden burada filtre dışındaki bütün ASAS siparişleri tekrar CP satırına
-  // çevriliyordu. Yalnız rapora girecek siparişleri dönüştürmek büyük Backlog
-  // Excel'lerinde hazırlık süresini belirgin biçimde azaltır.
+  // Notlar CP ile aynı satır anahtarından doğrudan okunur. Salt-okunur CP/Orders
+  // alanları yalnız harita detayları açıkça istendiğinde hazırlanır.
   const cpOrders = [], seenOrders = new Set();
   selectedSegments.forEach(segment => {
     const order = sourceOrderRef(segment) || segment;
@@ -3350,7 +3397,7 @@ function buildBacklogTemplateRows(asasOrders, antrepoMap, overrides, filterOrOco
   const cpMap = new Map();
   const sourceRows=options.includeSourceDetails===true
     ? buildOrdersRowsFromASAS(cpOrders, antrepoMap, overrides)
-    : buildCPRowsFromASAS(cpOrders, antrepoMap, overrides);
+    : [];
   sourceRows.forEach(row => {
     const source = sourceOrderRef(row);
     if (source) cpMap.set(source, row);
@@ -3530,7 +3577,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
       'ANTREPO-RETAIL': antRetail,
       // Önem etiketi: giriş yoksa Regular, varsa seçilen etiket (Excel'de liste).
       [BLOrderImportance.BACKLOG_HEADER]: importance.label,
-      'buying note': cpRow.Notes || '',
+      'buying note': cpRow.Notes || backlogNoteValue(order,overrides,options.includeSourceDetails===true),
       // Alt detay tablolarının görseli ve PLM köprüsünü, açık CP filtresine
       // bağımlı kalmadan doğrudan kaynak siparişten çözebilmesi için görünmeyen
       // kimlikler. BACKLOG_TEMPLATE_HEADERS'a eklenmezler; yalnız istemci
@@ -3607,6 +3654,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
 }
 
 module.exports = {
+  prepareBacklogQuery, buildBacklogFilterValues,
   calculateSuppFobByRule, findSuppFobRule, pricingLicensorForLicense, automaticRuleMeta,
   countryEN,
   parseASASWorkbook, parseASASRows, parseFabricWorkbook, applyFabricEntries, applyFabricEntriesToLflRows, parseAntrepoWorkbook, parseAntrepoRows, parseCPUpdateWorkbook,
