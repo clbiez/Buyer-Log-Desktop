@@ -12,7 +12,8 @@ function harness({reduced=false,hidden=false,off=false}={}){
     animate(frames,options){calls.push({tag,frames,options});return {cancel(){},addEventListener(){}};}
   });
   const cells=[node('TD',10,20),node('TD',90,20),node('TD',10,50),node('TD',90,50)];
-  const rows=[{cells:cells.slice(0,2)},{cells:cells.slice(2,4)}];
+  const rows=[node('TR',10,20),node('TR',10,50)];
+  rows.forEach((row,i)=>row.cells=cells.slice(i*2,i*2+2));
   const table=node('TABLE');table.tBodies=[{rows}];
   const card=node('DIV');
   const view=node('SECTION');
@@ -37,14 +38,14 @@ function harness({reduced=false,hidden=false,off=false}={}){
   return {root,doc,view,cells,calls,flush};
 }
 
-// waveTable used to start each cell animation and immediately measure the next
-// cell; every animate() dirtied style, turning each read into a forced layout.
-test('table wave measures every candidate cell before starting any animation',()=>{
+// Keep the former cell-wave regression at row level: all geometry reads must
+// complete before any animation writes can invalidate layout.
+test('table entry measures every candidate row before starting any animation',()=>{
   const h=harness();h.flush();
-  const cellEvents=h.calls.filter(call=>call.read==='TD'||(call.tag==='TD'&&call.frames));
-  const firstStart=cellEvents.findIndex(call=>call.frames);
-  assert.ok(firstStart>0,'cells are animated');
-  assert.equal(cellEvents.slice(firstStart).filter(call=>call.read).length,0,'no cell read after the first start');
-  const delays=h.calls.filter(call=>call.tag==='TD'&&call.frames).map(call=>call.options.delay);
-  assert.deepEqual(delays,[0,12,23,35],'stagger by row and column is unchanged');
+  const rowEvents=h.calls.filter(call=>call.read==='TR'||(call.tag==='TR'&&call.frames));
+  const firstStart=rowEvents.findIndex(call=>call.frames);
+  assert.ok(firstStart>0,'rows are animated');
+  assert.equal(rowEvents.slice(firstStart).filter(call=>call.read).length,0,'no row read after the first start');
+  const delays=h.calls.filter(call=>call.tag==='TR'&&call.frames).map(call=>call.options.delay);
+  assert.deepEqual(delays,[390*.18,390*(.18+.06)],'rows use the selected stagger recipe');
 });
