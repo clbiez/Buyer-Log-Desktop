@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.333",
-  "commit_sha": "429c3c7b9952977b51cb6b8f1777983b49cf6e87",
-  "release_notes": "TR: Buyer Log STABLE 7.0.333 — PR #825'in filtre dışı CP/Sipariş seçimi, Kopyala/Excel ve kompakt seçim çubuğu geliştirmelerini PR #826 regresyon düzeltmeleriyle içerir. İmzalı TEST 7.0.333 paketi tam Windows regresyonundan ve doğrulamadan geçtikten sonra aynı baytlar yeniden derlenmeden STABLE'a taşınır.\nEN: Buyer Log STABLE 7.0.333 — Includes #825 filtered-out CP/Orders selections, Copy/Excel and compact selection bar with #826 regression fixes. Only after full Windows regression and validation of the signed TEST 7.0.333 artifact can identical bytes be promoted to STABLE without rebuilding.",
-  "request_id": "7.0.333-pr826-stable-after-verified-test-20261103"
+  "version": "7.0.337",
+  "commit_sha": "d6c22e4175f412dc3fde096c366b837c2b4c8125",
+  "release_notes": "TR: Buyer Log STABLE 7.0.337 — CP, Siparişler ve Koleksiyon sütun dondurma düzeltmeleri; daraltılmış modellerde kumaş özeti; parsiyel sevkiyatlarda LCW AI belge kontrolü; PLM Sync tüm renkler ve kaldığı yerden yeniden deneme. Tam Windows regresyonundan geçen imzalı TEST paketi aynı baytlarla terfi ettirilir.\nEN: Buyer Log STABLE 7.0.337 — Freeze Columns fixes in CP, Orders and Collection; fabric summaries for collapsed models; LCW AI document review for partial shipments; all model colours and resumable PLM Sync retries. Promotes the signed TEST artifact that passed full Windows regression without rebuilding.",
+  "request_id": "7.0.337-verified-test-42026769265-stable-20261105"
 }
