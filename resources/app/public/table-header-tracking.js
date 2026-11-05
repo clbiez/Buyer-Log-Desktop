@@ -15,7 +15,11 @@
     if(!thead||!wrap.clientWidth)return;
     const viewport=wrap.getBoundingClientRect();
     const frozenEdge=thead.querySelector('tr.colRow th.frzLEdge');
-    const freezeRight=frozenEdge?frozenEdge.getBoundingClientRect().right:viewport.left;
+    // İki bölmeli dondurmada donmuş bölme kendi içinde kayar; sınırı bölme genişliğidir.
+    const pane=Number(table.getAttribute('data-bl-freeze-pane'))||0;
+    const paneRight=pane?viewport.left+wrap.clientLeft+pane:Infinity;
+    const freezeRight=frozenEdge?Math.min(frozenEdge.getBoundingClientRect().right,paneRight):viewport.left;
+    const frozenView={left:viewport.left,right:Math.min(viewport.right,paneRight)};
     thead.querySelectorAll('tr.groupRow th[data-grp]').forEach(th=>{
       let label=th.querySelector(':scope > .blGroupFollowLabel');
       if(!label){
@@ -26,7 +30,8 @@
         th.insertBefore(label,nodes[0]);
         nodes.forEach(node=>label.appendChild(node));
       }
-      const result=computeTrack(th.getBoundingClientRect(),viewport,freezeRight,th.classList.contains('frzL'));
+      const frozen=th.classList.contains('frzL');
+      const result=computeTrack(th.getBoundingClientRect(),frozen?frozenView:viewport,freezeRight,frozen);
       label.style.visibility=result.visible?'visible':'hidden';
       if(result.visible){
         label.style.maxWidth=result.maxWidth+'px';
@@ -48,6 +53,7 @@
       if(!wrap||!thead||wraps.has(wrap))return;
       wraps.add(wrap);
       wrap.addEventListener('scroll',()=>schedule(wrap),{passive:true});
+      wrap.addEventListener('blfreezepanescroll',()=>schedule(wrap));
       // Both header renderers replace rows; observe just those children.
       new MutationObserver(()=>schedule(wrap)).observe(thead,{childList:true});
       if(typeof ResizeObserver==='function'){

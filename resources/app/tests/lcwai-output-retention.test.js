@@ -1,0 +1,35 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { createOutputStore } = require('../server/lib/lcwai-output/output-store');
+
+test('60-day output archive survives 500 newer outputs, restart and owner isolation', t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-output-retention-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const root = path.join(dir, 'outputs');
+  let at = new Date('2026-11-01T12:00:00Z');
+  const options = { root, now: () => at };
+  const store = createOutputStore(options);
+  const first = store.save('u1', { buffer: Buffer.from('report'), title: 'Original', format: 'html', draftId: 'a'.repeat(24) });
+  const seed = JSON.parse(fs.readFileSync(store.indexFile(), 'utf8'));
+  for (let i = 0; i < 500; i++) seed.push({ ...seed[0], id: String(i).padStart(24, '0'), owner: 'u2' });
+  fs.writeFileSync(store.indexFile(), JSON.stringify(seed));
+  at = new Date('2026-11-03T12:00:00Z');
+  store.save('u1', { buffer: Buffer.from('new'), title: 'New', format: 'html' });
+  const restarted = createOutputStore(options);
+  assert.ok(restarted.get('u1', first.id), 'iki günlük dosya 500 yeni çıktıdan sonra da açılır');
+  assert.equal(restarted.get('u2', first.id), null);
+  assert.equal(restarted.list('u2').length, 500, 'arşiv son 20 dosyayla sınırlanmaz');
+  assert.equal(restarted.list('u1')[1].draftId, first.draftId);
+  at = new Date('2026-12-31T12:00:00Z');
+  assert.equal(restarted.get('u1', first.id), null, 'süre dolması yeni dosya oluşturmayı beklemez');
+  assert.equal(restarted.list('u2').length, 0);
+  restarted.save('u1', { buffer: Buffer.from('latest'), title: 'Latest', format: 'html' });
+  assert.equal(restarted.get('u1', first.id), null);
+  assert.equal(restarted.list('u2').length, 0);
+  assert.equal(restarted.list('u1').length, 2);
+  assert.equal(fs.readFileSync(first.path, 'utf8'), 'report', 'İndirilenler dosyası otomatik silinmez');
+});

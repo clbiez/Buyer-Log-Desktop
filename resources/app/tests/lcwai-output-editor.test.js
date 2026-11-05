@@ -146,14 +146,22 @@ test('taslak: rapor düzenlemesi yeniden temizlenir; görseller taslakta saklan�
   assert.throws(() => pdf.renderDraft('u1', first.output.draftId, { data: { body: '<script>x</script>' } }), error => error.code === 'LCWAI_OUTPUT_EDIT_INVALID');
 });
 
-test('taslak deposu: kullanıcı başına üst sınır, bozuk kimlik reddi', () => {
-  const store = createDraftStore({ root: tempDir() });
+test('taslak deposu: 60 gün dolmadan yoğun kullanım taslakları silmez; restart ve sahip sınırı korunur', () => {
+  const root = tempDir();
+  let at = new Date('2026-11-01T12:00:00Z');
+  const store = createDraftStore({ root, now: () => at });
   const ids = Array.from({ length: 45 }, (_, i) => store.create('u1', { format: 'xlsx', data: { i } }));
-  const kept = ids.filter(id => store.get('u1', id));
-  assert.ok(kept.length <= require(path.join(OUT, 'output-drafts')).MAX_PER_OWNER);
-  assert.ok(store.get('u1', ids[44]), 'en yeni taslak korunur');
+  at = new Date('2026-11-03T12:00:00Z');
+  const restarted = createDraftStore({ root, now: () => at });
+  assert.equal(ids.filter(id => restarted.get('u1', id)).length, 45, 'iki günlük tüm dosyalar düzenlenebilir');
+  restarted.update('u1', ids[0], { data: { i: 'edited' } });
+  at = new Date('2026-12-31T12:00:00Z');
+  restarted.create('u1', { format: 'xlsx', data: {} });
+  assert.equal(restarted.get('u1', ids[1]), null, '60 günü dolan taslak temizlenir');
+  assert.deepEqual(restarted.get('u1', ids[0]).data, { i: 'edited' }, 'düzenleme 60 günlük süreyi yeniler');
+  assert.equal(fs.readdirSync(root).flatMap(dir => fs.readdirSync(path.join(root, dir))).includes(`${ids[1]}.json`), false);
   assert.equal(store.get('u1', 'x'), null);
-  assert.equal(store.get('u2', ids[44]), null);
+  assert.equal(restarted.get('u2', ids[0]), null);
 });
 
 /* ---------------- Şablonlar: yalnız yapı, veri yok ---------------- */

@@ -3,14 +3,43 @@
   "publishedAt": "2026-11-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Çalışma alanı ve modül geçişi iyileştirmeleri",
-    "en": "Workspace and module transition improvements"
+    "tr": "İki bölmeli sütun dondurma · Çalışma alanı ve modül geçişi iyileştirmeleri ve LCW AI geçmişi",
+    "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history"
   },
   "summary": {
-    "tr": "Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. Excel içe aktarmaya LCW AI eşleme, veri kontrolü ve önizlemeli biçim düzeltme desteği eklendi.",
-    "en": "License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. Excel import now supports LCW AI mapping, data review and previewed format corrections."
+    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Excel içe aktarmaya LCW AI eşleme, veri kontrolü ve önizlemeli biçim düzeltme desteği eklendi.",
+    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Excel import now supports LCW AI mapping, data review and previewed format corrections."
   },
   "changes": [
+    {
+      "id": "table-freeze-two-panes",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Donmuş sol bölme kendi içinde kaydırılır",
+        "en": "The frozen left pane scrolls on its own"
+      },
+      "body": {
+        "tr": "Sütunları Dondur artık iki bağımsız bölme sunar: donmuş sol bölme ve sağdaki tablo ayrı ayrı sağa sola kaydırılır. Sol bölmenin altındaki kendi kaydırma çubuğu, bölme üzerinde yatay tekerlek/trackpad veya Shift+tekerlek yalnız donmuş sütunları kaydırır; sağ taraf yerinde kalır. Bölme sınırı sürüklenerek genişletilir veya daraltılır, genişlik tablo görünümüyle hatırlanır; sınıra çift tıklamak tüm donmuş sütunları gösterir. Donmuş sütunlar ekrana sığmazsa dondurma artık iptal edilmez; bölme daralır ve kendi içinde kaydırılır. Klavyeyle donmuş bölmede gizli kalan bir hücreye gelindiğinde bölme onu gösterir.",
+        "en": "Freeze Columns now offers two independent panes: the frozen left pane and the table on the right scroll left and right separately. The frozen pane's own scrollbar, horizontal wheel/trackpad over the pane or Shift+wheel scroll only the frozen columns while the right side stays put. Drag the pane boundary to make it wider or narrower; the width is remembered with the table view, and double-clicking the boundary shows all frozen columns. If the frozen columns do not fit on screen, freezing is no longer cancelled; the pane narrows and scrolls on its own. When the keyboard moves to a cell hidden in the frozen pane, the pane reveals it."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-freeze-pane-scroll.png",
+        "alt": {
+          "tr": "On donmuş sütunlu CP Tracker: sol bölme kendi çubuğuyla kaydırılmış, sağ bölme ayrı kaydırılmış, aradaki sınır belirgin",
+          "en": "CP Tracker with ten frozen columns: the left pane scrolled with its own bar, the right pane scrolled separately, with a clear boundary"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: donmuş sol bölme ve sağ tablo bağımsız olarak kaydırıldı.",
+          "en": "Actual Buyer Log with isolated demo data: the frozen left pane and the right table are scrolled independently."
+        }
+      }
+    },
     {
       "id": "license-cards-personal-favorites",
       "type": "feature",
@@ -211,6 +240,64 @@
         "caption": {
           "tr": "Gerçek Buyer Log, izole demo oturumu. Tek açılış ve hızlı yeniden açma davranışı tarayıcıda animasyon sayısıyla doğrulandı.",
           "en": "Actual Buyer Log in an isolated demo session. Single entrance and fast reopening were verified by counting browser animations."
+        }
+      }
+    },
+    {
+      "id": "lcwai-chat-history-delete",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Sohbet geçmişinden konuşma silme",
+        "en": "Delete conversations from chat history"
+      },
+      "body": {
+        "tr": "Sohbet satırındaki silme düğmesi onaydan sonra konuşmayı bu cihazdaki kullanıcı geçmişinden kaldırır. Silinen sohbet yeniden açılışta geri gelmez. Son sohbet silindiğinde yeni boş sohbet açılır; oluşturulan dosyalar Dosyalarım ekranında kalır. Yanıt oluşturulurken silme kapalıdır.",
+        "en": "After confirmation, the delete button on each chat row removes that conversation from the user’s history on this device. Deleted chats do not return after reopening. Deleting the last chat opens a new empty chat; created files remain in My files. Deletion is disabled while a response is being created."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-files-60-days.png",
+        "alt": {
+          "tr": "Demo sohbet silindikten sonra kalan sohbetin silme düğmesi ve Dosyalarım ekranındaki dosyalar",
+          "en": "Delete button on the remaining chat and files in My files after deleting a demo conversation"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: raporun sohbeti silinmiş, dosyaları bağımsız arşivde kalmıştır.",
+          "en": "Actual Buyer Log with isolated demo data: the report conversation was deleted and its files remain in the independent archive."
+        }
+      }
+    },
+    {
+      "id": "lcwai-files-retain-60-days",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Dosyalar ve düzenlenebilir taslaklar 60 gün erişilebilir",
+        "en": "Files and editable drafts stay accessible for 60 days"
+      },
+      "body": {
+        "tr": "Dosyalarım ekranı son 60 günde oluşturulan kişisel çıktıları sohbet geçmişinden bağımsız listeler. 40 taslak ve 500 kayıt sınırları yakın tarihli dosyaları artık düşürmez. Dosyalar aynı cihazda açılabilir ve LCW AI bağlantısı olmadan düzenlenip yeniden oluşturulabilir. Düzenleme taslağın 60 günlük süresini yeniler. İndirilenler klasöründeki dosyalar otomatik silinmez. Önceden silinmiş taslaklar geri getirilemez.",
+        "en": "My files lists personal outputs created in the last 60 days independently of chat history. The 40-draft and 500-record caps no longer discard recent files. Files can be opened on the same device and edited and recreated without an LCW AI connection. Editing renews the draft’s 60-day period. Files in Downloads are not automatically deleted. Previously deleted drafts cannot be recovered."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-retained-file-edit.png",
+        "alt": {
+          "tr": "İki günlük raporun sohbeti silindikten sonra gerçek çıktı düzenleyicide yeniden oluşturulması",
+          "en": "Recreating a two-day-old report in the actual output editor after deleting its chat"
+        },
+        "caption": {
+          "tr": "Gerçek çıktı düzenleyici: 45 dosya arasındaki en eski demo raporu açıldı ve bağlantı olmadan güncellenmiş dosya oluşturuldu.",
+          "en": "Actual output editor: the oldest of 45 demo reports was opened and an updated file was created offline."
         }
       }
     },

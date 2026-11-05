@@ -22,7 +22,7 @@ function engine() {
 }
 
 test('her donmuş sütun cumulative ofsetle başlık, gövde ve alt bilgide sabitlenir', () => {
-  const css = engine()._buildCss({ id: 'cpTable' }, [0, 46, 166.5]);
+  const css = engine()._buildCss({ id: 'cpTable' }, [0, 46, 166.5], [46, 120.5, 80], false);
   for (const [index, left] of [[1, '0px'], [2, '46px'], [3, '166.5px']]) {
     assert.ok(css.includes(`#cpTable[data-bl-freeze]>thead>tr.colRow>th:nth-child(${index}){position:sticky!important;left:${left}!important;z-index:var(--ui-z-sticky-column)!important}`));
     assert.ok(css.includes(`#cpTable[data-bl-freeze]>tbody>tr:not(:has(>[colspan]:not([colspan="1"])))>:nth-child(${index}){position:sticky!important;left:${left}!important;z-index:var(--ui-z-frozen-cell)!important}`));
@@ -32,7 +32,7 @@ test('her donmuş sütun cumulative ofsetle başlık, gövde ve alt bilgide sabi
 });
 
 test('katman sırası: kayan gövde < donmuş gövde < kayan başlık < donmuş başlık', () => {
-  const css = engine()._buildCss({ id: 'kolTable' }, [0, 72]);
+  const css = engine()._buildCss({ id: 'kolTable' }, [0, 72], [72, 90], false);
   assert.ok(css.includes('#kolTable[data-bl-freeze]>thead>tr>th{z-index:var(--ui-z-sticky)!important}'),
     'kimlik seçicili `#kolTable thead tr.colRow th{z-index:1}` donmuş başlığın üstüne çıkamaz');
   assert.ok(css.includes('#kolTable[data-bl-freeze]>tfoot>tr{z-index:var(--ui-z-sticky)!important}'));
@@ -42,12 +42,12 @@ test('katman sırası: kayan gövde < donmuş gövde < kayan başlık < donmuş 
 });
 
 test('donmuş zemin opaktır ama seçim/üzerine gelme zeminini ezmez', () => {
-  const css = engine()._buildCss({ id: 'ordersTable' }, [0, 40, 90]);
+  const css = engine()._buildCss({ id: 'ordersTable' }, [0, 40, 90], [40, 50, 60], false);
   assert.ok(css.includes(':where(#ordersTable[data-bl-freeze]>tbody>tr:not(:has(>[colspan]:not([colspan="1"])))>:nth-child(-n+3)){background-color:var(--ui-surface)}'));
   assert.ok(css.includes(':where(#ordersTable[data-bl-freeze]>tfoot>tr:not(:has(>[colspan]:not([colspan="1"])))>:nth-child(-n+3)){background-color:var(--ui-surface-soft)}'));
   assert.doesNotMatch(css, /background-color:[^}]*!important/, 'zemin !important olursa seçim görünmez');
-  assert.match(css, /:nth-child\(3\),#ordersTable\[data-bl-freeze\]>thead>tr\.colRow>th:nth-child\(3\)\)\{box-shadow:inset -2px 0 0 var\(--ui-group-divider\)\}/,
-    'donmuş alanın kenarı genişliği değiştirmeyen iç çizgidir');
+  assert.doesNotMatch(css, /box-shadow/, 'bölme sınırı hücre gölgesi değil ayrı ayırıcı öğedir');
+  assert.match(ENGINE, /pane\.className = 'blFreezePane';/);
 });
 
 test('ofsetler gerçek başlık genişliğinden ölçülür ve ResizeObserver ile canlı tutulur', () => {
@@ -58,11 +58,40 @@ test('ofsetler gerçek başlık genişliğinden ölçülür ve ResizeObserver il
   assert.match(ENGINE, /if \(!widths\.every\(function \(w\) \{ return Number\.isFinite\(w\) && w > 0; \}\)\) return;/);
 });
 
-test('donmuş alan tabloyu kaplarsa dondurma askıya alınır, tercih korunur', () => {
-  assert.match(ENGINE, /rec\.suspended = Boolean\(available && acc > available - MIN_SCROLL_VIEW\);/);
-  assert.match(ENGINE, /table\.setAttribute\('data-bl-freeze-suspended', ''\);/);
+test('donmuş sütunlar görünür alanı aşarsa bölme daralır ve iç kaydırma açılır', () => {
+  assert.match(ENGINE, /var maxPane = available \? available - MIN_SCROLL_VIEW : acc;/);
+  assert.match(ENGINE, /var paneWidth = Math\.round\(Math\.max\(Math\.min\(MIN_PANE, acc\), Math\.min\(wanted, acc, maxPane\)\) \* 100\) \/ 100;/);
+  // Yalnız tablo bölme için bile dar kalırsa dondurma askıya alınır.
+  assert.match(ENGINE, /rec\.suspended = Boolean\(available && maxPane < Math\.min\(MIN_PANE, acc\)\);/);
   assert.match(APP, /if\(result&&result\.suspended\)\{\s*setFreeze\(pick\.tableKey,previous\);/);
-  assert.match(APP, /tooWide:en\?'The frozen area would cover the visible table\. Pick fewer or narrower columns\.':'Dondurulan alan görünür tabloyu kaplıyor\. Daha az veya daha dar sütun seç\.'/);
+});
+
+test('iç kaydırmada donmuş hücre bölme kaydırmasıyla kayar ve bölme sınırında kırpılır', () => {
+  const css = engine()._buildCss({ id: 'cpTable' }, [0, 46, 166], [46, 120, 200], true);
+  const rule = '#cpTable[data-bl-freeze]>tbody>tr:not(:has(>[colspan]:not([colspan="1"])))>:nth-child(3){position:sticky!important;'
+    + 'left:calc(166px - var(--blfz-s))!important;clip-path:inset(0 max(0px,calc(366px - var(--blfz-s) - var(--blfz-w))) 0 max(0px,calc(var(--blfz-s) - 166px)))!important;'
+    + 'z-index:var(--ui-z-frozen-cell)!important}';
+  assert.ok(css.includes(rule), 'gövde hücresi');
+  assert.ok(css.includes('#cpTable[data-bl-freeze]>thead>tr.colRow>th:nth-child(1){position:sticky!important;left:calc(0px - var(--blfz-s))!important;'));
+  // Sağ bölmenin ilk sütunu tam bölme sınırından başlar.
+  assert.match(ENGINE, /table\.style\.marginLeft = -\(Math\.round\(\(acc - rec\.paneWidth\) \* 100\) \/ 100\) \+ 'px';/);
+  assert.match(ENGINE, /table\.style\.setProperty\('--blfz-s', next \+ 'px'\);/);
+});
+
+test('donmuş bölme kendi çubuğu, yatay tekerlek ve sürüklenen sınırla bağımsız kayar', () => {
+  assert.match(ENGINE, /bar\.addEventListener\('scroll', function \(\) \{ setScroll\(table, registry\.get\(table\), bar\.scrollLeft, true\); \}/);
+  assert.match(ENGINE, /wrap\.addEventListener\('wheel', function \(event\) \{/);
+  assert.match(ENGINE, /if \(r\.scroll !== before\) event\.preventDefault\(\);/, 'sınıra gelince tablo kaydırması devralır');
+  assert.match(ENGINE, /divider\.addEventListener\('pointerdown', function \(event\) \{ startPaneDrag\(table, event\); \}\);/);
+  assert.match(ENGINE, /if \(typeof rec\.onPaneResize === 'function'\) rec\.onPaneResize\(rec\.pane\);/);
+  // Bölme genişliği kişisel dondurma tercihidir ve görünüm profilleriyle taşınır.
+  assert.match(APP, /function setFreezePane\(tableKey, px\)\{/);
+  assert.match(APP, /if\(left\)state\.freeze\[key\]=pane\?\{left,pane\}:\{left\};/);
+  assert.match(APP, /\.\.\.\(Number\(data\[t\]\.freeze\.pane\)>0\?\{pane:Math\.round\(Number\(data\[t\]\.freeze\.pane\)\)\}:\{\}\)/);
+  // Başlık grup etiketi donmuş bölmenin görünür kısmında ortalanır.
+  const tracking = read('public/table-header-tracking.js');
+  assert.match(tracking, /data-bl-freeze-pane/);
+  assert.match(tracking, /addEventListener\('blfreezepanescroll'/);
 });
 
 test('app-main satır satır dondurma işi yapmaz; tek giriş noktası BLTableFreeze', () => {

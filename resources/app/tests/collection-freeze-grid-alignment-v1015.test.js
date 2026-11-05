@@ -41,7 +41,8 @@ test('Collection spreadsheet positioning does not override frozen body cells', (
   const engine = read('public/table-freeze.js');
   assert.match(css, /#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable tbody td\{position:relative\}/);
   assert.doesNotMatch(css, /frzL/, 'freeze positioning has a single owner: table-freeze.js');
-  assert.match(engine, /'>tbody>' \+ plain \+ '>' \+ n \+ '\{position:sticky!important;left:'/);
+  assert.match(engine, /'>tbody>' \+ plain \+ '>' \+ n \+ '\{position:sticky!important;' \+ place/);
+  assert.match(engine, /if \(!inner\) return 'left:' \+ left \+ 'px!important';/);
   const html = read('public/index.html');
   assert.match(html, /table-freeze\.js\?v=__BL_ASSET_VERSION__&rev=\d+/);
 });

@@ -7254,8 +7254,8 @@ function loadFreezeState(){
     const parsed=raw?JSON.parse(raw):{};
     state.freeze={};
     Object.entries(parsed&&typeof parsed==='object'?parsed:{}).forEach(([key,value])=>{
-      const left=Math.max(0,Number(value&&value.left)||0)|0;
-      if(left)state.freeze[key]={left};
+      const left=Math.max(0,Number(value&&value.left)||0)|0,pane=Math.max(0,Math.round(Number(value&&value.pane)||0));
+      if(left)state.freeze[key]=pane?{left,pane}:{left};
     });
   }catch(e){ state.freeze = {}; }
 }
@@ -7264,13 +7264,22 @@ function saveFreezeState(){
 }
 function getFreeze(tableKey){
   const f = (state.freeze||{})[tableKey];
-  return { left: Math.max(0,Number(f&&f.left)||0)|0, right: 0 };
+  return { left: Math.max(0,Number(f&&f.left)||0)|0, right: 0, pane: Math.max(0,Math.round(Number(f&&f.pane)||0)) };
 }
 function setFreeze(tableKey, left){
   if(!state.freeze) state.freeze = {};
   const count=Math.max(0,Number(left)||0)|0;
   if(!count) delete state.freeze[tableKey];
   else state.freeze[tableKey] = { left: count };
+  saveFreezeState();
+}
+// Donmuş sol bölmenin kullanıcı genişliği (px). Bölme dar tutulduğunda donmuş
+// sütunlar kendi içinde yatay kaydırılır; yeni bir dondurma bu değeri sıfırlar.
+function setFreezePane(tableKey, px){
+  const f=(state.freeze||{})[tableKey];
+  if(!f||!f.left)return;
+  const pane=Math.max(0,Math.round(Number(px)||0));
+  if(pane)f.pane=pane;else delete f.pane;
   saveFreezeState();
 }
 /* Dondurma düzeni tek motordadır: public/table-freeze.js (BLTableFreeze).
@@ -7287,7 +7296,8 @@ function applyFreeze(tableId, tableKey, withChk){
   // yeniden çizilir (renderKol bu fonksiyonu yeni sınırla tekrar çağırır).
   const kolGroupRow=tableId==='kolTable'?table.querySelector('thead tr.kolGroupRow'):null;
   if(kolGroupRow&&Number(kolGroupRow.dataset.freezeLeft)!==Number(getFreeze(tableKey).left)&&typeof renderKol==='function'){renderKol();return window.BLTableFreeze.info(table);}
-  return window.BLTableFreeze.apply(table,{count:getFreeze(tableKey).left});
+  const freeze=getFreeze(tableKey);
+  return window.BLTableFreeze.apply(table,{count:freeze.left,pane:freeze.pane,onPaneResize:px=>setFreezePane(tableKey,px)});
 }
 
 // Kademeli çizimde tablo, kalan satırlar boşta kalan zamanda eklenirken kısa bir süre
@@ -16938,7 +16948,7 @@ function applyViewState(data){
     if(v.imgSize) kolImgSize=kolNormalizeImgSize(v.imgSize);
     kolColWidths={...(v.widthPx||{})};
     kolSort={key:kolColDefs().some(c=>c.k===v.sorting?.key)?v.sorting.key:null,dir:Number(v.sorting?.dir)===-1?-1:1};
-    if(v.freeze&&typeof v.freeze==='object')state.freeze.koleksiyon={left:Number(v.freeze.left)||0,right:Number(v.freeze.right)||0};
+    if(v.freeze&&typeof v.freeze==='object')state.freeze.koleksiyon={left:Number(v.freeze.left)||0,right:Number(v.freeze.right)||0,...(Number(v.freeze.pane)>0?{pane:Math.round(Number(v.freeze.pane))}:{})};
     else delete state.freeze.koleksiyon;
     saveKolColState();
     renderKol();
@@ -16975,7 +16985,7 @@ function applyViewState(data){
     if((t==='cp'||t==='orders')&&sort&&(!sort.key||validKeys.includes(sort.key))){
       state[t+'Sort']={key:sort.key||null,dir:Number(sort.dir)===-1?-1:1};
     }else if(t==='cp'||t==='orders')state[t+'Sort']={key:null,dir:1};
-    if(data[t].freeze&&typeof data[t].freeze==='object')state.freeze[t]={left:Number(data[t].freeze.left)||0,right:Number(data[t].freeze.right)||0};
+    if(data[t].freeze&&typeof data[t].freeze==='object')state.freeze[t]={left:Number(data[t].freeze.left)||0,right:Number(data[t].freeze.right)||0,...(Number(data[t].freeze.pane)>0?{pane:Math.round(Number(data[t].freeze.pane))}:{})};
     else delete state.freeze[t];
   });
   saveAutoTableColumnState();
@@ -40197,6 +40207,7 @@ function applyLanguage(lang){
     else if(tab==='licensecards') window.BLLicenseCardsPage?.renderLanguage?.();
     else if(tab==='quotations'||tab==='pricinghistory') window.BLPricingDesk?.renderLanguage?.();
     else if(tab==='source') window.BLDataManagement?.refreshLanguage?.();
+    else if(tab==='lcwai') window.BLLcwAiChat?.refreshLanguage?.();
     if(typeof renderKolScopeFilters==='function' && document.getElementById('kolScopeFilters')) renderKolScopeFilters();
   }catch(e){}
   // Ufuk rozeti sunucu verisinden değil, o anki dilden metin üretir; dil

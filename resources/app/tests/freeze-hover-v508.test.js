@@ -13,7 +13,7 @@ const ENGINE = fs.readFileSync(path.join(ROOT, 'public', 'table-freeze.js'), 'ut
 
 test('v5.08 frozen body cells keep an opaque raised layer while hovered', () => {
   // Donmuş gövde hücresi kayan hücrelerin üstünde tek katmandır ve opak zemin alır.
-  assert.match(ENGINE, /'>tbody>' \+ plain \+ '>' \+ n \+ '\{position:sticky!important;left:' \+ px \+ '!important;z-index:var\(--ui-z-frozen-cell\)!important\}'/);
+  assert.match(ENGINE, /'>tbody>' \+ plain \+ '>' \+ n \+ '\{position:sticky!important;' \+ place \+ ';z-index:var\(--ui-z-frozen-cell\)!important\}'/);
   assert.match(ENGINE, /\{background-color:var\(--ui-surface\)\}/);
   // Satır üzeri zemini donmuş hücreye de opak olarak gelir: token yüzeyle karışımdır.
   assert.match(CSS, /--ui-row-hover:color-mix\(in srgb,var\(--ui-accent\) 6%,var\(--ui-surface\)\)/);
