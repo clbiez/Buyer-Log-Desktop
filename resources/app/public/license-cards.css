@@ -1,7 +1,7 @@
 /* License cards — list view and compact approval map editor.
    Layout only: colour, type, radius and motion come from Buyer Log tokens. */
 .licenseCardsPage{min-width:0}
-.lcPage{--lc-cols:28px 60px minmax(150px,1.5fr) minmax(110px,1fr) repeat(3,minmax(70px,.48fr)) minmax(78px,.55fr) minmax(150px,1fr) minmax(118px,.85fr) 118px;
+.lcPage{--lc-cols:58px 60px minmax(150px,1.5fr) minmax(110px,1fr) repeat(3,minmax(70px,.48fr)) minmax(78px,.55fr) minmax(150px,1fr) minmax(118px,.85fr) 118px;
   padding:var(--ui-space-3) var(--ui-space-4) 0;position:relative;min-height:100%}
 .lcSpacer{flex:1}
 
@@ -28,6 +28,10 @@
 .lcSort.isNum{justify-self:end}.lcSort .ic{width:11px;height:11px}
 .lcRow{position:relative;min-height:46px}
 .lcCheck{display:grid;place-items:center}.lcCheck input{width:14px;height:14px;cursor:pointer}
+.lcPick{display:flex;align-items:center;gap:var(--ui-space-1)}
+.lcPick>.ic{width:14px;height:14px;margin:0 8px}
+.lcFavorite{width:var(--ui-control-height);height:var(--ui-control-height)}
+.lcFavorite[aria-pressed="true"] .ic{fill:currentColor}
 .lcThumb{width:60px;height:34px;display:grid;place-items:center;overflow:hidden}
 .lcThumb img{width:100%;height:100%;object-fit:cover}
 .lcRow:hover .lcThumb img{transform:scale(1.06)}

@@ -3,14 +3,43 @@
   "publishedAt": "2026-11-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Giriş geçişi ve karşılaştırma ülkeleri",
-    "en": "Sign-in transition and comparison countries"
+    "tr": "Kişisel lisans favorileri, giriş geçişi ve karşılaştırma ülkeleri",
+    "en": "Personal license favorites, sign-in transition and comparison countries"
   },
   "summary": {
-    "tr": "Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez.",
-    "en": "Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list."
+    "tr": "Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez.",
+    "en": "License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list."
   },
   "changes": [
+    {
+      "id": "license-cards-personal-favorites",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Kendi lisans favorilerinizi atlas için tek seferde seçin",
+        "en": "Select your personal license favorites for the atlas in one click"
+      },
+      "body": {
+        "tr": "Satırdaki yıldızla lisans kartını kendi favorilerinize ekleyin veya çıkarın; Favorilerim ile listeyi süzün. Favorileri seç, arama ve filtrelerden bağımsız bütün favorilerinizi mevcut atlas seçimine ekler. Favoriler kullanıcı hesabına bağlı kişisel tercihlerde saklanır; aynı uygulama sunucusuna bağlanan tarayıcılarda açılışta yüklenir. Kartları yalnız görüntüleyebilen kullanıcılar da kendi favorilerini yönetebilir; ortak kartları düzenleme yetkisi değişmez.",
+        "en": "Use the star on a row to add or remove a license card from your own favorites; filter the list with My favorites. Select favorites adds all your favorites to the existing atlas selection regardless of search and filters. Favorites are stored in account-specific personal preferences and loaded at startup in browsers connected to the same application server. View-only users can manage their own favorites too; shared-card editing permissions are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-personal-favorites.png",
+        "alt": {
+          "tr": "Lisans kartlarında iki kişisel favori ve atlas için toplu seçim",
+          "en": "Two personal favorites in license cards and bulk selection for the atlas"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi ve yalnız görüntüleme yetkisi: yıldızlar kişiseldir; Favorileri seç iki lisansı atlas seçimine ekler.",
+          "en": "Actual Buyer Log with isolated demo data and view-only access: stars are personal; Select favorites adds two licenses to the atlas selection."
+        }
+      }
+    },
     {
       "id": "startup-login-no-flash",
       "type": "fix",
