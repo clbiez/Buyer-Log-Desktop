@@ -1,7 +1,15 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { requestJson, summarizeHealth, parseStalls, validateMeasurement, installProbe, measureModules } = require('../scripts/lib/startup-benchmark');
+const { requestJson, summarizeHealth, parseStalls, validateMeasurement, installProbe, measureModules, compactRefreshStatus } = require('../scripts/lib/startup-benchmark');
+
+test('benchmark retains refresh telemetry without copying raw comparison rows into reports',()=>{
+  const status={running:false,elapsedMs:5000,operations:[{operation:'file-parse',durationMs:123}],summary:{newOrderCount:30000,newlyAppeared:[{raw:'synthetic-row'}],nested:{changed:[1,2]}}};
+  const compact=compactRefreshStatus(status);
+  assert.deepEqual(compact.summary,{newOrderCount:30000,newlyAppeared:{count:1},nested:{changed:{count:2}}});
+  assert.deepEqual(compact.operations,status.operations);assert.equal(compact.elapsedMs,5000);
+  assert.equal(status.summary.newlyAppeared.length,1,'server status is not mutated');
+});
 
 test('benchmark retries only transient GET health/status failures, never refresh POST', async () => {
   for (const [url, method, attempts] of [['/api/health','GET',3],['/api/refresh-status','GET',3],['/api/refresh','POST',1],['/api/data','GET',1],['/api/health','POST',1]]) {

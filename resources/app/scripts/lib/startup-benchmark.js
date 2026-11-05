@@ -35,6 +35,14 @@ function parseStalls(log) {
     line, ...Object.fromEntries([...line.matchAll(/(\w+)=(-?[\d.]+)/g)].map(([,key,value]) => [key,Number(value)])),
   }));
 }
+function compactRefreshStatus(status) {
+  function compact(value) {
+    if (Array.isArray(value)) return { count:value.length };
+    if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key,item]) => [key,compact(item)]));
+    return value;
+  }
+  return { ...status, summary:compact(status.summary) };
+}
 function validateMeasurement(expected, actual) {
   for (const [label, wanted, got] of [
     ['rows',expected.rows[actual.module],actual.rows], ['generation',expected.generation,actual.generation],
@@ -45,12 +53,13 @@ function validateMeasurement(expected, actual) {
   if (actual.projectionGenerations.some(generation => generation !== expected.generation)) throw new Error(actual.module+' response generation mismatch');
 }
 // Serializable Playwright init script: no references to the Node module scope.
-function installProbe({ sampleWindowMs }) {
+function installProbe({ sampleWindowMs, logEvents = false }) {
   const probe = window.__startupProbe = { primaryScreenReadyMs:null, startupReadyMs:null, startupCompleteMs:null,
     continueAtMs:null, userWaitMs:null, systemStartupCompleteMs:null, sampleWindowMs, longTasks:[] };
   for (const [event,key] of [['bl:primary-screen-ready','primaryScreenReadyMs'],['bl:startup-ready','startupReadyMs'],['bl:startup-complete','startupCompleteMs']]) {
     window.addEventListener(event, () => {
       probe[key] = performance.now();
+      if (logEvents) console.log('BENCHMARK_LIFECYCLE '+JSON.stringify({event,key,ms:probe[key]}));
       if (event === 'bl:startup-complete') {
         probe.userWaitMs = Math.max(0, (probe.continueAtMs ?? probe.startupReadyMs) - probe.startupReadyMs);
         probe.systemStartupCompleteMs = probe.startupCompleteMs - probe.userWaitMs;
@@ -72,4 +81,4 @@ async function measureModules(context, modules, measure) {
   }
   return measurements;
 }
-module.exports = { requestJson, summarizeHealth, parseStalls, validateMeasurement, installProbe, measureModules };
+module.exports = { requestJson, summarizeHealth, parseStalls, validateMeasurement, installProbe, measureModules, compactRefreshStatus };

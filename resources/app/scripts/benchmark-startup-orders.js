@@ -6,7 +6,7 @@
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),net=require('node:net'),crypto=require('node:crypto'),zlib=require('node:zlib');
 const {spawn,spawnSync}=require('node:child_process');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const {requestJson,summarizeHealth,parseStalls,validateMeasurement,installProbe,measureModules}=require('./lib/startup-benchmark');
+const {requestJson,summarizeHealth,parseStalls,validateMeasurement,installProbe,measureModules,compactRefreshStatus}=require('./lib/startup-benchmark');
 const arg=(name,fallback)=>{const index=process.argv.indexOf(name);return index<0?fallback:process.argv[index+1];};
 const APP=path.resolve(arg('--app-root',path.resolve(__dirname,'..')));
 const count=Number(arg('--rows',30000)),sampleWindowMs=Number(arg('--sample-ms',10000));
@@ -76,6 +76,7 @@ async function rendererRss(){
   }finally{await cdp.detach();}
 }
 async function open(context,page,module){
+  try{
   const errors=[],projectionGenerations=[];
   const network=await context.newCDPSession(page);await network.send('Network.enable');
   await network.send('Network.setBlockedURLs',{urls:['https://*']});
@@ -85,8 +86,9 @@ async function open(context,page,module){
       projectionGenerations.push(header?.[1]||'');
     }
   });
-  page.on('pageerror',error=>errors.push(error.message));
-  await page.addInitScript(installProbe,{sampleWindowMs});
+  page.on('pageerror',error=>{errors.push(error.message);(report.rendererErrors??=[]).push({module,message:error.message});console.error(module+' page error: '+error.message);});
+  page.on('console',message=>{const text=message.text();if(text.startsWith('BENCHMARK_LIFECYCLE ')){(report.lifecycleEvents??=[]).push({module,...JSON.parse(text.slice(20))});console.log(module+' '+text);persist();}});
+  await page.addInitScript(installProbe,{sampleWindowMs,logEvents:true});
   // Observe the application's existing parse; never clone or parse a 72 MB response twice.
   await page.addInitScript(()=>{
     const original=Response.prototype.json;
@@ -130,6 +132,12 @@ async function open(context,page,module){
   await page.screenshot({path:path.join(root,module+'.png')});
   await network.detach();
   return measurement;
+  }catch(error){
+    report.failedPage={module,message:error.message};
+    let timer;
+    try{report.failedPage.state=await Promise.race([page.evaluate(()=>({probe:window.__startupProbe,active:document.body?.dataset.activeTab,gate:document.getElementById('blBootGuard')?.dataset.ready,detail:document.querySelector('[data-boot-detail]')?.textContent})),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Diagnostic evaluation timed out')),5000);})]);}catch(diagnosticError){report.failedPage.diagnosticError=diagnosticError.message;}finally{clearTimeout(timer);}
+    persist();throw error;
+  }
 }
 async function measureSameTab(context){
   const page=await context.newPage();
@@ -187,7 +195,7 @@ function prepareFixture(){
     if(!process.argv.includes('--skip-refresh')){
       phase='refresh';const started=performance.now();await api('/api/refresh',{method:'POST',body:'{}'});
       let refreshed=false;
-      for(let i=0;i<900;i++){report.refresh=await api('/api/refresh-status');persist();if(!report.refresh.running){if(report.refresh.error)throw Error(JSON.stringify(report.refresh.error));refreshed=true;break;}await delay(500);}
+      for(let i=0;i<900;i++){report.refresh=compactRefreshStatus(await api('/api/refresh-status'));persist();if(!report.refresh.running){if(report.refresh.error)throw Error(JSON.stringify(report.refresh.error));refreshed=true;break;}await delay(500);}
       if(!refreshed||!report.refresh.jobId)throw Error('Synthetic refresh timed out or returned no job');report.refreshWallMs=performance.now()-started;
     }
     phase='validate';
@@ -204,7 +212,7 @@ function prepareFixture(){
     report.expected=expected;persist();
     phase='restart';healthStopped=true;await healthLoop;await stop();report.backendStartupMs=await start();await login();
     phase='startup';healthStopped=false;healthLoop=(async()=>{while(!healthStopped){await health();await delay(500);}})();
-    browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});report.chromium=browser.version();
+    browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox',...(process.env.STARTUP_DEBUG_PORT?['--remote-debugging-port='+process.env.STARTUP_DEBUG_PORT]:[])]});report.chromium=browser.version();
     const context=await browser.newContext({viewport:{width:1600,height:1000}}),split=cookie.indexOf('=');await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),url:base,httpOnly:true}]);
     // Every page, including same-tab scenario, closes before the next measurement.
     if(!process.argv.includes('--skip-same-tab'))report.sameTab=await measureSameTab(context);

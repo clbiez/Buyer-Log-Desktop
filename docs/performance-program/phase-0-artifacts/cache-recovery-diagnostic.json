@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 2,
+  "synthetic": true,
+  "status": "failed",
+  "startedAt": "2026-11-05T21:58:09.541Z",
+  "fixtureRoot": "/tmp/buyerlog-startup-baseline-1",
+  "requestedRows": 30000,
+  "requestedModules": [
+    "overview"
+  ],
+  "sampling": {
+    "startMs": 0,
+    "endMs": 10000,
+    "clock": "navigation performance.now; tasks clipped at window end"
+  },
+  "measurements": [],
+  "healthSamples": [
+    {
+      "ms": 854.7975879999995,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "initial-start",
+      "startedAt": "2026-11-05T21:58:14.551Z"
+    }
+  ],
+  "platform": "linux",
+  "node": "v24.19.0",
+  "revision": "de40df44deab9ddbc571a02fbbef318ff2a5ecb5",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "cpuCount": 5,
+  "availableParallelism": 4,
+  "cpuQuota": "400000 100000",
+  "memoryLimitBytes": "17179869184",
+  "fixture": {
+    "synthetic": true,
+    "rows": 30000,
+    "seed": 7,
+    "hashes": {
+      "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+    }
+  },
+  "error": {
+    "message": "ENOENT: no such file or directory, open '/tmp/buyerlog-startup-baseline-1/local/page-cache/moderator/manifest.json'",
+    "stack": "Error: ENOENT: no such file or directory, open '/tmp/buyerlog-startup-baseline-1/local/page-cache/moderator/manifest.json'\n    at Object.readFileSync (node:fs:484:20)\n    at manifest (/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-startup-orders.js:68:42)\n    at /workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-startup-orders.js:202:57\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+  },
+  "finishedAt": "2026-11-05T21:58:15.996Z",
+  "health": {
+    "all": {
+      "count": 1,
+      "successful": 0,
+      "failed": 1,
+      "p50Ms": 854.7975879999995,
+      "p95Ms": 854.7975879999995,
+      "maxMs": 854.7975879999995
+    },
+    "refresh": {
+      "count": 0,
+      "successful": 0,
+      "failed": 0,
+      "p50Ms": null,
+      "p95Ms": null,
+      "maxMs": null
+    },
+    "endpoint": "/api/health",
+    "readinessEndpoint": "/api/status",
+    "observedStatuses": [
+      404
+    ],
+    "endpointAvailable": false
+  },
+  "stalls": [
+    {
+      "line": "[RUNTIME] event-loop-stall blockedMs=6897 cpuMs=12170 heapUsedMb=240 heapLimitMb=4288 rssMb=665",
+      "blockedMs": 6897,
+      "cpuMs": 12170,
+      "heapUsedMb": 240,
+      "heapLimitMb": 4288,
+      "rssMb": 665
+    },
+    {
+      "line": "[RUNTIME] event-loop-stall blockedMs=33363 cpuMs=47393 heapUsedMb=572 heapLimitMb=4288 rssMb=1496",
+      "blockedMs": 33363,
+      "cpuMs": 47393,
+      "heapUsedMb": 572,
+      "heapLimitMb": 4288,
+      "rssMb": 1496
+    }
+  ],
+  "diagnostics": {
+    "serverLog": "/tmp/buyerlog-startup-baseline-1/server.log",
+    "stallProfileLines": [
+      "[RUNTIME] stall-profiler samplingMs=5 minStallMs=10000",
+      "[RUNTIME] stall-profiler samplingMs=5 minStallMs=10000",
+      "[RUNTIME] stall-profile blockedMs=33363 sampledMs=84652 file=stall-2026-11-05T21-54-18-438Z.cpuprofile",
+      "[RUNTIME] stall-profile top1 37862ms 44.7% (idle)",
+      "[RUNTIME] stall-profile top2 4464ms 5.3% (garbage collector)",
+      "[RUNTIME] stall-profile top3 3416ms 4% (anonymous) server/lib/parse.js:3423",
+      "[RUNTIME] stall-profile top4 3000ms 3.5% stringifyWithDates server/lib/json-dates.js:8",
+      "[RUNTIME] stall-profile top5 2609ms 3.1% utf8Slice",
+      "[RUNTIME] stall-profile top6 2170ms 2.6% (program)",
+      "[RUNTIME] stall-profile top7 1796ms 2.1% decodeSnapshotText server/lib/model-snapshot.js:191",
+      "[RUNTIME] stall-profile top8 1249ms 1.5% turknorm server/lib/parse.js:31",
+      "[RUNTIME] stall-profile top9 1243ms 1.5% update node:internal/crypto/hash:145",
+      "[RUNTIME] stall-profile top10 1209ms 1.4% processTimers node:internal/timers:556",
+      "[RUNTIME] stall-profile top11 1011ms 1.2% post node:inspector:115",
+      "[RUNTIME] stall-profile top12 927ms 1.1% dateOnlyFromDateObject server/lib/parse.js:900",
+      "[RUNTIME] stall-profile top13 911ms 1.1% buildAntrepoLookup server/lib/parse.js:310",
+      "[RUNTIME] stall-profile top14 788ms 0.9% makeDateOnly server/lib/parse.js:890",
+      "[RUNTIME] stall-profile top15 765ms 0.9% concat node:buffer:628",
+      "[RUNTIME] stall-profile stack1 37862ms (idle)",
+      "[RUNTIME] stall-profile stack2 4464ms (garbage collector)",
+      "[RUNTIME] stall-profile stack3 3416ms (anonymous) server/lib/parse.js:3423 < backlogTemplateRowsFromSegments server/lib/parse.js:3418 < buildBacklogTemplateRows server/lib/parse.js:3373 < (anonymous) server/server.js:8859 < cachedBacklogTemplateRows server/server.js:8804 < (anonymous) server/server.js:8835 < runMicrotasks < processTicksAndRejections node:internal/process/task_queues:72",
+      "[RUNTIME] stall-profile stack4 3000ms stringifyWithDates server/lib/json-dates.js:8 < sendDateSafeJson server/server.js:6954 < (anonymous) server/server.js:8835 < runMicrotasks < processTicksAndRejections node:internal/process/task_queues:72",
+      "[RUNTIME] stall-profiler samplingMs=5 minStallMs=10000"
+    ],
+    "stallProfiles": [
+      "/tmp/buyerlog-startup-baseline-1/local/logs/stall-profiles/stall-2026-11-05T21-54-18-438Z.cpuprofile"
+    ]
+  }
+}
