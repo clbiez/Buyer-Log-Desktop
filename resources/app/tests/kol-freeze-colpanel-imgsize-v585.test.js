@@ -37,18 +37,18 @@ test('v5.85 dondurma sticky’si kimlik seçicili ezmelerden sonra geri veriliyo
   assert.match(CSS, /#kolTable tbody td\.editTd\{padding:0;position:relative;\}/,
     'relative kuralı hâlâ duruyor olmalı — mutlak konumlu çocuklar ona bağlı');
   assert.match(ENGINE, /var t = '#' \+ cssId\(table\.id\) \+ '\[data-bl-freeze\]';/);
-  assert.match(ENGINE, /\{position:sticky!important;left:' \+ px \+ '!important;/);
+  assert.match(ENGINE, /\{position:sticky!important;' \+ place/);
 });
 
 test('v5.85 yapışan düzenlenebilir hücre kayan hücrelerin üstünde kalıyor', () => {
   // Kayan hücre < donmuş gövde < kayan başlık < donmuş başlık.
   assert.match(ENGINE, /z-index:var\(--ui-z-frozen-cell\)!important/);
-  assert.match(ENGINE, /'>thead>tr\.colRow>th' \+ n \+ '\{position:sticky!important;left:' \+ px \+ '!important;z-index:var\(--ui-z-sticky-column\)!important\}'/);
+  assert.match(ENGINE, /'>thead>tr\.colRow>th' \+ n \+ '\{position:sticky!important;' \+ place \+ ';z-index:var\(--ui-z-sticky-column\)!important\}'/);
 });
 
 test('v5.85 CP ve Siparişler de aynı korumayı alıyor', () => {
   // Aynı motor tüm tablolara uygulanır; tabloya özel freeze CSS'i yoktur.
-  assert.match(APP, /return window\.BLTableFreeze\.apply\(table,\{count:getFreeze\(tableKey\)\.left\}\);/);
+  assert.match(APP, /return window\.BLTableFreeze\.apply\(table,\{count:freeze\.left,pane:freeze\.pane,/);
   assert.doesNotMatch(CSS, /#(?:cpTable|ordersTable|kolTable)[^{]*\.frzL/);
 });
 

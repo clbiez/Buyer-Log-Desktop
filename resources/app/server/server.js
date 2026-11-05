@@ -8266,7 +8266,7 @@ async function loadCachedPageProjectionSet(currentUser, startup) {
   if(!pageProjectionMatchesRuntime(loadedManifest,runtime))return {ctx,hit:false,stale:true};
   return { ctx, hit: true, byModule, manifest:loadedManifest, readMs: loaded.reduce((sum,item)=>sum+(Number(item.ms)||0),0) };
 }
-function backlogCacheKey(params) { return stableHashValue(params).slice(0, 48); }
+function backlogCacheKey(params) { const day=new Date();return stableHashValue([params,day.getFullYear(),day.getMonth(),day.getDate()]).slice(0, 48); }
 
 function buildCollectionCatalogs(orderRows) {
   const buckets = Object.fromEntries(Object.keys(COLLECTION_CATALOG_FIELDS).map(key => [key, new Map()]));
@@ -8681,6 +8681,7 @@ app.get('/api/data/orders', userAccess.requireArea('orders'), async (req, res) =
 // Backlog raporunu farklı retail tarih aralığı / buyer grup / gruplama boyutlarıyla
 // yeniden hesaplar (dosyaları tekrar okumaz, bellekteki son veriyi kullanır — hızlıdır).
 const backlogSourceFieldsInFlight = new Map();
+const backlogQueryCache=require('./lib/backlog-query-cache').createBacklogQueryCache();
 function rowsHaveSourceFields(rows) {
   return Array.isArray(rows) && rows.some(row => row && row._sourceFields && Object.keys(row._sourceFields).length);
 }
@@ -8730,7 +8731,7 @@ app.get('/api/backlog', userAccess.requireArea('backlog'), async (req, res) => {
     const dateLevels = antrepoDateLevels ? String(antrepoDateLevels).split(',').filter(Boolean) : undefined;
     let parsedDimFilters = {};
     if (dimFilters) { try { parsedDimFilters = JSON.parse(dimFilters); } catch { parsedDimFilters = {}; } }
-    const params = { retailFrom:retailFrom||'', retailTo:retailTo||'', inStoreFrom:inStoreFrom||'', inStoreTo:inStoreTo||'', exFactoryFrom:exFactoryFrom||'', exFactoryTo:exFactoryTo||'', buyerGrup:buyerGrup||'', groupBy:dims, dimFilters:parsedDimFilters, analysisFilters:req.query.analysisFilters, antrepoFrom:antrepoFrom||'', antrepoTo:antrepoTo||'', antrepoDateLevels:dateLevels||[] };
+    const params = { retailFrom:retailFrom||'', retailTo:retailTo||'', inStoreFrom:inStoreFrom||'', inStoreTo:inStoreTo||'', exFactoryFrom:exFactoryFrom||'', exFactoryTo:exFactoryTo||'', buyerGrup:buyerGrup||'', groupBy:dims, dimFilters:parsedDimFilters, analysisFilters:req.query.analysisFilters, antrepoFrom:antrepoFrom||'', antrepoTo:antrepoTo||'', antrepoDateLevels:dateLevels||[],lazyDimensions:req.query.lazyDimensions==='1',valueDimensions:String(req.query.valueDimensions||'').split(',').filter(Boolean) };
     if (!filterStatus.ready) {
       const overrides = loadOverrides();
       const emptyReport = buildBacklogGrouped([], {}, overrides, params);
@@ -8742,9 +8743,8 @@ app.get('/api/backlog', userAccess.requireArea('backlog'), async (req, res) => {
     const runtime = cacheForUser(id);
     if (!runtime.asasOrders) await ensureDataLoaded(id);
     await ensureBacklogSourceFields(id);
-    const active = cacheForUser(id), overrides = effectiveOverridesForUser(id);
-    const scopedBacklog = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser,'backlog',ordersForTarget(active, 'backlog', overrides)));
-    const report = buildBacklogGrouped(scopedBacklog, antrepoForTarget(active, 'backlog'), overrides, params);
+    const prepared=backlogQueryForRequest(req,params,!params.lazyDimensions || params.valueDimensions.length>0,ctx);
+    const report = {...buildBacklogGrouped(prepared.orders,prepared.antrepo,prepared.overrides,params,prepared.query),rowsInputRevision:prepared.sourceRevision};
     try { await pageProjectionCache.writeBacklog(id, ctx.contextHash, key, report); }
     catch (cacheError) { logRuntimeFailure('backlogPageCacheWrite', cacheError); }
     sendDateSafeJson(res, { ...report, pageCache: { hit:false } });
@@ -8785,6 +8785,7 @@ app.get('/api/backlog-source-columns', userAccess.requireArea('backlog'), async 
    girdi değişince anahtar da değişir; TTL yalnız bellek tavanıdır. */
 const BACKLOG_ROWS_CACHE_MS=60*1000,BACKLOG_ROWS_CACHE_MAX=12;
 const backlogRowsCache=new Map(),backlogObjectIds=new WeakMap();let backlogObjectSeq=0;
+const backlogCatalogCache=new Map();
 // Nesne kimlik sayaçları süreç başına sıfırlanır; revizyon süreçler arası çakışmasın.
 const BACKLOG_ROWS_PROCESS_NONCE=crypto.randomBytes(8).toString('hex');
 function backlogObjectIdentity(value){
@@ -8810,30 +8811,52 @@ function cachedBacklogTemplateRows(key,compute){
   return rows;
 }
 
+function backlogRowFilterOptions(options={}){
+  return Object.fromEntries(['retailFrom','retailTo','inStoreFrom','inStoreTo','exFactoryFrom','exFactoryTo','buyerGrup','dimFilters','analysisFilters','antrepoFrom','antrepoTo'].map(key=>[key,options[key]||'']));
+}
+function backlogQueryForRequest(req,options={},includeWindowed=false,context=null){
+  const id=sourceUserId(req),active=cacheForUser(id),overrides=effectiveOverridesForUser(id);
+  const ctx=context || pageProjectionContext(req.currentUser);
+  const sourceKey=backlogRowsCacheKey(id,active,overrides,req.currentUser,['query-v1',ctx.contextHash]);
+  const sourceRevision=crypto.createHash('sha256').update(BACKLOG_ROWS_PROCESS_NONCE).update(sourceKey).digest('hex');
+  const filterOpts=backlogRowFilterOptions(options),key=JSON.stringify([sourceKey,filterOpts,includeWindowed]);
+  return backlogQueryCache.get(key,()=>{
+    const orders=userAccess.filterRowsByScope(req.currentUser,filterRowsByEffectiveHorizon(req.currentUser,'backlog',ordersForTarget(active,'backlog',overrides)));
+    const antrepo=antrepoForTarget(active,'backlog');
+    let custom=backlogCatalogCache.get(sourceKey);
+    if(!custom){
+      custom=parseLib.backlogCustomDimensionContext(orders,antrepo);backlogCatalogCache.set(sourceKey,custom);
+      while(backlogCatalogCache.size>4)backlogCatalogCache.delete(backlogCatalogCache.keys().next().value);
+    }
+    return {orders,antrepo,overrides,sourceRevision,query:parseLib.prepareBacklogQuery(orders,antrepo,overrides,filterOpts,custom,includeWindowed)};
+  });
+}
+
 app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res)=>{
   try{
     assertSourceFilters(['backlog'], req);
     const id=sourceUserId(req),runtime=cacheForUser(id);
     if(!runtime.asasOrders) await ensureBacklogRuntime(id);
     await ensureBacklogSourceFields(id);
-    const active=cacheForUser(id),overrides=effectiveOverridesForUser(id);
     const {retailFrom,retailTo,inStoreFrom,inStoreTo,exFactoryFrom,exFactoryTo,buyerGrup,groupBy,dimFilters,antrepoFrom,antrepoTo,antrepoDateLevels}=req.query;
     const dims=groupBy?String(groupBy).split(',').filter(Boolean):[];
     const dateLevels=antrepoDateLevels?String(antrepoDateLevels).split(',').filter(Boolean):undefined;
     let parsedDimFilters={}; if(dimFilters){try{parsedDimFilters=JSON.parse(dimFilters);}catch{}}
     const filterOpts={retailFrom,retailTo,inStoreFrom,inStoreTo,exFactoryFrom,exFactoryTo,buyerGrup,groupBy:dims,dimFilters:parsedDimFilters,analysisFilters:req.query.analysisFilters,antrepoFrom,antrepoTo,antrepoDateLevels:dateLevels};
-    const backlogOrders=userAccess.filterRowsByScope(req.currentUser,ordersForTarget(active,'backlog',overrides));
-    const backlogAntrepo=antrepoForTarget(active,'backlog');
+    const prepared=backlogQueryForRequest(req,filterOpts);
+    const overrides=prepared.overrides;
+    const backlogOrders=prepared.orders;
+    const backlogAntrepo=prepared.antrepo;
     // Excel detayı Backlog ekranıyla AYNI hedef kapsamını ve AYNI aktif filtreleri
     // kullanır. CP'nin birincil cache'i bu akışa kesinlikle karışmaz.
-    const sourceCatalog=parseLib.backlogCustomDimensionContext(backlogOrders,backlogAntrepo).customDimensions;
+    const sourceCatalog=prepared.query.custom.customDimensions;
     const requestedIds=String(req.query.sourceColumns||'').split(',').map(value=>value.trim()).filter(Boolean);
     const sourceById=new Map(sourceCatalog.map(column=>[column.id,column]));
     const sourceColumns=requestedIds.map(id=>sourceById.get(id)).filter(Boolean);
     const previewLimit=Math.min(500,Math.max(0,Number(req.query.previewLimit)||0));
     const includeSourceDetails=req.query.includeSourceDetails==='1';
-    const detailRowsKey=backlogRowsCacheKey(id,active,overrides,req.currentUser,[filterOpts,sourceColumns.map(column=>column.id),previewLimit,includeSourceDetails]);
-    const detailRows=cachedBacklogTemplateRows(detailRowsKey,()=>buildBacklogTemplateRows(backlogOrders,backlogAntrepo,overrides,filterOpts,sourceColumns,{limit:previewLimit,includeSourceDetails}));
+    const detailRowsKey=JSON.stringify([prepared.sourceRevision,backlogRowFilterOptions(filterOpts),sourceColumns.map(column=>column.id),previewLimit,includeSourceDetails]);
+    const detailRows=cachedBacklogTemplateRows(detailRowsKey,()=>buildBacklogTemplateRows(backlogOrders,backlogAntrepo,overrides,filterOpts,sourceColumns,{limit:previewLimit,includeSourceDetails,queryContext:prepared.query}));
     const exportHeaders=[...BACKLOG_TEMPLATE_HEADERS,...sourceColumns.map(column=>column.label)];
     // format=json: satırlar istemciye gider, Excel istemcide CP ile AYNI stil motoruyla üretilir.
     if(req.query.format==='json'){
@@ -8850,6 +8873,21 @@ app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res
     res.setHeader('Content-Disposition',`attachment; filename="${name}"`);
     res.send(buffer);
   }catch(err){apiError(res,err,'Backlog Excel raporu oluşturulamadı.');}
+});
+
+app.get('/api/backlog-filter-values',userAccess.requireArea('backlog'),async(req,res)=>{
+  try{
+    assertSourceFilters(['backlog'],req);
+    const id=sourceUserId(req);if(!cacheForUser(id).asasOrders)await ensureBacklogRuntime(id);
+    await ensureBacklogSourceFields(id);
+    let dimFilters={};try{dimFilters=JSON.parse(req.query.dimFilters||'{}');}catch{}
+    // Preserve the pre-analysis option universe without transferring its rows.
+    const options={...req.query,dimFilters,analysisFilters:undefined};
+    const prepared=backlogQueryForRequest(req,options);
+    const idValue=String(req.query.field||'');
+    if(!BACKLOG_TEMPLATE_HEADERS.some(header=>'cp:'+header===idValue) && !prepared.query.custom.customDimensions.some(column=>column.id===idValue))return res.status(400).json({error:'Unknown Backlog filter field',code:'BACKLOG_FILTER_FIELD_INVALID'});
+    sendDateSafeJson(res,{...parseLib.buildBacklogFilterValues(prepared.orders,prepared.antrepo,prepared.overrides,options,idValue,prepared.query),rowsInputRevision:prepared.sourceRevision});
+  }catch(err){apiError(res,err,'Backlog filtre değerleri hazırlanamadı.');}
 });
 
 // Backlog pivot'unda bir düğüme tıklanınca veya CP/Siparişler sayfasında seçili

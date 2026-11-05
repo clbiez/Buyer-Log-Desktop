@@ -33,7 +33,7 @@ jobs:
       - name: Chronological season and budget-month filters and table sorting
         run: node --test tests/chronological-sorting.test.js tests/business-rules.test.js tests/collection-mb-month-locale-filter.test.js tests/quick-filter-groups-v736.test.js
       - name: Shared Backlog analysis filters, detail and export scope
-        run: node --test tests/backlog-shared-analysis-filters.test.js tests/backlog-overview-filters-v20261002.test.js tests/backlog-plan-actual-wiring.test.js
+        run: node --test tests/backlog-shared-analysis-filters.test.js tests/backlog-overview-filters-v20261002.test.js tests/backlog-plan-actual-wiring.test.js tests/backlog-analysis-performance.test.js tests/backlog-query-cache.test.js
       - name: Supp. FOB quick calculator and royalty commission regression
         run: node --test tests/supp-fob-quick-calculator.test.js tests/license-royalty-commission-v2.test.js tests/grid-context-copy-v1052.test.js
       - name: Unified license cards, category pricing and legacy peer compatibility

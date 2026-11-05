@@ -59,7 +59,7 @@ test('v10.72 Collection freeze offsetleri colgroup stilinden değil gerçek layo
     'sticky offset gerçek başlık hücresi ölçüsünü kullanmalı');
   assert.match(engine, /new global\.ResizeObserver/, 'genişlik değişince ofsetler yeniden yazılmalı');
   assert.doesNotMatch(engine, /colgroup/, 'colgroup stil genişliği ofset kaynağı olmamalı');
-  assert.match(bodyOf('applyFreeze'), /BLTableFreeze\.apply\(table,\{count:getFreeze\(tableKey\)\.left\}\)/);
+  assert.match(bodyOf('applyFreeze'), /BLTableFreeze\.apply\(table,\{count:freeze\.left,pane:freeze\.pane,onPaneResize:px=>setFreezePane\(tableKey,px\)\}\)/);
   for (const legacy of ['freezeColumnWidths', 'freezeLayoutFor', 'applyFreezeToRow', 'applyFreezePlanToRow'])
     assert.doesNotMatch(APP, new RegExp('function ' + legacy + '\\('), legacy + ' yeniden eklenmemeli');
 });

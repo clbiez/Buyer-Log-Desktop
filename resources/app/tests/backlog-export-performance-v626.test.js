@@ -19,13 +19,13 @@ test('v6.26 Backlog export no longer renders a preview panel',()=>{
   assert.doesNotMatch(route,/buildBacklogGrouped\(/);
 });
 
-test('v6.26 Backlog row preparation only builds CP rows for filtered segments',()=>{
+test('Backlog row preparation skips CP projection and builds source details only on request',()=>{
   const start=PARSE.indexOf('function buildBacklogTemplateRows');
   const end=PARSE.indexOf('/* Segment -> BACKLOG_TEMPLATE_HEADERS',start);
   const block=PARSE.slice(start,end);
   assert.match(block,/selectedSegments =/);
-  assert.match(block,/buildCPRowsFromASAS\(cpOrders,/);
-  assert.doesNotMatch(block,/buildCPRowsFromASAS\(asasOrders,/);
+  assert.doesNotMatch(block,/buildCPRowsFromASAS\(/);
+  assert.match(block,/options.includeSourceDetails===true\s*\? buildOrdersRowsFromASAS\(cpOrders,/);
   assert.match(block,/Object\.defineProperty\(rows, 'totalRows'/);
 });
 
