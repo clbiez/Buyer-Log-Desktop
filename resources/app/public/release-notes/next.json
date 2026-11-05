@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Kişisel lisans favorileri ve arayüz iyileştirmeleri",
-    "en": "Personal license favorites and interface improvements"
+    "tr": "Çalışma alanı ve modül geçişi iyileştirmeleri",
+    "en": "Workspace and module transition improvements"
   },
   "summary": {
-    "tr": "Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır.",
-    "en": "License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section."
+    "tr": "Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır.",
+    "en": "License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Module navigation reveals the header, summaries and main content in a staggered flow."
   },
   "changes": [
     {
@@ -124,6 +124,35 @@
         "caption": {
           "tr": "Gerçek Buyer Log, izole demo verisi: ülkeler aynı listeden seçilir; altta tekrarlanan etiketler yoktur.",
           "en": "Actual Buyer Log with isolated demo data: countries are selected in one list without duplicate tags underneath."
+        }
+      }
+    },
+    {
+      "id": "module-staggered-flow",
+      "type": "improvement",
+      "module": {
+        "tr": "Modül geçişleri",
+        "en": "Module navigation"
+      },
+      "title": {
+        "tr": "Modüller arasında kademeli akış",
+        "en": "Staggered flow between modules"
+      },
+      "body": {
+        "tr": "Modül değiştirirken önce başlık, ardından özetler ve ana içerik 40 ms aralıklarla, toplam 440 ms içinde açılır. Tablolar tek blok halinde girer. Aynı modüle tıklama ve veri yenileme geçişi tekrarlamaz; hızlı gezinme eski hareketi iptal eder. Seçim, düzenleme, kaydırma ve azaltılmış hareket tercihi korunur.",
+        "en": "Switching modules reveals the header, summaries and main content in 40 ms steps within 440 ms. Tables enter as single blocks. Clicking the same module or refreshing data does not repeat the transition; rapid navigation cancels the previous motion. Selection, editing, scrolling and reduced-motion preferences are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "module-staggered-flow.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log üzerinde modül geçişinde sırayla beliren başlık ve içerik blokları",
+          "en": "Header and content blocks appearing in sequence during module navigation in the actual Buyer Log"
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle gerçek Buyer Log; kademeli akışın ortasında yakalanan ekran.",
+          "en": "Actual Buyer Log with isolated demo data, captured during the staggered transition."
         }
       }
     }

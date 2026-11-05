@@ -8,7 +8,7 @@
   const html=doc.documentElement;
   const reduce=()=>Boolean(root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
   const enabled=()=>!reduce()&&doc.visibilityState!=='hidden'&&html.dataset.blMotion!=='off'&&!(doc.body?.dataset?.activeTab==='overview'&&html.dataset.overviewMotion==='paused');
-  const SPEED=Object.freeze({page:340,card:360,table:390,overlay:240,bar:440,theme:560});
+  const SPEED=Object.freeze({page:340,card:360,table:390,overlay:240,bar:440,theme:560,flow:440,stagger:40,distance:14});
   const EASE='cubic-bezier(.2,.75,.25,1)';
   const duration=name=>{
     const css=root.getComputedStyle?.(html).getPropertyValue('--ui-motion-'+name);
@@ -16,8 +16,8 @@
     return Number.isFinite(parsed)&&parsed>0?parsed:SPEED[name];
   };
   const TAB='main > section.active';
-  const CARDS='.bpaTile,.pricingMetric,.ovPulseKpi,.ovMetricRow,.ovCollectionCard,.kolModelCard,.kolCard,.lcCard,.mfrCard,.psaKpi,.cpaCard,.ovWidget';
-  const BARS='.ovMetricBars em,.bpaBarFill,.bpaProgressFill,.ovPulseMini i';
+  const PAGE_HEADER='.ovDashboardToolbar,.workspaceContextBar,.bpaHero,.pricingWorkspaceHeader,.kolHeader,.psaHeader,.psaHead,.mfrHeader,.mfpHead,.lcHeader,.lcHead,.dmHead,.lcwaiChatHead';
+  const PAGE_SUMMARY='.kpirow,.psaKpis,.pdKpis,.bpaKpis';
   const OVERLAYS='dialog[open],[role="dialog"][aria-hidden="false"],.colPanel.show,.vfMenu.show,.toolbarMoreMenu:not([hidden]),.userMenu:not([hidden])';
   // Controls follow their real busy states; only an active refresh keeps rotating.
   // One-shot click feedback and other Motion+ effects remain finite.
@@ -27,7 +27,8 @@
   const SYNC_CONTROLS='#syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,[data-plm-sync-category]';
   const activityAnimations=new Map();
   let generation=0,activeTab='',lastWave=-1,overlays=new WeakMap();
-  const pending=new Set(),animations=new Set();
+  const pending=new Set(),animations=new Set(),pageAnimations=new Set();
+  let pageFlow=null;
   const visible=el=>{
     if(!el||!el.isConnected||el.hidden||el.closest('[hidden],[aria-hidden="true"]'))return false;
     const r=el.getBoundingClientRect();
@@ -53,6 +54,7 @@
     pending.clear();
     for(const a of animations){try{a.cancel();}catch(_){}}
     animations.clear();
+    pageAnimations.clear();pageFlow=null;
     activityAnimations.clear();
   }
   function later(fn,ms){
@@ -61,6 +63,7 @@
   }
   function waveTable(view,token){
     if(!enabled()||token!==generation||lastWave===token)return 0;
+    if(pageFlow?.stopped)return 0;
     // Yazılım çiziminde (VDI/RDP) yüzlerce hücre animasyonu işlemciye düşer; sayfa ve kart hareketleri kalır.
     if(html.dataset.blRender==='software')return 0;
     const tables=Array.from(view.querySelectorAll('table')).slice(0,12).filter(visible).slice(0,2);
@@ -69,6 +72,8 @@
     // (CP çiziminde 0,45–0,75 sn). Seçilen hücreler ve gecikmeler aynıdır.
     const queue=[];
     for(const table of tables){
+      // A table already entering as a single block must not also animate its cells.
+      if(pageFlow&&(table.closest?.('.tablewrap')||pageFlow.seen.some(block=>block===table||block.contains?.(table))))continue;
       const tbody=table.tBodies?.[0]||table.querySelector('tbody');
       if(!tbody)continue;
       const host=table.closest?.('.tablewrap')?.getBoundingClientRect();
@@ -97,26 +102,52 @@
     if(count)lastWave=token;
     return count;
   }
-  function enterCards(view){
-    const cards=Array.from(view.querySelectorAll(CARDS)).slice(0,64).filter(visible).slice(0,16);
-    if(!cards.length)return 0;
-    const origin=cards.reduce((p,el)=>{const b=el.getBoundingClientRect();return {x:Math.min(p.x,b.left),y:Math.min(p.y,b.top)};},{x:Infinity,y:Infinity});
-    for(const el of cards){
-      const rect=el.getBoundingClientRect();
-      const delay=Math.min(210,(rect.left-origin.x)*.075+(rect.top-origin.y)*.10);
-      animate(el,[{opacity:.58,transform:'translate3d(-5px,-3px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('card'),delay});
-    }
-    return cards.length;
+  function stopPageFlow(){
+    if(pageFlow)pageFlow.stopped=true;
+    for(const a of pageAnimations){try{a.cancel();}catch(_){}animations.delete(a);}
+    pageAnimations.clear();
   }
-  function enterCharts(view){
-    const bars=Array.from(view.querySelectorAll(BARS)).slice(0,56).filter(visible).slice(0,14);
-    for(let i=0;i<bars.length;i++)animate(bars[i],[{opacity:.4,transform:'scaleX(.4)'},{opacity:1,transform:'scaleX(1)'}],{duration:duration('bar'),delay:i*19});
+  function pageBlocks(view){
+    const header=[doc.getElementById?.('pageTitle'),...view.querySelectorAll(PAGE_HEADER)].find(visible);
+    const summaries=Array.from(view.querySelectorAll(PAGE_SUMMARY)).slice(0,16).filter(visible);
+    const anchors=[header,...summaries].filter(Boolean),body=[];
+    let scanned=0;
+    function visit(parent,depth){
+      for(const el of Array.from(parent.children||[])){
+        if(++scanned>64)return;
+        if(anchors.includes(el)||!visible(el)||el.matches?.('script,style,dialog,.uiState--loading,[aria-busy="true"]'))continue;
+        if(el.matches?.('.empty')&&!el.querySelector?.('.uiState--empty,.uiState--error'))continue;
+        // A min-height lazy host can be visible before it has rendered any content.
+        if(!el.textContent?.trim()&&!el.querySelector?.('svg,canvas,img,table,input,button'))continue;
+        // Unwrap layout containers, never table rows/cells or individual widgets.
+        const anchored=anchors.some(anchor=>el.contains?.(anchor));
+        const pageHost=depth===0&&el.children?.length&&!el.matches?.('.panel,.tablewrap,.empty,table,svg,canvas,[role="toolbar"],[class*="Toolbar"],[class*="toolbar"]');
+        if(depth<4&&(anchored||pageHost||el.matches?.('.ovDashboardGrid'))){visit(el,depth+1);}
+        else if(!el.querySelector?.('.uiState--loading,[aria-busy="true"]'))body.push(el);
+      }
+    }
+    visit(view,0);
+    const blocks=[];
+    for(const el of [...anchors,...body]){
+      if(blocks.some(parent=>parent===el||parent.contains?.(el)))continue;
+      if(el.querySelector?.('input:focus,textarea:focus,select:focus,[contenteditable="true"]:focus,.blGridActiveCell,.blGridSelectedCell,.kolSpreadsheetActiveCell,.kolActiveGridCell,td[aria-selected="true"],[role="gridcell"][aria-selected="true"]'))continue;
+      blocks.push(el);
+    }
+    return blocks.slice(0,5);
   }
   function enterPage(view){
-    // The workspace stays still; animate only visible, lightweight page chrome.
-    const header=view.querySelector('.ovDashboardToolbar,.workspaceContextBar,.bpaHero,.pricingWorkspaceHeader,.kolHeader,.psaHeader');
-    if(visible(header))animate(header,[{opacity:.62,transform:'translate3d(0,5px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('page')});
-    enterCards(view);enterCharts(view);
+    if(!enabled()||!pageFlow||pageFlow.stopped||pageFlow.view!==view)return;
+    // Measure the small visible block set before any writes; large tables are atomic.
+    const flow=pageFlow,blocks=pageBlocks(view).filter(el=>!flow.seen.some(seen=>seen===el||seen.contains?.(el)||el.contains?.(seen))).slice(0,Math.max(0,5-flow.seen.length));
+    const step=duration('stagger'),distance=duration('distance');
+    const ms=Math.max(1,duration('flow')-(blocks.length-1)*step);
+    const easing=root.getComputedStyle?.(html).getPropertyValue('--ui-ease').trim()||EASE;
+    for(let i=0;i<blocks.length;i++){
+      const el=blocks[i];flow.seen.push(el);
+      const a=start(el,[{opacity:0,transform:'translate3d(0,'+distance+'px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],
+        {duration:ms,delay:i*step,fill:'backwards',easing});
+      if(a){pageAnimations.add(a);for(const event of ['finish','cancel'])a.addEventListener?.(event,()=>pageAnimations.delete(a),{once:true});}
+    }
     // Legacy KPI contract still returns to its exact canonical formatted value.
     try{root.BLKpiMotion?.run?.(view);}catch(_){}
   }
@@ -129,8 +160,11 @@
     generation++;
     const token=generation;
     cancelPending();
+    pageFlow={view,seen:[],stopped:false};
     restoreActivityControls(); // Tab changes must not silence a running refresh.
-    later(()=>{if(token===generation&&visible(view))enterPage(view);},85);
+    enterPage(view);
+    // Lazy modules may paint after navigation. Bounded retries only add unseen blocks.
+    for(const delay of [120,400,840])later(()=>{if(token===generation&&visible(view))enterPage(view);},delay);
     later(()=>{if(token===generation&&visible(view))waveTable(view,token);},185);
     // Initial async render can deliver the table after the first paint.
     later(()=>{if(token===generation&&visible(view))waveTable(view,token);},840);
@@ -309,7 +343,7 @@
     doc.addEventListener('pointerdown',rememberSegment,true);
     doc.addEventListener('click',slideSegment);
     doc.addEventListener('click',ev=>{
-      if(ev.target.closest?.('nav.tabs button[data-tab]'))later(()=>activate(true),45);
+      if(ev.target.closest?.('nav.tabs button[data-tab]'))later(()=>activate(false),45);
       else if(ev.target.closest?.('button,[role="button"]'))later(enterOverlay,65);
       const refresh=ev.target.closest?.(REFRESH_CONTROLS);
       const sync=ev.target.closest?.(SYNC_CONTROLS);
@@ -318,6 +352,11 @@
         const icon=button.querySelector?.('.ic')||button;
         play(refresh?'refresh':'sync',icon);
       }
+    },true);
+    // Layout/scroll restoration during lazy rendering is not user interaction.
+    for(const event of ['pointerdown','focusin','wheel','touchstart','keydown'])doc.addEventListener(event,ev=>{
+      if(event==='focusin'&&!['INPUT','TEXTAREA','SELECT'].includes(ev.target?.tagName)&&!ev.target?.isContentEditable)return;
+      if(pageFlow?.view.contains?.(ev.target))stopPageFlow();
     },true);
     if(typeof root.MutationObserver==='function'&&doc.body){
       new root.MutationObserver(()=>activate(false)).observe(doc.body,{attributes:true,attributeFilter:['data-active-tab']});
