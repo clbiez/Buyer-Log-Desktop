@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-11-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Girişte kesintisiz genel kültür geçişi",
+    "en": "Seamless trivia transition after sign-in"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi.",
+    "en": "Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "startup-login-no-flash",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Girişte kesintisiz genel kültür geçişi",
+        "en": "Seamless trivia transition after sign-in"
+      },
+      "body": {
+        "tr": "Girişten genel kültüre geçiş ilk çizimden önce hazırlanır; genel kültür yalnız katlanan üçgenlerin altından açılır. Geciken veya başarısız kare aktarımı giriş ekranını sonradan geri getirmez. Animasyon kapalıyken veya azaltılmış hareket tercihinde ekran doğrudan açılır.",
+        "en": "The transition from sign-in to trivia is prepared before the first paint, revealing trivia through the folding triangles. A delayed or failed frame handoff never brings the sign-in screen back later. With motion off or reduced motion enabled, the screen opens directly."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-login-no-flash.png",
+        "alt": {
+          "tr": "Giriş ekranının katlanan üçgenleri altından ilk kez açılan genel kültür kartı",
+          "en": "Trivia card first revealed beneath the folding triangles of the sign-in screen"
+        },
+        "caption": {
+          "tr": "İzole demo oturumunda gerçek Buyer Log; parola temizlendikten sonra geçiş sırasında yakalandı. İlk çizim sırası tarayıcıda kare kare kontrol edildi.",
+          "en": "Actual Buyer Log in an isolated demo session, captured during the transition after clearing the password. First-paint order was checked frame by frame in the browser."
+        }
+      }
+    }
+  ]
 }

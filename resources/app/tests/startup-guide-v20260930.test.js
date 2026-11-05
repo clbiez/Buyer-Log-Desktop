@@ -165,7 +165,7 @@ test('opening screen projection and failure gate are awaited, while background f
   assert.match(startup,/primaryScreenReady=initialDataLoaded&&await waitForStartupPrimaryScreen\(\)/);assert.match(startup,/if\(primaryScreenReady\)window\.BLBootGuard\?\.ready\('ui'\)/);
   const helper=APP.slice(APP.indexOf('async function waitForStartupPrimaryScreen()'),APP.indexOf("window.addEventListener('DOMContentLoaded', async () => {"));assert.match(helper,/ensureOverviewLoaded/);assert.match(helper,/ensureCpLoaded/);assert.match(helper,/ensureOrdersLoaded/);assert.doesNotMatch(helper,/ensureFeature|ensureLibrary|ensureCollectionMaster/);
   // The curtain is the first thing in <body>: nothing of the app can paint before it.
-  const bodyAt=INDEX.indexOf('<body'),mountAt=INDEX.indexOf('<script>window.BLBootGuard?.mount();</script>');
+  const bodyAt=INDEX.indexOf('<body'),mountAt=INDEX.indexOf('<script>window.BLBootGuard?.mount();');
   assert.ok(mountAt>bodyAt&&mountAt<INDEX.indexOf('<svg',bodyAt)&&mountAt<INDEX.indexOf('<aside'));
   assert.match(INDEX,/href="ui-startup\.css/);const startupCss=fs.readFileSync(path.join(__dirname,'../public/ui-startup.css'),'utf8');assert.match(startupCss,/prefers-reduced-motion:reduce/);assert.match(startupCss,/transition:opacity var\(--ui-motion-enter\)/);assert.doesNotMatch(startupCss,/background-color.*animation|blBootBgIn/);assert.match(APP,/'#buyerLogGuide\[open\]', '#blBootGuard'/);
 });

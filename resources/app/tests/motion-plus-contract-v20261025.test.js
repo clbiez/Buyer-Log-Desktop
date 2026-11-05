@@ -36,10 +36,13 @@ function harness({reduced=false,hidden=false,off=false}={}){
   }
   return {root,doc,view,cells,calls,flush};
 }
-test('Motion+ shared integration is loaded after canonical UI and KPI engine',()=>{
+test('Motion+ loads after canonical styles before first paint and mounts controls after the document is parsed',()=>{
  const html=read('index.html');
  assert.ok(html.indexOf('ui-components.css')<html.indexOf('ui-motion.css'));
- assert.ok(html.indexOf('kpi-motion.js')<html.indexOf('motion-plus.js'));
+ const motionAt=html.indexOf('src="motion-plus.js?');
+ assert.ok(motionAt>html.indexOf('ui-motion.css')&&motionAt<html.indexOf('</head>'));
+ assert.ok(html.indexOf('kpi-motion.js')<html.indexOf('selection-action-bar.js'));
+ assert.match(read('motion-plus.js'),/if\(doc\.readyState==='loading'\)doc\.addEventListener\('DOMContentLoaded',mount,\{once:true\}\)/);
  assert.match(read('ui-tokens.css'),/--ui-motion-table:390ms/);
  assert.match(read('ui-motion.css'),/prefers-reduced-motion:reduce/);
  assert.match(fs.readFileSync(path.resolve(publicRoot,'..','..','..','DESIGN_SYSTEM.md'),'utf8'),/Motion\+ zorunlu hareket sözleşmesidir/);
