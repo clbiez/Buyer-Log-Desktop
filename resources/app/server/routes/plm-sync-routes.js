@@ -9,15 +9,18 @@ const coreNectumApiSettings = require('../lib/corenectum-api-settings');
    yeniler, iş yeni yetkiyi görünce kaldığı yerden sürer. */
 const AUTH_WAIT_MS = 3 * 60 * 1000;
 const AUTH_POLL_MS = 1500;
-function waitForFreshToken(profile, job, { waitMs = AUTH_WAIT_MS, pollMs = AUTH_POLL_MS, language = '' } = {}) {
-  const failing = coreNectumApiSettings.getToken(profile.id);
+function waitForFreshToken(profile, job, { waitMs = AUTH_WAIT_MS, pollMs = AUTH_POLL_MS, language = '', failedGeneration } = {}) {
+  /* Karşılaştırma başarısız İSTEĞİN yetki kuşağıyla yapılır; o andan beri
+     yenilenmiş bir yetki varsa beklenmez. */
+  const baseline = Number.isFinite(Number(failedGeneration)) ? Number(failedGeneration) : coreNectumApiSettings.currentTokenGeneration();
+  if (coreNectumApiSettings.currentTokenGeneration() > baseline && coreNectumApiSettings.getToken(profile.id)) return Promise.resolve(true);
   job.report({ waitingAuth: true, phase: language === 'en' ? 'Waiting for the CoreNectum session to be renewed' : 'CoreNectum oturumunun yenilenmesi bekleniyor' });
   const deadline = Date.now() + waitMs;
   return new Promise(resolve => {
     const tick = () => {
       if (job.cancelled()) { job.report({ waitingAuth: false }); return resolve(false); }
       const current = coreNectumApiSettings.getToken(profile.id);
-      if (current && current !== failing) {
+      if (current && coreNectumApiSettings.currentTokenGeneration() > baseline) {
         job.report({ waitingAuth: false, phase: language === 'en' ? 'Reading PLM BOM' : 'PLM BOM okunuyor' });
         return resolve(true);
       }
@@ -499,7 +502,8 @@ function createPlmFetchService(deps){
       const result = await plmBomSync.syncPlmBoms(records, {
         ownerId: profile.id, assertAuthority, allowAi, language,
         isCancelled: job.cancelled,
-        waitForAuth: () => waitForFreshToken(profile, job, { language, ...(authWait || {}) }),
+        waitForAuth: error => waitForFreshToken(profile, job, { language, failedGeneration: error && error.details && error.details.tokenGeneration, ...(authWait || {}) }),
+        currentTokenGeneration: () => coreNectumApiSettings.currentTokenGeneration(),
         onProgress: progress => job.report({
           phase: progress && progress.phase,
           processed: progress && progress.current,

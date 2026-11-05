@@ -272,6 +272,35 @@
   // Model-level values that would otherwise start inheriting from the new parent
   // are captured as variant overrides so the values visible before the merge stay
   // intact and a later split can round-trip without data loss.
+  /* Mevcut modele yeni eklenen renk satırı, model düzeyindeki Buyer Log
+     değerlerini (fiyatlama, bütçe ayı, onaylı üretici…) o modelden devralır.
+     mergeGroups birleştirme öncesi değerleri bilerek korur; yeni satırın boş ya
+     da yalnız varsayılan değerleri aksi hâlde kalıcı varyant farkına dönüşürdü.
+     Yeni satırda AÇIKÇA verilmiş (boş/varsayılan olmayan) değer ve renk/PLM
+     alanları korunur. */
+  function inheritModelValues(row, anchor, rows, { baseline = {}, keep = [] } = {}) {
+    if (!row || !anchor) return row;
+    const keepSet = new Set(keep);
+    const unset = (key, value) => {
+      if (value == null || value === false) return true;
+      if (typeof value === 'string' && !value.trim()) return true;
+      if (Array.isArray(value) && !value.length) return true;
+      if (typeof value === 'object' && !Array.isArray(value) && !Object.keys(value).length) return true;
+      return Object.prototype.hasOwnProperty.call(baseline, key) && equalValue(value, baseline[key]);
+    };
+    const keys = new Set([...Object.keys(anchor), ...Object.keys(anchor.modelSharedValues || {})]);
+    keys.forEach(key => {
+      if (GROUP_METADATA_FIELDS.has(key) || String(key).startsWith('_') || keepSet.has(key)) return;
+      const meta = fieldMetadata(key);
+      if (meta.inheritance !== 'model' || meta.calculated) return;
+      if (!unset(key, row[key])) return;
+      const value = effectiveValue(anchor, key, rows);
+      if (value === undefined) return;
+      row[key] = clone(value);
+    });
+    return row;
+  }
+
   function mergeGroups(rows, selectedIds, targetRowId) {
     const source = Array.isArray(rows) ? rows : [];
     const next = source.map(clone);
@@ -521,5 +550,5 @@ function kolParseMoneyNum(v){
   }else value=value.replace(',','.');
   return Number(value);
 }
-  return { writeGroupedValue,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, groupFor, hasVariantOverride, effectiveValue, createValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
+  return { writeGroupedValue,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, inheritModelValues, groupFor, hasVariantOverride, effectiveValue, createValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
 });

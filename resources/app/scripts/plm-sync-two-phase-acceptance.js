@@ -61,7 +61,7 @@ async function bomJobs() { return (await (await api('/api/plm-jobs?scope=koleksi
   await page.evaluate(() => { applyLanguage('tr'); switchTab('koleksiyon'); });
   await page.waitForFunction(() => typeof window.BLPlmSync?.run === 'function', null, { timeout: 30000 });
   await page.evaluate(codes => {
-    kolRows = codes.map(code => migrateKolRow({ id: kolNextId++, plmId: code, modelKod: '', durum: 'Design' }));
+    kolRows = codes.map(code => migrateKolRow({ id: kolNextId++, plmId: code, modelKod: '', durum: 'Design', pricing: { 'Demo Factory': '5.40' }, confirmedManufacturer: 'Demo Factory' }));
     saveKolRows(); renderKol();
   }, CODES);
 
@@ -99,6 +99,12 @@ async function bomJobs() { return (await (await api('/api/plm-jobs?scope=koleksi
   });
   assert.equal(colourShape.length, CODES.length);
   assert.ok(colourShape.every(item => item.colours === 'J0G,Q2K,Q6K' && item.groups === 1), JSON.stringify(colourShape.slice(0, 3)));
+  // Yeni renk satırları model düzeyindeki Buyer Log değerlerini devralır.
+  const inherited = await page.evaluate(() => {
+    const api = window.BLCollectionModelGroups;
+    return kolRows.map(row => ({ manufacturer: api.effectiveValue(row, 'confirmedManufacturer', kolRows), pricing: api.effectiveValue(row, 'pricing', kolRows), override: Boolean((row.variantOverrides || {}).pricing) }));
+  });
+  assert.ok(inherited.every(item => item.manufacturer === 'Demo Factory' && item.pricing && item.pricing['Demo Factory'] === '5.40' && !item.override), JSON.stringify(inherited.slice(0, 4)));
   const failures = calls();
   assert.equal(failures.failedStyleList, 3, 'Style List geçici hatası yeniden denenerek aşıldı');
   const fields = await page.evaluate(() => kolRows.map(row => ({ plmId: row.plmId, modelKod: row.modelKod, fabric: row.fabric })));

@@ -32429,6 +32429,11 @@ function kolPlmJoinColourRowsToModels(rowIds){
     const siblings=kolRows.filter(row=>kolPlmNormalizeId(row.plmId)===key&&!createdIds.has(String(row.id)));
     const anchor=siblings.find(row=>row.modelGroupRole==='parent')||siblings[0];
     if(!anchor||!api?.mergeGroups)return;
+    // Model düzeyindeki Buyer Log değerleri (fiyatlama, bütçe ayı…) mevcut modelden gelir.
+    if(api.inheritModelValues){
+      const baseline=kolApplyNewModelDefaults(migrateKolRow({id:0}));
+      kolRows.filter(row=>createdIds.has(String(row.id))).forEach(row=>api.inheritModelValues(row,anchor,kolRows,{baseline,keep:PLM_MANAGED_FIELDS()}));
+    }
     const result=api.mergeGroups(kolRows,[anchor.id,...ids],anchor.id);
     if(result&&result.changed)kolRows=kolNormalizeModelGroups(result.rows);
   });

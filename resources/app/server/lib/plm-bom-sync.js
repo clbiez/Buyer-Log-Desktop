@@ -205,12 +205,16 @@ async function syncPlmBoms(records, options = {}) {
      kullanıcı oturumu yenileyene kadar beklenir ve kalan modeller kaldığı
      yerden okunur. Aynı anda düşen istekler tek beklemeyi paylaşır. */
   let authWait = null, authWaitsUsed = 0;
-  const awaitAuth = () => {
+  const awaitAuth = error => {
     if (typeof options.waitForAuth !== 'function') return Promise.resolve(false);
+    // Bu 401 eski yetkiyle alındı ve yetki o zamandan beri yenilendi: beklemeden yeniden dene.
+    const failedGeneration = Number(error && error.details && error.details.tokenGeneration);
+    if (typeof options.currentTokenGeneration === 'function' && Number.isFinite(failedGeneration)
+      && Number(options.currentTokenGeneration()) > failedGeneration) return Promise.resolve(true);
     if (!authWait) {
       if (authWaitsUsed >= (Number(options.authWaits) || AUTH_WAITS)) return Promise.resolve(false);
       authWaitsUsed += 1;
-      authWait = Promise.resolve().then(() => options.waitForAuth()).then(Boolean, () => false).finally(() => { authWait = null; });
+      authWait = Promise.resolve().then(() => options.waitForAuth(error)).then(Boolean, () => false).finally(() => { authWait = null; });
     }
     return authWait;
   };
@@ -285,7 +289,7 @@ async function syncPlmBoms(records, options = {}) {
     } catch (error) {
       if (error === STOP) { skipped.push(target); return; }
       if (isAuthError(error)) {
-        if (!authError && await awaitAuth()) { retryQueue.set(target.plmId, { target, error }); return; }
+        if (!authError && await awaitAuth(error)) { retryQueue.set(target.plmId, { target, error }); return; }
         authError = authError || error; skipped.push(target); return;
       }
       retryQueue.set(target.plmId, { target, error });

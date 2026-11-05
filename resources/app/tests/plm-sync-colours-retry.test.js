@@ -85,6 +85,32 @@ test('Koleksiyon PLM Sync satır bazında eşler, PLM’de olmayan rengi hata sa
   assert.match(app, /'Colours in PLM that are missing in Collection'/);
 });
 
+test('yeni renk satırı model düzeyindeki Buyer Log değerlerini mevcut modelden devralır; kalıcı boş fark oluşmaz', () => {
+  const rows = groups.normalizeRows([
+    { id: 1, plmId: '100', modelKod: 'MODEL-A', colourCode: 'A', colour: 'BLACK', pricing: { Factory: 5 }, confirmedManufacturer: 'Factory', mbMonth: '2027-03', not: 'model notu' },
+    { id: 2, plmId: '100', modelKod: 'MODEL-A', colourCode: 'B', colour: 'NAVY', pricing: { Factory: 5 }, confirmedManufacturer: 'Factory', mbMonth: '2027-03', not: 'model notu' },
+  ]).rows;
+  const grouped = groups.mergeGroups(rows, [1, 2], 1);
+  assert.equal(grouped.changed, true, 'mevcut model iki renkli tek grup');
+  const baseline = { pricing: {}, confirmedManufacturer: '', delType: 'Gemi' };
+  const fresh = { id: 3, plmId: '100', modelKod: 'MODEL-A', colourCode: 'C', colour: 'BLUE', pricing: {}, confirmedManufacturer: '', mbMonth: '', delType: 'Gemi', not: 'bu içe aktarmada verilen not' };
+  let all = groups.normalizeRows([...grouped.rows, fresh]).rows;
+  const anchor = all.find(row => row.id === 1);
+  const added = all.find(row => row.id === 3);
+  groups.inheritModelValues(added, anchor, all, { baseline, keep: ['colourCode', 'colour'] });
+  const merged = groups.mergeGroups(all, [1, 3], 1);
+  assert.equal(merged.changed, true);
+  all = merged.rows;
+  const row = all.find(item => item.id === 3);
+  assert.deepEqual(groups.effectiveValue(row, 'pricing', all), { Factory: 5 });
+  assert.equal(groups.effectiveValue(row, 'confirmedManufacturer', all), 'Factory');
+  assert.equal(groups.effectiveValue(row, 'mbMonth', all), '2027-03');
+  assert.equal(row.colourCode, 'C', 'renk alanı devralınmaz');
+  assert.equal((row.variantOverrides || {}).pricing, undefined, 'boş fiyatlama kalıcı fark olarak donmaz');
+  assert.equal(groups.effectiveValue(row, 'not', all), 'bu içe aktarmada verilen not', 'açıkça verilen değer korunur');
+  assert.equal(new Set(all.filter(item => item.plmId === '100').map(item => item.modelGroupId)).size, 1);
+});
+
 const tmpStore = () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-bom-retry-'));
   return { dir, store: createStore(path.join(dir, 'plm-bom.json')) };
@@ -139,6 +165,39 @@ test('oturum düşünce iş durmaz: yeni yetki beklenir ve kalan modeller kaldı
   assert.equal(result.failed.length, 0);
   assert.equal(result.fetched, 4);
   fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('yenileme tamamlandıktan sonra geç dönen eski-token 401 ikinci bir bekleme açmaz', async () => {
+  const { dir, store } = tmpStore();
+  let generation = 1, waits = 0;
+  const postJson = async (_url, body) => {
+    const sentWith = generation;
+    // İki istek eski yetkiyle uçuşta; biri hemen, diğeri yenilemeden SONRA 401 döner.
+    if (sentWith === 1 && String(body.styleId) === '9700') throw Object.assign(new Error('401'), { code: 'CORENECTUM_API_TOKEN_INVALID', details: { tokenGeneration: sentWith } });
+    if (sentWith === 1 && String(body.styleId) === '9701') {
+      await new Promise(resolve => setTimeout(resolve, 40));
+      throw Object.assign(new Error('401'), { code: 'CORENECTUM_API_TOKEN_INVALID', details: { tokenGeneration: sentWith } });
+    }
+    return bomPayload(body.styleId);
+  };
+  const result = await bomSync.syncPlmBoms(targets(4), {
+    ownerId: 'u1', store, postJson, fetchConcurrency: 2, retryDelaysMs: [0],
+    currentTokenGeneration: () => generation,
+    waitForAuth: async () => { waits += 1; generation += 1; return true; },
+  });
+  assert.equal(waits, 1, 'tamamlanmış yenileme yeniden beklenmez');
+  assert.equal(result.stopped, null);
+  assert.equal(result.failed.length, 0);
+  assert.equal(result.fetched, 4);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('istemci 401 hatası yalnız token kuşağını taşır, token değerini taşımaz', () => {
+  const client = read('server/lib/corenectum-api-client.js');
+  assert.match(client, /const generation = settings\.currentTokenGeneration\(\);/);
+  assert.match(client, /\{remoteStatus:response\.status,tokenGeneration:generation\}/);
+  const route = read('server/routes/plm-sync-routes.js');
+  assert.match(route, /if \(coreNectumApiSettings\.currentTokenGeneration\(\) > baseline && coreNectumApiSettings\.getToken\(profile\.id\)\) return Promise\.resolve\(true\);/);
 });
 
 test('yenilenmeyen oturumda iş en fazla 3 bekleme sonrası durur, okunanlar kaydedilir', async () => {
