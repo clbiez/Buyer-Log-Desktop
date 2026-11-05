@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.336",
+      "publishedAt": "2026-11-05",
+      "title": {
+        "tr": "Sütun dondurma yeniden kuruldu · Koleksiyon referansları için buyer ülke filtresi · Arayüz geçişleri ve dengeli sol navigasyon · daha hızlı PLM Sync · donmayan güncelleme açılışı",
+        "en": "Freeze Columns rebuilt · Buyer country filter for Collection references · UI transitions and balanced sidebar navigation · faster PLM Sync · freeze-free update startup"
+      },
+      "stats": {
+        "features": 2,
+        "improvements": 8,
+        "fixes": 14
+      },
+      "file": "release-notes/7.0.336/release.json"
+    },
+    {
       "version": "7.0.334",
       "publishedAt": "2026-11-04",
       "title": {
