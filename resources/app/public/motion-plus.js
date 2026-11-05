@@ -18,7 +18,7 @@
   const TAB='main > section.active';
   const PAGE_HEADER='.ovDashboardToolbar,.workspaceContextBar,.bpaHero,.pricingWorkspaceHeader,.kolHeader,.psaHeader,.psaHead,.mfrHeader,.mfpHead,.lcHeader,.lcHead,.dmHead,.lcwaiChatHead';
   const PAGE_SUMMARY='.kpirow,.psaKpis,.pdKpis,.bpaKpis';
-  const OVERLAYS='dialog[open],[role="dialog"][aria-hidden="false"],.colPanel.show,.vfMenu.show,.toolbarMoreMenu:not([hidden]),.userMenu:not([hidden])';
+  const OVERLAYS='dialog[open],[role="dialog"][aria-hidden="false"],.colPanel.show,.vfMenu.show,.vfMenu.open,.toolbarMoreMenu:not([hidden]),.userMenu:not([hidden])';
   // Controls follow their real busy states; only an active refresh keeps rotating.
   // One-shot click feedback and other Motion+ effects remain finite.
   const REFRESH_IDS=['topRefreshBtn','serverRefreshBtn','cpRefreshBtn','ordersRefreshBtn','lflRefreshBtn','intakeRefreshBtn','backlogOverviewRefresh'];
@@ -26,7 +26,7 @@
   const ACTIVITY_CONTROLS=REFRESH_IDS.map(id=>[id,'spinning','refresh']).concat([['syncStatusBadge','is-syncing','sync']]);
   const SYNC_CONTROLS='#syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,[data-plm-sync-category]';
   const activityAnimations=new Map();
-  let generation=0,activeTab='',lastWave=-1,overlays=new WeakMap();
+  let generation=0,activeTab='',lastWave=-1,overlayFrame=null,overlayBefore=null;
   const pending=new Set(),animations=new Set(),pageAnimations=new Set();
   let pageFlow=null;
   const visible=el=>{
@@ -50,6 +50,8 @@
     }catch(_){return null;}
   }
   function cancelPending(){
+    if(overlayFrame!==null)root.cancelAnimationFrame(overlayFrame);
+    overlayFrame=null;overlayBefore=null;
     for(const id of pending)root.clearTimeout(id);
     pending.clear();
     for(const a of animations){try{a.cancel();}catch(_){}}
@@ -169,15 +171,46 @@
     // Initial async render can deliver the table after the first paint.
     later(()=>{if(token===generation&&visible(view))waveTable(view,token);},840);
   }
-  function enterOverlay(){
-    if(!enabled())return;
-    const candidates=Array.from(doc.querySelectorAll(OVERLAYS)).filter(visible).slice(-4);
-    const time=Date.now();
-    for(const el of candidates){
-      if(time-(overlays.get(el)||0)<700)continue;
-      overlays.set(el,time);
-      animate(el,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('overlay')});
+  const openOverlays=()=>Array.from(doc.querySelectorAll(OVERLAYS)).filter(visible);
+  function hasEntrance(el){
+    // CSS and explicit Motion+ calls own the whole surface, including a moving
+    // dialog card inside a scrim. Never add a second moving parent/child.
+    for(let node=el;node;node=node.parentElement){
+      const effects=node.getAnimations?.({subtree:node===el})||[];
+      if(effects.some(a=>a.id==='bl-motion-entrance'||/^(blMotionEnter|blMotionOverlay|manifestEnter)$/.test(a.animationName||'')))return true;
     }
+    return false;
+  }
+  function entrance(el,frames){
+    if(hasEntrance(el))return null;
+    // placeMenu may shift a menu horizontally to keep it inside the viewport.
+    const base=root.getComputedStyle?.(el)?.transform;
+    if(base&&base!=='none')frames=frames.map(frame=>Object.assign({},frame,{transform:base+' '+frame.transform}));
+    const a=animate(el,frames,{duration:duration('overlay')});
+    if(a)a.id='bl-motion-entrance';
+    return a;
+  }
+  function cancelHiddenEntrances(){
+    for(const a of animations)if(a.id==='bl-motion-entrance'&&!visible(a.effect?.target))a.cancel();
+  }
+  function queueOverlay(){
+    if(!enabled())return;
+    cancelHiddenEntrances();
+    const before=new Set(openOverlays());
+    if(overlayBefore){
+      // Delegated .click() calls share one frame. A close/reopen in that frame
+      // still counts as a new opening; an already open parent never does.
+      for(const el of overlayBefore)if(!before.has(el))overlayBefore.delete(el);
+    }else overlayBefore=before;
+    if(overlayFrame!==null)return;
+    overlayFrame=root.requestAnimationFrame(()=>{
+      const previous=overlayBefore;overlayFrame=null;overlayBefore=null;
+      cancelHiddenEntrances();
+      if(!enabled())return;
+      const opened=openOverlays().filter(el=>!previous.has(el));
+      const surfaces=opened.filter(el=>!opened.some(parent=>parent!==el&&parent.contains(el))).slice(-4);
+      for(const el of surfaces)play('overlay',el);
+    });
   }
   function play(kind,element){
     if(!element||!enabled())return null;
@@ -188,9 +221,9 @@
       [{opacity:.5,transform:'translate3d('+(kind==='page-next'?48:-48)+'px,0,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],
       {duration:duration('page')});
     if(kind==='card')return animate(element,[{opacity:.6,transform:'translate3d(-5px,-3px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('card')});
-    if(kind==='overlay')return animate(element,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('overlay')});
+    if(kind==='overlay')return entrance(element,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}]);
     // Alttan açılan çekmece: içerik aşağıdan yukarı doğru açılır ve yerine kayar.
-    if(kind==='drawer')return animate(element,[{clipPath:'inset(100% 0 0 0)',transform:'translate3d(0,12px,0)'},{clipPath:'inset(0 0 0 0)',transform:'translate3d(0,0,0)'}],{duration:duration('overlay')});
+    if(kind==='drawer')return entrance(element,[{clipPath:'inset(100% 0 0 0)',transform:'translate3d(0,12px,0)'},{clipPath:'inset(0 0 0 0)',transform:'translate3d(0,0,0)'}]);
     // Bölüm genişletme: yüksekliği sıfırdan kendi boyuna açılır (alta sabitli kapta yukarı doğru büyür).
     if(kind==='expand')return animate(element,[{height:'0px',opacity:0,overflow:'hidden'},{height:element.scrollHeight+'px',opacity:1,overflow:'hidden'}],{duration:duration('overlay')});
     if(kind==='refresh'||kind==='refresh-active')return animate(element,
@@ -344,7 +377,7 @@
     doc.addEventListener('click',slideSegment);
     doc.addEventListener('click',ev=>{
       if(ev.target.closest?.('nav.tabs button[data-tab]'))later(()=>activate(false),45);
-      else if(ev.target.closest?.('button,[role="button"]'))later(enterOverlay,65);
+      else if(ev.target.closest?.('button,[role="button"]'))queueOverlay();
       const refresh=ev.target.closest?.(REFRESH_CONTROLS);
       const sync=ev.target.closest?.(SYNC_CONTROLS);
       const button=refresh||sync;
