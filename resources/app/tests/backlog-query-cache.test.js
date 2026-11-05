@@ -61,3 +61,13 @@ test('persisted pivot variants expire on a new calendar day even when source dat
  today='2026-11-05T23:59:00';assert.equal(read(),initial);
  today='2026-11-06T00:01:00';assert.notEqual(read(),initial);
 });
+test('export projects the same override snapshot used to select and cache its query',async()=>{
+ const server=fs.readFileSync(require.resolve('../server/server.js'),'utf8');
+ const start=server.indexOf("app.get('/api/backlog-export'"),end=server.indexOf("app.get('/api/backlog-filter-values'",start);
+ const selected={notesmap:{1001:{Notes:'selected snapshot'}},_revision:2};
+ let handler,result;
+ const sandbox={app:{get:(_path,_guard,fn)=>{handler=fn;}},userAccess:{requireArea:()=>null},assertSourceFilters(){},sourceUserId:()=> 'demo',cacheForUser:()=>({asasOrders:[]}),ensureBacklogSourceFields:async()=>{},effectiveOverridesForUser:()=>({notesmap:{1001:{Notes:'unrelated snapshot'}},_revision:1}),backlogQueryForRequest:()=>({orders:[],antrepo:{},overrides:selected,sourceRevision:'revision-2',query:{custom:{customDimensions:[]}}}),backlogRowFilterOptions:()=>({}),backlogRowsCacheKey:()=> 'legacy-key',cachedBacklogTemplateRows:(_key,compute)=>compute(),buildBacklogTemplateRows:(_orders,_antrepo,overrides)=>[{note:overrides.notesmap[1001].Notes}],BACKLOG_TEMPLATE_HEADERS:[],BACKLOG_ROWS_PROCESS_NONCE:'test',crypto:require('node:crypto'),sendDateSafeJson:(_res,body)=>{result=body;},require:()=>({publicProjection:()=>({})}),apiError:(_res,error)=>{throw error;}};
+ vm.runInNewContext(server.slice(start,end),sandbox);
+ await handler({query:{format:'json'},currentUser:{}},{});
+ assert.equal(result.rows[0].note,'selected snapshot');
+});

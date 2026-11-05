@@ -8838,13 +8838,13 @@ app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res
     const id=sourceUserId(req),runtime=cacheForUser(id);
     if(!runtime.asasOrders) await ensureBacklogRuntime(id);
     await ensureBacklogSourceFields(id);
-    const active=cacheForUser(id),overrides=effectiveOverridesForUser(id);
     const {retailFrom,retailTo,inStoreFrom,inStoreTo,exFactoryFrom,exFactoryTo,buyerGrup,groupBy,dimFilters,antrepoFrom,antrepoTo,antrepoDateLevels}=req.query;
     const dims=groupBy?String(groupBy).split(',').filter(Boolean):[];
     const dateLevels=antrepoDateLevels?String(antrepoDateLevels).split(',').filter(Boolean):undefined;
     let parsedDimFilters={}; if(dimFilters){try{parsedDimFilters=JSON.parse(dimFilters);}catch{}}
     const filterOpts={retailFrom,retailTo,inStoreFrom,inStoreTo,exFactoryFrom,exFactoryTo,buyerGrup,groupBy:dims,dimFilters:parsedDimFilters,analysisFilters:req.query.analysisFilters,antrepoFrom,antrepoTo,antrepoDateLevels:dateLevels};
     const prepared=backlogQueryForRequest(req,filterOpts);
+    const overrides=prepared.overrides;
     const backlogOrders=prepared.orders;
     const backlogAntrepo=prepared.antrepo;
     // Excel detayı Backlog ekranıyla AYNI hedef kapsamını ve AYNI aktif filtreleri
@@ -8855,7 +8855,7 @@ app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res
     const sourceColumns=requestedIds.map(id=>sourceById.get(id)).filter(Boolean);
     const previewLimit=Math.min(500,Math.max(0,Number(req.query.previewLimit)||0));
     const includeSourceDetails=req.query.includeSourceDetails==='1';
-    const detailRowsKey=backlogRowsCacheKey(id,active,overrides,req.currentUser,[prepared.sourceRevision,backlogRowFilterOptions(filterOpts),sourceColumns.map(column=>column.id),previewLimit,includeSourceDetails]);
+    const detailRowsKey=JSON.stringify([prepared.sourceRevision,backlogRowFilterOptions(filterOpts),sourceColumns.map(column=>column.id),previewLimit,includeSourceDetails]);
     const detailRows=cachedBacklogTemplateRows(detailRowsKey,()=>buildBacklogTemplateRows(backlogOrders,backlogAntrepo,overrides,filterOpts,sourceColumns,{limit:previewLimit,includeSourceDetails,queryContext:prepared.query}));
     const exportHeaders=[...BACKLOG_TEMPLATE_HEADERS,...sourceColumns.map(column=>column.label)];
     // format=json: satırlar istemciye gider, Excel istemcide CP ile AYNI stil motoruyla üretilir.
