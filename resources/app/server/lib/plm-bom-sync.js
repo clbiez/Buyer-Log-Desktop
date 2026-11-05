@@ -176,6 +176,10 @@ async function syncPlmBoms(records, options = {}) {
      istek başlatılmaz. İptalde de öyle. Tamamlanan BOM'lar yine kaydedilir. */
   let authError = null;
   const stopped = () => Boolean(authError) || isCancelled();
+  // Set Style alt isteklerinden önce de bakılır: süren ilişki isteği bittikten
+  // sonra durdurulmuş bir işte yeni çocuk istekleri başlatılmaz.
+  const STOP = Symbol('plm-bom-stop');
+  const checkStop = () => { if (stopped()) throw STOP; };
   const skipped = [];
   let done = 0;
 
@@ -188,6 +192,7 @@ async function syncPlmBoms(records, options = {}) {
           setStyleApi.associationQuery(target.styleId),
           { timeoutMs: 60000, retries: 3, language: options.language }
         );
+        checkStop();
         let children = setStyleApi.childStyleAssociations(associationPayload);
         if (!children.length) {
           throw Object.assign(new Error('Set Style için takım parçası bulunamadı.'), { code: 'PLM_SET_COMPONENTS_NOT_FOUND' });
@@ -197,6 +202,7 @@ async function syncPlmBoms(records, options = {}) {
            doğrulanmış GetStyleList alanlarından tek toplu istekle zenginleşir. */
         const childPlmIds = children.map(item => item.childPlmId).filter(Boolean);
         if (childPlmIds.length) {
+          checkStop();
           const metadataPayload = await postJson(
             styleApi.GET_STYLE_LIST_URL,
             styleApi.styleListBatchBody(childPlmIds),
@@ -207,6 +213,7 @@ async function syncPlmBoms(records, options = {}) {
 
         const childAnalyses = new Array(children.length);
         await mapLimit(children, Number(options.fetchConcurrency) || BOM_FETCH_CONCURRENCY, async (child, childIndex) => {
+          checkStop();
           const payload = await postJson(
             bomApi.GET_STYLE_BOM_INFORMATION_URL,
             bomApi.bomRequestBody(child.childStyleId),
@@ -242,6 +249,7 @@ async function syncPlmBoms(records, options = {}) {
         fetched.push({ target, kind: 'single', analysis: { ...analysis, styleId: target.styleId }, fingerprint: analysis.fingerprint });
       }
     } catch (error) {
+      if (error === STOP) { skipped.push(target); return; }
       if (isAuthError(error)) { authError = authError || error; skipped.push(target); return; }
       failed.push({
         plmId: target.plmId,

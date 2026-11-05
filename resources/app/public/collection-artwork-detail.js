@@ -180,7 +180,14 @@
           state.cache.set(id, entries[id] || null);
           state.meta.set(id, entries[id] || null);
         }
-        if (stale) { state.fetchedAt = Date.now(); state.revision = revision; }
+        if (stale) {
+          /* revision yalnız bu turda okunan ID'leri temsil eder; kümenin
+             dışında kalan eski kayıtlar atılır ki geri döndüklerinde yeniden
+             okunsunlar (aksi hâlde notModified onları süresiz bayat tutardı). */
+          for (const id of [...state.cache.keys()]) if (!ids.has(id)) { state.cache.delete(id); state.meta.delete(id); }
+          state.fetchedAt = Date.now();
+          state.revision = revision;
+        }
       } catch (_) {
         return 0;
       } finally {

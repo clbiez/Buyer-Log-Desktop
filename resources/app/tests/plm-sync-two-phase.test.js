@@ -316,4 +316,72 @@ test('CoreNectum durumu token değil yalnız bitiş zamanı verir; istemci süre
   assert.match(app, /runCoreNectumAutoAuth\(\{interactive:false,force:true\}\)/);
 });
 
+test('Set Style ilişki isteği sürerken durdurulursa çocuk istekleri başlatılmaz', async () => {
+  const { dir, store } = tmpStore();
+  let cancelled = false, posts = 0;
+  const getJson = async () => {
+    cancelled = true; // kullanıcı ilişki isteği uçuştayken Durdur'a bastı
+    return { data: { coreNectumResultData: { setStyleChildStyleColorAssociations: [
+      { rowId: 1, relatedStyleOptions: [{ setStyleId: 7, childStyleId: 71, childStylePlmCode: 701, childStyleName: 'A', perAssemblyCount: 1 }] },
+      { rowId: 2, relatedStyleOptions: [{ setStyleId: 7, childStyleId: 72, childStylePlmCode: 702, childStyleName: 'B', perAssemblyCount: 1 }] },
+    ] }, success: true } };
+  };
+  const postJson = async () => { posts += 1; return {}; };
+  const result = await bomSync.syncPlmBoms([{ plmId: '700', styleId: '7', productType: 'Set Style' }], {
+    ownerId: 'u1', store, getJson, postJson, isCancelled: () => cancelled,
+  });
+  assert.equal(posts, 0, 'çocuk metadata ve BOM istekleri gönderilmez');
+  assert.equal(result.stopped, 'cancelled');
+  assert.equal(result.skipped, 1);
+  assert.equal(result.failed.length, 0);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+function projectionHarness(file, globalName) {
+  const vm = require('node:vm');
+  const server = { revision: 1, entries: {} };
+  const clock = { now: 1000 };
+  const calls = [];
+  const fetchImpl = async (_url, options) => {
+    const body = JSON.parse(options.body);
+    calls.push(body);
+    if (body.ifRevision && body.ifRevision === server.revision) {
+      return { ok: true, json: async () => ({ ok: true, notModified: true, entries: {}, revision: server.revision }) };
+    }
+    const entries = Object.fromEntries(body.plmIds.filter(id => server.entries[id]).map(id => [id, server.entries[id]]));
+    return { ok: true, json: async () => ({ ok: true, entries, revision: server.revision }) };
+  };
+  const window = { document: { documentElement: { lang: 'tr' } }, addEventListener() {} };
+  const FakeDate = function (...args) { return new Date(...args); };
+  FakeDate.now = () => clock.now;
+  const context = vm.createContext({ window, Date: FakeDate, Set, Map, Promise, Number, String, JSON, Array, Object, Math, fetch: fetchImpl, setTimeout, clearTimeout });
+  vm.runInContext(read(file), context);
+  return { api: window[globalName], server, clock, calls };
+}
+
+test('CP projeksiyonu: görünür kümeden çıkan eski kayıt revision kısa devresiyle bayat kalmaz', async () => {
+  const { api, server, clock, calls } = projectionHarness('public/cp-plm-details.js', 'BLCPPlmDetails');
+  const rowA = { 'PLM ID': '501' }, rowB = { 'PLM ID': '502' };
+  server.entries = { 501: { styleId: '1', fabric: 'Eski kumaş' }, 502: { styleId: '2', fabric: 'B kumaş' } };
+  await api.sync({ cpRows: [rowA] });
+  assert.equal(rowA['Fabric (PLM)'], 'Eski kumaş');
+  // A depoda güncellenir; kullanıcı yalnız B'yi görürken tazeleme olur.
+  server.revision = 2; server.entries[501] = { styleId: '1', fabric: 'Yeni kumaş' };
+  await api.sync({ cpRows: [rowB] });
+  await api.refresh(); // yalnız B görünürken revision 2'ye ilerler
+  await api.sync({ cpRows: [rowA] });
+  assert.equal(rowA['Fabric (PLM)'], 'Yeni kumaş', 'kümeye geri dönen A yeniden okunur');
+  // Depo değişmediyse bayatlık sonrası yalnız revision sorulur, ID'ler yeniden taşınmaz.
+  clock.now += 61000; calls.length = 0;
+  await api.sync({ cpRows: [rowA] });
+  assert.equal(calls.length, 1);
+  assert.deepEqual(calls[0], { plmIds: [], ifRevision: 2 });
+});
+
+test('Koleksiyon Artwork projeksiyonu: görünür küme dışındaki kayıtlar revision ilerleyince atılır', () => {
+  const column = read('public/collection-artwork-detail.js');
+  assert.match(column, /for \(const id of \[\.\.\.state\.cache\.keys\(\)\]\) if \(!ids\.has\(id\)\) \{ state\.cache\.delete\(id\); state\.meta\.delete\(id\); \}/);
+  assert.match(column, /if \(stale && !options\.force && !missingIds\(\)\.size && await unchangedSince\(state\.revision\)\)/);
+});
+
 test.after(() => { fs.rmSync(DATA_ROOT, { recursive: true, force: true }); });

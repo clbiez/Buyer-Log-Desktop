@@ -69,7 +69,14 @@
         }
       }catch(_){return 0;} // failed read does not erase cached evidence
       for(const id of targets)state.cache.set(id,data[id]||null);
-      if(stale){state.fetchedAt=Date.now();state.revision=revision;}
+      if(stale){
+        /* revision yalnız bu turda okunan ID'leri temsil eder; görünür kümenin
+           dışında kalan eski kayıtlar atılır ki geri döndüklerinde yeniden
+           okunsunlar (aksi hâlde notModified onları süresiz bayat tutardı). */
+        const fresh=new Set(targets);
+        for(const id of [...state.cache.keys()])if(!fresh.has(id))state.cache.delete(id);
+        state.fetchedAt=Date.now();state.revision=revision;
+      }
       const changed=project();
       if(changed&&typeof state.repaint==='function')state.repaint();
       return changed;
