@@ -30,6 +30,9 @@ async function api(url,body){
   browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});
   const context=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'reduce'}),split=cookie.indexOf('=');
   await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),url:base,httpOnly:true}]);
+  await context.addInitScript(()=>{
+    for(const key of ['bl.releaseNotes.lastSeenStable.v1','bl.user.moderator.bl.releaseNotes.lastSeenStable.v1'])localStorage.setItem(key,'99.0.0');
+  });
   const page=await context.newPage();await page.route('https://**',route=>route.abort());
   await page.goto(base+'/?module=overview',{waitUntil:'domcontentloaded',timeout:120000});
   await page.waitForSelector('[data-boot-continue]',{timeout:180000});await page.click('[data-boot-continue]');
@@ -38,6 +41,8 @@ async function api(url,body){
   await page.evaluate(()=>window.openUserAccessAdmin());
   await page.waitForSelector('.umOverlay .umMain .umSection',{timeout:60000});
   await page.waitForFunction(()=>!document.querySelector('.umOverlay .umLoading'),null,{timeout:30000});
+  await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close()));
+  assert.equal(await page.locator('.blRnDialog[open]').count(),0,'release notes must not cover the admin session');
   const screenshot=path.join(app,'public/release-notes/next-assets/audit-session-details.png');
   await page.screenshot({path:screenshot});
   fs.writeFileSync(path.join(root,'acceptance.json'),JSON.stringify({synthetic:true,screenshot,sessionRecords:sessions.map(({line,record})=>({action:record.action,bytes:Buffer.byteLength(line+'\n'),details:record.details})),note:'PNG shows the actual authorized admin session. Null details/size are verified from this session audit file, not visually inferred.'},null,2));

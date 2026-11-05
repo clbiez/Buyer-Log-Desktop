@@ -1,0 +1,33 @@
+✖ detail-free LOGIN, LOGOUT and PASSWORD_SETUP append small null details without orderAccess (598.40652ms)
+✔ explicit null details and nested details preserve redaction semantics (37.727409ms)
+✔ no-argument backupSafeStore and backupSnapshot still return the sanitized complete store (731.79119ms)
+✔ append preserves existing audit lines and historical archive bytes (352.273097ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1743.938868
+
+✖ failing tests:
+
+test at tests/audit-details-null.test.js:23:1
+✖ detail-free LOGIN, LOGOUT and PASSWORD_SETUP append small null details without orderAccess (598.40652ms)
+  AssertionError [ERR_ASSERTION]: LOGIN details must be null
+
+  false !== true
+
+      at TestContext.<anonymous> (/workspace/buyerlog-phase1/resources/app/tests/audit-details-null.test.js:27:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

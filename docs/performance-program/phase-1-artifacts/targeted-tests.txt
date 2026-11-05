@@ -1,0 +1,23 @@
+
+> buyer-log-desktop@7.0.338 test
+> node tests/run-tests.js audit-details-null user-access security-hardening iam-store-fast-path
+
+[Buyer Log tests] 5 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (5 dosya)
+✔ tests/audit-details-null.test.js (2027.194367ms)
+✔ tests/iam-store-fast-path-v1016.test.js (1069.737923ms)
+✔ tests/security-hardening-v20261003.test.js (1035.094421ms)
+✔ tests/user-access-shared-owner-v20261009.test.js (683.161209ms)
+✔ tests/user-access-v291.test.js (1399.858977ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2142.828282
+[Buyer Log tests] Batch 1/1 süresi: 2.4s.
+
+[Buyer Log tests] PASS — 5 test dosyası (2.4s).
