@@ -123,7 +123,7 @@ test('Appearance opens as a drawer above its button; Theme transition stays coll
   assert.match(html,/menu\.style\.left=Math\.round\(r\.left\)\+'px';menu\.style\.bottom=Math\.max\(8,Math\.round\(window\.innerHeight-r\.top\+4\)\)\+'px'/);
   assert.match(html,/window\.BLMotionPlusTheme\?\.collapse\?\.\(\);place\(\);window\.BLMotionPlus\?\.play\?\.\('drawer',menu\)/);
   const motion=read('public/motion-plus.js');
-  assert.match(motion,/kind==='drawer'\)return animate\(element,\[\{clipPath:'inset\(100% 0 0 0\)'/);
+  assert.match(motion,/kind==='drawer'\)return entrance\(element,\[\{clipPath:'inset\(100% 0 0 0\)'/);
   assert.match(motion,/kind==='expand'\)return animate\(element,\[\{height:'0px'/);
   assert.match(SOURCE,/if\(open\)root\.BLMotionPlus\?\.play\?\.\('expand',body\)/);
 });

@@ -7,8 +7,8 @@
     "en": "Workspace and module transition improvements"
   },
   "summary": {
-    "tr": "Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır.",
-    "en": "License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow."
+    "tr": "Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi.",
+    "en": "License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu."
   },
   "changes": [
     {
@@ -182,6 +182,35 @@
         "caption": {
           "tr": "İzole demo verisiyle gerçek Buyer Log; kademeli akışın ortasında yakalanan ekran.",
           "en": "Actual Buyer Log with isolated demo data, captured during the staggered transition."
+        }
+      }
+    },
+    {
+      "id": "menu-opening-motion",
+      "type": "fix",
+      "module": {
+        "tr": "Ortak arayüz",
+        "en": "Shared interface"
+      },
+      "title": {
+        "tr": "Menüler tek ve akıcı hareketle açılır",
+        "en": "Menus open in one smooth motion"
+      },
+      "body": {
+        "tr": "Araçlar, Excel ve diğer buton menüleri ilk çizimde tek kez açılır. Açık menünün içindeki tıklamalar giriş hareketini tekrarlamaz; hızlı kapatıp açma yeni bir hareket başlatır. Çekmecelerin mevcut animasyonu, ekran kenarı konumu ve azaltılmış hareket tercihi korunur.",
+        "en": "Tools, Excel and other button menus animate once at their first paint. Clicking inside an open menu no longer replays its entrance; quickly closing and reopening starts a fresh entrance. Drawers retain their existing animation, viewport placement and reduced-motion behavior."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "menu-opening-motion.png",
+        "alt": {
+          "tr": "CP Tracker Araçlar menüsü açık, anonim demo verili gerçek Buyer Log",
+          "en": "Actual Buyer Log with the CP Tracker Tools menu open on anonymous demo data"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo oturumu. Tek açılış ve hızlı yeniden açma davranışı tarayıcıda animasyon sayısıyla doğrulandı.",
+          "en": "Actual Buyer Log in an isolated demo session. Single entrance and fast reopening were verified by counting browser animations."
         }
       }
     }
