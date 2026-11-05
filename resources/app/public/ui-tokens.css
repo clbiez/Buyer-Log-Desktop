@@ -41,7 +41,7 @@
  --ui-scrim:transparent;--ui-backdrop-blur:6px;
  --ui-backdrop-tint:rgba(0,0,0,.06);--ui-shadow-rail:8px 0 22px -8px var(--ui-shadow-color);
  /* Shared stack bands. Nested dialogs use 201–299; menus and notices stay above. */
- --ui-z-sticky:30;--ui-z-sticky-column:31;--ui-z-chrome:40;--ui-z-popover:100;--ui-z-modal:200;--ui-z-modal-backdrop:199;--ui-z-rail-backdrop:99;--ui-z-boot:500;
+ --ui-z-frozen-cell:20;--ui-z-sticky:30;--ui-z-sticky-column:31;--ui-z-chrome:40;--ui-z-popover:100;--ui-z-modal:200;--ui-z-modal-backdrop:199;--ui-z-rail-backdrop:99;--ui-z-boot:500;
  --ui-z-below:-1;--ui-z-base:0;--ui-z-data:1;--ui-z-raised:2;--ui-z-modal-menu:300;--ui-z-tooltip:400;
  /* Ink colors used by all categorical charts; labels carry category meaning. */
  --ui-chart-1:var(--ui-accent);--ui-chart-2:var(--ui-warning);--ui-chart-3:#376f73;--ui-chart-4:#81523e;

@@ -35,13 +35,15 @@ test('Data Health chips no longer occupy space in the Collection workspace', () 
 });
 
 test('Collection spreadsheet positioning does not override frozen body cells', () => {
+  // Spreadsheet hücreleri `position:relative` alır; donmuş hücrelerde sticky'yi
+  // dondurma motorunun ürettiği `!important` kural kazanır, ayrı CSS yaması gerekmez.
   const css = read('public/collection-spreadsheet.css');
+  const engine = read('public/table-freeze.js');
+  assert.match(css, /#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable tbody td\{position:relative\}/);
+  assert.doesNotMatch(css, /frzL/, 'freeze positioning has a single owner: table-freeze.js');
+  assert.match(engine, /'>tbody>' \+ plain \+ '>' \+ n \+ '\{position:sticky!important;left:'/);
   const html = read('public/index.html');
-  assert.match(css,
-    /#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable tbody td\.frzL\{position:sticky\}/,
-    'the spreadsheet interaction layer must preserve sticky positioning on every frozen body cell');
-  assert.match(html, /collection-spreadsheet\.css\?v=__BL_ASSET_VERSION__&rev=[A-Za-z0-9._-]+/,
-    'the browser must receive the corrected freeze rule instead of a cached stylesheet');
+  assert.match(html, /table-freeze\.js\?v=__BL_ASSET_VERSION__&rev=\d+/);
 });
 
 test('Collection summary hides only the duplicate count text, preserving the footer cell paint', () => {
