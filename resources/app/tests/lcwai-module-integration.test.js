@@ -173,3 +173,55 @@ test('Kurallar bağlamı alan ANLAMLARINI, hedef türünü ve seçilebilir önce
   assert.match(block, /context: \{\s*\.\.\.lcwaiRuleContext\(rule\)/);
   assert.match(block, /if \(priority && rule\.kind === 'priority'\) rule\.target = priority;/);
 });
+
+// Ortak panelin modül sözleşmesi: buildRequest(text) → { task, context, guide }.
+// CP Kuralları yanlış adlı `buildPayload` veriyordu; panel istek göndermeden
+// TypeError fırlatıyor, kullanıcı yalnız "LCW AI isteği tamamlanamadı" görüyordu.
+test('her ortak panel çağıranı buildRequest verir ve zorunlu task alanını taşır', () => {
+  const callers = { 'public/cp-overview-assistant.js': CPA, 'public/formula-columns.js': FC, 'public/ai-automation-import.js': AUTO, 'public/image-search.js': read('public/image-search.js') };
+  for (const [file, source] of Object.entries(callers)) {
+    const at = source.search(/\.(mountAssistant|openPanel)\(/);
+    assert.ok(at >= 0, file);
+    const block = source.slice(at, source.indexOf('interpret', at));
+    assert.match(block, /buildRequest/, `${file}: buildRequest`);
+    assert.doesNotMatch(block, /buildPayload/, `${file}: yanlış kanca adı`);
+    assert.match(block, /task: text/, `${file}: task`);
+  }
+});
+
+function fakeHost() {
+  const nodes = new Map();
+  const node = () => ({ value: '', textContent: '', innerHTML: '', hidden: false, disabled: false, readOnly: false, className: '', handlers: {},
+    addEventListener(type, fn) { this.handlers[type] = fn; }, querySelector: () => null, insertAdjacentHTML() {}, focus() {} });
+  return { innerHTML: '', isConnected: true, firstElementChild: {}, nodes,
+    querySelector(selector) { if (!nodes.has(selector)) nodes.set(selector, node()); return nodes.get(selector); } };
+}
+
+test('ortak panel: istek task ile gider; oturum yoksa sessiz masaüstü girişi sonrası bir kez yeniden dener', async () => {
+  const bodies = [];let signedIn = false;
+  const window = loadClient(async (url, init) => {
+    if (url === '/api/lcwai/ask') {
+      bodies.push(JSON.parse(init.body));
+      if (!signedIn) return new Response(JSON.stringify({ ok: false, code: 'LCWAI_AUTH_REQUIRED', action: 'login' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      return ndjson([{ type: 'result', result: { text: '{"formula":"[A]>1"}', data: { formula: '[A]>1' }, structured: { ok: true }, model: { label: 'GPT-6 Sol' } } }]);
+    }
+    if (url.startsWith('/api/lcwai/status')) return new Response(JSON.stringify({ ok: true, status: { connected: signedIn } }), { status: 200 });
+    return new Response(JSON.stringify({ ok: true, config: {} }), { status: 200 });
+  });
+  window.buyerLogDesktop = { ensureLcwAiAuth: async ({ interactive }) => { assert.equal(interactive, false, 'kullanıcıya pencere açılmaz'); signedIn = true; return { ok: true }; } };
+  const host = fakeHost();let applied = null;
+  const panel = window.BuyerLogAI.mountAssistant(host, {
+    source: 'rules',
+    buildRequest: text => ({ task: text, guide: 'guide', context: { ruleKind: 'priority' } }),
+    interpret: result => ({ ok: true, value: result.data.formula }),
+    onApply: value => { applied = value; },
+  });
+  panel.setRequest('Yükleme tarihi geçmiş siparişler için uyarı oluştur.');
+  await panel.run();
+  assert.equal(bodies.length, 2, 'oturum hatası → sessiz giriş → tek yeniden deneme');
+  assert.equal(bodies[1].task, 'Yükleme tarihi geçmiş siparişler için uyarı oluştur.');
+  assert.equal(bodies[1].source, 'rules');
+  host.nodes.get('[data-lcwai-apply]').handlers.click();
+  assert.equal(applied, '[A]>1');
+  assert.doesNotMatch(host.nodes.get('[data-lcwai-status]').innerHTML, /tamamlanamad|could not be completed/);
+});

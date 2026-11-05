@@ -3109,7 +3109,11 @@
           ? L('Örn. Lisanslı modellerde yüklemeye 21 gün kala sorulsun…', 'e.g. Ask for licensed styles when 21 days remain before loading…')
           : L('Örn. Yüklemeye 10 günden az kalan ve PPS onaylanmamış siparişler…', 'e.g. Orders with less than 10 days to load and PPS not approved…'),
         applyLabel: L('Kurala Uygula', 'Apply to Rule'),
-        buildPayload: text => ({
+        // Shared panel contract: buildRequest(text) → { task, context, guide }.
+        // A misnamed hook threw before any request and surfaced only as
+        // "The LCW AI request could not be completed"; task is mandatory.
+        buildRequest: text => ({
+          task: text,
           guide: aiGuideFor(rule.kind, rule, text, draft.purpose === 'auto' ? draft.autoStatus : ''),
           context: {
             ...lcwaiRuleContext(rule),
