@@ -1029,7 +1029,7 @@
     const collapsed = key !== 'checklist' && state.hidden[key] === true;
     return `<section class="cpaCard" data-cpa-card="${key}">
       <header><b>${esc(title)}</b><button type="button" class="cpaToggle" data-cpa-collapse="${key}" aria-expanded="${collapsed ? 'false' : 'true'}">${collapsed ? '+' : '−'}</button></header>
-      ${collapsed ? '' : `<div class="cpaCardBody">${body}</div>`}
+      <div class="cpaCardBody" ${collapsed ? 'hidden' : ''}>${body}</div>
     </section>`;
   }
 
@@ -1067,7 +1067,11 @@
       savePrefs(); recompute(); render();
     });
     container.querySelectorAll('[data-cpa-collapse]').forEach(el => el.onclick = () => {
-      const key = el.dataset.cpaCollapse; state.hidden[key] = !state.hidden[key]; savePrefs(); render();
+      const key = el.dataset.cpaCollapse; state.hidden[key] = !state.hidden[key]; savePrefs();
+      const open = !state.hidden[key], body = el.closest('[data-cpa-card]')?.querySelector('.cpaCardBody');
+      el.setAttribute('aria-expanded', String(open)); el.textContent = open ? '−' : '+';
+      if (window.BLMotionPlus?.disclosure) window.BLMotionPlus.disclosure(body, open, { trigger: el });
+      else if (body) body.hidden = !open;
     });
     container.querySelectorAll('[data-cpa-priority]').forEach(el => el.onclick = () => {
       const key = el.dataset.cpaPriority;

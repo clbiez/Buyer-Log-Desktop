@@ -565,7 +565,7 @@ function render(){
   const host=$('backlogOverviewBody');if(!host)return;
   updateFilterButton();if(filterOpen)renderFilterPanel();
   tips=new Map();openers=new Map();hideTip();
-  if(!state.open){host.innerHTML='';return;}
+  if(!state.open)return;
   if(loading){host.innerHTML=`<div class="bpaLoading"><span class="bpaSpinner"></span>${esc(L('Backlog satırları toplanıyor…','Collecting Backlog rows…'))}</div>`;return;}
   if(error){host.innerHTML=`<div class="bpaError">${esc(error)}</div>`;return;}
   if(!items||!R()){host.innerHTML=`<div class="bpaEmpty">${esc(L('Backlog yüklendiğinde genel bakış burada görünür.','The overview appears once Backlog loads.'))}</div>`;return;}
@@ -686,9 +686,10 @@ function openDrawer(spec){
 function setOpen(value){
   state.open=value;saveState();
   const mod=$('backlogOverview'),body=$('backlogOverviewBody'),toggle=$('backlogOverviewToggle');
-  mod?.classList.toggle('is-open',value);if(body)body.hidden=!value;
+  mod?.classList.toggle('is-open',value);
+  if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(body,value,{trigger:toggle});else if(body)body.hidden=!value;
   toggle?.setAttribute('aria-expanded',value?'true':'false');
-  if(value)void refresh(false);else{closeDrawer();closeFilterPanel();render();}
+  if(value)void refresh(false);else{closeDrawer();closeFilterPanel();}
 }
 function bind(){
   if(bound)return;const host=$('backlogOverviewBody');if(!host)return;bound=true;

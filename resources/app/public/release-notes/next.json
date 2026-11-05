@@ -128,6 +128,35 @@
       }
     },
     {
+      "id": "staggered-disclosures",
+      "type": "improvement",
+      "module": {
+        "tr": "Arayüz",
+        "en": "Interface"
+      },
+      "title": {
+        "tr": "Uygulama genelinde kademeli açılma ve kapanma",
+        "en": "Staggered expansion and collapse across the application"
+      },
+      "body": {
+        "tr": "Veri Yönetimi, Backlog, Global Flow, transit analizi, alan seçicileri ve standart açılır bölümler aynı Motion+ hareketini kullanır. Panel açılırken en fazla altı görünür içerik grubu 32 ms arayla görünür; kapanırken içerik söner ve panel daralır. Hızlı tıklamalarda son tercih geçerlidir; odak, alan değerleri, klavye ve azaltılmış hareket korunur.",
+        "en": "Data Management, Backlog, Global Flow, transit analysis, field pickers and native disclosures use the same Motion+ profile. Up to six visible content groups appear 32 ms apart as a panel opens; content fades as the panel contracts on close. Rapid clicks settle on the latest choice, preserving focus, field values, keyboard operation and reduced motion."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "staggered-disclosures.png",
+        "alt": {
+          "tr": "Veri Yönetimi Horizon ve Yenileme bölümünde kademeli olarak açılan içerik",
+          "en": "Content appearing in stages in the Data Management Horizon and Refresh section"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo oturumu; ortak bölüm animasyonunun açılış karesi.",
+          "en": "Actual Buyer Log in an isolated demo session, captured during the shared disclosure opening animation."
+        }
+      }
+    },
+    {
       "id": "data-management-collapsed-sections",
       "type": "improvement",
       "module": {

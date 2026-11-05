@@ -353,8 +353,8 @@
   function setExpanded(open){
     const toggle=doc.getElementById('railThemeFxToggle'),body=doc.getElementById('themeFxBody');
     if(!toggle||!body)return;
-    toggle.setAttribute('aria-expanded',open?'true':'false');body.hidden=!open;
-    if(open)root.BLMotionPlus?.play?.('expand',body);
+    toggle.setAttribute('aria-expanded',open?'true':'false');
+    if(root.BLMotionPlus?.disclosure)root.BLMotionPlus.disclosure(body,open,{trigger:toggle});else body.hidden=!open;
   }
   function mount(){
     const select=doc.getElementById('themeFxEffect'),speed=doc.getElementById('themeFxSpeed'),size=doc.getElementById('themeFxSize');

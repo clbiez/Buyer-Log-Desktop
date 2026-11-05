@@ -8,7 +8,7 @@
   const html=doc.documentElement;
   const reduce=()=>Boolean(root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
   const enabled=()=>!reduce()&&doc.visibilityState!=='hidden'&&html.dataset.blMotion!=='off'&&!(doc.body?.dataset?.activeTab==='overview'&&html.dataset.overviewMotion==='paused');
-  const SPEED=Object.freeze({page:340,card:360,table:390,overlay:240,bar:440,theme:560,flow:440,stagger:40,distance:14,'table-distance':10});
+  const SPEED=Object.freeze({page:340,card:360,table:390,overlay:240,bar:440,theme:560,flow:440,stagger:40,distance:14,'table-distance':10,disclosure:390,'disclosure-step':32});
   const EASE='cubic-bezier(.2,.75,.25,1)';
   const duration=name=>{
     const css=root.getComputedStyle?.(html).getPropertyValue('--ui-motion-'+name);
@@ -27,6 +27,7 @@
   const ACTIVITY_CONTROLS=REFRESH_IDS.map(id=>[id,'spinning','refresh']).concat([['syncStatusBadge','is-syncing','sync']]);
   const SYNC_CONTROLS='#syncStatusBtn,#cpPlmSyncBtn,#ordersPlmSyncBtn,#kolPlmSyncBtn,[data-plm-sync-category]';
   const activityAnimations=new Map();
+  const disclosures=new WeakMap(),activeDisclosures=new Set(),nativeDisclosures=new WeakMap(),nativeInert=new WeakMap();
   let generation=0,activeTab='',overlayFrame=null,overlayBefore=null;
   const pending=new Set(),animations=new Set(),pageAnimations=new Set();
   let pageFlow=null;
@@ -53,6 +54,7 @@
   function cancelPending(){
     if(overlayFrame!==null)root.cancelAnimationFrame(overlayFrame);
     overlayFrame=null;overlayBefore=null;
+    for(const state of Array.from(activeDisclosures))state.finish();
     for(const id of pending)root.clearTimeout(id);
     pending.clear();
     for(const a of animations){try{a.cancel();}catch(_){}}
@@ -63,6 +65,78 @@
   function later(fn,ms){
     const id=root.setTimeout(()=>{pending.delete(id);fn();},ms);
     pending.add(id);
+  }
+  /* Shared staggered disclosure. The owner updates its model/ARIA immediately;
+     hidden remains the target state even while the closing pixels are visible.
+     No clones, data edits, table observers or per-frame layout reads. */
+  function disclosure(element,open,options={}){
+    if(!element)return null;
+    open=Boolean(open);
+    const previous=disclosures.get(element);
+    if(previous?.open===open)return previous.animation||null;
+    const from=Number.isFinite(options.fromHeight)?options.fromHeight:(element.hidden&&!activeDisclosures.has(previous)?0:element.getBoundingClientRect().height);
+    const opacity=from?Number.parseFloat(root.getComputedStyle?.(element).opacity||'1'):0;
+    const wasVisible=visible(element)||visible(options.trigger)||visible(element.parentElement);
+    previous?.finish();
+    const saved={};
+    for(const key of ['display','height','overflow'])saved[key]=[element.style.getPropertyValue(key),element.style.getPropertyPriority(key)];
+    const oldInert=previous?previous.oldInert:Boolean(element.inert);
+    if(!open&&element.contains?.(doc.activeElement))options.trigger?.focus?.({preventScroll:true});
+    element.hidden=false;
+    const computed=root.getComputedStyle?.(element),display=computed?.display;
+    const natural=display&&display!=='none'?display:(previous?.display||'block');
+    const state={open,oldInert,display:natural,visible:wasVisible,animation:null,effects:[],finish:null};
+    let finished=false;
+    state.finish=()=>{
+      if(finished)return;finished=true;state.animation=null;
+      activeDisclosures.delete(state);
+      for(const effect of state.effects){try{effect.cancel();}catch(_){}}
+      for(const key of Object.keys(saved)){
+        const [value,priority]=saved[key];
+        if(value)element.style.setProperty(key,value,priority);else element.style.removeProperty(key);
+      }
+      element.hidden=!open;element.inert=open?oldInert:true;
+      element.setAttribute('aria-hidden',String(!open));
+    };
+    // Inline !important is temporary: it beats module-specific collapsed CSS
+    // without changing the saved state or adding permanent wrapper elements.
+    element.style.setProperty('display',natural,'important');
+    element.style.setProperty('height','auto');
+    const to=open?element.getBoundingClientRect().height:0;
+    element.hidden=!open;element.inert=open?oldInert:true;
+    element.setAttribute('aria-hidden',String(!open));
+    disclosures.set(element,state);
+    if(options.initial||(!previous&&open&&from===to)||!enabled()||(!wasVisible&&!visible(element))||(!from&&!to)){
+      state.finish();return null;
+    }
+    const ms=duration('disclosure')||duration('table');
+    const step=duration('disclosure-step');
+    const span=open?ms:ms*.78;
+    element.style.setProperty('overflow','hidden');
+    element.style.setProperty('height',to+'px');
+    const effect=start(element,[{height:from+'px',opacity},{height:to+'px',opacity:open?1:0}],{duration:span,fill:'both'});
+    if(!effect){state.finish();return null;}
+    state.animation=effect;state.effects.push(effect);activeDisclosures.add(state);
+    // Unwrap one layout shell; keep selection/editing and large grids still.
+    let items=Array.from(element.children||[]);
+    if(items.length===1&&!items[0].matches?.('table,canvas,svg,details'))items=Array.from(items[0].children||[]);
+    const queue=items.filter(item=>{
+      const box=item.getBoundingClientRect();
+      return !item.hidden&&box.width>0&&box.height>0&&box.bottom>0&&box.top<root.innerHeight&&
+      !item.matches?.('table,canvas,svg,summary')&&
+      !item.matches?.('.blGridActiveCell,.blGridSelectedCell,[aria-selected="true"],[contenteditable="true"]')&&
+      !item.contains?.(doc.activeElement);
+    }).slice(0,6);
+    for(let i=0;i<queue.length;i++){
+      const delay=open?Math.min(i*step,ms*.5):0;
+      const frames=open?[{opacity:0,transform:'translate3d(0,9px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}]:
+        [{opacity:1,transform:'translate3d(0,0,0)'},{opacity:0,transform:'translate3d(0,-4px,0)'}];
+      const a=start(queue[i],frames,{duration:open?ms-delay:span*.6,delay,fill:'both'});
+      if(a)state.effects.push(a);
+    }
+    effect.addEventListener?.('finish',state.finish,{once:true});
+    effect.addEventListener?.('cancel',state.finish,{once:true});
+    return effect;
   }
   function enterTableRows(view,token){
     if(!enabled()||token!==generation||!pageFlow||pageFlow.view!==view||pageFlow.stopped)return 0;
@@ -375,6 +449,48 @@
     else activate(true); // activate restores any in-progress refresh after cancellation.
   }
   function mount(){
+    const syncVisibility=()=>{html.dataset.blMotionVisibility=doc.visibilityState==='hidden'?'hidden':'visible';};
+    syncVisibility();
+    doc.addEventListener('visibilitychange',syncVisibility);
+    // Existing aria-controls disclosures, including lazily mounted controls.
+    // Menus, comboboxes and the horizontal rail keep their own interaction.
+    doc.addEventListener('click',event=>{
+      const trigger=event.target.closest?.('button[aria-expanded][aria-controls]:not([aria-haspopup])');
+      if(!trigger||trigger.id==='railCollapse')return;
+      const body=doc.getElementById?.(trigger.getAttribute('aria-controls'));
+      if(!body||!body.isConnected||['absolute','fixed'].includes(root.getComputedStyle?.(body).position))return;
+      const before=trigger.getAttribute('aria-expanded'),height=body.getBoundingClientRect().height;
+      later(()=>{
+        if(body.isConnected&&trigger.isConnected&&trigger.getAttribute('aria-expanded')!==before)
+          disclosure(body,trigger.getAttribute('aria-expanded')==='true',{trigger,fromHeight:height});
+      },0);
+    },true);
+    doc.addEventListener('toggle',event=>{
+      const details=event.target;
+      if(details?.tagName!=='DETAILS')return;
+      const content=Array.from(details.children||[]).filter(child=>child.tagName!=='SUMMARY');
+      for(const child of content){
+        if(!nativeInert.has(child))nativeInert.set(child,Boolean(child.inert));
+        if(!details.open&&child.contains?.(doc.activeElement))details.querySelector?.('summary')?.focus?.({preventScroll:true});
+        child.inert=details.open?nativeInert.get(child):true;
+      }
+      for(const effect of nativeDisclosures.get(details)||[])effect.cancel();
+      const effects=[];nativeDisclosures.set(details,effects);
+      const floating=Array.from(details.children||[]).some(child=>child.tagName!=='SUMMARY'&&['absolute','fixed'].includes(root.getComputedStyle?.(child).position));
+      details.dataset.blDisclosure=floating?'overlay':'section';
+      if(details.open&&!floating&&enabled()){
+        let items=Array.from(details.children||[]).filter(child=>child.tagName!=='SUMMARY');
+        if(items.length===1&&items[0].children.length)items=Array.from(items[0].children);
+        const queue=items.filter(item=>visible(item)&&!item.matches?.('table,canvas,svg,summary')&&!item.contains?.(doc.activeElement)).slice(0,6);
+        for(const item of details.querySelectorAll?.('.blDisclosureItem')||[])item.classList.remove('blDisclosureItem');
+        queue.forEach((item,index)=>{
+          item.classList.add('blDisclosureItem');
+          const delay=index*duration('disclosure-step');
+          const a=start(item,[{opacity:0,transform:'translate3d(0,9px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('disclosure')-delay,delay,fill:'both'});
+          if(a){effects.push(a);a.addEventListener?.('finish',()=>a.cancel(),{once:true});}
+        });
+      }
+    },true);
     bindActivityControls();
     doc.addEventListener('pointerdown',rememberSegment,true);
     doc.addEventListener('click',slideSegment);
@@ -414,7 +530,7 @@
       if(profile&&profile.softwareCompositing===true)html.dataset.blRender='software';
     }).catch(()=>{});
   }
-  root.BLMotionPlus=Object.freeze({enabled,play,theme,startup,prepareNavigation,arrive,activate,setEnabled,speeds:SPEED});
+  root.BLMotionPlus=Object.freeze({enabled,play,theme,startup,prepareNavigation,arrive,activate,setEnabled,disclosure,speeds:SPEED});
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',mount,{once:true});
   else mount();
 })(typeof window!=='undefined'?window:globalThis);

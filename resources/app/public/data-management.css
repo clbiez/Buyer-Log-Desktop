@@ -9,6 +9,8 @@
    (.empty) ve ikonlar (.ic) ortak primitive'lerdir ve yeniden tanımlanmaz.
    =================================================================== */
 
+.dmPanelBody { display: flow-root; min-width: 0; }
+
 .dataMgmt { display: flex; flex-direction: column; gap: 12px; padding-bottom: 24px; }
 
 /* --- Başlık --- */

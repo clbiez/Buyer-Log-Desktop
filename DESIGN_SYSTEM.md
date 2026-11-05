@@ -277,6 +277,8 @@ kartlar görünürlükle sınırlı, en çok 14/16 öğe üzerinden animasyon al
 Aynı yeni görünür işlevin TR/EN karşılığı, 2 tema × 4 boyut, reduced-motion,
 klavye/scroll ve veri doğruluğu regresyonları teslim koşuludur.
 
+**Kademeli açılma/kapanma:** Bölüm gövdeleri ortak `BLMotionPlus.disclosure(body, open, {trigger, initial})` API’sini kullanır. Yükseklik değişimi ortak bölüm hareketinin sınırlı istisnasıdır: `--ui-motion-disclosure` 390 ms, satır aralığı `--ui-motion-disclosure-step` 32 ms; en çok altı görünür içerik grubu hareket eder. Kapanış hedefi `hidden`/ARIA ile hemen kaydedilir; geçici çizim stilleri bitiş, ters tıklama, sekme değişimi ve hareket iptalinde temizlenir. Gövde/alan değerleri korunur; aktif editörler ve seçili tablo hücreleri kademeye katılmaz. Yerel `details/summary`, ortak `::details-content` kuralını ve aynı kademeyi kullanır; yüzen seçiciler bölüm yüksekliğiyle kırpılmaz. / Section bodies use the shared disclosure API; bounded intrinsic height motion, 390 ms duration and 32 ms staggering for at most six visible groups. Hidden/ARIA target state is immediate, temporary styles are cleaned up on completion/reversal/cancellation, editor values are retained and active editors/selected cells are skipped. Native details use the same profile while floating pickers retain their geometry.
+
 ## 7. Guard ve erişilebilirlik
 
 - `design-token-guard.test.js`: ortak ölçek/font, tanımsız değişken, sıfır ham
