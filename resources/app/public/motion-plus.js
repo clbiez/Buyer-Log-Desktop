@@ -524,7 +524,7 @@
       if(profile&&profile.softwareCompositing===true)html.dataset.blRender='software';
     }).catch(()=>{});
   }
-  root.BLMotionPlus=Object.freeze({enabled,play,disclosure,theme,startup,prepareNavigation,arrive,activate,setEnabled,speeds:SPEED});
+  root.BLMotionPlus=Object.freeze({enabled,play,theme,startup,prepareNavigation,arrive,activate,setEnabled,disclosure,speeds:SPEED});
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',mount,{once:true});
   else mount();
 })(typeof window!=='undefined'?window:globalThis);

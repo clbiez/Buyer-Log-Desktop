@@ -744,7 +744,13 @@
         button.addEventListener('dblclick',event=>{event.preventDefault();if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}applyLegend(true);});
       });
       const filterToggle=target.querySelector('[data-backlog-chart-filter]'),filterPanelEl=target.querySelector('[data-backlog-chart-filter-panel]');
-      filterToggle?.addEventListener('click',()=>{const opening=!!filterPanelEl?.hidden;if(filterPanelEl)filterPanelEl.hidden=!opening;filterToggle.setAttribute('aria-expanded',opening?'true':'false');if(opening)target.querySelector('[data-backlog-chart-filter-search]')?.focus();});
+      filterToggle?.addEventListener('click',()=>{
+        const opening=!!filterPanelEl?.hidden;
+        if(typeof window!=='undefined'&&window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(filterPanelEl,opening,{trigger:filterToggle});
+        else if(filterPanelEl)filterPanelEl.hidden=!opening;
+        filterToggle.setAttribute('aria-expanded',opening?'true':'false');
+        if(opening)target.querySelector('[data-backlog-chart-filter-search]')?.focus();
+      });
       const seriesList=target.querySelector('.backlogChartFilterList');
       seriesList?.addEventListener('change',event=>{
         if(!event.target.matches('[data-backlog-chart-series-index]'))return;
