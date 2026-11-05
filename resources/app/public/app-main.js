@@ -31293,8 +31293,48 @@ async function kolPlmSyncFetchRecords(plmIds,button,language=''){
     if(span)span.textContent=appLang==='en'?'Checking PLM API connection…':'PLM API bağlantısı kontrol ediliyor…';
     if(!await ensureCoreNectumApiConnection())return null;
     if(span)span.textContent=appLang==='en'?`Getting ${plmIds.length} model(s) from PLM…`:`${plmIds.length} model PLM'den alınıyor…`;
-    return await plmJsonRequest('/api/plm-sync/fetch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plmIds,language:language==='tr'?'tr':language==='en'?'en':''})});
+    return kolPlmWatchBomJob(await plmJsonRequest('/api/plm-sync/fetch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plmIds,bomMode:'background',language:language==='tr'?'tr':language==='en'?'en':''})}));
   } finally { stopProgress(); if(span)span.textContent=old; }
+}
+/* İki fazlı PLM Sync: alan önizlemesi BOM/LCW AI'ı beklemez. Sunucu kalan
+   BOM + AI analizini bir arka plan işinde (PLM Operasyon Merkezi'nde görünür)
+   yürütür; iş bitince Artwork Detayı ve CP/Orders PLM detayları yerel BOM
+   deposundan tazelenir. İzleme yalnız okur; iş sunucuda sayfa değişse de sürer. */
+const KOL_PLM_BOM_POLL_MS=2000,KOL_PLM_BOM_WATCH_MAX_MS=2*60*60*1000;
+function kolPlmWatchBomJob(fetchResult){
+  const jobId=fetchResult&&fetchResult.bomJob&&fetchResult.bomJob.jobId;
+  if(!jobId)return fetchResult;
+  const startedAt=Date.now();
+  const finish=async job=>{
+    try{await window.BLCollectionArtworkDetail?.refresh?.();}catch(_){}
+    try{await window.BLCPPlmDetails?.refresh?.();}catch(_){}
+    if(!job||job.status==='cancelled')return;
+    const total=Number(job.total)||Number(fetchResult.bomJob.total)||0,failed=Number(job.failureCount)||0;
+    const failText=failed?(appLang==='en'?` · ${failed} failed`:` · ${failed} başarısız`):'';
+    if(job.status==='failed'){
+      showToast((appLang==='en'?'PLM BOM background analysis did not finish: ':'PLM BOM arka plan analizi tamamlanamadı: ')+(job.error||'')+failText,{icon:false,duration:12000});
+      return;
+    }
+    showToast((appLang==='en'?`PLM BOM finished for ${total} model(s) · Artwork Detail refreshed`:`PLM BOM ${total} model için tamamlandı · Artwork Detayı güncellendi`)+failText+'.',{icon:false,duration:9000});
+  };
+  const tick=async()=>{
+    let job=null;
+    try{
+      const res=await fetch(`/api/plm-jobs/${encodeURIComponent(jobId)}`,{cache:'no-store',credentials:'same-origin'});
+      if(res.status===404)return finish(null);
+      const data=await res.json().catch(()=>({}));
+      job=data&&data.job||null;
+    }catch(_){}
+    if(job&&!job.running)return finish(job);
+    if(Date.now()-startedAt>KOL_PLM_BOM_WATCH_MAX_MS)return;
+    setTimeout(()=>{void tick();},KOL_PLM_BOM_POLL_MS);
+  };
+  setTimeout(()=>{void tick();},KOL_PLM_BOM_POLL_MS);
+  return fetchResult;
+}
+function kolPlmSyncBomSuffix(fetchResult){
+  if(!fetchResult||!fetchResult.bomJob||!fetchResult.bomJob.jobId)return '';
+  return appLang==='en'?' · BOM and Artwork continue in the background':' · BOM ve Artwork arka planda sürüyor';
 }
 async function kolPlmFetchSelectedRecords(button,language=''){
   const span=button&&button.querySelector('span'),old=span&&span.textContent;
@@ -31306,7 +31346,7 @@ async function kolPlmFetchSelectedRecords(button,language=''){
        preflight'ı (/browser/prepare) burada özellikle çağrılmaz. */
     if(!await ensureCoreNectumApiConnection())return null;
     if(span)span.textContent=appLang==='en'?'Reading selections from the open PLM tab…':'Açık PLM sekmesindeki seçimler okunuyor…';
-    return await plmJsonRequest('/api/plm-sync/fetch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({selectedOnly:true,existingBrowserOnly:true,language:language==='tr'?'tr':language==='en'?'en':''})});
+    return kolPlmWatchBomJob(await plmJsonRequest('/api/plm-sync/fetch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({selectedOnly:true,existingBrowserOnly:true,bomMode:'background',language:language==='tr'?'tr':language==='en'?'en':''})}));
   } finally { stopProgress(); if(span)span.textContent=old; }
 }
 const KOL_PLM_DIRECT_MAPPED_FIELDS=['plmId','modelKod','specialCode','seasonRaw','magRaw','mmygRaw','buyingGroup','categoryRaw','lineRaw','fabric','fit','colourCode','colour'];
@@ -32493,7 +32533,7 @@ async function kolPlmSyncRun(mode,button,options={}){
     const message=appLang==='en'
       ?`${summary.checked} checked · all up to date${summary.notFound.length?` · ${summary.notFound.length} not found`:''}${summary.errors.length?` · ${summary.errors.length} error(s)`:''}.`
       :`${summary.checked} kontrol edildi · hepsi güncel${summary.notFound.length?` · ${summary.notFound.length} bulunamadı`:''}${summary.errors.length?` · ${summary.errors.length} hata`:''}.`;
-    showToast(message+kolPlmSyncArtworkSuffix(artworkChanged)+kolPlmSyncImageSuffix(images),{icon:false,duration:9000});
+    showToast(message+kolPlmSyncArtworkSuffix(artworkChanged)+kolPlmSyncBomSuffix(fetchResult)+kolPlmSyncImageSuffix(images),{icon:false,duration:9000});
     return {ok:true,applied:0,summary,images};
   }
   const approved=await showPlmSyncPreview(mode,summary);
@@ -32513,7 +32553,7 @@ async function kolPlmSyncRun(mode,button,options={}){
   const message=appLang==='en'
     ?`${summary.checked} checked · ${summary.changed.length} updated · ${summary.unchanged.length} unchanged${summary.notFound.length?` · ${summary.notFound.length} not found`:''}${summary.errors.length?` · ${summary.errors.length} error(s)`:''}.`
     :`${summary.checked} kontrol edildi · ${summary.changed.length} güncellendi · ${summary.unchanged.length} değişmedi${summary.notFound.length?` · ${summary.notFound.length} bulunamadı`:''}${summary.errors.length?` · ${summary.errors.length} hata`:''}.`;
-  showToast(message+kolPlmSyncArtworkSuffix(artworkChanged)+kolPlmSyncImageSuffix(images),{icon:false,duration:12000});
+  showToast(message+kolPlmSyncArtworkSuffix(artworkChanged)+kolPlmSyncBomSuffix(fetchResult)+kolPlmSyncImageSuffix(images),{icon:false,duration:12000});
   return {ok:true,applied:summary.changed.length,summary,images};
 }
 async function kolPlmSyncRefreshArtwork(){
@@ -32857,6 +32897,19 @@ function coreNectumAuthenticationError(error){
   const code=String(error&&error.code||'');
   return code==='CORENECTUM_API_TOKEN_REQUIRED'||code==='CORENECTUM_API_TOKEN_INVALID'||code==='CORENECTUM_LOGIN_REQUIRED';
 }
+/* Uzun PLM işleri (iki fazlı sync'in arka plan BOM işi dahil) oturum
+   ortasında düşmesin: kalan süre kısaysa iş başlamadan sessiz yenileme
+   denenir. Başarısızlık işi durdurmaz; gerçek yetki reddi mevcut kurtarma
+   yolundan geçer. Aynı bitiş zamanı için yalnız bir kez denenir. */
+const CORENECTUM_REFRESH_BEFORE_MS=15*60*1000;
+let coreNectumLastRefreshFor='';
+async function coreNectumRefreshExpiringSession(status){
+  const expiresAt=status&&status.expiresAt?Date.parse(status.expiresAt):NaN;
+  if(!Number.isFinite(expiresAt)||status.source!=='desktop-sso'||!coreNectumDesktopAuthAvailable())return false;
+  if(expiresAt-Date.now()>CORENECTUM_REFRESH_BEFORE_MS||coreNectumLastRefreshFor===status.expiresAt)return false;
+  coreNectumLastRefreshFor=status.expiresAt;
+  try{await runCoreNectumAutoAuth({interactive:false,force:true});return true;}catch(_){return false;}
+}
 async function ensureCoreNectumApiConnection({validate=false,requireStyleListTemplate=false}={}){
   let status=null;
   try{
@@ -32864,6 +32917,7 @@ async function ensureCoreNectumApiConnection({validate=false,requireStyleListTem
     status=data&&data.status||null;
   }catch(_){}
   if(status&&status.configured&&(!requireStyleListTemplate||status.styleListTemplateReady)){
+    await coreNectumRefreshExpiringSession(status);
     if(!validate)return true;
     try{
       await coreNectumApiRaw('/api/corenectum-api/test',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
@@ -34092,6 +34146,8 @@ window.BLPlmOpsRetry={
     await kolPlmSyncRun('selected',null);
   },
 };
+// Arka plan BOM işinin başarısızları aynı PLM Sync akışıyla yeniden denenir.
+window.BLPlmOpsRetry['plm-bom']=window.BLPlmOpsRetry['plm-sync'];
 /* Koleksiyon'un ÜÇ BAĞIMSIZ model varlığı işlemi. Model Dosyaları yalnız
    burada vardır: teknik föy model düzeyinde bir varlıktır ve CP/Orders'ta
    görüntülenecek bir ekranı yoktur — oralara koymak kullanıcının hiçbir

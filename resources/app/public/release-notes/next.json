@@ -3,12 +3,12 @@
   "publishedAt": "2026-11-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Arayüz geçişleri ve dengeli sol navigasyon",
-    "en": "UI transitions and balanced sidebar navigation"
+    "tr": "Arayüz geçişleri ve dengeli sol navigasyon · daha hızlı PLM Sync",
+    "en": "UI transitions and balanced sidebar navigation · faster PLM Sync"
   },
   "summary": {
-    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir. Hover bilgi kutuları ve grafik değer etiketleri seçili temanın renklerini izler. Veri Yönetimi'ndeki CP, Diğer modüller ve INTAKE horizon filtreleri, IAS karşılığını otomatik öneren tek bir çekmecede düzenlenir.",
-    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values. Hover information boxes and chart value labels follow the selected theme colors. CP, Other modules and INTAKE horizon filters in Data Management are edited in a single drawer that suggests IAS counterparts automatically."
+    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir. Hover bilgi kutuları ve grafik değer etiketleri seçili temanın renklerini izler. Veri Yönetimi'ndeki CP, Diğer modüller ve INTAKE horizon filtreleri, IAS karşılığını otomatik öneren tek bir çekmecede düzenlenir. Koleksiyon PLM Sync önizlemesi artık BOM ve LCW AI analizini beklemez; BOM ve Artwork Detayı arka planda tamamlanır. Durdur düğmesi PLM işini gerçekten durdurur, Artwork sütunu çok daha az veriyle tazelenir.",
+    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values. Hover information boxes and chart value labels follow the selected theme colors. CP, Other modules and INTAKE horizon filters in Data Management are edited in a single drawer that suggests IAS counterparts automatically. The Collection PLM Sync preview no longer waits for BOM and LCW AI analysis; BOM and Artwork Detail finish in the background. Stop now really stops the PLM job, and the Artwork column refreshes with far less data."
   },
   "changes": [
     {
@@ -381,6 +381,64 @@
         "alt": {
           "tr": "Horizon filtreleri çekmecesinde ASAS Marka filtresi ve IAS karşılığı",
           "en": "ASAS Brand filter and its IAS counterpart in the Horizon filters drawer"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "plm-sync-two-phase",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · PLM Sync",
+        "en": "Collection · PLM Sync"
+      },
+      "title": {
+        "tr": "PLM Sync önizlemesi BOM’u beklemeden açılır",
+        "en": "PLM Sync preview opens without waiting for BOM"
+      },
+      "body": {
+        "tr": "Model alanları PLM’den gelir gelmez önizleme açılır ve onayınızla uygulanır. BOM okuma ve LCW AI baskı analizi PLM Operasyon Merkezi’nde “PLM BOM ve Artwork” işi olarak arka planda sürer; bitince Artwork Detayı kendiliğinden güncellenir. Set Style kumaş bilgisi yine önizlemeden önce okunur. PLM partileri ve LCW AI danışmaları sınırlı paralellikle yürür; Artwork sütunu yalnız gereken özet veriyi okur ve değişmeyen veriyi yeniden taşımaz.",
+        "en": "The preview opens as soon as model fields arrive from PLM and is applied with your approval. BOM reading and LCW AI print analysis continue in the background as a “PLM BOM and artwork” job in the PLM Operations Center; Artwork Detail refreshes automatically when it finishes. Set Style fabric is still read before the preview. PLM batches and LCW AI consultations run with bounded parallelism; the Artwork column reads only the summary it needs and does not re-send unchanged data."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-sync-two-phase.png",
+        "alt": {
+          "tr": "PLM Sync alanları uygulandı, PLM BOM ve Artwork işi arka planda sürüyor",
+          "en": "PLM Sync fields applied while the PLM BOM and artwork job runs in the background"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
+          "en": "Actual post-change Buyer Log with isolated demo data."
+        }
+      }
+    },
+    {
+      "id": "plm-sync-stop-and-session",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · PLM Sync",
+        "en": "Collection · PLM Sync"
+      },
+      "title": {
+        "tr": "Durdur PLM Sync’i gerçekten durdurur",
+        "en": "Stop really stops PLM Sync"
+      },
+      "body": {
+        "tr": "PLM Operasyon Merkezi’nde Durdur’a basıldığında yeni PLM ve LCW AI isteği başlatılmaz; o ana kadar okunan BOM’lar korunur. CoreNectum oturumu iş sırasında biterse kalan istekler boşuna gönderilmez, okunanlar kaydedilir ve iş açık bir hatayla biter. Süresi dolmak üzere olan masaüstü oturumu için, uzun bir PLM işi başlamadan sessiz yenileme denenir.",
+        "en": "Pressing Stop in the PLM Operations Center starts no new PLM or LCW AI requests, and BOMs read so far are kept. If the CoreNectum session ends mid-job, the remaining requests are not sent in vain, the BOMs already read are saved and the job ends with a clear error. For a desktop session close to expiry, a silent refresh is attempted before a long PLM job starts."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-sync-stop.png",
+        "alt": {
+          "tr": "PLM Operasyon Merkezi’nde durdurulan PLM BOM ve Artwork işi",
+          "en": "A stopped PLM BOM and artwork job in the PLM Operations Center"
         },
         "caption": {
           "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",

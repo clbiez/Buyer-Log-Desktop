@@ -2,6 +2,7 @@
 
 const plmBomSync = require('../lib/plm-bom-sync');
 const plmBomStore = require('../lib/plm-bom-store');
+const setStyleApi = require('../lib/corenectum-set-style-api');
 
 /* Koleksiyon doğrudan PLM senkronu ve QTX route'ları
    server.js'ten birebir taşındı (davranış değişikliği yok). Kayıt, server.js'te
@@ -69,17 +70,27 @@ app.post('/api/plm-sync/bom/batch', userAccess.requireAnyArea('koleksiyon', 'cp'
     if (!raw) return res.status(400).json({ error: 'plmIds (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
     const plmIds = [...new Set(raw.map(normalizePlmId).filter(Boolean))].slice(0, 1000);
     const store = plmBomStore.load();
+    const revision = Number(store._revision) || 0;
+    /* İstemci elindeki özetlerin revision'ını gönderir; depo o zamandan beri
+       yazılmadıysa özetler aynıdır ve yeniden taşınmaz. */
+    const ifRevision = Number(req.body && req.body.ifRevision);
+    if (revision > 0 && Number.isFinite(ifRevision) && ifRevision === revision) {
+      return res.set('Cache-Control', 'no-store').json({
+        ok: true, notModified: true, entries: {}, requested: plmIds.length, found: 0,
+        revision, updatedAt: store._updatedAt || null,
+      });
+    }
     const entries = {};
     for (const plmId of plmIds) {
       const entry = store.models && store.models[plmId];
-      if (entry) entries[plmId] = entry;
+      if (entry) entries[plmId] = plmBomStore.summaryEntry(entry);
     }
     res.set('Cache-Control', 'no-store').json({
       ok: true,
       entries,
       requested: plmIds.length,
       found: Object.keys(entries).length,
-      revision: Number(store._revision) || 0,
+      revision,
       updatedAt: store._updatedAt || null,
     });
   } catch (err) { apiError(res, err, 'PLM BOM özetleri okunamadı.'); }
@@ -295,6 +306,12 @@ function createPlmFetchService(deps){
      const scope=['koleksiyon','cp','orders'].includes(requestedScope)?requestedScope:'koleksiyon';
      const selectedOnly = Boolean(input && input.selectedOnly === true);
      const language = String(input && input.language || '').toLowerCase()==='tr'?'tr':String(input && input.language || '').toLowerCase()==='en'?'en':'';
+     /* bomMode 'background' (Koleksiyon PLM Sync ve içe aktarmalar): alan
+        önizlemesi BOM/LCW AI'ı beklemez. Set Style BOM'u kumaş alanını
+        doğrudan beslediği için burada (AI'sız) okunur; geri kalan BOM ve
+        bütün LCW AI analizi ayrı bir arka plan işinde sürer. Varsayılan
+        'inline' (CP/Orders PLM detayları) eski tek adımlı davranıştır. */
+     const backgroundBom = String(input && input.bomMode || '') === 'background';
      const raw = Array.isArray(input && input.plmIds) ? input.plmIds : null;
      if (!selectedOnly && !raw) throw Object.assign(new Error('PLM IDs are required.'),{code:'VALIDATION_ERROR',statusCode:400});
      const plmIds = selectedOnly ? [] : [...new Set(raw.map(value => normalizePlmId(value)).filter(Boolean))].slice(0, 2000);
@@ -313,6 +330,7 @@ function createPlmFetchService(deps){
          ...getModelImageSettings(),
          selectedOnly,
          language,
+         isCancelled: job.cancelled,
          onProgress: progress => {
            setModelOperationProgress(profile.id, { kind: 'plm-sync', ...progress });
            job.report({
@@ -328,9 +346,11 @@ function createPlmFetchService(deps){
        /* BOM, Style List sonucundaki doğrulanmış styleId üzerinden okunur.
           Başarısız BOM/LCW AI analizi ana PLM alan senkronunu geri ALMAZ:
           plm-bom-sync eski başarılı kaydı korur ve yalnız hata raporlar. */
-       const bomSync = await plmBomSync.syncPlmBoms(collected.links, {
-         ownerId: profile.id,assertAuthority,allowAi,
+       const bomRecords = backgroundBom ? collected.links.filter(record => setStyleApi.isSetStyle(record)) : collected.links;
+       const bomSync = await plmBomSync.syncPlmBoms(bomRecords, {
+         ownerId: profile.id,assertAuthority,allowAi: backgroundBom ? false : allowAi,
          language,
+         isCancelled: job.cancelled,
          onProgress: progress => {
            setModelOperationProgress(profile.id, { kind: 'plm-sync', ...progress });
            job.report({
@@ -341,11 +361,13 @@ function createPlmFetchService(deps){
            });
          },
        });
+       // Arka plan modunda henüz okunmamış modeller son bilinen BOM kaydını taşır.
+       const storedModels = backgroundBom ? (plmBomStore.load().models || {}) : {};
        collected.links = collected.links.map(record => {
          const plmId = String(record && record.plmId || '');
          const override = bomSync.recordOverrides && bomSync.recordOverrides.get(plmId);
          const base = override ? { ...record, ...override } : record;
-         const entry = bomSync.entries.get(plmId);
+         const entry = bomSync.entries.get(plmId) || storedModels[plmId] || null;
          return entry ? {
            ...base,
            bomSummary: entry.summary,
@@ -355,7 +377,18 @@ function createPlmFetchService(deps){
            bomAiStatus: entry.ai && entry.ai.status || 'not-needed',
          } : base;
        });
+       if (backgroundBom) {
+         /* Arka plana kalanlar: Set Style olmayan her model + AI'ı ertelenen
+            ya da okunamayan Set Style'lar. */
+         const doneSets = new Set([...bomSync.entries].filter(([, entry]) => entry && !['deferred', 'failed'].includes(entry.ai && entry.ai.status)).map(([plmId]) => plmId));
+         const failedSets = new Set((bomSync.failed || []).map(item => String(item && item.plmId || '')));
+         collected.backgroundRecords = collected.links.filter(record => {
+           const plmId = String(record && record.plmId || '');
+           return !setStyleApi.isSetStyle(record) || failedSets.has(plmId) || !doneSets.has(plmId);
+         });
+       }
        collected.bomSync = {
+         background: backgroundBom,
          requested: bomSync.requested,
          fetched: bomSync.fetched,
          changed: bomSync.changed,
@@ -398,6 +431,10 @@ function createPlmFetchService(deps){
     // (pahalı, dakikalar süren tam liste gezintisi) gerekmez.
     let styleLinks = null;
     try { styleLinks = upsertPlmStyleLinks(collected.links, profile); } catch (_) {}
+    // Kullanıcı ilk fazı durdurduysa arka plan BOM işi de başlatılmaz.
+    const bomJob = backgroundBom && !(fetchRun.job && fetchRun.job.status === 'cancelled') && Array.isArray(collected.backgroundRecords) && collected.backgroundRecords.length
+      ? startBackgroundBom(profile, collected.backgroundRecords, { scope, language, allowAi, assertAuthority })
+      : null;
     userAccess.appendAudit(profile, 'PLM_SYNC_FETCH', 'corenectum', {
       scope, requested: collected.requested, found: collected.links.length, failed: collected.failed.length,
       scannedPages: collected.scannedPages, scannedRows: collected.scannedRows,
@@ -415,10 +452,51 @@ function createPlmFetchService(deps){
       // döner, böylece "0 model" ile "oturum yok" karıştırılamaz.
       diagnostics: collected.diagnostics || [],
       bom: collected.bomSync || null,
+      bomJob,
       styleLinks, jobId: fetchRun.job.id,
     };
 
   }finally{clearModelOperationProgress(profile.id);}
+  }
+
+  /* Faz 2: BOM + LCW AI arka plan işi. HTTP isteğine bağlı değildir; ilerleme
+     ve sonuç PLM Operasyon Merkezi'nde (iş kaydı) görünür, istemci işi jobId
+     ile izleyip bitince Artwork/Fabric projeksiyonunu tazeler. Kullanıcının
+     düğme ilerlemesine (setModelOperationProgress) yazmaz; o alan o anda
+     başka bir işleme ait olabilir. */
+  function startBackgroundBom(profile, records, { scope, language, allowAi, assertAuthority }) {
+    let jobId = '';
+    const run = withPlmJob({ currentUser: profile }, {
+      kind: 'plm-bom', scope, total: records.length,
+      label: `PLM BOM · ${records.length} model`,
+      phase: language === 'en' ? 'Reading PLM BOM' : 'PLM BOM okunuyor',
+    }, async job => {
+      jobId = job.id;
+      const result = await plmBomSync.syncPlmBoms(records, {
+        ownerId: profile.id, assertAuthority, allowAi, language,
+        isCancelled: job.cancelled,
+        onProgress: progress => job.report({
+          phase: progress && progress.phase,
+          processed: progress && progress.current,
+          total: (progress && progress.total) || records.length,
+          activeModel: progress && progress.model,
+        }),
+      });
+      for (const item of result.failed || []) {
+        job.fail({ plmId: item && item.plmId, error: (item && item.error) || 'PLM BOM alınamadı.', code: (item && item.code) || 'PLM_BOM_FETCH_FAILED' });
+      }
+      // İptal/yetki bitişinde atlanan modeller işlenmiş sayılmaz.
+      plmJobs.update(profile.id, job.id, { processed: Math.max(0, result.requested - (result.skipped || 0)), total: result.requested, succeeded: result.fetched });
+      userAccess.appendAudit(profile, 'PLM_SYNC_BOM', 'corenectum', {
+        scope, requested: result.requested, fetched: result.fetched, changed: result.changed,
+        aiConsulted: result.aiConsulted, failed: (result.failed || []).length, stopped: result.stopped || '',
+      });
+      // Oturum bittiyse iş "başarısız" görünür; o ana kadarki BOM'lar kaydedildi.
+      if (result.stopped === 'auth' && result.stopError) throw result.stopError;
+      return { revision: result.revision, changed: result.changed };
+    });
+    run.catch(() => {}); // sonuç iş kaydındadır; işlenmemiş ret oluşmasın
+    return { jobId, total: records.length };
   }
   return {fetch};
 }

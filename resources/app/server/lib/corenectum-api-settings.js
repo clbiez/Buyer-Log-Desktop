@@ -147,9 +147,22 @@ function sourceFor(userId) {
   if (tokens.get(userKey(userId))) return 'session-memory';
   return 'none';
 }
+/* JWT'nin yalnız exp alanı okunur (imza doğrulaması sunucunundur). İstemciye
+   token değil, yalnız bitiş zamanı verilir: uzun bir PLM işi başlamadan önce
+   süresi bitmek üzere olan oturum sessizce yenilenebilsin. */
+function tokenExpiresAt(token) {
+  const parts = String(token || '').split('.');
+  if (parts.length !== 3) return '';
+  try {
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+    const exp = Number(payload && payload.exp);
+    return Number.isFinite(exp) && exp > 0 ? new Date(exp * 1000).toISOString() : '';
+  } catch (_) { return ''; }
+}
 function publicSettings(userId) {
   const source = sourceFor(userId);
   return {
+    expiresAt: source === 'none' ? '' : tokenExpiresAt(getToken(userId)),
     configured: source !== 'none',
     source,
     mode: source === 'desktop-sso' ? 'direct-api-auto-auth' : 'direct-bearer',
@@ -190,7 +203,7 @@ function clearDesktopToken() {
 function hasDesktopToken() { return Boolean(desktopToken); }
 
 module.exports = {
-  normalizeToken, getToken, publicSettings, saveToken, clearToken,
+  normalizeToken, getToken, publicSettings, tokenExpiresAt, saveToken, clearToken,
   setDesktopToken, clearDesktopToken, hasDesktopToken,
   sanitizeStyleListTemplate, paginateStyleListTemplate,
   setDesktopStyleListTemplate, getStyleListTemplate, clearDesktopStyleListTemplate,

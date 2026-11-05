@@ -34,6 +34,10 @@ const PLM_CODE_FILTER_COLUMN = 'plmCode';
 // Canlı ölçümle doğrulanan parti boyu ve başarısız parti için düşüş basamakları.
 const STYLE_LIST_BATCH_SIZE = 100;
 const STYLE_LIST_FALLBACK_SIZES = Object.freeze([50, 20]);
+/* GetStyleList partileri sınırlı eşzamanlılıkla gönderilir (kullanıcı kararı:
+   CoreNectum tarafında bilinen bir eşzamanlılık sınırı yok). 429/5xx görülürse
+   istemci kendi geri çekilmesini ve 100 -> 50 -> 20 bölmesini uygular. */
+const STYLE_LIST_CONCURRENCY = 3;
 // Sınırlı eşzamanlılık: paket sözleşmesindeki varsayılanlar.
 const STYLE_IMAGES_CONCURRENCY = 5;
 const IMAGE_DOWNLOAD_CONCURRENCY = 8;
@@ -436,6 +440,7 @@ module.exports = {
   PLM_CODE_FILTER_OPERATOR,
   STYLE_LIST_BATCH_SIZE,
   STYLE_LIST_FALLBACK_SIZES,
+  STYLE_LIST_CONCURRENCY,
   STYLE_IMAGES_CONCURRENCY,
   IMAGE_DOWNLOAD_CONCURRENCY,
   SOURCE_OPTION,
