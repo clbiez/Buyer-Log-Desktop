@@ -26,7 +26,7 @@ async function encodeAuthority(authority,{assertCurrent=()=>{},yieldControl=()=>
     }
   }
   await flush();assertCurrent();serializer.writeValue(null);
-  const bytes=Uint8Array.from(serializer.releaseBuffer()).buffer;timing();
+  const bytes=require('./compute-ipc').takeEncodedBuffer(serializer.releaseBuffer());timing();
   return {bytes,paramsSerializeMs,maxSerializeSliceMs,paramsChunks};
 }
 function decodeAuthority(bytes){

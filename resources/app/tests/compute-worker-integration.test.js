@@ -180,6 +180,28 @@ test('native CP code hints equal the canonical resolver without hydrating raw so
   try{assert.deepEqual(JSON.parse(zlib.gunzipSync(Buffer.from(lease.value.buffer))),{ok:true,denied:policy.sharedEditDeniedCodes(access,codes)});}finally{lease.release();}
  }
 });
+test('native IPC transfers its owned encoded buffer without copying or detaching the caller input',async t=>{
+ const {service,pool}=setup(t),v8=require('node:v8'),wt=require('node:worker_threads');
+ const descriptor=await service.coldSource({ownerId:'a',generation:'copy-check',uncompressedBytes:MiB});
+ const cachedCp=zlib.gzipSync(JSON.stringify({rows:[{'PLM ID':'321','C.Code':'RED'}]})),original=Buffer.from(cachedCp);
+ const serialize=v8.serialize,run=pool.run;let encoded,transferred;
+ v8.serialize=function(value){const result=serialize(value);if(value.syntheticCopyCheck)encoded=result;return result;};
+ try{
+  pool.run=(task,payload,options)=>{
+   if(task==='cp-image-registry'){
+    transferred=payload.paramsBytes;
+    if(typeof wt.isMarkedAsUntransferable==='function')assert.equal(transferred,encoded.buffer,'an owned transferable encoding must not be copied again');
+    else assert.notEqual(transferred,encoded.buffer,'older runtimes keep the safe copying fallback');
+    assert.deepEqual(options.transferList,[transferred]);assert.equal(options.inputBytes,transferred.byteLength+1024);
+   }
+   return run(task,payload,options);
+  };
+  const lease=await service.run('cp-image-registry',descriptor,{syntheticCopyCheck:true,cachedCp,overrides:{imagemap:{'plm:321|colour:RED':'demo-image'}}});
+  try{assert.equal(JSON.parse(zlib.gunzipSync(Buffer.from(lease.value.buffer))).imagemap['plm:321|colour:RED'],'demo-image');}
+  finally{lease.release();}
+  assert.equal(transferred.byteLength,0);assert.deepEqual(cachedCp,original);
+ }finally{v8.serialize=serialize;}
+});
 test('authority IPC encoding yields before admission and keeps exact hashes across split rows and special keys',async t=>{
  const {service,pool}=setup(t),authority={};
  for(let i=0;i<1100;i++)authority[String(i+100)]=[{buyer:'Synthetic '+i,merch:'M',ageGroup:'A',buyerGrup:'G'}];

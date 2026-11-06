@@ -73,3 +73,23 @@ admission. Special keys, split rows, Date values and shared row identity have
 additional equivalence coverage. This additional fix was not reviewed again by
 a second model, preserving the single review-pass limit. It does not establish
 the exact root cause of the earlier exceedances.
+
+TR: Daha sonraki native profil, aynı turdaki canlı kapı denetimleri ile
+4,6 MB CP gzip girdisinin V8 kodlanmasının biriktiğini ve bazı aralıklarda GC
+duraklamasını doğruladı. Encoder'a ait, tam ve transfer edilebilir tampon artık
+ikinci kez kopyalanmaz. Node sürümü transfer durumunu sorgulayamıyorsa veya
+tampon havuzlu/paylaşılmış/kesilmişse önceki kopyalama yolu korunur. Native test
+önce RED oldu; byte admission, gerçek transferde detach, çağıranın girdisinin
+korunması ve sonuç eşdeğerliği doğrulanır. Bu da ana agent'ın inceleme sonrası
+düzeltmesidir; tüm gecikmelerin kök nedeni veya üçlü normal kabul sonucu
+olarak sunulmaz.
+
+EN: A later native profile verified the accumulation of live-gate checks and
+V8 encoding of a 4.6 MB CP gzip input in one turn, and GC pauses in some gaps.
+A complete, transferable buffer owned by the encoder is no longer copied a
+second time. The prior copying path remains when the Node version cannot query
+transferability or the buffer is pooled, shared or sliced. The native test first
+failed RED; byte admission, detachment through real transfer, intact caller
+input and equivalent output are covered. This is another primary-agent fix
+after the independent review, not a claim to explain every delay or to have
+passed the normal three-run acceptance criterion.

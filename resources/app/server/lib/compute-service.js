@@ -1,9 +1,10 @@
 'use strict';
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
-const v8=require('node:v8'),{performance}=require('node:perf_hooks');
+const {performance}=require('node:perf_hooks');
 const {createComputePool}=require('./compute-pool');
 const {captureAntrepoMetadata}=require('./compute-source-codec');
 const {accessForTask}=require('./compute-task-access');
+const {serializeForTransfer}=require('./compute-ipc');
 const MiB=1024*1024;
 function failure(code){
   const messages={COMPUTE_SOURCE_TOO_LARGE:['Kaynak kopyası bayt bütçesine sığmıyor.','Source replica exceeds the byte budget.',413],COMPUTE_SOURCE_OWNER_MISMATCH:['Kaynak sahibi uyuşmuyor.','Source owner mismatch.',403],COMPUTE_STALE_GENERATION:['Kaynak sürümü değişti.','Source generation changed.',409],COMPUTE_POOL_CLOSED:['Hesaplama havuzu kapalı.','Compute pool is closed.',503],COMPUTE_JOB_INVALID:['Geçersiz hesaplama isteği.','Invalid compute request.',400]};
@@ -82,7 +83,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       // Küçük karar/sorgu DTO'su bir kez kodlanır. Kuyruk gerçek girdi
       // baytını ücretler; büyük ham kaynak bu yoldan tekrar taşınmaz.
       const jobParams=params.access?{...params,access:accessForTask(params.access,task,params)}:params;
-      const encodeStarted=performance.now(),encoded=v8.serialize(jobParams),paramsBytes=Uint8Array.from(encoded).buffer;
+      const encodeStarted=performance.now(),paramsBytes=serializeForTransfer(jobParams);
       const paramsSerializeMs=performance.now()-encodeStarted,inputBytes=paramsBytes.byteLength+1024;
       const estimate=task==='cp-shared-edit-codes'?96*MiB+inputBytes*8:(task==='backlog-workbook'?256*MiB+record.descriptor.bytes*6:96*MiB+record.descriptor.bytes*3)+inputBytes*3;
       const lease=await pool.run(task,{ownerId:owner,source:record.descriptor,paramsBytes},{ownerKey:poolOwner(owner),generation:version,priority:'interactive',
@@ -109,7 +110,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   async function runExcelUtility(task,payload,{ownerId='system',...options}={}){
     if(closed)throw failure('COMPUTE_POOL_CLOSED');
     if(!['previewFxWorkbookFromDirectories','loadFxWorkbookFromDirectories'].includes(task))throw failure('COMPUTE_JOB_INVALID');
-    const started=performance.now(),encoded=Uint8Array.from(v8.serialize({excelTask:task,excelPayload:payload})).buffer,inputBytes=encoded.byteLength+1024;
+    const started=performance.now(),encoded=serializeForTransfer({excelTask:task,excelPayload:payload}),inputBytes=encoded.byteLength+1024;
     const paramsSerializeMs=performance.now()-started,estimatedBytes=256*MiB+inputBytes*8;
     const lease=await pool.run('excel-utility',{paramsBytes:encoded,maxOutputBytes:estimatedBytes},
       {ownerKey:'utility:'+String(ownerId),generation:'1',...options,estimatedBytes,inputBytes,transferList:[encoded]});
@@ -118,7 +119,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   async function runOffice(ownerId,job,options={}){
     if(closed)throw failure('COMPUTE_POOL_CLOSED');
     if(!ownerId||!['xlsx','pptx'].includes(job?.format))throw failure('COMPUTE_JOB_INVALID');
-    const started=performance.now(),encoded=Uint8Array.from(v8.serialize(job)).buffer,inputBytes=encoded.byteLength+1024;
+    const started=performance.now(),encoded=serializeForTransfer(job),inputBytes=encoded.byteLength+1024;
     if(inputBytes>128*MiB)throw failure('COMPUTE_SOURCE_TOO_LARGE');
     const cells=job.format==='xlsx'?(job.data.sheets||[]).reduce((sum,sheet)=>sum+(sheet.rows||[]).length*(sheet.columns||[]).length,0)
       :(job.data.slides||[]).reduce((sum,slide)=>sum+(slide.items||[]).length*16+(slide.table?.rows||[]).reduce((count,row)=>count+(Array.isArray(row)?row.length:0),0),0);
@@ -138,7 +139,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       if(stat.size<4)throw failure('COMPUTE_JOB_INVALID');
       const tail=Buffer.alloc(4);await handle.read(tail,0,4,stat.size-4);rawBytes=Math.max(MiB,tail.readUInt32LE(0));
     }finally{await handle?.close();}
-    const paramsBytes=Uint8Array.from(v8.serialize({descriptor,maxOutputLength:rawBytes})).buffer,inputBytes=paramsBytes.byteLength+1024;
+    const paramsBytes=serializeForTransfer({descriptor,maxOutputLength:rawBytes}),inputBytes=paramsBytes.byteLength+1024;
     return pool.run('endeksmatik-legacy-status',{paramsBytes},{ownerKey,generation,priority:'interactive',estimatedBytes:96*MiB+rawBytes*8,inputBytes,transferList:[paramsBytes]});
   }
   async function hashAccessAuthority(authority,{onMetrics}={}){
