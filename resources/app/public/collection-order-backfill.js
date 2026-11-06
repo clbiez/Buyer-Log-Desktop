@@ -4,7 +4,22 @@
   else root.BLCollectionOrderBackfill = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function(fields) {
   'use strict';
+  /* CP / Orders → Koleksiyon eşitleme planı (saf, DOM'suz).
+   *
+   * Eşleşme anahtarı: MB ayı + PLM ID + Renk Kodu. Koleksiyonda bu kimlikte bir
+   * kayıt varsa yeni satır AÇILMAZ; mevcut satır yerinde güncellenir. Böylece
+   * satır kimliği (id) korunur ve ona bağlı fiyatlama geçmişi, teklifler, fiyat
+   * avantajları, landed kıyasları, Endeksmatik ve görsel kaybolmaz.
+   *
+   * Fiyat kaynağı nihai FOB değil Supp. FOB'dur; üretici Sub-Manufacturer'dır
+   * (yoksa Manufacturer). Koleksiyon FOB'u bu fiyattan royalty + hologram ile
+   * kendisi hesaplar; nihai FOB'u fiyat olarak yazmak masrafları iki kez ekler.
+   * Mevcut satırın onaylı üretici/fiyatı farklıysa değişiklik yalnız kullanıcı
+   * onayıyla uygulanır (priceChange.requiresApproval). Diğer kaynak alanları
+   * (MAG, buyer, ülke, tarihler, adet, kumaş …) kaynakta doluysa taşınır; boş
+   * kaynak değeri mevcut Koleksiyon değerini silmez. */
   const text = value => String(value ?? '').trim();
+  const upper = value => text(value).replace(/\s+/g, ' ').toLocaleUpperCase('tr-TR');
   const clone = value => JSON.parse(JSON.stringify(value));
   function number(value) {
     let raw = text(value).replace(/\s/g, '');
@@ -15,81 +30,168 @@
     const parsed = Number(raw);
     return Number.isFinite(parsed) ? parsed : null;
   }
-  const normalized = (row, field) => fields.normalizedValue(row, 'collection', field);
-  function groupKey(row, fallback) {
-    const plm = normalized(row, 'plmId'), model = plm || normalized(row, 'modelName');
-    // Collection FOB is a live royalty calculation. Source FOB defines the
-    // historical commercial group even when that calculated cell changes.
-    const month = text(row.inStoreMonth), price = number(row._sourceOrderDetails?.sourceFob ?? row.fob), quantity = number(row.quantity);
-    if (row._collectionBackfillKey && row.confirmedManufacturer && number(row.pricing?.[row.confirmedManufacturer]) !== price) {
-      return JSON.stringify(['edited-quote', fallback]);
-    }
-    // Unknown LCW periods and prices cannot establish a shared commercial row.
-    if (!model || !/^\d{6}$/.test(month) || !(price > 0) || quantity == null || quantity < 0) return JSON.stringify(['source', fallback]);
-    return JSON.stringify([plm?'plm':'name', model, month, normalized(row, 'season'), price, number(row.targetPrice),
-      normalized(row, 'country'), normalized(row, 'manufacturer')]);
+  // Kaynak siparişten Koleksiyona taşınan, kullanıcıya ait olmayan alanlar.
+  // pricing, confirmedManufacturer, targetPrice, previousFob, landed girdileri,
+  // endeksmatikData, durum, görsel, buying sample ve özel sütunlar burada YOKTUR.
+  const SOURCE_FIELDS = Object.freeze(['modelKod', 'lisans', 'licensor', 'urunTipi', 'productMainDefinition',
+    'specialCode', 'line', 'colour', 'fabric', 'fabricSupplierS7', 'fabricSupplierS6', 'fit', 'assortment',
+    'mag', 'mmyg', 'buyingGroup', 'buyer', 'season', 'country', 'delType']);
+  const AGGREGATE_FIELDS = Object.freeze(['quantity', 'opd', 'exFactory', 'retail', 'inStore', 'inStoreWeek']);
+  const defaultMonth = value => /^\d{6}$/.test(text(value)) ? text(value) : '';
+
+  function identity(row, monthKey = defaultMonth) {
+    const plm = text(fields.normalizedValue(row, 'collection', 'plmId'));
+    const colour = upper(row && row.colourCode);
+    const month = monthKey(row && row.inStoreMonth);
+    return plm && colour && month ? JSON.stringify([plm, colour, month]) : '';
+  }
+  const orderLine = order => JSON.stringify([upper(order && order.orderCode), upper(order && order.colourCode)]);
+  /* Önceden kayda bağlanmış sipariş satırlarından hangilerinin yenileriyle
+   * değiştirileceği. Aynı anahtar her zaman değişir. Anahtarı değişmiş (fiyat,
+   * tarih vb. güncellenmiş) satır yalnız o sipariş + rengin tüm satırları yeniden
+   * seçildiyse değişir; aynı sipariş + renkte farklı fiyatlı satırlardan yalnız
+   * biri seçildiğinde diğerleri korunur, adet eksilmez. */
+  function supersede(previous, incoming) {
+    const keys = new Set(incoming.map(order => order.key).filter(Boolean)), count = new Map();
+    const tally = (map, order) => map.set(orderLine(order), (map.get(orderLine(order)) || 0) + 1);
+    const before = new Map();
+    previous.forEach(order => tally(before, order));
+    incoming.forEach(order => tally(count, order));
+    return previous.filter(order => {
+      if (order.key && keys.has(order.key)) return false;
+      const line = orderLine(order);
+      return !(count.get(line) >= before.get(line));
+    });
   }
   function sourceOrder(key, row) {
     return {key, orderCode:row._sourceOrderCode || '', quantity:row.quantity, opd:row.opd,
       exFactory:row.exFactory, retail:row.retail, inStore:row.inStore, inStoreWeek:row.inStoreWeek,
       colourCode:row.colourCode, colour:row.colour, notes:row.not || '', details:clone(row._sourceOrderDetails || {})};
   }
-  function bound(a, b, latest) {
-    const dates = [a,b].map(text).filter(value => /^\d{4}-\d{2}-\d{2}$/.test(value)).sort();
+  function bound(values, latest) {
+    const dates = values.map(text).filter(value => /^\d{4}-\d{2}-\d{2}$/.test(value)).sort();
     return dates.length ? dates[latest ? dates.length - 1 : 0] : '';
   }
-  function joined(values) { return [...new Set(values.map(text).filter(Boolean))].join(' · '); }
-  function append(row, incoming, key) {
-    row.quantity = String((number(row.quantity) || 0) + (number(incoming.quantity) || 0));
-    row.opd = bound(row.opd, incoming.opd, false);
-    row.exFactory = bound(row.exFactory, incoming.exFactory, true);
-    row.retail = bound(row.retail, incoming.retail, true);
-    if (incoming.inStore && (!row.inStore || incoming.inStore < row.inStore)) {
-      row.inStore = incoming.inStore; row.inStoreWeek = incoming.inStoreWeek;
-    }
-    row._sourceOrders.push(sourceOrder(key, incoming));
-    row.colourCode = joined(row._sourceOrders.map(order => order.colourCode));
-    row.colour = joined(row._sourceOrders.map(order => order.colour));
-    row.not = joined([row.not, incoming.not]);
-    return row;
+  function aggregate(orders) {
+    const quantities = orders.map(order => number(order.quantity)).filter(value => value != null);
+    const firstStore = orders.filter(order => /^\d{4}-\d{2}-\d{2}$/.test(text(order.inStore)))
+      .sort((a, b) => text(a.inStore).localeCompare(text(b.inStore)))[0];
+    return {quantity:quantities.length ? String(quantities.reduce((sum, value) => sum + value, 0)) : '',
+      opd:bound(orders.map(order => order.opd), false), exFactory:bound(orders.map(order => order.exFactory), true),
+      retail:bound(orders.map(order => order.retail), true),
+      inStore:firstStore ? text(firstStore.inStore) : '', inStoreWeek:firstStore ? text(firstStore.inStoreWeek) : ''};
   }
-  function plan(entries, existing = [], existingKeys = []) {
-    const seen = new Set(existingKeys.filter(Boolean)), targets = new Map(), changes = new Map();
+  // Aynı model+renk+MB ayındaki siparişlerden tek fiyat önerisi. Farklı üretici
+  // veya Supp. FOB varsa tahmin yapılmaz: öneri yok, çakışma raporlanır.
+  function proposal(rows) {
+    const offers = new Map();
+    rows.forEach(row => {
+      const name = text(row.confirmedManufacturer), price = number(row.pricing && row.pricing[name]);
+      if (name && price > 0) offers.set(JSON.stringify([upper(name), price]), {name, price, raw:text(row.pricing[name])});
+    });
+    if (offers.size === 1) return {offer:[...offers.values()][0], conflict:false};
+    return {offer:null, conflict:offers.size > 1};
+  }
+  // Teslim tipi kaynakta boşsa eşleyici varsayılanı ('Gemi') gerçek veri değildir.
+  const sourceValue = (row, key) => key === 'delType' && row._sourceOrderDetails
+    && Object.prototype.hasOwnProperty.call(row._sourceOrderDetails, 'deliveryType') ? row._sourceOrderDetails.deliveryType : row[key];
+  function firstFilled(rows, key) {
+    for (const row of rows) if (text(sourceValue(row, key))) return sourceValue(row, key);
+    return '';
+  }
+  function notesWith(current, orders) {
+    const parts = text(current) ? text(current).split(' · ') : [];
+    orders.forEach(order => text(order.notes).split(' · ').map(text).filter(Boolean).forEach(note => {
+      if (!parts.includes(note)) parts.push(note);
+    }));
+    return parts.join(' · ');
+  }
+  function plan(entries, existing = [], existingKeys = [], options = {}) {
+    const monthKey = typeof options.monthKey === 'function' ? options.monthKey : defaultMonth;
+    const read = typeof options.read === 'function' ? options.read : (row, key) => row && row[key];
+    const pricingOf = typeof options.pricing === 'function' ? options.pricing : row => (row && row.pricing) || {};
+    const equal = typeof options.equal === 'function' ? options.equal : (a, b) => text(a) === text(b);
+    const seen = new Set(existingKeys.filter(Boolean)), byIdentity = new Map();
     existing.forEach(row => {
       (row._sourceOrders || []).forEach(order => { if (order.key) seen.add(order.key); });
       if (row._sourceOrderIdentity) seen.add(row._sourceOrderIdentity);
-      // Only rows made by this tool, with unchanged commercial dimensions, can
-      // receive new orders. Manual rows and previous one-order imports stay intact.
-      if (row._collectionBackfillKey && groupKey(row, row._sourceOrders?.[0]?.key) === row._collectionBackfillKey && !targets.has(row._collectionBackfillKey)) {
-        targets.set(row._collectionBackfillKey, {existingId:row.id, row});
-      }
+      const key = identity({...row, plmId:read(row, 'plmId'), colourCode:row.colourCode, inStoreMonth:read(row, 'inStoreMonth')}, monthKey);
+      if (!key) return;
+      if (!byIdentity.has(key)) byIdentity.set(key, []);
+      byIdentity.get(key).push(row);
     });
-    let duplicates = 0;
+    const groups = new Map(), loose = [], inputKeys = new Set();
+    let duplicates = 0, unchanged = 0;
     entries.forEach((entry, index) => {
       const key = text(entry.key);
-      if (key && seen.has(key)) { duplicates++; return; }
-      if (key) seen.add(key);
-      const identity = groupKey(entry.row, key || `unkeyed-${index}`);
-      let change = changes.get(identity);
-      if (!change) {
-        const target = targets.get(identity);
-        if (target) change = {existingId:target.existingId, row:clone(target.row)};
-        else {
-          const row = clone(entry.row);
-          // Independent commercial rows must not inherit another row's price,
-          // supplier or dates through automatic colour grouping on persistence.
-          row.modelGroupId = 'order-backfill:' + (key || identity); row.modelGroupRole = 'single';
-          row._collectionBackfillKey = identity;
-          row._sourceOrders = [sourceOrder(key, row)];
-          change = {existingId:null, row};
-          changes.set(identity, change);
-          return;
-        }
-        changes.set(identity, change);
+      if (key && inputKeys.has(key)) { duplicates++; return; }
+      if (key) inputKeys.add(key);
+      const id = identity(entry.row, monthKey);
+      if (!id) {
+        // Kimliği eksik kayıt (PLM/renk/MB ayı yok) eşleştirilemez; aynı sipariş
+        // satırı daha önce aktarıldıysa tekrar açılmaz, aksi hâlde yeni satırdır.
+        if (key && seen.has(key)) { duplicates++; return; }
+        loose.push({key:key || `unkeyed-${index}`, row:entry.row});
+        return;
       }
-      append(change.row, entry.row, key);
+      if (!groups.has(id)) groups.set(id, []);
+      groups.get(id).push({key, row:entry.row});
     });
-    return {changes:[...changes.values()], duplicates};
+    const changes = [];
+    loose.forEach(({key, row}) => {
+      const next = clone(row);
+      next.modelGroupId = 'order-backfill:' + key; next.modelGroupRole = 'single';
+      next._sourceOrders = [sourceOrder(key, row)];
+      const price = proposal([row]);
+      changes.push({existingId:null, identity:'', row:next, price:{current:null, proposed:price.offer, conflict:false, missing:!price.offer, changed:false, requiresApproval:false}, fieldChanges:[], matches:0});
+    });
+    groups.forEach((all, id) => {
+      const targets = byIdentity.get(id) || [];
+      // Eşleşen kayıt yoksa daha önce aktarılmış sipariş satırları (ör. eski
+      // sürümün renkleri tek satırda birleştirdiği kayıtlar) tekrar açılmaz.
+      const members = targets.length ? all : all.filter(member => !(member.key && seen.has(member.key)));
+      duplicates += all.length - members.length;
+      if (!members.length) return;
+      const rows = members.map(member => member.row);
+      const incoming = members.map(member => sourceOrder(member.key, member.row));
+      const price = proposal(rows);
+      if (!targets.length) {
+        const next = clone(rows[0]);
+        SOURCE_FIELDS.forEach(field => { const value = firstFilled(rows, field); if (text(value)) next[field] = value; });
+        Object.assign(next, aggregate(incoming));
+        next._sourceOrders = incoming;
+        next.not = notesWith('', incoming);
+        next.pricing = price.offer ? {[price.offer.name]:price.offer.raw} : {};
+        next.confirmedManufacturer = price.offer ? price.offer.name : (price.conflict ? '' : text(next.confirmedManufacturer));
+        next.buyingSampleManufacturer = price.offer ? price.offer.name : text(next.buyingSampleManufacturer);
+        next.modelGroupId = 'order-backfill:' + id; next.modelGroupRole = 'single';
+        changes.push({existingId:null, identity:id, row:next, price:{current:null, proposed:price.offer, conflict:price.conflict, missing:!price.offer && !price.conflict, changed:false, requiresApproval:false}, fieldChanges:[], matches:0});
+        return;
+      }
+      // Birden fazla eşleşme (ör. önceki hatayla çoğalmış kayıtlar): en zengin
+      // ticari geçmişe sahip, sonra en eski kayıt güncellenir; diğerlerine dokunulmaz.
+      const ranked = targets.slice().sort((a, b) => Object.keys(pricingOf(b)).length - Object.keys(pricingOf(a)).length
+        || Number(Boolean(a._sourceOrders?.length)) - Number(Boolean(b._sourceOrders?.length)) || Number(a.id) - Number(b.id));
+      const target = ranked[0];
+      const orders = [...supersede(target._sourceOrders || [], incoming), ...incoming];
+      const patch = {};
+      SOURCE_FIELDS.forEach(field => { const value = firstFilled(rows, field); if (text(value)) patch[field] = value; });
+      Object.entries(aggregate(orders)).forEach(([field, value]) => { if (text(value)) patch[field] = value; });
+      const notes = notesWith(read(target, 'not'), incoming);
+      if (notes) patch.not = notes;
+      const fieldChanges = Object.keys(patch).filter(field => !equal(read(target, field), patch[field]))
+        .map(field => ({key:field, from:read(target, field) ?? '', to:patch[field]}));
+      const pricing = pricingOf(target), currentName = text(read(target, 'confirmedManufacturer'));
+      const currentPrice = number(pricing[currentName]);
+      const current = currentName && currentPrice > 0 ? {name:currentName, price:currentPrice, raw:text(pricing[currentName])} : null;
+      const changed = Boolean(price.offer && (!current || upper(current.name) !== upper(price.offer.name) || current.price !== price.offer.price));
+      const ordersChanged = JSON.stringify(orders) !== JSON.stringify(target._sourceOrders || []);
+      if (!fieldChanges.length && !changed && !ordersChanged) { unchanged++; return; }
+      const display = {...target, ...patch};
+      changes.push({existingId:target.id, identity:id, row:display, patch, sourceOrders:orders, fieldChanges, matches:targets.length,
+        price:{current, proposed:price.offer, conflict:price.conflict, missing:!price.offer && !price.conflict, changed, requiresApproval:changed}});
+    });
+    return {changes, duplicates, unchanged};
   }
-  return {plan, groupKey};
+  return {plan, identity, SOURCE_FIELDS, AGGREGATE_FIELDS};
 });

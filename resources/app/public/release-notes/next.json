@@ -619,6 +619,35 @@
           "en": "Actual app with isolated demo data; the file limit and the LCW AI response were reduced and stubbed for acceptance testing."
         }
       }
+    },
+    {
+      "id": "collection-order-sync-in-place",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Siparişten Koleksiyona aktarım Supp. FOB ve Sub MFR ile, kayıt çoğaltmadan çalışır",
+        "en": "Orders-to-Collection import uses Supp. FOB and Sub MFR without duplicating records"
+      },
+      "body": {
+        "tr": "CP ve Siparişlerden Koleksiyona aktarımda onaylı fiyat artık nihai FOB değil Supp. FOB, onaylı üretici ise Sub-Manufacturer olarak alınır; Koleksiyon royalty ve hologramı bu fiyata yalnız bir kez ekler. Koleksiyonda aynı MB ayı + PLM ID + Renk Kodu ile kayıt varsa yeni satır açılmaz, mevcut kayıt yerinde güncellenir: fiyatlama geçmişi, teklifler, fiyat avantajları, landed kıyasları ve Endeksmatik korunur. MAG, buyer, ülke, tarihler, adet ve kumaş siparişten taşınır; onaylı üretici veya fiyat farklıysa yalnız önizlemede onayladığınız kayıtlarda değişir.",
+        "en": "When importing from CP and Orders into Collection, the confirmed price is now Supp. FOB instead of the final FOB and the confirmed manufacturer is the Sub-Manufacturer; Collection adds royalty and hologram to this price only once. If Collection already has a record with the same MB month + PLM ID + Colour Code, no new row is created and the existing record is updated in place: pricing history, quotes, price advantages, landed comparisons and Endeksmatik are kept. MAG, buyer, country, dates, quantity and fabric are copied from the order; a different confirmed manufacturer or price changes only for the records you approve in the preview."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-order-sync.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log önizlemesinde mevcut kaydın güncellenmesi ve Sub MFR · Supp. FOB fiyat onayı",
+          "en": "Existing record update and Sub MFR · Supp. FOB price approval in the actual Buyer Log preview"
+        },
+        "caption": {
+          "tr": "İzole demo veriyle gerçek uygulama; mevcut Koleksiyon kaydı ve CP Sub MFR/Supp. FOB değerleri kabul testi için hazırlandı.",
+          "en": "Actual app with isolated demo data; the existing Collection record and CP Sub MFR/Supp. FOB values were prepared for acceptance testing."
+        }
+      }
     }
   ]
 }
