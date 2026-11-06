@@ -84,8 +84,9 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       const jobParams=params.access?{...params,access:accessForTask(params.access,task,params)}:params;
       const encodeStarted=performance.now(),encoded=v8.serialize(jobParams),paramsBytes=Uint8Array.from(encoded).buffer;
       const paramsSerializeMs=performance.now()-encodeStarted,inputBytes=paramsBytes.byteLength+1024;
+      const estimate=task==='cp-shared-edit-codes'?96*MiB+inputBytes*8:(task==='backlog-workbook'?256*MiB+record.descriptor.bytes*6:96*MiB+record.descriptor.bytes*3)+inputBytes*3;
       const lease=await pool.run(task,{ownerId:owner,source:record.descriptor,paramsBytes},{ownerKey:poolOwner(owner),generation:version,priority:'interactive',
-        ...options,estimatedBytes:(task==='backlog-workbook'?256*MiB+record.descriptor.bytes*6:96*MiB+record.descriptor.bytes*3)+inputBytes*3,inputBytes,transferList:[paramsBytes]});
+        ...options,estimatedBytes:estimate,inputBytes,transferList:[paramsBytes]});
       if(current.get(owner)!==version||record.retired){lease.release();throw failure('COMPUTE_STALE_GENERATION');}
       let released=false;return {...lease,metrics:{...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024},release(){if(released)return;released=true;lease.release();record.pins--;void discard(record);}};
     }catch(error){record.pins--;void discard(record);throw error;}

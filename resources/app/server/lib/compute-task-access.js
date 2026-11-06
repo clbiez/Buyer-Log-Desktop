@@ -6,6 +6,7 @@ function accessForTask(context,task,parts={}){
   let authority=true;
   if(task.startsWith('backlog-')||['source-info','projection-plan','cp-image-registry'].includes(task))authority=false;
   else if(task==='projection-envelope')authority=parts.legacyModule==='cp'&&context.systemRole!=='moderator';
+  else if(task==='cp-shared-edit-codes')authority=context.systemRole!=='moderator';
   else if(task==='projections'){
     const modules=parts.modules||['cp','orders','overview','order-summary','collection-catalog'];
     const editing=!context.manageAll&&(modules.includes('cp')||modules.includes('order-summary'));

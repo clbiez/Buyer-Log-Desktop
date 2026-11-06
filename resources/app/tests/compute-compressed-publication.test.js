@@ -32,3 +32,12 @@ test('a late source change after manifest rename never leaves a manifest pointin
   finally{fs.promises.rename=original;}
   const manifest=cache.loadManifest('d');assert.ok(fs.existsSync(path.join(root,'page-cache','d',manifest.activeGeneration,'cp.json.gz')));
 });
+test('reused generations enforce the live guard before and after asynchronous cache reads',async()=>{
+ for(const mode of ['already-stale','changed-during-read']){
+  const user=mode==='already-stale'?'reuse-stale':'reuse-race',keys={cp:'same-input'};
+  const before=await cache.writeCompressedGeneration(user,{contextHash:'ctx',sourceLoadedAt:'r1',projections:{cp:entry({rows:[1]})},extra:{moduleInputKeys:keys}});
+  let checks=0;
+  await assert.rejects(cache.reuseGeneration(user,{contextHash:'ctx',generation:before.activeGeneration,moduleInputKeys:keys,sourceLoadedAt:'r2',assertCurrent(){checks++;if(mode==='already-stale'||checks>1)throw stale();}}),{code:'COMPUTE_STALE_GENERATION'});
+  assert.equal(cache.loadManifest(user).sourceLoadedAt,'r1');assert.equal(cache.loadManifest(user).activeGeneration,before.activeGeneration);
+ }
+});

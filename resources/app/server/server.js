@@ -8102,6 +8102,7 @@ const computeReadGuard=createComputeReadGuard({sessionProfile:req=>userAccess.se
   hasArea:(profile,area)=>userAccess.hasArea(profile,area),contextFor:computeReadContext,accessFor:profile=>userAccess.computeAccessContext(profile),sourceTokenFor:computeSourceToken});
 function computeParamsFor(profile,descriptor,task,parts={}){
   if(task==='source-info')return {};
+  if(task==='cp-shared-edit-codes')return {codes:parts.codes,access:userAccess.computeAccessContext(profile)};
   const shared=loadOverrides();
   const data={...parts,access:profile?userAccess.computeAccessContext(profile):null,overrides:{...shared,antrepoMatchConfig:shared.antrepoSourceMode==='dashboard'?dashboardAntrepoMatchRule():shared.antrepoMatchConfig},
     mergeSourceOverrides:true,preferSourceAppliedHorizons:true,horizons:Object.fromEntries(['cp','orders','backlog'].map(target=>[target,effectiveHorizonForTarget(profile,target)])),
@@ -8168,21 +8169,6 @@ async function buildAndWritePageProjectionCache(currentUser, runtime = null) {
   const active = runtime || cacheForUser(id);
   if (!Array.isArray(active.asasOrders)) return null;
   const expectedSourceToken=computeSourceToken(id);
-  const overrides = effectiveOverridesForUser(id);
-  const {backlog:backlogInputKey,...moduleInputKeys}=derivedInputKeys.keys(active,ctx.contextHash,overrides,{version:APP_VERSION});
-  const reused=await pageProjectionCache.readReusableProjections(id,ctx.contextHash,moduleInputKeys);
-  if(computeSourceToken(id)!==expectedSourceToken)throw Object.assign(new Error('Kaynak sürümü değişti. / Source generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
-  const wanted=new Set(Object.keys(moduleInputKeys).filter(module=>!reused.projections[module]));
-  const extra={runtimeMeta:pageCacheRuntimeMeta(active),sourceRevisionKey:projectionSourceRevision(active),moduleInputKeys,backlogInputKey,performance:{reusedModules:Object.keys(reused.projections)}};
-  if(!wanted.size){
-    const hit=await pageProjectionCache.reuseGeneration(id,{contextHash:ctx.contextHash,generation:reused.manifest.activeGeneration,moduleInputKeys,sourceLoadedAt:active.loadedAt||null,extra});
-    if(hit)return hit;
-    Object.keys(moduleInputKeys).forEach(module=>wanted.add(module));reused.projections={};
-  }
-  return buildAndWriteComputedPageProjectionCache(currentUser,active,ctx,wanted,reused,extra,expectedSourceToken);
-}
-async function buildAndWriteComputedPageProjectionCache(currentUser,active,ctx,wanted,reused,extra,expectedSourceToken){
-  const id=ctx.id;
   const assertCurrent=()=>{
     const latest=currentUser?userAccess.profileById(id):null;
     if((currentUser&&(!latest||latest.enabled===false||latest.status!=='ACTIVE'))
@@ -8190,6 +8176,21 @@ async function buildAndWriteComputedPageProjectionCache(currentUser,active,ctx,w
       throw Object.assign(new Error('Veri veya yetki sürümü değişti. / The data or permission generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
     }
   };
+  const overrides = effectiveOverridesForUser(id);
+  const {backlog:backlogInputKey,...moduleInputKeys}=derivedInputKeys.keys(active,ctx.contextHash,overrides,{version:APP_VERSION});
+  const reused=await pageProjectionCache.readReusableProjections(id,ctx.contextHash,moduleInputKeys);
+  assertCurrent();
+  const wanted=new Set(Object.keys(moduleInputKeys).filter(module=>!reused.projections[module]));
+  const extra={runtimeMeta:pageCacheRuntimeMeta(active),sourceRevisionKey:projectionSourceRevision(active),moduleInputKeys,backlogInputKey,performance:{reusedModules:Object.keys(reused.projections)}};
+  if(!wanted.size){
+    const hit=await pageProjectionCache.reuseGeneration(id,{contextHash:ctx.contextHash,generation:reused.manifest.activeGeneration,moduleInputKeys,sourceLoadedAt:active.loadedAt||null,extra,assertCurrent});
+    if(hit)return hit;
+    Object.keys(moduleInputKeys).forEach(module=>wanted.add(module));reused.projections={};
+  }
+  return buildAndWriteComputedPageProjectionCache(currentUser,active,ctx,wanted,reused,extra,assertCurrent);
+}
+async function buildAndWriteComputedPageProjectionCache(currentUser,active,ctx,wanted,reused,extra,assertCurrent){
+  const id=ctx.id;
   const descriptor=await computeSourceFor(currentUser||id);assertCurrent();
   const params=computeParamsFor(currentUser,descriptor,'projections',{modules:[...wanted],catalogOrdersBuffer:wanted.has('collection-catalog')?reused.projections.orders?.buffer:null});
   const lease=await serverCompute().run('projections',descriptor,params,{priority:'background'});
@@ -8502,11 +8503,12 @@ app.get('/api/page-projection/:module', async (req, res) => {
 // İstemci yalnız elindeki CP satırlarının sipariş kodlarını gönderir; yanıt onların
 // kilitli alt kümesidir (kapsam dışı kod açığa çıkmaz).
 const CP_SHARED_EDIT_MAX_CODES = 200000;
-app.post('/api/cp-shared-edit', userAccess.requireArea('cp'), express.json({ limit: '8mb' }), (req, res) => {
+app.post('/api/cp-shared-edit', userAccess.requireArea('cp'), express.json({ limit: '8mb' }), async (req, res) => {
   try {
-    const profile = req.currentUser, codes = Array.isArray(req.body && req.body.codes) ? req.body.codes : [];
+    const codes = Array.isArray(req.body && req.body.codes) ? req.body.codes : [];
     if (codes.length > CP_SHARED_EDIT_MAX_CODES) return res.status(413).json({ ok:false, code:'CP_SHARED_EDIT_TOO_MANY', error:'Çok fazla sipariş kodu.', errorEn:'Too many order codes.' });
-    res.set('Cache-Control','no-store').json({ ok:true, denied: userAccess.sharedEditDeniedOrderCodes(profile && profile.id, codes) });
+    const lease=await computeReads.run(req,'cp','cp-shared-edit-codes',{codes},{cache:false});
+    return sendComputedResponse(req,res,lease);
   } catch (err) { apiError(res, err, 'Paylaşılan alan yetkisi okunamadı.'); }
 });
 

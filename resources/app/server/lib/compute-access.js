@@ -77,4 +77,7 @@ function sharedRows(context,rows){
   const rowLineKey=require('./parse').rowLineKey,resolve=ownership.createOwnershipResolver(context.authority,context.ownershipProfiles),byCode=new Map();
   return (rows||[]).map(row=>{const code=row['Order Code'];if(!byCode.has(code))byCode.set(code,resolve({recordId:'cp-order:'+rowLineKey(row),userId:context.userId,systemRole:context.systemRole}).allowed);return {...row,_canEditShared:byCode.get(code)};});
 }
-module.exports={normalize,scopeAllowsEdit,createAccessContext,prepareAuthority,filterRows,canEditCode,sharedRows};
+function sharedEditDeniedCodes(context,codes){
+  return ownership.deniedOrderCodes(ownership.createOwnershipResolver(context.authority,context.ownershipProfiles),{userId:context.userId,systemRole:context.systemRole},codes);
+}
+module.exports={normalize,scopeAllowsEdit,createAccessContext,prepareAuthority,filterRows,canEditCode,sharedRows,sharedEditDeniedCodes};

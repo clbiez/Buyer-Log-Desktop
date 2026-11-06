@@ -2508,12 +2508,9 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
        açığa çıkmaz. Satır anahtarı biçimi ('kod|model|renk') sharedAccessRows ile aynı
        çok sahipli satır kuralını uygular; çözüm yalnız koda bağlıdır. */
     sharedEditDeniedOrderCodes: (userId, codes) => {
-      const store = readStore(), profile = findProfile(store, clean(userId)), denied = [];
+      const store = readStore(), profile = findProfile(store, clean(userId));
       const resolve = sharedOwnerResolverFor(store, authoritySnapshot);
-      for (const code of new Set((Array.isArray(codes) ? codes : []).map(value => clean(value)).filter(value => /^\d{1,20}$/.test(value)))) {
-        if (!resolve({ recordId:`cp-order:${code}||`, userId, systemRole:profile && profile.systemRole }).allowed) denied.push(code);
-      }
-      return denied;
+      return require('./cp-field-ownership').deniedOrderCodes(resolve,{userId,systemRole:profile&&profile.systemRole},codes);
     },
     effectiveScopes, appendAudit,
     listHandler, suggestHandler, loginHandler, logoutHandler, currentHandler, requireSelection, requireModerator, requireUserAdmin, requirePermission, requireArea, requireAnyArea, requireCapability,

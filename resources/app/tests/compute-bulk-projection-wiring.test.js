@@ -25,3 +25,17 @@ test('a source or authority-context change cannot publish completed worker proje
     const f=setup(change);await assert.rejects(f.run(),{code:'COMPUTE_STALE_GENERATION'});assert.equal(f.released(),1);assert.equal(f.written(),undefined);
   }
 });
+test('a fully reusable cache still rejects source changes, changed permissions and disabled profiles during queued publication',async()=>{
+  for(const kind of ['source','context','disabled']){
+    const profile={id:'a',enabled:true,status:'ACTIVE'},runtime={loadedAt:'r1',asasOrders:[]};let sourceToken='g1',hash='ctx',published=false;
+    const c={Object,Array,Set,Map,Buffer,APP_VERSION:'test',userAccess:{profileById:()=>profile},
+      pageProjectionContext:()=>({id:'a',contextHash:hash,filterStatus:{ready:true}}),computeSourceToken:()=>sourceToken,
+      effectiveOverridesForUser:()=>({}),derivedInputKeys:{keys:()=>({cp:'key',backlog:'backlog'})},
+      pageCacheRuntimeMeta:()=>({}),projectionSourceRevision:()=> 'r1',
+      pageProjectionCache:{readReusableProjections:async()=>({manifest:{activeGeneration:'existing'},projections:{cp:{buffer:Buffer.from('gzip')}}}),
+        reuseGeneration:async(_id,options)=>{await new Promise(setImmediate);if(kind==='source')sourceToken='g2';else if(kind==='context')hash='changed';else profile.enabled=false;options.assertCurrent();published=true;return {};}}
+    };
+    vm.createContext(c);vm.runInContext(extractFunction(server,'buildAndWritePageProjectionCache')+';globalThis.run=buildAndWritePageProjectionCache;',c);
+    await assert.rejects(c.run(profile,runtime),{code:'COMPUTE_STALE_GENERATION'});assert.equal(published,false);
+  }
+});

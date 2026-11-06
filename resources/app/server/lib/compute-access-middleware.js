@@ -1,6 +1,6 @@
 'use strict';
 function createComputeAccessMiddleware({prepare,profileFor}){
-  const targets=/^\/api\/(?:data(?:\/|$)|page-projection(?:\/|$)|backlog(?:[\/-]|$)|model-images\/registry\/cp(?:\/|$))/;
+  const targets=/^\/api\/(?:data(?:\/|$)|page-projection(?:\/|$)|backlog(?:[\/-]|$)|cp-shared-edit(?:\/|$)|model-images\/registry\/cp(?:\/|$))/i;
   return (req,_res,next)=>{
     if(!req.currentUser||!targets.test(String(req.path||req.url||'').split('?')[0]))return next();
     const id=String(req.currentUser.id);

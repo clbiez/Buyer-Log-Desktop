@@ -166,3 +166,14 @@ test('prepared authority hash runs in the same common worker and releases its le
  const ready=await service.runOffice('a',{format:'xlsx',data:require('../server/lib/lcwai-output/output-contracts').normalizeWorkbook({title:'Demo',sheets:[{name:'Demo',columns:[{header:'Order',type:'text'}],rows:[['Synthetic']]}]}).data,options:{date:new Date('2026-11-05T00:00:00Z')}});
  try{assert.equal(ready.metrics.threadId,metrics.threadId);}finally{ready.release();}
 });
+
+test('native CP code hints equal the canonical resolver without hydrating raw source records',async t=>{
+ const {service}=setup(t),policy=require('../server/lib/compute-access');
+ const descriptor=await service.seedSource({ownerId:'a',generation:'g1',source:source(),uncompressedBytes:MiB});fs.writeFileSync(descriptor.replicaFile,'Synthetic unreadable source: ownership uses the authority directory');
+ const authority={101:[{buyer:'Alice'}],102:[{buyer:'Alice'},{buyer:'Bob'}],104:[{buyer:'Bob'}]},profiles=[{id:'a',username:'Alice'},{id:'b',username:'Bob'}],codes=[' 101 ','101','000101','102','104','404','../101'];
+ for(const systemRole of ['buyer','manager','moderator']){
+  const access=policy.createAccessContext({userId:'a',systemRole,manageAll:true,authority,profiles});
+  const lease=await service.run('cp-shared-edit-codes',descriptor,{access,codes});
+  try{assert.deepEqual(JSON.parse(zlib.gunzipSync(Buffer.from(lease.value.buffer))),{ok:true,denied:policy.sharedEditDeniedCodes(access,codes)});}finally{lease.release();}
+ }
+});

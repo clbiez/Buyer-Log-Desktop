@@ -18,3 +18,11 @@ test('production installs readiness after authentication and prepares refresh ca
  const start=source.indexOf('async function buildAndWritePageProjectionCache('),block=source.slice(start,source.indexOf('async function ',start+20));
  assert.ok(block.indexOf('await userAccess.prepareComputeAccessContext?.()')<block.indexOf('const ctx = pageProjectionContext('));
 });
+
+test('direct CP ownership hints and case-insensitive Express paths also await authority readiness',async()=>{
+ for(const path of ['/api/cp-shared-edit','/API/DATA','/API/PAGE-PROJECTION/CP']){
+  let prepared=0,passed=0;const profile={id:'a',status:'ACTIVE'};
+  const gate=createComputeAccessMiddleware({prepare:async()=>{prepared++;},profileFor:()=>profile});
+  await gate({path,currentUser:profile},{},error=>{assert.equal(error,undefined);passed++;});assert.equal(prepared,1,path);assert.equal(passed,1);
+ }
+});

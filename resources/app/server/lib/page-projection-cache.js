@@ -193,13 +193,15 @@ async function readReusableProjections(userId,contextHash,moduleInputKeys={}) {
   }
   return {manifest,projections};
 }
-async function reuseGeneration(userId,{contextHash,generation,moduleInputKeys={},sourceLoadedAt=null,extra={}}={}){
+async function reuseGeneration(userId,{contextHash,generation,moduleInputKeys={},sourceLoadedAt=null,extra={},assertCurrent}={}){
   return enqueueUserMutation(userId,async()=>{
+    assertCurrent?.();
     const checked=await readReusableProjections(userId,contextHash,moduleInputKeys),manifest=checked.manifest;
+    assertCurrent?.();
     if(!manifest||manifest.activeGeneration!==generation||Object.keys(checked.projections).length!==Object.keys(moduleInputKeys).length)return null;
     const next={...manifest,...extra,sourceLoadedAt,moduleInputKeys};
     if(manifest.backlogInputKey!==next.backlogInputKey)next.backlogVariants={};
-    await saveManifest(userId,next);return next;
+    await saveManifest(userId,next);assertCurrent?.();return next;
   });
 }
 async function writeGenerationUnlocked(userId, { contextHash, sourceLoadedAt = null, projections = {}, reused = {}, extra = {}, previous = null } = {}) {

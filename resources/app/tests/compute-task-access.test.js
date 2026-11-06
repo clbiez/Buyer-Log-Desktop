@@ -17,6 +17,7 @@ test('task access sends authority only to computations that use code editing or 
    assert.deepEqual(tasks.buildProjections(source,{...input,access:compact}),tasks.buildProjections(source,input));
    if(!moderator&&(modules.includes('cp')||modules.includes('order-summary')))assert.equal(compact.authority,context.authority);
   }
+  const codeHints=accessForTask(context,'cp-shared-edit-codes',{});if(moderator)assert.deepEqual(codeHints.authority,{});else assert.equal(codeHints.authority,context.authority);
   const shared=accessForTask(context,'projection-envelope',{legacyModule:'cp'});
   assert.deepEqual(policy.sharedRows(shared,[{'Order Code':101,'Model Name':'Demo','C.Code':'01'}]),policy.sharedRows(context,[{'Order Code':101,'Model Name':'Demo','C.Code':'01'}]));
   if(!moderator)assert.equal(shared.authority,context.authority);
