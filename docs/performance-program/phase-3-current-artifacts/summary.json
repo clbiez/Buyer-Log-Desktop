@@ -887,5 +887,22 @@
     "firstBeforeFailed": 1,
     "firstAfterPassed": 3,
     "baselineFailure": "Orders not ready within900s; no wrong-row, generation, revision or access mismatch observed; failed sample retained, cause unknown"
+  },
+  "postMeasurementIntegration": {
+    "main": "873c1f4497535252db12c52f7d7a25155433fa5d",
+    "runtimeCommit": "6cca42ef",
+    "version": "7.0.339",
+    "scope": "#877 user-invoked Collection transfer; #878 Node22 Date test and version; measured startup path unchanged",
+    "tests": {
+      "files": 43,
+      "inner": 304,
+      "failed": 0,
+      "skipped": 0
+    },
+    "i18nMissing": 0,
+    "i18nBaseline": 0,
+    "releaseNotes": 23,
+    "uiAcceptance": "main339-startup-acceptance.json",
+    "benchmarkReperformedAfterIntegration": false
   }
 }

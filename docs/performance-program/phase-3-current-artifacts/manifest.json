@@ -368,5 +368,35 @@
     "file": "orders-error-recovery.json",
     "bytes": 8883,
     "sha256": "770c823e7661ff6e256c342344228b6cb61a950a87b53c3134f26438a3e2a698"
+  },
+  {
+    "file": "main339-tests.txt",
+    "bytes": 31218,
+    "sha256": "8a1b96e836a03380f4493f696f2739d5103970d533bc3eb354ce81c157fe8dc8"
+  },
+  {
+    "file": "main339-i18n.txt",
+    "bytes": 125,
+    "sha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+  },
+  {
+    "file": "main339-notes-post-png.txt",
+    "bytes": 126,
+    "sha256": "25fd72f1da801cff6cd6380a9d781d06be1de5b2db316b22d3a76bce53331407"
+  },
+  {
+    "file": "main339-startup-ui.txt",
+    "bytes": 159,
+    "sha256": "b8599c7b2672292af0b6bf0da50b0d8d57a1856f674402875a97cc6bfc0f5a4b"
+  },
+  {
+    "file": "main339-startup-acceptance.json",
+    "bytes": 7867,
+    "sha256": "dc9e860b46becf6fe4615c0a03bdf21d450ec5d82fa0f66eeaf7aeab08c14fb9"
+  },
+  {
+    "file": "main339-startup-tr-light.png",
+    "bytes": 74034,
+    "sha256": "7f254a2bbd83646f92c9092d9fb7e18818f3ae990532deb9bb8e23c182681021"
   }
 ]

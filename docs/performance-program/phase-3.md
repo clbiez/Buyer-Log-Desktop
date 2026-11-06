@@ -41,6 +41,12 @@ yeniden, aynı ana dal üzerinde üçer önce/sonra koşuyla yapıldı; iki seri
 karıştırılmadı. Güncel ham JSON, log, sunucu stall kayıtları ve özet
 `phase-3-current-artifacts/` altındadır.
 
+Ölçüm sonrasında ana dala gelen #877 Koleksiyon'a kullanıcı komutuyla aktarım
+değişikliği ve #878 Node 22 geçersiz Date testi/7.0.339 sürümü de korunarak
+entegre edildi. Bu değişiklikler ölçülen açılış yolunu değiştirmiyor. Yukarıdaki
+ölçüm commit'leri aynen belirtilir; 7.0.339 entegrasyonuna yeni bir performans
+kazancı atfedilmez. Entegrasyon sonrası ilgili testler yeniden çalıştırıldı.
+
 Faz 0'ın `sameTab` senaryosu ön hazırlık bitişini bekler; ilk giriş değildir.
 Ek `benchmark-first-transitions.js`, her CP/Orders denemesinde yeni tarayıcı
 bağlamında Overview açar ve gerçek Continue tamamlanır tamamlanmaz hedefe niyet
@@ -115,13 +121,19 @@ niyet önceliği, başarısız CP işinin hazır yayınlayamaması ve hata Retry
 Mevcut Manifest testi stil sahipliği ihlalini yakaladı; görünüm tokenları ortak
 `ui-components.css` katmanına taşındı. Test veya i18n baseline gevşetilmedi.
 
-Ana dal entegrasyonu sonrası ilgili `npm test -- startup snapshot-startup
+82c6cf38 ana dal entegrasyonu sonrası ilgili `npm test -- startup snapshot-startup
 user-prefs-sync first-transition ui-manifest-contract ui-inline-contract
 loading-approval-exfactory cp-background-personal-decisions boot-thinking-orb
 current-ui-regressions lcwai-data-query lcwai-chat-data-query
 lcwai-chat-retry-context`: 40 dosya, 262 alt test başarılı.
 `npm run i18n:check`: 0 eksik, baseline 0.
 `npm run release:notes:validate`: 22 kayıt başarılı.
+
+Son 7.0.339 entegrasyonunda aynı filtreye `collection-order-backfill
+copy-to-collection-backfill excel-source-dense` eklendi: **43 dosya / 304 alt test
+başarılı**, fail/skip/cancel 0. i18n **0 eksik / baseline 0**, release notes
+**23 kayıt başarılı**. Kaynak kodu testten sonra değiştirilmedi; güncel sürümde
+başlangıç PNG'si yeniden yakalandı ve release-note validator tekrar çalıştırıldı.
 
 20 sentetik siparişle gerçek tarayıcı kabulü: TR/açık başlangıç, EN/koyu Orders,
 font +4 ile menü metin çakışması, CP ve Orders için 500 → Retry → Ready.
