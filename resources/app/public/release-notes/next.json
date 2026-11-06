@@ -677,6 +677,35 @@
           "en": "Actual app with 20 synthetic orders. Continue is available with Overview ready before CP and Orders have loaded."
         }
       }
+    },
+    {
+      "id": "client-computation-catalog-index",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon ve ortak sıralama",
+        "en": "Collection and shared sorting"
+      },
+      "title": {
+        "tr": "Koleksiyon değerleri ve sıralama için tekrarlanan hesaplar azaltıldı",
+        "en": "Less repeated work for Collection values and sorting"
+      },
+      "body": {
+        "tr": "Koleksiyon filtreleri aynı tam kaynak kataloğuyla hazırlanır; üretici seçenekleri de korunur. Modelden gelen hücre değerleri her alan için tüm tablo taranmadan okunur. Ortak metin sıralaması aynı düzeni daha az tekrar işlemle korur.",
+        "en": "Collection filters use the same complete source catalog, including manufacturer options. Inherited model cells are read without scanning the whole table for every field. Shared text sorting preserves the same order with less repeated work."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "client-computation-collection.png",
+        "alt": {
+          "tr": "Altı sentetik kayıtla gerçek Buyer Log Koleksiyon ekranı ve hazır filtre kataloğu",
+          "en": "Actual Buyer Log Collection screen with six synthetic records and its filter catalog ready"
+        },
+        "caption": {
+          "tr": "20 sentetik siparişten altı demo Koleksiyon kaydı. Tam katalog ve model alan okumaları gerçek uygulamada doğrulandı.",
+          "en": "Six demo Collection records from 20 synthetic orders. The complete catalog and model field reads were checked in the actual app."
+        }
+      }
     }
   ]
 }

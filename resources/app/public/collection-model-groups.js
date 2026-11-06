@@ -172,6 +172,19 @@
     return (row, key) => effectiveValue(row, key, null, parents);
   }
 
+  // Bir canlı satır dizisi için yalnız son revizyon tutulur. Eski owner/undo
+  // dizileri weak key sayesinde burada tutulmaz. Yerel yapısal yazılar sunucu
+  // revizyonu gelmeden invalidate eder; parent'ın yerinde alan değişimi doğrudan
+  // aynı nesne referansından okunur.
+  const revisionReaders=new WeakMap();
+  function valueReaderForRevision(rows,revision){
+    if(!Array.isArray(rows))return createValueReader([]);
+    let cached=revisionReaders.get(rows);
+    if(!cached||cached.revision!==revision){cached={revision,reader:createValueReader(rows)};revisionReaders.set(rows,cached);}
+    return cached.reader;
+  }
+  function invalidateValueReader(rows){if(Array.isArray(rows))revisionReaders.delete(rows);}
+
   function setSharedValue(rows, groupId, key, value, options={}) {
     const next = options.inPlace ? rows : (rows || []).map(clone), members = groupFor(next, groupId);
     if (!members.length) return next;
@@ -550,5 +563,5 @@ function kolParseMoneyNum(v){
   }else value=value.replace(',','.');
   return Number(value);
 }
-  return { writeGroupedValue,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, inheritModelValues, groupFor, hasVariantOverride, effectiveValue, createValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
+  return { writeGroupedValue,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, inheritModelValues, groupFor, hasVariantOverride, effectiveValue, createValueReader, valueReaderForRevision, invalidateValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
 });

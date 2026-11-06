@@ -222,7 +222,10 @@ test('B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında
   assert.match(shortageSrc, /if\s*\(\s*state\.orders\s*\)\s*await\s+ensureOrdersLoaded\(\{\s*force:\s*true\s*\}\)/);
 
   let fetchCalls = 0;
+  const preparations=[];
   const ctx = {
+    window:{BLModulePreparation:{setStatus:(module,status)=>preparations.push([module,status])}},
+    currentActiveTab:()=> 'orders',
     state: {
       orders: { fname: 'Eski', rows: [{ 'Order Code': 1 }] },
       ordersLogisticExpanded: new Set(),
@@ -256,6 +259,7 @@ test('B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında
   await ctx.ensureOrdersLoaded({ force: true });
   assert.equal(fetchCalls, 1);
   assert.equal(ctx.state.orders.rows[0]['Order Code'], 2);
+  assert.deepEqual(preparations,[['orders','ready'],['orders','loading'],['orders','ready']]);
 });
 
 test('B4 · order-importance-ui.js state.orderSummary.rows satırlarını kapsar ve repaint içinde renderOrders koşulsuz çağrılır', () => {
@@ -361,6 +365,7 @@ test('B5 · ocMetaFromKolRow onaylı üreticiyi, hedef fiyatı ve model grubunda
   const ctx = {
     window: { BLCollectionModelGroups },
     kolRows: [parentRow, variantRow],
+    kolWorkspaceRevision: 1,
     kolColDefs: () => [
       { k: 'modelKod' }, { k: 'plmId' }, { k: 'colour' }, { k: 'country' },
       { k: 'season' }, { k: 'lisans' }, { k: 'urunTipi' },

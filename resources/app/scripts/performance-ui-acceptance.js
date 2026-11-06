@@ -10,6 +10,7 @@ const app = path.resolve(arg('--app-root', path.join(__dirname, '..')));
 const moduleName = arg('--module', 'orders'), lang = arg('--lang', 'tr'), theme = arg('--theme', 'light');
 const capture = arg('--capture', 'workspace');
 const failModule = arg('--simulate-error', '');
+const seedCollection=Number(arg('--seed-collection','0'));
 const screenshot = path.resolve(arg('--screenshot', path.join(app, 'public/release-notes/next-assets/source-dense-orders.png')));
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-perf-ui-'));
 const env = { ...process.env, BUYER_LOG_CENTRAL_IAM_ENABLED: '0',
@@ -29,6 +30,8 @@ async function api(url, body) {
   assert.ok(['tr', 'en'].includes(lang)); assert.ok(['light', 'dark'].includes(theme));
   assert.ok(['startup', 'workspace'].includes(capture));
   assert.ok(['','cp','orders'].includes(failModule));
+  assert.ok(Number.isInteger(seedCollection)&&seedCollection>=0&&seedCollection<=6);
+  if(seedCollection)assert.ok(moduleName==='koleksiyon'&&capture==='workspace');
   const socket = net.createServer(); await new Promise(resolve => socket.listen(0, '127.0.0.1', resolve));
   const port = socket.address().port; await new Promise(resolve => socket.close(resolve)); base = 'http://127.0.0.1:' + port;
   const source = path.join(root, 'source');
@@ -99,6 +102,22 @@ async function api(url, body) {
     errorRecovery={module:failModule,errorScreenshot,recovered:true};
   }
   if (moduleName === 'orders') await page.waitForFunction(() => state.orders?.rows.length === 20 && document.querySelector('#ordersTable tbody tr[data-id]'), null, { timeout: 60000 });
+  let collectionFixture=null;
+  if(seedCollection){
+    await page.waitForFunction(()=>kolWorkspaceCanEdit&&kolIsOwnWorkspace(),null,{timeout:60000});
+    await page.evaluate(async count=>{
+      if(!kolWorkspaceCanEdit||!kolIsOwnWorkspace()||kolRows.length)throw Error('Synthetic Collection must be empty and owner-editable');
+      if(!await ensureCpLoaded({deferRender:true}))throw Error('Synthetic CP source did not load');
+      if(state.cp.rows.length<count)throw Error('Synthetic source has too few rows');
+      kolRows=kolNormalizeModelGroups(state.cp.rows.slice(0,count).map(row=>cpRowToKolRow(row)));
+      saveKolRows();renderKol();
+    },seedCollection);
+    await page.waitForFunction(()=>document.querySelector('#kolTable tbody tr[data-id]'),null,{timeout:60000});
+    collectionFixture=await page.evaluate(()=>({rows:kolRows.length,canEdit:kolWorkspaceCanEdit,own:kolIsOwnWorkspace(),catalogFields:Object.keys(state.collectionCatalogs||{})}));
+    assert.equal(collectionFixture.rows,seedCollection,'the real Collection screen must contain the requested synthetic rows');
+    assert.equal(collectionFixture.canEdit,true);assert.equal(collectionFixture.own,true);
+    assert.equal(collectionFixture.catalogFields.length,12);assert.ok(collectionFixture.catalogFields.includes('manufacturer'));
+  }
   await page.evaluate(() => document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close()));
   assert.equal(await page.locator('.blRnDialog[open]').count(), 0);
   assert.deepEqual(errors, []);
@@ -119,7 +138,7 @@ async function api(url, body) {
   for(const item of preparationLayout)assert.ok(item.badgeTop>=item.labelBottom-0.5,'module label and status must not overlap at font step '+item.fontAdd+': '+item.module);
   if(capture==='workspace'){fs.mkdirSync(path.dirname(screenshot), { recursive: true }); await page.screenshot({ path: screenshot });}
   const afterContinue=await page.evaluate(()=>({moduleStates:window.BLModulePreparation?.snapshot(),metrics:window.BLPerf?.snapshot?.()}));
-  fs.writeFileSync(path.join(root, 'acceptance.json'), JSON.stringify({ synthetic: true, screenshot, capture, module: moduleName, lang, theme, observed, rows: 20, beforeContinue, afterContinue, preparationLayout, errorRecovery, errors }, null, 2));
+  fs.writeFileSync(path.join(root, 'acceptance.json'), JSON.stringify({ synthetic: true, screenshot, capture, module: moduleName, lang, theme, observed, rows: 20, beforeContinue, afterContinue, preparationLayout, errorRecovery, collectionFixture, errors }, null, 2));
   console.log(JSON.stringify({ screenshot, evidence: root }));
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => {
   try { await browser?.close(); } finally {

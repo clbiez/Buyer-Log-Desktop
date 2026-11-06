@@ -4,12 +4,9 @@ const {parentPort,workerData}=require('node:worker_threads');
 const zlib=require('node:zlib');
 const {promisify}=require('node:util');
 const parse=require('./lib/parse');
-const canonicalFields=require('./lib/canonical-fields');
-const BLBusinessRules=require('../public/business-rules');
+const {buildCollectionCatalogs:catalogs,COLLECTION_CATALOG_SCHEMA_VERSION}=require('./lib/collection-catalog');
 
 const gzip=promisify(zlib.gzip);
-const CATALOG_FIELDS={category:'category',mag:'mag',mmyg:'mmyg',buyingGroup:'buyingGroup',buyer:'buyer',season:'season',license:'license',licensor:'licensor',country:'country',line:'line',productMainDefinition:'productDescription'};
-const COLLECTION_CATALOG_SCHEMA_VERSION=2;
 function dateOnly(value){const p=n=>String(n).padStart(2,'0');return `${value.getFullYear()}-${p(value.getMonth()+1)}-${p(value.getDate())}`;}
 function dateSafeReplacer(key,value){const raw=this&&this[key];return raw instanceof Date?dateOnly(raw):value;}
 /* Aynı çıktı, replacer'sız: Date değerleri yerinde YYYY-MM-DD metnine çevrilir,
@@ -24,15 +21,6 @@ function replaceDatesInPlace(node,seen){
   if(Array.isArray(node)){for(let i=0;i<node.length;i++){const v=node[i];if(v instanceof Date){if(frozen)ok=false;else node[i]=dateOnly(v);}else if(v&&typeof v==='object')ok=replaceDatesInPlace(v,seen)&&ok;}return ok;}
   for(const key of Object.keys(node)){const v=node[key];if(v instanceof Date){if(frozen)ok=false;else node[key]=dateOnly(v);}else if(v&&typeof v==='object')ok=replaceDatesInPlace(v,seen)&&ok;}
   return ok;
-}
-function catalogs(rows){
-  const buckets=Object.fromEntries(Object.keys(CATALOG_FIELDS).map(key=>[key,new Map()]));
-  for(const row of rows||[])for(const [key,canonicalId] of Object.entries(CATALOG_FIELDS)){
-    const raw=canonicalFields.value(row,'overview',canonicalId);
-    const value=String(raw==null?'':raw).trim();if(!value)continue;
-    const identity=value.toLocaleUpperCase('tr-TR').replace(/[^A-Z0-9ÇĞİÖŞÜ]+/g,'');if(identity&&!buckets[key].has(identity))buckets[key].set(identity,value);
-  }
-  return Object.fromEntries(Object.entries(buckets).map(([key,values])=>[key,[...values.values()].sort(BLBusinessRules.compareChronologicalValues)]));
 }
 async function main(){
   const started=Date.now(),data=workerData||{},editable=new Set((data.editableOrderCodes||[]).map(String));
