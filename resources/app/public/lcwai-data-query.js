@@ -15,6 +15,11 @@
    Rakamlar hiçbir zaman modelden gelmez. Eşleşmeyen bir "dahil et" değeri
    sessizce yok sayılmaz: kullanıcıya benzer değerlerle soru sorulur.
 
+   Dönemler (ay, hafta, çeyrek, yıl) LCW Merch Calendar'a göredir: kaynak
+   Buyer Log'un ortak tarih boyutu BLDateDimension (date-dimension.js) ve
+   Veri Yönetimi'nden yüklenen takvimdir. Miladi takvim yalnız kullanıcı
+   açıkça isterse (calendar: "gregorian") kullanılır.
+
    Saf modül: DOM'a dokunmaz. Tarayıcıda window.BLDataQuery, testte
    module.exports. Alan anlamları kanonik alan kaydından
    (canonical-fields.js) okunur; ham başlık eşleştirmesi eklenmez.
@@ -22,10 +27,11 @@
 (function (root, factory) {
   'use strict';
   const canonical = root && root.BLCanonicalFields ? root.BLCanonicalFields : (typeof require === 'function' ? require('./canonical-fields.js') : null);
-  const api = factory(canonical);
+  const dates = root && root.BLDateDimension ? root.BLDateDimension : (typeof require === 'function' ? require('./date-dimension.js') : null);
+  const api = factory(canonical, dates);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.BLDataQuery = api;
-})(typeof window !== 'undefined' ? window : null, function (CF) {
+})(typeof window !== 'undefined' ? window : null, function (CF, DD) {
   'use strict';
 
   const VERSION = 1;
@@ -112,13 +118,60 @@
     const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
     return `${date.getUTCFullYear()}-W${pad(Math.ceil(((date - yearStart) / 86400000 + 1) / 7))}`;
   }
-  function bucketOf(iso, bucket) {
+  /* Merch Calendar aralığı dışında kalan tarih (LCW dönemi yok). */
+  const OUTSIDE = '\u0001';
+  /* Tarih → dönem anahtarı. calendar "merch" (varsayılan): LCW yılı/ayı/
+     haftası BLDateDimension'dan; çeyrek LCW ayından türetilir. Takvim
+     yüklü değilse BLDateDimension Buyer Log'un geçici hafta düzenini verir
+     (diğer modüllerle aynı). "gregorian": düz miladi takvim. */
+  function bucketOf(iso, bucket, calendar = 'merch') {
     if (!iso) return '';
+    if (bucket === 'day' || !bucket) return iso;
+    if (calendar !== 'gregorian' && DD && typeof DD.describe === 'function') {
+      const d = DD.describe(iso);
+      if (!d.valid || !d.businessValid) return OUTSIDE;
+      if (bucket === 'year') return String(d.periodYear);
+      if (bucket === 'quarter') return `${d.periodYear}-Q${Math.ceil(d.month / 3)}`;
+      if (bucket === 'month') return d.monthKey;
+      if (bucket === 'week') return d.weekKey;
+      return iso;
+    }
     if (bucket === 'year') return iso.slice(0, 4);
     if (bucket === 'quarter') return `${iso.slice(0, 4)}-Q${Math.ceil(Number(iso.slice(5, 7)) / 3)}`;
     if (bucket === 'month') return iso.slice(0, 7);
     if (bucket === 'week') return isoWeek(iso);
     return iso;
+  }
+  const merchActive = () => Boolean(DD && typeof DD.hasMerchCalendar === 'function' && DD.hasMerchCalendar());
+  /* Dönem anahtarının görünen adı: LCW ayı "Mart 2026", LCW haftası "12. Hafta Mart 2026". */
+  function periodLabel(key, bucket, calendar, lang) {
+    if (key === OUTSIDE) return T(lang, '(Merch Calendar dışı)', '(outside Merch Calendar)');
+    if (!bucket || bucket === 'day') return key;
+    if (bucket === 'quarter') { const m = /^(\d{4})-Q([1-4])$/.exec(key); return m ? `${m[1]} ${T(lang, 'Ç', 'Q')}${m[2]}` : key; }
+    if (bucket === 'year') return key;
+    if (calendar !== 'gregorian' && DD && typeof DD.bucketLabel === 'function') return DD.bucketLabel(key, bucket, lang);
+    if (bucket === 'month' && DD && DD.MONTHS_TR) { const m = /^(\d{4})-(\d{2})$/.exec(key); if (m) return `${(lang === 'en' ? DD.MONTHS_EN : DD.MONTHS_TR)[Number(m[2]) - 1]} ${m[1]}`; }
+    return key;
+  }
+  /* LCW dönemi → gün aralığı (Merch Calendar'dan). */
+  function merchRange(period) {
+    if (!DD || !period) return null;
+    if (period.bucket === 'day') return { start: period.key, end: period.key };
+    if (period.bucket === 'month') { const [y, m] = period.key.split('-').map(Number); return DD.businessMonthRange(y, m); }
+    if (period.bucket === 'year' || period.bucket === 'quarter') {
+      const y = Number(period.key.slice(0, 4));
+      const q = period.bucket === 'quarter' ? Number(period.key.slice(-1)) : 0;
+      const first = q ? q * 3 - 2 : 1, last = q ? q * 3 : 12;
+      const a = DD.businessMonthRange(y, first), b = DD.businessMonthRange(y, last);
+      return a && b ? { start: a.start, end: b.end } : null;
+    }
+    if (period.bucket === 'week') {
+      const m = /^(\d{4})-W(\d{2})$/.exec(period.key);
+      const monday = m && DD.mondayFromBusinessWeek(Number(m[1]), Number(m[2]));
+      const range = monday && DD.businessWeekRange(monday);
+      return range ? { start: range.start, end: range.end } : null;
+    }
+    return null;
   }
   /* Kullanıcının yazdığı tarih/dönem ("2026-03", "03.2026", "2026", "2026-Q1", "mart 2026") → kova anahtarı. */
   const MONTHS = { OCAK: 1, SUBAT: 2, MART: 3, NISAN: 4, MAYIS: 5, HAZIRAN: 6, TEMMUZ: 7, AGUSTOS: 8, EYLUL: 9, EKIM: 10, KASIM: 11, ARALIK: 12, JANUARY: 1, JAN: 1, FEBRUARY: 2, FEB: 2, MARCH: 3, MAR: 3, APRIL: 4, APR: 4, MAY: 5, JUNE: 6, JUN: 6, JULY: 7, JUL: 7, AUGUST: 8, AUG: 8, SEPTEMBER: 9, SEP: 9, OCTOBER: 10, OCT: 10, NOVEMBER: 11, NOV: 11, DECEMBER: 12, DEC: 12 }; // i18n-ignore — ay adı ayrıştırma anahtarları
@@ -376,7 +429,9 @@
     let dataset = list.find(item => item.id === clean(input.dataset)) || list.find(item => token(item.id) === token(input.dataset) || token(item.label) === token(input.dataset));
     if (!dataset && list.length === 1) dataset = list[0];
     if (!dataset) return { ok: false, spec: null, notes, errors: [`unknown-dataset:${clean(input.dataset)}`], clarify: null };
-    const spec = { dataset: dataset.id, filters: [], rows: [], columns: [], measures: [], list: [], sort: null, limit: 0, title: clean(input.title).slice(0, 120) };
+    // Dönemler varsayılan olarak LCW Merch Calendar'a göredir; miladi yalnız açık istekle.
+    const calendar = /^(gregorian|miladi|calendar)$/i.test(clean(input.calendar)) ? 'gregorian' : 'merch';
+    const spec = { dataset: dataset.id, calendar, filters: [], rows: [], columns: [], measures: [], list: [], sort: null, limit: 0, title: clean(input.title).slice(0, 120) };
     const fieldOf = (ref, where) => {
       const field = resolveField(dataset, typeof ref === 'object' && ref ? ref.field : ref);
       if (!field) errors.push(`unknown-field:${where}:${clean(typeof ref === 'object' && ref ? ref.field : ref)}`);
@@ -443,13 +498,16 @@
           if (!periods.length || periods.some(p => !p)) { errors.push(`bad-date-values:${field.id}`); continue; }
           filter.values = periods.map(p => p.key);
           filter.bucket = periods[0].bucket;
+          filter.calendar = spec.calendar;
           if (periods.some(p => p.bucket !== filter.bucket)) { errors.push(`mixed-periods:${field.id}`); continue; }
         } else if (normalizedOp === 'between') {
-          const from = periodStart(item.from != null ? item.from : values[0]), to = periodEnd(item.to != null ? item.to : values[1]);
+          const from = periodStart(item.from != null ? item.from : values[0], spec.calendar), to = periodEnd(item.to != null ? item.to : values[1], spec.calendar);
           if (!from || !to) { errors.push(`bad-date-range:${field.id}`); continue; }
           filter.from = from; filter.to = to;
         } else if (!['empty', 'not_empty'].includes(normalizedOp)) {
-          const edge = ['gte', 'gt'].includes(normalizedOp) ? periodStart(values[0] != null ? values[0] : item.from) : periodEnd(values[0] != null ? values[0] : item.to);
+          // Dönem kenarı: "≥ Mart" Mart'ın ilk günü, "> Mart" son günü; "≤ Mart" son, "< Mart" ilk gün.
+          const raw = values[0] != null ? values[0] : (['gte', 'gt'].includes(normalizedOp) ? item.from : item.to);
+          const edge = ['gte', 'lt'].includes(normalizedOp) ? periodStart(raw, spec.calendar) : periodEnd(raw, spec.calendar);
           if (!edge) { errors.push(`bad-date:${field.id}`); continue; }
           filter.value = edge;
         }
@@ -508,18 +566,20 @@
     if (limit > 0) spec.limit = Math.min(limit, 100000);
     return { ok: errors.length === 0, spec, notes: [...new Set(notes)], errors, clarify, dataset };
   }
-  function periodStart(value) {
+  function periodStart(value, calendar = 'gregorian') {
     const p = typeof value === 'string' || typeof value === 'number' ? periodOf(String(value)) : null;
     if (!p) return '';
+    if (calendar !== 'gregorian' && p.bucket !== 'day') { const range = merchRange(p); return range ? range.start : ''; }
     if (p.bucket === 'day') return p.key;
     if (p.bucket === 'month') return `${p.key}-01`;
     if (p.bucket === 'year') return `${p.key}-01-01`;
     if (p.bucket === 'quarter') { const q = Number(p.key.slice(-1)); return `${p.key.slice(0, 4)}-${pad(q * 3 - 2)}-01`; }
     return '';
   }
-  function periodEnd(value) {
+  function periodEnd(value, calendar = 'gregorian') {
     const p = typeof value === 'string' || typeof value === 'number' ? periodOf(String(value)) : null;
     if (!p) return '';
+    if (calendar !== 'gregorian' && p.bucket !== 'day') { const range = merchRange(p); return range ? range.end : ''; }
     const lastDay = (y, m) => new Date(Date.UTC(y, m, 0)).getUTCDate();
     if (p.bucket === 'day') return p.key;
     if (p.bucket === 'month') { const [y, m] = p.key.split('-').map(Number); return `${p.key}-${pad(lastDay(y, m))}`; }
@@ -534,7 +594,7 @@
     if (filter.op === 'empty') return empty;
     if (filter.op === 'not_empty') return !empty;
     if (filter.op === 'in' || filter.op === 'not_in') {
-      const target = filter.bucket ? bucketOf(value, filter.bucket) : value;
+      const target = filter.bucket ? bucketOf(value, filter.bucket, filter.calendar) : value;
       const hit = !empty && filter._set.has(target);
       return filter.op === 'in' ? hit : !hit;
     }
@@ -552,10 +612,10 @@
     return true;
   }
   const EMPTY = '\u0000';
-  function groupKey(field, bucket, row) {
+  function groupKey(field, bucket, row, calendar) {
     const value = read(field, row);
     if (value === '' || value == null) return EMPTY;
-    return bucket ? bucketOf(value, bucket) : value;
+    return bucket ? bucketOf(value, bucket, calendar) : value;
   }
   function newAcc(measure) { return { agg: measure.agg, sum: 0, n: 0, min: null, max: null, set: measure.agg === 'count_distinct' ? new Set() : null }; }
   function addAcc(acc, value) {
@@ -581,6 +641,8 @@
     if (a === b) return 0;
     if (a === EMPTY) return 1;
     if (b === EMPTY) return -1;
+    if (a === OUTSIDE) return 1;
+    if (b === OUTSIDE) return -1;
     const na = typeof a === 'number' ? a : null, nb = typeof b === 'number' ? b : null;
     if (na != null && nb != null) return na - nb;
     return String(a).localeCompare(String(b), 'tr', { numeric: true, sensitivity: 'base' });
@@ -602,10 +664,12 @@
     };
     return labels[bucket] ? labels[bucket][lang === 'en' ? 'en' : 'tr'] : '';
   }
-  function dimLabel(dataset, dim, lang) {
+  function dimLabel(dataset, dim, lang, calendar = 'merch') {
     const field = dataset.fields.find(item => item.id === dim.field);
     const name = field ? field.label : dim.field;
-    return dim.bucket ? `${name} (${bucketLabel(dim.bucket, lang)})` : name;
+    if (!dim.bucket) return name;
+    if (dim.bucket === 'day') return `${name} (${bucketLabel('day', lang)})`;
+    return calendar === 'gregorian' ? `${name} (${bucketLabel(dim.bucket, lang)}, ${T(lang, 'miladi', 'Gregorian')})` : `${name} (LCW ${bucketLabel(dim.bucket, lang)})`;
   }
   const emptyLabel = lang => T(lang, '(boş)', '(blank)');
   /* Doğrulanmış plan + veri kümesi → tablo. Hiçbir değer tahmin edilmez. */
@@ -618,7 +682,8 @@
       for (const filter of filters) { if (!rowMatches(filter, read(filter._field, row))) { ok = false; break; } }
       if (ok) matched.push(row);
     }
-    const out = { columns: [], rows: [], total: null, matched: matched.length, scanned: dataset.rows.length, truncatedColumns: 0, kind: spec.list.length ? 'list' : 'aggregate' };
+    const calendar = spec.calendar === 'gregorian' ? 'gregorian' : 'merch';
+    const out = { columns: [], rows: [], total: null, matched: matched.length, scanned: dataset.rows.length, truncatedColumns: 0, outsideCalendar: 0, kind: spec.list.length ? 'list' : 'aggregate' };
     if (spec.list.length) {
       const fields = spec.list.map(byId);
       out.columns = fields.map(field => ({ label: field.label, kind: field.kind }));
@@ -636,14 +701,16 @@
     const grand = measures.map(newAcc);
     const colSeen = new Map();
     for (const row of matched) {
-      const keys = rowDims.map(dim => groupKey(dim._field, dim.bucket, row));
+      const keys = rowDims.map(dim => groupKey(dim._field, dim.bucket, row, calendar));
       const key = keys.join('␟');
       if (!groups.has(key)) groups.set(key, { keys, cells: new Map(), total: measures.map(newAcc) });
       const group = groups.get(key);
       const values = measures.map(measure => (measure._field ? read(measure._field, row) : 1));
       values.forEach((value, i) => { addAcc(group.total[i], value); addAcc(grand[i], value); });
+      if (keys.includes(OUTSIDE)) out.outsideCalendar++;
       if (colDim) {
-        const colKey = groupKey(colDim._field, colDim.bucket, row);
+        const colKey = groupKey(colDim._field, colDim.bucket, row, calendar);
+        if (colKey === OUTSIDE && !keys.includes(OUTSIDE)) out.outsideCalendar++;
         colSeen.set(colKey, (colSeen.get(colKey) || 0) + 1);
         if (!group.cells.has(colKey)) group.cells.set(colKey, measures.map(newAcc));
         if (!colTotals.has(colKey)) colTotals.set(colKey, measures.map(newAcc));
@@ -657,10 +724,11 @@
       out.truncatedColumns = colKeys.length - keep.size;
       colKeys = colKeys.filter(k => keep.has(k));
     }
-    const keyText = value => (value === EMPTY ? emptyLabel(lang) : value);
-    out.columns = rowDims.map(dim => ({ label: dimLabel(dataset, dim, lang), kind: 'text' }));
+    // Anahtarlar sıralama içindir; görünen ad LCW dönem adıdır ("Mart 2026").
+    const keyText = (value, dim) => (value === EMPTY ? emptyLabel(lang) : dim && dim.bucket ? periodLabel(value, dim.bucket, calendar, lang) : value);
+    out.columns = rowDims.map(dim => ({ label: dimLabel(dataset, dim, lang, calendar), kind: 'text' }));
     if (colDim) {
-      for (const colKey of colKeys) for (const measure of measures) out.columns.push({ label: measures.length > 1 ? `${keyText(colKey)} · ${measureLabel(dataset, measure, lang)}` : String(keyText(colKey)), kind: 'number', pivot: true });
+      for (const colKey of colKeys) for (const measure of measures) out.columns.push({ label: measures.length > 1 ? `${keyText(colKey, colDim)} · ${measureLabel(dataset, measure, lang)}` : String(keyText(colKey, colDim)), kind: 'number', pivot: true });
       for (const measure of measures) out.columns.push({ label: measures.length > 1 ? `${T(lang, 'Toplam', 'Total')} · ${measureLabel(dataset, measure, lang)}` : T(lang, 'Toplam', 'Total'), kind: 'number', total: true });
     } else for (const measure of measures) out.columns.push({ label: measureLabel(dataset, measure, lang), kind: measure.agg === 'min' || measure.agg === 'max' ? (measure._field && measure._field.kind === 'date' ? 'date' : 'number') : 'number' });
     let list = [...groups.values()];
@@ -675,7 +743,7 @@
     }
     if (spec.limit) list = list.slice(0, spec.limit);
     out.rows = list.map(group => {
-      const cells = group.keys.map(keyText);
+      const cells = group.keys.map((key, k) => keyText(key, rowDims[k]));
       if (colDim) {
         for (const colKey of colKeys) { const accs = group.cells.get(colKey); measures.forEach((_, i) => cells.push(accs ? accValue(accs[i]) : null)); }
         measures.forEach((_, i) => cells.push(accValue(group.total[i])));
@@ -703,7 +771,7 @@
   function filterText(dataset, filter, lang) {
     const field = dataset.fields.find(item => item.id === filter.field);
     const name = field ? field.label : filter.field;
-    const values = (filter.values || []).map(value => (typeof value === 'number' ? numberFormat(lang).format(value) : shortValue(value)));
+    const values = (filter.values || []).map(value => (typeof value === 'number' ? numberFormat(lang).format(value) : filter.bucket ? periodLabel(value, filter.bucket, filter.calendar, lang) : shortValue(value)));
     const join = values.length > 6 ? `${values.slice(0, 6).join(', ')} +${values.length - 6}` : values.join(', ');
     switch (filter.op) {
       case 'in': return `${name} = ${join}`;
@@ -729,11 +797,27 @@
     const lines = [`${T(lang, 'Veri', 'Data')}: ${dataset.label} — ${scopeText(dataset, lang)}, ${n.format(dataset.total)} ${T(lang, 'kayıt', 'records')}`];
     lines.push(`${T(lang, 'Filtre', 'Filter')}: ${spec.filters.length ? spec.filters.map(filter => filterText(dataset, filter, lang)).join(' · ') : T(lang, 'yok', 'none')}`);
     if (spec.list.length) lines.push(`${T(lang, 'Liste', 'List')}: ${spec.list.map(id => (dataset.fields.find(f => f.id === id) || { label: id }).label).join(', ')}`);
-    if (spec.rows.length) lines.push(`${T(lang, 'Satırlar', 'Rows')}: ${spec.rows.map(dim => dimLabel(dataset, dim, lang)).join(' › ')}`);
-    if (spec.columns.length) lines.push(`${T(lang, 'Sütunlar', 'Columns')}: ${spec.columns.map(dim => dimLabel(dataset, dim, lang)).join(', ')}`);
+    if (spec.rows.length) lines.push(`${T(lang, 'Satırlar', 'Rows')}: ${spec.rows.map(dim => dimLabel(dataset, dim, lang, spec.calendar)).join(' › ')}`);
+    if (spec.columns.length) lines.push(`${T(lang, 'Sütunlar', 'Columns')}: ${spec.columns.map(dim => dimLabel(dataset, dim, lang, spec.calendar)).join(', ')}`);
     if (spec.measures.length) lines.push(`${T(lang, 'Değer', 'Value')}: ${spec.measures.map(measure => measureLabel(dataset, measure, lang)).join(', ')}`);
+    const period = calendarLine(spec, dataset, lang);
+    if (period) lines.push(period);
     if (result) lines.push(`${T(lang, 'Eşleşen', 'Matched')}: ${n.format(result.matched)} / ${n.format(result.scanned)} ${T(lang, 'kayıt', 'records')}`);
+    if (result && result.outsideCalendar) lines.push(T(lang, `Merch Calendar dışı: ${n.format(result.outsideCalendar)} kayıt ayrı satır/sütunda gösterildi (tarihi yüklü takvimin aralığında değil).`, `Outside Merch Calendar: ${n.format(result.outsideCalendar)} records are shown in a separate row/column (their date is outside the loaded calendar).`));
     return lines;
+  }
+  /* Dönemlerin hangi takvime göre hesaplandığı — kullanıcı her zaman görür. */
+  function usesPeriods(spec, dataset) {
+    const isDate = id => { const field = dataset.fields.find(item => item.id === id); return field && field.kind === 'date'; };
+    return [...spec.rows, ...spec.columns].some(dim => dim.bucket && dim.bucket !== 'day') || spec.filters.some(filter => isDate(filter.field) && filter.op !== 'empty' && filter.op !== 'not_empty');
+  }
+  function calendarLine(spec, dataset, lang) {
+    if (!usesPeriods(spec, dataset)) return '';
+    if (spec.calendar === 'gregorian') return T(lang, 'Dönem: miladi takvim (istendiği için; LCW Merch Calendar kullanılmadı)', 'Periods: Gregorian calendar (as requested; LCW Merch Calendar not used)');
+    if (!merchActive()) return T(lang, 'Dönem: LCW Merch Calendar yüklü değil — ay ve haftalar Buyer Log’un geçici hafta düzeniyle (pazartesi başlayan hafta, ayı haftanın pazarı belirler) hesaplandı. Kesin LCW dönemleri için Veri Yönetimi › Merch Calendar’ı yükleyin.', 'Periods: LCW Merch Calendar is not loaded — months and weeks use Buyer Log’s interim week layout (Monday-start weeks, the month of the week’s Sunday). Upload it under Data Management › Merch Calendar for exact LCW periods.');
+    const meta = DD.merchCalendarMeta() || {};
+    const range = meta.minDate && meta.maxDate ? ` ${meta.minDate} … ${meta.maxDate}` : '';
+    return T(lang, `Dönem: LCW Merch Calendar (yüklü takvim${range})`, `Periods: LCW Merch Calendar (loaded calendar${range})`);
   }
   const mdCell = value => String(value == null ? '' : value).replace(/\|/g, '¦').replace(/[\r\n]+/g, ' ');
   function toMarkdown(result, { lang = 'tr', maxRows = LIMITS.chatRows } = {}) {
@@ -787,7 +871,7 @@
   }
 
   return Object.freeze({
-    VERSION, LIMITS, BUCKETS, AGGS, GLOSSARY, token, parseDate, parseNumber, bucketOf, periodOf, periodStart, periodEnd,
+    VERSION, LIMITS, BUCKETS, AGGS, GLOSSARY, token, parseDate, parseNumber, bucketOf, periodOf, periodStart, periodEnd, periodLabel, merchRange, merchActive,
     createDataset, read, distinctValues, profile, schemaText, resolveField, matchValue, normalizeSpec, execute,
     describe, toMarkdown, toWorkbook, formatCell, looksLikeDataRequest, screensIn, parseSpec,
   });

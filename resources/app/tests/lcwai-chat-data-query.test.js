@@ -9,7 +9,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const read = name => fs.readFileSync(path.join(__dirname, '..', 'public', name), 'utf8');
-const SOURCES = ['canonical-fields.js', 'lcwai-data-query.js', 'lcwai-chat.js'].map(read);
+const SOURCES = ['canonical-fields.js', 'date-dimension.js', 'lcwai-data-query.js', 'lcwai-chat.js'].map(read);
+const fixture = require('./helpers/merch-calendar-fixture');
 
 function ordersTable() {
   const rows = [
@@ -49,7 +50,11 @@ function load({ plans = [], storage = new Map(), ordersLoaded = true } = {}) {
   };
   window.window = window;
   const context = vm.createContext({ window, globalThis: window, document: { documentElement: { lang: 'tr' }, getElementById() { return null; } }, File, console, Date, JSON, Map, Set, WeakMap, Intl, setTimeout, clearTimeout, requestAnimationFrame: fn => setTimeout(fn, 0) });
-  for (const source of SOURCES) vm.runInContext(source, context);
+  SOURCES.forEach((source, index) => {
+    vm.runInContext(source, context);
+    // Tarayıcıdaki gibi: LCW Merch Calendar ortak tarih boyutuna yüklenmiş olur.
+    if (index === 1) { window.BLDateDimension = window.BLDateDimension || context.BLDateDimension; window.BLDateDimension.setMerchCalendar(fixture.build()); }
+  });
   return { chat: window.BLLcwAiChat, calls, storage, window };
 }
 const PIVOT = { mode: 'query', dataset: 'orders', specJson: JSON.stringify({ dataset: 'orders', filters: [{ field: 'MAG', values: ['CU4E'] }, { field: 'Season', values: ['w6'] }, { field: 'Country', op: 'not_in', values: ['Türkiye'] }], rows: [{ field: 'In-Store (Model Budget)', bucket: 'month' }], columns: [{ field: 'Buying Group' }], measures: [{ agg: 'sum', field: 'Order Quantity' }], title: 'MAG CU4E W6 — MB ayı × Buying Group' }), assumptions: ['MB = In-Store (Model Budget)'] };
@@ -68,8 +73,9 @@ test('veri isteği: plan LCW AI’dan, rakam Buyer Log’dan; CSV yüklenmez, LC
   assert.equal(calls.uploads.length, 0, '37 bin satırlık CSV yüklenmez');
   const answer = lastAnswer(chat);
   assert.equal(answer.error, undefined);
-  assert.match(answer.text, /\| 2026-08 \| 250 \| — \| 250 \||\| 2026-08 \| 250 \|  \| 250 \|/);
-  assert.match(answer.text, /\| 2026-09 \|  \| 400 \| 400 \|/);
+  assert.match(answer.text, /\| Ağustos 2026 \| 250 \|  \| 250 \|/, 'LCW ay adı');
+  assert.match(answer.text, /\| Eylül 2026 \|  \| 400 \| 400 \|/);
+  assert.ok(answer.query.lines.some(line => /Dönem: LCW Merch Calendar/.test(line)), 'hangi takvimle hesaplandığı görünür');
   assert.match(answer.text, /\*\*Toplam\*\* \| 250 \| 400 \| 650/);
   assert.ok(answer.query.lines.some(line => /Eşleşen: 2 \/ 4 kayıt/.test(line)));
   assert.ok(answer.query.notes.includes('MB = In-Store (Model Budget)'));
@@ -146,7 +152,7 @@ test('takip sorusu: önceki plan planlayıcıya, hesaplanmış tablo sonraki soh
   await chat.send('bunu yorumla');
   assert.ok(calls.ask[1].context.previous.specJson.includes('"dataset":"orders"'), 'düzeltme için önceki plan');
   assert.equal(calls.chat.length, 1);
-  assert.match(calls.chat[0].contexts.at(-1).text, /\| 2026-08 \|/);
+  assert.match(calls.chat[0].contexts.at(-1).text, /\| Ağustos 2026 \|/);
   await chat.send('kısaca özetle');
   assert.equal(calls.chat[1].contexts.length, 0, 'aynı tablo ikinci kez eklenmez');
 });
