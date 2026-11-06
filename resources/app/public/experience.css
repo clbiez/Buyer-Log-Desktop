@@ -262,3 +262,5 @@ button:disabled .ic{--ic-tint-o:.08;}
 .uiProgress{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .uiProgress progress{width:min(260px,40vw)}
 #_kolManualStatus{flex:1;min-width:0}#_kolManualStatus .uiState{width:100%;max-width:none;margin:0;padding:6px;min-height:0;gap:6px;text-align:left}#_kolManualStatus .uiStateIcon{width:18px;height:18px;flex-basis:18px}
+
+
