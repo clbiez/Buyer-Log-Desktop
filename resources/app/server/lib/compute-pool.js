@@ -105,7 +105,7 @@ function createComputePool(options={}){
       void retire(slot);return;
     }
     slot.worker.ref?.();peak();
-    job.timer=setTimeout(()=>{void retire(slot,failure('COMPUTE_TIMEOUT'));},job.timeoutMs);job.timer.unref?.();
+    job.timer.unref?.();
     job.postStartedAt=performance.now();
     try{slot.worker.postMessage({type:'run',id:job.id,task:job.task,payload:job.payload},job.transferList);job.postMessageMs=performance.now()-job.postStartedAt;job.payload=null;job.transferList=null;}
     catch(_){void retire(slot,failure('COMPUTE_WORKER_FAILED'));}
@@ -140,6 +140,18 @@ function createComputePool(options={}){
     for(const slot of slots)if(slot.ownerKey===ownerKey&&slot.generation!==generation)void retire(slot,slot.job?failure('COMPUTE_STALE_GENERATION'):null);
     pump();
   }
+  function queueCanProgress(estimatedBytes,inputBytes){
+    const waiting=pending.map(job=>({estimatedBytes:job.estimatedBytes,inputBytes:job.inputBytes}));
+    waiting.push({estimatedBytes,inputBytes});let queued=queuedInputBytes+inputBytes;
+    // Each completed job can release its input before the next grows. Refuse
+    // an admission that leaves any subset mutually blocking even after all
+    // active work/leases and evictable worker caches have drained.
+    while(waiting.length){
+      const index=waiting.findIndex(job=>workerBase+queued-job.inputBytes+job.estimatedBytes<=budget);
+      if(index<0)return false;queued-=waiting[index].inputBytes;waiting.splice(index,1);
+    }
+    return true;
+  }
   function run(task,payload={},jobOptions={}){
     if(closed)return Promise.reject(failure('COMPUTE_POOL_CLOSED'));
     if(!jobOptions||typeof jobOptions!=='object'||Array.isArray(jobOptions)){counters.rejected++;return Promise.reject(failure('COMPUTE_JOB_INVALID'));}
@@ -154,13 +166,20 @@ function createComputePool(options={}){
     else if(estimated+workerBase>budget)code='COMPUTE_JOB_TOO_LARGE';
     else if(jobOptions.signal?.aborted)code='COMPUTE_ABORTED';
     else if(generations.has(ownerKey)&&generations.get(ownerKey)!==generation)code='COMPUTE_STALE_GENERATION';
-    else if(pending.length>=maxPending||queuedInputBytes+input>maxPendingBytes||reserved()+input>budget)code='COMPUTE_QUEUE_BUSY';
+    else if(pending.length>=maxPending||queuedInputBytes+input>maxPendingBytes||reserved()+input>budget||!queueCanProgress(estimated,input))code='COMPUTE_QUEUE_BUSY';
     if(code){counters.rejected++;return Promise.reject(failure(code));}
     if(!generations.has(ownerKey))generations.set(ownerKey,generation);
     return new Promise((resolve,reject)=>{
       const job={id:nextId++,queuedAt:performance.now(),task,payload,resolve,reject,ownerKey,generation,estimatedBytes:estimated,inputBytes:input,priority:priority==='interactive'?0:1,
         signal:jobOptions.signal,transferList:jobOptions.transferList||[],serializationKey:jobOptions.serializationKey||'',timeoutMs,settled:false};
       job.onAbort=()=>{if(job.settled)return;if(job.slot){rejectJob(job,failure('COMPUTE_ABORTED'));void retire(job.slot);}else{removeQueued(job);rejectJob(job,failure('COMPUTE_ABORTED'));pump();}};
+      // Admission wait and execution share one finite deadline. Waiting for a
+      // held output lease cannot leave queued input alive indefinitely.
+      job.timer=setTimeout(()=>{
+        if(job.settled)return;
+        if(job.slot)void retire(job.slot,failure('COMPUTE_TIMEOUT'));
+        else{removeQueued(job);rejectJob(job,failure('COMPUTE_TIMEOUT'));pump();}
+      },timeoutMs);
       pending.push(job);queuedInputBytes+=input;counters.queued++;job.signal?.addEventListener('abort',job.onAbort,{once:true});
       if(job.signal?.aborted)job.onAbort();else pump();peak();
     });

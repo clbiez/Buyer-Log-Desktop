@@ -1,0 +1,50 @@
+# Faz 5 · Bağımsız inceleme / Independent review
+
+TR: Kullanıcının P1 kuralı kapsamında `gpt-6-astra`, temel
+`ad198bfe245a93c5ccd90184082d209bb4c3dfb7` ile
+`7012eb3f2d978a5f39aa12800e9c5ccb9635697e` arasındaki gerçek diff'i tek turda,
+salt okunur olarak inceledi. İnceleme kod onayı vermedi; aşağıdaki üç bulguyu
+üretti. Düzeltmeler ana agent tarafından yapıldı ve regresyonlarla doğrulandı;
+kullanıcının tek çapraz tur sınırı nedeniyle ikinci bir inceleme yapılmadı.
+
+EN: Under the user's P1 rule, `gpt-6-astra` performed one independent read-only
+review of the actual diff from `ad198bfe245a93c5ccd90184082d209bb4c3dfb7` to
+`7012eb3f2d978a5f39aa12800e9c5ccb9635697e`. The review did not approve the code;
+it identified the three findings below. The primary agent implemented and
+regression-tested the fixes. There was no second review pass, in accordance
+with the user's one-pass limit.
+
+| Risk | Bulgu / Finding | Düzeltme / Resolution |
+| --- | --- | --- |
+| P1 | Kuyruk girdileri işlerin büyüme payını tüketip birbirlerini sonsuza kadar bloke edebilir. / Queued inputs can consume each other's execution headroom indefinitely. | Admission, tüm kabul edilmiş girdilerin sırayla boşaltılabildiği bir yürütme sırası bulunmasını şart koşar. Bekleme ve yürütme aynı son tarihi paylaşır; kuyruk timeout'u komşu worker'ı emekli etmez. Küçük, sığan bir iş büyük işin önünü açabilir. / Admission requires an execution order that can drain every accepted input; one deadline covers queue wait and execution, and a queued timeout does not retire its neighbour. A smaller fitting job can unblock an older large job. |
+| P2 | Snapshot olmayan Excel geri dönüşü MAIN'e yüklenir fakat worker'a yayımlanmadığında başarılı, boş Backlog dönebilir. / A snapshot-free Excel fallback can load MAIN without publishing a worker source, producing a successful empty Backlog. | Geri dönüş runtime'ı kaynak alanları zaten hazır olsa da snapshot ve tam tipli özel replica olarak kaydedilip yayımlanır. / The fallback runtime is saved and published as a snapshot and exact typed private replica even when source fields are already present. |
+| P2 | Snapshot sonrası, projection yayını öncesi crash eski manifest zamanı ile yeni snapshot arasında kalıcı 409 oluşturabilir. / A crash between snapshot save and projection publication can permanently bind an old manifest timestamp to a new snapshot. | Sahip bazlı tek soğuk hazırlık, gerçek disk snapshot'ını worker'da doğrular ve descriptor'u doğrulanan loadedAt'ye bağlar. Eski kimliği yakalamış istek bir kez 409 alır; sonraki istek doğrulanan kimlikle ilerler. Bağlandıktan sonraki dosya değişikliği hâlâ 409 verir. / A per-owner single-flight verifies the actual disk snapshot in the worker before exposing its bound descriptor. Already captured stale callers reject once; later callers use the verified identity. A subsequent unpublished disk replacement still rejects with 409. |
+
+TR: Beş gerçek RED assertion'ı
+`/tmp/phase-5-review-findings-red-2.txt` içinde korunur. Üretim fonksiyonlarını
+çalıştıran testlere ek olarak, `compute-cold-source-recovery.test.js` gerçek
+snapshot dosyaları ve native ortak worker ile iki yolu sınar. Backlog baytları
+kanonik üreticiyle birebir eşleşir; yabancı Buyer satırı çıkmaz, snapshot-free
+yol gerçek replica oluşturur, bağlanmış disk kimliği sonradan değiştirilirse
+reddedilir. Test, çağıranın descriptor kopyasını değiştirmesinin servisin
+kanonik descriptor'unu değiştirmediğini de doğrular.
+
+EN: Five actual RED assertions are retained in
+`/tmp/phase-5-review-findings-red-2.txt`. In addition to exercising the production
+functions, `compute-cold-source-recovery.test.js` uses real snapshot files and
+the native common worker for both recovery paths. Backlog bytes exactly match
+the canonical builder, foreign Buyer rows are absent, the snapshot-free path
+creates a real replica, and a subsequent change to bound disk identity rejects.
+The test also verifies that mutating a caller's descriptor copy cannot alter
+the service's canonical descriptor.
+
+TR: İnceleme, CPU profiler'ın açıkça etkinleştirilmesini belgelenmiş bir
+tanı/gecikme ödünleşimi olarak değerlendirdi; normal kullanımda geçmişe dönük
+fonksiyon profilinin bulunmayacağı sınırı korunur. Windows/Electron davranışı
+bu Linux incelemesiyle doğrulanmış değildir. Üç koşuluk performans kabulü ve
+GitHub check/merge durumu ayrı kanıt gerektirir.
+
+EN: The review treated opt-in CPU profiling as a documented diagnostic/latency
+tradeoff: normal operation will not retain retrospective function profiles.
+Windows/Electron behaviour is not verified by this Linux review. Three-run
+performance acceptance and GitHub check/merge status require separate evidence.

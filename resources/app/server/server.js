@@ -351,6 +351,7 @@ const { createComputeReadService } = require('./lib/compute-read-service');
 const { sendComputedResponse } = require('./lib/compute-response');
 const { projectionRuntimeMeta } = require('./lib/projection-runtime-meta');
 const publishedComputeSources = new Map();
+const coldComputeSourcesInFlight = new Map();
 // Thread kurulumu HTTP açılış penceresinde tekrarlanmaz; yalnız kod hazırlanır,
 // kullanıcı kaynağı veya görünmeyen modül verisi sorgulanmaz.
 void serverCompute().warm().catch(error=>logRuntimeFailure('computePoolWarmup',error));
@@ -8096,14 +8097,35 @@ async function computeSnapshotByteEstimate(id,metrics=null){
 async function computeSourceFor(profile){
   const id=sourceUserId(profile),initial=cacheForUser(id);
   if(initial._computeSourcePreparing)await initial._computeSourcePreparing;
+  if(coldComputeSourcesInFlight.has(id))return coldComputeSourcesInFlight.get(id);
   const base=computeSourceBase(id),known=publishedComputeSources.get(id);
   const sameCold=known&&!known.descriptor.replicaFile&&!base.active.loadedAt
     &&(!base.manifest?.sourceLoadedAt||!known.descriptor.loadedAt||String(base.manifest.sourceLoadedAt)===String(known.descriptor.loadedAt));
   if(known&&(known.key===base.key||sameCold))return known.descriptor;
-  const expected=computeSourceToken(id),bytes=await computeSnapshotByteEstimate(id);
-  if(computeSourceToken(id)!==expected)throw Object.assign(new Error('Kaynak sürümü değişti. / Source generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
-  const descriptor=await serverCompute().coldSource({ownerId:id,generation:'disk:'+base.key,loadedAt:base.active.loadedAt||base.manifest?.sourceLoadedAt||null,uncompressedBytes:bytes,replace:true});
-  publishedComputeSources.set(id,{key:base.key,guardToken:expected,descriptor});return descriptor;
+  const expected=computeSourceToken(id);
+  const stale=()=>Object.assign(new Error('Kaynak sürümü değişti. / Source generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
+  const operation=(async()=>{
+    const bytes=await computeSnapshotByteEstimate(id);if(computeSourceToken(id)!==expected)throw stale();
+    // A projection manifest is not proof of the disk snapshot's identity after
+    // a crash between snapshot save and projection publication. The worker
+    // verifies the actual snapshot before its first descriptor is exposed.
+    const descriptor=await serverCompute().coldSource({ownerId:id,generation:'disk:'+base.key,loadedAt:base.active.loadedAt||null,uncompressedBytes:bytes,replace:true});
+    if(computeSourceToken(id)!==expected)throw stale();
+    publishedComputeSources.set(id,{key:base.key,guardToken:expected,descriptor});let lease;
+    try{
+      lease=await serverCompute().run('source-info',descriptor,{});
+      if(computeSourceToken(id)!==expected||cacheForUser(id)!==base.active)throw stale();
+      const info=lease.value;acceptComputedMetadata(profile,info.runtimeMeta,info.sourceProjectionKeys);
+      const verified=publishedComputeSources.get(id);if(verified?.descriptor.capability!==descriptor.capability)throw stale();
+      // Already captured callers reject once on a recovered identity. Later
+      // reads use its bound loadedAt and retain all normal generation checks.
+      if(info.loadedAt&&base.manifest?.sourceLoadedAt&&String(info.loadedAt)!==String(base.manifest.sourceLoadedAt))verified.guardToken='disk:'+verified.key;
+      return verified.descriptor;
+    }catch(error){if(publishedComputeSources.get(id)?.descriptor.capability===descriptor.capability)publishedComputeSources.delete(id);throw error;}
+    finally{lease?.release();}
+  })();
+  coldComputeSourcesInFlight.set(id,operation);
+  try{return await operation;}finally{if(coldComputeSourcesInFlight.get(id)===operation)coldComputeSourcesInFlight.delete(id);}
 }
 function computeReadContext(profile){
   const context=pageProjectionContext(profile),shared=loadOverrides(),day=new Date();
@@ -8133,7 +8155,10 @@ async function prepareComputeBacklog(req){
   const lease=await computeReads.run(req,'backlog','source-info',{});let info;
   try{lease.assertBuild();info=lease.value;acceptComputedMetadata(req.currentUser,info.runtimeMeta,info.sourceProjectionKeys);lease.assertResponse();}finally{lease.release();}
   const shared=loadOverrides();
-  if(!info.loadedAt)await ensureBacklogRuntime(sourceUserId(req));
+  if(!info.loadedAt){
+    const id=sourceUserId(req),runtime=await ensureBacklogRuntime(id);
+    if(runtime?.loadedAt)await saveRuntimeModelSnapshot(id,runtime);
+  }
   if((shared.asasSourceMode!=='database'&&!info.asasSourceFields)
     ||(!['database','dashboard'].includes(shared.antrepoSourceMode)&&!info.antrepoSourceFields)){
     const id=sourceUserId(req);if(!cacheForUser(id).asasOrders)await ensureDataLoaded(id);await ensureBacklogSourceFields(id);

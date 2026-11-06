@@ -193,3 +193,21 @@ test('invalid serialization keys are refused before starting any worker',async t
   }
   assert.equal(workers.length,0);
 });
+test('queue admission reserves room for every accepted job to grow beyond its retained input',async t=>{
+ const {pool,workers}=fakePool({memoryBudgetBytes:1000,workerBaseBytes:100,maxPendingBytes:1000});t.after(()=>pool.close());
+ const active=pool.run('active',{},taskOptions({estimatedBytes:100})),large=pool.run('large',{},taskOptions({estimatedBytes:900,inputBytes:300}));large.catch(()=>{});
+ const second=pool.run('would-deadlock',{},taskOptions({estimatedBytes:900,inputBytes:300}));second.catch(()=>{});
+ let rejected;second.catch(error=>{rejected=error.code;});
+ try{await turn();assert.equal(rejected,'COMPUTE_QUEUE_BUSY');await assert.rejects(second,{code:'COMPUTE_QUEUE_BUSY'});workers[0].complete();(await active).release();await turn();assert.equal(workers[0].sent.at(-1).task,'large');workers[0].complete();(await large).release();assert.equal(pool.stats().pending,0);assert.equal(pool.stats().queuedInputBytes,0);}
+ finally{await pool.close();await Promise.allSettled([active,large,second]);}
+});
+test('a queued deadline expires without retiring its active neighbour or waiting for a retained lease',async t=>{
+ const {pool,workers}=fakePool();t.after(()=>pool.close());const active=pool.run('active',{},taskOptions({estimatedBytes:600}));
+ const queued=pool.run('queued-timeout',{},taskOptions({estimatedBytes:600,timeoutMs:20}));let result;queued.then(()=>result='completed',error=>result=error.code);
+ await new Promise(resolve=>setTimeout(resolve,60));assert.equal(result,'COMPUTE_TIMEOUT');assert.equal(workers[0].terminated,undefined);assert.equal(pool.stats().pending,0);workers[0].complete();(await active).release();await assert.rejects(queued,{code:'COMPUTE_TIMEOUT'});
+});
+test('admission still permits a smaller fitting job to drain input before an older large job',async t=>{
+ const {pool,workers}=fakePool({memoryBudgetBytes:1000,workerBaseBytes:100,maxPendingBytes:1000});t.after(()=>pool.close());
+ const active=pool.run('active',{},taskOptions({estimatedBytes:100})),large=pool.run('large',{},taskOptions({estimatedBytes:900})),small=pool.run('small',{},taskOptions({estimatedBytes:100,inputBytes:100}));
+ workers[0].complete();(await active).release();await turn();assert.equal(workers[0].sent.at(-1).task,'small');workers[0].complete();(await small).release();await turn();assert.equal(workers[0].sent.at(-1).task,'large');workers[0].complete();(await large).release();assert.equal(pool.stats().queuedInputBytes,0);
+});
