@@ -1,0 +1,98 @@
+{
+  "runs": [
+    {
+      "synthetic": true,
+      "app": "/workspace/buyerlog-phase1/resources/app",
+      "task": "parseAsasFile",
+      "sourceSha256": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "rows": 30000,
+      "resultSha256": "85ab00d055637e559dd3520346505c21878c1fb2e599990053542d594e00e1ed",
+      "workerExecutionMs": 14774.922915,
+      "parentRoundTripMs": 17504.871868,
+      "workerHeapUsedBytes": 519303328,
+      "node": "v24.19.0",
+      "platform": "linux",
+      "side": "before",
+      "rep": 1
+    },
+    {
+      "synthetic": true,
+      "app": "/workspace/buyerlog-phase2/resources/app",
+      "task": "parseAsasFile",
+      "sourceSha256": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "rows": 30000,
+      "resultSha256": "85ab00d055637e559dd3520346505c21878c1fb2e599990053542d594e00e1ed",
+      "workerExecutionMs": 6721.448205,
+      "parentRoundTripMs": 8525.670583000001,
+      "workerHeapUsedBytes": 399124336,
+      "node": "v24.19.0",
+      "platform": "linux",
+      "side": "after",
+      "rep": 1
+    },
+    {
+      "synthetic": true,
+      "app": "/workspace/buyerlog-phase2/resources/app",
+      "task": "parseAsasFile",
+      "sourceSha256": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "rows": 30000,
+      "resultSha256": "85ab00d055637e559dd3520346505c21878c1fb2e599990053542d594e00e1ed",
+      "workerExecutionMs": 8502.631176,
+      "parentRoundTripMs": 11032.025102,
+      "workerHeapUsedBytes": 429053464,
+      "node": "v24.19.0",
+      "platform": "linux",
+      "side": "after",
+      "rep": 2
+    },
+    {
+      "synthetic": true,
+      "app": "/workspace/buyerlog-phase1/resources/app",
+      "task": "parseAsasFile",
+      "sourceSha256": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "rows": 30000,
+      "resultSha256": "85ab00d055637e559dd3520346505c21878c1fb2e599990053542d594e00e1ed",
+      "workerExecutionMs": 12800.629654,
+      "parentRoundTripMs": 15452.528038,
+      "workerHeapUsedBytes": 496020640,
+      "node": "v24.19.0",
+      "platform": "linux",
+      "side": "before",
+      "rep": 2
+    },
+    {
+      "synthetic": true,
+      "app": "/workspace/buyerlog-phase1/resources/app",
+      "task": "parseAsasFile",
+      "sourceSha256": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "rows": 30000,
+      "resultSha256": "85ab00d055637e559dd3520346505c21878c1fb2e599990053542d594e00e1ed",
+      "workerExecutionMs": 14571.056154,
+      "parentRoundTripMs": 18360.057137,
+      "workerHeapUsedBytes": 520109616,
+      "node": "v24.19.0",
+      "platform": "linux",
+      "side": "before",
+      "rep": 3
+    },
+    {
+      "synthetic": true,
+      "app": "/workspace/buyerlog-phase2/resources/app",
+      "task": "parseAsasFile",
+      "sourceSha256": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "rows": 30000,
+      "resultSha256": "85ab00d055637e559dd3520346505c21878c1fb2e599990053542d594e00e1ed",
+      "workerExecutionMs": 12788.049169,
+      "parentRoundTripMs": 17203.079406999997,
+      "workerHeapUsedBytes": 429262880,
+      "node": "v24.19.0",
+      "platform": "linux",
+      "side": "after",
+      "rep": 3
+    }
+  ],
+  "medians": {
+    "before": 14571.056154,
+    "after": 8502.631176
+  }
+}

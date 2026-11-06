@@ -1,0 +1,1 @@
+Preliminary source timing samples. Local targeted tests overlapped part of this sequence. SHA equality remains valid; these timings are not the final controlled performance comparison. Final measurements will run after all macro processes terminate, with no local test/UI/benchmark started concurrently.

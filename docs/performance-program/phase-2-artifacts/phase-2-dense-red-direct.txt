@@ -1,0 +1,69 @@
+✖ date repair handles sparse and dense cells, holes, invalid dates and timestamps equally (2.889994ms)
+✖ production read hooks repair cellDates:true in both representations (31.910163ms)
+✔ ASAS seed=7: sparse/dense parser output is exactly equal with production hook order (51.019636ms)
+✔ Antrepo seed=7: sparse/dense parser output is exactly equal with production hook order (8.550161ms)
+✔ CPUpdate seed=7: sparse/dense parser output is exactly equal with production hook order (5.415656ms)
+✔ LFL seed=7: sparse/dense parser output is exactly equal with production hook order (82.732892ms)
+✔ ASAS seed=19: sparse/dense parser output is exactly equal with production hook order (26.72167ms)
+✔ Antrepo seed=19: sparse/dense parser output is exactly equal with production hook order (16.155762ms)
+✔ CPUpdate seed=19: sparse/dense parser output is exactly equal with production hook order (3.294372ms)
+✔ LFL seed=19: sparse/dense parser output is exactly equal with production hook order (59.405106ms)
+✔ ASAS seed=43: sparse/dense parser output is exactly equal with production hook order (29.868684ms)
+✔ Antrepo seed=43: sparse/dense parser output is exactly equal with production hook order (5.70211ms)
+✔ CPUpdate seed=43: sparse/dense parser output is exactly equal with production hook order (2.759195ms)
+✔ LFL seed=43: sparse/dense parser output is exactly equal with production hook order (117.923684ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 12
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 470.337436
+
+✖ failing tests:
+
+test at tests/excel-source-dense.test.js:21:1
+✖ date repair handles sparse and dense cells, holes, invalid dates and timestamps equally (2.889994ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 2
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-phase2/resources/app/tests/excel-source-dense.test.js:37:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/excel-source-dense.test.js:45:1
+✖ production read hooks repair cellDates:true in both representations (31.910163ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 1767311944000
+  - 1767312000000
+          ^
+  
+      at /workspace/buyerlog-phase2/resources/app/tests/excel-source-dense.test.js:53:12
+      at Array.map (<anonymous>)
+      at TestContext.<anonymous> (/workspace/buyerlog-phase2/resources/app/tests/excel-source-dense.test.js:49:33)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1767311944000,
+    expected: 1767312000000,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

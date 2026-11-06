@@ -474,6 +474,35 @@
           "en": "Actual user management in an isolated demo session. Small session records were separately verified in the audit file from this same session."
         }
       }
+    },
+    {
+      "id": "source-dense-excel-reading",
+      "type": "improvement",
+      "module": {
+        "tr": "Kaynak Veriler",
+        "en": "Source Data"
+      },
+      "title": {
+        "tr": "Excel kaynak okumaları optimize edildi",
+        "en": "Excel source reads optimized"
+      },
+      "body": {
+        "tr": "ASAS, Antrepo, CPUpdate ve LFL kaynak dosyaları daha düşük okuma maliyetiyle işlenir. Parser sonuçları ve tarih davranışı sparse/dense eşdeğerlik testleriyle korunur.",
+        "en": "ASAS, Warehouse, CPUpdate and LFL source files use a lower-cost reading path. Parser results and date behavior are protected by sparse/dense equivalence tests."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "source-dense-orders.png",
+        "alt": {
+          "tr": "Dense kaynak okumasından sonra demo siparişlerini gösteren gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen showing demo orders after dense source reading"
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle değişiklik sonrası gerçek Siparişler ekranı. Hesaplama eşdeğerliği ve okuma süreleri ayrıca test ve benchmark ile doğrulandı.",
+          "en": "Actual post-change Orders screen with isolated demo data. Calculation equivalence and read timings were separately verified by tests and benchmarks."
+        }
+      }
     }
   ]
 }
