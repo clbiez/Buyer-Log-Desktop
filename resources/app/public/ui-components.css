@@ -15436,11 +15436,19 @@ html[data-ui-system="manifest"] #currentUserBtn{
   border-radius:var(--ui-mark-radius)!important;
 }
 html[data-ui-system="manifest"] .rail .brandMarkImage{width:34px;height:34px;clip-path:inset(2px round var(--ui-mark-radius));}
-html[data-ui-system="manifest"] #currentUserBtn #currentUserInitials{
+/* Use the very same geometry/ink for the topbar and menu initials. */
+html[data-ui-system="manifest"] .userMenu .userMenuHead{grid-template-columns:34px minmax(0,1fr);}
+html[data-ui-system="manifest"] .userMenu .userMenuHead .userMenuAvatar{
+  box-sizing:border-box;display:grid;place-items:center;width:34px;height:34px;
+  border:0!important;background:transparent!important;box-shadow:none!important;overflow:hidden;
+}
+html[data-ui-system="manifest"] #currentUserBtn #currentUserInitials,
+html[data-ui-system="manifest"] .userMenu .userMenuHead .userMenuAvatar .blSteelInitials{
   display:grid;place-items:center;width:30px;height:30px;
   border-radius:var(--ui-mark-radius)!important;
   background:var(--ui-mark-paper)!important;color:var(--ui-avatar-ink)!important;
-  font-weight:800!important;
+  -webkit-text-fill-color:var(--ui-avatar-ink)!important;
+  font-size:var(--ui-font-sm)!important;font-weight:800!important;
 }
 /* ===== v7.0.319 · Sade ve tutarlı yüzeyler (DESIGN_SYSTEM.md §5) =====
    Vurgu dolgusu yalnız birincil eylemdedir. Seçim grupları (segment) açık
