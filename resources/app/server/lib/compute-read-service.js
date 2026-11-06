@@ -20,7 +20,11 @@ function createComputeReadService({compute,guard,sourceFor,paramsFor,maxBytes=48
       entry.promise=Promise.resolve().then(async()=>{
         let lease;
         try{
-          const source=await sourceFor(captured.profile),params=await paramsFor(captured.profile,source,task,{...keyParts,...options.payload});captured.assertBuild();
+          const source=await sourceFor(captured.profile),params=await paramsFor(captured.profile,source,task,{...keyParts,...options.payload});
+          // Body parsing, context preparation and encoded IPC must not all
+          // accumulate in one event-loop turn. Check live authority after the
+          // cooperative handoff, immediately before admitting worker input.
+          await new Promise(setImmediate);captured.assertBuild();
           lease=await compute.run(task,source,params,options.computeOptions);captured.assertBuild();
           entry.lease=lease;entry.bytes=lease.metrics.outputBytes||0;
           if(options.cache!==false&&entry.epoch===epoch)cacheEntry(key,entry);

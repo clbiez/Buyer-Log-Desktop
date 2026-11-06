@@ -8114,6 +8114,7 @@ const computeReadGuard=createComputeReadGuard({sessionProfile:req=>userAccess.se
 function computeParamsFor(profile,descriptor,task,parts={}){
   if(task==='source-info')return {};
   if(task==='cp-shared-edit-codes')return {codes:parts.codes,access:userAccess.computeAccessContext(profile)};
+  if(task==='cp-image-registry')return {...parts,access:userAccess.computeAccessContext(profile),overrides:{imagemap:loadOverrides().imagemap||{}}};
   const shared=loadOverrides();
   const data={...parts,access:profile?userAccess.computeAccessContext(profile):null,overrides:{...shared,antrepoMatchConfig:shared.antrepoSourceMode==='dashboard'?dashboardAntrepoMatchRule():shared.antrepoMatchConfig},
     mergeSourceOverrides:true,preferSourceAppliedHorizons:true,horizons:Object.fromEntries(['cp','orders','backlog'].map(target=>[target,effectiveHorizonForTarget(profile,target)])),

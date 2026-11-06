@@ -141,6 +141,7 @@ test('image registry decodes only authorized compressed CP rows in the common wo
  const {service}=setup(t),descriptor=await service.seedSource({ownerId:'a',generation:'g1',source:source(),uncompressedBytes:MiB});
  const rows=[{'PLM ID':'000215013.0','C.Code':'C01'},{'PLM ID':'400','C.Code':'B02'}];
  const imagemap={'plm:215013|colour:C01':'ci_front','plm:215013|colour:C01|name:BLACK':'ci_named','plm:215013':'ci_legacy','plm:400|colour:B02':'','plm:900|colour:A01':'ci_other_user'};
+ fs.writeFileSync(descriptor.replicaFile,'Synthetic damaged raw replica: image registry must use only verified cached CP rows');
  const lease=await service.run('cp-image-registry',descriptor,{cachedCp:zlib.gzipSync(JSON.stringify({rows})),overrides:{imagemap}});
  try{const actual=JSON.parse(zlib.gunzipSync(Buffer.from(lease.value.buffer)));assert.deepEqual(actual,JSON.parse(JSON.stringify({ok:true,...require('../server/lib/cp-image-startup-registry').scopedCpImageRegistry(rows,imagemap)})));assert.equal(actual.imagemap['plm:900|colour:A01'],undefined);}
  finally{lease.release();}

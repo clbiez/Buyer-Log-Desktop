@@ -9,7 +9,8 @@ function setup(options={}){
   const service=createComputeReadService({compute,guard,sourceFor:async()=>({generation:source}),paramsFor:()=>({overrides:{notesmap:{note:'selected snapshot'}}}),maxBytes:16,...options});
   return {service,sessions,profile,setSource:value=>source=value,finish:()=>complete(),calls:()=>calls,releases:()=>releases};
 }
-const turn=()=>new Promise(resolve=>setImmediate(resolve));
+// Drain request preparation and its real event-loop handoff to worker dispatch.
+const turn=()=>new Promise(resolve=>setImmediate(()=>setImmediate(resolve)));
 test('one in-flight build serves independent consumers and holds bytes until their last release',async()=>{
   const f=setup(),one=f.service.run({cookie:'one'},'backlog','backlog-export',{q:1}),two=f.service.run({cookie:'two'},'backlog','backlog-export',{q:1});
   await turn();assert.equal(f.calls(),1);f.finish();const [a,b]=await Promise.all([one,two]);assert.equal(a.value,b.value);
@@ -39,4 +40,10 @@ test('verified cached buffers are passed separately from the small revision/quer
   let received;const bytes=Buffer.from('Synthetic verified gzip bytes'),f=setup({paramsFor:(_profile,_source,_task,parts)=>{received=parts.extra;return {};}});
   const pending=f.service.run({cookie:'one'},'cp','projection-envelope',{generation:'g1'},{payload:{extra:bytes}});await turn();f.finish();const lease=await pending;
   assert.equal(received,bytes);lease.release();f.service.clear();
+});
+test('worker dispatch yields to the event loop and rechecks authority before admitting prepared input',async()=>{
+ const f=setup(),pending=f.service.run({cookie:'one'},'backlog','backlog-export',{});pending.catch(()=>{});
+ setImmediate(()=>{f.profile.access='revoked-before-dispatch';});
+ try{await new Promise(setImmediate);assert.equal(f.calls(),0,'request preparation must give an actual event-loop turn before worker dispatch');await assert.rejects(pending,{code:'COMPUTE_STALE_GENERATION'});}
+ finally{if(f.calls())f.finish();await pending.catch(()=>{});}
 });
