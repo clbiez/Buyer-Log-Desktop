@@ -157,6 +157,49 @@ function selectModules({ source = '', task = '', screens = [], exclude = [] } = 
   return chosen;
 }
 
-function globalKnowledge(lang) { return lang === 'en' ? GLOBAL_KNOWLEDGE.en : GLOBAL_KNOWLEDGE.tr; }
+/* LCW Merch Calendar bilgisi GERÇEK takvimden türetilir (Veri Yönetimi ›
+   Merch Calendar → server/lib/merch-calendar-store → BLDateDimension). Elle
+   kopyalanmaz; takvim değişince bir sonraki istek yeni aralıkları görür.
+   Bugünkü LCW dönemi ve LCW ay aralıkları (önceki/bu/sonraki LCW yılı)
+   verilir ki LCW AI "bu ay", "geçen hafta", "Mart" gibi ifadeleri ve
+   tarihleri LCW dönemine doğru eşlesin. */
+function merchCalendarKnowledge(lang, { now = new Date(), dates = null } = {}) {
+  const english = lang === 'en';
+  let DD = dates;
+  try { if (!DD) DD = require('../../../public/date-dimension'); } catch (_) { DD = null; }
+  const head = english
+    ? 'LCW Merch Calendar: in Buyer Log every month, week, quarter and year analysis uses the LCW Merch Calendar, not the Gregorian calendar, unless the user explicitly asks for calendar/Gregorian months. LCW weeks start on Monday and each LCW month is a run of whole LCW weeks, so an LCW month can start or end in a different Gregorian month. Never map a date to an LCW period by its Gregorian month; use the ranges below.'
+    : 'LCW Merch Calendar: Buyer Log\'da ay, hafta, çeyrek ve yıl analizleri, kullanıcı açıkça miladi/takvim ayı istemedikçe LCW Merch Calendar\'a göre yapılır. LCW haftası pazartesi başlar; her LCW ayı tam LCW haftalarından oluşur, bu yüzden bir LCW ayı farklı bir miladi ayda başlayıp bitebilir. Bir tarihi LCW dönemine miladi ayına bakarak eşleme; aşağıdaki aralıkları kullan.';
+  if (!DD || typeof DD.hasMerchCalendar !== 'function' || !DD.hasMerchCalendar()) {
+    return `${head}\n${english
+      ? 'The Merch Calendar is NOT loaded in Buyer Log, so exact LCW periods are unknown: do not guess LCW months or weeks; say that periods are approximate and that it can be uploaded under Data Management › Merch Calendar.'
+      : 'Merch Calendar Buyer Log\'a YÜKLENMEMİŞ; kesin LCW dönemleri bilinmiyor: LCW ay veya haftası tahmin etme; dönemlerin yaklaşık olduğunu ve Veri Yönetimi › Merch Calendar\'dan yüklenebileceğini söyle.'}`;
+  }
+  const names = english ? DD.MONTHS_EN : DD.MONTHS_TR;
+  const today = DD.describe(now);
+  const lines = [head];
+  if (today.businessValid) {
+    lines.push(english
+      ? `Today (${today.dateKey}) is LCW ${today.periodYear}, ${names[today.month - 1]} (LCW month ${today.monthKey}), LCW week ${today.lcwWeek} (${today.weekStart} … ${today.weekEnd}).`
+      : `Bugün (${today.dateKey}) LCW ${today.periodYear} yılı, ${names[today.month - 1]} ayı (LCW ay ${today.monthKey}), LCW ${today.lcwWeek}. hafta (${today.weekStart} … ${today.weekEnd}).`);
+  } else lines.push(english ? `Today (${today.dateKey}) is outside the loaded Merch Calendar.` : `Bugün (${today.dateKey}) yüklü Merch Calendar aralığının dışında.`);
+  const base = today.businessValid ? today.periodYear : now.getFullYear();
+  for (const year of [base - 1, base, base + 1]) {
+    const months = [];
+    for (let month = 1; month <= 12; month++) {
+      const range = DD.businessMonthRange(year, month);
+      if (!range) continue;
+      const first = DD.describe(range.start).lcwWeek, last = DD.describe(range.end).lcwWeek;
+      months.push(`${names[month - 1]} ${range.start}…${range.end} (${english ? 'wk' : 'hf'} ${first}–${last})`);
+    }
+    if (months.length) lines.push(`LCW ${year}: ${months.join('; ')}`);
+  }
+  return lines.join('\n');
+}
+function globalKnowledge(lang, options = {}) {
+  const text = lang === 'en' ? GLOBAL_KNOWLEDGE.en : GLOBAL_KNOWLEDGE.tr;
+  if (options.calendar === false) return text;
+  return `${text}\n${merchCalendarKnowledge(lang, options)}`;
+}
 
-module.exports = { KNOWLEDGE_VERSION, MODULES, GLOBAL_KNOWLEDGE, SCREEN_MODULES, MODULE_BUDGET_CHARS, MAX_MODULES, globalKnowledge, moduleKnowledge, selectModules };
+module.exports = { KNOWLEDGE_VERSION, MODULES, GLOBAL_KNOWLEDGE, SCREEN_MODULES, MODULE_BUDGET_CHARS, MAX_MODULES, globalKnowledge, merchCalendarKnowledge, moduleKnowledge, selectModules };

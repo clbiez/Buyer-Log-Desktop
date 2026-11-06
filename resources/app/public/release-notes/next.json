@@ -764,6 +764,35 @@
           "en": "Six demo Collection records from 20 synthetic orders. The complete catalog and model field reads were checked in the actual app."
         }
       }
+    },
+    {
+      "id": "lcwai-merch-calendar",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI analizleri LCW Merch Calendar’a göre yapar",
+        "en": "LCW AI analyses follow the LCW Merch Calendar"
+      },
+      "body": {
+        "tr": "Veri sorularında ay, hafta, çeyrek ve yıl artık Veri Yönetimi’nden yüklenen LCW Merch Calendar’a göre hesaplanır; dönemler “Mart 2026”, “12. Hafta Mart 2026” gibi LCW adlarıyla gösterilir ve “Mart’tan sonra”, “2026 Ç3” gibi filtreler LCW aralıklarını kullanır. Yorum kutusu hangi takvimin kullanıldığını yazar; takvim aralığı dışında kalan tarihler ayrı satırda gösterilir, takvim yüklü değilse dönemlerin yaklaşık olduğu açıkça belirtilir. Miladi ay yalnız açıkça istendiğinde kullanılır. LCW AI da bugünkü LCW dönemini ve LCW ay aralıklarını gerçek takvimden öğrenir; “bu ay”, “geçen hafta” gibi ifadeleri LCW’ye göre yorumlar.",
+        "en": "In data questions, months, weeks, quarters and years are now calculated by the LCW Merch Calendar uploaded under Data Management; periods are shown with LCW names such as “March 2026” or “Week 12 March 2026”, and filters such as “after March” or “2026 Q3” use LCW ranges. The interpretation box states which calendar was used; dates outside the calendar range are shown in a separate row, and if no calendar is loaded the periods are clearly marked as approximate. Gregorian months are used only when explicitly requested. LCW AI also learns today’s LCW period and the LCW month ranges from the actual calendar, so it reads “this month” or “last week” in LCW terms."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-merch-calendar.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI ekranında LCW Merch Calendar’a göre Model Bütçe ayı tablosu ve kullanılan takvim satırı",
+          "en": "Model Budget month table by LCW Merch Calendar and the calendar line in the actual Buyer Log LCW AI screen"
+        },
+        "caption": {
+          "tr": "İzole demo veri ve örnek bir 4-4-5 Merch Calendar ile gerçek uygulama; LCW AI planı kabul testi için taklit edildi. Ay toplamları sayfanın tarih boyutuyla bağımsız doğrulandı; 154 kaydın 25’i miladi takvimde başka aya düşerdi.",
+          "en": "Actual app with isolated demo data and a sample 4-4-5 Merch Calendar; the LCW AI plan was stubbed for acceptance testing. Month totals were checked independently with the page’s date dimension; 25 of 154 records would fall in another month on the Gregorian calendar."
+        }
+      }
     }
   ]
 }
