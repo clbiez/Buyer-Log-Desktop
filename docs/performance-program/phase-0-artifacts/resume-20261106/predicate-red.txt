@@ -1,0 +1,37 @@
+✖ real benchmark wait predicates reject missing probes during document navigation (8.563155ms)
+✔ benchmark retains refresh telemetry without copying raw comparison rows into reports (3.183933ms)
+✔ benchmark retries only transient GET health/status failures, never refresh POST (13.383368ms)
+✔ benchmark health quantiles retain failed attempts and separate refresh samples (0.815585ms)
+✔ benchmark parses runtime stalls without dropping the original evidence (1.368119ms)
+✔ benchmark rejects stale generation, source revision and wrong row count (1.611915ms)
+✔ benchmark records three distinct events, excludes user wait and fixes task window (1.197135ms)
+✔ benchmark closes each renderer even if measurement or screenshot fails (0.928899ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 7
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 49.071049
+
+✖ failing tests:
+
+test at tests/startup-benchmark.test.js:9:1
+✖ real benchmark wait predicates reject missing probes during document navigation (8.563155ms)
+  AssertionError [ERR_ASSERTION]: missing events must not be ready
+
+  true !== false
+
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/startup-benchmark.test.js:16:14)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

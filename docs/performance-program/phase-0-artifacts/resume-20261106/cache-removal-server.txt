@@ -1,0 +1,167 @@
+[PERF] APP_BOOT_START +0ms
+[PERF] LOCAL_CONFIG_READY +87ms
+[PERF] DELTA_STORE_MODE +135ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +246ms
+Buyer Log runtime config: /tmp/buyerlog-startup-cache-trace/config.json · port=32875 · host=127.0.0.1
+[PERF] SERVER_READY +416ms
+Buyer Log sunucusu çalışıyor: http://localhost:32875
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /tmp/buyerlog-startup-cache-trace/source
+[RUNTIME] heap-limit heapUsedMb=47 heapLimitMb=4288 rssMb=100
+[RUNTIME] stall-profiler samplingMs=5 minStallMs=10000
+[PERF] LOCAL_DB_CONFIG_PATH +533ms
+[PERF] SHARED_SYNC_ROOT +533ms
+[PERF] SHARED_HUB_BOOTSTRAP +573ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +599ms
+[PERF] LOCAL_DB_READY +599ms
+[PERF] LOCAL_STATE_READY +599ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +887ms
+[2026-11-06T04:17:22.057Z] [ASAS Excel] [pivot-refresh] START category=wait
+[2026-11-06T04:17:22.058Z] [ASAS Excel] [pivot-refresh] END duration=1ms category=wait error=ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.
+[2026-11-06T04:17:22.058Z] [ASAS Excel] [file-parse] START category=wait
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +4640ms
+[PERF] DELTA_STORE_HYDRATED +4641ms
+[2026-11-06T04:17:41.119Z] [ASAS Excel] [file-parse] END duration=19061ms category=wait
+[2026-11-06T04:17:41.258Z] [ANTREPO Excel] [pivot-refresh] START category=wait
+[2026-11-06T04:17:41.259Z] [ANTREPO Excel] [pivot-refresh] END duration=1ms category=wait error=Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.
+[2026-11-06T04:17:41.259Z] [ANTREPO Excel] [file-parse] START category=wait
+[2026-11-06T04:17:42.882Z] [ANTREPO Excel] [file-parse] END duration=1623ms category=wait
+[2026-11-06T04:17:44.118Z] [Refresh] [comparison] START category=wait
+[2026-11-06T04:17:45.123Z] [Refresh] [comparison] END duration=1005ms category=wait
+[2026-11-06T04:17:45.124Z] [Local storage] [snapshot-save] START category=save
+[RUNTIME] event-loop-stall blockedMs=3779 cpuMs=10525 heapUsedMb=240 heapLimitMb=4288 rssMb=1036
+[2026-11-06T04:17:54.702Z] [Local storage] [snapshot-save] END duration=9578ms category=save
+[2026-11-06T04:17:54.702Z] [Local storage] [page-cache-write] START category=cache
+[2026-11-06T04:18:09.153Z] [Local storage] [page-cache-write] END duration=14451ms category=cache
+[PERF] APP_BOOT_START +0ms
+[PERF] LOCAL_CONFIG_READY +67ms
+[PERF] DELTA_STORE_MODE +109ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +283ms
+Buyer Log runtime config: /tmp/buyerlog-startup-cache-trace/config.json · port=32875 · host=127.0.0.1
+[PERF] SERVER_READY +387ms
+Buyer Log sunucusu çalışıyor: http://localhost:32875
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /tmp/buyerlog-startup-cache-trace/source
+[RUNTIME] heap-limit heapUsedMb=60 heapLimitMb=4288 rssMb=131
+[RUNTIME] stall-profiler samplingMs=5 minStallMs=10000
+[PERF] LOCAL_DB_CONFIG_PATH +483ms
+[PERF] SHARED_SYNC_ROOT +483ms
+[PERF] SHARED_HUB_BOOTSTRAP +506ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +533ms
+[PERF] LOCAL_DB_READY +533ms
+[PERF] LOCAL_STATE_READY +533ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +976ms
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +4642ms
+[PERF] DELTA_STORE_HYDRATED +4645ms
+[PERF] APP_BOOT_START · server received +5160ms · client +232ms · duration 0ms
+[PERF] FRONTEND_BOOT_START · server received +5161ms · client +236ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_START · server received +5161ms · client +236ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_START · server received +5161ms · client +246ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY · server received +5161ms · client +339ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_XLSX_DEFERRED · server received +5161ms · client +374ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_CORE_RESOURCES_READY · server received +5161ms · client +389ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_START · server received +5161ms · client +1141ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_START · server received +5161ms · client +1142ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_READY · server received +5161ms · client +1561ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_UI_SHELL_READY · server received +5161ms · client +1628ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_READY · server received +5161ms · client +1629ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_READY · server received +5161ms · client +1629ms · duration 0ms
+[PERF] DOM_CREATION_READY · server received +5161ms · client +1836ms · duration 0ms
+[PERF] CACHE_LOAD_START · server received +5161ms · client +1849ms · duration 0ms
+[PERF] CACHE_LOAD_READY · server received +5161ms · client +2057ms · duration 209ms
+[PERF] DATASOURCE_PREPARATION_START · server received +5161ms · client +2057ms · duration 0ms
+[PERF] DATASOURCE_PREPARATION_READY · server received +5161ms · client +2096ms · duration 39ms
+[PERF] FILTER_PIVOT_INIT_START · server received +5162ms · client +2096ms · duration 0ms
+[PERF] FILTER_PIVOT_INIT_READY · server received +5162ms · client +2096ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_START · server received +5162ms · client +2096ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_READY · server received +5162ms · client +2096ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_START · server received +5162ms · client +2096ms · duration 0ms
+[PERF] TABLE_RENDER_START · server received +5162ms · client +2096ms · duration 0ms
+[PERF] TABLE_RENDER_READY · server received +5162ms · client +2106ms · duration 9ms
+[PERF] ACTIVE_MODULE_INIT_READY · server received +5162ms · client +2106ms · duration 9ms
+[PERF] UI_FIRST_RENDER · server received +5162ms · client +2106ms · duration 0ms
+[PERF] UI_READY · server received +5162ms · client +2873ms · duration 0ms
+[PERF] STARTUP_CLIENT_REPORT_RECEIVED +5162ms
+[PERF] BACKGROUND_SYNC_START +8850ms
+[PERF] SYNC_COMPLETE +8956ms · duration 51ms
+CACHE_MUTATION_TRACE rm /tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/manifest.json Error: cache mutation
+    at object.<computed> [as rm] (/tmp/buyerlog-cache-tracer.cjs:3:218)
+    at removeTarget (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:437:15)
+    at async apply (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:459:21)
+    at async /workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:517:26
+    at async Object.weeklyCheck (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:529:18)
+CACHE_MUTATION_TRACE unlink /tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/manifest.json Error: cache mutation
+    at object.<computed> (/tmp/buyerlog-cache-tracer.cjs:3:218)
+    at node:internal/fs/rimraf:73:5
+    at FSReqCallback.oncomplete (node:fs:200:5)
+CACHE_MUTATION_TRACE rm /tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/mw4grzhd-fe2c05b1c543/collection-catalog.json.gz Error: cache mutation
+    at object.<computed> [as rm] (/tmp/buyerlog-cache-tracer.cjs:3:218)
+    at removeTarget (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:437:15)
+    at async apply (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:459:21)
+    at async /workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:517:26
+    at async Object.weeklyCheck (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:529:18)
+CACHE_MUTATION_TRACE unlink /tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/mw4grzhd-fe2c05b1c543/collection-catalog.json.gz Error: cache mutation
+    at object.<computed> (/tmp/buyerlog-cache-tracer.cjs:3:218)
+    at node:internal/fs/rimraf:73:5
+    at FSReqCallback.oncomplete (node:fs:200:5)
+CACHE_MUTATION_TRACE rm /tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/mw4grzhd-fe2c05b1c543/cp.json.gz Error: cache mutation
+    at object.<computed> [as rm] (/tmp/buyerlog-cache-tracer.cjs:3:218)
+    at removeTarget (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:437:15)
+    at async apply (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:459:21)
+    at async /workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:517:26
+    at async Object.weeklyCheck (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:529:18)
+CACHE_MUTATION_TRACE unlink /tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/mw4grzhd-fe2c05b1c543/cp.json.gz Error: cache mutation
+    at object.<computed> (/tmp/buyerlog-cache-tracer.cjs:3:218)
+    at node:internal/fs/rimraf:73:5
+    at FSReqCallback.oncomplete (node:fs:200:5)
+CACHE_MUTATION_TRACE rm /tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/mw4grzhd-fe2c05b1c543/order-summary.json.gz Error: cache mutation
+    at object.<computed> [as rm] (/tmp/buyerlog-cache-tracer.cjs:3:218)
+    at removeTarget (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:437:15)
+    at async apply (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:459:21)
+    at async /workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:517:26
+    at async Object.weeklyCheck (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:529:18)
+CACHE_MUTATION_TRACE unlink /tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/mw4grzhd-fe2c05b1c543/order-summary.json.gz Error: cache mutation
+    at object.<computed> (/tmp/buyerlog-cache-tracer.cjs:3:218)
+    at node:internal/fs/rimraf:73:5
+    at FSReqCallback.oncomplete (node:fs:200:5)
+CACHE_MUTATION_TRACE rm /tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/mw4grzhd-fe2c05b1c543/orders.json.gz Error: cache mutation
+    at object.<computed> [as rm] (/tmp/buyerlog-cache-tracer.cjs:3:218)
+    at removeTarget (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:437:15)
+    at async apply (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:459:21)
+    at async /workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:517:26
+    at async Object.weeklyCheck (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:529:18)
+CACHE_MUTATION_TRACE unlink /tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/mw4grzhd-fe2c05b1c543/orders.json.gz Error: cache mutation
+    at object.<computed> (/tmp/buyerlog-cache-tracer.cjs:3:218)
+    at node:internal/fs/rimraf:73:5
+    at FSReqCallback.oncomplete (node:fs:200:5)
+CACHE_MUTATION_TRACE rm /tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/mw4grzhd-fe2c05b1c543/overview.json.gz Error: cache mutation
+    at object.<computed> [as rm] (/tmp/buyerlog-cache-tracer.cjs:3:218)
+    at removeTarget (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:437:15)
+    at async apply (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:459:21)
+    at async /workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:517:26
+    at async Object.weeklyCheck (/workspace/Buyer-Log-Desktop/resources/app/server/lib/data-cleanup.js:529:18)
+CACHE_MUTATION_TRACE unlink /tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/mw4grzhd-fe2c05b1c543/overview.json.gz Error: cache mutation
+    at object.<computed> (/tmp/buyerlog-cache-tracer.cjs:3:218)
+    at node:internal/fs/rimraf:73:5
+    at FSReqCallback.oncomplete (node:fs:200:5)
+[RUNTIME] event-loop-stall blockedMs=11185 cpuMs=21255 heapUsedMb=572 heapLimitMb=4288 rssMb=1466
+[RUNTIME] stall-profile blockedMs=11185 sampledMs=31173 file=stall-2026-11-06T04-20-53-622Z.cpuprofile
+[RUNTIME] stall-profile top1 15162ms 48.6% (idle)
+[RUNTIME] stall-profile top2 1570ms 5% utf8Slice
+[RUNTIME] stall-profile top3 1559ms 5% (garbage collector)
+[RUNTIME] stall-profile top4 1408ms 4.5% (anonymous) server/lib/parse.js:3423
+[RUNTIME] stall-profile top5 1391ms 4.5% stringifyWithDates server/lib/json-dates.js:8
+[RUNTIME] stall-profile top6 795ms 2.6% update node:internal/crypto/hash:145
+[RUNTIME] stall-profile top7 762ms 2.4% decodeSnapshotText server/lib/model-snapshot.js:191
+[RUNTIME] stall-profile top8 387ms 1.2% dateOnlyFromDateObject server/lib/parse.js:900
+[RUNTIME] stall-profile top9 369ms 1.2% concat node:buffer:628
+[RUNTIME] stall-profile top10 364ms 1.2% makeDateOnly server/lib/parse.js:890
+[RUNTIME] stall-profile top11 352ms 1.1% utf8Write node:internal/buffer:982
+[RUNTIME] stall-profile top12 291ms 0.9% visit server/lib/model-snapshot.js:160
+[RUNTIME] stall-profile top13 282ms 0.9% parseDate public/date-dimension.js:22
+[RUNTIME] stall-profile top14 270ms 0.9% turknorm server/lib/parse.js:31
+[RUNTIME] stall-profile top15 238ms 0.8% isoWeekNumber public/date-dimension.js:61
+[RUNTIME] stall-profile stack1 15162ms (idle)
+[RUNTIME] stall-profile stack2 1570ms utf8Slice < toString node:buffer:910 < loadModelSnapshotAsync server/lib/model-snapshot.js:292 < runMicrotasks < processTicksAndRejections node:internal/process/task_queues:72
+[RUNTIME] stall-profile stack3 1559ms (garbage collector)
+[RUNTIME] stall-profile stack4 1408ms (anonymous) server/lib/parse.js:3423 < backlogTemplateRowsFromSegments server/lib/parse.js:3418 < buildBacklogTemplateRows server/lib/parse.js:3373 < (anonymous) server/server.js:8859 < cachedBacklogTemplateRows server/server.js:8804 < (anonymous) server/server.js:8835 < runMicrotasks < processTicksAndRejections node:internal/process/task_queues:72
