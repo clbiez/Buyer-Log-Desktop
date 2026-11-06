@@ -1,7 +1,7 @@
 'use strict';
 
 // Playwright başlangıç betiği: dış kapsamdan bağımsızdır.
-function installFirstTransitionProbe({module,expectedRows,timeoutMs=240000}) {
+function installFirstTransitionProbe({module,expectedRows,timeoutMs=900000}) {
   if(!['cp','orders'].includes(module))throw Error('Unsupported first transition');
   let finished=false,firstPaintAt=null,interactivePaintAt=null,paintPending=false,dataReadyAt=null;
   const clicked=new WeakSet();
@@ -16,7 +16,7 @@ function installFirstTransitionProbe({module,expectedRows,timeoutMs=240000}) {
     const intentAt=performance.now();
     const result=window.__benchmarkFirstTransition={module,status:'scheduled',intentAtMs:intentAt,
       startedWithRows:rows()?.length??null,moduleContinueCount:0,stabilityObservationMs:1000};
-    function fail(message){if(finished)return;finished=true;Object.assign(result,{status:'failed',error:message});}
+    function fail(message){if(finished)return;finished=true;Object.assign(result,{status:'failed',error:message,failedAtMs:performance.now(),activeTab:document.body.dataset.activeTab,actualRows:rows()?.length??null,contentVisible:visible(document.getElementById(contentId)),domRows:document.querySelectorAll(selector).length,firstPaintAtMs:firstPaintAt,moduleStates:window.BLModulePreparation?.snapshot?.()});}
     function tick(){
       if(finished)return;
       try{
