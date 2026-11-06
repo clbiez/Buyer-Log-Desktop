@@ -503,6 +503,35 @@
           "en": "Actual post-change Orders screen with isolated demo data. Calculation equivalence and read timings were separately verified by tests and benchmarks."
         }
       }
+    },
+    {
+      "id": "startup-primary-screen-ready",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış ve modül hazırlığı",
+        "en": "Startup and module preparation"
+      },
+      "title": {
+        "tr": "Açılan ekran hazır olduğunda devam edin",
+        "en": "Continue when the opening screen is ready"
+      },
+      "body": {
+        "tr": "Açılış perdesi kimlik, yetki ve açılan ekranın birincil verisi hazır olduğunda devam düğmesini gösterir. CP, Siparişler ve Koleksiyon hazırlığı çalışma alanı açıldıktan sonra, açma niyetinize ve son kullanımınıza göre arka planda yürür. Sol menüde bekliyor, yükleniyor, hazır ve hata durumları gösterilir; CP ve Siparişler yükleme hatalarında yeniden deneme sunulur.",
+        "en": "The startup curtain offers Continue when identity, permissions and the opening screen’s primary data are ready. CP, Orders and Collection prepare in the background after the workspace opens, ordered by your opening intent and recent use. The sidebar shows pending, loading, ready and error states; CP and Orders offer retry after a loading failure."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-primary-ready.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log demo açılışında kimlik, veri ve ekran kapıları hazır; devam düğmesi gösteriliyor",
+          "en": "Actual Buyer Log demo startup with identity, data and screen gates ready and Continue available"
+        },
+        "caption": {
+          "tr": "20 sentetik siparişle gerçek uygulama. Genel Bakış hazırken CP ve Siparişler henüz yüklenmeden devam düğmesi sunulur.",
+          "en": "Actual app with 20 synthetic orders. Continue is available with Overview ready before CP and Orders have loaded."
+        }
+      }
     }
   ]
 }

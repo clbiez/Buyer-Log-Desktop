@@ -27,6 +27,46 @@ const state = { currentUser:window.BL_USER_CONTEXT||null, cp:null, orders:null, 
   // ortada kalan sütunlar yatay kaydırılır.
   freeze:{} };
 
+var startupPageProfileReady=Promise.resolve(),startupRevealPromise=null;
+var modulePreparation=window.BLStartupPreparation?.create({
+  readHistory:()=>JSON.parse(BLStorage.getItem('lcw.startup.moduleLastUsed.v1')||'{}'),
+  writeHistory:history=>BLStorage.setItem('lcw.startup.moduleLastUsed.v1',JSON.stringify(history)),
+  onChange:detail=>{renderModulePreparationStates();window.dispatchEvent(new CustomEvent('bl:module-preparation',{detail}));},
+});
+window.BLModulePreparation=modulePreparation;
+function renderModulePreparationStates(){
+  const snapshot=modulePreparation?.snapshot();if(!snapshot)return;
+  const L=(tr,en)=>appLang==='en'?en:tr;
+  const names={cp:'CP Tracker',orders:L('Siparişler','Orders'),koleksiyon:L('Koleksiyon','Collection')};
+  const labels={pending:L('Bekliyor','Pending'),loading:L('Yükleniyor','Loading'),ready:L('Hazır','Ready'),error:L('Hata','Error')};
+  for(const module of ['cp','orders','koleksiyon']){
+    const button=document.querySelector('nav.tabs button[data-tab="'+module+'"]');if(!button)continue;
+    let badge=button.querySelector('[data-module-preparation]');
+    if(window.BLCanAccessArea?.(module)!==true){badge?.remove();button.classList.remove('hasModulePreparation');continue;}
+    if(!badge){badge=document.createElement('span');badge.className='modulePrepState';badge.dataset.modulePreparation=module;badge.setAttribute('role','status');badge.setAttribute('aria-live','polite');button.appendChild(badge);button.classList.add('hasModulePreparation');}
+    const status=snapshot[module].status,label=labels[status];
+    if(badge.textContent!==label)badge.textContent=label;
+    badge.dataset.status=status;badge.title=names[module]+' · '+label;
+  }
+  if(snapshot.cp.status==='error'&&currentActiveTab()==='cp')renderCpLoadError(snapshot.cp.error);
+}
+function startupModuleIntent(event){
+  const module=event.target?.closest?.('button[data-tab]')?.dataset.tab;
+  if(!['cp','orders','koleksiyon'].includes(module))return;
+  if(window.BLCanAccessArea?.(module)===true)modulePreparation?.noteIntent(module);
+}
+document.querySelector('nav.tabs')?.addEventListener('pointerover',startupModuleIntent);
+document.querySelector('nav.tabs')?.addEventListener('focusin',startupModuleIntent);
+window.addEventListener('bl:user-access-applied',renderModulePreparationStates);
+document.addEventListener('bl:language-changed',renderModulePreparationStates);
+function afterStartupReveal(callback){
+  if(!startupRevealPromise)startupRevealPromise=new Promise(resolve=>{
+    const painted=()=>requestAnimationFrame(()=>requestAnimationFrame(resolve));
+    if(window.BL_STARTUP_COMPLETE)painted();else window.addEventListener('bl:startup-complete',painted,{once:true});
+  });
+  return startupRevealPromise.then(callback);
+}
+
 const CORE_FILTER_AUTO_KEY='lcw.corePageFilters.auto.v1';
 let coreFilterAutoReady=false, coreFilterSaveTimer=null;
 function coreSerializeFilters(bucket){
@@ -1085,16 +1125,17 @@ function scheduleUnifiedPrioritiesForTable(tableKey){
   if(!rows||!assistant?.computeDecisionsForRowsAsync)return Promise.resolve(false);
   const revision=_unifiedPriorityTableRevision.cp,contextRevision=assistant.decisionContextRevision();
   const day=new Date().toDateString(),cached=_unifiedPriorityCache.cp;
-  if(cached&&cached.rows===rows&&cached.dataRevision===revision&&cached.contextRevision===contextRevision&&cached.day===day)return Promise.resolve(true);
+  if(cached&&cached.rows===rows&&cached.dataRevision===revision&&cached.contextRevision===contextRevision&&cached.day===day){window.BLModulePreparation?.setStatus('cp','ready');return Promise.resolve(true);}
   if(cpPriorityJob&&cpPriorityJob.rows===rows&&cpPriorityJob.revision===revision&&cpPriorityJob.contextRevision===contextRevision)return cpPriorityJob.promise;
   const job={rows,revision,contextRevision};cpPriorityJob=job;
   job.promise=assistant.computeDecisionsForRowsAsync(rows).then(result=>{
     if(!result||state.cp?.rows!==rows||revision!==_unifiedPriorityTableRevision.cp||contextRevision!==assistant.decisionContextRevision()||day!==new Date().toDateString())return false;
     syncUnifiedPrioritiesForTable('cp',result);
+    window.BLModulePreparation?.setStatus('cp','ready');
     window.BLPerf?.mark?.('CP_PRIORITY_READY',{rows:rows.length,mode:'background'});
     if(currentActiveTab()==='cp')renderCP();
     scheduleOverviewRender('cp-priority-ready');return true;
-  }).catch(error=>{showToast(error.message);return false;}).finally(()=>{if(cpPriorityJob===job)cpPriorityJob=null;});
+  }).catch(error=>{window.BLModulePreparation?.setStatus('cp','error','CP_PRIORITY_FAILED');showToast(error.message);return false;}).finally(()=>{if(cpPriorityJob===job)cpPriorityJob=null;});
   return job.promise;
 }
 function renderCorePageLoadingState(tableKey,message){
@@ -1112,7 +1153,23 @@ function renderCorePageLoadingState(tableKey,message){
   }
   empty.style.display='flex';content.style.display='none';
 }
+function renderCpLoadError(code){
+  const empty=document.getElementById('cpEmpty'),content=document.getElementById('cpContent');
+  if(!empty||!content)return;
+  const reload=code==='BL_SCRIPT_TIMEOUT';
+  const title=appLang==='en'?'CP could not be prepared.':'CP hazırlanamadı.';
+  const actionLabel=reload?(appLang==='en'?'Reload':'Yeniden yükle'):(appLang==='en'?'Retry':'Tekrar dene');
+  const onAction=()=>{
+    if(reload){location.reload();return;}
+    if(code==='CP_LOAD_FAILED')void ensureCpLoaded({force:true});
+    else renderCP();
+  };
+  if(window.BLUI?.renderState)window.BLUI.renderState(empty,{kind:'error',title,actionLabel,onAction});
+  else{empty.textContent=title;empty.removeAttribute('aria-busy');}
+  empty.style.display='flex';content.style.display='none';
+}
 function showUnifiedPriorityLoading(tableKey){
+  window.BLModulePreparation?.setStatus(tableKey,'loading');
   renderCorePageLoadingState(tableKey,appLang==='en'?'Preparing unified priorities…':'Ortak öncelikler hazırlanıyor…');
 }
 function ensureUnifiedPrioritiesForTable(tableKey){
@@ -1127,7 +1184,7 @@ function ensureUnifiedPrioritiesForTable(tableKey){
       invalidateUnifiedPriorityDecisions('decision-engine-ready');
       if(currentActiveTab()==='cp')renderCP();
       else if(currentActiveTab()==='orders')renderOrders();
-    }).catch(err=>{showToast(err&&err.message?err.message:String(err));}).finally(()=>{_unifiedPriorityFeaturePromise=null;});
+    }).catch(err=>{window.BLModulePreparation?.setStatus('cp','error',err?.code||'CP_FEATURE_FAILED');showToast(err&&err.message?err.message:String(err));}).finally(()=>{_unifiedPriorityFeaturePromise=null;});
   }
   return false;
 }
@@ -1959,6 +2016,7 @@ function renderOverviewCpDependencyState(mode,errorMessage=''){
   host.innerHTML=`<section class="cpaCard"><header><b>${escapeHtml(title)}</b></header><div class="cpaCardBody"><p class="cpaEmpty">${escapeHtml(en?'Preparing checks…':'Kontroller hazırlanıyor…')}</p></div></section>`;
 }
 function ensureOverviewCpDependency(){
+  if(window.BLBootGuard&&!window.BL_STARTUP_COMPLETE)return afterStartupReveal(ensureOverviewCpDependency);
   if(state.cp){overviewCpLoadState='ready';overviewCpLoadError='';return Promise.resolve(true);}
   if(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false)return Promise.resolve(false);
   // Bir hata kartı kullanıcı Retry demeden otomatik request-loop'a dönüşmesin.
@@ -2064,11 +2122,12 @@ async function refreshCpStartupImageRegistry(rows){
 async function ensureCpLoaded(options={}){
   if(state.cp&&!options.force){overviewCpLoadState='ready';overviewCpLoadError='';return true;}
   if(cpLoadPromise)return cpLoadPromise;
+  window.BLModulePreparation?.setStatus('cp','loading');
   if(currentActiveTab()==='cp')renderCorePageLoadingState('cp');
   if(options.reason==='overview'){overviewCpLoadState='loading';overviewCpLoadError='';}
   cpLoadPromise=(async()=>{
     try{
-      const result=await fetchProjectionWithFallback('cp','/api/data/cp');if(result.cancelled)return false;
+      const result=await fetchProjectionWithFallback('cp','/api/data/cp');if(result.cancelled){window.BLModulePreparation?.setStatus('cp','pending');return false;}
       const data=result.payload||{},rows=Array.isArray(data.rows)?data.rows:[];
       reviveServerDates(rows);
       // Görünür CP satırları çizilmeden güncel yerel görsel registry'sini ve (hazır
@@ -2088,6 +2147,7 @@ async function ensureCpLoaded(options={}){
       return true;
     }catch(err){
       const message=(appLang==='en'?'CP could not be loaded: ':'CP yüklenemedi: ')+(err&&err.message||err);
+      window.BLModulePreparation?.setStatus('cp','error','CP_LOAD_FAILED');
       if(options.reason==='overview'||currentActiveTab()==='overview'){
         overviewCpLoadState='error';overviewCpLoadError=message;scheduleOverviewRender('cp-load-error');
       }
@@ -2097,11 +2157,13 @@ async function ensureCpLoaded(options={}){
   return cpLoadPromise;
 }
 async function ensureCollectionCatalogLoaded(options={}){
-  if(!options.force&&collectionCatalogsReady(state.collectionCatalogs))return true;
+  if(!options.force&&collectionCatalogsReady(state.collectionCatalogs)){window.BLModulePreparation?.setStatus('koleksiyon','ready');return true;}
+  if(window.BLBootGuard&&!window.BL_STARTUP_COMPLETE&&currentActiveTab()!=='koleksiyon')return afterStartupReveal(()=>ensureCollectionCatalogLoaded(options));
   if(collectionCatalogLoadPromise)return collectionCatalogLoadPromise;
+  window.BLModulePreparation?.setStatus('koleksiyon','loading');
   collectionCatalogLoadPromise=(async()=>{
     try{
-      const result=await fetchProjectionWithFallback('collection-catalog','/api/data/collection-catalog');if(result.cancelled)return false;
+      const result=await fetchProjectionWithFallback('collection-catalog','/api/data/collection-catalog');if(result.cancelled){window.BLModulePreparation?.setStatus('koleksiyon','pending');return false;}
       const data=result.payload||{};state.collectionCatalogs=data.catalogs&&typeof data.catalogs==='object'?data.catalogs:{};
       /* v7.41 — Koleksiyon artık yenileme sırasında düzenlemeye AÇIK kaldığı
          için, bu tazeleme o an açık bir düzenlemeyi bozmamalı. Açık bir
@@ -2111,8 +2173,9 @@ async function ensureCollectionCatalogLoaded(options={}){
       const kolEditing=document.activeElement&&typeof document.activeElement.closest==='function'
         &&document.activeElement.closest('#view-koleksiyon input,#view-koleksiyon textarea,#view-koleksiyon select,#view-koleksiyon [contenteditable="true"]');
       if(document.body.dataset.activeTab==='koleksiyon'&&typeof renderKol==='function'&&!kolEditing&&!options.deferRender)renderKol();
+      window.BLModulePreparation?.setStatus('koleksiyon','ready');
       return true;
-    }catch(err){showToast((appLang==='en'?'Collection filters could not be loaded: ':'Koleksiyon filtreleri yüklenemedi: ')+(err&&err.message||err));return false;}
+    }catch(err){window.BLModulePreparation?.setStatus('koleksiyon','error','COLLECTION_LOAD_FAILED');showToast((appLang==='en'?'Collection filters could not be loaded: ':'Koleksiyon filtreleri yüklenemedi: ')+(err&&err.message||err));return false;}
     finally{collectionCatalogLoadPromise=null;}
   })();
   return collectionCatalogLoadPromise;
@@ -2122,18 +2185,19 @@ function setOrdersLoadingState(loading,message){
   if(!empty||!content)return;
   if(loading){renderCorePageLoadingState('orders',message);return;}
   if(message){
-    if(window.BLUI&&typeof window.BLUI.renderState==='function')window.BLUI.renderState(empty,{kind:'error',title:message});
+    if(window.BLUI&&typeof window.BLUI.renderState==='function')window.BLUI.renderState(empty,{kind:'error',title:message,actionLabel:appLang==='en'?'Retry':'Tekrar dene',onAction:()=>{void ensureOrdersLoaded({force:true});}});
     else{empty.textContent=message;empty.removeAttribute('aria-busy');}
     empty.style.display='flex';content.style.display='none';
   }
 }
 async function ensureOrdersLoaded(options={}){
-  if(!options.force&&state.orders)return true;
+  if(!options.force&&state.orders){window.BLModulePreparation?.setStatus('orders','ready');return true;}
   if(ordersLoadPromise)return ordersLoadPromise;
-  setOrdersLoadingState(true);
+  window.BLModulePreparation?.setStatus('orders','loading');
+  if(currentActiveTab()==='orders')setOrdersLoadingState(true);
   ordersLoadPromise=(async()=>{
     try{
-      const result=await fetchOrdersProjection();if(result.cancelled)return false;
+      const result=await fetchOrdersProjection();if(result.cancelled){window.BLModulePreparation?.setStatus('orders','pending');return false;}
       const data=result.payload||{};
       const rows=Array.isArray(data.rows)?data.rows:(Array.isArray(data.orders)?data.orders:[]);
       reviveServerDates(rows);
@@ -2148,9 +2212,11 @@ async function ensureOrdersLoaded(options={}){
       if(data.collectionCatalogs&&typeof data.collectionCatalogs==='object')state.collectionCatalogs=data.collectionCatalogs;
       else void ensureCollectionCatalogLoaded();
       buildOrdersFilters();applyCoreAutoFilterState();if(!options.deferRender)renderOrders();
+      window.BLModulePreparation?.setStatus('orders','ready');
       return true;
     }catch(err){
       const message=(appLang==='en'?'Orders could not be loaded: ':'Siparişler yüklenemedi: ')+(err&&err.message||err);
+      window.BLModulePreparation?.setStatus('orders','error','ORDERS_LOAD_FAILED');
       setOrdersLoadingState(false,message);showToast(message);return false;
     }finally{ordersLoadPromise=null;}
   })();
@@ -2210,6 +2276,7 @@ function switchTab(tab){
   if(previousTab==='cp'&&tab!=='cp'){ _cpImageWarmupJob++; BLImageRuntime.cancelWarmup(); }
   if(typeof closeAllColumnPanels==='function') closeAllColumnPanels();
   document.body.dataset.activeTab = tab;
+  window.BLModulePreparation?.noteOpened(tab);
   if(startupReadySignaled)workspaceResume()?.save(tab);
   if(tab==='overview'&&state.overviewDeferred)void ensureOverviewLoaded();
   // Arka planda yüklenmiş ama hiç çizilmemiş tablo, ilk girişte profil uygulandıktan
@@ -2232,6 +2299,7 @@ function switchTab(tab){
   const profileFirstVisit=profileAllowed&&!_favoritesAppliedPages.has(tab);
   if(profileFirstVisit)_favoritesAppliedPages.add(tab);
   const profileReady=profileFirstVisit?applyProfilesForCurrentPage(true):Promise.resolve();
+  if(!startupReadySignaled)startupPageProfileReady=profileReady;
   if(profileFirstVisit)void profileReady.then(()=>{if(currentActiveTab()!==tab)_favoritesAppliedPages.delete(tab);});
   if(tab==='cp'&&(!state.cp||warmedUnrendered)){
     const dataReady=ensureCpLoaded({deferRender:profileFirstVisit||warmedUnrendered});
@@ -16614,6 +16682,7 @@ function hydrateUserPreferencesAfterUi(){
 let overviewOabLoadPromise=null;
 let overviewIntakeLoadPromise=null;
 function ensureOverviewOabModule(){
+  if(window.BLBootGuard&&!window.BL_STARTUP_COMPLETE)return afterStartupReveal(ensureOverviewOabModule);
   if(window.BLOAB)return Promise.resolve(window.BLOAB);
   if(overviewOabLoadPromise)return overviewOabLoadPromise;
   const loader=window.BLPerf?._loadScript;
@@ -16625,6 +16694,7 @@ function ensureOverviewOabModule(){
   return overviewOabLoadPromise;
 }
 function ensureOverviewIntakeModule(){
+  if(window.BLBootGuard&&!window.BL_STARTUP_COMPLETE)return afterStartupReveal(ensureOverviewIntakeModule);
   if(window.BLINTAKE)return Promise.resolve(window.BLINTAKE);
   if(overviewIntakeLoadPromise)return overviewIntakeLoadPromise;
   const loader=window.BLPerf?._loadScript;
@@ -16697,39 +16767,37 @@ function backgroundWarmupSteps(){
       const ok=await ensureCpLoaded({deferRender:true,reason:'warmup'});
       if(ok!==true)return ok;
       await window.BLPerf?.ensureFeature?.('cpAssistant');
-      await scheduleUnifiedPrioritiesForTable('cp');
-      return true;
+      return await scheduleUnifiedPrioritiesForTable('cp');
     }},
     {module:'orders',enabled:modelData&&!backgroundWarmupMemoryTight(),ready:()=>Boolean(state.orders),load:()=>ensureOrdersLoaded({deferRender:true})},
     {module:'koleksiyon',enabled:true,ready:()=>collectionCatalogsReady(state.collectionCatalogs),load:()=>ensureCollectionCatalogLoaded({deferRender:true})},
   ];
 }
-/* Açılış perdesi (genel kültür ekranı) ilk pencerede bu ön yükleme bitmeden
-   geçilemez: kullanıcı girişten sonra açacağı modülleri hazır bulur. Perde
-   görünürken kullanıcı ekranla çalışmadığından adımlar arasındaki nezaket
-   beklemesi kısaltılır; perde kapandıktan sonra eski yumuşak tempo sürer.
-   Her adım perdeye "hangi modül hazırlanıyor" bilgisini gönderir. */
-const BACKGROUND_WARMUP_CURTAIN_GAP_MS=60;
+/* Hazırlık, Continue ve ilk görünür karelerden sonra başlar. Her adımda güncel
+   açma niyeti ve kişisel son kullanım yeniden okunur; yetki, kaynak ve bellek
+   sınırları aynı kalır. Veri hazırlanır, görünmeyen tablo çizilmez. */
 function backgroundWarmupCurtainVisible(){return Boolean(document.getElementById('blBootGuard'));}
 function finishStartupModules(){
   window.BLBootGuard?.ready?.('modules');
 }
 function scheduleBackgroundModuleWarmup(){
+  if(backgroundWarmupCurtainVisible()){void afterStartupReveal(scheduleBackgroundModuleWarmup);return;}
   if(backgroundWarmupStarted)return;backgroundWarmupStarted=true;
   const steps=backgroundWarmupSteps();
   // Yetkisiz alan, zorunlu kaynak filtresi veya zaten yüklü veri için istek atılmaz.
   const eligible=step=>step.enabled&&!step.ready()&&window.BLCanAccessArea?.(step.module)===true;
   const total=steps.filter(eligible).length;let index=0;
-  const gap=()=>backgroundWarmupCurtainVisible()?BACKGROUND_WARMUP_CURTAIN_GAP_MS:BACKGROUND_WARMUP_GAP_MS;
+  const gap=()=>BACKGROUND_WARMUP_GAP_MS;
   const idle=fn=>{
-    if(backgroundWarmupCurtainVisible()||typeof window.requestIdleCallback!=='function'){setTimeout(fn,0);return;}
+    if(typeof window.requestIdleCallback!=='function'){setTimeout(fn,0);return;}
     window.requestIdleCallback(fn,{timeout:4000});
   };
   const next=()=>{
-    const step=steps.shift();
+    const step=window.BLModulePreparation?window.BLModulePreparation.takeNext(steps):steps.shift();
     if(!step){window.BLPerf?.mark?.('BACKGROUND_WARMUP_DONE');window.dispatchEvent(new CustomEvent('bl:background-warmup-done'));finishStartupModules();return;}
     if(!eligible(step)){next();return;}
     index++;
+    window.BLModulePreparation?.setStatus(step.module,'loading');
     window.BLPerf?.mark?.('BACKGROUND_WARMUP_START',{module:step.module});
     window.dispatchEvent(new CustomEvent('bl:startup-progress',{detail:{stage:'modules',module:step.module,index,total:Math.max(total,index)}}));
     // Veri zaten bellekteyse (ör. açılış sekmesi CP idi) tablo çizilmiş olabilir; yalnız
@@ -16737,9 +16805,10 @@ function scheduleBackgroundModuleWarmup(){
     const loadedBefore=step.module==='cp'?Boolean(state.cp):step.module==='orders'?Boolean(state.orders):true;
     Promise.resolve().then(step.load).then(ok=>{
       window.BLPerf?.mark?.('BACKGROUND_WARMUP_READY',{module:step.module,ok:ok===true});
+      if(ok===true)window.BLModulePreparation?.setStatus(step.module,'ready');
       // Kullanıcı yükleme sırasında modüle geçtiyse switchTab çizimi zaten üstlendi.
       if(ok===true&&!loadedBefore&&currentActiveTab()!==step.module)backgroundWarmupUnrendered.add(step.module);
-    }).catch(error=>console.warn('Arka plan ön yükleme:',step.module,error))
+    }).catch(error=>{window.BLModulePreparation?.setStatus(step.module,'error','BACKGROUND_PREPARATION_FAILED');console.warn('Arka plan ön yükleme:',step.module,error);})
       .finally(()=>setTimeout(()=>idle(next),gap()));
   };
   setTimeout(()=>idle(next),gap());
@@ -16748,13 +16817,29 @@ function scheduleBackgroundModuleWarmup(){
 // widgets, off-screen modules, images and Excel engines remain on demand.
 async function waitForStartupPrimaryScreen(){
   const tab=currentActiveTab();
+  await startupPageProfileReady;
   if(tab==='koleksiyon'){
     await ensureInitialKolWorkspace();
     return ensureCollectionCatalogLoaded({deferRender:true});
   }
   if(tab==='overview'&&state.overviewDeferred)return ensureOverviewLoaded();
   if(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false)return true;
-  if(tab==='cp'&&!state.cp)return ensureCpLoaded();
+  if(tab==='cp'){
+    if(!state.cp&&!await ensureCpLoaded({deferRender:true}))return false;
+    try{
+      // Görünür CP'nin mevcut çizim yolu zorunlu karar motorunu başlatır.
+      renderCP();
+      if(_unifiedPriorityFeaturePromise)await _unifiedPriorityFeaturePromise;
+      for(let attempt=0;attempt<3;attempt++){
+        const rows=state.cp?.rows,revision=_unifiedPriorityTableRevision.cp,context=window.BLCpAssistant?.decisionContextRevision?.();
+        if(await scheduleUnifiedPrioritiesForTable('cp')===true)return true;
+        // Yalnız iş sırasında gerçekten değişmiş revizyon için yeniden hesapla.
+        if(state.cp?.rows===rows&&_unifiedPriorityTableRevision.cp===revision&&window.BLCpAssistant?.decisionContextRevision?.()===context)break;
+      }
+    }catch(error){console.warn('CP başlangıç ekranı hazırlanamadı:',error);}
+    window.BLModulePreparation?.setStatus('cp','error','CP_PREPARATION_FAILED');
+    return false;
+  }
   if(tab==='orders'&&!state.orders)return ensureOrdersLoaded();
   return true;
 }
@@ -16768,18 +16853,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   const requestedModule=workspaceResume()?.target(explicitModule)||explicitModule;
   if(resumedWorkspace&&resumedWorkspace.module===requestedModule)startupViewResume=resumedWorkspace.data;
   if(requestedModule&&requestedModule!=='overview'&&document.getElementById('view-'+requestedModule))window.BL_BOOT_MODULE=requestedModule;
-  // Açılış perdesinin "Kullanıcı bilgileri" kapısı user-access-ui.js'e bağlıdır.
-  // deferredUi grubu ekran hazır olduktan ve önceki dosyalar bittikten sonra
-  // yüklendiği için kapı dakikalarca açık kalabiliyordu; betik ilk veriyle
-  // birlikte istenir. Aynı dize deferredUi'de tek kez yüklenir; profil hazırsa
-  // betik kendisi, değilse loadFromServer applyUserAccessUI'yi çağırır.
+  // Profil katmanı ilk veriyle gelir; deferredUi sonrasına kalmaz.
+  // İlk çağrı ve lazy manifest aynı script anahtarını paylaşır.
   void window.BLPerf?._loadScript?.('user-access-ui.js?rev=APP-UPDATE-V3')?.catch(error=>console.warn('Kullanıcı erişim katmanı erken yüklenemedi:',error));
   const initialDataLoaded=await loadInitialBuyerLogData();
   if(initialDataLoaded)window.BLBootGuard?.ready('data');
   else window.BLBootGuard?.fail('initial-data-failed');
-  // Workspace ile acilan yeni sekmelerde yetki/kullanici baglami yuklenmeden
-  // modulu degistirmek Overview'da kalmis, fakat basligi hedef modul olmus bir
-  // sekme uretebiliyordu. Ilk veri/yetki hidrasyonu bittikten sonra hedefi uygula.
+  // Hedef sekme ilk veri/yetki hidrasyonundan sonra uygulanır.
   if(requestedModule&&document.getElementById('view-'+requestedModule)){
     const switched=switchTab(requestedModule);
     if(switched===false&&requestedModule!=='overview')switchTab('overview');
@@ -16788,10 +16868,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   if(!primaryScreenReady)window.BLBootGuard?.fail('initial-screen-failed');
   scheduleStartupScreenReady(()=>{
     window.BLPerf?.mark?.('UI_READY');
+    if(primaryScreenReady)window.BLPerf?.record?.('primaryScreenReadyMs',performance.now()-(window.BLPerf?.origin?.()??0));
+    if(primaryScreenReady)window.dispatchEvent(new CustomEvent('bl:primary-screen-ready'));
     if(primaryScreenReady)window.BLBootGuard?.ready('ui');
-    window.BLPerf?.record?.('firstUsableInteractionMs',performance.now()-(window.BLPerf?.origin?.()||performance.now()));
     signalStartupReady();
-    window.dispatchEvent(new CustomEvent('bl:primary-screen-ready'));
+    // Oturumun kalp atışı kullanıcı Continue öncesinde beklerken de sürer.
+    try{window.BL_START_HEARTBEAT?.();}catch(error){console.warn('Heartbeat başlatılamadı:',error);}
+    void afterStartupReveal(()=>{
     // Erişim katmanı yüklendikten sonra yalnız yetkili modüller ön yüklenir.
     if(primaryScreenReady)void window.BLPerf._loadScript('user-access-ui.js?rev=APP-UPDATE-V3')
       .then(scheduleBackgroundModuleWarmup).catch(error=>{console.warn('Arka plan ön yükleme başlatılamadı:',error);finishStartupModules();});
@@ -16803,6 +16886,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       void loadPlmStyleLinks({rerender:false});
       if(!_favoritesAppliedPages.has(currentActiveTab()))void applyFavoritesOnStartup().catch(err=>console.warn('Başlangıç favorileri uygulanamadı:',err));
     },{timeout:900});
+    }).catch(error=>{console.warn('Arka plan başlangıcı tamamlanamadı:',error);finishStartupModules();});
   });
 });
 

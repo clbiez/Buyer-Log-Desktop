@@ -63,7 +63,7 @@
     bootRoot=root;root.classList.add('blBootWithGuide');trivia=global.BLTrivia||null;if(trivia)root.classList.add('blBootWithTrivia');refreshDeck();
     const card=root.querySelector('.blBootCard');if(!card)return;
     card.insertAdjacentHTML('afterbegin',`<div class="blBootBrand">BUYER LOG <span>${t('Çalışma alanınız hazırlanıyor','Preparing your workspace')}</span></div>`);
-    const stages=`<p class="blBootHint" data-boot-hint>${startupHint()}</p><div class="blBootStages" aria-label="${esc(t('Hazırlık adımları','Startup stages'))}"><span data-boot-stage="data">${t('Başlangıç verisi','Initial data')}</span><span data-boot-stage="ui">${t('Ekran','Screen')}</span><span data-boot-stage="profile">${t('Kullanıcı bilgileri','User information')}</span><span data-boot-stage="modules">${t('Modüller','Modules')}</span></div><p class="blBootDetail" data-boot-detail aria-live="polite"></p>`;
+    const stages=`<p class="blBootHint" data-boot-hint>${startupHint()}</p><div class="blBootStages" aria-label="${esc(t('Hazırlık adımları','Startup stages'))}"><span data-boot-stage="data">${t('Başlangıç verisi','Initial data')}</span><span data-boot-stage="ui">${t('Ekran','Screen')}</span><span data-boot-stage="profile">${t('Kullanıcı bilgileri','User information')}</span></div><p class="blBootDetail" data-boot-detail aria-live="polite"></p>`;
     if(trivia){
       // Trivia cards carry their own navigation; the footer keeps only the guide link and the Continue slot.
       card.insertAdjacentHTML('beforeend',`${stages}<div class="blBootTipHeading"><span>${startupHeading()}</span></div><div class="blBootTip" data-boot-tip></div><div class="blBootTipFooter"><button type="button" class="blBootLink" data-tip-guide>${t('Kullanım Rehberi','User Guide')} ↗</button><span class="blBootContinueSlot" data-boot-continue-slot></span></div>`);
@@ -87,7 +87,6 @@
     set('[data-boot-stage="data"]',t('Başlangıç verisi','Initial data'));
     set('[data-boot-stage="ui"]',t('Ekran','Screen'));
     set('[data-boot-stage="profile"]',t('Kullanıcı bilgileri','User information'));
-    set('[data-boot-stage="modules"]',t('Modüller','Modules'));
     set('.blBootTipHeading > span',startupHeading());
     set('[data-tip-guide]',t('Kullanım Rehberi','User Guide')+' ↗');
     set('[data-boot-retry]',t('Tekrar dene','Retry'));

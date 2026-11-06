@@ -11,7 +11,7 @@ const DATA=require('../public/buyerlog-guide-data.js');
 // Without the desktop capture bridge, Continue reveals the app immediately.
 function finishDismissal(h){assert.equal(h.nodes.has('blBootGuard'),false);}
 function guardHarness(search=''){
-  const listeners={},nodes=new Map(),timers=new Map();let tick=0,stops=0,reloads=0;
+  const listeners={},nodes=new Map(),timers=new Map(),metrics=new Map();let tick=0,stops=0,reloads=0,clock=0;
   function node(id=''){
     const n={id,textContent:'',dataset:{},style:{},isConnected:true,children:[],classList:{add(){},contains(){return false;}},setAttribute(){},removeAttribute(){},getClientRects(){return [{}];},focus(){doc.activeElement=n;},contains(o){return o===n||n.children.includes(o);},appendChild(c){n.children.push(c);},remove(){n.isConnected=false;nodes.delete(n.id);}};
     n.querySelector=selector=>{if(selector==='[data-boot-message]'||selector==='[data-boot-hint]')return n.message||(n.message=node());if(selector==='[data-boot-detail]')return n.detail||(n.detail=node());if(selector==='.blBootCard')return n.card||(n.card=node());if(selector==='[data-boot-retry]')return n.children.find(c=>c.dataset.bootRetry);if(selector==='.blBootOrb')return n.canvas||(n.canvas=node());return null;};
@@ -21,11 +21,12 @@ function guardHarness(search=''){
   const doc={readyState:'loading',activeElement:null,body:node(),documentElement:node(),getElementById:id=>nodes.get(id)||null,createElement:()=>node(),addEventListener:(name,fn)=>{(listeners['doc:'+name]??=[]).push(fn);}};
   doc.body.appendChild=el=>{nodes.set(el.id,el);};
   const win={addEventListener:(name,fn)=>{(listeners[name]??=[]).push(fn);},dispatchEvent:ev=>{for(const fn of listeners[ev.type]||[])fn(ev);},BLThinkingOrbBreathing:{attach:()=>({stop(){stops++;}})},BLGuide:{mountStartup(){},stage(){}}};
-  const context=vm.createContext({window:win,document:doc,URLSearchParams,console:{error(){}},sessionStorage:{removeItem(){},getItem(){return null;},setItem(){}},location:{search,replace(){reloads++;}},fetch:async()=>({ok:true,json:async()=>({app:'Buyer Log'})}),AbortSignal:{timeout(){}},CustomEvent:class {constructor(type,options){this.type=type;this.detail=options?.detail;}},setTimeout:(fn,ms)=>{const id=++tick;timers.set(id,{fn,ms});return id;},clearTimeout:id=>timers.delete(id)});
+  win.BLPerf={origin:()=>0,record:(name,value)=>metrics.set(name,value)};
+  const context=vm.createContext({window:win,document:doc,URLSearchParams,performance:{now:()=>clock},console:{error(){}},sessionStorage:{removeItem(){},getItem(){return null;},setItem(){}},location:{search,replace(){reloads++;}},fetch:async()=>({ok:true,json:async()=>({app:'Buyer Log'})}),AbortSignal:{timeout(){}},CustomEvent:class {constructor(type,options){this.type=type;this.detail=options?.detail;}},setTimeout:(fn,ms)=>{const id=++tick;timers.set(id,{fn,ms});return id;},clearTimeout:id=>timers.delete(id)});
   const script=INDEX.slice(INDEX.indexOf('<script>\n(function(){')+8,INDEX.indexOf('</script>',INDEX.indexOf('<script>\n(function(){')));
   vm.runInContext(script,context);
   win.BLBootGuard.mount();
-  return {win,doc,nodes,timers,listeners,get stops(){return stops;},get reloads(){return reloads;},profile(){nodes.set('currentUserInitials',{textContent:'AB'});nodes.set('accessModeBadge',{textContent:'Buyer'});win.dispatchEvent({type:'bl:user-access-applied',detail:{id:'sample',displayName:'Example User'}});}};
+  return {win,doc,nodes,timers,listeners,metrics,setClock(value){clock=value;},get stops(){return stops;},get reloads(){return reloads;},profile(){nodes.set('currentUserInitials',{textContent:'AB'});nodes.set('accessModeBadge',{textContent:'Buyer'});win.dispatchEvent({type:'bl:user-access-applied',detail:{id:'sample',displayName:'Example User'}});}};
 }
 test('Continue keeps the trivia screen until capture, then completes exactly once and restores visible keyboard focus',()=>{
   const h=guardHarness(),pending=[];let completed=0;
@@ -40,6 +41,29 @@ test('Continue keeps the trivia screen until capture, then completes exactly onc
 });
 // Every non-profile startup gate, in the order app-main.js reports them.
 function readyAll(h,keys=['core','data','ui','modules']){keys.forEach(k=>h.win.BLBootGuard.ready(k==='core'?undefined:k));}
+test('gate, actual dismissal and system usability exclude human wait but retain queued input and Motion time',()=>{
+  const h=guardHarness(),motion=[];
+  h.win.BLMotionPlus={startup:reveal=>{motion.push(reveal);return true;}};
+  h.setClock(100);readyAll(h);h.profile();
+  assert.equal(h.metrics.get('startupGateReadyMs'),100);
+  assert.equal(h.metrics.has('firstUsableInteractionMs'),false,'the app is still covered');
+  h.setClock(600);h.nodes.get('blBootGuard').card.children.find(c=>c.dataset.bootContinue).onclick({timeStamp:400});
+  assert.equal(h.metrics.get('startupUserWaitMs'),300);
+  assert.equal(h.metrics.get('startupContinueDispatchDelayMs'),200);
+  assert.equal(h.metrics.has('firstUsableInteractionMs'),false,'Motion has not revealed the app yet');
+  h.setClock(640);motion[0]();
+  assert.equal(h.metrics.get('startupCurtainDismissedMs'),640);
+  assert.equal(h.metrics.get('startupSystemCompleteMs'),340);
+  assert.equal(h.metrics.get('firstUsableInteractionMs'),340);
+});
+test('automated Continue can declare its earlier intent without bypassing a gate',()=>{
+  const h=guardHarness();h.win.BLBootGuard.continue({intentAtMs:0});assert.ok(h.nodes.has('blBootGuard'));
+  h.setClock(100);readyAll(h);h.profile();
+  h.setClock(500);h.win.BLBootGuard.continue({intentAtMs:100});
+  assert.equal(h.metrics.get('startupUserWaitMs'),0);
+  assert.equal(h.metrics.get('startupContinueDispatchDelayMs'),400);
+  assert.equal(h.metrics.get('startupSystemCompleteMs'),500);
+});
 function guideHarness(profile=null){
   const events={},timers=[];
   const win={BLGuideData:DATA,BL_USER_CONTEXT:profile,addEventListener:(name,fn)=>{(events[name]??=[]).push(fn);}};
@@ -47,17 +71,17 @@ function guideHarness(profile=null){
   vm.runInNewContext(GUIDE,{window:win,document:doc,setInterval:fn=>{timers.push(fn);return timers.length;},clearInterval(){},setTimeout(){}});
   return {win,doc,events,timers};
 }
-test('the curtain waits for the profile, the opening screen and the prepared modules',()=>{
+test('the curtain waits for profile and opening screen while other modules remain in the background',()=>{
   const h=guardHarness();h.win.BLBootGuard.ready();h.win.BLBootGuard.ready('data');
   assert.ok(h.nodes.has('blBootGuard'));assert.equal(h.nodes.get('blBootGuard').dataset.ready,undefined);
   h.profile();assert.equal(h.nodes.get('blBootGuard').dataset.ready,undefined,'an authenticated shell alone no longer releases the curtain');
-  h.win.BLBootGuard.ready('ui');assert.equal(h.nodes.get('blBootGuard').dataset.ready,undefined,'the opening screen alone is not enough');
-  const g=h.nodes.get('blBootGuard');assert.match(g.detail.textContent,/Modüller hazırlanıyor/);
+  h.win.BLBootGuard.ready('ui');assert.equal(h.nodes.get('blBootGuard').dataset.ready,'1','the authenticated primary screen releases the gate immediately');
+  const g=h.nodes.get('blBootGuard');assert.match(g.detail.textContent,/Başlangıç ekranı hazır/);
   h.win.dispatchEvent({type:'bl:startup-progress',detail:{stage:'modules',module:'orders',index:2,total:3}});
-  assert.equal(g.detail.textContent,'Modüller hazırlanıyor: Siparişler (2/3)…','the curtain names the module being prepared');
-  assert.equal(g.querySelector('.blBootCard').children.filter(c=>c.dataset.bootContinue).length,0,'Continue is not offered while modules prepare');
+  assert.equal(g.dataset.ready,'1','background progress cannot close the primary gate');
+  assert.ok(g.card.children.some(c=>c.dataset.bootContinue),'Continue is offered before other modules finish');
   h.win.BLBootGuard.ready('modules');
-  assert.equal(h.stops,1);assert.equal(g.dataset.ready,'1');assert.equal(g.message.textContent,'Buyer Log hazır');assert.equal(g.detail.textContent,'Tüm modüller hazır.');
+  assert.equal(h.stops,1);assert.equal(g.dataset.ready,'1');assert.equal(g.message.textContent,'Buyer Log hazır');assert.match(g.detail.textContent,/Başlangıç ekranı hazır/);
   const button=g.card.children.find(c=>c.dataset.bootContinue);assert.ok(button);assert.equal(h.doc.activeElement,button);
   let completed=0;h.win.addEventListener('bl:startup-complete',()=>completed++);assert.equal(completed,0);
   button.onclick();assert.equal(completed,1);finishDismissal(h);assert.ok(!h.nodes.has('blBootGuard'));
@@ -72,9 +96,9 @@ test('stage detail follows the first unfinished gate',()=>{
 });
 test('a module that never finishes cannot trap an authenticated user',()=>{
   const h=guardHarness();readyAll(h,['core','data','ui']);h.profile();
-  const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.ready,undefined);
-  const limit=[...h.timers.values()].find(t=>t.ms===90000);assert.ok(limit,'a bounded module wait starts once the shell is ready');
-  limit.fn();assert.equal(g.dataset.ready,'1');assert.match(g.detail.textContent,/arka planda hazırlanmaya devam ediyor/);
+  const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.ready,'1');
+  assert.equal([...h.timers.values()].some(t=>t.ms===90000),false,'no background-module timeout is a startup prerequisite');
+  assert.match(g.detail.textContent,/arka planda/);
 });
 test('a failed opening screen never traps the authenticated user behind the curtain',()=>{
   const h=guardHarness();h.win.BLBootGuard.ready();h.win.BLBootGuard.ready('data');
@@ -84,11 +108,23 @@ test('a failed opening screen never traps the authenticated user behind the curt
   assert.match(g.detail.textContent,/Başlangıç ekranı hazırlanamadı/);
   assert.ok(g.card.children.some(c=>c.dataset.bootContinue));
 });
-test('secondary workspace tabs do not wait for the startup modules',()=>{
+test('first and secondary workspace tabs use the same primary-only readiness gate',()=>{
   const h=guardHarness('?module=orders&workspaceTab=abc');readyAll(h,['core','data','ui']);h.profile();
   assert.equal(h.nodes.get('blBootGuard').dataset.ready,'1');
   const first=guardHarness('?module=overview&workspaceTab=abc&startup=1');readyAll(first,['core','data','ui']);first.profile();
-  assert.equal(first.nodes.get('blBootGuard').dataset.ready,undefined,'the first window of the session waits for its modules');
+  assert.equal(first.nodes.get('blBootGuard').dataset.ready,'1','the first window also waits only for its authenticated primary screen');
+});
+test('background completion cannot bypass any core, data, primary-screen or profile gate',()=>{
+  const required=['core','data','ui','profile'];
+  for(const missing of required){
+    const h=guardHarness();
+    for(const key of required.filter(key=>key!==missing)){if(key==='profile')h.profile();else h.win.BLBootGuard.ready(key);}
+    h.win.BLBootGuard.ready('modules');h.win.BLBootGuard.continue();
+    assert.equal(h.nodes.get('blBootGuard').dataset.ready,undefined,missing+' must remain mandatory');
+    assert.ok(h.nodes.has('blBootGuard'));
+    if(missing==='profile')h.profile();else h.win.BLBootGuard.ready(missing);
+    assert.equal(h.nodes.get('blBootGuard').dataset.ready,'1');
+  }
 });
 test('a stale startupWarm address no longer auto-dismisses the curtain',()=>{
   const h=guardHarness('?module=orders&startupWarm=1');
@@ -106,9 +142,10 @@ test('Continue does nothing until preparation is complete',()=>{
   assert.ok(h.nodes.has('blBootGuard'));assert.equal(h.nodes.get('blBootGuard').dataset.ready,undefined);
 });
 test('hard startup gates work regardless of arrival order',()=>{
-  for(const order of [['profile','data','core','ui','modules'],['modules','core','profile','data','ui'],['data','ui','core','modules','profile']]){
-    const h=guardHarness();
-    order.forEach((key,i)=>{if(key==='profile')h.profile();else h.win.BLBootGuard.ready(key==='core'?undefined:key);assert.equal(h.nodes.get('blBootGuard').dataset.ready,i<order.length-1?undefined:'1');});
+  const permutations=keys=>keys.length?keys.flatMap((key,i)=>permutations(keys.filter((_,index)=>index!==i)).map(rest=>[key,...rest])):[[]];
+  for(const order of permutations(['profile','data','core','ui','modules'])){
+    const h=guardHarness(),arrived=new Set();
+    order.forEach(key=>{arrived.add(key);if(key==='profile')h.profile();else h.win.BLBootGuard.ready(key==='core'?undefined:key);const complete=['core','data','ui','profile'].every(gate=>arrived.has(gate));assert.equal(h.nodes.get('blBootGuard').dataset.ready,complete?'1':undefined,order.join(',')+' at '+key);});
     h.win.BLBootGuard.ready('ui');h.win.BLBootGuard.ready();assert.equal(h.stops,1,'startup orb stops once after all hard gates finish');
     assert.equal(h.nodes.get('blBootGuard').card.children.filter(c=>c.dataset.bootContinue).length,1);h.win.BLBootGuard.continue();finishDismissal(h);assert.ok(!h.nodes.has('blBootGuard'));
   }
