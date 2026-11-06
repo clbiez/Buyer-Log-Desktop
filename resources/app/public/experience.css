@@ -264,34 +264,3 @@ button:disabled .ic{--ic-tint-o:.08;}
 #_kolManualStatus{flex:1;min-width:0}#_kolManualStatus .uiState{width:100%;max-width:none;margin:0;padding:6px;min-height:0;gap:6px;text-align:left}#_kolManualStatus .uiStateIcon{width:18px;height:18px;flex-basis:18px}
 
 
-/* The account menu must display the same 34px mark as #currentUserBtn.
-   Scoped specificity beats legacy satin-avatar rules in ui-components.css,
-   which is loaded after experience.css. */
-html[data-ui-system="manifest"] .userMenu .userMenuHead {
-  grid-template-columns:34px minmax(0,1fr);
-}
-html[data-ui-system="manifest"] .userMenu .userMenuHead .userMenuAvatar {
-  box-sizing:border-box;
-  display:grid;
-  place-items:center;
-  width:34px;
-  height:34px;
-  border:0 !important;
-  border-radius:var(--ui-mark-radius) !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  overflow:hidden;
-}
-html[data-ui-system="manifest"] .userMenu .userMenuHead .userMenuAvatar .blSteelInitials {
-  display:grid;
-  place-items:center;
-  box-sizing:border-box;
-  width:30px;
-  height:30px;
-  border-radius:var(--ui-mark-radius) !important;
-  background:var(--ui-mark-paper) !important;
-  color:var(--ui-avatar-ink) !important;
-  -webkit-text-fill-color:var(--ui-avatar-ink) !important;
-  font-size:var(--ui-font-sm) !important;
-  font-weight:800 !important;
-}
