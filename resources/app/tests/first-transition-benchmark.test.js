@@ -1,6 +1,6 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm');
-const {installFirstTransitionProbe}=require('../scripts/lib/first-transition-probe');
+const {installFirstTransitionProbe,validateFirstTransition}=require('../scripts/lib/first-transition-probe');
 function harness({denied=false}={}){
   let now=100,shown=false;const timers=[],frames=[],listeners=new Map();
   const content={getClientRects:()=>shown?[{}]:[]},row={};
@@ -32,4 +32,13 @@ test('an unready first transition has a bounded failure with partial evidence',(
   assert.equal(h.window.__benchmarkFirstTransition.status,'failed');
   assert.match(h.window.__benchmarkFirstTransition.error,/timed out/);
   assert.equal(h.window.__benchmarkFirstTransition.module,'cp');
+});
+
+test('metadata-only startup is compared with its envelope while actual projection identity remains mandatory',()=>{
+  const expected={rows:{cp:3},generation:'g-1',revisions:{orders:2,suppFob:3}};
+  const result={module:'cp',status:'passed',rows:3,canAccess:true,domRows:1,errors:[],initialGeneration:null,projectionGenerations:['g-1'],revisions:{orders:2,suppFob:3}};
+  assert.doesNotThrow(()=>validateFirstTransition(result,expected,null));
+  for(const patch of [{projectionGenerations:[]},{projectionGenerations:['g-2']},{rows:2},{revisions:{orders:1,suppFob:3}},{domRows:0},{initialGeneration:'unexpected'}]){
+    assert.throws(()=>validateFirstTransition({...result,...patch},expected,null));
+  }
 });

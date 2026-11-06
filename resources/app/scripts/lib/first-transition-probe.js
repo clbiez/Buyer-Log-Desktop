@@ -64,4 +64,17 @@ function installFirstTransitionProbe({module,expectedRows,timeoutMs=240000}) {
   },{once:true});
 }
 
-module.exports={installFirstTransitionProbe};
+function validateFirstTransition(result,expected,initialGeneration){
+  const assert=require('node:assert/strict');
+  assert.equal(result.status,'passed',result.error);
+  assert.equal(result.rows,expected.rows[result.module]);assert.equal(result.canAccess,true);
+  assert.ok(result.domRows>0,'visible row DOM is required');assert.deepEqual(result.errors,[]);
+  // /api/data?startup=1 intentionally returns metadata with pageCache.hit=false.
+  // Compare that field with the same baseline envelope; actual data identity
+  // is mandatory in every projection header and in the final disk manifest.
+  assert.equal(result.initialGeneration,initialGeneration);
+  assert.ok(result.projectionGenerations.length>0,'projection generation is required');
+  assert.ok(result.projectionGenerations.every(value=>value===expected.generation),'projection generation mismatch');
+  assert.deepEqual(result.revisions,expected.revisions);
+}
+module.exports={installFirstTransitionProbe,validateFirstTransition};

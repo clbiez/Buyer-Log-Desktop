@@ -5,7 +5,7 @@ const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),net=
 const {spawn}=require('node:child_process');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const {installProbe,requestJson,parseStalls}=require('./lib/startup-benchmark');
-const {installFirstTransitionProbe}=require('./lib/first-transition-probe');
+const {installFirstTransitionProbe,validateFirstTransition}=require('./lib/first-transition-probe');
 const arg=(name,fallback)=>{const i=process.argv.indexOf(name);return i<0?fallback:process.argv[i+1];};
 const app=path.resolve(arg('--app-root',path.join(__dirname,'..'))),input=path.resolve(arg('--measurement',''));
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-first-transition-'));
@@ -79,9 +79,7 @@ async function stop(){
       const result=await page.evaluate(()=>({...window.__benchmarkFirstTransition,startup:window.__startupProbe,initialGeneration:window.__firstTransitionGeneration,
         revisions:{orders:Number(state.storeRevisions.orders)||0,suppFob:Number(state.storeRevisions.suppFob)||0}}));
       result.projectionGenerations=generations;result.errors=errors;report.transitions.push(result);persist();
-      assert.equal(result.status,'passed',result.error);assert.equal(result.rows,original.expected.rows[module]);assert.equal(result.canAccess,true);assert.ok(result.domRows>0,'visible row DOM is required');assert.deepEqual(errors,[]);
-      assert.equal(result.initialGeneration,original.expected.generation);assert.ok(generations.length>0);assert.ok(generations.every(value=>value===original.expected.generation));
-      assert.deepEqual(result.revisions,original.expected.revisions);
+      validateFirstTransition(result,original.expected,original.measurements.find(item=>item.module==='overview').initialGeneration);
       const manifest=JSON.parse(fs.readFileSync(path.join(root,'local/page-cache/moderator/manifest.json'),'utf8'));
       assert.equal(manifest.activeGeneration,original.expected.generation);assert.equal(manifest.sourceRevisionKey,original.expected.sourceRevision);
       await page.screenshot({path:path.join(root,module+'.png'),timeout:900000});
