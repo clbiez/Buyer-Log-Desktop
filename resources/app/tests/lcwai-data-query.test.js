@@ -232,3 +232,20 @@ test('takvim dışı tarih ayrı gösterilir; takvim yüklü değilse kullanıc�
     assert.match(Q.describe(norm.spec, orders(), null, 'en').join('\n'), /LCW Merch Calendar is not loaded/);
   } finally { DD.setMerchCalendar(fixture.build()); }
 });
+
+test('takvim yüklü değilken dönem aralığı, gruplama/üyelikle aynı geçici hafta düzenini kullanır', () => {
+  DD.clearMerchCalendar();
+  try {
+    const ds = orders();
+    ds.rows.push({ ...ds.rows[0], OPD: d(2026, 3, 30), 'Order Code': 'PO30' }); // pazartesi; haftanın pazarı 5 Nisan → geçici düzende Nisan
+    const count = filter => Q.execute(Q.normalizeSpec({ dataset: 'orders', filters: [filter], measures: [{ agg: 'count' }] }, [ds]).spec, ds).rows[0][0];
+    const inMarch = count({ field: 'OPD', op: 'in', values: ['2026-03'] });
+    assert.equal(count({ field: 'OPD', op: 'between', from: '2026-03', to: '2026-03' }), inMarch, 'in ve between aynı Mart');
+    assert.equal(count({ field: 'OPD', op: 'gte', values: ['2026-04'] }) + count({ field: 'OPD', op: 'lt', values: ['2026-04'] }), ds.rows.filter(r => r.OPD).length, 'kenarlar boşluksuz ve çakışmasız');
+    assert.equal(Q.bucketOf('2026-03-30', 'month'), '2026-04');
+    assert.deepEqual(Q.merchRange(Q.periodOf('2026-03')), { start: '2026-02-23', end: '2026-03-29' }, 'Mart: pazarı Mart’ta olan haftalar');
+    const q1 = Q.merchRange(Q.periodOf('2026-Q1')), y = Q.merchRange(Q.periodOf('2026'));
+    assert.equal(q1.start, Q.merchRange(Q.periodOf('2026-01')).start);
+    assert.equal(y.end, Q.merchRange(Q.periodOf('2026-12')).end);
+  } finally { DD.setMerchCalendar(fixture.build()); }
+});

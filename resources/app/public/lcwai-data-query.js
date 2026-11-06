@@ -153,16 +153,31 @@
     if (bucket === 'month' && DD && DD.MONTHS_TR) { const m = /^(\d{4})-(\d{2})$/.exec(key); if (m) return `${(lang === 'en' ? DD.MONTHS_EN : DD.MONTHS_TR)[Number(m[2]) - 1]} ${m[1]}`; }
     return key;
   }
-  /* LCW dönemi → gün aralığı (Merch Calendar'dan). */
+  /* Takvim yüklü değilken BLDateDimension ayı haftanın PAZARINA göre atar
+     (geçici düzen). Aralık da aynı kuraldan türetilir: ay = pazarı o ayda
+     olan haftalar (ilk pazarın pazartesisi … son pazar). Böylece "in", "between"
+     ve gruplama aynı günleri aynı aya koyar. */
+  function interimMonthRange(year, month) {
+    if (!(month >= 1 && month <= 12)) return null;
+    const firstSunday = new Date(Date.UTC(year, month - 1, 1));
+    firstSunday.setUTCDate(firstSunday.getUTCDate() + ((7 - firstSunday.getUTCDay()) % 7));
+    const lastSunday = new Date(Date.UTC(year, month, 0));
+    lastSunday.setUTCDate(lastSunday.getUTCDate() - lastSunday.getUTCDay());
+    const start = new Date(firstSunday.getTime() - 6 * 86400000);
+    const day = date => date.toISOString().slice(0, 10);
+    return { start: day(start), end: day(lastSunday), year, month };
+  }
+  function monthRange(year, month) { return merchActive() ? DD.businessMonthRange(year, month) : interimMonthRange(year, month); }
+  /* LCW dönemi → gün aralığı (Merch Calendar'dan; yoksa geçici hafta düzeninden). */
   function merchRange(period) {
     if (!DD || !period) return null;
     if (period.bucket === 'day') return { start: period.key, end: period.key };
-    if (period.bucket === 'month') { const [y, m] = period.key.split('-').map(Number); return DD.businessMonthRange(y, m); }
+    if (period.bucket === 'month') { const [y, m] = period.key.split('-').map(Number); const range = monthRange(y, m); return range ? { start: range.start, end: range.end } : null; }
     if (period.bucket === 'year' || period.bucket === 'quarter') {
       const y = Number(period.key.slice(0, 4));
       const q = period.bucket === 'quarter' ? Number(period.key.slice(-1)) : 0;
       const first = q ? q * 3 - 2 : 1, last = q ? q * 3 : 12;
-      const a = DD.businessMonthRange(y, first), b = DD.businessMonthRange(y, last);
+      const a = monthRange(y, first), b = monthRange(y, last);
       return a && b ? { start: a.start, end: b.end } : null;
     }
     if (period.bucket === 'week') {
