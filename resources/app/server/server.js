@@ -7969,6 +7969,7 @@ function pageProjectionContext(currentUser = null) {
   const filterStatus = sourceFilterReadiness(['cp','orders','backlog'], currentUser || id);
   const contextHash = stableHashValue({
     schema: pageProjectionCache.CACHE_SCHEMA_VERSION,
+    exFactoryApprovalVersion: 1,
     userId: id,
     profile: profile ? {
       id: profile.id, role: profile.role, systemRole: profile.systemRole, status: profile.status,
@@ -9929,6 +9930,12 @@ function applyIncrementalProjectionPatch(row, patch, overrides, includePriority 
   if (patch.dates && typeof patch.dates === 'object') {
     const dateFields={exFactory:'Ex-factory',retailDate:'Retail Date',inStoreDate:'In-Store (Model Budget)'};
     for (const [incoming,field] of Object.entries(dateFields)) if (Object.prototype.hasOwnProperty.call(patch.dates,incoming)) row[field]=String(patch.dates[incoming]);
+    if(Object.prototype.hasOwnProperty.call(patch.dates,'exFactory')&&row['Buying Son Onay Tarihi']){
+      const planned=parseLib.parseDateOnly(row['Ex-factory']);
+      const effective=BLBusinessRules.resolveExFactoryDate(planned,row['Buying Son Onay Tarihi'],parseLib.dateOrdinal);
+      row._exFactoryRevision=effective.automatic?{source:'loading-approval',previousDate:planned}:null;
+      row['Ex-factory']=effective.value;
+    }
   }
   if (Object.prototype.hasOwnProperty.call(patch,'imageRef')) {
     const ref=patch.imageRef==null?'':String(patch.imageRef).trim();
@@ -9967,12 +9974,34 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
   return Boolean(manifest);
 }
 
+function assertAutomaticDatesReadOnly(currentUser,items){
+  const sourceFields=['shipConfirmationDate','shippingApproval','loadingApprovalDate','Buying Son Onay Tarihi','_exFactoryRevision'];
+  if(items.some(item=>sourceFields.some(key=>Object.prototype.hasOwnProperty.call(item?.patch||{},key)||Object.prototype.hasOwnProperty.call(item?.patch?.dates||{},key)))){
+    throw Object.assign(new Error('ASAS yükleme onay tarihi elle değiştirilemez. / The loading approval date from ASAS cannot be edited manually.'),{code:'AUTOMATIC_DATE_READ_ONLY',statusCode:409});
+  }
+  const relevant=items.filter(item=>item?.patch?.dates&&Object.prototype.hasOwnProperty.call(item.patch.dates,'exFactory'));
+  if(!relevant.length)return;
+  const active=cacheForUser(sourceUserId(currentUser)),overrides=effectiveOverridesForUser(sourceUserId(currentUser));
+  const codes=new Set(relevant.map(item=>parseLib.orderCodeKey(item.orderCode)));
+  const sources=[...new Set(['cp','orders','backlog'].flatMap(target=>active.asasOrdersByTarget?.[target]||active.asasOrders||[]))];
+  const rows=applyDateOverrides(sources.filter(row=>codes.has(parseLib.orderCodeKey(row.ocode))),overrides);
+  for(const item of relevant){
+    // Match db.overrideWriteKey exactly: partial selectors are order-wide;
+    // canonical line keys normalize case, accents and repeated whitespace.
+    const patch=item.patch,line=patch.model&&patch.ccode?parseLib.orderLineKey(item.orderCode,patch.model,patch.ccode):null;
+    if(rows.some(row=>parseLib.orderCodeKey(row.ocode)===parseLib.orderCodeKey(item.orderCode)&&(!line||parseLib.orderLineKeyOf(row)===line)&&row._exFactoryRevision?.source==='loading-approval')){
+      throw Object.assign(new Error('Yükleme onayından gelen otomatik Ex-Factory değiştirilemez. / Automatic Ex-Factory from loading approval cannot be edited.'),{code:'AUTOMATIC_DATE_READ_ONLY',statusCode:409});
+    }
+  }
+}
 app.post('/api/overrides/batch', async (req, res) => {
   try {
     const items = modelImageRegistry.normalizeItems((req.body || {}).items);
     if (!Array.isArray(items)) return res.status(400).json({ error: 'items (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
     if (rejectUnauthorizedOrders(req, res, items.map(item => item && item.orderCode))) return;
     if (rejectSharedOwnerWrites(req, res, items)) return;
+    if(items.some(item=>Object.prototype.hasOwnProperty.call(item?.patch?.dates||{},'exFactory'))&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);
+    assertAutomaticDatesReadOnly(req.currentUser,items);
     const beforeContext=pageProjectionContext(req.currentUser);
     const saved = patchOrderOverrides(items, requestRevision(req), requestSuppFobRevision(req), { actor: noteActorOf(req.currentUser) });
     void sharedRevisionStore.update('cpOverrides',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
@@ -9994,6 +10023,8 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
     if (!Number.isFinite(orderCode)) return res.status(400).json({ error: 'Geçerli sipariş kodu zorunlu.', code: 'VALIDATION_ERROR' });
     if (rejectUnauthorizedOrders(req, res, [orderCode])) return;
     if (rejectSharedOwnerWrites(req, res, [{ orderCode, patch:req.body || {} }])) return;
+    if(Object.prototype.hasOwnProperty.call(req.body?.dates||{},'exFactory')&&!Array.isArray(cacheForUser(req.currentUser).asasOrders))await ensureDataLoaded(req.currentUser);
+    assertAutomaticDatesReadOnly(req.currentUser,[{orderCode,patch:req.body||{}}]);
     const beforeContext=pageProjectionContext(req.currentUser);
     /* İstemci kaynaklı "origin" alanı veri değildir; yama gövdesinden ayıklanır —
        yoksa sipariş kaydına anlamsız bir alan sızar ve canlı yayınla bütün

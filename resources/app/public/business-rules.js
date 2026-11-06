@@ -436,6 +436,14 @@
     return 0;
   }
 
+  // Approval is an operational lower bound for a planned shipment date.
+  // Keep the original values; compare calendar days with the caller's parser.
+  function resolveExFactoryDate(planned, approval, dateOrdinal = defaultDateOrdinal) {
+    const plannedDay = dateOrdinal(planned), approvalDay = dateOrdinal(approval);
+    const automatic = plannedDay != null && approvalDay != null && approvalDay > plannedDay;
+    return { value: automatic ? approval : planned, automatic };
+  }
+
   function findTransitRule(rules, exFactory, season, country, delType, dateOrdinal = defaultDateOrdinal) {
     const wantedType = transitDelTypeKey(delType);
     if (!wantedType) return null;
@@ -945,6 +953,7 @@
     transitCountryKey,
     normalizeList,
     defaultDateOrdinal,
+    resolveExFactoryDate,
     resolveLatestLicensorsForLicense,
     resolveLicenseLicensor,
     resolveAutoLicensor,
