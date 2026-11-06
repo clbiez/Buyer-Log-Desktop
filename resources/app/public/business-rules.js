@@ -375,13 +375,36 @@
     return { ...state, displayValue: '', status: 'manufacturer-conflict' };
   }
 
-  // Orders use the manufacturer card's DTR classification before royalty rules.
+  // v7.0.340 — License Royalty sözleşmesi olan ve bu sözleşmelerin HİÇBİRİ DTR
+  // lisansörlü olmayan lisans (ör. Formula 1 → FASHION UK) lisansör/ajans
+  // üzerinden sipariş edilir. Üretici NON-DTR listesine eklenmemiş olsa bile bu
+  // lisansın siparişi otomatik DTR sayılmaz; aksi halde Supp. FOB = FOB olur ve
+  // royalty sessizce düşülmez. Tarih/sezon fark etmez: sınıflandırma lisansın
+  // sözleşme yapısından gelir. Sözleşmesi olmayan veya DTR sözleşmesi bulunan
+  // lisanslarda üretici listesi tek kaynak olmaya devam eder.
+  function licenseHasOnlyNonDtrContracts(license, rules) {
+    const wanted = turkNorm(norm(license));
+    if (!wanted) return false;
+    let found = false;
+    for (const rule of Array.isArray(rules) ? rules : []) {
+      if (!rule || typeof rule !== 'object' || turkNorm(norm(rule.license)) !== wanted) continue;
+      const licensor = turkNorm(norm(rule.licensor != null ? rule.licensor : rule.manufacturer));
+      if (!licensor) continue;
+      if (licensor === 'DTR') return false;
+      found = true;
+    }
+    return found;
+  }
+
+  // Orders use the manufacturer card's DTR classification before royalty rules,
+  // unless every royalty contract of the license names a non-DTR licensor.
   // Collection models keep their separate license-based selection policy.
   // Explicit source values and manual overrides are preserved by callers.
   function resolveOrderLicensor(license, rules, options) {
     const opts = options || {};
     if (norm(license) && manufacturerKey(opts.manufacturer)
-      && classifyDtrByManufacturer(opts.manufacturer, opts.nonDtrManufacturers) === 'DTR') {
+      && classifyDtrByManufacturer(opts.manufacturer, opts.nonDtrManufacturers) === 'DTR'
+      && !licenseHasOnlyNonDtrContracts(license, rules)) {
       return {
         license: norm(license), latestDate: '', licensors: ['DTR'], ambiguous: false,
         licensorsLabel: 'DTR', displayValue: 'DTR', hasLicense: true, hasRule: false, status: 'resolved',
@@ -958,6 +981,7 @@
     resolveLicenseLicensor,
     resolveAutoLicensor,
     resolveOrderLicensor,
+    licenseHasOnlyNonDtrContracts,
     isUnresolvedLicensorStatus,
     transitRuleSeasonMatches,
     transitRuleCountryMatches,
