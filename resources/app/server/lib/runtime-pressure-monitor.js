@@ -116,7 +116,16 @@ function createStallProfiler({ log, samplingUs = 5000, windowMs = 60000, dir = n
   async function rotate() {
     if (!running || busy || Date.now() - windowStart < windowMs) return;
     busy = true;
-    try { await post('Profiler.stop'); await post('Profiler.start'); windowStart = Date.now(); }
+    try {
+      // This quiet profile is discarded. Profiler.stop would first allocate and
+      // serialize its full response on the measured thread. Disable drops those
+      // samples without materializing a response; real stalls still use capture.
+      running = (await post('Profiler.disable')) !== null
+        && (await post('Profiler.enable')) !== null
+        && (await post('Profiler.setSamplingInterval', { interval: samplingUs })) !== null
+        && (await post('Profiler.start')) !== null;
+      windowStart = Date.now();
+    }
     finally { busy = false; }
   }
   async function capture(blockedMs) {
