@@ -1,0 +1,33 @@
+{
+  "synthetic": true,
+  "case": "sort",
+  "status": "passed",
+  "appRoot": "/workspace/buyerlog-phase4/resources/app",
+  "revision": "873a14f42f6cb0feef18cc76d3fb3dc1cb0e4f1c",
+  "workingTreeDirty": true,
+  "runtimeSourceHashes": {
+    "public/app-main.js": "69076771812916fd3abb303a53b3602de3be408ef370e73a28d8024c8f6b1413",
+    "public/chronological-values.js": "7ff17b9410c8d779c2d634ccb8563e16c28b3f40f8415279dfa6b0f64e439194",
+    "public/collection-model-groups.js": "07c5f2d8bbbf6231438b417c409b764eeaa4555bc9452bc3331dd90c521cfa5b",
+    "server/server.js": "a9a8504d5fc785a546fff0c3f1484e07a49c70f756cc4fd846410056bc8b6b74",
+    "server/projection-worker.js": "b379174be4040d89df5705c0044125a0da86289af57cbe4e4a5ab79f3163a3f3",
+    "server/lib/collection-catalog.js": "9b06fd8d0735a90724e1d4c6b3af026f93ddc0ba4070bd6417fce13b4003219f"
+  },
+  "harnessSha256": "148b0dafe037de0ee3126492834f8385e0dbe6b2fdd5dbb01873723ae42f0866",
+  "node": "v24.19.0",
+  "v8": "13.6.233.17-node.51",
+  "icu": "78.3",
+  "platform": "linux",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "availableParallelism": 4,
+  "heapSampling": "uncollected; no forced GC",
+  "elapsedMs": 369.959143,
+  "rows": 30000,
+  "directions": [
+    1,
+    -1
+  ],
+  "outputSha256": "66a8a9a3954c5edb38a8e6250b83185ff31f52caa482bd8731b247baa567164e",
+  "beforeHeapBytes": 7289616,
+  "afterHeapBytes": 12588880
+}

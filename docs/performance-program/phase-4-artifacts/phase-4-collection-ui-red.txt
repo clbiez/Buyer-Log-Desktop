@@ -1,0 +1,14 @@
+AssertionError [ERR_ASSERTION]: the real Collection screen must contain the requested synthetic rows
+
+0 !== 6
+
+    at /workspace/buyerlog-phase4/resources/app/scripts/performance-ui-acceptance.js:108:12
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at process.processImmediate (node:internal/timers:502:9) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 0,
+  expected: 6,
+  operator: 'strictEqual',
+  diff: 'simple'
+}

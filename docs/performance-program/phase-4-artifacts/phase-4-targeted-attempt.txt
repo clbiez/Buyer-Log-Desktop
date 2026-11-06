@@ -1,0 +1,114 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js client-computation-performance collection-model-groups collection-product-main-definition collection-asas-excel-grid chronological-sorting collection-workspace collection-row-sync collection-sync collection-order-backfill copy-to-collection-backfill
+
+[Buyer Log tests] 9 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (9 dosya)
+✔ all season list policies interleave Summer then Winter by year (11.787054ms)
+✔ month names, abbreviations and stored keys compare by year then month in both directions (9.064555ms)
+✔ season arrays compare by their chronological members without changing stored order (0.656407ms)
+✔ browser and Node load the same comparator and pivot paths preserve hierarchy (10.969195ms)
+✔ strict parsing avoids turning arbitrary codes and invalid months into periods (9.916144ms)
+✔ shared table sorting and header/quick facets use the same chronological values (73.251715ms)
+✔ dynamic price-analysis filters sort source month and season values chronologically (3.467741ms)
+✔ quick filter frequencies and Backlog quantities cannot override period chronology (7.131423ms)
+✔ real projection worker and server share complete v3 catalog semantics across canonical fields (449.702569ms)
+✔ shared chronological sorting constructs one Collator and preserves exact stable order (99.99695ms)
+✔ revision readers preserve falsy overrides, first-parent and local structural changes (1.313201ms)
+✔ Collection consumer uses revision index and invalidates replacement paths before derived reads (6.333019ms)
+✔ v4.89 Collection option catalogs are produced once from ASAS-backed Orders rows (18.934635ms)
+✔ v4.89 Collection cells use ASAS suggestions without an LFL dependency or strict selection (37.650769ms)
+✔ v4.89 Collection grid supports Excel-style navigation, active-cell focus and matrix paste (19.732353ms)
+✔ groups only exact PLM + normalized model + exact in-store month rows (5.967699ms)
+✔ does not auto-group incomplete or ambiguous identities (0.89035ms)
+✔ shared values inherit until a variant override is set (1.194624ms)
+✔ detaching and relinking preserve row data while changing membership (1.006764ms)
+✔ pricing fields can be made color-specific without changing unrelated fields (2.38949ms)
+✔ same PLM + colour + MB month aggregates orders into one new row with Supp. FOB as the confirmed price (9.87734ms)
+✔ different colours, PLM IDs or MB months stay separate rows (1.415458ms)
+✔ existing record is updated in place, not duplicated, and keeps pricing history inputs (1.094347ms)
+✔ different confirmed manufacturer or Supp. FOB requires explicit approval (1.01009ms)
+✔ orders with conflicting prices or without Supp. FOB never change the price automatically (4.394259ms)
+✔ re-importing the same order replaces its quantity instead of double counting and reports unchanged rows (1.486608ms)
+✔ blank source values never clear existing Collection values (0.687619ms)
+✔ legacy duplicated records: the record with the richest pricing history is updated, others are untouched (1.163129ms)
+✔ custom month and grouped-value readers are honoured (1.084126ms)
+✔ records without PLM, colour or MB month are not matched and previously imported lines are skipped (0.970444ms)
+✔ duplicate input lines are counted once (0.523822ms)
+✔ orders already imported into a legacy multi-colour row are not reopened as new rows (0.728584ms)
+✔ re-importing one of several same-order same-colour lines keeps the other lines (1.524994ms)
+✔ Collection Product Main Definition önerileri gerçek ASAS canonical kaynağından distinct üretilir (7.398113ms)
+✔ Collection Product Main Definition Category ile aynı suggestion editor ve serbest kayıt yolunu kullanır (7.573354ms)
+✔ Collection suggestion dropdown keyboard navigation selects exact ASAS value while custom Enter remains allowed (3.027696ms)
+✔ Collection Product Main Definition suggestion cache is not fetched per cell edit (2.441091ms)
+✔ raw ASAS normalized row -> lightweight Overview -> Collection catalog zinciri Product Main Definition değerini düşürmez (1.774164ms)
+✔ client partial Collection catalog cache hazır sayılmaz, tam catalog tekrar fetch gerektirmez (1.44614ms)
+✔ server eski/partial collection-catalog projection cache şemasını reddeder (1.912755ms)
+✔ projection worker da Product Main Definition catalogunu canonical productDescription üzerinden üretir (0.613139ms)
+✔ CP/Orders Tools contains the shared localized, selection-gated backfill action (5.136227ms)
+✔ complete supplier, prices, dates and historic LCW MB week/month mapping (13.911365ms)
+✔ without Sub MFR the Manufacturer is used, and a missing Supp. FOB never falls back to the final FOB (3.917321ms)
+✔ historical entries with unknown LCW calendar do not invent MB period (3.928081ms)
+✔ source identity distinguishes colors and models sharing one order code (4.564403ms)
+✔ copy inserts all models of one order but skips only exact imported duplicates (10.121135ms)
+✔ copy does not overwrite existing model or create changes in view-only workspaces (10.176539ms)
+✔ failed local save rolls back new rows, IDs and the complete undo/redo history (6.350389ms)
+✔ cancelled or stale preview does not allocate IDs or write Collection (10.029934ms)
+✔ source lines at different prices remain distinct even with the same order, model and colour (4.571461ms)
+✔ source selection is scoped to visible rows in the active screen and permits read-only source orders (3.422267ms)
+✔ incremental import updates the matching row in one undo step without allocating a new ID (13.191864ms)
+✔ existing PLM + colour + MB month record is updated in place; price changes only with approval (15.438969ms)
+✔ grouped colour records: colour-specific fields never leak to siblings and variant updates stay visible (38.319346ms)
+✔ B1 · syncOrderLinePeersFromCpRow state.orders.rows ve state.orderSummary.rows eşleşen satırlarını bellekte eşitler ve tarih/Del. Type değişiminde formülleri + renderOrders çalıştırır (16.522303ms)
+✔ B2 · commitCpEditor, clearRowNote, applyHistoryAction, applyCpGridPaste ve fiyat yayılım fonksiyonları state.orders.rows ile senkron çalışır (35.328644ms)
+✖ B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında yeniden çeker ve cpSetShortageMark yüklü state.orders için force yenileme çağırır (2.479079ms)
+✔ B4 · order-importance-ui.js state.orderSummary.rows satırlarını kapsar ve repaint içinde renderOrders koşulsuz çağrılır (3.5541ms)
+✖ B5 · ocMetaFromKolRow onaylı üreticiyi, hedef fiyatı ve model grubundan miras alınan alanları çözer; onaylı fiyatı targetFob alanına yazmaz (37.317851ms)
+✔ v5.19 License Royalty Rules changes synchronize CP and Collection together (1.743121ms)
+✔ v5.19 pricing rule persistence applies Collection immediately and again after server normalization (0.82527ms)
+✔ v5.19 single-rule Apply saves the edited rule set before applying order Supp FOB values (0.928483ms)
+ℹ tests 63
+ℹ suites 0
+ℹ pass 61
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 896.747985
+
+✖ failing tests:
+
+test at tests/cp-orders-collection-sync-v20261023.test.js:220:1
+✖ B3 · ensureOrdersLoaded force:true ile yüklü state.orders varlığında yeniden çeker ve cpSetShortageMark yüklü state.orders için force yenileme çağırır (2.479079ms)
+  ReferenceError: window is not defined
+      at Object.ensureOrdersLoaded (evalmachine.<anonymous>:2:36)
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/cp-orders-collection-sync-v20261023.test.js:251:13)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at tests/cp-orders-collection-sync-v20261023.test.js:309:1
+✖ B5 · ocMetaFromKolRow onaylı üreticiyi, hedef fiyatı ve model grubundan miras alınan alanları çözer; onaylı fiyatı targetFob alanına yazmaz (37.317851ms)
+  ReferenceError: kolWorkspaceRevision is not defined
+      at kolEffectiveValue (evalmachine.<anonymous>:4:76)
+      at evalmachine.<anonymous>:18:37
+      at Set.forEach (<anonymous>)
+      at kolEffectiveProjection (evalmachine.<anonymous>:18:8)
+      at Object.ocMetaFromKolRow (evalmachine.<anonymous>:22:15)
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/cp-orders-collection-sync-v20261023.test.js:382:46)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+[Buyer Log tests] Batch 1/1 süresi: 1.0s.
+[Buyer Log tests] Batch 1 başarısız. ZIP teslim edilmemeli.
+[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

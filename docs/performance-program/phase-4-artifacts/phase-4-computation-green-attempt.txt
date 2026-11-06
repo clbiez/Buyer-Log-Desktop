@@ -1,0 +1,12 @@
+✔ real projection worker and server share complete v3 catalog semantics across canonical fields (520.839904ms)
+✔ shared chronological sorting constructs one Collator and preserves exact stable order (78.700673ms)
+✔ revision readers preserve falsy overrides, first-parent and local structural changes (2.164718ms)
+✔ Collection consumer uses revision index and invalidates replacement paths before derived reads (9.52311ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 621.076442

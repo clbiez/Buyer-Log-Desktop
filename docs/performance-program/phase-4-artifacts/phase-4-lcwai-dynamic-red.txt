@@ -1,0 +1,106 @@
+✔ CP and Orders include declared formulas/database columns with current labels and formatted values (30.055745ms)
+✔ each build sees newly added columns and the current language (13.091675ms)
+✖ Collection all includes hidden custom and synthetic columns, effective values, and remains read-only (11.096545ms)
+✖ Collection selection uses id including zero rather than CP _id (10.290194ms)
+✔ Overview all uses the full current CP catalog and the same value reader (7.742243ms)
+✔ CP column metadata is available even when the CP filter matches no rows (9.72784ms)
+✖ Collection effective zero/false values, checklist labels and image identities survive CSV conversion (16.036819ms)
+✖ Collection card-detail records carry hidden and empty columns while the LCW AI CSV keeps visible columns (7.345789ms)
+✖ grouped Collection derived cells use inherited and overridden calculation inputs (6.462414ms)
+✔ indexed effective reader scans parents once and keeps canonical inheritance semantics (15.365752ms)
+✖ Collection context uses one fresh group index per build without per-cell full scans (9.605126ms)
+✔ a column-build failure is reported and never yields a table without columns (10.072055ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 6
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 159.854245
+
+✖ failing tests:
+
+test at tests/lcwai-dynamic-columns.test.js:98:1
+✖ Collection all includes hidden custom and synthetic columns, effective values, and remains read-only (11.096545ms)
+  ReferenceError: kolWorkspaceRevision is not defined
+      at kolEffectiveValue (evalmachine.<anonymous>:3:76)
+      at kolCollectionRawCellText (evalmachine.<anonymous>:16:47)
+      at Object.readValue (evalmachine.<anonymous>:82:22)
+      at contextCellValue (evalmachine.<anonymous>:34:94)
+      at evalmachine.<anonymous>:88:142
+      at Array.map (<anonymous>)
+      at evalmachine.<anonymous>:88:131
+      at Array.map (<anonymous>)
+      at Object.tableContext (evalmachine.<anonymous>:88:112)
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/lcwai-dynamic-columns.test.js:101:21)
+
+test at tests/lcwai-dynamic-columns.test.js:108:1
+✖ Collection selection uses id including zero rather than CP _id (10.290194ms)
+  ReferenceError: kolWorkspaceRevision is not defined
+      at kolEffectiveValue (evalmachine.<anonymous>:3:76)
+      at kolCollectionRawCellText (evalmachine.<anonymous>:16:47)
+      at Object.readValue (evalmachine.<anonymous>:82:22)
+      at contextCellValue (evalmachine.<anonymous>:34:94)
+      at evalmachine.<anonymous>:88:142
+      at Array.map (<anonymous>)
+      at evalmachine.<anonymous>:88:131
+      at Array.map (<anonymous>)
+      at Object.tableContext (evalmachine.<anonymous>:88:112)
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/lcwai-dynamic-columns.test.js:110:21)
+
+test at tests/lcwai-dynamic-columns.test.js:131:1
+✖ Collection effective zero/false values, checklist labels and image identities survive CSV conversion (16.036819ms)
+  ReferenceError: kolWorkspaceRevision is not defined
+      at kolEffectiveValue (evalmachine.<anonymous>:3:76)
+      at kolCollectionRawCellText (evalmachine.<anonymous>:16:47)
+      at Object.readValue (evalmachine.<anonymous>:82:22)
+      at contextCellValue (evalmachine.<anonymous>:34:94)
+      at evalmachine.<anonymous>:88:142
+      at Array.map (<anonymous>)
+      at evalmachine.<anonymous>:88:131
+      at Array.map (<anonymous>)
+      at Object.tableContext (evalmachine.<anonymous>:88:112)
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/lcwai-dynamic-columns.test.js:137:21)
+
+test at tests/lcwai-dynamic-columns.test.js:149:1
+✖ Collection card-detail records carry hidden and empty columns while the LCW AI CSV keeps visible columns (7.345789ms)
+  ReferenceError: kolWorkspaceRevision is not defined
+      at kolEffectiveValue (evalmachine.<anonymous>:3:76)
+      at kolCollectionRawCellText (evalmachine.<anonymous>:16:47)
+      at Object.readValue (evalmachine.<anonymous>:82:22)
+      at contextCellValue (evalmachine.<anonymous>:34:94)
+      at evalmachine.<anonymous>:88:142
+      at Array.map (<anonymous>)
+      at evalmachine.<anonymous>:88:131
+      at Array.map (<anonymous>)
+      at Object.tableContext (evalmachine.<anonymous>:88:112)
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/lcwai-dynamic-columns.test.js:153:21)
+
+test at tests/lcwai-dynamic-columns.test.js:161:1
+✖ grouped Collection derived cells use inherited and overridden calculation inputs (6.462414ms)
+  ReferenceError: kolWorkspaceRevision is not defined
+      at kolEffectiveValue (evalmachine.<anonymous>:3:76)
+      at kolCollectionRawCellText (evalmachine.<anonymous>:16:47)
+      at Object.readValue (evalmachine.<anonymous>:82:22)
+      at contextCellValue (evalmachine.<anonymous>:34:94)
+      at evalmachine.<anonymous>:88:142
+      at Array.map (<anonymous>)
+      at evalmachine.<anonymous>:88:131
+      at Array.map (<anonymous>)
+      at Object.tableContext (evalmachine.<anonymous>:88:112)
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/lcwai-dynamic-columns.test.js:167:55)
+
+test at tests/lcwai-dynamic-columns.test.js:184:1
+✖ Collection context uses one fresh group index per build without per-cell full scans (9.605126ms)
+  ReferenceError: kolWorkspaceRevision is not defined
+      at kolEffectiveValue (evalmachine.<anonymous>:3:76)
+      at kolCollectionRawCellText (evalmachine.<anonymous>:16:47)
+      at Object.readValue (evalmachine.<anonymous>:82:22)
+      at contextCellValue (evalmachine.<anonymous>:34:94)
+      at evalmachine.<anonymous>:88:142
+      at Array.map (<anonymous>)
+      at evalmachine.<anonymous>:88:131
+      at Array.map (<anonymous>)
+      at Object.tableContext (evalmachine.<anonymous>:88:112)
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/lcwai-dynamic-columns.test.js:189:8)
