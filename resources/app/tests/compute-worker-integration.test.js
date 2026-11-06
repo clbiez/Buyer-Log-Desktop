@@ -180,6 +180,32 @@ test('native CP code hints equal the canonical resolver without hydrating raw so
   try{assert.deepEqual(JSON.parse(zlib.gunzipSync(Buffer.from(lease.value.buffer))),{ok:true,denied:policy.sharedEditDeniedCodes(access,codes)});}finally{lease.release();}
  }
 });
+test('authority IPC encoding yields before admission and keeps exact hashes across split rows and special keys',async t=>{
+ const {service,pool}=setup(t),authority={};
+ for(let i=0;i<1100;i++)authority[String(i+100)]=[{buyer:'Synthetic '+i,merch:'M',ageGroup:'A',buyerGrup:'G'}];
+ authority.long=Array.from({length:900},(_,i)=>i%3?{buyer:'Demo '+i}:null);authority.empty=[];
+ Object.defineProperty(authority,'__proto__',{value:[{buyer:'Synthetic prototype key'}],enumerable:true});
+ const expected=require('node:crypto').createHash('sha256').update(JSON.stringify(authority)).digest('hex');
+ let turns=0,admissions=0,metrics;const tick=()=>{turns++;if(!admissions)setImmediate(tick);};setImmediate(tick);
+ const run=pool.run;pool.run=(task,payload,options)=>{
+  admissions++;assert.ok(turns>=4,'authority encoding must yield in bounded row batches before admission');
+  assert.ok(payload.authorityBytes instanceof ArrayBuffer);assert.equal(payload.paramsBytes,undefined);
+  assert.equal(options.inputBytes,payload.authorityBytes.byteLength+1024);
+  return run(task,payload,options);
+ };
+ assert.equal(await service.hashAccessAuthority(authority,{onMetrics:value=>{metrics=value;}}),expected);
+ assert.ok(metrics.paramsChunks>=8);assert.ok(metrics.maxSerializeSliceMs>=0);assert.equal(admissions,1);
+ assert.equal(pool.stats().leasedOutputBytes,0);assert.equal(Object.getPrototypeOf(authority),Object.prototype);
+});
+test('an obsolete authority encoding stops before admission while the latest directory remains usable',async t=>{
+ const {service,pool}=setup(t),authority=Object.fromEntries(Array.from({length:1100},(_,i)=>[String(i),[{buyer:'Synthetic '+i}]]));
+ let admissions=0;const run=pool.run;pool.run=(...args)=>{admissions++;return run(...args);};
+ const obsolete=service.hashAccessAuthority(authority).then(value=>({value}),error=>({error}));
+ const latest=service.hashAccessAuthority({7:[{buyer:'Latest synthetic buyer'}]});
+ assert.equal((await obsolete).error?.code,'COMPUTE_STALE_GENERATION');
+ assert.equal(await latest,require('node:crypto').createHash('sha256').update(JSON.stringify({7:[{buyer:'Latest synthetic buyer'}]})).digest('hex'));
+ assert.equal(admissions,1,'superseded partial encoding must not reach the worker pool');
+});
 test('legacy metadata is decoded in the common worker without a raw order source and rejects replaced files',async t=>{
  const {service}=setup(t),engine=require('../server/lib/endeksmatik'),file=engine.PERSISTED_FILE;
  fs.mkdirSync(path.dirname(file),{recursive:true});const old=fs.existsSync(file)?fs.readFileSync(file):null;

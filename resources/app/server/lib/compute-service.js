@@ -143,11 +143,13 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   }
   async function hashAccessAuthority(authority,{onMetrics}={}){
     if(closed)throw failure('COMPUTE_POOL_CLOSED');
-    const started=performance.now(),encoded=Uint8Array.from(v8.serialize(authority)).buffer,inputBytes=encoded.byteLength+1024;
-    const paramsSerializeMs=performance.now()-started,generation=String(++authorityGeneration);
+    const generation=String(++authorityGeneration);
     pool.setGeneration('access-authority',generation);
-    const lease=await pool.run('access-authority-hash',{paramsBytes:encoded},{ownerKey:'access-authority',generation,priority:'interactive',estimatedBytes:96*MiB+inputBytes*8,inputBytes,transferList:[encoded]});
-    try{try{onMetrics?.({...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024});}catch{}return lease.value.authorityHash;}
+    const assertCurrent=()=>{if(closed)throw failure('COMPUTE_POOL_CLOSED');if(String(authorityGeneration)!==generation)throw failure('COMPUTE_STALE_GENERATION');};
+    const {bytes:encoded,...encodeMetrics}=await require('./compute-authority-codec').encodeAuthority(authority,{assertCurrent});
+    assertCurrent();const inputBytes=encoded.byteLength+1024;
+    const lease=await pool.run('access-authority-hash',{authorityBytes:encoded},{ownerKey:'access-authority',generation,priority:'interactive',estimatedBytes:96*MiB+inputBytes*8,inputBytes,transferList:[encoded]});
+    try{try{onMetrics?.({...lease.metrics,...encodeMetrics,paramsBytes:inputBytes-1024});}catch{}return lease.value.authorityHash;}
     finally{lease.release();}
   }
   function stats(){return {diskBudgetBytes,reservedDiskBytes,sourceFiles:[...records.values()].filter(record=>Boolean(record.descriptor.replicaFile)).length,...pool.stats()};}

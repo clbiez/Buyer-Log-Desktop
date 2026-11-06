@@ -42,7 +42,10 @@ async function execute(task,data,transfer){
   }
   data.params=data.paramsBytes?v8.deserialize(Buffer.from(data.paramsBytes)):data.params||{};
   data.paramsBytes=null;
-  if(task==='access-authority-hash')return {authorityHash:require('node:crypto').createHash('sha256').update(JSON.stringify(data.params)).digest('hex')};
+  if(task==='access-authority-hash'){
+    const authority=data.authorityBytes?require('../lib/compute-authority-codec').decodeAuthority(data.authorityBytes):data.params;
+    return {authorityHash:require('node:crypto').createHash('sha256').update(JSON.stringify(authority)).digest('hex')};
+  }
   if(task==='cp-shared-edit-codes')return compress({ok:true,denied:access.sharedEditDeniedCodes(data.params.access,data.params.codes)},'api',transfer);
   if(task==='endeksmatik-legacy-status')return {status:require('../lib/endeksmatik').readLegacyStatusFile(data.params.descriptor,data.params.maxOutputLength)};
   if(task==='office-render'){

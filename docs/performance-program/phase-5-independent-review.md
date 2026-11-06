@@ -48,3 +48,28 @@ EN: The review treated opt-in CPU profiling as a documented diagnostic/latency
 tradeoff: normal operation will not retain retrospective function profiles.
 Windows/Electron behaviour is not verified by this Linux review. Three-run
 performance acceptance and GitHub check/merge status require separate evidence.
+
+TR: İncelemeden sonraki normal üçlü açılış serisi iki koşuda 200 ms sınırını
+aştı; bu örnekler korunur ve kabul edilmiş sayılmaz. Sonraki tanısal izler
+sınır aşımını yeniden üretmedi. İzlerde doğrulanan tek parça yetki V8 kodlama
+maliyeti için ana agent ek bir düzeltme yaptı: aynı V8 akışı en fazla 256
+satırlık parçalarda kodlanır, gerçek event-loop turları arasında güncel yetki
+sürümü denetlenir. Worker tam kanonik JSON digest'ini üretir; yetki kapısı
+gevşetilmez. İki yeni native regresyon önce RED oldu: aralarda tur verme ve
+eski hazırlığın admission öncesinde kesilmesi. Özel anahtar, bölünmüş satır,
+Date ve paylaşılan satır kimliği eşdeğerliği ayrıca sınanır. Bu ek düzeltme
+ikinci model tarafından yeniden incelenmedi; tek inceleme turu sınırı korunur.
+Önceki sınır aşımlarının kesin kök nedeni bu düzeltmeyle kanıtlanmış değildir.
+
+EN: The subsequent normal three-run opening cohort exceeded 200 ms in two
+runs; those samples are retained and are not accepted. Later diagnostic traces
+did not reproduce the exceedances. The primary agent made an additional fix
+for the measured monolithic authority V8 encoding cost: one V8 stream is
+written in batches of at most 256 rows, with live authority-generation checks
+between real event-loop turns. The worker produces the exact canonical JSON
+digest; authorization gates remain intact. Two new native regressions first
+failed RED: cooperative handoffs and stopping obsolete preparation before
+admission. Special keys, split rows, Date values and shared row identity have
+additional equivalence coverage. This additional fix was not reviewed again by
+a second model, preserving the single review-pass limit. It does not establish
+the exact root cause of the earlier exceedances.
