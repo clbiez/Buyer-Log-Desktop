@@ -1,0 +1,62 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js lcwai-dynamic-columns client-computation-performance
+
+[Buyer Log tests] 2 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (2 dosya)
+✔ real projection worker and server share complete v3 catalog semantics across canonical fields (519.157158ms)
+✔ shared chronological sorting constructs one Collator and preserves exact stable order (108.598479ms)
+✔ revision readers preserve falsy overrides, first-parent and local structural changes (1.674544ms)
+✔ Collection consumer uses revision index and invalidates replacement paths before derived reads (8.249242ms)
+✔ CP and Orders include declared formulas/database columns with current labels and formatted values (32.320755ms)
+✔ each build sees newly added columns and the current language (10.293525ms)
+✔ Collection all includes hidden custom and synthetic columns, effective values, and remains read-only (11.174405ms)
+✔ Collection selection uses id including zero rather than CP _id (9.820058ms)
+✔ Overview all uses the full current CP catalog and the same value reader (9.308964ms)
+✔ CP column metadata is available even when the CP filter matches no rows (7.774591ms)
+✔ Collection effective zero/false values, checklist labels and image identities survive CSV conversion (12.502082ms)
+✔ Collection card-detail records carry hidden and empty columns while the LCW AI CSV keeps visible columns (8.794633ms)
+✔ grouped Collection derived cells use inherited and overridden calculation inputs (9.884368ms)
+✔ indexed effective reader scans parents once and keeps canonical inheritance semantics (18.513348ms)
+✖ Collection context uses one fresh group index per build without per-cell full scans (9.244921ms)
+✔ a column-build failure is reported and never yields a table without columns (9.192823ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 15
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 808.802258
+
+✖ failing tests:
+
+test at tests/lcwai-dynamic-columns.test.js:184:1
+✖ Collection context uses one fresh group index per build without per-cell full scans (9.244921ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  2 !== 1
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/lcwai-dynamic-columns.test.js:190:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+[Buyer Log tests] Batch 1/1 süresi: 0.9s.
+[Buyer Log tests] Batch 1 başarısız. ZIP teslim edilmemeli.
+[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

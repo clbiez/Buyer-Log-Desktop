@@ -129,3 +129,31 @@ test('deferred remote paint still refreshes automatic rule fields before another
  assert.equal(f.ctx.kolBaseline.rows.get('2').royalty,'27,00%','keep actual accepted incoming baseline/CAS distinct from derived projection');
  assert.equal(saves,1);assert.equal(f.renders(),0,'the focused editor DOM must remain attached');
 });
+
+test('remote parent replacement invalidates inherited values before deferred pricing reads',()=>{
+ const f=fixture({editor:true,rowEditor:false}),Groups=require('../public/collection-model-groups');
+ f.ctx.window={BLCollectionModelGroups:Groups};
+ Object.assign(f.ctx.kolRows[0],{modelGroupId:'g',modelGroupRole:'parent',modelSharedValues:{fabric:'Old'}});
+ Object.assign(f.ctx.kolRows[1],{modelGroupId:'g',modelGroupRole:'variant'});
+ const a=source.indexOf('function kolEffectiveValue('),b=source.indexOf('function kolEffectiveEndeksmatikRow',a);
+ vm.runInContext(source.slice(a,b),f.ctx);
+ assert.equal(f.ctx.kolEffectiveValue(f.ctx.kolRows[1],'fabric'),'Old');
+ f.ctx.kolSyncRulePricing=()=>{assert.equal(f.ctx.kolEffectiveValue(f.ctx.kolRows[1],'fabric'),'Peer');return 0;};
+ assert.equal(f.ctx.kolApplyRemotePatches([{kind:'changed',row:{id:1,_rev:2,modelGroupId:'g',modelGroupRole:'parent',modelSharedValues:{fabric:'Peer'}}}]),1);
+ assert.equal(f.ctx.kolEffectiveValue(f.ctx.kolRows[1],'fabric'),'Peer');assert.equal(f.renders(),0);
+});
+
+test('own-row rebase invalidates parent index before persisting the rebased draft',()=>{
+ const f=fixture({editor:false,rowEditor:false}),Groups=require('../public/collection-model-groups');
+ f.ctx.window={BLCollectionModelGroups:Groups};
+ Object.assign(f.ctx.kolRows[0],{modelGroupId:'g',modelGroupRole:'parent',modelSharedValues:{fabric:'Old'}});
+ Object.assign(f.ctx.kolRows[1],{modelGroupId:'g',modelGroupRole:'variant'});
+ f.ctx.kolBaseline.expectedNewIds=new Set();f.ctx.kolIsOwnWorkspace=()=>true;
+ f.ctx.kolMergeLocalRowDelta=(_base,local,remote)=>({...local,...remote});f.ctx.showToast=()=>{};
+ const valueStart=source.indexOf('function kolEffectiveValue('),valueEnd=source.indexOf('function kolEffectiveEndeksmatikRow',valueStart);
+ const reportStart=source.indexOf('function kolReportConflicts('),reportEnd=source.indexOf('function kolWorkspaceSetReadonly',reportStart);
+ vm.runInContext(source.slice(valueStart,valueEnd)+source.slice(reportStart,reportEnd),f.ctx);
+ assert.equal(f.ctx.kolEffectiveValue(f.ctx.kolRows[1],'fabric'),'Old');
+ f.ctx.kolPersistPendingWorkspace=()=>assert.equal(f.ctx.kolEffectiveValue(f.ctx.kolRows[1],'fabric'),'Rebased');
+ assert.equal(f.ctx.kolReportConflicts([{id:1,current:{id:1,_rev:2,modelSharedValues:{fabric:'Rebased'}}}]),true);
+});

@@ -1,0 +1,37 @@
+✔ real projection worker and server share complete v3 catalog semantics across canonical fields (3986.817771ms)
+✔ shared chronological sorting constructs one Collator and preserves exact stable order (83.018961ms)
+✔ revision readers preserve falsy overrides, first-parent and local structural changes (2.121988ms)
+✖ revision reader builds the parent index only when inheritance is actually needed (2.482776ms)
+✔ Collection consumer uses revision index and invalidates replacement paths before derived reads (10.37842ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 4
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4096.591596
+
+✖ failing tests:
+
+test at tests/client-computation-performance.test.js:70:1
+✖ revision reader builds the parent index only when inheritance is actually needed (2.482776ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/client-computation-performance.test.js:75:59)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

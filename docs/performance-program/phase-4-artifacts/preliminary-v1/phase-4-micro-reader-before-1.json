@@ -1,0 +1,39 @@
+{
+  "synthetic": true,
+  "case": "reader",
+  "status": "passed",
+  "appRoot": "/workspace/buyerlog-phase3/resources/app",
+  "revision": "67fe95d8b54438be352b983ae158a26e2233c701",
+  "workingTreeDirty": false,
+  "sourceHashes": {
+    "public/app-main.js": "ba68cb9387893e051408410a66d6cedd359b7f7dac3d3fff1ee4edbf9b9b52e8",
+    "public/chronological-values.js": "3fa48e5188a04e5be695d8c1cb7a9793867a1a5c7930702f081ee7697e5fcefd",
+    "public/collection-model-groups.js": "69347abe0b9e8fbe6e46a1dd8c8db7d2f33aafe4f0c089a7b7b5b5999bc4cc0c",
+    "server/server.js": "6f305e75c52688d6aaa188e3e0af5c2957093f9e75d6257c17c1af20e74f53a3",
+    "server/projection-worker.js": "0c4e50b6e2b20d98632e6bd1c6c3bcab540614a4d6fdff57e5bca41872303684",
+    "server/lib/collection-catalog.js": null
+  },
+  "harnessSha256": "e95a900b987a8ef5538d9a2a72423e12c1b2d9368ce8d17a72347773573df500",
+  "node": "v24.19.0",
+  "v8": "13.6.233.17-node.51",
+  "icu": "78.3",
+  "platform": "linux",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "availableParallelism": 4,
+  "heapSampling": "uncollected; no forced GC",
+  "elapsedMs": 1586.9797859999999,
+  "rows": 5000,
+  "fields": [
+    "fabric",
+    "quantity",
+    "not",
+    "pricing",
+    "targetPrice",
+    "endeksmatikData",
+    "flag"
+  ],
+  "reads": 35000,
+  "outputSha256": "87624d6c0b51f3ac11e25fa8d23dae272b1b3569eaede5f18fd8365f574f6be9",
+  "beforeHeapBytes": 13237048,
+  "afterHeapBytes": 17841816
+}

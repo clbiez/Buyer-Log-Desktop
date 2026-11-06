@@ -1,0 +1,80 @@
+1 before catalog: 13322.734 ms; ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4
+1 after catalog: 34239.131 ms; ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4
+1 before sort: 67285.542 ms; 66a8a9a3954c5edb38a8e6250b83185ff31f52caa482bd8731b247baa567164e
+1 after sort: 4905.890 ms; 66a8a9a3954c5edb38a8e6250b83185ff31f52caa482bd8731b247baa567164e
+1 before reader: 18393.604 ms; 87624d6c0b51f3ac11e25fa8d23dae272b1b3569eaede5f18fd8365f574f6be9
+1 after reader: 255.491 ms; 87624d6c0b51f3ac11e25fa8d23dae272b1b3569eaede5f18fd8365f574f6be9
+2 after catalog: 4235.459 ms; ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4
+2 before catalog: 12351.805 ms; ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4
+2 after sort: 833.988 ms; 66a8a9a3954c5edb38a8e6250b83185ff31f52caa482bd8731b247baa567164e
+2 before sort: 8666.486 ms; 66a8a9a3954c5edb38a8e6250b83185ff31f52caa482bd8731b247baa567164e
+2 after reader: 17.371 ms; 87624d6c0b51f3ac11e25fa8d23dae272b1b3569eaede5f18fd8365f574f6be9
+2 before reader: 1597.659 ms; 87624d6c0b51f3ac11e25fa8d23dae272b1b3569eaede5f18fd8365f574f6be9
+3 before catalog: 5267.980 ms; ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4
+3 after catalog: 2742.624 ms; ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4
+3 before sort: 5445.432 ms; 66a8a9a3954c5edb38a8e6250b83185ff31f52caa482bd8731b247baa567164e
+3 after sort: 369.959 ms; 66a8a9a3954c5edb38a8e6250b83185ff31f52caa482bd8731b247baa567164e
+3 before reader: 1854.734 ms; 87624d6c0b51f3ac11e25fa8d23dae272b1b3569eaede5f18fd8365f574f6be9
+3 after reader: 56.698 ms; 87624d6c0b51f3ac11e25fa8d23dae272b1b3569eaede5f18fd8365f574f6be9
+{
+  "catalog": {
+    "before": {
+      "medianMs": 12351.805333,
+      "samplesMs": [
+        13322.733972,
+        12351.805333,
+        5267.979638
+      ],
+      "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4"
+    },
+    "after": {
+      "medianMs": 4235.458921,
+      "samplesMs": [
+        34239.130599000004,
+        4235.458921,
+        2742.624381
+      ],
+      "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4"
+    }
+  },
+  "sort": {
+    "before": {
+      "medianMs": 8666.485979,
+      "samplesMs": [
+        67285.541641,
+        8666.485979,
+        5445.431606
+      ],
+      "sha256": "66a8a9a3954c5edb38a8e6250b83185ff31f52caa482bd8731b247baa567164e"
+    },
+    "after": {
+      "medianMs": 833.9875940000001,
+      "samplesMs": [
+        4905.890446,
+        833.9875940000001,
+        369.959143
+      ],
+      "sha256": "66a8a9a3954c5edb38a8e6250b83185ff31f52caa482bd8731b247baa567164e"
+    }
+  },
+  "reader": {
+    "before": {
+      "medianMs": 1854.734253,
+      "samplesMs": [
+        18393.604184,
+        1597.6588889999998,
+        1854.734253
+      ],
+      "sha256": "87624d6c0b51f3ac11e25fa8d23dae272b1b3569eaede5f18fd8365f574f6be9"
+    },
+    "after": {
+      "medianMs": 56.698252999999994,
+      "samplesMs": [
+        255.49080000000026,
+        17.370849000000007,
+        56.698252999999994
+      ],
+      "sha256": "87624d6c0b51f3ac11e25fa8d23dae272b1b3569eaede5f18fd8365f574f6be9"
+    }
+  }
+}

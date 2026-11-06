@@ -5,6 +5,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
   const norm=value=>String(value==null?'':value).trim();
+  const displayCollator=new Intl.Collator('tr',{numeric:true,sensitivity:'base'});
   const turkNorm=value=>norm(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ı/g,'i').toUpperCase().replace(/\s+/g,' ');
   // Shared display ordering. Parse complete values only; source values and saved
   // filter identities stay untouched. Summer precedes Winter within each year.
@@ -63,7 +64,7 @@
     // Unknown/blank values follow recognized periods in either direction. This
     // also gives mixed dynamic columns a transitive, deterministic total order.
     if (Boolean(left) !== Boolean(right)) return left ? -1 : 1;
-    return norm(a).localeCompare(norm(b), 'tr', { numeric: true, sensitivity: 'base' }) * dir;
+    return displayCollator.compare(norm(a),norm(b)) * dir;
   }
   function compareSeasonLists(a, b) {
     const list = value => (Array.isArray(value) ? value : norm(value).split(/[,;|/]+/)).filter(value => norm(value)).slice().sort(compareChronologicalValues);

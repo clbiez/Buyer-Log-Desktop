@@ -9,6 +9,7 @@ const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
 const canonicalFields = require('../server/lib/canonical-fields');
+const collectionCatalog = require('../server/lib/collection-catalog');
 const parse = require('../server/lib/parse');
 
 function extractBetween(source, startText, endText) {
@@ -21,8 +22,8 @@ function extractBetween(source, startText, endText) {
 
 test('Collection Product Main Definition önerileri gerçek ASAS canonical kaynağından distinct üretilir', () => {
   const block = extractBetween(SERVER, 'const COLLECTION_CATALOG_FIELDS', 'async function buildResponse');
-  const factory = new Function('canonicalFields', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,buildCollectionCatalogs};`);
-  const { COLLECTION_CATALOG_FIELDS, buildCollectionCatalogs } = factory(canonicalFields);
+  const factory = new Function('canonicalFields', 'collectionCatalog', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,buildCollectionCatalogs};`);
+  const { COLLECTION_CATALOG_FIELDS, buildCollectionCatalogs } = factory(canonicalFields, collectionCatalog);
 
   assert.equal(COLLECTION_CATALOG_FIELDS.productMainDefinition, 'Ürün Ana Tanım');
   assert.equal(canonicalFields.canonicalId('overview', 'Ürün Ana Tanım'), 'productDescription');
@@ -76,8 +77,8 @@ test('Collection Product Main Definition suggestion cache is not fetched per cel
 
 test('raw ASAS normalized row -> lightweight Overview -> Collection catalog zinciri Product Main Definition değerini düşürmez', () => {
   const block = extractBetween(SERVER, 'const COLLECTION_CATALOG_FIELDS', 'async function buildResponse');
-  const factory = new Function('canonicalFields', `${block}\nreturn {buildCollectionCatalogs};`);
-  const { buildCollectionCatalogs } = factory(canonicalFields);
+  const factory = new Function('canonicalFields', 'collectionCatalog', `${block}\nreturn {buildCollectionCatalogs};`);
+  const { buildCollectionCatalogs } = factory(canonicalFields, collectionCatalog);
 
   const overviewRows = parse.buildOverviewSummaryRowsFromASAS([{
     kalan: 8,
@@ -113,8 +114,8 @@ test('client partial Collection catalog cache hazır sayılmaz, tam catalog tekr
 
 test('server eski/partial collection-catalog projection cache şemasını reddeder', () => {
   const block = extractBetween(SERVER, 'const COLLECTION_CATALOG_FIELDS', 'async function buildResponse');
-  const factory = new Function('canonicalFields', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,COLLECTION_CATALOG_SCHEMA_VERSION,collectionCatalogsComplete,collectionCatalogProjectionComplete};`);
-  const api = factory(canonicalFields);
+  const factory = new Function('canonicalFields', 'collectionCatalog', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,COLLECTION_CATALOG_SCHEMA_VERSION,collectionCatalogsComplete,collectionCatalogProjectionComplete};`);
+  const api = factory(canonicalFields, collectionCatalog);
   const full = Object.fromEntries(Object.keys(api.COLLECTION_CATALOG_FIELDS).map(key => [key, []]));
 
   assert.equal(api.COLLECTION_CATALOG_SCHEMA_VERSION, 3);
@@ -131,8 +132,10 @@ test('server eski/partial collection-catalog projection cache şemasını redded
 
 test('projection worker da Product Main Definition catalogunu canonical productDescription üzerinden üretir', () => {
   const worker = fs.readFileSync(path.join(ROOT, 'server', 'projection-worker.js'), 'utf8');
-  assert.match(worker, /canonicalFields=require\('\.\/lib\/canonical-fields'\)/);
-  assert.match(worker, /productMainDefinition:'productDescription'/);
-  assert.match(worker, /canonicalFields\.value\(row,'overview',canonicalId\)/);
+  const common = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'collection-catalog.js'), 'utf8');
+  assert.match(worker, /require\('\.\/lib\/collection-catalog'\)/);
+  assert.match(common, /canonicalFields=require\('\.\/canonical-fields'\)/);
+  assert.match(common, /productMainDefinition:'productDescription'/);
+  assert.match(common, /canonicalFields\.value\(row,'overview',canonicalId\)/);
   assert.match(worker, /catalogSchemaVersion:COLLECTION_CATALOG_SCHEMA_VERSION/);
 });

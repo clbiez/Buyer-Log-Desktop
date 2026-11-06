@@ -7894,58 +7894,12 @@ async function computeRefreshSummary(oldOrders, oldAntrepoMap, newOrders, newAnt
   };
 }
 
-const COLLECTION_CATALOG_FIELDS = Object.freeze({
-  category: 'Category',
-  mag: 'Merch Alt Grup Kod',
-  mmyg: 'Merch Marka Yaş Grup Kod',
-  buyingGroup: 'Buyer Grup (TR)',
-  buyer: 'Buyer',
-  manufacturer: 'Manufacturer',
-  season: 'Season',
-  license: 'License',
-  licensor: 'Licensor',
-  country: 'Country',
-  line: 'Line',
-  productMainDefinition: 'Ürün Ana Tanım',
-});
-
-// Katalog anahtarları Collection UI alanlarıdır; kaynak değerler ASAS'ın
-// canonical registry binding'inden okunur. Product Main Definition'ın ASAS
-// karşılığı canonical productDescription'dır ve Collection/PLM alanından ayrı
-// tutulur.
-const COLLECTION_CATALOG_CANONICAL_FIELDS = Object.freeze({
-  category: 'category',
-  mag: 'mag',
-  mmyg: 'mmyg',
-  buyingGroup: 'buyingGroup',
-  buyer: 'buyer',
-  manufacturer: 'manufacturer',
-  season: 'season',
-  license: 'license',
-  licensor: 'licensor',
-  country: 'country',
-  line: 'line',
-  productMainDefinition: 'productDescription',
-});
-
-// Increment when the persisted collection-catalog payload contract changes.
-// Version 3 adds the ASAS manufacturer directory used by Collection price
-// entry, while keeping Product Main Definition sourced from canonical ASAS
-// productDescription. Old cached catalogs are rebuilt on demand.
-const COLLECTION_CATALOG_SCHEMA_VERSION = 3;
-
-function collectionCatalogsComplete(catalogs) {
-  if (!catalogs || typeof catalogs !== 'object') return false;
-  return Object.keys(COLLECTION_CATALOG_FIELDS).every(key => Array.isArray(catalogs[key]));
-}
-
-function collectionCatalogProjectionComplete(data) {
-  return Boolean(
-    data
-    && Number(data.catalogSchemaVersion) === COLLECTION_CATALOG_SCHEMA_VERSION
-    && collectionCatalogsComplete(data.catalogs)
-  );
-}
+const collectionCatalog = require('./lib/collection-catalog');
+const COLLECTION_CATALOG_FIELDS = collectionCatalog.COLLECTION_CATALOG_FIELDS;
+const COLLECTION_CATALOG_CANONICAL_FIELDS = collectionCatalog.COLLECTION_CATALOG_CANONICAL_FIELDS;
+const COLLECTION_CATALOG_SCHEMA_VERSION = collectionCatalog.COLLECTION_CATALOG_SCHEMA_VERSION;
+function collectionCatalogsComplete(catalogs) { return collectionCatalog.collectionCatalogsComplete(catalogs); }
+function collectionCatalogProjectionComplete(data) { return collectionCatalog.collectionCatalogProjectionComplete(data); }
 
 
 function stableHashValue(value) {
@@ -8269,25 +8223,7 @@ async function loadCachedPageProjectionSet(currentUser, startup) {
 }
 function backlogCacheKey(params) { const day=new Date();return stableHashValue([params,day.getFullYear(),day.getMonth(),day.getDate()]).slice(0, 48); }
 
-function buildCollectionCatalogs(orderRows) {
-  const buckets = Object.fromEntries(Object.keys(COLLECTION_CATALOG_FIELDS).map(key => [key, new Map()]));
-  for (const row of Array.isArray(orderRows) ? orderRows : []) {
-    for (const [key, field] of Object.entries(COLLECTION_CATALOG_FIELDS)) {
-      const canonicalId = COLLECTION_CATALOG_CANONICAL_FIELDS[key];
-      const canonicalValue = canonicalId ? canonicalFields.value(row, 'overview', canonicalId) : undefined;
-      const rawValue = canonicalId ? canonicalValue : (row && row[field]);
-      const value = String(rawValue == null ? '' : rawValue).trim();
-      if (!value) continue;
-      const identity = canonicalFields.token(value).replace(/\s+/g, '');
-      if (identity && !buckets[key].has(identity)) buckets[key].set(identity, value);
-    }
-  }
-  const result = {};
-  for (const [key, values] of Object.entries(buckets)) {
-    result[key] = [...values.values()].sort(BLBusinessRules.compareChronologicalValues);
-  }
-  return result;
-}
+function buildCollectionCatalogs(orderRows) { return collectionCatalog.buildCollectionCatalogs(orderRows); }
 
 async function buildResponse(currentUser = null, options = {}) {
   const id = sourceUserId(currentUser), startup = options.startup === true;

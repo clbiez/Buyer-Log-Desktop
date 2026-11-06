@@ -10,6 +10,7 @@ const INDEX = (fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8') 
 const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
 const canonicalFields = require('../server/lib/canonical-fields');
+const collectionCatalog = require('../server/lib/collection-catalog');
 
 function extractBetween(source, startText, endText) {
   const start = source.indexOf(startText);
@@ -21,8 +22,8 @@ function extractBetween(source, startText, endText) {
 
 test('v4.89 Collection option catalogs are produced once from ASAS-backed Orders rows', () => {
   const block = extractBetween(SERVER, 'const COLLECTION_CATALOG_FIELDS', 'async function buildResponse');
-  const factory = new Function('canonicalFields','BLBusinessRules', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,COLLECTION_CATALOG_SCHEMA_VERSION,collectionCatalogsComplete,buildCollectionCatalogs};`);
-  const { COLLECTION_CATALOG_FIELDS, COLLECTION_CATALOG_SCHEMA_VERSION, collectionCatalogsComplete, buildCollectionCatalogs } = factory(canonicalFields,require('../public/business-rules'));
+  const factory = new Function('canonicalFields','BLBusinessRules','collectionCatalog', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,COLLECTION_CATALOG_SCHEMA_VERSION,collectionCatalogsComplete,buildCollectionCatalogs};`);
+  const { COLLECTION_CATALOG_FIELDS, COLLECTION_CATALOG_SCHEMA_VERSION, collectionCatalogsComplete, buildCollectionCatalogs } = factory(canonicalFields,require('../public/business-rules'),collectionCatalog);
 
   assert.equal(COLLECTION_CATALOG_FIELDS.category, 'Category');
   assert.equal(COLLECTION_CATALOG_FIELDS.mag, 'Merch Alt Grup Kod');

@@ -1,0 +1,129 @@
+✖ Collection Product Main Definition önerileri gerçek ASAS canonical kaynağından distinct üretilir (2.954539ms)
+✔ Collection Product Main Definition Category ile aynı suggestion editor ve serbest kayıt yolunu kullanır (7.288763ms)
+✔ Collection suggestion dropdown keyboard navigation selects exact ASAS value while custom Enter remains allowed (4.070401ms)
+✔ Collection Product Main Definition suggestion cache is not fetched per cell edit (1.239463ms)
+✖ raw ASAS normalized row -> lightweight Overview -> Collection catalog zinciri Product Main Definition değerini düşürmez (2.118466ms)
+✔ client partial Collection catalog cache hazır sayılmaz, tam catalog tekrar fetch gerektirmez (2.290484ms)
+✖ server eski/partial collection-catalog projection cache şemasını reddeder (1.893425ms)
+✖ projection worker da Product Main Definition catalogunu canonical productDescription üzerinden üretir (2.269843ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 4
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 43.518715
+
+✖ failing tests:
+
+test at tests/collection-product-main-definition-suggestions-v829.test.js:22:1
+✖ Collection Product Main Definition önerileri gerçek ASAS canonical kaynağından distinct üretilir (2.954539ms)
+  ReferenceError: collectionCatalog is not defined
+      at eval (eval at <anonymous> (/workspace/buyerlog-phase4/resources/app/tests/collection-product-main-definition-suggestions-v829.test.js:24:19), <anonymous>:3:35)
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/collection-product-main-definition-suggestions-v829.test.js:25:66)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+
+test at tests/collection-product-main-definition-suggestions-v829.test.js:77:1
+✖ raw ASAS normalized row -> lightweight Overview -> Collection catalog zinciri Product Main Definition değerini düşürmez (2.118466ms)
+  ReferenceError: collectionCatalog is not defined
+      at eval (eval at <anonymous> (/workspace/buyerlog-phase4/resources/app/tests/collection-product-main-definition-suggestions-v829.test.js:79:19), <anonymous>:3:35)
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/collection-product-main-definition-suggestions-v829.test.js:80:39)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at tests/collection-product-main-definition-suggestions-v829.test.js:114:1
+✖ server eski/partial collection-catalog projection cache şemasını reddeder (1.893425ms)
+  ReferenceError: collectionCatalog is not defined
+      at eval (eval at <anonymous> (/workspace/buyerlog-phase4/resources/app/tests/collection-product-main-definition-suggestions-v829.test.js:116:19), <anonymous>:3:35)
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/collection-product-main-definition-suggestions-v829.test.js:117:15)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+
+test at tests/collection-product-main-definition-suggestions-v829.test.js:132:1
+✖ projection worker da Product Main Definition catalogunu canonical productDescription üzerinden üretir (2.269843ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /canonicalFields=require\('\.\/lib\/canonical-fields'\)/. Input:
+  
+  "'use strict';\n" +
+    '\n' +
+    "const {parentPort,workerData}=require('node:worker_threads');\n" +
+    "const zlib=require('node:zlib');\n" +
+    "const {promisify}=require('node:util');\n" +
+    "const parse=require('./lib/parse');\n" +
+    "const {buildCollectionCatalogs:catalogs,COLLECTION_CATALOG_SCHEMA_VERSION}=require('./lib/collection-catalog');\n" +
+    '\n' +
+    'const gzip=promisify(zlib.gzip);\n' +
+    "function dateOnly(value){const p=n=>String(n).padStart(2,'0');return `${value.getFullYear()}-${p(value.getMonth()+1)}-${p(value.getDate())}`;}\n" +
+    'function dateSafeReplacer(key,value){const raw=this&&this[key];return raw instanceof Date?dateOnly(raw):value;}\n' +
+    "/* Aynı çıktı, replacer'sız: Date değerleri yerinde YYYY-MM-DD metnine çevrilir,\n" +
+    '   sonra düz JSON.stringify çalışır. Satırlar bu işçiye özeldir ve serileştirme\n' +
+    '   sonrası atılır. Replacer her alan için JS çağrısı yaptığından 33 bin\n' +
+    '   satırda saniyeler alıyordu. */\n' +
+    '// Değiştirilemeyen (dondurulmuş) bir nesnede tarih bulunursa false döner;\n' +
+    '// çağıran o modül için eski replacer yoluna düşer, çıktı her durumda aynıdır.\n' +
+    'function replaceDatesInPlace(node,seen){\n' +
+    "  if(!node||typeof node!=='object'||seen.has(node))return true;seen.add(node);\n" +
+    '  const frozen=Object.isFrozen(node);let ok=true;\n' +
+    "  if(Array.isArray(node)){for(let i=0;i<node.length;i++){const v=node[i];if(v instanceof Date){if(frozen)ok=false;else node[i]=dateOnly(v);}else if(v&&typeof v==='object')ok=replaceDatesInPlace(v,seen)&&ok;}return ok;}\n" +
+    "  for(const key of Object.keys(node)){const v=node[key];if(v instanceof Date){if(frozen)ok=false;else node[key]=dateOnly(v);}else if(v&&typeof v==='object')ok=replaceDatesInPlace(v,seen)&&ok;}\n" +
+    '  return ok;\n' +
+    '}\n' +
+    'async function main(){\n' +
+    '  const started=Date.now(),data=workerData||{},editable=new Set((data.editableOrderCodes||[]).map(String));\n' +
+    "  const requested=new Set(data.modules||['cp','overview','orders','order-summary','collection-catalog']);\n" +
+    '  let catalogRows=null;\n' +
+    "  if(requested.has('collection-catalog')&&data.catalogOrdersBuffer){\n" +
+    '    const raw=await promisify(zlib.gunzip)(Buffer.from(data.catalogOrdersBuffer));\n' +
+    "    catalogRows=JSON.parse(raw.toString('utf8')).rows;\n" +
+    '  }\n' +
+    "  const needCp=requested.has('cp'),needOrders=requested.has('orders')||(requested.has('collection-catalog')&&!catalogRows);\n" +
+    '  const projected=data.shared&&needCp&&needOrders\n' +
+    '    ?parse.buildSharedOrderProjectionRowsFromASAS(data.ordersSource,data.ordersAntrepo,data.overrides)\n' +
+    '    :{cp:needCp?parse.buildCPRowsFromASAS(data.cpSource,data.cpAntrepo,data.overrides):[],orders:needOrders?parse.buildOrdersRowsFromASAS(data.ordersSource,data.ordersAntrepo,data.overrides):[]};\n' +
+    "  const orderSummary=requested.has('order-summary')&&data.orderSummaryAllowed?parse.buildOrderSummaryRowsFromASAS(data.cpSource,data.cpAntrepo,data.overrides):[];\n" +
+    "  const needOverview=requested.has('overview')||(requested.has('collection-catalog')&&!(catalogRows||projected.orders).length);\n" +
+    '  const overview=needOverview&&data.orderSummaryAllowed?parse.buildOverviewSummaryRowsFromASAS(data.cpSource,data.overrides):[];\n' +
+    "  projected.cp.forEach(row=>{row._canEdit=editable.has(String(row['Order Code']));});\n" +
+    "  projected.orders.forEach(row=>{row._canEdit=false;});orderSummary.forEach(row=>{row._canEdit=editable.has(String(row['Order Code']));});\n" +
+    '  const values={};\n' +
+    "  if(requested.has('cp'))values.cp={rows:projected.cp,cpModelColumns:data.cpModelColumns||[]};\n" +
+    "  if(requested.has('overview'))values.overview={rows:overview};\n" +
+    "  if(requested.has('orders'))values.orders={rows:projected.orders};\n" +
+    "  if(requested.has('order-summary'))values['order-summary']={rows:orderSummary};\n" +
+    "  if(requested.has('collection-catalog')){const rows=catalogRows||projected.orders;values['collection-catalog']={catalogs:catalogs(rows.length?rows:overview),catalogSchemaVersion:COLLECTION_CATALOG_SCHEMA_VERSION};}\n" +
+    '  const compressed={},transfer=[];\n' +
+    '  for(const [module,value] of Object.entries(values)){\n' +
+    '    const converted=replaceDatesInPlace(value,new WeakSet());\n' +
+    "    const json=Buffer.from(converted?JSON.stringify(value):JSON.stringify(value,dateSafeReplacer),'utf8'),gz=await gzip(json,{level:4}),copy=Uint8Array.from(gz);\n" +
+    '    compressed[module]={buffer:copy.buffer,uncompressedBytes:json.length};transfer.push(copy.buffer);\n' +
+    '  }\n' +
+    '  parentPort.postMessage({ok:true,compressed,metrics:{workerMs:Date.now()-started,cpRows:projected.cp.length,ordersRows:projected.orders.length,orderSummaryRows:orderSummary.length}},transfer);\n' +
+    '}\n' +
+    'main().catch(error=>parentPort.postMessage({ok:false,error:String(error&&error.stack||error)}));\n' +
+    '\n'
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-phase4/resources/app/tests/collection-product-main-definition-suggestions-v829.test.js:134:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "'use strict';\n\nconst {parentPort,workerData}=require('node:worker_threads');\nconst zlib=require('node:zlib');\nconst {promisify}=require('node:util');\nconst parse=require('./lib/parse');\nconst {buildCollectionCatalogs:catalogs,COLLECTION_CATALOG_SCHEMA_VERSION}=require('./lib/collection-catalog');\n\nconst gzip=promisify(zlib.gzip);\nfunction dateOnly(value){const p=n=>String(n).padStart(2,'0');return `${value.getFullYear()}-${p(value.getMonth()+1)}-${p(value.getDate())}`;}\n...",
+    expected: /canonicalFields=require\('\.\/lib\/canonical-fields'\)/,
+    operator: 'match',
+    diff: 'simple'
+  }

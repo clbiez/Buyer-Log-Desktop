@@ -1,0 +1,744 @@
+{
+  "synthetic": true,
+  "beforeRuntime": "67fe95d8b54438be352b983ae158a26e2233c701",
+  "parentAppEquivalent": "873a14f42f6cb0feef18cc76d3fb3dc1cb0e4f1c",
+  "afterRuntime": "41789cca27efab9c5bafd31d35fc0df8fcc7054b",
+  "sourceHashes": {
+    "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+    "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+    "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+  },
+  "macro": {
+    "before": {
+      "refreshMs": 47862,
+      "refreshSamplesMs": [
+        49114,
+        39792,
+        47862
+      ],
+      "modules": {
+        "overview": {
+          "primaryScreenReadyMs": {
+            "median": 6506.70000000298,
+            "samples": [
+              6506.70000000298,
+              8091.80000000447,
+              5945.60000000149
+            ]
+          },
+          "startupReadyMs": {
+            "median": 6523.20000000298,
+            "samples": [
+              6523.20000000298,
+              8106.89999999851,
+              5956.79999999702
+            ]
+          },
+          "systemStartupCompleteMs": {
+            "median": 6693,
+            "samples": [
+              6693,
+              8210.60000000149,
+              6056.10000000149
+            ]
+          },
+          "primaryToGateMs": {
+            "median": 15.099999994039536,
+            "samples": [
+              16.5,
+              15.099999994039536,
+              11.199999995529652
+            ]
+          },
+          "longTaskCount": {
+            "median": 17,
+            "samples": [
+              14,
+              20,
+              17
+            ]
+          },
+          "longTaskTotalMs": {
+            "median": 1935,
+            "samples": [
+              1507,
+              3803,
+              1935
+            ]
+          },
+          "jsHeapUsedBytes": {
+            "median": 33595436,
+            "samples": [
+              40392752,
+              32680952,
+              33595436
+            ]
+          },
+          "rendererRssBytes": {
+            "median": 1503289344,
+            "samples": [
+              574001152,
+              1974329344,
+              1503289344
+            ]
+          }
+        },
+        "cp": {
+          "primaryScreenReadyMs": {
+            "median": 60278.10000000149,
+            "samples": [
+              60278.10000000149,
+              52854,
+              65858.30000000447
+            ]
+          },
+          "startupReadyMs": {
+            "median": 60299,
+            "samples": [
+              60299,
+              52874.39999999851,
+              65900.80000000447
+            ]
+          },
+          "systemStartupCompleteMs": {
+            "median": 60480.20000000298,
+            "samples": [
+              60480.20000000298,
+              53010.10000000149,
+              214017.30000000447
+            ]
+          },
+          "primaryToGateMs": {
+            "median": 20.899999998509884,
+            "samples": [
+              20.899999998509884,
+              20.399999998509884,
+              42.5
+            ]
+          },
+          "longTaskCount": {
+            "median": 20,
+            "samples": [
+              20,
+              17,
+              25
+            ]
+          },
+          "longTaskTotalMs": {
+            "median": 6888.69999999553,
+            "samples": [
+              6017.5,
+              6998.69999999553,
+              6888.69999999553
+            ]
+          },
+          "jsHeapUsedBytes": {
+            "median": 104833600,
+            "samples": [
+              104833600,
+              104062004,
+              144827496
+            ]
+          },
+          "rendererRssBytes": {
+            "median": 1150529536,
+            "samples": [
+              1150529536,
+              1149583360,
+              1219342336
+            ]
+          }
+        },
+        "orders": {
+          "primaryScreenReadyMs": {
+            "median": 7522.5,
+            "samples": [
+              6247.39999999851,
+              11078.89999999851,
+              7522.5
+            ]
+          },
+          "startupReadyMs": {
+            "median": 7555.29999999702,
+            "samples": [
+              6267.70000000298,
+              11103,
+              7555.29999999702
+            ]
+          },
+          "systemStartupCompleteMs": {
+            "median": 7951.79999999702,
+            "samples": [
+              6725.10000000149,
+              11212.29999999702,
+              7951.79999999702
+            ]
+          },
+          "primaryToGateMs": {
+            "median": 24.100000001490116,
+            "samples": [
+              20.30000000447035,
+              24.100000001490116,
+              32.79999999701977
+            ]
+          },
+          "longTaskCount": {
+            "median": 22,
+            "samples": [
+              22,
+              26,
+              19
+            ]
+          },
+          "longTaskTotalMs": {
+            "median": 7611.69999999553,
+            "samples": [
+              7611.69999999553,
+              7112.5,
+              8157.20000000298
+            ]
+          },
+          "jsHeapUsedBytes": {
+            "median": 115797532,
+            "samples": [
+              185443692,
+              115797532,
+              110413616
+            ]
+          },
+          "rendererRssBytes": {
+            "median": 980844544,
+            "samples": [
+              999579648,
+              741437440,
+              980844544
+            ]
+          }
+        },
+        "koleksiyon": {
+          "primaryScreenReadyMs": {
+            "median": 15091.60000000149,
+            "samples": [
+              14273.79999999702,
+              16605.70000000298,
+              15091.60000000149
+            ]
+          },
+          "startupReadyMs": {
+            "median": 15107.19999999553,
+            "samples": [
+              14304.79999999702,
+              16631.90000000596,
+              15107.19999999553
+            ]
+          },
+          "systemStartupCompleteMs": {
+            "median": 15224.89999999851,
+            "samples": [
+              14406.5,
+              16729.80000000447,
+              15224.89999999851
+            ]
+          },
+          "primaryToGateMs": {
+            "median": 26.200000002980232,
+            "samples": [
+              31,
+              26.200000002980232,
+              15.599999994039536
+            ]
+          },
+          "longTaskCount": {
+            "median": 0,
+            "samples": [
+              0,
+              0,
+              0
+            ]
+          },
+          "longTaskTotalMs": {
+            "median": 0,
+            "samples": [
+              0,
+              0,
+              0
+            ]
+          },
+          "jsHeapUsedBytes": {
+            "median": 11678500,
+            "samples": [
+              12345552,
+              11664584,
+              11678500
+            ]
+          },
+          "rendererRssBytes": {
+            "median": 543092736,
+            "samples": [
+              543092736,
+              534790144,
+              545075200
+            ]
+          }
+        }
+      },
+      "sameTabMs": {
+        "cp": {
+          "median": 43933.5,
+          "samples": [
+            41624.80000000447,
+            43933.5,
+            47976
+          ]
+        },
+        "orders": {
+          "median": 2788.8000000044703,
+          "samples": [
+            2743,
+            3760.7999999970198,
+            2788.8000000044703
+          ]
+        },
+        "koleksiyon": {
+          "median": 147.30000000447035,
+          "samples": [
+            146.69999999552965,
+            152.79999999701977,
+            147.30000000447035
+          ]
+        }
+      },
+      "statusRefreshP50Ms": 6.165091000000757,
+      "statusRefreshP95Ms": 35.41636400000061,
+      "health404RefreshP95Ms": 1038.0913899999996,
+      "runtime": {
+        "platform": "linux",
+        "node": "v24.19.0",
+        "chromium": "154.0.8037.57",
+        "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+        "availableParallelism": 4,
+        "cpuQuota": "800000 200000",
+        "memoryLimitBytes": "17179869184",
+        "sampling": {
+          "startMs": 0,
+          "endMs": 10000,
+          "clock": "navigation performance.now; tasks clipped at window end"
+        }
+      }
+    },
+    "after": {
+      "refreshMs": 40150,
+      "refreshSamplesMs": [
+        40150,
+        39224,
+        42074
+      ],
+      "modules": {
+        "overview": {
+          "primaryScreenReadyMs": {
+            "median": 4638.79999999702,
+            "samples": [
+              6934,
+              4521.79999999702,
+              4638.79999999702
+            ]
+          },
+          "startupReadyMs": {
+            "median": 4660.60000000149,
+            "samples": [
+              6953.60000000149,
+              4541.29999999702,
+              4660.60000000149
+            ]
+          },
+          "systemStartupCompleteMs": {
+            "median": 4743.39999999851,
+            "samples": [
+              7025.80000000447,
+              4603.39999999851,
+              4743.39999999851
+            ]
+          },
+          "primaryToGateMs": {
+            "median": 19.600000001490116,
+            "samples": [
+              19.600000001490116,
+              19.5,
+              21.80000000447035
+            ]
+          },
+          "longTaskCount": {
+            "median": 13,
+            "samples": [
+              14,
+              13,
+              13
+            ]
+          },
+          "longTaskTotalMs": {
+            "median": 1772,
+            "samples": [
+              2519,
+              1562,
+              1772
+            ]
+          },
+          "jsHeapUsedBytes": {
+            "median": 34389160,
+            "samples": [
+              42289420,
+              34389160,
+              33498224
+            ]
+          },
+          "rendererRssBytes": {
+            "median": 1634541568,
+            "samples": [
+              1484398592,
+              1734111232,
+              1634541568
+            ]
+          }
+        },
+        "cp": {
+          "primaryScreenReadyMs": {
+            "median": 60321.70000000298,
+            "samples": [
+              51657.30000000447,
+              60321.70000000298,
+              75016.39999999851
+            ]
+          },
+          "startupReadyMs": {
+            "median": 60338.60000000149,
+            "samples": [
+              51682.20000000298,
+              60338.60000000149,
+              75032.19999999553
+            ]
+          },
+          "systemStartupCompleteMs": {
+            "median": 60493.39999999851,
+            "samples": [
+              51796.20000000298,
+              60493.39999999851,
+              75168.5
+            ]
+          },
+          "primaryToGateMs": {
+            "median": 16.899999998509884,
+            "samples": [
+              24.899999998509884,
+              16.899999998509884,
+              15.799999997019768
+            ]
+          },
+          "longTaskCount": {
+            "median": 18,
+            "samples": [
+              14,
+              23,
+              18
+            ]
+          },
+          "longTaskTotalMs": {
+            "median": 6889.5,
+            "samples": [
+              7568.89999999851,
+              6889.5,
+              6725.4000000059605
+            ]
+          },
+          "jsHeapUsedBytes": {
+            "median": 130895944,
+            "samples": [
+              416867200,
+              103757364,
+              130895944
+            ]
+          },
+          "rendererRssBytes": {
+            "median": 1099956224,
+            "samples": [
+              1096577024,
+              1136816128,
+              1099956224
+            ]
+          }
+        },
+        "orders": {
+          "primaryScreenReadyMs": {
+            "median": 7796,
+            "samples": [
+              7612.70000000298,
+              8446.89999999851,
+              7796
+            ]
+          },
+          "startupReadyMs": {
+            "median": 7814.0999999940395,
+            "samples": [
+              7634,
+              8475.29999999702,
+              7814.0999999940395
+            ]
+          },
+          "systemStartupCompleteMs": {
+            "median": 7936.5999999940395,
+            "samples": [
+              7750.10000000149,
+              8586.89999999851,
+              7936.5999999940395
+            ]
+          },
+          "primaryToGateMs": {
+            "median": 21.299999997019768,
+            "samples": [
+              21.299999997019768,
+              28.399999998509884,
+              18.099999994039536
+            ]
+          },
+          "longTaskCount": {
+            "median": 20,
+            "samples": [
+              20,
+              21,
+              20
+            ]
+          },
+          "longTaskTotalMs": {
+            "median": 7940.5,
+            "samples": [
+              7940.5,
+              7667.39999999851,
+              7987.5
+            ]
+          },
+          "jsHeapUsedBytes": {
+            "median": 130395076,
+            "samples": [
+              130395076,
+              120800028,
+              138694548
+            ]
+          },
+          "rendererRssBytes": {
+            "median": 809795584,
+            "samples": [
+              800268288,
+              809795584,
+              935055360
+            ]
+          }
+        },
+        "koleksiyon": {
+          "primaryScreenReadyMs": {
+            "median": 10966.89999999851,
+            "samples": [
+              17089.39999999851,
+              10966.89999999851,
+              8587.60000000149
+            ]
+          },
+          "startupReadyMs": {
+            "median": 11026.89999999851,
+            "samples": [
+              17101.19999999553,
+              11026.89999999851,
+              8611
+            ]
+          },
+          "systemStartupCompleteMs": {
+            "median": 11074.09999999404,
+            "samples": [
+              17140,
+              11074.09999999404,
+              8691.60000000149
+            ]
+          },
+          "primaryToGateMs": {
+            "median": 23.399999998509884,
+            "samples": [
+              11.799999997019768,
+              60,
+              23.399999998509884
+            ]
+          },
+          "longTaskCount": {
+            "median": 5,
+            "samples": [
+              0,
+              5,
+              7
+            ]
+          },
+          "longTaskTotalMs": {
+            "median": 954,
+            "samples": [
+              0,
+              1001,
+              954
+            ]
+          },
+          "jsHeapUsedBytes": {
+            "median": 12606928,
+            "samples": [
+              15805012,
+              11623720,
+              12606928
+            ]
+          },
+          "rendererRssBytes": {
+            "median": 539947008,
+            "samples": [
+              539947008,
+              546496512,
+              537964544
+            ]
+          }
+        }
+      },
+      "sameTabMs": {
+        "cp": {
+          "median": 44885.39999999851,
+          "samples": [
+            44885.39999999851,
+            44900.5,
+            37322.39999999851
+          ]
+        },
+        "orders": {
+          "median": 2655.2999999970198,
+          "samples": [
+            4537.60000000149,
+            2178.2000000029802,
+            2655.2999999970198
+          ]
+        },
+        "koleksiyon": {
+          "median": 150.89999999850988,
+          "samples": [
+            167.39999999850988,
+            116.10000000149012,
+            150.89999999850988
+          ]
+        }
+      },
+      "statusRefreshP50Ms": 4.547117000000071,
+      "statusRefreshP95Ms": 16.7299090000015,
+      "health404RefreshP95Ms": 770.7915309999989,
+      "runtime": {
+        "platform": "linux",
+        "node": "v24.19.0",
+        "chromium": "154.0.8037.57",
+        "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+        "availableParallelism": 4,
+        "cpuQuota": "800000 200000",
+        "memoryLimitBytes": "17179869184",
+        "sampling": {
+          "startMs": 0,
+          "endMs": 10000,
+          "clock": "navigation performance.now; tasks clipped at window end"
+        }
+      }
+    }
+  },
+  "micro": {
+    "catalog": {
+      "before": {
+        "medianMs": 5525.734116,
+        "samplesMs": [
+          6858.626256,
+          5525.734116,
+          4967.682643
+        ],
+        "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4"
+      },
+      "after": {
+        "medianMs": 1961.454099,
+        "samplesMs": [
+          1497.053764,
+          2201.8862,
+          1961.454099
+        ],
+        "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4"
+      }
+    },
+    "sort": {
+      "before": {
+        "medianMs": 5562.102402,
+        "samplesMs": [
+          5321.333547,
+          5705.391342,
+          5562.102402
+        ],
+        "sha256": "66a8a9a3954c5edb38a8e6250b83185ff31f52caa482bd8731b247baa567164e"
+      },
+      "after": {
+        "medianMs": 358.282465,
+        "samplesMs": [
+          343.3975,
+          358.282465,
+          386.38097100000005
+        ],
+        "sha256": "66a8a9a3954c5edb38a8e6250b83185ff31f52caa482bd8731b247baa567164e"
+      }
+    },
+    "reader": {
+      "before": {
+        "medianMs": 1571.498395,
+        "samplesMs": [
+          1571.498395,
+          1525.599457,
+          1626.837921
+        ],
+        "sha256": "87624d6c0b51f3ac11e25fa8d23dae272b1b3569eaede5f18fd8365f574f6be9"
+      },
+      "after": {
+        "medianMs": 17.978583999999984,
+        "samplesMs": [
+          16.069481999999994,
+          17.978583999999984,
+          18.002378000000007
+        ],
+        "sha256": "87624d6c0b51f3ac11e25fa8d23dae272b1b3569eaede5f18fd8365f574f6be9"
+      }
+    }
+  },
+  "finalMicroSeries": "v3",
+  "limits": [
+    "Linux4vCPU Node24 headlessChromium; not Windows/Electron",
+    "Fixed0-10s clipped longtask window, not whole-process CPU",
+    "Uncollected heap, no forcedGC",
+    "/api/health404 RTT is not a successful health check; /api/status success recorded separately",
+    "F0 Collection has0rows; populated Collection hot-path timing is separate5000row micro",
+    "Default server inspector stall profiler enabled in both arms; its observer effect not isolated",
+    "Preliminary v2 first catalog pair worsened13.323->34.239s; all preliminary samples retained; final v3 measured after lazy-index correction",
+    "Final micro runtime was dirty5f2c38d7 with byte-exact runtimeSourceHashes+workingTreeDirty+harnessSHA per child; candidate committed beforeF0"
+  ],
+  "integration": {
+    "mainPreserved": "c225f91158cf9b7852c79121776ee5c8e5a55334",
+    "prPreserved": 880,
+    "integratedCodeHead": "eaa2ac6a87b15bfb1dd6abdeec91407582b1f6fe",
+    "tests": {
+      "files": 139,
+      "pass": 803,
+      "fail": 0,
+      "skip": 0,
+      "cancelled": 0
+    },
+    "i18nNewMissing": 0,
+    "i18nBaseline": 0,
+    "notes": 25,
+    "UI": {
+      "trLightRoot": "liN4ws",
+      "enDarkRoot": "FBVOeA",
+      "seedCollectionRows": 6,
+      "imagesViewed": true
+    },
+    "macroRerunForRoyalties": false,
+    "limit": "Macro timings measure41789cca vs67fe95 beforeupstream880; changedlicenseclassificationcostnotmeasuredbythiscohort",
+    "failedFirstTestAttempt": "4 files failed before tests due missing default /home/agent/.buyer-log/write-recovery; reran all139 in dedicated synthetic temp roots without changing tests"
+  }
+}

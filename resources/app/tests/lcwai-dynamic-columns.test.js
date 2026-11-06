@@ -31,7 +31,7 @@ function fixture() {
     BuyerLogAI: { registerContextProvider: provider => providers.set(provider.id, provider) } };
   const env = {
     window, console, File, document: { documentElement: { lang: 'tr' }, getElementById() { return null; } },
-    state: { cp: { rows: cpRows }, orders: { rows: cpRows } }, kolRows, appLang: 'tr',
+    state: { cp: { rows: cpRows }, orders: { rows: cpRows } }, kolRows, kolWorkspaceRevision: 0, appLang: 'tr',
     APP_PAGE_META: { cp: { tr: 'CP', en: 'CP' }, orders: { tr: 'Siparişler', en: 'Orders' }, koleksiyon: { tr: 'Koleksiyon', en: 'Collection' } },
     KOL_SYNTHETIC_COL_KEYS: ['__bestPrice__', '__confirmedName__', '__confirmedPrice__'],
     KOL_SYNTHETIC_COL_META: { __bestPrice__: { kind: 'best', label: 'Best Price' }, __confirmedName__: { kind: 'confirmedName', label: 'Conf. Manufacturer' }, __confirmedPrice__: { kind: 'confirmedPrice', label: 'Approved Mfr. Price' } },

@@ -1,0 +1,1 @@
+{"screenshot":"/tmp/phase-4-lazy-collection-en-dark.png","evidence":"/tmp/buyerlog-perf-ui-k2I1tt"}

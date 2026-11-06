@@ -22883,6 +22883,7 @@ function kolReportConflicts(conflicts){
     // baseline would give the rejected local snapshot a fresh token: a later
     // automatic pricing save could then overwrite unrelated accepted fields.
   }
+  if(rebased&&typeof window!=='undefined')window.BLCollectionModelGroups?.invalidateValueReader?.(kolRows);
   kolPersistPendingWorkspace(rebased?'rebased':'conflict');
   if(!rebased){
     const ids=list.map(item=>item.id).slice(0,5).join(', ');
@@ -23052,6 +23053,7 @@ async function kolSaveWorkspaceNow(saveOptions){
           if(options.preparedChange&&index>=0){const key=String(item.id),sent=(payload.upserts||[]).find(row=>kolRowKey(row)===key);if(sent)kolRows[index]=kolMergeLocalRowDelta(kolBaseline?.rows.get(key),kolRows[index],{...sent,_rev:Number(item.rev)||sent._rev});}
           if(index>=0)kolRows[index]._rev=Number(item.rev)||kolRows[index]._rev;
         }
+        if(options.preparedChange&&typeof window!=='undefined')window.BLCollectionModelGroups?.invalidateValueReader?.(kolRows);
         if(!kolBaseline)kolCaptureBaseline();
         for(const item of Array.isArray(data.applied)?data.applied:[]){
           const key=String(item.id),sent=(payload.upserts||[]).find(row=>kolRowKey(row)===key);
@@ -25032,6 +25034,7 @@ function migrateKolRow(r){
 // with an exact high-confidence identity are grouped automatically.
 function kolNormalizeModelGroups(rows){
   const api=window.BLCollectionModelGroups;
+  api?.invalidateValueReader?.(rows);
   return api?.normalizeRows ? api.normalizeRows(Array.isArray(rows)?rows:[]).rows : (Array.isArray(rows)?rows:[]);
 }
 function kolLinkImportedColourVariants(rows){
@@ -25141,6 +25144,7 @@ function kolHasVariantOverride(row,key){
 }
 function kolEffectiveValue(row,key){
   const api=window.BLCollectionModelGroups;
+  if(api?.valueReaderForRevision)return api.valueReaderForRevision(kolRows,kolWorkspaceRevision)(row,key);
   return api?.effectiveValue?api.effectiveValue(row,key,kolRows):(row?.[key]??'');
 }
 function kolEffectiveEndeksmatikRow(row){
@@ -38466,6 +38470,7 @@ function kolApplyRemotePatches(rowPatches){
     if(id)touched.add(id);
     applied++;appliedItems.push(item);
   }
+  if(applied&&typeof window!=='undefined')window.BLCollectionModelGroups?.invalidateValueReader?.(kolRows);
   kolDeferredPatches=deferred;
   if(appliedItems.length&&kolBaseline&&kolBaseline.ownerId===kolWorkspaceOwnerId){
     // Yalnız gerçekten uygulanan yamalar baseline'a geçer. Bekletilen satırı
