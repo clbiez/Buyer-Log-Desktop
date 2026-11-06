@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "loading-approval-exfactory",
+      "type": "fix",
+      "module": {
+        "tr": "CP, Siparişler ve Backlog",
+        "en": "CP, Orders and Backlog"
+      },
+      "title": {
+        "tr": "Geç yükleme onayı Ex-Factory hesaplarını günceller",
+        "en": "Late loading approval updates Ex-Factory calculations"
+      },
+      "body": {
+        "tr": "ASAS yükleme onayı geçerli Ex-Factory tarihinden sonraysa Buyer Log bu tarihi otomatik Ex-Factory revizyonu olarak kullanır. Ex→Retail, LT, kurallar, checklist ve raporlar aynı tarihi esas alır. ASAS orijinali ve mevcut manuel revizyon kayıtları korunur; onaydan daha ileri bir manuel tarih varsa o tarih kullanılır. Otomatik revizyonda ASAS orijinal Ex-Factory tarihi ve kilitli Yükleme onay tarihi kaynak etiketleriyle yan yana görünür; manuel revizyon eski → yeni oku ile ayrı kalır. Hücre, yapıştırma, içe aktarma ve tekli/toplu API düzenlemeleriyle değiştirilemez; ASAS onayı yenilendiğinde yeniden hesaplanır.",
+        "en": "When ASAS loading approval is later than the effective Ex-Factory date, Buyer Log uses it as an automatic Ex-Factory revision. Ex→Retail, LT, rules, checklists and reports use the same date. The ASAS original and existing manual revision records are preserved; a manual date later than approval remains effective. Automatic revisions show the original ASAS Ex-Factory and locked loading approval dates side by side with source labels; manual revisions retain their separate old → new arrows. Cell editing, paste, import and single/batch API edits cannot change the automatic date; it is recalculated when ASAS approval is refreshed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "loading-approval-exfactory.png",
+        "alt": {
+          "tr": "Buyer Log CP ekranında kilitli otomatik yükleme onayı revizyonu ve ayrı manuel revizyon",
+          "en": "Locked automatic loading approval revision and separate manual revision in Buyer Log CP"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: 30.10.26 planı yerine 05.11.26 onayı kullanılır; otomatik ve manuel revizyonlar ayrı görünür.",
+          "en": "Actual Buyer Log with isolated demo data: approval on 05 Nov 2026 replaces the 30 Oct plan; automatic and manual revisions look distinct."
+        }
+      }
+    },
+    {
       "id": "collection-lfl-durable-references",
       "type": "fix",
       "module": {"tr": "Koleksiyon", "en": "Collection"},
