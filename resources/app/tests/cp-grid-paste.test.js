@@ -163,16 +163,18 @@ test('CP elle girilen alanlara yazar; Orders yapıştırma almaz', () => {
   const register = extractFunction(APP, 'registerManagedGridClipboard');
   assert.match(register, /applyPaste:tableKey==='cp'\?applyCpGridPaste:undefined/);
   assert.match(register, /pasteTarget:tableKey==='cp'\?cpPasteTarget:undefined/);
-  const cpPasteTarget = new Function('turknorm', 'licenseLicensorStateForRow', 'norm', 'window',
+  const cpPasteTarget = new Function('turknorm', 'licenseLicensorStateForRow', 'norm', 'window', 'BLRevision',
     `${extractFunction(APP, 'cpPasteTarget')}; return cpPasteTarget;`)(
     value => String(value || '').toUpperCase(),
     () => ({ hasLicense: true, status: 'resolved' }),
     value => String(value || '').trim(),
     { BLOrderImportanceUI: { pasteResolve() {} } },
+    require('../public/revision-display'),
   );
   const row = { _id: 1, Licensor: 'WB', License: 'Batman' };
   assert.equal(cpPasteTarget(row, { k: 'Supp. FOB', type: 'moneyEdit' }), 'suppfob');
   assert.equal(cpPasteTarget(row, { k: 'Ex-factory', type: 'exfactory' }), 'exfactory');
+  assert.equal(cpPasteTarget({...row,_exFactoryRevision:{source:'loading-approval'}}, { k: 'Ex-factory', type: 'exfactory' }), null);
   assert.equal(cpPasteTarget(row, { k: 'Del. Type', type: 'deltype' }), 'deltype');
   assert.equal(cpPasteTarget(row, { k: 'Sub-Manufacturer', type: 'submfr' }), 'submfr');
   assert.equal(cpPasteTarget(row, { k: 'Importance', type: 'importance' }), 'importance');

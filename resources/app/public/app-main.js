@@ -1263,9 +1263,22 @@ function coerceDateLoose(v){
 function normalizeCPDates(rows){
   rows.forEach(r=>{
     CP_DATE_KEYS.forEach(k=>{ if(k in r) r[k] = coerceDateLoose(r[k]); });
+    applyCpApprovalDate(r,r._exFactoryRevision?.previousDate||r['Ex-factory']);
     cpLogisticSegments(r).forEach(segment=>{ segment.arrival=coerceDateLoose(segment.arrival);segment.handover=coerceDateLoose(segment.handover); });
     if(cpLogisticHasDetails(r)) rebuildCpLogisticCaches(r);
   });
+}
+function applyCpApprovalDate(row,planned=row['Ex-factory']){
+  const effective=BLBusinessRules.resolveExFactoryDate(planned,row['Buying Son Onay Tarihi'],dateOrdinal);
+  if(effective.automatic){
+    if(!Object.prototype.hasOwnProperty.call(row,'_asasExFactory'))row._asasExFactory=coerceDateLoose(planned);
+    row._exFactoryRevision={source:'loading-approval',previousDate:coerceDateLoose(planned)};
+    row['Ex-factory']=coerceDateLoose(effective.value);
+  }else{
+    row._exFactoryRevision=null;
+    row['Ex-factory']=coerceDateLoose(planned);
+  }
+  delete row._revBaseRow;
 }
 const dz = document.getElementById('dropzone');
 let dragCounter=0;
@@ -5684,16 +5697,17 @@ const REVISION_DATE_KEYS = new Set(BLRevision.DATE_KEYS);
 function revisionBaseRow(row){ return BLRevision.baselineRow(row, base=>applyFormulas(base)); }
 function revisionInfo(row,key,computed){
   const base=revisionBaseRow(row);
+  const withSource=rev=>rev&&BLRevision.isAutomaticExFactory(row)&&['Ex-factory','Ex→Retail','LT','Priority'].includes(key)?{...rev,source:'loading-approval'}:rev;
   // Türev hücrelerde karşılaştırma ham row değerine değil, bu render için anlık
   // hesaplanan değere yapılır. Böylece Ex-Factory revizyonu geri alındığı anda
   // Ex→Retail de sayfa yenilemeden orijinaline döner; LT ise sunucudan ham değer
   // gelmese bile yanlışlıkla “131→—” gibi revize görünmez.
   if(computed){
-    if(key==='Ex→Retail') return BLRevision.infoValue(row,key,base,computed.exr==null?'':computed.exr);
-    if(key==='LT') return BLRevision.infoValue(row,key,base,computed.lt==null?'':computed.lt);
+    if(key==='Ex→Retail') return withSource(BLRevision.infoValue(row,key,base,computed.exr==null?'':computed.exr));
+    if(key==='LT') return withSource(BLRevision.infoValue(row,key,base,computed.lt==null?'':computed.lt));
   }
-  if(key==='Priority') return BLRevision.infoValue(row,key,base,actionPriorityCode(row&&row['Priority'])||'');
-  return BLRevision.info(row,key,base);
+  if(key==='Priority') return withSource(BLRevision.infoValue(row,key,base,actionPriorityCode(row&&row['Priority'])||''));
+  return withSource(BLRevision.info(row,key,base));
 }
 
 function revisionText(key,value){
@@ -5706,6 +5720,14 @@ function revisionText(key,value){
 function revisionHtml(key,rev,renderValue){
   const render=typeof renderValue==='function'?renderValue:(value=>escapeHtml(revisionText(key,value)));
   const title=`${revisionText(key,rev.from)} → ${revisionText(key,rev.to)}`;
+  if(rev.source==='loading-approval'){
+    const hint=appLang==='en'?'Calculated using the loading approval date from ASAS. This automatic date cannot be edited.':'ASAS yükleme onay tarihi esas alınır. Bu otomatik tarih elle değiştirilemez.';
+    if(key==='Ex-factory'){
+      const sources=appLang==='en'?`ASAS Ex-Factory: ${revisionText(key,rev.from)} · Loading approval: ${revisionText(key,rev.to)}`:`ASAS Ex-Factory: ${revisionText(key,rev.from)} · Yükleme onayı: ${revisionText(key,rev.to)}`;
+      return `<span class="revAutomatic revAutomaticDates" title="${escapeHtml(sources+'. '+hint)}"><span class="revAutoOriginal">${render(rev.from)}</span><span class="revAutoSeparator" aria-hidden="true">·</span><strong class="revAutoApproved">${render(rev.to)}</strong></span>`;
+    }
+    return `<span class="revAutomatic" title="${escapeHtml(hint+' '+title)}">${render(rev.to)}</span>`;
+  }
   return `<span class="revPair" title="${escapeHtml(L('Orijinal')+': '+revisionText(key,rev.from))}" data-rev-title="${escapeHtml(title)}">`
     +`<span class="revOld">${render(rev.from)}</span>`
     +`<span class="revArrow" aria-hidden="true">→</span>`
@@ -5903,7 +5925,7 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
       <div class="cpLogisticQty">${fmtInt(segment.quantity)} <small>${appLang==='en'?'units':'adet'}</small></div>
       <div>${badge(escapeHtml(statusDisplay(segment.status)||'—'),statusTone(segment.status))}</div>
       <div>${escapeHtml(segment.delType?transitDelTypeDisplay(segment.delType):'—')}</div>
-      <div>${fmtDate(exFactory)||'—'}</div>
+      <div>${BLRevision.isAutomaticExFactory(row)?revisionHtml('Ex-factory',{from:row._asasExFactory,to:exFactory,source:'loading-approval'}):(fmtDate(exFactory)||'—')}</div>
       <div>${fmtDate(loadingApproval)||'—'}</div>
       <div>${fmtDate(handover)||'—'}</div>
       <div class="cpLogisticDateValue"><strong>${fmtDate(arrival)||'—'}</strong>${arrivalNote?`<small>${escapeHtml(arrivalNote)}</small>`:''}</div>
@@ -6047,6 +6069,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
     case 'date': return `<td>${fmtDate(v)}</td>`;
     case 'exfactory': {
       const body = rev ? revisionHtml(c.k, rev) : (fmtDate(v)||'—');
+      if(BLRevision.isAutomaticExFactory(r))return `<td class="viewOnlyCell">${body}</td>`;
       // Orders'ta ekip arkadaşlarının satırları salt-okunur olabilir. Düzenleme
       // yetkisi olmaması revizyon kaynağını gizlememeli: orijinal → revize tarih
       // yine gösterilir, yalnız hücre düzenlenemez.
@@ -9928,6 +9951,7 @@ function applyHistoryAction(action, direction, options={}){
   if(!row||row._canEdit===false) return;
   const sharedHistory=action.pricing?!action.pricing.prev.licensor:(action.fields||[]).some(field=>['Ex-factory','Retail Date','In-Store (Model Budget)','Sub-Manufacturer','Supp. FOB'].includes(field.key));
   if(row._canEditShared===false&&sharedHistory)return;
+  if(row._exFactoryRevision&&(action.fields||[]).some(field=>field.key==='Ex-factory')&&BLRevision.isAutomaticExFactory(row))return;
   action.fields.forEach(f=>{ row[f.key] = direction==='undo' ? f.prev : f.next; });
   const historyKeys=new Set((action.fields||[]).map(field=>field.key));
   if(action.pricing){
@@ -10277,6 +10301,7 @@ function commitCpEditor(t, options={}){
     showToast(appLang==='en'?'Shared fields for this order are view only.':'Bu siparişin ortak alanları için yalnız görüntüleme yetkiniz var.');return false;
   }
   if(kind==='exfactory'){
+    if(BLRevision.isAutomaticExFactory(row))return false;
     const prev = row[key];
     let next = null;
     const isoVal=dateValueISO(t); if(isoVal){ const [y,mo,da] = isoVal.split('-').map(Number); next = new Date(y,mo-1,da); }
@@ -10285,6 +10310,9 @@ function commitCpEditor(t, options={}){
     // toDateOnly, temel metin olarak gelmiş olsa bile gün bazlı Date'e çevirir;
     // aksi halde satırda Date ile metin karışıp gün kaymasına yol açabiliyor.
     if(next==null) next = toDateOnly(BLRevision.baselineDate(row,key));
+    if(BLBusinessRules.resolveExFactoryDate(next,row['Buying Son Onay Tarihi'],dateOrdinal).automatic){
+      showToast(appLang==='en'?'Ex-Factory cannot be earlier than the loading approval date.':'Ex-Factory yükleme onay tarihinden önce olamaz.');return false;
+    }
     if(editableValuesEqual(prev,next)) return false;
     row[key] = next;
     if(kind==='exfactory')syncCpProductionLogisticSegment(row);
@@ -10523,6 +10551,7 @@ function enterDateEdit(span){
   const rows=state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:null;
   const row = rows?resolveCpEditorRow(span):null;
   if(!row) return;
+  if(key==='Ex-factory'&&BLRevision.isAutomaticExFactory(row))return;
   if(row._canEdit===false){showToast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.'));return;}
   const input = document.createElement('input');
   input.type='date'; input.className='editCell';
@@ -13071,6 +13100,7 @@ function saveDateOverrides(row, touchedKeys){
   const nextKeys = (Array.isArray(touchedKeys) || touchedKeys instanceof Set)
     ? [...touchedKeys].filter(key => Object.prototype.hasOwnProperty.call(payloadKeys, key))
     : allKeys;
+  if(BLRevision.isAutomaticExFactory(row))nextKeys.splice(0,nextKeys.length,...nextKeys.filter(key=>key!=='Ex-factory'));
   if(!nextKeys.length) return;
   const syncKey = overrideSyncKey(row, orderCode);
   const bucket = _pendingDateOverrideKeys.get(syncKey) || new Set();
@@ -13080,6 +13110,7 @@ function saveDateOverrides(row, touchedKeys){
     const revised = new Set(BLRevision.revisedDateKeys(row));
     const dates = {};
     for(const key of keysToSend){
+      if(key==='Ex-factory'&&BLRevision.isAutomaticExFactory(row))continue;
       const field = payloadKeys[key];
       if(!field) continue;
       dates[field] = revised.has(key) ? (toISODate(row[key])||null) : null;
@@ -13914,6 +13945,7 @@ const TABLE_META = {
    salt-okunur, yetkisiz veya modal ile düzenlenen (Notes / Ek Not) hücreler atlanır. */
 function cpPasteTarget(row,column){
   if(!row||!column||row._canEdit===false) return null;
+  if(column.k==='Ex-factory'&&BLRevision.isAutomaticExFactory(row))return null;
   const shared=['exfactory','retailEdit','instoreEdit','submfr'].includes(column.type)||(column.type==='moneyEdit'&&column.k==='Supp. FOB');
   if(shared&&row._canEditShared===false) return null;
   switch(column.type){
@@ -29750,6 +29782,7 @@ function cpImportBuildItems(plan,fieldIdMap){
     const patch={...lineIdentity(row)};
     op.changes.forEach(change=>{
       const fieldId=fieldIdMap.get(change.fieldId)||change.fieldId;
+      if(fieldId==='Ex-factory'&&BLRevision.isAutomaticExFactory(row))throw new Error(appLang==='en'?'Automatic Ex-Factory from loading approval cannot be imported over.':'Yükleme onayından gelen otomatik Ex-Factory içe aktarımla değiştirilemez.');
       const value=change.kind==='clear'?null:change.to;
       if(fieldId==='Sub-Manufacturer'){ patch.subManufacturer=value==null?'':String(value); return; }
       if(fieldId==='Licensor'){ patch.licensor=value==null?'':String(value); return; }
@@ -38540,6 +38573,7 @@ function applyRemoteRowPatch(row,patch){
   if(patch.dates&&typeof patch.dates==='object'){
     const dateFields={exFactory:'Ex-factory',retailDate:'Retail Date',inStoreDate:'In-Store (Model Budget)'};
     for(const [incoming,field] of Object.entries(dateFields))if(Object.prototype.hasOwnProperty.call(patch.dates,incoming))row[field]=String(patch.dates[incoming]);
+    if(Object.prototype.hasOwnProperty.call(patch.dates,'exFactory')&&row['Buying Son Onay Tarihi'])applyCpApprovalDate(row);
   }
   if(Object.prototype.hasOwnProperty.call(patch,'imageRef')){
     const oldUrl=row._imageUrl,oldRef=row._imageRef;
