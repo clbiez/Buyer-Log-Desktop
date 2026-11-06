@@ -1,5 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),zlib=require('node:zlib');
+const serverData=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-compute-native-data-'));process.env.BUYER_LOG_SERVER_DATA_ROOT=serverData;
+test.after(()=>fs.rmSync(serverData,{recursive:true,force:true}));
 const {createComputePool}=require('../server/lib/compute-pool'),codec=require('../server/lib/compute-source-codec'),tasks=require('../server/lib/compute-tasks');
 const {createComputeService}=require('../server/lib/compute-service');
 const MiB=1024*1024;
@@ -176,4 +178,16 @@ test('native CP code hints equal the canonical resolver without hydrating raw so
   const lease=await service.run('cp-shared-edit-codes',descriptor,{access,codes});
   try{assert.deepEqual(JSON.parse(zlib.gunzipSync(Buffer.from(lease.value.buffer))),{ok:true,denied:policy.sharedEditDeniedCodes(access,codes)});}finally{lease.release();}
  }
+});
+test('legacy metadata is decoded in the common worker without a raw order source and rejects replaced files',async t=>{
+ const {service}=setup(t),engine=require('../server/lib/endeksmatik'),file=engine.PERSISTED_FILE;
+ fs.mkdirSync(path.dirname(file),{recursive:true});const old=fs.existsSync(file)?fs.readFileSync(file):null;
+ t.after(()=>old?fs.writeFileSync(file,old):fs.rmSync(file,{force:true}));
+ const snapshot={schemaVersion:1,months:['202601'],records:[],fx:{},season:'DEMO',generatedAt:'2026-11-05T00:00:00Z'};
+ fs.writeFileSync(file,zlib.gzipSync(JSON.stringify(snapshot)));
+ const expected=engine.legacyStatus(),stat=fs.statSync(file),descriptor={file,usingDefault:false,tag:[stat.mtimeMs,stat.ctimeMs,stat.size,stat.ino].join(':')};
+ const lease=await service.runEndeksmatikStatus('viewer',descriptor);
+ try{assert.deepEqual(lease.value.status,expected);assert.ok(lease.metrics.threadId>0);}finally{lease.release();}
+ fs.writeFileSync(file,zlib.gzipSync(JSON.stringify({...snapshot,season:'DEMO CHANGED'})));
+ await assert.rejects(service.runEndeksmatikStatus('viewer',descriptor),{code:'COMPUTE_STALE_GENERATION'});
 });

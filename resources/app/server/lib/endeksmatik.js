@@ -83,7 +83,7 @@ function buildRuntime(snapshot){
   });
   return {snapshot,monthIndex,byKey,byNoSupply};
 }
-function readSnapshotFile(file){ return JSON.parse(zlib.gunzipSync(fs.readFileSync(file)).toString('utf8')); }
+function readSnapshotFile(file,options){ return JSON.parse(zlib.gunzipSync(fs.readFileSync(file),options).toString('utf8')); }
 function loadSnapshot({force=false,index=true}={}){
   const materialize=()=>{if(index&&!cached.byKey)cached=buildRuntime(cached.snapshot);return cached;};
   const prepare=snapshot=>{validateSnapshot(snapshot);return index?buildRuntime(snapshot):{snapshot};};
@@ -407,10 +407,12 @@ function readActiveSelection(){
   if(shared)return shared;
   try{return JSON.parse(fs.readFileSync(ACTIVE_FILE,'utf8'));}catch(_){return {};}
 }
+function legacyMetaForStatus(s){
+  return {id:LEGACY_SET_ID,model:'legacy-tl',label:'Eski Endeksmatik (TL şablonu)',region:'',season:s.season,sourceFile:s.sourceFile,sourceUpdatedAt:s.sourceUpdatedAt,uploadedAt:s.generatedAt,version:`legacy:${s.sourceUpdatedAt||''}:${s.generatedAt||''}`,recordCount:s.recordCount,firstMonth:s.firstMonth,lastMonth:s.lastMonth,targetAdjustmentPct:s.targetAdjustmentPct,usingDefault:s.usingDefault};
+}
 function legacyMeta(){
   try{
-    const s=legacyStatus();
-    return {id:LEGACY_SET_ID,model:'legacy-tl',label:'Eski Endeksmatik (TL şablonu)',region:'',season:s.season,sourceFile:s.sourceFile,sourceUpdatedAt:s.sourceUpdatedAt,uploadedAt:s.generatedAt,version:`legacy:${s.sourceUpdatedAt||''}:${s.generatedAt||''}`,recordCount:s.recordCount,firstMonth:s.firstMonth,lastMonth:s.lastMonth,targetAdjustmentPct:s.targetAdjustmentPct,usingDefault:s.usingDefault};
+    return legacyMetaForStatus(legacyStatus());
   }catch(_){return null;}
 }
 function listSets(){
@@ -434,6 +436,36 @@ function publicStatus(){
   }
   const meta=sets.find(s=>s.id===active);
   return {ok:true,...meta,setId:meta.id,activeSetId:active,sets,usingDefault:false};
+}
+function statusFileTag(stat){return [stat.mtimeMs,stat.ctimeMs,stat.size,stat.ino].join(':');}
+function staleStatus(){return Object.assign(new Error('Endeksmatik veri sürümü değişti. / The Endeksmatik data generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});}
+function legacyDiskStatusPlan(){
+  // Ölçülen açılış yolu: diskteki tek eski şablon. Yetkili delta belgeleri ve
+  // bağımsız yüklenmiş setler kendi mevcut çözümleyicilerinde kalır.
+  if(fromSharedDocument(documents.read(DOCUMENT_ID))||setIds().length)return null;
+  const file=fs.existsSync(PERSISTED_FILE)?PERSISTED_FILE:DEFAULT_FILE;
+  if(!fs.existsSync(file))throw new Error('Endeksmatik veri snapshotı bulunamadı.');
+  return {file,usingDefault:file===DEFAULT_FILE,tag:statusFileTag(fs.statSync(file))};
+}
+const diskStatusCache=new Map();
+function readLegacyStatusFile(descriptor,maxOutputLength){
+  const file=path.resolve(String(descriptor&&descriptor.file||''));
+  if(![PERSISTED_FILE,DEFAULT_FILE].includes(file))throw Object.assign(new Error('Geçersiz metadata kaynağı. / Invalid metadata source.'),{code:'COMPUTE_JOB_INVALID',statusCode:400});
+  if(statusFileTag(fs.statSync(file))!==descriptor.tag)throw staleStatus();
+  const hit=diskStatusCache.get(file);if(hit&&hit.tag===descriptor.tag)return hit.status;
+  let snapshot;
+  try{snapshot=readSnapshotFile(file,{maxOutputLength});}
+  catch(error){if(error.code==='ERR_BUFFER_TOO_LARGE')throw Object.assign(new Error('Metadata kaynağı bellek bütçesine sığmıyor. / Metadata source exceeds the memory budget.'),{code:'COMPUTE_SOURCE_TOO_LARGE',statusCode:413});throw error;}
+  validateSnapshot(snapshot);
+  const status=publicStatusForSnapshot(snapshot,file===DEFAULT_FILE);
+  if(statusFileTag(fs.statSync(file))!==descriptor.tag)throw staleStatus();
+  diskStatusCache.set(file,{tag:descriptor.tag,status});return status;
+}
+async function publicStatusAsync(readLegacyFile){
+  const plan=legacyDiskStatusPlan();if(!plan)return publicStatus();
+  const status=await readLegacyFile(plan),current=legacyDiskStatusPlan();
+  if(!current||current.file!==plan.file||current.tag!==plan.tag)throw staleStatus();
+  return {...status,model:'legacy-tl',setId:LEGACY_SET_ID,activeSetId:LEGACY_SET_ID,sets:[legacyMetaForStatus(status)]};
 }
 function resolveSetForCalculation(setId){
   const requested=String(setId||'').trim();
@@ -564,4 +596,4 @@ async function restoreLegacyReceipt(snapshot,active,wasDefault,options={}){retur
   if(documents.writesLegacy)fs.rmSync(PERSISTED_FILE,{force:true});if(selection)writeActiveLegacy(selection);cached=null;cachedFile='';
  }else await saveSnapshot(snapshot,{...options,activeSelectionId:active});return publicStatus();
 });}
-module.exports={normalizeLabel,restoreLegacyReceipt,removeImportedSet:(id,active,options={})=>mutate(options,async()=>{return deleteSet(id,{...options,activeSelectionId:active});}),sourceFingerprint,parseImportWorkbook,restoreSet,readSetSnapshot:id=>{const entry=loadSet(id);return entry?entry.snapshot:null;},SCHEMA_VERSION,DEFAULT_FILE,PERSISTED_FILE,COLLECTION,DOCUMENT_ID,COMPONENTS,LEGACY_SET_ID,ACTIVE_DOCUMENT_ID,SETS_DIR,attachDeltaStore,seedMissing,text,norm,keyOf,numberValue,monthCode,loadSnapshot,publicStatus,legacyStatus,resolveRecord,calculate,calculateLegacy,lookup,listSets,activeSetId,setActiveSet:(id,actor,options={})=>mutate(options,()=>setActiveSet(id,actor,options)),saveSet:(snapshot,options={})=>mutate(options,()=>saveSet(snapshot,options)),renameSet:(id,label,options={})=>mutate(options,()=>renameSet(id,label,options)),deleteSet:(id,options={})=>mutate(options,()=>deleteSet(id,options)),parseWorkbookBuffer,saveSnapshot:(snapshot,options={})=>mutate(options,()=>saveSnapshot(snapshot,options)),importWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importWorkbookBuffer(buffer,name,options)),importLegacyWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importLegacyWorkbookBuffer(buffer,name,options))};
+module.exports={normalizeLabel,restoreLegacyReceipt,removeImportedSet:(id,active,options={})=>mutate(options,async()=>{return deleteSet(id,{...options,activeSelectionId:active});}),sourceFingerprint,parseImportWorkbook,restoreSet,readSetSnapshot:id=>{const entry=loadSet(id);return entry?entry.snapshot:null;},SCHEMA_VERSION,DEFAULT_FILE,PERSISTED_FILE,COLLECTION,DOCUMENT_ID,COMPONENTS,LEGACY_SET_ID,ACTIVE_DOCUMENT_ID,SETS_DIR,attachDeltaStore,seedMissing,text,norm,keyOf,numberValue,monthCode,loadSnapshot,publicStatus,publicStatusAsync,readLegacyStatusFile,legacyStatus,resolveRecord,calculate,calculateLegacy,lookup,listSets,activeSetId,setActiveSet:(id,actor,options={})=>mutate(options,()=>setActiveSet(id,actor,options)),saveSet:(snapshot,options={})=>mutate(options,()=>saveSet(snapshot,options)),renameSet:(id,label,options={})=>mutate(options,()=>renameSet(id,label,options)),deleteSet:(id,options={})=>mutate(options,()=>deleteSet(id,options)),parseWorkbookBuffer,saveSnapshot:(snapshot,options={})=>mutate(options,()=>saveSnapshot(snapshot,options)),importWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importWorkbookBuffer(buffer,name,options)),importLegacyWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importLegacyWorkbookBuffer(buffer,name,options))};

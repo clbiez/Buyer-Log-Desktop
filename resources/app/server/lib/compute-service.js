@@ -127,6 +127,20 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       {ownerKey:'output:'+String(ownerId),generation:'1',priority:'interactive',...options,estimatedBytes,inputBytes,transferList:[encoded]});
     return {...lease,metrics:{...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024}};
   }
+  async function runEndeksmatikStatus(ownerId,descriptor){
+    if(closed)throw failure('COMPUTE_POOL_CLOSED');
+    const engine=require('./endeksmatik');
+    if(!ownerId||![engine.PERSISTED_FILE,engine.DEFAULT_FILE].includes(descriptor?.file))throw failure('COMPUTE_JOB_INVALID');
+    const ownerKey='endeksmatik-status:'+String(ownerId),generation=String(descriptor.tag||'');pool.setGeneration(ownerKey,generation);
+    let handle,rawBytes;
+    try{
+      handle=await fs.promises.open(descriptor.file,'r');const stat=await handle.stat();
+      if(stat.size<4)throw failure('COMPUTE_JOB_INVALID');
+      const tail=Buffer.alloc(4);await handle.read(tail,0,4,stat.size-4);rawBytes=Math.max(MiB,tail.readUInt32LE(0));
+    }finally{await handle?.close();}
+    const paramsBytes=Uint8Array.from(v8.serialize({descriptor,maxOutputLength:rawBytes})).buffer,inputBytes=paramsBytes.byteLength+1024;
+    return pool.run('endeksmatik-legacy-status',{paramsBytes},{ownerKey,generation,priority:'interactive',estimatedBytes:96*MiB+rawBytes*8,inputBytes,transferList:[paramsBytes]});
+  }
   async function hashAccessAuthority(authority,{onMetrics}={}){
     if(closed)throw failure('COMPUTE_POOL_CLOSED');
     const started=performance.now(),encoded=Uint8Array.from(v8.serialize(authority)).buffer,inputBytes=encoded.byteLength+1024;
@@ -141,6 +155,6 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     if(closing)return closing;closed=true;
     closing=(async()=>{await pool.close();await Promise.allSettled([...records.values()].map(record=>record.ready));await fs.promises.rm(privateRoot,{recursive:true,force:true,maxRetries:3,retryDelay:50});records.clear();current.clear();preparing.clear();reservedDiskBytes=0;})();return closing;
   }
-  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,hashAccessAuthority,warm,stats,close};
+  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,runEndeksmatikStatus,hashAccessAuthority,warm,stats,close};
 }
 module.exports={createComputeService};

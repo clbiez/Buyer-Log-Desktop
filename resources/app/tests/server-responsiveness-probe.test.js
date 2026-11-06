@@ -59,3 +59,36 @@ test('non-server Node children inheriting preload and environment do not pollute
     assert.equal(run.status,0,run.stderr);assert.deepEqual(probe.readProbeEvents(root),[]);
   }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+test('recording a real stall does not encode or synchronously write observations on the measured thread',()=>{
+  const root=fixture();
+  try{
+    const code=`const fs=require('node:fs'),p=require(${JSON.stringify(probeFile)}).startLoopProbe({fixtureRoot:process.argv[1]});const write=fs.writeSync,from=Buffer.from;let writes=0,encodes=0;fs.writeSync=function(...args){writes++;return write.apply(this,args);};Buffer.from=function(...args){if(Error().stack.includes('server-loop-probe.js'))encodes++;return from.apply(this,args);};setTimeout(()=>{const until=performance.now()+260;while(performance.now()<until){}setTimeout(()=>{fs.writeSync=write;Buffer.from=from;p.stop();process.stdout.write(JSON.stringify({writes,encodes}));},35);},35);`;
+    const run=spawnSync(process.execPath,['-e',code,root],{encoding:'utf8',timeout:5000});assert.equal(run.status,0,run.stderr);
+    const counts=JSON.parse(run.stdout);assert.equal(counts.writes,0,'the measured thread must never perform observer disk writes');assert.equal(counts.encodes,0,'observation encoding belongs to the writer');
+    const events=probe.readProbeEvents(root,{requireStopped:true});assert.ok(probe.summarizeGaps(events).maxGapMs>=250);assert.equal(events.at(-1).kind,'stop');
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+test('a completed run cannot accept a writer that never published its stop record',()=>{
+  const root=fixture();
+  try{
+    fs.writeFileSync(path.join(root,'event-loop-probe-1.jsonl'),JSON.stringify({kind:'start',pid:1,atMs:1})+'\n');
+    assert.throws(()=>probe.readProbeEvents(root,{requireStopped:true}),/incomplete|stop/i);
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+test('SIGTERM flushes every observation even when the measured application has no shutdown handler',()=>{
+  const root=fixture();
+  try{
+    // A real HTTP server keeps the loop alive until its signal is delivered.
+    const code=`require(${JSON.stringify(probeFile)}).startLoopProbe({fixtureRoot:process.argv[1]});setInterval(()=>{},1000);setTimeout(()=>{const until=performance.now()+260;while(performance.now()<until){}setTimeout(()=>process.kill(process.pid,'SIGTERM'),35);},35);`;
+    const run=spawnSync(process.execPath,['-e',code,root],{encoding:'utf8',timeout:5000});assert.equal(run.error,undefined,run.stderr);assert.equal(run.signal,'SIGTERM',run.stderr);
+    const events=probe.readProbeEvents(root,{requireStopped:true});assert.equal(events.at(-1).kind,'stop');assert.ok(probe.summarizeGaps(events).maxGapMs>=250);
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+test('the observer preserves an application-owned asynchronous shutdown handler',()=>{
+  const root=fixture();
+  try{
+    const marker=path.join(root,'application-closed'),code=`const fs=require('fs');require(${JSON.stringify(probeFile)}).startLoopProbe({fixtureRoot:process.argv[1]});setInterval(()=>{},1000);process.once('SIGTERM',()=>setTimeout(()=>{fs.writeFileSync(${JSON.stringify(marker)},'closed');process.exit(0);},35));setTimeout(()=>process.kill(process.pid,'SIGTERM'),35);`;
+    const run=spawnSync(process.execPath,['-e',code,root],{encoding:'utf8',timeout:5000});assert.equal(run.error,undefined,run.stderr);assert.equal(run.status,0,run.stderr);
+    assert.equal(fs.readFileSync(marker,'utf8'),'closed');assert.equal(probe.readProbeEvents(root,{requireStopped:true}).at(-1).kind,'stop');
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});

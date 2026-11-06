@@ -6285,8 +6285,18 @@ function endeksmatikApiError(res, err, fallback) {
   if (status >= 500) return apiError(res, err, fallback);
   return res.status(status).json({ error: err && err.message || fallback, code: err && err.code || 'REQUEST_ERROR', details: err && err.details || null });
 }
-app.get('/api/endeksmatik/status', (_req, res) => {
-  try { res.json(endeksmatik.publicStatus()); }
+async function endeksmatikStatusForRequest(req){
+  const id=req.currentUser.id;
+  const status=await endeksmatik.publicStatusAsync(async descriptor=>{
+    const lease=await serverCompute().runEndeksmatikStatus(id,descriptor);
+    try{return lease.value.status;}finally{lease.release();}
+  });
+  const live=userAccess.sessionProfile(req);
+  if(!live||live.id!==id||live.enabled===false||live.status!=='ACTIVE')throw Object.assign(new Error('Oturumunuz artık geçerli değil. / Your session is no longer valid.'),{code:'USER_LOGIN_REQUIRED',statusCode:401});
+  return status;
+}
+app.get('/api/endeksmatik/status', async (req, res) => {
+  try { res.json(await endeksmatikStatusForRequest(req)); }
   catch (err) { apiError(res, err, 'Endeksmatik veri durumu okunamadı.'); }
 });
 app.post('/api/endeksmatik/calculate', (req, res) => {
@@ -6323,8 +6333,8 @@ app.post('/api/endeksmatik/structure-report', userAccess.requirePermission('mana
 });
 // Çoklu set yönetimi (v7.0.172). Listeleme/hesap herkese açık; varsayılan
 // seçimi, ad ve silme Endeksmatik yükleme yetkisiyle aynı izne bağlıdır.
-app.get('/api/endeksmatik/sets', (_req, res) => {
-  try { const status = endeksmatik.publicStatus(); res.json({ ok: true, activeSetId: status.activeSetId, sets: status.sets }); }
+app.get('/api/endeksmatik/sets', async (req, res) => {
+  try { const status = await endeksmatikStatusForRequest(req); res.json({ ok: true, activeSetId: status.activeSetId, sets: status.sets }); }
   catch (err) { apiError(res, err, 'Endeksmatik setleri okunamadı.'); }
 });
 app.post('/api/endeksmatik/lookup', (req, res) => {

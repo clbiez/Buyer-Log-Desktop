@@ -38,8 +38,8 @@ function persist(){
   const log=fs.existsSync(logFile)?fs.readFileSync(logFile,'utf8'):'';
   report.stalls=parseStalls(log);
   if(serverLoopProbe){
-    const probe=require('./lib/server-loop-probe'),events=probe.readProbeEvents(root);
-    report.serverLoopProbe={enabled:true,observerSha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname,'lib/server-loop-probe.js'))).digest('hex'),...probe.summarizeGaps(events),events,
+    const probe=require('./lib/server-loop-probe'),events=probe.readProbeEvents(root,{requireStopped:Boolean(server&&(server.exitCode!==null||server.signalCode))});
+    report.serverLoopProbe={enabled:true,observerSha256:probe.observerSha256(),...probe.summarizeGaps(events),events,
       files:fs.readdirSync(root).filter(file=>/^event-loop-probe-\d+\.jsonl$/.test(file)),
       modules:report.measurements.map(m=>({module:m.module,navigationStartedAtMs:m.navigationStartedAtMs,observedAtMs:m.observedAtMs,
         ...probe.summarizeGaps(events,{startMs:m.navigationStartedAtMs,endMs:m.observedAtMs})}))};

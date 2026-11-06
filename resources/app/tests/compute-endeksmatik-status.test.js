@@ -14,3 +14,36 @@ test('status reads exact metadata without building calculation indexes; first lo
   const before=normalizations;assert.deepEqual(engine.publicStatus(),status);assert.equal(normalizations,before);
  }finally{String.prototype.toLocaleUpperCase=upper;}
 });
+test('legacy disk status delegates decompression to the supplied reader and keeps the exact existing schema',async()=>{
+  const expected=engine.publicStatus(),legacy=engine.legacyStatus(),gunzip=zlib.gunzipSync;let calls=0;
+  zlib.gunzipSync=()=>{throw Error('Status must not decompress on the measured server thread');};
+  try{
+    const actual=await engine.publicStatusAsync(async descriptor=>{calls++;assert.equal(descriptor.file,engine.PERSISTED_FILE);assert.equal(descriptor.usingDefault,false);assert.ok(descriptor.tag);return legacy;});
+    assert.deepEqual(actual,expected);assert.equal(calls,1);
+  }finally{zlib.gunzipSync=gunzip;}
+});
+test('a changed legacy snapshot cannot publish metadata computed for the previous file generation',async()=>{
+  const file=engine.PERSISTED_FILE,bytes=fs.readFileSync(file),legacy=engine.legacyStatus();
+  try{
+    await assert.rejects(engine.publicStatusAsync(async()=>{fs.writeFileSync(file,zlib.gzipSync(JSON.stringify({...snapshot,season:'DEMO CHANGED'})));return legacy;}),{code:'COMPUTE_STALE_GENERATION'});
+  }finally{fs.writeFileSync(file,bytes);}
+});
+test('authoritative shared metadata stays on its canonical document path and cannot be replaced by the disk reader',async()=>{
+  const {toDocumentRecord}=require('../server/lib/delta-store');
+  const records={snapshot:toDocumentRecord({snapshot:{...snapshot,season:'SHARED DEMO'}})};
+  engine.attachDeltaStore({isAuthoritative:true,writesLegacy:false,readAllSync:()=>records});
+  try{assert.deepEqual(await engine.publicStatusAsync(()=>{throw Error('Canonical shared snapshot must not read a legacy file');}),engine.publicStatus());}
+  finally{engine.attachDeltaStore(null);}
+});
+test('a newly authoritative shared snapshot invalidates an in-flight legacy disk status',async()=>{
+  const {toDocumentRecord}=require('../server/lib/delta-store'),legacy=engine.legacyStatus();
+  try{
+    await assert.rejects(engine.publicStatusAsync(async()=>{
+      engine.attachDeltaStore({isAuthoritative:true,writesLegacy:false,readAllSync:()=>({snapshot:toDocumentRecord({snapshot:{...snapshot,season:'SHARED DEMO CHANGED'}})})});return legacy;
+    }),{code:'COMPUTE_STALE_GENERATION'});
+  }finally{engine.attachDeltaStore(null);}
+});
+test('independent imported sets preserve the existing list, active selection and metadata',async()=>{
+  await engine.saveSet({...snapshot,id:'em-0123456789abcdef',model:'legacy-tl',hash:'synthetic-set-hash',uploadedAt:'2026-11-05T12:00:00Z'},{activate:false});
+  assert.deepEqual(await engine.publicStatusAsync(()=>{throw Error('Imported sets retain their existing resolver');}),engine.publicStatus());
+});
