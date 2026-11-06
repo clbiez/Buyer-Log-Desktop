@@ -1231,7 +1231,7 @@ function rotateAuditIfNeeded(file = AUDIT_FILE, retention = auditRetention()) {
 function appendAudit(profile, action, target, details, requestMeta) {
   const transaction = iamTransaction.getStore();
   if (transaction) { transaction.audit.push({ action, target }); return true; }
-  details = backupSafeStore(details);
+  details = backupSafeStore(details ?? null);
   try {
     fs.mkdirSync(AUTH_DATA_ROOT, { recursive: true });
     const req = requestMeta && requestMeta.headers ? requestMeta : null;

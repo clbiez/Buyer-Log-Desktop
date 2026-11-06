@@ -1,0 +1,17 @@
+{
+  "synthetic": true,
+  "screenshot": "/workspace/buyerlog-phase1/resources/app/public/release-notes/next-assets/audit-session-details.png",
+  "sessionRecords": [
+    {
+      "action": "PASSWORD_SETUP",
+      "bytes": 376,
+      "details": null
+    },
+    {
+      "action": "LOGIN",
+      "bytes": 360,
+      "details": null
+    }
+  ],
+  "note": "PNG shows the actual authorized admin session. Null details/size are verified from this session audit file, not visually inferred."
+}

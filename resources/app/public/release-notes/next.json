@@ -445,6 +445,35 @@
           "en": "Actual Buyer Log UI with isolated demo data, showing the thumbnail, one contract and fixed save actions."
         }
       }
+    },
+    {
+      "id": "audit-small-session-records",
+      "type": "fix",
+      "module": {
+        "tr": "Denetim Günlüğü",
+        "en": "Audit Log"
+      },
+      "title": {
+        "tr": "Oturum kayıtları gereksiz büyümez",
+        "en": "Session records stay small"
+      },
+      "body": {
+        "tr": "Giriş, çıkış ve ilk parola kurulumunda ayrıntısız denetim kayıtları artık tüm kullanıcı ve sipariş erişim deposunu kopyalamaz. Ayrıntılı kayıtlarda hassas alan temizliği ve normal yedekleme korunur. Geçmiş günlükler değiştirilmez.",
+        "en": "Detail-free audit records for sign-in, sign-out and initial password setup no longer copy the entire user and order-access store. Sensitive-field redaction for detailed records and normal backups are preserved. Historical logs are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "audit-session-details.png",
+        "alt": {
+          "tr": "Demo girişinden sonra gerçek Buyer Log kullanıcı ve yetki yönetimi ekranı",
+          "en": "Actual Buyer Log user and authorization management after a demo sign-in"
+        },
+        "caption": {
+          "tr": "İzole demo oturumunda gerçek kullanıcı yönetimi. Oturum kayıtlarının küçük kaldığı aynı oturumun günlük dosyasından ayrıca doğrulandı.",
+          "en": "Actual user management in an isolated demo session. Small session records were separately verified in the audit file from this same session."
+        }
+      }
     }
   ]
 }
