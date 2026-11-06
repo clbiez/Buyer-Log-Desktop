@@ -6,11 +6,13 @@
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),net=require('node:net'),crypto=require('node:crypto'),zlib=require('node:zlib');
 const {spawn,spawnSync}=require('node:child_process');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const {requestJson,summarizeHealth,parseStalls,validateMeasurement,installProbe,measureModules,compactRefreshStatus}=require('./lib/startup-benchmark');
+const {requestJson,summarizeHealth,parseStalls,validateMeasurement,installProbe,measureModules,compactRefreshStatus,readRendererMetrics,initializeBenchmarkState}=require('./lib/startup-benchmark');
 const arg=(name,fallback)=>{const index=process.argv.indexOf(name);return index<0?fallback:process.argv[index+1];};
 const APP=path.resolve(arg('--app-root',path.resolve(__dirname,'..')));
 const count=Number(arg('--rows',30000)),sampleWindowMs=Number(arg('--sample-ms',10000));
+const rendererTimeoutMs=Number(arg('--renderer-timeout-ms',900000));
 if(!Number.isSafeInteger(count)||count<1||!Number.isSafeInteger(sampleWindowMs)||sampleWindowMs<1000)throw Error('Invalid rows or sample window');
+if(!Number.isSafeInteger(rendererTimeoutMs)||rendererTimeoutMs<60000)throw Error('Invalid renderer timeout');
 const requestedModules=arg('--module','')?[arg('--module','')]:['overview','koleksiyon','cp','orders'];
 if(requestedModules.some(module=>!['overview','koleksiyon','cp','orders'].includes(module)))throw Error('Unsupported benchmark module');
 const root=path.resolve(arg('--fixture-root','')||fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-startup-')));
@@ -23,13 +25,14 @@ let server,browser,cookie='',base,phase='setup',healthStopped=false,healthLoop,e
 const env={...process.env,BUYER_LOG_CENTRAL_IAM_ENABLED:'0',BUYER_LOG_SERVER_DATA_ROOT:path.join(root,'data'),BUYER_LOG_AUTH_DATA_ROOT:path.join(root,'data'),
   BUYER_LOG_DATA_ROOT:path.join(root,'app'),BUYER_LOG_LOCAL_DATA_ROOT:path.join(root,'local'),BUYER_LOG_LOCAL_DB:path.join(root,'local','BuyerLogLocal.db'),
   BUYER_LOG_CONFIG_PATH:path.join(root,'config.json'),BUYER_LOG_TEMP_ROOT:path.join(root,'tmp')};
-const report={schemaVersion:2,synthetic:true,status:'running',startedAt:new Date().toISOString(),fixtureRoot:root,requestedRows:count,requestedModules,
+const report={schemaVersion:3,synthetic:true,status:'running',startedAt:new Date().toISOString(),fixtureRoot:root,requestedRows:count,requestedModules,rendererTimeoutMs,
   sampling:{startMs:0,endMs:sampleWindowMs,clock:'navigation performance.now; tasks clipped at window end'},measurements:[],healthSamples:[]};
 function persist(){
-  report.health={all:summarizeHealth(report.healthSamples),refresh:summarizeHealth(report.healthSamples,'refresh')};
+  report.health={all:summarizeHealth(report.healthSamples,null,'/api/health'),refresh:summarizeHealth(report.healthSamples,'refresh','/api/health')};
+  report.statusProbe={endpoint:'/api/status',all:summarizeHealth(report.healthSamples,null,'/api/status'),refresh:summarizeHealth(report.healthSamples,'refresh','/api/status')};
   report.health.endpoint='/api/health';report.health.readinessEndpoint='/api/status';
-  report.health.observedStatuses=[...new Set(report.healthSamples.map(sample=>sample.status))];
-  report.health.endpointAvailable=report.healthSamples.some(sample=>sample.status===200);
+  report.health.observedStatuses=[...new Set(report.healthSamples.filter(sample=>sample.endpoint==='/api/health').map(sample=>sample.status))];
+  report.health.endpointAvailable=report.healthSamples.some(sample=>sample.endpoint==='/api/health'&&sample.status===200);
   const log=fs.existsSync(logFile)?fs.readFileSync(logFile,'utf8'):'';
   report.stalls=parseStalls(log);
   const profiles=path.join(root,'local','logs','stall-profiles');
@@ -40,7 +43,7 @@ function persist(){
 async function api(url,options={}){return requestJson(base+url,{...options,headers:{cookie,'Content-Type':'application/json',...options.headers}});}
 async function health(){
   const observedPhase=phase,startedAt=new Date().toISOString();
-  try{await requestJson(base+'/api/health',{}, {onAttempt:sample=>report.healthSamples.push({...sample,phase:observedPhase,startedAt})});}catch(_){}
+  for(const endpoint of ['/api/health','/api/status'])try{await requestJson(base+endpoint,{}, {onAttempt:sample=>report.healthSamples.push({...sample,endpoint,phase:observedPhase,startedAt})});}catch(_){}
 }
 async function start(){
   const started=performance.now(),log=fs.openSync(logFile,'a');
@@ -102,17 +105,17 @@ async function open(context,page,module){
   });
   const started=performance.now();
   await page.goto(base+'/?module='+module,{waitUntil:'domcontentloaded',timeout:120000});
-  await page.waitForFunction(()=>window.__startupProbe?.primaryScreenReadyMs!==null&&window.__startupProbe?.startupReadyMs!==null,null,{timeout:240000});
-  await page.evaluate(()=>{window.__startupProbe.continueAtMs=performance.now();window.BLBootGuard?.continue();});
-  await page.waitForFunction(()=>window.__startupProbe?.startupCompleteMs!==null,null,{timeout:60000});
-  if(module==='orders')await page.waitForFunction(()=>state.orders?.rows.length>0&&document.querySelector('#ordersTable tbody tr[data-id]'),null,{timeout:180000});
-  if(module==='cp')await page.waitForFunction(()=>state.cp?.rows.length>0&&document.querySelector('#cpTable tbody tr[data-id]'),null,{timeout:180000});
+  await page.waitForFunction(()=>Number.isFinite(window.__startupProbe?.primaryScreenReadyMs)&&Number.isFinite(window.__startupProbe?.startupReadyMs),null,{timeout:rendererTimeoutMs,polling:100});
+  await page.evaluate(()=>{window.__startupProbe.continueIntentAtMs=window.__startupProbe.startupReadyMs;window.__startupProbe.continueAtMs=performance.now();window.BLBootGuard?.continue();});
+  await page.waitForFunction(()=>Number.isFinite(window.__startupProbe?.startupCompleteMs),null,{timeout:rendererTimeoutMs,polling:100});
+  if(module==='orders')await page.waitForFunction(()=>state.orders?.rows.length>0&&document.querySelector('#ordersTable tbody tr[data-id]'),null,{timeout:rendererTimeoutMs,polling:100});
+  if(module==='cp')await page.waitForFunction(()=>state.cp?.rows.length>0&&document.querySelector('#cpTable tbody tr[data-id]'),null,{timeout:rendererTimeoutMs,polling:100});
   const elapsedMs=performance.now()-started;
-  await page.waitForFunction(ms=>performance.now()>=ms,sampleWindowMs,{timeout:sampleWindowMs+30000});
+  await page.waitForFunction(ms=>performance.now()>=ms,sampleWindowMs,{timeout:rendererTimeoutMs,polling:100});
   const data=await page.evaluate(module=>{
     const p=window.__startupProbe;
     return {module,primaryScreenReadyMs:p.primaryScreenReadyMs,startupReadyMs:p.startupReadyMs,startupCompleteMs:p.startupCompleteMs,
-      userWaitMs:p.userWaitMs,systemStartupCompleteMs:p.systemStartupCompleteMs,primaryToGateMs:p.startupReadyMs-p.primaryScreenReadyMs,
+      userWaitMs:p.userWaitMs,continueDispatchDelayMs:p.continueDispatchDelayMs,systemStartupCompleteMs:p.systemStartupCompleteMs,primaryToGateMs:p.startupReadyMs-p.primaryScreenReadyMs,
       initialGeneration:p.initialGeneration,
       rows:module==='orders'?state.orders?.rows.length:module==='cp'?state.cp?.rows.length:module==='koleksiyon'?kolRows.length:state.overviewSummary?.rows.length,
       revisions:{orders:Number(state.storeRevisions.orders)||0,suppFob:Number(state.storeRevisions.suppFob)||0},
@@ -121,15 +124,12 @@ async function open(context,page,module){
       resources:performance.getEntriesByType('resource').filter(entry=>entry.name.includes('/api/data')||entry.name.includes('/api/page-projection/')).map(entry=>({path:new URL(entry.name).pathname,ms:entry.duration,decodedBytes:entry.decodedBodySize,encodedBytes:entry.encodedBodySize})),
       timeline:window.BLPerf?.timeline?.()};
   },module);
-  const cdp=await context.newCDPSession(page);
-  try{await cdp.send('HeapProfiler.collectGarbage');await cdp.send('Performance.enable');const {metrics}=await cdp.send('Performance.getMetrics');
-    data.retainedJsHeapBytes=metrics.find(metric=>metric.name==='JSHeapUsedSize')?.value;data.dom=await cdp.send('Memory.getDOMCounters');
-  }finally{await cdp.detach();}
-  const measurement={...data,...identity(),projectionGenerations:[data.initialGeneration,...projectionGenerations].filter(Boolean),elapsedMs,rendererRssBytes:await rendererRss(),errors};
+  Object.assign(data,await readRendererMetrics(context,page,rendererTimeoutMs));
+  const measurement={...data,projectionGenerations:[data.initialGeneration,...projectionGenerations].filter(Boolean),elapsedMs,rendererRssBytes:await rendererRss(),errors};
   // Save the failed observation before validation throws.
-  report.measurements.push(measurement);persist();validateMeasurement(expected,measurement);
+  report.measurements.push(measurement);persist();Object.assign(measurement,identity());persist();validateMeasurement(expected,measurement);
   await page.evaluate(()=>document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close()));
-  await page.screenshot({path:path.join(root,module+'.png')});
+  await page.screenshot({path:path.join(root,module+'.png'),timeout:rendererTimeoutMs});
   await network.detach();
   return measurement;
   }catch(error){
@@ -188,7 +188,8 @@ function prepareFixture(){
     Object.assign(report,{platform:process.platform,node:process.version,revision,cpu:os.cpus()[0]?.model,cpuCount:os.cpus().length,
       availableParallelism:os.availableParallelism(),cpuQuota:fs.existsSync('/sys/fs/cgroup/cpu.max')?fs.readFileSync('/sys/fs/cgroup/cpu.max','utf8').trim():null,
       memoryLimitBytes:fs.existsSync('/sys/fs/cgroup/memory.max')?fs.readFileSync('/sys/fs/cgroup/memory.max','utf8').trim():null});
-    const source=prepareFixture(),socket=net.createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));base='http://127.0.0.1:'+port;
+    const source=prepareFixture();report.fixtureConditions=initializeBenchmarkState(root);
+    const socket=net.createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));base='http://127.0.0.1:'+port;
     fs.writeFileSync(env.BUYER_LOG_CONFIG_PATH,JSON.stringify({port,sourceFolder:source,host:'127.0.0.1'}));
     phase='initial-start';await start();await login();
     healthLoop=(async()=>{while(!healthStopped){await health();await delay(500);}})();

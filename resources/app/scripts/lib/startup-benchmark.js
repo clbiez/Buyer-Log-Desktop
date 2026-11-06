@@ -23,8 +23,8 @@ async function requestJson(url, options = {}, { fetchImpl = fetch, delayImpl = d
     }
   }
 }
-function summarizeHealth(samples, phase) {
-  const chosen = samples.filter(sample => !phase || sample.phase === phase);
+function summarizeHealth(samples, phase, endpoint) {
+  const chosen = samples.filter(sample => (!phase || sample.phase === phase) && (!endpoint || sample.endpoint === endpoint));
   const values = chosen.map(sample => sample.ms).sort((a,b) => a-b);
   const quantile = p => values.length ? values[Math.max(0, Math.ceil(values.length * p) - 1)] : null;
   const failed = chosen.filter(sample => sample.error || sample.status !== 200).length;
@@ -55,13 +55,15 @@ function validateMeasurement(expected, actual) {
 // Serializable Playwright init script: no references to the Node module scope.
 function installProbe({ sampleWindowMs, logEvents = false }) {
   const probe = window.__startupProbe = { primaryScreenReadyMs:null, startupReadyMs:null, startupCompleteMs:null,
-    continueAtMs:null, userWaitMs:null, systemStartupCompleteMs:null, sampleWindowMs, longTasks:[] };
+    continueAtMs:null,continueIntentAtMs:null,continueDispatchDelayMs:null,userWaitMs:null, systemStartupCompleteMs:null, sampleWindowMs, longTasks:[] };
   for (const [event,key] of [['bl:primary-screen-ready','primaryScreenReadyMs'],['bl:startup-ready','startupReadyMs'],['bl:startup-complete','startupCompleteMs']]) {
     window.addEventListener(event, () => {
       probe[key] = performance.now();
       if (logEvents) console.log('BENCHMARK_LIFECYCLE '+JSON.stringify({event,key,ms:probe[key]}));
       if (event === 'bl:startup-complete') {
-        probe.userWaitMs = Math.max(0, (probe.continueAtMs ?? probe.startupReadyMs) - probe.startupReadyMs);
+        const intent=probe.continueIntentAtMs ?? probe.continueAtMs ?? probe.startupReadyMs;
+        probe.userWaitMs = Math.max(0, intent - probe.startupReadyMs);
+        probe.continueDispatchDelayMs=Math.max(0,(probe.continueAtMs ?? intent)-intent);
         probe.systemStartupCompleteMs = probe.startupCompleteMs - probe.userWaitMs;
       }
     }, { once:true });
@@ -81,4 +83,26 @@ async function measureModules(context, modules, measure) {
   }
   return measurements;
 }
-module.exports = { requestJson, summarizeHealth, parseStalls, validateMeasurement, installProbe, measureModules, compactRefreshStatus };
+async function readRendererMetrics(context,page,timeoutMs=10000) {
+  const cdp=await context.newCDPSession(page);
+  async function bounded(promise,label){
+    let timer;
+    try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+' timed out')),timeoutMs);})]);}
+    finally{clearTimeout(timer);}
+  }
+  try{
+    // Forced HeapProfiler.collectGarbage can stop a busy renderer and alter the workload.
+    await bounded(cdp.send('Performance.enable'),'Performance.enable');
+    const {metrics}=await bounded(cdp.send('Performance.getMetrics'),'Performance.getMetrics');
+    const dom=await bounded(cdp.send('Memory.getDOMCounters'),'Memory.getDOMCounters');
+    return {jsHeapUsedBytes:metrics.find(metric=>metric.name==='JSHeapUsedSize')?.value,dom,heapSampling:'uncollected'};
+  }finally{await bounded(cdp.detach(),'CDP detach');}
+}
+function initializeBenchmarkState(root,now=Date.now()) {
+  const fs=require('node:fs'),path=require('node:path');
+  const file=path.join(root,'local','data-cleanup-state.json');
+  fs.mkdirSync(path.dirname(file),{recursive:true});
+  if(!fs.existsSync(file))fs.writeFileSync(file,JSON.stringify({schemaVersion:1,lastCheckAt:new Date(now).toISOString()})+'\n',{flag:'wx'});
+  return {maintenanceState:'recent-weekly-check',stateFile:file};
+}
+module.exports = { requestJson, summarizeHealth, parseStalls, validateMeasurement, installProbe, measureModules, compactRefreshStatus, readRendererMetrics, initializeBenchmarkState };
