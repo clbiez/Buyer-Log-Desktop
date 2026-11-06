@@ -60,7 +60,7 @@ async function stop(){
     try{
       await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),url:base,httpOnly:true}]);
       const page=await context.newPage(),generations=[],errors=[];
-      page.on('console',message=>{if(message.text().startsWith('BENCHMARK_LIFECYCLE '))console.log(module+' '+message.text());});
+      page.on('console',message=>{if(/^BENCHMARK_(LIFECYCLE|FIRST_PROGRESS) /.test(message.text()))console.log(module+' '+message.text());});
       page.on('pageerror',error=>{errors.push(error.message);report.rendererErrors.push({module,message:error.message});});
       page.on('response',response=>{
         if(new URL(response.url()).pathname.startsWith('/api/page-projection/')&&response.status()===200){const generation=response.headers()['x-page-cache-generation'];if(generation)generations.push(generation);}
@@ -72,7 +72,7 @@ async function stop(){
         const json=Response.prototype.json;Response.prototype.json=async function(...args){const value=await json.apply(this,args);if(new URL(this.url,location.href).pathname==='/api/data'&&value.pageCache)window.__firstTransitionGeneration=value.pageCache.generation;return value;};
       });
       await page.addInitScript(installProbe,{sampleWindowMs:10000,logEvents:true});
-      await page.addInitScript(installFirstTransitionProbe,{module,expectedRows:original.expected.rows[module]});
+      await page.addInitScript(installFirstTransitionProbe,{module,expectedRows:original.expected.rows[module],logEvents:true});
       await page.goto(base+'/?module=overview',{waitUntil:'domcontentloaded',timeout:120000});
       await page.waitForFunction(()=>Number.isFinite(window.__startupProbe?.startupReadyMs),null,{timeout:900000,polling:100});
       await page.evaluate(()=>{const p=window.__startupProbe;p.continueIntentAtMs=p.startupReadyMs;p.continueAtMs=performance.now();window.BLBootGuard.continue({intentAtMs:p.continueIntentAtMs});});

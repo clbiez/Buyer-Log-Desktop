@@ -1,7 +1,7 @@
 'use strict';
 
 // Playwright başlangıç betiği: dış kapsamdan bağımsızdır.
-function installFirstTransitionProbe({module,expectedRows,timeoutMs=900000}) {
+function installFirstTransitionProbe({module,expectedRows,timeoutMs=900000,logEvents=false}) {
   if(!['cp','orders'].includes(module))throw Error('Unsupported first transition');
   let finished=false,firstPaintAt=null,interactivePaintAt=null,paintPending=false,dataReadyAt=null;
   const clicked=new WeakSet();
@@ -13,7 +13,7 @@ function installFirstTransitionProbe({module,expectedRows,timeoutMs=900000}) {
   const dataReady=()=>document.body.dataset.activeTab===module&&rows()?.length===expectedRows&&visible(document.getElementById(contentId))&&(expectedRows===0||document.querySelector(selector));
   window.__benchmarkFirstTransition=null;
   window.addEventListener('bl:startup-complete',()=>{
-    const intentAt=performance.now();
+    const intentAt=performance.now();let lastProgressAt=intentAt;
     const result=window.__benchmarkFirstTransition={module,status:'scheduled',intentAtMs:intentAt,
       startedWithRows:rows()?.length??null,moduleContinueCount:0,stabilityObservationMs:1000};
     function fail(message){if(finished)return;finished=true;Object.assign(result,{status:'failed',error:message,failedAtMs:performance.now(),activeTab:document.body.dataset.activeTab,actualRows:rows()?.length??null,contentVisible:visible(document.getElementById(contentId)),domRows:document.querySelectorAll(selector).length,firstPaintAtMs:firstPaintAt,moduleStates:window.BLModulePreparation?.snapshot?.()});}
@@ -21,6 +21,10 @@ function installFirstTransitionProbe({module,expectedRows,timeoutMs=900000}) {
       if(finished)return;
       try{
         const now=performance.now();
+        if(logEvents&&now-lastProgressAt>=30000){
+          lastProgressAt=now;
+          console.log('BENCHMARK_FIRST_PROGRESS '+JSON.stringify({module,elapsedMs:now-intentAt,active:document.body.dataset.activeTab,rows:rows()?.length??null,visible:visible(document.getElementById(contentId)),domRows:document.querySelectorAll(selector).length,holds:holds().length,firstPaintAtMs:firstPaintAt}));
+        }
         if(now-intentAt>timeoutMs){fail('First transition timed out');return;}
         if(window.BLModulePreparation?.snapshot?.()[module]?.status==='error'){fail('Module preparation failed');return;}
         const ready=Boolean(dataReady());
