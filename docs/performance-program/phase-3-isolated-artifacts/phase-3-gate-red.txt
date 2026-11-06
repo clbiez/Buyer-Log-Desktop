@@ -1,0 +1,99 @@
+✔ Continue keeps the trivia screen until capture, then completes exactly once and restores visible keyboard focus (5.240366ms)
+✖ the curtain waits for profile and opening screen while other modules remain in the background (2.489482ms)
+✔ stage detail follows the first unfinished gate (1.09781ms)
+✖ a module that never finishes cannot trap an authenticated user (1.448185ms)
+✔ a failed opening screen never traps the authenticated user behind the curtain (1.604251ms)
+✖ first and secondary workspace tabs use the same primary-only readiness gate (2.632831ms)
+✔ background completion cannot bypass any core, data, primary-screen or profile gate (6.894145ms)
+✔ a stale startupWarm address no longer auto-dismisses the curtain (2.276421ms)
+✔ requested table module is selected before eager helpers and core health does not wait for images (0.522237ms)
+✔ Continue does nothing until preparation is complete (1.971166ms)
+✔ hard startup gates work regardless of arrival order (6.89616ms)
+✔ an absent/incomplete profile cannot release the curtain (1.757568ms)
+✔ slow startup shows information without an automatic 12-second reload; bounded failure offers exactly one retry (2.186041ms)
+✔ late successful preparation recovers from the timed-out curtain without reloading (2.103712ms)
+✔ a late page-projection failure cannot regress an already ready shell (1.969294ms)
+✔ recovery response cannot reload an already-ready app (2.149583ms)
+✔ each guide card has bilingual instructions, a unique ID, a module, an illustration and source evidence (1.868669ms)
+✔ module and capability access filters match real Orders and quotation area aliases (6.25395ms)
+✔ before a profile exists only general, unrestricted lessons are eligible (1.683301ms)
+✔ illustrations escape arbitrary content and never embed real records or remote image requests (2.387479ms)
+✔ startup tips rotate at the initial focused curtain and pause only when reading the card or a control (3.112786ms)
+✔ opening screen projection and failure gate are awaited, while background feature loading stays scheduled (3.627137ms)
+✔ guide keys are isolated at capture phase before legacy mutation shortcuts (0.340625ms)
+✔ calculated-column directions stay within supported tables and shipping uses the real Columns control (0.398989ms)
+✔ after initial data arrives the 120-second deadline does not show a misleading Retry (1.909075ms)
+✔ the profile gate script is requested with the initial data, not after the whole deferred UI group (1.569796ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 23
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 81.257137
+
+✖ failing tests:
+
+test at tests/startup-guide-v20260930.test.js:50:1
+✖ the curtain waits for profile and opening screen while other modules remain in the background (2.489482ms)
+  AssertionError [ERR_ASSERTION]: the authenticated primary screen releases the gate immediately
+  
+  undefined !== '1'
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-phase3/resources/app/tests/startup-guide-v20260930.test.js:54:40)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: '1',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/startup-guide-v20260930.test.js:73:1
+✖ a module that never finishes cannot trap an authenticated user (1.448185ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  undefined !== '1'
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-phase3/resources/app/tests/startup-guide-v20260930.test.js:75:45)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: '1',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/startup-guide-v20260930.test.js:87:1
+✖ first and secondary workspace tabs use the same primary-only readiness gate (2.632831ms)
+  AssertionError [ERR_ASSERTION]: the first window also waits only for its authenticated primary screen
+  
+  undefined !== '1'
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-phase3/resources/app/tests/startup-guide-v20260930.test.js:91:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: '1',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,354 @@
+{
+  "synthetic": true,
+  "screenshot": "/tmp/phase-3-final-orders-en-dark.png",
+  "capture": "workspace",
+  "module": "orders",
+  "lang": "en",
+  "theme": "dark",
+  "observed": {
+    "lang": "en",
+    "documentLang": "en",
+    "theme": "dark"
+  },
+  "rows": 20,
+  "beforeContinue": {
+    "active": "orders",
+    "gateReady": "1",
+    "profile": "moderator",
+    "accessApplied": true,
+    "cpRows": null,
+    "ordersRows": 20,
+    "overviewRows": 0,
+    "moduleStates": {
+      "cp": {
+        "status": "pending",
+        "error": ""
+      },
+      "orders": {
+        "status": "ready",
+        "error": ""
+      },
+      "koleksiyon": {
+        "status": "pending",
+        "error": ""
+      }
+    },
+    "metrics": {
+      "longTaskMs": {
+        "count": 14,
+        "totalMs": 1823,
+        "maxMs": 287,
+        "lastMs": 224,
+        "avgMs": 130.21428571428572
+      },
+      "bootstrapFetchMs": {
+        "count": 1,
+        "totalMs": 344.29999999701977,
+        "maxMs": 344.29999999701977,
+        "lastMs": 344.29999999701977,
+        "avgMs": 344.29999999701977
+      },
+      "bootstrapJsonParseMs": {
+        "count": 1,
+        "totalMs": 2.2000000029802322,
+        "maxMs": 2.2000000029802322,
+        "lastMs": 2.2000000029802322,
+        "avgMs": 2.2000000029802322
+      },
+      "CACHE_LOAD": {
+        "count": 1,
+        "totalMs": 346.69999999552965,
+        "maxMs": 346.69999999552965,
+        "lastMs": 346.69999999552965,
+        "avgMs": 346.69999999552965
+      },
+      "DATASOURCE_PREPARATION": {
+        "count": 1,
+        "totalMs": 14.100000001490116,
+        "maxMs": 14.100000001490116,
+        "lastMs": 14.100000001490116,
+        "avgMs": 14.100000001490116
+      },
+      "filterInitializationMs": {
+        "count": 1,
+        "totalMs": 0.19999999552965164,
+        "maxMs": 0.19999999552965164,
+        "lastMs": 0.19999999552965164,
+        "avgMs": 0.19999999552965164
+      },
+      "FILTER_PIVOT_INIT": {
+        "count": 1,
+        "totalMs": 0.09999999403953552,
+        "maxMs": 0.09999999403953552,
+        "lastMs": 0.09999999403953552,
+        "avgMs": 0.09999999403953552
+      },
+      "IMAGE_THUMBNAIL_INIT": {
+        "count": 1,
+        "totalMs": 0,
+        "maxMs": 0,
+        "lastMs": 0,
+        "avgMs": 0
+      },
+      "firstRenderMs": {
+        "count": 1,
+        "totalMs": 0.7000000029802322,
+        "maxMs": 0.7000000029802322,
+        "lastMs": 0.7000000029802322,
+        "avgMs": 0.7000000029802322
+      },
+      "TABLE_RENDER": {
+        "count": 1,
+        "totalMs": 0.6000000014901161,
+        "maxMs": 0.6000000014901161,
+        "lastMs": 0.6000000014901161,
+        "avgMs": 0.6000000014901161
+      },
+      "ACTIVE_MODULE_INIT": {
+        "count": 1,
+        "totalMs": 0.7000000029802322,
+        "maxMs": 0.7000000029802322,
+        "lastMs": 0.7000000029802322,
+        "avgMs": 0.7000000029802322
+      },
+      "stateHydrateMs": {
+        "count": 1,
+        "totalMs": 15.100000001490116,
+        "maxMs": 15.100000001490116,
+        "lastMs": 15.100000001490116,
+        "avgMs": 15.100000001490116
+      },
+      "orders.jsonParseMs": {
+        "count": 1,
+        "totalMs": 34.19999999552965,
+        "maxMs": 34.19999999552965,
+        "lastMs": 34.19999999552965,
+        "avgMs": 34.19999999552965
+      },
+      "primaryScreenReadyMs": {
+        "count": 1,
+        "totalMs": 3167.3000000044703,
+        "maxMs": 3167.3000000044703,
+        "lastMs": 3167.3000000044703,
+        "avgMs": 3167.3000000044703
+      },
+      "startupGateReadyMs": {
+        "count": 1,
+        "totalMs": 3177.7000000029802,
+        "maxMs": 3177.7000000029802,
+        "lastMs": 3177.7000000029802,
+        "avgMs": 3177.7000000029802
+      }
+    },
+    "observed": {
+      "lang": "en",
+      "documentLang": "en",
+      "theme": "dark"
+    }
+  },
+  "afterContinue": {
+    "moduleStates": {
+      "cp": {
+        "status": "pending",
+        "error": ""
+      },
+      "orders": {
+        "status": "ready",
+        "error": ""
+      },
+      "koleksiyon": {
+        "status": "ready",
+        "error": ""
+      }
+    },
+    "metrics": {
+      "longTaskMs": {
+        "count": 15,
+        "totalMs": 1976,
+        "maxMs": 287,
+        "lastMs": 153,
+        "avgMs": 131.73333333333332
+      },
+      "bootstrapFetchMs": {
+        "count": 1,
+        "totalMs": 344.29999999701977,
+        "maxMs": 344.29999999701977,
+        "lastMs": 344.29999999701977,
+        "avgMs": 344.29999999701977
+      },
+      "bootstrapJsonParseMs": {
+        "count": 1,
+        "totalMs": 2.2000000029802322,
+        "maxMs": 2.2000000029802322,
+        "lastMs": 2.2000000029802322,
+        "avgMs": 2.2000000029802322
+      },
+      "CACHE_LOAD": {
+        "count": 1,
+        "totalMs": 346.69999999552965,
+        "maxMs": 346.69999999552965,
+        "lastMs": 346.69999999552965,
+        "avgMs": 346.69999999552965
+      },
+      "DATASOURCE_PREPARATION": {
+        "count": 1,
+        "totalMs": 14.100000001490116,
+        "maxMs": 14.100000001490116,
+        "lastMs": 14.100000001490116,
+        "avgMs": 14.100000001490116
+      },
+      "filterInitializationMs": {
+        "count": 1,
+        "totalMs": 0.19999999552965164,
+        "maxMs": 0.19999999552965164,
+        "lastMs": 0.19999999552965164,
+        "avgMs": 0.19999999552965164
+      },
+      "FILTER_PIVOT_INIT": {
+        "count": 1,
+        "totalMs": 0.09999999403953552,
+        "maxMs": 0.09999999403953552,
+        "lastMs": 0.09999999403953552,
+        "avgMs": 0.09999999403953552
+      },
+      "IMAGE_THUMBNAIL_INIT": {
+        "count": 1,
+        "totalMs": 0,
+        "maxMs": 0,
+        "lastMs": 0,
+        "avgMs": 0
+      },
+      "firstRenderMs": {
+        "count": 1,
+        "totalMs": 0.7000000029802322,
+        "maxMs": 0.7000000029802322,
+        "lastMs": 0.7000000029802322,
+        "avgMs": 0.7000000029802322
+      },
+      "TABLE_RENDER": {
+        "count": 1,
+        "totalMs": 0.6000000014901161,
+        "maxMs": 0.6000000014901161,
+        "lastMs": 0.6000000014901161,
+        "avgMs": 0.6000000014901161
+      },
+      "ACTIVE_MODULE_INIT": {
+        "count": 1,
+        "totalMs": 0.7000000029802322,
+        "maxMs": 0.7000000029802322,
+        "lastMs": 0.7000000029802322,
+        "avgMs": 0.7000000029802322
+      },
+      "stateHydrateMs": {
+        "count": 1,
+        "totalMs": 15.100000001490116,
+        "maxMs": 15.100000001490116,
+        "lastMs": 15.100000001490116,
+        "avgMs": 15.100000001490116
+      },
+      "orders.jsonParseMs": {
+        "count": 1,
+        "totalMs": 34.19999999552965,
+        "maxMs": 34.19999999552965,
+        "lastMs": 34.19999999552965,
+        "avgMs": 34.19999999552965
+      },
+      "primaryScreenReadyMs": {
+        "count": 1,
+        "totalMs": 3167.3000000044703,
+        "maxMs": 3167.3000000044703,
+        "lastMs": 3167.3000000044703,
+        "avgMs": 3167.3000000044703
+      },
+      "startupGateReadyMs": {
+        "count": 1,
+        "totalMs": 3177.7000000029802,
+        "maxMs": 3177.7000000029802,
+        "lastMs": 3177.7000000029802,
+        "avgMs": 3177.7000000029802
+      },
+      "startupUserWaitMs": {
+        "count": 1,
+        "totalMs": 589.7999999970198,
+        "maxMs": 589.7999999970198,
+        "lastMs": 589.7999999970198,
+        "avgMs": 589.7999999970198
+      },
+      "startupContinueDispatchDelayMs": {
+        "count": 1,
+        "totalMs": 10.700000002980232,
+        "maxMs": 10.700000002980232,
+        "lastMs": 10.700000002980232,
+        "avgMs": 10.700000002980232
+      },
+      "startupCurtainDismissedMs": {
+        "count": 1,
+        "totalMs": 3785.2000000029802,
+        "maxMs": 3785.2000000029802,
+        "lastMs": 3785.2000000029802,
+        "avgMs": 3785.2000000029802
+      },
+      "startupSystemCompleteMs": {
+        "count": 1,
+        "totalMs": 3195.4000000059605,
+        "maxMs": 3195.4000000059605,
+        "lastMs": 3195.4000000059605,
+        "avgMs": 3195.4000000059605
+      },
+      "firstUsableInteractionMs": {
+        "count": 1,
+        "totalMs": 3195.4000000059605,
+        "maxMs": 3195.4000000059605,
+        "lastMs": 3195.4000000059605,
+        "avgMs": 3195.4000000059605
+      },
+      "collection-catalog.jsonParseMs": {
+        "count": 1,
+        "totalMs": 9.299999997019768,
+        "maxMs": 9.299999997019768,
+        "lastMs": 9.299999997019768,
+        "avgMs": 9.299999997019768
+      }
+    }
+  },
+  "preparationLayout": [
+    {
+      "fontAdd": 0,
+      "module": "cp",
+      "labelBottom": 255.296875,
+      "badgeTop": 258.90625
+    },
+    {
+      "fontAdd": 0,
+      "module": "orders",
+      "labelBottom": 292.296875,
+      "badgeTop": 295.90625
+    },
+    {
+      "fontAdd": 0,
+      "module": "koleksiyon",
+      "labelBottom": 434.296875,
+      "badgeTop": 437.90625
+    },
+    {
+      "fontAdd": 4,
+      "module": "cp",
+      "labelBottom": 267.6875,
+      "badgeTop": 267.6875
+    },
+    {
+      "fontAdd": 4,
+      "module": "orders",
+      "labelBottom": 309.875,
+      "badgeTop": 309.875
+    },
+    {
+      "fontAdd": 4,
+      "module": "koleksiyon",
+      "labelBottom": 461.0625,
+      "badgeTop": 461.0625
+    }
+  ],
+  "errorRecovery": null,
+  "errors": []
+}

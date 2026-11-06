@@ -1,0 +1,36 @@
+✔ Continue keeps the trivia screen until capture, then completes exactly once and restores visible keyboard focus (10.689451ms)
+✔ gate, actual dismissal and system usability exclude human wait but retain queued input and Motion time (1.340033ms)
+✔ automated Continue can declare its earlier intent without bypassing a gate (1.121742ms)
+✔ the curtain waits for profile and opening screen while other modules remain in the background (1.444716ms)
+✔ stage detail follows the first unfinished gate (1.178772ms)
+✔ a module that never finishes cannot trap an authenticated user (0.998791ms)
+✔ a failed opening screen never traps the authenticated user behind the curtain (1.489272ms)
+✔ first and secondary workspace tabs use the same primary-only readiness gate (3.738862ms)
+✔ background completion cannot bypass any core, data, primary-screen or profile gate (7.726301ms)
+✔ a stale startupWarm address no longer auto-dismisses the curtain (2.565869ms)
+✔ requested table module is selected before eager helpers and core health does not wait for images (0.652533ms)
+✔ Continue does nothing until preparation is complete (2.333271ms)
+✔ hard startup gates work regardless of arrival order (266.299319ms)
+✔ an absent/incomplete profile cannot release the curtain (4.331295ms)
+✔ slow startup shows information without an automatic 12-second reload; bounded failure offers exactly one retry (6.286775ms)
+✔ late successful preparation recovers from the timed-out curtain without reloading (2.175831ms)
+✔ a late page-projection failure cannot regress an already ready shell (1.79184ms)
+✔ recovery response cannot reload an already-ready app (3.540495ms)
+✔ each guide card has bilingual instructions, a unique ID, a module, an illustration and source evidence (3.416056ms)
+✔ module and capability access filters match real Orders and quotation area aliases (3.632393ms)
+✔ before a profile exists only general, unrestricted lessons are eligible (1.977831ms)
+✔ illustrations escape arbitrary content and never embed real records or remote image requests (1.979899ms)
+✔ startup tips rotate at the initial focused curtain and pause only when reading the card or a control (3.532698ms)
+✔ opening screen projection and failure gate are awaited, while background feature loading stays scheduled (2.769521ms)
+✔ guide keys are isolated at capture phase before legacy mutation shortcuts (0.30813ms)
+✔ calculated-column directions stay within supported tables and shipping uses the real Columns control (0.261168ms)
+✔ after initial data arrives the 120-second deadline does not show a misleading Retry (1.731326ms)
+✔ the profile gate script is requested with the initial data, not after the whole deferred UI group (1.208948ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 365.505176
