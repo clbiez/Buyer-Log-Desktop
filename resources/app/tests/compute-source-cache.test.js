@@ -48,3 +48,8 @@ test('a missing personal snapshot never falls back to a different owner',async()
   const lease=await cache.acquire(descriptor('buyer-a'),'buyer-a');assert.equal(lease.snapshot,null);lease.release();
   assert.deepEqual(owners,['buyer-a']);assert.equal(cache.stats().reservedBytes,0);assert.equal(cache.stats().entries,0);
 });
+test('loader receives the validated immutable generation descriptor',async()=>{
+  const descriptor={ownerId:'a',generation:'g1',loadedAt:'r1',bytes:100,checksum:'verified',replicaFile:'private-capability'};let received;
+  const cache=createComputeSourceCache({maxBytes:1000,loadSnapshot:async(owner,value)=>{received={owner,value};return {loadedAt:'r1',asasOrders:[]};}});
+  const lease=await cache.acquire(descriptor,'a');assert.equal(received.owner,'a');assert.equal(received.value,descriptor);lease.release();cache.clear();
+});

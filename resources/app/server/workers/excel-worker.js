@@ -248,7 +248,7 @@ async function execute(task, payload = {}) {
   throw new Error(`Desteklenmeyen Excel worker görevi: ${task}`);
 }
 
-parentPort.on('message', async message => {
+if(require.main===module&&parentPort)parentPort.on('message', async message => {
   const id = message && message.id;
   const startedAt = performance.now();
   const metrics = () => ({ executionMs: performance.now() - startedAt, heapUsedBytes: process.memoryUsage().heapUsed });
@@ -259,3 +259,4 @@ parentPort.on('message', async message => {
     parentPort.postMessage({ id, ok: false, error: { message: error && error.message || String(error), stack: error && error.stack || '' }, metrics: metrics() });
   }
 });
+module.exports={execute};

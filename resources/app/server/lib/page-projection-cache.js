@@ -242,23 +242,32 @@ async function writeGeneration(userId, { contextHash, sourceLoadedAt = null, pro
     return writeGenerationUnlocked(userId, { contextHash, sourceLoadedAt, projections, reused, extra, previous:loadManifest(userId) });
   }));
 }
-async function writeCompressedGeneration(userId,{contextHash,sourceLoadedAt=null,projections={},extra={}}={}){
+async function writeCompressedGeneration(userId,{contextHash,sourceLoadedAt=null,projections={},extra={},assertCurrent,mergePrevious=false}={}){
   const moduleKey=Object.keys(projections).sort().join(',');
   const inputKey=checksum(Buffer.from(JSON.stringify([sourceLoadedAt,extra.moduleInputKeys||null])));
   return singleFlight(`compressed-generation:${safeUserId(userId)}:${contextHash}:${moduleKey}:${inputKey}`,()=>enqueueUserMutation(userId,async()=>{
-    const previous=loadManifest(userId),id=generationId(),root=generationRoot(userId,id),modules={};
+    assertCurrent?.();
+    const previous=loadManifest(userId),id=generationId(),root=generationRoot(userId,id),modules={};let committed=false;
     await fs.promises.mkdir(root,{recursive:true});
     try{
+      const inherit=mergePrevious&&previous&&String(previous.contextHash||'')===String(contextHash||'')
+        &&String(previous.sourceLoadedAt||'')===String(sourceLoadedAt||'')&&String(previous.sourceRevisionKey||'')===String(extra.sourceRevisionKey||'');
       for(const module of MODULES){
-        if(!Object.prototype.hasOwnProperty.call(projections,module))continue;
+        if(!Object.prototype.hasOwnProperty.call(projections,module)){
+          if(inherit&&previous.modules?.[module]){
+            try{await fs.promises.copyFile(modulePath(userId,previous.activeGeneration,module),modulePath(userId,id,module));modules[module]={...previous.modules[module]};}
+            catch(error){if(error.code!=='ENOENT')throw error;}
+          }
+          continue;
+        }
         const entry=projections[module]||{},buffer=Buffer.isBuffer(entry.buffer)?entry.buffer:Buffer.from(entry.buffer||[]);
         if(!buffer.length)throw new Error(`${module} sıkıştırılmış projection buffer'ı boş.`);
         const file=modulePath(userId,id,module);await atomicWrite(file,buffer);lruForgetFile(file);
         modules[module]={bytes:buffer.length,uncompressedBytes:Number(entry.uncompressedBytes)||0,checksum:checksum(buffer)};
       }
       const manifest={schemaVersion:CACHE_SCHEMA_VERSION,activeGeneration:id,previousGeneration:previous&&previous.activeGeneration||null,contextHash:String(contextHash||''),sourceLoadedAt,createdAt:new Date().toISOString(),modules,backlogVariants:{},...extra};
-      await saveManifest(userId,manifest);await cleanupGenerations(userId,new Set([id,manifest.previousGeneration].filter(Boolean)));return manifest;
-    }catch(error){try{await fs.promises.rm(root,{recursive:true,force:true});}catch(_){}throw error;}
+      assertCurrent?.();await saveManifest(userId,manifest);committed=true;assertCurrent?.();await cleanupGenerations(userId,new Set([id,manifest.previousGeneration].filter(Boolean)));return manifest;
+    }catch(error){if(!committed){try{await fs.promises.rm(root,{recursive:true,force:true});}catch(_){}}throw error;}
   }));
 }
 

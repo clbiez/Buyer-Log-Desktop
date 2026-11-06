@@ -1,6 +1,7 @@
 'use strict';
 const path=require('node:path'),os=require('node:os');
 const {Worker}=require('node:worker_threads');
+const {performance}=require('node:perf_hooks');
 const {registerLeaseWorker}=require('./lease-worker-registry');
 const MiB=1024*1024;
 const messages={
@@ -13,6 +14,11 @@ const messages={
   COMPUTE_TIMEOUT:['Hesaplama zaman aşımına uğradı.','Compute operation timed out.',504],
   COMPUTE_WORKER_FAILED:['Hesaplama işçisi tamamlanamadı.','Compute worker failed.',500],
   COMPUTE_ESTIMATE_EXCEEDED:['Hesaplama bellek tahminini aştı.','Compute operation exceeded its memory estimate.',503],
+  COMPUTE_SOURCE_OWNER_MISMATCH:['Kaynak sahibi uyuşmuyor.','Source owner mismatch.',403],
+  COMPUTE_SOURCE_CORRUPT:['Kaynak kopyası doğrulanamadı.','Source replica could not be verified.',409],
+  COMPUTE_SOURCE_TOO_LARGE:['Kaynak bellek bütçesine sığmıyor.','Source exceeds the memory budget.',413],
+  COMPUTE_SOURCE_BUSY:['Kaynak önbelleği kullanımda.','Source cache is busy.',503],
+  BACKLOG_FILTER_FIELD_INVALID:['Bilinmeyen Backlog filtre alanı.','Unknown Backlog filter field.',400],
 };
 function failure(code){const [tr,en,statusCode]=messages[code];return Object.assign(Error(`${tr} / ${en}`),{code,statusCode,errorEn:en});}
 const bytes=value=>Number.isSafeInteger(value)&&value>=0;
@@ -26,16 +32,23 @@ function createComputePool(options={}){
   const WorkerClass=options.WorkerClass||Worker,workerFile=options.workerFile||path.join(__dirname,'../workers/compute-worker.js');
   const slots=new Set(),pending=[],generations=new Map();
   let nextId=1,queuedInputBytes=0,leasedOutputBytes=0,closed=false,pumping=false,closePromise;
-  const counters={queued:0,completed:0,failed:0,rejected:0,peakActiveWorkers:0,peakReservedBytes:0};
+  const counters={queued:0,completed:0,failed:0,rejected:0,peakActiveWorkers:0,peakReservedBytes:0,totalQueueWaitMs:0,totalDurationMs:0,totalPostMessageMs:0,lastQueueWaitMs:0,lastDurationMs:0,maxQueueWaitMs:0};
   const residentBytes=()=>[...slots].reduce((sum,s)=>sum+s.residentBytes,0);
   const activeBytes=()=>[...slots].reduce((sum,s)=>sum+s.estimatedBytes,0);
   const reserved=()=>slots.size*workerBase+residentBytes()+activeBytes()+queuedInputBytes+leasedOutputBytes;
   function stats(){return {...counters,maxWorkers,workerCount:slots.size,activeWorkers:[...slots].filter(s=>s.state!=='idle').length,pending:pending.length,
     memoryBudgetBytes:budget,estimatedActiveBytes:activeBytes(),retainedWorkerBytes:residentBytes(),queuedInputBytes,leasedOutputBytes,reservedBytes:reserved(),maxPendingBytes};}
   function peak(){counters.peakActiveWorkers=Math.max(counters.peakActiveWorkers,stats().activeWorkers);counters.peakReservedBytes=Math.max(counters.peakReservedBytes,reserved());}
+  function timing(job){
+    const ended=performance.now(),queueWaitMs=(job.startedAt??ended)-job.queuedAt,durationMs=job.startedAt==null?0:ended-job.startedAt;
+    const postMessageMs=job.postMessageMs??(job.postStartedAt==null?0:ended-job.postStartedAt);
+    counters.totalQueueWaitMs+=queueWaitMs;counters.totalDurationMs+=durationMs;counters.totalPostMessageMs+=postMessageMs;
+    counters.lastQueueWaitMs=queueWaitMs;counters.lastDurationMs=durationMs;counters.maxQueueWaitMs=Math.max(counters.maxQueueWaitMs,queueWaitMs);
+    return {queueWaitMs,durationMs,postMessageMs};
+  }
   function rejectJob(job,error){
     if(job.settled)return;job.settled=true;clearTimeout(job.timer);job.signal?.removeEventListener('abort',job.onAbort);job.payload=null;job.transferList=null;
-    counters.failed++;job.reject(error);
+    counters.failed++;error.computeMetrics=timing(job);job.reject(error);
   }
   function removeQueued(job){const index=pending.indexOf(job);if(index<0)return false;pending.splice(index,1);queuedInputBytes-=job.inputBytes;return true;}
   function exited(slot){
@@ -59,7 +72,7 @@ function createComputePool(options={}){
   function received(slot,message){
     const job=slot.job;
     if(slot.state!=='active'||!job||job.settled||message?.type!=='result'||message.id!==job.id)return;
-    if(message.ok!==true){void retire(slot,failure('COMPUTE_WORKER_FAILED'));return;}
+    if(message.ok!==true){void retire(slot,failure(Object.hasOwn(messages,message.error?.code)?message.error.code:'COMPUTE_WORKER_FAILED'));return;}
     const metrics=message.metrics||{},retained=metrics.retainedBytes,output=metrics.outputBytes;
     if(!bytes(retained)||!bytes(output)||retained+output>slot.residentBytes+job.estimatedBytes
       ||reserved()-slot.residentBytes-slot.estimatedBytes+retained+output>budget){void retire(slot,failure('COMPUTE_ESTIMATE_EXCEEDED'));return;}
@@ -69,9 +82,10 @@ function createComputePool(options={}){
     // Havuz value'yu saklamaz. Tüketici, yanıt/disk kaydı bitince lease'i
     // bırakır; aynı release'in iki kez gelmesi sayacı negatife düşürmez.
     const release=()=>{if(released)return;released=true;leasedOutputBytes-=output;pump();};
-    slot.worker.unref?.();peak();job.resolve({value:message.value,metrics,release});pump();
+    slot.worker.unref?.();peak();job.resolve({value:message.value,metrics:{...metrics,...timing(job)},release});pump();
   }
   function start(job,slot){
+    job.startedAt=performance.now();
     removeQueued(job);job.slot=slot;slot.state='active';slot.job=job;slot.ownerKey=job.ownerKey;slot.generation=job.generation;slot.estimatedBytes=job.estimatedBytes;
     if(!slot.worker){
       let setupError;
@@ -92,7 +106,8 @@ function createComputePool(options={}){
     }
     slot.worker.ref?.();peak();
     job.timer=setTimeout(()=>{void retire(slot,failure('COMPUTE_TIMEOUT'));},job.timeoutMs);job.timer.unref?.();
-    try{slot.worker.postMessage({type:'run',id:job.id,task:job.task,payload:job.payload},job.transferList);job.payload=null;job.transferList=null;}
+    job.postStartedAt=performance.now();
+    try{slot.worker.postMessage({type:'run',id:job.id,task:job.task,payload:job.payload},job.transferList);job.postMessageMs=performance.now()-job.postStartedAt;job.payload=null;job.transferList=null;}
     catch(_){void retire(slot,failure('COMPUTE_WORKER_FAILED'));}
   }
   function pump(){
@@ -141,7 +156,7 @@ function createComputePool(options={}){
     if(code){counters.rejected++;return Promise.reject(failure(code));}
     if(!generations.has(ownerKey))generations.set(ownerKey,generation);
     return new Promise((resolve,reject)=>{
-      const job={id:nextId++,task,payload,resolve,reject,ownerKey,generation,estimatedBytes:estimated,inputBytes:input,priority:priority==='interactive'?0:1,
+      const job={id:nextId++,queuedAt:performance.now(),task,payload,resolve,reject,ownerKey,generation,estimatedBytes:estimated,inputBytes:input,priority:priority==='interactive'?0:1,
         signal:jobOptions.signal,transferList:jobOptions.transferList||[],timeoutMs,settled:false};
       job.onAbort=()=>{if(job.settled)return;if(job.slot){rejectJob(job,failure('COMPUTE_ABORTED'));void retire(job.slot);}else{removeQueued(job);rejectJob(job,failure('COMPUTE_ABORTED'));pump();}};
       pending.push(job);queuedInputBytes+=input;counters.queued++;job.signal?.addEventListener('abort',job.onAbort,{once:true});

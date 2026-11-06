@@ -1,0 +1,103 @@
+'use strict';
+const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
+const v8=require('node:v8'),{performance}=require('node:perf_hooks');
+const {createComputePool}=require('./compute-pool');
+const MiB=1024*1024;
+function failure(code){
+  const messages={COMPUTE_SOURCE_TOO_LARGE:['Kaynak kopyası bayt bütçesine sığmıyor.','Source replica exceeds the byte budget.',413],COMPUTE_SOURCE_OWNER_MISMATCH:['Kaynak sahibi uyuşmuyor.','Source owner mismatch.',403],COMPUTE_STALE_GENERATION:['Kaynak sürümü değişti.','Source generation changed.',409],COMPUTE_POOL_CLOSED:['Hesaplama havuzu kapalı.','Compute pool is closed.',503]};
+  const [tr,en,statusCode]=messages[code];return Object.assign(Error(`${tr} / ${en}`),{code,statusCode,errorEn:en});
+}
+function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
+  if(!Number.isSafeInteger(diskBudgetBytes)||diskBudgetBytes<1)throw Error('Invalid source replica byte budget');
+  pool??=createComputePool({maxPendingBytes:512*MiB});
+  const privateRoot=fs.mkdtempSync(path.join(root||os.tmpdir(),'buyerlog-source-replicas-'));
+  fs.chmodSync(privateRoot,0o700);
+  const records=new Map(),current=new Map(),preparing=new Map();let reservedDiskBytes=0,closed=false,closing;
+  const key=(owner,generation)=>JSON.stringify([String(owner),String(generation)]),poolOwner=owner=>'source:'+owner;
+  async function discard(record){
+    if(record.removing||record.pins||!record.retired)return;
+    record.removing=true;
+    try{
+      if(record.descriptor.replicaFile)await fs.promises.rm(record.descriptor.replicaFile,{force:true,maxRetries:3,retryDelay:50});
+      if(records.get(record.key)===record)records.delete(record.key);reservedDiskBytes-=record.diskBytes;record.diskBytes=0;
+    }catch{record.removing=false;/* Windows: açık native okuma bitene kadar baytlar ücretli kalır. */}
+  }
+  function advance(owner,generation){
+    current.set(owner,generation);pool.setGeneration(poolOwner(owner),generation);
+    for(const record of records.values())if(record.owner===owner&&record.generation!==generation){record.retired=true;void discard(record);}
+  }
+  async function seedSource({ownerId,generation,source,uncompressedBytes,publish=true}){
+    if(closed)throw failure('COMPUTE_POOL_CLOSED');
+    const owner=String(ownerId||''),version=String(generation||'');
+    if(!owner||!version||!Number.isSafeInteger(uncompressedBytes)||uncompressedBytes<1)throw failure('COMPUTE_SOURCE_TOO_LARGE');
+    const id=key(owner,version),known=records.get(id);if(known)return known.ready;
+    const diskBytes=uncompressedBytes*2+MiB;
+    if(!Number.isSafeInteger(diskBytes)||reservedDiskBytes+diskBytes>diskBudgetBytes)throw failure('COMPUTE_SOURCE_TOO_LARGE');
+    const replicaFile=path.join(privateRoot,crypto.randomBytes(24).toString('hex')+'.v8');
+    const descriptor={ownerId:owner,generation:version,loadedAt:source.loadedAt||null,replicaFile,capability:crypto.randomBytes(24).toString('hex'),bytes:Math.max(64*MiB,uncompressedBytes*4)};
+    const record={key:id,owner,generation:version,descriptor,diskBytes,pins:1,retired:false};
+    reservedDiskBytes+=diskBytes;records.set(id,record);preparing.set(owner,version);
+    const preparationOwner='prepare:'+owner;pool.setGeneration(preparationOwner,version);
+    record.ready=(async()=>{
+      let lease;
+      try{
+        lease=await pool.run('seed-source',{ownerId:owner,generation:version,source,replicaFile,maxBytes:diskBytes},
+          {ownerKey:preparationOwner,generation:version,priority:'background',estimatedBytes:96*MiB+uncompressedBytes*12,inputBytes:uncompressedBytes*2});
+        if(preparing.get(owner)!==version)throw failure('COMPUTE_STALE_GENERATION');
+        descriptor.checksum=lease.value.checksum;descriptor.loadedAt=lease.value.loadedAt;
+        reservedDiskBytes-=record.diskBytes-lease.value.fileBytes;record.diskBytes=lease.value.fileBytes;
+        Object.freeze(descriptor);if(publish)advance(owner,version);return descriptor;
+      }catch(error){record.retired=true;throw error;}
+      finally{lease?.release();record.pins--;void discard(record);}
+    })();return record.ready;
+  }
+  async function publishSource(descriptor){
+    const record=records.get(key(descriptor?.ownerId,descriptor?.generation));
+    if(!record||record.descriptor.capability!==descriptor.capability)throw failure('COMPUTE_SOURCE_OWNER_MISMATCH');
+    await record.ready;if(record.retired||preparing.get(record.owner)!==record.generation)throw failure('COMPUTE_STALE_GENERATION');
+    advance(record.owner,record.generation);return descriptor;
+  }
+  async function coldSource({ownerId,generation,loadedAt=null,uncompressedBytes,replace=false}){
+    if(closed)throw failure('COMPUTE_POOL_CLOSED');
+    const owner=String(ownerId||''),version=String(generation||''),id=key(owner,version);
+    const existing=records.get(id);if(existing)return existing.ready;
+    if(!replace&&current.has(owner)&&current.get(owner)!==version)throw failure('COMPUTE_STALE_GENERATION');
+    if(!owner||!version||!Number.isSafeInteger(uncompressedBytes)||uncompressedBytes<1)throw failure('COMPUTE_SOURCE_TOO_LARGE');
+    const descriptor=Object.freeze({ownerId:owner,generation:version,loadedAt,capability:crypto.randomBytes(24).toString('hex'),bytes:Math.max(64*MiB,uncompressedBytes*4)});
+    const record={key:id,owner,generation:version,descriptor,diskBytes:0,pins:0,retired:false,ready:Promise.resolve(descriptor)};
+    records.set(id,record);advance(owner,version);return descriptor;
+  }
+  async function run(task,descriptor,params={},options={}){
+    if(closed)throw failure('COMPUTE_POOL_CLOSED');
+    const owner=String(descriptor?.ownerId||''),version=String(descriptor?.generation||''),record=records.get(key(owner,version));
+    if(current.has(owner)&&current.get(owner)!==version)throw failure('COMPUTE_STALE_GENERATION');
+    if(!record||record.descriptor.capability!==descriptor.capability)throw failure('COMPUTE_SOURCE_OWNER_MISMATCH');
+    if(params.access&&String(params.access.userId)!==owner)throw failure('COMPUTE_SOURCE_OWNER_MISMATCH');
+    if(current.get(owner)!==version||record.retired)throw failure('COMPUTE_STALE_GENERATION');
+    await record.ready;record.pins++;
+    try{
+      // Küçük karar/sorgu DTO'su bir kez kodlanır. Kuyruk gerçek girdi
+      // baytını ücretler; büyük ham kaynak bu yoldan tekrar taşınmaz.
+      const encodeStarted=performance.now(),encoded=v8.serialize(params),paramsBytes=Uint8Array.from(encoded).buffer;
+      const paramsSerializeMs=performance.now()-encodeStarted,inputBytes=paramsBytes.byteLength+1024;
+      const lease=await pool.run(task,{ownerId:owner,source:record.descriptor,paramsBytes},{ownerKey:poolOwner(owner),generation:version,priority:'interactive',
+        ...options,estimatedBytes:(task==='backlog-workbook'?256*MiB+record.descriptor.bytes*6:96*MiB+record.descriptor.bytes*3)+inputBytes*3,inputBytes,transferList:[paramsBytes]});
+      if(current.get(owner)!==version||record.retired){lease.release();throw failure('COMPUTE_STALE_GENERATION');}
+      let released=false;return {...lease,metrics:{...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024},release(){if(released)return;released=true;lease.release();record.pins--;void discard(record);}};
+    }catch(error){record.pins--;void discard(record);throw error;}
+  }
+  function bindColdSource(descriptor,loadedAt){
+    const record=records.get(key(descriptor?.ownerId,descriptor?.generation));
+    if(!record||record.descriptor.capability!==descriptor.capability)throw failure('COMPUTE_SOURCE_OWNER_MISMATCH');
+    if(record.retired||current.get(record.owner)!==record.generation)throw failure('COMPUTE_STALE_GENERATION');
+    if(record.descriptor.loadedAt&&String(record.descriptor.loadedAt)!==String(loadedAt))throw failure('COMPUTE_STALE_GENERATION');
+    record.descriptor=Object.freeze({...record.descriptor,loadedAt:loadedAt||null});return record.descriptor;
+  }
+  function stats(){return {diskBudgetBytes,reservedDiskBytes,sourceFiles:[...records.values()].filter(record=>Boolean(record.descriptor.replicaFile)).length,...pool.stats()};}
+  function close(){
+    if(closing)return closing;closed=true;
+    closing=(async()=>{await pool.close();await Promise.allSettled([...records.values()].map(record=>record.ready));await fs.promises.rm(privateRoot,{recursive:true,force:true,maxRetries:3,retryDelay:50});records.clear();current.clear();preparing.clear();reservedDiskBytes=0;})();return closing;
+  }
+  return {seedSource,publishSource,coldSource,bindColdSource,run,stats,close};
+}
+module.exports={createComputeService};

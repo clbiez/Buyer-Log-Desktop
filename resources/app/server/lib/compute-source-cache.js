@@ -47,7 +47,7 @@ function createComputeSourceCache({maxBytes=2*1024*1024*1024,loadSnapshot}={}){
       record.promise=Promise.resolve().then(async()=>{
         let retained=false;
         try{
-          loads++;const snapshot=await load(owner);
+          loads++;const snapshot=await load(owner,descriptor);
           if(record.epoch!==(epochs.get(owner)||0))throw sourceError('COMPUTE_STALE_GENERATION');
           if(snapshot==null)return null;
           identity(snapshot,descriptor);

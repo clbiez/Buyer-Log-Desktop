@@ -159,3 +159,20 @@ test('a job that fits alone can reclaim more than one idle worker cache',async t
   assert.equal(pool.stats().pending,0);assert.equal(pool.stats().estimatedActiveBytes,900);
   workers[2].complete({big:true});const lease=await big;assert.equal(lease.value.big,true);lease.release();
 });
+test('queue wait and main-thread submission are measured separately from worker execution',async t=>{
+  const {pool,workers}=fakePool();t.after(()=>pool.close());
+  const first=pool.run('first',{},taskOptions()),second=pool.run('second',{},taskOptions());
+  await new Promise(resolve=>setTimeout(resolve,25));workers[0].complete();(await first).release();await turn();
+  workers[0].complete({}, {executionMs:3});const lease=await second;
+  assert.ok(lease.metrics.queueWaitMs>=20);assert.ok(lease.metrics.durationMs>=0);assert.ok(lease.metrics.postMessageMs>=0);
+  assert.equal(lease.metrics.executionMs,3);assert.ok(pool.stats().totalQueueWaitMs>=lease.metrics.queueWaitMs);lease.release();
+});
+test('known source failures retain their safe status without accepting arbitrary worker messages',async t=>{
+  const {pool,workers}=fakePool();t.after(()=>pool.close());
+  const first=pool.run('source',{},taskOptions());
+  workers[0].emit('message',{type:'result',id:workers[0].sent.at(-1).id,ok:false,error:{code:'COMPUTE_SOURCE_OWNER_MISMATCH',message:'SYNTHETIC_PRIVATE_PATH',statusCode:200}});
+  await assert.rejects(first,error=>error.code==='COMPUTE_SOURCE_OWNER_MISMATCH'&&error.statusCode===403&&!error.message.includes('SYNTHETIC_PRIVATE_PATH'));
+  await turn();const second=pool.run('source',{},taskOptions());
+  workers.at(-1).emit('message',{type:'result',id:workers.at(-1).sent.at(-1).id,ok:false,error:{code:'arbitrary',message:'SYNTHETIC_PRIVATE_PATH'}});
+  await assert.rejects(second,error=>error.code==='COMPUTE_WORKER_FAILED'&&!error.message.includes('SYNTHETIC_PRIVATE_PATH'));
+});

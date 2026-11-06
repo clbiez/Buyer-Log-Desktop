@@ -345,6 +345,14 @@ const { saveModelSnapshotAsync, loadModelSnapshot, loadModelSnapshotAsync, SNAPS
 const pageProjectionCache = require('./lib/page-projection-cache');
 const derivedInputKeys = require('./lib/derived-input-keys');
 const { runProjectionWorker } = require('./lib/projection-worker-client');
+const { createComputeService } = require('./lib/compute-service');
+const { createComputeReadGuard } = require('./lib/compute-read-guard');
+const { createComputeReadService } = require('./lib/compute-read-service');
+const { sendComputedResponse } = require('./lib/compute-response');
+const { projectionRuntimeMeta } = require('./lib/projection-runtime-meta');
+let commonComputeService = null;
+const publishedComputeSources = new Map();
+function serverCompute() { return commonComputeService || (commonComputeService = createComputeService({root:TEMP_ROOT})); }
 const { SharedRevisionStore } = require('./lib/shared-revision-store');
 const platform = require('./lib/platform');
 const { buildCPRowsFromASAS, buildOrdersRowsFromASAS, buildSharedOrderProjectionRowsFromASAS, buildOverviewSummaryRowsFromASAS, buildOrderSummaryRowsFromASAS, buildBacklogGrouped, buildBacklogDetailRows, buildBacklogTemplateRows, deriveOperationalStatus, findAntrepoHit, applyDateOverrides } = require('./lib/parse');
@@ -6823,7 +6831,7 @@ function hydrateSharedModelSnapshot(value) {
 
 async function saveRuntimeModelSnapshot(id, runtime) {
   if (!runtime || !runtime.loadedAt) return null;
-  return saveModelSnapshotAsync(id, {
+  const payload = {
     loadedAt: runtime.loadedAt,
     sources: runtime.sources || null,
     asasOrders: runtime.asasOrders || [],
@@ -6841,7 +6849,18 @@ async function saveRuntimeModelSnapshot(id, runtime) {
     refreshWarningDetails: runtime.refreshWarningDetails || [],
     modelRefresh: runtime.modelRefresh || null,
     lastRefreshResult: runtime.lastRefreshResult || null,
-  });
+  };
+  const operation = (async () => {
+    const metrics = await saveModelSnapshotAsync(id, payload);
+    const descriptor = await serverCompute().seedSource({ownerId:id,generation:crypto.randomBytes(24).toString('hex'),source:payload,
+      uncompressedBytes:await computeSnapshotByteEstimate(id,metrics),publish:false});
+    Object.defineProperty(runtime,'_computeSourceDescriptor',{value:descriptor,enumerable:false,configurable:true});
+    if(cacheForUser(id)===runtime){await serverCompute().publishSource(descriptor);rememberComputeSource(id,runtime,descriptor);}
+    return metrics;
+  })();
+  Object.defineProperty(runtime,'_computeSourcePreparing',{value:operation,enumerable:false,configurable:true});
+  try{return await operation;}
+  finally{if(runtime._computeSourcePreparing===operation)delete runtime._computeSourcePreparing;}
 }
 
 async function loadInitialDataAndLfl(value){
@@ -7443,6 +7462,7 @@ async function publishRefreshedRuntime(id, next) {
   const snapshotMetrics = await saveRuntimeModelSnapshot(id, next);
   replaceUserCache(id, next);
   userAccess.syncProfiles(next.asasOrders, { authoritative: id === 'moderator' });
+  if(next._computeSourceDescriptor){await serverCompute().publishSource(next._computeSourceDescriptor);rememberComputeSource(id,next,next._computeSourceDescriptor);}
   Object.defineProperty(next, '_refreshPersistenceMetrics', { value:snapshotMetrics || null, enumerable:false, configurable:true });
   return next;
 }
@@ -7925,6 +7945,7 @@ function pageProjectionContext(currentUser = null) {
     schema: pageProjectionCache.CACHE_SCHEMA_VERSION,
     exFactoryApprovalVersion: 1,
     userId: id,
+    resolvedAccessHash: currentUser ? userAccess.computeAccessContext(currentUser).accessHash : null,
     profile: profile ? {
       id: profile.id, role: profile.role, systemRole: profile.systemRole, status: profile.status,
       scopes: profile.scopes, permissions: profile.permissions, accessAreas: profile.accessAreas,
@@ -7973,8 +7994,8 @@ function pageProjectionMatchesRuntime(manifest,runtime){
   if(manifest&&manifest.sourceRevisionKey)return String(manifest.sourceRevisionKey)===projectionSourceRevision(runtime);
   return String(manifest&&manifest.sourceLoadedAt||'')===expected;
 }
-function filterRowsByEffectiveHorizon(currentUser,target,rows){
-  const source=Array.isArray(rows)?rows:[];if(!currentUser)return source;
+function effectiveHorizonForTarget(currentUser,target){
+  if(!currentUser)return null;
   const id=sourceUserId(currentUser),runtime=cacheForUser(id);
   const appliedMap=runtime.modelRefresh&&runtime.modelRefresh.appliedHorizons&&typeof runtime.modelRefresh.appliedHorizons==='object'
     ? runtime.modelRefresh.appliedHorizons : null;
@@ -7989,7 +8010,7 @@ function filterRowsByEffectiveHorizon(currentUser,target,rows){
       hasApplied=true;
     }
   }
-  if(hasApplied)return horizonFields.filterRows(source,horizon);
+  if(hasApplied)return horizon;
   const connections=loadModelConnections(),roleEntries=userAccess.roleWorkspaceEntries(currentUser||id),effective=userPreferences.applyHorizonOverrides(connections.items,id,[target],roleEntries);
   for(const connection of effective){
     const scopes=Array.isArray(connection.scopes)&&connection.scopes.length?connection.scopes:[{targets:['cp','orders','backlog','lfl','priceanalysis'],horizon:connection.horizon||{}}];
@@ -8003,7 +8024,7 @@ function filterRowsByEffectiveHorizon(currentUser,target,rows){
      (ve ön ayardan gelen) ufuk artık bağlantıdan bağımsız da çözülür. */
   /* v7.81 — Kişisel/ön ayar ufkuna geri düşüş KALDIRILDI (kullanıcı
      kararı). Kaynakta filtre yoksa satırlar süzülmez. */
-  if(!horizon)return source;
+  if(!horizon)return null;
   /* v7.26 — KOŞUL GRUPLARI DA UYGULANIR.
 
      Bu süzgeç yalnız SEZON ve TARİH biliyordu. "MAG = CK1E" gibi bir ufuk
@@ -8013,24 +8034,88 @@ function filterRowsByEffectiveHorizon(currentUser,target,rows){
      kullanılıyor; iki yolun sonucu ayrışamaz. */
   // Ufuk bir kez derlenir; satır başına yalnız karşılaştırma kalır
   // (gerçek ASAS'ta 29.923 satır için 191 ms → 96 ms).
-  return horizonFields.filterRows(source,horizon);
+  return horizon;
 }
-function pageCacheRuntimeMeta(runtime) {
-  const src = runtime || {};
-  return {
-    loadedAt: src.loadedAt || null,
-    sources: src.sources || null,
-    cpupdateInfo: src.cpupdateInfo || null,
-    cpupdateOverrides: src.cpupdateOverrides || null,
-    fabricHeaderInfo: src.fabricHeaderInfo || null,
-    antrepoHeaderInfo: src.antrepoHeaderInfo || null,
-    lflMeta: src.lflMeta || null,
-    refreshWarnings: Array.isArray(src.refreshWarnings) ? src.refreshWarnings : [],
-    refreshWarningDetails: Array.isArray(src.refreshWarningDetails) ? src.refreshWarningDetails : [],
-    modelRefresh: src.modelRefresh || null,
-    lastRefreshResult: src.lastRefreshResult || null,
-  };
+function filterRowsByEffectiveHorizon(currentUser,target,rows){
+  const source=Array.isArray(rows)?rows:[],horizon=effectiveHorizonForTarget(currentUser,target);
+  return horizon?horizonFields.filterRows(source,horizon):source;
 }
+function computeSourceBase(id){
+  const active=cacheForUser(id),manifest=active.loadedAt?null:pageProjectionCache.loadManifest(id);
+  return {active,manifest,key:manifest?.sourceRevisionKey||projectionSourceRevision(active.loadedAt?active:manifest?.runtimeMeta||active)};
+}
+function computeSourceToken(id){
+  const base=computeSourceBase(id),known=publishedComputeSources.get(id);
+  const sameCold=known&&!known.descriptor.replicaFile&&!base.active?.loadedAt
+    &&(!base.manifest?.sourceLoadedAt||!known.descriptor.loadedAt||String(base.manifest.sourceLoadedAt)===String(known.descriptor.loadedAt));
+  if(known&&(known.key===base.key||sameCold))return known.descriptor.replicaFile?known.descriptor.capability:known.guardToken||'disk:'+base.key;
+  return 'disk:'+base.key;
+}
+function rememberComputeSource(id,runtime,descriptor){publishedComputeSources.set(id,{key:projectionSourceRevision(runtime),descriptor});}
+function acceptComputedMetadata(profile,metadata){
+  if(!metadata?.loadedAt)return;
+  const id=sourceUserId(profile),known=publishedComputeSources.get(id);if(!known||known.descriptor.replicaFile)return;
+  const descriptor=serverCompute().bindColdSource(known.descriptor,metadata.loadedAt),active=cacheForUser(id);
+  if(!active.loadedAt)Object.assign(active,metadata);
+  publishedComputeSources.set(id,{...known,key:projectionSourceRevision(metadata),descriptor});
+}
+async function computeSnapshotByteEstimate(id,metrics=null){
+  if(Number.isSafeInteger(metrics?.uncompressedBytes)&&metrics.uncompressedBytes>0)return metrics.uncompressedBytes;
+  const file=require('./lib/model-snapshot').snapshotPath(id);
+  for(const candidate of [file,file+'.bak']){
+    let handle;
+    try{handle=await fs.promises.open(candidate,'r');const stat=await handle.stat();if(stat.size<4)continue;
+      const tail=Buffer.alloc(4);await handle.read(tail,0,4,stat.size-4);return Math.max(1024*1024,tail.readUInt32LE(0));
+    }catch(error){if(error.code!=='ENOENT')throw error;}finally{await handle?.close();}
+  }
+  return 1024*1024;
+}
+async function computeSourceFor(profile){
+  const id=sourceUserId(profile),initial=cacheForUser(id);
+  if(initial._computeSourcePreparing)await initial._computeSourcePreparing;
+  const base=computeSourceBase(id),known=publishedComputeSources.get(id);
+  const sameCold=known&&!known.descriptor.replicaFile&&!base.active.loadedAt
+    &&(!base.manifest?.sourceLoadedAt||!known.descriptor.loadedAt||String(base.manifest.sourceLoadedAt)===String(known.descriptor.loadedAt));
+  if(known&&(known.key===base.key||sameCold))return known.descriptor;
+  const expected=computeSourceToken(id),bytes=await computeSnapshotByteEstimate(id);
+  if(computeSourceToken(id)!==expected)throw Object.assign(new Error('Kaynak sürümü değişti. / Source generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
+  const descriptor=await serverCompute().coldSource({ownerId:id,generation:'disk:'+base.key,loadedAt:base.active.loadedAt||base.manifest?.sourceLoadedAt||null,uncompressedBytes:bytes,replace:true});
+  publishedComputeSources.set(id,{key:base.key,guardToken:expected,descriptor});return descriptor;
+}
+function computeReadContext(profile){
+  const context=pageProjectionContext(profile),shared=loadOverrides(),day=new Date();
+  return {...context,contextHash:stableHashValue([context.contextHash,shared._revision||0,shared._revisions||null,require('./lib/merch-calendar-store').fingerprint(),day.getFullYear(),day.getMonth(),day.getDate()])};
+}
+const computeReadGuard=createComputeReadGuard({sessionProfile:req=>userAccess.sessionProfile(req),profileById:id=>userAccess.profileById(id),
+  hasArea:(profile,area)=>userAccess.hasArea(profile,area),contextFor:computeReadContext,accessFor:profile=>userAccess.computeAccessContext(profile),sourceTokenFor:computeSourceToken});
+function computeParamsFor(profile,descriptor,task,parts={}){
+  if(task==='source-info')return {};
+  const shared=loadOverrides();
+  const data={...parts,access:profile?userAccess.computeAccessContext(profile):null,overrides:{...shared,antrepoMatchConfig:shared.antrepoSourceMode==='dashboard'?dashboardAntrepoMatchRule():shared.antrepoMatchConfig},
+    mergeSourceOverrides:true,preferSourceAppliedHorizons:true,horizons:Object.fromEntries(['cp','orders','backlog'].map(target=>[target,effectiveHorizonForTarget(profile,target)])),
+    cpAllowed:!profile||['overview','cp','orders','koleksiyon','shipping','source'].some(area=>userAccess.hasArea(profile,area)),summaryAllowed:!profile||['overview','backlog','source'].some(area=>userAccess.hasArea(profile,area)),
+    cpModelColumns:loadModelConnections().items.flatMap(item=>(item.cpColumns||[]).map(col=>({...col,role:item.role,connectionId:item.id,connectionName:item.name||item.catalog||item.server}))),
+    calendar:require('./lib/merch-calendar-store').publicProjection()};
+  if(task.startsWith('backlog-')){
+    data.headers=BACKLOG_TEMPLATE_HEADERS;
+    data.sourceRevision=stableHashValue([descriptor.generation,computeReadContext(profile).contextHash]);
+    data.rowsRevision=stableHashValue([data.sourceRevision,parts]);
+  }
+  return data;
+}
+const computeReads=createComputeReadService({compute:{run:(...args)=>serverCompute().run(...args)},guard:computeReadGuard,sourceFor:computeSourceFor,paramsFor:computeParamsFor});
+async function prepareComputeBacklog(req){
+  const lease=await computeReads.run(req,'backlog','source-info',{});let info;
+  try{lease.assertBuild();info=lease.value;acceptComputedMetadata(req.currentUser,info.runtimeMeta);lease.assertResponse();}finally{lease.release();}
+  const shared=loadOverrides();
+  if(!info.loadedAt)await ensureBacklogRuntime(sourceUserId(req));
+  if((shared.asasSourceMode!=='database'&&!info.asasSourceFields)
+    ||(!['database','dashboard'].includes(shared.antrepoSourceMode)&&!info.antrepoSourceFields)){
+    const id=sourceUserId(req);if(!cacheForUser(id).asasOrders)await ensureDataLoaded(id);await ensureBacklogSourceFields(id);
+  }
+}
+function pageCacheRuntimeMeta(runtime) { return projectionRuntimeMeta(runtime); }
+
 function cachedRuntimeFromManifest(manifest) {
   return { ...emptySourceCache(), ...((manifest && manifest.runtimeMeta) || {}) };
 }
@@ -8069,9 +8154,11 @@ async function buildAndWritePageProjectionCache(currentUser, runtime = null) {
   if (!ctx.filterStatus.ready) return null;
   const active = runtime || cacheForUser(id);
   if (!Array.isArray(active.asasOrders)) return null;
+  const expectedSourceToken=computeSourceToken(id);
   const overrides = effectiveOverridesForUser(id);
   const {backlog:backlogInputKey,...moduleInputKeys}=derivedInputKeys.keys(active,ctx.contextHash,overrides,{version:APP_VERSION});
   const reused=await pageProjectionCache.readReusableProjections(id,ctx.contextHash,moduleInputKeys);
+  if(computeSourceToken(id)!==expectedSourceToken)throw Object.assign(new Error('Kaynak sürümü değişti. / Source generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
   const wanted=new Set(Object.keys(moduleInputKeys).filter(module=>!reused.projections[module]));
   const extra={runtimeMeta:pageCacheRuntimeMeta(active),sourceRevisionKey:projectionSourceRevision(active),moduleInputKeys,backlogInputKey,performance:{reusedModules:Object.keys(reused.projections)}};
   if(!wanted.size){
@@ -8079,80 +8166,28 @@ async function buildAndWritePageProjectionCache(currentUser, runtime = null) {
     if(hit)return hit;
     Object.keys(moduleInputKeys).forEach(module=>wanted.add(module));reused.projections={};
   }
-  const cpDataAllowed = !currentUser || ['overview','cp','orders','koleksiyon','shipping','source'].some(area => userAccess.hasArea(currentUser, area));
-  const orderSummaryDataAllowed = !currentUser || ['overview','backlog','source'].some(area => userAccess.hasArea(currentUser, area));
-  const scoped = (target,rows) => currentUser ? userAccess.filterRowsByScope(currentUser, filterRowsByEffectiveHorizon(currentUser,target,rows)) : rows;
-  const scopedCpSource = scoped('cp',ordersForTarget(active, 'cp', overrides));
-  const scopedOrdersSource = scoped('orders',ordersForTarget(active, 'orders', overrides));
-  const cpAntrepo = antrepoForTarget(active, 'cp'), ordersAntrepo = antrepoForTarget(active, 'orders');
-  const cpModelColumns = cpDataAllowed ? loadModelConnections().items.flatMap(item => (item.cpColumns || []).map(col => ({...col, role:item.role, connectionId:item.id, connectionName:item.name || item.catalog || item.server}))) : [];
-  const workerMinRows=Math.max(1000,Number(process.env.BL_PROJECTION_WORKER_MIN_ROWS)||5000);
-  if(cpDataAllowed&&process.env.BL_DISABLE_PROJECTION_WORKER!=='1'&&Math.max(scopedCpSource.length,scopedOrdersSource.length)>=workerMinRows){
-    try{
-      // v7.16: aynı sipariş kodu binlerce satırda tekrar ediyor; karar kod başına
-      // bir kez alınır ve kullanıcı düzeyindeki manageAll kontrolü dışarı çıkarılır.
-      const workerEditContext = { manageAll: currentUser ? Boolean(userAccess.hasPermission(currentUser, 'manageAllOrders')) : true };
-      const workerEditByCode = new Map();
-      const editableOrderCodes = currentUser ? scopedCpSource.filter(row => {
-        const code = row && row.ocode, key = String(code == null ? '' : code);
-        if (!workerEditByCode.has(key)) workerEditByCode.set(key, Boolean(canUserEditOrderCode(currentUser, code, workerEditContext)));
-        return workerEditByCode.get(key);
-      }).map(row => row.ocode) : scopedCpSource.map(row => row && row.ocode);
-      const worker=await runProjectionWorker({
-        cpSource:scopedCpSource,ordersSource:scopedOrdersSource,cpAntrepo,ordersAntrepo,overrides,cpModelColumns,
-        modules:[...wanted],catalogOrdersBuffer:wanted.has('collection-catalog')?reused.projections.orders?.buffer:null,
-        shared:cpAntrepo===ordersAntrepo&&sameProjectionSourceRows(scopedCpSource,scopedOrdersSource),
-        orderSummaryAllowed:orderSummaryDataAllowed,editableOrderCodes,
-      });
-      const compressed={...reused.projections,...Object.fromEntries(Object.entries(worker.compressed||{}).map(([module,entry])=>[module,{buffer:Buffer.from(entry.buffer),uncompressedBytes:entry.uncompressedBytes}]))};
-      return pageProjectionCache.writeCompressedGeneration(id,{
-        contextHash:ctx.contextHash,sourceLoadedAt:active.loadedAt||null,projections:compressed,
-        extra:{...extra,performance:{...extra.performance,projectionWorker:true,...(worker.metrics||{})}},
-      });
-    }catch(workerError){logRuntimeFailure('projectionWorkerFallback',workerError);}
-  }
-  const projected = wanted.has('cp')&&wanted.has('orders')?buildCpAndOrdersProjectionRows(scopedCpSource, scopedOrdersSource, cpAntrepo, ordersAntrepo, overrides, cpDataAllowed):{
-    cpRows:cpDataAllowed&&wanted.has('cp')?buildCPRowsFromASAS(scopedCpSource,cpAntrepo,overrides):[],
-    ordersRows:cpDataAllowed&&wanted.has('orders')?buildOrdersRowsFromASAS(scopedOrdersSource,ordersAntrepo,overrides):[],
-  };
-  const cpRows = projected.cpRows, ordersRows = projected.ordersRows;
-  const orderSummaryRows = wanted.has('order-summary')&&orderSummaryDataAllowed ? buildOrderSummaryRowsFromASAS(scopedCpSource, antrepoForTarget(active, 'cp'), overrides) : [];
-  const overviewRows = (wanted.has('overview')||wanted.has('collection-catalog'))&&orderSummaryDataAllowed ? buildOverviewSummaryRowsFromASAS(scopedCpSource, overrides) : [];
-  // v7.16: _canEdit her satır için ayrı hesaplanıyordu ve her hesap alt kullanıcı
-  // ağacını yürüyüp izin kümesini yeniden kuruyordu. Gerçek ölçüm: çağrı başına
-  // 35 ms; 1.155 satırlık bir yenilemede page-cache aşaması 28 saniye sürüyordu.
-  // Karar artık (a) kullanıcı için bir kez, (b) sipariş kodu başına bir kez alınır.
-  const editContext = { manageAll: currentUser ? Boolean(userAccess.hasPermission(currentUser, 'manageAllOrders')) : true };
-  const editByOrderCode = new Map();
-  const rowCanEdit = row => {
-    if (!currentUser || editContext.manageAll) return true;
-    const key = String(row && row['Order Code'] == null ? '' : row['Order Code']);
-    if (!editByOrderCode.has(key)) editByOrderCode.set(key, Boolean(canUserEditOrderCode(currentUser, row && row['Order Code'], editContext)));
-    return editByOrderCode.get(key);
-  };
-  cpRows.forEach(row => { row._canEdit = rowCanEdit(row); });
-  ordersRows.forEach(row => { row._canEdit = false; });
-  orderSummaryRows.forEach(row => { row._canEdit = rowCanEdit(row); });
-  let catalogRows=ordersRows;
-  if(wanted.has('collection-catalog')&&reused.projections.orders)catalogRows=(await pageProjectionCache.decodeProjection(reused.projections.orders.buffer)).rows||[];
-  const projections = {
-    cp: { rows: cpRows, cpModelColumns },
-    overview: { rows: overviewRows },
-    orders: { rows: ordersRows },
-    'order-summary': { rows: orderSummaryRows },
-    'collection-catalog': {
-      catalogs: cpDataAllowed ? buildCollectionCatalogs(catalogRows.length ? catalogRows : overviewRows) : {},
-      catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION,
-    },
-  };
-  return pageProjectionCache.writeGeneration(id, {
-    contextHash: ctx.contextHash,
-    sourceLoadedAt: active.loadedAt || null,
-    projections:Object.fromEntries(Object.entries(projections).filter(([module])=>wanted.has(module))),
-    reused:reused.projections,
-    extra,
-  });
+  return buildAndWriteComputedPageProjectionCache(currentUser,active,ctx,wanted,reused,extra,expectedSourceToken);
 }
+async function buildAndWriteComputedPageProjectionCache(currentUser,active,ctx,wanted,reused,extra,expectedSourceToken){
+  const id=ctx.id;
+  const assertCurrent=()=>{
+    const latest=currentUser?userAccess.profileById(id):null;
+    if((currentUser&&(!latest||latest.enabled===false||latest.status!=='ACTIVE'))
+      ||pageProjectionContext(latest).contextHash!==ctx.contextHash||computeSourceToken(id)!==expectedSourceToken){
+      throw Object.assign(new Error('Veri veya yetki sürümü değişti. / The data or permission generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
+    }
+  };
+  const descriptor=await computeSourceFor(currentUser||id);assertCurrent();
+  const params=computeParamsFor(currentUser,descriptor,'projections',{modules:[...wanted],catalogOrdersBuffer:wanted.has('collection-catalog')?reused.projections.orders?.buffer:null});
+  const lease=await serverCompute().run('projections',descriptor,params,{priority:'background'});
+  try{
+    assertCurrent();
+    const compressed={...reused.projections,...Object.fromEntries(Object.entries(lease.value.compressed||{}).map(([module,entry])=>[module,{buffer:Buffer.from(entry.buffer),uncompressedBytes:entry.uncompressedBytes}]))};
+    return await pageProjectionCache.writeCompressedGeneration(id,{contextHash:ctx.contextHash,sourceLoadedAt:active.loadedAt||null,projections:compressed,assertCurrent,
+      extra:{...extra,performance:{...extra.performance,projectionWorker:true,computePool:true,...lease.metrics}}});
+  }finally{lease.release();}
+}
+
 async function warmPageProjectionCachesFromSnapshots() {
   const profiles = userAccess.allPublicProfiles().filter(profile => profile && profile.enabled !== false);
   const bySnapshotId = new Map();
@@ -8662,30 +8697,17 @@ async function ensureBacklogSourceFields(value) {
 
 app.get('/api/backlog', userAccess.requireArea('backlog'), async (req, res) => {
   try {
-    const id = sourceUserId(req), filterStatus = sourceFilterReadiness(['backlog'], req);
-    const { retailFrom, retailTo, inStoreFrom, inStoreTo, exFactoryFrom, exFactoryTo, buyerGrup, groupBy, dimFilters, antrepoFrom, antrepoTo, antrepoDateLevels } = req.query;
-    const dims = groupBy ? String(groupBy).split(',').filter(Boolean) : [];
-    const dateLevels = antrepoDateLevels ? String(antrepoDateLevels).split(',').filter(Boolean) : undefined;
-    let parsedDimFilters = {};
-    if (dimFilters) { try { parsedDimFilters = JSON.parse(dimFilters); } catch { parsedDimFilters = {}; } }
-    const params = { retailFrom:retailFrom||'', retailTo:retailTo||'', inStoreFrom:inStoreFrom||'', inStoreTo:inStoreTo||'', exFactoryFrom:exFactoryFrom||'', exFactoryTo:exFactoryTo||'', buyerGrup:buyerGrup||'', groupBy:dims, dimFilters:parsedDimFilters, analysisFilters:req.query.analysisFilters, antrepoFrom:antrepoFrom||'', antrepoTo:antrepoTo||'', antrepoDateLevels:dateLevels||[],lazyDimensions:req.query.lazyDimensions==='1',valueDimensions:String(req.query.valueDimensions||'').split(',').filter(Boolean) };
-    if (!filterStatus.ready) {
-      const overrides = loadOverrides();
-      const emptyReport = buildBacklogGrouped([], {}, overrides, params);
-      return sendDateSafeJson(res, { ...emptyReport, sourceFilterRequired: true, sourceFilterStatus: filterStatus, sourceFilterMessage: sourceFilterReadinessMessage(filterStatus, 'tr') });
+    const filterStatus=sourceFilterReadiness(['backlog'],req),q=req.query;
+    let dimFilters={};try{dimFilters=JSON.parse(q.dimFilters||'{}');}catch{}
+    const options={retailFrom:q.retailFrom||'',retailTo:q.retailTo||'',inStoreFrom:q.inStoreFrom||'',inStoreTo:q.inStoreTo||'',exFactoryFrom:q.exFactoryFrom||'',exFactoryTo:q.exFactoryTo||'',buyerGrup:q.buyerGrup||'',groupBy:String(q.groupBy||'').split(',').filter(Boolean),dimFilters,analysisFilters:q.analysisFilters,antrepoFrom:q.antrepoFrom||'',antrepoTo:q.antrepoTo||'',antrepoDateLevels:String(q.antrepoDateLevels||'').split(',').filter(Boolean),lazyDimensions:q.lazyDimensions==='1',valueDimensions:String(q.valueDimensions||'').split(',').filter(Boolean)};
+    if(!filterStatus.ready){
+      const emptyReport=buildBacklogGrouped([],{},loadOverrides(),options);
+      return sendDateSafeJson(res,{...emptyReport,sourceFilterRequired:true,sourceFilterStatus:filterStatus,sourceFilterMessage:sourceFilterReadinessMessage(filterStatus,'tr')});
     }
-    const ctx = pageProjectionContext(req.currentUser), key = backlogCacheKey(params);
-    const cached = await pageProjectionCache.readBacklog(id, ctx.contextHash, key);
-    if (cached) return sendDateSafeJson(res, { ...cached.data, pageCache: { hit:true, readMs:Number(cached.ms)||0, generation:cached.manifest.activeGeneration } });
-    const runtime = cacheForUser(id);
-    if (!runtime.asasOrders) await ensureDataLoaded(id);
-    await ensureBacklogSourceFields(id);
-    const prepared=backlogQueryForRequest(req,params,!params.lazyDimensions || params.valueDimensions.length>0,ctx);
-    const report = {...buildBacklogGrouped(prepared.orders,prepared.antrepo,prepared.overrides,params,prepared.query),rowsInputRevision:prepared.sourceRevision};
-    try { await pageProjectionCache.writeBacklog(id, ctx.contextHash, key, report); }
-    catch (cacheError) { logRuntimeFailure('backlogPageCacheWrite', cacheError); }
-    sendDateSafeJson(res, { ...report, pageCache: { hit:false } });
-  } catch (err) { apiError(res, err, 'Backlog raporu hesaplanamadı.'); }
+    await prepareComputeBacklog(req);
+    const lease=await computeReads.run(req,'backlog','backlog-grouped',{options,pageCache:{hit:false}});
+    return sendComputedResponse(req,res,lease);
+  }catch(err){apiError(res,err,'Backlog raporu hesaplanamadı.');}
 });
 
 
@@ -8702,14 +8724,9 @@ const BACKLOG_TEMPLATE_HEADERS = [
 // değilken boş raporla dönebilir.
 app.get('/api/backlog-source-columns', userAccess.requireArea('backlog'), async (req,res)=>{
   try{
-    assertSourceFilters(['backlog'], req);
-    const id=sourceUserId(req),runtime=cacheForUser(id);
-    if(!runtime.asasOrders) await ensureBacklogRuntime(id);
-    await ensureBacklogSourceFields(id);
-    const active=cacheForUser(id),overrides=effectiveOverridesForUser(id);
-    const backlogOrders=userAccess.filterRowsByScope(req.currentUser,ordersForTarget(active,'backlog',overrides));
-    const columns=parseLib.backlogCustomDimensionContext(backlogOrders,antrepoForTarget(active,'backlog')).customDimensions;
-    sendDateSafeJson(res,{columns,defaultHeaders:BACKLOG_TEMPLATE_HEADERS});
+    assertSourceFilters(['backlog'],req);await prepareComputeBacklog(req);
+    const lease=await computeReads.run(req,'backlog','backlog-source-columns',{});
+    return sendComputedResponse(req,res,lease);
   }catch(err){apiError(res,err,'Backlog kaynak sütunları listelenemedi.');}
 });
 
@@ -8771,59 +8788,24 @@ function backlogQueryForRequest(req,options={},includeWindowed=false,context=nul
 
 app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res)=>{
   try{
-    assertSourceFilters(['backlog'], req);
-    const id=sourceUserId(req),runtime=cacheForUser(id);
-    if(!runtime.asasOrders) await ensureBacklogRuntime(id);
-    await ensureBacklogSourceFields(id);
-    const {retailFrom,retailTo,inStoreFrom,inStoreTo,exFactoryFrom,exFactoryTo,buyerGrup,groupBy,dimFilters,antrepoFrom,antrepoTo,antrepoDateLevels}=req.query;
-    const dims=groupBy?String(groupBy).split(',').filter(Boolean):[];
-    const dateLevels=antrepoDateLevels?String(antrepoDateLevels).split(',').filter(Boolean):undefined;
-    let parsedDimFilters={}; if(dimFilters){try{parsedDimFilters=JSON.parse(dimFilters);}catch{}}
-    const filterOpts={retailFrom,retailTo,inStoreFrom,inStoreTo,exFactoryFrom,exFactoryTo,buyerGrup,groupBy:dims,dimFilters:parsedDimFilters,analysisFilters:req.query.analysisFilters,antrepoFrom,antrepoTo,antrepoDateLevels:dateLevels};
-    const prepared=backlogQueryForRequest(req,filterOpts);
-    const overrides=prepared.overrides;
-    const backlogOrders=prepared.orders;
-    const backlogAntrepo=prepared.antrepo;
-    // Excel detayı Backlog ekranıyla AYNI hedef kapsamını ve AYNI aktif filtreleri
-    // kullanır. CP'nin birincil cache'i bu akışa kesinlikle karışmaz.
-    const sourceCatalog=prepared.query.custom.customDimensions;
-    const requestedIds=String(req.query.sourceColumns||'').split(',').map(value=>value.trim()).filter(Boolean);
-    const sourceById=new Map(sourceCatalog.map(column=>[column.id,column]));
-    const sourceColumns=requestedIds.map(id=>sourceById.get(id)).filter(Boolean);
-    const previewLimit=Math.min(500,Math.max(0,Number(req.query.previewLimit)||0));
-    const includeSourceDetails=req.query.includeSourceDetails==='1';
-    const detailRowsKey=JSON.stringify([prepared.sourceRevision,backlogRowFilterOptions(filterOpts),sourceColumns.map(column=>column.id),previewLimit,includeSourceDetails]);
-    const detailRows=cachedBacklogTemplateRows(detailRowsKey,()=>buildBacklogTemplateRows(backlogOrders,backlogAntrepo,overrides,filterOpts,sourceColumns,{limit:previewLimit,includeSourceDetails,queryContext:prepared.query}));
-    const exportHeaders=[...BACKLOG_TEMPLATE_HEADERS,...sourceColumns.map(column=>column.label)];
-    // format=json: satırlar istemciye gider, Excel istemcide CP ile AYNI stil motoruyla üretilir.
-    if(req.query.format==='json'){
-      // rowsRevision: aynı girdiler = aynı satırlar. İstemci aynı revizyonda
-      // elindeki normalleştirilmiş/analiz edilmiş veriyi yeniden kullanır.
-      const rowsRevision=crypto.createHash('sha1').update(BACKLOG_ROWS_PROCESS_NONCE).update(detailRowsKey).digest('hex');
-      return sendDateSafeJson(res, { headers: exportHeaders, rows: detailRows, totalRows:detailRows.totalRows||detailRows.length, sourceColumns, sourceCatalog, rowsRevision, merchCalendar:require('./lib/merch-calendar-store').publicProjection() });
-    }
-    const workerResult=await runExcelTask('writeBacklogWorkbook',{headers:exportHeaders,detailRows,importanceValues:BLOrderImportance.excelValues(overrides.importanceSettings),templatePath:path.join(__dirname,'templates','BACKLOG.xlsx')},{timeoutMs:300000});
-    const buffer=Buffer.from(workerResult.data);
-    const d=new Date(),p=x=>String(x).padStart(2,'0');
-    const name=`Backlog_Report_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.xlsx`;
-    res.setHeader('Content-Type','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition',`attachment; filename="${name}"`);
-    res.send(buffer);
+    assertSourceFilters(['backlog'],req);await prepareComputeBacklog(req);
+    const q=req.query;let dimFilters={};try{dimFilters=JSON.parse(q.dimFilters||'{}');}catch{}
+    const options={retailFrom:q.retailFrom,retailTo:q.retailTo,inStoreFrom:q.inStoreFrom,inStoreTo:q.inStoreTo,exFactoryFrom:q.exFactoryFrom,exFactoryTo:q.exFactoryTo,buyerGrup:q.buyerGrup,groupBy:String(q.groupBy||'').split(',').filter(Boolean),dimFilters,analysisFilters:q.analysisFilters,antrepoFrom:q.antrepoFrom,antrepoTo:q.antrepoTo,antrepoDateLevels:q.antrepoDateLevels?String(q.antrepoDateLevels).split(',').filter(Boolean):undefined};
+    const json=q.format==='json',task=json?'backlog-export':'backlog-workbook';
+    const lease=await computeReads.run(req,'backlog',task,{options,sourceColumns:String(q.sourceColumns||'').split(',').map(value=>value.trim()).filter(Boolean),previewLimit:Math.min(500,Math.max(0,Number(q.previewLimit)||0)),includeSourceDetails:q.includeSourceDetails==='1',mapProjection:q.projection==='global-flow'},{cache:json});
+    if(json)return sendComputedResponse(req,res,lease);
+    const d=new Date(),pad=value=>String(value).padStart(2,'0'),filename=`Backlog_Report_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.xlsx`;
+    return sendComputedResponse(req,res,lease,{contentType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',filename,gzip:false});
   }catch(err){apiError(res,err,'Backlog Excel raporu oluşturulamadı.');}
 });
 
 app.get('/api/backlog-filter-values',userAccess.requireArea('backlog'),async(req,res)=>{
   try{
-    assertSourceFilters(['backlog'],req);
-    const id=sourceUserId(req);if(!cacheForUser(id).asasOrders)await ensureBacklogRuntime(id);
-    await ensureBacklogSourceFields(id);
+    assertSourceFilters(['backlog'],req);await prepareComputeBacklog(req);
     let dimFilters={};try{dimFilters=JSON.parse(req.query.dimFilters||'{}');}catch{}
-    // Preserve the pre-analysis option universe without transferring its rows.
     const options={...req.query,dimFilters,analysisFilters:undefined};
-    const prepared=backlogQueryForRequest(req,options);
-    const idValue=String(req.query.field||'');
-    if(!BACKLOG_TEMPLATE_HEADERS.some(header=>'cp:'+header===idValue) && !prepared.query.custom.customDimensions.some(column=>column.id===idValue))return res.status(400).json({error:'Unknown Backlog filter field',code:'BACKLOG_FILTER_FIELD_INVALID'});
-    sendDateSafeJson(res,{...parseLib.buildBacklogFilterValues(prepared.orders,prepared.antrepo,prepared.overrides,options,idValue,prepared.query),rowsInputRevision:prepared.sourceRevision});
+    const lease=await computeReads.run(req,'backlog','backlog-filter-values',{options,field:String(req.query.field||'')});
+    return sendComputedResponse(req,res,lease);
   }catch(err){apiError(res,err,'Backlog filtre değerleri hazırlanamadı.');}
 });
 
