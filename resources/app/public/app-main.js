@@ -14766,6 +14766,43 @@ function cpClientWorkInProgress(){
   }catch(_){}
   return false;
 }
+/* v7.0.340 — Yenileme izleyicisinin kimlik kararı (saf, test edilir).
+   Sunucu süreci yenileme sırasında kapanıp gözetmen tarafından yeniden
+   başlatılırsa yeni süreçte iş kaydı yoktur: durum ya "idle/jobId:null" ya da
+   farklı bir sunucu örneği döner. Eskiden bu durum "başka iş" sayılıyor,
+   geçen süre sayacı donuyor ve kullanıcı 25 dakika sonra "Refresh job could
+   not be verified." görüyordu. 'lost' artık hemen açık bir hataya dönüşür. */
+function refreshJobWatchVerdict(expectedJob,jobState){
+  const expectedId=String(expectedJob&&expectedJob.jobId||'');
+  const expectedStartedAt=String(expectedJob&&expectedJob.startedAt||'');
+  const expectedInstance=String(expectedJob&&expectedJob.serverInstanceId||'');
+  const state=jobState&&typeof jobState==='object'?jobState:{};
+  const instance=String(state.serverInstanceId||'');
+  if(expectedInstance&&instance&&instance!==expectedInstance)return 'lost';
+  const sameId=!expectedId||String(state.jobId||'')===expectedId;
+  const sameStart=!expectedStartedAt||String(state.startedAt||'')===expectedStartedAt;
+  if(sameId&&sameStart)return 'match';
+  // İş kayıtları sunucu süreci boyunca silinmez; aynı süreçte jobId'nin
+  // boşalması ancak sürecin yeniden başlamasıyla olur.
+  if(expectedId&&!state.jobId)return 'lost';
+  return 'foreign';
+}
+function refreshJobLostError(expectedJob,jobState){
+  const en=appLang==='en';
+  const err=new Error(en?'The Buyer Log server restarted during the refresh; the refresh was not completed.':'Buyer Log sunucusu yenileme sırasında yeniden başladı; yenileme tamamlanmadı.');
+  err.code='REFRESH_JOB_LOST';
+  const technical=`Refresh job ${String(expectedJob&&expectedJob.jobId||'—')} is unknown to the server`
+    +` (server instance ${String(expectedJob&&expectedJob.serverInstanceId||'—')} → ${String(jobState&&jobState.serverInstanceId||'—')}, phase=${String(jobState&&jobState.phase||'—')}).`; // i18n-ignore
+  err.diagnosis={
+    code:'REFRESH_JOB_LOST',category:'server-restart',
+    title:{tr:'Yenileme sırasında sunucu yeniden başladı',en:'The server restarted during the refresh'},
+    summary:{tr:'Buyer Log sunucusu yenilemeyi bitiremeden kapandı ve otomatik olarak yeniden başlatıldı. Bu yenilemenin sonucu doğrulanamadı; ekrandaki veri bu yenilemeyle güncellenmedi.',en:'The Buyer Log server stopped before the refresh finished and was restarted automatically. The result of this refresh could not be verified; the data on screen was not updated by it.'},
+    action:{tr:'Yenilemeyi yeniden başlatın. Sorun tekrar ederse Buyer Log veri klasöründeki logs/backend.log ve logs/server-restart.log dosyalarının son satırlarını destek ekibine iletin.',en:'Start the refresh again. If it happens again, share the last lines of logs/backend.log and logs/server-restart.log in the Buyer Log data folder with support.'},
+    owner:{tr:'Buyer Log uygulaması',en:'Buyer Log application'},
+    technical:{tr:technical,en:technical},
+  };
+  return err;
+}
 async function loadFromServer(force, targets){
   // İstemcinin eski snapshot'ı bir hedefi yanlış gruba dahil edip geçerli
   // filtre bulunamadı hatası üretebiliyordu. Her manuel yenilemeden önce aynı
@@ -14849,6 +14886,8 @@ async function waitForRefreshJob(expectedJob=null){
     // /api/data sonucunu yeniden çiziyordu. Başlatılan işin kimliği birebir eşleşmeli.
     const sameId=!expectedId||String(jobState.jobId||'')===expectedId;
     const sameStart=!expectedStartedAt||String(jobState.startedAt||'')===expectedStartedAt;
+    const verdict=refreshJobWatchVerdict(expectedJob,jobState);
+    if(verdict==='lost')throw refreshJobLostError(expectedJob,jobState);
     if(!sameId||!sameStart){
       if(Date.now()-started>timeoutMs)throw new Error(appLang==='en'?'Refresh job could not be verified.':'Yenileme işi doğrulanamadı.');
       continue;
