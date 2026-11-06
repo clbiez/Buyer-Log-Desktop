@@ -48,7 +48,7 @@ function requireExcelModules() {
   return { XLSX, parseASASWorkbook, parseAntrepoWorkbook, parseCPUpdateWorkbook, parseLFLWorkbook };
 }
 function readWorkbook(XLSX, fullPath) {
-  return XLSX.readFile(fullPath, { cellDates: false, raw: true });
+  return XLSX.readFile(fullPath, { cellDates: false, raw: true, dense: true });
 }
 async function execute(task, payload = {}) {
   if (task === 'health') return { ok: true, thread: 'excel-worker' };
