@@ -1878,24 +1878,33 @@ const DATE_OVERRIDE_TARGETS = [['ex', '_asasEx'], ['retail', '_asasRetail'], ['m
 function applyDateOverrides(orders, overrides) {
   const map = overrides && overrides.datemap;
   const list = Array.isArray(orders) ? orders : [];
-  if (!map || typeof map !== 'object') return list;
   return list.map(order => {
-    const record = overrideGet(map, order);
-    if (!record || typeof record !== 'object') return order;
+    const record = map && typeof map === 'object' ? overrideGet(map, order) : null;
+    if(!record&&!order._exFactoryRevision&&!BLBusinessRules.resolveExFactoryDate(order.ex,order.shipConf,dateOrdinal).automatic)return order;
     const next = {
       ...order,
-      _asasEx: parseDateOnly(order.ex) || null,
-      _asasRetail: parseDateOnly(order.retail) || null,
-      _asasMb: parseDateOnly(order.mb) || null,
+      _asasEx: asasBaseline(order, 'ex', '_asasEx'),
+      _asasRetail: asasBaseline(order, 'retail', '_asasRetail'),
+      _asasMb: asasBaseline(order, 'mb', '_asasMb'),
     };
+    // Rebuild from source on every pass: automatic dates never enter datemap.
+    if (order._exFactoryRevision) next.ex = next._asasEx;
+    delete next._exFactoryRevision;
     let touched = false;
     for (const [field, _baselineKey] of DATE_OVERRIDE_TARGETS) {
-      if (!Object.prototype.hasOwnProperty.call(record, field)) continue;
+      if (!record || !Object.prototype.hasOwnProperty.call(record, field)) continue;
       const parsed = parseDateFlexible(record[field]);
       if (!parsed) continue;
       next[field] = parsed;
       touched = true;
     }
+    const effective = BLBusinessRules.resolveExFactoryDate(next.ex, next.shipConf, dateOrdinal);
+    if (effective.automatic) {
+      next._exFactoryRevision = { source: 'loading-approval', previousDate: parseDateOnly(next.ex) };
+      next.ex = parseDateOnly(effective.value);
+      touched = true;
+    }
+    if (order._exFactoryRevision) touched = true;
     return touched ? next : order;
   });
 }
@@ -2171,6 +2180,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       OPD: o.opd, 'Original Ex-factory': o.originalExFactoryDate || null, 'Ex-factory': o.ex,
       // Revizyon oku ve Ex-Factory renklendirmesi için ASAS orijinalleri.
       _asasExFactory: asasBaseline(o, 'ex', '_asasEx'),
+      _exFactoryRevision: o._exFactoryRevision || null,
       _asasRetailDate: asasBaseline(o, 'retail', '_asasRetail'),
       _asasInStore: asasBaseline(o, 'mb', '_asasMb'),
       'HANDOVER Tarihi': handover, 'Retail Date': o.retail, 'Ex→Retail': '',
@@ -2348,6 +2358,8 @@ function buildOrderSummaryRowsFromASAS(asasOrders, antrepoMap, overrides) {
       _suppFobImported: isImportedSuppFob ? { value: overrideGet(ov.suppfobmap, o), meta: suppFobMeta || { source: 'manual', origin: 'cpupdate' } } : null,
       _suppFobOverride: hasSuppfobOverride, _licensorManual: hasLicensorOverride, _licensorSource:norm(o.licensor), _nonDtrManufacturerRule: false,
       OPD: o.opd, 'Original Ex-factory': o.originalExFactoryDate || null, 'Ex-factory': o.ex, 'Retail Date': o.retail, 'Ex→Retail': exRetail, 'In-Store (Model Budget)': o.mb, 'Days to go': daysToGo,
+      _asasExFactory: asasBaseline(o, 'ex', '_asasEx'), _exFactoryRevision: o._exFactoryRevision || null,
+      'Buying Son Onay Tarihi': o.shipConf || null,
       'Merch Marka Yaş Grup Kod': o.ageGroup, 'Buyer': o.buyer, 'Line': o.line,
       'Kumaş Kategorisi': o.fabricCategory, 'Kumaşçı Ülkesi': o.fabricSupplierCountry, 'Kumaşçı': o.fabricSupplier,
       'Kumaş Tipi': o.kumasTipi, 'İplik No': o.iplikNo, 'Gramaj': o.fabricWeight, 'Karışım': o.karisim,

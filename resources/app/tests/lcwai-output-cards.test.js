@@ -263,7 +263,7 @@ test('arayüz: kart bilgisi seçici, grup bayrakları, 60 kartlık galeri, kayna
   assert.doesNotMatch(editor, /\.badge`|flag\('showBadge'/, 'A3 etiketi düzenleyicide sunulmaz');
   assert.match(editor, /LAY\(\)\.cardContent\(cell, l,/, 'önizleme kartı dosyayla aynı hesap');
   const chat = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-chat.js'), 'utf8');
-  assert.match(chat, /const \{ rows, columns, images, records, \.\.\.rest \} = context;/, 'records bağlam özetinden ayrılır');
+  assert.match(chat, /const \{ rows: allRows, columns: allColumns, images, records, \.\.\.rest \} = context;/, 'records bağlam özetinden ayrılır');
   assert.match(chat, /if \(prepared\.context\) delete prepared\.context\.records;/);
   const persist = chat.indexOf('function persistConversations');
   assert.ok(persist > 0);

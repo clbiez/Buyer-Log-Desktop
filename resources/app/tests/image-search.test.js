@@ -236,8 +236,8 @@ test('sohbet: model görselleri anahtar etiketli paftalarla LCW AI’a eklenir',
   assert.equal(chat.modelImageSheetsContext([], 0, 0), null);
 
   const source = read('public/lcwai-chat.js');
-  assert.match(source, /const sheets = await uploadModelImageSheets\(contextImages, maxFiles - userMessage\.attachments\.length,/, 'sohbet mesajı bağlamdaki görselleri ek olarak gönderir');
-  assert.match(source, /userMessage\.attachments\.push\(\.\.\.sheets\.attachments\);[^]*if \(sheets\.context\) userMessage\.contexts\.unshift\(sheets\.context\);/, 'sunucunun bağlam sınırında pafta açıklaması kaybolmaz');
+  assert.match(source, /const sheets = await uploadModelImageSheets\(contextImages, maxFiles - attachments\.length,/, 'sohbet mesajı bağlamdaki görselleri ek olarak gönderir');
+  assert.match(source, /\battachments\.push\(\.\.\.sheets\.attachments\);[^]*if \(sheets\.context\) contexts\.unshift\(sheets\.context\);/, 'sunucunun bağlam sınırında pafta açıklaması kaybolmaz');
   assert.match(source, /ctx\.fillText\(key,/, 'her karenin altında anahtar yazılıdır');
   assert.match(source, /try \{ attachments\.push\(await api\.uploadFile\(new File\(\[blob\], sheet\.fileName[^]*catch \(error\) \{ if \(error && error\.code === 'LCWAI_CANCELLED'\) throw error; continue; \}/, 'pafta yüklenemezse mesaj yine gider (iptal hariç)');
   assert.doesNotMatch(source, /görselin kendisi LCW AI'a GİTMEZ/);

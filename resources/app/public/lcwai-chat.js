@@ -109,16 +109,32 @@
     const base = String(context.label || context.screen || 'buyerlog').replace(/ı/g, 'i').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'buyerlog';
     return `BuyerLog-${base}.csv`;
   }
-  /* Tablo taşıyan bağlamı dosyaya çevirir: { context (yalnız özet), file }. */
-  function contextAsFile(context) {
+  /* Tablo taşıyan bağlamı dosyaya çevirir: { context (yalnız özet), file }.
+     Tamamen boş sütunlar dosyaya girmez. maxBytes verilirse ve dosya sınırı
+     aşarsa istek başarısız olmaz: ilk N satır gider ve bu, hem modele hem
+     kullanıcıya açıkça yazılır (truncated: { sent, total }). */
+  function contextAsFile(context, { maxBytes = 0 } = {}) {
     if (!context || !Array.isArray(context.columns) || !context.columns.length || !Array.isArray(context.rows) || !context.rows.length) return { context, file: null };
     const name = contextFileName(context);
-    const file = new File([contextCsv(context)], name, { type: 'text/csv' });
-    const { rows, columns, images, records, ...rest } = context;
+    const { rows: allRows, columns: allColumns, images, records, ...rest } = context;
+    const keep = allColumns.map((_, index) => allRows.some(row => Array.isArray(row) && row[index] != null && row[index] !== ''));
+    const columns = allColumns.filter((_, index) => keep[index]);
+    const rows = allRows.map(row => (Array.isArray(row) ? row.filter((_, index) => keep[index]) : []));
+    let sent = rows.length;
+    let file = new File([contextCsv({ columns, rows })], name, { type: 'text/csv' });
+    for (let attempt = 0; maxBytes > 0 && file.size > maxBytes && attempt < 6 && sent > 1; attempt++) {
+      sent = Math.max(1, Math.floor(sent * (maxBytes / file.size) * 0.97));
+      file = new File([contextCsv({ columns, rows: rows.slice(0, sent) })], name, { type: 'text/csv' });
+    }
+    const truncated = sent < rows.length ? { sent, total: rows.length } : null;
+    const scope = truncated
+      ? L(`Dosya boyut sınırı nedeniyle tablonun yalnız ilk ${sent} / ${rows.length} satırı ekli “${name}” dosyasında; toplam, sayım veya tüm kayıtlar hakkında kesin sonuç bu dosyadan çıkarılamaz, bunu cevabında belirt. ${columns.length} sütun (${columns.join(', ')}).`, `Because of the file size limit, only the first ${sent} of ${rows.length} rows are in the attached “${name}” file; totals, counts or statements about all records cannot be derived from it, say so in your answer. ${columns.length} columns (${columns.join(', ')}).`)
+      : L(`Tablonun tamamı ekli “${name}” dosyasında: ${rows.length} satır, ${columns.length} sütun (${columns.join(', ')}).`, `The full table is in the attached “${name}” file: ${rows.length} rows, ${columns.length} columns (${columns.join(', ')}).`);
     return {
       records: records || null,
       file,
-      context: { ...rest, text: L(`Tablonun tamamı ekli “${name}” dosyasında: ${rows.length} satır, ${columns.length} sütun (${columns.join(', ')}).`, `The full table is in the attached “${name}” file: ${rows.length} rows, ${columns.length} columns (${columns.join(', ')}).`) + (images ? L(` “${IMAGE_COLUMN}” sütunu kaydın Buyer Log’daki gerçek model görselinin anahtarıdır.`, ` The “${IMAGE_COLUMN}” column is the key of the record’s real model image in Buyer Log.`) : '') },
+      truncated,
+      context: { ...rest, text: scope + (images ? L(` “${IMAGE_COLUMN}” sütunu kaydın Buyer Log’daki gerçek model görselinin anahtarıdır.`, ` The “${IMAGE_COLUMN}” column is the key of the record’s real model image in Buyer Log.`) : '') },
       images: images || null,
     };
   }
@@ -224,6 +240,7 @@
       draftId: /^[a-f0-9]{24}$/.test(String(file.draftId || '')) ? String(file.draftId) : '', edited: Boolean(file.edited),
     };
   }
+  const historyContextIds = list => (Array.isArray(list) ? list : []).slice(0, 12).map(value => String(value).slice(0, 120)).filter(Boolean);
   function historyMessage(message) {
     if (!message || (message.role !== 'user' && message.role !== 'ai') || message.streaming) return null;
     const item = { role: message.role, text: cleanHistoryText(message.text) };
@@ -237,14 +254,36 @@
         orientation: message.output.orientation === 'landscape' ? 'landscape' : 'portrait',
         detail: String(message.output.detail || 'standard').slice(0, 20),
       } : null;
-      // Yeniden üretmede upstream sohbet geçmişi kullanılır; eski upload URL/context
-      // nesnelerini kalıcı depoya taşımıyoruz.
-      item.attachments = [];
-      item.contexts = [];
+      // Eski upload URL/context nesneleri kalıcı depoya taşınmaz. Yalnız bağlam
+      // kimliği (ör. "orders:all") ve mesajın LCW AI'a ulaşıp ulaşmadığı yazılır:
+      // ulaşmadıysa yeniden denemede bağlam yerelden yeniden kurulur.
+      item.contextIds = historyContextIds(message.contextIds);
+      item.delivered = Boolean(message.delivered);
+    }
+    if (message.role === 'ai') {
+      if (message.warning) item.warning = cleanHistoryText(message.warning).slice(0, 600);
+      if (Array.isArray(message.options) && message.options.length) item.options = message.options.slice(0, 6).map(value => String(value).slice(0, 160));
+      const query = historyQuery(message.query);
+      if (query) item.query = query;
     }
     const file = historyFile(message.file);
     if (file) item.file = file;
     return item;
+  }
+  /* Sorgu cevabının yalnız yorumu ve planı saklanır (veri satırı değil);
+     "Excel olarak indir" planı güncel veride yeniden çalıştırır. */
+  function historyQuery(query) {
+    if (!query || typeof query !== 'object') return null;
+    const list = (value, max, chars) => (Array.isArray(value) ? value : []).slice(0, max).map(item => String(item == null ? '' : item).slice(0, chars));
+    return {
+      title: String(query.title || '').slice(0, 140), lines: list(query.lines, 10, 400), notes: list(query.notes, 12, 400),
+      dataset: String(query.dataset || '').slice(0, 40), scope: String(query.scope || '').slice(0, 20), contextIds: historyContextIds(query.contextIds),
+      spec: String(query.spec || '').slice(0, 12000), matched: Number(query.matched) || 0, rows: Number(query.rows) || 0,
+    };
+  }
+  function historyQueryState(value) {
+    if (!value || typeof value !== 'object') return null;
+    return { request: String(value.request || '').slice(0, 600), question: String(value.question || '').slice(0, 600), specJson: String(value.specJson || '').slice(0, QUERY_STATE_CHARS) };
   }
   function persistConversations() {
     const store = historyStore();
@@ -253,6 +292,7 @@
       id: String(conv.id || '').slice(0, 80),
       chatId: conv.chatId == null ? null : String(conv.chatId).slice(0, 180),
       title: String(conv.title || '').slice(0, 120),
+      queryState: historyQueryState(conv.queryState),
       messages: conv.messages.slice(-HISTORY_MAX_MESSAGES).map(historyMessage).filter(Boolean),
     })).filter(conv => conv.messages.length);
     try {
@@ -281,8 +321,19 @@
             item.contextLabels = Array.isArray(message.contextLabels) ? message.contextLabels.slice(0, 12).map(String) : [];
             item.fileNames = Array.isArray(message.fileNames) ? message.fileNames.slice(0, 12).map(String) : [];
             item.output = message.output && typeof message.output === 'object' ? message.output : null;
-            item.attachments = [];
-            item.contexts = [];
+            item.contextIds = historyContextIds(message.contextIds);
+            // Bu alan öncesi kayıtlar: sohbet kimliği varsa eski davranış (upstream geçmiş).
+            item.delivered = 'delivered' in message ? Boolean(message.delivered) : Boolean(raw.chatId);
+            // LCW AI'a ulaşmış mesajın bağlamı/ekleri upstream sohbet geçmişindedir;
+            // ulaşmamış mesajınki yeniden denemede yerelden yeniden hazırlanır.
+            item.attachments = item.delivered ? [] : null;
+            item.contexts = item.delivered ? [] : null;
+          }
+          if (message.role === 'ai') {
+            if (message.warning) item.warning = cleanHistoryText(message.warning).slice(0, 600);
+            if (Array.isArray(message.options)) item.options = message.options.slice(0, 6).map(String);
+            const query = historyQuery(message.query);
+            if (query) item.query = query;
           }
           if (message.file && message.file.id && message.file.fileName) item.file = historyFile(message.file);
           return item;
@@ -292,6 +343,7 @@
           id: String(raw.id || `c${Date.now().toString(36)}${(++seq).toString(36)}`).slice(0, 80),
           chatId: raw.chatId == null ? null : String(raw.chatId).slice(0, 180),
           title: String(raw.title || '').slice(0, 120),
+          queryState: historyQueryState(raw.queryState),
           messages,
         };
       }).filter(Boolean);
@@ -341,6 +393,8 @@
   function detectScreens(text) {
     const value = String(text || '');
     const screens = SCREEN_HINTS.filter(([, re]) => re.test(value)).map(([screen]) => screen);
+    // Türkçe karaktersiz/hatalı yazım ("sıparıs", "sıparıslerden") da ekranı bulsun.
+    if (window.BLDataQuery) screens.push(...window.BLDataQuery.screensIn(value).filter(screen => SCREEN_HINTS.some(([key]) => key === screen)));
     if (!screens.length && THIS_SCREEN.test(value) && window.BLAIScreenData) screens.push(window.BLAIScreenData.lastTab());
     return [...new Set(screens)].slice(0, 2);
   }
@@ -715,12 +769,26 @@
       return `<div class="lcwaiMsg is-user"><div class="lcwaiMsgWho">${esc(L('Siz', 'You'))}</div><div class="lcwaiMsgBody">${esc(message.text).replace(/\n/g, '<br>')}</div>${meta.length ? `<div class="lcwaiMsgMeta">${meta.map(esc).join(' · ')}</div>` : ''}</div>`;
     }
     const last = index === conv.messages.length - 1;
-    const body = message.error
+    const warning = message.warning ? `<p class="lcwaiMsgWarning">${esc(message.warning)}</p>` : '';
+    const content = message.error
       ? `<div class="lcwaiMsgError">${esc(message.error)}${message.login ? ` <button type="button" class="lcwaiBtn is-link" data-chat-login>${esc(L('LCW AI Girişi Yap', 'Sign in to LCW AI'))}</button>` : ''}</div>`
       : message.file ? `${message.text ? md(message.text) : ''}${fileCardHtml(message.file)}`
         : (message.text ? md(message.text) : `<p class="lcwaiNote">${esc(message.phase || L('LCW AI düşünüyor…', 'LCW AI is thinking…'))}</p>`);
-    const actions = message.streaming ? '' : `<div class="lcwaiMsgActions">${message.text ? `<button type="button" class="lcwaiBtn is-link" data-msg-copy="${index}">${esc(L('Kopyala', 'Copy'))}</button><button type="button" class="lcwaiBtn is-link" data-msg-reuse="${index}">${esc(L('Yeni mesajda kullan', 'Use in new message'))}</button>` : ''}${last ? `<button type="button" class="lcwaiBtn is-link" data-msg-retry>${esc(message.error ? L('Tekrar Dene', 'Try Again') : L('Yeniden üret', 'Regenerate'))}</button>` : ''}</div>`;
+    const options = !message.streaming && last && Array.isArray(message.options) && message.options.length
+      ? `<div class="lcwaiOptions">${message.options.map((option, i) => `<button type="button" class="lcwaiBtn" data-msg-option="${index}:${i}">${esc(option)}</button>`).join('')}</div>` : '';
+    const body = `${warning}${message.query && !message.error ? queryHtml(message.query) : ''}${content}${options}`;
+    const excel = message.query && message.query.matched && !message.file && !message.error
+      ? `<button type="button" class="lcwaiBtn is-link" data-msg-excel="${index}"${message.exporting || state.busy ? ' disabled' : ''}>${esc(message.exporting ? L('Excel hazırlanıyor…', 'Preparing Excel…') : L('Excel olarak indir', 'Download as Excel'))}</button>` : '';
+    const actions = message.streaming ? '' : `<div class="lcwaiMsgActions">${excel}${message.text ? `<button type="button" class="lcwaiBtn is-link" data-msg-copy="${index}">${esc(L('Kopyala', 'Copy'))}</button><button type="button" class="lcwaiBtn is-link" data-msg-reuse="${index}">${esc(L('Yeni mesajda kullan', 'Use in new message'))}</button>` : ''}${last ? `<button type="button" class="lcwaiBtn is-link" data-msg-retry>${esc(message.error ? L('Tekrar Dene', 'Try Again') : L('Yeniden üret', 'Regenerate'))}</button>` : ''}</div>`;
     return `<div class="lcwaiMsg is-ai${message.streaming ? ' is-streaming' : ''}"><div class="lcwaiMsgWho">LCW AI${message.model ? ` · ${esc(message.model)}` : ''}</div><div class="lcwaiMsgBody lcwaiMd">${body}</div>${actions}</div>`;
+  }
+
+  /* "Nasıl anladım": rakamları Buyer Log'un hesapladığı ve yorumun ne olduğu
+     tek bakışta görünür; kullanıcı yanlış yorumu bir cümleyle düzeltir. */
+  function queryHtml(query) {
+    const lines = (query.lines || []).map(line => `<li>${esc(line)}</li>`).join('');
+    const notes = (query.notes || []).length ? `<details class="lcwaiQueryNotes" open><summary>${esc(L('Varsayımlar ve eşleştirmeler', 'Assumptions and matches'))}</summary><ul>${query.notes.map(note => `<li>${esc(note)}</li>`).join('')}</ul></details>` : '';
+    return `<div class="lcwaiQuery blMotionEnter"><div class="lcwaiQueryHead"><b>${esc(L('Buyer Log hesapladı', 'Calculated by Buyer Log'))}</b><small>${esc(L('LCW AI isteği yorumladı; rakamlar tüm kayıtlar üzerinde Buyer Log tarafından hesaplandı.', 'LCW AI interpreted the request; Buyer Log calculated the figures on all records.'))}</small></div><ul class="lcwaiQueryLines">${lines}</ul>${notes}<p class="lcwaiNote">${esc(L('Yanlış anladıysam düzeltmeyi yazmanız yeterli (ör. “adet yerine PO sayısı”, “Mısır da hariç”).', 'If I misunderstood, just write the correction (e.g. “PO count instead of quantity”, “exclude Egypt too”).'))}</p></div>`;
   }
 
   function renderMessages() {
@@ -833,6 +901,196 @@
   }
   function closeContextMenu() { const menu = $('[data-chat-context-menu]'); if (menu) menu.hidden = true; }
 
+  /* ---------------- Doğal dil veri sorgusu ----------------
+     Veri isteğinde LCW AI yalnız isteği yorumlayıp bir sorgu planı yazar
+     (source: data-query). Buyer Log planı doğrular, değerleri gerçek veride
+     eşleştirir ve TÜM kayıtlar üzerinde kendisi hesaplar (BLDataQuery).
+     Böylece on binlerce satırlık tablo LCW AI'a yüklenmez ve rakamlar
+     modelden gelmez. Belirsizlikte tahmin edilmez, kullanıcıya sorulur. */
+  const DQ = () => window.BLDataQuery || null;
+  const QUERY_SCREENS = ['orders', 'cp', 'koleksiyon', 'shipping'];
+  const QUERY_STATE_CHARS = 1800;
+  const answerResults = new WeakMap(); // cevap → { computed, title, lines, notes } (yalnız bellekte)
+  const localToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  /* Bağlam kimlikleri ("orders:all", "overview:cp") → sorgulanacak tablolar.
+     Bağlam yoksa mesajda adı geçen ekran, o da yoksa yüklü tüm tablolar. */
+  function queryTargets(contextIds, text) {
+    const targets = [];
+    let other = false;
+    for (const id of contextIds || []) {
+      const [provider, mode = 'all'] = String(id || '').split(':');
+      if (provider === 'overview') targets.push({ screen: 'cp', scope: mode === 'cp' ? 'overview' : 'all' });
+      else if (QUERY_SCREENS.includes(provider)) targets.push({ screen: provider, scope: mode === 'visible' || mode === 'filters' ? 'visible' : mode === 'selected' ? 'selected' : 'all' });
+      else other = true;
+    }
+    if (targets.length || other) return { targets, named: true };
+    const named = (DQ() ? DQ().screensIn(text) : []).filter(screen => QUERY_SCREENS.includes(screen));
+    return { targets: (named.length ? named : QUERY_SCREENS).map(screen => ({ screen, scope: 'all' })), named: named.length > 0 };
+  }
+  /* Görünmeyen modül çizilmez: veri gerekiyorsa yalnız yüklenir (deferRender). */
+  async function ensureQueryData(screen) {
+    const loader = screen === 'orders' ? window.BLEnsureOrdersLoaded : screen === 'cp' ? window.BLEnsureCpLoaded : null;
+    if (typeof loader === 'function') { try { await loader({ deferRender: true, reason: 'lcwai' }); } catch (_) { /* yüklenemezse o tablo sorguya girmez */ } }
+  }
+  async function queryDatasets(contextIds, text) {
+    const engine = DQ(), data = window.BLAIScreenData;
+    if (!engine || !data || typeof data.table !== 'function') return [];
+    const { targets, named } = queryTargets(contextIds, text);
+    const out = [], seen = new Set();
+    for (const target of targets) {
+      const key = `${target.screen}:${target.scope}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      // Ad verilmediyse yalnız Siparişler yüklenir; diğer tablolar yüklüyse sorguya girer.
+      if (named || target.screen === 'orders') await ensureQueryData(target.screen);
+      let rows = null, columns = null;
+      if (target.scope === 'overview') { rows = data.overviewCpRows(); columns = data.cpColumns(); }
+      else {
+        const table = data.table(target.screen, { all: target.scope === 'all' });
+        if (!table) continue;
+        rows = table.rows;
+        columns = table.columns;
+        if (target.scope === 'selected') {
+          const selected = new Set((table.selectedIds || []).map(String));
+          rows = rows.filter(row => { const id = typeof table.rowId === 'function' ? table.rowId(row) : row && row._id; return id != null && selected.has(String(id)); });
+        }
+      }
+      if (!Array.isArray(rows) || !rows.length || !Array.isArray(columns) || !columns.length) continue;
+      out.push(engine.createDataset({ id: target.screen, label: data.pageTitle(target.screen), screen: target.screen, rows, columns, scope: target.scope === 'overview' ? 'visible' : target.scope }));
+    }
+    return out;
+  }
+  function wantsDataQuery(conv, userMessage) {
+    const engine = DQ();
+    const text = String(userMessage.text || '');
+    if (!engine || !text.trim() || (userMessage.fileNames || []).length) return false;
+    const tableContext = (userMessage.contextIds || []).some(id => { const provider = String(id || '').split(':')[0]; return provider === 'overview' || QUERY_SCREENS.includes(provider); });
+    // Önceki sorgunun düzeltmesi ("Mısır da hariç") veri sözcüğü içermeyebilir.
+    return tableContext || Boolean(conv.queryState) || engine.looksLikeDataRequest(text) || engine.screensIn(text).length > 0;
+  }
+  function planContext(conv) {
+    const previous = conv.queryState && typeof conv.queryState === 'object' ? conv.queryState : null;
+    return {
+      today: localToday(),
+      previous: previous ? { request: String(previous.request || '').slice(0, 600), question: String(previous.question || '').slice(0, 600), specJson: String(previous.specJson || '').slice(0, QUERY_STATE_CHARS) } : null,
+    };
+  }
+  const planOf = result => {
+    const data = result && (result.data || (result.structured && result.structured.partial));
+    return data && typeof data === 'object' && data.mode ? data : null;
+  };
+  const planMode = plan => String(plan && plan.mode || '').trim().toLowerCase();
+  function askPlan(api, task, guide, context) {
+    return api.ask({ requestId: state.requestId, source: 'data-query', task, guide, context, lang: isEn() ? 'en' : 'tr' });
+  }
+  function askClarification(conv, answer, base, question, options, specJson) {
+    const text = String(question || '').trim();
+    if (!text) return 'chat';
+    answer.text = text;
+    answer.options = (Array.isArray(options) ? options : []).map(item => String(item == null ? '' : item).trim()).filter(Boolean).slice(0, 6);
+    conv.queryState = { request: String(base || '').slice(0, 600), question: text.slice(0, 600), specJson: String(specJson || '').slice(0, QUERY_STATE_CHARS) };
+    return 'done';
+  }
+  /* Dönüş: 'done' (cevap hazır) · 'chat' (sohbet yoluna devam) ·
+     { contexts } (PDF/PowerPoint/HTML: hesaplanmış tablo bağlam olarak gider). */
+  async function runDataQuery({ api, conv, userMessage, answer, output }) {
+    const engine = DQ();
+    const lang = isEn() ? 'en' : 'tr';
+    answer.phase = L('Buyer Log verisi hazırlanıyor…', 'Preparing Buyer Log data…');
+    renderMessages();
+    const datasets = await queryDatasets(userMessage.contextIds, userMessage.text);
+    if (!datasets.length) return 'chat';
+    answer.phase = L('İstek yorumlanıyor…', 'Interpreting the request…');
+    renderMessages();
+    const guide = engine.schemaText(datasets, { lang });
+    const context = planContext(conv);
+    const base = context.previous && context.previous.question ? `${context.previous.request} → ${userMessage.text}` : userMessage.text;
+    let result = await askPlan(api, userMessage.text, guide, context);
+    let plan = planOf(result);
+    if (result && result.model && result.model.label) answer.model = result.model.label;
+    if (!plan || planMode(plan) === 'chat' || !['query', 'clarify'].includes(planMode(plan))) return 'chat';
+    if (planMode(plan) === 'clarify') return askClarification(conv, answer, base, plan.question, plan.options, context.previous && context.previous.specJson);
+    let norm = engine.normalizeSpec(plan.specJson, datasets, { lang });
+    if (!norm.ok && !norm.clarify) {
+      // Yapısal hata (bilinmeyen alan, türe uymayan işlem): LCW AI'dan bir kez düzeltme istenir.
+      answer.phase = L('Sorgu planı düzeltiliyor…', 'Correcting the query plan…');
+      renderMessages();
+      result = await askPlan(api, userMessage.text, guide, { ...context, invalidPlan: String(plan.specJson || '').slice(0, QUERY_STATE_CHARS), errors: norm.errors.slice(0, 12) });
+      const repaired = planOf(result);
+      if (repaired && planMode(repaired) === 'clarify') return askClarification(conv, answer, base, repaired.question, repaired.options, plan.specJson);
+      if (repaired && planMode(repaired) === 'query') { plan = repaired; norm = engine.normalizeSpec(plan.specJson, datasets, { lang }); }
+    }
+    if (norm.clarify) return askClarification(conv, answer, base, norm.clarify.question, norm.clarify.options, plan.specJson);
+    if (!norm.ok) {
+      // Tahmini bir rakam göstermektense durulur.
+      answer.error = L('Bu isteği Buyer Log verisinde güvenle hesaplayamadım; tahmini bir rakam göstermemek için durdum. Hangi alana göre istediğinizi (ör. Sezon, MB ayı, Buying Group, sipariş adedi) ekleyerek tekrar yazar mısınız?', 'I could not calculate this request safely on Buyer Log data, so I stopped instead of showing an estimate. Could you rewrite it naming the fields you mean (e.g. season, MB month, buying group, order quantity)?');
+      return 'done';
+    }
+    const dataset = norm.dataset;
+    answer.phase = L('Buyer Log hesaplıyor…', 'Buyer Log is calculating…');
+    renderMessages();
+    const computed = engine.execute(norm.spec, dataset, { lang });
+    const lines = engine.describe(norm.spec, dataset, computed, lang);
+    const notes = [...(Array.isArray(plan.assumptions) ? plan.assumptions : []).map(item => String(item == null ? '' : item).trim()), ...norm.notes].filter(Boolean);
+    if (computed.truncatedColumns) notes.push(L(`${computed.truncatedColumns} sütun değeri sığmadığı için en sık geçen değerler sütun olarak gösterildi; Toplam sütunu tüm değerleri içerir.`, `${computed.truncatedColumns} column values did not fit, so the most frequent ones are shown as columns; the Total column includes all values.`));
+    const title = norm.spec.title || L('Veri sorgusu', 'Data query');
+    const specJson = JSON.stringify(norm.spec);
+    conv.queryState = { request: base.slice(0, 600), question: '', specJson: specJson.slice(0, QUERY_STATE_CHARS) };
+    answer.query = { title, lines, notes: notes.slice(0, 12), dataset: dataset.id, scope: dataset.scope, contextIds: (userMessage.contextIds || []).slice(0, 12), spec: specJson.slice(0, 12000), matched: computed.matched, rows: computed.rows.length };
+    answerResults.set(answer, { computed, title, lines, notes });
+    const shown = Math.min(computed.rows.length, engine.LIMITS.chatRows);
+    const table = engine.toMarkdown(computed, { lang });
+    answer.text = computed.matched
+      ? `**${title}**\n\n${table}${computed.rows.length > shown ? `\n\n${L(`İlk ${shown} / ${computed.rows.length} satır gösteriliyor; tamamı için Excel olarak indirin.`, `Showing the first ${shown} of ${computed.rows.length} rows; download as Excel for all of them.`)}` : ''}`
+      : L('Bu filtrelere uyan kayıt yok. Yorumu aşağıda kontrol edip düzeltmeyi yazabilirsiniz.', 'No records match these filters. Check the interpretation below and write a correction.');
+    // Sonraki sohbet mesajı ("bunu yorumla", "bundan mail yaz") hesaplanmış tabloyu görsün.
+    conv.lastQueryContext = { label: L(`Buyer Log hesaplanmış sonuç — ${title}`, `Buyer Log computed result — ${title}`), screen: dataset.screen, summary: lines.join(' · ').slice(0, 1800), text: `${L('Bu tablo Buyer Log tarafından tüm kayıtlar üzerinde hesaplandı. Rakamları aynen kullan; yeniden hesaplama veya tahmin etme.', 'Buyer Log calculated this table on all records. Use the figures exactly; do not recalculate or estimate.')}\n${table}`.slice(0, 18000) };
+    if (output && output.format === 'xlsx' && computed.matched) {
+      answer.phase = L('Excel oluşturuluyor…', 'Creating Excel…');
+      renderMessages();
+      answer.file = await api.createTableOutput(engine.toWorkbook(computed, { title, lines, notes, lang }), lang);
+      notifyFile(answer.file, conv);
+      return 'done';
+    }
+    if (output && output.format && computed.matched) {
+      const context = conv.lastQueryContext;
+      conv.lastQueryContext = null;
+      return { contexts: [context] };
+    }
+    return 'done';
+  }
+  /* Sorgu cevabını Excel'e aktarır. Sonuç bellekte yoksa (uygulama yeniden
+     açıldı) aynı plan güncel veride yeniden çalıştırılır. */
+  async function exportQuery(index) {
+    const api = AI(), engine = DQ();
+    const conv = activeConversation();
+    const message = conv.messages[index];
+    if (!api || !engine || !message || !message.query || state.busy) return;
+    const lang = isEn() ? 'en' : 'tr';
+    setBusy(true);
+    message.exporting = true;
+    renderMessages();
+    try {
+      let memo = answerResults.get(message);
+      if (!memo) {
+        const datasets = await queryDatasets(message.query.contextIds || [], '');
+        const norm = engine.normalizeSpec(message.query.spec, datasets.filter(item => item.id === message.query.dataset), { lang });
+        if (!norm.ok || norm.clarify) throw Object.assign(new Error('stale'), { code: 'LCWAI_OUTPUT_RENDER_FAILED' });
+        const computed = engine.execute(norm.spec, norm.dataset, { lang });
+        memo = { computed, title: message.query.title, lines: engine.describe(norm.spec, norm.dataset, computed, lang), notes: message.query.notes || [] };
+      }
+      message.file = await api.createTableOutput(engine.toWorkbook(memo.computed, { title: memo.title, lines: memo.lines, notes: memo.notes, lang }), lang);
+      notifyFile(message.file, conv);
+    } catch (error) {
+      if (window.BLUI && typeof window.BLUI.notify === 'function') window.BLUI.notify({ kind: 'error', message: api.errorText(error) });
+    } finally {
+      message.exporting = false;
+      setBusy(false);
+      persistConversations();
+      renderMessages();
+    }
+  }
+
   /* ---------------- Gönderme ---------------- */
   async function send(text, { reuse = null } = {}) {
     const api = AI();
@@ -842,9 +1100,11 @@
     const files = reuse ? [] : state.files.filter(item => !item.error).map(item => item.file);
     // Elle bağlam eklenmediyse mesajdaki ekran adına göre otomatik bağlam.
     const auto = reuse || state.contexts.length ? [] : autoContextsFor(text);
-    const contextIds = reuse ? [] : [...state.contexts.map(item => item.id), ...auto.map(item => item.id)];
     if (!message && !files.length && !reuse) return;
-    const userMessage = reuse || { role: 'user', text: message, contextLabels: [...state.contexts.map(item => item.label), ...auto.map(item => `${item.label} · ${L('otomatik', 'automatic')}`)], fileNames: files.map(file => file.name), contexts: null, attachments: null, output: outputRequest() };
+    /* contextIds/files mesajda tutulur (files yalnız bellekte): bağlam ya da
+       dosya yüklemesi yarıda kalırsa "Tekrar Dene" aynı bağlamı yeniden kurar.
+       Eskiden tekrar deneme bağlamsız ve eksiz gidiyor, model "veri yok" diyordu. */
+    const userMessage = reuse || { role: 'user', text: message, contextLabels: [...state.contexts.map(item => item.label), ...auto.map(item => `${item.label} · ${L('otomatik', 'automatic')}`)], fileNames: files.map(file => file.name), contextIds: [...state.contexts.map(item => item.id), ...auto.map(item => item.id)], files, contexts: null, attachments: null, output: outputRequest() };
     const output = userMessage.output || null;
     if (!reuse) conv.messages.push(userMessage);
     if (!conv.title) conv.title = (message || files.map(file => file.name).join(', ')).slice(0, 60);
@@ -857,21 +1117,33 @@
     persistConversations();
     state.requestId = `bl${Date.now().toString(36)}${(++seq).toString(36)}`;
     try {
-      if (!userMessage.attachments) {
-        userMessage.attachments = [];
-        for (let index = 0; index < files.length; index++) {
-          answer.phase = L(`Dosya yükleniyor (${index + 1}/${files.length}): ${files[index].name}`, `Uploading file (${index + 1}/${files.length}): ${files[index].name}`);
-          renderMessages();
-          userMessage.attachments.push(await api.uploadFile(files[index]));
+      // Veri isteği: Buyer Log hesaplar; LCW AI yalnız planlar (bkz. runDataQuery).
+      const routed = wantsDataQuery(conv, userMessage) ? await runDataQuery({ api, conv, userMessage, answer, output }) : 'chat';
+      if (routed === 'done') return;
+      const computedContexts = routed && routed.contexts ? routed.contexts : null;
+      /* Hazırlık tamamlanana kadar mesaja yazılmaz: yarım kalan hazırlık bir
+         sonraki denemede baştan yapılır, boş liste "hazır" sanılmaz. */
+      if (!computedContexts && (!userMessage.attachments || !userMessage.contexts)) {
+        const pendingFiles = Array.isArray(userMessage.files) ? userMessage.files : [];
+        const missing = (userMessage.fileNames || []).filter(name => !pendingFiles.some(file => file.name === name));
+        if (missing.length) {
+          answer.error = L(`Ekli dosyalar artık mevcut değil (${missing.join(', ')}). Dosyaları yeniden ekleyip mesajı tekrar gönderin.`, `The attached files are no longer available (${missing.join(', ')}). Add the files again and resend the message.`);
+          return;
         }
-      }
-      if (!userMessage.contexts) {
-        userMessage.contexts = [];
+        const attachments = [];
+        for (let index = 0; index < pendingFiles.length; index++) {
+          answer.phase = L(`Dosya yükleniyor (${index + 1}/${pendingFiles.length}): ${pendingFiles[index].name}`, `Uploading file (${index + 1}/${pendingFiles.length}): ${pendingFiles[index].name}`);
+          renderMessages();
+          attachments.push(await api.uploadFile(pendingFiles[index]));
+        }
+        const contexts = [];
         const contextImages = {};
-        for (const id of contextIds) {
+        for (const id of userMessage.contextIds || []) {
           answer.phase = L('Buyer Log bağlamı hazırlanıyor…', 'Preparing Buyer Log context…');
           renderMessages();
-          const prepared = contextAsFile(await api.buildContext(id));
+          const fileLimit = state.config && state.config.limits ? state.config.limits.maxFileBytes : 20 * 1048576;
+          // Dosya sınırı aşılırsa istek başarısız olmaz: satırlar sınıra göre kısaltılır ve bu açıkça yazılır.
+          const prepared = contextAsFile(await api.buildContext(id), { maxBytes: Math.max(1024, fileLimit - 65536) });
           Object.assign(contextImages, prepared.images || (prepared.context && prepared.context.images) || {});
           if (prepared.images) conv.imageMap = { ...(conv.imageMap || {}), ...prepared.images };
           else if (prepared.context && prepared.context.images) { conv.imageMap = { ...(conv.imageMap || {}), ...prepared.context.images }; delete prepared.context.images; }
@@ -879,23 +1151,27 @@
           const records = prepared.records || (prepared.context && prepared.context.records);
           if (prepared.context) delete prepared.context.records;
           if (records) conv.recordMap = { ...(conv.recordMap || {}), ...records };
+          if (prepared.truncated) answer.warning = L(`“${prepared.context.label}” LCW AI dosya sınırını aştığı için ilk ${prepared.truncated.sent} / ${prepared.truncated.total} satırı gönderildi. Toplam ve sayım için isteği doğrudan yazın; Buyer Log tüm kayıtlar üzerinde hesaplar.`, `“${prepared.context.label}” exceeded the LCW AI file limit, so only the first ${prepared.truncated.sent} of ${prepared.truncated.total} rows were sent. For totals and counts, just ask directly; Buyer Log calculates them on all records.`);
           if (prepared.file) {
-            const limit = state.config && state.config.limits ? state.config.limits.maxFileBytes : 20 * 1048576;
-            if (prepared.file.size > limit) throw Object.assign(new Error('too-large'), { code: 'LCWAI_FILE_TOO_LARGE' });
             answer.phase = L(`Bağlam dosyası yükleniyor: ${prepared.file.name}`, `Uploading context file: ${prepared.file.name}`);
             renderMessages();
-            userMessage.attachments.push(await api.uploadFile(prepared.file));
+            attachments.push(await api.uploadFile(prepared.file));
           }
-          userMessage.contexts.push(prepared.context);
+          contexts.push(prepared.context);
         }
         if (Object.keys(contextImages).length) {
           const maxFiles = state.config && state.config.limits ? state.config.limits.maxFilesPerRequest : 5;
-          const sheets = await uploadModelImageSheets(contextImages, maxFiles - userMessage.attachments.length, phase => { answer.phase = phase; renderMessages(); });
-          userMessage.attachments.push(...sheets.attachments);
+          const sheets = await uploadModelImageSheets(contextImages, maxFiles - attachments.length, phase => { answer.phase = phase; renderMessages(); });
+          attachments.push(...sheets.attachments);
           // Sunucu ilk bağlamları tutar; görsel açıklaması paftalarla birlikte kalsın diye başa eklenir.
-          if (sheets.context) userMessage.contexts.unshift(sheets.context);
+          if (sheets.context) contexts.unshift(sheets.context);
         }
+        userMessage.attachments = attachments;
+        userMessage.contexts = contexts;
       }
+      // Son sorgu sonucu bir sonraki sohbet mesajına bir kez eklenir; LCW AI geçmişi sonrasını taşır.
+      const followUp = !computedContexts && conv.lastQueryContext ? [conv.lastQueryContext] : [];
+      const sendContexts = computedContexts || [...(userMessage.contexts || []), ...followUp];
       answer.phase = output ? outputPhase({ step: 'generating' }, output) : L('LCW AI düşünüyor…', 'LCW AI is thinking…');
       renderMessages();
       let pendingPaint = 0;
@@ -904,8 +1180,8 @@
         requestId: state.requestId,
         chatId: conv.chatId,
         message: userMessage.text,
-        contexts: userMessage.contexts,
-        attachments: userMessage.attachments,
+        contexts: sendContexts,
+        attachments: computedContexts ? [] : userMessage.attachments,
         output,
         resolveImages: tokens => resolveImages(conv, tokens, answer),
         resolveRecords: tokens => resolveRecords(conv, tokens),
@@ -925,6 +1201,8 @@
         },
       });
       conv.chatId = result.chatId || conv.chatId;
+      userMessage.delivered = true;
+      if (followUp.length) conv.lastQueryContext = null;
       if (output) {
         if (!result.output || !result.output.id) throw Object.assign(new Error('no-output'), { code: 'LCWAI_OUTPUT_RENDER_FAILED' });
         answer.text = String(result.text || '').trim();
@@ -956,7 +1234,7 @@
     const last = conv.messages[conv.messages.length - 1];
     // Boş ya da hatalı cevap yeniden denemede kaldırılır; ekranda yığılmaz.
     if (last && last.role === 'ai' && (last.error || !last.text)) conv.messages.pop();
-    send(lastUser.text, { reuse: lastUser });
+    return send(lastUser.text, { reuse: lastUser });
   }
 
   async function copyText(text, button) {
@@ -1048,6 +1326,13 @@
     if (target.matches('[data-msg-copy]')) { const message = activeConversation().messages[Number(target.dataset.msgCopy)]; if (message) copyText(message.text, target); return; }
     if (target.matches('[data-msg-reuse]')) { const message = activeConversation().messages[Number(target.dataset.msgReuse)]; if (message) { input.value = `${input.value ? `${input.value}\n\n` : ''}${message.text}`; input.focus(); } return; }
     if (target.matches('[data-msg-retry]')) { retryLast(); return; }
+    if (target.matches('[data-msg-excel]')) { exportQuery(Number(target.dataset.msgExcel)); return; }
+    if (target.matches('[data-msg-option]')) {
+      const [messageIndex, optionIndex] = String(target.dataset.msgOption).split(':').map(Number);
+      const option = activeConversation().messages[messageIndex]?.options?.[optionIndex];
+      if (option && !state.busy) send(option);
+      return;
+    }
     if (target.matches('[data-lcwai-code-copy]')) { const code = target.closest('.lcwaiCode')?.querySelector('code'); if (code) copyText(code.textContent, target); }
   }
 
@@ -1151,5 +1436,5 @@
   }
 
   window.initLcwAiChat = initLcwAiChat;
-  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, openEditor, openTemplateManager, loadTemplates, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, resolveRecords, modelImageSheetPlan, modelImageSheetsContext, uploadModelImageSheets, addFiles, persistConversations, restoreConversations, deleteConversation, refreshLanguage };
+  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, openEditor, openTemplateManager, loadTemplates, retryLast, runDataQuery, exportQuery, queryTargets, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, resolveRecords, modelImageSheetPlan, modelImageSheetsContext, uploadModelImageSheets, addFiles, persistConversations, restoreConversations, deleteConversation, refreshLanguage };
 })();

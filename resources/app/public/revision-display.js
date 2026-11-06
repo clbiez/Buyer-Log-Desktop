@@ -105,14 +105,18 @@
   /** Hangi tarih alanları elle revize edilmiş? Sunucuya gönderilecek gövde için. */
   function revisedDateKeys(row) {
     if (!row) return [];
-    return DATE_KEYS.filter(key => !valuesEqual(baselineDate(row, key), row[key]));
+    return DATE_KEYS.filter(key => !(key === 'Ex-factory' && isAutomaticExFactory(row)) && !valuesEqual(baselineDate(row, key), row[key]));
+  }
+
+  function isAutomaticExFactory(row) {
+    return row?._exFactoryRevision?.source === 'loading-approval';
   }
 
   function isDateKey(key) {
     return DATE_KEY_SET.has(key);
   }
 
-  const api = { KEYS, DATE_KEYS, BASELINE_FIELDS, valuesEqual, baselineDate, baselineRow, info, infoValue, hasAny, revisedDateKeys, isDateKey };
+  const api = { KEYS, DATE_KEYS, BASELINE_FIELDS, valuesEqual, baselineDate, baselineRow, info, infoValue, hasAny, revisedDateKeys, isDateKey, isAutomaticExFactory };
 
   if (typeof module === 'object' && module.exports) module.exports = api;
   else global.BLRevision = api;

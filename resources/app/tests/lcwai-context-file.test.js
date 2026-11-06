@@ -38,5 +38,5 @@ test('tablosuz bağlam (yalnız filtreler) dosyaya çevrilmez; kesme sınırlar�
   assert.equal(result.file, null);
   assert.equal(chat.contextAsFile({ label: 'Backlog — kayıtlar', columns: ['a'], rows: [[1]] }).file.name, 'BuyerLog-Backlog-kayitlar.csv', 'Türkçe ı dosya adında korunur');
   assert.doesNotMatch(SOURCE, /MAX_TABLE_ROWS|MAX_TABLE_COLUMNS|slice\(0, 200\)/);
-  assert.match(SOURCE, /userMessage\.attachments\.push\(await api\.uploadFile\(prepared\.file\)\)/, 'mevcut LCW AI upload yolu');
+  assert.match(SOURCE, /\battachments\.push\(await api\.uploadFile\(prepared\.file\)\)/, 'mevcut LCW AI upload yolu');
 });

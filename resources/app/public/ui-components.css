@@ -3290,6 +3290,9 @@ html[data-ui-system="manifest"] .revArrow {color:var(--ui-text-muted) !important
 }
 html[data-ui-system="manifest"] .revNew {color:var(--ui-text) !important; font-weight:600 !important
 }
+html[data-ui-system="manifest"] .revAutomatic{color:var(--ui-text);}
+html[data-ui-system="manifest"] .revAutoOriginal,html[data-ui-system="manifest"] .revAutoSeparator{color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] .revAutoApproved{font-weight:600;}
 html[data-ui-system="manifest"] .cfpTitle {font-weight:600 !important;font-size:var(--ui-font-sm) !important;color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .profileSelectMenu.profileSelectMenuModal {z-index:var(--ui-z-modal-menu)
@@ -6357,6 +6360,16 @@ html[data-ui-system="manifest"] .lcwaiMsgWho {font-size:var(--ui-font-2xs) !impo
 html[data-ui-system="manifest"] .lcwaiMsgMeta {font-size:var(--ui-font-xs) !important
 }
 html[data-ui-system="manifest"] .lcwaiMsgError {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .lcwaiQuery {background:var(--ui-selected) !important;border-radius:var(--ui-radius)
+}
+html[data-ui-system="manifest"] .lcwaiQueryHead b {font-size:var(--ui-font-xs) !important;letter-spacing:.02em;text-transform:uppercase;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .lcwaiQueryHead small,html[data-ui-system="manifest"] .lcwaiQueryNotes summary {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .lcwaiQueryLines,html[data-ui-system="manifest"] .lcwaiQueryNotes {font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .lcwaiMsgWarning {color:var(--ui-warning) !important;font-size:var(--ui-font-xs) !important
 }
 html[data-ui-system="manifest"] .lcwaiMsg.is-streaming .lcwaiMsgBody::after {color:var(--ui-accent) !important
 }

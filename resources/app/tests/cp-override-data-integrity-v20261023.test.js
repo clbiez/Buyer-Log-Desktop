@@ -144,7 +144,7 @@ test('A3 · saveDateOverrides yalnız dokunulan tarih alanlarını gönderir, ar
   const ctx = {
     window: { SERVER_BACKED: true },
     state: { overrides: { datemap: { '4100010|MDL-1|C1': { retail: '2026-10-01', mb: '2026-09-17' } } } },
-    BLRevision: { revisedDateKeys: () => [...revisedSet] },
+    BLRevision: { revisedDateKeys: () => [...revisedSet], isAutomaticExFactory: require('../public/revision-display').isAutomaticExFactory },
     overrideSyncKey: (r, oc) => `${oc}|${r['Model Name']}|${r['C.Code']}`,
     lineIdentity: r => ({ modelName: r['Model Name'], ccode: r['C.Code'] }),
     toISODate: d => (d instanceof Date ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : ''),
@@ -225,6 +225,7 @@ test('A4 · applyHistoryAction tarih geri/ileri alma işlemlerinde saveDateOverr
   };
   const ctx = {
     cpBulkPreparing: false,
+    BLRevision: require('../public/revision-display'),
     state: { cp: { rows: [cpRow] } },
     shipRows: [],
     syncCpProductionLogisticSegment: () => false,
