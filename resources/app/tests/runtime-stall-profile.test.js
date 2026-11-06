@@ -34,7 +34,7 @@ test('quiet rotation discards unused samples in the worker without materializing
   inspector.Session=class{constructor(){assert.fail('the HTTP event loop must never create an inspector session');}};wt.Worker=Worker;Date.now=()=>clock;global.setInterval=callback=>{tick=callback;return {unref(){}};};global.clearInterval=()=>{};
   const flush=()=>new Promise(setImmediate);
   try{
-    monitor=require('../server/lib/runtime-pressure-monitor').startRuntimePressureMonitor({now:()=>clock,cpu:()=>0,profileDir:root,log:line=>logs.push(line)});await flush();
+    monitor=require('../server/lib/runtime-pressure-monitor').startRuntimePressureMonitor({profile:true,now:()=>clock,cpu:()=>0,profileDir:root,log:line=>logs.push(line)});await flush();
     for(let i=0;i<12;i++){clock+=5000;tick();await flush();}
     assert.equal(calls.filter(call=>call.method==='Profiler.stop').length,1,'a quiet window is discarded inside the worker');
     assert.equal(calls.filter(call=>call.method==='Profiler.disable').length,0,'the enabled profiler code cache must survive a quiet rotation');
@@ -47,4 +47,10 @@ test('quiet rotation discards unused samples in the worker without materializing
   }finally{
     await monitor?.stop();inspector.Session=original.Session;wt.Worker=original.Worker;global.setInterval=original.setInterval;global.clearInterval=original.clearInterval;Date.now=original.now;fs.rmSync(root,{recursive:true,force:true});
   }
+});
+test('normal runtime retains numeric stall diagnostics without starting the expensive opt-in CPU profiler',async()=>{
+ const wt=require('node:worker_threads'),original={Worker:wt.Worker,setInterval:global.setInterval,clearInterval:global.clearInterval,flag:process.env.BL_STALL_PROFILE},logs=[];let clock=1000000,tick,workers=0,monitor;
+ delete process.env.BL_STALL_PROFILE;wt.Worker=class{constructor(){workers++;throw Error('unexpected profiler worker');}};global.setInterval=fn=>{tick=fn;return {unref(){}};};global.clearInterval=()=>{};
+ try{monitor=require('../server/lib/runtime-pressure-monitor').startRuntimePressureMonitor({now:()=>clock,cpu:()=>0,log:line=>logs.push(line)});clock+=20000;tick();assert.equal(workers,0);assert.ok(logs.some(line=>line.includes('[RUNTIME] event-loop-stall ')&&line.includes('blockedMs=15000')));assert.ok(logs.some(line=>line.includes('[RUNTIME] heap-limit ')));}
+ finally{await monitor?.stop();wt.Worker=original.Worker;global.setInterval=original.setInterval;global.clearInterval=original.clearInterval;if(original.flag===undefined)delete process.env.BL_STALL_PROFILE;else process.env.BL_STALL_PROFILE=original.flag;}
 });

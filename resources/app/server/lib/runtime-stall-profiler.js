@@ -29,7 +29,7 @@ function createStallProfiler({log=()=>{},samplingUs=5000,windowMs=60000,dir=null
     if(failed||closed||(closing&&operation!=='close'))return Promise.resolve(null);
     const id=++serial;worker.ref();
     return new Promise(resolve=>{
-      const timer=setTimeout(unavailable,15000);timer.unref();pending.set(id,{resolve,timer});
+      const timer=setTimeout(unavailable,operation==='close'?5000:15000);timer.unref();pending.set(id,{resolve,timer});
       try{worker.postMessage({id,operation,payload});}catch(_){unavailable();}
     });
   }

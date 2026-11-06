@@ -11,14 +11,16 @@
      süresi ve o arada harcanan CPU ile birlikte (uyku/saat sıçraması elenir),
    - heap kullanımı sınırın %80'ini aştığında (dakikada en çok bir kez).
 
-   Kilit profili: V8'in örnekleyici CPU profili arka planda sürekli açık
+   İsteğe bağlı kilit profili (BL_STALL_PROFILE=1): V8'in örnekleyici CPU profili arka planda açık
    tutulur (5 ms örnek aralığı) ve kontrol worker'ında bir dakikada bir sıfırlanır, böylece bellek
    sınırlı kalır. Uzun bir kilit (varsayılan 10 sn) biter bitmez profil
    alınır; en çok CPU harcayan fonksiyonlar ve en ağır çağrı zincirleri
    `[RUNTIME] stall-profile` satırlarıyla loga yazılır, tam profil de
    logs/stall-profiles altına .cpuprofile olarak saklanır (en çok 3 dosya).
    Satırlar yalnız fonksiyon adı ve uygulama içi dosya yolu içerir; iş verisi,
-   kullanıcı adı veya yerel klasör yolu içermez. BL_STALL_PROFILE=0 kapatır. */
+   kullanıcı adı veya yerel klasör yolu içermez. Normal çalışma sayısal stall ve
+   heap takibini sürdürür; CPU profili V8 yeniden başlatma maliyeti nedeniyle
+   yalnız açıkça istenen tanı koşusunda etkinleşir. */
 const v8 = require('v8');
 const path = require('path');
 
@@ -90,9 +92,10 @@ function defaultProfileDir() {
 
 const SUSPEND_MS = 10 * 60000;
 function startRuntimePressureMonitor({ log = console.log, intervalMs = 5000, stallMs = 3000, pressureRatio = 0.8, pressureEveryMs = 60000, now = Date.now, cpu = () => { const usage = process.cpuUsage(); return usage.user + usage.system; },
-  profile = process.env.BL_STALL_PROFILE !== '0', profileStallMs = 10000, profileDir } = {}) {
+  profile = process.env.BL_STALL_PROFILE === '1', profileStallMs = 10000, profileDir } = {}) {
   log(formatLine('heap-limit', heapNumbers()));
   const profiler = profile ? createStallProfiler({ log, dir: profileDir === undefined ? defaultProfileDir() : profileDir }) : null;
+  if(!profile)log(formatLine('stall-profiler',{enabled:0,optIn:'BL_STALL_PROFILE=1'}));
   if (profiler) void profiler.start().then(ok => { if (ok) log(formatLine('stall-profiler', { samplingMs: 5, minStallMs: profileStallMs })); });
   let expected = now() + intervalMs, lastPressureAt = 0, lastCpu = cpu();
   const timer = setInterval(() => {

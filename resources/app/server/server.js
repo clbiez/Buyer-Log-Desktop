@@ -12763,6 +12763,7 @@ if (process.env.NODE_ENV !== 'test') {
   console.log(`Buyer Log runtime config: ${CONFIG_PATH} · port=${PORT} · host=${REQUESTED_HOST}`);
 }
 
+let runtimePressureMonitor=null;
 const httpServer = app.listen(PORT, HOST, () => {
   markStartup('SERVER_READY', { host: HOST, port: PORT });
   if (backendCompileCacheState.status !== 'disabled') backendCompileCache.scheduleCompileCacheFlush();
@@ -12781,7 +12782,7 @@ const httpServer = app.listen(PORT, HOST, () => {
   console.log(`Dinleme adresi: ${HOST} (yerel kullanım için varsayılan 127.0.0.1)`);
   console.log(`Moderatör kaynak klasörü: ${sourceFolderForUser('moderator') || '(seçilmedi)'}`);
   // Bellek baskısı / olay döngüsü kilitlenmesi yalnız sayısal olarak loglanır.
-  if (process.env.BL_AUTOMATION_RUN !== '1') require('./lib/runtime-pressure-monitor').startRuntimePressureMonitor();
+  if (process.env.BL_AUTOMATION_RUN !== '1') runtimePressureMonitor=require('./lib/runtime-pressure-monitor').startRuntimePressureMonitor();
   // Açılışta kimlik doğrulama yolu MUTLAKA hafif kalır. Büyük model snapshot'ı
   // burada hydrate edilmez ve tüm kullanıcı page-cache warm-up'ı ana HTTP
   // sürecinde başlatılmaz. gzip/JSON parse ile CP/Orders/Overview projection
@@ -12861,7 +12862,10 @@ function shutdownComputeRuntime(){
   if(computeShutdownPromise)return computeShutdownPromise;
   const deadline=setTimeout(()=>process.exit(1),10000);deadline.unref();
   httpServer.close();computeReads.clear();
-  computeShutdownPromise=Promise.resolve().then(()=>closeComputeService()).catch(error=>{
+  computeShutdownPromise=Promise.resolve().then(async()=>{
+    const results=await Promise.allSettled([closeComputeService(),runtimePressureMonitor?.stop()]);
+    const failure=results.find(result=>result.status==='rejected');if(failure)throw failure.reason;
+  }).catch(error=>{
     process.exitCode=1;logRuntimeFailure('computePoolShutdown',error);
   }).finally(()=>{clearTimeout(deadline);cleanupOrphanExcel();process.exit(process.exitCode||0);});
   return computeShutdownPromise;

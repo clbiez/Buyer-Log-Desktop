@@ -23,6 +23,9 @@ function backlogScreenReady(){
 function assertNoFatalServerErrors(log){
   if(/\b(?:uncaughtException|unhandledRejection)\s*:/i.test(log))throw Error('Fatal server exception during the opening scenario');
 }
+function assertServerShutdown(result){
+  if(result.forced||!(result.code===0||(result.code===null&&['SIGTERM','SIGINT'].includes(result.signal))))throw Error('Server shutdown failed during the opening scenario');
+}
 function persist(){
   if(fs.existsSync(root)){
     const events=probe.readProbeEvents(root,{requireStopped:Boolean(server&&(server.exitCode!==null||server.signalCode))});report.serverLoopProbe={observerSha256:probe.observerSha256(),events,
@@ -33,9 +36,13 @@ function persist(){
   fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output+'.partial',JSON.stringify(report,null,2)+'\n');
 }
 async function stop(){
-  if(!server||server.exitCode!==null)return;
-  const done=new Promise(resolve=>server.once('exit',resolve));server.kill('SIGTERM');await Promise.race([done,delay(10000)]);
-  if(server.exitCode===null){server.kill('SIGKILL');await done;}
+  if(!server)return;
+  let forced=false;
+  if(server.exitCode===null&&!server.signalCode){
+    const done=new Promise(resolve=>server.once('exit',resolve));server.kill('SIGTERM');await Promise.race([done,delay(10000)]);
+    if(server.exitCode===null&&!server.signalCode){forced=true;server.kill('SIGKILL');await done;}
+  }
+  report.serverExit={code:server.exitCode,signal:server.signalCode,forced};
 }
 async function record(scenario,action,read){
   phase=scenario;const measurement={scenario,startedAtMs:Date.now()};report.measurements.push(measurement);persist();process.stdout.write('Opening: '+scenario+'\n');
@@ -117,7 +124,7 @@ async function record(scenario,action,read){
     healthStopped=true;if(healthLoop)await healthLoop;
     try{await browser?.close();}finally{
       await stop();
-      try{if(fs.existsSync(path.join(root,'interactive-server.log')))assertNoFatalServerErrors(fs.readFileSync(path.join(root,'interactive-server.log'),'utf8'));}
+      try{if(report.serverExit)assertServerShutdown(report.serverExit);if(fs.existsSync(path.join(root,'interactive-server.log')))assertNoFatalServerErrors(fs.readFileSync(path.join(root,'interactive-server.log'),'utf8'));}
       catch(error){report.correctness='failed';report.status='failed';report.error={message:error.message,stack:error.stack};process.exitCode=1;}
       report.finishedAt=new Date().toISOString();persist();fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');process.stdout.write('Report: '+output+'\n');
     }
