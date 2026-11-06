@@ -106,7 +106,7 @@ async function open(context,page,module){
   const started=performance.now();
   await page.goto(base+'/?module='+module,{waitUntil:'domcontentloaded',timeout:120000});
   await page.waitForFunction(()=>Number.isFinite(window.__startupProbe?.primaryScreenReadyMs)&&Number.isFinite(window.__startupProbe?.startupReadyMs),null,{timeout:rendererTimeoutMs,polling:100});
-  await page.evaluate(()=>{window.__startupProbe.continueIntentAtMs=window.__startupProbe.startupReadyMs;window.__startupProbe.continueAtMs=performance.now();window.BLBootGuard?.continue();});
+  await page.evaluate(()=>{window.__startupProbe.continueIntentAtMs=window.__startupProbe.startupReadyMs;window.__startupProbe.continueAtMs=performance.now();window.BLBootGuard?.continue({intentAtMs:window.__startupProbe.continueIntentAtMs});});
   await page.waitForFunction(()=>Number.isFinite(window.__startupProbe?.startupCompleteMs),null,{timeout:rendererTimeoutMs,polling:100});
   if(module==='orders')await page.waitForFunction(()=>state.orders?.rows.length>0&&document.querySelector('#ordersTable tbody tr[data-id]'),null,{timeout:rendererTimeoutMs,polling:100});
   if(module==='cp')await page.waitForFunction(()=>state.cp?.rows.length>0&&document.querySelector('#cpTable tbody tr[data-id]'),null,{timeout:rendererTimeoutMs,polling:100});

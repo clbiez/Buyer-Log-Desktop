@@ -9,7 +9,7 @@ const start=APP.indexOf('const BACKGROUND_WARMUP_GAP_MS');
 const source=APP.slice(start,APP.indexOf("window.addEventListener('DOMContentLoaded'",start));
 
 function harness({access=['cp','orders','koleksiyon'],state={},flags={},active='overview',deviceMemory=8,heap=null,curtain=false}={}){
-  const timers=[],calls=[],marks=[],events=[],details=[],gates=[];
+  const timers=[],calls=[],marks=[],events=[],details=[],gates=[],revealed=[];
   const resolvers={};
   const window={BLCanAccessArea:area=>access.includes(area),BLPerf:{mark:(name,detail)=>marks.push({name,detail})},
     dispatchEvent:event=>{events.push(event.type);if(event.detail)details.push(event.detail);},BLBootGuard:{ready:gate=>gates.push(gate)},...flags};
@@ -17,6 +17,7 @@ function harness({access=['cp','orders','koleksiyon'],state={},flags={},active='
   const context={window,state,console:{warn(){}},navigator:{deviceMemory},performance:{memory:heap},CustomEvent:class{constructor(type,options){this.type=type;this.detail=options&&options.detail;}},
     document:{getElementById:id=>id==='blBootGuard'&&context.curtain?{}:null},curtain,
     setTimeout:(fn,ms)=>{timers.push(fn);delays.push(ms);return timers.length;},
+    afterStartupReveal:fn=>{revealed.push(fn);return Promise.resolve();},
     currentActiveTab:()=>context.active,active,
     collectionCatalogsReady:catalogs=>Boolean(catalogs&&catalogs.ready),
     _unifiedPriorityCache:{cp:null,orders:null},
@@ -28,7 +29,7 @@ function harness({access=['cp','orders','koleksiyon'],state={},flags={},active='
   context.backgroundWarmupUnrendered=new Set();
   vm.createContext(context);vm.runInContext(source,context);
   const flush=async()=>{for(let i=0;i<20;i++){await new Promise(resolve=>setImmediate(resolve));while(timers.length)timers.shift()();}};
-  return {context,calls,marks,events,details,gates,delays,resolvers,flush};
+  return {context,calls,marks,events,details,gates,delays,resolvers,flush,reveal(){context.curtain=false;revealed.splice(0).forEach(fn=>fn());}};
 }
 
 test('authorized modules warm one at a time, hidden, in CP → Orders → Collection order', async () => {
@@ -45,20 +46,23 @@ test('authorized modules warm one at a time, hidden, in CP → Orders → Collec
   assert.deepEqual([...h.context.backgroundWarmupUnrendered].sort(),['cp','orders'],'first visit draws the warmed table once');
   assert.ok(h.marks.some(mark=>mark.name==='BACKGROUND_WARMUP_DONE'));
   assert.deepEqual(h.events,['bl:startup-progress','bl:startup-progress','bl:startup-progress','bl:background-warmup-done']);
-  // The startup curtain names each module it is waiting for and opens only after the last one.
+  // Background progress is informational; the primary gate has already opened.
   assert.deepEqual(h.details.map(d=>[d.stage,d.module,d.index,d.total]),[['modules','cp',1,3],['modules','orders',2,3],['modules','koleksiyon',3,3]]);
   assert.deepEqual(h.gates,['modules']);
   assert.ok(h.delays.every(ms=>ms===0||ms===1500),'without the curtain the gentle 1.5 s pacing is kept');
 });
 
-test('while the startup curtain is visible the modules warm back to back and release the curtain gate', async () => {
+test('while the startup curtain is visible no background module starts; preparation follows dismissal', async () => {
   const h=harness({curtain:true});
   h.context.scheduleBackgroundModuleWarmup();await h.flush();
+  assert.deepEqual(h.calls,[],'Continue must not compete with background module work');
+  assert.deepEqual(h.delays,[],'no pending warmup timer runs underneath the curtain');
+  h.reveal();await h.flush();
   h.resolvers.cp(true);await h.flush();h.resolvers.orders(true);await h.flush();
-  assert.deepEqual(h.gates,[],'the curtain stays closed until every module is ready');
+  assert.deepEqual(h.gates,[],'background completion has not been reported prematurely');
   h.resolvers.koleksiyon(true);await h.flush();
   assert.deepEqual(h.gates,['modules']);
-  assert.ok(h.delays.length&&h.delays.every(ms=>ms<=60),'no 1.5 s gaps while the user is waiting on the curtain');
+  assert.ok(h.delays.length&&h.delays.every(ms=>ms===0||ms===1500),'background pacing is preserved after dismissal');
 });
 
 test('a warmup that cannot start still releases the startup modules gate',()=>{
@@ -105,5 +109,14 @@ test('a table already in memory before its warmup step is not marked for a redun
   const h=harness({access:['cp'],state:{cp:{rows:[]}}});
   h.context.scheduleBackgroundModuleWarmup();await h.flush();
   h.resolvers.cp(true);await h.flush();
+  assert.equal(h.context.backgroundWarmupUnrendered.has('cp'),false);
+});
+
+test('a stale or failed CP priority job cannot publish a ready background module', async () => {
+  const h=harness({access:['cp']});
+  h.context.scheduleUnifiedPrioritiesForTable=()=>Promise.resolve(false);
+  h.context.scheduleBackgroundModuleWarmup();await h.flush();h.resolvers.cp(true);await h.flush();
+  const result=h.marks.find(mark=>mark.name==='BACKGROUND_WARMUP_READY');
+  assert.equal(result.detail.ok,false);
   assert.equal(h.context.backgroundWarmupUnrendered.has('cp'),false);
 });

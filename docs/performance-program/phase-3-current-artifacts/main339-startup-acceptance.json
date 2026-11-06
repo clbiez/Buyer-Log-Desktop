@@ -1,0 +1,317 @@
+{
+  "synthetic": true,
+  "screenshot": "/workspace/buyerlog-phase3/resources/app/public/release-notes/next-assets/startup-primary-ready.png",
+  "capture": "startup",
+  "module": "overview",
+  "lang": "tr",
+  "theme": "light",
+  "observed": {
+    "lang": "tr",
+    "documentLang": "tr",
+    "theme": "light"
+  },
+  "rows": 20,
+  "beforeContinue": {
+    "active": "overview",
+    "gateReady": "1",
+    "profile": "moderator",
+    "accessApplied": true,
+    "cpRows": null,
+    "ordersRows": null,
+    "overviewRows": 20,
+    "moduleStates": {
+      "cp": {
+        "status": "pending",
+        "error": ""
+      },
+      "orders": {
+        "status": "pending",
+        "error": ""
+      },
+      "koleksiyon": {
+        "status": "pending",
+        "error": ""
+      }
+    },
+    "metrics": {
+      "longTaskMs": {
+        "count": 8,
+        "totalMs": 894,
+        "maxMs": 244,
+        "lastMs": 150,
+        "avgMs": 111.75
+      },
+      "bootstrapFetchMs": {
+        "count": 1,
+        "totalMs": 296.20000000298023,
+        "maxMs": 296.20000000298023,
+        "lastMs": 296.20000000298023,
+        "avgMs": 296.20000000298023
+      },
+      "bootstrapJsonParseMs": {
+        "count": 1,
+        "totalMs": 11.099999994039536,
+        "maxMs": 11.099999994039536,
+        "lastMs": 11.099999994039536,
+        "avgMs": 11.099999994039536
+      },
+      "CACHE_LOAD": {
+        "count": 1,
+        "totalMs": 307.5,
+        "maxMs": 307.5,
+        "lastMs": 307.5,
+        "avgMs": 307.5
+      },
+      "DATASOURCE_PREPARATION": {
+        "count": 1,
+        "totalMs": 15.599999994039536,
+        "maxMs": 15.599999994039536,
+        "lastMs": 15.599999994039536,
+        "avgMs": 15.599999994039536
+      },
+      "filterInitializationMs": {
+        "count": 1,
+        "totalMs": 0.20000000298023224,
+        "maxMs": 0.20000000298023224,
+        "lastMs": 0.20000000298023224,
+        "avgMs": 0.20000000298023224
+      },
+      "FILTER_PIVOT_INIT": {
+        "count": 1,
+        "totalMs": 0.20000000298023224,
+        "maxMs": 0.20000000298023224,
+        "lastMs": 0.20000000298023224,
+        "avgMs": 0.20000000298023224
+      },
+      "IMAGE_THUMBNAIL_INIT": {
+        "count": 1,
+        "totalMs": 0,
+        "maxMs": 0,
+        "lastMs": 0,
+        "avgMs": 0
+      },
+      "firstRenderMs": {
+        "count": 1,
+        "totalMs": 7.199999995529652,
+        "maxMs": 7.199999995529652,
+        "lastMs": 7.199999995529652,
+        "avgMs": 7.199999995529652
+      },
+      "TABLE_RENDER": {
+        "count": 1,
+        "totalMs": 7.199999995529652,
+        "maxMs": 7.199999995529652,
+        "lastMs": 7.199999995529652,
+        "avgMs": 7.199999995529652
+      },
+      "ACTIVE_MODULE_INIT": {
+        "count": 1,
+        "totalMs": 7.5,
+        "maxMs": 7.5,
+        "lastMs": 7.5,
+        "avgMs": 7.5
+      },
+      "stateHydrateMs": {
+        "count": 1,
+        "totalMs": 23.5,
+        "maxMs": 23.5,
+        "lastMs": 23.5,
+        "avgMs": 23.5
+      },
+      "overview.jsonParseMs": {
+        "count": 1,
+        "totalMs": 17.5,
+        "maxMs": 17.5,
+        "lastMs": 17.5,
+        "avgMs": 17.5
+      },
+      "primaryScreenReadyMs": {
+        "count": 1,
+        "totalMs": 2282,
+        "maxMs": 2282,
+        "lastMs": 2282,
+        "avgMs": 2282
+      },
+      "startupGateReadyMs": {
+        "count": 1,
+        "totalMs": 2299.89999999851,
+        "maxMs": 2299.89999999851,
+        "lastMs": 2299.89999999851,
+        "avgMs": 2299.89999999851
+      }
+    },
+    "observed": {
+      "lang": "tr",
+      "documentLang": "tr",
+      "theme": "light"
+    }
+  },
+  "afterContinue": {
+    "moduleStates": {
+      "cp": {
+        "status": "ready",
+        "error": ""
+      },
+      "orders": {
+        "status": "pending",
+        "error": ""
+      },
+      "koleksiyon": {
+        "status": "pending",
+        "error": ""
+      }
+    },
+    "metrics": {
+      "longTaskMs": {
+        "count": 8,
+        "totalMs": 894,
+        "maxMs": 244,
+        "lastMs": 150,
+        "avgMs": 111.75
+      },
+      "bootstrapFetchMs": {
+        "count": 1,
+        "totalMs": 296.20000000298023,
+        "maxMs": 296.20000000298023,
+        "lastMs": 296.20000000298023,
+        "avgMs": 296.20000000298023
+      },
+      "bootstrapJsonParseMs": {
+        "count": 1,
+        "totalMs": 11.099999994039536,
+        "maxMs": 11.099999994039536,
+        "lastMs": 11.099999994039536,
+        "avgMs": 11.099999994039536
+      },
+      "CACHE_LOAD": {
+        "count": 1,
+        "totalMs": 307.5,
+        "maxMs": 307.5,
+        "lastMs": 307.5,
+        "avgMs": 307.5
+      },
+      "DATASOURCE_PREPARATION": {
+        "count": 1,
+        "totalMs": 15.599999994039536,
+        "maxMs": 15.599999994039536,
+        "lastMs": 15.599999994039536,
+        "avgMs": 15.599999994039536
+      },
+      "filterInitializationMs": {
+        "count": 1,
+        "totalMs": 0.20000000298023224,
+        "maxMs": 0.20000000298023224,
+        "lastMs": 0.20000000298023224,
+        "avgMs": 0.20000000298023224
+      },
+      "FILTER_PIVOT_INIT": {
+        "count": 1,
+        "totalMs": 0.20000000298023224,
+        "maxMs": 0.20000000298023224,
+        "lastMs": 0.20000000298023224,
+        "avgMs": 0.20000000298023224
+      },
+      "IMAGE_THUMBNAIL_INIT": {
+        "count": 1,
+        "totalMs": 0,
+        "maxMs": 0,
+        "lastMs": 0,
+        "avgMs": 0
+      },
+      "firstRenderMs": {
+        "count": 1,
+        "totalMs": 7.199999995529652,
+        "maxMs": 7.199999995529652,
+        "lastMs": 7.199999995529652,
+        "avgMs": 7.199999995529652
+      },
+      "TABLE_RENDER": {
+        "count": 1,
+        "totalMs": 7.199999995529652,
+        "maxMs": 7.199999995529652,
+        "lastMs": 7.199999995529652,
+        "avgMs": 7.199999995529652
+      },
+      "ACTIVE_MODULE_INIT": {
+        "count": 1,
+        "totalMs": 7.5,
+        "maxMs": 7.5,
+        "lastMs": 7.5,
+        "avgMs": 7.5
+      },
+      "stateHydrateMs": {
+        "count": 1,
+        "totalMs": 23.5,
+        "maxMs": 23.5,
+        "lastMs": 23.5,
+        "avgMs": 23.5
+      },
+      "overview.jsonParseMs": {
+        "count": 1,
+        "totalMs": 17.5,
+        "maxMs": 17.5,
+        "lastMs": 17.5,
+        "avgMs": 17.5
+      },
+      "primaryScreenReadyMs": {
+        "count": 1,
+        "totalMs": 2282,
+        "maxMs": 2282,
+        "lastMs": 2282,
+        "avgMs": 2282
+      },
+      "startupGateReadyMs": {
+        "count": 1,
+        "totalMs": 2299.89999999851,
+        "maxMs": 2299.89999999851,
+        "lastMs": 2299.89999999851,
+        "avgMs": 2299.89999999851
+      },
+      "startupUserWaitMs": {
+        "count": 1,
+        "totalMs": 435,
+        "maxMs": 435,
+        "lastMs": 435,
+        "avgMs": 435
+      },
+      "startupContinueDispatchDelayMs": {
+        "count": 1,
+        "totalMs": 8.700000002980232,
+        "maxMs": 8.700000002980232,
+        "lastMs": 8.700000002980232,
+        "avgMs": 8.700000002980232
+      },
+      "startupCurtainDismissedMs": {
+        "count": 1,
+        "totalMs": 2751.60000000149,
+        "maxMs": 2751.60000000149,
+        "lastMs": 2751.60000000149,
+        "avgMs": 2751.60000000149
+      },
+      "startupSystemCompleteMs": {
+        "count": 1,
+        "totalMs": 2316.60000000149,
+        "maxMs": 2316.60000000149,
+        "lastMs": 2316.60000000149,
+        "avgMs": 2316.60000000149
+      },
+      "firstUsableInteractionMs": {
+        "count": 1,
+        "totalMs": 2316.60000000149,
+        "maxMs": 2316.60000000149,
+        "lastMs": 2316.60000000149,
+        "avgMs": 2316.60000000149
+      },
+      "cp.jsonParseMs": {
+        "count": 1,
+        "totalMs": 36.899999998509884,
+        "maxMs": 36.899999998509884,
+        "lastMs": 36.899999998509884,
+        "avgMs": 36.899999998509884
+      }
+    }
+  },
+  "preparationLayout": [],
+  "errorRecovery": null,
+  "errors": []
+}

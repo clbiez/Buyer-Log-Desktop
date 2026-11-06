@@ -20,16 +20,11 @@
 (function(){
   'use strict';
   var RETRY_KEY='buyerlog.bootRetry.v__BL_DISPLAY_VERSION__',finished=false,dismissed=false,timer=null,lastFailure='',orb=null,recovering=false,slowTimer=null;
-  // The app shell, initial data, authenticated profile, opening screen and (for the
-  // session's first window) the background-prepared modules are startup gates: the
-  // curtain cannot be passed before the modules the user opens next are ready.
-  // A module that is still preparing after MODULE_WAIT_LIMIT_MS no longer holds an
-  // authenticated user here; it keeps loading in the background and the reason is shown.
-  var params=new URLSearchParams(location.search);
-  var modulesGate=params.get('startup')==='1'||!params.has('workspaceTab');
-  var gates={core:false,data:false,ui:false,profile:false,modules:!modulesGate};
-  var hardGates=['core','data','profile','ui','modules'];
-  var MODULE_WAIT_LIMIT_MS=90000,moduleTimer=null,moduleProgress=null,modulesDeferred=false,screenFailed=false;
+  // Kimlik/yetki, ilk veri ve açılan ekran zorunludur. Diğer modüllerin
+  // hazırlığı ilk pencereyi veya native sekmeyi perde arkasında bekletmez.
+  var gates={core:false,data:false,ui:false,profile:false,modules:false};
+  var hardGates=['core','data','profile','ui'];
+  var moduleProgress=null,screenFailed=false,gateReadyAt=null,humanWaitMs=0;
   // A failed opening-screen projection never traps an authenticated user: the shell
   // opens with Retry available until the profile arrives, as before.
   var MODULE_LABELS={cp:['CP','CP'],orders:['Siparişler','Orders'],koleksiyon:['Koleksiyon','Collection']};
@@ -58,20 +53,23 @@
     }
   }
   function english(){try{return typeof appLang!=='undefined'&&appLang==='en';}catch(_){return document.documentElement.lang==='en';}}
+  function recordClockMetric(name,at){
+    var origin=window.BLPerf?.origin?.();
+    window.BLPerf?.record?.(name,at-(Number.isFinite(origin)?origin:0));
+  }
+  function recordGateReady(){gateReadyAt=performance.now();recordClockMetric('startupGateReadyMs',gateReadyAt);}
   // Which stage Buyer Log is in right now: the first unfinished gate, in startup order.
   function detailText(){
     var en=english(),L=function(tr,enText){return en?enText:tr;};
     if(finished&&screenFailed)return L('Başlangıç ekranı hazırlanamadı; Buyer Log\'a devam edip ekranı yenileyebilirsiniz.','The initial screen could not be prepared; you can continue and refresh the screen.');
-    if(finished)return modulesDeferred?L('Bazı modüller arka planda hazırlanmaya devam ediyor; açtığınızda kaldığı yerden tamamlanır.','Some modules are still being prepared in the background; they finish when you open them.'):L('Tüm modüller hazır.','All modules are ready.');
+    if(finished)return L('Başlangıç ekranı hazır. Diğer ekranlar arka planda hazırlanır.','The opening screen is ready. Other screens prepare in the background.');
     if(!gates.core)return L('Uygulama arayüzü yükleniyor…','Loading the application interface…');
     if(!gates.data)return L('Başlangıç verisi yükleniyor…','Loading initial data…');
     if(!gates.profile)return L('Kullanıcı bilgileri ve yetkiler uygulanıyor…','Applying user information and permissions…');
     if(!gates.ui)return L('Başlangıç ekranı hazırlanıyor…','Preparing the initial screen…');
-    var p=moduleProgress;
-    if(p&&p.module){var names=MODULE_LABELS[p.module]||[p.module,p.module];return L('Modüller hazırlanıyor: ','Preparing modules: ')+names[en?1:0]+(p.total>0?' ('+p.index+'/'+p.total+')':'')+'…';}
-    return L('Modüller hazırlanıyor…','Preparing modules…');
+    return L('Başlangıç ekranı hazırlanıyor…','Preparing the initial screen…');
   }
-  function activeGate(){if(finished)return '';var order=['core','data','profile','ui','modules'];for(var i=0;i<order.length;i++)if(!gates[order[i]])return order[i]==='core'?'data':order[i];return '';}
+  function activeGate(){if(finished)return '';for(var i=0;i<hardGates.length;i++)if(!gates[hardGates[i]])return hardGates[i]==='core'?'data':hardGates[i];return '';}
   function renderDetail(){
     var el=guard();if(!el)return;
     var detail=el.querySelector('[data-boot-detail]');if(detail)detail.textContent=detailText();
@@ -127,18 +125,11 @@
     if(stage&&Object.prototype.hasOwnProperty.call(gates,stage))gates[stage]=true;else gates.core=true;
     window.BLGuide?.stage(stage||'core');
     if(gates.modules)window.BLGuide?.stage('modules');
-    // Once the authenticated shell and opening screen are ready, a module that never
-    // finishes preparing cannot keep the user here forever.
-    if(!moduleTimer&&!gates.modules&&gates.core&&gates.data&&gates.profile&&gates.ui)moduleTimer=setTimeout(function(){
-      if(finished||gates.modules)return;modulesDeferred=true;
-      try{console.warn('Buyer Log startup: modules still preparing after',MODULE_WAIT_LIMIT_MS,'ms',moduleProgress&&moduleProgress.module||'');}catch(_){}
-      ready('modules');
-    },MODULE_WAIT_LIMIT_MS);
     renderDetail();
     if(!hardGates.every(function(key){return gates[key];}))return;
-    finished=true;if(timer)clearTimeout(timer);if(slowTimer)clearTimeout(slowTimer);if(moduleTimer)clearTimeout(moduleTimer);
+    finished=true;if(timer)clearTimeout(timer);if(slowTimer)clearTimeout(slowTimer);
     try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}
-    stopOrb();var el=guard();if(!el){dismiss();return;}
+    stopOrb();var el=guard();if(!el){recordGateReady();dismiss();return;}
     // Ready no longer yanks the curtain away mid-sentence: the user continues explicitly.
     el.dataset.ready='1';delete el.dataset.failed;el.querySelector('[data-boot-retry]')?.remove();
     var msg=el.querySelector('[data-boot-message]');if(msg)msg.textContent=english()?'Buyer Log is ready':'Buyer Log hazır';
@@ -146,14 +137,27 @@
     if(slot&&!el.querySelector('[data-boot-continue]')){var b=document.createElement('button');b.type='button';b.className='blBootContinue';b.dataset.bootContinue='1';b.textContent=(english()?'Continue to Buyer Log':'Buyer Log\'a devam et')+' →';b.onclick=dismiss;slot.appendChild(b);try{b.focus({preventScroll:true});}catch(_){}}
     window.BLGuide?.refreshStartup?.();
     renderDetail();
+    recordGateReady();
     window.dispatchEvent(new CustomEvent('bl:startup-ready'));
   }
   function dismiss(){
     if(dismissed)return;dismissed=true;
+    var intent=arguments[0];
+    var calledAt=performance.now();
+    var supplied=Number(typeof intent==='number'?intent:(intent?.intentAtMs??intent?.timeStamp));
+    var intendedAt=Number.isFinite(supplied)?Math.max(gateReadyAt,Math.min(calledAt,supplied)):calledAt;
+    humanWaitMs=Math.max(0,intendedAt-gateReadyAt);
+    window.BLPerf?.record?.('startupUserWaitMs',humanWaitMs);
+    window.BLPerf?.record?.('startupContinueDispatchDelayMs',Math.max(0,calledAt-intendedAt));
     var el=guard();var refocus=el&&el.contains(document.activeElement);
     if(el)el.inert=true;
     function reveal(){
       if(el){el.dataset.leaving='1';el.setAttribute('aria-hidden','true');el.remove();}
+      var revealedAt=performance.now();
+      recordClockMetric('startupCurtainDismissedMs',revealedAt);
+      recordClockMetric('startupSystemCompleteMs',revealedAt-humanWaitMs);
+      recordClockMetric('firstUsableInteractionMs',revealedAt-humanWaitMs);
+      window.BL_STARTUP_COMPLETE=true;
       window.dispatchEvent(new CustomEvent('bl:startup-complete'));
       if(refocus)document.getElementById('corporateConnectionsBtn')?.focus({preventScroll:true});
     }
@@ -207,7 +211,7 @@
     if(ev.shiftKey&&(document.activeElement===first||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();last.focus();}
     else if(!ev.shiftKey&&(document.activeElement===last||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();first.focus();}
   },true);
-  window.BLBootGuard={ready:ready,recover:recover,mount:ensureGuard,continue:function(){if(finished)dismiss();},fail:function(reason){if(finished)return;lastFailure=String(reason||'initial-data-failed');if(lastFailure==='initial-screen-failed'){screenFailed=true;gates.ui=true;gates.modules=true;}message(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.',true);if(screenFailed)ready('ui');},noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
+  window.BLBootGuard={ready:ready,recover:recover,mount:ensureGuard,continue:function(intent){if(finished)dismiss(intent);},fail:function(reason){if(finished)return;lastFailure=String(reason||'initial-data-failed');if(lastFailure==='initial-screen-failed'){screenFailed=true;gates.ui=true;gates.modules=true;}message(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.',true);if(screenFailed)ready('ui');},noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensureGuard,{once:true});else ensureGuard();
   window.addEventListener('error',function(ev){var t=ev&&ev.target;if(t&&(t.tagName==='SCRIPT'||t.tagName==='LINK'))window.BLBootGuard.noteFailure((t.src||t.href||t.tagName)+' yüklenemedi.');},true);
   document.addEventListener('bl:language-changed',function(){syncBootLanguage();try{window.BLGuide?.refreshLanguage?.();}catch(_){}}); 
@@ -230,6 +234,7 @@
 <script src="file-parser.js?v=__BL_ASSET_VERSION__"></script>
 <script type="application/json" id="blAssetHashes">__BL_ASSET_HASH_MAP__</script>
 <script src="perf-runtime.js?v=__BL_ASSET_VERSION__&rev=20261023atlas9mb1"></script>
+<script src="startup-module-preparation.js?v=__BL_ASSET_VERSION__"></script>
 <script src="release-notes.js?v=__BL_ASSET_VERSION__&rev=4"></script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_LOCAL_CONTEXT_START');</script>
 <script src="/user-context.js"></script>

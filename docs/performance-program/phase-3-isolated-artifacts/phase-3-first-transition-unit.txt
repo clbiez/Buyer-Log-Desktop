@@ -1,0 +1,12 @@
+✔ first intent includes handler dispatch delay and waits for actual visible rows and paint (11.300019ms)
+✔ a denied first transition fails instead of reporting a ready previous screen (5.067088ms)
+✔ an unready first transition has a bounded failure with partial evidence (10.357903ms)
+✔ metadata-only startup is compared with its envelope while actual projection identity remains mandatory (10.301674ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 280.94266

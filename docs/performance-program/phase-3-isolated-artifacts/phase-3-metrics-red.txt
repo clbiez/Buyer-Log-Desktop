@@ -1,0 +1,80 @@
+✔ Continue keeps the trivia screen until capture, then completes exactly once and restores visible keyboard focus (9.389306ms)
+✖ gate, actual dismissal and system usability exclude human wait but retain queued input and Motion time (7.690161ms)
+✖ automated Continue can declare its earlier intent without bypassing a gate (1.286619ms)
+✔ the curtain waits for profile and opening screen while other modules remain in the background (3.850306ms)
+✔ stage detail follows the first unfinished gate (2.082039ms)
+✔ a module that never finishes cannot trap an authenticated user (4.413151ms)
+✔ a failed opening screen never traps the authenticated user behind the curtain (2.633582ms)
+✔ first and secondary workspace tabs use the same primary-only readiness gate (7.478994ms)
+✔ background completion cannot bypass any core, data, primary-screen or profile gate (23.047873ms)
+✔ a stale startupWarm address no longer auto-dismisses the curtain (16.192373ms)
+✔ requested table module is selected before eager helpers and core health does not wait for images (5.271207ms)
+✔ Continue does nothing until preparation is complete (6.208195ms)
+✔ hard startup gates work regardless of arrival order (511.4336ms)
+✔ an absent/incomplete profile cannot release the curtain (1.544788ms)
+✔ slow startup shows information without an automatic 12-second reload; bounded failure offers exactly one retry (3.202152ms)
+✔ late successful preparation recovers from the timed-out curtain without reloading (2.255218ms)
+✔ a late page-projection failure cannot regress an already ready shell (4.026255ms)
+✔ recovery response cannot reload an already-ready app (3.754232ms)
+✔ each guide card has bilingual instructions, a unique ID, a module, an illustration and source evidence (1.5107ms)
+✔ module and capability access filters match real Orders and quotation area aliases (3.398115ms)
+✔ before a profile exists only general, unrestricted lessons are eligible (1.153125ms)
+✔ illustrations escape arbitrary content and never embed real records or remote image requests (1.448649ms)
+✔ startup tips rotate at the initial focused curtain and pause only when reading the card or a control (1.989416ms)
+✔ opening screen projection and failure gate are awaited, while background feature loading stays scheduled (3.130852ms)
+✔ guide keys are isolated at capture phase before legacy mutation shortcuts (0.301449ms)
+✔ calculated-column directions stay within supported tables and shipping uses the real Columns control (0.368616ms)
+✔ after initial data arrives the 120-second deadline does not show a misleading Retry (1.332508ms)
+✔ the profile gate script is requested with the initial data, not after the whole deferred UI group (1.708058ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 26
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 657.80414
+
+✖ failing tests:
+
+test at tests/startup-guide-v20260930.test.js:44:1
+✖ gate, actual dismissal and system usability exclude human wait but retain queued input and Motion time (7.690161ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  undefined !== 100
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-phase3/resources/app/tests/startup-guide-v20260930.test.js:48:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 100,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/startup-guide-v20260930.test.js:59:1
+✖ automated Continue can declare its earlier intent without bypassing a gate (1.286619ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  undefined !== 0
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-phase3/resources/app/tests/startup-guide-v20260930.test.js:63:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

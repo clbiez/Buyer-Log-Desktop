@@ -1,7 +1,4 @@
 {
-  "schemaVersion": 1,
-  "publishedAt": "2026-11-05",
-  "bootstrapVisual": false,
   "title": {
     "tr": "İki bölmeli sütun dondurma · Çalışma alanı ve modül geçişi iyileştirmeleri ve LCW AI geçmişi · Backlog performansı",
     "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history · Backlog performance"
@@ -10,6 +7,9 @@
     "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır.",
     "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still."
   },
+  "schemaVersion": 1,
+  "publishedAt": "2026-11-05",
+  "bootstrapVisual": false,
   "changes": [
     {
       "id": "loading-approval-exfactory",
@@ -646,6 +646,35 @@
         "caption": {
           "tr": "İzole demo veriyle gerçek uygulama; mevcut Koleksiyon kaydı ve CP Sub MFR/Supp. FOB değerleri kabul testi için hazırlandı.",
           "en": "Actual app with isolated demo data; the existing Collection record and CP Sub MFR/Supp. FOB values were prepared for acceptance testing."
+        }
+      }
+    },
+    {
+      "id": "startup-primary-screen-ready",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış ve modül hazırlığı",
+        "en": "Startup and module preparation"
+      },
+      "title": {
+        "tr": "Açılan ekran hazır olduğunda devam edin",
+        "en": "Continue when the opening screen is ready"
+      },
+      "body": {
+        "tr": "Açılış perdesi kimlik, yetki ve açılan ekranın birincil verisi hazır olduğunda devam düğmesini gösterir. CP, Siparişler ve Koleksiyon hazırlığı çalışma alanı açıldıktan sonra, açma niyetinize ve son kullanımınıza göre arka planda yürür. Sol menüde bekliyor, yükleniyor, hazır ve hata durumları gösterilir; CP ve Siparişler yükleme hatalarında yeniden deneme sunulur.",
+        "en": "The startup curtain offers Continue when identity, permissions and the opening screen’s primary data are ready. CP, Orders and Collection prepare in the background after the workspace opens, ordered by your opening intent and recent use. The sidebar shows pending, loading, ready and error states; CP and Orders offer retry after a loading failure."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-primary-ready.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log demo açılışında kimlik, veri ve ekran kapıları hazır; devam düğmesi gösteriliyor",
+          "en": "Actual Buyer Log demo startup with identity, data and screen gates ready and Continue available"
+        },
+        "caption": {
+          "tr": "20 sentetik siparişle gerçek uygulama. Genel Bakış hazırken CP ve Siparişler henüz yüklenmeden devam düğmesi sunulur.",
+          "en": "Actual app with 20 synthetic orders. Continue is available with Overview ready before CP and Orders have loaded."
         }
       }
     }

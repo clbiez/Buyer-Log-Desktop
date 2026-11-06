@@ -33,6 +33,9 @@ nav.tabs>.railGroupLabel{display:block;flex:0 0 auto;height:calc(var(--ui-font-2
 nav.tabs button{width:100%;height:var(--ui-rail-item-height);min-height:var(--ui-rail-item-height);flex:0 0 var(--ui-rail-item-height);cursor:pointer;display:grid;grid-template-columns:var(--rail-icon-track) minmax(0,1fr);align-items:center;gap:0;padding:0;text-align:left;}
 nav.tabs button .ic{width:19px;height:19px;justify-self:center;}
 nav.tabs button span{min-width:0;padding-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+nav.tabs button.hasModulePreparation{min-height:calc((var(--ui-font-sm) + var(--ui-font-2xs))*1.1 + 5px);}
+nav.tabs button.hasModulePreparation>span[data-i18n-tr]{grid-column:2;grid-row:1;align-self:start;padding-top:3px;}
+nav.tabs button.hasModulePreparation>.modulePrepState{grid-column:2;grid-row:1;align-self:end;padding-bottom:2px;}
 .railFoot{margin-top:auto;display:flex;flex:0 0 auto;flex-direction:column;gap:2px;width:100%;padding-top:9px;}
 .railFoot>button{width:100%;height:var(--ui-rail-footer-height);min-height:var(--ui-rail-footer-height);cursor:pointer;display:grid;grid-template-columns:var(--rail-icon-track) minmax(0,1fr);align-items:center;gap:0;padding:0;text-align:left;}
 .railFoot .railAppearanceMenu button{height:var(--ui-rail-footer-height);min-height:var(--ui-rail-footer-height);display:flex;align-items:center;gap:10px;}

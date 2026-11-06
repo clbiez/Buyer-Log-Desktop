@@ -1,0 +1,12 @@
+AssertionError [ERR_ASSERTION]: a failed module must show an error state, not an endless loading panel
+
+0 !== 1
+
+    at /workspace/buyerlog-phase3/resources/app/scripts/performance-ui-acceptance.js:92:12 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 0,
+  expected: 1,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
