@@ -4,13 +4,100 @@
     "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history · Backlog performance · Royalty for agency licenses"
   },
   "summary": {
-    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır. Sözleşmeleri yalnız DTR dışı lisansörle tanımlı lisanslarda (ör. Formula 1) siparişler artık otomatik DTR sayılmaz; Supp. FOB Türkiye ve yurt dışı siparişlerinde royalty ile hesaplanır.",
-    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still. Orders of licenses whose contracts name only non-DTR licensors (e.g. Formula 1) are no longer classified DTR automatically; Supp. FOB includes royalty for Turkey and overseas orders."
+    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır. Sözleşmeleri yalnız DTR dışı lisansörle tanımlı lisanslarda (ör. Formula 1) siparişler artık otomatik DTR sayılmaz; Supp. FOB Türkiye ve yurt dışı siparişlerinde royalty ile hesaplanır. Küresel Akış kaynak ayrıntılarını çekmece açıldığında alır; Backlog panelleri ilk açılışta aynı satır isteğini paylaşır. Excel ve PowerPoint dosyaları arka planda hazırlanır.",
+    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still. Orders of licenses whose contracts name only non-DTR licensors (e.g. Formula 1) are no longer classified DTR automatically; Supp. FOB includes royalty for Turkey and overseas orders. Global Flow fetches source details when the drawer opens, and Backlog panels share the same initial row request. Excel and PowerPoint files are prepared in the background."
   },
   "schemaVersion": 1,
   "publishedAt": "2026-11-05",
   "bootstrapVisual": false,
   "changes": [
+    {
+      "id": "perf-phase5-global-flow-details",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview · Küresel Akış",
+        "en": "Overview · Global Flow"
+      },
+      "title": {
+        "tr": "Harita kaynak ayrıntılarını çekmece açılınca yükler",
+        "en": "Map source details load when the drawer opens"
+      },
+      "body": {
+        "tr": "Küresel Akış haritaya gereken alanları yükler; kaynak ayrıntıları bir nokta veya rota açıldığında alınır. Detay çekmecesi aynı siparişleri, parsiyelleri ve kaynak alanlarını gösterir. Backlog detayları ve kaynak ayrıntılı Excel akışı korunur.",
+        "en": "Global Flow loads the fields needed by the map and fetches source details when a point or route is opened. The detail drawer retains the same orders, partials and source fields. Backlog detail and source-detailed Excel workflows remain available."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-globalflow-details-tr-light.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log demo verisinde İstanbul çekmecesi: üç sipariş ve 11.900 adet",
+          "en": "Actual Buyer Log demo: the Istanbul drawer with three orders and 11,900 units"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, Türkçe ve açık tema; harita tıklamasından sonra kaynak ayrıntıları yetkili istekle yüklendi.",
+          "en": "Actual post-change app in Turkish and light theme; an authorized request loaded source details after clicking the map."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-backlog-shared-rows",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Backlog panelleri ilk açılışta aynı veri isteğini paylaşır",
+        "en": "Backlog panels share the same request on first opening"
+      },
+      "body": {
+        "tr": "Genel Bakış, Teslimat Analizi ve Grafik, pivotun kaynak revizyonu belli olduktan sonra ortak satır verisini kullanır. Sayfa açılırken Delivery hazırlığının erken başlaması aynı detay isteğini yeniden başlatmaz. Filtreler, sipariş kapsamı ve ekran toplamları korunur.",
+        "en": "Overview, Delivery Analysis and Chart use shared rows once the pivot source revision is known. Early Delivery preparation no longer restarts the same detail request during opening. Filters, order scope and screen totals are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-backlog-shared-rows-tr-light.png",
+        "alt": {
+          "tr": "Gerçek Backlog demo ekranında 20 sipariş ve 71.200 adetlik ortak operasyon özeti",
+          "en": "Actual Backlog demo screen with 20 orders and a shared operation summary of 71,200 units"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama: Genel Bakış özeti hazır; kabul koşusu tüm görünür raporların hazır olmasını ve Delivery toplam eşitliğini ayrıca doğrular.",
+          "en": "Actual post-change app with the Overview summary ready; the acceptance scenario separately verifies all visible reports and matching Delivery totals."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-office-background",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · Dosyalarım",
+        "en": "LCW AI · My files"
+      },
+      "title": {
+        "tr": "Excel ve PowerPoint dosyaları arka planda hazırlanır",
+        "en": "Excel and PowerPoint files are prepared in the background"
+      },
+      "body": {
+        "tr": "Excel ve PowerPoint oluşturma sürerken Buyer Log diğer sunucu isteklerini işlemeye devam eder. Dosyalar aynı biçim ve içerik kurallarıyla Dosyalarım listesine kaydedilir; yayımlanmadan önce oturum ve dosya sahipliği yeniden doğrulanır.",
+        "en": "Buyer Log continues handling other server requests while Excel and PowerPoint files are being created. Files retain the same format and content rules in My files; session and file ownership are checked again before publication."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-office-files-en-dark.png",
+        "alt": {
+          "tr": "Gerçek Dosyalarım ekranında oluşturulmuş demo Excel ve PowerPoint dosyaları",
+          "en": "Actual My files screen with generated demo Excel and PowerPoint files"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, İngilizce ve koyu tema. Demo dosyalar gerçek yerel API ve dosya üreticileriyle oluşturuldu; harici AI oturumu veya credential kullanılmadı.",
+          "en": "Actual post-change app in English and dark theme. Demo files were created through the real local API and renderers, without an external AI session or credentials."
+        }
+      }
+    },
     {
       "id": "license-agency-royalty-orders",
       "type": "fix",
