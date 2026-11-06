@@ -9119,9 +9119,13 @@ async function runRefreshTelemetry(telemetry, connection, operation, category, t
   }
 }
 
+// v7.0.340 — Her sunucu süreci kendi kimliğini taşır. İstemci izlediği
+// yenilemenin, gözetmenin yeniden başlattığı yeni bir süreçte kaybolduğunu
+// buradan ayırt eder (aksi halde sayaç donup 25 dakika bekliyordu).
+const SERVER_INSTANCE_ID = crypto.randomBytes(8).toString('hex');
 function refreshJobState(id) {
   const job = refreshJobs.get(id);
-  if (!job) return { running: false, phase: 'idle', jobId: null };
+  if (!job) return { running: false, phase: 'idle', jobId: null, serverInstanceId: SERVER_INSTANCE_ID };
   const elapsedMs=job.running?Date.now()-job.startedMs:(job.elapsedMs||0);
   const eta=job.eta?{...job.eta,
     remainingMs:job.running&&job.eta.available?Math.max(0,Number(job.eta.estimateMs||0)-elapsedMs):null,
@@ -9129,6 +9133,7 @@ function refreshJobState(id) {
   }:null;
   return {
     jobId: job.jobId || null,
+    serverInstanceId: SERVER_INSTANCE_ID,
     running: Boolean(job.running),
     phase: job.phase || 'idle',
     startedAt: job.startedAt || null,
