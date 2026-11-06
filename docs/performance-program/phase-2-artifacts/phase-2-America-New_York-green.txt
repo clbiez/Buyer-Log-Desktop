@@ -1,0 +1,23 @@
+✔ date repair handles sparse and dense cells, holes, invalid dates and timestamps equally (3.46065ms)
+✔ production read hooks repair cellDates:true in both representations (30.143631ms)
+✔ ASAS seed=7: sparse/dense parser output is exactly equal with production hook order (47.690764ms)
+✔ Antrepo seed=7: sparse/dense parser output is exactly equal with production hook order (8.263067ms)
+✔ CPUpdate seed=7: sparse/dense parser output is exactly equal with production hook order (4.204552ms)
+✔ LFL seed=7: sparse/dense parser output is exactly equal with production hook order (87.260228ms)
+✔ ASAS seed=19: sparse/dense parser output is exactly equal with production hook order (32.806907ms)
+✔ Antrepo seed=19: sparse/dense parser output is exactly equal with production hook order (8.269993ms)
+✔ CPUpdate seed=19: sparse/dense parser output is exactly equal with production hook order (5.163312ms)
+✔ LFL seed=19: sparse/dense parser output is exactly equal with production hook order (55.191805ms)
+✔ ASAS seed=43: sparse/dense parser output is exactly equal with production hook order (21.692094ms)
+✔ Antrepo seed=43: sparse/dense parser output is exactly equal with production hook order (6.264156ms)
+✔ CPUpdate seed=43: sparse/dense parser output is exactly equal with production hook order (3.343253ms)
+✔ LFL seed=43: sparse/dense parser output is exactly equal with production hook order (62.67683ms)
+✔ actual worker enables dense for source tasks while buffer date reads stay sparse (459.083305ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 848.442012

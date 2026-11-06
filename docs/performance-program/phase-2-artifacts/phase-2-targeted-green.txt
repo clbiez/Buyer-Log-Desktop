@@ -1,0 +1,25 @@
+
+> buyer-log-desktop@7.0.338 test
+> node tests/run-tests.js excel-source-dense excel-date-timezone excel-worker-queue file-parser-isolation original-exf-asas-date lfl-period-date-fields antrepo-excel-source
+
+[Buyer Log tests] 7 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (7 dosya)
+✔ tests/antrepo-excel-source-v445.test.js (280.309211ms)
+✔ tests/excel-date-timezone-v581.test.js (690.731624ms)
+✔ tests/excel-source-dense.test.js (2168.075026ms)
+✔ tests/excel-worker-queue.test.js (1443.254554ms)
+✔ tests/file-parser-isolation.test.js (2254.713865ms)
+✔ tests/lfl-period-date-fields-v70106.test.js (975.405619ms)
+✔ tests/original-exf-asas-date-v20261008.test.js (260.933697ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2551.617601
+[Buyer Log tests] Batch 1/1 süresi: 2.6s.
+
+[Buyer Log tests] PASS — 7 test dosyası (2.7s).

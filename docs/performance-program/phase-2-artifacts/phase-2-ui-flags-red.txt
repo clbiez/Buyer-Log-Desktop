@@ -1,0 +1,20 @@
+AssertionError [ERR_ASSERTION]: The requested language and theme must actually be active
++ actual - expected
+
+  {
++   documentLang: 'tr',
++   lang: 'tr',
++   theme: 'light'
+-   documentLang: 'en',
+-   lang: 'en',
+-   theme: 'dark'
+  }
+
+    at /workspace/buyerlog-phase2/resources/app/scripts/performance-ui-acceptance.js:67:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [Object],
+  expected: [Object],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
