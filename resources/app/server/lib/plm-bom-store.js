@@ -6,8 +6,9 @@
  * normalize BOM; Set Style için parent PLM altında child A/B/C kanıtları
  * tutulur. Takım parçaları Buyer Log'da bağımsız model satırı değildir.
  */
+const fs = require('fs');
 const path = require('path');
-const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
+const { SERVER_DATA_ROOT, atomicWriteBuffer } = require('../user-data');
 const { readJsonWithValidatedBackup } = require('./safe-json-read');
 const bomApi = require('./corenectum-bom-api');
 
@@ -184,20 +185,78 @@ function normalizeStore(raw) {
   return out;
 }
 
+/* Artwork sütunu ve CP PLM detayları yalnız bu alanları okur. Tam bileşen
+   listeleri (components/fullComponents) yalnız BOM detay penceresinde
+   /api/plm-sync/bom/:plmId ile istenir; toplu projeksiyona taşınmaz. */
+function summaryEntry(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  return {
+    plmId: entry.plmId,
+    styleId: entry.styleId,
+    isSetStyle: Boolean(entry.isSetStyle),
+    hasPrint: Boolean(entry.hasPrint),
+    totalPrintCount: Number(entry.totalPrintCount) || 0,
+    summary: entry.summary || '',
+    artworkSummary: entry.artworkSummary || '',
+    fabric: entry.fabric || '',
+    fabricSummary: entry.fabricSummary || '',
+    needsAi: Boolean(entry.needsAi),
+    fetchedAt: entry.fetchedAt || null,
+    ai: { status: entry.ai && entry.ai.status || 'not-needed' },
+    placements: (Array.isArray(entry.placements) ? entry.placements : []).map(item => ({
+      placement: item.placement,
+      placementTr: item.placementTr,
+      placementEn: item.placementEn,
+      count: item.count,
+      printType: item.printType,
+    })),
+  };
+}
+
+/* Depo tek JSON dosyasıdır ve binlerce modelde onlarca MB olabilir. Eskiden
+   her okuma (görünen satır başına /bom/batch) dosyayı senkron okuyup bütün
+   modelleri yeniden normalize ediyordu: 2.000 modelde ~0,8 sn olay döngüsü
+   blokajı. Normalize edilmiş depo dosya kimliğiyle (mtime+boyut+inode)
+   bellekte tutulur; dosya başka bir yoldan değişirse (yedekten dönüş, bakım)
+   kimlik değişir ve yeniden okunur. Dönen nesne PAYLAŞILIR: çağıran onu
+   değiştirmez; yazma yolu (saveResults) kopya üzerinde çalışır. */
+function fileIdentity(file) {
+  try {
+    const stat = fs.statSync(file);
+    return `${stat.mtimeMs}:${stat.size}:${stat.ino}`;
+  } catch (_) { return ''; }
+}
+function writeCompact(file, value) {
+  // Girintisiz JSON: aynı veri ~%30 daha küçük, kayıt ve okuma daha hızlı.
+  atomicWriteBuffer(file, Buffer.from(JSON.stringify(value), 'utf8'));
+}
+
 function createStore(file = DEFAULT_FILE) {
+  let cached = null;
+  let cachedIdentity = '';
+  function remember(value) {
+    cachedIdentity = fileIdentity(file);
+    cached = cachedIdentity ? value : null;
+    return value;
+  }
   function load() {
-    return readJsonWithValidatedBackup(file, {
+    const identity = fileIdentity(file);
+    if (cached && identity && identity === cachedIdentity) return cached;
+    const value = readJsonWithValidatedBackup(file, {
       fallback: emptyStore,
       normalize: normalizeStore,
-      restore: value => atomicWriteJson(file, value),
+      restore: restored => writeCompact(file, restored),
     });
+    return remember(value);
   }
   function entry(plmId, source = load()) {
     const id = bomApi.coreId(plmId);
     return id ? source.models[id] || null : null;
   }
   function saveResults(results, now = new Date().toISOString()) {
-    const store = load();
+    const current = load();
+    // Önbellekteki paylaşılan nesne yazma başarısız olursa bozulmasın.
+    const store = { ...current, models: { ...current.models } };
     let written = 0;
     for (const raw of Array.isArray(results) ? results : []) {
       const normalized = normalizeEntry({ ...raw, fetchedAt: raw && raw.fetchedAt || now });
@@ -211,7 +270,8 @@ function createStore(file = DEFAULT_FILE) {
     if (written) {
       store._revision += 1;
       store._updatedAt = now;
-      atomicWriteJson(file, store);
+      writeCompact(file, store);
+      remember(store);
     }
     return { written, revision: store._revision, updatedAt: store._updatedAt };
   }
@@ -229,6 +289,7 @@ module.exports = {
   emptyStore,
   normalizeEntry,
   normalizeStore,
+  summaryEntry,
   createStore,
   load: defaultStore.load,
   entry: defaultStore.entry,

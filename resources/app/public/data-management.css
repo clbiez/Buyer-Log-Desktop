@@ -9,6 +9,8 @@
    (.empty) ve ikonlar (.ic) ortak primitive'lerdir ve yeniden tanımlanmaz.
    =================================================================== */
 
+.dmPanelBody { display: flow-root; min-width: 0; }
+
 .dataMgmt { display: flex; flex-direction: column; gap: 12px; padding-bottom: 24px; }
 
 /* --- Başlık --- */
@@ -17,6 +19,7 @@
 .dmSub { margin: 2px 0 0; }
 .dmHeadActions { display: flex; gap: 6px; flex-shrink: 0; }
 .dmSectionLabel { margin-top: 2px; }
+.dmConnectionBody { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 12px; }
 
 /* --- Corporate Integration Lab --- */
 .dmLabPanel { display: flex; flex-direction: column; min-width: 0; }
@@ -188,10 +191,54 @@
 .dmsMapSummary { display: flex; gap: 14px; flex-wrap: wrap; }
 .dmsFoot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 9px 11px; }
 
-/* --- Filtre düzenleyici (satır içi) --- */
-.dmFilterSlot:empty { display: none; }
-.dmFilterSlot.isOpen { display: block; }
+/* --- Filtre düzenleyici — v2026-11-04: Horizon çekmecesine monte edilir --- */
 .dmFilterEditor { padding: 11px; display: flex; flex-direction: column; gap: 9px; }
+
+/* Horizon çekmecesi. Kabuk Backlog Analiz Filtreleri çekmecesidir
+   (.blvFilterRoot/.blvFilterDrawer, backlog-overview.css); burada yalnız
+   Horizon'a özgü yerleşim var. Renk/çerçeve ui-components.css'te. */
+.blvFilterDrawer.dmHorizonAside { width: min(1080px, 96vw); }
+.blvFilterHead.dmHorizonHead { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 10px; padding-bottom: 0; }
+.dmHorizonHeadTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.dmHorizonHeadTop p { max-width: 720px; }
+.dmHorizonSources { align-self: flex-start; margin-bottom: 8px; }
+.dmHorizonMount { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.dmHorizonMount > .blvFilterEditorEmpty { flex: 1; }
+.dmHorizonMount > .dmfEmpty { padding: 20px; }
+.dmHorizonMount > .dmFilterEditor { flex: 1; min-height: 0; padding: 0; gap: 0; }
+.dmHorizonMount .dmfHead { padding: 10px 20px; align-items: center; }
+.dmHorizonMount .dmfBody { flex: 1; min-height: 0; overflow: auto; padding: 12px 20px; display: flex; flex-direction: column; gap: 9px; }
+.dmHorizonMount .dmfFoot { padding: 10px 20px; }
+.dmfModeToggle { margin-left: auto; }
+.dmfModeToggle > button:disabled { opacity: .45; cursor: default; }
+
+/* Basit kip: aktif filtre kartları + sütun kataloğu + değer düzenleyici. */
+.dmfSimple { flex: 1; min-height: 460px; display: flex; flex-direction: column; gap: 8px; }
+.dmfActive { display: flex; flex-wrap: wrap; gap: 6px; }
+.dmfCard { display: flex; align-items: stretch; min-width: 170px; max-width: 300px; }
+.dmfCardMain { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+  text-align: left; padding: 6px 9px; cursor: pointer; }
+.dmfCardMain b,.dmfCardMain small,.dmfCardPair { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dmfCard .blvFilterRemove { margin-right: 0; }
+.dmfWorkspace { flex: 1; min-height: 0; }
+.dmfSourceTabs { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
+.dmfColTable { display: block; overflow: hidden; text-overflow: ellipsis; }
+.dmfKindToggle { display: inline-flex; margin-bottom: 10px; }
+.dmfValueList { max-height: min(44vh, 420px); }
+.dmfFreeValue { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.dmfFreeValue input { height: var(--ui-control-height); padding: 0 8px; }
+.dmfPairBox { margin-top: 16px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.dmfPairBoxHead { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.dmfPairPick { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.dmfPairPick .dmfField { max-width: 100%; }
+.dmfPairStatus { margin: 0; }
+.dmfPairCustomHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.dmfPairBox > .tbtn { align-self: flex-start; }
+@media (max-width: 760px) {
+  .blvFilterDrawer.dmHorizonAside { width: 100vw; }
+  .dmfSimple { min-height: 0; }
+  .dmHorizonMount .dmfHead,.dmHorizonMount .dmfBody,.dmHorizonMount .dmfFoot { padding-left: 16px; padding-right: 16px; }
+}
 
 .dmfHead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .dmfNameField { display: flex; flex-direction: column; gap: 3px; }

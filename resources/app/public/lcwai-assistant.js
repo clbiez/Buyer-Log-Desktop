@@ -457,7 +457,9 @@
       state.requestId = `bl${Date.now().toString(36)}${(++requestSeq).toString(36)}`;
       try {
         const request = await options.buildRequest(text);
-        const result = await ask({
+        // Same session path as BuyerLogAI.ask: an absent/expired session first
+        // tries the silent desktop sign-in once, then retries the request.
+        const result = await withDesktopAuth(() => ask({
           ...request, source: options.source, requestId: state.requestId,
           onProgress: event => {
             if (state.destroyed) return;
@@ -468,7 +470,7 @@
               setStatus(L(`LCW AI yazıyor… ${event.chars || 0} karakter`, `LCW AI is writing… ${event.chars || 0} characters`), 'busy');
             }
           },
-        });
+        }));
         if (state.destroyed) return;
         let interpreted;
         try { interpreted = await options.interpret(result); }

@@ -26,6 +26,7 @@ function fixture(previous) {
     kolManufacturers: [],
     kolCustomCols: [],
     kolNextId: 2,
+    kolLflCountryExclusions: [],
     kolStatusEntries: () => [],
     kolPersistableRow: (r) => r,
     kolWorkspacePendingKey: () => "draft",

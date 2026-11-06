@@ -831,12 +831,6 @@ tfoot .collectionWeightedAverage .collectionFooterCaption{display:block;}
 @media(max-width:640px){
   .todoCard{height:80vh;max-height:80vh;}
 }
-.tablewrap table td.frzL,.tablewrap table th.frzL{
-  position:sticky;
-}
-.tablewrap.freezePick{position:relative;}
-.tablewrap.freezePick table{cursor:crosshair;}
-.freezeLaser{position:absolute;width:2px;pointer-events:none;}
 
 .verHistFoot .tbtn .ic{width:13px;height:13px;margin-right:5px;}
 .mfrCard{width:min(940px,95vw);height:70vh;max-height:70vh;}
@@ -1842,7 +1836,6 @@ input.kolLandedInput::placeholder{opacity:.62;}
 #kolTable tbody .kolLandedCard{padding:2px 3px;}
 .kolLandedInputGroup{display:inline-flex;align-items:center;gap:0;flex:none;min-width:0;height:18px;}
 .kolLandedInputGroup>i{opacity:.72;pointer-events:none;}
-.tablewrap.freezePick thead{position:relative;}
 .qhTopActions{display:flex;align-items:center;gap:8px;flex:none;}
 .qhViewSwitch{display:inline-flex;align-items:center;padding:3px;}
 .qhViewBtn{height:30px;padding:0 10px;cursor:pointer;white-space:nowrap;}
@@ -2117,9 +2110,6 @@ tfoot .collectionWeightedAverage strong{text-align:right;}
 .prepareEmailOperationBar>span{width:38%;}
 @media(max-width:720px){
   .prepareEmailProgressNote{left:12px!important;right:12px!important;width:auto!important;}
-}
-.tablewrap table tbody td.frzL{
-  isolation:isolate;
 }
 .ovNoteDate{white-space:nowrap;}
 #cpTable tbody tr{height:var(--cp-row-h-cp,var(--cp-row-h,46px));}
@@ -2467,12 +2457,6 @@ tfoot .collectionWeightedAverage strong{text-align:right;}
 @media(max-width:820px){.freightCartonField{grid-column:span 2;}}
 .refreshAutoOpenToggle{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
 .refreshAutoOpenToggle input{width:13px;height:13px;cursor:pointer;}
-#kolTable tbody td.editTd.frzL,#kolTable tbody td.kolPictureCell.frzL,#kolTable thead th.frzL,#kolTable tfoot td.frzL{
-  position:sticky;
-}
-#cpTable tbody td.editTd.frzL,#ordersTable tbody td.editTd.frzL{
-  position:sticky;
-}
 .refreshStagesOverlay{position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:64px 16px 16px;pointer-events:none;}
 .refreshStagesOverlay .refreshStagesCard{pointer-events:auto;}
 .refreshStagesCard{width:min(340px,calc(100vw - 24px));max-height:none;padding:0;display:flex;flex-direction:column;overflow:visible;}
@@ -3475,6 +3459,7 @@ td.plmSampleCell .badge+.badge{margin-left:2px}
 .trxModalBody{padding:14px 18px;overflow:auto;display:flex;flex-direction:column;gap:12px;min-height:0;}
 .trxModalFoot{padding:10px 18px;display:flex;align-items:center;gap:8px;}
 .trxCard{padding:12px 14px;display:flex;flex-direction:column;gap:10px;}
+.trxDisclosureBody{display:flex;flex-direction:column;gap:10px;min-width:0;}
 .trxCard.is-collapsed{gap:0;}
 .trxCardHead{display:flex;align-items:center;gap:10px;}
 .trxCardTitle{flex:1;min-width:0;}

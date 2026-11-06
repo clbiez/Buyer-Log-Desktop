@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-11-04",
+  "publishedAt": "2026-11-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Arayüz geçişleri ve dengeli sol navigasyon",
-    "en": "UI transitions and balanced sidebar navigation"
+    "tr": "İki bölmeli sütun dondurma · Çalışma alanı ve modül geçişi iyileştirmeleri ve LCW AI geçmişi · Backlog performansı",
+    "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history · Backlog performance"
   },
   "summary": {
-    "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır. Giriş, genel kültür ve Buyer Log çalışma alanı arasındaki geçişler de tema efektindeki gibi sırayla katlanan üçgenlerle açılır. Dar menü simgeleri ortalandı. Genişlemede satır konumları korunur; klavyeyle gezinme, uzun etiketler ve Görünüm menüsü iyileştirildi. Karanlık temadaki açılır yüzeyler ve geçici genişleyen sol navigasyon artık aynı aydınlık gölge rengini kullanır. Koleksiyon Previous Season, LFL ve Sezon Etkisi referansları yeniden girişte ve diğer kaynaklar yenilendiğinde korunur; yalnız başarılı manuel yenileme kayıtlı değerleri değiştirir.",
-    "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred. Transitions from sign-in to trivia and into the Buyer Log workspace also use the same triangles folding in sequence as the theme effect. Collapsed menu icons are centered. Rows keep their positions during expansion; keyboard navigation, long labels and the Appearance menu have been improved. Floating surfaces and the temporarily expanded sidebar now share the same light shadow color in dark mode. Collection Previous Season, LFL and Season Impact references survive sign-in and refreshes of other sources; only a successful manual refresh replaces saved values."
+    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır.",
+    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still."
   },
   "changes": [
     {
@@ -41,309 +41,495 @@
       }
     },
     {
-      "id": "collection-lfl-durable-references",
-      "type": "fix",
-      "module": {"tr": "Koleksiyon", "en": "Collection"},
-      "title": {"tr": "Previous Season ve LFL verileri kaybolmaz", "en": "Previous Season and LFL data stays available"},
-      "body": {
-        "tr": "Koleksiyonun Previous Season, LFL ve Sezon Etkisi referansları kullanıcı ve gerçek erişim kapsamına göre kalıcı saklanır. Yeniden giriş, uygulamayı kapatıp açma ve yalnız CP gibi başka bir kaynağı yenileme bu değerleri silmez. Referansları yenile düğmesi yeni veriyi kaydeder; kaynak boşsa, eski referans grupları eksikse veya kayıt başarısızsa mevcut değerler korunur ve çekmecede bilgi gösterilir. Kaynak sürümü değiştiğinde sipariş detayları referansları kendiliğinden değiştirmez; güncel detaylar için önce referansları yenileyin. Elle yüklenen LFL kaynak verisi de yeniden açılış için kaydedilir.",
-        "en": "Collection's Previous Season, LFL and Season Impact references are saved permanently for each user and effective access scope. Signing in again, restarting the app or refreshing another source such as CP does not clear these values. Refresh references saves new data; if the source is empty, previous reference groups are missing or saving fails, existing values are preserved and the drawer explains the issue. When the source revision changes, order details do not automatically replace references; refresh references first for current details. Manually uploaded LFL source data is also saved for the next startup."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "collection-lfl-persistence.png",
-        "alt": {"tr": "Eksik kaynakla yenileme sonrasında korunan Previous Season ve LFL değerleri", "en": "Previous Season and LFL values preserved after refreshing an incomplete source"},
-        "caption": {"tr": "Gerçek Buyer Log, izole demo verisi: yenileme başarısız olsa da kayıtlı referanslar korunur.", "en": "Actual Buyer Log with isolated demo data: saved references survive a failed refresh."}
-      }
-    },
-    {
-      "id": "overview-page-slide",
-      "type": "improvement",
+      "id": "excel-import-lcw-ai",
+      "type": "feature",
       "module": {
-        "tr": "Overview",
-        "en": "Overview"
+        "tr": "Excel İçe Aktarma",
+        "en": "Excel Import"
       },
       "title": {
-        "tr": "Overview sayfaları arasında yönlü kayma",
-        "en": "Directional slides between Overview pages"
+        "tr": "Excel eşleme ve veri kontrolünde LCW AI",
+        "en": "LCW AI for Excel mapping and data review"
       },
       "body": {
-        "tr": "Overview sayfaları sekmeler, nokta göstergeleri, ok tuşları veya trackpad ile değiştirildiğinde içerik geçiş yönünden kayarak gelir. Hızlı geçişlerde önceki hareket iptal edilir; düzenleme sırasında, hareket kapalıyken veya azaltılmış hareket tercihinde sayfa anında açılır.",
-        "en": "When switching Overview pages using tabs, dots, arrow keys or a trackpad, content slides in from the navigation direction. Rapid navigation cancels the previous slide; pages open immediately during editing, when motion is off or when reduced motion is preferred."
+        "tr": "Import your Excel içinden seçili sayfanın örnek satırlarını LCW AI ile inceleyin. Sütun eşlemeleri, eşleşme alanları ve güvenli biçim düzeltmeleri önce önerilir; hücrelerin önce/sonra değerleri sayfalı listede gösterilir. Öneri kabul edildiğinde mevcut aktarım önizlemesi yenilenir ve değişiklikler geri alınabilir. Eksik kimlikler, belirsiz eşleşmeler, tekrarlar ve farklı para birimleri otomatik değiştirilmez. Kayıt yalnız son aktarım onayıyla yapılır.",
+        "en": "Review sample rows from the selected sheet with LCW AI in Import your Excel. Column mappings, match fields and safe format corrections are proposed first, with paginated before/after cell values. Accepting a suggestion rebuilds the existing import preview and supports undo. Missing identifiers, ambiguous matches, duplicates and foreign currencies are never changed automatically. Data is saved only after final import approval."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "overview-page-slide.png",
+        "src": "excel-import-lcw-ai.png",
         "alt": {
-          "tr": "Overview sayfası sola doğru kayarak açılırken",
-          "en": "Overview page sliding in from the left"
+          "tr": "Gerçek Buyer Log içinde LCW AI eşleme önerisi ve iki fiyat hücresinin önce/sonra önizlemesi",
+          "en": "LCW AI mapping suggestion and before/after preview of two price cells in the actual Buyer Log"
         },
         "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo oturumunda kayma animasyonu sırasında yakalandı.",
-          "en": "Actual post-change Buyer Log, captured during the slide animation in an isolated demo session."
+          "tr": "İzole demo Excel ile gerçek uygulama; LCW AI yanıtı kabul testi için taklit edildi. Sütun önerisi ve yerel doğrulayıcının ürettiği hücre düzeltmeleri gösteriliyor.",
+          "en": "Actual app with an isolated demo workbook; the LCW AI response was stubbed for acceptance testing. Shows the column suggestion and cell corrections produced by the local validator."
         }
       }
     },
     {
-      "id": "startup-login-folding",
+      "id": "backlog-analysis-scope-performance",
       "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Geniş horizon üzerinde hızlı Backlog analizi",
+        "en": "Faster Backlog analysis within a broad horizon"
+      },
+      "body": {
+        "tr": "Sezon, Buyer ve uygun sipariş filtreleri pahalı hesaplamalardan önce uygulanır. Genel Bakış, Teslimat Analizi ve Grafik aynı filtreli veriyi paylaşır; gruplama değiştiğinde detaylar yeniden indirilmez. Filtre seçenekleri yalnız açılan sütun için hazırlanır ve diğer sezonlar görünür kalır. Kaynak yenilemesi tüm panellere yansır; IAS parsiyelleri, üretim bakiyesi, Excel ve ekran toplamları aynı kuralları korur.",
+        "en": "Season, Buyer and eligible order filters apply before expensive calculations. Overview, Delivery Analysis and Chart share the same filtered data; changing grouping does not download details again. Filter choices load only for the opened column and other seasons remain available. Source refreshes update all panels while IAS partials, production balances, Excel and screen totals preserve their existing rules."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-analysis-scope.png",
+        "alt": {
+          "tr": "Backlog analizinde S7 seçili ve 59 satır görüntülenirken W6 ile W7 seçenekleri de listeleniyor",
+          "en": "Backlog analysis showing 59 rows with S7 selected while retaining W6 and W7 choices"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: analiz dar kapsamda çalışır; diğer sezonların filtre seçenekleri ayrı yüklenir.",
+          "en": "Actual Buyer Log with isolated demo data: analysis uses the narrow scope while other seasons remain available through separately loaded filter choices."
+        }
+      }
+    },
+    {
+      "id": "table-freeze-two-panes",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Donmuş sol bölme kendi içinde kaydırılır",
+        "en": "The frozen left pane scrolls on its own"
+      },
+      "body": {
+        "tr": "Sütunları Dondur artık iki bağımsız bölme sunar: donmuş sol bölme ve sağdaki tablo ayrı ayrı sağa sola kaydırılır. Sol bölmenin altındaki kendi kaydırma çubuğu, bölme üzerinde yatay tekerlek/trackpad veya Shift+tekerlek yalnız donmuş sütunları kaydırır; sağ taraf yerinde kalır. Bölme sınırı sürüklenerek genişletilir veya daraltılır, genişlik tablo görünümüyle hatırlanır; sınıra çift tıklamak tüm donmuş sütunları gösterir. Donmuş sütunlar ekrana sığmazsa dondurma artık iptal edilmez; bölme daralır ve kendi içinde kaydırılır. Klavyeyle donmuş bölmede gizli kalan bir hücreye gelindiğinde bölme onu gösterir.",
+        "en": "Freeze Columns now offers two independent panes: the frozen left pane and the table on the right scroll left and right separately. The frozen pane's own scrollbar, horizontal wheel/trackpad over the pane or Shift+wheel scroll only the frozen columns while the right side stays put. Drag the pane boundary to make it wider or narrower; the width is remembered with the table view, and double-clicking the boundary shows all frozen columns. If the frozen columns do not fit on screen, freezing is no longer cancelled; the pane narrows and scrolls on its own. When the keyboard moves to a cell hidden in the frozen pane, the pane reveals it."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-freeze-pane-scroll.png",
+        "alt": {
+          "tr": "On donmuş sütunlu CP Tracker: sol bölme kendi çubuğuyla kaydırılmış, sağ bölme ayrı kaydırılmış, aradaki sınır belirgin",
+          "en": "CP Tracker with ten frozen columns: the left pane scrolled with its own bar, the right pane scrolled separately, with a clear boundary"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: donmuş sol bölme ve sağ tablo bağımsız olarak kaydırıldı.",
+          "en": "Actual Buyer Log with isolated demo data: the frozen left pane and the right table are scrolled independently."
+        }
+      }
+    },
+    {
+      "id": "license-cards-personal-favorites",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Kendi lisans favorilerinizi atlas için tek seferde seçin",
+        "en": "Select your personal license favorites for the atlas in one click"
+      },
+      "body": {
+        "tr": "Satırdaki yıldızla lisans kartını kendi favorilerinize ekleyin veya çıkarın; Favorilerim ile listeyi süzün. Favorileri seç, arama ve filtrelerden bağımsız bütün favorilerinizi mevcut atlas seçimine ekler. Favoriler kullanıcı hesabına bağlı kişisel tercihlerde saklanır; aynı uygulama sunucusuna bağlanan tarayıcılarda açılışta yüklenir. Kartları yalnız görüntüleyebilen kullanıcılar da kendi favorilerini yönetebilir; ortak kartları düzenleme yetkisi değişmez.",
+        "en": "Use the star on a row to add or remove a license card from your own favorites; filter the list with My favorites. Select favorites adds all your favorites to the existing atlas selection regardless of search and filters. Favorites are stored in account-specific personal preferences and loaded at startup in browsers connected to the same application server. View-only users can manage their own favorites too; shared-card editing permissions are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-personal-favorites.png",
+        "alt": {
+          "tr": "Lisans kartlarında iki kişisel favori ve atlas için toplu seçim",
+          "en": "Two personal favorites in license cards and bulk selection for the atlas"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi ve yalnız görüntüleme yetkisi: yıldızlar kişiseldir; Favorileri seç iki lisansı atlas seçimine ekler.",
+          "en": "Actual Buyer Log with isolated demo data and view-only access: stars are personal; Select favorites adds two licenses to the atlas selection."
+        }
+      }
+    },
+    {
+      "id": "staggered-disclosures",
+      "type": "improvement",
+      "module": {
+        "tr": "Arayüz",
+        "en": "Interface"
+      },
+      "title": {
+        "tr": "Uygulama genelinde kademeli açılma ve kapanma",
+        "en": "Staggered expansion and collapse across the application"
+      },
+      "body": {
+        "tr": "Veri Yönetimi, Backlog, Global Flow, transit analizi, alan seçicileri ve standart açılır bölümler aynı Motion+ hareketini kullanır. Panel açılırken en fazla altı görünür içerik grubu 32 ms arayla görünür; kapanırken içerik söner ve panel daralır. Hızlı tıklamalarda son tercih geçerlidir; odak, alan değerleri, klavye ve azaltılmış hareket korunur.",
+        "en": "Data Management, Backlog, Global Flow, transit analysis, field pickers and native disclosures use the same Motion+ profile. Up to six visible content groups appear 32 ms apart as a panel opens; content fades as the panel contracts on close. Rapid clicks settle on the latest choice, preserving focus, field values, keyboard operation and reduced motion."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "staggered-disclosures.png",
+        "alt": {
+          "tr": "Veri Yönetimi Horizon ve Yenileme bölümünde kademeli olarak açılan içerik",
+          "en": "Content appearing in stages in the Data Management Horizon and Refresh section"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo oturumu; ortak bölüm animasyonunun açılış karesi.",
+          "en": "Actual Buyer Log in an isolated demo session, captured during the shared disclosure opening animation."
+        }
+      }
+    },
+    {
+      "id": "data-management-collapsed-sections",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Daraltılmış bölümler ve birleşik bağlantı yönetimi",
+        "en": "Collapsed sections and unified connection management"
+      },
+      "body": {
+        "tr": "Entegrasyon laboratuvarı, bağlantı kartları ve veri eşleştirme ayarları Bağlantı ve yapılandırma başlığı altında birlikte açılır ve kapanır. Bu bölüm, Kaynak modu, Horizon ve yenileme ve Araçlar ilk kullanımda daraltılmış gelir; sonraki açma-kapama tercihleriniz hatırlanır. Diğer ekranlardan bir kaynağa, modüle veya araca gidildiğinde ilgili bölüm otomatik açılır.",
+        "en": "The integration lab, connection cards and data matching settings expand and collapse together under Connections and configuration. This section, Source mode, Horizon and refresh, and Tools start collapsed on first use; subsequent expand/collapse preferences are remembered. Navigating to a source, module or tool from another screen automatically expands its section."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-management-collapsed-sections.png",
+        "alt": {
+          "tr": "Veri Yönetimi ekranında başlangıçta daraltılmış dört bölüm",
+          "en": "Four initially collapsed sections in Data Management"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo oturumu: Bağlantı ve yapılandırma, Kaynak modu, Horizon ve yenileme ve Araçlar kapalı başlar.",
+          "en": "Actual Buyer Log in an isolated demo session: Connections and configuration, Source mode, Horizon and refresh, and Tools start collapsed."
+        }
+      }
+    },
+    {
+      "id": "startup-login-no-flash",
+      "type": "fix",
       "module": {
         "tr": "Açılış",
         "en": "Startup"
       },
       "title": {
-        "tr": "Girişten genel kültüre katlanan üçgenler",
-        "en": "Folding triangles from sign-in to trivia"
+        "tr": "Girişte kesintisiz genel kültür geçişi",
+        "en": "Seamless trivia transition after sign-in"
       },
       "body": {
-        "tr": "Masaüstünde başarılı girişten sonra giriş ekranı, sol alt köşeden yayılan sırayla katlanan üçgenlerle genel kültür ekranını açar. Parola görüntü yakalanmadan temizlenir; tek kare yalnız aynı pencerenin kısa ömürlü belleğinde bir kez kullanılır. Yakalama başarısızsa giriş bekletilmez.",
-        "en": "After a successful desktop sign-in, the sign-in screen folds into triangles in sequence from the bottom-left corner to reveal the trivia screen. The password is cleared before capture; the single frame is used once from short-lived memory in the same window. Capture failure does not block sign-in."
+        "tr": "Girişten genel kültüre geçiş ilk çizimden önce hazırlanır; genel kültür yalnız katlanan üçgenlerin altından açılır. Geciken veya başarısız kare aktarımı giriş ekranını sonradan geri getirmez. Animasyon kapalıyken veya azaltılmış hareket tercihinde ekran doğrudan açılır.",
+        "en": "The transition from sign-in to trivia is prepared before the first paint, revealing trivia through the folding triangles. A delayed or failed frame handoff never brings the sign-in screen back later. With motion off or reduced motion enabled, the screen opens directly."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "startup-login-folding.png",
+        "src": "startup-login-no-flash.png",
         "alt": {
-          "tr": "İzole demo oturumunda giriş ekranı üçgenler halinde katlanırken alttan genel kültür kartı görünüyor; parola alanı boş.",
-          "en": "In an isolated demo session, the sign-in screen folds into triangles to reveal the trivia card underneath; the password field is empty."
+          "tr": "Giriş ekranının katlanan üçgenleri altından ilk kez açılan genel kültür kartı",
+          "en": "Trivia card first revealed beneath the folding triangles of the sign-in screen"
         },
         "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; demo verilerle katlanma sırasında yakalandı.",
-          "en": "Actual post-change Buyer Log UI, captured during folding with demo data."
+          "tr": "İzole demo oturumunda gerçek Buyer Log; parola temizlendikten sonra geçiş sırasında yakalandı. İlk çizim sırası tarayıcıda kare kare kontrol edildi.",
+          "en": "Actual Buyer Log in an isolated demo session, captured during the transition after clearing the password. First-paint order was checked frame by frame in the browser."
         }
       }
     },
     {
-      "id": "startup-trivia-folding",
+      "id": "collection-lfl-country-checkboxes",
       "type": "improvement",
-      "module": {
-        "tr": "Açılış",
-        "en": "Startup"
-      },
-      "title": {
-        "tr": "Genel kültürden Buyer Log’a aynı üçgen geçişi",
-        "en": "The same triangle transition from trivia to Buyer Log"
-      },
-      "body": {
-        "tr": "Buyer Log’a devam et düğmesi, genel kültür ekranının kendisini tema geçişiyle aynı üçgen motorunda sırayla katlayarak çalışma alanını açar. Kayıtlı hız ve üçgen boyutu kullanılır; tema efekti tercihi değişmez. Klavye odağı görünen Bağlantılar düğmesine döner. Hazır olma kapıları ve kullanıcının Devam kararı korunur. Hareket azaltıldığında, kapatıldığında, yazılım çiziminde veya yakalama yoksa ekran anında açılır.",
-        "en": "Continue to Buyer Log folds the trivia screen itself in sequence using the same triangle engine as theme transitions, revealing the workspace. Saved speed and triangle size are used without changing the chosen theme effect. Keyboard focus returns to the visible Connections button. Readiness gates and the explicit Continue step are preserved. Reduced motion, disabled motion, software rendering or unavailable capture open the screen immediately."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "startup-trivia-folding.png",
-        "alt": {
-          "tr": "İzole demo oturumunda genel kültür ekranının sol altından sırayla katlanan üçgenler Buyer Log çalışma alanını açıyor.",
-          "en": "In an isolated demo session, triangles folding in sequence from the bottom-left of the trivia screen reveal the Buyer Log workspace."
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; demo verilerle katlanma sırasında yakalandı.",
-          "en": "Actual post-change Buyer Log UI, captured during folding with demo data."
-        }
-      }
-    },
-    {
-      "id": "sidebar-centered-icon-column",
-      "type": "fix",
-      "module": {
-        "tr": "Sol navigasyon",
-        "en": "Sidebar navigation"
-      },
-      "title": {
-        "tr": "Dar menü simgeleri tüm boyutlarda ortalanır",
-        "en": "Collapsed menu icons are centered at every size"
-      },
-      "body": {
-        "tr": "Çakışan kenar boşluğu kuralları kaldırıldı. Modül simgeleri, logo, menü düğmesi ve Görünüm simgesi aynı merkez eksenini kullanır. Fare veya klavyeyle geçici genişlemede modül simgeleri ve satırlar yer değiştirmez; çalışma alanı kaymaz. Seçili bölüm ince bir göstergeyle belirginleşir; uzun adlar üç noktayla kısaltılır.",
-        "en": "Conflicting padding rules were removed. Module icons, the logo, menu toggle and Appearance icon share one center axis. Temporary expansion with the pointer or keyboard keeps module icons and rows in place without shifting the workspace. A subtle marker identifies the selected module, and long names use ellipsis."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "sidebar-centered-icons.png",
-        "alt": {
-          "tr": "Gerçek Buyer Log dar sol menüsünde ortalanmış simgeler",
-          "en": "Centered icons in the actual Buyer Log collapsed sidebar"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek uygulama, izole demo verisi. İki tema, dört boyut ve TR/EN kontrol edildi.",
-          "en": "Actual post-change application with isolated demo data. Both themes, four sizes and TR/EN were checked."
-        }
-      }
-    },
-    {
-      "id": "sidebar-keyboard-appearance-polish",
-      "type": "improvement",
-      "module": {
-        "tr": "Sol navigasyon · Görünüm",
-        "en": "Sidebar · Appearance"
-      },
-      "title": {
-        "tr": "Klavye ve Görünüm menüsü daha tutarlı",
-        "en": "More consistent keyboard navigation and Appearance settings"
-      },
-      "body": {
-        "tr": "Modüller ve Görünüm eylemleri arasında ok, Home ve End tuşlarıyla gezinilir; odak değişimi modülü açmaz. Escape Görünüm menüsünü kapatıp odağı düğmeye döndürür. Kısa pencerelerde ayarlar ekrana sığar ve kendi içinde kayar. Tema efekti seçenekleri ve hız açıklaması dil değişimini anında izler. Daraltma düğmesinin erişilebilir adı ve ipucu seçili dile uygun kalır; azaltılmış hareket korunur.",
-        "en": "Arrow, Home and End keys move through modules and Appearance actions without activating modules. Escape closes Appearance and restores focus to its trigger. Settings fit short windows and scroll internally. Theme effect options and speed descriptions follow language changes immediately. The collapse button's accessible name and tooltip stay in the selected language, and reduced motion is respected."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "sidebar-appearance-short.png",
-        "alt": {
-          "tr": "Kısa Buyer Log penceresine sığan İngilizce Görünüm ayarları",
-          "en": "English Appearance settings fitting a short Buyer Log window"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek uygulama, 960×480 pencere ve izole demo verisi. Açık ayarlarda dil değişimi ve klavye odağı kontrol edildi.",
-          "en": "Actual post-change application at 960×480 with isolated demo data. Language switching in open settings and keyboard focus were checked."
-        }
-      }
-    },
-    {
-      "id": "refresh-fine-branches",
-      "type": "improvement",
-      "module": {
-        "tr": "Yenileme",
-        "en": "Refresh"
-      },
-      "title": {
-        "tr": "Yenileme seçenekleri ince çizgilerle dallanıyor",
-        "en": "Refresh options unfold into fine branches"
-      },
-      "body": {
-        "tr": "Yenileme butonu aşağıya uzanan ince çizgilerle CP, ALL ve LFL gibi kısa kodlu kareleri açar. Tam kapsam ve son yenileme zamanı odaklanan karenin altında görünür. Kapsamlar mevcut ayarlardan okunur; klavye, azaltılmış hareket ve işlem sırasındaki aşama görünümü korunur.",
-        "en": "The refresh button unfolds downward into short-code squares such as CP, ALL and LFL, connected by fine lines. Full scope and last refresh time appear below the focused square. Scopes follow current settings; keyboard navigation, reduced motion and the in-progress stages view are preserved."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "refresh-fine-branches.png",
-        "alt": {
-          "tr": "Buyer Log üst çubuğundan aşağı dallanan yenileme kareleri",
-          "en": "Refresh squares branching below the Buyer Log top bar"
-        },
-        "caption": {
-          "tr": "İzole demo verilerle çalışan Buyer Log’da ince dallanma menüsü.",
-          "en": "Fine branches menu in Buyer Log running with isolated demo data."
-        }
-      }
-    },
-    {
-      "id": "chronological-season-filter",
-      "type": "fix",
-      "module": {
-        "tr": "Filtreler ve tablolar",
-        "en": "Filters and tables"
-      },
-      "title": {
-        "tr": "Kronolojik sezon sıralaması",
-        "en": "Chronological season ordering"
-      },
-      "body": {
-        "tr": "Sezonlar filtrelerde ve tablolarda yıl ve sezon sırasına göre karşılaştırılır: S5, W5, S6, W6, S7, W7. Azalan sıralama aynı kronolojiyi tersine çevirir. Koleksiyon, CP, Siparişler, LFL ve dinamik analiz filtreleri ortak kuralı kullanır.",
-        "en": "Filters and tables compare seasons by year with Summer before Winter: S5, W5, S6, W6, S7, W7. Descending sorting reverses the same chronology. Collection, CP, Orders, LFL and dynamic analysis filters share this rule."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "chronological-season-filter.png",
-        "alt": {
-          "tr": "Kronolojik sezon sıralaması gösteren gerçek Buyer Log ekranı",
-          "en": "Actual Buyer Log showing chronological season ordering"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisiyle doğrulandı.",
-          "en": "Actual post-change Buyer Log, verified with isolated demo data."
-        }
-      }
-    },
-    {
-      "id": "chronological-month-filter",
-      "type": "fix",
-      "module": {
-        "tr": "Filtreler ve tablolar",
-        "en": "Filters and tables"
-      },
-      "title": {
-        "tr": "MB aylarında takvim sırası",
-        "en": "Calendar ordering for budget months"
-      },
-      "body": {
-        "tr": "MB ayı ve ay içeren dinamik filtreler alfabetik sıra yerine yıl ve ay sırasını kullanır. JUNE 2027, JULY 2027’den önce gelir; Türkçe ve İngilizce ay adları ile sayısal ay kodları aynı kronolojide değerlendirilir.",
-        "en": "Budget months and dynamic month filters use year and month order. JUNE 2027 precedes JULY 2027; Turkish and English month names and numeric period keys follow the same chronology."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "chronological-month-filter.png",
-        "alt": {
-          "tr": "MB aylarında takvim sırası gösteren gerçek Buyer Log ekranı",
-          "en": "Actual Buyer Log showing calendar ordering for budget months"
-        },
-        "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log; izole demo verisiyle doğrulandı.",
-          "en": "Actual post-change Buyer Log, verified with isolated demo data."
-        }
-      }
-    },
-    {
-      "id": "unified-dark-surface-shadows",
-      "type": "fix",
-      "module": {
-        "tr": "Görünüm ve navigasyon",
-        "en": "Appearance and navigation"
-      },
-      "title": {
-        "tr": "Karanlık temada tutarlı aydınlık gölgeler",
-        "en": "Consistent light shadows in dark mode"
-      },
-      "body": {
-        "tr": "Daraltılmış sol navigasyon fare veya klavyeyle geçici açıldığında siyah kalan kenar gölgesi düzeltildi. Navigasyon, açılır menüler, pencereler ve çekmeceler aynı tema duyarlı gölge rengini paylaşır; karanlık temada aydınlık, açık temada koyu gölge kullanılır.",
-        "en": "Fixed the black edge shadow when the collapsed sidebar temporarily expands with the mouse or keyboard. Navigation, pop-up menus, dialogs and drawers share one theme-aware shadow color: light in dark mode and dark in light mode."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "unified-dark-shadow-rail.png",
-        "alt": {
-          "tr": "Karanlık temada aydınlık kenar gölgesiyle geçici genişleyen sol navigasyon",
-          "en": "Temporarily expanded sidebar with a light edge shadow in dark mode"
-        },
-        "caption": {
-          "tr": "Sol navigasyon, pencereler ve çekmecelerle aynı aydınlık gölge rengini kullanır. Demo verisiyle gerçek Buyer Log ekranı.",
-          "en": "The sidebar uses the same light shadow color as dialogs and drawers. Actual Buyer Log screen with demo data."
-        }
-      }
-    },
-    {
-      "id": "collection-model-footer",
-      "type": "fix",
       "module": {
         "tr": "Koleksiyon",
         "en": "Collection"
       },
       "title": {
-        "tr": "Model Name sütununun altındaki taşma düzeltildi",
-        "en": "Fixed model names showing through the table footer"
+        "tr": "Fiyat kıyasında tikli ülke seçimi",
+        "en": "Checkbox country selection in price comparisons"
       },
       "body": {
-        "tr": "Koleksiyon tablosunda alt özet bandının arka planı korunur; Model Name sütunundaki satırlar kaydırma sırasında bandın içinden görünmez. Tekrarlanan model sayısı metni gizli kalır.",
-        "en": "The Collection summary footer keeps its background, preventing Model Name rows from showing through while scrolling. The duplicate model count text remains hidden."
+        "tr": "Previous Season, LFL ve Sezon Etkisi için hesaba katılmayacak ülkeleri aynı listede tikleyin veya tikini kaldırın. Seçim sırasında liste açık kalır; Escape veya liste dışına tıklama listeyi kapatır. Seçili ülke etiketleri kaldırıldı. Buyer kuralı ve diğer kullanıcıların yalnız görüntüleme yetkisi korunur.",
+        "en": "Check or uncheck countries to exclude from Previous Season, LFL and Season Impact in the same list. The list stays open while selecting; Escape or a click outside closes it. Selected-country tags have been removed. The buyer rule and other users’ view-only access are preserved."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "collection-model-footer.png",
+        "src": "collection-lfl-country-checkboxes.png",
         "alt": {
-          "tr": "Demo modellerin altındaki kesintisiz Koleksiyon özet bandı",
-          "en": "Continuous Collection summary footer below demo models"
+          "tr": "Fiyat çekmecesinde Fas ve Mısır tikli ülke listesi",
+          "en": "Country list in the price drawer with Morocco and Egypt checked"
         },
         "caption": {
-          "tr": "Değişiklik sonrası gerçek Buyer Log, izole demo verisiyle.",
-          "en": "Actual post-change Buyer Log with isolated demo data."
+          "tr": "Gerçek Buyer Log, izole demo verisi: ülkeler aynı listeden seçilir; altta tekrarlanan etiketler yoktur.",
+          "en": "Actual Buyer Log with isolated demo data: countries are selected in one list without duplicate tags underneath."
+        }
+      }
+    },
+    {
+      "id": "checklist-rules-studio-workspace",
+      "type": "improvement",
+      "module": {
+        "tr": "Kontrol ve Kurallar",
+        "en": "Checklist & Rules"
+      },
+      "title": {
+        "tr": "LCW AI odaklı sade kural çalışma alanı",
+        "en": "A simpler rule workspace with LCW AI first"
+      },
+      "body": {
+        "tr": "Öncelik kuralları ve kontrol soruları soldaki listeden aranır ve etkinliğe göre süzülür. Sağda yalnız seçilen kayıt açılır; LCW AI görünür başlar, koşulların sade özeti ve gerçek sipariş etkisi gösterilir. Elle düzenleme gerektiğinde açılır. AI önerisi önce taslağa alınır, kontrol edilip kaydedilene kadar kurallara uygulanmaz.",
+        "en": "Search and filter priority rules and checklist questions in the list on the left. Only the selected item opens on the right, with LCW AI visible first, a plain-language condition summary and live order impact. Manual editing opens when needed. AI suggestions first enter a draft and take effect only after review and saving."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-rules-studio-workspace.png",
+        "alt": {
+          "tr": "Solda kural listesi, sağda LCW AI ve seçili kuralın sade özeti",
+          "en": "Rule list on the left, LCW AI and the selected rule’s plain summary on the right"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: seçili kural, LCW AI ile düzenleme ve kontrol sonrası kaydetme.",
+          "en": "Actual Buyer Log with isolated demo data: selected rule, LCW AI editing and saving after review."
+        }
+      }
+    },
+    {
+      "id": "module-staggered-flow",
+      "type": "improvement",
+      "module": {
+        "tr": "Modül geçişleri",
+        "en": "Module navigation"
+      },
+      "title": {
+        "tr": "Modüller arasında kademeli akış",
+        "en": "Staggered flow between modules"
+      },
+      "body": {
+        "tr": "Modül değiştirirken önce başlık, ardından özetler ve ana içerik 40 ms aralıklarla, toplam 440 ms içinde açılır. Tablo üst kapsayıcıları sabit kalır; veri satırları ayrı sıralı giriş kullanır. Aynı modüle tıklama ve veri yenileme geçişi tekrarlamaz; hızlı gezinme eski hareketi iptal eder. Seçim, düzenleme, kaydırma ve azaltılmış hareket tercihi korunur.",
+        "en": "Switching modules reveals the header, summaries and main content in 40 ms steps within 440 ms. Table ancestors stay still; data rows use a separate staggered entrance. Clicking the same module or refreshing data does not repeat the transition; rapid navigation cancels the previous motion. Selection, editing, scrolling and reduced-motion preferences are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "module-staggered-flow.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log üzerinde modül geçişinde sırayla beliren başlık ve içerik blokları",
+          "en": "Header and content blocks appearing in sequence during module navigation in the actual Buyer Log"
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle gerçek Buyer Log; kademeli akışın ortasında yakalanan ekran.",
+          "en": "Actual Buyer Log with isolated demo data, captured during the staggered transition."
+        }
+      }
+    },
+    {
+      "id": "menu-opening-motion",
+      "type": "fix",
+      "module": {
+        "tr": "Ortak arayüz",
+        "en": "Shared interface"
+      },
+      "title": {
+        "tr": "Menüler tek ve akıcı hareketle açılır",
+        "en": "Menus open in one smooth motion"
+      },
+      "body": {
+        "tr": "Araçlar, Excel ve diğer buton menüleri ilk çizimde tek kez açılır. Açık menünün içindeki tıklamalar giriş hareketini tekrarlamaz; hızlı kapatıp açma yeni bir hareket başlatır. Çekmecelerin mevcut animasyonu, ekran kenarı konumu ve azaltılmış hareket tercihi korunur.",
+        "en": "Tools, Excel and other button menus animate once at their first paint. Clicking inside an open menu no longer replays its entrance; quickly closing and reopening starts a fresh entrance. Drawers retain their existing animation, viewport placement and reduced-motion behavior."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "menu-opening-motion.png",
+        "alt": {
+          "tr": "CP Tracker Araçlar menüsü açık, anonim demo verili gerçek Buyer Log",
+          "en": "Actual Buyer Log with the CP Tracker Tools menu open on anonymous demo data"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo oturumu. Tek açılış ve hızlı yeniden açma davranışı tarayıcıda animasyon sayısıyla doğrulandı.",
+          "en": "Actual Buyer Log in an isolated demo session. Single entrance and fast reopening were verified by counting browser animations."
+        }
+      }
+    },
+    {
+      "id": "lcwai-chat-history-delete",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Sohbet geçmişinden konuşma silme",
+        "en": "Delete conversations from chat history"
+      },
+      "body": {
+        "tr": "Sohbet satırındaki silme düğmesi onaydan sonra konuşmayı bu cihazdaki kullanıcı geçmişinden kaldırır. Silinen sohbet yeniden açılışta geri gelmez. Son sohbet silindiğinde yeni boş sohbet açılır; oluşturulan dosyalar Dosyalarım ekranında kalır. Yanıt oluşturulurken silme kapalıdır.",
+        "en": "After confirmation, the delete button on each chat row removes that conversation from the user’s history on this device. Deleted chats do not return after reopening. Deleting the last chat opens a new empty chat; created files remain in My files. Deletion is disabled while a response is being created."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-files-60-days.png",
+        "alt": {
+          "tr": "Demo sohbet silindikten sonra kalan sohbetin silme düğmesi ve Dosyalarım ekranındaki dosyalar",
+          "en": "Delete button on the remaining chat and files in My files after deleting a demo conversation"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: raporun sohbeti silinmiş, dosyaları bağımsız arşivde kalmıştır.",
+          "en": "Actual Buyer Log with isolated demo data: the report conversation was deleted and its files remain in the independent archive."
+        }
+      }
+    },
+    {
+      "id": "lcwai-files-retain-60-days",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Dosyalar ve düzenlenebilir taslaklar 60 gün erişilebilir",
+        "en": "Files and editable drafts stay accessible for 60 days"
+      },
+      "body": {
+        "tr": "Dosyalarım ekranı son 60 günde oluşturulan kişisel çıktıları sohbet geçmişinden bağımsız listeler. 40 taslak ve 500 kayıt sınırları yakın tarihli dosyaları artık düşürmez. Dosyalar aynı cihazda açılabilir ve LCW AI bağlantısı olmadan düzenlenip yeniden oluşturulabilir. Düzenleme taslağın 60 günlük süresini yeniler. İndirilenler klasöründeki dosyalar otomatik silinmez. Önceden silinmiş taslaklar geri getirilemez.",
+        "en": "My files lists personal outputs created in the last 60 days independently of chat history. The 40-draft and 500-record caps no longer discard recent files. Files can be opened on the same device and edited and recreated without an LCW AI connection. Editing renews the draft’s 60-day period. Files in Downloads are not automatically deleted. Previously deleted drafts cannot be recovered."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-retained-file-edit.png",
+        "alt": {
+          "tr": "İki günlük raporun sohbeti silindikten sonra gerçek çıktı düzenleyicide yeniden oluşturulması",
+          "en": "Recreating a two-day-old report in the actual output editor after deleting its chat"
+        },
+        "caption": {
+          "tr": "Gerçek çıktı düzenleyici: 45 dosya arasındaki en eski demo raporu açıldı ve bağlantı olmadan güncellenmiş dosya oluşturuldu.",
+          "en": "Actual output editor: the oldest of 45 demo reports was opened and an updated file was created offline."
+        }
+      }
+    },
+    {
+      "id": "table-staggered-rows",
+      "type": "improvement",
+      "module": {
+        "tr": "Tablo geçişleri",
+        "en": "Table transitions"
+      },
+      "title": {
+        "tr": "Tablolar sıralı satırlarla açılır",
+        "en": "Tables enter with staggered rows"
+      },
+      "body": {
+        "tr": "Modül değiştirirken ilk iki görünür tablonun en çok altışar görünür veri satırı hafifçe yükselerek sırayla belirir. Eski hücre renk dalgası kaldırıldı; tablo başlığı, kaydırma alanı ve hücre renkleri sabit kalır. Seçili veya düzenlenen satırlar atlanır. Aynı modüle tıklama ve veri yenileme hareketi tekrarlamaz; etkileşim ve hızlı gezinme önceki hareketi iptal eder. Azaltılmış harekette ve yazılım çiziminde tablo doğrudan görünür.",
+        "en": "When switching modules, up to six visible data rows in each of the first two visible tables enter sequentially with a subtle lift. The old cell tint wave is removed; table headers, scroll containers and cell colours stay still. Selected or edited rows are skipped. Clicking the same module or refreshing data does not replay the entrance; interaction and rapid navigation cancel old effects. Reduced motion and software compositing show the table immediately."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-staggered-rows.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP tablosunda sabit başlık altında sırayla beliren veri satırları",
+          "en": "Data rows entering in sequence beneath the fixed header in the actual Buyer Log CP table"
+        },
+        "caption": {
+          "tr": "İzole sentetik verili gerçek Buyer Log oturumunda sıralı satır girişinin bir karesi. Veri, başlık ve kaydırma konumu korunur.",
+          "en": "A frame of the staggered-row entrance in an actual Buyer Log session with isolated synthetic data. Data, headers and scroll positions are preserved."
+        }
+      }
+    },
+    {
+      "id": "license-card-compact-editor",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Kompakt lisans kartı düzenleme penceresi",
+        "en": "Compact license card editor"
+      },
+      "body": {
+        "tr": "Lisans kartını ayrı bir pencerede düzenleyin. İlk açılışta yalnız seçili sözleşme görünür; geçmiş ve diğer sözleşmeler ile ek lisansör formu kendi düğmeleriyle açılır. Artwork brief alanı kaldırıldı ve görsel önizlemesi listedeki küçük görselle aynı boyuta getirildi. Kapatma taslağı korur, Vazgeç değişiklikleri geri alır.",
+        "en": "Edit a license card in a separate dialog. Only the selected contract appears initially; history, other contracts and the additional licensor form open with their own buttons. The artwork brief field has been removed and the image preview matches the list thumbnail size. Closing keeps the draft; Cancel discards edits."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-card-compact-editor.png",
+        "alt": {
+          "tr": "Kapalı sözleşme geçmişi ve lisansör formuyla kompakt lisans kartı penceresi",
+          "en": "Compact license card dialog with contract history and additional licensor form collapsed"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log arayüzünde izole demo verisi. Küçük görsel, tek sözleşme ve sabit kaydetme alanı.",
+          "en": "Actual Buyer Log UI with isolated demo data, showing the thumbnail, one contract and fixed save actions."
+        }
+      }
+    },
+    {
+      "id": "audit-small-session-records",
+      "type": "fix",
+      "module": {
+        "tr": "Denetim Günlüğü",
+        "en": "Audit Log"
+      },
+      "title": {
+        "tr": "Oturum kayıtları gereksiz büyümez",
+        "en": "Session records stay small"
+      },
+      "body": {
+        "tr": "Giriş, çıkış ve ilk parola kurulumunda ayrıntısız denetim kayıtları artık tüm kullanıcı ve sipariş erişim deposunu kopyalamaz. Ayrıntılı kayıtlarda hassas alan temizliği ve normal yedekleme korunur. Geçmiş günlükler değiştirilmez.",
+        "en": "Detail-free audit records for sign-in, sign-out and initial password setup no longer copy the entire user and order-access store. Sensitive-field redaction for detailed records and normal backups are preserved. Historical logs are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "audit-session-details.png",
+        "alt": {
+          "tr": "Demo girişinden sonra gerçek Buyer Log kullanıcı ve yetki yönetimi ekranı",
+          "en": "Actual Buyer Log user and authorization management after a demo sign-in"
+        },
+        "caption": {
+          "tr": "İzole demo oturumunda gerçek kullanıcı yönetimi. Oturum kayıtlarının küçük kaldığı aynı oturumun günlük dosyasından ayrıca doğrulandı.",
+          "en": "Actual user management in an isolated demo session. Small session records were separately verified in the audit file from this same session."
+        }
+      }
+    },
+    {
+      "id": "source-dense-excel-reading",
+      "type": "improvement",
+      "module": {
+        "tr": "Kaynak Veriler",
+        "en": "Source Data"
+      },
+      "title": {
+        "tr": "Excel kaynak okumaları optimize edildi",
+        "en": "Excel source reads optimized"
+      },
+      "body": {
+        "tr": "ASAS, Antrepo, CPUpdate ve LFL kaynak dosyaları daha düşük okuma maliyetiyle işlenir. Parser sonuçları ve tarih davranışı sparse/dense eşdeğerlik testleriyle korunur.",
+        "en": "ASAS, Warehouse, CPUpdate and LFL source files use a lower-cost reading path. Parser results and date behavior are protected by sparse/dense equivalence tests."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "source-dense-orders.png",
+        "alt": {
+          "tr": "Dense kaynak okumasından sonra demo siparişlerini gösteren gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen showing demo orders after dense source reading"
+        },
+        "caption": {
+          "tr": "İzole demo verisiyle değişiklik sonrası gerçek Siparişler ekranı. Hesaplama eşdeğerliği ve okuma süreleri ayrıca test ve benchmark ile doğrulandı.",
+          "en": "Actual post-change Orders screen with isolated demo data. Calculation equivalence and read timings were separately verified by tests and benchmarks."
         }
       }
     }

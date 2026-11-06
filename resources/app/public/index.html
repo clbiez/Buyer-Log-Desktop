@@ -20,11 +20,19 @@
 (function(){
   'use strict';
   var RETRY_KEY='buyerlog.bootRetry.v__BL_DISPLAY_VERSION__',finished=false,dismissed=false,timer=null,lastFailure='',orb=null,recovering=false,slowTimer=null;
-  // The app shell, initial data and authenticated profile are hard startup gates.
-  // The active page projection is NOT a hard gate: Overview/CP/Orders may still be
-  // rebuilding after login and must never trap an authenticated user here.
-  var gates={core:false,data:false,ui:false,profile:false};
-  var hardGates=['core','data','profile'];
+  // The app shell, initial data, authenticated profile, opening screen and (for the
+  // session's first window) the background-prepared modules are startup gates: the
+  // curtain cannot be passed before the modules the user opens next are ready.
+  // A module that is still preparing after MODULE_WAIT_LIMIT_MS no longer holds an
+  // authenticated user here; it keeps loading in the background and the reason is shown.
+  var params=new URLSearchParams(location.search);
+  var modulesGate=params.get('startup')==='1'||!params.has('workspaceTab');
+  var gates={core:false,data:false,ui:false,profile:false,modules:!modulesGate};
+  var hardGates=['core','data','profile','ui','modules'];
+  var MODULE_WAIT_LIMIT_MS=90000,moduleTimer=null,moduleProgress=null,modulesDeferred=false,screenFailed=false;
+  // A failed opening-screen projection never traps an authenticated user: the shell
+  // opens with Retry available until the profile arrives, as before.
+  var MODULE_LABELS={cp:['CP','CP'],orders:['Siparişler','Orders'],koleksiyon:['Koleksiyon','Collection']};
   function guard(){var el=document.getElementById('blBootGuard');return el&&!el.dataset.leaving?el:null;}
   function ensureGuard(){
     if(finished||guard()||!document.body)return;
@@ -34,6 +42,7 @@
     window.BLGuide?.mountStartup(el);
     mountLanguageChooser(el);
     Object.keys(gates).forEach(function(key){if(gates[key])window.BLGuide?.stage(key);});
+    renderDetail();
     el.focus({preventScroll:true});
     // A semantic waiting indicator; stages remain the readiness authority.
     try{if(window.BLThinkingOrbBreathing)orb=window.BLThinkingOrbBreathing.attach(el.querySelector('.blBootOrb'));}catch(_){}
@@ -49,6 +58,26 @@
     }
   }
   function english(){try{return typeof appLang!=='undefined'&&appLang==='en';}catch(_){return document.documentElement.lang==='en';}}
+  // Which stage Buyer Log is in right now: the first unfinished gate, in startup order.
+  function detailText(){
+    var en=english(),L=function(tr,enText){return en?enText:tr;};
+    if(finished&&screenFailed)return L('Başlangıç ekranı hazırlanamadı; Buyer Log\'a devam edip ekranı yenileyebilirsiniz.','The initial screen could not be prepared; you can continue and refresh the screen.');
+    if(finished)return modulesDeferred?L('Bazı modüller arka planda hazırlanmaya devam ediyor; açtığınızda kaldığı yerden tamamlanır.','Some modules are still being prepared in the background; they finish when you open them.'):L('Tüm modüller hazır.','All modules are ready.');
+    if(!gates.core)return L('Uygulama arayüzü yükleniyor…','Loading the application interface…');
+    if(!gates.data)return L('Başlangıç verisi yükleniyor…','Loading initial data…');
+    if(!gates.profile)return L('Kullanıcı bilgileri ve yetkiler uygulanıyor…','Applying user information and permissions…');
+    if(!gates.ui)return L('Başlangıç ekranı hazırlanıyor…','Preparing the initial screen…');
+    var p=moduleProgress;
+    if(p&&p.module){var names=MODULE_LABELS[p.module]||[p.module,p.module];return L('Modüller hazırlanıyor: ','Preparing modules: ')+names[en?1:0]+(p.total>0?' ('+p.index+'/'+p.total+')':'')+'…';}
+    return L('Modüller hazırlanıyor…','Preparing modules…');
+  }
+  function activeGate(){if(finished)return '';var order=['core','data','profile','ui','modules'];for(var i=0;i<order.length;i++)if(!gates[order[i]])return order[i]==='core'?'data':order[i];return '';}
+  function renderDetail(){
+    var el=guard();if(!el)return;
+    var detail=el.querySelector('[data-boot-detail]');if(detail)detail.textContent=detailText();
+    var active=activeGate();
+    el.querySelectorAll('[data-boot-stage]').forEach(function(chip){if(chip.dataset.bootStage===active)chip.setAttribute('data-active','true');else chip.removeAttribute('data-active');});
+  }
   function syncBootLanguage(){
     var el=guard();if(!el)return;
     var active=english()?'en':'tr';
@@ -59,6 +88,7 @@
     });
     var chooser=el.querySelector('.blBootLanguage');
     if(chooser)chooser.setAttribute('aria-label',active==='en'?'Language':'Dil');
+    renderDetail();
   }
   function applyBootLanguage(next){
     next=next==='en'?'en':'tr';
@@ -96,11 +126,17 @@
     if(finished)return;
     if(stage&&Object.prototype.hasOwnProperty.call(gates,stage))gates[stage]=true;else gates.core=true;
     window.BLGuide?.stage(stage||'core');
+    if(gates.modules)window.BLGuide?.stage('modules');
+    // Once the authenticated shell and opening screen are ready, a module that never
+    // finishes preparing cannot keep the user here forever.
+    if(!moduleTimer&&!gates.modules&&gates.core&&gates.data&&gates.profile&&gates.ui)moduleTimer=setTimeout(function(){
+      if(finished||gates.modules)return;modulesDeferred=true;
+      try{console.warn('Buyer Log startup: modules still preparing after',MODULE_WAIT_LIMIT_MS,'ms',moduleProgress&&moduleProgress.module||'');}catch(_){}
+      ready('modules');
+    },MODULE_WAIT_LIMIT_MS);
+    renderDetail();
     if(!hardGates.every(function(key){return gates[key];}))return;
-    // "Ekran" means the interactive application shell is available. The active
-    // page's heavy projection continues behind the shell with its own loading UI.
-    if(!gates.ui){gates.ui=true;window.BLGuide?.stage('ui');}
-    finished=true;if(timer)clearTimeout(timer);if(slowTimer)clearTimeout(slowTimer);
+    finished=true;if(timer)clearTimeout(timer);if(slowTimer)clearTimeout(slowTimer);if(moduleTimer)clearTimeout(moduleTimer);
     try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}
     stopOrb();var el=guard();if(!el){dismiss();return;}
     // Ready no longer yanks the curtain away mid-sentence: the user continues explicitly.
@@ -109,6 +145,7 @@
     var slot=el.querySelector('[data-boot-continue-slot]')||el.querySelector('.blBootCard');
     if(slot&&!el.querySelector('[data-boot-continue]')){var b=document.createElement('button');b.type='button';b.className='blBootContinue';b.dataset.bootContinue='1';b.textContent=(english()?'Continue to Buyer Log':'Buyer Log\'a devam et')+' →';b.onclick=dismiss;slot.appendChild(b);try{b.focus({preventScroll:true});}catch(_){}}
     window.BLGuide?.refreshStartup?.();
+    renderDetail();
     window.dispatchEvent(new CustomEvent('bl:startup-ready'));
   }
   function dismiss(){
@@ -151,6 +188,11 @@
     if(!box){box=document.createElement('div');box.id='blErrBox';box.className='uiBootError';document.documentElement.appendChild(box);}
     box.textContent+=(english()?'PROMISE ERROR: ':'PROMISE HATA: ')+String(ev.reason&&ev.reason.message||ev.reason)+'\n';
   }catch(_){}});
+  // Background module preparation (scheduleBackgroundModuleWarmup) reports each module it prepares.
+  window.addEventListener('bl:startup-progress',function(ev){
+    var d=ev&&ev.detail;if(finished||!d||d.stage!=='modules')return;
+    moduleProgress={module:String(d.module||''),index:Number(d.index)||0,total:Number(d.total)||0};renderDetail();
+  });
   window.addEventListener('bl:user-access-applied',function(ev){
     var p=ev.detail,avatar=document.getElementById('currentUserInitials'),badge=document.getElementById('accessModeBadge');
     if(p&&(p.id||p.username)&&(p.displayName||p.username)&&avatar&&badge&&badge.textContent.trim())ready('profile');
@@ -165,7 +207,7 @@
     if(ev.shiftKey&&(document.activeElement===first||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();last.focus();}
     else if(!ev.shiftKey&&(document.activeElement===last||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();first.focus();}
   },true);
-  window.BLBootGuard={ready:ready,recover:recover,mount:ensureGuard,continue:function(){if(finished)dismiss();},fail:function(reason){if(finished)return;lastFailure=String(reason||'initial-data-failed');message(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.',true);},noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
+  window.BLBootGuard={ready:ready,recover:recover,mount:ensureGuard,continue:function(){if(finished)dismiss();},fail:function(reason){if(finished)return;lastFailure=String(reason||'initial-data-failed');if(lastFailure==='initial-screen-failed'){screenFailed=true;gates.ui=true;gates.modules=true;}message(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.',true);if(screenFailed)ready('ui');},noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensureGuard,{once:true});else ensureGuard();
   window.addEventListener('error',function(ev){var t=ev&&ev.target;if(t&&(t.tagName==='SCRIPT'||t.tagName==='LINK'))window.BLBootGuard.noteFailure((t.src||t.href||t.tagName)+' yüklenemedi.');},true);
   document.addEventListener('bl:language-changed',function(){syncBootLanguage();try{window.BLGuide?.refreshLanguage?.();}catch(_){}}); 
@@ -297,7 +339,7 @@
 <link rel="stylesheet" href="backlog-plan-actual.css?v=__BL_ASSET_VERSION__&rev=2">
 <link rel="stylesheet" href="backlog-date-range.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="backlog-overview.css?v=__BL_ASSET_VERSION__&rev=1">
-<link rel="stylesheet" href="cp-overview-assistant.css?v=__BL_ASSET_VERSION__&rev=20261101">
+<link rel="stylesheet" href="cp-overview-assistant.css?v=__BL_ASSET_VERSION__&rev=20261105-workspace">
 <link rel="stylesheet" href="lcwai-assistant.css?v=__BL_ASSET_VERSION__&rev=7">
 <link rel="stylesheet" href="design.css?v=__BL_ASSET_VERSION__&rev=7181">
 <link rel="stylesheet" href="collection-spreadsheet.css?v=__BL_ASSET_VERSION__&rev=8">
@@ -313,14 +355,17 @@
 <link rel="stylesheet" href="command-palette.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="backlog-presentation.css?v=__BL_ASSET_VERSION__&rev=2">
 <link rel="stylesheet" href="table-view-drawers.css?v=__BL_ASSET_VERSION__&rev=1">
-<link rel="stylesheet" href="ui-components.css?v=__BL_ASSET_VERSION__">
+<link rel="stylesheet" href="ui-components.css?v=__BL_ASSET_VERSION__&rev=20261105-studio">
 <link rel="stylesheet" href="ui-motion.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="thinking-orbs.css?v=__BL_ASSET_VERSION__&rev=1">
 <link id="blBootGuardStyle" rel="stylesheet" href="ui-startup.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="table-header-tracking.css?v=__BL_ASSET_VERSION__&rev=1">
+<link rel="stylesheet" href="table-freeze.css?v=__BL_ASSET_VERSION__&rev=2">
+<script src="motion-plus-theme.js?v=__BL_ASSET_VERSION__"></script>
+<script src="motion-plus.js?v=__BL_ASSET_VERSION__"></script>
 </head>
 <body data-active-tab="overview" data-ui-migrated="manifest">
-<script>window.BLBootGuard?.mount();</script>
+<script>window.BLBootGuard?.mount();window.BLMotionPlus?.arrive();</script>
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="i-layout-dashboard" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="7" rx="1.5"/><rect x="4" y="15" width="6" height="5" rx="1.5"/><rect x="14" y="4" width="6" height="5" rx="1.5"/><rect x="14" y="13" width="6" height="7" rx="1.5"/></symbol>
   <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></symbol>
@@ -1555,6 +1600,7 @@
 <script src="backlog-date-range.js?v=__BL_ASSET_VERSION__"></script>
 <script src="order-line-peer-index.js?v=__BL_ASSET_VERSION__"></script>
 <script src="table-density.js?v=__BL_ASSET_VERSION__"></script>
+<script src="table-freeze.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="contextual-commands.js?v=__BL_ASSET_VERSION__"></script>
 <script src="price-lineage.js?v=__BL_ASSET_VERSION__"></script>
 <script src="bulk-operations.js?v=__BL_ASSET_VERSION__"></script>
@@ -1585,8 +1631,6 @@
 <script src="image-search.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="command-palette.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="kpi-motion.js?v=__BL_ASSET_VERSION__&rev=2"></script>
-<script src="motion-plus-theme.js?v=__BL_ASSET_VERSION__"></script>
-<script src="motion-plus.js?v=__BL_ASSET_VERSION__"></script>
 <script src="selection-action-bar.js?v=__BL_ASSET_VERSION__"></script>
 <script>
 (function syncRailLanguageIndicator(){
@@ -1632,7 +1676,7 @@
 <script src="collection-spreadsheet-engine.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="collection-spreadsheet.js?v=__BL_ASSET_VERSION__&rev=11"></script>
 <script src="workspace-blur.js?v=__BL_ASSET_VERSION__"></script>
-<script src="table-header-tracking.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="table-header-tracking.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <!-- Kullanıcı Excel'i içeri aktarma: deterministik motor + sihirbaz arayüzü.
      CP ve Koleksiyon AYNI motoru kullanır (bkz. BLExcelImportBridge). -->
 <script src="excel-import-workbook.js?v=__BL_ASSET_VERSION__&rev=1"></script>
@@ -1640,7 +1684,8 @@
 <script src="excel-import-match.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="excel-import-plan.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="excel-import-profiles.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="excel-import-wizard.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="excel-import-ai.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="excel-import-wizard.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_MAIN_READY');</script>
 
 <script>

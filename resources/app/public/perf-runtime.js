@@ -166,7 +166,7 @@
     /* PLM numune talepleri (CoreNectum Requests) kontrol listesine kanıt verir;
        iki dosya görünümden ÖNCE yüklenir. deferredUi'de de listelidir (sağ tık
        penceresi); loadScript aynı dosyayı tek kez yükler. */
-    cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','plm-sample-requests-engine.js','plm-sample-requests.js','cp-decision-runtime.js','cp-managed-rules.js?rev=20261101','cp-overview-assistant.js?rev=20261101-studio'],
+    cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','plm-sample-requests-engine.js','plm-sample-requests.js','cp-decision-runtime.js','cp-managed-rules.js?rev=20261101','cp-overview-assistant.js?rev=20261105-workspace'],
     exceptionInbox:['backlog-delivery-engine.js','cp-readiness-engine.js','exception-inbox.js','exception-inbox-view.js'],
     /* Test Raporu Aktarımı: yalnız menüden açılınca ya da CP'ye dosya
        bırakılınca yüklenir. Saf motor görünümden ÖNCE gelir. */
@@ -192,7 +192,7 @@
     /* v7.81 — Veri Yönetimi ekranı açılış kritik yolunda DEĞİLDİR: günlük
        kullanımda hiç açılmayan bir kurulum ekranıdır. Sekmeye ilk geçişte
        yüklenir (§11). */
-    dataManagement:['data-management-picker.js?rev=1','data-management-filter.js?rev=2','data-management-source.js?rev=2','data-management-mapping.js?rev=1','data-management-cpcolumns.js?rev=1','data-management-matchrule.js?rev=1','data-management-query.js?rev=1','data-management-connection.js?rev=1','data-cleanup.js?rev=2','data-management.js?rev=11'],
+    dataManagement:['data-management-picker.js?rev=1','data-management-filter.js?rev=3','data-management-source.js?rev=2','data-management-mapping.js?rev=1','data-management-cpcolumns.js?rev=1','data-management-matchrule.js?rev=1','data-management-query.js?rev=1','data-management-connection.js?rev=1','data-cleanup.js?rev=2','data-management.js?rev=12'],
   };
   // Yüklenmesi TAMAMLANMIŞ özellikler: çağıran "ilk kez mi yüklendi" ayrımını
   // yapabilsin (ör. sekmeye her girişte tabloyu yeniden çizmemek için).

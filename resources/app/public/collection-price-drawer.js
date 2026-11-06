@@ -176,9 +176,18 @@
     const row=findRow(state.rowId);
     if(!row){close();return;}
     const scroll=state.body?.scrollTop||0;
+    const picker=state.panel.querySelector('.cpdCountryPicker');
+    const pickerState=picker?.open?{scroll:picker.querySelector('.cpdCountryList').scrollTop,code:document.activeElement?.dataset.cpdLflCountry,summary:document.activeElement===picker.querySelector('summary')}:null;
     const session=state;session.rendering=true;
     try{session.panel.innerHTML=`${headHtml(row)}<div class="cpdBody">${lineageHtml(row)}${state.module==='collection'?offersHtml(row)+(global.BLCollectionLfl?.drawer(row)||'')+waterfallHtml(row)+endeksmatikHtml(row):''}${canEdit()?'':`<p class="cpdNote">${esc(T('Bu sayfa salt okunur; değerler yalnız görüntülenir.','This page is read-only; values are view-only.'))}</p>`}</div>`;}finally{session.rendering=false;}
     state.body=state.panel.querySelector('.cpdBody');
+    const nextPicker=state.panel.querySelector('.cpdCountryPicker');
+    if(pickerState&&nextPicker){
+      nextPicker.open=true;
+      nextPicker.querySelector('.cpdCountryList').scrollTop=pickerState.scroll;
+      const focus=pickerState.summary?nextPicker.querySelector('summary'):pickerState.code?nextPicker.querySelector('[data-cpd-lfl-country="'+CSS.escape(pickerState.code)+'"]'):null;
+      focus?.focus({preventScroll:true});
+    }
     if(state.body)state.body.scrollTop=scroll;
   }
 
@@ -257,8 +266,21 @@
       state.backdropTap=false;
     });
     overlay.addEventListener('click',onClick);
-    panel.addEventListener('change',event=>{const input=event.target.closest('[data-cpd-field]');if(input)commitField(input);});
-    panel.addEventListener('keydown',event=>{const input=event.target.closest('[data-cpd-field]');if(input&&event.key==='Enter'){event.preventDefault();commitField(input);}});
+    panel.addEventListener('change',event=>{
+      if(event.target.closest('[data-cpd-lfl-country]')){const row=findRow(state?.rowId);if(row&&global.BLCollectionLfl?.onDrawerChange?.(event.target,row))render();return;}
+      const input=event.target.closest('[data-cpd-field]');if(input)commitField(input);
+    });
+    panel.addEventListener('toggle',event=>{
+      if(event.target.matches('.cpdCountryPicker')&&event.target.open)global.BLMotionPlus?.play?.('overlay',event.target.querySelector('.cpdCountryList'));
+    },true);
+    panel.addEventListener('click',event=>{
+      const picker=panel.querySelector('.cpdCountryPicker[open]');
+      if(picker&&!picker.contains(event.target))picker.open=false;
+    });
+    panel.addEventListener('keydown',event=>{
+      const picker=panel.querySelector('.cpdCountryPicker[open]');
+      if(event.key==='Escape'&&picker){event.preventDefault();event.stopPropagation();picker.open=false;picker.querySelector('summary').focus();return;}
+      const input=event.target.closest('[data-cpd-field]');if(input&&event.key==='Enter'){event.preventDefault();commitField(input);}});
     render();
     global.BLLayerSystem?.openDialog?.(overlay,{onClose:close});
     return true;

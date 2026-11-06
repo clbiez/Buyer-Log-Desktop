@@ -6,7 +6,7 @@
   'use strict';
   if(global.BLCPPlmDetails)return;
   const BATCH=500,FRESH_MS=60000;
-  const state={cache:new Map(),fetchedAt:0,inflight:null,cpRows:[],ordersRows:[],repaint:null};
+  const state={cache:new Map(),fetchedAt:0,revision:0,inflight:null,cpRows:[],ordersRows:[],repaint:null};
   function numericId(value){
     let text=String(value==null?'':value).trim().replace(/^_+/,'');
     if(/^\d+\.0+$/.test(text))text=text.slice(0,text.indexOf('.'));
@@ -43,22 +43,40 @@
     const missing=wanted.filter(id=>!state.cache.has(id));
     if(!stale&&!missing.length)return project();
     const targets=stale?wanted:missing;
+    const post=async body=>{
+      const response=await fetch('/api/plm-sync/bom/batch',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        cache:'no-store',body:JSON.stringify(body)
+      });
+      const payload=await response.json().catch(()=>({}));
+      if(!response.ok||!payload.ok)throw new Error(payload.error||response.statusText);
+      return payload;
+    };
     const promise=(async()=>{
       const data={};
+      let revision=0;
       try{
+        // Depo son okumadan beri yazılmadıysa bütün ID'ler yeniden taşınmaz.
+        if(stale&&!force&&!missing.length&&state.revision&&(await post({plmIds:[],ifRevision:state.revision})).notModified){
+          state.fetchedAt=Date.now();
+          return project();
+        }
         for(let i=0;i<targets.length;i+=BATCH){
-          const batch=targets.slice(i,i+BATCH);
-          const response=await fetch('/api/plm-sync/bom/batch',{
-            method:'POST',headers:{'Content-Type':'application/json'},
-            cache:'no-store',body:JSON.stringify({plmIds:batch})
-          });
-          const payload=await response.json().catch(()=>({}));
-          if(!response.ok||!payload.ok)throw new Error(payload.error||response.statusText);
+          const payload=await post({plmIds:targets.slice(i,i+BATCH)});
+          const current=Number(payload.revision)||0;
+          revision=i===0?current:Math.min(revision,current);
           Object.assign(data,payload.entries||{});
         }
       }catch(_){return 0;} // failed read does not erase cached evidence
       for(const id of targets)state.cache.set(id,data[id]||null);
-      if(stale)state.fetchedAt=Date.now();
+      if(stale){
+        /* revision yalnız bu turda okunan ID'leri temsil eder; görünür kümenin
+           dışında kalan eski kayıtlar atılır ki geri döndüklerinde yeniden
+           okunsunlar (aksi hâlde notModified onları süresiz bayat tutardı). */
+        const fresh=new Set(targets);
+        for(const id of [...state.cache.keys()])if(!fresh.has(id))state.cache.delete(id);
+        state.fetchedAt=Date.now();state.revision=revision;
+      }
       const changed=project();
       if(changed&&typeof state.repaint==='function')state.repaint();
       return changed;

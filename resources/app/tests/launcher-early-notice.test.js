@@ -3,6 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const {EventEmitter}=require('node:events');
 const source=fs.readFileSync(path.join(__dirname,'../electron/launcher-core.js'),'utf8');
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
+const until=async check=>{for(let i=0;i<400&&!check();i++)await new Promise(resolve=>setTimeout(resolve,5));};
 
 function fixture({pending=false,locked=true,corrupt=false}={}){
   const calls=[],notices=[];
@@ -10,7 +11,7 @@ function fixture({pending=false,locked=true,corrupt=false}={}){
   const app=Object.assign(new EventEmitter(),{isPackaged:true,setPath:name=>calls.push(name),requestSingleInstanceLock:()=>locked,
     whenReady:()=>Promise.resolve(),exit:code=>calls.push('exit:'+code),quit(){},relaunch(){}});
   class Notice extends EventEmitter{
-    constructor(options){super();this.options=options;this.webContents=new EventEmitter();notices.push(this);}
+    constructor(options){super();this.options=options;this.webContents=Object.assign(new EventEmitter(),{executeJavaScript:code=>{const step=/step\("([a-z-]+)"\)/.exec(code);if(step)calls.push('step:'+step[1]);return Promise.resolve();}});notices.push(this);}
     loadURL(url){this.url=url;return Promise.resolve();}
     show(){calls.push('show');}
     isDestroyed(){return Boolean(this.destroyed);}
@@ -38,7 +39,7 @@ test('notice paints before rollback/verification; ordinary launch hashes its cor
   const f=fixture();await tick();
   assert.equal(f.notices.length,1);assert.ok(!f.calls.includes('rollback'));
   assert.match(decodeURIComponent(f.notices[0].url),/Buyer Log açılıyor…/);
-  assert.match(decodeURIComponent(f.notices[0].url),/Buyer Log is opening…/);
+  assert.match(decodeURIComponent(f.notices[0].url),/Program dosyaları doğrulanıyor/);
   assert.equal(f.notices[0].options.webPreferences.sandbox,true);
   f.notices[0].emit('ready-to-show');await tick();await tick();
   assert.ok(f.calls.indexOf('show')<f.calls.indexOf('rollback'));
@@ -46,9 +47,16 @@ test('notice paints before rollback/verification; ordinary launch hashes its cor
   assert.equal(f.calls.at(-1),'main');
 });
 test('a pending activation still validates the rollback target before activation',async()=>{
-  const f=fixture({pending:true});await tick();f.notices[0].emit('ready-to-show');await tick();await tick();
+  const f=fixture({pending:true});await tick();f.notices[0].emit('ready-to-show');await until(()=>f.calls.includes('main'));
   assert.ok(f.calls.indexOf('verify:/portable/.buyerlog-versions/current/app')<f.calls.indexOf('activate'));
   assert.ok(f.calls.includes('verify:/pending'));
+  // Each core is scanned once per launch: the selected core is not re-hashed.
+  assert.deepEqual(f.calls.filter(call=>call.startsWith('verify:')),['verify:/portable/.buyerlog-versions/current/app','verify:/pending']);
+  // The notice reports every launcher step of the update, in order.
+  const steps=f.calls.filter(call=>call.startsWith('step:'));
+  assert.deepEqual(steps.slice(0,4),['step:verify-current','step:verify-new','step:backup','step:verify']);
+  assert.equal(steps.at(-1),'step:start');
+  assert.ok(f.calls.indexOf('step:backup')<f.calls.indexOf('activate'),'the backup step is shown before the synchronous checkpoint');
 });
 test('a corrupt core remains blocked after the early notice',async()=>{
   const f=fixture({corrupt:true});await tick();f.notices[0].emit('ready-to-show');await tick();await tick();

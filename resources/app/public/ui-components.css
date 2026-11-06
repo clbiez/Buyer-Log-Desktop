@@ -2215,23 +2215,22 @@ html[data-ui-system="manifest"] .todoMeta {font-size:var(--ui-font-2xs) !importa
 }
 html[data-ui-system="manifest"] .noteEditorHint {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
 }
-html[data-ui-system="manifest"] .tablewrap table td.frzL,html[data-ui-system="manifest"] .tablewrap table th.frzL {
-  background:var(--ui-surface) !important;
-  background-clip:padding-box !important
+/* Sütun dondurma seçim kipi: önizleme aralığı ve lazer sınırı (table-freeze.js).
+   :is() içindeki kimlikler tablo başlık zeminlerinin kimlik özgüllüğünü karşılar. */
+html[data-ui-system="manifest"] .tablewrap.freezePick :is(#cpTable,#ordersTable,#kolTable,table)>thead>tr.colRow>th.freezePreview {background:color-mix(in srgb,var(--ui-accent) 12%,var(--ui-header-bg)) !important
 }
-html[data-ui-system="manifest"] .tablewrap tbody tr:hover td.frzL {background:var(--ui-row-hover) !important
+html[data-ui-system="manifest"] .tablewrap.freezePick :is(#cpTable,#ordersTable,#kolTable,table)>thead>tr.colRow>th.freezeHover {background:color-mix(in srgb,var(--ui-accent) 22%,var(--ui-header-bg)) !important
 }
-html[data-ui-system="manifest"] .tablewrap thead th.frzL {background:var(--ui-header-bg) !important;z-index:var(--ui-z-sticky-column)
+html[data-ui-system="manifest"] .freezeLaser {z-index:var(--ui-z-sticky-column);background:var(--ui-accent) !important
 }
-html[data-ui-system="manifest"] .tablewrap thead tr.groupRow th.frzL {background:var(--ui-surface-strong) !important;z-index:var(--ui-z-sticky-column)
+/* İki bölmeli dondurma: bölme sınırı alan çerçevesi rengini alır, sürüklenirken vurgulanır. */
+html[data-ui-system="manifest"] .tablewrap>.blFreezePane {z-index:var(--ui-z-sticky-column)
 }
-html[data-ui-system="manifest"] .tablewrap tbody td.frzL {z-index:var(--ui-z-raised)
+html[data-ui-system="manifest"] .blFreezePaneDivider::after {background:var(--ui-field-border)
 }
-html[data-ui-system="manifest"] .tablewrap tfoot td.frzL {background:var(--ui-surface-soft) !important;z-index:var(--ui-z-raised)
+html[data-ui-system="manifest"] .blFreezePaneDivider:hover::after,html[data-ui-system="manifest"] .blFreezePaneDivider.isDragging::after {background:var(--ui-accent)
 }
-html[data-ui-system="manifest"] .tablewrap.freezePick thead tr.colRow th.freezeHover {background:color-mix(in srgb,var(--ui-danger) 11%,var(--ui-header-bg)) !important
-}
-html[data-ui-system="manifest"] .freezeLaser {z-index:var(--ui-z-sticky);background:var(--ui-surface) !important
+html[data-ui-system="manifest"] .blFreezePaneBar {background:var(--ui-surface-strong)
 }
 html[data-ui-system="manifest"] .navActionBtn.freezeOn {background:color-mix(in srgb,var(--ui-danger) 12%,var(--ui-surface)) !important;color:var(--ui-danger) !important
 }
@@ -3299,10 +3298,6 @@ html[data-ui-system="manifest"] .cfpTitle {font-weight:600 !important;font-size:
 }
 html[data-ui-system="manifest"] .profileSelectMenu.profileSelectMenuModal {z-index:var(--ui-z-modal-menu)
 }
-html[data-ui-system="manifest"] .tablewrap.freezePick thead {z-index:var(--ui-z-sticky)
-}
-html[data-ui-system="manifest"] .tablewrap.freezePick thead tr.colRow th {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
-}
 html[data-ui-system="manifest"] .matchRuleOption:hover {background:var(--ui-surface-soft) !important
 }
 html[data-ui-system="manifest"] .matchRuleOption strong {font-size:var(--ui-font-sm) !important;font-weight:650 !important
@@ -3431,14 +3426,6 @@ html[data-ui-system="manifest"] .prepareEmailOperationMeta em {font-size:var(--u
 html[data-ui-system="manifest"] .prepareEmailProgressSpinner {animation:none !important
 }
 html[data-ui-system="manifest"] .prepareEmailOperationBar>span {animation:none !important
-}
-html[data-ui-system="manifest"] .tablewrap table tbody td.frzL {
-  z-index:var(--ui-z-raised);
-  background:var(--ui-surface) !important;
-  background-clip:padding-box !important
-}
-html[data-ui-system="manifest"] .tablewrap table tbody tr:hover td.frzL {
-  background:color-mix(in srgb,var(--ui-surface) 94%,var(--ui-text) 6%) !important
 }
 html[data-ui-system="manifest"] .ovNoteDate {color:var(--ui-text-muted) !important;font-weight:600 !important
 }
@@ -5586,7 +5573,7 @@ html[data-ui-system="manifest"] .tableActionToolbar .tbtn:not(.primary):not(.tab
 html[data-ui-system="manifest"] .tableActionToolbar .toolbarMoreWrap>.tbtn:has(>svg.ic)::after,html[data-ui-system="manifest"] .tableActionToolbar .toolbarMoreWrap>.navActionBtn:has(>svg.ic)::after {
   border-right:0 !important;border-bottom:0 !important
 }
-html[data-ui-system="manifest"] .blTip {z-index:var(--ui-z-tooltip);background:var(--ui-text) !important;color:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;
+html[data-ui-system="manifest"] .blTip {z-index:var(--ui-z-tooltip);background:var(--ui-surface) !important;color:var(--ui-text) !important;box-shadow:var(--ui-shadow-overlay) !important;
   font-size:var(--ui-font-xs) !important;line-height:1.35;
   transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
@@ -7373,7 +7360,41 @@ html[data-ui-system="manifest"] .dmsMapSummary .isWarn { color: var(--ui-warning
 }
 html[data-ui-system="manifest"] .dmsMapSummary .isBad { color: var(--ui-danger) !important
 }
-html[data-ui-system="manifest"] .dmFilterSlot.isOpen { background: var(--ui-surface-soft) !important
+html[data-ui-system="manifest"] .dmHorizonMount .dmfHead { background: var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .dmHorizonMount .dmfFoot { background: var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .dmfCard { background: var(--ui-surface-soft) !important; color: var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .dmfCard.is-active { background: var(--ui-selected) !important; color: var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .dmfCardMain { background: transparent !important; color: inherit !important; font: inherit !important; border: 0 !important
+}
+html[data-ui-system="manifest"] .dmfCardSource { font-size: var(--ui-font-2xs) !important; font-weight: 800 !important; letter-spacing: .08em; color: var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .dmfCard.isExtra .dmfCardSource { color: var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .dmfCardMain b { font-size: var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .dmfCardMain small { font-size: var(--ui-font-2xs) !important; color: var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .dmfCard.is-warn .dmfCardMain small { color: var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .dmfCardPair { font-size: var(--ui-font-2xs) !important; color: var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .dmfColTable { font-size: var(--ui-font-2xs) !important; color: var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .dmfFreeValue span { font-size: var(--ui-font-2xs) !important; color: var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .dmfFreeValue input { font: inherit !important; font-size: var(--ui-font-sm) !important; background: var(--ui-surface) !important; color: var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .dmfPairBox { background: var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .dmfPairBoxHead span:last-child,html[data-ui-system="manifest"] .dmfPairStatus { font-size: var(--ui-font-xs) !important; color: var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .dmfPairCustomHead span { font-size: var(--ui-font-xs) !important; font-weight: 600 !important; color: var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .dmHorizonMount .blvFilterRangeHint.is-warn { color: var(--ui-warning) !important
 }
 html[data-ui-system="manifest"] .dmfTitle { font-size: var(--ui-font-sm) !important; font-weight: 600 !important; color: var(--ui-text) !important
 }
@@ -8549,8 +8570,6 @@ html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTab
 }
 html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th {z-index:var(--ui-z-sticky)
 }
-html[data-ui-system="manifest"] #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.frzL {z-index:var(--ui-z-sticky-column);background:var(--ui-canvas)!important
-}
 html[data-ui-system="manifest"] .kolSpreadsheetFilterSort {background:var(--ui-surface-soft) !important
 }
 html[data-ui-system="manifest"] .kolSpreadsheetFilterSort button {background:var(--ui-surface) !important;color:var(--ui-text) !important;font:600 var(--ui-font-2xs)/1.2 var(--ui-font-body) !important
@@ -9288,6 +9307,12 @@ html[data-ui-system="manifest"] .cpdInput input {background:var(--ui-surface) !i
 }
 html[data-ui-system="manifest"] .cpdInput input:disabled {background:var(--ui-surface-soft) !important;color:var(--ui-text-muted) !important
 }
+html[data-ui-system="manifest"] .cpdCountryPicker>summary {background:var(--ui-surface) !important;color:var(--ui-text) !important;font:600 var(--ui-font-sm) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .cpdCountryList {background:var(--ui-surface) !important;color:var(--ui-text) !important;font:400 var(--ui-font-sm) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .cpdCountryList label:hover {background:var(--ui-surface-soft) !important
+}
 @media (prefers-reduced-motion:reduce) {
 html[data-ui-system="manifest"] .kolPsTrack>i,html[data-ui-system="manifest"] .kolHealthChip,html[data-ui-system="manifest"] .cpdOffer {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
 }
@@ -9978,6 +10003,8 @@ html[data-ui-system="manifest"] .lcIconBtn:hover:not(:disabled) {background:var(
 }
 html[data-ui-system="manifest"] .lcIconBtn.isPrimary {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
 }
+html[data-ui-system="manifest"] .lcFavorite[aria-pressed="true"] .ic {fill:currentColor
+}
 html[data-ui-system="manifest"] .lcIconBtn.isPrimary:hover:not(:disabled) {background:var(--ui-accent-hover) !important;color:var(--ui-on-accent) !important
 }
 html[data-ui-system="manifest"] .lcLink {background:none !important;color:var(--ui-selected-ink) !important;font:600 var(--ui-font-xs) var(--ui-font-body) !important;text-decoration:underline
@@ -10101,6 +10128,18 @@ html[data-ui-system="manifest"] .lcExpand .ic {transition:transform var(--ui-mot
 html[data-ui-system="manifest"] .lcRowMsg {background:var(--ui-warning-bg) !important;color:var(--ui-text) !important;font-size:var(--ui-font-xs) !important;animation:none !important
 }
 html[data-ui-system="manifest"] .lcDetail {background:var(--ui-surface-soft) !important;animation:none !important
+}
+html[data-ui-system="manifest"] .lcEditor {border:0;color:var(--ui-text);box-shadow:var(--ui-shadow-overlay);font:400 var(--ui-font-sm) var(--ui-font-body)
+}
+html[data-ui-system="manifest"] .lcEditor::backdrop {background:transparent
+}
+html[data-ui-system="manifest"] .lcEditorHead,html[data-ui-system="manifest"] .lcEditor .lcDetailFoot {background:var(--ui-surface)
+}
+html[data-ui-system="manifest"] .lcEditorHead small,html[data-ui-system="manifest"] .lcEditorHead div>span {color:var(--ui-text-muted)
+}
+html[data-ui-system="manifest"] .lcEditorHead h2 {font:600 var(--ui-font-lg) var(--ui-font-heading)
+}
+html[data-ui-system="manifest"] .lcEditor .lcCover.lcThumb {font:600 var(--ui-font-sm) var(--ui-font-heading) !important
 }
 html[data-ui-system="manifest"] .lcPane>header b {font:600 var(--ui-font-md) var(--ui-font-heading) !important
 }
@@ -11913,12 +11952,6 @@ html[data-ui-system="manifest"] tfoot .collectionWeightedAverage .collectionWeig
 }
 html[data-ui-system="manifest"] #kolSendPricingBtn.prepareEmailBusy {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
 }
-html[data-ui-system="manifest"] #kolTable tbody td.frzL {
-  background-color:var(--ui-surface) !important
-}
-html[data-ui-system="manifest"] #kolTable tbody tr:hover td.frzL {
-  background:color-mix(in srgb,var(--ui-surface) 94%,var(--ui-text) 6%) !important
-}
 html[data-ui-system="manifest"] #kolTableActions>.kolSelectedGroupLabel {font-size:var(--ui-font-2xs) !important;font-weight:700 !important;letter-spacing:.04em;color:var(--ui-text-muted) !important;text-transform:uppercase
 }
 html[data-ui-system="manifest"] #kolTableActions>.kolSelectedGroupLabel::before {background:var(--ui-group-divider) !important
@@ -11926,11 +11959,6 @@ html[data-ui-system="manifest"] #kolTableActions>.kolSelectedGroupLabel::before 
 @media (max-width:1350px) {
 html[data-ui-system="manifest"] #kolTableActions>.kolSelectedGroupLabel {font-size:0 !important
 }
-}
-html[data-ui-system="manifest"] #kolTable tbody td.editTd.frzL,html[data-ui-system="manifest"] #kolTable tbody td.kolPictureCell.frzL,html[data-ui-system="manifest"] #kolTable thead th.frzL,html[data-ui-system="manifest"] #kolTable tfoot td.frzL {
-  background-clip:padding-box !important
-}
-html[data-ui-system="manifest"] #kolTable tbody td.editTd.frzL {z-index:var(--ui-z-raised)
 }
 html[data-ui-system="manifest"] .plmImportCard > .kolPlanStats {background:var(--ui-surface) !important
 }
@@ -14181,12 +14209,6 @@ html[data-ui-system="manifest"] #ordersTable tr.ordersPassiveRow:hover td {
 }
 html[data-ui-system="manifest"] #cpProdStatusBtn.prepareEmailBusy {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
 }
-html[data-ui-system="manifest"] #cpTable tbody td.frzL,html[data-ui-system="manifest"] #ordersTable tbody td.frzL {
-  background-color:var(--ui-surface) !important
-}
-html[data-ui-system="manifest"] #cpTable tbody tr:hover td.frzL,html[data-ui-system="manifest"] #ordersTable tbody tr:hover td.frzL {
-  background:color-mix(in srgb,var(--ui-surface) 94%,var(--ui-text) 6%) !important
-}
 html[data-ui-system="manifest"] .backlogFieldLabel {font-size:var(--ui-font-2xs) !important;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-text-muted) !important;font-weight:600 !important
 }
 html[data-ui-system="manifest"] .backlogRange input[type=date] {background:var(--ui-canvas) !important;color:var(--ui-text) !important;font-size:var(--ui-font-sm) !important
@@ -14323,9 +14345,6 @@ html[data-ui-system="manifest"] .freightCartonRow input {background:var(--ui-sur
 html[data-ui-system="manifest"] .freightCartonRow i {font-style:normal !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important;font-weight:800 !important
 }
 html[data-ui-system="manifest"] .freightMultiTable tr.freightTotalRow td {border-top:0 !important;font-weight:800 !important
-}
-html[data-ui-system="manifest"] #cpTable tbody td.editTd.frzL,html[data-ui-system="manifest"] #ordersTable tbody td.editTd.frzL {
-  background-clip:padding-box !important
 }
 html[data-ui-system="manifest"] #cpTable td.qtxSavedColourCell[data-key="C.Code"],html[data-ui-system="manifest"] #ordersTable td.qtxSavedColourCell[data-key="C.Code"] {color:var(--ui-accent) !important;font-weight:700 !important;text-decoration:underline dotted
 }
@@ -14474,7 +14493,7 @@ html[data-ui-system="manifest"] .backlogChartCrosshairV,html[data-ui-system="man
 }
 html[data-ui-system="manifest"] .backlogChartCrosshair.is-pinned .backlogChartCrosshairV,html[data-ui-system="manifest"] .backlogChartCrosshair.is-pinned .backlogChartCrosshairH {background:color-mix(in srgb,var(--ui-accent) 72%,transparent) !important
 }
-html[data-ui-system="manifest"] .backlogChartCrosshairValue {background:var(--ui-text) !important;color:var(--ui-surface) !important;font:700 var(--ui-font-2xs) var(--ui-font-body) !important
+html[data-ui-system="manifest"] .backlogChartCrosshairValue {background:var(--ui-surface) !important;color:var(--ui-text) !important;font:700 var(--ui-font-2xs) var(--ui-font-body) !important
 }
 html[data-ui-system="manifest"] .backlogChartTooltip {background:color-mix(in srgb,var(--ui-surface) 96%,transparent) !important;color:var(--ui-text) !important;font:var(--ui-font-2xs) var(--ui-font-body) !important
 }
@@ -15050,7 +15069,6 @@ html[data-ui-system="manifest"] .qhPivot td.qhApproved{background:var(--ui-succe
 html[data-ui-system="manifest"] .cpaRuleReasonField input.is-invalid{background:var(--ui-danger-bg)!important;color:var(--ui-danger)!important;}
 html[data-ui-system="manifest"] #kolTable .kolBuyingSampleApprove[aria-pressed="true"]{color:var(--ui-success)!important;}
 html[data-ui-system="manifest"] #cpTable .cpThumbFlash{opacity:.65;}
-html[data-ui-system="manifest"] .freezeLaser{background:var(--ui-accent)!important;}
 
 html[data-ui-system="manifest"] .qhApprovalMark{font-size:var(--ui-font-xs);color:var(--ui-success);font-weight:600;}
 
@@ -15505,7 +15523,7 @@ html[data-ui-system="manifest"] .dmPanelToggle .ic {width:14px;height:14px
 }
 html[data-ui-system="manifest"] .dmPanel.isCollapsed .dmPanelToggle .ic {transform:rotate(-90deg)
 }
-html[data-ui-system="manifest"] .dmPanel.isCollapsed > :not(.dmPanelHead) {display:none !important
+html[data-ui-system="manifest"] .dmPanelBody[hidden] {display:none !important
 }
 html[data-ui-system="manifest"] .dmPanel > .dmPanelHead:has(> .dmPanelToggle) {justify-content:flex-start
 }
@@ -15604,6 +15622,27 @@ html[data-ui-system="manifest"] .cpaRuleSentence {background:var(--ui-surface-so
 html[data-ui-system="manifest"] .cpaAdvancedModes>summary {font-size:var(--ui-font-xs);color:var(--ui-text-secondary)}
 html[data-ui-system="manifest"] .cpaDraftBadge {background:var(--ui-warning-bg);color:var(--ui-warning)}
 html[data-ui-system="manifest"] .cpaRuleMenuItems {background:var(--ui-surface)}
+
+/* Checklist Studio uses Manifest surfaces for its library and selected editor. */
+html[data-ui-system="manifest"] .cpaRuleLibrary {background:var(--ui-surface-soft)}
+html[data-ui-system="manifest"] .cpaLibraryItem {background:transparent;color:var(--ui-text);font-family:var(--ui-font-body)}
+html[data-ui-system="manifest"] .cpaLibraryItem:hover {background:var(--ui-row-hover)}
+html[data-ui-system="manifest"] .cpaLibraryItem.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important}
+html[data-ui-system="manifest"] .cpaLibraryItem:focus-visible {outline:2px solid var(--ui-accent);outline-offset:-3px}
+html[data-ui-system="manifest"] .cpaLibraryItem>b {font-size:var(--ui-font-sm);font-weight:600}
+html[data-ui-system="manifest"] :is(.cpaLibraryItem>small,.cpaLibraryMeta,.cpaLibraryFoot,.cpaLibrarySearch>span) {font-size:var(--ui-font-xs);color:var(--ui-text-muted)}
+html[data-ui-system="manifest"] .cpaLibraryFilters .cpaBtn.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important}
+html[data-ui-system="manifest"] .cpaRuleDetail>.cpaRule {border:0 !important}
+html[data-ui-system="manifest"] .cpaRuleDetail .cpaRuleBar {background:var(--ui-surface) !important}
+html[data-ui-system="manifest"] .cpaRuleDetail .cpaRuleSummaryMain b {font:600 var(--ui-font-xl)/1.15 var(--ui-font-heading) !important}
+html[data-ui-system="manifest"] .cpaRuleDetail .cpaSwitch>span:last-child {font-size:var(--ui-font-xs);color:var(--ui-text-secondary)}
+html[data-ui-system="manifest"] .cpaAiFirst {background:var(--ui-surface-soft)}
+html[data-ui-system="manifest"] .cpaAiFirst .lcwaiAssist {background:transparent;border:0}
+html[data-ui-system="manifest"] .cpaPlainSummary h3 {font:600 var(--ui-font-xl)/1.15 var(--ui-font-heading)}
+html[data-ui-system="manifest"] .cpaPlainColumns h4 {font-size:var(--ui-font-xs);font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ui-text-muted)}
+html[data-ui-system="manifest"] .cpaPlainColumns li {font-size:var(--ui-font-sm)}
+html[data-ui-system="manifest"] .cpaPlainColumns :is(p,small) {font-size:var(--ui-font-xs);color:var(--ui-text-muted)}
+html[data-ui-system="manifest"] .cpaRuleDetail .cpaAdvancedModes>summary {font-size:var(--ui-font-sm);color:var(--ui-selected-ink)}
 
 /* Cell-range selection uses a soft theme tint, distinct from checked rows. Four inset edge
    shadows form ONE outer rectangle without covering internal cell separators,

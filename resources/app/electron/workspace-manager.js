@@ -84,6 +84,9 @@ function createWorkspaceManager(options) {
   const contentsToTab = new Map();
   let lastFocusedWindowId = 0;
   let rendererReadySignaled = false;
+  // Oturumun ilk sekmesi açılış perdesini modüller hazır olana kadar tutar
+  // (index.html → modulesGate); sonradan açılan sekmeler beklemez.
+  let startupTabIssued = false;
   let primaryWindowId = 0;
   let workspaceTheme = normalizeWorkspaceTheme(
     options.initialTheme,
@@ -478,6 +481,7 @@ function createWorkspaceManager(options) {
     url.searchParams.set('launch', String(Date.now()));
     url.searchParams.set('workspaceTab', id);
     url.searchParams.set('module', module);
+    if (!startupTabIssued) { startupTabIssued = true; url.searchParams.set('startup', '1'); }
     view.webContents.loadURL(url.toString());
     return tab;
   }

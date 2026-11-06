@@ -133,7 +133,7 @@ test('Collection PLM SYNC (Model Details) force-refreshes Artwork Detail even wh
   const body = APP.slice(start, APP.indexOf('async function kolPlmSyncButtonRun(', start));
   const refresh = body.indexOf('kolPlmSyncRefreshArtwork()');
   assert.ok(refresh > body.indexOf('kolPlmSyncFetchRecords('), 'artwork refresh runs after the fetch wrote plm-bom.json');
-  assert.ok(refresh < body.indexOf('if(!summary.changed.length){'), 'refresh must not depend on Model Details field changes');
+  assert.ok(refresh < body.indexOf('if(!summary.changed.length&&!(summary.newColours||[]).length){'), 'refresh must not depend on Model Details field changes');
   assert.match(APP, /function kolPlmSyncRefreshArtwork\(\)\{[^]*?BLCollectionArtworkDetail[^]*?\.refresh\(\)/);
 });
 
@@ -154,7 +154,8 @@ test('BOM detail stays reachable from the cell context menu (double click is the
 test('visible Collection models read BOM summaries with local batch requests', () => {
   assert.match(ROUTE, /app\.post\('\/api\/plm-sync\/bom\/batch'/);
   assert.match(ROUTE, /plmBomStore\.load\(\)/);
-  assert.match(ROUTE, /entries\[plmId\] = entry/);
+  assert.match(ROUTE, /entries\[plmId\] = plmBomStore\.summaryEntry\(entry\)/, 'batch carries only the summary projection');
+  assert.match(ROUTE, /notModified: true/, 'unchanged store revision is not re-sent');
   const start = ROUTE.indexOf("app.post('/api/plm-sync/bom/batch'");
   const end = ROUTE.indexOf('\n});', start);
   assert.ok(start >= 0 && end > start, 'batch route block must be found');

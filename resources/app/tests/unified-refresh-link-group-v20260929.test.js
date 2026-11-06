@@ -223,7 +223,9 @@ test('istemci: genel filtre CP\'yi kapsamıyorsa yenileme bitince açıkça uyar
 test('Veri Yönetimi: iki ufuk tek panelde (Horizon ve yenileme); ekle/ayır ve gruplar yok', () => {
   assert.match(DM, /\$\{horizonPanel\(\)\}/);
   assert.match(DM, /data-refresh-horizon="\$\{esc\(group\.id\)\}"/);
-  assert.match(DM, /data-horizon-slot="\$\{esc\(group\.id\)\}"/);
+  // v2026-11-04 — Ufuk filtresi satır içinde değil, tek Horizon çekmecesinde düzenlenir (kullanıcı kararı).
+  assert.match(DM, /data-open-horizon="\$\{esc\(group\.id\)\}"/);
+  assert.doesNotMatch(DM, /data-horizon-slot=/);
   assert.match(DM, /model\.horizonGroups/);
   assert.match(DM, /model\.mergedFilters/);
   assert.doesNotMatch(DM, /data-link=|linkGroupPanels|fetch\('\/api\/data-management\/link'/);

@@ -25,28 +25,33 @@ jobs:
       # Core Node-only checks; no npm ci or full regression on ordinary PRs.
       - name: Agent instructions, i18n and release-note contract
         run: node --test tests/agent-instructions.test.js tests/i18n-coverage-guard.test.js tests/visual-release-notes-v70211.test.js tests/page-horizon-badges-removal-v20261025.test.js
-      - name: Motion+ diagonal wave, reduced-motion and Manifest contracts
-        run: node --test tests/motion-plus-contract-v20261025.test.js tests/motion-plus-refresh-sync-v20261026.test.js tests/motion-plus-theme-transitions.test.js tests/startup-sequential-triangles.test.js tests/ui-manifest-contract.test.js tests/ui-inline-contract.test.js tests/design-token-guard.test.js tests/workspace-blur-drawer-v20261029.test.js tests/render-profile-software-compositing.test.js
+      - name: Motion+ table rows, reduced-motion and Manifest contracts
+        run: node --test tests/motion-plus-table-rows.test.js tests/motion-plus-wave-batched.test.js tests/motion-plus-contract-v20261025.test.js tests/staggered-disclosures.test.js tests/motion-plus-overlay-opening.test.js tests/motion-plus-refresh-sync-v20261026.test.js tests/motion-plus-theme-transitions.test.js tests/startup-sequential-triangles.test.js tests/ui-manifest-contract.test.js tests/ui-inline-contract.test.js tests/design-token-guard.test.js tests/workspace-blur-drawer-v20261029.test.js tests/render-profile-software-compositing.test.js
       - name: Clipboard, selection and Data Management layout regression
-        run: node --test tests/cp-grid-paste.test.js tests/collection-spreadsheet-wiring.test.js tests/grid-cell-selection-visibility-v70300.test.js tests/compact-selection-filter-copy.test.js tests/cp-orders-external-output-v1090.test.js tests/ui-polish-v70319.test.js tests/horizon-personal-deletion-persist.test.js tests/row-note-clipboard-spacing.test.js
+        # Module transitions must not restart or animate selected/edited grids.
+        run: node --test tests/motion-plus-module-flow.test.js tests/cp-grid-paste.test.js tests/collection-spreadsheet-wiring.test.js tests/grid-cell-selection-visibility-v70300.test.js tests/compact-selection-filter-copy.test.js tests/cp-orders-external-output-v1090.test.js tests/ui-polish-v70319.test.js tests/horizon-personal-deletion-persist.test.js tests/row-note-clipboard-spacing.test.js
       - name: Chronological season and budget-month filters and table sorting
         run: node --test tests/chronological-sorting.test.js tests/business-rules.test.js tests/collection-mb-month-locale-filter.test.js tests/quick-filter-groups-v736.test.js
-      - name: Shared Backlog analysis filters, detail and export scope
-        run: node --test tests/backlog-shared-analysis-filters.test.js tests/backlog-overview-filters-v20261002.test.js tests/backlog-plan-actual-wiring.test.js
       - name: Loading approval dates, calculations and edit protection
         run: node --test tests/loading-approval-exfactory.test.js
+      - name: Shared Backlog analysis filters, detail and export scope
+        run: node --test tests/backlog-shared-analysis-filters.test.js tests/backlog-overview-filters-v20261002.test.js tests/backlog-plan-actual-wiring.test.js tests/backlog-analysis-performance.test.js tests/backlog-query-cache.test.js
       - name: Supp. FOB quick calculator and royalty commission regression
         run: node --test tests/supp-fob-quick-calculator.test.js tests/license-royalty-commission-v2.test.js tests/grid-context-copy-v1052.test.js
       - name: Unified license cards, category pricing and legacy peer compatibility
-        run: node --test tests/license-cards-unified.test.js tests/collection-pricing-engine.test.js tests/royalty-precision-license-cards-v20261021.test.js
+        run: node --test tests/license-cards-unified.test.js tests/license-cards-editor.test.js tests/collection-pricing-engine.test.js tests/royalty-precision-license-cards-v20261021.test.js
       - name: Checklist Worker, formula editor and attention regressions
-        run: node --test tests/cp-background-personal-decisions-v249.test.js tests/cp-rule-editor-v980.test.js tests/cp-attention-exclusions-v959.test.js tests/current-ui-regressions-v20260920.test.js
+        run: node --test tests/cp-background-personal-decisions-v249.test.js tests/cp-rule-editor-v980.test.js tests/cp-studio-workspace.test.js tests/cp-attention-exclusions-v959.test.js tests/current-ui-regressions-v20260920.test.js
       - name: Thinking Orbs startup and navigation regression
         run: node --test tests/boot-thinking-orb-v20260929.test.js tests/startup-guide-v20260930.test.js tests/navigation-revisit-perf-v250.test.js tests/intake-ui-controls.test.js
+      - name: Post-update startup freeze, launch notice steps and module gate
+        run: node --test tests/launcher-sync-offthread-v70335.test.js tests/launcher-early-notice.test.js tests/launcher-offthread-verification.test.js tests/startup-progress-splash-v70321.test.js tests/startup-background-warmup.test.js tests/updater-launcher-upgrade-gate.test.js
       - name: Global Flow startup curtain and performance visibility
         run: node --test tests/startup-global-flow-curtain.test.js tests/today-feature-performance-v20260926.test.js
       - name: LCW AI embedded session and PLM BOM regression
-        run: node --test tests/lcwai-desktop-relay.test.js tests/lcwai-desktop-session.test.js tests/plm-bom-sync.test.js
+        run: node --test tests/lcwai-desktop-relay.test.js tests/lcwai-desktop-session.test.js tests/plm-bom-sync.test.js tests/plm-sync-two-phase.test.js tests/plm-sync-colours-retry.test.js tests/collection-artwork-detail.test.js
+      - name: Excel import AI validation and canonical import regression
+        run: node --test tests/excel-import-ai.test.js tests/excel-import-plan-v1060.test.js tests/excel-import-mapping-match-v1060.test.js tests/collection-excel-import-actions-v20260920.test.js
       - name: Release version, lock, SBOM and artifact bytes
         run: |
           node --test tests/dependency-inventory-metadata.test.js
@@ -66,6 +71,10 @@ jobs:
       # runs with dependencies installed in the full test environment.
       - name: Checklist denied writes, journal durability and CP first load
         run: node --test tests/checklist-forbidden-retry-v20261027.test.js tests/checklist-durability.test.js
+      - name: Collection LFL references and buyer country filter
+        run: node --test tests/collection-lfl-country-filter.test.js tests/collection-lfl-reference.test.js tests/collection-lfl-detail.test.js
+      - name: Freeze Columns engine for CP, Orders and Collection
+        run: node --test tests/table-freeze-engine.test.js tests/freeze-hover-v508.test.js tests/kol-freeze-colpanel-imgsize-v585.test.js tests/collection-freeze-grid-alignment-v1015.test.js tests/kol-freeze-cache-bust-v1010.test.js tests/table-header-tracking-v70301.test.js
       - name: Validate nonempty pending release notes
         run: |
           node -e "const n=require('./public/release-notes/next.json');if(n.changes?.length)require('./scripts/release-notes').validateNext();else if(n.publishedAt)throw Error('Empty pending notes must have blank publishedAt')"

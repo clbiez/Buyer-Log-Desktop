@@ -2214,11 +2214,15 @@ async function coreNectumRestoreSelectedStyleRows(page,selected=[]){
    in backend memory. Normal PLM Sync therefore has no Edge/CDP dependency.
    Only the special 'PLM-selected' DOM action still needs an already-open PLM
    page because its checkbox selection exists only there. */
+/* Kullanıcı kararı: hata işi durdurmaz; başarısız PLM'ler kaldığı yerden en az
+   3 tur yeniden sorulur (HTTP katmanının kendi 3 denemesine ek olarak). */
+const CORENECTUM_RETRY_ROUNDS=3;
+const CORENECTUM_RETRY_DELAYS_MS=Object.freeze([2000,5000,10000]);
 async function collectCoreNectumStyleLinksDirect(ownerId,candidates,options,trail){
   const requested=coreNectumStyleApi.dedupePlmCodes(candidates),requestedSet=new Set(requested),candidateByPlm=new Map();
   for(const item of candidates)if(item&&item.plmId&&!candidateByPlm.has(item.plmId))candidateByPlm.set(item.plmId,item);
   if(!requested.length)throw plmSyncDiagnostics.attach(connectorError('Eşleştirilecek geçerli PLM ID bulunamadı.','CORENECTUM_ITEMS_EMPTY'),trail);
-  const found=new Map(),ambiguous=new Set();let scannedPages=0,scannedRows=0,processed=0;
+  const found=new Map(),ambiguous=new Set(),lookupFailures=new Map();let scannedPages=0,scannedRows=0,processed=0;
   const session=await openCoreNectumStyleApiSession(ownerId,{trail,isCancelled:options&&options.isCancelled});
   const ingest=payload=>{
     const records=coreNectumStyleApi.styleListRecords(payload);scannedPages+=1;scannedRows+=records.length;
@@ -2241,19 +2245,51 @@ async function collectCoreNectumStyleLinksDirect(ownerId,candidates,options,trai
       const next=fallbacks.find(size=>size<codes.length&&size>0);
       /* Match PLM_Image_Test_v2: auth failures are terminal, while transport/
          HTTP/batch failures step down 100 -> 50 -> 20 before giving up. */
-      const authFailure=error&&['CORENECTUM_API_TOKEN_INVALID','CORENECTUM_API_TOKEN_REQUIRED'].includes(error.code);
+      // İptal de bölünmez: her alt parti aynı iptal hatasını verirdi.
+      const authFailure=error&&['CORENECTUM_API_TOKEN_INVALID','CORENECTUM_API_TOKEN_REQUIRED','PLM_JOB_CANCELLED'].includes(error.code);
       if(!authFailure&&next){for(const child of coreNectumStyleApi.splitBatches(codes,next))await scanBatch(child);return;}
-      throw error;
+      if(authFailure)throw error;
+      /* Kullanıcı kararı: tek bir partinin hatası bütün senkronu durdurmaz.
+         Bu PLM'ler aşağıda, yalnız onlar, en az 3 tur yeniden sorulur. */
+      for(const code of codes)lookupFailures.set(code,error);
+      return;
     }
+    for(const code of codes)lookupFailures.delete(code);
     processed+=codes.length;
     if(typeof options?.onProgress==='function')await Promise.resolve(options.onProgress({phase:'PLM verisi alınıyor',current:Math.min(processed,requested.length),total:requested.length,model:codes[codes.length-1]||''})).catch(()=>{});
   };
   try{
-    for(const batch of coreNectumStyleApi.splitBatches(requested,coreNectumStyleApi.STYLE_LIST_BATCH_SIZE))await scanBatch(batch);
+    /* Partiler sınırlı eşzamanlılıkla sorulur. Partiler ayrık PLM kümeleri
+       taşıdığı için sonuç sırası eşlemeyi etkilemez; ilk hatadan sonra yeni
+       parti başlatılmaz ve hata aynen yükseltilir. */
+    let firstError=null;
+    const runPool=async(codes,batchSize=coreNectumStyleApi.STYLE_LIST_BATCH_SIZE)=>{
+      const batches=coreNectumStyleApi.splitBatches(codes,batchSize);
+      let cursor=0;
+      const worker=async()=>{while(!firstError&&cursor<batches.length){const batch=batches[cursor++];try{await scanBatch(batch);}catch(error){firstError=firstError||error;}}};
+      await Promise.all(Array.from({length:Math.min(Math.max(1,Number(coreNectumStyleApi.STYLE_LIST_CONCURRENCY)||1),batches.length)},worker));
+      if(firstError)throw firstError;
+    };
+    await runPool(requested);
+    const delays=Array.isArray(options&&options.retryDelaysMs)?options.retryDelaysMs:CORENECTUM_RETRY_DELAYS_MS;
+    for(let round=0;round<CORENECTUM_RETRY_ROUNDS&&lookupFailures.size;round+=1){
+      const pending=[...lookupFailures.keys()];
+      if(typeof options?.onProgress==='function')await Promise.resolve(options.onProgress({phase:`PLM verisi yeniden deneniyor (${round+1}/${CORENECTUM_RETRY_ROUNDS})`,current:Math.min(processed,requested.length),total:requested.length,model:''})).catch(()=>{});
+      await new Promise(resolve=>setTimeout(resolve,Number(delays[Math.min(round,delays.length-1)])||0));
+      if(options&&typeof options.isCancelled==='function'&&options.isCancelled())throw connectorError('PLM görsel işlemi kullanıcı tarafından durduruldu.','PLM_JOB_CANCELLED',499);
+      /* Son turda kalan PLM'ler tek tek sorulur: kalıcı olarak bozuk tek bir
+         kod, partisindeki diğer modellerin de okunamamasına yol açmasın. */
+      const lastRound=round===CORENECTUM_RETRY_ROUNDS-1;
+      await runPool(pending,lastRound&&pending.length<=200?1:coreNectumStyleApi.STYLE_LIST_BATCH_SIZE);
+    }
+    trail.record('STYLE_LIST_RETRY',{remaining:lookupFailures.size,rounds:CORENECTUM_RETRY_ROUNDS});
+    // Hiçbir parti okunamadıysa bu bir kesintidir: "bulunamadı" denmez, hata yükselir.
+    if(lookupFailures.size&&!scannedPages)throw [...lookupFailures.values()].pop();
     const links=[],failed=[];
     for(const plmId of requested){
       if(ambiguous.has(plmId)){failed.push({plmId,error:'Aynı PLM ID için birden fazla çelişen CoreNectum kaydı bulundu.',code:'CORENECTUM_STYLE_AMBIGUOUS'});continue;}
       const row=found.get(plmId),input=candidateByPlm.get(plmId)||{};
+      if(!row&&lookupFailures.has(plmId)){const error=lookupFailures.get(plmId);failed.push({plmId,error:`PLM verisi ${CORENECTUM_RETRY_ROUNDS} yeniden denemeden sonra okunamadı: ${clean(error&&error.message||error).slice(0,200)}`,code:'CORENECTUM_STYLE_LOOKUP_FAILED'});continue;}
       if(!row){failed.push({plmId,error:'CoreNectum Style List içinde model bulunamadı.',code:'CORENECTUM_STYLE_NOT_FOUND'});continue;}
       const merged={...row,styleName:clean(row.styleName||input.styleName).slice(0,300)};
       const mergedColours=coreNectumMergeColourVariants(row.colors||row.colours,input.colors||input.colours);

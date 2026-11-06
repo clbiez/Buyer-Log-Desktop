@@ -1,0 +1,25 @@
+{
+  "tr-light": {
+    "synthetic": true,
+    "screenshot": "/workspace/buyerlog-phase2/resources/app/public/release-notes/next-assets/source-dense-orders.png",
+    "module": "orders",
+    "lang": "tr",
+    "theme": "light",
+    "rows": 20,
+    "errors": []
+  },
+  "en-dark": {
+    "synthetic": true,
+    "screenshot": "/tmp/phase-2-en-dark-green.png",
+    "module": "orders",
+    "lang": "en",
+    "theme": "dark",
+    "observed": {
+      "lang": "en",
+      "documentLang": "en",
+      "theme": "dark"
+    },
+    "rows": 20,
+    "errors": []
+  }
+}

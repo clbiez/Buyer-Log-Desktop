@@ -43,6 +43,7 @@
   let state = Object.assign({}, DEFAULT_STATE);
   let initialized = false;
   let cache = { signature:'', headers:[], rows:[] };
+  let renderGeneration=0,sourceRevision='';
   let chartView = { signature:'', start:0, end:0 };
   let wheelZoomActive = false;
 
@@ -743,7 +744,13 @@
         button.addEventListener('dblclick',event=>{event.preventDefault();if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}applyLegend(true);});
       });
       const filterToggle=target.querySelector('[data-backlog-chart-filter]'),filterPanelEl=target.querySelector('[data-backlog-chart-filter-panel]');
-      filterToggle?.addEventListener('click',()=>{const opening=!!filterPanelEl?.hidden;if(filterPanelEl)filterPanelEl.hidden=!opening;filterToggle.setAttribute('aria-expanded',opening?'true':'false');if(opening)target.querySelector('[data-backlog-chart-filter-search]')?.focus();});
+      filterToggle?.addEventListener('click',()=>{
+        const opening=!!filterPanelEl?.hidden;
+        if(typeof window!=='undefined'&&window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(filterPanelEl,opening,{trigger:filterToggle});
+        else if(filterPanelEl)filterPanelEl.hidden=!opening;
+        filterToggle.setAttribute('aria-expanded',opening?'true':'false');
+        if(opening)target.querySelector('[data-backlog-chart-filter-search]')?.focus();
+      });
       const seriesList=target.querySelector('.backlogChartFilterList');
       seriesList?.addEventListener('change',event=>{
         if(!event.target.matches('[data-backlog-chart-series-index]'))return;
@@ -873,23 +880,27 @@
   function cacheSignature(params) {
     return Object.keys(params||{}).sort().map(k=>k+'='+String(params[k]==null?'':params[k])).join('&');
   }
-  function queryParams() {
+  function queryParams(allColumns=false) {
     try {
       const ctx=root.BLBacklogChartContext;
-      return ctx && typeof ctx.queryParams==='function' ? (ctx.queryParams()||{}) : {};
+      return ctx && typeof ctx.queryParams==='function' ? (ctx.queryParams(allColumns)||{}) : {};
     } catch (_) { return {}; }
   }
-  async function loadDetail(force) {
+  async function loadDetail(force,allColumns=false) {
     try {
       const ctx=root.BLBacklogChartContext;
       if(ctx&&typeof ctx.prepareQuery==='function')await ctx.prepareQuery();
     } catch (_) {}
-    const params=queryParams(), sig=cacheSignature(params);
+    const params=queryParams(allColumns), sig=cacheSignature(params);
     if (!force && cache.signature===sig && cache.rows.length) return cache;
     const qs=new URLSearchParams(Object.entries(params).filter(([,v])=>v!=null&&v!=='')).toString();
-    const res=await root.fetch('/api/backlog-export'+(qs?'?'+qs:''));
-    if(!res.ok){ let msg=res.statusText; try{const e=await res.json();msg=e.error||msg;}catch(_){} throw new Error(msg); }
-    const data=await res.json();
+    let data;
+    if(root.BLBacklogRows?.loadData)data=await root.BLBacklogRows.loadData(params);
+    else{
+      const res=await root.fetch('/api/backlog-export'+(qs?'?'+qs:''));
+      if(!res.ok){ let msg=res.statusText; try{const e=await res.json();msg=e.error||msg;}catch(_){} throw new Error(msg); }
+      data=await res.json();
+    }
     await root.BLMerchCalendarReady;
     if(data.merchCalendar)root.BLMerchCalendarRuntime?.apply?.(data.merchCalendar);
     cache={signature:sig,headers:normalizeHeaders(data.headers||[],data.rows||[]),rows:Array.isArray(data.rows)?data.rows:[]};
@@ -899,11 +910,14 @@
 
   function panel() { return root.document && root.document.getElementById('backlogChartPanel'); }
   async function render(force,detailOverride) {
+    const generation=++renderGeneration;
     const host=panel(); if(!host || !state.enabled) { if(host)host.hidden=true; return; }
     host.hidden=false;
     host.innerHTML='<div class="backlogChartLoading">'+esc(tr('Grafik hazırlanıyor…','Preparing chart…'))+'</div>';
     try {
+      if(force)root.BLBacklogRows?.invalidate?.();
       const detail=detailOverride||await loadDetail(!!force);
+      if(generation!==renderGeneration)return;
       const inferred=inferState(detail.headers,detail.rows,state);
       if(!inferred.timeField) throw new Error(tr('Grafik için tarih alanı bulunamadı.','No date field was found for the chart.'));
       if(inferred.timeField!==state.timeField || inferred.metricField!==state.metricField || inferred.seriesField!==state.seriesField) {
@@ -923,6 +937,7 @@
       host.querySelector('[data-backlog-chart-refresh]')?.addEventListener('click',()=>{invalidate();render(true);});
       host.querySelector('[data-backlog-chart-disable]')?.addEventListener('click',()=>{saveState(Object.assign({},state,{enabled:false}));host.hidden=true;});
     } catch(err) {
+      if(generation!==renderGeneration)return;
       host.innerHTML='<div class="backlogChartError">'+esc(tr('Grafik oluşturulamadı: ','Chart could not be created: ')+err.message)+'</div>';
     }
   }
@@ -936,7 +951,7 @@
     const overlay=root.document.createElement('div');overlay.id='_backlogChartSettingsModal';overlay.className='autoModalOverlay';
     overlay.innerHTML='<div class="autoModal backlogChartSettingsModal" role="dialog" aria-modal="true" aria-labelledby="backlogChartSettingsTitle"><header><h3 id="backlogChartSettingsTitle">'+esc(tr('Backlog Grafik Ayarları','Backlog Chart Settings'))+'</h3><button type="button" data-chart-close>×</button></header><div class="autoModalBody"><div class="backlogChartLoading">'+esc(tr('Alanlar yükleniyor…','Loading fields…'))+'</div></div></div>';
     root.document.body.appendChild(overlay);let releaseKeyboard=()=>{};const close=()=>{releaseKeyboard();overlay.remove();};releaseKeyboard=root.BLUI?.bindDialogKeyboard(overlay,{onEscape:close})||(()=>{});overlay.querySelector('[data-chart-close]')?.addEventListener('click',close);
-    let detail;try{detail=await loadDetail(false);}catch(err){overlay.querySelector('.autoModalBody').innerHTML='<div class="backlogChartError">'+esc(err.message)+'</div>';return;}
+    let detail;try{detail=await loadDetail(false,true);}catch(err){overlay.querySelector('.autoModalBody').innerHTML='<div class="backlogChartError">'+esc(err.message)+'</div>';return;}
     const headers=normalizeHeaders(detail.headers,detail.rows),dates=detectDateHeaders(headers,detail.rows),draft=inferState(headers,detail.rows,state),body=overlay.querySelector('.autoModalBody');
     body.innerHTML='<div class="backlogChartSettingsGrid">'
       +'<label><span>'+esc(tr('Zaman alanı 1','Time field 1'))+'</span><select id="backlogChartTime">'+optionHtml(dates,draft.timeField,null)+'</select></label>'
@@ -964,7 +979,7 @@
       if(!next.timeField){notify(tr('Grafik için bir tarih alanı seçin.','Select a date field for the chart.'));return;}
       if(next.metricField==='__records')next.aggregation='count';
       const model=buildModel(detail.rows,detail.headers,next);if(!model.categories.length){notify(tr('Seçili tarih alanında grafiğe uygun veri yok.','The selected date field has no chartable data.'));return;}
-      saveState(next);chartView={signature:'',start:0,end:0};close();render(false,detail);
+      saveState(next);chartView={signature:'',start:0,end:0};close();render(false);
     });
     overlay.addEventListener('mousedown',e=>{if(e.target===overlay)close();});
   }
@@ -1152,8 +1167,8 @@
     const host=panel(); if(host&&state.enabled)host.hidden=false;
   }
   function onBacklogRendered(data) {
-    invalidate();
-    if(data&&state.enabled)render(true);
+    if(!data?.rowsInputRevision || sourceRevision!==data.rowsInputRevision){sourceRevision=data?.rowsInputRevision||'';invalidate();}
+    if(data&&state.enabled)render(false);
   }
 
   return Object.freeze({

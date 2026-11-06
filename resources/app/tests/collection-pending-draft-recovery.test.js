@@ -46,6 +46,7 @@ function fixture(pending, fresh) {
     kolCustomCols: [],
     kolStatusCatalog: [],
     kolNextId: 20,
+    kolLflCountryExclusions: [],
     kolReadPendingWorkspace: () => clone(pending),
     kolNormalizeStatusCatalog: (x) => x || [],
     kolNormalizeModelGroups: (x) => x,
@@ -73,6 +74,7 @@ function fixture(pending, fresh) {
     });
   vm.createContext(ctx);
   for (const name of [
+    "kolNormalizeLflCountryExclusions",
     "kolValueEqual",
     "kolRowEqual",
     "kolRowChangedFromBase",
@@ -271,6 +273,7 @@ test("workspace application restores pending intent before a pricing render may 
       scheduleOverviewCollectionSummaryRender: () => {},
     };
   vm.createContext(ctx);
+  vm.runInContext(fn("kolNormalizeLflCountryExclusions"), ctx);
   vm.runInContext(fn("kolApplyWorkspace"), ctx);
   ctx.kolApplyWorkspace(
     { _revision: 2, rows: [{ id: 1 }], customColumns: [] },

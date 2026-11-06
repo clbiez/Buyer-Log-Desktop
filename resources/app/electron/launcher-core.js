@@ -67,21 +67,58 @@ function launchNoticeKind(){
   }catch(_){}
   return 'start';
 }
+/* EXE başlatıldığı anda görünen bildirim artık bu açılışta launcher'ın yaptığı
+ * adımları da gösterir (ör. güncellemede: mevcut sürüm → yeni sürüm doğrulaması →
+ * veri yedeği → etkinleştirme). Metinler yalnız bu dosyadadır; ana süreç yalnız
+ * adım kimliği gönderir. Dil, main.js'in kapanışta sakladığı arayüz dilidir;
+ * kayıt yoksa sistem dili kullanılır. Hiçbir okuma hatası açılışı etkilemez. */
 const LAUNCH_NOTICE_TEXT={
-  start:{tr:'Buyer Log açılıyor…',en:'Buyer Log is opening…'},
-  update:{tr:'Güncelleme uygulanıyor…',en:'Applying the update…',
-    trDetail:'Yeni sürüm dosyaları doğrulanıyor ve verinizin yedeği alınıyor. Lütfen kapatmayın.',
-    enDetail:'Verifying the new version and backing up your data. Please do not close Buyer Log.'},
-  rollback:{tr:'Önceki sürüme dönülüyor…',en:'Returning to the previous version…',
-    trDetail:'Yeni sürüm önceki açılışta tamamlanamadı; verileriniz korunarak geri alınıyor. Lütfen kapatmayın.',
-    enDetail:'The new version did not finish starting last time; it is being rolled back with your data preserved. Please do not close Buyer Log.'},
+  tr:{
+    start:{title:'Buyer Log açılıyor…'},
+    update:{title:'Güncelleme uygulanıyor…',detail:'Yeni sürüm dosyaları doğrulanıyor ve verinizin yedeği alınıyor. Lütfen kapatmayın.'},
+    rollback:{title:'Önceki sürüme dönülüyor…',detail:'Yeni sürüm önceki açılışta tamamlanamadı; verileriniz korunarak geri alınıyor. Lütfen kapatmayın.'},
+    steps:{verify:'Program dosyaları doğrulanıyor','verify-current':'Mevcut sürüm doğrulanıyor','verify-new':'Yeni sürüm doğrulanıyor',
+      backup:'Verileriniz yedekleniyor',activate:'Yeni sürüm etkinleştiriliyor',rollback:'Önceki sürüm ve veriler geri yükleniyor',start:'Buyer Log başlatılıyor'},
+    elapsed:'Geçen süre {0}',slow:'Bu adım normalden uzun sürüyor. Buyer Log çalışıyor; lütfen kapatmayın.'},
+  en:{
+    start:{title:'Buyer Log is opening…'},
+    update:{title:'Applying the update…',detail:'Verifying the new version and backing up your data. Please do not close Buyer Log.'},
+    rollback:{title:'Returning to the previous version…',detail:'The new version did not finish starting last time; it is being rolled back with your data preserved. Please do not close Buyer Log.'},
+    steps:{verify:'Verifying program files','verify-current':'Verifying the current version','verify-new':'Verifying the new version',
+      backup:'Backing up your data',activate:'Activating the new version',rollback:'Restoring the previous version and data',start:'Starting Buyer Log'},
+    elapsed:'Elapsed {0}',slow:'This step is taking longer than usual. Buyer Log is working; please do not close it.'},
 };
+const LAUNCH_NOTICE_STEPS={start:['verify','start'],update:['verify-current','verify-new','backup','activate','start'],rollback:['rollback','verify','start']};
+function launchNoticeLanguage(){
+  try{
+    const file=path.join(desktopPaths(PORTABLE_ROOT).localDataRoot,'desktop-ui-language.json');
+    const saved=JSON.parse(fs.readFileSync(file,'utf8'));
+    if(saved&&(saved.language==='tr'||saved.language==='en'))return saved.language;
+  }catch(_){}
+  try{const locale=String((app.getPreferredSystemLanguages?.()||[])[0]||app.getLocale?.()||'');if(locale&&!/^tr\b/i.test(locale))return 'en';}catch(_){}
+  return 'tr';
+}
+const htmlText=value=>String(value).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function launchNoticeHtml(kind,lang){
+  const text=LAUNCH_NOTICE_TEXT[lang]||LAUNCH_NOTICE_TEXT.tr,info=text[kind]||text.start,steps=LAUNCH_NOTICE_STEPS[kind]||LAUNCH_NOTICE_STEPS.start;
+  const items=steps.map((id,index)=>`<li data-step="${id}" data-state="${index===0?'active':'pending'}">${htmlText(text.steps[id])}</li>`).join('');
+  const script=`(function(){var order=${JSON.stringify(steps)},t0=Date.now()-${Math.max(0,Math.round(sinceProcessStartMs()||0))},since=Date.now(),current=order[0],slow=${JSON.stringify(text.slow)},label=${JSON.stringify(text.elapsed)};
+function clock(ms){var s=Math.max(0,Math.floor(ms/1000)),m=Math.floor(s/60);s=s%60;return m+':'+(s<10?'0':'')+s;}
+function paint(){var at=order.indexOf(current);document.querySelectorAll('li[data-step]').forEach(function(li){var i=order.indexOf(li.dataset.step);li.dataset.state=i<at?'done':i===at?'active':'pending';});
+document.getElementById('e').textContent=label.replace('{0}',clock(Date.now()-t0));document.getElementById('w').textContent=Date.now()-since>20000?slow:'';}
+window.BLNotice={step:function(id){var i=order.indexOf(id);if(i<0||i<=order.indexOf(current))return;current=id;since=Date.now();paint();}};
+paint();setInterval(paint,1000);})();`;
+  return `<!doctype html><html lang="${lang}"><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'"><title>Buyer Log</title><style>html,body{height:100%;margin:0}body{box-sizing:border-box;padding:20px 28px 14px;border:1px solid #d4d4d7;background:#f8f8f9;color:#1d1f20;font-family:system-ui,Segoe UI,sans-serif;display:flex;flex-direction:column;gap:8px;-webkit-app-region:drag;cursor:default;user-select:none}strong{font-size:26px;font-weight:600}p{margin:0;font-size:14px;font-weight:600}small{display:block;margin-top:3px;font-size:11.5px;font-weight:400;line-height:1.35;color:#5d5d60}i{display:block;height:3px;background:#d4d4d7;overflow:hidden;position:relative}i::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-40%;background:#3f6488;animation:s 1.2s ease-in-out infinite}@keyframes s{to{left:100%}}ol{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:12.5px}li{display:flex;align-items:center;gap:8px;color:#7a7a7d}li::before{content:"";flex:0 0 auto;width:8px;height:8px;border-radius:50%;border:1.5px solid #d4d4d7;box-sizing:border-box}li[data-state="done"]{color:#5d5d60}li[data-state="done"]::before{background:#3d7a57;border-color:#3d7a57}li[data-state="active"]{color:#1d1f20;font-weight:600}li[data-state="active"]::before{background:#3f6488;border-color:#3f6488}footer{margin-top:auto;display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#7a7a7d}@media (prefers-reduced-motion:reduce){i::after{animation:none;left:0;width:100%;opacity:.35}}</style><body><strong>Buyer Log</strong><p role="status">${htmlText(info.title)}${info.detail?`<small>${htmlText(info.detail)}</small>`:''}</p><i aria-hidden="true"></i><ol aria-label="${lang==='en'?'Startup steps':'Açılış adımları'}">${items}</ol><footer><span id="w" aria-live="polite"></span><span id="e"></span></footer><script>${script}</script></body></html>`;
+}
+let launchNoticeKindValue='start';
 async function showLaunchNotice(){
   const {BrowserWindow}=require('electron');
   await app.whenReady();
-  const notice=new BrowserWindow({width:420,height:240,center:true,show:false,frame:false,
+  launchNoticeKindValue=launchNoticeKind();
+  const lang=launchNoticeLanguage(),text=LAUNCH_NOTICE_TEXT[lang][launchNoticeKindValue];
+  const notice=new BrowserWindow({width:440,height:launchNoticeKindValue==='update'?320:launchNoticeKindValue==='rollback'?300:250,center:true,show:false,frame:false,
     resizable:false,minimizable:false,maximizable:false,fullscreenable:false,
-    backgroundColor:'#f8f8f9',title:'Buyer Log açılıyor… / Buyer Log is opening…',
+    backgroundColor:'#f8f8f9',title:'Buyer Log · '+text.title,
     webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true}});
   global.__buyerLogLaunchNotice=notice;
   // Older/rolled-back cores do not know the hand-off global. Close the notice
@@ -95,10 +132,8 @@ async function showLaunchNotice(){
     app.removeListener('browser-window-created',handOff);
     if(global.__buyerLogLaunchNotice===notice)delete global.__buyerLogLaunchNotice;
   });
-  const text=LAUNCH_NOTICE_TEXT[launchNoticeKind()];
-  // Animasyon derleyicide çalışır: ana süreç senkron doğrulamadayken de çubuk ilerler.
-  const detail=text.trDetail?`<small>${text.trDetail}</small>`:'',detailEn=text.enDetail?`<small lang="en">${text.enDetail}</small>`:'';
-  const html=`<!doctype html><html lang="tr"><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"><title>Buyer Log</title><style>html,body{height:100%;margin:0}body{box-sizing:border-box;padding:0 28px;border:1px solid #d4d4d7;background:#f8f8f9;color:#1d1f20;font-family:system-ui,Segoe UI,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;-webkit-app-region:drag}strong{font-size:30px;font-weight:600}p{margin:0;font-size:14px;color:#5d5d60}small{display:block;font-size:11.5px;line-height:1.35;color:#7a7a7d}i{display:block;width:220px;height:3px;background:#d4d4d7;overflow:hidden;position:relative}i::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-40%;background:#3f6488;animation:s 1.2s ease-in-out infinite}@keyframes s{to{left:100%}}@media (prefers-reduced-motion:reduce){i::after{animation:none;left:0;width:100%;opacity:.35}}</style><body><strong>Buyer Log</strong><i aria-hidden="true"></i><p role="status">${text.tr}${detail}</p><p lang="en">${text.en}${detailEn}</p></body></html>`;
+  // Animasyon derleyicide çalışır: ana süreç senkron işteyken de çubuk ilerler.
+  const html=launchNoticeHtml(launchNoticeKindValue,lang);
   let timer;
   try{await new Promise((resolve,reject)=>{
     timer=setTimeout(()=>reject(new Error('Launch notice timeout')),3000);
@@ -108,7 +143,24 @@ async function showLaunchNotice(){
     notice.loadURL('data:text/html;charset=utf-8,'+encodeURIComponent(html)).catch(reject);
   });}catch(error){if(!notice.isDestroyed())notice.destroy();throw error;}
   finally{clearTimeout(timer);}
-  log('launch-notice-visible',{sinceProcessStartMs:sinceProcessStartMs()});
+  log('launch-notice-visible',{kind:launchNoticeKindValue,sinceProcessStartMs:sinceProcessStartMs()});
+}
+/* Bildirimdeki etkin adımı ilerletir. Senkron bir adımdan (veri yedeği,
+ * etkinleştirme) önce çağrıldığında boyamanın tamamlanması kısa süre beklenir;
+ * bildirim yoksa ya da yanıt vermezse açılış hiçbir koşulda beklemede kalmaz. */
+async function launchStep(id,{paint=false}={}){
+  log('launch-step',{step:id,sinceProcessStartMs:sinceProcessStartMs()});
+  const notice=global.__buyerLogLaunchNotice;
+  if(!notice||notice.isDestroyed()||typeof notice.webContents?.executeJavaScript!=='function')return;
+  let timer;
+  try{
+    await Promise.race([
+      notice.webContents.executeJavaScript('window.BLNotice&&window.BLNotice.step('+JSON.stringify(id)+')',false).catch(()=>{}),
+      new Promise(resolve=>{timer=setTimeout(resolve,300);}),
+    ]);
+    if(paint)await new Promise(resolve=>setTimeout(resolve,50));
+  }catch(_){}
+  finally{clearTimeout(timer);}
 }
 /* Normal açılışta seçili çekirdeğin bütünlük taraması (~2.500 dosya / 165 MB)
  * ana süreçte senkron çalışıyordu; yavaş disk veya antivirüste açılış penceresi
@@ -137,42 +189,47 @@ function verifyPackagedCoreOffThread(core,version){
     worker.once('exit',()=>settle(resolve,false));
   });
 }
+/* Launcher'ın açılış işi (geri alma, doğrulama, etkinleştirme) bittiği ve main.js
+ * kendi işleyicilerini kaydettiği ana kadar: bildirim kapatılırsa (Alt+F4)
+ * Electron'un varsayılan çıkışı denemedeki sağlam sürümü sonraki açılışta geri
+ * aldırabilirdi; ikinci kopya olayı da kaybolurdu. Bu aralıkta açılış sürer ve
+ * ikinci kopya bildirimi öne getirir. Dinleyici kaydı en iyi çabadır. */
+function holdLaunch(){
+  const keepRunning=()=>{};
+  const focusNotice=()=>{const notice=global.__buyerLogLaunchNotice;if(notice&&!notice.isDestroyed()){try{notice.show();notice.focus();}catch(_){}}};
+  const listen=(name,fn)=>{try{if(typeof app.on==='function')app.on(name,fn);}catch(_){}};
+  const unlisten=(name,fn)=>{try{if(typeof app.removeListener==='function')app.removeListener(name,fn);}catch(_){}};
+  listen('window-all-closed',keepRunning);listen('second-instance',focusNotice);
+  let released=false;
+  return ()=>{if(released)return;released=true;unlisten('window-all-closed',keepRunning);unlisten('second-instance',focusNotice);};
+}
 async function launchCore(){
-const lifecycle=createLauncherState({bootstrapCore:BOOTSTRAP_CORE,portableRoot:PORTABLE_ROOT});
+const release=holdLaunch();
+let selected,activation,lifecycle;
+try{
+lifecycle=createLauncherState({bootstrapCore:BOOTSTRAP_CORE,portableRoot:PORTABLE_ROOT});
 const recovered=app.isPackaged?lifecycle.rollbackExistingTrial():null;
 if(recovered)log('rollback-on-next-launch',{failedVersion:recovered.failed.version,restoredVersion:recovered.restored.version});
 // İmzalı yama güven kökü bu launcher'ın kendi dosyalarıdır (bootstrap.json,
 // anahtarlar, doğrulayıcı); kurulum kökü yalnız sürüm/pointer yönetimi içindir.
 const patchManager=app.isPackaged?require('./manual-patch/manager').createInstalledManager({bootstrapCore:BOOTSTRAP_CORE,trustRoot:LAUNCHER_ROOT,portableRoot:PORTABLE_ROOT}):null;
-function verifySelected(selected){
+const isManualCore=core=>path.relative(path.join(PORTABLE_ROOT,'.buyerlog-versions'),core).split(path.sep)[0].startsWith('manual-');
+/* Aynı açılışta aynı paketli çekirdek bir kez taranır. Güncellemede yeni sürüm
+ * etkinleştirmeden önce doğrulanır ve seçilen çekirdek odur; eskiden aynı ~165 MB
+ * üçüncü kez taranıyordu. İmzalı el yaması çekirdekleri kendi yöneticisiyle
+ * doğrulanır (nadir yol) ve bu kümeye girmez. */
+const verifiedCores=new Set();
+async function verifyCore(target){
   if(!app.isPackaged)return;
+  const root=path.resolve(target.appCoreRoot),key=root+'\n'+String(target.version||'');
+  if(verifiedCores.has(key))return;
   const started=Date.now();
-  const relative=path.relative(path.join(PORTABLE_ROOT,'.buyerlog-versions'),selected.appCoreRoot);
-  if(relative.split(path.sep)[0].startsWith('manual-'))patchManager.verifyInstalled(selected);
-  else require('./manual-patch/core-verification').verifyPackagedCore(selected.appCoreRoot,selected.version);
-  log('core-verified',{version:selected.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs()});
-}
-async function verifySelectedOffThread(selected){
-  if(!app.isPackaged)return;
-  const relative=path.relative(path.join(PORTABLE_ROOT,'.buyerlog-versions'),selected.appCoreRoot);
-  // İmzalı el yaması çekirdekleri kendi yöneticisiyle doğrulanır (nadir yol).
-  if(relative.split(path.sep)[0].startsWith('manual-'))return verifySelected(selected);
-  const started=Date.now();
-  // Senkron taramada olay döngüsü kilitliydi; artık boşta ve main.js henüz kendi
-  // işleyicilerini kaydetmedi. Bildirim kapatılırsa (Alt+F4) Electron'un varsayılan
-  // çıkışı denemedeki sağlam sürümü sonraki açılışta geri aldırabilirdi; ikinci kopya
-  // olayı da kaybolurdu. Bu aralıkta açılış sürer ve ikinci kopya bildirimi öne getirir.
-  const keepRunning=()=>{};
-  const focusNotice=()=>{const notice=global.__buyerLogLaunchNotice;if(notice&&!notice.isDestroyed()){try{notice.show();notice.focus();}catch(_){}}};
-  // Dinleyici kaydı en iyi çabadır: hiçbir koşulda doğrulamayı ya da açılışı durdurmaz.
-  const listen=(name,fn)=>{try{if(typeof app.on==='function')app.on(name,fn);}catch(_){}};
-  const unlisten=(name,fn)=>{try{if(typeof app.removeListener==='function')app.removeListener(name,fn);}catch(_){}};
-  listen('window-all-closed',keepRunning);listen('second-instance',focusNotice);
-  let verified;
-  try{verified=await verifyPackagedCoreOffThread(selected.appCoreRoot,selected.version);}
-  finally{unlisten('window-all-closed',keepRunning);unlisten('second-instance',focusNotice);}
-  if(!verified)return verifySelected(selected);
-  log('core-verified',{version:selected.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs(),offThread:true});
+  if(isManualCore(target.appCoreRoot)){patchManager.verifyInstalled(target);log('core-verified',{version:target.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs(),manualPatch:true});return;}
+  // Tarama işçi iş parçacığında yürür; ana süreç ve bildirim yanıt vermeye devam eder.
+  const offThread=await verifyPackagedCoreOffThread(target.appCoreRoot,target.version);
+  if(!offThread)require('./manual-patch/core-verification').verifyPackagedCore(target.appCoreRoot,target.version);
+  verifiedCores.add(key);
+  log('core-verified',{version:target.version,durationMs:Date.now()-started,sinceProcessStartMs:sinceProcessStartMs(),offThread});
 }
 /* Bekleyen çekirdek bu launcher'dan daha yeni bir etkinleştirme protokolü
  * isterse deneme başlatılmaz; updater önce uygun launcher'ı kurar. */
@@ -184,25 +241,31 @@ function pendingNeedsNewerLauncher(pending){
     return compareSemver(UPDATER_VERSION,required)<0?required:'';
   }catch(error){return error.code==='ENOENT'?'':'invalid';}
 }
+let activating=false;
 if(app.isPackaged){
   const pending=lifecycle.readState().pending;
   if(pending?.ready){
-    // Before a real activation, validate the rollback target as well. Normal
-    // launches validate the final selected core once, below.
-    verifySelected(lifecycle.currentPointer());
+    // Before a real activation, validate the rollback target as well.
+    await launchStep('verify-current');
+    await verifyCore(lifecycle.currentPointer());
+    await launchStep('verify-new');
     if(pending.manualPatch)patchManager.verifyStaged(pending);
-    else require('./manual-patch/core-verification').verifyPackagedCore(pending.appCoreRoot,pending.version);
+    else await verifyCore({appCoreRoot:pending.appCoreRoot,version:pending.version});
     const required=pendingNeedsNewerLauncher(pending);
     if(required){
       lifecycle.writeState({state:'FAILED',pending:null,lastError:{code:'UPDATE_UPDATER_TOO_OLD',required,message:'Bu sürüm daha yeni güncelleme altyapısı gerektiriyor; altyapı yeniden hazırlanacak. / This version requires newer update infrastructure; it will be prepared again.'}});
       log('activation-deferred-launcher-too-old',{version:pending.version,required});
-    }
+    }else activating=true;
   }
 }
+// Yerel veri checkpointi ve pointer geçişi senkron ve kısa; adım önce boyanır.
+if(activating)await launchStep('backup',{paint:true});
 const activationResult=app.isPackaged?lifecycle.activatePending():null;
-const activation=activationResult&&activationResult.activation||null;
-const selected=app.isPackaged?lifecycle.currentPointer():lifecycle.bootstrapPointer();
-await verifySelectedOffThread(selected);
+activation=activationResult&&activationResult.activation||null;
+if(activation)await launchStep('activate');
+selected=app.isPackaged?lifecycle.currentPointer():lifecycle.bootstrapPointer();
+await launchStep('verify');
+await verifyCore(selected);
 if(activation)log('activation-started',{version:activation.version,previousVersion:activation.previous&&activation.previous.version||''});
 process.env.BUYER_LOG_BOOTSTRAP_APP_CORE=BOOTSTRAP_CORE;
 process.env.BUYER_LOG_ACTIVE_APP_CORE=selected.appCoreRoot;
@@ -221,15 +284,16 @@ global.__buyerLogLauncherHealthReady=(info={})=>{
   return ok;
 };
 
-let healthTimer=null;
 if(activation){
-  healthTimer=setTimeout(()=>{
+  const healthTimer=setTimeout(()=>{
     const state=lifecycle.readState();if(!state.activation||state.activation.token!==activation.token)return;
     lifecycle.requestRollback(activation,'health-timeout');log('rollback-requested',{failedVersion:activation.version,reason:'health-timeout'});
-    // Restore only on the next launcher run, after normal backend shutdown.
+    // Restore only on the next launch, after normal backend shutdown.
     try{app.relaunch();}catch(_){};app.quit();
   },HEALTH_TIMEOUT_MS);if(healthTimer.unref)healthTimer.unref();
 }
+await launchStep('start');
+}finally{release();}
 // Launcher'ın kendi işi (kurtarma, doğrulama, etkinleştirme) tamamlandı. Onay
 // çekirdek yüklenmeden verilir: çekirdek hatası sağlam launcher'ı geri düşürmez;
 // çekirdek hataları deneme/geri alma mekanizmasıyla ele alınır.

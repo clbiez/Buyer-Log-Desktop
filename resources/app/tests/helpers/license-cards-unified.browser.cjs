@@ -43,14 +43,41 @@ test('unified license workspace with demo data',async()=>{
   await page.locator('[data-lc-act="newCard"]').click();await page.locator('[data-lc-new="license"]').fill('Manual Demo');await page.locator('[data-lc-new="licensor"]').fill('MANUAL AGENCY');
   await page.locator('[data-lc-act="createCard"]').click();await page.waitForFunction(()=>document.querySelector('.lcName')?.textContent?.includes('Brawl')&&[...document.querySelectorAll('.lcName')].some(el=>el.textContent.includes('Manual Demo')));
   assert.ok(store.licenseCards.items.some(c=>c.license==='Manual Demo'));assert.ok(audit.some(a=>a[1]==='LICENSE_CARD_CREATE'));
+  await page.locator('[data-lc-act="closeEditor"]').click();
   // Category editing adds an independent scope and retains the general contract.
   await page.locator('#lcSearch').fill('Brawl');await page.locator('[data-lc-act="expand"]').first().click();
+  const editor=page.locator('.lcEditor');assert.equal(await editor.evaluate(el=>el.matches(':modal')),true);
+  assert.equal(await editor.locator('.lcContract').count(),1);assert.equal(await editor.locator('[data-lc-profile="artworkBrief"],[data-lc-new-licensor]').count(),0);
+  assert.equal(await page.locator('.lcTable .lcDetail').count(),0);
+  await editor.locator('[data-lc-act="history"]').click();assert.equal(await editor.locator('.lcContract').count(),3);
+  await editor.locator('[data-lc-act="history"]').click();assert.equal(await editor.locator('.lcContract').count(),1);
+  await editor.locator('[data-lc-act="toggleLicensor"]').click();assert.equal(await editor.locator('[data-lc-new-licensor]').isVisible(),true);
+  await editor.locator('[data-lc-act="toggleLicensor"]').click();assert.equal(await editor.locator('[data-lc-new-licensor]').count(),0);
+  const thumb=await page.locator('.lcRow .lcThumb').first().boundingBox(),preview=await editor.locator('.lcCover').boundingBox();
+  assert.equal(preview.width,thumb.width);assert.equal(preview.height,thumb.height);
+  await editor.locator('.datePickerBtn').first().click();assert.equal(await editor.locator('.dateCalendarPopup').count(),1);
+  await editor.locator('[data-cal-today]').click();assert.ok(await editor.locator('input[type="date"][data-lc-key="opdStart"]').first().inputValue());
+  await editor.locator('.datePickerBtn').first().click();await editor.locator('[data-cal-clear]').click();assert.equal(await editor.locator('input[type="date"][data-lc-key="opdStart"]').first().inputValue(),'');
+  await editor.locator('[data-lc-act="closeEditor"]').focus();await page.keyboard.press('Shift+Tab');assert.equal(await editor.locator('[data-lc-act="save"]').evaluate(el=>el===document.activeElement),true);
+  await page.keyboard.press('Tab');assert.equal(await editor.locator('[data-lc-act="closeEditor"]').evaluate(el=>el===document.activeElement),true);
+  await editor.locator('[data-lc-profile="workingNotes"]').fill('Pending demo note');await page.keyboard.press('Escape');assert.equal(await editor.count(),0);
+  await page.locator('.lcName').first().click();assert.equal(await editor.locator('[data-lc-profile="workingNotes"]').inputValue(),'Pending demo note');
+  await editor.locator('[data-lc-act="cancelEditor"]').click();assert.equal(await page.locator('.lcRow.isDirty').count(),0);
+  await page.locator('.lcName').first().click();
+  await editor.locator('[data-lc-cover]').setInputFiles({name:'demo.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEklEQVR4nGP4z8CAFWEXHbQSACj/P8Fu7N9hAAAAAElFTkSuQmCC','base64')});
+  await editor.locator('.lcCover img').waitFor();assert.equal(await editor.locator('.lcCover img').evaluate(el=>getComputedStyle(el).objectFit),'cover');
+  assert.equal((await editor.locator('.lcCover').boundingBox()).width,thumb.width);
+  if(process.env.LICENSE_COMPACT_SCREENSHOT){await page.evaluate(()=>{document.documentElement.dataset.theme='dark';});await page.waitForTimeout(600);await page.screenshot({path:process.env.LICENSE_COMPACT_SCREENSHOT});}
+  await editor.locator('[data-lc-act="cancelEditor"]').click();await page.locator('.lcName').first().click();
   await page.locator('[data-lc-act="addCategory"]').click();const category=page.locator('[data-lc-key="categories"]').last();
-  await category.fill('Accessories');const contract=category.locator('..');await contract.locator('[data-lc-key="royalty"]').fill('7');
+  await category.fill('Accessories');const contract=category.locator('xpath=ancestor::div[contains(@class,"lcContract")][1]');await contract.locator('[data-lc-key="royalty"]').fill('7');
+  const categoryId=await category.getAttribute('data-lc-rule');
   await contract.locator('[data-lc-act="checkRule"]').click();await page.locator('#lcQuickSupp').fill('1');assert.equal(await page.locator('#lcQuickTr').inputValue(),'1,18');
+  await page.evaluate(id=>window.BLLicenseCardsPage.openRule(id),categoryId);
   await contract.locator('[data-lc-key="hologramCost"]').fill('0,10');
   await page.locator('.lcDetailFoot [data-lc-act="save"]').click();await page.waitForFunction(()=>!document.querySelector('.lcRow.isDirty'));
   assert.equal(store.pricingRules.length,4);assert.equal(store.pricingRules.find(r=>r.id==='general').opdEnd,'');assert.equal(store.pricingRules.find(r=>r.categories?.includes('Accessories')).royalty,7);assert.equal(store.pricingRules.find(r=>r.categories?.includes('Accessories')).legacyTrHologramCost,null);
+  await page.locator('[data-lc-act="closeEditor"]').click();
   // The contracts view keeps the removed screen's filters, sorting and editing access.
   await page.locator('[data-lc-act="contractView"]').click();assert.equal(await page.locator('.lcContractRecord').count(),4,JSON.stringify(errors));
   await page.locator('[data-lc-contract-filter="hologramCost"]').fill('0,057');assert.equal(await page.locator('.lcContractRecord').count(),3);await page.locator('[data-lc-contract-filter="hologramCost"]').fill('');
@@ -58,6 +85,7 @@ test('unified license workspace with demo data',async()=>{
   await page.locator('[data-lc-contract-filter="categories"]').fill('');await page.locator('[data-lc-contract-sort="royalty"]').click();
   assert.equal(await page.locator('.lcContractRecord').first().locator('[data-lc-key="royalty"]').inputValue(),'3');
   await page.locator('.lcContractRecord').first().locator('[data-lc-act="openContract"]').click();
+  await page.locator('[data-lc-act="closeEditor"]').click();
   // Background refresh detects same-card conflicts and preserves the typed draft.
   const rate=page.locator('.lcRow [data-lc-rate="royalty"]').first();await rate.fill('8');await rate.blur();
   const current=cards.responseOf(store,true).cards.find(c=>c.license==='Brawl Demo');store=cards.updateCard(store,current.id,{editToken:current.editToken,profile:{workingNotes:'Changed elsewhere'}},validators).overrides;
@@ -65,8 +93,9 @@ test('unified license workspace with demo data',async()=>{
   await page.locator('.lcRow.isConflict [data-lc-act="discard"]').click();
   // All legacy entry points route here, including a contract deep link.
   await page.evaluate(()=>openSuppFobRulesModal('home'));assert.equal(await page.locator('#_suppFobRulesModal').count(),0);assert.equal(await page.locator('.lcDetail').count(),1);
-  if(process.env.LICENSE_CARDS_SCREENSHOT){await page.locator('#lcQuickRule').selectOption('home');await page.locator('#lcQuickSupp').fill('1');await page.locator('#lcQuickSupp').blur();await page.locator('.lcTable').evaluate(el=>el.scrollTop=0);await page.waitForTimeout(1200);await page.screenshot({path:process.env.LICENSE_CARDS_SCREENSHOT});}
+  if(process.env.LICENSE_CARDS_SCREENSHOT){await page.locator('[data-lc-act="closeEditor"]').click();await page.locator('#lcQuickRule').selectOption('home');await page.locator('#lcQuickSupp').fill('1');await page.locator('#lcQuickSupp').blur();await page.locator('.lcTable').evaluate(el=>el.scrollTop=0);await page.evaluate(()=>openSuppFobRulesModal('home'));await page.waitForTimeout(1200);await page.screenshot({path:process.env.LICENSE_CARDS_SCREENSHOT});}
   if(process.env.LICENSE_CARDS_CAPTURE_DIR){
+    await page.locator('[data-lc-act="closeEditor"]').click();
     const dir=process.env.LICENSE_CARDS_CAPTURE_DIR;
     assert.match(await page.locator('.lcName').first().innerText(),/Home/);
     await page.locator('[data-lc-act="newCard"]').click();await page.locator('[data-lc-new="license"]').fill('Future Demo');await page.locator('[data-lc-new="licensor"]').fill('DEMO AGENCY');
@@ -78,6 +107,7 @@ test('unified license workspace with demo data',async()=>{
   await page.evaluate(()=>openSuppFobRulesModal('general'));await page.locator('[data-lc-act="addPeriod"]').click();
   let pending=page.locator('.lcContract').first();const pendingId=await pending.locator('[data-lc-key="categories"]').getAttribute('data-lc-rule');
   await pending.locator('[data-lc-key="categories"]').fill('Home Future');await pending.locator('.dateKeyboardInput[data-lc-key="opdStart"]').fill('01.01.27');await pending.locator('.dateKeyboardInput[data-lc-key="opdStart"]').blur();
+  await page.locator('[data-lc-act="history"]').click();
   assert.equal(await page.locator('input[type="date"][data-lc-rule="general"][data-lc-key="opdEnd"]').inputValue(),'');
   page.once('dialog',dialog=>dialog.accept());await page.locator(`[data-lc-act="deleteRule"][data-rule-id="${pendingId}"]`).click();
   await page.locator('[data-lc-act="addPeriod"]').click();pending=page.locator('.lcContract').first();const secondId=await pending.locator('[data-lc-key="categories"]').getAttribute('data-lc-rule');
@@ -89,7 +119,10 @@ test('unified license workspace with demo data',async()=>{
     assert.equal(await page.locator('[data-lc-act="newCard"]').isVisible(),true);
     assert.ok((await page.locator('.lcTable').boundingBox()).height>100);
     assert.ok(await page.evaluate(()=>document.scrollingElement.scrollHeight<=innerHeight+1));
+    const bounds=await editor.boundingBox();assert.ok(bounds.x>=0&&bounds.y>=0&&bounds.y+bounds.height<=1001);
+    assert.equal(await editor.locator('.lcDetailFoot').isVisible(),true);assert.ok(await editor.evaluate(el=>el.scrollWidth<=el.clientWidth+1));
   }
+  await page.locator('[data-lc-act="closeEditor"]').click();
   await page.emulateMedia({reducedMotion:'reduce'});await page.locator('[data-lc-act="contractView"]').click();assert.ok(await page.locator('.lcContractRecord').count()>0);
   // Revoked edit permission cannot create a card.
   permission=false;const denied=await page.evaluate(()=>fetch('/api/license-cards',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({license:'Denied'})}).then(r=>r.status));assert.equal(denied,403);assert.ok(!store.licenseCards.items.some(c=>c.license==='Denied'));

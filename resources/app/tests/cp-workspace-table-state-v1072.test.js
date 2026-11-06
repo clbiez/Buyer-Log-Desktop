@@ -54,14 +54,12 @@ test('v10.72 otomatik DTR Sub Mfr display, filter, copy ve export için kanonikt
 });
 
 test('v10.72 Collection freeze offsetleri colgroup stilinden değil gerçek layout genişliğinden hesaplanır', () => {
-  assert.match(APP, /function freezeColumnWidths\(table,withChk\)/,
-    'freeze için tek genişlik ölçüm yardımcısı olmalı');
-  const helperStart = APP.indexOf('function freezeColumnWidths(');
-  const helperEnd = APP.indexOf('\n}', helperStart) + 2;
-  const helper = APP.slice(helperStart, helperEnd);
-  assert.match(helper, /getBoundingClientRect\(\)\.width/,
-    'sticky offset gerçek header/body layout ölçüsünü kullanmalı');
-  assert.match(bodyOf('applyFreeze'), /freezeColumnWidths\(table,withChk\)/);
-  assert.match(bodyOf('freezeLayoutFor'), /freezeColumnWidths\(table,withChk\)/);
-  assert.match(bodyOf('applyFreezeToRow'), /freezeColumnWidths\(table,withChk\)/);
+  const engine = fs.readFileSync(path.join(__dirname, '..', 'public', 'table-freeze.js'), 'utf8');
+  assert.match(engine, /cells\.map\(function \(cell\) \{ return cell\.getBoundingClientRect\(\)\.width; \}\)/,
+    'sticky offset gerçek başlık hücresi ölçüsünü kullanmalı');
+  assert.match(engine, /new global\.ResizeObserver/, 'genişlik değişince ofsetler yeniden yazılmalı');
+  assert.doesNotMatch(engine, /colgroup/, 'colgroup stil genişliği ofset kaynağı olmamalı');
+  assert.match(bodyOf('applyFreeze'), /BLTableFreeze\.apply\(table,\{count:freeze\.left,pane:freeze\.pane,onPaneResize:px=>setFreezePane\(tableKey,px\)\}\)/);
+  for (const legacy of ['freezeColumnWidths', 'freezeLayoutFor', 'applyFreezeToRow', 'applyFreezePlanToRow'])
+    assert.doesNotMatch(APP, new RegExp('function ' + legacy + '\\('), legacy + ' yeniden eklenmemeli');
 });

@@ -1,0 +1,126 @@
+[PERF] APP_BOOT_START +1ms
+[PERF] LOCAL_CONFIG_READY +175ms
+[PERF] DELTA_STORE_MODE +813ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +1138ms
+Buyer Log runtime config: /tmp/buyerlog-startup-baseline-1/config.json · port=34701 · host=127.0.0.1
+[PERF] SERVER_READY +1380ms
+Buyer Log sunucusu çalışıyor: http://localhost:34701
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /tmp/buyerlog-startup-baseline-1/source
+[RUNTIME] heap-limit heapUsedMb=46 heapLimitMb=4288 rssMb=101
+[RUNTIME] stall-profiler samplingMs=5 minStallMs=10000
+[PERF] LOCAL_DB_CONFIG_PATH +1702ms
+[PERF] SHARED_SYNC_ROOT +1702ms
+[PERF] SHARED_HUB_BOOTSTRAP +1818ms
+[2026-11-05T21:50:06.688Z] [ASAS Excel] [pivot-refresh] START category=wait
+[2026-11-05T21:50:06.691Z] [ASAS Excel] [pivot-refresh] END duration=3ms category=wait error=ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.
+[2026-11-05T21:50:06.693Z] [ASAS Excel] [file-parse] START category=wait
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +3184ms
+[PERF] LOCAL_DB_READY +3185ms
+[PERF] LOCAL_STATE_READY +3185ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +3338ms
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +7668ms
+[PERF] DELTA_STORE_HYDRATED +7675ms
+[2026-11-05T21:50:43.551Z] [ASAS Excel] [file-parse] END duration=36858ms category=wait
+[2026-11-05T21:50:44.542Z] [ANTREPO Excel] [pivot-refresh] START category=wait
+[2026-11-05T21:50:44.542Z] [ANTREPO Excel] [pivot-refresh] END duration=0ms category=wait error=Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.
+[2026-11-05T21:50:44.543Z] [ANTREPO Excel] [file-parse] START category=wait
+[2026-11-05T21:50:52.385Z] [ANTREPO Excel] [file-parse] END duration=7842ms category=wait
+[2026-11-05T21:50:57.267Z] [Refresh] [comparison] START category=wait
+[2026-11-05T21:51:04.145Z] [Refresh] [comparison] END duration=6878ms category=wait
+[2026-11-05T21:51:04.147Z] [Local storage] [snapshot-save] START category=save
+[RUNTIME] event-loop-stall blockedMs=6897 cpuMs=12170 heapUsedMb=240 heapLimitMb=4288 rssMb=665
+[2026-11-05T21:51:22.515Z] [Local storage] [snapshot-save] END duration=18368ms category=save
+[2026-11-05T21:51:22.515Z] [Local storage] [page-cache-write] START category=cache
+[2026-11-05T21:51:44.876Z] [Local storage] [page-cache-write] END duration=22361ms category=cache
+[PERF] APP_BOOT_START +4ms
+[PERF] LOCAL_CONFIG_READY +139ms
+[PERF] DELTA_STORE_MODE +203ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +459ms
+Buyer Log runtime config: /tmp/buyerlog-startup-baseline-1/config.json · port=34701 · host=127.0.0.1
+[PERF] SERVER_READY +684ms
+Buyer Log sunucusu çalışıyor: http://localhost:34701
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /tmp/buyerlog-startup-baseline-1/source
+[RUNTIME] heap-limit heapUsedMb=59 heapLimitMb=4288 rssMb=130
+[RUNTIME] stall-profiler samplingMs=5 minStallMs=10000
+[PERF] LOCAL_DB_CONFIG_PATH +860ms
+[PERF] SHARED_SYNC_ROOT +860ms
+[PERF] SHARED_HUB_BOOTSTRAP +882ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +1597ms
+[PERF] LOCAL_DB_READY +1598ms
+[PERF] LOCAL_STATE_READY +1599ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +1699ms
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +5625ms
+[PERF] DELTA_STORE_HYDRATED +5629ms
+[PERF] APP_BOOT_START · server received +7856ms · client +397ms · duration 0ms
+[PERF] FRONTEND_BOOT_START · server received +7857ms · client +401ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_START · server received +7857ms · client +401ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_START · server received +7857ms · client +410ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY · server received +7857ms · client +534ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_XLSX_DEFERRED · server received +7857ms · client +637ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_CORE_RESOURCES_READY · server received +7857ms · client +659ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_START · server received +7857ms · client +2156ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_START · server received +7859ms · client +2165ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_READY · server received +7860ms · client +2702ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_UI_SHELL_READY · server received +7860ms · client +2728ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_READY · server received +7860ms · client +2728ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_READY · server received +7860ms · client +2728ms · duration 0ms
+[PERF] DOM_CREATION_READY · server received +7860ms · client +2902ms · duration 0ms
+[PERF] CACHE_LOAD_START · server received +7860ms · client +2910ms · duration 0ms
+[PERF] CACHE_LOAD_READY · server received +7860ms · client +3172ms · duration 261ms
+[PERF] DATASOURCE_PREPARATION_START · server received +7861ms · client +3172ms · duration 0ms
+[PERF] DATASOURCE_PREPARATION_READY · server received +7861ms · client +3205ms · duration 33ms
+[PERF] FILTER_PIVOT_INIT_START · server received +7861ms · client +3205ms · duration 0ms
+[PERF] FILTER_PIVOT_INIT_READY · server received +7861ms · client +3205ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_START · server received +7861ms · client +3205ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_READY · server received +7861ms · client +3205ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_START · server received +7861ms · client +3205ms · duration 0ms
+[PERF] TABLE_RENDER_START · server received +7861ms · client +3205ms · duration 0ms
+[PERF] TABLE_RENDER_READY · server received +7861ms · client +3223ms · duration 18ms
+[PERF] ACTIVE_MODULE_INIT_READY · server received +7861ms · client +3223ms · duration 18ms
+[PERF] UI_FIRST_RENDER · server received +7862ms · client +3223ms · duration 0ms
+[PERF] UI_READY · server received +7862ms · client +4483ms · duration 0ms
+[PERF] STARTUP_CLIENT_REPORT_RECEIVED +7863ms
+[PERF] BACKGROUND_SYNC_START +10364ms
+[PERF] SYNC_COMPLETE +10393ms · duration 6ms
+[RUNTIME] event-loop-stall blockedMs=33363 cpuMs=47393 heapUsedMb=572 heapLimitMb=4288 rssMb=1496
+[RUNTIME] stall-profile blockedMs=33363 sampledMs=84652 file=stall-2026-11-05T21-54-18-438Z.cpuprofile
+[RUNTIME] stall-profile top1 37862ms 44.7% (idle)
+[RUNTIME] stall-profile top2 4464ms 5.3% (garbage collector)
+[RUNTIME] stall-profile top3 3416ms 4% (anonymous) server/lib/parse.js:3423
+[RUNTIME] stall-profile top4 3000ms 3.5% stringifyWithDates server/lib/json-dates.js:8
+[RUNTIME] stall-profile top5 2609ms 3.1% utf8Slice
+[RUNTIME] stall-profile top6 2170ms 2.6% (program)
+[RUNTIME] stall-profile top7 1796ms 2.1% decodeSnapshotText server/lib/model-snapshot.js:191
+[RUNTIME] stall-profile top8 1249ms 1.5% turknorm server/lib/parse.js:31
+[RUNTIME] stall-profile top9 1243ms 1.5% update node:internal/crypto/hash:145
+[RUNTIME] stall-profile top10 1209ms 1.4% processTimers node:internal/timers:556
+[RUNTIME] stall-profile top11 1011ms 1.2% post node:inspector:115
+[RUNTIME] stall-profile top12 927ms 1.1% dateOnlyFromDateObject server/lib/parse.js:900
+[RUNTIME] stall-profile top13 911ms 1.1% buildAntrepoLookup server/lib/parse.js:310
+[RUNTIME] stall-profile top14 788ms 0.9% makeDateOnly server/lib/parse.js:890
+[RUNTIME] stall-profile top15 765ms 0.9% concat node:buffer:628
+[RUNTIME] stall-profile stack1 37862ms (idle)
+[RUNTIME] stall-profile stack2 4464ms (garbage collector)
+[RUNTIME] stall-profile stack3 3416ms (anonymous) server/lib/parse.js:3423 < backlogTemplateRowsFromSegments server/lib/parse.js:3418 < buildBacklogTemplateRows server/lib/parse.js:3373 < (anonymous) server/server.js:8859 < cachedBacklogTemplateRows server/server.js:8804 < (anonymous) server/server.js:8835 < runMicrotasks < processTicksAndRejections node:internal/process/task_queues:72
+[RUNTIME] stall-profile stack4 3000ms stringifyWithDates server/lib/json-dates.js:8 < sendDateSafeJson server/server.js:6954 < (anonymous) server/server.js:8835 < runMicrotasks < processTicksAndRejections node:internal/process/task_queues:72
+[PERF] SYNC_COMPLETE +301248ms · duration 30ms
+[PERF] APP_BOOT_START +1ms
+[PERF] LOCAL_CONFIG_READY +169ms
+[PERF] DELTA_STORE_MODE +250ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +798ms
+Buyer Log runtime config: /tmp/buyerlog-startup-baseline-1/config.json · port=42987 · host=127.0.0.1
+[PERF] SERVER_READY +973ms
+Buyer Log sunucusu çalışıyor: http://localhost:42987
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /tmp/buyerlog-startup-baseline-1/source
+[RUNTIME] heap-limit heapUsedMb=60 heapLimitMb=4288 rssMb=131
+[RUNTIME] stall-profiler samplingMs=5 minStallMs=10000
+[PERF] LOCAL_DB_CONFIG_PATH +1421ms
+[PERF] SHARED_SYNC_ROOT +1421ms
+[PERF] SHARED_HUB_BOOTSTRAP +1424ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +2786ms
+[PERF] LOCAL_DB_READY +2786ms
+[PERF] LOCAL_STATE_READY +2786ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +3690ms

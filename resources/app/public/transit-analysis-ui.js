@@ -387,9 +387,9 @@
           <div class="trxCardTitle"><div class="trxH">${title}</div><div class="trxSub">${sub}</div></div>
           ${sourceSeg()}
         </div>
-        ${view.collapsed ? '' : `${view.source === 'database' ? dbToolbar() : excelToolbar(analysis)}
+        ${view.collapsed ? '' : `<div class="trxDisclosureBody">${view.source === 'database' ? dbToolbar() : excelToolbar(analysis)}
         ${view.source === 'database' && live.warnings && live.warnings.length ? `<div class="trxWarn">${live.warnings.map(w => esc(w && typeof w === 'object' ? L(w.tr, w.en || w.tr) : String(w))).join(' · ')}</div>` : ''}
-        <div class="trxCardBody">${bodyHtml(analysis)}</div>`}
+        <div class="trxCardBody">${bodyHtml(analysis)}</div></div>`}
       </section>`;
       bindAll();
     }
@@ -405,7 +405,17 @@
     function bindAll() {
       const q = sel => container.querySelector(sel);
       const qa = sel => container.querySelectorAll(sel);
-      q('[data-ta-collapse]')?.addEventListener('click', () => { view.collapsed = !view.collapsed; writeView(view); render(); });
+      q('[data-ta-collapse]')?.addEventListener('click', event => {
+        view.collapsed = !view.collapsed; writeView(view);
+        if (!view.collapsed) render();
+        const button = q('[data-ta-collapse]') || event.currentTarget, body = q('.trxDisclosureBody');
+        button.setAttribute('aria-expanded', String(!view.collapsed));
+        button.textContent = view.collapsed ? '▸' : '▾';
+        button.title = view.collapsed ? L('Aç', 'Expand') : L('Daralt', 'Collapse');
+        q('.trxCard')?.classList.toggle('is-collapsed', view.collapsed);
+        if (global.BLMotionPlus?.disclosure) global.BLMotionPlus.disclosure(body, !view.collapsed, { trigger: button, ...(!view.collapsed ? { fromHeight: 0 } : {}) });
+        else if (body) body.hidden = view.collapsed;
+      });
       qa('[data-ta-source]').forEach(el => el.addEventListener('click', () => {
         if (view.source === el.dataset.taSource) return;
         view.source = el.dataset.taSource; view.basis = ''; view.year = ''; view.vehicle = '*';

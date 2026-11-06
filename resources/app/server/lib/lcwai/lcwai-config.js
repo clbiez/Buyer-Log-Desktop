@@ -67,7 +67,9 @@ const LIMITS = Object.freeze({
   maxResponseChars: 200000,
   maxFileBytes: 20 * 1024 * 1024,
   maxFilesPerRequest: 5,
-  maxConcurrentPerOwner: 2,
+  /* 3: PLM BOM analizi en fazla 2 slot kullanır (plm-bom-sync AI_CONCURRENCY);
+     kullanıcının kendi LCW AI sohbetine her zaman bir slot kalır. */
+  maxConcurrentPerOwner: 3,
 });
 
 const ALLOWED_UPLOAD_TYPES = Object.freeze([

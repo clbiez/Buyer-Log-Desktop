@@ -110,6 +110,13 @@ diğer grafik işaretçilerine veya kart/kontrol köşelerine uygulanmaz.
    üzerinde `--ui-group-divider` ile 1px sınır; giriş alanları `--ui-field-border` (§5). Checkbox'ta durum
    okunabilirliği, kullanıcı avatarında logo ile eşit `--ui-mark-radius` köşe uygulanır.
 7. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
+8. Sütun dondurmanın tek sahibi `public/table-freeze.js` (`BLTableFreeze`):
+   konum, ofset ve katman sırası (kayan gövde < `--ui-z-frozen-cell` < kayan
+   başlık `--ui-z-sticky` < donmuş başlık `--ui-z-sticky-column`) yalnız orada
+   üretilir. Donmuş sol bölme ile sağ tablo bağımsız yatay kayar: bölme sınırı
+   sürüklenebilir 2px `--ui-field-border` ayırıcıdır (sürüklerken `--ui-accent`),
+   donmuş bölmenin kendi kaydırma çubuğu yalnız sol bölmenin altındadır. Modül
+   CSS'i `frzL` hücrelerine konum, `z-index` veya zemin yaması eklemez.
 
 Tablo başlıkları `--ui-header-*`, ana grup bandı `--ui-group-header-*` kullanır.
 OAB ve INTAKE ilk açılışta grafik yerine pivot/tablo gösterir; grafik
@@ -177,6 +184,7 @@ aynı tokenları kullanır. Modül CSS’i bu durumlara ayrı renk/çerçeve ica
 | Token | Seviye | Amaç |
 | --- | ---: | --- |
 | `--ui-z-below/base/data/raised` | -1 / 0 / 1 / 2 | yerel veri geometrisi |
+| `--ui-z-frozen-cell` | 20 | dondurulmuş gövde/alt bilgi hücresi (yalnız `table-freeze.js`) |
 | `--ui-z-sticky` | 30 | sabit tablo başlığı |
 | `--ui-z-sticky-column` | 31 | dondurulmuş başlık sütunu |
 | `--ui-z-chrome` | 40 | uygulama rayı/üst çubuk |
@@ -198,6 +206,17 @@ Hareket paleti yalnız `ui-tokens.css` üzerinden gelir: 100/140 ms temel kontro
 560 ms tema (`--ui-motion-theme`).
 Easing ortak cubic-bezier ile izlenir. Hareket içerik, geometri ve iş verisi
 üzerinde kalıcı değişiklik yapmaz.
+
+**Modüller arası kademeli akış:** Başlık, özetler ve görünür ana içerik en çok
+beş ayrı blok halinde sırayla girer. Ortak `--ui-motion-flow:440ms`,
+`--ui-motion-stagger:40ms` ve `--ui-motion-distance:14px` tokenları kullanılır.
+Tablo başlığı, kaydırma alanı ve tabloyu içeren üst bloklar sabit kalır;
+tablo gövdesi aşağıdaki sıralı satır girişiyle açılır. Aynı girişte üst blok,
+hücre dalgası veya iç içe kart animasyonu eklenmez. Lazy çizim için sınırlı
+tekrarlar yalnız henüz girmemiş blokları ve tabloları alır.
+Gezinme, hareketi kapatma ve görünmez sekme önceki akışı iptal eder; içerikle
+etkileşim, odak veya kaydırma sırasında akış durur. Seçili/düzenlenen veri
+blokları atlanır; aynı modüle tıklama, filtre ve veri yenilemesi akışı tekrarlamaz.
 
 **Tema geçişi:** Kullanıcı temayı değiştirdiğinde `BLMotionPlus.theme(update, origin)`
 Görünüm menüsünde seçilen efekti çalıştırır (`motion-plus-theme.js`,
@@ -239,20 +258,26 @@ Taşıma simgeleri (gemi/uçak/tır) `MODE_GLYPH_PATHS` tek kaynağından gelir;
 1 araç tek rozet, birden fazla araç aynı boyutta üç küçük gemi içeren tek filo
 rozetidir; gerçek taşıma tipleri ve araç sayısı hover/detay özetinde korunur.
 
-**Sol üstten dalga:** Aktif tablodaki sadece ilk iki görünür gridin
-kaydırma alanında görünen satır ve sütunlarında tek giriş efekti uygulanır. Hücreler diagonal gecikmeyle
-`--ui-selected` renginden özgün görünümüne döner; yatay/dikey kaydırma, seçim,
-hücre düzenleme, veri değişimi ve export tetiklemez. Aktif/seçilmiş/düzenlenen
-hücreler atlanır. Yeni sayfa aktivasyonunda tekrar çalışabilir; scroll,
-filtre seçimi veya her veri yaması bir dalga başlatmaz.
+**Sıralı satırlar:** Modül girişinde ilk iki görünür tablonun en çok altışar
+görünür veri satırı, `--ui-motion-table:390ms` toplam süre ve
+`--ui-motion-table-distance:10px` ile sırayla belirir. Satır başına süre
+toplamın %52'si, ilk gecikme %18'i ve satırlar arası aralık %6'sıdır.
+Yalnız `opacity/transform` değişir; hücre renkleri, metin, başlıklar ve seçim
+korunur. Aktif/seçili/düzenlenen hücre içeren satırın tamamı atlanır.
+Tablo başına en çok 128 satır ölçülür; derin kayıtlı kaydırma konumunda bu
+sınırda görünür satır yoksa hareket atlanır. Ölçümler animasyonlardan önce
+toplanır. Kaydırma, filtre, veri yaması ve export yeni giriş başlatmaz;
+etkileşim devam eden satır hareketini iptal eder. Yazılım çiziminde tablo
+hareket etmez; yeni modül aktivasyonunda uygun satırlar yeniden girebilir.
 
 **Erişilebilirlik/performans:** `prefers-reduced-motion`, görünmeyen sekme ve
 `data-bl-motion='off'` tüm hareketi devre dışı bırakır. Hareketler sayfa
-geçişinde iptal edilir; `opacity/transform` tercih edilir. Yalnız tablo girişinde
-kısa süreli token tabanlı `backgroundColor` WAAPI istisnası vardır. Grafik ve
+geçişinde iptal edilir; tablo girişinde yalnız `opacity/transform` kullanılır. Grafik ve
 kartlar görünürlükle sınırlı, en çok 14/16 öğe üzerinden animasyon alır.
 Aynı yeni görünür işlevin TR/EN karşılığı, 2 tema × 4 boyut, reduced-motion,
 klavye/scroll ve veri doğruluğu regresyonları teslim koşuludur.
+
+**Kademeli açılma/kapanma:** Bölüm gövdeleri ortak `BLMotionPlus.disclosure(body, open, {trigger, initial})` API’sini kullanır. Yükseklik değişimi ortak bölüm hareketinin sınırlı istisnasıdır: `--ui-motion-disclosure` 390 ms, satır aralığı `--ui-motion-disclosure-step` 32 ms; en çok altı görünür içerik grubu hareket eder. Kapanış hedefi `hidden`/ARIA ile hemen kaydedilir; geçici çizim stilleri bitiş, ters tıklama, sekme değişimi ve hareket iptalinde temizlenir. Gövde/alan değerleri korunur; aktif editörler ve seçili tablo hücreleri kademeye katılmaz. Yerel `details/summary`, ortak `::details-content` kuralını ve aynı kademeyi kullanır; yüzen seçiciler bölüm yüksekliğiyle kırpılmaz. / Section bodies use the shared disclosure API; bounded intrinsic height motion, 390 ms duration and 32 ms staggering for at most six visible groups. Hidden/ARIA target state is immediate, temporary styles are cleaned up on completion/reversal/cancellation, editor values are retained and active editors/selected cells are skipped. Native details use the same profile while floating pickers retain their geometry.
 
 ## 7. Guard ve erişilebilirlik
 

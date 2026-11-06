@@ -18,8 +18,8 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const {withFileLeaseSync}=require('../shared-file-transaction');
+const { isExpired } = require('./output-retention');
 
-const MAX_INDEX = 500;
 const PENDING_TTL_MS = 15 * 60 * 1000;
 const EXTENSIONS = Object.freeze({ pdf: 'pdf', xlsx: 'xlsx', pptx: 'pptx', html: 'html' });
 
@@ -82,7 +82,9 @@ function createOutputStore(options = {}) {
     const file = indexFile();
     fs.mkdirSync(path.dirname(file), { recursive: true });
     const temp = `${file}.${process.pid}.${crypto.randomBytes(3).toString('hex')}.tmp`;
-    fs.writeFileSync(temp, JSON.stringify(list.slice(-MAX_INDEX), null, 1), 'utf8');
+    const at = now();
+    // Metadata 60 gün tutulur; kullanıcının Downloads dosyalarını silmeyiz.
+    fs.writeFileSync(temp, JSON.stringify(list.filter(item => !isExpired(item, at)), null, 1), 'utf8');
     fs.renameSync(temp, file);
   }
 
@@ -141,7 +143,7 @@ function createOutputStore(options = {}) {
      elle değiştirilerek başka bir klasöre çıkılamaz. */
   function get(ownerId, id) {
     const record = readIndex().find(item => item.id === String(id || '') && item.owner === String(ownerId || 'default'));
-    if (!record) return null;
+    if (!record || isExpired(record, now())) return null;
     const full = path.resolve(record.path);
     const allowed = new Set([path.resolve(root())]);
     const legacy = legacyRoot();
@@ -150,8 +152,10 @@ function createOutputStore(options = {}) {
     return { ...publicRecord(record), path: full };
   }
 
-  function list(ownerId, limit = 20) {
-    return readIndex().filter(item => item.owner === String(ownerId || 'default')).slice(-limit).reverse().map(publicRecord);
+  function list(ownerId, limit) {
+    const at = now();
+    const records = readIndex().filter(item => item.owner === String(ownerId || 'default') && !isExpired(item, at)).reverse();
+    return (Number.isInteger(limit) && limit > 0 ? records.slice(0, limit) : records).map(publicRecord);
   }
 
   /* PDF bekleyenleri: HTML masaüstü kabuğunda basılana kadar bellekte durur. */

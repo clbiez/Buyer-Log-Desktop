@@ -8,10 +8,6 @@
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable{--kol-spreadsheet-row-h:30px}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr{height:var(--kol-spreadsheet-row-h)}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td{position:relative}
-/* Spreadsheet cells are positioned so range/validation affordances can anchor to
-   them. Frozen cells must remain sticky; this selector intentionally outranks the
-   generic positioned-cell rule above without changing the containing block. */
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.frzL{position:sticky}
 /* Single-click editing: real editors stay pointer-addressable so the browser can place
    the caret/open native selects on the first click. Spreadsheet capture still guards
    Shift-range selection, read-only cells, buttons, links and pictures. */

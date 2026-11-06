@@ -24,7 +24,31 @@ const { extractJsonObject } = require('./lcwai/lcwai-prompt');
 
 const BOM_FETCH_CONCURRENCY = 5;
 const MAX_AI_PER_SYNC = 50;
+/* LCW AI motoru kullanıcı başına sınırlı sayıda eşzamanlı istek kabul eder
+   (lcwai-config LIMITS.maxConcurrentPerOwner). BOM analizi bir slotu her
+   zaman kullanıcının kendi LCW AI sohbetine bırakır. */
+const AI_CONCURRENCY = 2;
+const AI_BUSY_RETRIES = 4;
+/* Kullanıcı kararı: herhangi bir aşamadaki hata işi durdurmaz. Başarısız
+   BOM'lar ilk turdan SONRA, yalnız onlar (kaldığı yerden) en az 3 tur yeniden
+   denenir; LCW AI danışması da en az 3 kez denenir. */
+const RETRY_ROUNDS = 3;
+const RETRY_DELAYS_MS = Object.freeze([2000, 5000, 10000]);
+const AI_ATTEMPTS = 3;
+const AUTH_WAITS = 3;
+const AUTH_ERROR_CODES = new Set(['CORENECTUM_API_TOKEN_INVALID', 'CORENECTUM_API_TOKEN_REQUIRED']);
 
+function isAuthError(error) { return Boolean(error && AUTH_ERROR_CODES.has(error.code)); }
+/* LCW AI yeniden denemesi yalnız geçici hatalarda yapılır. Oturum/izin
+   hatası (AUTH_REQUIRED, SESSION_EXPIRED, FORBIDDEN…) tekrarlanırsa reddedilen
+   oturum yeniden canlandırılmaya çalışılır; bunlar tek denemede kalır. */
+function isRetryableAiError(error) {
+  if (!error || error.aiSessionFailure) return false;
+  if (error.code === 'PLM_BOM_AI_INVALID_JSON') return true;
+  if (/^LCWAI_/.test(String(error.code || ''))) return error.retryable === true;
+  return !error.code;
+}
+function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 function clean(value, max = 500) {
   return String(value == null ? '' : value).replace(/[\u0000\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 }
@@ -70,10 +94,25 @@ function aiTask(analysis) {
   ].join('\n');
 }
 
+async function askWithBusyRetry(engine, ownerId, input, options) {
+  for (let attempt = 0; ; attempt += 1) {
+    try { return await engine.ask(ownerId, input); }
+    catch (error) {
+      // Başka bir LCW AI isteği slotu tutuyorsa bekleyip yeniden denenir.
+      const busy = error && error.code === 'LCWAI_BUSY';
+      if (!busy || attempt >= AI_BUSY_RETRIES || (typeof options.isCancelled === 'function' && options.isCancelled())) throw error;
+      await wait((Number(options.aiBusyDelayMs) >= 0 ? Number(options.aiBusyDelayMs) : 1500) * (attempt + 1));
+    }
+  }
+}
+
 async function consultAi(ownerId, analysis, options) {
   const engine = options.aiEngine || getDefaultEngine();
   // Yalnız gerçekten belirsiz BOM için; ana PLM isteğini tekrar çalıştırmaz.
-  await engine.ensureSession?.(ownerId);
+  // Oturum kurma hatası yeniden denenmez: kendi kurtarma yolu vardır ve
+  // tekrarı masaüstü oturum köprüsünü/girişi gereksiz yere yeniden tetikler.
+  try { await engine.ensureSession?.(ownerId); }
+  catch (error) { if (error && typeof error === 'object') error.aiSessionFailure = true; throw error; }
   const ambiguous = analysis.placements.filter(item => item.placement === 'other').map(item => ({
     componentCode: item.componentCode,
     styleBomComponentId: item.styleBomComponentId,
@@ -87,7 +126,7 @@ async function consultAi(ownerId, analysis, options) {
     placement: item.placement,
     printType: item.printType,
   }));
-  const result = await engine.ask(ownerId, {
+  const result = await askWithBusyRetry(engine, ownerId, {
     source: 'plm-bom',
     task: aiTask(analysis),
     context: {
@@ -97,7 +136,7 @@ async function consultAi(ownerId, analysis, options) {
     },
     lang: options.language === 'en' ? 'en' : 'tr',
     reasoningLevel: 'High',
-  });
+  }, options);
   const parsed = extractJsonObject(result && result.text);
   if (!parsed) throw Object.assign(new Error('LCW AI BOM analizi geçerli JSON döndürmedi.'), { code: 'PLM_BOM_AI_INVALID_JSON' });
   return { parsed, result };
@@ -151,9 +190,39 @@ async function syncPlmBoms(records, options = {}) {
   const fetched = [];
   const failed = [];
   const recordOverrides = new Map();
+  const isCancelled = typeof options.isCancelled === 'function' ? options.isCancelled : () => false;
+  /* Oturum düşerse kalan her BOM aynı 401'i alır: ilk yetki hatasında yeni
+     istek başlatılmaz. İptalde de öyle. Tamamlanan BOM'lar yine kaydedilir. */
+  let authError = null;
+  const stopped = () => Boolean(authError) || isCancelled();
+  // Set Style alt isteklerinden önce de bakılır: süren ilişki isteği bittikten
+  // sonra durdurulmuş bir işte yeni çocuk istekleri başlatılmaz.
+  const STOP = Symbol('plm-bom-stop');
+  const checkStop = () => { if (stopped()) throw STOP; };
+  const skipped = [];
+  const retryQueue = new Map();
+  /* Oturum bittiğinde (401/403) çağıran bir bekleme sağlarsa iş durmaz:
+     kullanıcı oturumu yenileyene kadar beklenir ve kalan modeller kaldığı
+     yerden okunur. Aynı anda düşen istekler tek beklemeyi paylaşır. */
+  let authWait = null, authWaitsUsed = 0;
+  const awaitAuth = error => {
+    if (typeof options.waitForAuth !== 'function') return Promise.resolve(false);
+    // Bu 401 eski yetkiyle alındı ve yetki o zamandan beri yenilendi: beklemeden yeniden dene.
+    const failedGeneration = Number(error && error.details && error.details.tokenGeneration);
+    if (typeof options.currentTokenGeneration === 'function' && Number.isFinite(failedGeneration)
+      && Number(options.currentTokenGeneration()) > failedGeneration) return Promise.resolve(true);
+    if (!authWait) {
+      if (authWaitsUsed >= (Number(options.authWaits) || AUTH_WAITS)) return Promise.resolve(false);
+      authWaitsUsed += 1;
+      authWait = Promise.resolve().then(() => options.waitForAuth(error)).then(Boolean, () => false).finally(() => { authWait = null; });
+    }
+    return authWait;
+  };
   let done = 0;
+  const concurrency = Number(options.fetchConcurrency) || BOM_FETCH_CONCURRENCY;
 
-  await mapLimit(targets, Number(options.fetchConcurrency) || BOM_FETCH_CONCURRENCY, async target => {
+  const processTarget = async (target, firstPass) => {
+    if (stopped()) { skipped.push(target); return; }
     try {
       if (setStyleApi.isSetStyle(target.productType)) {
         const associationPayload = await getJson(
@@ -161,6 +230,7 @@ async function syncPlmBoms(records, options = {}) {
           setStyleApi.associationQuery(target.styleId),
           { timeoutMs: 60000, retries: 3, language: options.language }
         );
+        checkStop();
         let children = setStyleApi.childStyleAssociations(associationPayload);
         if (!children.length) {
           throw Object.assign(new Error('Set Style için takım parçası bulunamadı.'), { code: 'PLM_SET_COMPONENTS_NOT_FOUND' });
@@ -170,6 +240,7 @@ async function syncPlmBoms(records, options = {}) {
            doğrulanmış GetStyleList alanlarından tek toplu istekle zenginleşir. */
         const childPlmIds = children.map(item => item.childPlmId).filter(Boolean);
         if (childPlmIds.length) {
+          checkStop();
           const metadataPayload = await postJson(
             styleApi.GET_STYLE_LIST_URL,
             styleApi.styleListBatchBody(childPlmIds),
@@ -180,6 +251,7 @@ async function syncPlmBoms(records, options = {}) {
 
         const childAnalyses = new Array(children.length);
         await mapLimit(children, Number(options.fetchConcurrency) || BOM_FETCH_CONCURRENCY, async (child, childIndex) => {
+          checkStop();
           const payload = await postJson(
             bomApi.GET_STYLE_BOM_INFORMATION_URL,
             bomApi.bomRequestBody(child.childStyleId),
@@ -215,17 +287,45 @@ async function syncPlmBoms(records, options = {}) {
         fetched.push({ target, kind: 'single', analysis: { ...analysis, styleId: target.styleId }, fingerprint: analysis.fingerprint });
       }
     } catch (error) {
-      failed.push({
-        plmId: target.plmId,
-        styleId: target.styleId,
-        code: clean(error && error.code, 80) || 'PLM_BOM_FETCH_FAILED',
-        error: clean(error && error.message || error, 500) || 'BOM alınamadı.',
-      });
+      if (error === STOP) { skipped.push(target); return; }
+      if (isAuthError(error)) {
+        if (!authError && await awaitAuth(error)) { retryQueue.set(target.plmId, { target, error }); return; }
+        authError = authError || error; skipped.push(target); return;
+      }
+      retryQueue.set(target.plmId, { target, error });
     } finally {
-      done += 1;
-      onProgress({ phase: options.language === 'en' ? 'Reading PLM BOM' : 'PLM BOM okunuyor', current: done, total: targets.length, model: target.plmId });
+      if (firstPass) {
+        done += 1;
+        onProgress({ phase: options.language === 'en' ? 'Reading PLM BOM' : 'PLM BOM okunuyor', current: done, total: targets.length, model: target.plmId });
+      }
     }
-  });
+  };
+
+  await mapLimit(targets, concurrency, target => processTarget(target, true));
+  const delays = Array.isArray(options.retryDelaysMs) ? options.retryDelaysMs : RETRY_DELAYS_MS;
+  const rounds = Math.max(RETRY_ROUNDS, Number(options.retryRounds) || 0);
+  let retriedAny = false;
+  for (let round = 0; round < rounds && retryQueue.size && !stopped(); round += 1) {
+    const pending = [...retryQueue.values()].map(item => item.target);
+    retryQueue.clear();
+    retriedAny = true;
+    // Genel ilerleme korunur: tamamlananlar işlenmiş, yalnız yeniden denenenler kalan.
+    onProgress({ phase: options.language === 'en' ? `Retrying PLM BOM (${round + 1}/${rounds})` : `PLM BOM yeniden deneniyor (${round + 1}/${rounds})`, current: Math.max(0, targets.length - pending.length), total: targets.length, model: pending.map(target => target.plmId).slice(0, 3).join(', ') });
+    await wait(Number(delays[Math.min(round, delays.length - 1)]) || 0);
+    if (stopped()) { pending.forEach(target => skipped.push(target)); break; }
+    await mapLimit(pending, concurrency, target => processTarget(target, false));
+  }
+  if (rounds && delays && targets.length && retriedAny) {
+    onProgress({ phase: options.language === 'en' ? 'Reading PLM BOM' : 'PLM BOM okunuyor', current: Math.max(0, targets.length - retryQueue.size), total: targets.length, model: '' });
+  }
+  for (const { target, error } of retryQueue.values()) {
+    failed.push({
+      plmId: target.plmId,
+      styleId: target.styleId,
+      code: clean(error && error.code, 80) || 'PLM_BOM_FETCH_FAILED',
+      error: clean(error && error.message || error, 500) || 'BOM alınamadı.',
+    });
+  }
 
   const entries = new Map();
   const toSave = [];
@@ -242,6 +342,7 @@ async function syncPlmBoms(records, options = {}) {
     let ai = { status: 'not-needed', model: '', consultedAt: null, confidence: '', notes: [], error: '' };
     if (!next.needsAi) return { analysis: next, ai };
     if(options.allowAi===false)return {analysis:next,ai:{...ai,status:'deferred',error:'AI not authorized for this sync.'}};
+    if (stopped()) return { analysis: next, ai: { ...ai, status: 'deferred', error: authError ? 'CoreNectum authorization ended during this sync.' : 'Sync cancelled before AI consultation.' } };
     if (aiConsulted >= maxAiPerSync) {
       return { analysis: next, ai: { ...ai, status: 'deferred', error: 'AI consultation limit reached for this sync.' } };
     }
@@ -253,7 +354,16 @@ async function syncPlmBoms(records, options = {}) {
       model: modelLabel,
     });
     try {
-      const consulted = await consultAi(ownerId, next, options);
+      let consulted = null, lastError = null;
+      for (let attempt = 1; attempt <= AI_ATTEMPTS && !consulted; attempt += 1) {
+        try { consulted = await consultAi(ownerId, next, options); }
+        catch (error) {
+          lastError = error;
+          if (stopped() || attempt >= AI_ATTEMPTS || !isRetryableAiError(error)) break;
+          await wait((Number(options.aiRetryDelayMs) >= 0 ? Number(options.aiRetryDelayMs) : 2000) * attempt);
+        }
+      }
+      if (!consulted) throw lastError || new Error('LCW AI yanıt vermedi.');
       next = bomApi.mergeAiAnalysis(next, consulted.parsed);
       const confidence = ['high', 'medium', 'low'].includes(clean(consulted.parsed.confidence, 20).toLowerCase())
         ? clean(consulted.parsed.confidence, 20).toLowerCase() : '';
@@ -277,7 +387,7 @@ async function syncPlmBoms(records, options = {}) {
     return { analysis: next, ai };
   }
 
-  for (const item of fetched) {
+  await mapLimit(fetched, Math.max(1, Number(options.aiConcurrency) || AI_CONCURRENCY), async item => {
     const { target } = item;
     const old = snapshot.models && snapshot.models[target.plmId];
 
@@ -307,7 +417,7 @@ async function syncPlmBoms(records, options = {}) {
           })),
         });
       }
-      continue;
+      return;
     }
 
     let entry;
@@ -420,6 +530,19 @@ async function syncPlmBoms(records, options = {}) {
     if (entry.hasPrint) withPrint += 1;
     entries.set(target.plmId, entry);
     toSave.push(entry);
+  });
+
+  /* Yetki biterse işlenemeyen modeller kullanıcıya görünür biçimde
+     raporlanır; iptalde atlananlar hata sayılmaz. */
+  if (authError) {
+    for (const target of skipped) {
+      failed.push({
+        plmId: target.plmId,
+        styleId: target.styleId,
+        code: clean(authError.code, 80),
+        error: clean(authError.message, 500) || 'CoreNectum yetkilendirmesi sona erdi.',
+      });
+    }
   }
 
   /* Fetch hatası eski başarılı kaydı SİLMEZ; UI son bilinen kanıtı göstermeye
@@ -437,6 +560,9 @@ async function syncPlmBoms(records, options = {}) {
   options.assertAuthority?.();
   const saved = toSave.length ? store.saveResults(toSave) : { written: 0, revision: snapshot._revision || 0, updatedAt: snapshot._updatedAt || null };
   return {
+    stopped: authError ? 'auth' : isCancelled() ? 'cancelled' : null,
+    stopError: authError,
+    skipped: skipped.length,
     requested: targets.length,
     fetched: fetched.length,
     changed: toSave.length,
@@ -455,6 +581,10 @@ async function syncPlmBoms(records, options = {}) {
 module.exports = {
   BOM_FETCH_CONCURRENCY,
   MAX_AI_PER_SYNC,
+  AI_CONCURRENCY,
+  RETRY_ROUNDS,
+  AI_ATTEMPTS,
+  isAuthError,
   targetsFromRecords,
   aggregateSetFingerprint,
   aiTask,

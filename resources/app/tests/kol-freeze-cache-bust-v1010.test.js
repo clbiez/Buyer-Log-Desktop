@@ -8,10 +8,7 @@ const read=p=>fs.readFileSync(path.join(ROOT,p),'utf8');
 
 test('Collection freeze sticky fix is served with a fresh stylesheet revision',()=>{
   const html=read('public/index.html');
-  const css=require('./helpers/manifest-css')();
-  const cssRef=html.match(/app\.css\?v=[^&]+&rev=(\d+)/);
-  assert.ok(cssRef,'app.css must have an explicit cache-busting revision');
-  assert.ok(Number(cssRef[1])>=7172,'Collection freeze CSS changes require a new app.css revision');
-  assert.match(css,/#kolTable tbody td\.editTd\.frzL\{z-index:var\(--ui-z-raised\)/);
-  assert.match(css,/#kolTable tbody td\.editTd\.frzL[\s\S]*position:sticky/);
+  assert.match(html,/table-freeze\.css\?v=__BL_ASSET_VERSION__&rev=\d+/,'freeze picker styles must be cache-busted');
+  assert.match(html,/table-freeze\.js\?v=__BL_ASSET_VERSION__&rev=\d+/,'freeze engine must be cache-busted');
+  assert.ok(html.indexOf('table-freeze.js')<html.indexOf('app-main.js?'),'engine loads before app-main');
 });

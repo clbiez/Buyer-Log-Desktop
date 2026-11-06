@@ -23,7 +23,7 @@
 
   var STEPS = ['file', 'sheet', 'columns', 'match', 'review', 'import'];
   var PAGE_SIZE = 50;
-  var state = null, host = null;
+  var state = null, host = null, aiPanel = null;
 
   function en() { return (global.appLang || document.documentElement.lang) === 'en'; }
   function T(tr, enText) { return en() ? enText : tr; }
@@ -52,6 +52,7 @@
       decisions: { excludedSourceRows: [], ambiguousChoice: {}, duplicateResolution: {} },
       plan: null, page: 0, result: null, progress: null,
       profiles: [], profileMatches: [], appliedProfile: null, profileNotice: '',
+      aiNotice: '', aiUndo: null,
     };
   }
   // Plan ancak "Gözden Geçir" adımında kurulur; aşağı akıştaki her girdi
@@ -152,6 +153,7 @@
     rebuildTable();
   }
   function rebuildTable() {
+    state.aiUndo = null; state.aiNotice = '';
     state.table = Workbook.extractTable(state.grid, state.analysis, {
       includeHiddenRows: state.options.includeHiddenRows,
       includeHiddenColumns: state.options.includeHiddenColumns,
@@ -666,13 +668,89 @@
             : state.step === 'review' ? renderReviewStep()
               : renderImportStep();
     host.innerHTML = '<div class="modalCard ximCard" role="dialog" aria-modal="true" aria-label="' + esc(T('Kullanıcı Excelini İçeri Aktar', 'Import your Excel')) + '">'
-      + '<div class="ximHead"><strong>' + esc(T('Kullanıcı Excelini İçeri Aktar', 'Import your Excel')) + ' — ' + esc(state.adapter.label) + '</strong>'
+      + '<div class="ximHead"><strong>' + esc(T('Kullanıcı Excelini İçeri Aktar', 'Import your Excel')) + ' — ' + esc(state.moduleId === 'collection' ? T('Koleksiyon', 'Collection') : state.adapter.label) + '</strong>'
       + (state.fileName ? '<span class="muted">' + esc(state.fileName) + (state.sheetName ? ' · ' + esc(state.sheetName) : '') + '</span>' : '') + '</div>'
       + stepper()
       + (state.error ? '<p class="ximNotice is-bad">' + esc(state.error) + '</p>' : '')
-      + '<div class="ximBody">' + body + '</div>'
+      + '<div class="ximBody">' + renderAIEntry() + body + '</div>'
       + '<div class="ximFoot">' + footerButtons() + '</div>'
       + '</div>';
+  }
+
+  function renderAIEntry() {
+    if (!state.table || state.step === 'import') return '';
+    return '<div class="ximBlock blMotionEnter"><div class="ximRow"><strong>LCW AI</strong>'
+      + '<button type="button" class="tbtn" data-xim="ai-review"' + (state.busy ? ' disabled' : '') + '>' + esc(T('Exceli LCW AI ile incele', 'Review Excel with LCW AI')) + '</button>'
+      + (state.aiUndo ? '<button type="button" class="tbtn" data-xim="ai-undo">' + esc(T('AI değişikliklerini geri al', 'Undo AI changes')) + '</button>' : '') + '</div>'
+      + '<p class="muted">' + esc(T('Seçili sayfanın örnek satırları ve yerel kontrol özeti şirket içi LCW AI ile paylaşılır. Eşleme ve güvenli biçim düzeltmeleri önce önerilir; aktarım son onayınızı bekler.', 'Sample rows from the selected sheet and the local validation summary are shared with internal LCW AI. Mapping and safe format corrections are proposed first; import waits for your final approval.')) + '</p>'
+      + (state.aiNotice ? '<p class="ximNotice" role="status">' + esc(T(state.aiNotice.tr, state.aiNotice.en)) + '</p>' : '') + '</div>';
+  }
+
+  function aiPreview(prepared, page) {
+    if (!prepared.draft) return '<p>' + esc(T('Yanıt okunamadı. Yeniden deneyin.', 'The response could not be read. Try again.')) + '</p>';
+    var summary = prepared.plan.summary;
+    var actionLabels = { match: T('Eşleştirmede kullan', 'Use for matching'), update: T('Güncelle', 'Update'), ignore: T('Dikkate alma', 'Ignore') };
+    var offset = (page || 0) * PAGE_SIZE;
+    return '<p>' + esc(T('AI örnek satırları inceler; yerel kontroller tüm seçili satırlara uygulanır.', 'AI reviews sample rows; local checks cover every selected row.')) + '</p>'
+      + '<ul>' + prepared.changes.map(function (item) { return '<li>' + esc(item.header) + ' → ' + esc(item.label || T('Dikkate alma', 'Ignore')) + ' · ' + esc(actionLabels[item.action]) + '</li>'; }).join('') + '</ul>'
+      + '<p>' + esc(T('Eşleşme alanları', 'Match fields')) + ': ' + esc(prepared.matchFieldIds.map(function (id) { var field = fieldById(id); return field ? field.label : id; }).join(' + ') || '—') + '</p>'
+      + '<p>' + esc(T('Düzeltilecek hücre', 'Cells to correct')) + ': ' + prepared.fixes.length + ' · ' + esc(T('Geçersiz satır', 'Invalid rows')) + ': ' + summary.invalidRows
+      + ' · ' + esc(T('Belirsiz eşleşme', 'Ambiguous matches')) + ': ' + summary.ambiguousRows + ' · ' + esc(T('Engel', 'Blockers')) + ': ' + summary.blockingConflicts + '</p>'
+      + (prepared.fixes.length ? '<div class="ximTableScroll"><table class="ximTable"><thead><tr><th>Excel</th><th>' + esc(T('Sütun', 'Column')) + '</th><th>' + esc(T('Önce', 'Before')) + '</th><th>' + esc(T('Sonra', 'After')) + '</th></tr></thead><tbody>'
+        + prepared.fixes.slice(offset, offset + PAGE_SIZE).map(function (fix) { return '<tr><td>' + fix.excelRow + '</td><td>' + esc(fix.header) + '</td><td>' + esc(display(fix.before)) + '</td><td>' + esc(display(fix.after)) + '</td></tr>'; }).join('') + '</tbody></table></div>'
+        + '<div class="ximRow"><button type="button" class="tbtn" data-xim-ai-page="-1"' + (offset ? '' : ' disabled') + '>' + esc(T('Önceki', 'Previous')) + '</button><span>' + (offset + 1) + '–' + Math.min(offset + PAGE_SIZE, prepared.fixes.length) + ' / ' + prepared.fixes.length + '</span><button type="button" class="tbtn" data-xim-ai-page="1"' + (offset + PAGE_SIZE < prepared.fixes.length ? '' : ' disabled') + '>' + esc(T('Sonraki', 'Next')) + '</button></div>' : '')
+      + '<p>' + esc(T('Eksik kimlikleri kaynak Excelde tamamlayın. Belirsiz eşleşmeleri ve tekrarları Gözden geçir adımında çözün. Geçersiz tarih ve sayılar tahmin edilmez.', 'Complete missing identifiers in the source workbook. Resolve ambiguous matches and duplicates in the Review step. Invalid dates and numbers are never guessed.')) + '</p>';
+  }
+
+  async function openAIReview() {
+    if (!state || !state.table || state.busy) return;
+    var session = state;
+    try {
+      if (!global.BuyerLogAI) await global.BLPerf._loadScript('lcwai-assistant.js?rev=1');
+      if (state !== session) return;
+      if (aiPanel) aiPanel.close();
+      var engine = global.BLExcelImportAI, requestSpec = null, requestSnapshot = '', preparedPreview = null, reviewPage = 0;
+      aiPanel = global.BuyerLogAI.openPanel({
+        source: 'excel-import', title: { tr: 'Excel · LCW AI incelemesi', en: 'Excel · LCW AI review' },
+        initialRequest: T('Sütun eşlemelerini ve eşleşme alanlarını kontrol et. Olası veri sorunlarını ve çözümünü açıkla; güvenli biçim düzeltmelerini öner.', 'Check column mappings and match fields. Explain possible data problems and how to resolve them; propose safe format corrections.'),
+        applyLabel: { tr: 'Öneriyi içe aktarma önizlemesine uygula', en: 'Apply suggestion to import preview' },
+        buildRequest: function (text) {
+          if (state !== session) throw new Error('STALE_AI_SUGGESTION');
+          requestSpec = planSpec();
+          requestSnapshot = engine.snapshot(requestSpec);
+          var context = engine.buildContext(requestSpec);
+          context.workbookFindings = (state.analysis.warnings || []).slice(0, 10).map(function (item) { return { code: item.code, count: item.count }; });
+          return { task: text, context: context };
+        },
+        interpret: function (result) {
+          if (state !== session || !requestSpec) return { ok: false };
+          var prepared = engine.prepare(requestSpec, result);
+          preparedPreview = prepared; reviewPage = 0;
+          if (requestSnapshot !== engine.snapshot(planSpec()) || prepared.snapshot !== requestSnapshot) prepared.ok = false;
+          return { ok: prepared.ok, value: prepared, html: aiPreview(prepared), explanation: prepared.explanation, warnings: prepared.warnings,
+            issues: prepared.ok ? [] : [T('Öneri geçerli değil veya veriler değişti. Yeniden inceleyin; mevcut veri korunuyor.', 'The suggestion is invalid or data has changed. Review again; current data is preserved.')] };
+        },
+        onApply: function (prepared) {
+          if (state !== session || !state.adapter.canEdit()) throw new Error('STALE_AI_SUGGESTION');
+          var draft = engine.apply(planSpec(), prepared);
+          state.aiUndo = { table: state.table, assignments: state.assignments, matchFieldIds: state.matchFieldIds.slice(), newColumns: state.newColumns.slice() };
+          state.table = Object.assign({}, state.table, { rows: draft.source.rows });
+          state.assignments = draft.mapping.assignments; state.matchFieldIds = draft.matchRule.fieldIds;
+          syncNewColumns(); invalidatePlan();
+          state.aiNotice = { tr: 'LCW AI önerisi önizlemeye uygulandı. Düzeltilen hücre: ' + prepared.fixes.length, en: 'LCW AI suggestion applied to the preview. Corrected cells: ' + prepared.fixes.length };
+          state.step = 'review'; rebuildPlan();
+        },
+      });
+      aiPanel.assistant.element.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-xim-ai-page]');
+        if (!button || !preparedPreview || !preparedPreview.draft) return;
+        reviewPage = Math.max(0, Math.min(Math.ceil(preparedPreview.fixes.length / PAGE_SIZE) - 1, reviewPage + Number(button.dataset.ximAiPage)));
+        aiPanel.assistant.element.querySelector('[data-lcwai-result]').innerHTML = aiPreview(preparedPreview, reviewPage);
+      });
+      global.BLMotionPlus?.play('overlay', aiPanel.assistant.element);
+    } catch (_) {
+      if (state === session) { state.error = T('LCW AI paneli açılamadı. Yeniden deneyin.', 'The LCW AI panel could not be opened. Try again.'); render(); }
+    }
   }
 
   /* ---------------- OLAYLAR ---------------- */
@@ -863,6 +941,11 @@
     if (action === 'close') { close(); return; }
     if (action === 'back') { goBack(); return; }
     if (action === 'next') { void goNext(); return; }
+    if (action === 'ai-review') { void openAIReview(); return; }
+    if (action === 'ai-undo' && state.aiUndo) {
+      Object.assign(state, state.aiUndo); state.aiUndo = null; state.aiNotice = '';
+      invalidatePlan(); state.step = 'columns'; render(); return;
+    }
     if (action === 'sheet') { loadSheet(button.dataset.name); autoMap(); render(); return; }
     if (action === 'automap') { autoMap(); render(); return; }
     if (action === 'page') { state.page = Math.max(0, state.page + Number(button.dataset.delta)); render(); return; }
@@ -981,10 +1064,11 @@
   }
 
   var releaseKeyboard=null;
-  function onKey(event) { if (event.key === 'Escape' && !state.busy) close(); }
+  function onKey(event) { if (event.key === 'Escape' && state && !state.busy && !document.getElementById('_lcwaiPanel')) close(); }
 
   function close() {
     if (!host) return;
+    if (aiPanel) { aiPanel.close(); aiPanel = null; }
     document.removeEventListener('keydown', onKey);
     if(releaseKeyboard){releaseKeyboard();releaseKeyboard=null;}
     host.remove();
@@ -1024,7 +1108,13 @@
   /* Tetikleyici düğmeler delege edilir: araç menüleri dinamik olarak
      yeniden çizilebiliyor ve düğüme doğrudan bağlanan bir dinleyici
      sessizce kopardı. */
+  function refreshLanguage() {
+    if (!state || !host) return;
+    if (aiPanel) { aiPanel.close(); aiPanel = null; }
+    render();
+  }
   if (typeof document !== 'undefined') {
+    document.addEventListener('bl:language-changed', refreshLanguage);
     document.addEventListener('click', function (event) {
       var trigger = event.target.closest && event.target.closest('[data-excel-import]');
       if (!trigger) return;
@@ -1033,5 +1123,5 @@
     });
   }
 
-  global.BLExcelImportWizard = { open: open, close: close, _state: function () { return state; } };
+  global.BLExcelImportWizard = { open: open, close: close, refreshLanguage: refreshLanguage, _state: function () { return state; } };
 }(typeof window !== 'undefined' ? window : globalThis));

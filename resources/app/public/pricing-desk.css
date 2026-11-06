@@ -287,6 +287,15 @@ td.kolPriceStripTd:hover .kolManualBtn,td.kolPriceStripTd:focus-within .kolManua
 .cpdInput{display:flex;flex-direction:column;gap:3px}
 .cpdInput input{height:var(--ui-control-height);padding:0 8px}
 .cpdTarget{max-width:160px;margin-top:6px}
+.cpdCountryRule .cpdInput{max-width:280px}
+.cpdCountryPicker>summary{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;min-height:var(--ui-control-height);padding:0 8px;cursor:pointer;list-style:none}
+.cpdCountryPicker>summary::-webkit-details-marker{display:none}
+.cpdCountryPicker>summary::after{content:'▾'}
+.cpdCountryPicker[open]>summary::after{content:'▴'}
+.cpdCountryList{max-height:240px;overflow:auto;padding:4px}
+.cpdCountryList label{display:flex;align-items:center;gap:8px;min-height:var(--ui-control-height-small);padding:4px 8px;cursor:pointer}
+.cpdCountryList input[type=checkbox]{width:16px;height:16px;flex:0 0 auto;margin:0;padding:0}
+
 .cpdLineage dl{margin:0;display:grid;gap:6px}
 .cpdLineage dl>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .cpdLineage dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}

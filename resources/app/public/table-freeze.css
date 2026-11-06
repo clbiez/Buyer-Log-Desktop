@@ -1,0 +1,14 @@
+/* Buyer Log — sütun dondurma seçim kipinin yapısı.
+   Konum, ofset ve katman sırası yalnız table-freeze.js'in tablo başına ürettiği
+   stilde yönetilir; görünüm (renk, katman, geçiş) ui-components.css'tedir. */
+.tablewrap.freezePick{position:relative}
+.tablewrap.freezePick table{cursor:crosshair}
+.freezeLaser{position:absolute;width:2px;pointer-events:none}
+/* İki bölmeli dondurma: donmuş bölmenin sınır ayırıcısı ve kendi kaydırma çubuğu.
+   Tablodan sonra gelen sıfır yükseklikli yapışkan kap; ayırıcı yukarı doğru uzanır. */
+.tablewrap>.blFreezePane{position:sticky;left:0;bottom:0;height:0;margin:0;padding:0;pointer-events:none}
+.blFreezePane>.blFreezePaneBar{position:absolute;left:0;bottom:0;width:100%;height:12px;overflow-x:auto;overflow-y:hidden;pointer-events:auto}
+.blFreezePane>.blFreezePaneBar[hidden]{display:none}
+.blFreezePaneTrack{height:1px}
+.blFreezePane>.blFreezePaneDivider{position:absolute;right:-4px;bottom:0;width:8px;cursor:col-resize;pointer-events:auto;touch-action:none}
+.blFreezePaneDivider::after{content:"";position:absolute;top:0;bottom:0;left:3px;width:2px}

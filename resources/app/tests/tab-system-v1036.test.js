@@ -58,8 +58,9 @@ test('v10.36 gerçek tablistlerin tamamı adlandırılmış ve tek tab durağı 
   const source = TAB_FILES.map(([, value]) => value).join('\n');
   const lists = tags(source, 'tablist');
   const tabs = tags(source, 'tab');
-  // The unified Studio adds one named, roving-tabindex tablist to the seven existing lists.
-  assert.equal(lists.length, 8, 'Studio dahil sekiz gerçek tablist olmalı');
+  // The unified Studio adds one named, roving-tabindex tablist to the seven existing lists;
+  // v2026-11-04 the Data Management Horizon drawer adds CP / Other modules / INTAKE.
+  assert.equal(lists.length, 9, 'Studio ve Horizon çekmecesi dahil dokuz gerçek tablist olmalı');
   lists.forEach(tag => {
     assert.match(tag, /data-bl-tabs="(?:line|segment|metrics)"/);
     assert.match(tag, /aria-label=/);

@@ -1,0 +1,19 @@
+
+> buyer-log-desktop@7.0.338 test
+> node tests/run-tests.js startup-benchmark
+
+[Buyer Log tests] 1 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (1 dosya)
+✔ tests/startup-benchmark.test.js (689.840959ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 753.979723
+[Buyer Log tests] Batch 1/1 süresi: 1.0s.
+
+[Buyer Log tests] PASS — 1 test dosyası (1.0s).

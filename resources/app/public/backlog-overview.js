@@ -24,6 +24,8 @@ const R=()=>window.BLBacklogV3Report;
 let state=loadState();
 let baseItems=null,items=null,loading=false,error='',signature='',tips=new Map(),openers=new Map(),seq=0,bound=false;
 let filterCatalog=null,filterCatalogPromise=null,filterCatalogError='',filterOpen=false,filterSource='cp',filterSearch='',filterEditorId='',filterValueSearch='';
+const filterFacets=new Map();
+let refreshGeneration=0,sourceRevision='',catalogGeneration=0;
 
 function loadState(){
   const defaults={open:true,groupBy:'buyer',barScale:'pct',timeField:'exFactory',granularity:'week',timelineChart:'stacked',timelineDimension:'buyingGroup',showAll:false,exportPlanActual:true,exportLegacy:true,filters:[],importanceScope:'all'};
@@ -67,18 +69,34 @@ function filterSourceColumnIds(){
 function overviewQueryParams(){
   const base=queryParams();if(!base)return null;
   const params={...base},extra=filterSourceColumnIds();
-  // Çekmecenin seçenekleri filtre öncesi satırlardan gelir; diğer tüketiciler
-  // aynı kriterleri sunucuda uygular. Böylece seçimler birbirini gizlemez.
-  delete params.analysisFilters;
   if(extra.length){
     const existing=String(params.sourceColumns||'').split(',').map(v=>v.trim()).filter(Boolean);
     params.sourceColumns=[...new Set([...existing,...extra])].join(',');
   }
   return params;
 }
+function filterFacetParams(filter){
+  const params={...(queryParams()||{}),field:filter.id};
+  for(const key of ['analysisFilters','sourceColumns','format','groupBy','antrepoDateLevels','lazyDimensions'])delete params[key];
+  return params;
+}
+function filterFacet(filter){return filterFacets.get(JSON.stringify(filterFacetParams(filter)));}
+async function ensureFilterValues(filter){
+  if(!filter)return;
+  const params=filterFacetParams(filter),key=JSON.stringify(params),known=filterFacets.get(key);
+  if(known&&!known.error)return known.promise;
+  const entry={loading:true,data:null,error:''};filterFacets.set(key,entry);
+  while(filterFacets.size>12)filterFacets.delete(filterFacets.keys().next().value);
+  entry.promise=fetch('/api/backlog-filter-values?'+new URLSearchParams(params),{credentials:'same-origin'}).then(async response=>{
+    const body=await response.json();if(!response.ok)throw new Error(body.error||`HTTP ${response.status}`);
+    entry.data=body;
+  }).catch(error=>{entry.error=String(error.message||error);}).finally(()=>{entry.loading=false;if(filterOpen)renderFilterPanel();});
+  renderFilterPanel();return entry.promise;
+}
 function filterRawValue(item,filter){return item&&item.row?item.row[filter.rowKey]:null}
 function filterDay(value){try{return R()?.dayIso(value)||''}catch(_){return ''}}
 function filterKind(filter){
+  const facet=filterFacet(filter);if(facet?.data)return facet.data.kind;
   const rows=Array.isArray(baseItems)?baseItems:[],values=[];
   for(const item of rows){
     const value=filterRawValue(item,filter);
@@ -91,6 +109,8 @@ function filterKind(filter){
   return dates/values.length>=.8?'date':'values';
 }
 function distinctFilterValues(filter){
+  const facet=filterFacet(filter);
+  if(facet?.data)return facet.data.values.map(entry=>({...entry,label:entry.value===''?L('(boş)','(blank)'):entry.value}));
   const counts=new Map();
   for(const item of (baseItems||[])){
     const key=filterValueKey(filterRawValue(item,filter));
@@ -126,64 +146,78 @@ function applyOverviewFilters(rows){
 }
 let sharedFilterTimer=0;
 function reapplyOverviewFilters(){
-  items=applyOverviewFilters(baseItems||[]);saveState();render();
+  ++refreshGeneration;saveState();loading=true;signature='';render();
   clearTimeout(sharedFilterTimer);
   sharedFilterTimer=setTimeout(()=>{if(typeof fetchCurrentBacklog==='function')fetchCurrentBacklog();},140);
 }
 
 
 /* ------------------------------------------------ ortak satır önbelleği */
-/* revision: sunucunun girdilerden türettiği satır revizyonu. Önbellek düşse de
-   yeniden çekilen satırlar aynı revizyondaysa ÖNCEKİ dizi döndürülür; böylece
-   Genel Bakış ve Teslimat Riski panelleri aynı veriyi baştan hesaplamaz. */
-const rowsCache={signature:'',promise:null,rows:null,lastRevision:'',lastRows:null};
-function loadRows(params){
-  const sig=JSON.stringify(params||{});
-  if(rowsCache.signature===sig&&(rowsCache.rows||rowsCache.promise))return rowsCache.rows?Promise.resolve(rowsCache.rows):rowsCache.promise;
-  rowsCache.signature=sig;rowsCache.rows=null;
+/* Aynı satır sorgusu için tüm paneller tek promise/dizi paylaşır. Gruplama
+   satır kümesini değiştirmez; kaynak revizyonu değişince bütün girişler düşer. */
+const rowsCache=new Map();
+const rowsRevisions=new Map();
+const rowsQueryKey=params=>JSON.stringify(Object.keys(params||{}).sort().filter(key=>!['groupBy','antrepoDateLevels','lazyDimensions'].includes(key)).map(key=>[key,params[key]]));
+function loadData(params){
+  const sig=rowsQueryKey(params),known=rowsCache.get(sig);
+  if(known)return known.promise;
+  const entry={};rowsCache.set(sig,entry);
+  while(rowsCache.size>4)rowsCache.delete(rowsCache.keys().next().value);
   const qs=new URLSearchParams(params||{}).toString();
-  const promise=fetch('/api/backlog-export?'+qs,{credentials:'same-origin'}).then(async res=>{
+  entry.promise=fetch('/api/backlog-export?'+qs,{credentials:'same-origin'}).then(async res=>{
     const body=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(body&&body.error?body.error:`HTTP ${res.status}`);
     await window.BLMerchCalendarReady;
     if(body.merchCalendar)window.BLMerchCalendarRuntime?.apply?.(body.merchCalendar);
     let rows=Array.isArray(body.rows)?body.rows:[];
-    const revision=typeof body.rowsRevision==='string'?body.rowsRevision:'';
-    if(revision&&revision===rowsCache.lastRevision&&rowsCache.lastRows)rows=rowsCache.lastRows;
-    else{rowsCache.lastRevision=revision;rowsCache.lastRows=revision?rows:null;}
-    if(rowsCache.signature===sig){rowsCache.rows=rows;rowsCache.promise=null;}
-    return rows;
-  }).catch(err=>{if(rowsCache.signature===sig){rowsCache.signature='';rowsCache.promise=null;}throw err;});
-  rowsCache.promise=promise;
-  return promise;
+    const revision=typeof body.rowsRevision==='string'?body.rowsRevision:'',previous=rowsRevisions.get(sig);
+    if(revision&&previous?.revision===revision)rows=previous.rows;
+    else if(revision){
+      rowsRevisions.set(sig,{revision,rows});
+      while(rowsRevisions.size>4)rowsRevisions.delete(rowsRevisions.keys().next().value);
+    }
+    return {...body,rows};
+  }).catch(err=>{if(rowsCache.get(sig)===entry)rowsCache.delete(sig);throw err;});
+  return entry.promise;
 }
-window.BLBacklogRows={load:loadRows,invalidate:()=>{rowsCache.signature='';rowsCache.rows=null;rowsCache.promise=null;}};
+function loadRows(params){return loadData(params).then(body=>body.rows);}
+window.BLBacklogRows={load:loadRows,loadData,invalidate:()=>rowsCache.clear()};
 
 function queryParams(){try{return typeof backlogExportQueryParams==='function'?backlogExportQueryParams():null;}catch(_){return null;}}
 function visible(){const c=$('backlogContent');return !!c&&c.style.display!=='none'&&!!c.offsetParent;}
 async function refresh(force){
-  const host=$('backlogOverviewBody');if(!host||(!state.open&&!filterOpen))return;
+  const host=$('backlogOverviewBody');if(!host||!state.open)return;
   const params=overviewQueryParams();if(!params){return;}
   const sig=JSON.stringify(params);
-  if(!force&&sig===signature&&baseItems){items=applyOverviewFilters(baseItems);return render();}
+  const generation=++refreshGeneration;
+  if(!force&&sig===signature&&baseItems){loading=false;error='';items=applyOverviewFilters(baseItems);return render();}
   loading=true;error='';render();
   try{
     if(window.BLPerf?.ensureFeature)await window.BLPerf.ensureFeature('backlogAnalysis').catch(()=>null);
     if(force)window.BLBacklogRows.invalidate();
     const rows=await loadRows(params);
+    if(generation!==refreshGeneration)return;
     if(!R())throw new Error(L('Backlog V3 rapor motoru yüklenemedi.','Backlog V3 report engine could not be loaded.'));
     // Aynı satır dizisi (aynı sunucu revizyonu) zaten normalleştirildiyse tekrarlanmaz.
     if(!(rows===normalizedRows&&baseItems))baseItems=R().normalizeRows(rows);
     normalizedRows=rows;items=applyOverviewFilters(baseItems);signature=sig;
-  }catch(err){error=String(err&&err.message||err);baseItems=null;items=null;}
-  finally{loading=false;render();}
+  }catch(err){if(generation!==refreshGeneration)return;error=String(err&&err.message||err);baseItems=null;items=null;}
+  finally{if(generation===refreshGeneration){loading=false;render();}}
 }
 let pendingTimer=0,lastData=null,normalizedRows=null;
 function onBacklogRendered(data){
   $('backlogContent')?.classList.add('has-blv');
   // Her yeni Backlog yanıtı (filtre değişimi veya veri yenileme) taze satır
   // demektir: ortak önbellek ve imza burada, Teslimat Riski panelinden ÖNCE sıfırlanır.
-  if(data!==lastData){lastData=data;window.BLBacklogRows.invalidate();signature='';}
+  if(data!==lastData){
+    lastData=data;
+    if(!data?.rowsInputRevision || sourceRevision!==data.rowsInputRevision){
+      if(sourceRevision){++catalogGeneration;filterCatalog=null;filterCatalogPromise=null;}
+      sourceRevision=data?.rowsInputRevision||'';window.BLBacklogRows.invalidate();filterFacets.clear();
+    }
+    signature='';
+    if(filterOpen){void ensureFilterCatalog().then(()=>ensureFilterValues(overviewFilters().find(f=>f.id===filterEditorId))).catch(()=>{});renderFilterPanel();}
+  }
   clearTimeout(pendingTimer);
   pendingTimer=setTimeout(()=>{if(visible())void refresh(false);},60);
 }
@@ -390,7 +424,8 @@ async function ensureFilterCatalog(){
   if(filterCatalog)return filterCatalog;
   if(filterCatalogPromise)return filterCatalogPromise;
   filterCatalogError='';
-  filterCatalogPromise=fetch('/api/backlog-source-columns',{credentials:'same-origin'}).then(async res=>{
+  const generation=catalogGeneration;
+  const promise=fetch('/api/backlog-source-columns',{credentials:'same-origin'}).then(async res=>{
     const body=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(body&&body.error?body.error:`HTTP ${res.status}`);
     const cp=(Array.isArray(body.defaultHeaders)?body.defaultHeaders:[]).map(header=>({
@@ -400,10 +435,11 @@ async function ensureFilterCatalog(){
       id:String(column.id),source:column.source==='antrepo'?'antrepo':'asas',header:String(column.header),
       rowKey:String(column.label),label:String(column.header)
     }));
+    if(generation!==catalogGeneration)return filterCatalog;
     filterCatalog=[...cp,...raw];
     return filterCatalog;
-  }).catch(err=>{filterCatalogError=String(err&&err.message||err);throw err;}).finally(()=>{filterCatalogPromise=null;});
-  return filterCatalogPromise;
+  }).catch(err=>{if(generation===catalogGeneration)filterCatalogError=String(err&&err.message||err);throw err;}).finally(()=>{if(filterCatalogPromise===promise)filterCatalogPromise=null;});
+  filterCatalogPromise=promise;return promise;
 }
 function filterRoot(){
   let root=$('blvFilterRoot');
@@ -416,7 +452,7 @@ function filterRoot(){
     const source=e.target.closest('[data-blvf-source]');if(source){filterSource=source.dataset.blvfSource||'cp';filterSearch='';renderFilterPanel();return;}
     const reset=e.target.closest('[data-blvf-reset]');if(reset){state.filters=[];filterEditorId='';filterValueSearch='';signature='';reapplyOverviewFilters();return;}
     const add=e.target.closest('[data-blvf-add]');if(add){void addOverviewFilter(decodeURIComponent(add.dataset.blvfAdd||''));return;}
-    const edit=e.target.closest('[data-blvf-edit]');if(edit){filterEditorId=decodeURIComponent(edit.dataset.blvfEdit||'');filterValueSearch='';renderFilterPanel();return;}
+    const edit=e.target.closest('[data-blvf-edit]');if(edit){filterEditorId=decodeURIComponent(edit.dataset.blvfEdit||'');filterValueSearch='';void ensureFilterValues(overviewFilters().find(f=>f.id===filterEditorId));renderFilterPanel();return;}
     const remove=e.target.closest('[data-blvf-remove]');if(remove){
       const id=decodeURIComponent(remove.dataset.blvfRemove||'');
       state.filters=overviewFilters().filter(filter=>filter.id!==id);
@@ -462,7 +498,7 @@ function filterRoot(){
 }
 async function openFilterPanel(){
   filterOpen=true;const root=filterRoot();root.hidden=false;window.BLMotionPlus?.play?.('overlay',root.querySelector('.blvFilterDrawer'));requestAnimationFrame(()=>root.classList.add('is-open'));updateFilterButton();renderFilterPanel();
-  try{await ensureFilterCatalog();await refresh(false);renderFilterPanel();}catch(_){renderFilterPanel();}
+  try{await ensureFilterCatalog();await ensureFilterValues(overviewFilters().find(f=>f.id===filterEditorId));renderFilterPanel();}catch(_){renderFilterPanel();}
 }
 function closeFilterPanel(){
   filterOpen=false;const root=$('blvFilterRoot');if(root){root.classList.remove('is-open');setTimeout(()=>{if(!filterOpen)root.hidden=true;},160);}updateFilterButton();
@@ -476,21 +512,22 @@ function filterCriterionText(filter){
 async function addOverviewFilter(id){
   if(!filterCatalog)try{await ensureFilterCatalog();}catch(_){return;}
   const field=(filterCatalog||[]).find(item=>item.id===id);if(!field)return;
-  let filter=overviewFilters().find(item=>item.id===id),added=false;
+  let filter=overviewFilters().find(item=>item.id===id);
   if(!filter){
     filter={id:field.id,source:field.source,header:field.header,rowKey:field.rowKey,label:field.label,values:[],from:'',to:''};
-    state.filters=[...overviewFilters(),filter];added=true;saveState();
+    state.filters=[...overviewFilters(),filter];saveState();
   }
   filterEditorId=id;filterValueSearch='';
-  if(!baseItems||added&&(field.source==='asas'||field.source==='antrepo')){signature='';await refresh(!!baseItems);}
-  else renderFilterPanel();
+  await ensureFilterValues(filter);renderFilterPanel();
 }
 function renderFilterEditor(filter){
   if(!filter)return `<div class="blvFilterEditorEmpty"><svg class="ic"><use href="#i-filter"/></svg><b>${esc(L('Bir sütun seçin','Select a column'))}</b><span>${esc(L('Soldaki CP, ASAS veya IAS sütunlarından birini seçerek filtre ekleyin.','Choose a CP, ASAS or IAS column on the left to add a filter.'))}</span></div>`;
-  const kind=filterKind(filter),rawValues=(baseItems||[]).map(item=>filterRawValue(item,filter)).filter(value=>value!=null&&value!=='');
+  const facet=filterFacet(filter);
+  if(!facet?.data)return `<div class="blvFilterLoading">${esc(facet?.error||L('Filtre değerleri yükleniyor…','Loading filter values…'))}</div>`;
+  const kind=filterKind(filter);
   let controls='';
   if(kind==='date'){
-    const days=rawValues.map(filterDay).filter(Boolean).sort(),min=days[0]||'',max=days[days.length-1]||'';
+    const min=facet.data.min||'',max=facet.data.max||'';
     controls=`<div class="blvFilterDateGrid"><label><span>${esc(L('Başlangıç','From'))}</span><input type="date" data-blvf-from value="${esc(filter.from||'')}"${min?` min="${esc(min)}"`:''}${max?` max="${esc(max)}"`:''}></label><label><span>${esc(L('Bitiş','To'))}</span><input type="date" data-blvf-to value="${esc(filter.to||'')}"${min?` min="${esc(min)}"`:''}${max?` max="${esc(max)}"`:''}></label></div>
       <div class="blvFilterRangeHint">${esc(min&&max?L(`Veri aralığı: ${fmtDay(min)} – ${fmtDay(max)}`,`Data range: ${fmtDay(min)} – ${fmtDay(max)}`):L('Bu sütunda tarih değeri bulunamadı.','No date values found in this column.'))}</div>`;
   }else{
@@ -516,7 +553,7 @@ function renderFilterPanel(){
   const sourceCount=source=>filterCatalog.filter(field=>field.source===source).length;
   const active=overviewFilters();
   mount.innerHTML=`<header class="blvFilterHead"><div><span class="blvFilterKicker">${esc(L('BACKLOG ORTAK FİLTRELER','SHARED BACKLOG FILTERS'))}</span><h3 id="blvFilterTitle">${esc(L('Analiz Filtreleri','Analysis Filters'))}</h3><p>${esc(L('Bu filtreler tüm Backlog görünümlerini, Legacy Excel ve Backlog Report çıktılarını etkiler.','These filters apply to all Backlog views, Legacy Excel and Backlog Report exports.'))}</p></div><div class="blvFilterHeadActions"><button type="button" data-blvf-reset${active.length?'':' disabled'}>${esc(L('Tümünü sıfırla','Reset all'))}</button><button type="button" data-blvf-close title="${esc(L('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div></header>
-    <div class="blvFilterSummary"><div><b>${n((items||[]).length)}</b><span>/ ${n((baseItems||[]).length)} ${esc(L('satır','rows'))}</span></div><span>${esc(L(`${activeFilterCount()} aktif filtre`,`${activeFilterCount()} active filters`))}</span></div>
+    <div class="blvFilterSummary"><div><b>${n(lastData?.totalRows||0)}</b><span>${esc(L('satır','rows'))}</span></div><span>${esc(L(`${activeFilterCount()} aktif filtre`,`${activeFilterCount()} active filters`))}</span></div>
     <div class="blvFilterActive">${active.map(filter=>`<button type="button" class="${filter.id===filterEditorId?'is-active':''}" data-blvf-edit="${esc(encodeURIComponent(filter.id))}"><span>${esc(filterSourceLabel(filter.source))}</span><b>${esc(filter.label)}</b><small>${esc(filterCriterionText(filter))}</small></button><button type="button" class="blvFilterRemove" data-blvf-remove="${esc(encodeURIComponent(filter.id))}" title="${esc(L('Filtreyi kaldır','Remove filter'))}"><svg class="ic"><use href="#i-x"/></svg></button>`).join('')||`<span class="blvFilterNoActive">${esc(L('Henüz analiz filtresi eklenmedi.','No analysis filters added yet.'))}</span>`}</div>
     <div class="blvFilterWorkspace"><div class="blvFilterCatalogue"><div class="blvFilterSourceTabs">${['cp','asas','antrepo'].map(source=>`<button type="button" class="${source===filterSource?'is-active':''}" data-blvf-source="${source}">${filterSourceLabel(source)} <b>${n(sourceCount(source))}</b></button>`).join('')}</div><input class="blvFilterSearch" type="search" data-blvf-search value="${esc(filterSearch)}" placeholder="${esc(L('Sütun ara…','Search columns…'))}"><div class="blvFilterColumns">${visibleFields.map(field=>`<button type="button" class="${activeIds.has(field.id)?'is-added':''}" data-blvf-add="${esc(encodeURIComponent(field.id))}" title="${esc(field.header)}"><span>${esc(field.header)}</span><svg class="ic"><use href="#${activeIds.has(field.id)?'i-check':'i-plus'}"/></svg></button>`).join('')||`<div class="blvFilterNoValue">${esc(L('Eşleşen sütun yok.','No matching columns.'))}</div>`}</div>${sourceItems.length>visibleFields.length?`<div class="blvFilterRangeHint">${esc(L(`${sourceItems.length} sütunun ilk 300'ü gösteriliyor. Aramayı kullanın.`,`Showing the first 300 of ${sourceItems.length} columns. Use search.`))}</div>`:''}</div><div class="blvFilterEditor">${renderFilterEditor(editor)}</div></div>`;
   requestAnimationFrame(()=>{
@@ -528,7 +565,7 @@ function render(){
   const host=$('backlogOverviewBody');if(!host)return;
   updateFilterButton();if(filterOpen)renderFilterPanel();
   tips=new Map();openers=new Map();hideTip();
-  if(!state.open){host.innerHTML='';return;}
+  if(!state.open)return;
   if(loading){host.innerHTML=`<div class="bpaLoading"><span class="bpaSpinner"></span>${esc(L('Backlog satırları toplanıyor…','Collecting Backlog rows…'))}</div>`;return;}
   if(error){host.innerHTML=`<div class="bpaError">${esc(error)}</div>`;return;}
   if(!items||!R()){host.innerHTML=`<div class="bpaEmpty">${esc(L('Backlog yüklendiğinde genel bakış burada görünür.','The overview appears once Backlog loads.'))}</div>`;return;}
@@ -649,9 +686,10 @@ function openDrawer(spec){
 function setOpen(value){
   state.open=value;saveState();
   const mod=$('backlogOverview'),body=$('backlogOverviewBody'),toggle=$('backlogOverviewToggle');
-  mod?.classList.toggle('is-open',value);if(body)body.hidden=!value;
+  mod?.classList.toggle('is-open',value);
+  if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(body,value,{trigger:toggle});else if(body)body.hidden=!value;
   toggle?.setAttribute('aria-expanded',value?'true':'false');
-  if(value)void refresh(false);else{closeDrawer();closeFilterPanel();render();}
+  if(value)void refresh(false);else{closeDrawer();closeFilterPanel();}
 }
 function bind(){
   if(bound)return;const host=$('backlogOverviewBody');if(!host)return;bound=true;
@@ -709,6 +747,7 @@ function openExternalItems(externalItems,options){
 /* Excel Backlog V3 seçenekleri ve kırılım tercihi app-main'deki dışa aktarım
    akışına buradan verilir. */
 window.BLBacklogOverview={
+  sourceColumnIds:filterSourceColumnIds,
   queryFilters:()=>overviewFilters().filter(filterHasCriteria).map(f=>({...f,values:[...(f.values||[])]})),
   onBacklogRendered,refresh:()=>refresh(true),openItems:openExternalItems,
   exportOptions:()=>({includePlanActual:state.exportPlanActual!==false,includeLegacy:state.exportLegacy!==false,groupBy:state.groupBy}),

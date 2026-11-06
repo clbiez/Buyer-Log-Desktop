@@ -14,6 +14,7 @@ const ROOT = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const APP = read('public/app-main.js');
 const CSS = require('./helpers/manifest-css')();
+const ENGINE = read('public/table-freeze.js');
 
 function bodyOf(name, source = APP) {
   const start = source.indexOf(`function ${name}(`);
@@ -30,38 +31,25 @@ function bodyOf(name, source = APP) {
 /* ---------------------------------------------------------------- 1) FREEZE */
 
 test('v5.85 dondurma sticky’si kimlik seçicili ezmelerden sonra geri veriliyor', () => {
-  // Kök neden: sticky, kimlik seçicisi OLMAYAN `.tablewrap table td.frzL` ile
-  // veriliyor; Koleksiyon'da ise `#kolTable tbody td.editTd{position:relative}`
-  // var ve kimlik seçicisi özgüllükte kazanıyordu. Sonuç: dondurulan aralıktaki
-  // düzenlenebilir sütunlar yapışmıyordu.
+  // Kök neden: `#kolTable tbody td.editTd{position:relative}` kimlik seçicisiyle
+  // sticky'yi eziyordu. Artık sticky, tablo kimliğini içeren ve !important taşıyan
+  // tek üretilmiş kuraldan gelir; hücre türüne göre yama gerekmez.
   assert.match(CSS, /#kolTable tbody td\.editTd\{padding:0;position:relative;\}/,
     'relative kuralı hâlâ duruyor olmalı — mutlak konumlu çocuklar ona bağlı');
-  // Yalnız v5.85 bloğuna bak: dosya sonuna kadar dilimlemek sonradan eklenen
-  // ilgisiz kuralları bu teste dahil ediyordu.
-  const fix = require('./helpers/manifest-css').rules(/(?:#kolTable|#cpTable|#ordersTable).*frzL/);
-  assert.match(fix, /#kolTable tbody td\.editTd\.frzL/);
-  assert.match(fix, /#kolTable tbody td\.kolPictureCell\.frzL/);
-  assert.match(fix, /position:sticky/);
-  // Düzeltme !important ile değil, özgüllükle yapılmalı.
-  const positionRules=fix.match(/position:[^;}]+/g)||[];
-  assert.ok(positionRules.includes('position:sticky'));
-  assert.ok(positionRules.every(v=>!v.includes('!important')));
+  assert.match(ENGINE, /var t = '#' \+ cssId\(table\.id\) \+ '\[data-bl-freeze\]';/);
+  assert.match(ENGINE, /\{position:sticky!important;' \+ place/);
 });
 
 test('v5.85 yapışan düzenlenebilir hücre kayan hücrelerin üstünde kalıyor', () => {
-  // Yalnız v5.85 bloğuna bak: dosya sonuna kadar dilimlemek sonradan eklenen
-  // ilgisiz kuralları bu teste dahil ediyordu.
-  const fix = require('./helpers/manifest-css').rules(/(?:#kolTable|#cpTable|#ordersTable).*frzL/);
-  assert.match(fix, /#kolTable tbody td\.editTd\.frzL\{z-index:var\(--ui-z-raised\)/);
+  // Kayan hücre < donmuş gövde < kayan başlık < donmuş başlık.
+  assert.match(ENGINE, /z-index:var\(--ui-z-frozen-cell\)!important/);
+  assert.match(ENGINE, /'>thead>tr\.colRow>th' \+ n \+ '\{position:sticky!important;' \+ place \+ ';z-index:var\(--ui-z-sticky-column\)!important\}'/);
 });
 
 test('v5.85 CP ve Siparişler de aynı korumayı alıyor', () => {
-  // Aynı sınıf hata ileride o tablolarda da çıkabilir; kural şimdiden kapsıyor.
-  // Yalnız v5.85 bloğuna bak: dosya sonuna kadar dilimlemek sonradan eklenen
-  // ilgisiz kuralları bu teste dahil ediyordu.
-  const fix = require('./helpers/manifest-css').rules(/(?:#kolTable|#cpTable|#ordersTable).*frzL/);
-  assert.match(fix, /#cpTable tbody td\.editTd\.frzL/);
-  assert.match(fix, /#ordersTable tbody td\.editTd\.frzL/);
+  // Aynı motor tüm tablolara uygulanır; tabloya özel freeze CSS'i yoktur.
+  assert.match(APP, /return window\.BLTableFreeze\.apply\(table,\{count:freeze\.left,pane:freeze\.pane,/);
+  assert.doesNotMatch(CSS, /#(?:cpTable|ordersTable|kolTable)[^{]*\.frzL/);
 });
 
 /* ------------------------------------------------------- 2) SÜTUN SEÇİCİ A→Z */

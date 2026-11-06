@@ -1,0 +1,3447 @@
+{
+  "schemaVersion": 2,
+  "synthetic": true,
+  "status": "failed",
+  "startedAt": "2026-11-06T04:17:19.707Z",
+  "fixtureRoot": "/tmp/buyerlog-startup-cache-trace",
+  "requestedRows": 30000,
+  "requestedModules": [
+    "overview"
+  ],
+  "sampling": {
+    "startMs": 0,
+    "endMs": 10000,
+    "clock": "navigation performance.now; tasks clipped at window end"
+  },
+  "measurements": [],
+  "healthSamples": [
+    {
+      "ms": 13.30591400000003,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "initial-start",
+      "startedAt": "2026-11-06T04:17:22.018Z"
+    },
+    {
+      "ms": 6.227500999999847,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:22.531Z"
+    },
+    {
+      "ms": 4.886878999999681,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:23.038Z"
+    },
+    {
+      "ms": 4.583732999999484,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:23.544Z"
+    },
+    {
+      "ms": 4.115174999999908,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:24.048Z"
+    },
+    {
+      "ms": 4.418798000000606,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:24.553Z"
+    },
+    {
+      "ms": 4.623006999999234,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:25.058Z"
+    },
+    {
+      "ms": 4.639067000000068,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:25.562Z"
+    },
+    {
+      "ms": 4.289168000000245,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:26.067Z"
+    },
+    {
+      "ms": 5.596795999999813,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:26.571Z"
+    },
+    {
+      "ms": 4.015900000000329,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:27.078Z"
+    },
+    {
+      "ms": 3.9859890000007,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:27.582Z"
+    },
+    {
+      "ms": 6.415430999999444,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:28.087Z"
+    },
+    {
+      "ms": 4.452439999999115,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:28.594Z"
+    },
+    {
+      "ms": 7.255987000000459,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:29.098Z"
+    },
+    {
+      "ms": 6.686781000000337,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:29.605Z"
+    },
+    {
+      "ms": 7.864470000000438,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:30.112Z"
+    },
+    {
+      "ms": 6.414764999999534,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:30.620Z"
+    },
+    {
+      "ms": 6.841354000000138,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:31.127Z"
+    },
+    {
+      "ms": 4.02294400000028,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:31.634Z"
+    },
+    {
+      "ms": 5.572158000000854,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:32.138Z"
+    },
+    {
+      "ms": 4.392222000000402,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:32.644Z"
+    },
+    {
+      "ms": 3.8044929999996384,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:33.149Z"
+    },
+    {
+      "ms": 3.470669000000271,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:33.654Z"
+    },
+    {
+      "ms": 5.899808000000121,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:34.157Z"
+    },
+    {
+      "ms": 5.401699000000008,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:34.664Z"
+    },
+    {
+      "ms": 3.9450229999984003,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:35.169Z"
+    },
+    {
+      "ms": 6.672953000001144,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:35.674Z"
+    },
+    {
+      "ms": 3.429869999999937,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:36.180Z"
+    },
+    {
+      "ms": 5.167481000000407,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:36.684Z"
+    },
+    {
+      "ms": 3.686245000000781,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:37.189Z"
+    },
+    {
+      "ms": 4.3277020000023185,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:37.693Z"
+    },
+    {
+      "ms": 5.099748999997246,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:38.197Z"
+    },
+    {
+      "ms": 3.845621000000392,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:38.702Z"
+    },
+    {
+      "ms": 7.68355000000156,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:39.207Z"
+    },
+    {
+      "ms": 4.209764000002906,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:39.715Z"
+    },
+    {
+      "ms": 873.8718860000008,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:40.220Z"
+    },
+    {
+      "ms": 5.931637999998202,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:41.595Z"
+    },
+    {
+      "ms": 3.951915999998164,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:42.102Z"
+    },
+    {
+      "ms": 4.6201360000013665,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:42.605Z"
+    },
+    {
+      "ms": 1177.8549299999977,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:43.110Z"
+    },
+    {
+      "ms": 20.24571599999763,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:44.789Z"
+    },
+    {
+      "ms": 5129.503453999998,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:45.310Z"
+    },
+    {
+      "ms": 4.826580000000831,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:50.939Z"
+    },
+    {
+      "ms": 3.822080999998434,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:51.445Z"
+    },
+    {
+      "ms": 4.900094000004174,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:51.950Z"
+    },
+    {
+      "ms": 32.60462700000062,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:52.459Z"
+    },
+    {
+      "ms": 6.068400999996811,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:52.992Z"
+    },
+    {
+      "ms": 146.32361400000082,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:53.538Z"
+    },
+    {
+      "ms": 3142.1924179999987,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:54.186Z"
+    },
+    {
+      "ms": 4.825783000000229,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:57.834Z"
+    },
+    {
+      "ms": 9.717523999999685,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:58.339Z"
+    },
+    {
+      "ms": 4.733086000000185,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:58.848Z"
+    },
+    {
+      "ms": 4.67014499999641,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:59.353Z"
+    },
+    {
+      "ms": 8.386969999999565,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:17:59.859Z"
+    },
+    {
+      "ms": 4.938480000004347,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:00.367Z"
+    },
+    {
+      "ms": 5.501725000001898,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:00.872Z"
+    },
+    {
+      "ms": 5.026192999997875,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:01.379Z"
+    },
+    {
+      "ms": 6.795496999999159,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:01.884Z"
+    },
+    {
+      "ms": 8.940371000004234,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:02.391Z"
+    },
+    {
+      "ms": 14.209731000002648,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:02.901Z"
+    },
+    {
+      "ms": 4.439641000004485,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:03.415Z"
+    },
+    {
+      "ms": 3.845928000002459,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:03.920Z"
+    },
+    {
+      "ms": 3.603975999998511,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:04.425Z"
+    },
+    {
+      "ms": 4.107017000002088,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:04.929Z"
+    },
+    {
+      "ms": 6.3849130000016885,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:05.434Z"
+    },
+    {
+      "ms": 5.08106399999815,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:05.941Z"
+    },
+    {
+      "ms": 5.632224999993923,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:06.446Z"
+    },
+    {
+      "ms": 5.582120999999461,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:06.952Z"
+    },
+    {
+      "ms": 5.86341099999845,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:07.459Z"
+    },
+    {
+      "ms": 3.8032289999973727,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:07.966Z"
+    },
+    {
+      "ms": 6.903011000002152,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:08.469Z"
+    },
+    {
+      "ms": 6.0984820000012405,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:08.977Z"
+    },
+    {
+      "ms": 5.063361999993504,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-06T04:18:09.484Z"
+    },
+    {
+      "ms": 35.72898000000714,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "validate",
+      "startedAt": "2026-11-06T04:18:10.116Z"
+    },
+    {
+      "ms": 55.48245699999825,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:12.899Z"
+    },
+    {
+      "ms": 15.74079100000381,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:13.454Z"
+    },
+    {
+      "ms": 16.003128000003926,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:13.970Z"
+    },
+    {
+      "ms": 13.448017000002437,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:14.488Z"
+    },
+    {
+      "ms": 10.034693000001425,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:15.002Z"
+    },
+    {
+      "ms": 4.159175000000687,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:15.512Z"
+    },
+    {
+      "ms": 109.01215100000263,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:16.016Z"
+    },
+    {
+      "ms": 5.49850499999593,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:16.627Z"
+    },
+    {
+      "ms": 6.063105000001087,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:17.132Z"
+    },
+    {
+      "ms": 4.368750000001455,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:17.638Z"
+    },
+    {
+      "ms": 6.311435000003257,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:18.143Z"
+    },
+    {
+      "ms": 4.231532999998308,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:18.649Z"
+    },
+    {
+      "ms": 20.497145000001183,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:19.154Z"
+    },
+    {
+      "ms": 1206.8586359999972,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:19.679Z"
+    },
+    {
+      "ms": 4.711376999999629,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:21.387Z"
+    },
+    {
+      "ms": 9.368172000002232,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:21.891Z"
+    },
+    {
+      "ms": 11.33081900000252,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:22.402Z"
+    },
+    {
+      "ms": 4.307673000002978,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:22.916Z"
+    },
+    {
+      "ms": 2.946940000001632,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:23.420Z"
+    },
+    {
+      "ms": 4.436791000000085,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:23.923Z"
+    },
+    {
+      "ms": 5.348879000011948,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:24.427Z"
+    },
+    {
+      "ms": 4.285105000002659,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:24.933Z"
+    },
+    {
+      "ms": 11.727308000001358,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:25.437Z"
+    },
+    {
+      "ms": 9.188128000008874,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:25.950Z"
+    },
+    {
+      "ms": 5.2496419999952195,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:26.460Z"
+    },
+    {
+      "ms": 4.628513999996358,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:26.965Z"
+    },
+    {
+      "ms": 4.642763999989256,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:27.471Z"
+    },
+    {
+      "ms": 6.017451000006986,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:27.976Z"
+    },
+    {
+      "ms": 11.778143999996246,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:28.483Z"
+    },
+    {
+      "ms": 4.179948999997578,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:28.996Z"
+    },
+    {
+      "ms": 5.300965000002179,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:29.500Z"
+    },
+    {
+      "ms": 4.45671100000618,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:30.006Z"
+    },
+    {
+      "ms": 12.002835000006598,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:30.511Z"
+    },
+    {
+      "ms": 5.522152000005008,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:31.024Z"
+    },
+    {
+      "ms": 5.247793000002275,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:31.529Z"
+    },
+    {
+      "ms": 4.159486000004108,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:32.034Z"
+    },
+    {
+      "ms": 5.0654150000045775,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:32.539Z"
+    },
+    {
+      "ms": 4.437516999998479,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:33.043Z"
+    },
+    {
+      "ms": 6.475007999993977,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:33.548Z"
+    },
+    {
+      "ms": 3.3697660000034375,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:34.054Z"
+    },
+    {
+      "ms": 6.135443999999552,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:34.559Z"
+    },
+    {
+      "ms": 3.4576669999951264,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:35.066Z"
+    },
+    {
+      "ms": 6.477367999992566,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:35.569Z"
+    },
+    {
+      "ms": 10.118905999988783,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:36.078Z"
+    },
+    {
+      "ms": 4.699211999992258,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:36.589Z"
+    },
+    {
+      "ms": 5.239390999995521,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:37.093Z"
+    },
+    {
+      "ms": 4.716583000001265,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:37.598Z"
+    },
+    {
+      "ms": 5.021836999992956,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:38.102Z"
+    },
+    {
+      "ms": 7.3359829999972135,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:38.608Z"
+    },
+    {
+      "ms": 5.525236000001314,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:39.116Z"
+    },
+    {
+      "ms": 4.4240069999941625,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:39.622Z"
+    },
+    {
+      "ms": 4.274629999999888,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:40.127Z"
+    },
+    {
+      "ms": 4.449706999992486,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:40.632Z"
+    },
+    {
+      "ms": 8.212004999993951,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:41.137Z"
+    },
+    {
+      "ms": 4.726490999993985,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:41.647Z"
+    },
+    {
+      "ms": 4.362731000001077,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:42.152Z"
+    },
+    {
+      "ms": 18.690233999994234,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:42.656Z"
+    },
+    {
+      "ms": 4.988524000000325,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:43.176Z"
+    },
+    {
+      "ms": 7.471433999991859,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:43.681Z"
+    },
+    {
+      "ms": 6.039718999993056,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:44.189Z"
+    },
+    {
+      "ms": 6.1968159999960335,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:44.695Z"
+    },
+    {
+      "ms": 5.999419999992824,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:45.202Z"
+    },
+    {
+      "ms": 12.965844000005745,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:45.707Z"
+    },
+    {
+      "ms": 5.026765000002342,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:46.221Z"
+    },
+    {
+      "ms": 4.883447999993223,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:46.727Z"
+    },
+    {
+      "ms": 5.694749000002048,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:47.232Z"
+    },
+    {
+      "ms": 4.883265999989817,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:47.738Z"
+    },
+    {
+      "ms": 8.797163000010187,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:48.242Z"
+    },
+    {
+      "ms": 23.510771999994176,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:48.752Z"
+    },
+    {
+      "ms": 25.2109300000011,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:49.278Z"
+    },
+    {
+      "ms": 4.288255999999819,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:49.803Z"
+    },
+    {
+      "ms": 7.471298999997089,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:50.308Z"
+    },
+    {
+      "ms": 7.146877000006498,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:50.815Z"
+    },
+    {
+      "ms": 3.6786270000011427,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:51.327Z"
+    },
+    {
+      "ms": 6.620230000000447,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:51.831Z"
+    },
+    {
+      "ms": 5.296656999998959,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:52.339Z"
+    },
+    {
+      "ms": 19.984593999994104,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:52.845Z"
+    },
+    {
+      "ms": 4.842101999995066,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:53.368Z"
+    },
+    {
+      "ms": 9.406757999997353,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:53.874Z"
+    },
+    {
+      "ms": 7.50292700000864,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:54.384Z"
+    },
+    {
+      "ms": 12.757558999990579,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:54.895Z"
+    },
+    {
+      "ms": 6.101154000003589,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:55.408Z"
+    },
+    {
+      "ms": 4.582889999990584,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:55.915Z"
+    },
+    {
+      "ms": 4.993101000000024,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:56.419Z"
+    },
+    {
+      "ms": 14.028515999991214,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:56.925Z"
+    },
+    {
+      "ms": 8.014079999993555,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:57.440Z"
+    },
+    {
+      "ms": 4.450391000005766,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:57.948Z"
+    },
+    {
+      "ms": 5.415978999997606,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:58.452Z"
+    },
+    {
+      "ms": 8.644642999992357,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:58.959Z"
+    },
+    {
+      "ms": 5.948017000002437,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:59.468Z"
+    },
+    {
+      "ms": 4.176862000007532,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:18:59.974Z"
+    },
+    {
+      "ms": 7.161682000005385,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:00.480Z"
+    },
+    {
+      "ms": 47.1906170000002,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:00.988Z"
+    },
+    {
+      "ms": 5.240589000008185,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:01.538Z"
+    },
+    {
+      "ms": 4.294702000013785,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:02.043Z"
+    },
+    {
+      "ms": 5.607022999989567,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:02.547Z"
+    },
+    {
+      "ms": 15.158738999991328,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:03.056Z"
+    },
+    {
+      "ms": 5.932867000010447,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:03.574Z"
+    },
+    {
+      "ms": 4.37278000000515,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:04.080Z"
+    },
+    {
+      "ms": 5.6798950000084005,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:04.585Z"
+    },
+    {
+      "ms": 16.26757300000463,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:05.092Z"
+    },
+    {
+      "ms": 6.046332999991137,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:05.611Z"
+    },
+    {
+      "ms": 4.839563999994425,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:06.117Z"
+    },
+    {
+      "ms": 5.063886000003549,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:06.623Z"
+    },
+    {
+      "ms": 6.267240000001038,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:07.130Z"
+    },
+    {
+      "ms": 5.0658779999939725,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:07.637Z"
+    },
+    {
+      "ms": 4.594024000005447,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:08.142Z"
+    },
+    {
+      "ms": 5.0282700000097975,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:08.647Z"
+    },
+    {
+      "ms": 5.016671000004862,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:09.153Z"
+    },
+    {
+      "ms": 4.8355739999969956,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:09.659Z"
+    },
+    {
+      "ms": 5.741081999993185,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:10.163Z"
+    },
+    {
+      "ms": 8.778638999996474,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:10.669Z"
+    },
+    {
+      "ms": 4.0896429999993416,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:11.179Z"
+    },
+    {
+      "ms": 9.90256399998907,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:11.683Z"
+    },
+    {
+      "ms": 4.360551000005216,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:12.194Z"
+    },
+    {
+      "ms": 6.682501000002958,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:12.698Z"
+    },
+    {
+      "ms": 8.035759000005783,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:13.205Z"
+    },
+    {
+      "ms": 20.393637000001036,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:13.715Z"
+    },
+    {
+      "ms": 5.752481000003172,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:14.238Z"
+    },
+    {
+      "ms": 5.137063999995007,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:14.745Z"
+    },
+    {
+      "ms": 6.069332999992184,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:15.251Z"
+    },
+    {
+      "ms": 5.0850809999974445,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:15.758Z"
+    },
+    {
+      "ms": 4.939979999995558,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:16.263Z"
+    },
+    {
+      "ms": 4.683669000005466,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:16.769Z"
+    },
+    {
+      "ms": 4.592237999997451,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:17.274Z"
+    },
+    {
+      "ms": 11.071295000001555,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:17.779Z"
+    },
+    {
+      "ms": 23.7301129999978,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:18.351Z"
+    },
+    {
+      "ms": 5.879566000003251,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:18.876Z"
+    },
+    {
+      "ms": 4.3621559999883175,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:19.383Z"
+    },
+    {
+      "ms": 5.7220780000061495,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:19.887Z"
+    },
+    {
+      "ms": 4.535905999990064,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:20.393Z"
+    },
+    {
+      "ms": 5.303123999998206,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:20.898Z"
+    },
+    {
+      "ms": 5.252237000007881,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:21.403Z"
+    },
+    {
+      "ms": 5.314152999999351,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:21.909Z"
+    },
+    {
+      "ms": 5.853575999994064,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:22.414Z"
+    },
+    {
+      "ms": 4.767578999992111,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:22.920Z"
+    },
+    {
+      "ms": 4.976871000006213,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:23.426Z"
+    },
+    {
+      "ms": 4.456985999990138,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:23.931Z"
+    },
+    {
+      "ms": 5.683299999989686,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:24.436Z"
+    },
+    {
+      "ms": 5.19585800000641,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:24.941Z"
+    },
+    {
+      "ms": 6.021788999991259,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:25.446Z"
+    },
+    {
+      "ms": 3.8635900000081165,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:25.953Z"
+    },
+    {
+      "ms": 6.054801999998745,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:26.457Z"
+    },
+    {
+      "ms": 5.344941000003018,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:26.963Z"
+    },
+    {
+      "ms": 4.702632000000449,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:27.469Z"
+    },
+    {
+      "ms": 4.427313000007416,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:27.974Z"
+    },
+    {
+      "ms": 11.796927000003052,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:28.478Z"
+    },
+    {
+      "ms": 7.569482000006246,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:28.991Z"
+    },
+    {
+      "ms": 5.16459999998915,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:29.499Z"
+    },
+    {
+      "ms": 5.214382000005571,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:30.005Z"
+    },
+    {
+      "ms": 5.925917000015033,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:30.511Z"
+    },
+    {
+      "ms": 4.989440999983344,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:31.017Z"
+    },
+    {
+      "ms": 8.548443000006955,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:31.522Z"
+    },
+    {
+      "ms": 5.894616000005044,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:32.032Z"
+    },
+    {
+      "ms": 5.727645000006305,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:32.539Z"
+    },
+    {
+      "ms": 5.148161999997683,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:33.044Z"
+    },
+    {
+      "ms": 4.270522000006167,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:33.549Z"
+    },
+    {
+      "ms": 4.424191999976756,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:34.054Z"
+    },
+    {
+      "ms": 6.439909000007901,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:34.558Z"
+    },
+    {
+      "ms": 3.956214000005275,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:35.066Z"
+    },
+    {
+      "ms": 6.1742059999960475,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:35.571Z"
+    },
+    {
+      "ms": 13.73377399999299,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:36.082Z"
+    },
+    {
+      "ms": 5.217629000020679,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:36.596Z"
+    },
+    {
+      "ms": 8.243545000004815,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:37.102Z"
+    },
+    {
+      "ms": 6.2689660000032745,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:37.611Z"
+    },
+    {
+      "ms": 4.752253999991808,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:38.117Z"
+    },
+    {
+      "ms": 4.2313929999945685,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:38.623Z"
+    },
+    {
+      "ms": 8.505999999993946,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:39.128Z"
+    },
+    {
+      "ms": 4.859100999980001,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:39.637Z"
+    },
+    {
+      "ms": 5.0036289999843575,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:40.142Z"
+    },
+    {
+      "ms": 4.801737000001594,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:40.648Z"
+    },
+    {
+      "ms": 5.587974000023678,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:41.153Z"
+    },
+    {
+      "ms": 4.357910999999149,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:41.660Z"
+    },
+    {
+      "ms": 4.9230700000189245,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:42.164Z"
+    },
+    {
+      "ms": 5.083419999980833,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:42.669Z"
+    },
+    {
+      "ms": 4.622131999989506,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:43.175Z"
+    },
+    {
+      "ms": 7.486081000010017,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:43.679Z"
+    },
+    {
+      "ms": 5.672990999999456,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:44.186Z"
+    },
+    {
+      "ms": 6.714538000000175,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:44.693Z"
+    },
+    {
+      "ms": 7.291339999996126,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:45.199Z"
+    },
+    {
+      "ms": 8.238601999997627,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:45.707Z"
+    },
+    {
+      "ms": 5.395901000010781,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:46.215Z"
+    },
+    {
+      "ms": 5.799557999998797,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:46.721Z"
+    },
+    {
+      "ms": 6.203164000005927,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:47.226Z"
+    },
+    {
+      "ms": 4.901225000008708,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:47.736Z"
+    },
+    {
+      "ms": 4.802991999982623,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:48.241Z"
+    },
+    {
+      "ms": 4.20778899997822,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:48.746Z"
+    },
+    {
+      "ms": 4.75416199999745,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:49.250Z"
+    },
+    {
+      "ms": 4.462884999986272,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:49.756Z"
+    },
+    {
+      "ms": 4.8065369999967515,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:50.260Z"
+    },
+    {
+      "ms": 4.46408600002178,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:50.765Z"
+    },
+    {
+      "ms": 8.650810999999521,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:51.269Z"
+    },
+    {
+      "ms": 4.72066900000209,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:51.777Z"
+    },
+    {
+      "ms": 3.348993000021437,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:52.282Z"
+    },
+    {
+      "ms": 5.068541000015102,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:52.786Z"
+    },
+    {
+      "ms": 4.771263000002364,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:53.291Z"
+    },
+    {
+      "ms": 3.410238999989815,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:53.796Z"
+    },
+    {
+      "ms": 7.323615000001155,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:54.300Z"
+    },
+    {
+      "ms": 7.560266999993473,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:54.809Z"
+    },
+    {
+      "ms": 5.46326799999224,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:55.317Z"
+    },
+    {
+      "ms": 5.9874130000243895,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:55.823Z"
+    },
+    {
+      "ms": 3.1034340000187512,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:56.330Z"
+    },
+    {
+      "ms": 13.435886999999639,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:56.833Z"
+    },
+    {
+      "ms": 6.411625000007916,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:57.347Z"
+    },
+    {
+      "ms": 4.21667900000466,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:57.854Z"
+    },
+    {
+      "ms": 3.5223669999977574,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:58.359Z"
+    },
+    {
+      "ms": 8.026660000003176,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:58.863Z"
+    },
+    {
+      "ms": 10.629150000022491,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:59.372Z"
+    },
+    {
+      "ms": 4.231715999980224,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:19:59.882Z"
+    },
+    {
+      "ms": 24.093861000001198,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:00.390Z"
+    },
+    {
+      "ms": 5.250735000008717,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:00.919Z"
+    },
+    {
+      "ms": 19.47989499999676,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:01.427Z"
+    },
+    {
+      "ms": 3.469651999999769,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:01.948Z"
+    },
+    {
+      "ms": 7.6216610000119545,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:02.452Z"
+    },
+    {
+      "ms": 10.68822199999704,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:02.961Z"
+    },
+    {
+      "ms": 5.045882000005804,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:03.475Z"
+    },
+    {
+      "ms": 5.201226000004681,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:03.980Z"
+    },
+    {
+      "ms": 3.924486000003526,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:04.486Z"
+    },
+    {
+      "ms": 5.278197999985423,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:04.989Z"
+    },
+    {
+      "ms": 6.165454000001773,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:05.494Z"
+    },
+    {
+      "ms": 6.506349000002956,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:06.000Z"
+    },
+    {
+      "ms": 7.229349000001093,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:06.507Z"
+    },
+    {
+      "ms": 4.73071499998332,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:07.015Z"
+    },
+    {
+      "ms": 4.537485999986529,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:07.520Z"
+    },
+    {
+      "ms": 4.2471670000231825,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:08.025Z"
+    },
+    {
+      "ms": 18.465041000017663,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:08.533Z"
+    },
+    {
+      "ms": 3.902786000020569,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:09.059Z"
+    },
+    {
+      "ms": 6.653339999989839,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:09.564Z"
+    },
+    {
+      "ms": 4.7348259999998845,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:10.070Z"
+    },
+    {
+      "ms": 21.970000000001164,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:10.577Z"
+    },
+    {
+      "ms": 4.943458000023384,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:11.101Z"
+    },
+    {
+      "ms": 5.982178999984171,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:11.606Z"
+    },
+    {
+      "ms": 8.063538999995217,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:12.113Z"
+    },
+    {
+      "ms": 7.583405000012135,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:12.621Z"
+    },
+    {
+      "ms": 7.044770000007702,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:13.130Z"
+    },
+    {
+      "ms": 5.31344500000705,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:13.638Z"
+    },
+    {
+      "ms": 4.0914580000098795,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:14.145Z"
+    },
+    {
+      "ms": 7.804389000026276,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:14.649Z"
+    },
+    {
+      "ms": 4.8810669999802485,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:15.158Z"
+    },
+    {
+      "ms": 4.075331000000006,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:15.664Z"
+    },
+    {
+      "ms": 6.498890000017127,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:16.169Z"
+    },
+    {
+      "ms": 4.396515000000363,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:16.675Z"
+    },
+    {
+      "ms": 4.380174999998417,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:17.181Z"
+    },
+    {
+      "ms": 11.801325000007637,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:17.685Z"
+    },
+    {
+      "ms": 4.988844000006793,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:18.199Z"
+    },
+    {
+      "ms": 2.6899710000143386,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:18.703Z"
+    },
+    {
+      "ms": 4.656422999978531,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:19.206Z"
+    },
+    {
+      "ms": 6.557733999972697,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:19.711Z"
+    },
+    {
+      "ms": 3.9708770000142977,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:20.218Z"
+    },
+    {
+      "ms": 10.437195000005886,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:20.722Z"
+    },
+    {
+      "ms": 18.13502200000221,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:21.237Z"
+    },
+    {
+      "ms": 6.359135000006063,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:21.758Z"
+    },
+    {
+      "ms": 7.875811999983853,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:22.334Z"
+    },
+    {
+      "ms": 9.50732699999935,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:22.843Z"
+    },
+    {
+      "ms": 4.0670849999878556,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:23.353Z"
+    },
+    {
+      "ms": 9.324053000018466,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:23.859Z"
+    },
+    {
+      "ms": 4.538237000000663,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:24.368Z"
+    },
+    {
+      "ms": 5.147223000007216,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:24.873Z"
+    },
+    {
+      "ms": 6.138009000016609,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:25.379Z"
+    },
+    {
+      "ms": 3.434454000002006,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:25.887Z"
+    },
+    {
+      "ms": 8.365500999992946,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:26.391Z"
+    },
+    {
+      "ms": 5.8557980000041425,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:26.900Z"
+    },
+    {
+      "ms": 4.440793999994639,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:27.406Z"
+    },
+    {
+      "ms": 61.88523400001577,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:27.926Z"
+    },
+    {
+      "ms": 66.73356200000853,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:28.504Z"
+    },
+    {
+      "ms": 6.014958000014303,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:29.072Z"
+    },
+    {
+      "ms": 8.263468000019202,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:29.577Z"
+    },
+    {
+      "ms": 3.786118999996688,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:30.085Z"
+    },
+    {
+      "ms": 4.86839499999769,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:30.590Z"
+    },
+    {
+      "ms": 5.504565000010189,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:31.097Z"
+    },
+    {
+      "ms": 4.500785999989603,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:31.603Z"
+    },
+    {
+      "ms": 4.601823999983026,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:32.109Z"
+    },
+    {
+      "ms": 19.868732000002638,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:32.613Z"
+    },
+    {
+      "ms": 7.92984600001364,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:33.134Z"
+    },
+    {
+      "ms": 20.744999000016833,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:33.694Z"
+    },
+    {
+      "ms": 4.182342999993125,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:34.218Z"
+    },
+    {
+      "ms": 15.068966999999247,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:34.722Z"
+    },
+    {
+      "ms": 4.773921999993036,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:35.240Z"
+    },
+    {
+      "ms": 5.363654000015231,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:35.745Z"
+    },
+    {
+      "ms": 4.417672000010498,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:36.252Z"
+    },
+    {
+      "ms": 15.372796999989077,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:36.757Z"
+    },
+    {
+      "ms": 10.605796999996528,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:37.272Z"
+    },
+    {
+      "ms": 8.422126999998,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:37.784Z"
+    },
+    {
+      "ms": 15292.256793000008,
+      "status": null,
+      "attempt": 1,
+      "error": "fetch failed",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:38.293Z"
+    },
+    {
+      "ms": 499.3916480000189,
+      "status": 404,
+      "attempt": 2,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-06T04:20:38.293Z"
+    }
+  ],
+  "platform": "linux",
+  "node": "v24.19.0",
+  "revision": "85c3f22a089bf91aeec9190b5baa7bb00125cb37",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "cpuCount": 5,
+  "availableParallelism": 4,
+  "cpuQuota": "400000 100000",
+  "memoryLimitBytes": "17179869184",
+  "fixture": {
+    "synthetic": true,
+    "rows": 30000,
+    "seed": 7,
+    "hashes": {
+      "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+    }
+  },
+  "refresh": {
+    "jobId": "mw4gqz5p-l2imqajf",
+    "running": false,
+    "phase": "done",
+    "startedAt": "2026-11-06T04:17:22.043Z",
+    "finishedAt": "2026-11-06T04:18:09.173Z",
+    "elapsedMs": 47128,
+    "error": null,
+    "errorCode": null,
+    "repairAction": null,
+    "diagnosis": null,
+    "summary": {
+      "oldOrderCount": 0,
+      "newOrderCount": 30000,
+      "newlyAppeared": 30000,
+      "disappeared": 0,
+      "statusChanged": 0,
+      "qtyChangedOrders": 0,
+      "kalanDelta": 0,
+      "asasChangedOrders": 30000,
+      "antrepoChangedOrders": 12726,
+      "asasChangeCount": 30000,
+      "antrepoChangeCount": 12726,
+      "hasChanges": true,
+      "details": {
+        "count": 42726
+      },
+      "historyItemId": "refresh_mw4grzig_alk8at"
+    },
+    "sourceRequest": null,
+    "connections": [],
+    "operations": [
+      {
+        "type": "start",
+        "timestamp": "2026-11-06T04:17:22.057Z",
+        "timestampMs": 1793938642057,
+        "connection": "ASAS Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-06T04:17:22.058Z",
+        "timestampMs": 1793938642058,
+        "connection": "ASAS Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": 1,
+        "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-06T04:17:22.058Z",
+        "timestampMs": 1793938642058,
+        "connection": "ASAS Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-06T04:17:41.119Z",
+        "timestampMs": 1793938661119,
+        "connection": "ASAS Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": 19061,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-06T04:17:41.258Z",
+        "timestampMs": 1793938661258,
+        "connection": "ANTREPO Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-06T04:17:41.259Z",
+        "timestampMs": 1793938661259,
+        "connection": "ANTREPO Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": 1,
+        "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-06T04:17:41.259Z",
+        "timestampMs": 1793938661259,
+        "connection": "ANTREPO Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-06T04:17:42.882Z",
+        "timestampMs": 1793938662882,
+        "connection": "ANTREPO Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": 1623,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-06T04:17:44.118Z",
+        "timestampMs": 1793938664118,
+        "connection": "Refresh",
+        "operation": "comparison",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-06T04:17:45.123Z",
+        "timestampMs": 1793938665123,
+        "connection": "Refresh",
+        "operation": "comparison",
+        "category": "wait",
+        "durationMs": 1005,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-06T04:17:45.124Z",
+        "timestampMs": 1793938665124,
+        "connection": "Local storage",
+        "operation": "snapshot-save",
+        "category": "save",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-06T04:17:54.702Z",
+        "timestampMs": 1793938674702,
+        "connection": "Local storage",
+        "operation": "snapshot-save",
+        "category": "save",
+        "durationMs": 9578,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-06T04:17:54.702Z",
+        "timestampMs": 1793938674702,
+        "connection": "Local storage",
+        "operation": "page-cache-write",
+        "category": "cache",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-06T04:18:09.153Z",
+        "timestampMs": 1793938689153,
+        "connection": "Local storage",
+        "operation": "page-cache-write",
+        "category": "cache",
+        "durationMs": 14451,
+        "error": null
+      }
+    ],
+    "excelWorkers": {
+      "asas": {
+        "queueWaitMs": 0.5293699999999717,
+        "durationMs": 19028.662214,
+        "executionMs": 16376.539943000002,
+        "overheadMs": 2652.1222709999984,
+        "heapUsedBytes": 468803776
+      },
+      "antrepo": {
+        "queueWaitMs": 0.07656700000006822,
+        "durationMs": 1619.2376119999972,
+        "executionMs": 1282.3466689999987,
+        "overheadMs": 336.8909429999985,
+        "heapUsedBytes": 90047624
+      }
+    },
+    "phases": [
+      {
+        "phase": "source-setup",
+        "startedAt": "2026-11-06T04:17:22.053Z",
+        "ms": 4,
+        "running": false
+      },
+      {
+        "phase": "asas-excel-refresh",
+        "startedAt": "2026-11-06T04:17:22.057Z",
+        "ms": 1,
+        "running": false
+      },
+      {
+        "phase": "asas-excel-parse",
+        "startedAt": "2026-11-06T04:17:22.058Z",
+        "ms": 19165,
+        "running": false
+      },
+      {
+        "phase": "database",
+        "startedAt": "2026-11-06T04:17:41.223Z",
+        "ms": 35,
+        "running": false
+      },
+      {
+        "phase": "antrepo-excel-refresh",
+        "startedAt": "2026-11-06T04:17:41.258Z",
+        "ms": 1,
+        "running": false
+      },
+      {
+        "phase": "antrepo-excel-parse",
+        "startedAt": "2026-11-06T04:17:41.259Z",
+        "ms": 2857,
+        "running": false
+      },
+      {
+        "phase": "source-processing",
+        "startedAt": "2026-11-06T04:17:44.116Z",
+        "ms": 0,
+        "running": false
+      },
+      {
+        "phase": "comparing",
+        "startedAt": "2026-11-06T04:17:44.116Z",
+        "ms": 1008,
+        "running": false
+      },
+      {
+        "phase": "saving",
+        "startedAt": "2026-11-06T04:17:45.124Z",
+        "ms": 9578,
+        "running": false
+      },
+      {
+        "phase": "page-cache",
+        "startedAt": "2026-11-06T04:17:54.702Z",
+        "ms": 14451,
+        "running": false
+      },
+      {
+        "phase": "finalizing",
+        "startedAt": "2026-11-06T04:18:09.153Z",
+        "ms": 20,
+        "running": false
+      }
+    ],
+    "loadedAt": "2026-11-06T04:17:41.257Z",
+    "requestedTargets": [
+      "cp",
+      "orders",
+      "backlog",
+      "lfl",
+      "priceanalysis"
+    ],
+    "cancelable": false,
+    "cancelRequested": false,
+    "dashboard": null,
+    "metrics": {
+      "dbQueryMs": 0,
+      "connectionWaitMs": 0,
+      "retryMs": 0,
+      "dbResultWriteMs": 0,
+      "parseMs": 0,
+      "uiBlockingMs": 0,
+      "localDbWriteMs": 0,
+      "localSnapshotWriteMs": 9048,
+      "dashboard": null,
+      "totalMs": 47125
+    },
+    "eta": {
+      "available": false,
+      "basis": "none",
+      "sampleCount": 0,
+      "neededSamples": 3,
+      "scope": {
+        "targets": [
+          "backlog",
+          "cp",
+          "lfl",
+          "orders",
+          "priceanalysis"
+        ],
+        "rowBucket": "unknown",
+        "horizonDensity": "light"
+      },
+      "remainingMs": null,
+      "exceeded": false
+    }
+  },
+  "health": {
+    "all": {
+      "count": 360,
+      "successful": 0,
+      "failed": 360,
+      "p50Ms": 5.395901000010781,
+      "p95Ms": 23.510771999994176,
+      "maxMs": 15292.256793000008
+    },
+    "refresh": {
+      "count": 73,
+      "successful": 0,
+      "failed": 73,
+      "p50Ms": 5.08106399999815,
+      "p95Ms": 873.8718860000008,
+      "maxMs": 5129.503453999998
+    },
+    "endpoint": "/api/health",
+    "readinessEndpoint": "/api/status",
+    "observedStatuses": [
+      404,
+      null
+    ],
+    "endpointAvailable": false
+  },
+  "stalls": [
+    {
+      "line": "[RUNTIME] event-loop-stall blockedMs=3779 cpuMs=10525 heapUsedMb=240 heapLimitMb=4288 rssMb=1036",
+      "blockedMs": 3779,
+      "cpuMs": 10525,
+      "heapUsedMb": 240,
+      "heapLimitMb": 4288,
+      "rssMb": 1036
+    },
+    {
+      "line": "[RUNTIME] event-loop-stall blockedMs=11185 cpuMs=21255 heapUsedMb=572 heapLimitMb=4288 rssMb=1466",
+      "blockedMs": 11185,
+      "cpuMs": 21255,
+      "heapUsedMb": 572,
+      "heapLimitMb": 4288,
+      "rssMb": 1466
+    }
+  ],
+  "diagnostics": {
+    "serverLog": "/tmp/buyerlog-startup-cache-trace/server.log",
+    "stallProfileLines": [
+      "[RUNTIME] stall-profiler samplingMs=5 minStallMs=10000",
+      "[RUNTIME] stall-profiler samplingMs=5 minStallMs=10000",
+      "[RUNTIME] stall-profile blockedMs=11185 sampledMs=31173 file=stall-2026-11-06T04-20-53-622Z.cpuprofile",
+      "[RUNTIME] stall-profile top1 15162ms 48.6% (idle)",
+      "[RUNTIME] stall-profile top2 1570ms 5% utf8Slice",
+      "[RUNTIME] stall-profile top3 1559ms 5% (garbage collector)",
+      "[RUNTIME] stall-profile top4 1408ms 4.5% (anonymous) server/lib/parse.js:3423",
+      "[RUNTIME] stall-profile top5 1391ms 4.5% stringifyWithDates server/lib/json-dates.js:8",
+      "[RUNTIME] stall-profile top6 795ms 2.6% update node:internal/crypto/hash:145",
+      "[RUNTIME] stall-profile top7 762ms 2.4% decodeSnapshotText server/lib/model-snapshot.js:191",
+      "[RUNTIME] stall-profile top8 387ms 1.2% dateOnlyFromDateObject server/lib/parse.js:900",
+      "[RUNTIME] stall-profile top9 369ms 1.2% concat node:buffer:628",
+      "[RUNTIME] stall-profile top10 364ms 1.2% makeDateOnly server/lib/parse.js:890",
+      "[RUNTIME] stall-profile top11 352ms 1.1% utf8Write node:internal/buffer:982",
+      "[RUNTIME] stall-profile top12 291ms 0.9% visit server/lib/model-snapshot.js:160",
+      "[RUNTIME] stall-profile top13 282ms 0.9% parseDate public/date-dimension.js:22",
+      "[RUNTIME] stall-profile top14 270ms 0.9% turknorm server/lib/parse.js:31",
+      "[RUNTIME] stall-profile top15 238ms 0.8% isoWeekNumber public/date-dimension.js:61",
+      "[RUNTIME] stall-profile stack1 15162ms (idle)",
+      "[RUNTIME] stall-profile stack2 1570ms utf8Slice < toString node:buffer:910 < loadModelSnapshotAsync server/lib/model-snapshot.js:292 < runMicrotasks < processTicksAndRejections node:internal/process/task_queues:72",
+      "[RUNTIME] stall-profile stack3 1559ms (garbage collector)",
+      "[RUNTIME] stall-profile stack4 1408ms (anonymous) server/lib/parse.js:3423 < backlogTemplateRowsFromSegments server/lib/parse.js:3418 < buildBacklogTemplateRows server/lib/parse.js:3373 < (anonymous) server/server.js:8859 < cachedBacklogTemplateRows server/server.js:8804 < (anonymous) server/server.js:8835 < runMicrotasks < processTicksAndRejections node:internal/process/task_queues:72"
+    ],
+    "stallProfiles": [
+      "/tmp/buyerlog-startup-cache-trace/local/logs/stall-profiles/stall-2026-11-06T04-20-53-622Z.cpuprofile"
+    ]
+  },
+  "refreshWallMs": 48096.911109999994,
+  "expected": {
+    "rows": {
+      "koleksiyon": 0,
+      "cp": 24982,
+      "orders": 30000,
+      "overview": 30000
+    },
+    "generation": "mw4grzhd-fe2c05b1c543",
+    "sourceRevision": "8445ffca2d718f780c58ec75460c8a80c4d76c954f434efe1f699b437b012610",
+    "revisions": {
+      "orders": 0,
+      "suppFob": 0
+    }
+  },
+  "backendStartupMs": 983.905872000003,
+  "chromium": "154.0.8037.57",
+  "lifecycleEvents": [
+    {
+      "module": "overview",
+      "event": "bl:primary-screen-ready",
+      "key": "primaryScreenReadyMs",
+      "ms": 3100.5
+    },
+    {
+      "module": "overview",
+      "event": "bl:startup-ready",
+      "key": "startupReadyMs",
+      "ms": 38131.20000000298
+    },
+    {
+      "module": "overview",
+      "event": "bl:startup-complete",
+      "key": "startupCompleteMs",
+      "ms": 142575.80000000075
+    }
+  ],
+  "failedPage": {
+    "module": "overview",
+    "message": "ENOENT: no such file or directory, open '/tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/manifest.json'",
+    "state": {
+      "probe": {
+        "primaryScreenReadyMs": 3100.5,
+        "startupReadyMs": 38131.20000000298,
+        "startupCompleteMs": 142575.80000000075,
+        "continueAtMs": 142540.5,
+        "userWaitMs": 104409.29999999702,
+        "systemStartupCompleteMs": 38166.500000003725,
+        "sampleWindowMs": 10000,
+        "longTasks": [
+          {
+            "startTime": 505.20000000298023,
+            "duration": 85
+          },
+          {
+            "startTime": 598.8000000007451,
+            "duration": 51
+          },
+          {
+            "startTime": 696.7000000029802,
+            "duration": 303
+          },
+          {
+            "startTime": 1206.5,
+            "duration": 51
+          },
+          {
+            "startTime": 1259.4000000022352,
+            "duration": 53
+          },
+          {
+            "startTime": 1408.6000000014901,
+            "duration": 231
+          },
+          {
+            "startTime": 1639.6000000014901,
+            "duration": 59
+          },
+          {
+            "startTime": 1871.300000000745,
+            "duration": 225
+          },
+          {
+            "startTime": 2282.800000000745,
+            "duration": 70
+          },
+          {
+            "startTime": 2356.60000000149,
+            "duration": 57
+          },
+          {
+            "startTime": 2652.300000000745,
+            "duration": 291
+          },
+          {
+            "startTime": 2989.7000000029802,
+            "duration": 76
+          },
+          {
+            "startTime": 3405.60000000149,
+            "duration": 278
+          },
+          {
+            "startTime": 3750.400000002235,
+            "duration": 77
+          },
+          {
+            "startTime": 3828.300000000745,
+            "duration": 522
+          },
+          {
+            "startTime": 4350.5,
+            "duration": 61
+          },
+          {
+            "startTime": 4429.800000000745,
+            "duration": 600
+          },
+          {
+            "startTime": 5133.60000000149,
+            "duration": 57
+          },
+          {
+            "startTime": 5276.900000002235,
+            "duration": 148
+          },
+          {
+            "startTime": 5519.800000000745,
+            "duration": 83
+          },
+          {
+            "startTime": 5611.20000000298,
+            "duration": 132
+          },
+          {
+            "startTime": 6880.5,
+            "duration": 701
+          },
+          {
+            "startTime": 7582.20000000298,
+            "duration": 78
+          },
+          {
+            "startTime": 7734,
+            "duration": 2266
+          }
+        ],
+        "initialGeneration": null
+      },
+      "active": "overview"
+    }
+  },
+  "error": {
+    "message": "ENOENT: no such file or directory, open '/tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/manifest.json'",
+    "stack": "Error: ENOENT: no such file or directory, open '/tmp/buyerlog-startup-cache-trace/local/page-cache/moderator/manifest.json'\n    at Object.readFileSync (node:fs:484:20)\n    at manifest (/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-startup-orders.js:68:42)\n    at identity (/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-startup-orders.js:69:29)\n    at open (/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-startup-orders.js:125:33)\n    at async measureModules (/workspace/Buyer-Log-Desktop/resources/app/scripts/lib/startup-benchmark.js:79:29)\n    at async /workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-startup-orders.js:216:5"
+  },
+  "finishedAt": "2026-11-06T04:20:54.985Z"
+}

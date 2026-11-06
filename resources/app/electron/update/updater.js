@@ -5,6 +5,7 @@ const { parseReleaseManifest }=require('./manifest');
 const { compareSemver }=require('./semver');
 const { sha256File }=require('./crypto');
 const { extractZipSafe }=require('./zip');
+const { verifyPackagedCoreAsync }=require('./core-verify-async');
 const { readJson,atomicWriteJson,ensureDir }=require('./json-store');
 const { FolderReleaseProvider,expandEnv }=require('./folder-provider');
 const { GitHubReleaseProvider,parseGitHubSource }=require('./github-provider');
@@ -162,7 +163,9 @@ class BuyerLogUpdater{
       // Gereken launcher'ı sağlamayan artifact'ten hiçbir şey kurulmaz.
       const offered=this.launcherHost.readLauncherInfo(appTarget);
       if(!offered||compareSemver(offered.launcherVersion,manifest.minimumUpdaterVersion)<0)throw this.launcherTooOld(manifest.minimumUpdaterVersion);
-      const result=this.launcherHost.install({sourceCore:appTarget,sourceVersion:manifest.version,ignoreRecentFailure:true});
+      // Arka plan kontrolü ana süreçte çalışır: tam çekirdek taramaları işçi iş parçacığında yapılır.
+      const installOptions={sourceCore:appTarget,sourceVersion:manifest.version,ignoreRecentFailure:true};
+      const result=typeof this.launcherHost.installAsync==='function'?await this.launcherHost.installAsync(installOptions,{verifyCore:verifyPackagedCoreAsync}):this.launcherHost.install(installOptions);
       if(compareSemver(this.launcherHost.effectiveVersion(),manifest.minimumUpdaterVersion)<0)throw this.launcherTooOld(manifest.minimumUpdaterVersion);
       this.appendLog('launcher-upgrade-staged',{version:manifest.version,launcherVersion:result.version||'',changed:result.changed===true});
     }

@@ -1,0 +1,23 @@
+[
+  {
+    "file": "phase-2-v3-after-1.json.gz",
+    "uncompressedSha256": "c0e46d38fd8fe7429132c3bc5cd73267ff61d5e2ce62f10cdf2f858c7d76f47a",
+    "compressedSha256": "72c9e03f40fe73daa98459c9188dd2dd47fb1b91e0def279a51ea197df2d065d",
+    "uncompressedBytes": 590187,
+    "compressedBytes": 42336
+  },
+  {
+    "file": "phase-2-v3-after-2.json.gz",
+    "uncompressedSha256": "031a9ca37f239c5e916d4f58d33020655c5bf4f1488eeba7b858a320795b6f10",
+    "compressedSha256": "59adc0b30889c7e6e5a147c07cad4f244a3fec7aea9292e7768262e44bfcc28a",
+    "uncompressedBytes": 589553,
+    "compressedBytes": 42254
+  },
+  {
+    "file": "phase-2-v3-after-3.json.gz",
+    "uncompressedSha256": "2758759a039a61c0d6aa931016e89c1db848e3ccdc29064ec6c62380114d0d45",
+    "compressedSha256": "12a18dfbd2c84b1a52681b58eecc8aeaa5d92eb7701f40ebe5ff3ba62d93835e",
+    "uncompressedBytes": 702568,
+    "compressedBytes": 49099
+  }
+]

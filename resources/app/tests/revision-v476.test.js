@@ -10,6 +10,7 @@ const { extractFunction } = require('./helpers/app-main-functions');
 const ROOT = path.join(__dirname, '..');
 const INDEX = (fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8'));
 const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
+const ENGINE = fs.readFileSync(path.join(ROOT, 'public', 'table-freeze.js'), 'utf8');
 const QUOT = fs.readFileSync(path.join(ROOT, 'public', 'quotations.js'), 'utf8');
 const QUOT_STORE = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'quotations-store.js'), 'utf8');
 const PARSE = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'parse.js'), 'utf8');
@@ -95,19 +96,19 @@ test('v4.76 quotation records are detached from Notebook storage', () => {
 });
 
 test('v4.78 freeze picker uses a single laser boundary and freezes its left side', () => {
-  assert.match(INDEX, /_freezePick=\{tableId,tableKey,trigger:actualTrigger,hoverIndex:null,laser:null\}/);
-  assert.match(INDEX, /function freezeMoveLaser\(event\)/);
-  assert.match(INDEX, /line\.className='freezeLaser'/);
-  assert.match(INDEX, /const count=pick\.hoverIndex\+1;\s*setFreeze\(pick\.tableKey,count\)/);
-  assert.doesNotMatch(INDEX, /freezeRenderBar|_freezePick\.second|freezeClosed|freezeOpen/);
-  assert.match(CSS, /\.freezeLaser\{background:var\(--ui-accent\)/);
+  assert.match(INDEX, /_freezePick=\{tableId,tableKey,trigger:actualTrigger\};\s*window\.BLTableFreeze\.startPick\(table,\{onPick:freezeCommitPick,onCancel:freezeReleasePick\}\)/);
+  assert.match(ENGINE, /function onPointerMove\(event\)/);
+  assert.match(ENGINE, /pick\.laser\.className = 'freezeLaser';/);
+  assert.match(ENGINE, /if \(typeof done === 'function'\) done\(index \+ 1\);/);
+  assert.doesNotMatch(INDEX + ENGINE, /freezeRenderBar|_freezePick\.second|freezeClosed|freezeOpen/);
+  assert.match(CSS, /\.freezeLaser\{z-index:var\(--ui-z-sticky-column\);background:var\(--ui-accent\)/);
   for(const selector of [".navActionBtn.freezeOn",".lflCpTableTool.freezeOn"]) assert.ok(CSS.includes(selector));
 });
 
 test('v4.76 freeze offsets are recalculated after resizing and grouped headers freeze too', () => {
   assert.match(INDEX, /applyColgroupWidths\(table,tableKey,withChk\);\s*applyFreeze\(table\.id,tableKey,withChk\)/);
   assert.match(INDEX, /applyFreeze\('kolTable','koleksiyon',true\)/);
-  assert.match(INDEX, /groupRow\.querySelectorAll\('th\[data-start\]\[data-end\]'\)/);
+  assert.match(ENGINE, /groups\.querySelectorAll\('th\[data-start\]\[data-end\]'\)/);
   assert.match(INDEX, /data-start="\$\{r\.start\}" data-end="\$\{r\.end\}"/);
   assert.match(INDEX, /freezeRefreshTable\(tableId,tableKey\)/);
 });

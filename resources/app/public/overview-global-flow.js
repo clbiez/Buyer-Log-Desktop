@@ -1255,7 +1255,7 @@ function syncLoadingOverlay(){
 function setCollapsed(next){
   state.collapsed=Boolean(next);savePrefs();
   const body=$('globalFlowBody'),button=$('globalFlowCollapseBtn');
-  if(body)body.hidden=state.collapsed;
+  if(window.BLMotionPlus?.disclosure)window.BLMotionPlus.disclosure(body,!state.collapsed,{trigger:button});else if(body)body.hidden=state.collapsed;
   if(button){button.setAttribute('aria-expanded',state.collapsed?'false':'true');const use=button.querySelector('use');if(use)use.setAttribute('href',state.collapsed?'#i-chevron-down':'#i-chevron-up');}
   if(!state.collapsed){if(state.dirty)void refresh(false);scheduleDraw();}
   syncEarthActivity();

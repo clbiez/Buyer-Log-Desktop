@@ -1,0 +1,146 @@
+[
+  {
+    "stage": "before",
+    "run": 1,
+    "entries": [
+      {
+        "action": "PASSWORD_SETUP",
+        "bytes": 23878,
+        "detailsNull": false,
+        "containsOrderAccess": true
+      },
+      {
+        "action": "LOGIN",
+        "bytes": 23862,
+        "detailsNull": false,
+        "containsOrderAccess": true
+      },
+      {
+        "action": "LOGIN",
+        "bytes": 2485108,
+        "detailsNull": false,
+        "containsOrderAccess": true
+      }
+    ]
+  },
+  {
+    "stage": "before",
+    "run": 2,
+    "entries": [
+      {
+        "action": "PASSWORD_SETUP",
+        "bytes": 23878,
+        "detailsNull": false,
+        "containsOrderAccess": true
+      },
+      {
+        "action": "LOGIN",
+        "bytes": 23862,
+        "detailsNull": false,
+        "containsOrderAccess": true
+      },
+      {
+        "action": "LOGIN",
+        "bytes": 2485108,
+        "detailsNull": false,
+        "containsOrderAccess": true
+      }
+    ]
+  },
+  {
+    "stage": "before",
+    "run": 3,
+    "entries": [
+      {
+        "action": "PASSWORD_SETUP",
+        "bytes": 23878,
+        "detailsNull": false,
+        "containsOrderAccess": true
+      },
+      {
+        "action": "LOGIN",
+        "bytes": 23862,
+        "detailsNull": false,
+        "containsOrderAccess": true
+      },
+      {
+        "action": "LOGIN",
+        "bytes": 2485108,
+        "detailsNull": false,
+        "containsOrderAccess": true
+      }
+    ]
+  },
+  {
+    "stage": "after",
+    "run": 1,
+    "entries": [
+      {
+        "action": "PASSWORD_SETUP",
+        "bytes": 376,
+        "detailsNull": true,
+        "containsOrderAccess": false
+      },
+      {
+        "action": "LOGIN",
+        "bytes": 360,
+        "detailsNull": true,
+        "containsOrderAccess": false
+      },
+      {
+        "action": "LOGIN",
+        "bytes": 360,
+        "detailsNull": true,
+        "containsOrderAccess": false
+      }
+    ]
+  },
+  {
+    "stage": "after",
+    "run": 2,
+    "entries": [
+      {
+        "action": "PASSWORD_SETUP",
+        "bytes": 376,
+        "detailsNull": true,
+        "containsOrderAccess": false
+      },
+      {
+        "action": "LOGIN",
+        "bytes": 360,
+        "detailsNull": true,
+        "containsOrderAccess": false
+      },
+      {
+        "action": "LOGIN",
+        "bytes": 360,
+        "detailsNull": true,
+        "containsOrderAccess": false
+      }
+    ]
+  },
+  {
+    "stage": "after",
+    "run": 3,
+    "entries": [
+      {
+        "action": "PASSWORD_SETUP",
+        "bytes": 376,
+        "detailsNull": true,
+        "containsOrderAccess": false
+      },
+      {
+        "action": "LOGIN",
+        "bytes": 360,
+        "detailsNull": true,
+        "containsOrderAccess": false
+      },
+      {
+        "action": "LOGIN",
+        "bytes": 360,
+        "detailsNull": true,
+        "containsOrderAccess": false
+      }
+    ]
+  }
+]

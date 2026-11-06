@@ -1,0 +1,23 @@
+[
+  {
+    "file": "baseline-1.json.gz",
+    "sha256": "b4440fc1cb2c788dec76a81f85e7265a7bbe68be776c8a6bfe4b96fc152ef5e0",
+    "bytes": 558888,
+    "runtimeRevision": "8e5a66fcdfbc37d9ed60a9db97e507fd74300e70",
+    "status": "passed"
+  },
+  {
+    "file": "baseline-2.json.gz",
+    "sha256": "d278b5dcba493ee435973886f989b6701cc99a6136ffb33156be477fbd823712",
+    "bytes": 545893,
+    "runtimeRevision": "8e5a66fcdfbc37d9ed60a9db97e507fd74300e70",
+    "status": "passed"
+  },
+  {
+    "file": "baseline-3.json.gz",
+    "sha256": "cc12103ca6338c73b0425734dca9e9b33e7c3e5417fa7cd02958a125910bda91",
+    "bytes": 604158,
+    "runtimeRevision": "8e5a66fcdfbc37d9ed60a9db97e507fd74300e70",
+    "status": "passed"
+  }
+]

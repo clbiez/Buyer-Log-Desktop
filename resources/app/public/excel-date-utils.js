@@ -304,17 +304,26 @@
   function repairReadDateCells(wb, XLSX) {
     if (!wb || !wb.Sheets || !XLSX || !XLSX.utils) return 0;
     let changed = 0;
+    function repair(cell) {
+      if (!cell || !(cell.v instanceof Date) || isNaN(cell.v)) return;
+      const snapped = snapReadDate(cell.v);
+      if (snapped.getTime() !== cell.v.getTime()) { cell.v = snapped; delete cell.w; changed++; }
+    }
     for (const name of Array.isArray(wb.SheetNames) ? wb.SheetNames : Object.keys(wb.Sheets)) {
       const ws = wb.Sheets[name];
       if (!ws || !ws['!ref']) continue;
       const range = XLSX.utils.decode_range(ws['!ref']);
-      for (let r = range.s.r; r <= range.e.r; r++) {
-        for (let c = range.s.c; c <= range.e.c; c++) {
-          const cell = ws[XLSX.utils.encode_cell({ r, c })];
-          if (!cell || !(cell.v instanceof Date) || isNaN(cell.v)) continue;
-          const snapped = snapReadDate(cell.v);
-          if (snapped.getTime() !== cell.v.getTime()) { cell.v = snapped; delete cell.w; changed++; }
+      const data = ws['!data'];
+      if (Array.isArray(data)) {
+        for (let r = range.s.r; r <= Math.min(range.e.r, data.length - 1); r++) {
+          const row = data[r];
+          if (!row) continue;
+          for (let c = range.s.c; c <= Math.min(range.e.c, row.length - 1); c++) repair(row[c]);
         }
+        continue;
+      }
+      for (let r = range.s.r; r <= range.e.r; r++) {
+        for (let c = range.s.c; c <= range.e.c; c++) repair(ws[XLSX.utils.encode_cell({ r, c })]);
       }
     }
     return changed;

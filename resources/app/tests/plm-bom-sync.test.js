@@ -211,7 +211,7 @@ test('BOM fetch hatası daha önce saklanan başarılı kaydı silmez', async ()
   }]);
   const result = await bomSync.syncPlmBoms(
     [{ plmId: '2133719', styleId: '2538477' }],
-    { ownerId: 'u1', store, postJson: async () => { throw Object.assign(new Error('network'), { code: 'X' }); } }
+    { ownerId: 'u1', store, retryDelaysMs: [0], postJson: async () => { throw Object.assign(new Error('network'), { code: 'X' }); } }
   );
   assert.equal(result.failed.length, 1);
   assert.equal(result.entries.get('2133719').summary.includes('Ön: 1'), true);
@@ -221,7 +221,10 @@ test('BOM fetch hatası daha önce saklanan başarılı kaydı silmez', async ()
 
 test('PLM Sync route BOM senkronunu aynı işin içine alır ve saklı BOM okuma ucu sunar', () => {
   const route = fs.readFileSync(path.join(ROOT, 'server', 'routes', 'plm-sync-routes.js'), 'utf8');
-  assert.match(route, /plmBomSync\.syncPlmBoms\(collected\.links/);
+  assert.match(route, /const bomRecords = backgroundBom \? collected\.links\.filter\(record => setStyleApi\.isSetStyle\(record\)\) : collected\.links;/);
+  assert.match(route, /plmBomSync\.syncPlmBoms\(bomRecords/);
+  assert.match(route, /function startBackgroundBom\(profile, records/);
+  assert.match(route, /kind: 'plm-bom'/);
   assert.match(route, /bomSummary/);
   assert.match(route, /bom:\s*collected\.bomSync/);
   assert.match(route, /app\.get\('\/api\/plm-sync\/bom\/:plmId'/);

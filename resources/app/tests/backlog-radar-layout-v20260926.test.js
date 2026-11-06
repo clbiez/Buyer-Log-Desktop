@@ -78,8 +78,10 @@ test('Teslimat Riski Analizi gövdesi kullanıcı tarafından gizlenip gösteril
   assert.match(ANALYSIS,/class="bdaTitle bdaTitleToggle" data-action="toggleAnalysis"/);
   assert.doesNotMatch(ANALYSIS,/bdaAnalysisToggle|Analizi Göster|Show Analysis|Analizi Gizle|Hide Analysis/);
   assert.match(CSS,/\.bdaTitleToggle/);
-  assert.match(ANALYSIS,/state\.collapsed = !state\.collapsed; save\(\); render\(\)/);
-  assert.match(ANALYSIS,/if \(state\.collapsed\) \{ host\.innerHTML = renderHeader\(\); bind\(host\); return; \}/);
+  assert.match(ANALYSIS,/state\.collapsed = !state\.collapsed; save\(\)/);
+  assert.match(ANALYSIS,/if \(state\.collapsed\) \{[\s\S]*?head\.outerHTML = renderHeader\(\)/);
+  assert.match(ANALYSIS,/BLMotionPlus\.disclosure\(body, open/);
+  assert.match(ANALYSIS,/if \(open\) render\(\)/, 'reopen refreshes the body lazily while close retains content for motion');
 });
 
 test('Requested legacy sections are absent from the Delivery Risk Analysis UI source',()=>{

@@ -50,6 +50,7 @@ function endpointWithQuery(endpoint, query) {
   return parsed.href;
 }
 async function request(userId, url, body, options = {}) {
+  const generation = settings.currentTokenGeneration();
   const endpoint = assertEndpoint(url), token = tokenFor(userId, options.token);
   const method = String(options.method || 'POST').toUpperCase();
   if (!['GET', 'POST'].includes(method)) throw apiError('Desteklenmeyen CoreNectum API metodu.','CORENECTUM_API_METHOD_NOT_ALLOWED',400);
@@ -75,7 +76,7 @@ async function request(userId, url, body, options = {}) {
       });
       clearTimeout(timer);
       if (response.status === 401 || response.status === 403) {
-        throw apiError(`CoreNectum yetkilendirmesi reddedildi (HTTP ${response.status}). Kurumsal oturumun süresi dolmuş olabilir; Buyer Log otomatik yenileme yapmalıdır.`,'CORENECTUM_API_TOKEN_INVALID',409,{remoteStatus:response.status});
+        throw apiError(`CoreNectum yetkilendirmesi reddedildi (HTTP ${response.status}). Kurumsal oturumun süresi dolmuş olabilir; Buyer Log otomatik yenileme yapmalıdır.`,'CORENECTUM_API_TOKEN_INVALID',409,{remoteStatus:response.status,tokenGeneration:generation});
       }
       if (!response.ok) {
         const text = await response.text().catch(()=>'');

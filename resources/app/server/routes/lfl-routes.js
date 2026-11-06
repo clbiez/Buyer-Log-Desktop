@@ -26,13 +26,15 @@ module.exports = function registerLflRoutes(app, deps) {
     collectionLflCache,
   } = deps;
 
-async function collectionReferenceSource(req,res){
+async function collectionReferenceSource(req,res,fallback=null){
     res.set('Cache-Control','no-store');
+    // A saved legacy summary is shown as-is while its source cannot upgrade it.
+    const unavailable=code=>{if(fallback)sendDateSafeJson(res,fallback);else res.status(409).json({code});return null;};
     const id=sourceUserId(req),readiness=sourceFilterReadiness(['lfl'],req);
-    if(!readiness.ready){res.status(409).json({code:'SOURCE_FILTER_REQUIRED'});return null;}
+    if(!readiness.ready)return unavailable('SOURCE_FILTER_REQUIRED');
     let runtime=cacheForUser(id);
     if(!runtime.lflLoadedAt){await ensureDataLoaded(id);runtime=cacheForUser(id);}
-    if(!runtime.lflLoadedAt){res.status(409).json({code:'LFL_SOURCE_UNAVAILABLE'});return null;}
+    if(!runtime.lflLoadedAt)return unavailable('LFL_SOURCE_UNAVAILABLE');
     return {id,runtime,rows:runtime.lflRows||[],version:runtime.lflLoadedAt};
 }
 function collectionReferenceIdentity(req){
@@ -48,11 +50,12 @@ function collectionReferenceSnapshot(req,source,rebuild=false){
 app.get('/api/collection-lfl-reference', userAccess.requireArea('koleksiyon'), userAccess.requireArea('lfl'), async (req,res)=>{
   try{
     res.set('Cache-Control','no-store');
+    let saved=null;
     if(req.query.rebuild!=='1'){
-      const saved=await collectionLflCache.read({identity:collectionReferenceIdentity(req)});
-      if(saved)return sendDateSafeJson(res,saved);
+      saved=await collectionLflCache.read({identity:collectionReferenceIdentity(req)});
+      if(saved&&saved.schema!==4)return sendDateSafeJson(res,saved);
     }
-    const source=await collectionReferenceSource(req,res);if(!source)return;
+    const source=await collectionReferenceSource(req,res,saved);if(!source)return;
     const snapshot=await collectionReferenceSnapshot(req,source,req.query.rebuild==='1');
     sendDateSafeJson(res,snapshot);
   }catch(err){apiError(res,err,'LFL reference could not be calculated.');}
@@ -60,16 +63,20 @@ app.get('/api/collection-lfl-reference', userAccess.requireArea('koleksiyon'), u
 app.post('/api/collection-lfl-detail',userAccess.requireArea('koleksiyon'),userAccess.requireArea('lfl'),async(req,res)=>{
   try{
     res.set('Cache-Control','no-store');
-    const {key,version}=req.body||{};
+    const {key,version,excludedCountries=[]}=req.body||{};
     if(typeof key!=='string'||!key||key.length>2048||typeof version!=='string'||!version||version.length>256)return res.status(400).json({code:'VALIDATION_ERROR'});
+    // Buyer country rule (production countries left out of the reference); codes only, never trusted as dimensions.
+    if(!Array.isArray(excludedCountries)||excludedCountries.length>60||excludedCountries.some(code=>typeof code!=='string'||code.length>40))return res.status(400).json({code:'VALIDATION_ERROR'});
+    const excluded=collectionLflEngine.countryList(excludedCountries);
     const source=await collectionReferenceSource(req,res);if(!source)return;
     if(version!==String(source.version))return res.status(409).json({code:'LFL_REFERENCE_STALE'});
     const snapshot=await collectionReferenceSnapshot(req,source);
     if(version!==snapshot.version)return res.status(409).json({code:'LFL_REFERENCE_STALE'});
     // Never trust client dimensions: the key must exist in the current user's scoped summary.
-    const reference=snapshot.references.find(item=>item.key===key);
+    const stored=snapshot.references.find(item=>item.key===key);
+    const reference=collectionLflEngine.excludeCountries(stored,excluded);
     if(!reference)return res.status(404).json({code:'LFL_REFERENCE_NOT_FOUND'});
-    const rows=collectionLflEngine.referenceDetails(userAccess.filterRowsByScope(req.currentUser,source.rows),reference);
+    const rows=collectionLflEngine.referenceDetails(userAccess.filterRowsByScope(req.currentUser,source.rows),stored,excluded);
     const imageAwareRows=attachModelImageIdentities(rows,modelImageIdentityOrders(source.runtime));
     sendDateSafeJson(res,{version:String(source.version),calculatedAt:snapshot.calculatedAt,reference,rows:imageAwareRows});
   }catch(err){apiError(res,err,'LFL order detail could not be loaded.');}

@@ -155,6 +155,11 @@ test('Manifest fonts scale and only transform/opacity may animate',()=>{
   if(d.prop==='font'&&/(?:^|\s)[\d.]+px(?:\/|\s)/.test(d.value))failures.push(d);
   if(d.ancestors.some(s=>s.startsWith('@keyframes'))&&!['opacity','transform'].includes(d.prop))failures.push(d);
   if(/^transition(?:-property)?$/.test(d.prop)&&!/^none/.test(d.value)){
+   // Native section disclosures need intrinsic block-size interpolation and
+   // discrete content visibility. This exception belongs only to the shared
+   // details pseudo-element, with canonical timing and motion guards.
+   if(d.file==='ui-motion.css'&&d.selector===':root:not([data-bl-motion="off"]):not([data-bl-motion-visibility="hidden"]) details:not([data-bl-disclosure="overlay"])::details-content'&&
+     d.value==='block-size var(--ui-motion-disclosure) var(--ui-ease),content-visibility var(--ui-motion-disclosure) allow-discrete')continue;
    for(const part of d.value.split(','))if(!/^(transform|opacity)\b/.test(part.trim())&&!(d.file==='ui-motion.css'&&((d.selector==='.blWorkspaceBlur'&&part.trim().startsWith('backdrop-filter var(--ui-motion-overlay)'))||(d.selector===':root:not([data-bl-motion="off"]) .rail'&&part.trim().startsWith('width var(--ui-motion-overlay)')))))failures.push(d);
   }
  }
@@ -274,7 +279,10 @@ test('every module and shell layout file is free of private appearance definitio
 
 test('Motion+ CSS owner is limited to transform/opacity and short canonical timing',()=>{
  const source=read('ui-motion.css');
- const failures=declarations(source).filter(d=>!['animation','transition','opacity','transform'].includes(d.prop));
+ const nativeSelector=':root:not([data-bl-motion="off"]):not([data-bl-motion-visibility="hidden"]) details';
+ const nativeValues={'interpolate-size':['allow-keywords'],'block-size':['0','auto'],'overflow':['clip']};
+ const failures=declarations(source).filter(d=>!['animation','transition','opacity','transform'].includes(d.prop)&&
+   !(d.selector.startsWith(nativeSelector)&&d.selector.endsWith('::details-content')&&nativeValues[d.prop]?.includes(d.value)));
  assert.deepEqual(failures,[]);
  assert.match(source,/prefers-reduced-motion:reduce/);
  assert.match(source,/var\(--ui-motion-page\)/);

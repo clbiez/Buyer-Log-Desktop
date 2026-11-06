@@ -1,0 +1,2937 @@
+{
+  "schemaVersion": 2,
+  "synthetic": true,
+  "status": "passed",
+  "startedAt": "2026-11-05T22:00:19.325Z",
+  "fixtureRoot": "/tmp/buyerlog-startup-smoke3",
+  "requestedRows": 100,
+  "requestedModules": [
+    "overview",
+    "koleksiyon",
+    "cp",
+    "orders"
+  ],
+  "sampling": {
+    "startMs": 0,
+    "endMs": 10000,
+    "clock": "navigation performance.now; tasks clipped at window end"
+  },
+  "measurements": [
+    {
+      "module": "overview",
+      "primaryScreenReadyMs": 6677.600000000093,
+      "startupReadyMs": 8608.200000000186,
+      "startupCompleteMs": 8642.40000000014,
+      "userWaitMs": 23.799999999813735,
+      "systemStartupCompleteMs": 8618.600000000326,
+      "primaryToGateMs": 1930.6000000000931,
+      "initialGeneration": null,
+      "rows": 100,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "domRows": 0,
+      "longTaskCount": 31,
+      "longTaskTotalMs": 5754,
+      "maxLongTaskMs": 824,
+      "resources": [
+        {
+          "path": "/api/data",
+          "ms": 736.1999999999534,
+          "decodedBytes": 14782,
+          "encodedBytes": 4656
+        },
+        {
+          "path": "/api/page-projection/overview",
+          "ms": 22,
+          "decodedBytes": 41404,
+          "encodedBytes": 3932
+        },
+        {
+          "path": "/api/page-projection/cp",
+          "ms": 36.5999999998603,
+          "decodedBytes": 211157,
+          "encodedBytes": 17380
+        }
+      ],
+      "timeline": [
+        {
+          "name": "APP_BOOT_START",
+          "atMs": 588.1999999999534,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOT_START",
+          "atMs": 588.3000000000466,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_START",
+          "atMs": 588.3000000000466,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_START",
+          "atMs": 588.9000000001397,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY",
+          "atMs": 721,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_XLSX_DEFERRED",
+          "atMs": 761.1999999999534,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_CORE_RESOURCES_READY",
+          "atMs": 774.6999999999534,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_START",
+          "atMs": 3500.5,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_START",
+          "atMs": 3500.9000000001397,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_CONFIG_READY",
+          "atMs": 3587.600000000093,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_READY",
+          "atMs": 4276.800000000047,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_UI_SHELL_READY",
+          "atMs": 4526,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_READY",
+          "atMs": 4526.699999999953,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_READY",
+          "atMs": 4526.90000000014,
+          "detail": null
+        },
+        {
+          "name": "DOM_CREATION_READY",
+          "atMs": 4845.300000000047,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_START",
+          "atMs": 4860,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_DB_READY",
+          "atMs": 5590.600000000093,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_READY",
+          "atMs": 5687.90000000014,
+          "detail": {
+            "pageCache": {
+              "hit": false,
+              "readMs": 0,
+              "generation": null
+            },
+            "durationMs": 827.8000000000466
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_START",
+          "atMs": 5688.100000000093,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 5692.300000000047,
+          "detail": {
+            "reason": "server-transit-rules-hydrated",
+            "revision": 2
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 5706.100000000093,
+          "detail": {
+            "reason": "server-cp-deferred",
+            "revision": 3
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_READY",
+          "atMs": 5709.90000000014,
+          "detail": {
+            "durationMs": 21.699999999953434
+          }
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_START",
+          "atMs": 5709.90000000014,
+          "detail": null
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_READY",
+          "atMs": 5710,
+          "detail": {
+            "durationMs": 0.09999999986030161
+          }
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_START",
+          "atMs": 5710,
+          "detail": null
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_READY",
+          "atMs": 5710.100000000093,
+          "detail": {
+            "mode": "lazy",
+            "durationMs": 0
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_START",
+          "atMs": 5710.100000000093,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_START",
+          "atMs": 5710.100000000093,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_READY",
+          "atMs": 5735.600000000093,
+          "detail": {
+            "module": "overview",
+            "durationMs": 25.5
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_READY",
+          "atMs": 5735.699999999953,
+          "detail": {
+            "module": "overview",
+            "durationMs": 25.5999999998603
+          }
+        },
+        {
+          "name": "UI_FIRST_RENDER",
+          "atMs": 5735.699999999953,
+          "detail": null
+        },
+        {
+          "name": "OVERVIEW_MODULE_LOAD_START",
+          "atMs": 5757.800000000047,
+          "detail": {
+            "module": "oab",
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "OVERVIEW_MODULE_LOAD_START",
+          "atMs": 5761,
+          "detail": {
+            "module": "intake",
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "OVERVIEW_MODULE_LOAD_READY",
+          "atMs": 5896.199999999953,
+          "detail": {
+            "module": "intake",
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "OVERVIEW_MODULE_LOAD_READY",
+          "atMs": 5923.100000000093,
+          "detail": {
+            "module": "oab",
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "UI_READY",
+          "atMs": 5979.600000000093,
+          "detail": null
+        },
+        {
+          "name": "CP_LOAD_START",
+          "atMs": 6003.5,
+          "detail": {
+            "reason": "overview"
+          }
+        },
+        {
+          "name": "AUTH_USER_LOAD_START",
+          "atMs": 6116.100000000093,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_START",
+          "atMs": 6269,
+          "detail": {
+            "module": "cp"
+          }
+        },
+        {
+          "name": "AUTH_USER_LOAD_READY",
+          "atMs": 6421.199999999953,
+          "detail": {
+            "mode": "after-ui",
+            "applied": 0,
+            "pushed": 6
+          }
+        },
+        {
+          "name": "AUTH_READY",
+          "atMs": 6421.199999999953,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 6506.40000000014,
+          "detail": {
+            "reason": "cp-projection-loaded",
+            "revision": 4
+          }
+        },
+        {
+          "name": "CP_LOAD_READY",
+          "atMs": 6536.699999999953,
+          "detail": {
+            "reason": "overview",
+            "rows": 87,
+            "revision": 4
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 6537,
+          "detail": {
+            "reason": "cp-ready"
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 6797.199999999953,
+          "detail": {
+            "reason": "overview-decision-engine-ready",
+            "revision": 5
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 6798.199999999953,
+          "detail": {
+            "reason": "overview-decision-engine-ready"
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 6806.40000000014,
+          "detail": null
+        },
+        {
+          "name": "CP_PRIORITY_READY",
+          "atMs": 7175.199999999953,
+          "detail": {
+            "rows": 87,
+            "mode": "background"
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 7175.800000000047,
+          "detail": {
+            "reason": "cp-priority-ready"
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_READY",
+          "atMs": 7177.600000000093,
+          "detail": {
+            "module": "cp",
+            "ok": true
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 7207.40000000014,
+          "detail": null
+        },
+        {
+          "name": "BACKGROUND_WARMUP_START",
+          "atMs": 7568.100000000093,
+          "detail": {
+            "module": "orders"
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 7627.800000000047,
+          "detail": null
+        },
+        {
+          "name": "EXCEL_ENGINE_LOAD_START",
+          "atMs": 7739.600000000093,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 7790.300000000047,
+          "detail": {
+            "reason": "orders-projection-loaded",
+            "revision": 6
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_READY",
+          "atMs": 7798.600000000093,
+          "detail": {
+            "module": "orders",
+            "ok": true
+          }
+        },
+        {
+          "name": "EXCEL_ENGINE_LOAD_READY",
+          "atMs": 7885,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_DONE",
+          "atMs": 7894.199999999953,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 8089.40000000014,
+          "detail": {
+            "reason": "personal-decision-context",
+            "revision": 7
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 8090.199999999953,
+          "detail": {
+            "reason": "personal-decision-context"
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 8090.600000000093,
+          "detail": null
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 8204.300000000047,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 8298,
+          "detail": {
+            "reason": "personal-decision-context",
+            "revision": 8
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 8298.600000000093,
+          "detail": {
+            "reason": "personal-decision-context"
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 8299.40000000014,
+          "detail": null
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 8932.5,
+          "detail": null
+        },
+        {
+          "name": "CP_PRIORITY_READY",
+          "atMs": 8997.90000000014,
+          "detail": {
+            "rows": 87,
+            "mode": "background"
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 8998,
+          "detail": {
+            "reason": "cp-priority-ready"
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 9157.800000000047,
+          "detail": null
+        }
+      ],
+      "retainedJsHeapBytes": 17648980,
+      "dom": {
+        "documents": 2,
+        "nodes": 8233,
+        "jsEventListeners": 1007
+      },
+      "generation": "mw43a8ml-1487479c127a",
+      "sourceRevision": "a27c6562e4e7e0c199f213c83d8803d8c514eebb3f97874d6bde612ca59460ce",
+      "projectionGenerations": [
+        "mw43a8ml-1487479c127a",
+        "mw43a8ml-1487479c127a",
+        "mw43a8ml-1487479c127a",
+        "mw43a8ml-1487479c127a",
+        "mw43a8ml-1487479c127a"
+      ],
+      "elapsedMs": 8796.854133,
+      "rendererRssBytes": 382656512,
+      "errors": []
+    },
+    {
+      "module": "koleksiyon",
+      "primaryScreenReadyMs": 4396,
+      "startupReadyMs": 5521.800000000047,
+      "startupCompleteMs": 5549.199999999953,
+      "userWaitMs": 18.800000000046566,
+      "systemStartupCompleteMs": 5530.399999999907,
+      "primaryToGateMs": 1125.8000000000466,
+      "initialGeneration": null,
+      "rows": 0,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "domRows": 0,
+      "longTaskCount": 20,
+      "longTaskTotalMs": 2847,
+      "maxLongTaskMs": 516,
+      "resources": [
+        {
+          "path": "/api/data",
+          "ms": 18.299999999813735,
+          "decodedBytes": 14782,
+          "encodedBytes": 4656
+        },
+        {
+          "path": "/api/page-projection/collection-catalog",
+          "ms": 52.5,
+          "decodedBytes": 1535,
+          "encodedBytes": 669
+        }
+      ],
+      "timeline": [
+        {
+          "name": "APP_BOOT_START",
+          "atMs": 320.10000000009313,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOT_START",
+          "atMs": 320.69999999995343,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_START",
+          "atMs": 320.69999999995343,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_START",
+          "atMs": 321.60000000009313,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY",
+          "atMs": 402.10000000009313,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_XLSX_DEFERRED",
+          "atMs": 492.60000000009313,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_CORE_RESOURCES_READY",
+          "atMs": 508.5,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_START",
+          "atMs": 1785.9000000001397,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_START",
+          "atMs": 1786.1000000000931,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_CONFIG_READY",
+          "atMs": 1852.6999999999534,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_READY",
+          "atMs": 2878.5,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_UI_SHELL_READY",
+          "atMs": 2991.5,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_READY",
+          "atMs": 2991.600000000093,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_READY",
+          "atMs": 2991.8000000000466,
+          "detail": null
+        },
+        {
+          "name": "DOM_CREATION_READY",
+          "atMs": 3300.5,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_START",
+          "atMs": 3314.100000000093,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_DB_READY",
+          "atMs": 3391.4000000001397,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_READY",
+          "atMs": 3670.100000000093,
+          "detail": {
+            "pageCache": {
+              "hit": false,
+              "readMs": 0,
+              "generation": null
+            },
+            "durationMs": 355.9000000001397
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_START",
+          "atMs": 3670.100000000093,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 3677.3000000000466,
+          "detail": {
+            "reason": "server-transit-rules-hydrated",
+            "revision": 2
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 3681.8000000000466,
+          "detail": {
+            "reason": "server-cp-deferred",
+            "revision": 3
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_READY",
+          "atMs": 3692,
+          "detail": {
+            "durationMs": 21.899999999906868
+          }
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_START",
+          "atMs": 3692,
+          "detail": null
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_READY",
+          "atMs": 3693.4000000001397,
+          "detail": {
+            "durationMs": 1.4000000001396984
+          }
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_START",
+          "atMs": 3693.5,
+          "detail": null
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_READY",
+          "atMs": 3693.5,
+          "detail": {
+            "mode": "lazy",
+            "durationMs": 0
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_START",
+          "atMs": 3693.5,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_START",
+          "atMs": 3693.5,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_READY",
+          "atMs": 3694.5,
+          "detail": {
+            "module": "koleksiyon",
+            "durationMs": 0.8999999999068677
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_READY",
+          "atMs": 3694.600000000093,
+          "detail": {
+            "module": "koleksiyon",
+            "durationMs": 1.1000000000931323
+          }
+        },
+        {
+          "name": "UI_FIRST_RENDER",
+          "atMs": 3694.600000000093,
+          "detail": null
+        },
+        {
+          "name": "UI_READY",
+          "atMs": 4110.40000000014,
+          "detail": null
+        },
+        {
+          "name": "AUTH_USER_LOAD_START",
+          "atMs": 4141.5,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_START",
+          "atMs": 4297.90000000014,
+          "detail": {
+            "module": "cp"
+          }
+        },
+        {
+          "name": "AUTH_USER_LOAD_READY",
+          "atMs": 4304.100000000093,
+          "detail": {
+            "mode": "after-ui",
+            "applied": 0,
+            "pushed": 6
+          }
+        },
+        {
+          "name": "AUTH_READY",
+          "atMs": 4304.100000000093,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 4545.699999999953,
+          "detail": {
+            "reason": "cp-projection-loaded",
+            "revision": 4
+          }
+        },
+        {
+          "name": "CP_LOAD_READY",
+          "atMs": 4570.100000000093,
+          "detail": {
+            "reason": "warmup",
+            "rows": 87,
+            "revision": 4
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 4574.300000000047,
+          "detail": {
+            "reason": "cp-ready"
+          }
+        },
+        {
+          "name": "CP_PRIORITY_READY",
+          "atMs": 5018.5,
+          "detail": {
+            "rows": 87,
+            "mode": "background"
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 5018.5,
+          "detail": {
+            "reason": "cp-priority-ready"
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_READY",
+          "atMs": 5018.5,
+          "detail": {
+            "module": "cp",
+            "ok": true
+          }
+        },
+        {
+          "name": "EXCEL_ENGINE_LOAD_START",
+          "atMs": 5047.40000000014,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_START",
+          "atMs": 5080.600000000093,
+          "detail": {
+            "module": "orders"
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 5154.100000000093,
+          "detail": {
+            "reason": "orders-projection-loaded",
+            "revision": 5
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_READY",
+          "atMs": 5162.199999999953,
+          "detail": {
+            "module": "orders",
+            "ok": true
+          }
+        },
+        {
+          "name": "EXCEL_ENGINE_LOAD_READY",
+          "atMs": 5209.800000000047,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_DONE",
+          "atMs": 5224.90000000014,
+          "detail": null
+        }
+      ],
+      "retainedJsHeapBytes": 12451920,
+      "dom": {
+        "documents": 2,
+        "nodes": 7793,
+        "jsEventListeners": 1560
+      },
+      "generation": "mw43a8ml-1487479c127a",
+      "sourceRevision": "a27c6562e4e7e0c199f213c83d8803d8c514eebb3f97874d6bde612ca59460ce",
+      "projectionGenerations": [
+        "mw43a8ml-1487479c127a",
+        "mw43a8ml-1487479c127a",
+        "mw43a8ml-1487479c127a"
+      ],
+      "elapsedMs": 5664.290326999999,
+      "rendererRssBytes": 558395392,
+      "errors": []
+    },
+    {
+      "module": "cp",
+      "primaryScreenReadyMs": 6016.800000000047,
+      "startupReadyMs": 10809.90000000014,
+      "startupCompleteMs": 11046.300000000047,
+      "userWaitMs": 194.39999999990687,
+      "systemStartupCompleteMs": 10851.90000000014,
+      "primaryToGateMs": 4793.100000000093,
+      "initialGeneration": null,
+      "rows": 87,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "domRows": 50,
+      "longTaskCount": 26,
+      "longTaskTotalMs": 6858.699999999953,
+      "maxLongTaskMs": 1503,
+      "resources": [
+        {
+          "path": "/api/data",
+          "ms": 48.5,
+          "decodedBytes": 14782,
+          "encodedBytes": 4656
+        },
+        {
+          "path": "/api/page-projection/cp",
+          "ms": 61.60000000009313,
+          "decodedBytes": 211157,
+          "encodedBytes": 17380
+        }
+      ],
+      "timeline": [
+        {
+          "name": "APP_BOOT_START",
+          "atMs": 15.699999999953434,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOT_START",
+          "atMs": 16.199999999953434,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_START",
+          "atMs": 16.300000000046566,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_START",
+          "atMs": 18,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY",
+          "atMs": 86.80000000004657,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_XLSX_DEFERRED",
+          "atMs": 133.89999999990687,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_CORE_RESOURCES_READY",
+          "atMs": 154.19999999995343,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_START",
+          "atMs": 2295.6999999999534,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_START",
+          "atMs": 2295.8000000000466,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_CONFIG_READY",
+          "atMs": 2398.6999999999534,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_READY",
+          "atMs": 3217.1999999999534,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_UI_SHELL_READY",
+          "atMs": 3267.899999999907,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_READY",
+          "atMs": 3271.5,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_READY",
+          "atMs": 3276.5,
+          "detail": null
+        },
+        {
+          "name": "DOM_CREATION_READY",
+          "atMs": 3800.600000000093,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_START",
+          "atMs": 3824.1999999999534,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_DB_READY",
+          "atMs": 3988,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_READY",
+          "atMs": 4311.899999999907,
+          "detail": {
+            "pageCache": {
+              "hit": false,
+              "readMs": 0,
+              "generation": null
+            },
+            "durationMs": 487.60000000009313
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_START",
+          "atMs": 4311.899999999907,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 4341.600000000093,
+          "detail": {
+            "reason": "server-transit-rules-hydrated",
+            "revision": 2
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 4358.5,
+          "detail": {
+            "reason": "server-cp-deferred",
+            "revision": 3
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_READY",
+          "atMs": 4374.800000000047,
+          "detail": {
+            "durationMs": 62.9000000001397
+          }
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_START",
+          "atMs": 4374.800000000047,
+          "detail": null
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_READY",
+          "atMs": 4374.899999999907,
+          "detail": {
+            "durationMs": 0.09999999986030161
+          }
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_START",
+          "atMs": 4374.899999999907,
+          "detail": null
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_READY",
+          "atMs": 4374.899999999907,
+          "detail": {
+            "mode": "lazy",
+            "durationMs": 0
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_START",
+          "atMs": 4374.899999999907,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_START",
+          "atMs": 4374.899999999907,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_READY",
+          "atMs": 4377.899999999907,
+          "detail": {
+            "module": "cp",
+            "durationMs": 2.8999999999068677
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_READY",
+          "atMs": 4378.100000000093,
+          "detail": {
+            "module": "cp",
+            "durationMs": 3.2000000001862645
+          }
+        },
+        {
+          "name": "UI_FIRST_RENDER",
+          "atMs": 4378.100000000093,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 5075,
+          "detail": {
+            "reason": "cp-projection-loaded",
+            "revision": 4
+          }
+        },
+        {
+          "name": "CP_LOAD_READY",
+          "atMs": 5092.899999999907,
+          "detail": {
+            "reason": "cp",
+            "rows": 87,
+            "revision": 4
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 5093.199999999953,
+          "detail": {
+            "reason": "cp-ready"
+          }
+        },
+        {
+          "name": "UI_READY",
+          "atMs": 5226.399999999907,
+          "detail": null
+        },
+        {
+          "name": "AUTH_USER_LOAD_START",
+          "atMs": 5287.800000000047,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_START",
+          "atMs": 5353.899999999907,
+          "detail": {
+            "module": "cp"
+          }
+        },
+        {
+          "name": "AUTH_USER_LOAD_READY",
+          "atMs": 5492.699999999953,
+          "detail": {
+            "mode": "after-ui",
+            "applied": 0,
+            "pushed": 7
+          }
+        },
+        {
+          "name": "AUTH_READY",
+          "atMs": 5492.800000000047,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 5654.300000000047,
+          "detail": {
+            "reason": "decision-engine-ready",
+            "revision": 5
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 5655.199999999953,
+          "detail": null
+        },
+        {
+          "name": "CP_PRIORITY_READY",
+          "atMs": 6381.699999999953,
+          "detail": {
+            "rows": 87,
+            "mode": "background"
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 7028.399999999907,
+          "detail": {
+            "reason": "cp-priority-ready"
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_READY",
+          "atMs": 7093.600000000093,
+          "detail": {
+            "module": "cp",
+            "ok": true
+          }
+        },
+        {
+          "name": "EXCEL_ENGINE_LOAD_START",
+          "atMs": 8661.5,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_START",
+          "atMs": 8840.5,
+          "detail": {
+            "module": "orders"
+          }
+        },
+        {
+          "name": "EXCEL_ENGINE_LOAD_READY",
+          "atMs": 8886.699999999953,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 9035.5,
+          "detail": {
+            "reason": "orders-projection-loaded",
+            "revision": 6
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_READY",
+          "atMs": 9051.699999999953,
+          "detail": {
+            "module": "orders",
+            "ok": true
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_DONE",
+          "atMs": 9168.699999999953,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 10990.199999999953,
+          "detail": {
+            "reason": "personal-decision-context",
+            "revision": 7
+          }
+        },
+        {
+          "name": "PRODUCTION_FOCUS_RECOMPUTE",
+          "atMs": 10990.399999999907,
+          "detail": null
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 11087,
+          "detail": {
+            "reason": "personal-decision-context"
+          }
+        },
+        {
+          "name": "CP_PRIORITY_READY",
+          "atMs": 11093.699999999953,
+          "detail": {
+            "rows": 87,
+            "mode": "background"
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 11919.899999999907,
+          "detail": {
+            "reason": "cp-priority-ready"
+          }
+        }
+      ],
+      "retainedJsHeapBytes": 13804632,
+      "dom": {
+        "documents": 3,
+        "nodes": 19707,
+        "jsEventListeners": 2442
+      },
+      "generation": "mw43a8ml-1487479c127a",
+      "sourceRevision": "a27c6562e4e7e0c199f213c83d8803d8c514eebb3f97874d6bde612ca59460ce",
+      "projectionGenerations": [
+        "mw43a8ml-1487479c127a",
+        "mw43a8ml-1487479c127a",
+        "mw43a8ml-1487479c127a"
+      ],
+      "elapsedMs": 15105.643687999996,
+      "rendererRssBytes": 507228160,
+      "errors": []
+    },
+    {
+      "module": "orders",
+      "primaryScreenReadyMs": 3500.3000000000466,
+      "startupReadyMs": 9215,
+      "startupCompleteMs": 9279.700000000186,
+      "userWaitMs": 35.4000000001397,
+      "systemStartupCompleteMs": 9244.300000000047,
+      "primaryToGateMs": 5714.699999999953,
+      "initialGeneration": null,
+      "rows": 100,
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      },
+      "domRows": 50,
+      "longTaskCount": 27,
+      "longTaskTotalMs": 7169.899999999907,
+      "maxLongTaskMs": 2720,
+      "resources": [
+        {
+          "path": "/api/data",
+          "ms": 125.70000000018626,
+          "decodedBytes": 14782,
+          "encodedBytes": 4656
+        },
+        {
+          "path": "/api/page-projection/orders",
+          "ms": 164,
+          "decodedBytes": 239597,
+          "encodedBytes": 19949
+        },
+        {
+          "path": "/api/page-projection/collection-catalog",
+          "ms": 158,
+          "decodedBytes": 1535,
+          "encodedBytes": 669
+        },
+        {
+          "path": "/api/page-projection/cp",
+          "ms": 201.4000000001397,
+          "decodedBytes": 211157,
+          "encodedBytes": 17380
+        }
+      ],
+      "timeline": [
+        {
+          "name": "APP_BOOT_START",
+          "atMs": 274.70000000018626,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOT_START",
+          "atMs": 275,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_START",
+          "atMs": 275,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_START",
+          "atMs": 277.10000000009313,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY",
+          "atMs": 339.4000000001397,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_XLSX_DEFERRED",
+          "atMs": 378,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_CORE_RESOURCES_READY",
+          "atMs": 389.80000000004657,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_START",
+          "atMs": 1853.4000000001397,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_START",
+          "atMs": 1853.7000000001863,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_CONFIG_READY",
+          "atMs": 1937.2000000001863,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_MAIN_READY",
+          "atMs": 2351.600000000093,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_UI_SHELL_READY",
+          "atMs": 2389.2000000001863,
+          "detail": null
+        },
+        {
+          "name": "PRE_FRONTEND_STEP_APP_SCRIPTS_READY",
+          "atMs": 2389.4000000001397,
+          "detail": null
+        },
+        {
+          "name": "FRONTEND_BOOTSTRAP_READY",
+          "atMs": 2389.5,
+          "detail": null
+        },
+        {
+          "name": "DOM_CREATION_READY",
+          "atMs": 2469.9000000001397,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_START",
+          "atMs": 2475.3000000000466,
+          "detail": null
+        },
+        {
+          "name": "LOCAL_DB_READY",
+          "atMs": 2633.2000000001863,
+          "detail": null
+        },
+        {
+          "name": "CACHE_LOAD_READY",
+          "atMs": 2635.2000000001863,
+          "detail": {
+            "pageCache": {
+              "hit": false,
+              "readMs": 0,
+              "generation": null
+            },
+            "durationMs": 159.9000000001397
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_START",
+          "atMs": 2635.2000000001863,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 2642,
+          "detail": {
+            "reason": "server-transit-rules-hydrated",
+            "revision": 2
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 2646.9000000001397,
+          "detail": {
+            "reason": "server-cp-deferred",
+            "revision": 3
+          }
+        },
+        {
+          "name": "DATASOURCE_PREPARATION_READY",
+          "atMs": 2651.3000000000466,
+          "detail": {
+            "durationMs": 16.0999999998603
+          }
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_START",
+          "atMs": 2651.3000000000466,
+          "detail": null
+        },
+        {
+          "name": "FILTER_PIVOT_INIT_READY",
+          "atMs": 2652.4000000001397,
+          "detail": {
+            "durationMs": 1.1000000000931323
+          }
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_START",
+          "atMs": 2652.4000000001397,
+          "detail": null
+        },
+        {
+          "name": "IMAGE_THUMBNAIL_INIT_READY",
+          "atMs": 2652.4000000001397,
+          "detail": {
+            "mode": "lazy",
+            "durationMs": 0
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_START",
+          "atMs": 2652.5,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_START",
+          "atMs": 2652.5,
+          "detail": null
+        },
+        {
+          "name": "TABLE_RENDER_READY",
+          "atMs": 2653.8000000000466,
+          "detail": {
+            "module": "orders",
+            "durationMs": 1.3000000000465661
+          }
+        },
+        {
+          "name": "ACTIVE_MODULE_INIT_READY",
+          "atMs": 2654,
+          "detail": {
+            "module": "orders",
+            "durationMs": 1.5
+          }
+        },
+        {
+          "name": "UI_FIRST_RENDER",
+          "atMs": 2654,
+          "detail": null
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 3027.4000000001397,
+          "detail": {
+            "reason": "orders-projection-loaded",
+            "revision": 4
+          }
+        },
+        {
+          "name": "UI_READY",
+          "atMs": 3059.3000000000466,
+          "detail": null
+        },
+        {
+          "name": "AUTH_USER_LOAD_START",
+          "atMs": 3076.600000000093,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_START",
+          "atMs": 3160.3000000000466,
+          "detail": {
+            "module": "cp"
+          }
+        },
+        {
+          "name": "AUTH_USER_LOAD_READY",
+          "atMs": 3362.5,
+          "detail": {
+            "mode": "after-ui",
+            "applied": 0,
+            "pushed": 7
+          }
+        },
+        {
+          "name": "AUTH_READY",
+          "atMs": 3362.600000000093,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "EXCEL_ENGINE_LOAD_START",
+          "atMs": 6544.90000000014,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "UNIFIED_PRIORITY_INVALIDATED",
+          "atMs": 7327.600000000093,
+          "detail": {
+            "reason": "cp-projection-loaded",
+            "revision": 5
+          }
+        },
+        {
+          "name": "CP_LOAD_READY",
+          "atMs": 7339.40000000014,
+          "detail": {
+            "reason": "warmup",
+            "rows": 87,
+            "revision": 5
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 7340.200000000186,
+          "detail": {
+            "reason": "cp-ready"
+          }
+        },
+        {
+          "name": "EXCEL_ENGINE_LOAD_READY",
+          "atMs": 7627.5,
+          "detail": {
+            "mode": "after-ui"
+          }
+        },
+        {
+          "name": "CP_PRIORITY_READY",
+          "atMs": 8654.5,
+          "detail": {
+            "rows": 87,
+            "mode": "background"
+          }
+        },
+        {
+          "name": "OVERVIEW_INVALIDATED",
+          "atMs": 8659,
+          "detail": {
+            "reason": "cp-priority-ready"
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_READY",
+          "atMs": 8659.100000000093,
+          "detail": {
+            "module": "cp",
+            "ok": true
+          }
+        },
+        {
+          "name": "BACKGROUND_WARMUP_DONE",
+          "atMs": 8741.700000000186,
+          "detail": null
+        }
+      ],
+      "retainedJsHeapBytes": 13036520,
+      "dom": {
+        "documents": 3,
+        "nodes": 16404,
+        "jsEventListeners": 2226
+      },
+      "generation": "mw43a8ml-1487479c127a",
+      "sourceRevision": "a27c6562e4e7e0c199f213c83d8803d8c514eebb3f97874d6bde612ca59460ce",
+      "projectionGenerations": [
+        "mw43a8ml-1487479c127a",
+        "mw43a8ml-1487479c127a",
+        "mw43a8ml-1487479c127a"
+      ],
+      "elapsedMs": 10051.449588000003,
+      "rendererRssBytes": 519413760,
+      "errors": []
+    }
+  ],
+  "healthSamples": [
+    {
+      "ms": 125.82445000000007,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "initial-start",
+      "startedAt": "2026-11-05T22:00:23.366Z"
+    },
+    {
+      "ms": 21.074577999999747,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-05T22:00:23.994Z"
+    },
+    {
+      "ms": 13.813435000000027,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-05T22:00:24.517Z"
+    },
+    {
+      "ms": 13.256725999999617,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-05T22:00:25.032Z"
+    },
+    {
+      "ms": 9.597074999999677,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-05T22:00:25.546Z"
+    },
+    {
+      "ms": 107.18788200000017,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-05T22:00:26.055Z"
+    },
+    {
+      "ms": 5.549203999999008,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "refresh",
+      "startedAt": "2026-11-05T22:00:26.664Z"
+    },
+    {
+      "ms": 114.80074199999945,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:30.538Z"
+    },
+    {
+      "ms": 14.794251000001168,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:31.153Z"
+    },
+    {
+      "ms": 55.38375499999893,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:31.667Z"
+    },
+    {
+      "ms": 50.9947489999995,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:32.225Z"
+    },
+    {
+      "ms": 135.85451399999874,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:32.817Z"
+    },
+    {
+      "ms": 4.3425959999985935,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:33.453Z"
+    },
+    {
+      "ms": 18.06857299999865,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:33.965Z"
+    },
+    {
+      "ms": 81.54144099999758,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:35.136Z"
+    },
+    {
+      "ms": 10.346809000002395,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:35.721Z"
+    },
+    {
+      "ms": 5.900429000001168,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:36.233Z"
+    },
+    {
+      "ms": 1436.7103260000004,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:36.743Z"
+    },
+    {
+      "ms": 20.691398999999365,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:38.680Z"
+    },
+    {
+      "ms": 11.909105999999156,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:39.200Z"
+    },
+    {
+      "ms": 6.621347000000242,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:39.712Z"
+    },
+    {
+      "ms": 27.206287999997585,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:40.219Z"
+    },
+    {
+      "ms": 204.96663799999806,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:40.747Z"
+    },
+    {
+      "ms": 5.61515099999815,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:41.453Z"
+    },
+    {
+      "ms": 30.401871999998548,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:41.960Z"
+    },
+    {
+      "ms": 14.636672999997245,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:42.493Z"
+    },
+    {
+      "ms": 8.623020999999426,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:43.009Z"
+    },
+    {
+      "ms": 7.348272999999608,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:43.517Z"
+    },
+    {
+      "ms": 11.005251999999018,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:44.025Z"
+    },
+    {
+      "ms": 9.771811999999045,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:44.537Z"
+    },
+    {
+      "ms": 9.531322999999247,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:45.046Z"
+    },
+    {
+      "ms": 6.781924999999319,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:45.557Z"
+    },
+    {
+      "ms": 16.067212000001746,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:46.063Z"
+    },
+    {
+      "ms": 5.012029000001348,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:46.580Z"
+    },
+    {
+      "ms": 5.105256999999256,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:47.085Z"
+    },
+    {
+      "ms": 5.851572999999917,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:47.591Z"
+    },
+    {
+      "ms": 8.625210000001971,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:48.098Z"
+    },
+    {
+      "ms": 12.154325999999855,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:48.606Z"
+    },
+    {
+      "ms": 4.704239999999118,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:49.119Z"
+    },
+    {
+      "ms": 5.574534999999742,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:49.623Z"
+    },
+    {
+      "ms": 4.078949999999168,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:50.129Z"
+    },
+    {
+      "ms": 4.605781999998726,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:50.633Z"
+    },
+    {
+      "ms": 14.992072000000917,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:51.140Z"
+    },
+    {
+      "ms": 37.65424999999959,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:51.655Z"
+    },
+    {
+      "ms": 10.594137000000046,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:52.194Z"
+    },
+    {
+      "ms": 8.710436999994272,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:52.704Z"
+    },
+    {
+      "ms": 20.379291999997804,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:53.213Z"
+    },
+    {
+      "ms": 12.92656100000022,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:53.735Z"
+    },
+    {
+      "ms": 7.118514000001596,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:54.247Z"
+    },
+    {
+      "ms": 17.861609999999928,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:54.756Z"
+    },
+    {
+      "ms": 9.770077000001038,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:55.273Z"
+    },
+    {
+      "ms": 32.156786999999895,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:55.799Z"
+    },
+    {
+      "ms": 45.03752700000041,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:56.357Z"
+    },
+    {
+      "ms": 86.77228600000672,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:56.919Z"
+    },
+    {
+      "ms": 5.780359999997017,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:57.505Z"
+    },
+    {
+      "ms": 6.145965999996406,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:58.012Z"
+    },
+    {
+      "ms": 19.164244999999937,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:58.520Z"
+    },
+    {
+      "ms": 21.545818999999028,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:59.046Z"
+    },
+    {
+      "ms": 71.15401700000075,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:00:59.570Z"
+    },
+    {
+      "ms": 22.91946900000039,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:00.142Z"
+    },
+    {
+      "ms": 8.461809000000358,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:00.665Z"
+    },
+    {
+      "ms": 25.150174000002153,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:01.177Z"
+    },
+    {
+      "ms": 11.584186000000045,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:01.705Z"
+    },
+    {
+      "ms": 14.569567000005918,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:02.217Z"
+    },
+    {
+      "ms": 9.238945999997668,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:02.737Z"
+    },
+    {
+      "ms": 9.913307000002533,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:03.250Z"
+    },
+    {
+      "ms": 11.596647999998822,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:03.761Z"
+    },
+    {
+      "ms": 8.807421000004979,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:04.274Z"
+    },
+    {
+      "ms": 62.25426400000288,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:04.787Z"
+    },
+    {
+      "ms": 25.67546399999992,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:05.351Z"
+    },
+    {
+      "ms": 11.461767999993754,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:05.878Z"
+    },
+    {
+      "ms": 10.29146299999411,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:06.390Z"
+    },
+    {
+      "ms": 15.799219000000448,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:06.901Z"
+    },
+    {
+      "ms": 5.126564000005601,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:07.418Z"
+    },
+    {
+      "ms": 9.350984000004246,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:07.925Z"
+    },
+    {
+      "ms": 6.0559659999998985,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:08.436Z"
+    },
+    {
+      "ms": 16.48070000000007,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:08.943Z"
+    },
+    {
+      "ms": 7.838848000006692,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:09.460Z"
+    },
+    {
+      "ms": 205.504316999999,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:09.976Z"
+    },
+    {
+      "ms": 5.576204999997572,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:10.686Z"
+    },
+    {
+      "ms": 8.214942999999039,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:11.193Z"
+    },
+    {
+      "ms": 5.6429300000017975,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:11.702Z"
+    },
+    {
+      "ms": 17.578452000001562,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:12.208Z"
+    },
+    {
+      "ms": 6.526873000002524,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:12.727Z"
+    },
+    {
+      "ms": 17.551026000001002,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:13.235Z"
+    },
+    {
+      "ms": 16.903954999994312,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:13.753Z"
+    },
+    {
+      "ms": 70.88868800000637,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:14.270Z"
+    },
+    {
+      "ms": 111.54686300000321,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:14.877Z"
+    },
+    {
+      "ms": 19.660861999996996,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:15.490Z"
+    },
+    {
+      "ms": 39.29821799999627,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:16.010Z"
+    },
+    {
+      "ms": 35.626202999999805,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:16.551Z"
+    },
+    {
+      "ms": 123.45898699999816,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:17.094Z"
+    },
+    {
+      "ms": 8.88273499999923,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:17.723Z"
+    },
+    {
+      "ms": 16.074061000006623,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:18.233Z"
+    },
+    {
+      "ms": 8.376807000000554,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:18.750Z"
+    },
+    {
+      "ms": 79.86250299999665,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:19.265Z"
+    },
+    {
+      "ms": 14.273325000001932,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:19.848Z"
+    },
+    {
+      "ms": 33.10031000000163,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:20.362Z"
+    },
+    {
+      "ms": 4.516666999996232,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:20.895Z"
+    },
+    {
+      "ms": 10.131728000000294,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:21.400Z"
+    },
+    {
+      "ms": 9.729083999998693,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:21.910Z"
+    },
+    {
+      "ms": 9.02017500000511,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:22.421Z"
+    },
+    {
+      "ms": 16.34730299999501,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:22.930Z"
+    },
+    {
+      "ms": 8.23640599999635,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:23.448Z"
+    },
+    {
+      "ms": 58.42510399999446,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:23.969Z"
+    },
+    {
+      "ms": 11.49680600001011,
+      "status": 404,
+      "attempt": 1,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "phase": "startup",
+      "startedAt": "2026-11-05T22:01:24.532Z"
+    }
+  ],
+  "platform": "linux",
+  "node": "v24.19.0",
+  "revision": "de40df44deab9ddbc571a02fbbef318ff2a5ecb5",
+  "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+  "cpuCount": 5,
+  "availableParallelism": 4,
+  "cpuQuota": "400000 100000",
+  "memoryLimitBytes": "17179869184",
+  "fixture": {
+    "synthetic": true,
+    "rows": 100,
+    "seed": 7,
+    "hashes": {
+      "ASAS - Demo.xlsx": "692fc14fc10ec125397dfd2e54fd4ac9e728451be39823e5e4a6484959dbd683",
+      "Antrepo - Demo.xlsx": "58e038d2a9782e3832b8f6c016f6476221f06b3c01573921583bf6d7f13f0a8b",
+      "LFL - Demo.xlsx": "dde935dae26a3a8c8699d91b352d2273f3f37bf1e6193c9441dedcce74944541"
+    }
+  },
+  "refresh": {
+    "jobId": "mw43a6jt-ywjtc5xu",
+    "running": false,
+    "phase": "done",
+    "startedAt": "2026-11-05T22:00:23.458Z",
+    "finishedAt": "2026-11-05T22:00:26.306Z",
+    "elapsedMs": 2840,
+    "error": null,
+    "errorCode": null,
+    "repairAction": null,
+    "diagnosis": null,
+    "summary": {
+      "oldOrderCount": 0,
+      "newOrderCount": 100,
+      "newlyAppeared": 100,
+      "disappeared": 0,
+      "statusChanged": 0,
+      "qtyChangedOrders": 0,
+      "kalanDelta": 0,
+      "asasChangedOrders": 100,
+      "antrepoChangedOrders": 34,
+      "asasChangeCount": 100,
+      "antrepoChangeCount": 34,
+      "hasChanges": true,
+      "details": {
+        "count": 134
+      },
+      "historyItemId": "refresh_mw43a8qi_xohlwg"
+    },
+    "sourceRequest": null,
+    "connections": [],
+    "operations": [
+      {
+        "type": "start",
+        "timestamp": "2026-11-05T22:00:23.516Z",
+        "timestampMs": 1793916023516,
+        "connection": "ASAS Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-05T22:00:23.516Z",
+        "timestampMs": 1793916023516,
+        "connection": "ASAS Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": 0,
+        "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-05T22:00:23.516Z",
+        "timestampMs": 1793916023516,
+        "connection": "ASAS Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-05T22:00:25.110Z",
+        "timestampMs": 1793916025110,
+        "connection": "ASAS Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": 1594,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-05T22:00:25.121Z",
+        "timestampMs": 1793916025121,
+        "connection": "ANTREPO Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-05T22:00:25.121Z",
+        "timestampMs": 1793916025121,
+        "connection": "ANTREPO Excel",
+        "operation": "pivot-refresh",
+        "category": "wait",
+        "durationMs": 0,
+        "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-05T22:00:25.121Z",
+        "timestampMs": 1793916025121,
+        "connection": "ANTREPO Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-05T22:00:25.735Z",
+        "timestampMs": 1793916025735,
+        "connection": "ANTREPO Excel",
+        "operation": "file-parse",
+        "category": "wait",
+        "durationMs": 614,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-05T22:00:25.798Z",
+        "timestampMs": 1793916025798,
+        "connection": "Refresh",
+        "operation": "comparison",
+        "category": "wait",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-05T22:00:25.819Z",
+        "timestampMs": 1793916025819,
+        "connection": "Refresh",
+        "operation": "comparison",
+        "category": "wait",
+        "durationMs": 21,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-05T22:00:25.820Z",
+        "timestampMs": 1793916025820,
+        "connection": "Local storage",
+        "operation": "snapshot-save",
+        "category": "save",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-05T22:00:25.890Z",
+        "timestampMs": 1793916025890,
+        "connection": "Local storage",
+        "operation": "snapshot-save",
+        "category": "save",
+        "durationMs": 70,
+        "error": null
+      },
+      {
+        "type": "start",
+        "timestamp": "2026-11-05T22:00:25.890Z",
+        "timestampMs": 1793916025890,
+        "connection": "Local storage",
+        "operation": "page-cache-write",
+        "category": "cache",
+        "durationMs": null,
+        "error": null
+      },
+      {
+        "type": "end",
+        "timestamp": "2026-11-05T22:00:26.297Z",
+        "timestampMs": 1793916026297,
+        "connection": "Local storage",
+        "operation": "page-cache-write",
+        "category": "cache",
+        "durationMs": 407,
+        "error": null
+      }
+    ],
+    "excelWorkers": {
+      "asas": {
+        "queueWaitMs": 1.0448609999998553,
+        "durationMs": 1567.2628719999998,
+        "executionMs": 1292.4648690000004,
+        "overheadMs": 274.7980029999994,
+        "heapUsedBytes": 36138248
+      },
+      "antrepo": {
+        "queueWaitMs": 0.07755300000007992,
+        "durationMs": 536.0999169999996,
+        "executionMs": 400.37053900000046,
+        "overheadMs": 135.7293779999991,
+        "heapUsedBytes": 23640384
+      }
+    },
+    "phases": [
+      {
+        "phase": "source-setup",
+        "startedAt": "2026-11-05T22:00:23.504Z",
+        "ms": 12,
+        "running": false
+      },
+      {
+        "phase": "asas-excel-refresh",
+        "startedAt": "2026-11-05T22:00:23.516Z",
+        "ms": 0,
+        "running": false
+      },
+      {
+        "phase": "asas-excel-parse",
+        "startedAt": "2026-11-05T22:00:23.516Z",
+        "ms": 1599,
+        "running": false
+      },
+      {
+        "phase": "database",
+        "startedAt": "2026-11-05T22:00:25.115Z",
+        "ms": 6,
+        "running": false
+      },
+      {
+        "phase": "antrepo-excel-refresh",
+        "startedAt": "2026-11-05T22:00:25.121Z",
+        "ms": 0,
+        "running": false
+      },
+      {
+        "phase": "antrepo-excel-parse",
+        "startedAt": "2026-11-05T22:00:25.121Z",
+        "ms": 673,
+        "running": false
+      },
+      {
+        "phase": "source-processing",
+        "startedAt": "2026-11-05T22:00:25.794Z",
+        "ms": 1,
+        "running": false
+      },
+      {
+        "phase": "comparing",
+        "startedAt": "2026-11-05T22:00:25.795Z",
+        "ms": 25,
+        "running": false
+      },
+      {
+        "phase": "saving",
+        "startedAt": "2026-11-05T22:00:25.820Z",
+        "ms": 70,
+        "running": false
+      },
+      {
+        "phase": "page-cache",
+        "startedAt": "2026-11-05T22:00:25.890Z",
+        "ms": 407,
+        "running": false
+      },
+      {
+        "phase": "finalizing",
+        "startedAt": "2026-11-05T22:00:26.297Z",
+        "ms": 8,
+        "running": false
+      }
+    ],
+    "loadedAt": "2026-11-05T22:00:25.119Z",
+    "requestedTargets": [
+      "cp",
+      "orders",
+      "backlog",
+      "lfl",
+      "priceanalysis"
+    ],
+    "cancelable": false,
+    "cancelRequested": false,
+    "dashboard": null,
+    "metrics": {
+      "dbQueryMs": 0,
+      "connectionWaitMs": 0,
+      "retryMs": 0,
+      "dbResultWriteMs": 0,
+      "parseMs": 0,
+      "uiBlockingMs": 0,
+      "localDbWriteMs": 0,
+      "localSnapshotWriteMs": 61,
+      "dashboard": null,
+      "totalMs": 2833
+    },
+    "eta": {
+      "available": false,
+      "basis": "none",
+      "sampleCount": 0,
+      "neededSamples": 3,
+      "scope": {
+        "targets": [
+          "backlog",
+          "cp",
+          "lfl",
+          "orders",
+          "priceanalysis"
+        ],
+        "rowBucket": "unknown",
+        "horizonDensity": "light"
+      },
+      "remainingMs": null,
+      "exceeded": false
+    }
+  },
+  "health": {
+    "all": {
+      "count": 106,
+      "successful": 0,
+      "failed": 106,
+      "p50Ms": 12.154325999999855,
+      "p95Ms": 123.45898699999816,
+      "maxMs": 1436.7103260000004
+    },
+    "refresh": {
+      "count": 6,
+      "successful": 0,
+      "failed": 6,
+      "p50Ms": 13.256725999999617,
+      "p95Ms": 107.18788200000017,
+      "maxMs": 107.18788200000017
+    },
+    "endpoint": "/api/health",
+    "readinessEndpoint": "/api/status",
+    "observedStatuses": [
+      404
+    ],
+    "endpointAvailable": false
+  },
+  "stalls": [],
+  "diagnostics": {
+    "serverLog": "/tmp/buyerlog-startup-smoke3/server.log",
+    "stallProfileLines": [
+      "[RUNTIME] stall-profiler samplingMs=5 minStallMs=10000",
+      "[RUNTIME] stall-profiler samplingMs=5 minStallMs=10000"
+    ],
+    "stallProfiles": []
+  },
+  "refreshWallMs": 3339.128782,
+  "expected": {
+    "rows": {
+      "koleksiyon": 0,
+      "cp": 87,
+      "orders": 100,
+      "overview": 100
+    },
+    "generation": "mw43a8ml-1487479c127a",
+    "sourceRevision": "a27c6562e4e7e0c199f213c83d8803d8c514eebb3f97874d6bde612ca59460ce",
+    "revisions": {
+      "orders": 0,
+      "suppFob": 0
+    }
+  },
+  "backendStartupMs": 2592.3644750000003,
+  "chromium": "154.0.8037.57",
+  "lifecycleEvents": [
+    {
+      "module": "overview",
+      "event": "bl:primary-screen-ready",
+      "key": "primaryScreenReadyMs",
+      "ms": 6677.600000000093
+    },
+    {
+      "module": "overview",
+      "event": "bl:startup-ready",
+      "key": "startupReadyMs",
+      "ms": 8608.200000000186
+    },
+    {
+      "module": "overview",
+      "event": "bl:startup-complete",
+      "key": "startupCompleteMs",
+      "ms": 8642.40000000014
+    },
+    {
+      "module": "koleksiyon",
+      "event": "bl:primary-screen-ready",
+      "key": "primaryScreenReadyMs",
+      "ms": 4396
+    },
+    {
+      "module": "koleksiyon",
+      "event": "bl:startup-ready",
+      "key": "startupReadyMs",
+      "ms": 5521.800000000047
+    },
+    {
+      "module": "koleksiyon",
+      "event": "bl:startup-complete",
+      "key": "startupCompleteMs",
+      "ms": 5549.199999999953
+    },
+    {
+      "module": "cp",
+      "event": "bl:primary-screen-ready",
+      "key": "primaryScreenReadyMs",
+      "ms": 6016.800000000047
+    },
+    {
+      "module": "cp",
+      "event": "bl:startup-ready",
+      "key": "startupReadyMs",
+      "ms": 10809.90000000014
+    },
+    {
+      "module": "cp",
+      "event": "bl:startup-complete",
+      "key": "startupCompleteMs",
+      "ms": 11046.300000000047
+    },
+    {
+      "module": "orders",
+      "event": "bl:primary-screen-ready",
+      "key": "primaryScreenReadyMs",
+      "ms": 3500.3000000000466
+    },
+    {
+      "module": "orders",
+      "event": "bl:startup-ready",
+      "key": "startupReadyMs",
+      "ms": 9215
+    },
+    {
+      "module": "orders",
+      "event": "bl:startup-complete",
+      "key": "startupCompleteMs",
+      "ms": 9279.700000000186
+    }
+  ],
+  "limitations": [
+    "Linux headless Chromium; Windows/Electron, antivirus and cold OS disk cache are not measured.",
+    "Collection workspace is empty synthetic data. RSS sums include shared renderer pages, not unique physical memory.",
+    "Health probes are serial every 500 ms after completion; timeouts/errors are retained in quantiles, not discarded.",
+    "Long tasks use a fixed navigation window; startup events outside it remain separate timings.",
+    "This revision has no /api/health handler. Reported health latencies are failed HTTP round trips (404), not a successful health endpoint. Readiness uses /api/status."
+  ],
+  "finishedAt": "2026-11-05T22:01:25.282Z"
+}

@@ -15,6 +15,10 @@
  */
 
 const tokens = new Map();
+/* Token kuşağı: her yeni/değişen yetkide artar. Sır değildir; yalnız bir 401'in
+   hangi yetkiyle alındığını ayırt etmek içindir (eşzamanlı isteklerde geç
+   dönen eski-token 401'i, tamamlanmış bir yenilemeyi beklemeye yol açmasın). */
+let tokenGeneration = 0;
 let desktopToken = '';
 let desktopTokenUpdatedAt = 0;
 let desktopStyleListTemplate = null;
@@ -147,9 +151,22 @@ function sourceFor(userId) {
   if (tokens.get(userKey(userId))) return 'session-memory';
   return 'none';
 }
+/* JWT'nin yalnız exp alanı okunur (imza doğrulaması sunucunundur). İstemciye
+   token değil, yalnız bitiş zamanı verilir: uzun bir PLM işi başlamadan önce
+   süresi bitmek üzere olan oturum sessizce yenilenebilsin. */
+function tokenExpiresAt(token) {
+  const parts = String(token || '').split('.');
+  if (parts.length !== 3) return '';
+  try {
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+    const exp = Number(payload && payload.exp);
+    return Number.isFinite(exp) && exp > 0 ? new Date(exp * 1000).toISOString() : '';
+  } catch (_) { return ''; }
+}
 function publicSettings(userId) {
   const source = sourceFor(userId);
   return {
+    expiresAt: source === 'none' ? '' : tokenExpiresAt(getToken(userId)),
     configured: source !== 'none',
     source,
     mode: source === 'desktop-sso' ? 'direct-api-auto-auth' : 'direct-bearer',
@@ -170,6 +187,7 @@ function assertToken(normalized) {
 function saveToken(userId, token) {
   const normalized = assertToken(normalizeToken(token));
   tokens.set(userKey(userId), normalized);
+  tokenGeneration += 1;
   return publicSettings(userId);
 }
 function clearToken(userId) {
@@ -177,7 +195,9 @@ function clearToken(userId) {
   return publicSettings(userId);
 }
 function setDesktopToken(token) {
-  desktopToken = assertToken(normalizeToken(token));
+  const next = assertToken(normalizeToken(token));
+  if (next !== desktopToken) tokenGeneration += 1;
+  desktopToken = next;
   desktopTokenUpdatedAt = Date.now();
   return publicSettings('desktop');
 }
@@ -188,10 +208,11 @@ function clearDesktopToken() {
   return publicSettings('desktop');
 }
 function hasDesktopToken() { return Boolean(desktopToken); }
+function currentTokenGeneration() { return tokenGeneration; }
 
 module.exports = {
-  normalizeToken, getToken, publicSettings, saveToken, clearToken,
-  setDesktopToken, clearDesktopToken, hasDesktopToken,
+  normalizeToken, getToken, publicSettings, tokenExpiresAt, saveToken, clearToken,
+  setDesktopToken, clearDesktopToken, hasDesktopToken, currentTokenGeneration,
   sanitizeStyleListTemplate, paginateStyleListTemplate,
   setDesktopStyleListTemplate, getStyleListTemplate, clearDesktopStyleListTemplate,
 };
