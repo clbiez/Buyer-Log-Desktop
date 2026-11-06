@@ -532,6 +532,93 @@
           "en": "Actual post-change Orders screen with isolated demo data. Calculation equivalence and read timings were separately verified by tests and benchmarks."
         }
       }
+    },
+    {
+      "id": "lcwai-retry-keeps-context",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Tekrar Dene artık eklenen Buyer Log verisini de gönderir",
+        "en": "Try Again now also sends the added Buyer Log data"
+      },
+      "body": {
+        "tr": "Bağlam dosyası (ör. Siparişler — Tüm kayıtlar) yüklenemediğinde ya da hazırlık yarıda kaldığında “Tekrar Dene” ve “Yeniden üret” isteği LCW AI’a bağlamsız ve eksiz gidiyordu; model veriyi görmediği için “veri sağlanmadı” diyerek boş tablo veya dosya üretiyordu. Artık tekrar denemede bağlam ve CSV eki yeniden hazırlanır. Uygulama yeniden açıldıktan sonra da hiç gönderilememiş mesaj aynı bağlamla tekrarlanır; eklenen dosyalar artık mevcut değilse istek sessizce gönderilmez, dosyaları yeniden eklemeniz istenir.",
+        "en": "When a context file (e.g. Orders — All records) failed to upload or preparation stopped midway, “Try Again” and “Regenerate” sent the request to LCW AI without the context and attachments; the model never saw the data and produced an empty table or file saying no data was provided. Retrying now rebuilds the context and its CSV attachment. After the app is reopened, a message that was never delivered is retried with the same context; if its attached files are no longer available, the request is not sent silently and you are asked to add the files again."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-retry-keeps-context.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI ekranında, Orders — All records bağlamıyla tekrar denenen mesaj ve tablo yanıtı",
+          "en": "Message retried with the Orders — All records context and its table answer in the actual Buyer Log LCW AI screen"
+        },
+        "caption": {
+          "tr": "İzole demo veriyle gerçek uygulama; LCW AI yanıtı kabul testi için taklit edildi. İlk CSV yüklemesi başarısız olduktan sonra Tekrar Dene isteği bağlam ve CSV ekiyle gönderildi.",
+          "en": "Actual app with isolated demo data; the LCW AI response was stubbed for acceptance testing. After the first CSV upload failed, Try Again sent the request with the context and its CSV attachment."
+        }
+      }
+    },
+    {
+      "id": "lcwai-data-query",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI’a doğal dille veri sorun; rakamları Buyer Log hesaplar",
+        "en": "Ask LCW AI about your data in plain language; Buyer Log calculates the figures"
+      },
+      "body": {
+        "tr": "“günaydın bana sıparıs adetlerını model butce ayına göre w6 da çıkarır mısın” gibi Türkçe karaktersiz, kısaltmalı ya da yazım hatalı istekler anlaşılır. LCW AI yalnız isteği yorumlayıp bir sorgu planı yazar; Buyer Log planı doğrular, değerleri gerçek veride eşleştirir (Mısır → Egypt, Yuzme → Yüzme) ve tüm kayıtlar üzerinde kendisi hesaplar. On binlerce satır LCW AI’a yüklenmez, rakamlar modelden gelmez. Cevabın üstünde nasıl anlaşıldığı (veri, filtre, satır/sütun, değer, eşleşen kayıt) ve yapılan varsayımlar yazar; yanlışsa “Mısır da hariç”, “adet yerine PO sayısı” diye düzeltmek yeterlidir. Belirsiz istekte ya da veride olmayan bir kodda tahmin yapılmaz, seçenekli soru sorulur. Sonuç “Excel olarak indir” ile ya da Excel yanıt biçimiyle LCW AI’a gitmeden dosyaya dönüşür. Ayrıca LCW AI bilgisindeki MB tanımı düzeltildi: MB = Model Bütçe (In-Store) tarihi.",
+        "en": "Requests written without Turkish characters, with abbreviations or typos, such as “good morning get me order qty by model budget month in w6”, are understood. LCW AI only interprets the request and writes a query plan; Buyer Log validates the plan, matches values to the real data (Mısır → Egypt, Yuzme → Yüzme) and calculates on all records itself. Tens of thousands of rows are no longer uploaded to LCW AI and figures never come from the model. Above the answer you see how the request was understood (data, filters, rows/columns, value, matched records) and any assumptions; to correct it, just write “exclude Egypt too” or “PO count instead of quantity”. Ambiguous requests and codes missing from the data are never guessed; you get a question with options. “Download as Excel”, or the Excel answer format, turns the result into a file without sending it to LCW AI. The MB definition in LCW AI’s knowledge was also corrected: MB = the Model Budget (In-Store) date."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-data-query.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI ekranında dağınık yazılmış istek, “Buyer Log hesapladı” yorumu ve MB ayı × Buying Group tablosu",
+          "en": "Casually written request, the “Calculated by Buyer Log” interpretation and the MB month × Buying Group table in the actual Buyer Log LCW AI screen"
+        },
+        "caption": {
+          "tr": "İzole demo veriyle gerçek uygulama; LCW AI planı kabul testi için taklit edildi. Toplamlar uygulamanın kendi verisiyle bağımsız olarak doğrulandı (102 kayıt, 338.400 adet).",
+          "en": "Actual app with isolated demo data; the LCW AI plan was stubbed for acceptance testing. Totals were checked independently against the app’s own data (102 records, 338,400 units)."
+        }
+      }
+    },
+    {
+      "id": "lcwai-large-context-trimmed",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Büyük tablo bağlamı artık isteği durdurmuyor",
+        "en": "Large table context no longer stops the request"
+      },
+      "body": {
+        "tr": "Tüm kayıtlar bağlamı LCW AI dosya sınırını aştığında istek “dosya çok büyük” hatasıyla duruyordu. Artık tamamen boş sütunlar dosyaya girmez; sınır yine aşılırsa ilk satırlar gönderilir ve bu hem LCW AI’a hem cevabın üstünde size açıkça yazılır. Kesin toplam ve sayımlar için isteği doğrudan yazmanız yeterlidir; Buyer Log tüm kayıtlar üzerinde hesaplar.",
+        "en": "When the all-records context exceeded the LCW AI file limit, the request stopped with a “file too large” error. Columns that are completely blank are now left out of the file; if the limit is still exceeded, the first rows are sent and this is stated clearly both to LCW AI and to you above the answer. For exact totals and counts, just ask directly; Buyer Log calculates them on all records."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-large-context-trimmed.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI ekranında kısaltılmış bağlam uyarısı ve nitelikselliği belirten cevap",
+          "en": "Trimmed-context warning and an answer stating it is qualitative in the actual Buyer Log LCW AI screen"
+        },
+        "caption": {
+          "tr": "İzole demo veriyle gerçek uygulama; dosya sınırı ve LCW AI yanıtı kabul testi için küçültülüp taklit edildi.",
+          "en": "Actual app with isolated demo data; the file limit and the LCW AI response were reduced and stubbed for acceptance testing."
+        }
+      }
     }
   ]
 }

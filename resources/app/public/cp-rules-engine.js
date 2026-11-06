@@ -83,7 +83,7 @@
      tek kaynaktan okur; model "Teslimat sonucu"nun ne olduğunu tahmin etmez. */
   const DERIVED_FIELDS = Object.freeze([
     { id: '@daysToLoad', tr: 'Yüklemeye kalan gün', en: 'Days to load', numeric: true,
-      meaning: { tr: 'Bugünden yükleme (MB / Ex-Factory planı) tarihine kalan gün; negatifse yükleme tarihi geçmiş.', en: 'Days from today to the loading (MB / ex-factory plan) date; negative means the loading date has passed.' } },
+      meaning: { tr: 'Bugünden yükleme (Ex-Factory planı) tarihine kalan gün; negatifse yükleme tarihi geçmiş.', en: 'Days from today to the loading (ex-factory plan) date; negative means the loading date has passed.' } },
     { id: '@orderAgeDays', tr: 'Sipariş yaşı (gün)', en: 'Order age (days)', numeric: true,
       meaning: { tr: 'Siparişin açılışından bu yana geçen gün.', en: 'Days since the order was created.' } },
     { id: '@stage', tr: 'Aşama', en: 'Stage', values: STAGE_VALUES,

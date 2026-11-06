@@ -13405,6 +13405,10 @@ window.BLAIScreenData = {
         .map(col => ({
           key: col.k,
           label: String(info.tableKey === 'koleksiyon' ? col.label : tableColumnLabel(info.tableKey, col)),
+          // Doğal dil veri sorgusu (lcwai-data-query.js) tarih/sayıyı ekran metninden
+          // değil ham değerden okur; tür, alan türünü belirlemek içindir.
+          type: col.type || '',
+          rawValue: info.tableKey === 'cp' || info.tableKey === 'orders' ? row => (row ? row[col.k] : undefined) : undefined,
           readValue: row => {
             if (info.tableKey === 'koleksiyon') {
               const effective = collectionRow(row);

@@ -151,12 +151,12 @@ test('navigasyon: LCW AI bağımsız modül (sol menü + üst çubuk), lazy yük
   assert.match(APP, /ensureFeature\('lcwaiChat'\)\.then\(\(\)=>\{\s*if\(currentActiveTab\(\)==='lcwai'\)return window\.initLcwAiChat\?\.\(\);/);
   assert.match(APP, /window\.BL_LCWAI_LAST_TAB=previousTab/);
   assert.match(APP, /lcwai:\{tr:'LCW AI',en:'LCW AI',group:'home'\}/);
-  assert.match(PERF, /lcwaiChat:\['lcwai-assistant\.js\?rev=1','lcwai-markdown\.js\?rev=1','lcwai-chat\.js\?rev=1'\]/);
+  assert.match(PERF, /lcwaiChat:\['lcwai-assistant\.js\?rev=1','lcwai-markdown\.js\?rev=1','lcwai-data-query\.js\?rev=1','lcwai-chat\.js\?rev=1'\]/);
   assert.match(ACCESS, /if \(key === 'lcwai'\) return true;/);
   // Tek motor: genel çalışma alanı kendi AI istemcisini yazmaz.
   assert.doesNotMatch(CHAT, /fetch\(|'\/api\/lcwai|mym\.prod|access_token/);
   assert.match(CHAT, /api\.chat\(\{/);
-  assert.match(CHAT, /api\.uploadFile\(files\[index\]\)/);
+  assert.match(CHAT, /attachments\.push\(await api\.uploadFile\(pendingFiles\[index\]\)\)/);
   assert.match(CHAT, /api\.buildContext\(id\)/);
   assert.match(CHAT, /window\.BLMarkdown\.render/);
   assert.doesNotMatch(CHAT, /localStorage\.|sessionStorage\./, 'sohbet içeriği tarayıcı deposuna yazılmaz');

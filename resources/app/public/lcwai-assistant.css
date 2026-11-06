@@ -301,3 +301,10 @@
 /* Sunumu şekillendir: ayar paneli ve önizleme bağımsız kayar; tekerlek bir sütunda diğerini taşımaz. */
 @media(min-width:1101px){.lcwaiEdOverlay.is-studio .lcwaiLay{height:100%;min-height:0;grid-template-rows:minmax(0,1fr);align-items:stretch}.lcwaiEdOverlay.is-studio .lcwaiLayControls{position:static;max-height:none;min-height:0;overflow:auto;overscroll-behavior:contain}.lcwaiEdOverlay.is-studio .lcwaiLay > .lcwaiLayStage{min-height:0;overflow:auto;overscroll-behavior:contain}}
 @media(max-width:950px){.lcwaiEdOverlay.is-studio .lcwaiLay{grid-template-columns:minmax(0,1fr)}.lcwaiEdOverlay.is-studio .lcwaiLayControls{position:static;max-height:none}}
+/* Doğal dil veri sorgusu: "Buyer Log hesapladı" yorumu, seçenekler, uyarı. */
+.lcwaiQuery{display:flex;flex-direction:column;gap:6px;margin:0 0 10px;padding:9px 11px;}
+.lcwaiQueryHead{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;}
+.lcwaiQueryLines,.lcwaiQueryNotes ul{margin:0;padding-left:18px;}
+.lcwaiQueryNotes summary{cursor:pointer;}
+.lcwaiOptions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.lcwaiMsgWarning{margin:0 0 8px;}
