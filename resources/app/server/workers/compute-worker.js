@@ -5,6 +5,7 @@ const v8=require('node:v8');
 const dates=require('../../public/date-dimension'),{createComputeSourceCache}=require('../lib/compute-source-cache');
 const access=require('../lib/compute-access'),catalog=require('../lib/collection-catalog');
 const {projectionRuntimeMeta}=require('../lib/projection-runtime-meta');
+globalThis.BLCanonicalFields=require('../lib/canonical-fields');
 const gzip=promisify(zlib.gzip),MiB=1024*1024;
 const sourceFingerprints=new WeakMap();
 function projectionSourceKeys(source){
@@ -41,6 +42,12 @@ async function execute(task,data,transfer){
   }
   data.params=data.paramsBytes?v8.deserialize(Buffer.from(data.paramsBytes)):data.params||{};
   data.paramsBytes=null;
+  if(task==='office-render'){
+    const {format,data:document,options}=data.params;
+    if(!['xlsx','pptx'].includes(format))throw Object.assign(Error('Invalid compute request'),{code:'COMPUTE_JOB_INVALID'});
+    const buffer=format==='xlsx'?require('../lib/lcwai-output/output-xlsx').renderWorkbook(document,options):require('../lib/lcwai-output/output-pptx').renderPresentation(document,options);
+    const bytes=Uint8Array.from(buffer);transfer.push(bytes.buffer);return {buffer:bytes.buffer};
+  }
   if(task==='excel-utility'){
     if(!['previewFxWorkbookFromDirectories','loadFxWorkbookFromDirectories'].includes(data.params.excelTask))throw Object.assign(Error('Invalid compute request'),{code:'COMPUTE_JOB_INVALID'});
     dates.clearMerchCalendar();return require('./excel-worker').execute(data.params.excelTask,data.params.excelPayload);

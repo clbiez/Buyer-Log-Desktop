@@ -112,11 +112,23 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       {ownerKey:'utility:'+String(ownerId),generation:'1',...options,estimatedBytes,inputBytes,transferList:[encoded]});
     return {...lease,metrics:{...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024}};
   }
+  async function runOffice(ownerId,job,options={}){
+    if(closed)throw failure('COMPUTE_POOL_CLOSED');
+    if(!ownerId||!['xlsx','pptx'].includes(job?.format))throw failure('COMPUTE_JOB_INVALID');
+    const started=performance.now(),encoded=Uint8Array.from(v8.serialize(job)).buffer,inputBytes=encoded.byteLength+1024;
+    if(inputBytes>128*MiB)throw failure('COMPUTE_SOURCE_TOO_LARGE');
+    const cells=job.format==='xlsx'?(job.data.sheets||[]).reduce((sum,sheet)=>sum+(sheet.rows||[]).length*(sheet.columns||[]).length,0)
+      :(job.data.slides||[]).reduce((sum,slide)=>sum+(slide.items||[]).length*16+(slide.table?.rows||[]).reduce((count,row)=>count+(Array.isArray(row)?row.length:0),0),0);
+    const paramsSerializeMs=performance.now()-started,estimatedBytes=256*MiB+inputBytes*8+cells*2048;
+    const lease=await pool.run('office-render',{paramsBytes:encoded,maxOutputBytes:estimatedBytes},
+      {ownerKey:'output:'+String(ownerId),generation:'1',priority:'interactive',...options,estimatedBytes,inputBytes,transferList:[encoded]});
+    return {...lease,metrics:{...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024}};
+  }
   function stats(){return {diskBudgetBytes,reservedDiskBytes,sourceFiles:[...records.values()].filter(record=>Boolean(record.descriptor.replicaFile)).length,...pool.stats()};}
   function close(){
     if(closing)return closing;closed=true;
     closing=(async()=>{await pool.close();await Promise.allSettled([...records.values()].map(record=>record.ready));await fs.promises.rm(privateRoot,{recursive:true,force:true,maxRetries:3,retryDelay:50});records.clear();current.clear();preparing.clear();reservedDiskBytes=0;})();return closing;
   }
-  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,warm,stats,close};
+  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,warm,stats,close};
 }
 module.exports={createComputeService};

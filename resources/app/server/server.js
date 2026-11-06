@@ -345,14 +345,12 @@ const { saveModelSnapshotAsync, loadModelSnapshot, loadModelSnapshotAsync, SNAPS
 const pageProjectionCache = require('./lib/page-projection-cache');
 const derivedInputKeys = require('./lib/derived-input-keys');
 const { runProjectionWorker } = require('./lib/projection-worker-client');
-const { createComputeService } = require('./lib/compute-service');
+const { getComputeService:serverCompute, closeComputeService } = require('./lib/compute-runtime');
 const { createComputeReadGuard } = require('./lib/compute-read-guard');
 const { createComputeReadService } = require('./lib/compute-read-service');
 const { sendComputedResponse } = require('./lib/compute-response');
 const { projectionRuntimeMeta } = require('./lib/projection-runtime-meta');
-let commonComputeService = null;
 const publishedComputeSources = new Map();
-function serverCompute() { return commonComputeService || (commonComputeService = createComputeService({root:TEMP_ROOT})); }
 // Thread kurulumu HTTP açılış penceresinde tekrarlanmaz; yalnız kod hazırlanır,
 // kullanıcı kaynağı veya görünmeyen modül verisi sorgulanmaz.
 void serverCompute().warm().catch(error=>logRuntimeFailure('computePoolWarmup',error));
@@ -8771,6 +8769,19 @@ app.get('/api/backlog-filter-values',userAccess.requireArea('backlog'),async(req
 
 // Backlog pivot'unda bir düğüme tıklanınca veya CP/Siparişler sayfasında seçili
 // siparişler için rapor istendiğinde aynı operasyon satırı detayını döner.
+app.post('/api/backlog-map-details', userAccess.requireArea('backlog'), async (req,res)=>{
+  try{
+    const body=req.body||{},items=body.identities;
+    if(!Array.isArray(items)||!items.length||items.length>5000||typeof body.sourceRevision!=='string'||body.sourceRevision.length>256)
+      return res.status(400).json({code:'BACKLOG_SELECTION_INVALID',error:'Geçersiz harita detay seçimi.',errorEn:'Invalid map detail selection.'});
+    const identities=items.map(item=>({orderCode:item?.orderCode,modelName:item?.modelName,colourCode:item?.colourCode}));
+    if(identities.some(item=>Object.values(item).some(value=>!['string','number'].includes(typeof value)||!String(value).trim()||String(value).length>512)))
+      return res.status(400).json({code:'BACKLOG_SELECTION_INVALID',error:'Geçersiz sipariş kimliği.',errorEn:'Invalid order identity.'});
+    assertSourceFilters(['backlog'],req);await prepareComputeBacklog(req);
+    const lease=await computeReads.run(req,'backlog','backlog-map-details',{target:'backlog',selector:{identities},expectedSourceRevision:body.sourceRevision,includeSourceDetails:true});
+    return sendComputedResponse(req,res,lease);
+  }catch(err){apiError(res,err,'Harita detayları alınamadı.');}
+});
 app.post('/api/backlog-detail', userAccess.requireAnyArea('backlog','cp','orders'), async (req, res) => {
   try {
     const body = req.body || {};
@@ -12828,5 +12839,15 @@ function cleanupOrphanExcel() {
   } catch (e) { /* best-effort, sessiz geç */ }
 }
 process.on('exit', cleanupOrphanExcel);
-process.on('SIGINT', () => { cleanupOrphanExcel(); process.exit(0); });
-process.on('SIGTERM', () => { cleanupOrphanExcel(); process.exit(0); });
+let computeShutdownPromise;
+function shutdownComputeRuntime(){
+  if(computeShutdownPromise)return computeShutdownPromise;
+  const deadline=setTimeout(()=>process.exit(1),10000);deadline.unref();
+  httpServer.close();computeReads.clear();
+  computeShutdownPromise=Promise.resolve().then(()=>closeComputeService()).catch(error=>{
+    process.exitCode=1;logRuntimeFailure('computePoolShutdown',error);
+  }).finally(()=>{clearTimeout(deadline);cleanupOrphanExcel();process.exit(process.exitCode||0);});
+  return computeShutdownPromise;
+}
+process.on('SIGINT', shutdownComputeRuntime);
+process.on('SIGTERM', shutdownComputeRuntime);

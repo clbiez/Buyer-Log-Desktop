@@ -49,7 +49,13 @@ function buildProjections(source,data){
 function buildBacklog(kind,source,data){
   data=withSourceOverrides(source,data);
   const options=data.options||{},overrides=data.overrides||{},target=data.target||'backlog';
-  const orders=kind==='source-columns'?(data.access?access.filterRows(data.access,parse.applyDateOverrides(rawOrders(source,target),overrides)):parse.applyDateOverrides(rawOrders(source,target),overrides)):scopedOrders(source,target,data),antrepo=antrepoFor(source,target);
+  let orders=kind==='source-columns'?(data.access?access.filterRows(data.access,parse.applyDateOverrides(rawOrders(source,target),overrides)):parse.applyDateOverrides(rawOrders(source,target),overrides)):scopedOrders(source,target,data);
+  const antrepo=antrepoFor(source,target),mapDetails=kind==='map-details';
+  if(mapDetails){
+    if(!data.expectedSourceRevision||data.expectedSourceRevision!==data.sourceRevision)throw Object.assign(Error('Source generation changed'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});
+    const wanted=new Set((data.selector?.identities||[]).map(item=>parse.orderLineKey(item?.orderCode,item?.modelName,item?.colourCode)));
+    orders=orders.filter(row=>wanted.has(parse.orderLineKeyOf(row)));kind='export';
+  }
   if(kind==='detail')return {headers:data.headers,rows:parse.buildBacklogDetailRows(orders,antrepo,overrides,data.selector,{includeInternalMeta:true})};
   const custom=parse.backlogCustomDimensionContext(orders,antrepo);
   if(kind==='source-columns')return {columns:custom.customDimensions,defaultHeaders:data.headers};
@@ -62,7 +68,8 @@ function buildBacklog(kind,source,data){
   }
   if(kind!=='export')throw Error('Unknown Backlog computation');
   const byId=new Map(custom.customDimensions.map(column=>[column.id,column])),columns=(data.sourceColumns||[]).map(id=>byId.get(id)).filter(Boolean);
-  const rows=parse.buildBacklogTemplateRows(orders,antrepo,overrides,options,columns,{limit:data.previewLimit||0,includeSourceDetails:Boolean(data.includeSourceDetails),queryContext:query});
-  return {headers:[...data.headers,...columns.map(column=>column.label)],rows,totalRows:rows.totalRows||rows.length,sourceColumns:columns,sourceCatalog:custom.customDimensions,rowsRevision:data.rowsRevision,merchCalendar:data.calendar};
+  const rows=parse.buildBacklogTemplateRows(orders,antrepo,overrides,options,columns,{limit:data.previewLimit||0,includeSourceDetails:Boolean(data.includeSourceDetails)&&!data.mapProjection,queryContext:query});
+  const mapRows=data.mapProjection?require('../../public/overview-global-flow').projectBacklogMapRows(rows):rows;
+  return {headers:[...data.headers,...columns.map(column=>column.label)],rows:mapRows,totalRows:rows.totalRows||rows.length,sourceColumns:data.mapProjection?[]:columns,sourceCatalog:data.mapProjection?[]:custom.customDimensions,rowsRevision:data.rowsRevision,merchCalendar:data.calendar,...(data.mapProjection||mapDetails?{sourceRevision:data.sourceRevision}:{})};
 }
 module.exports={buildProjections,buildBacklog,serialize,scopedOrders,antrepoFor,withSourceOverrides};

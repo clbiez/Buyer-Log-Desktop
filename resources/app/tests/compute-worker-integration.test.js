@@ -143,3 +143,17 @@ test('image registry decodes only authorized compressed CP rows in the common wo
  try{const actual=JSON.parse(zlib.gunzipSync(Buffer.from(lease.value.buffer)));assert.deepEqual(actual,JSON.parse(JSON.stringify({ok:true,...require('../server/lib/cp-image-startup-registry').scopedCpImageRegistry(rows,imagemap)})));assert.equal(actual.imagemap['plm:900|colour:A01'],undefined);}
  finally{lease.release();}
 });
+
+test('native map and selected lazy details share source generation and keep Backlog target isolation',async t=>{
+ globalThis.BLCanonicalFields=require('../server/lib/canonical-fields');
+ const {service}=setup(t),raw=source('Synthetic Backlog');raw.asasOrdersByTarget.cp=[{...raw.asasOrders[0],model:'CP-only'}];
+ const descriptor=await service.seedSource({ownerId:'a',generation:'g1',source:raw,uncompressedBytes:MiB});
+ const data={overrides:{},horizons:{},headers:[],options:{},sourceColumns:[],includeSourceDetails:true,calendar:{configured:false},rowsRevision:'rows',sourceRevision:'g1'};
+ const thin=await service.run('backlog-export',descriptor,{...data,mapProjection:true});
+ try{assert.equal(zlib.gunzipSync(Buffer.from(thin.value.buffer)).toString(),tasks.serialize(tasks.buildBacklog('export',raw,{...data,mapProjection:true})));}finally{thin.release();}
+ const selector={identities:[{orderCode:123,modelName:'Synthetic Backlog',colourCode:'R'}]};
+ const details=await service.run('backlog-map-details',descriptor,{...data,selector,expectedSourceRevision:'g1'});
+ try{const result=JSON.parse(zlib.gunzipSync(Buffer.from(details.value.buffer)));assert.ok(result.rows.length>0);assert.ok(result.rows.every(row=>row._detailSource));assert.equal(result.rows[0]['Model Adı'],'Synthetic Backlog');}
+ finally{details.release();}
+ await assert.rejects(service.run('backlog-map-details',descriptor,{...data,selector,expectedSourceRevision:'old'}),{code:'COMPUTE_STALE_GENERATION'});
+});

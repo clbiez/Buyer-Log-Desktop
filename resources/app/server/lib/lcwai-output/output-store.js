@@ -17,7 +17,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const {withFileLeaseSync}=require('../shared-file-transaction');
+const {withFileLeaseSync,withFileLeaseAsync}=require('../shared-file-transaction');
 const { isExpired } = require('./output-retention');
 
 const PENDING_TTL_MS = 15 * 60 * 1000;
@@ -118,7 +118,13 @@ function createOutputStore(options = {}) {
     if (!Buffer.isBuffer(buffer) || !buffer.length) throw new Error('ai-output-empty');
     const created = now();
     const written = writeUnique(fileNameFor(title, format, created), buffer);
-    const record = {
+    const record = outputRecord(ownerId,written,{title,format,template,templateLabel,attempts,requestId,draftId,edited},buffer.length,created);
+    withFileLeaseSync(indexFile(),()=>{const list=readIndex();list.push(record);writeIndex(list);});
+    return publicRecord(record);
+  }
+
+  function outputRecord(ownerId,written,{title,format,template='',templateLabel='',attempts=1,requestId='',draftId='',edited=false},bytes,created){
+    return {
       id: crypto.randomBytes(12).toString('hex'),
       owner: String(ownerId || 'default'),
       fileName: written.name,
@@ -126,15 +132,41 @@ function createOutputStore(options = {}) {
       format,
       title: String(title || '').slice(0, 160),
       template, templateLabel,
-      bytes: buffer.length,
+      bytes,
       attempts,
       requestId: String(requestId || '').slice(0, 64),
       draftId: /^[a-f0-9]{24}$/.test(String(draftId || '')) ? String(draftId) : null,
       edited: Boolean(edited),
       createdAt: created.toISOString(),
     };
-    withFileLeaseSync(indexFile(),()=>{const list=readIndex();list.push(record);writeIndex(list);});
-    return publicRecord(record);
+  }
+
+  async function saveAsync(ownerId,input,{assertCurrent}={}){
+    const {buffer,title,format}=input||{};
+    if(!Buffer.isBuffer(buffer)||!buffer.length)throw new Error('ai-output-empty');
+    assertCurrent?.();const created=now(),dir=root();await fs.promises.mkdir(dir,{recursive:true});
+    const fileName=fileNameFor(title,format,created),ext=path.extname(fileName),stem=fileName.slice(0,fileName.length-ext.length);
+    let written,committed=false;
+    try{
+      for(let n=1;n<1000;n++){
+        const name=n===1?fileName:`${stem} (${n})${ext}`,full=path.join(dir,name);
+        try{await fs.promises.writeFile(full,buffer,{flag:'wx'});written={name,full};break;}
+        catch(error){if(error.code!=='EEXIST')throw error;}
+      }
+      if(!written)throw new Error('ai-output-name-exhausted');
+      const record=outputRecord(ownerId,written,input,buffer.length,created);
+      await withFileLeaseAsync(indexFile(),async()=>{
+        assertCurrent?.();let list=[];
+        try{const raw=JSON.parse(await fs.promises.readFile(indexFile(),'utf8'));if(Array.isArray(raw))list=raw;}
+        catch(error){if(error instanceof SyntaxError)await fs.promises.rename(indexFile(),`${indexFile()}.corrupt-${Date.now()}`).catch(()=>{});}
+        list.push(record);const file=indexFile(),temp=`${file}.${process.pid}.${crypto.randomBytes(3).toString('hex')}.tmp`;
+        try{
+          await fs.promises.writeFile(temp,JSON.stringify(list.filter(item=>!isExpired(item,now())),null,1),'utf8');
+          assertCurrent?.();await fs.promises.rename(temp,file);committed=true;
+        }finally{await fs.promises.rm(temp,{force:true}).catch(()=>{});}
+      });
+      return publicRecord(record);
+    }catch(error){if(written&&!committed)await fs.promises.rm(written.full,{force:true}).catch(()=>{});throw error;}
   }
 
   /* Sahibine ait kaydı döndürür. Yeni dosyalar Downloads'tadır; yükseltme
@@ -178,7 +210,7 @@ function createOutputStore(options = {}) {
     return entry;
   }
 
-  return { save, get, list, putPending, takePending, root, indexFile,
+  return { save, saveAsync, get, list, putPending, takePending, root, indexFile,
     byRequest(ownerId,requestId){const record=readIndex().findLast(item=>item.owner===String(ownerId)&&item.requestId===requestId);return record?get(ownerId,record.id):null;},
     withPending(id,fn){const file=pendingFile(id);if(!file)throw new Error('ai-output-pending-invalid');return withFileLeaseSync(file,fn);},
   };
