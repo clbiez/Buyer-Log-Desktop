@@ -4,13 +4,42 @@
     "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history · Backlog performance · Royalty for agency licenses"
   },
   "summary": {
-    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır. Sözleşmeleri yalnız DTR dışı lisansörle tanımlı lisanslarda (ör. Formula 1) siparişler artık otomatik DTR sayılmaz; Supp. FOB Türkiye ve yurt dışı siparişlerinde royalty ile hesaplanır.",
-    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still. Orders of licenses whose contracts name only non-DTR licensors (e.g. Formula 1) are no longer classified DTR automatically; Supp. FOB includes royalty for Turkey and overseas orders."
+    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır. Sözleşmeleri yalnız DTR dışı lisansörle tanımlı lisanslarda (ör. Formula 1) siparişler artık otomatik DTR sayılmaz; Supp. FOB Türkiye ve yurt dışı siparişlerinde royalty ile hesaplanır. Yenileme sırasında sunucu yeniden başlarsa sayaç donmaz; birkaç saniyede açık bir hata penceresi gösterilir.",
+    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still. Orders of licenses whose contracts name only non-DTR licensors (e.g. Formula 1) are no longer classified DTR automatically; Supp. FOB includes royalty for Turkey and overseas orders. If the server restarts during a refresh, the counter no longer freezes; a clear error dialog appears within seconds."
   },
   "schemaVersion": 1,
   "publishedAt": "2026-11-05",
   "bootstrapVisual": false,
   "changes": [
+    {
+      "id": "refresh-server-restart-lost-job",
+      "type": "fix",
+      "module": {
+        "tr": "Veri yenileme",
+        "en": "Data refresh"
+      },
+      "title": {
+        "tr": "Sunucu yeniden başlarsa yenileme donmadan sonlanır",
+        "en": "Refresh ends cleanly when the server restarts"
+      },
+      "body": {
+        "tr": "Yenileme sırasında Buyer Log sunucusu kapanıp otomatik olarak yeniden başlarsa geçen süre sayacı artık donmuyor ve uygulama 25 dakika beklemiyor. Birkaç saniye içinde \"Yenileme sırasında sunucu yeniden başladı\" penceresi açılır: yenilemenin tamamlanmadığı, ekrandaki verinin bu yenilemeyle güncellenmediği ve hangi günlük dosyalarının (logs/backend.log, logs/server-restart.log) paylaşılacağı yazılır. Önceden aynı durum, uzun bekleyişten sonra yalnız \"Refresh job could not be verified.\" hatasıyla bitiyordu.",
+        "en": "If the Buyer Log server stops and restarts automatically during a refresh, the elapsed counter no longer freezes and the app no longer waits 25 minutes. Within seconds a \"The server restarted during the refresh\" dialog explains that the refresh was not completed, that the data on screen was not updated by it, and which log files (logs/backend.log, logs/server-restart.log) to share. Previously the same situation ended only after a long wait with \"Refresh job could not be verified.\""
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "refresh-server-restart-lost-job.png",
+        "alt": {
+          "tr": "Yenileme sırasında sunucu yeniden başladığında açılan, kodu REFRESH_JOB_LOST olan hata penceresi",
+          "en": "Error dialog with code REFRESH_JOB_LOST shown when the server restarts during a refresh"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: yenileme sürerken sunucu süreci kapatılıp yeniden başlatıldı; kayıp iş birkaç saniyede bildirildi.",
+          "en": "Actual Buyer Log with isolated demo data: the server process was stopped and restarted during a refresh; the lost job was reported within seconds."
+        }
+      }
+    },
     {
       "id": "license-agency-royalty-orders",
       "type": "fix",

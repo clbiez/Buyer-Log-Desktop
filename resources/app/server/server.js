@@ -6,6 +6,10 @@ const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const crypto = require('crypto');
+// v7.0.340 — Her sunucu süreci kendi kimliğini taşır. İstemci izlediği
+// yenilemenin, gözetmenin yeniden başlattığı yeni bir süreçte kaybolduğunu
+// buradan ayırt eder (aksi halde sayaç donup 25 dakika bekliyordu).
+const SERVER_INSTANCE_ID = crypto.randomBytes(8).toString('hex');
 const { redactSecrets } = require('../shared/secret-redaction');
 const zlib = require('zlib');
 const os = require('os');
@@ -9119,10 +9123,6 @@ async function runRefreshTelemetry(telemetry, connection, operation, category, t
   }
 }
 
-// v7.0.340 — Her sunucu süreci kendi kimliğini taşır. İstemci izlediği
-// yenilemenin, gözetmenin yeniden başlattığı yeni bir süreçte kaybolduğunu
-// buradan ayırt eder (aksi halde sayaç donup 25 dakika bekliyordu).
-const SERVER_INSTANCE_ID = crypto.randomBytes(8).toString('hex');
 function refreshJobState(id) {
   const job = refreshJobs.get(id);
   if (!job) return { running: false, phase: 'idle', jobId: null, serverInstanceId: SERVER_INSTANCE_ID };

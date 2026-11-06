@@ -7,7 +7,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {chromium}=require('playwright'),XLSX=require('xlsx');
 const app=path.resolve(__dirname,'..'),work=path.resolve(app,'../../work');fs.mkdirSync(work,{recursive:true});
 const root=fs.mkdtempSync(path.join(work,'refresh-server-restart-')),port=6495,base=`http://127.0.0.1:${port}`;
-const env={...process.env,BUYER_LOG_CONFIG_PATH:path.join(root,'config.json'),BUYER_LOG_USER_SESSION_SECRET:'acceptance-session-secret-0123456789abcdef'};
+const env={...process.env,BUYER_LOG_CONFIG_PATH:path.join(root,'config.json'),BUYER_LOG_USER_SESSION_SECRET:'abababababababababababababababababababababababababababababababab'};
 for(const key of ['BUYER_LOG_DATA_ROOT','BUYER_LOG_SERVER_DATA_ROOT','BUYER_LOG_LOCAL_DATA_ROOT','BUYER_LOG_TEMP_ROOT']){env[key]=path.join(root,key.toLowerCase());fs.mkdirSync(env[key],{recursive:true});}
 const source=path.join(root,'source');fs.mkdirSync(source);fs.writeFileSync(env.BUYER_LOG_CONFIG_PATH,JSON.stringify({port,host:'127.0.0.1',sourceFolder:source,refreshWithExcel:false,updates:{enabled:false}}));
 const demo=require('./generate-demo-data').build({rows:Number(process.env.ROWS)||8000,seed:7,today:new Date('2026-11-06T00:00:00Z')});
@@ -30,19 +30,21 @@ async function healthy(){for(let i=0;i<300;i++){try{if((await fetch(base+'/api/h
   await page.getByText(/Buyer Log'a devam et|Continue to Buyer Log/).first().click({timeout:5000}).catch(()=>{});
   await page.waitForFunction(()=>!document.getElementById('blBootGuard'),null,{timeout:240000});
   await page.evaluate(()=>applyLanguage('en'));
-  await page.evaluate(()=>{const button=document.getElementById('refreshBtn')||document.getElementById('reloadBtn');button.click();});
+  await page.evaluate(()=>{window.__refreshRun=loadFromServer(true,['cp','orders','backlog','lfl']).catch(error=>{window.__refreshError=String(error&&error.message||error);});});
   await page.waitForFunction(()=>window.BL_REFRESH_JOB_STATE&&window.BL_REFRESH_JOB_STATE.running&&window.BL_REFRESH_JOB_STATE.serverInstanceId,null,{timeout:60000});
   const before=await page.evaluate(()=>window.BL_REFRESH_JOB_STATE.serverInstanceId);
   server.kill('SIGKILL');await new Promise(resolve=>server.once('exit',resolve));
   const killedAt=Date.now();await sleep(1500);startServer();await healthy();
   const status=await (await fetch(base+'/api/refresh-status',{headers:{cookie}})).json();
-  assert.equal(status.jobId,null);assert.ok(status.serverInstanceId&&status.serverInstanceId!==before);
+  assert.equal(status.jobId,null,JSON.stringify(status).slice(0,300));assert.ok(status.serverInstanceId&&status.serverInstanceId!==before);
   const modal=page.locator('#sourceRefreshFailureModal');await modal.waitFor({state:'visible',timeout:30000});
   const seconds=Math.round((Date.now()-killedAt)/1000);assert.ok(seconds<30,`lost job reported after ${seconds}s`);
   const text=await modal.innerText();
   assert.match(text,/The server restarted during the refresh/);assert.match(text,/server-restart\.log/);assert.match(text,/REFRESH_JOB_LOST/);
   assert.equal(await page.evaluate(()=>typeof isRefreshRunning==='function'?isRefreshRunning():false),false);
-  await modal.locator('details summary').click().catch(()=>{});await page.waitForTimeout(400);
+  // Hide unrelated demo-source notices so the dialog is the subject of the capture.
+  await page.evaluate(()=>[...document.querySelectorAll('body *')].filter(el=>getComputedStyle(el).position==='fixed'&&!el.closest('#sourceRefreshFailureModal')&&!el.querySelector('#sourceRefreshFailureModal')&&el.id!=='sourceRefreshFailureModal'&&/INFORMATION|BİLGİ/i.test(el.textContent||'')&&el.textContent.length<600).forEach(el=>{el.style.display='none';}));
+  await page.waitForTimeout(400);
   const assets=path.join(app,'public/release-notes/next-assets');fs.mkdirSync(assets,{recursive:true});
   await page.screenshot({path:path.join(assets,'refresh-server-restart-lost-job.png')});
   assert.deepEqual(errors,[]);
