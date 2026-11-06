@@ -17,3 +17,8 @@ test('an error, parity mismatch, inactive tab or expanded unready Overview canno
   f.state.error='synthetic failure';assert.equal(f.c.ready(),false);f.state.error='';f.state.parity.match=false;assert.equal(f.c.ready(),false);f.state.parity.match=true;
   f.flags.active='overview';assert.equal(f.c.ready(),false);f.flags.active='backlog';f.flags.overviewOpen=true;assert.equal(f.c.ready(),false);f.flags.hero=true;assert.equal(f.c.ready(),true);
 });
+test('fatal server exceptions fail an opening even after renderer and timing checks passed',()=>{
+ const c={};vm.createContext(c);vm.runInContext(extractFunction(source,'assertNoFatalServerErrors')+';globalThis.check=assertNoFatalServerErrors;',c);
+ assert.doesNotThrow(()=>c.check('[RUNTIME] event-loop-stall blockedMs=100\n[2026-11-06] expected connection error'));
+ for(const line of ['[2026-11-06] uncaughtException: synthetic exception','[2026-11-06] unhandledRejection: synthetic rejection'])assert.throws(()=>c.check(line),/Fatal server exception/);
+});

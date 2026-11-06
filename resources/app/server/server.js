@@ -6750,6 +6750,7 @@ function refreshPerformanceProfile(value, requestedTargets, sourcePolicy = {}) {
 }
 function sourceFilterReadiness(targets = null,value='moderator') {
   const overrides = loadOverrides();
+  if(overrides.asasSourceMode!=='database')return inspectSourceFilterReadiness([],targets,{asasSourceMode:'excel'});
   const items=userPreferences.applyHorizonOverrides(loadModelConnections().items,sourceUserId(value),targets,userAccess.roleWorkspaceEntries(value));
   return inspectSourceFilterReadiness(items, targets, {
     asasSourceMode: overrides.asasSourceMode === 'database' ? 'database' : 'excel',

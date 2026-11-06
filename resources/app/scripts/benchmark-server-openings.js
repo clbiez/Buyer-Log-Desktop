@@ -20,6 +20,9 @@ function backlogScreenReady(){
     &&Boolean(document.querySelector('#backlogTreeTable tbody tr'))&&delivery?.rows?.length===lastBacklogData.totalRows
     &&!delivery.loading&&!delivery.error&&delivery.parity?.match===true&&overviewReady;
 }
+function assertNoFatalServerErrors(log){
+  if(/\b(?:uncaughtException|unhandledRejection)\s*:/i.test(log))throw Error('Fatal server exception during the opening scenario');
+}
 function persist(){
   if(fs.existsSync(root)){
     const events=probe.readProbeEvents(root,{requireStopped:Boolean(server&&(server.exitCode!==null||server.signalCode))});report.serverLoopProbe={observerSha256:probe.observerSha256(),events,
@@ -105,12 +108,18 @@ async function record(scenario,action,read){
     if(report.errors.length)throw Error('Renderer errors occurred');
     const manifest=JSON.parse(fs.readFileSync(path.join(root,'local/page-cache/moderator/manifest.json'),'utf8'));
     if(manifest.sourceRevisionKey!==seed.expected.sourceRevision||manifest.activeGeneration!==seed.expected.generation||report.projectionGenerations.some(value=>value!==manifest.activeGeneration))throw Error('Source or projection generation changed during the opening scenario');
+    assertNoFatalServerErrors(fs.readFileSync(path.join(root,'interactive-server.log'),'utf8'));
     report.correctness='passed';persist();report.responsivenessPassed=report.serverLoopProbe.measurements.every(m=>m.gapsOver200ms===0);
     report.status=report.responsivenessPassed?'passed':'failed';if(!report.responsivenessPassed)process.exitCode=1;
     report.limitations=['Separate sequential interactive scenario: Overview plus visible Global Flow, followed by Backlog; each window extends 10 seconds after actual ready state.','Linux headless Chromium; no Windows/Electron or cold OS disk cache claim.','Full timer gaps, including the normal 10 ms interval, are compared against 200 ms.','The seed is copied; no refresh mutation is sent in this scenario.'];
   }catch(error){report.status='failed';report.error={message:error.message,stack:error.stack};process.exitCode=1;}
   finally{
     healthStopped=true;if(healthLoop)await healthLoop;
-    try{await browser?.close();}finally{await stop();report.finishedAt=new Date().toISOString();persist();fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');process.stdout.write('Report: '+output+'\n');}
+    try{await browser?.close();}finally{
+      await stop();
+      try{if(fs.existsSync(path.join(root,'interactive-server.log')))assertNoFatalServerErrors(fs.readFileSync(path.join(root,'interactive-server.log'),'utf8'));}
+      catch(error){report.correctness='failed';report.status='failed';report.error={message:error.message,stack:error.stack};process.exitCode=1;}
+      report.finishedAt=new Date().toISOString();persist();fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');process.stdout.write('Report: '+output+'\n');
+    }
   }
 })();
