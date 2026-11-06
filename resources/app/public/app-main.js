@@ -39742,15 +39742,24 @@ function cpKolBackfillPreview(plan,trigger){
    fiyatlama geçmişi, landed/Endeksmatik girdileri ve görsel aynen kalır. Fiyat
    ve onaylı üretici yalnız kullanıcı onayladıysa değişir; önceki değer satırın
    _orderPriceChanges izinde saklanır. */
+/* Alanı kalıtım kuralına göre yazar: renge özel alan (adet, renk …) yalnız bu
+   satırda kalır ve kardeş renklere sızmaz; modele bağlı alan ana satırda modelin
+   ortak değeri, bağlı bir renk varyantında o rengin açık override'ı olur. */
+function cpKolBackfillWriteField(row,key,value){
+  const api=window.BLCollectionModelGroups;
+  if(!api?.writeGroupedValue){row[key]=value;return row;}
+  kolRows=kolNormalizeModelGroups(api.writeGroupedValue(kolRows,row.id,key,value));
+  return kolRows.find(item=>String(item?.id)===String(row.id))||row;
+}
 function cpKolBackfillApplyUpdate(change,approved){
   let row=kolRows.find(item=>String(item?.id)===String(change.existingId));
   if(!row)return {updated:false,priced:false};
-  Object.entries(change.patch||{}).forEach(([key,value])=>{row=kolWriteGroupedStorageValue(row,key,value);});
+  Object.entries(change.patch||{}).forEach(([key,value])=>{row=cpKolBackfillWriteField(row,key,value);});
   row._sourceOrders=change.sourceOrders||row._sourceOrders||[];
   let priced=false;
   const offer=change.price?.proposed;
   if(approved&&change.price?.requiresApproval&&offer){
-    row=kolWriteGroupedStorageValue(row,'pricing',{...kolEffectivePricing(row),[offer.name]:kolFormatMoneyDisplay(String(offer.raw||offer.price))});
+    row=cpKolBackfillWriteField(row,'pricing',{...kolEffectivePricing(row),[offer.name]:kolFormatMoneyDisplay(String(offer.raw||offer.price))});
     const previous=change.price.current;
     row.confirmedManufacturer=offer.name;
     const trail=Array.isArray(row._orderPriceChanges)?row._orderPriceChanges:[];

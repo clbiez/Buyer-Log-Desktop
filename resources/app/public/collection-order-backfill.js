@@ -46,6 +46,23 @@
     return plm && colour && month ? JSON.stringify([plm, colour, month]) : '';
   }
   const orderLine = order => JSON.stringify([upper(order && order.orderCode), upper(order && order.colourCode)]);
+  /* Önceden kayda bağlanmış sipariş satırlarından hangilerinin yenileriyle
+   * değiştirileceği. Aynı anahtar her zaman değişir. Anahtarı değişmiş (fiyat,
+   * tarih vb. güncellenmiş) satır yalnız o sipariş + rengin tüm satırları yeniden
+   * seçildiyse değişir; aynı sipariş + renkte farklı fiyatlı satırlardan yalnız
+   * biri seçildiğinde diğerleri korunur, adet eksilmez. */
+  function supersede(previous, incoming) {
+    const keys = new Set(incoming.map(order => order.key).filter(Boolean)), count = new Map();
+    const tally = (map, order) => map.set(orderLine(order), (map.get(orderLine(order)) || 0) + 1);
+    const before = new Map();
+    previous.forEach(order => tally(before, order));
+    incoming.forEach(order => tally(count, order));
+    return previous.filter(order => {
+      if (order.key && keys.has(order.key)) return false;
+      const line = orderLine(order);
+      return !(count.get(line) >= before.get(line));
+    });
+  }
   function sourceOrder(key, row) {
     return {key, orderCode:row._sourceOrderCode || '', quantity:row.quantity, opd:row.opd,
       exFactory:row.exFactory, retail:row.retail, inStore:row.inStore, inStoreWeek:row.inStoreWeek,
@@ -156,8 +173,7 @@
       const ranked = targets.slice().sort((a, b) => Object.keys(pricingOf(b)).length - Object.keys(pricingOf(a)).length
         || Number(Boolean(a._sourceOrders?.length)) - Number(Boolean(b._sourceOrders?.length)) || Number(a.id) - Number(b.id));
       const target = ranked[0];
-      const lines = new Set(incoming.map(orderLine));
-      const orders = [...(target._sourceOrders || []).filter(order => !lines.has(orderLine(order))), ...incoming];
+      const orders = [...supersede(target._sourceOrders || [], incoming), ...incoming];
       const patch = {};
       SOURCE_FIELDS.forEach(field => { const value = firstFilled(rows, field); if (text(value)) patch[field] = value; });
       Object.entries(aggregate(orders)).forEach(([field, value]) => { if (text(value)) patch[field] = value; });

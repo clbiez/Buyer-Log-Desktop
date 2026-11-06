@@ -147,3 +147,16 @@ test('orders already imported into a legacy multi-colour row are not reopened as
   assert.equal(plan.changes[0].row._sourceOrders.length, 1);
   assert.equal(plan.changes[0].row._sourceOrders[0].key, 'B');
 });
+test('re-importing one of several same-order same-colour lines keeps the other lines', () => {
+  const a = draft('A100', {_sourceOrderCode: 'ORD', quantity: '100'}), b = draft('A200', {_sourceOrderCode: 'ORD', quantity: '200', pricing: {'SUB FACTORY': '4.40'}});
+  const target = existingRow({_sourceOrders: [], confirmedManufacturer: 'SUB FACTORY', pricing: {'SUB FACTORY': '4.00'}});
+  const first = backfill.plan([a, b], [target]).changes[0];
+  assert.equal(first.patch.quantity, '300');
+  const stored = {...target, ...first.patch, _sourceOrders: first.sourceOrders};
+  const partial = backfill.plan([a], [stored]).changes;
+  assert.ok(!partial.length || partial[0].patch.quantity === '300');
+  assert.ok(!partial.length || partial[0].sourceOrders.length === 2);
+  const changedPrice = backfill.plan([draft('A100b', {_sourceOrderCode: 'ORD', quantity: '120'}), draft('A200b', {_sourceOrderCode: 'ORD', quantity: '210'})], [stored]).changes[0];
+  assert.equal(changedPrice.patch.quantity, '330');
+  assert.equal(changedPrice.sourceOrders.length, 2);
+});

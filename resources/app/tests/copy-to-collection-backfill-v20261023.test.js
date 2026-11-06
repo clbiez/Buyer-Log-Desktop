@@ -108,7 +108,8 @@ async function transferAction(selected,existing=[],options={}){
   const scope={
     appLang:'en',document:{body:{dataset:{activeTab:'orders'}},
       getElementById:()=>({addEventListener:(type,listener)=>{events[type]=listener;}})},
-    window:{BLTableToolbarActionCleanup:{begin:()=>{},finish:()=>{}}},
+    window:{BLTableToolbarActionCleanup:{begin:()=>{},finish:()=>{}},BLCollectionModelGroups:options.groups?require('../public/collection-model-groups'):undefined},
+    kolNormalizeModelGroups:rows=>require('../public/collection-model-groups').normalizeRows(rows).rows,
     kolWorkspaceCanEdit:true,kolWorkspaceOwnerId:'mine',kolWorkspaceRevision:1,
     kolIsOwnWorkspace:()=>options.own!==false,
     kolRequireWorkspaceEdit:()=>options.editable!==false,
@@ -132,7 +133,7 @@ async function transferAction(selected,existing=[],options={}){
   };
   const engine=require('../public/collection-order-backfill');
   scope.cpKolBackfillPlan=rows=>engine.plan(rows.map(row=>({key:scope.cpKolSourceIdentity(row,true),row:{...row,id:null,_sourceOrderCode:row['Order Code'],plmId:row['PLM ID'],colourCode:row['C.Code']}})),scope.kolRows,scope.kolRows.map(row=>scope.cpKolSourceIdentity(row)));
-  vm.runInNewContext(segment('function cpKolBackfillApplyUpdate(','// ================= DİL SEÇİMİ'),scope);
+  vm.runInNewContext(segment('function cpKolBackfillWriteField(','// ================= DİL SEÇİMİ'),scope);
   await events.click({currentTarget:{}});
   return {scope,toasts};
 }
@@ -222,4 +223,22 @@ test('existing PLM + colour + MB month record is updated in place; price changes
   assert.equal(priced._orderPriceChanges.length,1);
   assert.equal(priced._orderPriceChanges[0].from.name,'OLD FACTORY');
   assert.equal(JSON.stringify(priced.endeksmatikData),JSON.stringify({a:1}));
+});
+test('grouped colour records: colour-specific fields never leak to siblings and variant updates stay visible',async()=>{
+  const groups=require('../public/collection-model-groups');
+  const base={plmId:'100',modelKod:'DEMO',inStoreMonth:'202702',modelGroupId:'mg_demo',mag:'OLD MAG',pricing:{},variantOverrides:{},modelSharedValues:{}};
+  const rows=()=>[{...base,id:1,modelGroupRole:'parent',colourCode:'RED',colour:'Red',quantity:'100'},
+    {...base,id:2,modelGroupRole:'variant',colourCode:'BLUE',colour:'Blue',quantity:'200'}];
+  const red={'Order Code':'R1','PLM ID':'100','C.Code':'RED',inStoreMonth:'202702',modelKod:'DEMO',colour:'Red',quantity:'150'};
+  const first=await transferAction([red],rows(),{groups:true});
+  const blue=first.scope.kolRows.find(row=>row.id===2),parent=first.scope.kolRows.find(row=>row.id===1);
+  assert.equal(parent.quantity,'150');
+  assert.equal(blue.quantity,'200');
+  assert.equal(blue.colour,'Blue');
+  const blueOrder={'Order Code':'B1','PLM ID':'100','C.Code':'BLUE',inStoreMonth:'202702',modelKod:'DEMO',mag:'NEW MAG',quantity:'300'};
+  const second=await transferAction([blueOrder],rows(),{groups:true});
+  const variant=second.scope.kolRows.find(row=>row.id===2);
+  assert.equal(groups.effectiveValue(variant,'mag',second.scope.kolRows),'NEW MAG');
+  assert.equal(groups.effectiveValue(second.scope.kolRows.find(row=>row.id===1),'mag',second.scope.kolRows),'OLD MAG');
+  assert.equal(variant.quantity,'300');
 });
