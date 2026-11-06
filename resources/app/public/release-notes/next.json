@@ -503,6 +503,35 @@
           "en": "Actual post-change Orders screen with isolated demo data. Calculation equivalence and read timings were separately verified by tests and benchmarks."
         }
       }
+    },
+    {
+      "id": "lcwai-retry-keeps-context",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Tekrar Dene artık eklenen Buyer Log verisini de gönderir",
+        "en": "Try Again now also sends the added Buyer Log data"
+      },
+      "body": {
+        "tr": "Bağlam dosyası (ör. Siparişler — Tüm kayıtlar) yüklenemediğinde ya da hazırlık yarıda kaldığında “Tekrar Dene” ve “Yeniden üret” isteği LCW AI’a bağlamsız ve eksiz gidiyordu; model veriyi görmediği için “veri sağlanmadı” diyerek boş tablo veya dosya üretiyordu. Artık tekrar denemede bağlam ve CSV eki yeniden hazırlanır. Uygulama yeniden açıldıktan sonra da hiç gönderilememiş mesaj aynı bağlamla tekrarlanır; eklenen dosyalar artık mevcut değilse istek sessizce gönderilmez, dosyaları yeniden eklemeniz istenir.",
+        "en": "When a context file (e.g. Orders — All records) failed to upload or preparation stopped midway, “Try Again” and “Regenerate” sent the request to LCW AI without the context and attachments; the model never saw the data and produced an empty table or file saying no data was provided. Retrying now rebuilds the context and its CSV attachment. After the app is reopened, a message that was never delivered is retried with the same context; if its attached files are no longer available, the request is not sent silently and you are asked to add the files again."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-retry-keeps-context.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI ekranında, Orders — All records bağlamıyla tekrar denenen mesaj ve tablo yanıtı",
+          "en": "Message retried with the Orders — All records context and its table answer in the actual Buyer Log LCW AI screen"
+        },
+        "caption": {
+          "tr": "İzole demo veriyle gerçek uygulama; LCW AI yanıtı kabul testi için taklit edildi. İlk CSV yüklemesi başarısız olduktan sonra Tekrar Dene isteği bağlam ve CSV ekiyle gönderildi.",
+          "en": "Actual app with isolated demo data; the LCW AI response was stubbed for acceptance testing. After the first CSV upload failed, Try Again sent the request with the context and its CSV attachment."
+        }
+      }
     }
   ]
 }

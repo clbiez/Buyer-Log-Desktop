@@ -156,7 +156,7 @@ test('navigasyon: LCW AI bağımsız modül (sol menü + üst çubuk), lazy yük
   // Tek motor: genel çalışma alanı kendi AI istemcisini yazmaz.
   assert.doesNotMatch(CHAT, /fetch\(|'\/api\/lcwai|mym\.prod|access_token/);
   assert.match(CHAT, /api\.chat\(\{/);
-  assert.match(CHAT, /api\.uploadFile\(files\[index\]\)/);
+  assert.match(CHAT, /attachments\.push\(await api\.uploadFile\(pendingFiles\[index\]\)\)/);
   assert.match(CHAT, /api\.buildContext\(id\)/);
   assert.match(CHAT, /window\.BLMarkdown\.render/);
   assert.doesNotMatch(CHAT, /localStorage\.|sessionStorage\./, 'sohbet içeriği tarayıcı deposuna yazılmaz');

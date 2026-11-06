@@ -224,6 +224,7 @@
       draftId: /^[a-f0-9]{24}$/.test(String(file.draftId || '')) ? String(file.draftId) : '', edited: Boolean(file.edited),
     };
   }
+  const historyContextIds = list => (Array.isArray(list) ? list : []).slice(0, 12).map(value => String(value).slice(0, 120)).filter(Boolean);
   function historyMessage(message) {
     if (!message || (message.role !== 'user' && message.role !== 'ai') || message.streaming) return null;
     const item = { role: message.role, text: cleanHistoryText(message.text) };
@@ -237,10 +238,11 @@
         orientation: message.output.orientation === 'landscape' ? 'landscape' : 'portrait',
         detail: String(message.output.detail || 'standard').slice(0, 20),
       } : null;
-      // Yeniden üretmede upstream sohbet geçmişi kullanılır; eski upload URL/context
-      // nesnelerini kalıcı depoya taşımıyoruz.
-      item.attachments = [];
-      item.contexts = [];
+      // Eski upload URL/context nesneleri kalıcı depoya taşınmaz. Yalnız bağlam
+      // kimliği (ör. "orders:all") ve mesajın LCW AI'a ulaşıp ulaşmadığı yazılır:
+      // ulaşmadıysa yeniden denemede bağlam yerelden yeniden kurulur.
+      item.contextIds = historyContextIds(message.contextIds);
+      item.delivered = Boolean(message.delivered);
     }
     const file = historyFile(message.file);
     if (file) item.file = file;
@@ -281,8 +283,13 @@
             item.contextLabels = Array.isArray(message.contextLabels) ? message.contextLabels.slice(0, 12).map(String) : [];
             item.fileNames = Array.isArray(message.fileNames) ? message.fileNames.slice(0, 12).map(String) : [];
             item.output = message.output && typeof message.output === 'object' ? message.output : null;
-            item.attachments = [];
-            item.contexts = [];
+            item.contextIds = historyContextIds(message.contextIds);
+            // Bu alan öncesi kayıtlar: sohbet kimliği varsa eski davranış (upstream geçmiş).
+            item.delivered = 'delivered' in message ? Boolean(message.delivered) : Boolean(raw.chatId);
+            // LCW AI'a ulaşmış mesajın bağlamı/ekleri upstream sohbet geçmişindedir;
+            // ulaşmamış mesajınki yeniden denemede yerelden yeniden hazırlanır.
+            item.attachments = item.delivered ? [] : null;
+            item.contexts = item.delivered ? [] : null;
           }
           if (message.file && message.file.id && message.file.fileName) item.file = historyFile(message.file);
           return item;
@@ -842,9 +849,11 @@
     const files = reuse ? [] : state.files.filter(item => !item.error).map(item => item.file);
     // Elle bağlam eklenmediyse mesajdaki ekran adına göre otomatik bağlam.
     const auto = reuse || state.contexts.length ? [] : autoContextsFor(text);
-    const contextIds = reuse ? [] : [...state.contexts.map(item => item.id), ...auto.map(item => item.id)];
     if (!message && !files.length && !reuse) return;
-    const userMessage = reuse || { role: 'user', text: message, contextLabels: [...state.contexts.map(item => item.label), ...auto.map(item => `${item.label} · ${L('otomatik', 'automatic')}`)], fileNames: files.map(file => file.name), contexts: null, attachments: null, output: outputRequest() };
+    /* contextIds/files mesajda tutulur (files yalnız bellekte): bağlam ya da
+       dosya yüklemesi yarıda kalırsa "Tekrar Dene" aynı bağlamı yeniden kurar.
+       Eskiden tekrar deneme bağlamsız ve eksiz gidiyor, model "veri yok" diyordu. */
+    const userMessage = reuse || { role: 'user', text: message, contextLabels: [...state.contexts.map(item => item.label), ...auto.map(item => `${item.label} · ${L('otomatik', 'automatic')}`)], fileNames: files.map(file => file.name), contextIds: [...state.contexts.map(item => item.id), ...auto.map(item => item.id)], files, contexts: null, attachments: null, output: outputRequest() };
     const output = userMessage.output || null;
     if (!reuse) conv.messages.push(userMessage);
     if (!conv.title) conv.title = (message || files.map(file => file.name).join(', ')).slice(0, 60);
@@ -857,18 +866,24 @@
     persistConversations();
     state.requestId = `bl${Date.now().toString(36)}${(++seq).toString(36)}`;
     try {
-      if (!userMessage.attachments) {
-        userMessage.attachments = [];
-        for (let index = 0; index < files.length; index++) {
-          answer.phase = L(`Dosya yükleniyor (${index + 1}/${files.length}): ${files[index].name}`, `Uploading file (${index + 1}/${files.length}): ${files[index].name}`);
-          renderMessages();
-          userMessage.attachments.push(await api.uploadFile(files[index]));
+      /* Hazırlık tamamlanana kadar mesaja yazılmaz: yarım kalan hazırlık bir
+         sonraki denemede baştan yapılır, boş liste "hazır" sanılmaz. */
+      if (!userMessage.attachments || !userMessage.contexts) {
+        const pendingFiles = Array.isArray(userMessage.files) ? userMessage.files : [];
+        const missing = (userMessage.fileNames || []).filter(name => !pendingFiles.some(file => file.name === name));
+        if (missing.length) {
+          answer.error = L(`Ekli dosyalar artık mevcut değil (${missing.join(', ')}). Dosyaları yeniden ekleyip mesajı tekrar gönderin.`, `The attached files are no longer available (${missing.join(', ')}). Add the files again and resend the message.`);
+          return;
         }
-      }
-      if (!userMessage.contexts) {
-        userMessage.contexts = [];
+        const attachments = [];
+        for (let index = 0; index < pendingFiles.length; index++) {
+          answer.phase = L(`Dosya yükleniyor (${index + 1}/${pendingFiles.length}): ${pendingFiles[index].name}`, `Uploading file (${index + 1}/${pendingFiles.length}): ${pendingFiles[index].name}`);
+          renderMessages();
+          attachments.push(await api.uploadFile(pendingFiles[index]));
+        }
+        const contexts = [];
         const contextImages = {};
-        for (const id of contextIds) {
+        for (const id of userMessage.contextIds || []) {
           answer.phase = L('Buyer Log bağlamı hazırlanıyor…', 'Preparing Buyer Log context…');
           renderMessages();
           const prepared = contextAsFile(await api.buildContext(id));
@@ -884,17 +899,19 @@
             if (prepared.file.size > limit) throw Object.assign(new Error('too-large'), { code: 'LCWAI_FILE_TOO_LARGE' });
             answer.phase = L(`Bağlam dosyası yükleniyor: ${prepared.file.name}`, `Uploading context file: ${prepared.file.name}`);
             renderMessages();
-            userMessage.attachments.push(await api.uploadFile(prepared.file));
+            attachments.push(await api.uploadFile(prepared.file));
           }
-          userMessage.contexts.push(prepared.context);
+          contexts.push(prepared.context);
         }
         if (Object.keys(contextImages).length) {
           const maxFiles = state.config && state.config.limits ? state.config.limits.maxFilesPerRequest : 5;
-          const sheets = await uploadModelImageSheets(contextImages, maxFiles - userMessage.attachments.length, phase => { answer.phase = phase; renderMessages(); });
-          userMessage.attachments.push(...sheets.attachments);
+          const sheets = await uploadModelImageSheets(contextImages, maxFiles - attachments.length, phase => { answer.phase = phase; renderMessages(); });
+          attachments.push(...sheets.attachments);
           // Sunucu ilk bağlamları tutar; görsel açıklaması paftalarla birlikte kalsın diye başa eklenir.
-          if (sheets.context) userMessage.contexts.unshift(sheets.context);
+          if (sheets.context) contexts.unshift(sheets.context);
         }
+        userMessage.attachments = attachments;
+        userMessage.contexts = contexts;
       }
       answer.phase = output ? outputPhase({ step: 'generating' }, output) : L('LCW AI düşünüyor…', 'LCW AI is thinking…');
       renderMessages();
@@ -925,6 +942,7 @@
         },
       });
       conv.chatId = result.chatId || conv.chatId;
+      userMessage.delivered = true;
       if (output) {
         if (!result.output || !result.output.id) throw Object.assign(new Error('no-output'), { code: 'LCWAI_OUTPUT_RENDER_FAILED' });
         answer.text = String(result.text || '').trim();
@@ -956,7 +974,7 @@
     const last = conv.messages[conv.messages.length - 1];
     // Boş ya da hatalı cevap yeniden denemede kaldırılır; ekranda yığılmaz.
     if (last && last.role === 'ai' && (last.error || !last.text)) conv.messages.pop();
-    send(lastUser.text, { reuse: lastUser });
+    return send(lastUser.text, { reuse: lastUser });
   }
 
   async function copyText(text, button) {
@@ -1151,5 +1169,5 @@
   }
 
   window.initLcwAiChat = initLcwAiChat;
-  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, openEditor, openTemplateManager, loadTemplates, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, resolveRecords, modelImageSheetPlan, modelImageSheetsContext, uploadModelImageSheets, addFiles, persistConversations, restoreConversations, deleteConversation, refreshLanguage };
+  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, openEditor, openTemplateManager, loadTemplates, retryLast, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, resolveRecords, modelImageSheetPlan, modelImageSheetsContext, uploadModelImageSheets, addFiles, persistConversations, restoreConversations, deleteConversation, refreshLanguage };
 })();
