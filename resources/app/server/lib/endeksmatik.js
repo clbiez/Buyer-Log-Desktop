@@ -68,8 +68,11 @@ function excelDate(value){
 }
 function recordKey(record){ return keyOf(record.slice(0,5)); }
 function recordNoSupplyKey(record){ return keyOf([record[0],record[1],record[3],record[4]]); }
-function buildRuntime(snapshot){
+function validateSnapshot(snapshot){
   if(!snapshot||Number(snapshot.schemaVersion)!==SCHEMA_VERSION||!Array.isArray(snapshot.months)||!Array.isArray(snapshot.records))throw new Error('Endeksmatik snapshot formatı geçersiz.');
+}
+function buildRuntime(snapshot){
+  validateSnapshot(snapshot);
   const monthIndex=new Map(snapshot.months.map((m,i)=>[String(m),i]));
   const byKey=new Map(), byNoSupply=new Map();
   snapshot.records.forEach(record=>{
@@ -81,18 +84,20 @@ function buildRuntime(snapshot){
   return {snapshot,monthIndex,byKey,byNoSupply};
 }
 function readSnapshotFile(file){ return JSON.parse(zlib.gunzipSync(fs.readFileSync(file)).toString('utf8')); }
-function loadSnapshot({force=false}={}){
+function loadSnapshot({force=false,index=true}={}){
+  const materialize=()=>{if(index&&!cached.byKey)cached=buildRuntime(cached.snapshot);return cached;};
+  const prepare=snapshot=>{validateSnapshot(snapshot);return index?buildRuntime(snapshot):{snapshot};};
   const shared=fromSharedDocument(documents.read(DOCUMENT_ID));
   if(shared){
     const source=`delta:${shared.generatedAt||shared.sourceUpdatedAt||shared._updatedAt||''}`;
-    if(!force&&cached&&cachedFile===source)return cached;
-    cached=buildRuntime(shared); cachedFile=source; return cached;
+    if(!force&&cached&&cachedFile===source)return materialize();
+    cached=prepare(shared); cachedFile=source; return cached;
   }
   const file=fs.existsSync(PERSISTED_FILE)?PERSISTED_FILE:DEFAULT_FILE;
   if(!fs.existsSync(file))throw new Error('Endeksmatik veri snapshotı bulunamadı.');
   const stat=fs.statSync(file),tag=stat.mtimeMs+':'+stat.size+':'+stat.ino;
-  if(!force&&cached&&cachedFile===file&&cachedTag===tag)return cached;
-  cached=buildRuntime(readSnapshotFile(file)); cachedFile=file;cachedTag=tag; return cached;
+  if(!force&&cached&&cachedFile===file&&cachedTag===tag)return materialize();
+  cached=prepare(readSnapshotFile(file)); cachedFile=file;cachedTag=tag; return cached;
 }
 /* Hedef düzeltme yüzdesinin varsayılanı YALNIZ yüklenen dosyadan gelir.
    Eski anlık görüntülerde bu alan yok; onlarda 0 kabul edilir çünkü mevcut
@@ -107,7 +112,7 @@ function publicStatusForSnapshot(snapshot,usingDefault=false){
   return {ok:true,schemaVersion:snapshot.schemaVersion,sourceFile:snapshot.sourceFile||'',season:snapshot.season||'',sourceUpdatedAt:snapshot.sourceUpdatedAt||'',targetAdjustmentPct:defaultAdjustmentPct(snapshot),generatedAt:snapshot.generatedAt||'',recordCount:snapshot.records.length,firstMonth:snapshot.months[0]||'',lastMonth:snapshot.months[snapshot.months.length-1]||'',fxFirst:Object.keys(snapshot.fx||{}).sort()[0]||'',fxLast:Object.keys(snapshot.fx||{}).sort().slice(-1)[0]||'',usingDefault};
 }
 function legacyStatus(){
-  const {snapshot}=loadSnapshot();
+  const {snapshot}=loadSnapshot({index:false});
   return publicStatusForSnapshot(snapshot,cachedFile===DEFAULT_FILE);
 }
 function resolveRecord(input,runtime=loadSnapshot()){

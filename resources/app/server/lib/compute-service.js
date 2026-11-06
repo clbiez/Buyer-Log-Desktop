@@ -3,6 +3,7 @@ const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),cryp
 const v8=require('node:v8'),{performance}=require('node:perf_hooks');
 const {createComputePool}=require('./compute-pool');
 const {captureAntrepoMetadata}=require('./compute-source-codec');
+const {accessForTask}=require('./compute-task-access');
 const MiB=1024*1024;
 function failure(code){
   const messages={COMPUTE_SOURCE_TOO_LARGE:['Kaynak kopyası bayt bütçesine sığmıyor.','Source replica exceeds the byte budget.',413],COMPUTE_SOURCE_OWNER_MISMATCH:['Kaynak sahibi uyuşmuyor.','Source owner mismatch.',403],COMPUTE_STALE_GENERATION:['Kaynak sürümü değişti.','Source generation changed.',409],COMPUTE_POOL_CLOSED:['Hesaplama havuzu kapalı.','Compute pool is closed.',503],COMPUTE_JOB_INVALID:['Geçersiz hesaplama isteği.','Invalid compute request.',400]};
@@ -80,7 +81,8 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     try{
       // Küçük karar/sorgu DTO'su bir kez kodlanır. Kuyruk gerçek girdi
       // baytını ücretler; büyük ham kaynak bu yoldan tekrar taşınmaz.
-      const encodeStarted=performance.now(),encoded=v8.serialize(params),paramsBytes=Uint8Array.from(encoded).buffer;
+      const jobParams=params.access?{...params,access:accessForTask(params.access,task,params)}:params;
+      const encodeStarted=performance.now(),encoded=v8.serialize(jobParams),paramsBytes=Uint8Array.from(encoded).buffer;
       const paramsSerializeMs=performance.now()-encodeStarted,inputBytes=paramsBytes.byteLength+1024;
       const lease=await pool.run(task,{ownerId:owner,source:record.descriptor,paramsBytes},{ownerKey:poolOwner(owner),generation:version,priority:'interactive',
         ...options,estimatedBytes:(task==='backlog-workbook'?256*MiB+record.descriptor.bytes*6:96*MiB+record.descriptor.bytes*3)+inputBytes*3,inputBytes,transferList:[paramsBytes]});
