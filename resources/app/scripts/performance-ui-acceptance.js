@@ -104,9 +104,22 @@ async function api(url, body) {
   assert.deepEqual(errors, []);
   const observed = await page.evaluate(() => ({ lang: appLang, documentLang: document.documentElement.lang, theme: document.documentElement.dataset.theme }));
   assert.deepEqual(observed, { lang, documentLang: lang, theme }, 'The requested language and theme must actually be active');
+  const preparationLayout=capture==='workspace'?await page.evaluate(()=>{
+    const root=document.documentElement,previous=root.style.getPropertyValue('--ui-font-add');
+    const result=[];
+    try{for(const fontAdd of [0,4]){
+      root.style.setProperty('--ui-font-add',fontAdd+'px');
+      for(const button of document.querySelectorAll('nav.tabs button.hasModulePreparation')){
+        const label=button.querySelector(':scope>span[data-i18n-tr]'),badge=button.querySelector('[data-module-preparation]');
+        result.push({fontAdd,module:button.dataset.tab,labelBottom:label.getBoundingClientRect().bottom,badgeTop:badge.getBoundingClientRect().top});
+      }
+    }}finally{if(previous)root.style.setProperty('--ui-font-add',previous);else root.style.removeProperty('--ui-font-add');}
+    return result;
+  }):[];
+  for(const item of preparationLayout)assert.ok(item.badgeTop>=item.labelBottom-0.5,'module label and status must not overlap at font step '+item.fontAdd+': '+item.module);
   if(capture==='workspace'){fs.mkdirSync(path.dirname(screenshot), { recursive: true }); await page.screenshot({ path: screenshot });}
   const afterContinue=await page.evaluate(()=>({moduleStates:window.BLModulePreparation?.snapshot(),metrics:window.BLPerf?.snapshot?.()}));
-  fs.writeFileSync(path.join(root, 'acceptance.json'), JSON.stringify({ synthetic: true, screenshot, capture, module: moduleName, lang, theme, observed, rows: 20, beforeContinue, afterContinue, errorRecovery, errors }, null, 2));
+  fs.writeFileSync(path.join(root, 'acceptance.json'), JSON.stringify({ synthetic: true, screenshot, capture, module: moduleName, lang, theme, observed, rows: 20, beforeContinue, afterContinue, preparationLayout, errorRecovery, errors }, null, 2));
   console.log(JSON.stringify({ screenshot, evidence: root }));
 })().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => {
   try { await browser?.close(); } finally {

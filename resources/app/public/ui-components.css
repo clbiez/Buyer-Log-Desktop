@@ -14782,6 +14782,8 @@ html[data-ui-system="manifest"] #cpTable thead th{vertical-align:middle;}
 html[data-ui-system="manifest"] #cpTable tbody td{color:var(--ui-text);font-size:var(--ui-font-xs);}
 html[data-ui-system="manifest"] .vfBar button,html[data-ui-system="manifest"] .railFoot button{background:transparent;}
 html[data-ui-system="manifest"] nav.tabs button{font-size:var(--ui-font-sm);font-family:var(--ui-font-body);}
+html[data-ui-system="manifest"] nav.tabs button.hasModulePreparation>span[data-i18n-tr]{line-height:1.1;}
+html[data-ui-system="manifest"] nav.tabs button.hasModulePreparation>.modulePrepState{font-size:var(--ui-font-2xs)!important;line-height:1.1;color:var(--ui-text-muted);}
 html[data-ui-system="manifest"] .globalFlowTitle{color:var(--ui-text);}
 html[data-ui-system="manifest"] .globalFlowMeta,html[data-ui-system="manifest"] .globalFlowLegend,html[data-ui-system="manifest"] .gfKpi>span{font-size:var(--ui-font-2xs);color:var(--ui-text-secondary);}
 html[data-ui-system="manifest"] .gfKpi b{font-size:var(--ui-font-lg);font-weight:600;}
