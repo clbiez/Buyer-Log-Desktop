@@ -253,6 +253,25 @@ function createOutputService(options = {}) {
     return { output, warnings: parsed.warnings || [], revision: updated ? updated.revision : draft.revision };
   }
 
+  /* Buyer Log'un kendi hesapladığı tablo (doğal dil veri sorgusu) → Excel.
+     İçerik LCW AI'a gitmez ve modelden gelmez; yalnız çalışma kitabı
+     sözleşmesiyle doğrulanır, düzenlenebilir taslak olarak da saklanır. */
+  function createTable(ownerId, input = {}) {
+    const lang = input.lang === 'en' ? 'en' : 'tr';
+    const date = now();
+    const day = date.toISOString().slice(0, 10);
+    const parsed = contracts.normalizeWorkbook(input.data, { lang, date: day });
+    if (!parsed.ok) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: parsed.errors });
+    // Satır kırpılması hesaplanmış tabloda veri kaybıdır: sessizce kesilmez.
+    if (parsed.warnings.some(item => /^rows-trimmed/.test(item))) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: [lang === 'en' ? 'A sheet has more than 5,000 rows.' : 'Bir sayfada 5.000 satırdan fazla var.'] });
+    const label = lang === 'en' ? 'Buyer Log data query' : 'Buyer Log veri sorgusu';
+    const job = { format: 'xlsx', data: parsed.data, title: parsed.data.title, template: 'data-query', templateLabel: label, attempts: 1, lang, orientation: 'portrait', day, date: date.toISOString(), requestId: '' };
+    try {
+      job.draftId = drafts.create(ownerId, { format: 'xlsx', data: job.data, title: job.title, template: job.template, templateLabel: label, lang, orientation: 'portrait', detail: 'standard', day, images: {} });
+    } catch (_) { job.draftId = null; }
+    return render(ownerId, job, {});
+  }
+
   function createStudio(ownerId, input = {}) {
     const lang = input.lang === 'en' ? 'en' : 'tr';
     if (!input.data || !input.data.layout || !input.data.layout.studio) throw lcwAiError('BAD_REQUEST');
@@ -322,7 +341,7 @@ function createOutputService(options = {}) {
   }
 
   return {
-    create, createStudio, completeImages, completePdf, fallbackHtml, getDraft, renderDraft, skeleton,
+    create, createStudio, createTable, completeImages, completePdf, fallbackHtml, getDraft, renderDraft, skeleton,
     saveStudioImages(ownerId, id, input) {
       const draft = draftOf(ownerId, id);
       if (!draft.source) throw lcwAiError('BAD_REQUEST');

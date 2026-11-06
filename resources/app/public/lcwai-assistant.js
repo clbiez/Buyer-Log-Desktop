@@ -667,6 +667,8 @@
     const result = { output: data.output, warnings: data.warnings || [] };
     return result.output && result.output.pending === 'pdf' ? finalizePdf(result, onProgress) : result;
   }
+  /* Buyer Log'un hesapladığı sorgu tablosu → Excel (LCW AI'a istek gitmez). */
+  const createTableOutput = async (data, lang) => (await jsonPost('/api/lcwai/outputs/table', { data, lang: lang || (isEn() ? 'en' : 'tr') })).output;
   const draftSkeleton = async (id, data) => (await jsonPost(`/api/lcwai/output-drafts/${encodeURIComponent(String(id || ''))}/skeleton`, { data })).definition;
   const templatePath = (id, shared, suffix = '') => `/api/lcwai/output-templates/${encodeURIComponent(String(id || ''))}${suffix}${shared ? '?shared=1' : ''}`;
   const outputTemplates = {
@@ -732,7 +734,7 @@
   root.BuyerLogAI = {
     ask: askAuthed, askWithFiles: options => withDesktopAuth(() => askWithFiles(options)), uploadFile: uploadAuthed, cancel, getStatus, onStatus, connect, disconnect,
     chat: chatAuthed, createConversation, continueConversation, openChat,
-    openOutput, revealOutput, listOutputs, getDraft, renderDraft, draftSkeleton, outputTemplates,
+    openOutput, revealOutput, listOutputs, getDraft, renderDraft, draftSkeleton, outputTemplates, createTableOutput,
     createStudio: async body => (await jsonPost('/api/lcwai/output-studio', body)).draft,
     saveStudioImages: (id, images) => jsonPost(`/api/lcwai/output-studio/${encodeURIComponent(id)}/images`, images),
     finalizeOutput:(result,onProgress=()=>{},endpoints={})=>result.output?.pending==='pdf'?finalizePdf(result,onProgress,endpoints):Promise.resolve(result),

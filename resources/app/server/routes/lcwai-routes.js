@@ -244,6 +244,19 @@ app.post('/api/lcwai/output-studio', express.json({ limit: '48mb' }), (req, res)
     } catch (error) { fail(res, error); }
   });
 
+  /* Doğal dil veri sorgusunun Buyer Log tarafından hesaplanan sonucu → Excel. */
+app.post('/api/lcwai/outputs/table', express.json({ limit: '24mb' }), (req, res) => {
+    try {
+      const body = req.body && typeof req.body === 'object' ? req.body : {};
+      const output = outputsOf().createTable(ownerOf(req), { data: body.data, lang: body.lang });
+      audit(req, 'LCWAI_DATA_QUERY_EXPORT', { format: 'xlsx' });
+      res.set('Cache-Control', 'no-store').json({ ok: true, output });
+    } catch (error) {
+      if (error && error.type === 'entity.too.large') return fail(res, lcwAiError('OUTPUT_RENDER_FAILED', { detail: 'table-too-large' }));
+      fail(res, error);
+    }
+  });
+
 app.get('/api/lcwai/output-drafts/:id', (req, res) => {
     try {
       res.set('Cache-Control', 'no-store').json({ ok: true, draft: outputsOf().getDraft(ownerOf(req), req.params.id) });
