@@ -716,5 +716,29 @@
     "Default server inspector stall profiler enabled in both arms; its observer effect not isolated",
     "Preliminary v2 first catalog pair worsened13.323->34.239s; all preliminary samples retained; final v3 measured after lazy-index correction",
     "Final micro runtime was dirty5f2c38d7 with byte-exact runtimeSourceHashes+workingTreeDirty+harnessSHA per child; candidate committed beforeF0"
-  ]
+  ],
+  "integration": {
+    "mainPreserved": "c225f91158cf9b7852c79121776ee5c8e5a55334",
+    "prPreserved": 880,
+    "integratedCodeHead": "eaa2ac6a87b15bfb1dd6abdeec91407582b1f6fe",
+    "tests": {
+      "files": 139,
+      "pass": 803,
+      "fail": 0,
+      "skip": 0,
+      "cancelled": 0
+    },
+    "i18nNewMissing": 0,
+    "i18nBaseline": 0,
+    "notes": 25,
+    "UI": {
+      "trLightRoot": "liN4ws",
+      "enDarkRoot": "FBVOeA",
+      "seedCollectionRows": 6,
+      "imagesViewed": true
+    },
+    "macroRerunForRoyalties": false,
+    "limit": "Macro timings measure41789cca vs67fe95 beforeupstream880; changedlicenseclassificationcostnotmeasuredbythiscohort",
+    "failedFirstTestAttempt": "4 files failed before tests due missing default /home/agent/.buyer-log/write-recovery; reran all139 in dedicated synthetic temp roots without changing tests"
+  }
 }

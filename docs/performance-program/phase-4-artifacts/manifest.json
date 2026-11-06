@@ -658,5 +658,60 @@
     "file": "collection-en-dark.json",
     "bytes": 9039,
     "sha256": "27ab0c36d344ad21bd77c44331eff7e1f1e8b5e18dc16f2b9dc32677773d6539"
+  },
+  {
+    "file": "phase-4-integrated-tests.txt",
+    "bytes": 81287,
+    "sha256": "f4e81d49cb1df5b3bcd45d6369ceb3d4e41368d0af083dc1942cd0809e434e8a"
+  },
+  {
+    "file": "phase-4-integrated-isolated-tests.txt",
+    "bytes": 78499,
+    "sha256": "5dcc908fb973e27b164e07455afc199b9c427e68f7f3005aeeb4d9b20bd48be3"
+  },
+  {
+    "file": "phase-4-integrated-i18n.txt",
+    "bytes": 333,
+    "sha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
+  },
+  {
+    "file": "phase-4-integrated-notes.txt",
+    "bytes": 334,
+    "sha256": "fd0abd9dd9c59c262c68b3e73bd229229ac04231a6ea152b704ac20c8d24db99"
+  },
+  {
+    "file": "phase-4-integrated-final-notes.txt",
+    "bytes": 334,
+    "sha256": "fd0abd9dd9c59c262c68b3e73bd229229ac04231a6ea152b704ac20c8d24db99"
+  },
+  {
+    "file": "phase-4-integrated-ui-tr.txt",
+    "bytes": 167,
+    "sha256": "2e851d000cfd017029db3a2ff47eb815c2a530a22e841f26a2fbbb1572aaa028"
+  },
+  {
+    "file": "phase-4-integrated-ui-en.txt",
+    "bytes": 98,
+    "sha256": "d4c936113b1a82b4832f580e6ea8b5f8bcc310d9687a66aaa20b70108a250c1f"
+  },
+  {
+    "file": "phase-4-integrated-test-root.txt",
+    "bytes": 46,
+    "sha256": "5614675ec0047113b7bef2a934aeea84570c858be3bd01b1493f5933002efe1b"
+  },
+  {
+    "file": "integrated-ui-tr.json",
+    "bytes": 9182,
+    "sha256": "be4fc2f1abe4026c3003dcd400981c94463f154320532b02e3e665ddbe2d9399"
+  },
+  {
+    "file": "integrated-ui-en.json",
+    "bytes": 9287,
+    "sha256": "24b20acc1ed02b0bf9243d6191d8cbfb25092f7ef3c2f25f68324b9331616ef5"
+  },
+  {
+    "file": "integrated-ui-en-dark.png",
+    "bytes": 116636,
+    "sha256": "64ebd291fc37459ddc3a1561bdbcccb0c09d1f79356a39d30112802c1a1dc730"
   }
 ]

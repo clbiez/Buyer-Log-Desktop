@@ -115,7 +115,7 @@ adayıyla PASS oldu. Sonrasında tespit edilen lazy-index düzeltmesi nedeniyle
 bu üç after sonucu yalnız ön kanıt olarak tutuldu. Kod değişmeyen üç before
 örneği korunup final `41789cca` ile üç yeni after seri olarak alınır. Bu son
 after örnekleri zaman açısından before ile dönüşümlü değildir; çevresel
-varyansın tümü izole edildiği iddia edilmez. 
+varyansın tümü izole edildiği iddia edilmez.
 
 Final altı örnek **PASS**: Overview/Orders 30.000, CP 24.982, Koleksiyon 0
 satır; generation, kaynak hash ve revizyon kontrolleri her koşuda eşittir.
@@ -148,6 +148,29 @@ profilleri [kanıt paketinde](phase-4-artifacts/summary.json) tutulur. İlk Faz 
 yenileme medyanı 53.231 sn tarihsel referanstır; arada fazlar ve upstream
 değişimleri olduğundan yalnız Faz 4 etkisi olarak sunulmaz. Koleksiyon makrosu
 0 satır içerir; 5k dolu veri için yalnız ayrı alan okuma mikrosu ölçüldü.
+
+[Doğrulandı] CP sıcak geçişi ve Koleksiyon sıcak geçişi medyanı kötüleşti;
+Orders birincil hazır süresi de arttı. Bu faz bütün ekranları hızlandırdı
+iddiasında değildir. Yenileme medyanındaki farkın tümünü tek bir optimizasyona
+atfetmek için ölçüm yeterli değildir.
+
+## Ana dal entegrasyonu
+
+Ölçüm sürerken ana dala giren #880 (`c225f911`) royalty düzeltmesi tümüyle
+korundu; business-rules, ilgili testler, gerçek PNG ve sürüm notu birleştirildi.
+Bu değişiklik `resolveOrderLicensor` sınıflandırmasını etkiler; ortak sıralama
+ve okuyucu işlevlerini değiştirmez. Yukarıdaki süreler entegrasyon öncesi
+`41789cca` adayına aittir; yeni royalty sınıflandırma maliyeti ölçülmüş sayılmaz.
+Faz 5 baz çizgisi birleşik uygulamadan alınacaktır.
+
+İlk entegrasyon test komutunda geçici veri kökü tanımlanmadığı için dört dosya
+varsayılan ev dizini oluşturma hatasıyla test gövdelerine giremedi. Log korunur.
+Testler değiştirilmeden komut ayrı demo app/local/server/temp/config yollarıyla
+yeniden çalıştırıldı: aynı filtre + `dtr-manufacturer-licensor`, **139 dosya /
+803 test PASS**, fail/skip/cancel 0. i18n **0 / baseline 0**, **25 sürüm notu
+PASS**. Ardından birleşik uygulamada TR/açık ve EN/koyu altı satırlık gerçek
+Koleksiyon kabulü yeniden PASS oldu; iki PNG incelendi. Sürüm notu doğrulayıcı
+son PNG'den sonra tekrar PASS oldu. Kod testten sonra değiştirilmedi.
 
 ## Yayın ve risk
 

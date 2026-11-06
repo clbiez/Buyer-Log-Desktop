@@ -1,0 +1,1 @@
+{"screenshot":"/tmp/phase-4-integrated-ui-en-dark.png","evidence":"/tmp/buyerlog-perf-ui-FBVOeA"}
