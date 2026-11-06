@@ -1,0 +1,15 @@
+✔ benchmark retains refresh telemetry without copying raw comparison rows into reports (5.30348ms)
+✔ benchmark retries only transient GET health/status failures, never refresh POST (29.637031ms)
+✔ benchmark health quantiles retain failed attempts and separate refresh samples (0.745557ms)
+✔ benchmark parses runtime stalls without dropping the original evidence (1.660004ms)
+✔ benchmark rejects stale generation, source revision and wrong row count (1.230137ms)
+✔ benchmark records three distinct events, excludes user wait and fixes task window (1.569531ms)
+✔ benchmark closes each renderer even if measurement or screenshot fails (0.650388ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 56.03382

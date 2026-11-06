@@ -1,0 +1,43 @@
+✔ synthetic fixture seeds a recently checked maintenance state without overwriting existing state (28.100847ms)
+✔ heap sampling reads metrics without forcing GC and bounds unresponsive protocol calls (21.658619ms)
+✔ real benchmark wait predicates reject missing probes during document navigation (7.529359ms)
+✔ benchmark retains refresh telemetry without copying raw comparison rows into reports (0.471958ms)
+✔ benchmark retries only transient GET health/status failures, never refresh POST (2.42093ms)
+✔ benchmark health quantiles retain failed attempts and separate refresh samples (0.979116ms)
+✔ benchmark separates missing health endpoint latency from available status latency (0.684808ms)
+✔ benchmark parses runtime stalls without dropping the original evidence (0.515417ms)
+✔ benchmark rejects stale generation, source revision and wrong row count (1.565256ms)
+✔ benchmark records three distinct events, excludes user wait and fixes task window (0.78569ms)
+✖ renderer delay in handling automatic Continue remains system time (1.605182ms)
+✔ benchmark closes each renderer even if measurement or screenshot fails (0.612147ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 11
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 75.155516
+
+✖ failing tests:
+
+test at tests/startup-benchmark.test.js:107:1
+✖ renderer delay in handling automatic Continue remains system time (1.605182ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  700 !== 0
+
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/startup-benchmark.test.js:115:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 700,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

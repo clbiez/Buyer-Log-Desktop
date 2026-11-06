@@ -1,0 +1,26 @@
+✖ benchmark retains refresh telemetry without copying raw comparison rows into reports (5.295728ms)
+✔ benchmark retries only transient GET health/status failures, never refresh POST (13.68143ms)
+✔ benchmark health quantiles retain failed attempts and separate refresh samples (12.723343ms)
+✔ benchmark parses runtime stalls without dropping the original evidence (9.520394ms)
+✔ benchmark rejects stale generation, source revision and wrong row count (1.825881ms)
+✔ benchmark records three distinct events, excludes user wait and fixes task window (2.980806ms)
+✔ benchmark closes each renderer even if measurement or screenshot fails (2.478771ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 87.569372
+
+✖ failing tests:
+
+test at tests/startup-benchmark.test.js:6:1
+✖ benchmark retains refresh telemetry without copying raw comparison rows into reports (5.295728ms)
+  TypeError: compactRefreshStatus is not a function
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/startup-benchmark.test.js:8:17)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)

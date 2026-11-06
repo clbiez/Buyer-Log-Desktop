@@ -1,0 +1,128 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const os = require('node:os');
+const { requestJson, summarizeHealth, parseStalls, validateMeasurement, installProbe, measureModules, compactRefreshStatus, readRendererMetrics, initializeBenchmarkState } = require('../scripts/lib/startup-benchmark');
+
+test('synthetic fixture seeds a recently checked maintenance state without overwriting existing state',async t=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-benchmark-state-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  const now=Date.parse('2026-11-06T00:00:00Z');initializeBenchmarkState(root,now);
+  const file=path.join(root,'local/data-cleanup-state.json'),before=fs.readFileSync(file);
+  assert.deepEqual(JSON.parse(before),{schemaVersion:1,lastCheckAt:'2026-11-06T00:00:00.000Z'});
+  const {createDataCleanup}=require('../server/lib/data-cleanup');
+  const cleanup=createDataCleanup({roots:{localDataRoot:path.join(root,'local')},now:()=>now+1000});
+  assert.deepEqual(await cleanup.weeklyCheck(),JSON.parse(before),'weekly job must leave a recently checked fixture untouched');
+  initializeBenchmarkState(root,now+2000);assert.deepEqual(fs.readFileSync(file),before);
+});
+
+test('heap sampling reads metrics without forcing GC and bounds unresponsive protocol calls',async()=>{
+  const calls=[];const cdp={send:async(method)=>{calls.push(method);if(method==='Performance.getMetrics')return {metrics:[{name:'JSHeapUsedSize',value:123}]};if(method==='Memory.getDOMCounters')return {nodes:42};},detach:async()=>calls.push('detach')};
+  const context={newCDPSession:async()=>cdp};
+  assert.deepEqual(await readRendererMetrics(context,{},100),{jsHeapUsedBytes:123,dom:{nodes:42},heapSampling:'uncollected'});
+  assert.deepEqual(calls,['Performance.enable','Performance.getMetrics','Memory.getDOMCounters','detach']);
+  calls.length=0;cdp.send=()=>new Promise(()=>{});
+  await assert.rejects(readRendererMetrics(context,{},20),/Performance.enable.*timed out/);
+  assert.deepEqual(calls,['detach']);
+});
+
+test('real benchmark wait predicates reject missing probes during document navigation',()=>{
+  const source=fs.readFileSync(path.join(__dirname,'../scripts/benchmark-startup-orders.js'),'utf8');
+  const lines=source.split('\n').filter(line=>line.includes('page.waitForFunction(')&&(/primaryScreenReadyMs|startupCompleteMs/.test(line)));
+  assert.equal(lines.length,2);
+  for(const line of lines){
+    const predicate=line.slice(line.indexOf('page.waitForFunction(')+'page.waitForFunction('.length,line.indexOf(',null,'));
+    for(const probe of [undefined,{}, {primaryScreenReadyMs:null,startupReadyMs:null,startupCompleteMs:null}]){
+      assert.equal(vm.runInNewContext('('+predicate+')()',{window:{__startupProbe:probe}}),false,'missing events must not be ready');
+    }
+    assert.equal(vm.runInNewContext('('+predicate+')()',{window:{__startupProbe:{primaryScreenReadyMs:0,startupReadyMs:1,startupCompleteMs:2}}}),true);
+  }
+});
+
+test('benchmark retains refresh telemetry without copying raw comparison rows into reports',()=>{
+  const status={running:false,elapsedMs:5000,operations:[{operation:'file-parse',durationMs:123}],summary:{newOrderCount:30000,newlyAppeared:[{raw:'synthetic-row'}],nested:{changed:[1,2]}}};
+  const compact=compactRefreshStatus(status);
+  assert.deepEqual(compact.summary,{newOrderCount:30000,newlyAppeared:{count:1},nested:{changed:{count:2}}});
+  assert.deepEqual(compact.operations,status.operations);assert.equal(compact.elapsedMs,5000);
+  assert.equal(status.summary.newlyAppeared.length,1,'server status is not mutated');
+});
+
+test('benchmark retries only transient GET health/status failures, never refresh POST', async () => {
+  for (const [url, method, attempts] of [['/api/health','GET',3],['/api/refresh-status','GET',3],['/api/refresh','POST',1],['/api/data','GET',1],['/api/health','POST',1]]) {
+    let calls=0;
+    await assert.rejects(requestJson('http://local'+url,{method},{fetchImpl:async()=>{calls++;throw Error('offline');},delayImpl:async()=>{}}),/offline/);
+    assert.equal(calls,attempts,url+' '+method);
+  }
+  let calls=0;
+  await assert.rejects(requestJson('http://local/api/refresh-status',{}, {fetchImpl:async()=>{calls++;return {ok:false,status:403,json:async()=>({code:'FORBIDDEN'})};}}),/403/);
+  assert.equal(calls,1,'authorization failures must not be retried');
+});
+
+test('benchmark health quantiles retain failed attempts and separate refresh samples', () => {
+  const samples=[{phase:'refresh',ms:20,status:200},{phase:'refresh',ms:100,status:200},{phase:'refresh',ms:900,error:'timeout'},{phase:'startup',ms:10,status:200}];
+  assert.deepEqual(summarizeHealth(samples,'refresh'),{count:3,successful:2,failed:1,p50Ms:100,p95Ms:900,maxMs:900});
+  assert.equal(summarizeHealth([], 'refresh').p95Ms,null);
+});
+
+test('benchmark separates missing health endpoint latency from available status latency',()=>{
+  const samples=[{phase:'refresh',endpoint:'/api/health',status:404,error:'not found',ms:300},
+    {phase:'refresh',endpoint:'/api/status',status:200,ms:10}];
+  assert.deepEqual(summarizeHealth(samples,'refresh','/api/status'),{count:1,successful:1,failed:0,p50Ms:10,p95Ms:10,maxMs:10});
+  assert.equal(summarizeHealth(samples,'refresh','/api/health').failed,1);
+});
+
+test('benchmark parses runtime stalls without dropping the original evidence', () => {
+  const line='[RUNTIME] event-loop-stall blockedMs=3721 cpuMs=4088 heapUsedMb=900';
+  assert.deepEqual(parseStalls('noise\n'+line+'\n[RUNTIME] stall-profile top1 200ms parse'),[{line,blockedMs:3721,cpuMs:4088,heapUsedMb:900}]);
+});
+
+test('benchmark rejects stale generation, source revision and wrong row count', () => {
+  const expected={rows:{orders:30000,cp:24982,koleksiyon:0,overview:30000},generation:'g1',sourceRevision:'r1',revisions:{orders:2,suppFob:3}};
+  const valid={module:'orders',rows:30000,generation:'g1',sourceRevision:'r1',revisions:{orders:2,suppFob:3},projectionGenerations:['g1']};
+  assert.doesNotThrow(()=>validateMeasurement(expected,valid));
+  for (const patch of [{rows:29999},{generation:'g0'},{sourceRevision:'r0'},{revisions:{orders:1,suppFob:3}},{projectionGenerations:['g0']}]) assert.throws(()=>validateMeasurement(expected,{...valid,...patch}),/mismatch/i);
+  assert.throws(()=>validateMeasurement(expected,{...valid,projectionGenerations:[]}),/missing/i);
+});
+
+test('benchmark records three distinct events, excludes user wait and fixes task window', () => {
+  const old={window:global.window,performance:global.performance,PerformanceObserver:global.PerformanceObserver};
+  let now=0,observe;const listeners={};
+  global.window={addEventListener:(name,fn)=>listeners[name]=fn};
+  Object.defineProperty(global,'performance',{configurable:true,value:{now:()=>now}});
+  global.PerformanceObserver=class {constructor(fn){observe=fn;}observe(){} disconnect(){}};
+  try {
+    installProbe({sampleWindowMs:1000});
+    now=100;listeners['bl:primary-screen-ready']();now=200;listeners['bl:startup-ready']();
+    now=700;window.__startupProbe.continueAtMs=now;now=800;listeners['bl:startup-complete']();
+    observe({getEntries:()=>[{startTime:900,duration:300},{startTime:1200,duration:100}]});
+    const p=window.__startupProbe;
+    assert.equal(p.primaryScreenReadyMs,100);assert.equal(p.startupReadyMs,200);assert.equal(p.startupCompleteMs,800);
+    assert.equal(p.userWaitMs,500);assert.equal(p.systemStartupCompleteMs,300);
+    assert.deepEqual(p.longTasks,[{startTime:900,duration:100}]);
+  } finally {for(const [key,value] of Object.entries(old))Object.defineProperty(global,key,{configurable:true,writable:true,value});}
+});
+
+test('renderer delay in handling automatic Continue remains system time',()=>{
+  const old={window:global.window,performance:global.performance,PerformanceObserver:global.PerformanceObserver};
+  let now=0;const events={};global.window={addEventListener:(name,fn)=>events[name]=fn};
+  Object.defineProperty(global,'performance',{configurable:true,value:{now:()=>now}});
+  global.PerformanceObserver=class{observe(){}};
+  try{
+    installProbe({sampleWindowMs:1000});now=100;events['bl:primary-screen-ready']();now=200;events['bl:startup-ready']();
+    window.__startupProbe.continueIntentAtMs=200;window.__startupProbe.continueAtMs=900;now=1000;events['bl:startup-complete']();
+    assert.equal(window.__startupProbe.userWaitMs,0);assert.equal(window.__startupProbe.continueDispatchDelayMs,700);
+    assert.equal(window.__startupProbe.systemStartupCompleteMs,1000);
+  }finally{for(const [key,value]of Object.entries(old))Object.defineProperty(global,key,{configurable:true,writable:true,value});}
+});
+
+test('benchmark closes each renderer even if measurement or screenshot fails', async () => {
+  const events=[];
+  const context={newPage:async()=>{events.push('open');return {close:async()=>events.push('close')};}};
+  await measureModules(context,['cp','orders'],async(page,module)=>{events.push(module);return module;});
+  assert.deepEqual(events,['open','cp','close','open','orders','close']);
+  events.length=0;
+  await assert.rejects(measureModules(context,['cp','orders'],async()=>{throw Error('capture failed');}),/capture failed/);
+  assert.deepEqual(events,['open','close']);
+});

@@ -1,0 +1,63 @@
+✖ synthetic fixture seeds a recently checked maintenance state without overwriting existing state (4.914814ms)
+✔ heap sampling reads metrics without forcing GC and bounds unresponsive protocol calls (22.120507ms)
+✔ real benchmark wait predicates reject missing probes during document navigation (14.254764ms)
+✔ benchmark retains refresh telemetry without copying raw comparison rows into reports (0.895685ms)
+✔ benchmark retries only transient GET health/status failures, never refresh POST (4.707165ms)
+✔ benchmark health quantiles retain failed attempts and separate refresh samples (0.777719ms)
+✖ benchmark separates missing health endpoint latency from available status latency (3.651838ms)
+✔ benchmark parses runtime stalls without dropping the original evidence (0.84522ms)
+✔ benchmark rejects stale generation, source revision and wrong row count (1.28454ms)
+✔ benchmark records three distinct events, excludes user wait and fixes task window (1.756323ms)
+✔ benchmark closes each renderer even if measurement or screenshot fails (4.261329ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 9
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 70.912155
+
+✖ failing tests:
+
+test at tests/startup-benchmark.test.js:10:1
+✖ synthetic fixture seeds a recently checked maintenance state without overwriting existing state (4.914814ms)
+  TypeError: initializeBenchmarkState is not a function
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/startup-benchmark.test.js:12:48)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+
+test at tests/startup-benchmark.test.js:69:1
+✖ benchmark separates missing health endpoint latency from available status latency (3.651838ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   count: 2,
+  +   failed: 1,
+  +   maxMs: 300,
+  -   count: 1,
+  -   failed: 0,
+  -   maxMs: 10,
+      p50Ms: 10,
+  +   p95Ms: 300,
+  -   p95Ms: 10,
+      successful: 1
+    }
+
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/startup-benchmark.test.js:72:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [Object],
+    expected: [Object],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
