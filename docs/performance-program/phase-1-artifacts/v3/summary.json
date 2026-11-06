@@ -1,0 +1,108 @@
+{
+  "before": {
+    "runs": 3,
+    "refreshMs": 53231,
+    "refreshRangeMs": [
+      42460,
+      57389
+    ],
+    "modules": {
+      "overview": {
+        "primaryScreenReadyMs": 4259.10000000149,
+        "startupReadyMs": 38715.199999999255,
+        "systemStartupCompleteMs": 152689.5,
+        "continueDispatchDelayMs": 113963.5,
+        "elapsedMs": 152894.09946199998,
+        "jsHeapUsedBytes": 737051700,
+        "rendererRssBytes": 1407959040
+      },
+      "koleksiyon": {
+        "primaryScreenReadyMs": 12842.60000000149,
+        "startupReadyMs": 31234.800000000745,
+        "systemStartupCompleteMs": 31291.89999999851,
+        "continueDispatchDelayMs": 36.600000001490116,
+        "elapsedMs": 31358.544253,
+        "jsHeapUsedBytes": 179672240,
+        "rendererRssBytes": 796139520
+      },
+      "cp": {
+        "primaryScreenReadyMs": 5925.10000000149,
+        "startupReadyMs": 54940.89999999851,
+        "systemStartupCompleteMs": 190161.5,
+        "continueDispatchDelayMs": 137400.40000000224,
+        "elapsedMs": 190508.05007400003,
+        "jsHeapUsedBytes": 583341592,
+        "rendererRssBytes": 1289191424
+      },
+      "orders": {
+        "primaryScreenReadyMs": 6427.60000000149,
+        "startupReadyMs": 22684.400000002235,
+        "systemStartupCompleteMs": 22761,
+        "continueDispatchDelayMs": 45.79999999701977,
+        "elapsedMs": 23032.215511000017,
+        "jsHeapUsedBytes": 261453304,
+        "rendererRssBytes": 1168748544
+      }
+    },
+    "switches": {
+      "cp": 13998.39999999851,
+      "orders": 2153.900000002235,
+      "koleksiyon": 99.40000000223517
+    },
+    "statusRefreshP95Ms": 25.24565000000075,
+    "health404RefreshP95Ms": 645.9997640000001
+  },
+  "after": {
+    "runs": 3,
+    "refreshMs": 48088,
+    "refreshRangeMs": [
+      46338,
+      49620
+    ],
+    "modules": {
+      "overview": {
+        "primaryScreenReadyMs": 4542.300000000745,
+        "startupReadyMs": 37011.699999999255,
+        "systemStartupCompleteMs": 124498.09999999776,
+        "continueDispatchDelayMs": 92934.09999999776,
+        "elapsedMs": 124776.12505399997,
+        "jsHeapUsedBytes": 663005200,
+        "rendererRssBytes": 1298595840
+      },
+      "koleksiyon": {
+        "primaryScreenReadyMs": 12863.5,
+        "startupReadyMs": 31478.300000000745,
+        "systemStartupCompleteMs": 31569.300000000745,
+        "continueDispatchDelayMs": 80.79999999701977,
+        "elapsedMs": 31630.45086099999,
+        "jsHeapUsedBytes": 179808836,
+        "rendererRssBytes": 797040640
+      },
+      "cp": {
+        "primaryScreenReadyMs": 6662.70000000298,
+        "startupReadyMs": 60584.199999999255,
+        "systemStartupCompleteMs": 193531.8999999985,
+        "continueDispatchDelayMs": 132937,
+        "elapsedMs": 193949.29152200004,
+        "jsHeapUsedBytes": 590284268,
+        "rendererRssBytes": 1292390400
+      },
+      "orders": {
+        "primaryScreenReadyMs": 6635.70000000298,
+        "startupReadyMs": 23330.5,
+        "systemStartupCompleteMs": 23402.70000000298,
+        "continueDispatchDelayMs": 66.40000000223517,
+        "elapsedMs": 23653.028954999987,
+        "jsHeapUsedBytes": 237710040,
+        "rendererRssBytes": 1033777152
+      }
+    },
+    "switches": {
+      "cp": 11011.60000000149,
+      "orders": 1841,
+      "koleksiyon": 111.90000000223517
+    },
+    "statusRefreshP95Ms": 27.209485999999742,
+    "health404RefreshP95Ms": 754.0518459999985
+  }
+}
