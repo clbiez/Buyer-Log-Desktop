@@ -39474,11 +39474,18 @@ function cpRowToKolRow(r,allocateId=true){
   const date=(key)=>toISODate(r[key])||'';
   const manufacturer=canonicalText('manufacturer')||canonicalText('subManufacturer');
   const subManufacturer=canonicalText('subManufacturer');
+  /* Koleksiyonda onaylı üretici, siparişi fiilen üreten Sub-Manufacturer'dır
+     (yoksa Manufacturer). Onaylı fiyat nihai FOB değil Supp. FOB'dur: Koleksiyon
+     FOB'u bu fiyata royalty + hologram'ı kendisi ekler. Nihai FOB'u fiyat
+     olarak yazmak bu masrafları iki kez eklerdi. Supp. FOB yoksa fiyat
+     uydurulmaz; satır onaylı fiyatsız açılır. */
+  const producer=subManufacturer||manufacturer;
   const sourceFob=value('fob');
   const quotedFob=(sourceFob!==null&&sourceFob!==undefined&&String(sourceFob).trim()!=='')
     ?String(sourceFob).trim():'';
   const supplierFob=norm(value('supplierFob'))||'';
-  const validQuote=Number.isFinite(kolParseMoneyNum(quotedFob))&&kolParseMoneyNum(quotedFob)>0;
+  const validQuote=Number.isFinite(kolParseMoneyNum(supplierFob))&&kolParseMoneyNum(supplierFob)>0;
+  const deliveryType=normalizeTransitDelType(value('deliveryType'))||'';
   const inStoreDate=canonicalDate('inStore');
   // LCW Merch Calendar, never the browser locale/ISO week, determines MB periods.
   const schedule=inStoreDate?kolScheduleFromWeekMonday(inStoreDate):null;
@@ -39508,12 +39515,12 @@ function cpRowToKolRow(r,allocateId=true){
     buyer:canonicalText('buyer'),
     season:canonicalText('season'),
     country:canonicalText('country'),
-    delType:normalizeTransitDelType(value('deliveryType'))||'Gemi',
-    buyingSampleManufacturer:manufacturer,
-    confirmedManufacturer:manufacturer,
-    pricing:manufacturer&&validQuote?{[manufacturer]:quotedFob}:{},
+    delType:deliveryType||'Gemi',
+    buyingSampleManufacturer:producer,
+    confirmedManufacturer:producer,
+    pricing:producer&&validQuote?{[producer]:supplierFob}:{},
     pricingSent:{},
-    // Source order FOB is retained independently as the Collection FOB value.
+    // Kaynak nihai FOB; Koleksiyon FOB'u kaydetmeden önce kuraldan yeniden hesaplanır.
     fob:quotedFob,
     targetPrice:supplierFob,
     exFactory:canonicalDate('exFactory')||date('Original Ex-factory'),
@@ -39538,7 +39545,7 @@ function cpRowToKolRow(r,allocateId=true){
       remainingUnits:r['Remaining Units']??'',
       fabricCategory:text('Kumaş Kategorisi'),fabricComposition:text('Karışım'),
       yarn:text('İplik No'),weight:text('Gramaj'),fabricCountry:text('Kumaşçı Ülkesi'),
-      sourceFob:quotedFob,supplierFob,
+      sourceFob:quotedFob,supplierFob,deliveryType,
     }
   });
 }
@@ -39760,22 +39767,53 @@ function cpKolSelectedSourceRows(){
   return (module==='orders'?filteredOrders():filteredCP()).filter(row=>selected?.has(row._id));
 }
 function cpKolBackfillPlan(rows){
+  // Eşleşme MB ayı + PLM ID + Renk Kodu; mevcut kayıt yerinde güncellenir.
   return window.BLCollectionOrderBackfill.plan(rows.map(row=>({key:cpKolSourceIdentity(row,true),row:cpRowToKolRow(row,false)})),
-    kolRows,kolRows.filter(row=>!row._sourceOrders?.length).map(row=>cpKolSourceIdentity(row)));
+    kolRows,kolRows.filter(row=>!row._sourceOrders?.length).map(row=>cpKolSourceIdentity(row)),
+    {monthKey:kolMonthCode,read:kolEffectiveValue,pricing:kolEffectivePricing,equal:editableValuesEqual});
+}
+function cpKolBackfillOfferLabel(offer){
+  return offer?`${offer.name} · ${kolFormatMoneyDisplay(String(offer.raw||offer.price))}`:'—';
 }
 function cpKolBackfillPreview(plan,trigger){
   return new Promise(resolve=>{
     const overlay=document.createElement('div');overlay.id='cpKolBackfillPreview';overlay.className='warnOverlay blBulkOverlay';overlay.dataset.uiMigrated='dialog';
     const en=appLang==='en',T=(tr,english)=>en?english:tr;
     const created=plan.changes.filter(change=>change.existingId==null).length,updated=plan.changes.length-created;
-    const cells=values=>values.map(value=>`<td>${escapeHtml(value??'')}</td>`).join('');
-    const rows=plan.changes.slice(0,100).map(({existingId,row})=>`<tr>${cells([
-      existingId==null?T('Yeni','New'):T('Birleştir','Merge'),row.modelKod,kolMonthDisplay(row.inStoreMonth)||'—',row._sourceOrderDetails?.sourceFob??row.fob,
-      row.country,row.confirmedManufacturer,row.quantity,row.opd||'—',row.exFactory||'—',
-      row._sourceOrders.map(order=>order.orderCode).filter(Boolean).join(', ')])}</tr>`).join('');
+    const pending=plan.changes.filter(change=>change.price?.requiresApproval).length;
+    const conflicts=plan.changes.filter(change=>change.price?.conflict).length,missing=plan.changes.filter(change=>change.price?.missing).length;
+    const cell=value=>`<td>${escapeHtml(value??'')}</td>`;
+    const priceCell=(change,index)=>{
+      const price=change.price||{};
+      if(price.requiresApproval)return `<td><label class="cpKolBackfillApprove"><input type="checkbox" data-price-approve="${index}"> ${escapeHtml(T('Fiyatı/üreticiyi güncelle','Update price/manufacturer'))}</label></td>`;
+      if(price.conflict)return cell(T('Farklı fiyatlar: Koleksiyonda elle onaylayın','Different prices: confirm manually in Collection'));
+      if(price.missing)return cell(T('Supp. FOB yok: fiyat taşınmaz','No Supp. FOB: price not copied'));
+      return cell(change.existingId==null?T('Yeni kayıt','New record'):T('Aynı','Unchanged'));
+    };
+    const rows=plan.changes.slice(0,100).map((change,index)=>{
+      const row=change.row,action=change.existingId==null?T('Yeni','New')
+        :(change.matches>1?T(`Güncelle (${change.matches} eşleşme; en eski kayıt)`,`Update (${change.matches} matches; oldest record)`):T('Güncelle','Update'));
+      const orders=(change.existingId==null?row._sourceOrders:change.sourceOrders)||[];
+      return `<tr>${[action,row.modelKod,row.colourCode,kolMonthDisplay(row.inStoreMonth)||'—',
+        change.existingId==null?'—':cpKolBackfillOfferLabel(change.price?.current),cpKolBackfillOfferLabel(change.price?.proposed)].map(cell).join('')}${priceCell(change,index)}${[
+        row.country,row.quantity,row.opd||'—',row.exFactory||'—',orders.map(order=>order.orderCode).filter(Boolean).join(', ')].map(cell).join('')}</tr>`;
+    }).join('');
     const missingPeriod=plan.changes.filter(({row})=>!row.inStoreMonth).length;
-    overlay.innerHTML=`<div class="modalCard blBulkCard cpKolBackfillCard" role="dialog" aria-modal="true" aria-labelledby="cpKolBackfillTitle"><div class="modalTitle" id="cpKolBackfillTitle">${T('Siparişlerden Koleksiyon Oluştur','Build Collection from Orders')}</div><div class="blBulkBody"><p>${escapeHtml(T(`${created} yeni satır · ${updated} mevcut satıra ekleme · ${plan.duplicates} tekrar atlandı`,`${created} new rows · ${updated} existing rows extended · ${plan.duplicates} duplicates skipped`))}</p><p>${T('Aynı model ve MB ayında adetler toplanır; en erken OPD ve en geç Ex-Factory alınır. Fiyat, tedarikçi veya ülke farklıysa ayrı satır açılır.','Quantities are summed for the same model and MB month, using the earliest OPD and latest Ex-Factory. Different prices, suppliers or countries create separate rows.')}</p>${missingPeriod?`<p role="status">${escapeHtml(T(`${missingPeriod} satırın MB ayı Merch Calendar ile çözülemedi; bu siparişler ayrı tutulur.`,`${missingPeriod} rows have no MB month resolved by Merch Calendar; these orders are kept separate.`))}</p>`:''}<div class="blBulkTableWrap"><table><thead><tr>${[T('İşlem','Action'),T('Model','Model'),T('MB ayı','MB month'),'FOB ($)',T('Ülke','Country'),T('Onaylı tedarikçi','Confirmed supplier'),T('Adet','Quantity'),'OPD','Ex-Factory',T('Kaynak siparişler','Source orders')].map(label=>`<th>${escapeHtml(label)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>${plan.changes.length>100?`<p>${T('İlk 100 satır gösteriliyor; aktarım tüm satırları kapsar.','Showing the first 100 rows; all rows will be imported.')}</p>`:''}<p>${T('Kaynak siparişler korunur. İşlem Koleksiyonda tek adımda geri alınabilir.','Source orders are preserved. You can undo this operation in one step in Collection.')}</p></div><div class="modalFoot"><button type="button" class="tbtn" data-backfill-cancel>${T('Vazgeç','Cancel')}</button><button type="button" class="tbtn primary" data-backfill-apply>${T('Koleksiyona Aktar','Import into Collection')}</button></div></div>`;
-    const close=accepted=>{window.BLLayerSystem?.closeDialog(overlay);overlay.remove();resolve(accepted);};
+    const headers=[T('İşlem','Action'),T('Model','Model'),T('Renk Kodu','Colour Code'),T('MB ayı','MB month'),T('Mevcut onaylı üretici · Supp. FOB','Current confirmed manufacturer · Supp. FOB'),
+      T('Siparişteki Sub MFR · Supp. FOB','Order Sub MFR · Supp. FOB'),T('Fiyat onayı','Price approval'),T('Ülke','Country'),T('Adet','Quantity'),'OPD','Ex-Factory',T('Kaynak siparişler','Source orders')];
+    const approveAll=pending?`<p><label class="cpKolBackfillApprove"><input type="checkbox" data-price-approve-all> ${escapeHtml(T(`Fiyatı/üreticisi farklı ${pending} kaydın tamamını güncelle`,`Update all ${pending} records with a different price/manufacturer`))}</label></p>`:'';
+    overlay.innerHTML=`<div class="modalCard blBulkCard cpKolBackfillCard" role="dialog" aria-modal="true" aria-labelledby="cpKolBackfillTitle"><div class="modalTitle" id="cpKolBackfillTitle">${T('Siparişlerden Koleksiyon Oluştur','Build Collection from Orders')}</div><div class="blBulkBody"><p>${escapeHtml(T(`${created} yeni satır · ${updated} mevcut kayıt güncellenecek · ${plan.unchanged||0} kayıt zaten güncel · ${plan.duplicates} tekrar atlandı`,`${created} new rows · ${updated} existing records to update · ${plan.unchanged||0} records already up to date · ${plan.duplicates} duplicates skipped`))}</p><p>${escapeHtml(T('Eşleşme MB ayı + PLM ID + Renk Kodu ile yapılır. Koleksiyonda olan kayıt çoğaltılmaz, yerinde güncellenir; fiyatlama geçmişi, teklifler, fiyat avantajları, landed kıyasları ve Endeksmatik korunur. MAG, buyer, ülke, tarihler, adet, kumaş ve diğer sipariş alanları siparişten taşınır; siparişte boş olan alan mevcut değeri silmez.','Records are matched by MB month + PLM ID + Colour Code. A record already in Collection is not duplicated but updated in place; pricing history, quotes, price advantages, landed comparisons and Endeksmatik are kept. MAG, buyer, country, dates, quantity, fabric and other order fields are copied from the order; a field that is blank in the order does not clear the existing value.'))}</p><p>${escapeHtml(T('Onaylı üretici Sub-Manufacturer, onaylı fiyat Supp. FOB olarak alınır; FOB, royalty ve hologram ile Koleksiyonda hesaplanır. Mevcut kaydın onaylı üreticisi veya fiyatı farklıysa yalnız işaretlediğiniz kayıtlarda değişir.','The confirmed manufacturer is taken from Sub-Manufacturer and the confirmed price from Supp. FOB; Collection calculates FOB with royalty and hologram. When an existing record has a different confirmed manufacturer or price, it changes only for the records you tick.'))}</p>${pending?`<p role="status">${escapeHtml(T(`${pending} kayıtta fiyat/üretici farkı onayınızı bekliyor.`,`${pending} records have a price/manufacturer difference awaiting your approval.`))}</p>`:''}${conflicts?`<p role="status">${escapeHtml(T(`${conflicts} kayıtta siparişler farklı fiyat/üretici taşıyor; fiyat otomatik değişmez.`,`${conflicts} records have orders with different prices/manufacturers; the price is not changed automatically.`))}</p>`:''}${missing?`<p role="status">${escapeHtml(T(`${missing} kayıtta Supp. FOB yok; nihai FOB fiyat olarak taşınmaz.`,`${missing} records have no Supp. FOB; the final FOB is not copied as the price.`))}</p>`:''}${missingPeriod?`<p role="status">${escapeHtml(T(`${missingPeriod} satırın MB ayı Merch Calendar ile çözülemedi; bu siparişler eşleştirilmeden ayrı tutulur.`,`${missingPeriod} rows have no MB month resolved by Merch Calendar; these orders are kept separate without matching.`))}</p>`:''}${approveAll}<div class="blBulkTableWrap"><table><thead><tr>${headers.map(label=>`<th>${escapeHtml(label)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>${plan.changes.length>100?`<p>${T('İlk 100 satır gösteriliyor; aktarım tüm satırları kapsar. Gösterilmeyen satırlarda fiyat farkı yalnız "tamamını güncelle" ile onaylanır.','Showing the first 100 rows; all rows will be imported. Price differences in hidden rows are approved only with "update all".')}</p>`:''}<p>${T('Kaynak siparişler korunur. İşlem Koleksiyonda tek adımda geri alınabilir.','Source orders are preserved. You can undo this operation in one step in Collection.')}</p></div><div class="modalFoot"><button type="button" class="tbtn" data-backfill-cancel>${T('Vazgeç','Cancel')}</button><button type="button" class="tbtn primary" data-backfill-apply>${T('Koleksiyona Aktar','Import into Collection')}</button></div></div>`;
+    const all=overlay.querySelector('[data-price-approve-all]');
+    const boxes=[...overlay.querySelectorAll('[data-price-approve]')];
+    all?.addEventListener('change',()=>boxes.forEach(box=>{box.checked=all.checked;}));
+    boxes.forEach(box=>box.addEventListener('change',()=>{if(all)all.checked=boxes.every(item=>item.checked);}));
+    const approvedSet=()=>{
+      const approved=new Set();
+      if(all?.checked)plan.changes.forEach((change,index)=>{if(change.price?.requiresApproval)approved.add(index);});
+      boxes.forEach(box=>{if(box.checked)approved.add(Number(box.dataset.priceApprove));});
+      return approved;
+    };
+    const close=accepted=>{window.BLLayerSystem?.closeDialog(overlay);overlay.remove();resolve(accepted?{approved:approvedSet()}:null);};
     overlay.querySelector('[data-backfill-cancel]').onclick=()=>close(false);
     overlay.querySelector('[data-backfill-apply]').onclick=()=>close(true);
     overlay.addEventListener('click',event=>{if(event.target===overlay)close(false);});
@@ -39783,6 +39821,38 @@ function cpKolBackfillPreview(plan,trigger){
     window.BLLayerSystem?.openDialog(overlay,{trigger,onClose:()=>close(false),initialFocus:'[data-backfill-cancel]'});
     window.BLMotionPlus?.play('overlay',overlay.querySelector('.modalCard'));
   });
+}
+/* Mevcut Koleksiyon kaydına sipariş verisini yazar. Satır kimliği, teklifler,
+   fiyatlama geçmişi, landed/Endeksmatik girdileri ve görsel aynen kalır. Fiyat
+   ve onaylı üretici yalnız kullanıcı onayladıysa değişir; önceki değer satırın
+   _orderPriceChanges izinde saklanır. */
+/* Alanı kalıtım kuralına göre yazar: renge özel alan (adet, renk …) yalnız bu
+   satırda kalır ve kardeş renklere sızmaz; modele bağlı alan ana satırda modelin
+   ortak değeri, bağlı bir renk varyantında o rengin açık override'ı olur. */
+function cpKolBackfillWriteField(row,key,value){
+  const api=window.BLCollectionModelGroups;
+  if(!api?.writeGroupedValue){row[key]=value;return row;}
+  kolRows=kolNormalizeModelGroups(api.writeGroupedValue(kolRows,row.id,key,value));
+  return kolRows.find(item=>String(item?.id)===String(row.id))||row;
+}
+function cpKolBackfillApplyUpdate(change,approved){
+  let row=kolRows.find(item=>String(item?.id)===String(change.existingId));
+  if(!row)return {updated:false,priced:false};
+  Object.entries(change.patch||{}).forEach(([key,value])=>{row=cpKolBackfillWriteField(row,key,value);});
+  row._sourceOrders=change.sourceOrders||row._sourceOrders||[];
+  let priced=false;
+  const offer=change.price?.proposed;
+  if(approved&&change.price?.requiresApproval&&offer){
+    row=cpKolBackfillWriteField(row,'pricing',{...kolEffectivePricing(row),[offer.name]:kolFormatMoneyDisplay(String(offer.raw||offer.price))});
+    const previous=change.price.current;
+    row.confirmedManufacturer=offer.name;
+    const trail=Array.isArray(row._orderPriceChanges)?row._orderPriceChanges:[];
+    row._orderPriceChanges=[...trail,{at:new Date().toISOString(),from:previous?{name:previous.name,price:previous.raw||String(previous.price)}:null,
+      to:{name:offer.name,price:offer.raw||String(offer.price)},orders:(change.sourceOrders||[]).map(order=>order.orderCode).filter(Boolean)}].slice(-20);
+    priced=true;
+  }
+  kolApplyRulePricing(row);
+  return {updated:true,priced};
 }
 let cpKolBackfillBusy=false;
 document.getElementById('cpCopyToKolBtn')?.addEventListener('click',async event=>{
@@ -39802,36 +39872,45 @@ document.getElementById('cpCopyToKolBtn')?.addEventListener('click',async event=
   }
   const plan=cpKolBackfillPlan(rows);
   if(!plan.changes.length){
-    showToast(appLang==='en'?'All selected orders are already in Collection.':'Seçili siparişlerin tamamı Koleksiyonda zaten mevcut.');
+    showToast(appLang==='en'?'The selected orders are already up to date in Collection.':'Seçili siparişler Koleksiyonda zaten güncel.');
     window.BLTableToolbarActionCleanup?.finish?.(btn,true);return;
   }
   const owner=kolWorkspaceOwnerId,revision=kolWorkspaceRevision,snapshot=JSON.stringify(kolRows),sourceSnapshot=JSON.stringify(rows);
   cpKolBackfillBusy=true;
   try{
-    if(!await cpKolBackfillPreview(plan,trigger||btn)){window.BLTableToolbarActionCleanup?.finish?.(btn);return;}
+    const decision=await cpKolBackfillPreview(plan,trigger||btn);
+    if(!decision){window.BLTableToolbarActionCleanup?.finish?.(btn);return;}
+    const approved=new Set(decision&&decision.approved&&typeof decision.approved[Symbol.iterator]==='function'?decision.approved:[]);
     if(!kolWorkspaceCanEdit||!kolIsOwnWorkspace()||owner!==kolWorkspaceOwnerId||revision!==kolWorkspaceRevision||snapshot!==JSON.stringify(kolRows)||sourceSnapshot!==JSON.stringify(cpKolSelectedSourceRows())){
       showToast(appLang==='en'?'The selection or Collection changed during preview. Open the preview again.':'Önizleme sırasında seçim veya Koleksiyon değişti. Önizlemeyi yeniden açın.');
       window.BLTableToolbarActionCleanup?.finish?.(btn,false);return;
     }
     window.BLTableToolbarActionCleanup?.begin?.(btn);
-    const oldRows=kolRows,oldNextId=kolNextId;
+    const oldNextId=kolNextId;
     const history={undo:kolUndoStack.slice(),summary:kolUndoSummaryStack.slice(),redo:kolRedoStack.slice(),redoSummary:kolRedoSummaryStack.slice()};
     kolPushUndo();
-    const created=[],updated=new Map();
-    plan.changes.forEach(change=>{
-      const row=change.row;
-      if(change.existingId==null){row.id=kolNextId++;row.modelGroupId='mg_order_backfill_'+row.id;created.push(row);}
-      else updated.set(change.existingId,row);
+    const created=[],touched=[];let updated=0,priced=0;
+    plan.changes.forEach((change,index)=>{
+      if(change.existingId==null){
+        const row=change.row;row.id=kolNextId++;row.modelGroupId='mg_order_backfill_'+row.id;
+        kolApplyRulePricing(row);created.push(row);touched.push(row.id);return;
+      }
+      const result=cpKolBackfillApplyUpdate(change,approved.has(index));
+      if(result.updated){updated++;touched.push(change.existingId);}
+      if(result.priced)priced++;
     });
-    kolRows=[...created,...kolRows.map(row=>updated.get(row.id)||row)];
+    kolRows=[...created,...kolRows];
     if(!saveKolRows()){
-      kolRows=oldRows;kolNextId=oldNextId;
+      kolRows=JSON.parse(snapshot);kolNextId=oldNextId;
       kolUndoStack=history.undo;kolUndoSummaryStack=history.summary;kolRedoStack=history.redo;kolRedoSummaryStack=history.redoSummary;updateKolUndoRedoButtons();
       window.BLTableToolbarActionCleanup?.finish?.(btn,false);return;
     }
-    kolSelected=new Set(plan.changes.map(change=>change.row.id));
+    kolSelected=new Set(touched);
     if(document.body.dataset.activeTab==='koleksiyon')renderKol();
-    showToast(appLang==='en'?`${created.length} new Collection rows · ${updated.size} rows extended · ${plan.duplicates} duplicates skipped. Undo is available in Collection.`:`Koleksiyonda ${created.length} yeni satır · ${updated.size} satıra ekleme · ${plan.duplicates} tekrar atlandı. Koleksiyondan geri alınabilir.`);
+    const skippedPrices=plan.changes.filter(change=>change.price?.requiresApproval).length-priced;
+    showToast(appLang==='en'
+      ?`${created.length} new Collection rows · ${updated} records updated · ${priced} prices/manufacturers changed${skippedPrices?` · ${skippedPrices} price differences left unchanged`:''} · ${plan.duplicates} duplicates skipped. Undo is available in Collection.`
+      :`Koleksiyonda ${created.length} yeni satır · ${updated} kayıt güncellendi · ${priced} fiyat/üretici değişti${skippedPrices?` · ${skippedPrices} fiyat farkı değiştirilmedi`:''} · ${plan.duplicates} tekrar atlandı. Koleksiyondan geri alınabilir.`);
     window.BLTableToolbarActionCleanup?.finish?.(btn,true);
   }finally{cpKolBackfillBusy=false;}
 });

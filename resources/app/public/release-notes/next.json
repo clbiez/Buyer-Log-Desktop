@@ -1,7 +1,4 @@
 {
-  "schemaVersion": 1,
-  "publishedAt": "2026-11-05",
-  "bootstrapVisual": false,
   "title": {
     "tr": "İki bölmeli sütun dondurma · Çalışma alanı ve modül geçişi iyileştirmeleri ve LCW AI geçmişi · Backlog performansı",
     "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history · Backlog performance"
@@ -10,7 +7,39 @@
     "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır.",
     "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still."
   },
+  "schemaVersion": 1,
+  "publishedAt": "2026-11-05",
+  "bootstrapVisual": false,
   "changes": [
+    {
+      "id": "loading-approval-exfactory",
+      "type": "fix",
+      "module": {
+        "tr": "CP, Siparişler ve Backlog",
+        "en": "CP, Orders and Backlog"
+      },
+      "title": {
+        "tr": "Geç yükleme onayı Ex-Factory hesaplarını günceller",
+        "en": "Late loading approval updates Ex-Factory calculations"
+      },
+      "body": {
+        "tr": "ASAS yükleme onayı geçerli Ex-Factory tarihinden sonraysa Buyer Log bu tarihi otomatik Ex-Factory revizyonu olarak kullanır. Ex→Retail, LT, kurallar, checklist ve raporlar aynı tarihi esas alır. ASAS orijinali ve mevcut manuel revizyon kayıtları korunur; onaydan daha ileri bir manuel tarih varsa o tarih kullanılır. Ex-Factory hücresinde ASAS orijinal tarihi ile yükleme onay tarihi yalnız iki tarih ve aralarında bir nokta ile yan yana görünür. Orijinal tarih soluk, hesaplamada kullanılan tarih vurguludur; kaynak açıklaması fareyle üzerine gelince açılır. Simge ve otomatik etiketi gösterilmez; manuel revizyon eski → yeni oku ile ayrı kalır. Hücre, yapıştırma, içe aktarma ve tekli/toplu API düzenlemeleriyle değiştirilemez; ASAS onayı yenilendiğinde yeniden hesaplanır.",
+        "en": "When ASAS loading approval is later than the effective Ex-Factory date, Buyer Log uses it as an automatic Ex-Factory revision. Ex→Retail, LT, rules, checklists and reports use the same date. The ASAS original and existing manual revision records are preserved; a manual date later than approval remains effective. The Ex-Factory cell shows only the original ASAS date and loading approval date side by side with a dot between them. The original is muted and the effective date emphasized; hovering explains the sources. No icon or automatic-mode label is shown; manual revisions retain their separate old → new arrows. Cell editing, paste, import and single/batch API edits cannot change the automatic date; it is recalculated when ASAS approval is refreshed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "loading-approval-exfactory.png",
+        "alt": {
+          "tr": "Buyer Log CP ekranında yan yana orijinal ASAS ve yükleme onay tarihleri; ayrı manuel revizyon",
+          "en": "Original ASAS and loading approval dates side by side, with a separate manual revision in Buyer Log CP"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: 30.10.26 planı yerine 05.11.26 onayı kullanılır; otomatik ve manuel revizyonlar ayrı görünür.",
+          "en": "Actual Buyer Log with isolated demo data: approval on 05 Nov 2026 replaces the 30 Oct plan; automatic and manual revisions look distinct."
+        }
+      }
+    },
     {
       "id": "excel-import-lcw-ai",
       "type": "feature",
@@ -505,35 +534,6 @@
       }
     },
     {
-      "id": "loading-approval-exfactory",
-      "type": "fix",
-      "module": {
-        "tr": "CP, Siparişler ve Backlog",
-        "en": "CP, Orders and Backlog"
-      },
-      "title": {
-        "tr": "Geç yükleme onayı Ex-Factory hesaplarını günceller",
-        "en": "Late loading approval updates Ex-Factory calculations"
-      },
-      "body": {
-        "tr": "ASAS yükleme onayı geçerli Ex-Factory tarihinden sonraysa Buyer Log bu tarihi otomatik Ex-Factory revizyonu olarak kullanır. Ex→Retail, LT, kurallar, checklist ve raporlar aynı tarihi esas alır. ASAS orijinali ve mevcut manuel revizyon kayıtları korunur; onaydan daha ileri bir manuel tarih varsa o tarih kullanılır. Ex-Factory hücresinde ASAS orijinal tarihi ile yükleme onay tarihi yalnız iki tarih ve aralarında bir nokta ile yan yana görünür. Orijinal tarih soluk, hesaplamada kullanılan tarih vurguludur; kaynak açıklaması fareyle üzerine gelince açılır. Simge ve otomatik etiketi gösterilmez; manuel revizyon eski → yeni oku ile ayrı kalır. Hücre, yapıştırma, içe aktarma ve tekli/toplu API düzenlemeleriyle değiştirilemez; ASAS onayı yenilendiğinde yeniden hesaplanır.",
-        "en": "When ASAS loading approval is later than the effective Ex-Factory date, Buyer Log uses it as an automatic Ex-Factory revision. Ex→Retail, LT, rules, checklists and reports use the same date. The ASAS original and existing manual revision records are preserved; a manual date later than approval remains effective. The Ex-Factory cell shows only the original ASAS date and loading approval date side by side with a dot between them. The original is muted and the effective date emphasized; hovering explains the sources. No icon or automatic-mode label is shown; manual revisions retain their separate old → new arrows. Cell editing, paste, import and single/batch API edits cannot change the automatic date; it is recalculated when ASAS approval is refreshed."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "loading-approval-exfactory.png",
-        "alt": {
-          "tr": "Buyer Log CP ekranında yan yana orijinal ASAS ve yükleme onay tarihleri; ayrı manuel revizyon",
-          "en": "Original ASAS and loading approval dates side by side, with a separate manual revision in Buyer Log CP"
-        },
-        "caption": {
-          "tr": "Gerçek Buyer Log, izole demo verisi: 30.10.26 planı yerine 05.11.26 onayı kullanılır; otomatik ve manuel revizyonlar ayrı görünür.",
-          "en": "Actual Buyer Log with isolated demo data: approval on 05 Nov 2026 replaces the 30 Oct plan; automatic and manual revisions look distinct."
-        }
-      }
-    },
-    {
       "id": "lcwai-retry-keeps-context",
       "type": "fix",
       "module": {
@@ -617,6 +617,35 @@
         "caption": {
           "tr": "İzole demo veriyle gerçek uygulama; dosya sınırı ve LCW AI yanıtı kabul testi için küçültülüp taklit edildi.",
           "en": "Actual app with isolated demo data; the file limit and the LCW AI response were reduced and stubbed for acceptance testing."
+        }
+      }
+    },
+    {
+      "id": "collection-order-sync-in-place",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Siparişten Koleksiyona aktarım Supp. FOB ve Sub MFR ile, kayıt çoğaltmadan çalışır",
+        "en": "Orders-to-Collection import uses Supp. FOB and Sub MFR without duplicating records"
+      },
+      "body": {
+        "tr": "CP ve Siparişlerden Koleksiyona aktarımda onaylı fiyat artık nihai FOB değil Supp. FOB, onaylı üretici ise Sub-Manufacturer olarak alınır; Koleksiyon royalty ve hologramı bu fiyata yalnız bir kez ekler. Koleksiyonda aynı MB ayı + PLM ID + Renk Kodu ile kayıt varsa yeni satır açılmaz, mevcut kayıt yerinde güncellenir: fiyatlama geçmişi, teklifler, fiyat avantajları, landed kıyasları ve Endeksmatik korunur. MAG, buyer, ülke, tarihler, adet ve kumaş siparişten taşınır; onaylı üretici veya fiyat farklıysa yalnız önizlemede onayladığınız kayıtlarda değişir.",
+        "en": "When importing from CP and Orders into Collection, the confirmed price is now Supp. FOB instead of the final FOB and the confirmed manufacturer is the Sub-Manufacturer; Collection adds royalty and hologram to this price only once. If Collection already has a record with the same MB month + PLM ID + Colour Code, no new row is created and the existing record is updated in place: pricing history, quotes, price advantages, landed comparisons and Endeksmatik are kept. MAG, buyer, country, dates, quantity and fabric are copied from the order; a different confirmed manufacturer or price changes only for the records you approve in the preview."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-order-sync.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log önizlemesinde mevcut kaydın güncellenmesi ve Sub MFR · Supp. FOB fiyat onayı",
+          "en": "Existing record update and Sub MFR · Supp. FOB price approval in the actual Buyer Log preview"
+        },
+        "caption": {
+          "tr": "İzole demo veriyle gerçek uygulama; mevcut Koleksiyon kaydı ve CP Sub MFR/Supp. FOB değerleri kabul testi için hazırlandı.",
+          "en": "Actual app with isolated demo data; the existing Collection record and CP Sub MFR/Supp. FOB values were prepared for acceptance testing."
         }
       }
     },

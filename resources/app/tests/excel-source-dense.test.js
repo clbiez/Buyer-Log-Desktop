@@ -40,7 +40,11 @@ test('date repair handles sparse and dense cells, holes, invalid dates and times
   for (const ws of [sparse, dense]) {
     assert.equal(dates.repairReadDateCells({ SheetNames: ['S'], Sheets: { S: ws } }, XLSX), 2);
   }
-  assert.deepEqual(denseCells, sparseCells);
+  // Node 22.23 deepStrictEqual iki geçersiz Date'i eşit saymaz (Node 24 sayar);
+  // zamanı sayısal karşılaştır: geçersiz tarih iki temsilde de geçersiz kalmalı.
+  const comparable = list => list.map(cell => cell && { ...cell, v: cell.v instanceof Date ? `date:${cell.v.getTime()}` : cell.v });
+  assert.deepEqual(comparable(denseCells), comparable(sparseCells));
+  assert.ok(Number.isNaN(denseCells[4].v.getTime()) && Number.isNaN(sparseCells[4].v.getTime()));
   assert.equal(denseCells[0].v.getTime(), new Date(2026, 0, 2).getTime());
   assert.equal(Object.hasOwn(denseCells[0], 'w'), false);
   assert.equal(denseCells[3].w, 'keep');

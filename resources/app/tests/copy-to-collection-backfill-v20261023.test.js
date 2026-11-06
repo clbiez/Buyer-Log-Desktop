@@ -52,9 +52,14 @@ test('complete supplier, prices, dates and historic LCW MB week/month mapping',(
     'Shipment Quantity':250,'Remaining Units':950,
   };
   const row=scope.mapOrder(source);
-  assert.equal(row.confirmedManufacturer,source.Manufacturer);
-  assert.equal(row.pricing[source.Manufacturer],'4.75');
+  // Onaylı üretici Sub MFR, onaylı fiyat Supp. FOB: Koleksiyon royalty/hologram'ı
+  // bu fiyata ekler; nihai FOB'u fiyat yazmak masrafları ikinci kez eklerdi.
+  assert.equal(row.confirmedManufacturer,'SUB FACTORY');
+  assert.equal(row.buyingSampleManufacturer,'SUB FACTORY');
+  assert.equal(JSON.stringify(row.pricing),JSON.stringify({'SUB FACTORY':'4.10'}));
   assert.equal(row.fob,'4.75');
+  assert.equal(row._sourceOrderDetails.sourceFob,'4.75');
+  assert.equal(row._sourceOrderDetails.manufacturer,source.Manufacturer);
   assert.equal(row.targetPrice,'4.10');
   assert.equal(row.exFactory,'2027-05-12');
   assert.equal(row.retail,'2027-06-10');
@@ -69,6 +74,16 @@ test('complete supplier, prices, dates and historic LCW MB week/month mapping',(
   assert.match(row.not,/Original comment/);
   assert.equal(source['In-Store (Model Budget)'],'2027-07-08'); // source remains untouched
   assert.equal(scope.sourceIdentity(source,true),scope.sourceIdentity(row));
+});
+test('without Sub MFR the Manufacturer is used, and a missing Supp. FOB never falls back to the final FOB',()=>{
+  const scope=transferMapper();
+  const main=scope.mapOrder({'Order Code':'M1','PLM ID':'1','Model Name':'M','Manufacturer':'MAIN FACTORY','FOB ($)':'5.00','Supp. FOB':'4.20'});
+  assert.equal(main.confirmedManufacturer,'MAIN FACTORY');
+  assert.equal(JSON.stringify(main.pricing),JSON.stringify({'MAIN FACTORY':'4.20'}));
+  const noSupp=scope.mapOrder({'Order Code':'M2','PLM ID':'1','Model Name':'M','Manufacturer':'MAIN FACTORY','Sub-Manufacturer':'SUB','FOB ($)':'5.00'});
+  assert.equal(JSON.stringify(noSupp.pricing),'{}');
+  assert.equal(noSupp.confirmedManufacturer,'SUB');
+  assert.equal(noSupp._sourceOrderDetails.deliveryType,'');
 });
 test('historical entries with unknown LCW calendar do not invent MB period',()=>{
   const scope=transferMapper();
@@ -93,12 +108,13 @@ async function transferAction(selected,existing=[],options={}){
   const scope={
     appLang:'en',document:{body:{dataset:{activeTab:'orders'}},
       getElementById:()=>({addEventListener:(type,listener)=>{events[type]=listener;}})},
-    window:{BLTableToolbarActionCleanup:{begin:()=>{},finish:()=>{}}},
+    window:{BLTableToolbarActionCleanup:{begin:()=>{},finish:()=>{}},BLCollectionModelGroups:options.groups?require('../public/collection-model-groups'):undefined},
+    kolNormalizeModelGroups:rows=>require('../public/collection-model-groups').normalizeRows(rows).rows,
     kolWorkspaceCanEdit:true,kolWorkspaceOwnerId:'mine',kolWorkspaceRevision:1,
     kolIsOwnWorkspace:()=>options.own!==false,
     kolRequireWorkspaceEdit:()=>options.editable!==false,
     cpKolSelectedSourceRows:()=>selected,
-    cpKolBackfillPreview:async()=>{if(options.stale)scope.kolWorkspaceRevision++;return options.accept!==false;},
+    cpKolBackfillPreview:async()=>{if(options.stale)scope.kolWorkspaceRevision++;return options.accept===false?null:(options.approved?{approved:options.approved}:true);},
     kolRows:existing.slice(),kolNextId:99,kolSelected:new Set(),
     kolUndoStack:[1],kolUndoSummaryStack:[1],kolRedoStack:[3],kolRedoSummaryStack:[3],
     updateKolUndoRedoButtons:()=>{},
@@ -110,11 +126,14 @@ async function transferAction(selected,existing=[],options={}){
     },
     cpRowToKolRow(row){return {id:scope.kolNextId++,_sourceOrderCode:row['Order Code'],plmId:row['PLM ID'],colourCode:row['C.Code']};},
     saveKolRows:()=>options.save!==false,renderKol:()=>{},
+    kolApplyRulePricing:()=>false,kolFormatMoneyDisplay:value=>String(value),
+    kolEffectivePricing:row=>row.pricing||{},
+    kolWriteGroupedStorageValue(row,key,value){row[key]=value;return row;},
     showToast:message=>toasts.push(message),
   };
   const engine=require('../public/collection-order-backfill');
   scope.cpKolBackfillPlan=rows=>engine.plan(rows.map(row=>({key:scope.cpKolSourceIdentity(row,true),row:{...row,id:null,_sourceOrderCode:row['Order Code'],plmId:row['PLM ID'],colourCode:row['C.Code']}})),scope.kolRows,scope.kolRows.map(row=>scope.cpKolSourceIdentity(row)));
-  vm.runInNewContext(segment('let cpKolBackfillBusy=false;','// ================= DİL SEÇİMİ'),scope);
+  vm.runInNewContext(segment('function cpKolBackfillWriteField(','// ================= DİL SEÇİMİ'),scope);
   await events.click({currentTarget:{}});
   return {scope,toasts};
 }
@@ -179,4 +198,47 @@ test('incremental import updates the matching row in one undo step without alloc
   assert.equal(second.scope.kolRows[0].id,99);
   assert.equal(second.scope.kolNextId,99);
   assert.equal(second.scope.kolUndoStack.length,2);
+});
+test('existing PLM + colour + MB month record is updated in place; price changes only with approval',async()=>{
+  const existing=()=>({id:5,plmId:'100',colourCode:'RED',inStoreMonth:'202702',quantity:'900',mag:'OLD',
+    confirmedManufacturer:'OLD FACTORY',pricing:{'OLD FACTORY':'3.90','OTHER QUOTE':'4.20'},trPrice:'180',endeksmatikData:{a:1}});
+  const order={'Order Code':'A','PLM ID':'100','C.Code':'RED',inStoreMonth:'202702',quantity:'100',mag:'NEW',
+    confirmedManufacturer:'SUB FACTORY',pricing:{'SUB FACTORY':'4.00'}};
+  const kept=await transferAction([order],[existing()]);
+  assert.equal(kept.scope.kolRows.length,1);
+  const row=kept.scope.kolRows[0];
+  assert.equal(row.id,5);
+  assert.equal(row.quantity,'100');
+  assert.equal(row.mag,'NEW');
+  assert.equal(row.confirmedManufacturer,'OLD FACTORY');
+  assert.equal(JSON.stringify(row.pricing),JSON.stringify({'OLD FACTORY':'3.90','OTHER QUOTE':'4.20'}));
+  assert.equal(row.trPrice,'180');
+  assert.match(kept.toasts.join(' '),/1 price differences left unchanged/);
+  const approved=await transferAction([order],[existing()],{approved:new Set([0])});
+  const priced=approved.scope.kolRows[0];
+  assert.equal(approved.scope.kolRows.length,1);
+  assert.equal(priced.id,5);
+  assert.equal(priced.confirmedManufacturer,'SUB FACTORY');
+  assert.equal(JSON.stringify(priced.pricing),JSON.stringify({'OLD FACTORY':'3.90','OTHER QUOTE':'4.20','SUB FACTORY':'4.00'}));
+  assert.equal(priced._orderPriceChanges.length,1);
+  assert.equal(priced._orderPriceChanges[0].from.name,'OLD FACTORY');
+  assert.equal(JSON.stringify(priced.endeksmatikData),JSON.stringify({a:1}));
+});
+test('grouped colour records: colour-specific fields never leak to siblings and variant updates stay visible',async()=>{
+  const groups=require('../public/collection-model-groups');
+  const base={plmId:'100',modelKod:'DEMO',inStoreMonth:'202702',modelGroupId:'mg_demo',mag:'OLD MAG',pricing:{},variantOverrides:{},modelSharedValues:{}};
+  const rows=()=>[{...base,id:1,modelGroupRole:'parent',colourCode:'RED',colour:'Red',quantity:'100'},
+    {...base,id:2,modelGroupRole:'variant',colourCode:'BLUE',colour:'Blue',quantity:'200'}];
+  const red={'Order Code':'R1','PLM ID':'100','C.Code':'RED',inStoreMonth:'202702',modelKod:'DEMO',colour:'Red',quantity:'150'};
+  const first=await transferAction([red],rows(),{groups:true});
+  const blue=first.scope.kolRows.find(row=>row.id===2),parent=first.scope.kolRows.find(row=>row.id===1);
+  assert.equal(parent.quantity,'150');
+  assert.equal(blue.quantity,'200');
+  assert.equal(blue.colour,'Blue');
+  const blueOrder={'Order Code':'B1','PLM ID':'100','C.Code':'BLUE',inStoreMonth:'202702',modelKod:'DEMO',mag:'NEW MAG',quantity:'300'};
+  const second=await transferAction([blueOrder],rows(),{groups:true});
+  const variant=second.scope.kolRows.find(row=>row.id===2);
+  assert.equal(groups.effectiveValue(variant,'mag',second.scope.kolRows),'NEW MAG');
+  assert.equal(groups.effectiveValue(second.scope.kolRows.find(row=>row.id===1),'mag',second.scope.kolRows),'OLD MAG');
+  assert.equal(variant.quantity,'300');
 });
