@@ -1,0 +1,891 @@
+{
+  "synthetic": true,
+  "runtimeBefore": "82c6cf3824df772519d2d6e0d7b189ee4317d577",
+  "runtimeAfter": "6525e625",
+  "sourceFixtureHashes": {
+    "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+    "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+    "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+  },
+  "macro": {
+    "before": {
+      "refreshMs": 42664,
+      "modules": {
+        "overview": {
+          "primaryScreenReadyMs": 4777.5,
+          "startupReadyMs": 40471.5,
+          "systemStartupCompleteMs": 156481.1000000015,
+          "primaryToGateMs": 35694,
+          "longTaskCount": 25,
+          "longTaskTotalMs": 5147.60000000149,
+          "jsHeapUsedBytes": 473966776,
+          "rendererRssBytes": 1521827840,
+          "samples": {
+            "primaryScreenReadyMs": [
+              4777.5,
+              4602.5,
+              8930.20000000298
+            ],
+            "startupReadyMs": [
+              40471.5,
+              23697.39999999851,
+              66443.89999999851
+            ],
+            "systemStartupCompleteMs": [
+              156481.1000000015,
+              23740.89999999851,
+              181825.80000000447
+            ],
+            "primaryToGateMs": [
+              35694,
+              19094.89999999851,
+              57513.69999999553
+            ],
+            "longTaskCount": [
+              25,
+              26,
+              19
+            ],
+            "longTaskTotalMs": [
+              5147.60000000149,
+              5291.70000000298,
+              3519.89999999851
+            ],
+            "jsHeapUsedBytes": [
+              473966776,
+              655186224,
+              286730568
+            ],
+            "rendererRssBytes": [
+              1313296384,
+              1772564480,
+              1521827840
+            ]
+          }
+        },
+        "cp": {
+          "primaryScreenReadyMs": 6527.10000000149,
+          "startupReadyMs": 63675.5,
+          "systemStartupCompleteMs": 200655.3999999985,
+          "primaryToGateMs": 57687.20000000298,
+          "longTaskCount": 15,
+          "longTaskTotalMs": 6871,
+          "jsHeapUsedBytes": 385914912,
+          "rendererRssBytes": 1172508672,
+          "samples": {
+            "primaryScreenReadyMs": [
+              5988.29999999702,
+              6527.10000000149,
+              7761.5
+            ],
+            "startupReadyMs": [
+              63675.5,
+              54994.60000000149,
+              70142.90000000596
+            ],
+            "systemStartupCompleteMs": [
+              63742,
+              200655.3999999985,
+              232311.1000000015
+            ],
+            "primaryToGateMs": [
+              57687.20000000298,
+              48467.5,
+              62381.40000000596
+            ],
+            "longTaskCount": [
+              14,
+              15,
+              21
+            ],
+            "longTaskTotalMs": [
+              6936,
+              6820,
+              6871
+            ],
+            "jsHeapUsedBytes": [
+              504466628,
+              385914912,
+              294901080
+            ],
+            "rendererRssBytes": [
+              1172508672,
+              1553457152,
+              1136365568
+            ]
+          }
+        },
+        "orders": {
+          "primaryScreenReadyMs": 9777.5,
+          "startupReadyMs": 40648.70000000298,
+          "systemStartupCompleteMs": 41043.20000000298,
+          "primaryToGateMs": 29133,
+          "longTaskCount": 20,
+          "longTaskTotalMs": 7022.70000000298,
+          "jsHeapUsedBytes": 257356824,
+          "rendererRssBytes": 1017470976,
+          "samples": {
+            "primaryScreenReadyMs": [
+              15015.29999999702,
+              9777.5,
+              8279.40000000596
+            ],
+            "startupReadyMs": [
+              44148.29999999702,
+              40648.70000000298,
+              28162.10000000149
+            ],
+            "systemStartupCompleteMs": [
+              44192.60000000149,
+              41043.20000000298,
+              28264.70000000298
+            ],
+            "primaryToGateMs": [
+              29133,
+              30871.20000000298,
+              19882.69999999553
+            ],
+            "longTaskCount": [
+              20,
+              18,
+              23
+            ],
+            "longTaskTotalMs": [
+              7022.70000000298,
+              6680.39999999851,
+              8092.69999999553
+            ],
+            "jsHeapUsedBytes": [
+              267741020,
+              257356824,
+              247668000
+            ],
+            "rendererRssBytes": [
+              1017470976,
+              1350750208,
+              927838208
+            ]
+          }
+        },
+        "koleksiyon": {
+          "primaryScreenReadyMs": 10935.5,
+          "startupReadyMs": 33951.5,
+          "systemStartupCompleteMs": 34017.20000000298,
+          "primaryToGateMs": 22722.39999999851,
+          "longTaskCount": 5,
+          "longTaskTotalMs": 1078,
+          "jsHeapUsedBytes": 180182736,
+          "rendererRssBytes": 768122880,
+          "samples": {
+            "primaryScreenReadyMs": [
+              15192.39999999851,
+              2579,
+              10935.5
+            ],
+            "startupReadyMs": [
+              35004,
+              33951.5,
+              33657.89999999851
+            ],
+            "systemStartupCompleteMs": [
+              35048.20000000298,
+              34017.20000000298,
+              33742.19999999553
+            ],
+            "primaryToGateMs": [
+              19811.60000000149,
+              31372.5,
+              22722.39999999851
+            ],
+            "longTaskCount": [
+              0,
+              20,
+              5
+            ],
+            "longTaskTotalMs": [
+              0,
+              4364,
+              1078
+            ],
+            "jsHeapUsedBytes": [
+              179972292,
+              192058832,
+              180182736
+            ],
+            "rendererRssBytes": [
+              768122880,
+              1176125440,
+              767197184
+            ]
+          }
+        }
+      },
+      "sameTabMs": {
+        "cp": {
+          "median": 15893.39999999851,
+          "samples": [
+            15893.39999999851,
+            9630.30000000447,
+            26109.5
+          ]
+        },
+        "orders": {
+          "median": 2195.1999999955297,
+          "samples": [
+            2195.1999999955297,
+            1760.3000000044703,
+            4180
+          ]
+        },
+        "koleksiyon": {
+          "median": 122.90000000596046,
+          "samples": [
+            106.30000000447035,
+            122.90000000596046,
+            496.5
+          ]
+        }
+      },
+      "statusRefreshP95Ms": 24.694009999999253,
+      "health404RefreshP95Ms": 1017.4330130000017,
+      "refreshSamplesMs": [
+        42664,
+        40861,
+        69301
+      ],
+      "revisions": [
+        "82c6cf3824df772519d2d6e0d7b189ee4317d577",
+        "82c6cf3824df772519d2d6e0d7b189ee4317d577",
+        "82c6cf3824df772519d2d6e0d7b189ee4317d577"
+      ],
+      "runtime": {
+        "platform": "linux",
+        "node": "v24.19.0",
+        "chromium": "154.0.8037.57",
+        "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+        "cpuCount": 5,
+        "availableParallelism": 4,
+        "cpuQuota": "800000 200000",
+        "memoryLimitBytes": "17179869184",
+        "sampling": {
+          "startMs": 0,
+          "endMs": 10000,
+          "clock": "navigation performance.now; tasks clipped at window end"
+        }
+      },
+      "runtimeStallCount": [
+        2,
+        4,
+        6
+      ]
+    },
+    "after": {
+      "refreshMs": 46636,
+      "modules": {
+        "overview": {
+          "primaryScreenReadyMs": 4659.5,
+          "startupReadyMs": 4683.19999999553,
+          "systemStartupCompleteMs": 4765.10000000149,
+          "primaryToGateMs": 21.599999994039536,
+          "longTaskCount": 14,
+          "longTaskTotalMs": 1686,
+          "jsHeapUsedBytes": 33410864,
+          "rendererRssBytes": 1677979648,
+          "samples": {
+            "primaryScreenReadyMs": [
+              6406.20000000298,
+              3982,
+              4659.5
+            ],
+            "startupReadyMs": [
+              6427.79999999702,
+              4001.3000000044703,
+              4683.19999999553
+            ],
+            "systemStartupCompleteMs": [
+              6510.29999999702,
+              4106.60000000149,
+              4765.10000000149
+            ],
+            "primaryToGateMs": [
+              21.599999994039536,
+              19.30000000447035,
+              23.69999999552965
+            ],
+            "longTaskCount": [
+              18,
+              13,
+              14
+            ],
+            "longTaskTotalMs": [
+              2431,
+              1378,
+              1686
+            ],
+            "jsHeapUsedBytes": [
+              31994784,
+              33566104,
+              33410864
+            ],
+            "rendererRssBytes": [
+              1677979648,
+              1967181824,
+              1656950784
+            ]
+          }
+        },
+        "cp": {
+          "primaryScreenReadyMs": 59643.5,
+          "startupReadyMs": 59664.5,
+          "systemStartupCompleteMs": 59876.30000000447,
+          "primaryToGateMs": 21,
+          "longTaskCount": 20,
+          "longTaskTotalMs": 7049,
+          "jsHeapUsedBytes": 132378304,
+          "rendererRssBytes": 1105502208,
+          "samples": {
+            "primaryScreenReadyMs": [
+              58594.40000000596,
+              69971.90000000596,
+              59643.5
+            ],
+            "startupReadyMs": [
+              58615.10000000149,
+              69995.10000000149,
+              59664.5
+            ],
+            "systemStartupCompleteMs": [
+              58793.30000000447,
+              198831.70000000298,
+              59876.30000000447
+            ],
+            "primaryToGateMs": [
+              20.69999999552965,
+              23.19999999552965,
+              21
+            ],
+            "longTaskCount": [
+              20,
+              23,
+              13
+            ],
+            "longTaskTotalMs": [
+              5392.39999999851,
+              7083,
+              7049
+            ],
+            "jsHeapUsedBytes": [
+              105664508,
+              402858864,
+              132378304
+            ],
+            "rendererRssBytes": [
+              1103355904,
+              1160167424,
+              1105502208
+            ]
+          }
+        },
+        "orders": {
+          "primaryScreenReadyMs": 6687.39999999851,
+          "startupReadyMs": 6709.89999999851,
+          "systemStartupCompleteMs": 6832.39999999851,
+          "primaryToGateMs": 21.100000001490116,
+          "longTaskCount": 20,
+          "longTaskTotalMs": 8233.5,
+          "jsHeapUsedBytes": 125678624,
+          "rendererRssBytes": 857350144,
+          "samples": {
+            "primaryScreenReadyMs": [
+              6687.39999999851,
+              6706.69999999553,
+              6496.29999999702
+            ],
+            "startupReadyMs": [
+              6709.89999999851,
+              6720.60000000149,
+              6517.39999999851
+            ],
+            "systemStartupCompleteMs": [
+              6832.39999999851,
+              6827.79999999702,
+              6945.39999999851
+            ],
+            "primaryToGateMs": [
+              22.5,
+              13.900000005960464,
+              21.100000001490116
+            ],
+            "longTaskCount": [
+              20,
+              20,
+              18
+            ],
+            "longTaskTotalMs": [
+              8015.4000000059605,
+              8233.5,
+              8370.39999999851
+            ],
+            "jsHeapUsedBytes": [
+              192252196,
+              125678624,
+              113561152
+            ],
+            "rendererRssBytes": [
+              973570048,
+              857350144,
+              789483520
+            ]
+          }
+        },
+        "koleksiyon": {
+          "primaryScreenReadyMs": 17977.69999999553,
+          "startupReadyMs": 17990.89999999851,
+          "systemStartupCompleteMs": 18067.09999999404,
+          "primaryToGateMs": 17.30000000447035,
+          "longTaskCount": 0,
+          "longTaskTotalMs": 0,
+          "jsHeapUsedBytes": 11821636,
+          "rendererRssBytes": 532205568,
+          "samples": {
+            "primaryScreenReadyMs": [
+              19543.59999999404,
+              17104,
+              17977.69999999553
+            ],
+            "startupReadyMs": [
+              19601.19999999553,
+              17121.30000000447,
+              17990.89999999851
+            ],
+            "systemStartupCompleteMs": [
+              19754.09999999404,
+              17160.89999999851,
+              18067.09999999404
+            ],
+            "primaryToGateMs": [
+              57.600000001490116,
+              17.30000000447035,
+              13.200000002980232
+            ],
+            "longTaskCount": [
+              0,
+              0,
+              0
+            ],
+            "longTaskTotalMs": [
+              0,
+              0,
+              0
+            ],
+            "jsHeapUsedBytes": [
+              17520688,
+              11592280,
+              11821636
+            ],
+            "rendererRssBytes": [
+              526630912,
+              532205568,
+              559255552
+            ]
+          }
+        }
+      },
+      "sameTabMs": {
+        "cp": {
+          "median": 46167.79999999702,
+          "samples": [
+            60870.29999999702,
+            38552.60000000149,
+            46167.79999999702
+          ]
+        },
+        "orders": {
+          "median": 3523.60000000149,
+          "samples": [
+            3376.10000000149,
+            3523.60000000149,
+            3937.6999999955297
+          ]
+        },
+        "koleksiyon": {
+          "median": 163.69999999552965,
+          "samples": [
+            163.69999999552965,
+            159.09999999403954,
+            178.5
+          ]
+        }
+      },
+      "statusRefreshP95Ms": 37.17070999999851,
+      "health404RefreshP95Ms": 893.022692999999,
+      "refreshSamplesMs": [
+        46636,
+        44563,
+        50773
+      ],
+      "revisions": [
+        "6525e625dc46a8d4c29a102e616c35852eba5f48",
+        "6525e625dc46a8d4c29a102e616c35852eba5f48",
+        "6525e625dc46a8d4c29a102e616c35852eba5f48"
+      ],
+      "runtime": {
+        "platform": "linux",
+        "node": "v24.19.0",
+        "chromium": "154.0.8037.57",
+        "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+        "cpuCount": 5,
+        "availableParallelism": 4,
+        "cpuQuota": "800000 200000",
+        "memoryLimitBytes": "17179869184",
+        "sampling": {
+          "startMs": 0,
+          "endMs": 10000,
+          "clock": "navigation performance.now; tasks clipped at window end"
+        }
+      },
+      "runtimeStallCount": [
+        3,
+        2,
+        3
+      ]
+    }
+  },
+  "firstIntent": {
+    "before": {
+      "cp": {
+        "attempts": 3,
+        "passed": 3,
+        "failed": 0,
+        "statuses": [
+          "passed",
+          "passed",
+          "passed"
+        ],
+        "startedWithRows": [
+          24982,
+          24982,
+          24982
+        ],
+        "elapsedMs": {
+          "median": 4769.39999999851,
+          "samples": [
+            2775.2000000029802,
+            4769.39999999851,
+            30377.89999999851
+          ],
+          "successfulSubsetMedian": 4769.39999999851
+        },
+        "dataReadyMs": {
+          "median": 4015.89999999851,
+          "samples": [
+            2633.3000000044703,
+            4015.89999999851,
+            30210.5
+          ],
+          "successfulSubsetMedian": 4015.89999999851
+        },
+        "firstRowsPaintedMs": {
+          "median": 4769.39999999851,
+          "samples": [
+            2775.2000000029802,
+            4769.39999999851,
+            30377.89999999851
+          ],
+          "successfulSubsetMedian": 4769.39999999851
+        },
+        "dispatchDelayMs": {
+          "median": 129.60000000149012,
+          "samples": [
+            129.60000000149012,
+            124.79999999701977,
+            10298.70000000298
+          ],
+          "successfulSubsetMedian": 129.60000000149012
+        },
+        "observationEndMs": {
+          "median": 5777.29999999702,
+          "samples": [
+            3784.60000000149,
+            5777.29999999702,
+            34516.20000000298
+          ],
+          "successfulSubsetMedian": 5777.29999999702
+        },
+        "systemToPaintMs": {
+          "median": 180787.19999999553,
+          "samples": [
+            164063.70000000298,
+            180787.19999999553,
+            494142.8999999985
+          ],
+          "successfulSubsetMedian": 180787.19999999553
+        },
+        "primaryToGateMs": 51844.89999999851,
+        "startup": {
+          "primaryScreenReadyMs": 4848.20000000298,
+          "startupReadyMs": 55683.10000000149,
+          "systemStartupCompleteMs": 176017.19999999553,
+          "continueDispatchDelayMs": 121299.19999999553
+        }
+      },
+      "orders": {
+        "attempts": 3,
+        "passed": 2,
+        "failed": 1,
+        "statuses": [
+          "passed",
+          "passed",
+          "failed"
+        ],
+        "startedWithRows": [
+          30000,
+          30000,
+          null
+        ],
+        "elapsedMs": {
+          "median": null,
+          "samples": [
+            19863.39999999851,
+            38055.29999999702,
+            null
+          ],
+          "successfulSubsetMedian": 28959.349999997765,
+          "identifiableCensoredMedian": 38055.29999999702
+        },
+        "dataReadyMs": {
+          "median": null,
+          "samples": [
+            15966,
+            29115.79999999702,
+            null
+          ],
+          "successfulSubsetMedian": 22540.89999999851
+        },
+        "firstRowsPaintedMs": {
+          "median": null,
+          "samples": [
+            16059.89999999851,
+            29447.89999999851,
+            null
+          ],
+          "successfulSubsetMedian": 22753.89999999851,
+          "identifiableCensoredMedian": 29447.89999999851
+        },
+        "dispatchDelayMs": {
+          "median": 2711.5,
+          "samples": [
+            129.70000000298023,
+            13705.79999999702,
+            2711.5
+          ],
+          "successfulSubsetMedian": 6917.75
+        },
+        "observationEndMs": {
+          "median": null,
+          "samples": [
+            19890.60000000149,
+            38075.5,
+            null
+          ],
+          "successfulSubsetMedian": 28983.050000000745
+        },
+        "systemToPaintMs": {
+          "median": null,
+          "samples": [
+            163786,
+            251459.1000000015,
+            null
+          ],
+          "successfulSubsetMedian": 207622.55000000075,
+          "identifiableCensoredMedian": 251459.1000000015
+        },
+        "rightCensored": {
+          "count": 1,
+          "latencyLowerBoundMs": 900006.8000000045,
+          "systemToPaintLowerBoundMs": 1006495.5,
+          "actualRows": null,
+          "error": "First transition timed out",
+          "note": "Timeout is not a passed run. Missing values are never replaced with zero or a successful-subset median."
+        },
+        "primaryToGateMs": 65169.79999999702,
+        "startup": {
+          "primaryScreenReadyMs": 3697.8000000044703,
+          "startupReadyMs": 68867.60000000149,
+          "systemStartupCompleteMs": 143919.40000000596,
+          "continueDispatchDelayMs": 104227.40000000596
+        }
+      }
+    },
+    "after": {
+      "cp": {
+        "attempts": 3,
+        "passed": 3,
+        "failed": 0,
+        "statuses": [
+          "passed",
+          "passed",
+          "passed"
+        ],
+        "startedWithRows": [
+          null,
+          null,
+          null
+        ],
+        "elapsedMs": {
+          "median": 76695.39999999851,
+          "samples": [
+            76695.39999999851,
+            123246.80000000447,
+            70317.30000000447
+          ],
+          "successfulSubsetMedian": 76695.39999999851
+        },
+        "dataReadyMs": {
+          "median": 74071.79999999702,
+          "samples": [
+            74071.79999999702,
+            117734.70000000298,
+            70166.39999999851
+          ],
+          "successfulSubsetMedian": 74071.79999999702
+        },
+        "firstRowsPaintedMs": {
+          "median": 74286.79999999702,
+          "samples": [
+            74286.79999999702,
+            117958.80000000447,
+            70317.30000000447
+          ],
+          "successfulSubsetMedian": 74286.79999999702
+        },
+        "dispatchDelayMs": {
+          "median": 63.100000001490116,
+          "samples": [
+            53.100000001490116,
+            63.100000001490116,
+            100.60000000149012
+          ],
+          "successfulSubsetMedian": 63.100000001490116
+        },
+        "observationEndMs": {
+          "median": 80099.39999999851,
+          "samples": [
+            80099.39999999851,
+            125465.70000000298,
+            73269.39999999851
+          ],
+          "successfulSubsetMedian": 80099.39999999851
+        },
+        "systemToPaintMs": {
+          "median": 81538.10000000149,
+          "samples": [
+            81538.10000000149,
+            130338.80000000447,
+            73853
+          ],
+          "successfulSubsetMedian": 81538.10000000149
+        },
+        "primaryToGateMs": 23.600000001490116,
+        "startup": {
+          "primaryScreenReadyMs": 4730.5,
+          "startupReadyMs": 4754.10000000149,
+          "systemStartupCompleteMs": 4841.5,
+          "continueDispatchDelayMs": 80
+        }
+      },
+      "orders": {
+        "attempts": 3,
+        "passed": 3,
+        "failed": 0,
+        "statuses": [
+          "passed",
+          "passed",
+          "passed"
+        ],
+        "startedWithRows": [
+          null,
+          null,
+          null
+        ],
+        "elapsedMs": {
+          "median": 23751.10000000149,
+          "samples": [
+            73012.80000000447,
+            23751.10000000149,
+            14377.10000000149
+          ],
+          "successfulSubsetMedian": 23751.10000000149
+        },
+        "dataReadyMs": {
+          "median": 23650.5,
+          "samples": [
+            26166.70000000298,
+            23650.5,
+            14275.5
+          ],
+          "successfulSubsetMedian": 23650.5
+        },
+        "firstRowsPaintedMs": {
+          "median": 23751.10000000149,
+          "samples": [
+            26458,
+            23751.10000000149,
+            14377.10000000149
+          ],
+          "successfulSubsetMedian": 23751.10000000149
+        },
+        "dispatchDelayMs": {
+          "median": 137.89999999850988,
+          "samples": [
+            27.700000002980232,
+            184.30000000447035,
+            137.89999999850988
+          ],
+          "successfulSubsetMedian": 137.89999999850988
+        },
+        "observationEndMs": {
+          "median": 25367.40000000596,
+          "samples": [
+            73033.89999999851,
+            25367.40000000596,
+            15726.10000000149
+          ],
+          "successfulSubsetMedian": 25367.40000000596
+        },
+        "systemToPaintMs": {
+          "median": 28588.79999999702,
+          "samples": [
+            75616.30000000447,
+            28588.79999999702,
+            16873.5
+          ],
+          "successfulSubsetMedian": 28588.79999999702
+        },
+        "primaryToGateMs": 11.900000005960464,
+        "startup": {
+          "primaryScreenReadyMs": 2517.89999999851,
+          "startupReadyMs": 2529.8000000044703,
+          "systemStartupCompleteMs": 2602.7000000029802,
+          "continueDispatchDelayMs": 64.59999999403954
+        }
+      }
+    }
+  },
+  "limits": [
+    "Linux headless Chromium; not Windows/Electron",
+    "Uncollected heap; no forced GC",
+    "/api/health is 404, not a successful health probe",
+    "First-intent results include automatic zero-human-wait module trivia Continue; fixed stability observation is separate",
+    "Old initialGeneration is null because startup metadata is not a projection; every actual projection header and disk manifest generation is mandatory",
+    "Default server inspector stall profiler enabled in both arms; one baseline first-intent profile records inspector.post self samples65722ms; profiler-off A/B was not measured, observer effect magnitude unknown"
+  ],
+  "validation": {
+    "macroBeforePassed": 3,
+    "macroAfterPassed": 3,
+    "firstBeforePassed": 2,
+    "firstBeforeFailed": 1,
+    "firstAfterPassed": 3,
+    "baselineFailure": "Orders not ready within900s; no wrong-row, generation, revision or access mismatch observed; failed sample retained, cause unknown"
+  }
+}
