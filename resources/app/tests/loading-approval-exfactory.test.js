@@ -66,6 +66,9 @@ test('client resolves the same date and renders a separate translated automatic 
  const rev={from:'2026-10-30',to:'2026-11-05',source:'loading-approval'};
  const rendered=ctx.revisionHtml('Ex-factory',rev);
  assert.match(rendered,/ASAS Ex-Factory/);assert.match(rendered,/2026-10-30/);assert.match(rendered,/Yükleme onayı/);assert.match(rendered,/2026-11-05/);assert.doesNotMatch(rendered,/class="revPair"/);
+ assert.doesNotMatch(rendered,/🔒|<small>/);
+ assert.equal(rendered.replace(/<[^>]*>/g,''),'2026-10-30·2026-11-05','only the two dates and a dot are visible');
+ assert.equal(ctx.revisionHtml('LT',{from:29,to:35,source:'loading-approval'}).replace(/<[^>]*>/g,''),'35','derived values have no automatic-mode labels');
  ctx.appLang='en';assert.match(ctx.revisionHtml('Ex-factory',rev),/Loading approval/);
  assert.match(ctx.revisionHtml('Ex-factory',{...rev,source:'manual'}),/class="revPair"/);
 });

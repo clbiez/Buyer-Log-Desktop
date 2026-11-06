@@ -3291,9 +3291,8 @@ html[data-ui-system="manifest"] .revArrow {color:var(--ui-text-muted) !important
 html[data-ui-system="manifest"] .revNew {color:var(--ui-text) !important; font-weight:600 !important
 }
 html[data-ui-system="manifest"] .revAutomatic{color:var(--ui-text);}
-html[data-ui-system="manifest"] .revAutomatic small{font-size:var(--ui-font-2xs);font-weight:500;line-height:1.3;color:var(--ui-text-muted);}
-html[data-ui-system="manifest"] .revAutoOriginal>span{color:var(--ui-text-muted);}
-html[data-ui-system="manifest"] .revAutoApproved strong{font-weight:600;}
+html[data-ui-system="manifest"] .revAutoOriginal,html[data-ui-system="manifest"] .revAutoSeparator{color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] .revAutoApproved{font-weight:600;}
 html[data-ui-system="manifest"] .cfpTitle {font-weight:600 !important;font-size:var(--ui-font-sm) !important;color:var(--ui-text) !important
 }
 html[data-ui-system="manifest"] .profileSelectMenu.profileSelectMenuModal {z-index:var(--ui-z-modal-menu)

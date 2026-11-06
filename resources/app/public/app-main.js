@@ -5722,9 +5722,11 @@ function revisionHtml(key,rev,renderValue){
   const title=`${revisionText(key,rev.from)} → ${revisionText(key,rev.to)}`;
   if(rev.source==='loading-approval'){
     const hint=appLang==='en'?'Calculated using the loading approval date from ASAS. This automatic date cannot be edited.':'ASAS yükleme onay tarihi esas alınır. Bu otomatik tarih elle değiştirilemez.';
-    const label=key==='Ex-factory'?(appLang==='en'?'Loading approval · Auto':'Yükleme onayı · Otomatik'):(appLang==='en'?'Auto':'Otomatik');
-    if(key==='Ex-factory')return `<span class="revAutomatic revAutomaticDates" title="${escapeHtml(hint)}"><span class="revAutoOriginal"><small>ASAS Ex-Factory</small><span>${render(rev.from)}</span></span><span class="revAutoApproved"><small><span aria-hidden="true">🔒</span> ${escapeHtml(appLang==='en'?'Loading approval':'Yükleme onayı')}</small><strong>${render(rev.to)}</strong></span></span>`;
-    return `<span class="revAutomatic" title="${escapeHtml(hint+' '+title)}"><span>${render(rev.to)}</span><small><span aria-hidden="true">🔒</span> ${escapeHtml(label)}</small></span>`;
+    if(key==='Ex-factory'){
+      const sources=appLang==='en'?`ASAS Ex-Factory: ${revisionText(key,rev.from)} · Loading approval: ${revisionText(key,rev.to)}`:`ASAS Ex-Factory: ${revisionText(key,rev.from)} · Yükleme onayı: ${revisionText(key,rev.to)}`;
+      return `<span class="revAutomatic revAutomaticDates" title="${escapeHtml(sources+'. '+hint)}"><span class="revAutoOriginal">${render(rev.from)}</span><span class="revAutoSeparator" aria-hidden="true">·</span><strong class="revAutoApproved">${render(rev.to)}</strong></span>`;
+    }
+    return `<span class="revAutomatic" title="${escapeHtml(hint+' '+title)}">${render(rev.to)}</span>`;
   }
   return `<span class="revPair" title="${escapeHtml(L('Orijinal')+': '+revisionText(key,rev.from))}" data-rev-title="${escapeHtml(title)}">`
     +`<span class="revOld">${render(rev.from)}</span>`

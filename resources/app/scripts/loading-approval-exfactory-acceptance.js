@@ -46,9 +46,10 @@ async function refresh(){await api('/api/refresh',{},'POST',202);for(let i=0;i<1
   colmgr.cp.widthPx['Model Name']=230;colmgr.cp.widthPx['Ex-factory']=200;colmgr.cp.widthPx['Buying Son Onay Tarihi']=140;colmgr.cp.widthPx.STATUS=180;
   state.cpLogisticExpanded=new Set([state.cp.rows.find(row=>row['Order Code']===810001)._id]);renderCP();
  });
- assert.match(await page.locator('#cpTable').innerText(),/Yükleme onayı/);
  const sourceDates=page.locator('#cpTable .revAutomaticDates').first();
- assert.match(await sourceDates.innerText(),/ASAS Ex-Factory/);assert.match(await sourceDates.innerText(),/30.10.26/);assert.match(await sourceDates.innerText(),/05.11.26/);
+ assert.match(await sourceDates.innerText(),/30.10.26/);assert.match(await sourceDates.innerText(),/05.11.26/);
+ assert.doesNotMatch(await page.locator('#cpTable .revAutomatic').allInnerTexts().then(texts=>texts.join(' ')),/🔒|Otomatik|Yükleme onayı|ASAS|Auto|Loading approval/);
+ assert.match(await sourceDates.getAttribute('title'),/ASAS Ex-Factory/);assert.match(await sourceDates.getAttribute('title'),/Yükleme onayı/);
  const original=await sourceDates.locator('.revAutoOriginal').boundingBox(),approved=await sourceDates.locator('.revAutoApproved').boundingBox();
  assert.ok(approved.x>original.x,'ASAS and approval dates are displayed side by side');
  const checks=await page.evaluate(()=>{
@@ -60,7 +61,7 @@ async function refresh(){await api('/api/refresh',{},'POST',202);for(let i=0;i<1
  assert.equal(await page.locator('#cpTable .revAutomatic .exfDisplay').count(),0);assert.ok(await page.locator('#cpTable .revPair').count());
  const assets=path.join(app,'public/release-notes/next-assets');fs.mkdirSync(assets,{recursive:true});
  await page.screenshot({path:path.join(assets,'loading-approval-exfactory.png')});
- await page.evaluate(()=>applyLanguage('en'));assert.match(await page.locator('#cpTable .revAutomaticDates').first().innerText(),/Loading approval/);assert.doesNotMatch(await page.locator('#cpTable .revAutomaticDates').first().innerText(),/Yükleme onayı/);
+ await page.evaluate(()=>applyLanguage('en'));assert.match(await page.locator('#cpTable .revAutomaticDates').first().getAttribute('title'),/Loading approval/);assert.doesNotMatch(await page.locator('#cpTable .revAutomaticDates').first().getAttribute('title'),/Yükleme onayı/);
  const existing=await page.evaluate(async()=>{await ensureOrdersLoaded();return state.orders.rows.find(row=>row['Order Code']===810001)._exFactoryRevision.source;});assert.equal(existing,'loading-approval');
  // A new source publication changes approval; the original ASAS plan stays intact.
  demo.asas[3][header.indexOf('Buying Son Onay Tarihi')]='2026-11-08';writeSource();await refresh();

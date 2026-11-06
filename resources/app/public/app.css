@@ -1728,10 +1728,8 @@ tr:hover .quotationOptions:not(.hasOptions),tr:focus-within .quotationOptions:no
 .revPair .badge{vertical-align:middle;}
 .revOld .badge{opacity:.55;}
 td.num .revPair{justify-content:flex-end;}
-.revAutomatic{display:inline-flex;flex-direction:column;gap:2px;max-width:100%;white-space:nowrap;}
-.revAutomatic small{white-space:normal;}
-.revAutomaticDates{flex-direction:row;align-items:flex-start;gap:10px;}
-.revAutomaticDates>span{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.revAutomatic{display:inline-flex;align-items:center;max-width:100%;white-space:nowrap;}
+.revAutomaticDates{gap:6px;}
 .cfpTitle{padding:6px 8px 4px;}
 .cfpItem.cfpFaded{opacity:.42;}
 .shipDecision{display:block; margin-bottom:10px;}
