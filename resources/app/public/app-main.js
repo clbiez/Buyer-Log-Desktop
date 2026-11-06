@@ -19521,6 +19521,7 @@ async function backlogWorkbookBufferWithImages(wb,rows,includeImages){
 }
 window.BLBacklogChartContext={
   prepareQuery:()=>prepareBacklogChartQuery(),
+  whenRowsReady:()=>waitForBacklogRowsReady(),
   queryParams:(allColumns=false)=>{
     const params=backlogExportQueryParams();
     // Ayar penceresinde ASAS/Antrepo dahil tüm mevcut başlıklar seçilebilir olmalı.
@@ -19693,6 +19694,9 @@ let backlogFetchGeneration=0;
 let backlogFetchPending=null;
 async function prepareBacklogChartQuery(){
   await fetchBacklogSourceColumns();
+  await waitForBacklogRowsReady();
+}
+async function waitForBacklogRowsReady(){
   // İlk pivot kaynak revizyonunu ortak satır önbelleğine bildirir. Grafik onu
   // beklemezse henüz başlayan ortak isteği bu bildirim silip tekrar başlatır.
   while(backlogFetchPending)await backlogFetchPending.ready;

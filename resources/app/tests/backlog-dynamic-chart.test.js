@@ -265,7 +265,9 @@ test('Backlog render refreshes chart and Excel export appends chart sheets', () 
   assert.match(APP,/prepareQuery:\(\)=>prepareBacklogChartQuery\(\)/);
   const prepare=require('./helpers/app-main-functions').extractFunction(APP,'prepareBacklogChartQuery');
   assert.match(prepare,/await fetchBacklogSourceColumns\(\)/);
-  assert.match(prepare,/while\(backlogFetchPending\)await backlogFetchPending\.ready/);
+  assert.match(prepare,/await waitForBacklogRowsReady\(\)/);
+  const ready=require('./helpers/app-main-functions').extractFunction(APP,'waitForBacklogRowsReady');
+  assert.match(ready,/while\(backlogFetchPending\)await backlogFetchPending\.ready/);
   assert.match(APP,/appendWorkbookSheets\?\.\(/);
   assert.match(APP,/const chartSpecs=chartExport&&Array\.isArray\(chartExport\.charts\)\?chartExport\.charts:\[\]/);
   assert.match(APP,/charts:chartSpecs/);

@@ -16,7 +16,7 @@ function setup(){
   const providerStart=main.indexOf('window.BLBacklogChartContext={'),provider=main.slice(providerStart,main.indexOf('\n};',providerStart)+4);
   const cache=overview.slice(overview.indexOf('const rowsCache=new Map()'),overview.indexOf('\nfunction queryParams()'));
   const hook=overview.slice(overview.indexOf('let pendingTimer='),overview.indexOf('/* --------------------------------------------------------------- çizim */'));
-  const functions=['fetchBacklog','fetchBacklogData','prepareBacklogChartQuery'].filter(name=>main.includes('function '+name+'(')).map(name=>extractFunction(main,name));
+  const functions=['fetchBacklog','fetchBacklogData','prepareBacklogChartQuery','waitForBacklogRowsReady'].filter(name=>main.includes('function '+name+'(')).map(name=>extractFunction(main,name));
   vm.runInContext(['let backlogFetchGeneration=0,backlogFetchPending=null;',cache,hook,...functions,provider,...['cacheSignature','queryParams','loadDetail'].map(name=>extractFunction(chart,name))].join('\n'),c);
   return {c,grouped,exports,applied,query,requestUrls,fetches:()=>fetches};
 }
@@ -36,4 +36,11 @@ test('Chart follows the newest pivot preparation without waiting for an obsolete
   assert.equal(f.fetches(),1);assert.equal(f.exports.length,1,'the current pivot unlocks the shared row request while the obsolete pivot is unresolved');
   f.exports[0]({headers:[],rows:[{Adet:200}],rowsRevision:'rows-current'});assert.equal((await chartResult).rows[0].Adet,200);
   f.grouped[0]({rowsInputRevision:'source-old'});await old;assert.deepEqual(f.applied,['source-current']);
+});
+test('lazy Delivery initialization shares the post-pivot request with Chart and Overview',async()=>{
+  const f=setup(),group=f.c.fetchBacklog({}),delivery=f.c.window.BLBacklogRows.load(f.query);await flush();
+  f.grouped[0]({rowsInputRevision:'source-a'});await group;
+  const chart=f.c.loadDetail(false),overview=f.c.window.BLBacklogRows.load(f.query);await flush();
+  const body={headers:['Adet'],rows:[{Adet:100}],rowsRevision:'rows-a'};f.exports.forEach(resolve=>resolve(body));
+  const [deliveryRows,chartData,overviewRows]=await Promise.all([delivery,chart,overview]);assert.equal(f.fetches(),1);assert.equal(deliveryRows,chartData.rows);assert.equal(deliveryRows,overviewRows);
 });

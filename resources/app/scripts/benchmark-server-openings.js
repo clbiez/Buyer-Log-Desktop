@@ -13,6 +13,13 @@ if(!Number.isSafeInteger(timeoutMs)||timeoutMs<60000)throw Error('Invalid openin
 let server,browser,page,healthLoop,healthStopped=false,cookie='',base,phase='setup';
 const report={schemaVersion:1,synthetic:true,status:'running',startedAt:new Date().toISOString(),fixtureRoot:root,seedReport:seedFile,settleMs,timeoutMs,measurements:[],healthSamples:[],requests:[],errors:[]};
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms)),sha=value=>crypto.createHash('sha256').update(value).digest('hex');
+function backlogScreenReady(){
+  const delivery=window.BLBacklogAnalysis?._state,toggle=document.getElementById('backlogOverviewToggle');
+  const overviewReady=!toggle||toggle.getAttribute('aria-expanded')!=='true'||Boolean(document.querySelector('#backlogOverviewBody .bpaHero'));
+  return document.body.dataset.activeTab==='backlog'&&typeof lastBacklogData!=='undefined'&&lastBacklogData?.totalRows>0
+    &&Boolean(document.querySelector('#backlogTreeTable tbody tr'))&&delivery?.rows?.length===lastBacklogData.totalRows
+    &&!delivery.loading&&!delivery.error&&delivery.parity?.match===true&&overviewReady;
+}
 function persist(){
   if(fs.existsSync(root)){
     const events=probe.readProbeEvents(root,{requireStopped:Boolean(server&&(server.exitCode!==null||server.signalCode))});report.serverLoopProbe={observerSha256:probe.observerSha256(),events,
@@ -92,8 +99,9 @@ async function record(scenario,action,read){
     if(report.measurements[0].state.overviewRows!==seed.expected.rows.overview)throw Error('Overview row count differs from validated seed');
     await record('backlog',async()=>{
       await page.locator('nav.tabs button[data-tab="backlog"]').click({timeout:timeoutMs});
-      await page.waitForFunction(()=>document.body.dataset.activeTab==='backlog'&&typeof lastBacklogData!=='undefined'&&lastBacklogData?.totalRows>0&&document.querySelector('#backlogTreeTable tbody tr'),null,{timeout:timeoutMs});
-    },()=>page.evaluate(()=>({rows:lastBacklogData.totalRows,orders:lastBacklogData.totalOrders,qty:lastBacklogData.totalQty,domRows:document.querySelectorAll('#backlogTreeTable tbody tr').length})));
+      await page.waitForFunction(backlogScreenReady,null,{timeout:timeoutMs});
+    },()=>page.evaluate(()=>({rows:lastBacklogData.totalRows,orders:lastBacklogData.totalOrders,qty:lastBacklogData.totalQty,domRows:document.querySelectorAll('#backlogTreeTable tbody tr').length,
+      deliveryRows:BLBacklogAnalysis._state.rows.length,deliveryParity:BLBacklogAnalysis._state.parity.match})));
     if(report.errors.length)throw Error('Renderer errors occurred');
     const manifest=JSON.parse(fs.readFileSync(path.join(root,'local/page-cache/moderator/manifest.json'),'utf8'));
     if(manifest.sourceRevisionKey!==seed.expected.sourceRevision||manifest.activeGeneration!==seed.expected.generation||report.projectionGenerations.some(value=>value!==manifest.activeGeneration))throw Error('Source or projection generation changed during the opening scenario');
