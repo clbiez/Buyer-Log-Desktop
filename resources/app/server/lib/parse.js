@@ -1880,6 +1880,7 @@ function applyDateOverrides(orders, overrides) {
   const list = Array.isArray(orders) ? orders : [];
   return list.map(order => {
     const record = map && typeof map === 'object' ? overrideGet(map, order) : null;
+    if(!record&&!order._exFactoryRevision&&!BLBusinessRules.resolveExFactoryDate(order.ex,order.shipConf,dateOrdinal).automatic)return order;
     const next = {
       ...order,
       _asasEx: asasBaseline(order, 'ex', '_asasEx'),
