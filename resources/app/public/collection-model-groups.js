@@ -164,12 +164,20 @@
 
   // A fresh reader for one read-only operation: index parents once instead of
   // scanning all rows for every model-level cell. Rebuild after row changes.
-  function createValueReader(rows) {
-    const parents = new Map();
-    (rows || []).forEach(row => {
-      if (row && row.modelGroupRole === 'parent' && !parents.has(String(row.modelGroupId))) parents.set(String(row.modelGroupId), row);
-    });
-    return (row, key) => effectiveValue(row, key, null, parents);
+  function createValueReader(rows, {lazy=false}={}) {
+    let parents=null;
+    const index=()=>{
+      if(parents)return parents;
+      parents=new Map();
+      (rows||[]).forEach(row=>{
+        if(row&&row.modelGroupRole==='parent'&&!parents.has(String(row.modelGroupId)))parents.set(String(row.modelGroupId),row);
+      });
+      return parents;
+    };
+    // Salt okunur işlem varsayılan olarak kendi taze indeksini kurar. Revizyon
+    // okuyucusu, açık override/renk alanı okuması için ikinci bir tarama yapmaz.
+    const lookup=lazy?{get:key=>index().get(key)}:index();
+    return (row,key)=>effectiveValue(row,key,null,lookup);
   }
 
   // Bir canlı satır dizisi için yalnız son revizyon tutulur. Eski owner/undo
@@ -180,7 +188,7 @@
   function valueReaderForRevision(rows,revision){
     if(!Array.isArray(rows))return createValueReader([]);
     let cached=revisionReaders.get(rows);
-    if(!cached||cached.revision!==revision){cached={revision,reader:createValueReader(rows)};revisionReaders.set(rows,cached);}
+    if(!cached||cached.revision!==revision){cached={revision,reader:createValueReader(rows,{lazy:true})};revisionReaders.set(rows,cached);}
     return cached.reader;
   }
   function invalidateValueReader(rows){if(Array.isArray(rows))revisionReaders.delete(rows);}

@@ -67,6 +67,18 @@ test('revision readers preserve falsy overrides, first-parent and local structur
   rows[1].modelGroupRole='variant';Groups.invalidateValueReader(rows);check(6);
   assert.notEqual(check(6),Groups.valueReaderForRevision(rows.slice(),6));
 });
+test('revision reader builds the parent index only when inheritance is actually needed',()=>{
+  const parent={id:1,modelGroupId:'g',modelGroupRole:'parent',modelSharedValues:{fabric:'Model'}};
+  const variant={id:2,modelGroupId:'g',modelGroupRole:'variant',quantity:0,variantOverrides:{not:'',flag:false,pricing:null}};
+  const rows=[parent,variant];let scans=0;
+  rows.forEach=callback=>{scans++;Array.prototype.forEach.call(rows,callback);};
+  const read=Groups.valueReaderForRevision(rows,1);assert.equal(scans,0);
+  assert.equal(read(variant,'not'),'');assert.equal(read(variant,'flag'),false);assert.equal(read(variant,'pricing'),null);
+  assert.equal(read(parent,'fabric'),'Model');assert.equal(read(variant,'quantity'),0);assert.equal(scans,0);
+  assert.equal(read(variant,'fabric'),'Model');assert.equal(scans,1);
+  assert.equal(read,Groups.valueReaderForRevision(rows,1));read(variant,'fabric');assert.equal(scans,1);
+  Groups.createValueReader(rows);assert.equal(scans,2,'an explicit read-only operation still creates its own fresh index');
+});
 test('Collection consumer uses revision index and invalidates replacement paths before derived reads',()=>{
   const value=block(APP,'function kolEffectiveValue','function kolEffectiveEndeksmatikRow');
   assert.match(value,/valueReaderForRevision/);
