@@ -10,6 +10,7 @@ const centralIam = require('./central-iam');
 const orderAuthorityShare = require('./order-authority-share');
 const cpFieldOwnership = require('./cp-field-ownership');
 const iam = require('./iam-core');
+const computeAccess = require('./compute-access');
 const iamExcel = require('./iam-excel');
 const userPreferences = require('./user-preferences');
 const { createPersonalLoginCache } = require('./personal-login-cache');
@@ -1151,12 +1152,7 @@ function canEditOrder(profile, order, store = readStore(), { sharedOnly = false,
   }
   if (hasPermission(profile, 'manageAllOrders', store)) return true;
   const scopes = effectiveScopes(profile, store);
-  if (scopes.all) return true;
-  if (scopes.buyers.some(value => norm(value) === norm(order.buyer))) return true;
-  const configured = [
-    [scopes.mags, order.merch], [scopes.mmygs, order.ageGroup], [scopes.buyingGroups, order.buyerGrup],
-  ].filter(([list]) => list.length);
-  return configured.length > 0 && configured.every(([list, value]) => clean(value) && list.some(item => norm(item) === norm(value)));
+  return computeAccess.scopeAllowsEdit(order, scopes, norm);
 }
 function catalogsFromStore(store, options = {}) {
   const mags = [], mmygs = [], buyingGroups = [], titles = [];
@@ -2486,6 +2482,12 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     syncProfiles: syncProfilesForAccess, mergeCatalogValues, authoritativeOrderRows, sessionProfile, publicProfile,
     // Opaque in-process identity; replaced whenever canonical order authority changes.
     orderAuthorityToken: () => authoritySnapshot,
+    computeAccessContext: profile => {
+      const store=readStore();
+      return computeAccess.createAccessContext({userId:profile&&profile.id,systemRole:profile&&profile.systemRole,
+        manageAll:Boolean(profile&&hasPermission(profile,'manageAllOrders',store)),viewScope:iam.effectiveDataScope(profile,store),editScopes:effectiveScopes(profile,store),
+        authority:authoritySnapshot,profiles:allProfiles(store)});
+    },
     canEditOrder: (profile, order, options = {}) => canEditOrder(profile, order, readStore(), { ...options, orderAccess:authoritySnapshot }),
     sharedOwnerOf: (recordId, userId) => {
       const store = readStore(), profile = findProfile(store, clean(userId));
