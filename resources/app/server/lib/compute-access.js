@@ -17,9 +17,39 @@ function scopeAllowsEdit(order,scopes,norm=normalize){
 }
 function scopeCopy(scope={}){return {...(scope.mode?{mode:comparable(scope.mode)}:{}),all:Boolean(scope.all),...Object.fromEntries(fields.map(key=>[key,Array.isArray(scope[key])?scope[key].map(comparable):[]]))};}
 const hash=value=>crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
+function preparationError(code){
+  const stale=code==='COMPUTE_STALE_GENERATION';
+  return Object.assign(Error(stale?'Yetki sürümü değişti. / Authority generation changed.':'Yetki dizini hazırlanıyor. / Authority directory is being prepared.'),{code,statusCode:stale?409:503});
+}
+function prepareAuthority(source,{hashAuthority,batchSize=256,yieldControl=()=>new Promise(setImmediate),isCurrent=()=>true}={}){
+  if(typeof hashAuthority!=='function'||!Number.isInteger(batchSize)||batchSize<1||batchSize>1024)throw TypeError('Invalid authority preparation options');
+  const original=source&&typeof source==='object'?source:{},known=authorityCopies.get(original);
+  if(known)return known.ready||Promise.resolve(known);
+  const pending={};authorityCopies.set(original,pending);
+  pending.ready=(async()=>{
+    try{
+      const authority={};let processed=0;
+      const yieldIfNeeded=async()=>{if(++processed>=batchSize){processed=0;await yieldControl();if(!isCurrent())throw preparationError('COMPUTE_STALE_GENERATION');}};
+      for(const code of Object.keys(original)){
+        const sourceRows=original[code],rows=[];
+        Object.defineProperty(authority,code,{value:rows,enumerable:true,writable:true,configurable:true});
+        if(Array.isArray(sourceRows))for(const row of sourceRows){
+          rows.push(!row||typeof row!=='object'?row:Object.fromEntries(['buyer','merch','ageGroup','buyerGrup'].map(key=>[key,comparable(row[key])])));
+          await yieldIfNeeded();
+        }
+        await yieldIfNeeded();
+      }
+      await yieldControl();if(!isCurrent())throw preparationError('COMPUTE_STALE_GENERATION');
+      const authorityHash=await hashAuthority(authority);
+      if(!isCurrent())throw preparationError('COMPUTE_STALE_GENERATION');
+      if(typeof authorityHash!=='string'||!/^[a-f0-9]{64}$/.test(authorityHash))throw Error('Invalid authority digest');
+      const prepared={authority,authorityHash};authorityCopies.set(original,prepared);return prepared;
+    }catch(error){if(authorityCopies.get(original)===pending)authorityCopies.delete(original);throw error;}
+  })();return pending.ready;
+}
 function copyAuthority(source){
   const original=source&&typeof source==='object'?source:{};
-  let cached=authorityCopies.get(original);if(cached)return cached;
+  let cached=authorityCopies.get(original);if(cached){if(!cached.authorityHash)throw preparationError('COMPUTE_ACCESS_NOT_READY');return cached;}
   const authority=Object.fromEntries(Object.entries(original).map(([code,rows])=>[code,Array.isArray(rows)?rows.map(row=>{
     // Falsy bozuk satırların eski every(canEditOrder) sonucunu değiştirme.
     if(!row||typeof row!=='object')return row;
@@ -47,4 +77,4 @@ function sharedRows(context,rows){
   const rowLineKey=require('./parse').rowLineKey,resolve=ownership.createOwnershipResolver(context.authority,context.ownershipProfiles),byCode=new Map();
   return (rows||[]).map(row=>{const code=row['Order Code'];if(!byCode.has(code))byCode.set(code,resolve({recordId:'cp-order:'+rowLineKey(row),userId:context.userId,systemRole:context.systemRole}).allowed);return {...row,_canEditShared:byCode.get(code)};});
 }
-module.exports={normalize,scopeAllowsEdit,createAccessContext,filterRows,canEditCode,sharedRows};
+module.exports={normalize,scopeAllowsEdit,createAccessContext,prepareAuthority,filterRows,canEditCode,sharedRows};

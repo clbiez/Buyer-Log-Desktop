@@ -42,6 +42,7 @@ async function execute(task,data,transfer){
   }
   data.params=data.paramsBytes?v8.deserialize(Buffer.from(data.paramsBytes)):data.params||{};
   data.paramsBytes=null;
+  if(task==='access-authority-hash')return {authorityHash:require('node:crypto').createHash('sha256').update(JSON.stringify(data.params)).digest('hex')};
   if(task==='office-render'){
     const {format,data:document,options}=data.params;
     if(!['xlsx','pptx'].includes(format))throw Object.assign(Error('Invalid compute request'),{code:'COMPUTE_JOB_INVALID'});

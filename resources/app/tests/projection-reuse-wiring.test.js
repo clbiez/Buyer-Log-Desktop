@@ -22,9 +22,10 @@ test('source identity survives appended Excel telemetry and unrelated LFL metada
   r.loadedAt='next';assert.notEqual(c.key(r),key);
 });
 test('actual server orchestration skips unchanged builders and rebuilds only changed target modules',async()=>{
-  let builds=0,scope='authorized',currentRuntime;const build=rows=>{builds++;return rows.map(r=>({qty:r.qty}));};
+  let builds=0,scope='authorized',currentRuntime,prepared=false;const build=rows=>{builds++;return rows.map(r=>({qty:r.qty}));};
   const context={APP_VERSION:'test',process,Set,Map,Buffer,pageProjectionCache,derivedInputKeys,
-    pageProjectionContext:()=>({id:'u',contextHash:scope,filterStatus:{ready:true}}),effectiveOverridesForUser:()=>({}),
+    userAccess:{prepareComputeAccessContext:async()=>{await new Promise(setImmediate);prepared=true;}},
+    pageProjectionContext:()=>{assert.equal(prepared,true);return {id:'u',contextHash:scope,filterStatus:{ready:true}};},effectiveOverridesForUser:()=>({}),
     pageCacheRuntimeMeta:r=>({loadedAt:r.loadedAt}),projectionSourceRevision:r=>r.loadedAt,
     ordersForTarget:(r,t)=>r.asasOrdersByTarget?.[t]||r.asasOrders,antrepoForTarget:()=>({}),
     buildCPRowsFromASAS:build,buildOrdersRowsFromASAS:build,buildOrderSummaryRowsFromASAS:build,buildOverviewSummaryRowsFromASAS:build,
@@ -46,7 +47,7 @@ test('actual server orchestration skips unchanged builders and rebuilds only cha
     return {value:{compressed},metrics:{},release(){}};
   }});
   vm.createContext(context);vm.runInContext([fn('sameProjectionSourceRows'),fn('buildCpAndOrdersProjectionRows'),fn('buildAndWritePageProjectionCache'),fn('buildAndWriteComputedPageProjectionCache')].join('\n')+'\nglobalThis.run=buildAndWritePageProjectionCache;',context);
-  const actualRun=context.run;context.run=(profile,runtime)=>{currentRuntime=runtime;return actualRun(profile,runtime);};
+  const actualRun=context.run;context.run=(profile,runtime)=>{currentRuntime=runtime;prepared=false;return actualRun(profile,runtime);};
   const runtime={loadedAt:'old',asasOrders:[{qty:1}],asasOrdersByTarget:{cp:[{qty:2}],orders:[{qty:3}],backlog:[{qty:4}]}};
   const first=await context.run(null,runtime);assert.equal(builds,4);
   const copy=JSON.parse(JSON.stringify(runtime));copy.loadedAt='fresh';

@@ -14,7 +14,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   pool??=createComputePool({maxPendingBytes:512*MiB});
   const privateRoot=fs.mkdtempSync(path.join(root||os.tmpdir(),'buyerlog-source-replicas-'));
   fs.chmodSync(privateRoot,0o700);
-  const records=new Map(),current=new Map(),preparing=new Map();let reservedDiskBytes=0,closed=false,closing,warming;
+  const records=new Map(),current=new Map(),preparing=new Map();let reservedDiskBytes=0,closed=false,closing,warming,authorityGeneration=0;
   const key=(owner,generation)=>JSON.stringify([String(owner),String(generation)]),poolOwner=owner=>'source:'+owner;
   async function discard(record){
     if(record.removing||record.pins||!record.retired)return;
@@ -126,11 +126,20 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       {ownerKey:'output:'+String(ownerId),generation:'1',priority:'interactive',...options,estimatedBytes,inputBytes,transferList:[encoded]});
     return {...lease,metrics:{...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024}};
   }
+  async function hashAccessAuthority(authority,{onMetrics}={}){
+    if(closed)throw failure('COMPUTE_POOL_CLOSED');
+    const started=performance.now(),encoded=Uint8Array.from(v8.serialize(authority)).buffer,inputBytes=encoded.byteLength+1024;
+    const paramsSerializeMs=performance.now()-started,generation=String(++authorityGeneration);
+    pool.setGeneration('access-authority',generation);
+    const lease=await pool.run('access-authority-hash',{paramsBytes:encoded},{ownerKey:'access-authority',generation,priority:'interactive',estimatedBytes:96*MiB+inputBytes*8,inputBytes,transferList:[encoded]});
+    try{try{onMetrics?.({...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024});}catch{}return lease.value.authorityHash;}
+    finally{lease.release();}
+  }
   function stats(){return {diskBudgetBytes,reservedDiskBytes,sourceFiles:[...records.values()].filter(record=>Boolean(record.descriptor.replicaFile)).length,...pool.stats()};}
   function close(){
     if(closing)return closing;closed=true;
     closing=(async()=>{await pool.close();await Promise.allSettled([...records.values()].map(record=>record.ready));await fs.promises.rm(privateRoot,{recursive:true,force:true,maxRetries:3,retryDelay:50});records.clear();current.clear();preparing.clear();reservedDiskBytes=0;})();return closing;
   }
-  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,warm,stats,close};
+  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,hashAccessAuthority,warm,stats,close};
 }
 module.exports={createComputeService};

@@ -2232,6 +2232,9 @@ app.post('/api/user-login', express.json({ limit: '64kb' }), (req, res, next) =>
 app.post('/api/user-logout', userAccess.logoutHandler);
 app.get('/api/current-user', userAccess.currentHandler);
 app.use(userAccess.requireSelection);
+app.use(require('./lib/compute-access-middleware').createComputeAccessMiddleware({
+  prepare:()=>userAccess.prepareComputeAccessContext(),profileFor:req=>userAccess.sessionProfile(req),
+}));
 // Master yayım yetkisi: bu bilgisayarda Moderatör oturumu görüldü mü?
 app.use((req, res, next) => {
   noteModeratorSession(req.currentUser);
@@ -8159,6 +8162,7 @@ function buildCpAndOrdersProjectionRows(cpSource, ordersSource, cpAntrepo, order
   };
 }
 async function buildAndWritePageProjectionCache(currentUser, runtime = null) {
+  await userAccess.prepareComputeAccessContext?.();
   const ctx = pageProjectionContext(currentUser), id = ctx.id;
   if (!ctx.filterStatus.ready) return null;
   const active = runtime || cacheForUser(id);

@@ -157,3 +157,12 @@ test('native map and selected lazy details share source generation and keep Back
  finally{details.release();}
  await assert.rejects(service.run('backlog-map-details',descriptor,{...data,selector,expectedSourceRevision:'old'}),{code:'COMPUTE_STALE_GENERATION'});
 });
+
+test('prepared authority hash runs in the same common worker and releases its lease',async t=>{
+ const {service,pool}=setup(t),authority={101:[{buyer:'Synthetic Buyer',merch:'M',ageGroup:'A',buyerGrup:'G'}]};let metrics;
+ const expected=require('node:crypto').createHash('sha256').update(JSON.stringify(authority)).digest('hex');
+ assert.equal(await service.hashAccessAuthority(authority,{onMetrics:value=>{metrics=value;}}),expected);
+ assert.ok(metrics.threadId>0);assert.ok(metrics.paramsSerializeMs>=0);assert.ok(metrics.paramsBytes>0);assert.equal(pool.stats().leasedOutputBytes,0);
+ const ready=await service.runOffice('a',{format:'xlsx',data:require('../server/lib/lcwai-output/output-contracts').normalizeWorkbook({title:'Demo',sheets:[{name:'Demo',columns:[{header:'Order',type:'text'}],rows:[['Synthetic']]}]}).data,options:{date:new Date('2026-11-05T00:00:00Z')}});
+ try{assert.equal(ready.metrics.threadId,metrics.threadId);}finally{ready.release();}
+});

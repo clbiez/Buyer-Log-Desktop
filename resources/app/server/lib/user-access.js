@@ -2482,6 +2482,14 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     syncProfiles: syncProfilesForAccess, mergeCatalogValues, authoritativeOrderRows, sessionProfile, publicProfile,
     // Opaque in-process identity; replaced whenever canonical order authority changes.
     orderAuthorityToken: () => authoritySnapshot,
+    prepareComputeAccessContext: async()=>{
+      for(;;){
+        const current=authoritySnapshot;
+        try{await computeAccess.prepareAuthority(current,{isCurrent:()=>current===authoritySnapshot,hashAuthority:value=>require('./compute-runtime').getComputeService().hashAccessAuthority(value)});}
+        catch(error){if(current!==authoritySnapshot)continue;throw error;}
+        if(current===authoritySnapshot)return;
+      }
+    },
     computeAccessContext: profile => {
       const store=readStore();
       return computeAccess.createAccessContext({userId:profile&&profile.id,systemRole:profile&&profile.systemRole,
