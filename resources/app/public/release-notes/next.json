@@ -3,14 +3,43 @@
   "publishedAt": "2026-11-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "İki bölmeli sütun dondurma · Çalışma alanı ve modül geçişi iyileştirmeleri ve LCW AI geçmişi · Backlog performansı",
-    "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history · Backlog performance"
+    "tr": "İki bölmeli sütun dondurma · Çalışma alanı ve modül geçişi iyileştirmeleri ve LCW AI geçmişi · Backlog performansı · Ajans lisanslarında royalty",
+    "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history · Backlog performance · Royalty for agency licenses"
   },
   "summary": {
-    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır.",
-    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still."
+    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır. Sözleşmeleri yalnız DTR dışı lisansörle tanımlı lisanslarda (ör. Formula 1) siparişler artık otomatik DTR sayılmaz; Supp. FOB Türkiye ve yurt dışı siparişlerinde royalty ile hesaplanır.",
+    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still. Orders of licenses whose contracts name only non-DTR licensors (e.g. Formula 1) are no longer classified DTR automatically; Supp. FOB includes royalty for Turkey and overseas orders."
   },
   "changes": [
+    {
+      "id": "license-agency-royalty-orders",
+      "type": "fix",
+      "module": {
+        "tr": "Siparişler · CP · License Royalty",
+        "en": "Orders · CP · License Royalty"
+      },
+      "title": {
+        "tr": "Ajans lisanslarında Supp. FOB royalty ile hesaplanır",
+        "en": "Supp. FOB includes royalty for agency licenses"
+      },
+      "body": {
+        "tr": "Bir lisansın License Royalty sözleşmelerinin tamamı DTR dışı bir lisansörle tanımlıysa (ör. Formula 1 → FASHION UK), o lisansın siparişleri üretici NON-DTR MANUFACTURERS listesinde olmasa da artık otomatik DTR sayılmaz. Licensor sözleşmeden gelir; Supp. FOB, Türkiye siparişlerinde TR komisyonu, yurt dışı siparişlerinde YD komisyonuyla (FOB − hologram) × (1 − royalty) olarak hesaplanır. Önceden bu satırlarda Supp. FOB = FOB görünüyor ve royalty düşülmüyordu. Sözleşmesi olmayan veya DTR sözleşmesi bulunan lisanslarda üretici listesi tek sınıflandırma kaynağı olmaya devam eder; elle seçilen Licensor ve elle girilen Supp. FOB korunur. Bu siparişlerde Sub-MFR artık üretici adıyla otomatik dolmaz; asıl üretim yapan firmayı girin.",
+        "en": "When every License Royalty contract of a license names a non-DTR licensor (e.g. Formula 1 → FASHION UK), its orders are no longer classified DTR automatically just because the manufacturer is missing from NON-DTR MANUFACTURERS. The Licensor comes from the contract and Supp. FOB is calculated as (FOB − hologram) × (1 − royalty), with the TR commission for Turkey orders and the overseas commission for other countries. Previously these rows showed Supp. FOB = FOB without deducting royalty. Licenses without contracts or with a DTR contract still use the manufacturer list as the only classification source; a manually selected Licensor and manually entered Supp. FOB are kept. Sub-MFR is no longer filled automatically with the manufacturer on these orders; enter the actual producing factory."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-agency-royalty-orders.png",
+        "alt": {
+          "tr": "Siparişler tablosunda ajans lisanslı Türkiye siparişi FOB ₺384,98, Supp. FOB 290,54; DTR siparişi FOB ile aynı",
+          "en": "Orders table: an agency-licensed Turkey order with FOB ₺384.98 and Supp. FOB 290.54; the DTR order equals FOB"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: üretici NON-DTR listesinde değil, sözleşme %24,5 royalty + 0,16 hologram; Türkiye ve yurt dışı siparişleri royalty ile hesaplanır, DTR lisansı değişmez.",
+          "en": "Actual Buyer Log with isolated demo data: the manufacturer is not on the NON-DTR list and the contract is 24.5% royalty + 0.16 hologram; Turkey and overseas orders include royalty while the DTR license is unchanged."
+        }
+      }
+    },
     {
       "id": "loading-approval-exfactory",
       "type": "fix",
