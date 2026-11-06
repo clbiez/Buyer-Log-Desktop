@@ -95,4 +95,12 @@ async function refresh(){await api('/api/refresh',{},'POST',202);for(let i=0;i<1
   assert.deepEqual(errors,[]);
   console.log('PASS real UI: Sub MFR + Supp. FOB, in-place update by MB month + PLM ID + Colour Code, approval-gated price change, history inputs kept, idempotent re-import; screenshot captured.');
   console.log('Evidence: '+root);
-})().catch(async error=>{console.error(error);if(page)await page.screenshot({path:path.join(root,'failure.png')}).catch(()=>{});console.error('Evidence: '+root);process.exitCode=1;}).finally(async()=>{if(browser)await browser.close();server.kill('SIGTERM');fs.closeSync(log);});
+})().catch(async error=>{console.error(error);if(page)await page.screenshot({path:path.join(root,'failure.png')}).catch(()=>{});console.error('Evidence: '+root);process.exitCode=1;}).finally(async()=>{
+  if(browser)await browser.close();
+  // Sunucu SIGTERM ile kapanmazsa yalıtılmış veri klasörüne yazmaya devam etmesin.
+  if(server.exitCode==null&&server.signalCode==null){
+    const exited=new Promise(resolve=>server.once('exit',resolve));server.kill('SIGTERM');
+    const timer=setTimeout(()=>server.kill('SIGKILL'),5000);await exited;clearTimeout(timer);
+  }
+  fs.closeSync(log);
+});
