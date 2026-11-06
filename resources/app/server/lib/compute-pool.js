@@ -90,7 +90,7 @@ function createComputePool(options={}){
     if(!slot.worker){
       let setupError;
       try{
-        slot.worker=new WorkerClass(workerFile,{resourceLimits:{maxOldGenerationSizeMb:options.maxOldGenerationSizeMb??Math.min(3072,Math.max(16,Math.floor(budget/MiB)))}});
+        slot.worker=new WorkerClass(workerFile,{workerData:{buyerLogComputePool:true},resourceLimits:{maxOldGenerationSizeMb:options.maxOldGenerationSizeMb??Math.min(3072,Math.max(16,Math.floor(budget/MiB)))}});
         // Lease kaydı exit dinleyicilerinden önce kurulur; paylaşılan dosya
         // kilidi okuyucusu emekli thread'i istemci callback'inden önce görür.
         try{registerLeaseWorker(slot.worker);}catch(error){setupError=error;}
@@ -117,6 +117,7 @@ function createComputePool(options={}){
         const ordered=pending.slice().sort((a,b)=>a.priority-b.priority||a.id-b.id);let launched=false,retired=false;
         for(const job of ordered){
           if(generations.get(job.ownerKey)!==job.generation){removeQueued(job);rejectJob(job,failure('COMPUTE_STALE_GENERATION'));launched=true;break;}
+          if(job.serializationKey&&[...slots].some(slot=>slot.state!=='idle'&&slot.job?.serializationKey===job.serializationKey))continue;
           const fit=extra=>reserved()-job.inputBytes+job.estimatedBytes+extra<=budget;
           let slot=[...slots].find(s=>s.state==='idle'&&fit(0));
           if(!slot&&slots.size<maxWorkers&&fit(workerBase)){slot={state:'idle',worker:null,residentBytes:0,estimatedBytes:0,job:null};slots.add(slot);}
@@ -149,6 +150,7 @@ function createComputePool(options={}){
       ||!['interactive','background'].includes(priority)||!Number.isFinite(timeoutMs)||timeoutMs<=0
       ||(jobOptions.signal!=null&&(typeof jobOptions.signal.aborted!=='boolean'||typeof jobOptions.signal.addEventListener!=='function'||typeof jobOptions.signal.removeEventListener!=='function'))
       ||(jobOptions.transferList!==undefined&&!Array.isArray(jobOptions.transferList)))code='COMPUTE_JOB_INVALID';
+    else if(jobOptions.serializationKey!=null&&(typeof jobOptions.serializationKey!=='string'||jobOptions.serializationKey.length>200))code='COMPUTE_JOB_INVALID';
     else if(estimated+workerBase>budget)code='COMPUTE_JOB_TOO_LARGE';
     else if(jobOptions.signal?.aborted)code='COMPUTE_ABORTED';
     else if(generations.has(ownerKey)&&generations.get(ownerKey)!==generation)code='COMPUTE_STALE_GENERATION';
@@ -157,7 +159,7 @@ function createComputePool(options={}){
     if(!generations.has(ownerKey))generations.set(ownerKey,generation);
     return new Promise((resolve,reject)=>{
       const job={id:nextId++,queuedAt:performance.now(),task,payload,resolve,reject,ownerKey,generation,estimatedBytes:estimated,inputBytes:input,priority:priority==='interactive'?0:1,
-        signal:jobOptions.signal,transferList:jobOptions.transferList||[],timeoutMs,settled:false};
+        signal:jobOptions.signal,transferList:jobOptions.transferList||[],serializationKey:jobOptions.serializationKey||'',timeoutMs,settled:false};
       job.onAbort=()=>{if(job.settled)return;if(job.slot){rejectJob(job,failure('COMPUTE_ABORTED'));void retire(job.slot);}else{removeQueued(job);rejectJob(job,failure('COMPUTE_ABORTED'));pump();}};
       pending.push(job);queuedInputBytes+=input;counters.queued++;job.signal?.addEventListener('abort',job.onAbort,{once:true});
       if(job.signal?.aborted)job.onAbort();else pump();peak();

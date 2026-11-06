@@ -2,9 +2,10 @@
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const v8=require('node:v8'),{performance}=require('node:perf_hooks');
 const {createComputePool}=require('./compute-pool');
+const {captureAntrepoMetadata}=require('./compute-source-codec');
 const MiB=1024*1024;
 function failure(code){
-  const messages={COMPUTE_SOURCE_TOO_LARGE:['Kaynak kopyası bayt bütçesine sığmıyor.','Source replica exceeds the byte budget.',413],COMPUTE_SOURCE_OWNER_MISMATCH:['Kaynak sahibi uyuşmuyor.','Source owner mismatch.',403],COMPUTE_STALE_GENERATION:['Kaynak sürümü değişti.','Source generation changed.',409],COMPUTE_POOL_CLOSED:['Hesaplama havuzu kapalı.','Compute pool is closed.',503]};
+  const messages={COMPUTE_SOURCE_TOO_LARGE:['Kaynak kopyası bayt bütçesine sığmıyor.','Source replica exceeds the byte budget.',413],COMPUTE_SOURCE_OWNER_MISMATCH:['Kaynak sahibi uyuşmuyor.','Source owner mismatch.',403],COMPUTE_STALE_GENERATION:['Kaynak sürümü değişti.','Source generation changed.',409],COMPUTE_POOL_CLOSED:['Hesaplama havuzu kapalı.','Compute pool is closed.',503],COMPUTE_JOB_INVALID:['Geçersiz hesaplama isteği.','Invalid compute request.',400]};
   const [tr,en,statusCode]=messages[code];return Object.assign(Error(`${tr} / ${en}`),{code,statusCode,errorEn:en});
 }
 function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
@@ -12,7 +13,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   pool??=createComputePool({maxPendingBytes:512*MiB});
   const privateRoot=fs.mkdtempSync(path.join(root||os.tmpdir(),'buyerlog-source-replicas-'));
   fs.chmodSync(privateRoot,0o700);
-  const records=new Map(),current=new Map(),preparing=new Map();let reservedDiskBytes=0,closed=false,closing;
+  const records=new Map(),current=new Map(),preparing=new Map();let reservedDiskBytes=0,closed=false,closing,warming;
   const key=(owner,generation)=>JSON.stringify([String(owner),String(generation)]),poolOwner=owner=>'source:'+owner;
   async function discard(record){
     if(record.removing||record.pins||!record.retired)return;
@@ -41,10 +42,11 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     record.ready=(async()=>{
       let lease;
       try{
-        lease=await pool.run('seed-source',{ownerId:owner,generation:version,source,replicaFile,maxBytes:diskBytes},
+        lease=await pool.run('seed-source',{ownerId:owner,generation:version,source,antrepoMetadata:captureAntrepoMetadata(source),replicaFile,maxBytes:diskBytes},
           {ownerKey:preparationOwner,generation:version,priority:'background',estimatedBytes:96*MiB+uncompressedBytes*12,inputBytes:uncompressedBytes*2});
         if(preparing.get(owner)!==version)throw failure('COMPUTE_STALE_GENERATION');
         descriptor.checksum=lease.value.checksum;descriptor.loadedAt=lease.value.loadedAt;
+        descriptor.projectionKeys=Object.freeze({...lease.value.projectionKeys});
         reservedDiskBytes-=record.diskBytes-lease.value.fileBytes;record.diskBytes=lease.value.fileBytes;
         Object.freeze(descriptor);if(publish)advance(owner,version);return descriptor;
       }catch(error){record.retired=true;throw error;}
@@ -86,18 +88,35 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       let released=false;return {...lease,metrics:{...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024},release(){if(released)return;released=true;lease.release();record.pins--;void discard(record);}};
     }catch(error){record.pins--;void discard(record);throw error;}
   }
-  function bindColdSource(descriptor,loadedAt){
+  function bindColdSource(descriptor,loadedAt,projectionKeys){
     const record=records.get(key(descriptor?.ownerId,descriptor?.generation));
     if(!record||record.descriptor.capability!==descriptor.capability)throw failure('COMPUTE_SOURCE_OWNER_MISMATCH');
     if(record.retired||current.get(record.owner)!==record.generation)throw failure('COMPUTE_STALE_GENERATION');
     if(record.descriptor.loadedAt&&String(record.descriptor.loadedAt)!==String(loadedAt))throw failure('COMPUTE_STALE_GENERATION');
-    record.descriptor=Object.freeze({...record.descriptor,loadedAt:loadedAt||null});return record.descriptor;
+    record.descriptor=Object.freeze({...record.descriptor,loadedAt:loadedAt||null,...(projectionKeys?{projectionKeys:Object.freeze({...projectionKeys})}:{})});return record.descriptor;
+  }
+  function warm(){
+    if(warming)return warming;
+    warming=Promise.allSettled(Array.from({length:pool.stats().maxWorkers},()=>pool.run('health',{},
+      {ownerKey:'pool-warm',generation:'1',priority:'background',estimatedBytes:64*MiB,inputBytes:0}))).then(results=>{
+      for(const result of results)if(result.status==='fulfilled')result.value.release();
+      const failed=results.find(result=>result.status==='rejected');if(failed)throw failed.reason;
+    });return warming;
+  }
+  async function runExcelUtility(task,payload,{ownerId='system',...options}={}){
+    if(closed)throw failure('COMPUTE_POOL_CLOSED');
+    if(!['previewFxWorkbookFromDirectories','loadFxWorkbookFromDirectories'].includes(task))throw failure('COMPUTE_JOB_INVALID');
+    const started=performance.now(),encoded=Uint8Array.from(v8.serialize({excelTask:task,excelPayload:payload})).buffer,inputBytes=encoded.byteLength+1024;
+    const paramsSerializeMs=performance.now()-started,estimatedBytes=256*MiB+inputBytes*8;
+    const lease=await pool.run('excel-utility',{paramsBytes:encoded,maxOutputBytes:estimatedBytes},
+      {ownerKey:'utility:'+String(ownerId),generation:'1',...options,estimatedBytes,inputBytes,transferList:[encoded]});
+    return {...lease,metrics:{...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024}};
   }
   function stats(){return {diskBudgetBytes,reservedDiskBytes,sourceFiles:[...records.values()].filter(record=>Boolean(record.descriptor.replicaFile)).length,...pool.stats()};}
   function close(){
     if(closing)return closing;closed=true;
     closing=(async()=>{await pool.close();await Promise.allSettled([...records.values()].map(record=>record.ready));await fs.promises.rm(privateRoot,{recursive:true,force:true,maxRetries:3,retryDelay:50});records.clear();current.clear();preparing.clear();reservedDiskBytes=0;})();return closing;
   }
-  return {seedSource,publishSource,coldSource,bindColdSource,run,stats,close};
+  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,warm,stats,close};
 }
 module.exports={createComputeService};

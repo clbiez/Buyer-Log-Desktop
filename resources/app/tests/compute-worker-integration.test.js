@@ -101,3 +101,45 @@ test('cold projection planning computes existing reuse keys in the worker and re
   try{assert.deepEqual(lease.value.inputKeys,require('../server/lib/derived-input-keys').keys(raw,'ctx',{}, {version:'test'}));assert.equal(lease.value.sourceMeta.loadedAt,'r1');assert.equal(lease.value.sourceMeta.asasOrders,undefined);}
   finally{lease.release();}
 });
+test('source fingerprints distinguish real CP updates and Backlog enrichment while ignoring LFL-only changes',async t=>{
+  const {service}=setup(t),raw=source(),a=await service.seedSource({ownerId:'a',generation:'g1',source:raw,uncompressedBytes:MiB});assert.ok(a.projectionKeys?.cp);
+  const b=await service.seedSource({ownerId:'a',generation:'g2',source:{...raw,lflRows:[{changed:true}]},uncompressedBytes:MiB});assert.deepEqual(a.projectionKeys,b.projectionKeys);
+  const backlog=raw.asasOrders.map(row=>({...row,_sourceFields:{...row._sourceFields,'New Backlog Header':'Synthetic'}}));
+  const c=await service.seedSource({ownerId:'a',generation:'g3',source:{...raw,asasOrdersByTarget:{...raw.asasOrdersByTarget,backlog}},uncompressedBytes:MiB});
+  assert.equal(c.projectionKeys.cp,a.projectionKeys.cp);assert.notEqual(c.projectionKeys.backlog,a.projectionKeys.backlog);
+  const d=await service.seedSource({ownerId:'a',generation:'g4',source:{...raw,cpupdateOverrides:{suppfobmap:{123:12}}},uncompressedBytes:MiB});assert.notEqual(d.projectionKeys.cp,a.projectionKeys.cp);
+});
+test('generated demo ASAS/Antrepo/CP-update/LFL records keep real projection and Backlog bytes through the native pool',async t=>{
+  const {service}=setup(t),XLSX=require('xlsx'),parse=require('../server/lib/parse'),policy=require('../server/lib/compute-access');
+  require('../server/lib/workbook-parser-guards').install(XLSX);require('../public/excel-date-utils').installSheetJsHooks(XLSX);
+  const demo=require('../scripts/generate-demo-data').build({rows:24,seed:19,today:new Date('2026-11-05T00:00:00Z')});
+  const read=(aoa,name)=>{const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),name);return XLSX.read(XLSX.write(wb,{type:'buffer',bookType:'xlsx'}),{type:'buffer',raw:true,cellDates:false,dense:true});};
+  const asas=parse.parseASASWorkbook(read(demo.asas,'ASAS')),antrepo=parse.parseAntrepoWorkbook(read(demo.antrepo,'Antrepo'));
+  const cpupdate=parse.parseCPUpdateWorkbook(read([['Supplier','PO','Manufacturer FOB'],['Synthetic imported supplier',4100000,12.35]],'CPUpdate'));
+  const lfl=require('../server/lib/lfl').parseLFLWorkbook(read(demo.lfl,'LFL'));
+  assert.equal(asas.orders.length,24);assert.ok(Object.keys(antrepo).length>0);assert.ok(lfl.rows.length>0);assert.ok(cpupdate.fob>0);
+  const raw={loadedAt:'demo-r1',asasOrders:asas.orders,asasOrdersByTarget:{cp:asas.orders,orders:asas.orders,backlog:asas.orders},antrepoMap:antrepo,antrepoMapByTarget:{cp:antrepo,orders:antrepo,backlog:antrepo},antrepoHeaderInfo:parse.antrepoParseMeta(antrepo),cpupdateOverrides:cpupdate,lflRows:lfl.rows,lflMeta:lfl.meta};
+  const access=policy.createAccessContext({userId:'a',systemRole:'moderator',manageAll:true,viewScope:{all:true},editScopes:{all:true},authority:{},profiles:[]});
+  const data={...params,access,mergeSourceOverrides:true,overrides:{submap:{4100000:'Synthetic manual supplier'}}};
+  const descriptor=await service.seedSource({ownerId:'a',generation:'demo-g1',source:raw,uncompressedBytes:MiB});
+  const stored=codec.decode(fs.readFileSync(descriptor.replicaFile),descriptor);
+  assert.deepEqual(stored.antrepoMap.__antrepoMeta,raw.antrepoMap.__antrepoMeta);assert.equal(stored.antrepoMap.__antrepoMeta,stored.antrepoHeaderInfo);
+  const projected=await service.run('projections',descriptor,data);
+  try{const expected=tasks.buildProjections(raw,data);assert.ok(expected.cp.rows.length>0);for(const module of params.modules)assert.equal(zlib.gunzipSync(Buffer.from(projected.value.compressed[module].buffer)).toString(),tasks.serialize(expected[module],'projection'));}
+  finally{projected.release();}
+  for(const includeSourceDetails of [false,true]){
+    const request={...data,headers:['Synthetic'],options:{},sourceColumns:[],previewLimit:7,includeSourceDetails,rowsRevision:'demo-rows',calendar:{configured:false}};
+    const lease=await service.run('backlog-export',descriptor,request);
+    try{assert.equal(zlib.gunzipSync(Buffer.from(lease.value.buffer)).toString(),tasks.serialize(tasks.buildBacklog('export',raw,request),'api'));}
+    finally{lease.release();}
+  }
+});
+
+test('image registry decodes only authorized compressed CP rows in the common worker',async t=>{
+ const {service}=setup(t),descriptor=await service.seedSource({ownerId:'a',generation:'g1',source:source(),uncompressedBytes:MiB});
+ const rows=[{'PLM ID':'000215013.0','C.Code':'C01'},{'PLM ID':'400','C.Code':'B02'}];
+ const imagemap={'plm:215013|colour:C01':'ci_front','plm:215013|colour:C01|name:BLACK':'ci_named','plm:215013':'ci_legacy','plm:400|colour:B02':'','plm:900|colour:A01':'ci_other_user'};
+ const lease=await service.run('cp-image-registry',descriptor,{cachedCp:zlib.gzipSync(JSON.stringify({rows})),overrides:{imagemap}});
+ try{const actual=JSON.parse(zlib.gunzipSync(Buffer.from(lease.value.buffer)));assert.deepEqual(actual,JSON.parse(JSON.stringify({ok:true,...require('../server/lib/cp-image-startup-registry').scopedCpImageRegistry(rows,imagemap)})));assert.equal(actual.imagemap['plm:900|colour:A01'],undefined);}
+ finally{lease.release();}
+});

@@ -244,7 +244,7 @@ async function writeGeneration(userId, { contextHash, sourceLoadedAt = null, pro
 }
 async function writeCompressedGeneration(userId,{contextHash,sourceLoadedAt=null,projections={},extra={},assertCurrent,mergePrevious=false}={}){
   const moduleKey=Object.keys(projections).sort().join(',');
-  const inputKey=checksum(Buffer.from(JSON.stringify([sourceLoadedAt,extra.moduleInputKeys||null])));
+  const inputKey=checksum(Buffer.from(JSON.stringify([sourceLoadedAt,extra.moduleInputKeys||null,extra.sourceProjectionKeys||null])));
   return singleFlight(`compressed-generation:${safeUserId(userId)}:${contextHash}:${moduleKey}:${inputKey}`,()=>enqueueUserMutation(userId,async()=>{
     assertCurrent?.();
     const previous=loadManifest(userId),id=generationId(),root=generationRoot(userId,id),modules={};let committed=false;
@@ -254,7 +254,7 @@ async function writeCompressedGeneration(userId,{contextHash,sourceLoadedAt=null
         &&String(previous.sourceLoadedAt||'')===String(sourceLoadedAt||'')&&String(previous.sourceRevisionKey||'')===String(extra.sourceRevisionKey||'');
       for(const module of MODULES){
         if(!Object.prototype.hasOwnProperty.call(projections,module)){
-          if(inherit&&previous.modules?.[module]){
+          if(inherit&&previous.modules?.[module]&&(!extra.sourceProjectionKeys||previous.sourceProjectionKeys?.[module]===extra.sourceProjectionKeys[module])){
             try{await fs.promises.copyFile(modulePath(userId,previous.activeGeneration,module),modulePath(userId,id,module));modules[module]={...previous.modules[module]};}
             catch(error){if(error.code!=='ENOENT')throw error;}
           }

@@ -28,3 +28,9 @@ test('legacy snapshot revival is intentionally not a lossless substitute for liv
   assert.notDeepEqual(parse.buildCPRowsFromASAS(legacy.asasOrders,{},{}),parse.buildCPRowsFromASAS(input.asasOrders,{},{}));
   assert.equal(typeof input.asasOrders[0]._sourceFields['Literal ISO'],'string');
 });
+test('source replica also preserves parser-owned non-enumerable Antrepo metadata and its aliases',()=>{
+  const input=source(),map={one:[{qty:3}]},meta={sourceKind:'synthetic',matchableRows:1};
+  Object.defineProperty(map,'__antrepoMeta',{value:meta,enumerable:false,configurable:true});input.antrepoMap=map;input.antrepoMapByTarget={cp:map,orders:map,backlog:map};input.antrepoHeaderInfo=meta;
+  const encoded=codec.encode({ownerId:'a',generation:'g1',source:input}),decoded=codec.decode(encoded.bytes,{ownerId:'a',generation:'g1',checksum:encoded.checksum});
+  assert.deepEqual(decoded.antrepoMap.__antrepoMeta,meta);assert.equal(decoded.antrepoMap.__antrepoMeta,decoded.antrepoHeaderInfo);assert.equal(decoded.antrepoMapByTarget.cp,decoded.antrepoMap);assert.equal(Object.prototype.propertyIsEnumerable.call(decoded.antrepoMap,'__antrepoMeta'),false);
+});

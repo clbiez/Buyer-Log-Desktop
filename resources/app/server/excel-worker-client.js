@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { performance } = require('perf_hooks');
-const { Worker } = require('worker_threads');
+const { Worker, MessageChannel, receiveMessageOnPort } = require('worker_threads');
 
 const WORKER_FILE = path.join(__dirname, 'workers', 'excel-worker.js');
 const MiB = 1024 * 1024;
@@ -42,6 +42,7 @@ function createExcelWorkerClient(options = {}) {
     queued: 0, completed: 0, failed: 0, rejected: 0, active: false,
     lastTask: null, lastDurationMs: null, lastQueueWaitMs: null,
     lastExecutionMs: null, lastOverheadMs: null, maxQueueWaitMs: 0,
+    lastMainReceiveMs: null, lastWorkerPostMessageMs: null,
     totalQueueWaitMs: 0, totalExecutionMs: 0, peakActiveWorkers: 0,
     peakWorkerHeapMiB: 0,
   };
@@ -64,24 +65,28 @@ function createExcelWorkerClient(options = {}) {
 
   function start(job) {
     const startedAt = performance.now(), queueWaitMs = startedAt - job.queuedAt;
-    let worker, timer, settled = false;
+    let worker, timer, resultChannel, settled = false;
     const onAbort = () => finish(cancelledError());
     const finish = (error, result, metrics = {}) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      resultChannel?.port1.close();resultChannel?.port2.close();
       if (job.signal) job.signal.removeEventListener('abort', onAbort);
       const durationMs = performance.now() - startedAt;
       stats.lastTask = job.task; stats.lastDurationMs = durationMs;
       stats.lastQueueWaitMs = queueWaitMs;
       stats.lastExecutionMs = Number.isFinite(metrics.executionMs) ? metrics.executionMs : null;
       stats.lastOverheadMs = Number.isFinite(metrics.executionMs) ? Math.max(0, durationMs - metrics.executionMs) : null;
+      stats.lastMainReceiveMs = Number.isFinite(metrics.mainReceiveMs) ? metrics.mainReceiveMs : null;
+      stats.lastWorkerPostMessageMs = Number.isFinite(metrics.workerPostMessageMs) ? metrics.workerPostMessageMs : null;
       stats.totalQueueWaitMs += queueWaitMs;
       stats.maxQueueWaitMs = Math.max(stats.maxQueueWaitMs, queueWaitMs);
       stats.totalExecutionMs += stats.lastExecutionMs || 0;
       stats.peakWorkerHeapMiB = Math.max(stats.peakWorkerHeapMiB, Number(metrics.heapUsedBytes) / MiB || 0);
       if (typeof job.onMetrics === 'function') {
-        try { job.onMetrics({ queueWaitMs, durationMs, executionMs: stats.lastExecutionMs, overheadMs: stats.lastOverheadMs, heapUsedBytes: Number(metrics.heapUsedBytes) || 0 }); } catch (_) {}
+        try { job.onMetrics({ queueWaitMs, durationMs, executionMs: stats.lastExecutionMs, overheadMs: stats.lastOverheadMs, heapUsedBytes: Number(metrics.heapUsedBytes) || 0,
+          mainReceiveMs:stats.lastMainReceiveMs,workerPostMessageMs:stats.lastWorkerPostMessageMs,resultTransport:metrics.resultTransport||'legacy' }); } catch (_) {}
       }
       if (error) { stats.failed++; job.reject(error); } else { stats.completed++; }
       job.payload = null;
@@ -105,6 +110,13 @@ function createExcelWorkerClient(options = {}) {
       timer.unref();
       worker.on('message', message => {
         if (!message || message.id !== job.id) return;
+        if(message.type==='result-ready'){
+          const receiveStarted=performance.now();let received;
+          try{received=receiveMessageOnPort(resultChannel.port1)?.message;}catch(error){finish(error);return;}
+          const mainReceiveMs=performance.now()-receiveStarted;
+          if(!received||received.id!==job.id){finish(new Error('Excel sonucu alınamadı. / Excel result could not be received.'));return;}
+          finish(null,received.result,{...message.metrics,mainReceiveMs,resultTransport:'message-port'});return;
+        }
         if (message.ok) finish(null, message.result, message.metrics);
         else finish(Object.assign(new Error(message.error && message.error.message || 'Excel worker işlemi başarısız. / Excel worker failed.'), {
           code: 'EXCEL_WORKER_ERROR', workerStack: message.error && message.error.stack || '',
@@ -116,7 +128,10 @@ function createExcelWorkerClient(options = {}) {
         job.signal.addEventListener('abort', onAbort, { once: true });
         if (job.signal.aborted) { onAbort(); return; }
       }
-      worker.postMessage({ id: job.id, task: job.task, payload: job.payload });
+      // Sonucu event callback'inden önce örtük açmak yerine native porttan
+      // burada al: süre gerçek worker mesajının ana thread deserialization'ıdır.
+      resultChannel=new MessageChannel();
+      worker.postMessage({ id: job.id, task: job.task, payload: job.payload, resultPort:resultChannel.port2 },[resultChannel.port2]);
     } catch (error) { finish(error); }
   }
 

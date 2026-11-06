@@ -29,7 +29,8 @@ function buildProjections(source,data){
   data=withSourceOverrides(source,data);
   const wanted=new Set(data.modules||['cp','orders','overview','order-summary','collection-catalog']),out={},overrides=data.overrides||{};
   const cpSource=scopedOrders(source,'cp',data),ordersSource=scopedOrders(source,'orders',data),cpAntrepo=antrepoFor(source,'cp'),ordersAntrepo=antrepoFor(source,'orders');
-  const needCp=wanted.has('cp'),needOrders=wanted.has('orders')||(wanted.has('collection-catalog')&&!data.catalogRows);
+  const catalogFromCp=data.catalogSource==='cp-overview';
+  const needCp=wanted.has('cp'),needOrders=wanted.has('orders')||(wanted.has('collection-catalog')&&!data.catalogRows&&!catalogFromCp);
   const allowed=data.cpAllowed!==false,summaryAllowed=data.summaryAllowed!==false;
   const pair=allowed&&needCp&&needOrders&&cpAntrepo===ordersAntrepo&&sameRows(cpSource,ordersSource)
     ?parse.buildSharedOrderProjectionRowsFromASAS(ordersSource,ordersAntrepo,overrides)
@@ -39,10 +40,10 @@ function buildProjections(source,data){
   if(needCp)out.cp={rows:data.sharedHints&&data.access?access.sharedRows(data.access,pair.cp):pair.cp,cpModelColumns:data.cpModelColumns||[]};
   if(wanted.has('orders'))out.orders={rows:pair.orders};
   let overview=[];
-  if(summaryAllowed&&(wanted.has('overview')||(wanted.has('collection-catalog')&&!(data.catalogRows||pair.orders).length)))overview=parse.buildOverviewSummaryRowsFromASAS(cpSource,overrides);
+  if(summaryAllowed&&(wanted.has('overview')||(wanted.has('collection-catalog')&&(catalogFromCp||!(data.catalogRows||pair.orders).length))))overview=parse.buildOverviewSummaryRowsFromASAS(cpSource,overrides);
   if(wanted.has('overview'))out.overview={rows:overview};
   if(wanted.has('order-summary')){const rows=summaryAllowed?parse.buildOrderSummaryRowsFromASAS(cpSource,cpAntrepo,overrides):[];rows.forEach(row=>{row._canEdit=canEdit(row);});out['order-summary']={rows};}
-  if(wanted.has('collection-catalog')){const rows=data.catalogRows||pair.orders;out['collection-catalog']={catalogs:allowed?buildCollectionCatalogs(rows.length?rows:overview):{},catalogSchemaVersion:COLLECTION_CATALOG_SCHEMA_VERSION};}
+  if(wanted.has('collection-catalog')){const rows=catalogFromCp?overview:data.catalogRows||pair.orders;out['collection-catalog']={catalogs:allowed?buildCollectionCatalogs(rows.length?rows:overview):{},catalogSchemaVersion:COLLECTION_CATALOG_SCHEMA_VERSION};}
   return out;
 }
 function buildBacklog(kind,source,data){

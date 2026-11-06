@@ -64,4 +64,11 @@ test('source-column catalog preserves its full authorized source universe indepe
   const expected=parse.backlogCustomDimensionContext(source.asasOrders,{}).customDimensions;assert.ok(expected.length>0);
   assert.deepEqual(tasks.buildBacklog('source-columns',source,data).columns,expected);
 });
+test('an on-demand Collection catalog preserves its CP/Overview source when Orders has a different target scope',()=>{
+  const source=fixture();source.asasOrdersByTarget.cp=source.asasOrders.map(row=>({...row,manufacturer:'CP only'}));source.asasOrdersByTarget.orders=source.asasOrders.slice(0,3).map(row=>({...row,manufacturer:'Orders only'}));
+  const data={access:context(source,true),overrides:{},horizons:{},modules:['collection-catalog'],catalogSource:'cp-overview'};
+  const expected=catalog.buildCollectionCatalogs(parse.buildOverviewSummaryRowsFromASAS(source.asasOrdersByTarget.cp,{}));
+  assert.notDeepEqual(expected,catalog.buildCollectionCatalogs(parse.buildOrdersRowsFromASAS(source.asasOrdersByTarget.orders,{},{})));
+  assert.deepEqual(tasks.buildProjections(source,data)['collection-catalog'].catalogs,expected);
+});
 module.exports={fixture,context};

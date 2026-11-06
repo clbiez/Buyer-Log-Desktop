@@ -7,7 +7,7 @@ test('ready gzip and identity clients receive equal JSON; leases end with the re
   const completions=[];
   const server=http.createServer((req,res)=>{completions.push(new Promise(resolve=>res.once('finish',resolve)));sendComputedResponse(req,res,{value:{buffer:Uint8Array.from(gzip).buffer,uncompressedBytes:raw.length},metrics:{queueWaitMs:2,executionMs:3},assertResponse:()=>checks++,release:()=>releases++});});
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
-  const zipped=await request(server.address().port,'gzip');assert.equal(zipped.status,200);assert.equal(zipped.headers['content-encoding'],'gzip');assert.deepEqual(zlib.gunzipSync(zipped.bytes),raw);
+  const zipped=await request(server.address().port,'gzip');assert.equal(zipped.status,200);assert.equal(zipped.headers['cache-control'],'no-store');assert.equal(zipped.headers['content-encoding'],'gzip');assert.deepEqual(zlib.gunzipSync(zipped.bytes),raw);
   const identity=await request(server.address().port,'gzip;q=0, identity');assert.equal(identity.headers['content-encoding'],undefined);assert.deepEqual(identity.bytes,raw);assert.equal(Number(identity.headers['content-length']),raw.length);
   await Promise.all(completions);
   assert.equal(releases,2);assert.equal(checks,2);

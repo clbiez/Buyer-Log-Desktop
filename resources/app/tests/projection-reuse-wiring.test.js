@@ -22,7 +22,7 @@ test('source identity survives appended Excel telemetry and unrelated LFL metada
   r.loadedAt='next';assert.notEqual(c.key(r),key);
 });
 test('actual server orchestration skips unchanged builders and rebuilds only changed target modules',async()=>{
-  let builds=0,scope='authorized';const build=rows=>{builds++;return rows.map(r=>({qty:r.qty}));};
+  let builds=0,scope='authorized',currentRuntime;const build=rows=>{builds++;return rows.map(r=>({qty:r.qty}));};
   const context={APP_VERSION:'test',process,Set,Map,Buffer,pageProjectionCache,derivedInputKeys,
     pageProjectionContext:()=>({id:'u',contextHash:scope,filterStatus:{ready:true}}),effectiveOverridesForUser:()=>({}),
     pageCacheRuntimeMeta:r=>({loadedAt:r.loadedAt}),projectionSourceRevision:r=>r.loadedAt,
@@ -30,7 +30,23 @@ test('actual server orchestration skips unchanged builders and rebuilds only cha
     buildCPRowsFromASAS:build,buildOrdersRowsFromASAS:build,buildOrderSummaryRowsFromASAS:build,buildOverviewSummaryRowsFromASAS:build,
     buildCollectionCatalogs:rows=>({qty:rows.map(r=>r.qty)}),loadModelConnections:()=>({items:[]}),COLLECTION_CATALOG_SCHEMA_VERSION:2,
     buildSharedOrderProjectionRowsFromASAS:rows=>({cp:build(rows),orders:build(rows)}),logRuntimeFailure:(_name,e)=>{throw e;}};
-  vm.createContext(context);vm.runInContext([fn('sameProjectionSourceRows'),fn('buildCpAndOrdersProjectionRows'),fn('buildAndWritePageProjectionCache')].join('\n')+'\nglobalThis.run=buildAndWritePageProjectionCache;',context);
+  // Native worker mechanics and parser equivalence are covered separately. This
+  // fixture keeps the original builder counters at the orchestration boundary.
+  context.computeSourceToken=()=>currentRuntime.loadedAt;
+  context.computeSourceFor=async()=>({runtime:currentRuntime});
+  context.computeParamsFor=(_profile,descriptor,_task,parts)=>({...parts,runtime:descriptor.runtime});
+  context.serverCompute=()=>({run:async(_task,_descriptor,params)=>{
+    const r=params.runtime,cp=r.asasOrdersByTarget?.cp||r.asasOrders,orders=r.asasOrdersByTarget?.orders||r.asasOrders,values={},wanted=new Set(params.modules);
+    if(wanted.has('cp'))values.cp={rows:build(cp).map(row=>({...row,_canEdit:true})),cpModelColumns:[]};
+    if(wanted.has('orders'))values.orders={rows:build(orders).map(row=>({...row,_canEdit:false}))};
+    if(wanted.has('overview'))values.overview={rows:build(cp)};
+    if(wanted.has('order-summary'))values['order-summary']={rows:build(cp).map(row=>({...row,_canEdit:true}))};
+    if(wanted.has('collection-catalog')){const catalogRows=values.orders?.rows||JSON.parse(require('node:zlib').gunzipSync(Buffer.from(params.catalogOrdersBuffer))).rows;values['collection-catalog']={catalogs:context.buildCollectionCatalogs(catalogRows),catalogSchemaVersion:2};}
+    const compressed=Object.fromEntries(Object.entries(values).map(([module,value])=>{const json=Buffer.from(JSON.stringify(value)),gz=require('node:zlib').gzipSync(json);return [module,{buffer:Uint8Array.from(gz).buffer,uncompressedBytes:json.length}];}));
+    return {value:{compressed},metrics:{},release(){}};
+  }});
+  vm.createContext(context);vm.runInContext([fn('sameProjectionSourceRows'),fn('buildCpAndOrdersProjectionRows'),fn('buildAndWritePageProjectionCache'),fn('buildAndWriteComputedPageProjectionCache')].join('\n')+'\nglobalThis.run=buildAndWritePageProjectionCache;',context);
+  const actualRun=context.run;context.run=(profile,runtime)=>{currentRuntime=runtime;return actualRun(profile,runtime);};
   const runtime={loadedAt:'old',asasOrders:[{qty:1}],asasOrdersByTarget:{cp:[{qty:2}],orders:[{qty:3}],backlog:[{qty:4}]}};
   const first=await context.run(null,runtime);assert.equal(builds,4);
   const copy=JSON.parse(JSON.stringify(runtime));copy.loadedAt='fresh';

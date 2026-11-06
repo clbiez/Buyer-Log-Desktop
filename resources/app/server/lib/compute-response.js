@@ -6,7 +6,7 @@ function sendComputedResponse(req,res,lease,{contentType='application/json; char
   try{
     lease.assertResponse?.();
     const buffer=Buffer.isBuffer(lease.value.buffer)?lease.value.buffer:Buffer.from(lease.value.buffer);
-    res.statusCode=200;res.setHeader('Content-Type',contentType);
+    res.statusCode=200;res.setHeader('Content-Type',contentType);res.setHeader('Cache-Control','no-store');
     if(filename)res.setHeader('Content-Disposition',`attachment; filename="${filename}"`);
     for(const [key,value] of Object.entries(headers))res.setHeader(key,String(value));
     res.once('finish',release);res.once('close',release);

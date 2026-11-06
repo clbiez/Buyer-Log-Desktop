@@ -176,3 +176,20 @@ test('known source failures retain their safe status without accepting arbitrary
   workers.at(-1).emit('message',{type:'result',id:workers.at(-1).sent.at(-1).id,ok:false,error:{code:'arbitrary',message:'SYNTHETIC_PRIVATE_PATH'}});
   await assert.rejects(second,error=>error.code==='COMPUTE_WORKER_FAILED'&&!error.message.includes('SYNTHETIC_PRIVATE_PATH'));
 });
+test('a serialization key holds only its own queue while independent interactive work can use another worker',async t=>{
+  const {pool,workers}=fakePool({maxWorkers:2,memoryBudgetBytes:2048});t.after(()=>pool.close());
+  const first=pool.run('fx-first',{},taskOptions({serializationKey:'shared-fx'})),second=pool.run('fx-second',{},taskOptions({serializationKey:'shared-fx'})),other=pool.run('independent',{},taskOptions());
+  for(const pending of [first,second,other])pending.catch(()=>{});
+  assert.equal(workers.length,2);assert.equal(workers[0].sent.at(-1).task,'fx-first');assert.equal(workers[1].sent.at(-1).task,'independent');assert.equal(pool.stats().pending,1);
+  workers[1].complete();(await other).release();assert.equal(pool.stats().pending,1);
+  workers[0].complete();(await first).release();await turn();
+  const running=workers.find(worker=>worker.sent.at(-1).task==='fx-second');assert.ok(running);running.complete();(await second).release();assert.equal(pool.stats().pending,0);
+});
+test('invalid serialization keys are refused before starting any worker',async t=>{
+  const {pool,workers}=fakePool();t.after(()=>pool.close());
+  for(const serializationKey of [2,{},[], 'x'.repeat(201)]){
+    const pending=pool.run('invalid',{},taskOptions({serializationKey})),refused=assert.rejects(pending,{code:'COMPUTE_JOB_INVALID'});
+    workers.at(-1)?.complete();await refused;
+  }
+  assert.equal(workers.length,0);
+});

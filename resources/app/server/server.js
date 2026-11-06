@@ -353,6 +353,9 @@ const { projectionRuntimeMeta } = require('./lib/projection-runtime-meta');
 let commonComputeService = null;
 const publishedComputeSources = new Map();
 function serverCompute() { return commonComputeService || (commonComputeService = createComputeService({root:TEMP_ROOT})); }
+// Thread kurulumu HTTP açılış penceresinde tekrarlanmaz; yalnız kod hazırlanır,
+// kullanıcı kaynağı veya görünmeyen modül verisi sorgulanmaz.
+void serverCompute().warm().catch(error=>logRuntimeFailure('computePoolWarmup',error));
 const { SharedRevisionStore } = require('./lib/shared-revision-store');
 const platform = require('./lib/platform');
 const { buildCPRowsFromASAS, buildOrdersRowsFromASAS, buildSharedOrderProjectionRowsFromASAS, buildOverviewSummaryRowsFromASAS, buildOrderSummaryRowsFromASAS, buildBacklogGrouped, buildBacklogDetailRows, buildBacklogTemplateRows, deriveOperationalStatus, findAntrepoHit, applyDateOverrides } = require('./lib/parse');
@@ -6913,16 +6916,17 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
   const { decideFolderKurApply, mergeFolderKur } = require('./lib/fxWorkbook');
   const id = sourceUserId(value), appRoot = path.join(__dirname, '..');
   const sourceFolder = sourceFolderForUser(id);
-  let current = loadFx();
+  let current = loadFx(), computeLease;
   const remember = (candidate, reason) => {
     folderFxSyncStatus = { file: candidate.file || 'KUR.xlsx', modifiedAt: candidate.modifiedAt || null,
       reportMonth: candidate.reportMonth || null, fingerprint: candidate.fingerprint || null, reason };
   };
   try {
-    const parsed = await runExcelTask('loadFxWorkbookFromDirectories', {
+    computeLease = await serverCompute().runExcelUtility('loadFxWorkbookFromDirectories', {
       directories: [sourceFolder, ...(id === 'moderator' ? [appRoot] : [])].filter(Boolean),
       current, force,
-    }, { timeoutMs: 5000, serializationKey: 'shared-fx' });
+    }, { ownerId:id,priority:explicit?'interactive':'background',timeoutMs: 5000, serializationKey: 'shared-fx' });
+    const parsed=computeLease.value;
     if (explicit && (!parsed.found || !parsed.fingerprint || parsed.fingerprint !== explicit.fingerprint)) {
       throw Object.assign(new Error('SOURCE_KUR_CHANGED'), { statusCode: 409, code: 'SOURCE_KUR_CHANGED' });
     }
@@ -6948,7 +6952,7 @@ async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
     remember({}, 'parse-failed');
     logRuntimeFailure('fxWorkbookRead', err);
     return { found: false, updated: false, reason: 'parse-failed' };
-  }
+  }finally{computeLease?.release();}
 }
 
 // Date nesneleri JSON.stringify sırasında UTC'ye çevrildiğinde Türkiye gibi UTC+ saat
@@ -7985,12 +7989,18 @@ function projectionSourceRevision(runtime){
   // source identity and must not invalidate a generation built by this refresh.
   return stableHashValue({loadedAt:source.loadedAt||null,sources:sources&&Object.keys(sources).length?sources:null});
 }
-function pageProjectionMatchesRuntime(manifest,runtime){
+function pageProjectionMatchesRuntime(manifest,runtime,module=null){
   const expected=String(runtime&&runtime.loadedAt||'');
   // Cold startup'ta runtime henüz disk snapshot'ından açılmamış olabilir; bu
   // durumda doğrulanmış manifest hızlı başlangıç kaynağıdır. Runtime yüklüyse
   // sourceLoadedAt birebir eşleşmeden eski projection kabul edilmez.
   if(!expected)return true;
+  const keys=runtime?._computeSourceDescriptor?.projectionKeys;
+  if(keys){
+    if(!manifest?.sourceProjectionKeys)return false;
+    const modules=module?[module]:Object.keys(manifest.modules||{});
+    if(modules.some(name=>String(keys[name]||'')!==String(manifest.sourceProjectionKeys[name]||'')))return false;
+  }
   if(manifest&&manifest.sourceRevisionKey)return String(manifest.sourceRevisionKey)===projectionSourceRevision(runtime);
   return String(manifest&&manifest.sourceLoadedAt||'')===expected;
 }
@@ -8052,11 +8062,12 @@ function computeSourceToken(id){
   return 'disk:'+base.key;
 }
 function rememberComputeSource(id,runtime,descriptor){publishedComputeSources.set(id,{key:projectionSourceRevision(runtime),descriptor});}
-function acceptComputedMetadata(profile,metadata){
+function acceptComputedMetadata(profile,metadata,projectionKeys){
   if(!metadata?.loadedAt)return;
   const id=sourceUserId(profile),known=publishedComputeSources.get(id);if(!known||known.descriptor.replicaFile)return;
-  const descriptor=serverCompute().bindColdSource(known.descriptor,metadata.loadedAt),active=cacheForUser(id);
+  const descriptor=serverCompute().bindColdSource(known.descriptor,metadata.loadedAt,projectionKeys),active=cacheForUser(id);
   if(!active.loadedAt)Object.assign(active,metadata);
+  Object.defineProperty(active,'_computeSourceDescriptor',{value:descriptor,enumerable:false,configurable:true});
   publishedComputeSources.set(id,{...known,key:projectionSourceRevision(metadata),descriptor});
 }
 async function computeSnapshotByteEstimate(id,metrics=null){
@@ -8106,7 +8117,7 @@ function computeParamsFor(profile,descriptor,task,parts={}){
 const computeReads=createComputeReadService({compute:{run:(...args)=>serverCompute().run(...args)},guard:computeReadGuard,sourceFor:computeSourceFor,paramsFor:computeParamsFor});
 async function prepareComputeBacklog(req){
   const lease=await computeReads.run(req,'backlog','source-info',{});let info;
-  try{lease.assertBuild();info=lease.value;acceptComputedMetadata(req.currentUser,info.runtimeMeta);lease.assertResponse();}finally{lease.release();}
+  try{lease.assertBuild();info=lease.value;acceptComputedMetadata(req.currentUser,info.runtimeMeta,info.sourceProjectionKeys);lease.assertResponse();}finally{lease.release();}
   const shared=loadOverrides();
   if(!info.loadedAt)await ensureBacklogRuntime(sourceUserId(req));
   if((shared.asasSourceMode!=='database'&&!info.asasSourceFields)
@@ -8182,9 +8193,10 @@ async function buildAndWriteComputedPageProjectionCache(currentUser,active,ctx,w
   const lease=await serverCompute().run('projections',descriptor,params,{priority:'background'});
   try{
     assertCurrent();
+    if(lease.value.sourceMeta)acceptComputedMetadata(currentUser||id,lease.value.sourceMeta,lease.value.sourceProjectionKeys);
     const compressed={...reused.projections,...Object.fromEntries(Object.entries(lease.value.compressed||{}).map(([module,entry])=>[module,{buffer:Buffer.from(entry.buffer),uncompressedBytes:entry.uncompressedBytes}]))};
     return await pageProjectionCache.writeCompressedGeneration(id,{contextHash:ctx.contextHash,sourceLoadedAt:active.loadedAt||null,projections:compressed,assertCurrent,
-      extra:{...extra,performance:{...extra.performance,projectionWorker:true,computePool:true,...lease.metrics}}});
+      extra:{...extra,sourceProjectionKeys:lease.value.sourceProjectionKeys||descriptor.projectionKeys,performance:{...extra.performance,projectionWorker:true,computePool:true,...lease.metrics}}});
   }finally{lease.release();}
 }
 
@@ -8423,6 +8435,40 @@ app.get('/api/data', async (req, res) => {
 // ayrıştırır. Context hash kontrolü kullanıcı/yetki/horizon izolasyonunu korur.
 const PAGE_PROJECTION_AREAS = Object.freeze({ cp:'cp', overview:'overview', orders:'orders', 'collection-catalog':'koleksiyon' });
 const PAGE_PROJECTION_TARGETS = Object.freeze({ cp:['cp'], overview:['cp'], orders:['orders'], 'collection-catalog':['cp'] });
+async function ensureComputedProjection(req,module,{legacy=false}={}){
+  const area=PAGE_PROJECTION_AREAS[module];assertSourceFilters(PAGE_PROJECTION_TARGETS[module],req);
+  const captured=computeReadGuard.capture(req,area),ctx=pageProjectionContext(captured.profile);
+  const cached=await pageProjectionCache.readProjectionCompressed(ctx.id,module,ctx.contextHash);captured.assertResponse();
+  if(cached&&pageProjectionMatchesRuntime(cached.manifest,cacheForUser(ctx.id),module)){
+    if(!legacy)return {value:{buffer:cached.buffer,uncompressedBytes:cached.meta?.uncompressedBytes},metrics:{},manifest:cached.manifest,
+      cacheState:cached.fallback?'fallback':'hit',assertResponse:captured.assertResponse,release(){}};
+    const cachedModules={[module]:cached.buffer};let readMs=Number(cached.ms)||0;
+    if(module==='orders'){
+      const catalog=await pageProjectionCache.readProjectionCompressed(ctx.id,'collection-catalog',ctx.contextHash);
+      if(catalog&&pageProjectionMatchesRuntime(catalog.manifest,cacheForUser(ctx.id),'collection-catalog')){cachedModules['collection-catalog']=catalog.buffer;readMs+=Number(catalog.ms)||0;}
+    }
+    captured.assertResponse();
+    const envelope=await computeReads.run(req,area,'projection-envelope',{legacyModule:module,cachedGeneration:cached.manifest.activeGeneration},
+      {payload:{cachedModules,metadata:cached.manifest.runtimeMeta||{},pageCache:{hit:true,readMs,generation:cached.manifest.activeGeneration}}});
+    if(!envelope.value.needsRebuild)return {...envelope,manifest:cached.manifest,cacheState:'hit'};
+    envelope.release();
+  }
+  const plan=await computeReads.run(req,area,'projection-plan',{projectionContextHash:ctx.contextHash,appVersion:APP_VERSION});
+  let inputKeys;
+  try{plan.assertBuild();acceptComputedMetadata(captured.profile,plan.value.sourceMeta,plan.value.sourceProjectionKeys);inputKeys=plan.value.inputKeys;plan.assertResponse();}
+  finally{plan.release();}
+  const modules=legacy&&module==='orders'?['orders','order-summary','collection-catalog']:[module];
+  const lease=await computeReads.run(req,area,'projections',{modules,...(legacy?{legacyModule:module}:{}),...(module==='collection-catalog'?{catalogSource:'cp-overview'}:{})});
+  try{
+    lease.assertBuild();acceptComputedMetadata(captured.profile,lease.value.sourceMeta,lease.value.sourceProjectionKeys);
+    const active=cacheForUser(ctx.id),{backlog:backlogInputKey,...moduleInputKeys}=inputKeys;
+    const projections=Object.fromEntries(Object.entries(lease.value.compressed).map(([name,entry])=>[name,{buffer:Buffer.from(entry.buffer),uncompressedBytes:entry.uncompressedBytes}]));
+    const manifest=await pageProjectionCache.writeCompressedGeneration(ctx.id,{contextHash:ctx.contextHash,sourceLoadedAt:active.loadedAt||null,projections,mergePrevious:true,assertCurrent:lease.assertBuild,
+      extra:{runtimeMeta:pageCacheRuntimeMeta(active),sourceRevisionKey:projectionSourceRevision(active),sourceProjectionKeys:lease.value.sourceProjectionKeys,moduleInputKeys,backlogInputKey}});
+    lease.assertResponse();
+    return {...lease,value:legacy?lease.value.response:lease.value.compressed[module],manifest,cacheState:'miss'};
+  }catch(error){lease.release();throw error;}
+}
 function sendCompressedPageProjection(res, cached) {
   res.status(200);
   res.set('Content-Type', 'application/json; charset=utf-8');
@@ -8443,10 +8489,8 @@ app.get('/api/page-projection/:module', async (req, res) => {
     if (!userAccess.hasArea(req.currentUser, area)) return res.status(403).json({ error:'Bu alana erişim yetkiniz yok.', code:'AREA_FORBIDDEN' });
     const filterStatus = sourceFilterReadiness(PAGE_PROJECTION_TARGETS[module], req);
     if (!filterStatus.ready) return res.status(409).json({ error:sourceFilterReadinessMessage(filterStatus, 'tr'), code:'SOURCE_FILTER_REQUIRED', sourceFilterStatus:filterStatus });
-    const ctx = pageProjectionContext(req.currentUser);
-    const cached = await pageProjectionCache.readProjectionCompressed(ctx.id, module, ctx.contextHash);
-    if (!cached||!pageProjectionMatchesRuntime(cached.manifest,cacheForUser(ctx.id))) return res.status(404).json({ error:'Hazır ekran önbelleği bulunamadı.', code:'PAGE_CACHE_MISS' });
-    return sendCompressedPageProjection(res, cached);
+    const lease=await ensureComputedProjection(req,module);
+    return sendComputedResponse(req,res,lease,{headers:{'X-Page-Cache':lease.cacheState,'X-Page-Cache-Generation':lease.manifest?.activeGeneration||''}});
   } catch (err) { apiError(res, err, 'Hazır ekran önbelleği okunamadı.'); }
 });
 
@@ -8488,33 +8532,14 @@ async function storeOnDemandProjection(currentUser, ctx, module, value, runtime)
 }
 app.get('/api/data/overview', userAccess.requireArea('overview'), async (req, res) => {
   try {
-    const value = await singleFlightPageProjection(req.currentUser, 'overview', async ctx => {
-      const runtime = cacheForUser(ctx.id); if (!runtime.asasOrders) await ensureDataLoaded(ctx.id);
-      const active = cacheForUser(ctx.id), overrides = effectiveOverridesForUser(ctx.id);
-      const cached = await pageProjectionCache.readProjection(ctx.id, 'overview', ctx.contextHash);
-      if (cached&&pageProjectionMatchesRuntime(cached.manifest,active)) return cached.data;
-      const scoped = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser,'cp',ordersForTarget(active, 'cp', overrides)));
-      const rows = buildOverviewSummaryRowsFromASAS(scoped, overrides);
-      return storeOnDemandProjection(req.currentUser, ctx, 'overview', { rows }, active);
-    });
-    sendDateSafeJson(res, value);
+    const lease=await ensureComputedProjection(req,'overview',{legacy:true});
+    return sendComputedResponse(req,res,lease);
   } catch (err) { apiError(res, err, 'Genel Bakış verisi yüklenemedi.'); }
 });
 app.get('/api/data/cp', userAccess.requireArea('cp'), async (req, res) => {
   try {
-    const value = await singleFlightPageProjection(req.currentUser, 'cp', async ctx => {
-      const runtime = cacheForUser(ctx.id); if (!runtime.asasOrders) await ensureDataLoaded(ctx.id);
-      const active = cacheForUser(ctx.id), overrides = effectiveOverridesForUser(ctx.id);
-      const cached = await pageProjectionCache.readProjection(ctx.id, 'cp', ctx.contextHash);
-      if (cached&&pageProjectionMatchesRuntime(cached.manifest,active)) return cached.data;
-      const scoped = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser,'cp',ordersForTarget(active, 'cp', overrides)));
-      const rows = buildCPRowsFromASAS(scoped, antrepoForTarget(active, 'cp'), overrides);
-      const rowCanEdit=pageProjectionEditResolver(req.currentUser);
-      rows.forEach(row => { row._canEdit = rowCanEdit(row); });
-      const cpModelColumns = loadModelConnections().items.flatMap(item => (item.cpColumns || []).map(col => ({...col, role:item.role, connectionId:item.id, connectionName:item.name || item.catalog || item.server})));
-      return storeOnDemandProjection(req.currentUser, ctx, 'cp', { rows, cpModelColumns }, active);
-    });
-    sendDateSafeJson(res, { ...value, rows:sharedAccessRows(value.rows, req.currentUser) });
+    const lease=await ensureComputedProjection(req,'cp',{legacy:true});
+    return sendComputedResponse(req,res,lease);
   } catch (err) { apiError(res, err, 'CP verisi yüklenemedi.'); }
 });
 
@@ -8523,34 +8548,20 @@ app.get('/api/data/cp', userAccess.requireArea('cp'), async (req, res) => {
    anahtarları döner; tüm imagemap veya görsel dosyaları sızdırılmaz.
    PLM/ASAS erişimi yoktur. */
 app.get('/api/model-images/registry/cp', userAccess.requireArea('cp'), async (req, res) => {
+  let cp;
   try {
-    const ctx = pageProjectionContext(req.currentUser);
-    const cached = await pageProjectionCache.readProjection(ctx.id, 'cp', ctx.contextHash);
-    if (!cached || !pageProjectionMatchesRuntime(cached.manifest, cacheForUser(ctx.id))) {
-      return res.status(409).set('Cache-Control','no-store').json({ error:'CP image scope is not ready.', code:'CP_IMAGE_SCOPE_UNAVAILABLE' });
-    }
-    const scoped = scopedCpImageRegistry(cached.data.rows, loadOverrides().imagemap);
-    res.set('Cache-Control','no-store').json({ ok:true, ...scoped });
+    cp=await ensureComputedProjection(req,'cp');cp.assertResponse();
+    const lease=await computeReads.run(req,'cp','cp-image-registry',{cachedGeneration:cp.manifest.activeGeneration},
+      {payload:{cachedCp:cp.value.buffer}});
+    return sendComputedResponse(req,res,lease);
   } catch (err) { apiError(res, err, 'CP model image registry could not be loaded.'); }
+  finally{cp?.release();}
 });
 
 app.get('/api/data/collection-catalog', userAccess.requireArea('koleksiyon'), async (req, res) => {
   try {
-    const value = await singleFlightPageProjection(req.currentUser, 'collection-catalog', async ctx => {
-      const runtime = cacheForUser(ctx.id); if (!runtime.asasOrders) await ensureDataLoaded(ctx.id);
-      const active = cacheForUser(ctx.id), overrides = effectiveOverridesForUser(ctx.id);
-      const cached = await pageProjectionCache.readProjection(ctx.id, 'collection-catalog', ctx.contextHash);
-      if (cached
-        && pageProjectionMatchesRuntime(cached.manifest,active)
-        && collectionCatalogProjectionComplete(cached.data)) return cached.data;
-      const scoped = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser,'cp',ordersForTarget(active, 'cp', overrides)));
-      const catalogs = buildCollectionCatalogs(buildOverviewSummaryRowsFromASAS(scoped, overrides));
-      return storeOnDemandProjection(req.currentUser, ctx, 'collection-catalog', {
-        catalogs,
-        catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION,
-      }, active);
-    });
-    sendDateSafeJson(res, value);
+    const lease=await ensureComputedProjection(req,'collection-catalog',{legacy:true});
+    return sendComputedResponse(req,res,lease);
   } catch (err) { apiError(res, err, 'Koleksiyon filtre kataloğu yüklenemedi.'); }
 });
 
@@ -8594,59 +8605,8 @@ app.get('/api/data/orders', userAccess.requireArea('orders'), async (req, res) =
         sourceFilterMessage: sourceFilterReadinessMessage(filterStatus, 'tr'),
       });
     }
-    const ctx = pageProjectionContext(req.currentUser);
-    const [cachedOrders, cachedCatalog] = await Promise.all([
-      pageProjectionCache.readProjection(id, 'orders', ctx.contextHash),
-      pageProjectionCache.readProjection(id, 'collection-catalog', ctx.contextHash),
-    ]);
-    const loadedRuntime=cacheForUser(id);
-    if (cachedOrders&&pageProjectionMatchesRuntime(cachedOrders.manifest,loadedRuntime)) {
-      const runtimeMeta = cachedRuntimeFromManifest(cachedOrders.manifest);
-      const cachedOrderRows = cachedOrders.data.rows || [];
-      let collectionCatalogs;
-      let catalogReadMs = Number(cachedCatalog&&cachedCatalog.ms)||0;
-      if (cachedCatalog
-        && pageProjectionMatchesRuntime(cachedCatalog.manifest,loadedRuntime)
-        && collectionCatalogProjectionComplete(cachedCatalog.data)) {
-        collectionCatalogs = cachedCatalog.data.catalogs;
-      } else {
-        collectionCatalogs = buildCollectionCatalogs(cachedOrderRows);
-        try {
-          await storeOnDemandProjection(req.currentUser,ctx,'collection-catalog',{
-            catalogs: collectionCatalogs,
-            catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION,
-          },loadedRuntime);
-        } catch (cacheError) { logRuntimeFailure('ordersCollectionCatalogSchemaRepair', cacheError); }
-        catalogReadMs = 0;
-      }
-      return sendDateSafeJson(res, {
-        loadedAt: runtimeMeta.loadedAt,
-        sources: runtimeMeta.sources || {},
-        orders: cachedOrderRows,
-        collectionCatalogs,
-        pageCache: { hit: true, readMs: (Number(cachedOrders.ms)||0) + catalogReadMs, generation: cachedOrders.manifest.activeGeneration },
-      });
-    }
-    const runtime = cacheForUser(id);
-    if (!runtime.asasOrders) await ensureDataLoaded(id);
-    const active = cacheForUser(id), overrides = effectiveOverridesForUser(id);
-    const scopedOrders = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser,'orders',ordersForTarget(active, 'orders', overrides)));
-    const orders = buildOrdersRowsFromASAS(scopedOrders, antrepoForTarget(active, 'orders'), overrides);
-    orders.forEach(row => { row._canEdit = false; });
-    const scopedCp = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser,'cp',ordersForTarget(active, 'cp', overrides)));
-    const orderSummary = buildOrderSummaryRowsFromASAS(scopedCp, antrepoForTarget(active, 'cp'), overrides);
-    const summaryCanEdit=pageProjectionEditResolver(req.currentUser);
-    orderSummary.forEach(row => { row._canEdit = summaryCanEdit(row); });
-    const catalogs = buildCollectionCatalogs(orders);
-    try {
-      await storeOnDemandProjection(req.currentUser,ctx,'orders',{rows:orders},active);
-      await storeOnDemandProjection(req.currentUser,ctx,'order-summary',{rows:orderSummary},active);
-      await storeOnDemandProjection(req.currentUser,ctx,'collection-catalog',{
-        catalogs,
-        catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION,
-      },active);
-    } catch (cacheError) { logRuntimeFailure('ordersPageCacheWrite', cacheError); }
-    sendDateSafeJson(res, { loadedAt: active.loadedAt, sources: active.sources || {}, orders, collectionCatalogs: catalogs, pageCache: { hit: false } });
+    const lease=await ensureComputedProjection(req,'orders',{legacy:true});
+    return sendComputedResponse(req,res,lease);
   } catch (err) { apiError(res, err, 'Siparişler verisi yüklenemedi.'); }
 });
 
@@ -12071,6 +12031,9 @@ require('./routes/lfl-routes')(app, {
   userAccess,
   withFabricDimensions,
 
+});
+app.get('/api/health', (_req,res) => {
+  res.set('Cache-Control','no-store').json({ok:true,app:'Buyer Log',appVersion:APP_VERSION});
 });
 app.get('/api/status', (req, res) => {
   res.set('Cache-Control', 'no-store');
