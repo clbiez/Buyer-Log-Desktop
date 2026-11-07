@@ -9,6 +9,7 @@ on:
       - 'resources/app/server/lib/iam-core.js'
       - 'resources/app/server/lib/central-iam.js'
       - 'resources/app/tests/user-access*.test.js'
+      - 'resources/app/tests/user-management*.test.js'
       - 'resources/app/tests/*iam*.test.js'
       - 'resources/app/tests/fixtures/admin-03-resumed-authority.cjs'
   workflow_dispatch:
@@ -37,4 +38,4 @@ jobs:
           auth_test_tmp_root=$(mktemp -d "$RUNNER_TEMP/buyerlog-authority.XXXXXX")
           echo "TMPDIR=$auth_test_tmp_root" >> "$GITHUB_ENV"
       - name: Native resumed authority and IAM regressions
-        run: npm test -- user-access iam credential access-area security-hardening
+        run: npm test -- user-access user-management iam credential access-area security-hardening

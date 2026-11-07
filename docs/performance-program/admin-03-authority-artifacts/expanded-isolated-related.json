@@ -1,0 +1,17 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "user-access",
+    "user-management",
+    "iam",
+    "credential",
+    "access-area",
+    "security-hardening"
+  ],
+  "TMPDIR": "/tmp/buyerlog-authority-isolated-expanded-yegy3tck",
+  "returncode": 0,
+  "elapsedSeconds": 13.864442825317383,
+  "testChange": "own fixture installation is nested inside a private container, keeping sibling test installations outside discovery; all previous assertions retained"
+}

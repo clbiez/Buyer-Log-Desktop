@@ -46,9 +46,27 @@ ile bozuyordu; en küçük bağımsız Node örneğiyle ayrıştırıldı. Stand
 değiştirilmeden, aynı sentetik köklerde sandbox dışında çalıştırıldı.
 `--test-isolation=none` denemeleri yalnız teşhis olarak saklanır, kabul değildir.
 
-İlgili ilk paket (önceki 13 test dahil): **19 dosya / 117 PASS**. Son ilgili
-paket, tam standart `npm test`, i18n ve release-note sonuçları son kabul kaydında
-tamamlanacaktır. Önceki sonucu son 16-test kodunun tam regresyonu sayma.
+İlgili ilk paket (önceki 13 test dahil): **19 dosya / 117 PASS**; son 16 testle
+aynı filtre **120 PASS**. Standart tam koşu `e49df459` üzerinde batch 5'te bir
+kaynak-ankor hatasında durdu: eski test `sessionProfile(req)` imzasını arayıp
+boş kesit denetliyordu. Aynı credential/access/status assertion'ları korunarak
+gerçek fonksiyon sınırı seçildi; eksik hedefli kapsam `user-management` ile
+tamamlandı. Eski başarısız tam sonuç değişmedi; batch 6–10 o koşuda çalışmadı.
+
+Genişletilmiş filtre ayrıca başka sentetik test kurulumunun daha zengin IAM
+kopyasını bulan fixture yarışını açığa çıkardı. Bu üretim yetki kontrolü
+regresyonu değildir: kurtarma yolu Buyer Log adlı kardeş kurulumları kasıtlı
+arar. Özel kardeş fixture ile **7 PASS / 1 FAIL** deterministik RED alındı.
+Fixture'ın portable kurulumu `root/install/data` içine alınarak kardeş arama
+sınırı kendi özel kapsayıcısına bağlandı. Üretim recovery kapatılmadı; özgün
+yedi test/assertion korundu, sekizinci test dış fixture yerine kendi korumalı
+yedeğinin seçildiğini ve dış fixture'daki iki kullanıcının korunduğunu sınar.
+Dosyanın byte düzeyinde değişmediği iddia edilmez.
+
+Son genişletilmiş ilgili paket **21 dosya / 158 PASS / 0 FAIL / 0 SKIP**.
+Tam standart `npm test`, i18n ve release-note sonuçları güncel entegrasyondaki
+son kabul kaydında tamamlanacaktır. Hedefli PASS eski tam RED'i kapatmaz.
+Raw loglar kayıpsız `.log.gz` olarak ve ham/gzip SHA-256 manifestiyle korunur.
 
 ### Görsel ve entegrasyon sınırı
 
@@ -63,8 +81,13 @@ guard eklediği iddiasını taşımaz. Mevcut merkezi transaction/compute/import
 kontrolleri korunur. #897'deki hiyerarşi/publicProfile performans işi açık
 kalır. Ölçülmüş hızlanma veya genel performans kabulü iddia edilmez.
 
-Tek bağımsız ikinci model incelemesi ve son SHA'nın gerçek CI sonucu merge
-öncesinde tamamlanmalıdır. **Merge yok; TEST yok; STABLE yok.**
+Tek bağımsız ikinci model (`gpt-6-astra`) incelemesi `e49df459` kaynakları için
+tamamlandı: raporlanabilir P1/P2 yok. Son iki dar test/fixture kapanışı aynı tur
+içinde ayrıca doğrulandı; yeni genel tur yapılmadı. Reviewer test çalıştırmadı.
+16 yeni testte ayrı inherited-grant iptal örneği yok; değişmeyen hiyerarşi yolu
+kaynak üzerinden incelendi. Güncel entegrasyonda tam regresyon ve son SHA'nın
+gerçek CI sonucu merge öncesinde tamamlanmalıdır. **Merge yok; TEST yok;
+STABLE yok.**
 
 ## EN
 
@@ -93,12 +116,22 @@ fixture attempts and sandbox-only runner failures remain explicitly historical.
 Credential tests change actual synthetic hashes and verify the writer-derived
 generation, rather than manually bumping a field the writer owns.
 
-The first related package passed **117 tests** before three additional cases.
-Final related/full-suite, i18n, release-note and actual CI results remain a
-separate acceptance record until completed. Inspected TR/EN screenshots come
+The related package progressed from **117** to **120** tests. The first standard
+full run stopped at batch 5 on a literal source-signature lookup, not on the
+preserved credential/access assertions. Updating the function boundary and
+including user-management in the related gate exposed a separate synthetic
+sibling-install recovery fixture race. A deterministic regression was **7/1
+RED**; nesting the fixture installation inside its private container preserves
+production recovery and all seven original tests, then adds the isolation
+regression. The expanded package is **21 files / 158 PASS / 0 FAIL / 0 SKIP**.
+The old full failure remains unchanged; final integrated full-suite, i18n,
+release-note and actual CI results remain pending. Inspected TR/EN screenshots come
 from the actual isolated demo application; pending-request rejection is proven
 by tests, not the screenshot. Main's existing 38 note objects are preserved.
 
 No real data, credentials, services, migration, deployment, or performance gain
-claim. ADMIN-03 performance work remains open. One independent second-model
-review and final-head CI are required before merge. **No merge, TEST or STABLE.**
+claim. ADMIN-03 performance work remains open. The one independent second-model
+review at `e49df459` found no reportable P1/P2; subsequent narrow test/fixture
+closures were verified within that round, without rerunning tests. Final
+integrated regression and final-head CI are still required before merge.
+**No merge, TEST or STABLE.**
