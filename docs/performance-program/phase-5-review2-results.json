@@ -1,0 +1,4693 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "createdAt": "2026-11-07T14:01:29.919802+00:00",
+  "decision": {
+    "B1": "OPEN: refresh tradeoff needs user product decision; normal responsiveness acceptance failed. No merge.",
+    "B2": "FIXED: shared LFL source-version helper, actual native equality, no-source fallback preserved.",
+    "B3": "FIXED: worker-per-request OAB metadata feature withdrawn after measured latency regression. The later local async I/O fix addresses the separately traced B1 blocking read.",
+    "deltaIndependentReview": "Not performed: post-639372a4 commits are a separate delta for Claude via the user.",
+    "TEST": "not published",
+    "STABLE": "not published"
+  },
+  "environment": {
+    "platform": "Linux",
+    "node": "24.19.0",
+    "chromium": "154.0.8037.57",
+    "cpuQuota": "1600000 400000",
+    "availableParallelism": 4,
+    "affinity": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "memoryLimitBytes": 17179869184,
+    "limitations": [
+      "No Windows/Electron or cold OS disk-cache validation.",
+      "Collection workspace contains zero rows; its canonical catalog still derives from the 30k source.",
+      "Before has no successful /api/health endpoint (404). Failed attempts are retained and not a successful health baseline. After also retains its one refresh fetch failure.",
+      "BL_STALL_PROFILE is unset both arms; before profiles CPU by default and after opts in. This is a disclosed production behaviour difference.",
+      "Normal acceptance uses full timer gaps including the 10 ms interval; overlapping boundary gaps are retained in full. No threshold, validator, affinity or GC change."
+    ]
+  },
+  "quantiles": "nearest rank ceil(n*p)-1; three-run medians use statistics.median. Durations are milliseconds.",
+  "candidate": {
+    "measuredRevision": "fa580f89c1cdce75160d78b2c56c2876fb315f68",
+    "baselineRevision": "270228a4d9f195e613ae670db8c30583d9c183fc",
+    "normalAcceptanceEligible": true,
+    "status": "failed-responsiveness",
+    "fixtureHashes": {
+      "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+    },
+    "observerSha256": "8449c87695aacf881ff4f01ccdb8ef32630b7aa6b6a99709e4f5df3f448672b0",
+    "cpuQuota": "1600000 400000",
+    "affinity": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "plan": {
+      "file": "/tmp/phase-5-review2-final-cohort-plan.json",
+      "sha256": "ebd6a8d063905aa0e39edac824158b2722553cc1e002cd1a407a70eeef5ec8ff"
+    },
+    "arms": {
+      "before": {
+        "runs": [
+          {
+            "rep": 1,
+            "raw": {
+              "file": "/tmp/phase-5-review2-final-v3-before-1.json",
+              "sha256": "40ae3cdaab4cdedda4c88df42056de10b23ce4052c9fc05a3de1977b5fa1b031"
+            },
+            "rowGenerationRevisionChecks": "passed",
+            "expected": {
+              "rows": {
+                "koleksiyon": 0,
+                "cp": 24982,
+                "orders": 30000,
+                "overview": 30000
+              },
+              "generation": "mw6enrik-9e144eacdf30",
+              "sourceRevision": "a71b83d8ea75820923fb8371812ee6e50aeb82f3927f92ea4c12aad1230e312f",
+              "revisions": {
+                "orders": 0,
+                "suppFob": 0
+              }
+            },
+            "metrics": {
+              "refreshMs": 55792,
+              "refreshWallMs": 57048.393309,
+              "snapshotWriteMs": 11183,
+              "snapshotOperationMs": 11537,
+              "asasParseMs": 16588,
+              "pageCacheWriteMs": 22011,
+              "successfulRefreshHealthP50Ms": null,
+              "successfulRefreshHealthP95Ms": null,
+              "sourcePreparationOutsideSnapshotMetricMs": 354,
+              "sameTab.cp.ms": 59654.09999999404,
+              "sameTab.orders.ms": 3659.0999999940395,
+              "sameTab.koleksiyon.ms": 142,
+              "module.overview.primaryScreenReadyMs": 8521.40000000596,
+              "module.overview.startupReadyMs": 8552.59999999404,
+              "module.overview.systemStartupCompleteMs": 8909,
+              "module.overview.elapsedMs": 9520.217562000005,
+              "module.overview.jsHeapUsedBytes": 32172652,
+              "module.overview.rendererRssBytes": 1636311040,
+              "module.koleksiyon.primaryScreenReadyMs": 14797,
+              "module.koleksiyon.startupReadyMs": 14813.59999999404,
+              "module.koleksiyon.systemStartupCompleteMs": 14943,
+              "module.koleksiyon.elapsedMs": 15053.117604,
+              "module.koleksiyon.jsHeapUsedBytes": 12021568,
+              "module.koleksiyon.rendererRssBytes": 550113280,
+              "module.cp.primaryScreenReadyMs": 81988.90000000596,
+              "module.cp.startupReadyMs": 82038.70000001788,
+              "module.cp.systemStartupCompleteMs": 82278.09999999404,
+              "module.cp.elapsedMs": 253361.331779,
+              "module.cp.jsHeapUsedBytes": 130472144,
+              "module.cp.rendererRssBytes": 1104060416,
+              "module.orders.primaryScreenReadyMs": 11473,
+              "module.orders.startupReadyMs": 11514.800000011921,
+              "module.orders.systemStartupCompleteMs": 11898.90000000596,
+              "module.orders.elapsedMs": 12336.080837000045,
+              "module.orders.jsHeapUsedBytes": 115386980,
+              "module.orders.rendererRssBytes": 803737600,
+              "allAttemptRefreshHealthP50Ms": 7.896960999998555,
+              "allAttemptRefreshHealthP95Ms": 174.55153199999768,
+              "refreshHealthFailures": 80
+            },
+            "moduleObservations": [
+              {
+                "module": "overview",
+                "primaryScreenReadyMs": 8521.40000000596,
+                "startupReadyMs": 8552.59999999404,
+                "startupCompleteMs": 8909,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 335.40000000596046,
+                "systemStartupCompleteMs": 8909,
+                "primaryToGateMs": 31.19999998807907,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 28,
+                "longTaskTotalMs": 3878,
+                "maxLongTaskMs": 488,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 99.59999999403954,
+                    "decodedBytes": 15018,
+                    "encodedBytes": 4743
+                  },
+                  {
+                    "path": "/api/page-projection/overview",
+                    "ms": 615.0999999940395,
+                    "decodedBytes": 12516431,
+                    "encodedBytes": 952040
+                  }
+                ],
+                "jsHeapUsedBytes": 32172652,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 8005,
+                  "jsEventListeners": 1633
+                },
+                "navigationStartedAtMs": 1794056223223,
+                "observedAtMs": 1794056233415,
+                "elapsedMs": 9520.217562000005,
+                "rendererRssBytes": 1636311040,
+                "errors": [],
+                "generation": "mw6enrik-9e144eacdf30",
+                "sourceRevision": "a71b83d8ea75820923fb8371812ee6e50aeb82f3927f92ea4c12aad1230e312f"
+              },
+              {
+                "module": "koleksiyon",
+                "primaryScreenReadyMs": 14797,
+                "startupReadyMs": 14813.59999999404,
+                "startupCompleteMs": 14943,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 119,
+                "systemStartupCompleteMs": 14943,
+                "primaryToGateMs": 16.599999994039536,
+                "initialGeneration": null,
+                "rows": 0,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 0,
+                "longTaskTotalMs": 0,
+                "maxLongTaskMs": 0,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 81.90000000596046,
+                    "decodedBytes": 15018,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/collection-catalog",
+                    "ms": 76.10000002384186,
+                    "decodedBytes": 1619,
+                    "encodedBytes": 684
+                  }
+                ],
+                "jsHeapUsedBytes": 12021568,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 7558,
+                  "jsEventListeners": 1592
+                },
+                "navigationStartedAtMs": 1794056234131,
+                "observedAtMs": 1794056249288,
+                "elapsedMs": 15053.117604,
+                "rendererRssBytes": 550113280,
+                "errors": [],
+                "generation": "mw6enrik-9e144eacdf30",
+                "sourceRevision": "a71b83d8ea75820923fb8371812ee6e50aeb82f3927f92ea4c12aad1230e312f"
+              },
+              {
+                "module": "cp",
+                "primaryScreenReadyMs": 81988.90000000596,
+                "startupReadyMs": 82038.70000001788,
+                "startupCompleteMs": 82278.09999999404,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 217,
+                "systemStartupCompleteMs": 82278.09999999404,
+                "primaryToGateMs": 49.80000001192093,
+                "initialGeneration": null,
+                "rows": 24982,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 27,
+                "longTaskTotalMs": 4996.299999982119,
+                "maxLongTaskMs": 901,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 98.40000000596046,
+                    "decodedBytes": 15018,
+                    "encodedBytes": 4743
+                  },
+                  {
+                    "path": "/api/page-projection/cp",
+                    "ms": 2127.5,
+                    "decodedBytes": 61859722,
+                    "encodedBytes": 4644605
+                  }
+                ],
+                "jsHeapUsedBytes": 130472144,
+                "dom": {
+                  "documents": 3,
+                  "nodes": 41979,
+                  "jsEventListeners": 3582
+                },
+                "navigationStartedAtMs": 1794056249857,
+                "observedAtMs": 1794056505378,
+                "elapsedMs": 253361.331779,
+                "rendererRssBytes": 1104060416,
+                "errors": [],
+                "generation": "mw6enrik-9e144eacdf30",
+                "sourceRevision": "a71b83d8ea75820923fb8371812ee6e50aeb82f3927f92ea4c12aad1230e312f"
+              },
+              {
+                "module": "orders",
+                "primaryScreenReadyMs": 11473,
+                "startupReadyMs": 11514.800000011921,
+                "startupCompleteMs": 11898.90000000596,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 142.59999999403954,
+                "systemStartupCompleteMs": 11898.90000000596,
+                "primaryToGateMs": 41.80000001192093,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 14,
+                "longTaskTotalMs": 8097.5999999940395,
+                "maxLongTaskMs": 4446,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 91.90000000596046,
+                    "decodedBytes": 15018,
+                    "encodedBytes": 4743
+                  },
+                  {
+                    "path": "/api/page-projection/orders",
+                    "ms": 1913,
+                    "decodedBytes": 73145820,
+                    "encodedBytes": 5676208
+                  }
+                ],
+                "jsHeapUsedBytes": 115386980,
+                "dom": {
+                  "documents": 4,
+                  "nodes": 26030,
+                  "jsEventListeners": 3143
+                },
+                "navigationStartedAtMs": 1794056506299,
+                "observedAtMs": 1794056521514,
+                "elapsedMs": 12336.080837000045,
+                "rendererRssBytes": 803737600,
+                "errors": [],
+                "generation": "mw6enrik-9e144eacdf30",
+                "sourceRevision": "a71b83d8ea75820923fb8371812ee6e50aeb82f3927f92ea4c12aad1230e312f"
+              }
+            ],
+            "sameTabSwitches": [
+              {
+                "module": "cp",
+                "ms": 59654.09999999404,
+                "rows": 24982
+              },
+              {
+                "module": "orders",
+                "ms": 3659.0999999940395,
+                "rows": 30000
+              },
+              {
+                "module": "koleksiyon",
+                "ms": 142,
+                "rows": 0
+              }
+            ],
+            "health": {
+              "all": {
+                "count": 848,
+                "successful": 0,
+                "failed": 848,
+                "p50Ms": 7.32117300000391,
+                "p95Ms": 80.02099199999793,
+                "maxMs": 25970.435220999992
+              },
+              "refresh": {
+                "count": 80,
+                "successful": 0,
+                "failed": 80,
+                "p50Ms": 7.896960999998555,
+                "p95Ms": 174.55153199999768,
+                "maxMs": 6163.843934
+              },
+              "endpoint": "/api/health",
+              "readinessEndpoint": "/api/status",
+              "observedStatuses": [
+                404,
+                null
+              ],
+              "endpointAvailable": false
+            },
+            "refreshTelemetry": {
+              "operations": [
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T12:53:29.729Z",
+                  "timestampMs": 1794056009729,
+                  "connection": "ASAS Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T12:53:46.317Z",
+                  "timestampMs": 1794056026317,
+                  "connection": "ASAS Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 16588,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T12:53:46.492Z",
+                  "timestampMs": 1794056026492,
+                  "connection": "ANTREPO Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 0,
+                  "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T12:53:48.233Z",
+                  "timestampMs": 1794056028233,
+                  "connection": "ANTREPO Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 1741,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T12:53:51.881Z",
+                  "timestampMs": 1794056031881,
+                  "connection": "Refresh",
+                  "operation": "comparison",
+                  "category": "wait",
+                  "durationMs": 1394,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T12:54:03.419Z",
+                  "timestampMs": 1794056043419,
+                  "connection": "Local storage",
+                  "operation": "snapshot-save",
+                  "category": "save",
+                  "durationMs": 11537,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T12:54:25.431Z",
+                  "timestampMs": 1794056065431,
+                  "connection": "Local storage",
+                  "operation": "page-cache-write",
+                  "category": "cache",
+                  "durationMs": 22011,
+                  "error": null
+                }
+              ],
+              "metrics": {
+                "dbQueryMs": 0,
+                "connectionWaitMs": 0,
+                "retryMs": 0,
+                "dbResultWriteMs": 0,
+                "parseMs": 0,
+                "uiBlockingMs": 0,
+                "localDbWriteMs": 0,
+                "localSnapshotWriteMs": 11183,
+                "dashboard": null,
+                "totalMs": 55785
+              },
+              "excelWorkers": {
+                "asas": {
+                  "queueWaitMs": 0.7536260000001676,
+                  "durationMs": 16556.518316,
+                  "executionMs": 13225.696333,
+                  "overheadMs": 3330.8219830000016,
+                  "heapUsedBytes": 442658552
+                },
+                "antrepo": {
+                  "queueWaitMs": 0.06772899999850779,
+                  "durationMs": 1734.5115890000015,
+                  "executionMs": 1436.1521790000006,
+                  "overheadMs": 298.35941000000093,
+                  "heapUsedBytes": 75169992
+                }
+              }
+            },
+            "runtimeEventLoopStalls": [
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=4455 cpuMs=13786 heapUsedMb=289 heapLimitMb=4288 rssMb=1229",
+                "blockedMs": 4455,
+                "cpuMs": 13786,
+                "heapUsedMb": 289,
+                "heapLimitMb": 4288,
+                "rssMb": 1229
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=22247 cpuMs=34282 heapUsedMb=573 heapLimitMb=4288 rssMb=1498",
+                "blockedMs": 22247,
+                "cpuMs": 34282,
+                "heapUsedMb": 573,
+                "heapLimitMb": 4288,
+                "rssMb": 1498
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=4220 cpuMs=5539 heapUsedMb=355 heapLimitMb=4288 rssMb=715",
+                "blockedMs": 4220,
+                "cpuMs": 5539,
+                "heapUsedMb": 355,
+                "heapLimitMb": 4288,
+                "rssMb": 715
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=8615 cpuMs=17448 heapUsedMb=574 heapLimitMb=4288 rssMb=1543",
+                "blockedMs": 8615,
+                "cpuMs": 17448,
+                "heapUsedMb": 574,
+                "heapLimitMb": 4288,
+                "rssMb": 1543
+              }
+            ],
+            "moduleLoopGaps": [
+              {
+                "module": "overview",
+                "navigationStartedAtMs": 1794056223223,
+                "observedAtMs": 1794056233415,
+                "recordedGaps": 25,
+                "maxGapMs": 4517.889278000017,
+                "maxDelayMs": 4507.889278000017,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 4517.889278000017,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "koleksiyon",
+                "navigationStartedAtMs": 1794056234131,
+                "observedAtMs": 1794056249288,
+                "recordedGaps": 13,
+                "maxGapMs": 11959.506947000016,
+                "maxDelayMs": 11949.506947000016,
+                "gapsOver200ms": 1,
+                "maxGapUpperBoundMs": 11959.506947000016,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "cp",
+                "navigationStartedAtMs": 1794056249857,
+                "observedAtMs": 1794056505378,
+                "recordedGaps": 159,
+                "maxGapMs": 3652.226913999999,
+                "maxDelayMs": 3642.226913999999,
+                "gapsOver200ms": 8,
+                "maxGapUpperBoundMs": 3652.226913999999,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "orders",
+                "navigationStartedAtMs": 1794056506299,
+                "observedAtMs": 1794056521514,
+                "recordedGaps": 34,
+                "maxGapMs": 193.00691100000404,
+                "maxDelayMs": 183.00691100000404,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 193.00691100000404,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              }
+            ]
+          },
+          {
+            "rep": 2,
+            "raw": {
+              "file": "/tmp/phase-5-review2-final-v3-before-2.json",
+              "sha256": "bd098bf763f65168867f3335ba1e860a30b5c6229362703676f19982f34f604d"
+            },
+            "rowGenerationRevisionChecks": "passed",
+            "expected": {
+              "rows": {
+                "koleksiyon": 0,
+                "cp": 24982,
+                "orders": 30000,
+                "overview": 30000
+              },
+              "generation": "mw6fqi97-302e0342a80a",
+              "sourceRevision": "0254e473fea7ab68f6d211bbe13eaabb5bb2747a5e71f9c7cd088c92da645e84",
+              "revisions": {
+                "orders": 0,
+                "suppFob": 0
+              }
+            },
+            "metrics": {
+              "refreshMs": 52962,
+              "refreshWallMs": 54207.908896,
+              "snapshotWriteMs": 10541,
+              "snapshotOperationMs": 11145,
+              "asasParseMs": 16963,
+              "pageCacheWriteMs": 17923,
+              "successfulRefreshHealthP50Ms": null,
+              "successfulRefreshHealthP95Ms": null,
+              "sourcePreparationOutsideSnapshotMetricMs": 604,
+              "sameTab.cp.ms": 59342.09999999404,
+              "sameTab.orders.ms": 4337.699999988079,
+              "sameTab.koleksiyon.ms": 529.2000000178814,
+              "module.overview.primaryScreenReadyMs": 5863.800000011921,
+              "module.overview.startupReadyMs": 5878.800000011921,
+              "module.overview.systemStartupCompleteMs": 5998.800000011921,
+              "module.overview.elapsedMs": 6135.002917000005,
+              "module.overview.jsHeapUsedBytes": 38992360,
+              "module.overview.rendererRssBytes": 596426752,
+              "module.koleksiyon.primaryScreenReadyMs": 18748,
+              "module.koleksiyon.startupReadyMs": 18768.59999999404,
+              "module.koleksiyon.systemStartupCompleteMs": 18860.59999999404,
+              "module.koleksiyon.elapsedMs": 19019.402613000013,
+              "module.koleksiyon.jsHeapUsedBytes": 11939640,
+              "module.koleksiyon.rendererRssBytes": 544481280,
+              "module.cp.primaryScreenReadyMs": 64758.70000001788,
+              "module.cp.startupReadyMs": 64779.09999999404,
+              "module.cp.systemStartupCompleteMs": 64935.20000001788,
+              "module.cp.elapsedMs": 223096.511695,
+              "module.cp.jsHeapUsedBytes": 131077192,
+              "module.cp.rendererRssBytes": 1105879040,
+              "module.orders.primaryScreenReadyMs": 7459.4000000059605,
+              "module.orders.startupReadyMs": 7483.9000000059605,
+              "module.orders.systemStartupCompleteMs": 7607.5,
+              "module.orders.elapsedMs": 8712.831790999975,
+              "module.orders.jsHeapUsedBytes": 108226088,
+              "module.orders.rendererRssBytes": 815005696,
+              "allAttemptRefreshHealthP50Ms": 9.85587299999952,
+              "allAttemptRefreshHealthP95Ms": 1015.7119080000011,
+              "refreshHealthFailures": 70
+            },
+            "moduleObservations": [
+              {
+                "module": "overview",
+                "primaryScreenReadyMs": 5863.800000011921,
+                "startupReadyMs": 5878.800000011921,
+                "startupCompleteMs": 5998.800000011921,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 114.39999997615814,
+                "systemStartupCompleteMs": 5998.800000011921,
+                "primaryToGateMs": 15,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 13,
+                "longTaskTotalMs": 2025,
+                "maxLongTaskMs": 324,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 91.59999999403954,
+                    "decodedBytes": 15018,
+                    "encodedBytes": 4745
+                  },
+                  {
+                    "path": "/api/page-projection/overview",
+                    "ms": 397.09999999403954,
+                    "decodedBytes": 12516431,
+                    "encodedBytes": 952040
+                  }
+                ],
+                "jsHeapUsedBytes": 38992360,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 8238,
+                  "jsEventListeners": 1650
+                },
+                "navigationStartedAtMs": 1794058020244,
+                "observedAtMs": 1794058030344,
+                "elapsedMs": 6135.002917000005,
+                "rendererRssBytes": 596426752,
+                "errors": [],
+                "generation": "mw6fqi97-302e0342a80a",
+                "sourceRevision": "0254e473fea7ab68f6d211bbe13eaabb5bb2747a5e71f9c7cd088c92da645e84"
+              },
+              {
+                "module": "koleksiyon",
+                "primaryScreenReadyMs": 18748,
+                "startupReadyMs": 18768.59999999404,
+                "startupCompleteMs": 18860.59999999404,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 86.30000001192093,
+                "systemStartupCompleteMs": 18860.59999999404,
+                "primaryToGateMs": 20.599999994039536,
+                "initialGeneration": null,
+                "rows": 0,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 0,
+                "longTaskTotalMs": 0,
+                "maxLongTaskMs": 0,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 63.099999994039536,
+                    "decodedBytes": 15018,
+                    "encodedBytes": 4743
+                  },
+                  {
+                    "path": "/api/page-projection/collection-catalog",
+                    "ms": 39.900000005960464,
+                    "decodedBytes": 1619,
+                    "encodedBytes": 684
+                  }
+                ],
+                "jsHeapUsedBytes": 11939640,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 7647,
+                  "jsEventListeners": 1605
+                },
+                "navigationStartedAtMs": 1794058030744,
+                "observedAtMs": 1794058049877,
+                "elapsedMs": 19019.402613000013,
+                "rendererRssBytes": 544481280,
+                "errors": [],
+                "generation": "mw6fqi97-302e0342a80a",
+                "sourceRevision": "0254e473fea7ab68f6d211bbe13eaabb5bb2747a5e71f9c7cd088c92da645e84"
+              },
+              {
+                "module": "cp",
+                "primaryScreenReadyMs": 64758.70000001788,
+                "startupReadyMs": 64779.09999999404,
+                "startupCompleteMs": 64935.20000001788,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 148.80000001192093,
+                "systemStartupCompleteMs": 64935.20000001788,
+                "primaryToGateMs": 20.399999976158142,
+                "initialGeneration": null,
+                "rows": 24982,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 25,
+                "longTaskTotalMs": 6246.9000000059605,
+                "maxLongTaskMs": 2088.9000000059605,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 108.30000001192093,
+                    "decodedBytes": 15018,
+                    "encodedBytes": 4745
+                  },
+                  {
+                    "path": "/api/page-projection/cp",
+                    "ms": 1295.800000011921,
+                    "decodedBytes": 61859722,
+                    "encodedBytes": 4644605
+                  }
+                ],
+                "jsHeapUsedBytes": 131077192,
+                "dom": {
+                  "documents": 3,
+                  "nodes": 45696,
+                  "jsEventListeners": 3582
+                },
+                "navigationStartedAtMs": 1794058050459,
+                "observedAtMs": 1794058275726,
+                "elapsedMs": 223096.511695,
+                "rendererRssBytes": 1105879040,
+                "errors": [],
+                "generation": "mw6fqi97-302e0342a80a",
+                "sourceRevision": "0254e473fea7ab68f6d211bbe13eaabb5bb2747a5e71f9c7cd088c92da645e84"
+              },
+              {
+                "module": "orders",
+                "primaryScreenReadyMs": 7459.4000000059605,
+                "startupReadyMs": 7483.9000000059605,
+                "startupCompleteMs": 7607.5,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 115.19999998807907,
+                "systemStartupCompleteMs": 7607.5,
+                "primaryToGateMs": 24.5,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 21,
+                "longTaskTotalMs": 8255.799999982119,
+                "maxLongTaskMs": 2123,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 104.09999999403954,
+                    "decodedBytes": 15018,
+                    "encodedBytes": 4745
+                  },
+                  {
+                    "path": "/api/page-projection/orders",
+                    "ms": 974.0999999940395,
+                    "decodedBytes": 73145820,
+                    "encodedBytes": 5676208
+                  }
+                ],
+                "jsHeapUsedBytes": 108226088,
+                "dom": {
+                  "documents": 4,
+                  "nodes": 26133,
+                  "jsEventListeners": 3190
+                },
+                "navigationStartedAtMs": 1794058276604,
+                "observedAtMs": 1794058287184,
+                "elapsedMs": 8712.831790999975,
+                "rendererRssBytes": 815005696,
+                "errors": [],
+                "generation": "mw6fqi97-302e0342a80a",
+                "sourceRevision": "0254e473fea7ab68f6d211bbe13eaabb5bb2747a5e71f9c7cd088c92da645e84"
+              }
+            ],
+            "sameTabSwitches": [
+              {
+                "module": "cp",
+                "ms": 59342.09999999404,
+                "rows": 24982
+              },
+              {
+                "module": "orders",
+                "ms": 4337.699999988079,
+                "rows": 30000
+              },
+              {
+                "module": "koleksiyon",
+                "ms": 529.2000000178814,
+                "rows": 0
+              }
+            ],
+            "health": {
+              "all": {
+                "count": 770,
+                "successful": 0,
+                "failed": 770,
+                "p50Ms": 6.648089999973308,
+                "p95Ms": 74.98218699998688,
+                "maxMs": 19728.997216999996
+              },
+              "refresh": {
+                "count": 70,
+                "successful": 0,
+                "failed": 70,
+                "p50Ms": 9.85587299999952,
+                "p95Ms": 1015.7119080000011,
+                "maxMs": 7166.369756
+              },
+              "endpoint": "/api/health",
+              "readinessEndpoint": "/api/status",
+              "observedStatuses": [
+                404,
+                null
+              ],
+              "endpointAvailable": false
+            },
+            "refreshTelemetry": {
+              "operations": [
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:23:40.102Z",
+                  "timestampMs": 1794057820102,
+                  "connection": "ASAS Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 3,
+                  "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:23:57.067Z",
+                  "timestampMs": 1794057837067,
+                  "connection": "ASAS Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 16963,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:23:57.443Z",
+                  "timestampMs": 1794057837443,
+                  "connection": "ANTREPO Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:23:59.351Z",
+                  "timestampMs": 1794057839351,
+                  "connection": "ANTREPO Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 1908,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:24:03.915Z",
+                  "timestampMs": 1794057843915,
+                  "connection": "Refresh",
+                  "operation": "comparison",
+                  "category": "wait",
+                  "durationMs": 1855,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:24:15.061Z",
+                  "timestampMs": 1794057855061,
+                  "connection": "Local storage",
+                  "operation": "snapshot-save",
+                  "category": "save",
+                  "durationMs": 11145,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:24:32.984Z",
+                  "timestampMs": 1794057872984,
+                  "connection": "Local storage",
+                  "operation": "page-cache-write",
+                  "category": "cache",
+                  "durationMs": 17923,
+                  "error": null
+                }
+              ],
+              "metrics": {
+                "dbQueryMs": 0,
+                "connectionWaitMs": 0,
+                "retryMs": 0,
+                "dbResultWriteMs": 0,
+                "parseMs": 0,
+                "uiBlockingMs": 0,
+                "localDbWriteMs": 0,
+                "localSnapshotWriteMs": 10541,
+                "dashboard": null,
+                "totalMs": 52958
+              },
+              "excelWorkers": {
+                "asas": {
+                  "queueWaitMs": 0.5105029999999715,
+                  "durationMs": 16929.351612,
+                  "executionMs": 14221.43761,
+                  "overheadMs": 2707.9140019999977,
+                  "heapUsedBytes": 426381752
+                },
+                "antrepo": {
+                  "queueWaitMs": 0.11952100000053179,
+                  "durationMs": 1893.0804590000007,
+                  "executionMs": 1467.7860220000002,
+                  "overheadMs": 425.29443700000047,
+                  "heapUsedBytes": 76257264
+                }
+              }
+            },
+            "runtimeEventLoopStalls": [
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=6854 cpuMs=13517 heapUsedMb=240 heapLimitMb=4288 rssMb=861",
+                "blockedMs": 6854,
+                "cpuMs": 13517,
+                "heapUsedMb": 240,
+                "heapLimitMb": 4288,
+                "rssMb": 861
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=3114 cpuMs=11033 heapUsedMb=290 heapLimitMb=4288 rssMb=1088",
+                "blockedMs": 3114,
+                "cpuMs": 11033,
+                "heapUsedMb": 290,
+                "heapLimitMb": 4288,
+                "rssMb": 1088
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=14081 cpuMs=24947 heapUsedMb=573 heapLimitMb=4288 rssMb=1528",
+                "blockedMs": 14081,
+                "cpuMs": 24947,
+                "heapUsedMb": 573,
+                "heapLimitMb": 4288,
+                "rssMb": 1528
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=16989 cpuMs=25218 heapUsedMb=573 heapLimitMb=4288 rssMb=1491",
+                "blockedMs": 16989,
+                "cpuMs": 25218,
+                "heapUsedMb": 573,
+                "heapLimitMb": 4288,
+                "rssMb": 1491
+              }
+            ],
+            "moduleLoopGaps": [
+              {
+                "module": "overview",
+                "navigationStartedAtMs": 1794058020244,
+                "observedAtMs": 1794058030344,
+                "recordedGaps": 9,
+                "maxGapMs": 18987.915159999975,
+                "maxDelayMs": 18977.915159999975,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 18987.915159999975,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "koleksiyon",
+                "navigationStartedAtMs": 1794058030744,
+                "observedAtMs": 1794058049877,
+                "recordedGaps": 14,
+                "maxGapMs": 18987.915159999975,
+                "maxDelayMs": 18977.915159999975,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 18987.915159999975,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "cp",
+                "navigationStartedAtMs": 1794058050459,
+                "observedAtMs": 1794058275726,
+                "recordedGaps": 118,
+                "maxGapMs": 2283.664279999968,
+                "maxDelayMs": 2273.664279999968,
+                "gapsOver200ms": 4,
+                "maxGapUpperBoundMs": 2283.664279999968,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "orders",
+                "navigationStartedAtMs": 1794058276604,
+                "observedAtMs": 1794058287184,
+                "recordedGaps": 15,
+                "maxGapMs": 105.67199999996228,
+                "maxDelayMs": 95.67199999996228,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 105.67199999996228,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              }
+            ]
+          },
+          {
+            "rep": 3,
+            "raw": {
+              "file": "/tmp/phase-5-review2-final-v3-before-3.json",
+              "sha256": "9bc956da7c3b75e91eebd3dcea13a4e40e89112f2aef172a8e74a97d48e36502"
+            },
+            "rowGenerationRevisionChecks": "passed",
+            "expected": {
+              "rows": {
+                "koleksiyon": 0,
+                "cp": 24982,
+                "orders": 30000,
+                "overview": 30000
+              },
+              "generation": "mw6g0wzi-ea380abe2f0b",
+              "sourceRevision": "892abb68ecd794979041ef00f0597ff5c076b391af6b3ff7aa181379c2516f28",
+              "revisions": {
+                "orders": 0,
+                "suppFob": 0
+              }
+            },
+            "metrics": {
+              "refreshMs": 51842,
+              "refreshWallMs": 53733.447735,
+              "snapshotWriteMs": 9817,
+              "snapshotOperationMs": 10272,
+              "asasParseMs": 18057,
+              "pageCacheWriteMs": 16885,
+              "successfulRefreshHealthP50Ms": null,
+              "successfulRefreshHealthP95Ms": null,
+              "sourcePreparationOutsideSnapshotMetricMs": 455,
+              "sameTab.cp.ms": 41881.80000001192,
+              "sameTab.orders.ms": 2454.7999999821186,
+              "sameTab.koleksiyon.ms": 222.2000000178814,
+              "module.overview.primaryScreenReadyMs": 7015.0999999940395,
+              "module.overview.startupReadyMs": 7043.799999982119,
+              "module.overview.systemStartupCompleteMs": 7142,
+              "module.overview.elapsedMs": 7336.102838999999,
+              "module.overview.jsHeapUsedBytes": 32923140,
+              "module.overview.rendererRssBytes": 1874251776,
+              "module.koleksiyon.primaryScreenReadyMs": 19187.5,
+              "module.koleksiyon.startupReadyMs": 19210.69999998808,
+              "module.koleksiyon.systemStartupCompleteMs": 19332.399999976158,
+              "module.koleksiyon.elapsedMs": 19438.454249000002,
+              "module.koleksiyon.jsHeapUsedBytes": 11986460,
+              "module.koleksiyon.rendererRssBytes": 501829632,
+              "module.cp.primaryScreenReadyMs": 100067.5,
+              "module.cp.startupReadyMs": 100154.70000001788,
+              "module.cp.systemStartupCompleteMs": 343828,
+              "module.cp.elapsedMs": 345222.241771,
+              "module.cp.jsHeapUsedBytes": 103332284,
+              "module.cp.rendererRssBytes": 1092206592,
+              "module.orders.primaryScreenReadyMs": 9932.800000011921,
+              "module.orders.startupReadyMs": 9952,
+              "module.orders.systemStartupCompleteMs": 10461.700000017881,
+              "module.orders.elapsedMs": 11223.462111000088,
+              "module.orders.jsHeapUsedBytes": 106796484,
+              "module.orders.rendererRssBytes": 707289088,
+              "allAttemptRefreshHealthP50Ms": 11.138704999997572,
+              "allAttemptRefreshHealthP95Ms": 1333.745272,
+              "refreshHealthFailures": 70
+            },
+            "moduleObservations": [
+              {
+                "module": "overview",
+                "primaryScreenReadyMs": 7015.0999999940395,
+                "startupReadyMs": 7043.799999982119,
+                "startupCompleteMs": 7142,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 92.30000001192093,
+                "systemStartupCompleteMs": 7142,
+                "primaryToGateMs": 28.69999998807907,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 21,
+                "longTaskTotalMs": 3145,
+                "maxLongTaskMs": 648,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 159,
+                    "decodedBytes": 15018,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/overview",
+                    "ms": 1275.0999999940395,
+                    "decodedBytes": 12516431,
+                    "encodedBytes": 952040
+                  }
+                ],
+                "jsHeapUsedBytes": 32923140,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 8052,
+                  "jsEventListeners": 1635
+                },
+                "navigationStartedAtMs": 1794058588939,
+                "observedAtMs": 1794058599036,
+                "elapsedMs": 7336.102838999999,
+                "rendererRssBytes": 1874251776,
+                "errors": [],
+                "generation": "mw6g0wzi-ea380abe2f0b",
+                "sourceRevision": "892abb68ecd794979041ef00f0597ff5c076b391af6b3ff7aa181379c2516f28"
+              },
+              {
+                "module": "koleksiyon",
+                "primaryScreenReadyMs": 19187.5,
+                "startupReadyMs": 19210.69999998808,
+                "startupCompleteMs": 19332.399999976158,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 109.40000000596046,
+                "systemStartupCompleteMs": 19332.399999976158,
+                "primaryToGateMs": 23.19999998807907,
+                "initialGeneration": null,
+                "rows": 0,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 0,
+                "longTaskTotalMs": 0,
+                "maxLongTaskMs": 0,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 109.39999997615814,
+                    "decodedBytes": 15018,
+                    "encodedBytes": 4741
+                  },
+                  {
+                    "path": "/api/page-projection/collection-catalog",
+                    "ms": 103.10000002384186,
+                    "decodedBytes": 1619,
+                    "encodedBytes": 684
+                  }
+                ],
+                "jsHeapUsedBytes": 11986460,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 7684,
+                  "jsEventListeners": 1610
+                },
+                "navigationStartedAtMs": 1794058600108,
+                "observedAtMs": 1794058619809,
+                "elapsedMs": 19438.454249000002,
+                "rendererRssBytes": 501829632,
+                "errors": [],
+                "generation": "mw6g0wzi-ea380abe2f0b",
+                "sourceRevision": "892abb68ecd794979041ef00f0597ff5c076b391af6b3ff7aa181379c2516f28"
+              },
+              {
+                "module": "cp",
+                "primaryScreenReadyMs": 100067.5,
+                "startupReadyMs": 100154.70000001788,
+                "startupCompleteMs": 343828,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 243651.09999999404,
+                "systemStartupCompleteMs": 343828,
+                "primaryToGateMs": 87.2000000178814,
+                "initialGeneration": null,
+                "rows": 24982,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 19,
+                "longTaskTotalMs": 6193,
+                "maxLongTaskMs": 975,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 154.90000000596046,
+                    "decodedBytes": 15018,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/cp",
+                    "ms": 1823.4000000059605,
+                    "decodedBytes": 61859722,
+                    "encodedBytes": 4644605
+                  }
+                ],
+                "jsHeapUsedBytes": 103332284,
+                "dom": {
+                  "documents": 3,
+                  "nodes": 35173,
+                  "jsEventListeners": 3212
+                },
+                "navigationStartedAtMs": 1794058621326,
+                "observedAtMs": 1794058969192,
+                "elapsedMs": 345222.241771,
+                "rendererRssBytes": 1092206592,
+                "errors": [],
+                "generation": "mw6g0wzi-ea380abe2f0b",
+                "sourceRevision": "892abb68ecd794979041ef00f0597ff5c076b391af6b3ff7aa181379c2516f28"
+              },
+              {
+                "module": "orders",
+                "primaryScreenReadyMs": 9932.800000011921,
+                "startupReadyMs": 9952,
+                "startupCompleteMs": 10461.700000017881,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 495,
+                "systemStartupCompleteMs": 10461.700000017881,
+                "primaryToGateMs": 19.19999998807907,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 20,
+                "longTaskTotalMs": 8075.699999988079,
+                "maxLongTaskMs": 3877,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 156.5,
+                    "decodedBytes": 15018,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/orders",
+                    "ms": 1619.0999999940395,
+                    "decodedBytes": 73145820,
+                    "encodedBytes": 5676208
+                  }
+                ],
+                "jsHeapUsedBytes": 106796484,
+                "dom": {
+                  "documents": 4,
+                  "nodes": 16954,
+                  "jsEventListeners": 2215
+                },
+                "navigationStartedAtMs": 1794058970395,
+                "observedAtMs": 1794058981670,
+                "elapsedMs": 11223.462111000088,
+                "rendererRssBytes": 707289088,
+                "errors": [],
+                "generation": "mw6g0wzi-ea380abe2f0b",
+                "sourceRevision": "892abb68ecd794979041ef00f0597ff5c076b391af6b3ff7aa181379c2516f28"
+              }
+            ],
+            "sameTabSwitches": [
+              {
+                "module": "cp",
+                "ms": 41881.80000001192,
+                "rows": 24982
+              },
+              {
+                "module": "orders",
+                "ms": 2454.7999999821186,
+                "rows": 30000
+              },
+              {
+                "module": "koleksiyon",
+                "ms": 222.2000000178814,
+                "rows": 0
+              }
+            ],
+            "health": {
+              "all": {
+                "count": 857,
+                "successful": 0,
+                "failed": 857,
+                "p50Ms": 7.593771999934688,
+                "p95Ms": 215.7214340000064,
+                "maxMs": 24842.086603999996
+              },
+              "refresh": {
+                "count": 70,
+                "successful": 0,
+                "failed": 70,
+                "p50Ms": 11.138704999997572,
+                "p95Ms": 1333.745272,
+                "maxMs": 5879.715852999998
+              },
+              "endpoint": "/api/health",
+              "readinessEndpoint": "/api/status",
+              "observedStatuses": [
+                404,
+                null
+              ],
+              "endpointAvailable": false
+            },
+            "refreshTelemetry": {
+              "operations": [
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:31:46.895Z",
+                  "timestampMs": 1794058306895,
+                  "connection": "ASAS Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 0,
+                  "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:32:04.953Z",
+                  "timestampMs": 1794058324953,
+                  "connection": "ASAS Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 18057,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:32:05.222Z",
+                  "timestampMs": 1794058325222,
+                  "connection": "ANTREPO Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:32:07.055Z",
+                  "timestampMs": 1794058327055,
+                  "connection": "ANTREPO Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 1832,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:32:11.519Z",
+                  "timestampMs": 1794058331519,
+                  "connection": "Refresh",
+                  "operation": "comparison",
+                  "category": "wait",
+                  "durationMs": 1833,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:32:21.795Z",
+                  "timestampMs": 1794058341795,
+                  "connection": "Local storage",
+                  "operation": "snapshot-save",
+                  "category": "save",
+                  "durationMs": 10272,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:32:38.680Z",
+                  "timestampMs": 1794058358680,
+                  "connection": "Local storage",
+                  "operation": "page-cache-write",
+                  "category": "cache",
+                  "durationMs": 16885,
+                  "error": null
+                }
+              ],
+              "metrics": {
+                "dbQueryMs": 0,
+                "connectionWaitMs": 0,
+                "retryMs": 0,
+                "dbResultWriteMs": 0,
+                "parseMs": 0,
+                "uiBlockingMs": 0,
+                "localDbWriteMs": 0,
+                "localSnapshotWriteMs": 9817,
+                "dashboard": null,
+                "totalMs": 51838
+              },
+              "excelWorkers": {
+                "asas": {
+                  "queueWaitMs": 0.831869000000097,
+                  "durationMs": 18035.850403,
+                  "executionMs": 15210.429137000001,
+                  "overheadMs": 2825.4212659999994,
+                  "heapUsedBytes": 425208120
+                },
+                "antrepo": {
+                  "queueWaitMs": 0.08337400000164052,
+                  "durationMs": 1824.790466999999,
+                  "executionMs": 1539.1372249999986,
+                  "overheadMs": 285.6532420000003,
+                  "heapUsedBytes": 63571000
+                }
+              }
+            },
+            "runtimeEventLoopStalls": [
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=3581 cpuMs=12323 heapUsedMb=289 heapLimitMb=4288 rssMb=1179",
+                "blockedMs": 3581,
+                "cpuMs": 12323,
+                "heapUsedMb": 289,
+                "heapLimitMb": 4288,
+                "rssMb": 1179
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=22063 cpuMs=33556 heapUsedMb=573 heapLimitMb=4288 rssMb=1502",
+                "blockedMs": 22063,
+                "cpuMs": 33556,
+                "heapUsedMb": 573,
+                "heapLimitMb": 4288,
+                "rssMb": 1502
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=20041 cpuMs=14592 heapUsedMb=575 heapLimitMb=4288 rssMb=1425",
+                "blockedMs": 20041,
+                "cpuMs": 14592,
+                "heapUsedMb": 575,
+                "heapLimitMb": 4288,
+                "rssMb": 1425
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=10168 cpuMs=16111 heapUsedMb=576 heapLimitMb=4288 rssMb=1425",
+                "blockedMs": 10168,
+                "cpuMs": 16111,
+                "heapUsedMb": 576,
+                "heapLimitMb": 4288,
+                "rssMb": 1425
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=16416 cpuMs=21427 heapUsedMb=573 heapLimitMb=4288 rssMb=1474",
+                "blockedMs": 16416,
+                "cpuMs": 21427,
+                "heapUsedMb": 573,
+                "heapLimitMb": 4288,
+                "rssMb": 1474
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=7385 cpuMs=6489 heapUsedMb=415 heapLimitMb=4288 rssMb=1108",
+                "blockedMs": 7385,
+                "cpuMs": 6489,
+                "heapUsedMb": 415,
+                "heapLimitMb": 4288,
+                "rssMb": 1108
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=9861 cpuMs=9946 heapUsedMb=437 heapLimitMb=4288 rssMb=1084",
+                "blockedMs": 9861,
+                "cpuMs": 9946,
+                "heapUsedMb": 437,
+                "heapLimitMb": 4288,
+                "rssMb": 1084
+              },
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=8420 cpuMs=12424 heapUsedMb=345 heapLimitMb=4288 rssMb=648",
+                "blockedMs": 8420,
+                "cpuMs": 12424,
+                "heapUsedMb": 345,
+                "heapLimitMb": 4288,
+                "rssMb": 648
+              }
+            ],
+            "moduleLoopGaps": [
+              {
+                "module": "overview",
+                "navigationStartedAtMs": 1794058588939,
+                "observedAtMs": 1794058599036,
+                "recordedGaps": 8,
+                "maxGapMs": 17089.297892000002,
+                "maxDelayMs": 17079.297892000002,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 17089.297892000002,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "koleksiyon",
+                "navigationStartedAtMs": 1794058600108,
+                "observedAtMs": 1794058619809,
+                "recordedGaps": 25,
+                "maxGapMs": 17089.297892000002,
+                "maxDelayMs": 17079.297892000002,
+                "gapsOver200ms": 3,
+                "maxGapUpperBoundMs": 17089.297892000002,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "cp",
+                "navigationStartedAtMs": 1794058621326,
+                "observedAtMs": 1794058969192,
+                "recordedGaps": 437,
+                "maxGapMs": 11427.17757,
+                "maxDelayMs": 11417.17757,
+                "gapsOver200ms": 57,
+                "maxGapUpperBoundMs": 11427.17757,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "orders",
+                "navigationStartedAtMs": 1794058970395,
+                "observedAtMs": 1794058981670,
+                "recordedGaps": 23,
+                "maxGapMs": 140.24878900009207,
+                "maxDelayMs": 130.24878900009207,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 140.24878900009207,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              }
+            ]
+          }
+        ],
+        "medians": {
+          "refreshMs": 52962,
+          "refreshWallMs": 54207.908896,
+          "snapshotWriteMs": 10541,
+          "snapshotOperationMs": 11145,
+          "asasParseMs": 16963,
+          "pageCacheWriteMs": 17923,
+          "successfulRefreshHealthP50Ms": null,
+          "successfulRefreshHealthP95Ms": null,
+          "sourcePreparationOutsideSnapshotMetricMs": 455,
+          "sameTab.cp.ms": 59342.09999999404,
+          "sameTab.orders.ms": 3659.0999999940395,
+          "sameTab.koleksiyon.ms": 222.2000000178814,
+          "module.overview.primaryScreenReadyMs": 7015.0999999940395,
+          "module.overview.startupReadyMs": 7043.799999982119,
+          "module.overview.systemStartupCompleteMs": 7142,
+          "module.overview.elapsedMs": 7336.102838999999,
+          "module.overview.jsHeapUsedBytes": 32923140,
+          "module.overview.rendererRssBytes": 1636311040,
+          "module.koleksiyon.primaryScreenReadyMs": 18748,
+          "module.koleksiyon.startupReadyMs": 18768.59999999404,
+          "module.koleksiyon.systemStartupCompleteMs": 18860.59999999404,
+          "module.koleksiyon.elapsedMs": 19019.402613000013,
+          "module.koleksiyon.jsHeapUsedBytes": 11986460,
+          "module.koleksiyon.rendererRssBytes": 544481280,
+          "module.cp.primaryScreenReadyMs": 81988.90000000596,
+          "module.cp.startupReadyMs": 82038.70000001788,
+          "module.cp.systemStartupCompleteMs": 82278.09999999404,
+          "module.cp.elapsedMs": 253361.331779,
+          "module.cp.jsHeapUsedBytes": 130472144,
+          "module.cp.rendererRssBytes": 1104060416,
+          "module.orders.primaryScreenReadyMs": 9932.800000011921,
+          "module.orders.startupReadyMs": 9952,
+          "module.orders.systemStartupCompleteMs": 10461.700000017881,
+          "module.orders.elapsedMs": 11223.462111000088,
+          "module.orders.jsHeapUsedBytes": 108226088,
+          "module.orders.rendererRssBytes": 803737600,
+          "allAttemptRefreshHealthP50Ms": 9.85587299999952,
+          "allAttemptRefreshHealthP95Ms": 1015.7119080000011,
+          "refreshHealthFailures": 70
+        }
+      },
+      "after": {
+        "runs": [
+          {
+            "rep": 1,
+            "raw": {
+              "file": "/tmp/phase-5-review2-final-v3-after-1.json",
+              "sha256": "fe6173b8bcbb98fe112e02c094929d6bb962b92735ecd39014463e79a77c1341"
+            },
+            "rowGenerationRevisionChecks": "passed",
+            "expected": {
+              "rows": {
+                "koleksiyon": 0,
+                "cp": 24982,
+                "orders": 30000,
+                "overview": 30000
+              },
+              "generation": "mw6ezf0e-3cebc37a99e2",
+              "sourceRevision": "c8895a46594b69eb23befd85e54a859cafc4679ffc0210adf0fd2925284ed0db",
+              "revisions": {
+                "orders": 0,
+                "suppFob": 0
+              }
+            },
+            "metrics": {
+              "refreshMs": 65852,
+              "refreshWallMs": 66916.618778,
+              "snapshotWriteMs": 11449,
+              "snapshotOperationMs": 19278,
+              "asasParseMs": 15188,
+              "pageCacheWriteMs": 26316,
+              "successfulRefreshHealthP50Ms": 8.200055000001157,
+              "successfulRefreshHealthP95Ms": 684.9269950000016,
+              "sourcePreparationOutsideSnapshotMetricMs": 7829,
+              "sameTab.cp.ms": 53066.5,
+              "sameTab.orders.ms": 3761.7999999821186,
+              "sameTab.koleksiyon.ms": 150.09999999403954,
+              "module.overview.primaryScreenReadyMs": 6333.800000011921,
+              "module.overview.startupReadyMs": 6378.5,
+              "module.overview.systemStartupCompleteMs": 6470.5999999940395,
+              "module.overview.elapsedMs": 7022.976388999989,
+              "module.overview.jsHeapUsedBytes": 49215316,
+              "module.overview.rendererRssBytes": 1100079104,
+              "module.koleksiyon.primaryScreenReadyMs": 6581.5999999940395,
+              "module.koleksiyon.startupReadyMs": 6619.399999976158,
+              "module.koleksiyon.systemStartupCompleteMs": 6755.399999976158,
+              "module.koleksiyon.elapsedMs": 6966.964768000005,
+              "module.koleksiyon.jsHeapUsedBytes": 100120144,
+              "module.koleksiyon.rendererRssBytes": 977231872,
+              "module.cp.primaryScreenReadyMs": 65025.79999998212,
+              "module.cp.startupReadyMs": 65051.5,
+              "module.cp.systemStartupCompleteMs": 65195.29999998212,
+              "module.cp.elapsedMs": 232944.831627,
+              "module.cp.jsHeapUsedBytes": 104851832,
+              "module.cp.rendererRssBytes": 1469681664,
+              "module.orders.primaryScreenReadyMs": 7976,
+              "module.orders.startupReadyMs": 8004.199999988079,
+              "module.orders.systemStartupCompleteMs": 8133,
+              "module.orders.elapsedMs": 9006.160096999956,
+              "module.orders.jsHeapUsedBytes": 109689624,
+              "module.orders.rendererRssBytes": 1300443136,
+              "allAttemptRefreshHealthP50Ms": 8.200055000001157,
+              "allAttemptRefreshHealthP95Ms": 684.9269950000016,
+              "refreshHealthFailures": 0
+            },
+            "moduleObservations": [
+              {
+                "module": "overview",
+                "primaryScreenReadyMs": 6333.800000011921,
+                "startupReadyMs": 6378.5,
+                "startupCompleteMs": 6470.5999999940395,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 85.2000000178814,
+                "systemStartupCompleteMs": 6470.5999999940395,
+                "primaryToGateMs": 44.69999998807907,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 38,
+                "longTaskTotalMs": 6742.4000000059605,
+                "maxLongTaskMs": 1389,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 307.89999997615814,
+                    "decodedBytes": 15017,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/overview",
+                    "ms": 762.3999999761581,
+                    "decodedBytes": 12516431,
+                    "encodedBytes": 952040
+                  }
+                ],
+                "jsHeapUsedBytes": 49215316,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 8899,
+                  "jsEventListeners": 1825
+                },
+                "navigationStartedAtMs": 1794056753666,
+                "observedAtMs": 1794056764305,
+                "elapsedMs": 7022.976388999989,
+                "rendererRssBytes": 1100079104,
+                "errors": [],
+                "generation": "mw6ezf0e-3cebc37a99e2",
+                "sourceRevision": "c8895a46594b69eb23befd85e54a859cafc4679ffc0210adf0fd2925284ed0db"
+              },
+              {
+                "module": "koleksiyon",
+                "primaryScreenReadyMs": 6581.5999999940395,
+                "startupReadyMs": 6619.399999976158,
+                "startupCompleteMs": 6755.399999976158,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 117.60000002384186,
+                "systemStartupCompleteMs": 6755.399999976158,
+                "primaryToGateMs": 37.79999998211861,
+                "initialGeneration": null,
+                "rows": 0,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 30,
+                "longTaskTotalMs": 5606.800000011921,
+                "maxLongTaskMs": 1550.800000011921,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 681.9000000059605,
+                    "decodedBytes": 15017,
+                    "encodedBytes": 4740
+                  },
+                  {
+                    "path": "/api/page-projection/collection-catalog",
+                    "ms": 47.19999998807907,
+                    "decodedBytes": 1619,
+                    "encodedBytes": 684
+                  }
+                ],
+                "jsHeapUsedBytes": 100120144,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 7730,
+                  "jsEventListeners": 1567
+                },
+                "navigationStartedAtMs": 1794056791324,
+                "observedAtMs": 1794056805451,
+                "elapsedMs": 6966.964768000005,
+                "rendererRssBytes": 977231872,
+                "errors": [],
+                "generation": "mw6ezf0e-3cebc37a99e2",
+                "sourceRevision": "c8895a46594b69eb23befd85e54a859cafc4679ffc0210adf0fd2925284ed0db"
+              },
+              {
+                "module": "cp",
+                "primaryScreenReadyMs": 65025.79999998212,
+                "startupReadyMs": 65051.5,
+                "startupCompleteMs": 65195.29999998212,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 138.40000000596046,
+                "systemStartupCompleteMs": 65195.29999998212,
+                "primaryToGateMs": 25.700000017881393,
+                "initialGeneration": null,
+                "rows": 24982,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 21,
+                "longTaskTotalMs": 7720.200000017881,
+                "maxLongTaskMs": 1763.2000000178814,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 80.09999999403954,
+                    "decodedBytes": 15017,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/cp",
+                    "ms": 1233.2999999821186,
+                    "decodedBytes": 61859722,
+                    "encodedBytes": 4644605
+                  }
+                ],
+                "jsHeapUsedBytes": 104851832,
+                "dom": {
+                  "documents": 3,
+                  "nodes": 45676,
+                  "jsEventListeners": 2858
+                },
+                "navigationStartedAtMs": 1794056805986,
+                "observedAtMs": 1794057042173,
+                "elapsedMs": 232944.831627,
+                "rendererRssBytes": 1469681664,
+                "errors": [],
+                "generation": "mw6ezf0e-3cebc37a99e2",
+                "sourceRevision": "c8895a46594b69eb23befd85e54a859cafc4679ffc0210adf0fd2925284ed0db"
+              },
+              {
+                "module": "orders",
+                "primaryScreenReadyMs": 7976,
+                "startupReadyMs": 8004.199999988079,
+                "startupCompleteMs": 8133,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 120.40000000596046,
+                "systemStartupCompleteMs": 8133,
+                "primaryToGateMs": 28.19999998807907,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 22,
+                "longTaskTotalMs": 8029.300000011921,
+                "maxLongTaskMs": 3023,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 141.40000000596046,
+                    "decodedBytes": 15017,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/orders",
+                    "ms": 1245.1000000238419,
+                    "decodedBytes": 73145820,
+                    "encodedBytes": 5676208
+                  }
+                ],
+                "jsHeapUsedBytes": 109689624,
+                "dom": {
+                  "documents": 4,
+                  "nodes": 26097,
+                  "jsEventListeners": 3167
+                },
+                "navigationStartedAtMs": 1794057042962,
+                "observedAtMs": 1794057056706,
+                "elapsedMs": 9006.160096999956,
+                "rendererRssBytes": 1300443136,
+                "errors": [],
+                "generation": "mw6ezf0e-3cebc37a99e2",
+                "sourceRevision": "c8895a46594b69eb23befd85e54a859cafc4679ffc0210adf0fd2925284ed0db"
+              }
+            ],
+            "sameTabSwitches": [
+              {
+                "module": "cp",
+                "ms": 53066.5,
+                "rows": 24982
+              },
+              {
+                "module": "orders",
+                "ms": 3761.7999999821186,
+                "rows": 30000
+              },
+              {
+                "module": "koleksiyon",
+                "ms": 150.09999999403954,
+                "rows": 0
+              }
+            ],
+            "health": {
+              "all": {
+                "count": 944,
+                "successful": 944,
+                "failed": 0,
+                "p50Ms": 6.3619849999959115,
+                "p95Ms": 55.28588799998397,
+                "maxMs": 5646.022986
+              },
+              "refresh": {
+                "count": 101,
+                "successful": 101,
+                "failed": 0,
+                "p50Ms": 8.200055000001157,
+                "p95Ms": 684.9269950000016,
+                "maxMs": 5646.022986
+              },
+              "endpoint": "/api/health",
+              "readinessEndpoint": "/api/status",
+              "observedStatuses": [
+                200
+              ],
+              "endpointAvailable": true
+            },
+            "refreshTelemetry": {
+              "operations": [
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:02:23.355Z",
+                  "timestampMs": 1794056543355,
+                  "connection": "ASAS Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:02:38.543Z",
+                  "timestampMs": 1794056558543,
+                  "connection": "ASAS Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 15188,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:02:38.850Z",
+                  "timestampMs": 1794056558850,
+                  "connection": "ANTREPO Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 4,
+                  "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:02:40.412Z",
+                  "timestampMs": 1794056560412,
+                  "connection": "ANTREPO Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 1562,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:02:43.511Z",
+                  "timestampMs": 1794056563511,
+                  "connection": "Refresh",
+                  "operation": "comparison",
+                  "category": "wait",
+                  "durationMs": 1447,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:03:02.789Z",
+                  "timestampMs": 1794056582789,
+                  "connection": "Local storage",
+                  "operation": "snapshot-save",
+                  "category": "save",
+                  "durationMs": 19278,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:03:29.105Z",
+                  "timestampMs": 1794056609105,
+                  "connection": "Local storage",
+                  "operation": "page-cache-write",
+                  "category": "cache",
+                  "durationMs": 26316,
+                  "error": null
+                }
+              ],
+              "metrics": {
+                "dbQueryMs": 0,
+                "connectionWaitMs": 0,
+                "retryMs": 0,
+                "dbResultWriteMs": 0,
+                "parseMs": 0,
+                "uiBlockingMs": 0,
+                "localDbWriteMs": 0,
+                "localSnapshotWriteMs": 11449,
+                "dashboard": null,
+                "totalMs": 65847
+              },
+              "excelWorkers": {
+                "asas": {
+                  "queueWaitMs": 0.6603230000000622,
+                  "durationMs": 15173.309665,
+                  "executionMs": 12561.346723,
+                  "overheadMs": 2611.962942,
+                  "heapUsedBytes": 425218488,
+                  "mainReceiveMs": 1029.276921999999,
+                  "workerPostMessageMs": 1505.8450650000013,
+                  "resultTransport": "message-port"
+                },
+                "antrepo": {
+                  "queueWaitMs": 0.1468219999987923,
+                  "durationMs": 1554.9489040000008,
+                  "executionMs": 1346.3142150000022,
+                  "overheadMs": 208.63468899999862,
+                  "heapUsedBytes": 55726120,
+                  "mainReceiveMs": 73.24954299999808,
+                  "workerPostMessageMs": 53.03616899999906,
+                  "resultTransport": "message-port"
+                }
+              }
+            },
+            "runtimeEventLoopStalls": [
+              {
+                "line": "[RUNTIME] event-loop-stall blockedMs=5539 cpuMs=13316 heapUsedMb=238 heapLimitMb=4288 rssMb=909",
+                "blockedMs": 5539,
+                "cpuMs": 13316,
+                "heapUsedMb": 238,
+                "heapLimitMb": 4288,
+                "rssMb": 909
+              }
+            ],
+            "moduleLoopGaps": [
+              {
+                "module": "overview",
+                "navigationStartedAtMs": 1794056753666,
+                "observedAtMs": 1794056764305,
+                "recordedGaps": 39,
+                "maxGapMs": 284.4013799999957,
+                "maxDelayMs": 274.4013799999957,
+                "gapsOver200ms": 1,
+                "maxGapUpperBoundMs": 284.4013799999957,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "koleksiyon",
+                "navigationStartedAtMs": 1794056791324,
+                "observedAtMs": 1794056805451,
+                "recordedGaps": 33,
+                "maxGapMs": 615.669521999982,
+                "maxDelayMs": 605.669521999982,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 615.669521999982,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "cp",
+                "navigationStartedAtMs": 1794056805986,
+                "observedAtMs": 1794057042173,
+                "recordedGaps": 100,
+                "maxGapMs": 373.31662400002824,
+                "maxDelayMs": 363.31662400002824,
+                "gapsOver200ms": 1,
+                "maxGapUpperBoundMs": 373.31662400002824,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "orders",
+                "navigationStartedAtMs": 1794057042962,
+                "observedAtMs": 1794057056706,
+                "recordedGaps": 16,
+                "maxGapMs": 130.260140999977,
+                "maxDelayMs": 120.26014099997701,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 130.260140999977,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              }
+            ]
+          },
+          {
+            "rep": 2,
+            "raw": {
+              "file": "/tmp/phase-5-review2-final-v3-after-2.json",
+              "sha256": "3e6e64a8690047fdb3dd6711d50a037a8b0639e3e5b71202ad4d7d6849bfb052"
+            },
+            "rowGenerationRevisionChecks": "passed",
+            "expected": {
+              "rows": {
+                "koleksiyon": 0,
+                "cp": 24982,
+                "orders": 30000,
+                "overview": 30000
+              },
+              "generation": "mw6fdhc6-561d0d90b560",
+              "sourceRevision": "2b66c13894ef2349e126cb65211ab45dee68e30812146e52485259c0372d1ce5",
+              "revisions": {
+                "orders": 0,
+                "suppFob": 0
+              }
+            },
+            "metrics": {
+              "refreshMs": 63503,
+              "refreshWallMs": 65444.896129,
+              "snapshotWriteMs": 9084,
+              "snapshotOperationMs": 16196,
+              "asasParseMs": 16262,
+              "pageCacheWriteMs": 25403,
+              "successfulRefreshHealthP50Ms": 8.843882000001031,
+              "successfulRefreshHealthP95Ms": 555.1415589999997,
+              "sourcePreparationOutsideSnapshotMetricMs": 7112,
+              "sameTab.cp.ms": 52211.79999998212,
+              "sameTab.orders.ms": 3688.7999999821186,
+              "sameTab.koleksiyon.ms": 266.2999999821186,
+              "module.overview.primaryScreenReadyMs": 7572.5999999940395,
+              "module.overview.startupReadyMs": 7610.799999982119,
+              "module.overview.systemStartupCompleteMs": 7831.0999999940395,
+              "module.overview.elapsedMs": 8173.416071999993,
+              "module.overview.jsHeapUsedBytes": 33353688,
+              "module.overview.rendererRssBytes": 1096241152,
+              "module.koleksiyon.primaryScreenReadyMs": 3426.199999988079,
+              "module.koleksiyon.startupReadyMs": 3442.5999999940395,
+              "module.koleksiyon.systemStartupCompleteMs": 3565.699999988079,
+              "module.koleksiyon.elapsedMs": 3659.8852489999845,
+              "module.koleksiyon.jsHeapUsedBytes": 115749000,
+              "module.koleksiyon.rendererRssBytes": 676552704,
+              "module.cp.primaryScreenReadyMs": 70647.90000000596,
+              "module.cp.startupReadyMs": 70671.59999999404,
+              "module.cp.systemStartupCompleteMs": 70856.30000001192,
+              "module.cp.elapsedMs": 224685.991317,
+              "module.cp.jsHeapUsedBytes": 103830640,
+              "module.cp.rendererRssBytes": 1151311872,
+              "module.orders.primaryScreenReadyMs": 9038.90000000596,
+              "module.orders.startupReadyMs": 9121.700000017881,
+              "module.orders.systemStartupCompleteMs": 9658.100000023842,
+              "module.orders.elapsedMs": 10091.081218999985,
+              "module.orders.jsHeapUsedBytes": 133294304,
+              "module.orders.rendererRssBytes": 798711808,
+              "allAttemptRefreshHealthP50Ms": 8.843882000001031,
+              "allAttemptRefreshHealthP95Ms": 573.9238639999967,
+              "refreshHealthFailures": 1
+            },
+            "moduleObservations": [
+              {
+                "module": "overview",
+                "primaryScreenReadyMs": 7572.5999999940395,
+                "startupReadyMs": 7610.799999982119,
+                "startupCompleteMs": 7831.0999999940395,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 204.60000002384186,
+                "systemStartupCompleteMs": 7831.0999999940395,
+                "primaryToGateMs": 38.19999998807907,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 33,
+                "longTaskTotalMs": 6963.9000000059605,
+                "maxLongTaskMs": 1163,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 107.89999997615814,
+                    "decodedBytes": 15017,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/overview",
+                    "ms": 908,
+                    "decodedBytes": 12516431,
+                    "encodedBytes": 952040
+                  }
+                ],
+                "jsHeapUsedBytes": 33353688,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 8417,
+                  "jsEventListeners": 1771
+                },
+                "navigationStartedAtMs": 1794057402543,
+                "observedAtMs": 1794057414549,
+                "elapsedMs": 8173.416071999993,
+                "rendererRssBytes": 1096241152,
+                "errors": [],
+                "generation": "mw6fdhc6-561d0d90b560",
+                "sourceRevision": "2b66c13894ef2349e126cb65211ab45dee68e30812146e52485259c0372d1ce5"
+              },
+              {
+                "module": "koleksiyon",
+                "primaryScreenReadyMs": 3426.199999988079,
+                "startupReadyMs": 3442.5999999940395,
+                "startupCompleteMs": 3565.699999988079,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 115,
+                "systemStartupCompleteMs": 3565.699999988079,
+                "primaryToGateMs": 16.400000005960464,
+                "initialGeneration": null,
+                "rows": 0,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 21,
+                "longTaskTotalMs": 6553.600000023842,
+                "maxLongTaskMs": 2003,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 102.59999999403954,
+                    "decodedBytes": 15017,
+                    "encodedBytes": 4741
+                  },
+                  {
+                    "path": "/api/page-projection/collection-catalog",
+                    "ms": 55,
+                    "decodedBytes": 1619,
+                    "encodedBytes": 684
+                  }
+                ],
+                "jsHeapUsedBytes": 115749000,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 7694,
+                  "jsEventListeners": 1567
+                },
+                "navigationStartedAtMs": 1794057419454,
+                "observedAtMs": 1794057430315,
+                "elapsedMs": 3659.8852489999845,
+                "rendererRssBytes": 676552704,
+                "errors": [],
+                "generation": "mw6fdhc6-561d0d90b560",
+                "sourceRevision": "2b66c13894ef2349e126cb65211ab45dee68e30812146e52485259c0372d1ce5"
+              },
+              {
+                "module": "cp",
+                "primaryScreenReadyMs": 70647.90000000596,
+                "startupReadyMs": 70671.59999999404,
+                "startupCompleteMs": 70856.30000001192,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 166.40000000596046,
+                "systemStartupCompleteMs": 70856.30000001192,
+                "primaryToGateMs": 23.69999998807907,
+                "initialGeneration": null,
+                "rows": 24982,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 27,
+                "longTaskTotalMs": 7013.299999982119,
+                "maxLongTaskMs": 860,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 433.80000001192093,
+                    "decodedBytes": 15017,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/cp",
+                    "ms": 2216.699999988079,
+                    "decodedBytes": 61859722,
+                    "encodedBytes": 4644605
+                  }
+                ],
+                "jsHeapUsedBytes": 103830640,
+                "dom": {
+                  "documents": 3,
+                  "nodes": 49094,
+                  "jsEventListeners": 5560
+                },
+                "navigationStartedAtMs": 1794057430877,
+                "observedAtMs": 1794057657864,
+                "elapsedMs": 224685.991317,
+                "rendererRssBytes": 1151311872,
+                "errors": [],
+                "generation": "mw6fdhc6-561d0d90b560",
+                "sourceRevision": "2b66c13894ef2349e126cb65211ab45dee68e30812146e52485259c0372d1ce5"
+              },
+              {
+                "module": "orders",
+                "primaryScreenReadyMs": 9038.90000000596,
+                "startupReadyMs": 9121.700000017881,
+                "startupCompleteMs": 9658.100000023842,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 532,
+                "systemStartupCompleteMs": 9658.100000023842,
+                "primaryToGateMs": 82.80000001192093,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 22,
+                "longTaskTotalMs": 7869,
+                "maxLongTaskMs": 3460,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 407.59999999403954,
+                    "decodedBytes": 15017,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/orders",
+                    "ms": 1496.0999999940395,
+                    "decodedBytes": 73145820,
+                    "encodedBytes": 5676208
+                  }
+                ],
+                "jsHeapUsedBytes": 133294304,
+                "dom": {
+                  "documents": 4,
+                  "nodes": 26055,
+                  "jsEventListeners": 3147
+                },
+                "navigationStartedAtMs": 1794057658687,
+                "observedAtMs": 1794057670069,
+                "elapsedMs": 10091.081218999985,
+                "rendererRssBytes": 798711808,
+                "errors": [],
+                "generation": "mw6fdhc6-561d0d90b560",
+                "sourceRevision": "2b66c13894ef2349e126cb65211ab45dee68e30812146e52485259c0372d1ce5"
+              }
+            ],
+            "sameTabSwitches": [
+              {
+                "module": "cp",
+                "ms": 52211.79999998212,
+                "rows": 24982
+              },
+              {
+                "module": "orders",
+                "ms": 3688.7999999821186,
+                "rows": 30000
+              },
+              {
+                "module": "koleksiyon",
+                "ms": 266.2999999821186,
+                "rows": 0
+              }
+            ],
+            "health": {
+              "all": {
+                "count": 871,
+                "successful": 870,
+                "failed": 1,
+                "p50Ms": 6.416305000020657,
+                "p95Ms": 53.82347300000038,
+                "maxMs": 5571.582609999998
+              },
+              "refresh": {
+                "count": 98,
+                "successful": 97,
+                "failed": 1,
+                "p50Ms": 8.843882000001031,
+                "p95Ms": 573.9238639999967,
+                "maxMs": 5571.582609999998
+              },
+              "endpoint": "/api/health",
+              "readinessEndpoint": "/api/status",
+              "observedStatuses": [
+                200,
+                null
+              ],
+              "endpointAvailable": true
+            },
+            "refreshTelemetry": {
+              "operations": [
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:13:21.934Z",
+                  "timestampMs": 1794057201934,
+                  "connection": "ASAS Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 0,
+                  "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:13:38.197Z",
+                  "timestampMs": 1794057218197,
+                  "connection": "ASAS Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 16262,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:13:38.502Z",
+                  "timestampMs": 1794057218502,
+                  "connection": "ANTREPO Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:13:40.107Z",
+                  "timestampMs": 1794057220107,
+                  "connection": "ANTREPO Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 1605,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:13:43.728Z",
+                  "timestampMs": 1794057223728,
+                  "connection": "Refresh",
+                  "operation": "comparison",
+                  "category": "wait",
+                  "durationMs": 2123,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:13:59.927Z",
+                  "timestampMs": 1794057239927,
+                  "connection": "Local storage",
+                  "operation": "snapshot-save",
+                  "category": "save",
+                  "durationMs": 16196,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:14:25.331Z",
+                  "timestampMs": 1794057265331,
+                  "connection": "Local storage",
+                  "operation": "page-cache-write",
+                  "category": "cache",
+                  "durationMs": 25403,
+                  "error": null
+                }
+              ],
+              "metrics": {
+                "dbQueryMs": 0,
+                "connectionWaitMs": 0,
+                "retryMs": 0,
+                "dbResultWriteMs": 0,
+                "parseMs": 0,
+                "uiBlockingMs": 0,
+                "localDbWriteMs": 0,
+                "localSnapshotWriteMs": 9084,
+                "dashboard": null,
+                "totalMs": 63499
+              },
+              "excelWorkers": {
+                "asas": {
+                  "queueWaitMs": 0.4068139999999403,
+                  "durationMs": 16230.38786,
+                  "executionMs": 13734.483753,
+                  "overheadMs": 2495.9041070000003,
+                  "heapUsedBytes": 430057080,
+                  "mainReceiveMs": 905.6028469999983,
+                  "workerPostMessageMs": 1485.4211369999975,
+                  "resultTransport": "message-port"
+                },
+                "antrepo": {
+                  "queueWaitMs": 0.07045100000323146,
+                  "durationMs": 1597.2718079999977,
+                  "executionMs": 1351.524977000001,
+                  "overheadMs": 245.74683099999675,
+                  "heapUsedBytes": 71518208,
+                  "mainReceiveMs": 81.95188099999723,
+                  "workerPostMessageMs": 81.33721999999761,
+                  "resultTransport": "message-port"
+                }
+              }
+            },
+            "runtimeEventLoopStalls": [],
+            "moduleLoopGaps": [
+              {
+                "module": "overview",
+                "navigationStartedAtMs": 1794057402543,
+                "observedAtMs": 1794057414549,
+                "recordedGaps": 36,
+                "maxGapMs": 345.9861540000129,
+                "maxDelayMs": 335.9861540000129,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 345.9861540000129,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "koleksiyon",
+                "navigationStartedAtMs": 1794057419454,
+                "observedAtMs": 1794057430315,
+                "recordedGaps": 33,
+                "maxGapMs": 84.41326299999491,
+                "maxDelayMs": 74.41326299999491,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 84.41326299999491,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "cp",
+                "navigationStartedAtMs": 1794057430877,
+                "observedAtMs": 1794057657864,
+                "recordedGaps": 119,
+                "maxGapMs": 348.15568999998504,
+                "maxDelayMs": 338.15568999998504,
+                "gapsOver200ms": 3,
+                "maxGapUpperBoundMs": 348.15568999998504,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "orders",
+                "navigationStartedAtMs": 1794057658687,
+                "observedAtMs": 1794057670069,
+                "recordedGaps": 22,
+                "maxGapMs": 365.77907300001243,
+                "maxDelayMs": 355.77907300001243,
+                "gapsOver200ms": 1,
+                "maxGapUpperBoundMs": 365.77907300001243,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              }
+            ]
+          },
+          {
+            "rep": 3,
+            "raw": {
+              "file": "/tmp/phase-5-review2-final-v3-after-3.json",
+              "sha256": "ea1253eeb199be38871565bbfaab7eeaf4622762ddc2fd89bc1714e8f8f4dee7"
+            },
+            "rowGenerationRevisionChecks": "passed",
+            "expected": {
+              "rows": {
+                "koleksiyon": 0,
+                "cp": 24982,
+                "orders": 30000,
+                "overview": 30000
+              },
+              "generation": "mw6gg2vu-86dbd1640072",
+              "sourceRevision": "e33936340769492c445ce4fefa3525107b9b8e9571da5b56b62e5fb92c292cb1",
+              "revisions": {
+                "orders": 0,
+                "suppFob": 0
+              }
+            },
+            "metrics": {
+              "refreshMs": 64102,
+              "refreshWallMs": 65996.79762699999,
+              "snapshotWriteMs": 9313,
+              "snapshotOperationMs": 17729,
+              "asasParseMs": 16302,
+              "pageCacheWriteMs": 23689,
+              "successfulRefreshHealthP50Ms": 7.105529000000388,
+              "successfulRefreshHealthP95Ms": 919.400496000002,
+              "sourcePreparationOutsideSnapshotMetricMs": 8416,
+              "sameTab.cp.ms": 59231.09999999404,
+              "sameTab.orders.ms": 3042.5,
+              "sameTab.koleksiyon.ms": 100.5,
+              "module.overview.primaryScreenReadyMs": 8002,
+              "module.overview.startupReadyMs": 8015.799999982119,
+              "module.overview.systemStartupCompleteMs": 8295.59999999404,
+              "module.overview.elapsedMs": 8674.311130999995,
+              "module.overview.jsHeapUsedBytes": 112039432,
+              "module.overview.rendererRssBytes": 1319145472,
+              "module.koleksiyon.primaryScreenReadyMs": 3933.5999999940395,
+              "module.koleksiyon.startupReadyMs": 3947.2999999821186,
+              "module.koleksiyon.systemStartupCompleteMs": 4353.4000000059605,
+              "module.koleksiyon.elapsedMs": 4487.994452999963,
+              "module.koleksiyon.jsHeapUsedBytes": 110005044,
+              "module.koleksiyon.rendererRssBytes": 633073664,
+              "module.cp.primaryScreenReadyMs": 74028.19999998808,
+              "module.cp.startupReadyMs": 74044.09999999404,
+              "module.cp.systemStartupCompleteMs": 214309,
+              "module.cp.elapsedMs": 214794.30791100004,
+              "module.cp.jsHeapUsedBytes": 104931656,
+              "module.cp.rendererRssBytes": 1115066368,
+              "module.orders.primaryScreenReadyMs": 8393.199999988079,
+              "module.orders.startupReadyMs": 8429.300000011921,
+              "module.orders.systemStartupCompleteMs": 8792.40000000596,
+              "module.orders.elapsedMs": 9126.338084000046,
+              "module.orders.jsHeapUsedBytes": 110503864,
+              "module.orders.rendererRssBytes": 774258688,
+              "allAttemptRefreshHealthP50Ms": 7.105529000000388,
+              "allAttemptRefreshHealthP95Ms": 919.400496000002,
+              "refreshHealthFailures": 0
+            },
+            "moduleObservations": [
+              {
+                "module": "overview",
+                "primaryScreenReadyMs": 8002,
+                "startupReadyMs": 8015.799999982119,
+                "startupCompleteMs": 8295.59999999404,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 267,
+                "systemStartupCompleteMs": 8295.59999999404,
+                "primaryToGateMs": 13.799999982118607,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 32,
+                "longTaskTotalMs": 7066.5999999940395,
+                "maxLongTaskMs": 1427,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 102.09999999403954,
+                    "decodedBytes": 15017,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/overview",
+                    "ms": 804.3000000119209,
+                    "decodedBytes": 12516431,
+                    "encodedBytes": 952040
+                  }
+                ],
+                "jsHeapUsedBytes": 112039432,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 8044,
+                  "jsEventListeners": 1676
+                },
+                "navigationStartedAtMs": 1794059280663,
+                "observedAtMs": 1794059293814,
+                "elapsedMs": 8674.311130999995,
+                "rendererRssBytes": 1319145472,
+                "errors": [],
+                "generation": "mw6gg2vu-86dbd1640072",
+                "sourceRevision": "e33936340769492c445ce4fefa3525107b9b8e9571da5b56b62e5fb92c292cb1"
+              },
+              {
+                "module": "koleksiyon",
+                "primaryScreenReadyMs": 3933.5999999940395,
+                "startupReadyMs": 3947.2999999821186,
+                "startupCompleteMs": 4353.4000000059605,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 392.80000001192093,
+                "systemStartupCompleteMs": 4353.4000000059605,
+                "primaryToGateMs": 13.699999988079071,
+                "initialGeneration": null,
+                "rows": 0,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 0,
+                "longTaskCount": 16,
+                "longTaskTotalMs": 5815.4000000059605,
+                "maxLongTaskMs": 1344,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 174.30000001192093,
+                    "decodedBytes": 15017,
+                    "encodedBytes": 4741
+                  },
+                  {
+                    "path": "/api/page-projection/collection-catalog",
+                    "ms": 57,
+                    "decodedBytes": 1619,
+                    "encodedBytes": 684
+                  }
+                ],
+                "jsHeapUsedBytes": 110005044,
+                "dom": {
+                  "documents": 2,
+                  "nodes": 7695,
+                  "jsEventListeners": 1568
+                },
+                "navigationStartedAtMs": 1794059296244,
+                "observedAtMs": 1794059307979,
+                "elapsedMs": 4487.994452999963,
+                "rendererRssBytes": 633073664,
+                "errors": [],
+                "generation": "mw6gg2vu-86dbd1640072",
+                "sourceRevision": "e33936340769492c445ce4fefa3525107b9b8e9571da5b56b62e5fb92c292cb1"
+              },
+              {
+                "module": "cp",
+                "primaryScreenReadyMs": 74028.19999998808,
+                "startupReadyMs": 74044.09999999404,
+                "startupCompleteMs": 214309,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 140255.5,
+                "systemStartupCompleteMs": 214309,
+                "primaryToGateMs": 15.900000005960464,
+                "initialGeneration": null,
+                "rows": 24982,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 34,
+                "longTaskTotalMs": 6529,
+                "maxLongTaskMs": 1188,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 81.59999999403954,
+                    "decodedBytes": 15017,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/cp",
+                    "ms": 4727.399999976158,
+                    "decodedBytes": 61859722,
+                    "encodedBytes": 4644605
+                  }
+                ],
+                "jsHeapUsedBytes": 104931656,
+                "dom": {
+                  "documents": 3,
+                  "nodes": 44297,
+                  "jsEventListeners": 2878
+                },
+                "navigationStartedAtMs": 1794059309442,
+                "observedAtMs": 1794059525850,
+                "elapsedMs": 214794.30791100004,
+                "rendererRssBytes": 1115066368,
+                "errors": [],
+                "generation": "mw6gg2vu-86dbd1640072",
+                "sourceRevision": "e33936340769492c445ce4fefa3525107b9b8e9571da5b56b62e5fb92c292cb1"
+              },
+              {
+                "module": "orders",
+                "primaryScreenReadyMs": 8393.199999988079,
+                "startupReadyMs": 8429.300000011921,
+                "startupCompleteMs": 8792.40000000596,
+                "userWaitMs": 0,
+                "continueDispatchDelayMs": 354.09999999403954,
+                "systemStartupCompleteMs": 8792.40000000596,
+                "primaryToGateMs": 36.10000002384186,
+                "initialGeneration": null,
+                "rows": 30000,
+                "revisions": {
+                  "orders": 0,
+                  "suppFob": 0
+                },
+                "domRows": 50,
+                "longTaskCount": 21,
+                "longTaskTotalMs": 7257.0999999940395,
+                "maxLongTaskMs": 2893,
+                "resources": [
+                  {
+                    "path": "/api/data",
+                    "ms": 120.7999999821186,
+                    "decodedBytes": 15017,
+                    "encodedBytes": 4742
+                  },
+                  {
+                    "path": "/api/page-projection/orders",
+                    "ms": 1344.3999999761581,
+                    "decodedBytes": 73145820,
+                    "encodedBytes": 5676208
+                  }
+                ],
+                "jsHeapUsedBytes": 110503864,
+                "dom": {
+                  "documents": 4,
+                  "nodes": 26089,
+                  "jsEventListeners": 3145
+                },
+                "navigationStartedAtMs": 1794059526595,
+                "observedAtMs": 1794059537663,
+                "elapsedMs": 9126.338084000046,
+                "rendererRssBytes": 774258688,
+                "errors": [],
+                "generation": "mw6gg2vu-86dbd1640072",
+                "sourceRevision": "e33936340769492c445ce4fefa3525107b9b8e9571da5b56b62e5fb92c292cb1"
+              }
+            ],
+            "sameTabSwitches": [
+              {
+                "module": "cp",
+                "ms": 59231.09999999404,
+                "rows": 24982
+              },
+              {
+                "module": "orders",
+                "ms": 3042.5,
+                "rows": 30000
+              },
+              {
+                "module": "koleksiyon",
+                "ms": 100.5,
+                "rows": 0
+              }
+            ],
+            "health": {
+              "all": {
+                "count": 955,
+                "successful": 955,
+                "failed": 0,
+                "p50Ms": 8.066596999997273,
+                "p95Ms": 92.9837820000248,
+                "maxMs": 5232.309413999999
+              },
+              "refresh": {
+                "count": 99,
+                "successful": 99,
+                "failed": 0,
+                "p50Ms": 7.105529000000388,
+                "p95Ms": 919.400496000002,
+                "maxMs": 5232.309413999999
+              },
+              "endpoint": "/api/health",
+              "readinessEndpoint": "/api/status",
+              "observedStatuses": [
+                200
+              ],
+              "endpointAvailable": true
+            },
+            "refreshTelemetry": {
+              "operations": [
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:43:22.116Z",
+                  "timestampMs": 1794059002116,
+                  "connection": "ASAS Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 0,
+                  "error": "ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:43:38.418Z",
+                  "timestampMs": 1794059018418,
+                  "connection": "ASAS Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 16302,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:43:38.580Z",
+                  "timestampMs": 1794059018580,
+                  "connection": "ANTREPO Excel",
+                  "operation": "pivot-refresh",
+                  "category": "wait",
+                  "durationMs": 1,
+                  "error": "Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir."
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:43:40.972Z",
+                  "timestampMs": 1794059020972,
+                  "connection": "ANTREPO Excel",
+                  "operation": "file-parse",
+                  "category": "wait",
+                  "durationMs": 2392,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:43:44.714Z",
+                  "timestampMs": 1794059024714,
+                  "connection": "Refresh",
+                  "operation": "comparison",
+                  "category": "wait",
+                  "durationMs": 1369,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:44:02.444Z",
+                  "timestampMs": 1794059042444,
+                  "connection": "Local storage",
+                  "operation": "snapshot-save",
+                  "category": "save",
+                  "durationMs": 17729,
+                  "error": null
+                },
+                {
+                  "type": "end",
+                  "timestamp": "2026-11-07T13:44:26.133Z",
+                  "timestampMs": 1794059066133,
+                  "connection": "Local storage",
+                  "operation": "page-cache-write",
+                  "category": "cache",
+                  "durationMs": 23689,
+                  "error": null
+                }
+              ],
+              "metrics": {
+                "dbQueryMs": 0,
+                "connectionWaitMs": 0,
+                "retryMs": 0,
+                "dbResultWriteMs": 0,
+                "parseMs": 0,
+                "uiBlockingMs": 0,
+                "localDbWriteMs": 0,
+                "localSnapshotWriteMs": 9313,
+                "dashboard": null,
+                "totalMs": 64097
+              },
+              "excelWorkers": {
+                "asas": {
+                  "queueWaitMs": 0.6040389999998297,
+                  "durationMs": 16269.860228,
+                  "executionMs": 13664.957159,
+                  "overheadMs": 2604.903069,
+                  "heapUsedBytes": 397373024,
+                  "mainReceiveMs": 760.7394239999994,
+                  "workerPostMessageMs": 1675.7751510000016,
+                  "resultTransport": "message-port"
+                },
+                "antrepo": {
+                  "queueWaitMs": 0.07042699999874458,
+                  "durationMs": 2375.402976000001,
+                  "executionMs": 1816.4773819999973,
+                  "overheadMs": 558.9255940000039,
+                  "heapUsedBytes": 81858568,
+                  "mainReceiveMs": 155.43968900000255,
+                  "workerPostMessageMs": 317.7310609999986,
+                  "resultTransport": "message-port"
+                }
+              }
+            },
+            "runtimeEventLoopStalls": [],
+            "moduleLoopGaps": [
+              {
+                "module": "overview",
+                "navigationStartedAtMs": 1794059280663,
+                "observedAtMs": 1794059293814,
+                "recordedGaps": 61,
+                "maxGapMs": 178.30924099998083,
+                "maxDelayMs": 168.30924099998083,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 178.30924099998083,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "koleksiyon",
+                "navigationStartedAtMs": 1794059296244,
+                "observedAtMs": 1794059307979,
+                "recordedGaps": 44,
+                "maxGapMs": 328.4420680000039,
+                "maxDelayMs": 318.4420680000039,
+                "gapsOver200ms": 1,
+                "maxGapUpperBoundMs": 328.4420680000039,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "cp",
+                "navigationStartedAtMs": 1794059309442,
+                "observedAtMs": 1794059525850,
+                "recordedGaps": 130,
+                "maxGapMs": 460.66260500001954,
+                "maxDelayMs": 450.66260500001954,
+                "gapsOver200ms": 2,
+                "maxGapUpperBoundMs": 460.66260500001954,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              },
+              {
+                "module": "orders",
+                "navigationStartedAtMs": 1794059526595,
+                "observedAtMs": 1794059537663,
+                "recordedGaps": 12,
+                "maxGapMs": 117.0052929999656,
+                "maxDelayMs": 107.0052929999656,
+                "gapsOver200ms": 0,
+                "maxGapUpperBoundMs": 117.0052929999656,
+                "intervalMs": 10,
+                "reportFromMs": 20,
+                "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+              }
+            ]
+          }
+        ],
+        "medians": {
+          "refreshMs": 64102,
+          "refreshWallMs": 65996.79762699999,
+          "snapshotWriteMs": 9313,
+          "snapshotOperationMs": 17729,
+          "asasParseMs": 16262,
+          "pageCacheWriteMs": 25403,
+          "successfulRefreshHealthP50Ms": 8.200055000001157,
+          "successfulRefreshHealthP95Ms": 684.9269950000016,
+          "sourcePreparationOutsideSnapshotMetricMs": 7829,
+          "sameTab.cp.ms": 53066.5,
+          "sameTab.orders.ms": 3688.7999999821186,
+          "sameTab.koleksiyon.ms": 150.09999999403954,
+          "module.overview.primaryScreenReadyMs": 7572.5999999940395,
+          "module.overview.startupReadyMs": 7610.799999982119,
+          "module.overview.systemStartupCompleteMs": 7831.0999999940395,
+          "module.overview.elapsedMs": 8173.416071999993,
+          "module.overview.jsHeapUsedBytes": 49215316,
+          "module.overview.rendererRssBytes": 1100079104,
+          "module.koleksiyon.primaryScreenReadyMs": 3933.5999999940395,
+          "module.koleksiyon.startupReadyMs": 3947.2999999821186,
+          "module.koleksiyon.systemStartupCompleteMs": 4353.4000000059605,
+          "module.koleksiyon.elapsedMs": 4487.994452999963,
+          "module.koleksiyon.jsHeapUsedBytes": 110005044,
+          "module.koleksiyon.rendererRssBytes": 676552704,
+          "module.cp.primaryScreenReadyMs": 70647.90000000596,
+          "module.cp.startupReadyMs": 70671.59999999404,
+          "module.cp.systemStartupCompleteMs": 70856.30000001192,
+          "module.cp.elapsedMs": 224685.991317,
+          "module.cp.jsHeapUsedBytes": 104851832,
+          "module.cp.rendererRssBytes": 1151311872,
+          "module.orders.primaryScreenReadyMs": 8393.199999988079,
+          "module.orders.startupReadyMs": 8429.300000011921,
+          "module.orders.systemStartupCompleteMs": 8792.40000000596,
+          "module.orders.elapsedMs": 9126.338084000046,
+          "module.orders.jsHeapUsedBytes": 110503864,
+          "module.orders.rendererRssBytes": 798711808,
+          "allAttemptRefreshHealthP50Ms": 8.200055000001157,
+          "allAttemptRefreshHealthP95Ms": 684.9269950000016,
+          "refreshHealthFailures": 0
+        }
+      }
+    },
+    "openings": [
+      {
+        "rep": 1,
+        "raw": {
+          "file": "/tmp/phase-5-review2-final-openings-after-1.json",
+          "sha256": "e232cfd448c13269a61cc0f2a01064cdcbd808674555672e3fabe289248cd6d4"
+        },
+        "correctness": "passed",
+        "status": "passed",
+        "measurements": [
+          {
+            "scenario": "overview-global-flow",
+            "startedAtMs": 1794057075986,
+            "readyAtMs": 1794057136856,
+            "readyMs": 60870
+          },
+          {
+            "scenario": "backlog",
+            "startedAtMs": 1794057147145,
+            "readyAtMs": 1794057175923,
+            "readyMs": 28778
+          }
+        ],
+        "loopGaps": [
+          {
+            "scenario": "overview-global-flow",
+            "recordedGaps": 87,
+            "maxGapMs": 147.95829400000002,
+            "maxDelayMs": 137.95829400000002,
+            "gapsOver200ms": 0,
+            "maxGapUpperBoundMs": 147.95829400000002,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          },
+          {
+            "scenario": "backlog",
+            "recordedGaps": 60,
+            "maxGapMs": 171.25027899999986,
+            "maxDelayMs": 161.25027899999986,
+            "gapsOver200ms": 0,
+            "maxGapUpperBoundMs": 171.25027899999986,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          }
+        ],
+        "serverExit": {
+          "code": 0,
+          "signal": null,
+          "forced": false
+        }
+      },
+      {
+        "rep": 2,
+        "raw": {
+          "file": "/tmp/phase-5-review2-final-openings-after-2.json",
+          "sha256": "72bf16fde729167f20084672b229a8af352c320a0f9e3ee031952eab829af60b"
+        },
+        "correctness": "passed",
+        "status": "failed",
+        "measurements": [
+          {
+            "scenario": "overview-global-flow",
+            "startedAtMs": 1794057697525,
+            "readyAtMs": 1794057759008,
+            "readyMs": 61483
+          },
+          {
+            "scenario": "backlog",
+            "startedAtMs": 1794057769732,
+            "readyAtMs": 1794057793576,
+            "readyMs": 23844
+          }
+        ],
+        "loopGaps": [
+          {
+            "scenario": "overview-global-flow",
+            "recordedGaps": 102,
+            "maxGapMs": 245.00398799999675,
+            "maxDelayMs": 235.00398799999675,
+            "gapsOver200ms": 1,
+            "maxGapUpperBoundMs": 245.00398799999675,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          },
+          {
+            "scenario": "backlog",
+            "recordedGaps": 53,
+            "maxGapMs": 334.82593500000075,
+            "maxDelayMs": 324.82593500000075,
+            "gapsOver200ms": 1,
+            "maxGapUpperBoundMs": 334.82593500000075,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          }
+        ],
+        "serverExit": {
+          "code": 0,
+          "signal": null,
+          "forced": false
+        }
+      },
+      {
+        "rep": 3,
+        "raw": {
+          "file": "/tmp/phase-5-review2-final-openings-after-3.json",
+          "sha256": "7db4effd6dba0fc333afb86d5116ff7093fb12113adb071b73ef34aa1ea7ef7a"
+        },
+        "correctness": "passed",
+        "status": "failed",
+        "measurements": [
+          {
+            "scenario": "overview-global-flow",
+            "startedAtMs": 1794059557561,
+            "readyAtMs": 1794059594492,
+            "readyMs": 36931
+          },
+          {
+            "scenario": "backlog",
+            "startedAtMs": 1794059624644,
+            "readyAtMs": 1794059645592,
+            "readyMs": 20948
+          }
+        ],
+        "loopGaps": [
+          {
+            "scenario": "overview-global-flow",
+            "recordedGaps": 76,
+            "maxGapMs": 290.6739729999972,
+            "maxDelayMs": 280.6739729999972,
+            "gapsOver200ms": 3,
+            "maxGapUpperBoundMs": 290.6739729999972,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          },
+          {
+            "scenario": "backlog",
+            "recordedGaps": 24,
+            "maxGapMs": 143.66160300000047,
+            "maxDelayMs": 133.66160300000047,
+            "gapsOver200ms": 0,
+            "maxGapUpperBoundMs": 143.66160300000047,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          }
+        ],
+        "serverExit": {
+          "code": 0,
+          "signal": null,
+          "forced": false
+        }
+      }
+    ],
+    "projectionEquality": {
+      "passed": true,
+      "pairs": 15,
+      "raw": {
+        "file": "/tmp/phase-5-review2-final-projection-equality.json",
+        "sha256": "2a489ea765863f3f10a02252a82113855b7bfad89debf91f5658e40a99594a04"
+      },
+      "modules": [
+        {
+          "module": "cp",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 61859722,
+              "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 61859722,
+              "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 61859722,
+              "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3"
+            }
+          ]
+        },
+        {
+          "module": "orders",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 73145820,
+              "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 73145820,
+              "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 73145820,
+              "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+            }
+          ]
+        },
+        {
+          "module": "overview",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 12516431,
+              "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 12516431,
+              "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 12516431,
+              "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a"
+            }
+          ]
+        },
+        {
+          "module": "order-summary",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 40655622,
+              "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 40655622,
+              "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 40655622,
+              "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc"
+            }
+          ]
+        },
+        {
+          "module": "collection-catalog",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 1619,
+              "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 1619,
+              "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 1619,
+              "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "priorMatched639": {
+    "measuredRevision": "639372a43fe8bc20bb20e967f44cfe32389ebd5a",
+    "baselineRevision": "270228a4d9f195e613ae670db8c30583d9c183fc",
+    "normalAcceptanceEligible": true,
+    "status": "failed-responsiveness",
+    "fixtureHashes": {
+      "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+    },
+    "observerSha256": "8449c87695aacf881ff4f01ccdb8ef32630b7aa6b6a99709e4f5df3f448672b0",
+    "cpuQuota": "1600000 400000",
+    "affinity": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "plan": {
+      "file": "/tmp/phase-5-main-oab-cohort-plan.json",
+      "sha256": "7b039f5c4f0b7cd379988efed28c3e3b22a7dcacc5611e4d5af0bf157da72411"
+    },
+    "openings": [
+      {
+        "rep": 1,
+        "raw": {
+          "file": "/tmp/phase-5-main-oab-openings-after-1.json",
+          "sha256": "0ab2bf57a98fc0b6530b871c1fe61f8c131d859109f065bae68f210906cb63ff"
+        },
+        "correctness": "passed",
+        "status": "failed",
+        "measurements": [
+          {
+            "scenario": "overview-global-flow",
+            "startedAtMs": 1794048534420,
+            "readyAtMs": 1794048572994,
+            "readyMs": 38574
+          },
+          {
+            "scenario": "backlog",
+            "startedAtMs": 1794048596508,
+            "readyAtMs": 1794048616163,
+            "readyMs": 19655
+          }
+        ],
+        "loopGaps": [
+          {
+            "scenario": "overview-global-flow",
+            "recordedGaps": 94,
+            "maxGapMs": 209.60692800000106,
+            "maxDelayMs": 199.60692800000106,
+            "gapsOver200ms": 1,
+            "maxGapUpperBoundMs": 209.60692800000106,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          },
+          {
+            "scenario": "backlog",
+            "recordedGaps": 14,
+            "maxGapMs": 118.82531000000017,
+            "maxDelayMs": 108.82531000000017,
+            "gapsOver200ms": 0,
+            "maxGapUpperBoundMs": 118.82531000000017,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          }
+        ],
+        "serverExit": {
+          "code": 0,
+          "signal": null,
+          "forced": false
+        }
+      },
+      {
+        "rep": 2,
+        "raw": {
+          "file": "/tmp/phase-5-main-oab-openings-after-2.json",
+          "sha256": "a5a16f50a9bc8996af7af486bba535a992cce7a3a5b3d5de0405bd8d72d60f6f"
+        },
+        "correctness": "passed",
+        "status": "failed",
+        "measurements": [
+          {
+            "scenario": "overview-global-flow",
+            "startedAtMs": 1794049124595,
+            "readyAtMs": 1794049180134,
+            "readyMs": 55539
+          },
+          {
+            "scenario": "backlog",
+            "startedAtMs": 1794049190453,
+            "readyAtMs": 1794049207226,
+            "readyMs": 16773
+          }
+        ],
+        "loopGaps": [
+          {
+            "scenario": "overview-global-flow",
+            "recordedGaps": 90,
+            "maxGapMs": 217.62865100000272,
+            "maxDelayMs": 207.62865100000272,
+            "gapsOver200ms": 1,
+            "maxGapUpperBoundMs": 217.62865100000272,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          },
+          {
+            "scenario": "backlog",
+            "recordedGaps": 10,
+            "maxGapMs": 148.75295399999595,
+            "maxDelayMs": 138.75295399999595,
+            "gapsOver200ms": 0,
+            "maxGapUpperBoundMs": 148.75295399999595,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          }
+        ],
+        "serverExit": {
+          "code": 0,
+          "signal": null,
+          "forced": false
+        }
+      },
+      {
+        "rep": 3,
+        "raw": {
+          "file": "/tmp/phase-5-main-oab-openings-after-3.json",
+          "sha256": "5a24764a286017775a5b05764796b3a8f4cb02e5c4174d85a78471d095b0a6ce"
+        },
+        "correctness": "passed",
+        "status": "failed",
+        "measurements": [
+          {
+            "scenario": "overview-global-flow",
+            "startedAtMs": 1794050746984,
+            "readyAtMs": 1794050801891,
+            "readyMs": 54907
+          },
+          {
+            "scenario": "backlog",
+            "startedAtMs": 1794050812205,
+            "readyAtMs": 1794050827257,
+            "readyMs": 15052
+          }
+        ],
+        "loopGaps": [
+          {
+            "scenario": "overview-global-flow",
+            "recordedGaps": 67,
+            "maxGapMs": 238.52180899999985,
+            "maxDelayMs": 228.52180899999985,
+            "gapsOver200ms": 1,
+            "maxGapUpperBoundMs": 238.52180899999985,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          },
+          {
+            "scenario": "backlog",
+            "recordedGaps": 13,
+            "maxGapMs": 47.68327300000237,
+            "maxDelayMs": 37.68327300000237,
+            "gapsOver200ms": 0,
+            "maxGapUpperBoundMs": 47.68327300000237,
+            "intervalMs": 10,
+            "reportFromMs": 20,
+            "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+          }
+        ],
+        "serverExit": {
+          "code": 0,
+          "signal": null,
+          "forced": false
+        }
+      }
+    ],
+    "projectionEquality": {
+      "passed": true,
+      "pairs": 15,
+      "raw": {
+        "file": "/tmp/phase-5-main-oab-projection-equality.json",
+        "sha256": "b6d0342aa69d86b6ba0ca0ea4cccdeaa0d4b70df18432258579e512c0ede9bd7"
+      },
+      "modules": [
+        {
+          "module": "cp",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 61859722,
+              "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 61859722,
+              "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 61859722,
+              "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3"
+            }
+          ]
+        },
+        {
+          "module": "orders",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 73145820,
+              "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 73145820,
+              "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 73145820,
+              "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1"
+            }
+          ]
+        },
+        {
+          "module": "overview",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 12516431,
+              "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 12516431,
+              "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 12516431,
+              "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a"
+            }
+          ]
+        },
+        {
+          "module": "order-summary",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 40655622,
+              "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 40655622,
+              "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 40655622,
+              "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc"
+            }
+          ]
+        },
+        {
+          "module": "collection-catalog",
+          "pairs": [
+            {
+              "rep": 1,
+              "equal": true,
+              "bytes": 1619,
+              "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4"
+            },
+            {
+              "rep": 2,
+              "equal": true,
+              "bytes": 1619,
+              "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4"
+            },
+            {
+              "rep": 3,
+              "equal": true,
+              "bytes": 1619,
+              "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4"
+            }
+          ]
+        }
+      ]
+    },
+    "medians": {
+      "before": {
+        "refreshMs": 45861,
+        "refreshWallMs": 46851.503424,
+        "snapshotWriteMs": 9439,
+        "snapshotOperationMs": 9866,
+        "asasParseMs": 14028,
+        "pageCacheWriteMs": 20160,
+        "successfulRefreshHealthP50Ms": null,
+        "successfulRefreshHealthP95Ms": null,
+        "sourcePreparationOutsideSnapshotMetricMs": 417,
+        "sameTab.cp.ms": 51064.09999999404,
+        "sameTab.orders.ms": 3312.7999999821186,
+        "sameTab.koleksiyon.ms": 120.20000000298023,
+        "module.overview.primaryScreenReadyMs": 6848.9000000059605,
+        "module.overview.startupReadyMs": 6872.9000000059605,
+        "module.overview.systemStartupCompleteMs": 6945.0999999940395,
+        "module.overview.elapsedMs": 7093.22623,
+        "module.overview.jsHeapUsedBytes": 34184516,
+        "module.overview.rendererRssBytes": 1902223360,
+        "module.koleksiyon.primaryScreenReadyMs": 18501.80000001192,
+        "module.koleksiyon.startupReadyMs": 18517.20000000298,
+        "module.koleksiyon.systemStartupCompleteMs": 18565.20000000298,
+        "module.koleksiyon.elapsedMs": 18682.386524,
+        "module.koleksiyon.jsHeapUsedBytes": 16614844,
+        "module.koleksiyon.rendererRssBytes": 994684928,
+        "module.cp.primaryScreenReadyMs": 63348.5,
+        "module.cp.startupReadyMs": 63370,
+        "module.cp.systemStartupCompleteMs": 63488.20000000298,
+        "module.cp.elapsedMs": 242565.587922,
+        "module.cp.jsHeapUsedBytes": 104763784,
+        "module.cp.rendererRssBytes": 1511526400,
+        "module.orders.primaryScreenReadyMs": 8775.699999988079,
+        "module.orders.startupReadyMs": 8807.59999999404,
+        "module.orders.systemStartupCompleteMs": 8924.5,
+        "module.orders.elapsedMs": 9564.846451999969,
+        "module.orders.jsHeapUsedBytes": 122177608,
+        "module.orders.rendererRssBytes": 1175134208
+      },
+      "after": {
+        "refreshMs": 61196,
+        "refreshWallMs": 62215.214961,
+        "snapshotWriteMs": 8947,
+        "snapshotOperationMs": 17751,
+        "asasParseMs": 14908,
+        "pageCacheWriteMs": 24937,
+        "successfulRefreshHealthP50Ms": 7.008620000000519,
+        "successfulRefreshHealthP95Ms": 724.2531879999988,
+        "sourcePreparationOutsideSnapshotMetricMs": 8610,
+        "sameTab.cp.ms": 51087.5,
+        "sameTab.orders.ms": 2386.300000011921,
+        "sameTab.koleksiyon.ms": 135.8999999910593,
+        "module.overview.primaryScreenReadyMs": 3866.5999999940395,
+        "module.overview.startupReadyMs": 3885.0999999940395,
+        "module.overview.systemStartupCompleteMs": 4003.2999999970198,
+        "module.overview.elapsedMs": 4242.793340999982,
+        "module.overview.jsHeapUsedBytes": 142405584,
+        "module.overview.rendererRssBytes": 1059635200,
+        "module.koleksiyon.primaryScreenReadyMs": 2895,
+        "module.koleksiyon.startupReadyMs": 2919.7000000029802,
+        "module.koleksiyon.systemStartupCompleteMs": 2994.3999999910593,
+        "module.koleksiyon.elapsedMs": 3120.388259999978,
+        "module.koleksiyon.jsHeapUsedBytes": 164123748,
+        "module.koleksiyon.rendererRssBytes": 839593984,
+        "module.cp.primaryScreenReadyMs": 64307.90000000596,
+        "module.cp.startupReadyMs": 64332.70000001788,
+        "module.cp.systemStartupCompleteMs": 210522.29999999702,
+        "module.cp.elapsedMs": 211379.603631,
+        "module.cp.jsHeapUsedBytes": 297304252,
+        "module.cp.rendererRssBytes": 1157406720,
+        "module.orders.primaryScreenReadyMs": 10128.20000000298,
+        "module.orders.startupReadyMs": 10142.59999999404,
+        "module.orders.systemStartupCompleteMs": 10319.59999999404,
+        "module.orders.elapsedMs": 11034.135996000026,
+        "module.orders.jsHeapUsedBytes": 106677820,
+        "module.orders.rendererRssBytes": 793485312
+      }
+    }
+  },
+  "refreshStageDiagnostic": {
+    "diagnosticOnly": true,
+    "acceptanceEligible": false,
+    "beforeRevision": "270228a4d9f195e613ae670db8c30583d9c183fc",
+    "afterRevision": "c799fe4143b192db45bac2e5e77b4b44f43707de",
+    "preloadSha256": "3b14302629995deb02081e9050fd547b59238c5274b7120890f80e6caa56d939",
+    "runs": [
+      {
+        "arm": "before",
+        "rep": 1,
+        "raw": {
+          "file": "/tmp/phase-5-review2-b1-refresh-before-1.json",
+          "sha256": "f90370188ee7e281bafae193fc0372a7c4b3d0fcc829709012ab86e9ab06eac0"
+        },
+        "expectedAbort": true,
+        "serverPid": 198938,
+        "refreshFromMs": 1794052330817.0,
+        "refreshToMs": 1794052372909.0,
+        "traceFiles": [
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-1/b1-stage-198938-2.jsonl",
+            "sha256": "cfe786373cd8012975d360749d99871d17b421ef6bb0d0ed704850355c093bb2"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-1/b1-stage-198938-5.jsonl",
+            "sha256": "352a9cbe5b0c901dbf0a1563c5f162afb41bd6cb0f7f691ddc782b9aa368495e"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-1/b1-stage-198961-0.jsonl",
+            "sha256": "a6dadf95f63e164822494f87d25ed3eb0d2e0fec20451d1c93fe0ebb22d07f4d"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-1/b1-stage-198929-0.jsonl",
+            "sha256": "c831b74a25316366d9e68f2ed1046e3fa3c15ab18f6f8d9e43ddf3c7f1272b4b"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-1/b1-stage-198938-0.jsonl",
+            "sha256": "e325351fd756271c5e5f58e2b06c945d8aba648401a26fb9a364778eff76eec9"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-1/b1-stage-198938-4.jsonl",
+            "sha256": "c351ada202d55804f521a86178bfc137d9f3564735d8a2a1c246aa3c6bd02eec"
+          }
+        ],
+        "metrics": {
+          "refreshMs": 42090,
+          "legacyAndExcelConstructorsMs": 972.7315280000016,
+          "workerReplicaEncodeMs": 0,
+          "workerReplicaDecodeMs": 0,
+          "workerReplicaWriteMs": 0,
+          "mainContentHashMs": 2167.359565999999,
+          "workerContentHashMs": 0,
+          "workerContentHashCalls": 0,
+          "workerProjectionGzipMs": 2350.0928940000013,
+          "workerProjectionGzipCalls": 5,
+          "workerProjectionBuildMs": null,
+          "maxPoolJobQueueMs": null,
+          "seedElapsedMs": null,
+          "seedExecutionMs": null,
+          "seedNativePostMs": null
+        },
+        "poolJobs": []
+      },
+      {
+        "arm": "after",
+        "rep": 1,
+        "raw": {
+          "file": "/tmp/phase-5-review2-b1-refresh-after-1.json",
+          "sha256": "6367b5b362cb9f2f0d841ecf79f3e07e11b7654c158e5d3a689a91efed72bb9a"
+        },
+        "expectedAbort": true,
+        "serverPid": 199069,
+        "refreshFromMs": 1794052394291.0,
+        "refreshToMs": 1794052459388.0,
+        "traceFiles": [
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-1/b1-stage-199060-0.jsonl",
+            "sha256": "32b7566e6ee83cdd13b7a81cbcc448fc070c5cbfa3b6e91eca9e128e7ee253b7"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-1/b1-stage-199069-1.jsonl",
+            "sha256": "d5953eac00ea44c5f43c36f48e6408e1d71aab401484fe3127d6eb0969ab05e8"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-1/b1-stage-199099-0.jsonl",
+            "sha256": "2f6ce800eb711b1af74c6bb5114aad944f6e6ec02f3234fef759a91bbe72eded"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-1/b1-stage-199069-2.jsonl",
+            "sha256": "254424e809833063cf93b2d699735db48183135632efcb5eeeeaeed3400da1d8"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-1/b1-stage-199069-0.jsonl",
+            "sha256": "8cdbd0628d9fceaf98134b1caa0ad6bf671060c1c7d8569e049a62bbb2e4fda9"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-1/b1-stage-199069-4.jsonl",
+            "sha256": "97399de140c07dee5f9706646dcaaaae4fe01571c4f25164e30c8d2d800a0955"
+          }
+        ],
+        "metrics": {
+          "refreshMs": 65093,
+          "legacyAndExcelConstructorsMs": 2.7179280000004837,
+          "workerReplicaEncodeMs": 1647.0688310000041,
+          "workerReplicaDecodeMs": 1240.3938619999972,
+          "workerReplicaWriteMs": 727.619068,
+          "mainContentHashMs": 2667.183947999998,
+          "workerContentHashMs": 4335.069341000009,
+          "workerContentHashCalls": 2,
+          "workerProjectionGzipMs": 3192.7472059999855,
+          "workerProjectionGzipCalls": 5,
+          "workerProjectionBuildMs": 11229.550643999995,
+          "maxPoolJobQueueMs": 0.17316199999913806,
+          "seedElapsedMs": 7529.495564000001,
+          "seedExecutionMs": 4832.070040999999,
+          "seedNativePostMs": 994.4532819999986
+        },
+        "poolJobs": [
+          {
+            "task": "seed-source",
+            "ms": 7529.495564000001,
+            "executionMs": 4832.070040999999,
+            "queueWaitMs": 0.17316199999913806,
+            "postMessageMs": 994.4532819999986
+          },
+          {
+            "task": "access-authority-hash",
+            "ms": 126.56985899999563,
+            "executionMs": 124.74582199999713,
+            "queueWaitMs": 0.1230580000046757,
+            "postMessageMs": 0.117060999997193
+          },
+          {
+            "task": "projections",
+            "ms": 25312.664408000004,
+            "executionMs": 25296.145722,
+            "queueWaitMs": 0.09062899999844376,
+            "postMessageMs": 0.2159689999971306
+          }
+        ]
+      },
+      {
+        "arm": "after",
+        "rep": 2,
+        "raw": {
+          "file": "/tmp/phase-5-review2-b1-refresh-after-2.json",
+          "sha256": "ab6c1413648df39efbc637575e29404df4845ec4991f8675993a7439856e4513"
+        },
+        "expectedAbort": true,
+        "serverPid": 199455,
+        "refreshFromMs": 1794052595854.0,
+        "refreshToMs": 1794052654826.0,
+        "traceFiles": [
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-2/b1-stage-199485-0.jsonl",
+            "sha256": "f75cd8a4ba6b244878e4bdfcace7bf5491295a73cc1051cc4059e04e4ca095f4"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-2/b1-stage-199446-0.jsonl",
+            "sha256": "ad598f8db902ac1a4532bbbff6e9a467bbd52c9842282c38ca4b82a28e5a3ca4"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-2/b1-stage-199455-0.jsonl",
+            "sha256": "3d0c8fda167c98a223343c708d07514e962e9ee3fc57efaca3a4cfc699c15ab8"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-2/b1-stage-199455-2.jsonl",
+            "sha256": "efa8e586a2c2a27dce66c1ff64999eb976ee39897df5163b1eef98a5e5e31b17"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-2/b1-stage-199455-4.jsonl",
+            "sha256": "a9005d0d84d557ee314bcf774bc20d6ec6dabcea91c76ad2e33a976fe87a4068"
+          }
+        ],
+        "metrics": {
+          "refreshMs": 58968,
+          "legacyAndExcelConstructorsMs": 2.111233999997694,
+          "workerReplicaEncodeMs": 799.7857470000017,
+          "workerReplicaDecodeMs": 904.5890589999981,
+          "workerReplicaWriteMs": 795.6821009999985,
+          "mainContentHashMs": 1900.4937040000004,
+          "workerContentHashMs": 3940.774884000006,
+          "workerContentHashCalls": 2,
+          "workerProjectionGzipMs": 1993.086641000009,
+          "workerProjectionGzipCalls": 5,
+          "workerProjectionBuildMs": 8939.049492000006,
+          "maxPoolJobQueueMs": 0.24672300000020186,
+          "seedElapsedMs": 6708.078401999999,
+          "seedExecutionMs": 3720.691282,
+          "seedNativePostMs": 1434.56149
+        },
+        "poolJobs": [
+          {
+            "task": "seed-source",
+            "ms": 6708.078401999999,
+            "executionMs": 3720.691282,
+            "queueWaitMs": 0.24672300000020186,
+            "postMessageMs": 1434.56149
+          },
+          {
+            "task": "access-authority-hash",
+            "ms": 117.99976699999388,
+            "executionMs": 115.46247900000162,
+            "queueWaitMs": 0.12950500000442844,
+            "postMessageMs": 0.34054699999978766
+          },
+          {
+            "task": "projections",
+            "ms": 19288.351413000004,
+            "executionMs": 19283.882856000004,
+            "queueWaitMs": 0.1890930000008666,
+            "postMessageMs": 0.4191650000066147
+          }
+        ]
+      },
+      {
+        "arm": "before",
+        "rep": 2,
+        "raw": {
+          "file": "/tmp/phase-5-review2-b1-refresh-before-2.json",
+          "sha256": "0ee763c4482de48a326a78bc453d9e8d09268b2f3f49ae17427f22988120e889"
+        },
+        "expectedAbort": true,
+        "serverPid": 199840,
+        "refreshFromMs": 1794052792272.0,
+        "refreshToMs": 1794052846789.0,
+        "traceFiles": [
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-2/b1-stage-199840-3.jsonl",
+            "sha256": "6da22ee72db23f7f5f5fa1bf5d816d9ad651bfa1e9c8de9c26daeac3fb502873"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-2/b1-stage-199840-2.jsonl",
+            "sha256": "691721847894619404b2a512621f11a720441c6d9d559b4aa30c8506aee8b0f8"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-2/b1-stage-199840-0.jsonl",
+            "sha256": "db1cd0338603dceb23a6a2198a8110c0bfb20db405d71cf1a248e9e014cd513a"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-2/b1-stage-199863-0.jsonl",
+            "sha256": "392f01c7ae7a2babf955c79121a15e8999229befbab6ea9edbf6ebeb13be7375"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-2/b1-stage-199840-5.jsonl",
+            "sha256": "1acd5e5a318c893b7511a36ea2067835847fbe34f3497b2c5fda7c7aa825fef0"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-2/b1-stage-199831-0.jsonl",
+            "sha256": "f19b768226aaf771eff724364e99f4316c4a2295d2f7829de4b706a80488f0a2"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-2/b1-stage-199840-1.jsonl",
+            "sha256": "8a47f04950f790ce78f991686ba18585fcad62f70e249bce4f0ed8e31768577b"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-2/b1-stage-199840-4.jsonl",
+            "sha256": "037b5ae10be9e77aa6a9d13da7a061c6ea937668061a2dfca325ce9a0e382185"
+          }
+        ],
+        "metrics": {
+          "refreshMs": 54515,
+          "legacyAndExcelConstructorsMs": 916.3800700000011,
+          "workerReplicaEncodeMs": 0,
+          "workerReplicaDecodeMs": 0,
+          "workerReplicaWriteMs": 0,
+          "mainContentHashMs": 2173.6617350000015,
+          "workerContentHashMs": 0,
+          "workerContentHashCalls": 0,
+          "workerProjectionGzipMs": 2019.7319530000022,
+          "workerProjectionGzipCalls": 5,
+          "workerProjectionBuildMs": null,
+          "maxPoolJobQueueMs": null,
+          "seedElapsedMs": null,
+          "seedExecutionMs": null,
+          "seedNativePostMs": null
+        },
+        "poolJobs": []
+      },
+      {
+        "arm": "before",
+        "rep": 3,
+        "raw": {
+          "file": "/tmp/phase-5-review2-b1-refresh-before-3.json",
+          "sha256": "7e0eedc70d54257d69e8ff9e94ab08acd6c1bb3adce675696517232ae17477c1"
+        },
+        "expectedAbort": true,
+        "serverPid": 199971,
+        "refreshFromMs": 1794052868563.0,
+        "refreshToMs": 1794052921122.0,
+        "traceFiles": [
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-3/b1-stage-199971-4.jsonl",
+            "sha256": "3fed1013f10a8045eafeed01ab368cfc67f2d1e0121aa86cacff39241826b5d6"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-3/b1-stage-199962-0.jsonl",
+            "sha256": "91a4168ebd055b712408d0849f8635eca2eed57dd6e90ab5d5df8219c69ed6ea"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-3/b1-stage-199971-5.jsonl",
+            "sha256": "b8240827fd119cf95a8553069f711fa46e575de07c2b68bd1376e8a6eccd9194"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-3/b1-stage-199971-2.jsonl",
+            "sha256": "87173843e1b95ab9b4acf11e84fa1623d4ae0b5a47fea934278fc566b059ca3b"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-3/b1-stage-200005-0.jsonl",
+            "sha256": "8400e1158e39b4594fff0b359420ceb1afa53c27a9aa6c9e361488d7964d365b"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-3/b1-stage-199971-1.jsonl",
+            "sha256": "42d46b377f0b79b86fd411b74a2ccbf90014eb3f1a2cbbf5ffb58dce523d574d"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-before-3/b1-stage-199971-0.jsonl",
+            "sha256": "7ba13a4ff9ded0450ec387cdca1a5d386d18107b8d0d922bcc6d9053828fc374"
+          }
+        ],
+        "metrics": {
+          "refreshMs": 52552,
+          "legacyAndExcelConstructorsMs": 1107.9796040000033,
+          "workerReplicaEncodeMs": 0,
+          "workerReplicaDecodeMs": 0,
+          "workerReplicaWriteMs": 0,
+          "mainContentHashMs": 2321.8347680000006,
+          "workerContentHashMs": 0,
+          "workerContentHashCalls": 0,
+          "workerProjectionGzipMs": 1657.0225590000045,
+          "workerProjectionGzipCalls": 5,
+          "workerProjectionBuildMs": null,
+          "maxPoolJobQueueMs": null,
+          "seedElapsedMs": null,
+          "seedExecutionMs": null,
+          "seedNativePostMs": null
+        },
+        "poolJobs": []
+      },
+      {
+        "arm": "after",
+        "rep": 3,
+        "raw": {
+          "file": "/tmp/phase-5-review2-b1-refresh-after-3.json",
+          "sha256": "f4014901c4c01d9dd10afe891653e7ec12bca3509b714dc65e7ef9876e42f6a7"
+        },
+        "expectedAbort": true,
+        "serverPid": 200113,
+        "refreshFromMs": 1794052941134.0,
+        "refreshToMs": 1794053002425.0,
+        "traceFiles": [
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-3/b1-stage-200104-0.jsonl",
+            "sha256": "7334e3d466e4d14787fd952bfafb70504e57089b693cc869570da7f264493245"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-3/b1-stage-200113-4.jsonl",
+            "sha256": "ce48064727ba212500184ec2138aae5d2397f6df3b647d09a20f7bf02f001233"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-3/b1-stage-200113-0.jsonl",
+            "sha256": "62d641dcdb8bc58e85149c0cdd3d14455b00c42c334042a0d5b6830157898bb8"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-3/b1-stage-200113-2.jsonl",
+            "sha256": "b3cc4fc0b1c48c5b00219b570f2a4d98e3b029e3f210a6e3f3cb9c956739dc89"
+          },
+          {
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-b1-refresh-after-3/b1-stage-200135-0.jsonl",
+            "sha256": "610b6d403f0ed437adbde1f51b580ca405104217f149871f855ac99bddd1f1db"
+          }
+        ],
+        "metrics": {
+          "refreshMs": 61284,
+          "legacyAndExcelConstructorsMs": 1.7374529999995048,
+          "workerReplicaEncodeMs": 1026.5742290000053,
+          "workerReplicaDecodeMs": 1796.5440610000005,
+          "workerReplicaWriteMs": 608.179839000004,
+          "mainContentHashMs": 1765.229846000002,
+          "workerContentHashMs": 3226.2054410000055,
+          "workerContentHashCalls": 2,
+          "workerProjectionGzipMs": 2340.1569699999964,
+          "workerProjectionGzipCalls": 5,
+          "workerProjectionBuildMs": 10123.537677,
+          "maxPoolJobQueueMs": 0.2511159999994561,
+          "seedElapsedMs": 5399.4087,
+          "seedExecutionMs": 3404.852525000002,
+          "seedNativePostMs": 760.6277480000026
+        },
+        "poolJobs": [
+          {
+            "task": "seed-source",
+            "ms": 5399.4087,
+            "executionMs": 3404.852525000002,
+            "queueWaitMs": 0.15816300000005867,
+            "postMessageMs": 760.6277480000026
+          },
+          {
+            "task": "access-authority-hash",
+            "ms": 155.8394499999995,
+            "executionMs": 154.5027029999983,
+            "queueWaitMs": 0.053670000001147855,
+            "postMessageMs": 0.0955790000007255
+          },
+          {
+            "task": "projections",
+            "ms": 21605.103251,
+            "executionMs": 21598.345630999997,
+            "queueWaitMs": 0.2511159999994561,
+            "postMessageMs": 0.09609400000044843
+          }
+        ]
+      }
+    ],
+    "limitations": [
+      "Clock-only instrumentation adds overhead. Refresh-only runs deliberately abort at Chromium launch after completed refresh and generation validation; their failed sentinel reports are retained, not counted as acceptance.",
+      "Durations are nested wall spans and must not be summed. Native gzip duration includes native queue/wait. Bootstrap/restart pool health jobs are excluded. Legacy projection build was not instrumented, so no isolated parallelism benefit or penalty is quantified."
+    ],
+    "medians": {
+      "before": {
+        "refreshMs": 52552,
+        "legacyAndExcelConstructorsMs": 972.7315280000016,
+        "workerReplicaEncodeMs": 0,
+        "workerReplicaDecodeMs": 0,
+        "workerReplicaWriteMs": 0,
+        "mainContentHashMs": 2173.6617350000015,
+        "workerContentHashMs": 0,
+        "workerContentHashCalls": 0,
+        "workerProjectionGzipMs": 2019.7319530000022,
+        "workerProjectionGzipCalls": 5,
+        "workerProjectionBuildMs": null,
+        "maxPoolJobQueueMs": null,
+        "seedElapsedMs": null,
+        "seedExecutionMs": null,
+        "seedNativePostMs": null
+      },
+      "after": {
+        "refreshMs": 61284,
+        "legacyAndExcelConstructorsMs": 2.111233999997694,
+        "workerReplicaEncodeMs": 1026.5742290000053,
+        "workerReplicaDecodeMs": 1240.3938619999972,
+        "workerReplicaWriteMs": 727.619068,
+        "mainContentHashMs": 1900.4937040000004,
+        "workerContentHashMs": 3940.774884000006,
+        "workerContentHashCalls": 2,
+        "workerProjectionGzipMs": 2340.1569699999964,
+        "workerProjectionGzipCalls": 5,
+        "workerProjectionBuildMs": 10123.537677,
+        "maxPoolJobQueueMs": 0.24672300000020186,
+        "seedElapsedMs": 6708.078401999999,
+        "seedExecutionMs": 3720.691282,
+        "seedNativePostMs": 994.4532819999986
+      }
+    }
+  },
+  "oabWithdrawnWorkerHttpComparison": {
+    "raw": {
+      "file": "/tmp/phase-5-review2-b3-http.json",
+      "sha256": "4acf877d32fd04b2b58b4b26b6a6f13c0e8521e2665c79acab54758cfd11e282"
+    },
+    "diagnosticOnly": true,
+    "acceptanceEligible": false,
+    "runtimeRevision": "285d8fe5d57fb987a3b480046983e680ed9f4a8f",
+    "beforeRoutesRevision": "764079b3055e595ed3cc395dc44c904ac3db4a31",
+    "fixtureHashes": {
+      "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+    },
+    "responseBytesEqual": true,
+    "responseCount": 1818,
+    "arms": {
+      "before": {
+        "coldMs": [
+          40.27394099999947,
+          37.3287049999999,
+          46.96379799999704
+        ],
+        "coldMedianMs": 40.27394099999947,
+        "coldMaxLoopGapMs": [
+          38.82372400000031,
+          39.300546999999824,
+          47.14172000000008
+        ],
+        "warmEndpoints": {
+          "/api/oab/seasons": {
+            "count": 300,
+            "p50Ms": 3.413985999999568,
+            "p95Ms": 6.9520660000016505,
+            "bytes": 485,
+            "sha256": "6f8a344643ef868a42636f8073ce57d6578c2f14394da7acc2775174595ca6ac"
+          },
+          "/api/oab/mag": {
+            "count": 300,
+            "p50Ms": 3.8990389999999024,
+            "p95Ms": 9.188951000000088,
+            "bytes": 4272,
+            "sha256": "88cc4eeda0dca9a042b607e5c3875bf154e43a522c8663bb3077406ddeb9840f"
+          },
+          "/api/oab/buyer-groups": {
+            "count": 300,
+            "p50Ms": 3.5731790000027104,
+            "p95Ms": 6.68440499999997,
+            "bytes": 2010,
+            "sha256": "c030b1f11914ca6c3d70cb41fe663b94d6bc5289e213bdc3b0406eccb6e16bbb"
+          }
+        }
+      },
+      "after": {
+        "coldMs": [
+          102.95406600000024,
+          221.9441939999997,
+          313.6905839999963
+        ],
+        "coldMedianMs": 221.9441939999997,
+        "coldMaxLoopGapMs": [
+          26.520055000000184,
+          0,
+          505.5901839999997
+        ],
+        "warmEndpoints": {
+          "/api/oab/seasons": {
+            "count": 300,
+            "p50Ms": 10.385467000000062,
+            "p95Ms": 22.8125770000006,
+            "bytes": 485,
+            "sha256": "6f8a344643ef868a42636f8073ce57d6578c2f14394da7acc2775174595ca6ac"
+          },
+          "/api/oab/mag": {
+            "count": 300,
+            "p50Ms": 11.63802299999952,
+            "p95Ms": 25.324921999999788,
+            "bytes": 4272,
+            "sha256": "88cc4eeda0dca9a042b607e5c3875bf154e43a522c8663bb3077406ddeb9840f"
+          },
+          "/api/oab/buyer-groups": {
+            "count": 300,
+            "p50Ms": 12.289064000000508,
+            "p95Ms": 24.721373999998832,
+            "bytes": 2010,
+            "sha256": "c030b1f11914ca6c3d70cb41fe663b94d6bc5289e213bdc3b0406eccb6e16bbb"
+          }
+        }
+      }
+    },
+    "limitations": [
+      "Linux four-CPU quota; no Chromium workload or PASS connection. Each server uses a private copy of the same completed 30k demo seed.",
+      "Controlled route A/B on the same runtime: before installs the exact three production route bodies from 8c575ecd parent at compilation through a diagnostic-only external preload. All dependencies, authority, pool warmup and observer are otherwise identical. Repository files are not modified.",
+      "Cold means first metadata request in a fresh process/file-cache generation; it is not cold OS disk cache. Subsequent MAG and Buyer Group first requests already share that index.",
+      "Both servers automatically warm the existing common pool at startup as production does; no extra artificial pool warmup is added.",
+      "Latency includes loopback HTTP, automatic gzip decoding and client JSON parsing. Requests are sequential with no retries; none send refresh. BL_STALL_PROFILE is unset in both arms."
+    ]
+  },
+  "oabLocalAsyncHttpComparison": {
+    "raw": {
+      "file": "/tmp/phase-5-review2-b1-async-oab-http-2.json",
+      "sha256": "68b82330f9275662f45f427f7a2c317e9ab24e12e4e4a158baa59b0879d10ef5"
+    },
+    "diagnosticOnly": true,
+    "acceptanceEligible": false,
+    "runtimeRevision": "06399a53ca504d313b8df66b50756d29d278c773",
+    "beforeRoutesRevision": "764079b3055e595ed3cc395dc44c904ac3db4a31",
+    "fixtureHashes": {
+      "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+      "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+      "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+    },
+    "responseBytesEqual": true,
+    "responseCount": 1818,
+    "arms": {
+      "before": {
+        "coldMs": [
+          45.164002999999866,
+          54.926039999998466,
+          36.174535000001924
+        ],
+        "coldMedianMs": 45.164002999999866,
+        "coldMaxLoopGapMs": [
+          49.75816500000019,
+          55.17417800000021,
+          262.34616299999993
+        ],
+        "warmEndpoints": {
+          "/api/oab/seasons": {
+            "count": 300,
+            "p50Ms": 4.599828000000343,
+            "p95Ms": 11.215732000000571,
+            "bytes": 485,
+            "sha256": "6f8a344643ef868a42636f8073ce57d6578c2f14394da7acc2775174595ca6ac"
+          },
+          "/api/oab/mag": {
+            "count": 300,
+            "p50Ms": 5.139456999997492,
+            "p95Ms": 14.277984000000288,
+            "bytes": 4272,
+            "sha256": "88cc4eeda0dca9a042b607e5c3875bf154e43a522c8663bb3077406ddeb9840f"
+          },
+          "/api/oab/buyer-groups": {
+            "count": 300,
+            "p50Ms": 4.504178000002867,
+            "p95Ms": 12.674309999999423,
+            "bytes": 2010,
+            "sha256": "c030b1f11914ca6c3d70cb41fe663b94d6bc5289e213bdc3b0406eccb6e16bbb"
+          }
+        }
+      },
+      "after": {
+        "coldMs": [
+          34.686893000000055,
+          82.91072499999973,
+          77.41231799999878
+        ],
+        "coldMedianMs": 77.41231799999878,
+        "coldMaxLoopGapMs": [
+          0,
+          26.193684000000303,
+          0
+        ],
+        "warmEndpoints": {
+          "/api/oab/seasons": {
+            "count": 300,
+            "p50Ms": 4.6440829999992275,
+            "p95Ms": 12.701625999998214,
+            "bytes": 485,
+            "sha256": "6f8a344643ef868a42636f8073ce57d6578c2f14394da7acc2775174595ca6ac"
+          },
+          "/api/oab/mag": {
+            "count": 300,
+            "p50Ms": 5.830047999999806,
+            "p95Ms": 10.755832999999257,
+            "bytes": 4272,
+            "sha256": "88cc4eeda0dca9a042b607e5c3875bf154e43a522c8663bb3077406ddeb9840f"
+          },
+          "/api/oab/buyer-groups": {
+            "count": 300,
+            "p50Ms": 5.605748000001768,
+            "p95Ms": 12.724342999999863,
+            "bytes": 2010,
+            "sha256": "c030b1f11914ca6c3d70cb41fe663b94d6bc5289e213bdc3b0406eccb6e16bbb"
+          }
+        }
+      }
+    },
+    "limitations": [
+      "Linux four-CPU quota; no Chromium workload or PASS connection. Each server uses a private copy of the same completed 30k demo seed.",
+      "Controlled route A/B on the same runtime: before installs the exact three production route bodies from 8c575ecd parent at compilation through a diagnostic-only external preload. All dependencies, authority, pool warmup and observer are otherwise identical. Repository files are not modified.",
+      "Cold means first metadata request in a fresh process/file-cache generation; it is not cold OS disk cache. Subsequent MAG and Buyer Group first requests already share that index.",
+      "Both servers automatically warm the existing common pool at startup as production does; no extra artificial pool warmup is added.",
+      "Latency includes loopback HTTP, automatic gzip decoding and client JSON parsing. Requests are sequential with no retries; none send refresh. BL_STALL_PROFILE is unset in both arms."
+    ]
+  },
+  "remainingGapDiagnostic": {
+    "raw": {
+      "file": "/tmp/phase-5-review2-final-native-1.json",
+      "sha256": "878c51c2c1e5e0e44742deea9ce2e3b9048b7f3e4c792693ac28b24acc783f57"
+    },
+    "revision": "fa580f89c1cdce75160d78b2c56c2876fb315f68",
+    "diagnosticOnly": true,
+    "acceptanceEligible": false,
+    "correctness": "passed",
+    "preloadSha256": "f3f7c259894cf638cf0c8e09d3cfcd2c86b5ee058e87f5d8f631d9724804b276",
+    "traceFiles": [
+      {
+        "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase5-review2-final-native-1/b1-stage-207649-0.jsonl",
+        "sha256": "6dd91c0899af5a3a901af1c1d5388eb821b16383270df69734ae5eb2783f88c4"
+      },
+      {
+        "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase5-review2-final-native-1/b1-stage-207649-1.jsonl",
+        "sha256": "f3a552ee3f66adba6f20f51a5bca2f1fadefe24f4e548d7f729a0b2eb50c6c8c"
+      },
+      {
+        "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase5-review2-final-native-1/b1-stage-207649-2.jsonl",
+        "sha256": "9ba613ea0c0e6f5757c83ce07e5ba45115309ab723ac2e861b31188cfebd67ed"
+      },
+      {
+        "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase5-review2-final-native-1/b1-stage-207649-3.jsonl",
+        "sha256": "886db3e89aaedd1a08bf152e208e8ab3dcf7bcd87115478a3c8a646538348200"
+      },
+      {
+        "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase5-review2-final-native-1/b1-stage-207608-0.jsonl",
+        "sha256": "3db29f35e21606c8f18f309e8372fb8f919bb781683229747aae2365d4876616"
+      }
+    ],
+    "loopGaps": [
+      {
+        "scenario": "overview-global-flow",
+        "recordedGaps": 173,
+        "maxGapMs": 590.209870000006,
+        "maxDelayMs": 580.209870000006,
+        "gapsOver200ms": 9,
+        "maxGapUpperBoundMs": 590.209870000006,
+        "intervalMs": 10,
+        "reportFromMs": 20,
+        "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+      },
+      {
+        "scenario": "backlog",
+        "recordedGaps": 11,
+        "maxGapMs": 86.04629899999418,
+        "maxDelayMs": 76.04629899999418,
+        "gapsOver200ms": 0,
+        "maxGapUpperBoundMs": 86.04629899999418,
+        "intervalMs": 10,
+        "reportFromMs": 20,
+        "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+      }
+    ],
+    "existingNativeApiCallsRecordedOver20ms": [],
+    "unattributedGaps": [
+      {
+        "scenario": "overview-global-flow",
+        "gap": {
+          "pid": 207649,
+          "kind": "gap",
+          "fromMs": 1794059717277.4866,
+          "toMs": 1794059717616.989,
+          "gapMs": 339.5024080000003,
+          "delayMs": 329.5024080000003,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794059717194.7026,
+          "cpuWindowToMs": 1794059717766.6506,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 280,
+          "systemCpuMs": 110
+        },
+        "overlappingMeasuredSyncCalls": [],
+        "overlappingGc": []
+      },
+      {
+        "scenario": "overview-global-flow",
+        "gap": {
+          "pid": 207649,
+          "kind": "gap",
+          "fromMs": 1794059763980.355,
+          "toMs": 1794059764279.9033,
+          "gapMs": 299.54830099999526,
+          "delayMs": 289.54830099999526,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794059763935.1262,
+          "cpuWindowToMs": 1794059764298.6143,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 80,
+          "systemCpuMs": 30
+        },
+        "overlappingMeasuredSyncCalls": [],
+        "overlappingGc": []
+      },
+      {
+        "scenario": "overview-global-flow",
+        "gap": {
+          "pid": 207649,
+          "kind": "gap",
+          "fromMs": 1794059764403.359,
+          "toMs": 1794059764804.9868,
+          "gapMs": 401.6279990000039,
+          "delayMs": 391.6279990000039,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794059764280.8184,
+          "cpuWindowToMs": 1794059764896.4329,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 360,
+          "systemCpuMs": 130
+        },
+        "overlappingMeasuredSyncCalls": [],
+        "overlappingGc": []
+      },
+      {
+        "scenario": "overview-global-flow",
+        "gap": {
+          "pid": 207649,
+          "kind": "gap",
+          "fromMs": 1794059765195.7268,
+          "toMs": 1794059765688.7415,
+          "gapMs": 493.0145709999997,
+          "delayMs": 483.0145709999997,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794059765126.0652,
+          "cpuWindowToMs": 1794059765800.2598,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 110,
+          "systemCpuMs": 50
+        },
+        "overlappingMeasuredSyncCalls": [],
+        "overlappingGc": []
+      },
+      {
+        "scenario": "overview-global-flow",
+        "gap": {
+          "pid": 207649,
+          "kind": "gap",
+          "fromMs": 1794059765854.5413,
+          "toMs": 1794059766284.7637,
+          "gapMs": 430.2226260000025,
+          "delayMs": 420.2226260000025,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794059765799.6948,
+          "cpuWindowToMs": 1794059766809.3496,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 420,
+          "systemCpuMs": 140
+        },
+        "overlappingMeasuredSyncCalls": [],
+        "overlappingGc": []
+      },
+      {
+        "scenario": "overview-global-flow",
+        "gap": {
+          "pid": 207649,
+          "kind": "gap",
+          "fromMs": 1794059766398.6282,
+          "toMs": 1794059766792.567,
+          "gapMs": 393.9387180000049,
+          "delayMs": 383.9387180000049,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794059766281.4468,
+          "cpuWindowToMs": 1794059766935.2012,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 210,
+          "systemCpuMs": 50
+        },
+        "overlappingMeasuredSyncCalls": [],
+        "overlappingGc": []
+      },
+      {
+        "scenario": "overview-global-flow",
+        "gap": {
+          "pid": 207649,
+          "kind": "gap",
+          "fromMs": 1794059766932.826,
+          "toMs": 1794059767486.3137,
+          "gapMs": 553.4877930000002,
+          "delayMs": 543.4877930000002,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794059766603.4338,
+          "cpuWindowToMs": 1794059768078.474,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 290,
+          "systemCpuMs": 80
+        },
+        "overlappingMeasuredSyncCalls": [],
+        "overlappingGc": []
+      },
+      {
+        "scenario": "overview-global-flow",
+        "gap": {
+          "pid": 207649,
+          "kind": "gap",
+          "fromMs": 1794059767709.8054,
+          "toMs": 1794059768073.5024,
+          "gapMs": 363.6971610000037,
+          "delayMs": 353.6971610000037,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794059767258.77,
+          "cpuWindowToMs": 1794059768078.474,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 60,
+          "systemCpuMs": 10
+        },
+        "overlappingMeasuredSyncCalls": [],
+        "overlappingGc": []
+      },
+      {
+        "scenario": "overview-global-flow",
+        "gap": {
+          "pid": 207649,
+          "kind": "gap",
+          "fromMs": 1794059771005.225,
+          "toMs": 1794059771595.435,
+          "gapMs": 590.209870000006,
+          "delayMs": 580.209870000006,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794059770745.5942,
+          "cpuWindowToMs": 1794059771891.7544,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 140,
+          "systemCpuMs": 50
+        },
+        "overlappingMeasuredSyncCalls": [],
+        "overlappingGc": []
+      }
+    ],
+    "limitations": [
+      "Clock wrappers time only existing calls; they invoke no extra CPU or memory samples, profiler, timer or worker. The normal nine-run cohort remains the acceptance evidence.",
+      "The recorded CPU sample window surrounds a gap; it is not exact CPU usage during that gap. No recorded long native-statistics call or overlapping GC establishes the cause; unwrapped JS/native work and scheduling remain unresolved. Async pool/round-trip spans are not synchronous blocking evidence."
+    ]
+  },
+  "lflThirtyThousandEquality": {
+    "synthetic": true,
+    "fixtureRows": 30000,
+    "sourceSeed": "/tmp/phase-5-main-oab-v3-after-1.json",
+    "fixtureRoot": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase5-review2-lfl-equivalence-jIl3WV",
+    "scopes": [
+      {
+        "name": "all",
+        "legacyRows": 30000,
+        "references": 338,
+        "bytes": 225049,
+        "sha256": "e0eafac8169ba16ce21240647cf3b90b4a5a467f51b7a3f7612cb8b201da8be5",
+        "equal": true,
+        "workerThreadId": 1
+      },
+      {
+        "name": "matching-scope",
+        "legacyRows": 3128,
+        "references": 292,
+        "bytes": 188479,
+        "sha256": "6fa65662c1f9330c8b45ddd9f1040c21d3d1aaf21b89fa342beda807854aa522",
+        "equal": true,
+        "workerThreadId": 1
+      },
+      {
+        "name": "denied-scope",
+        "legacyRows": 0,
+        "references": 0,
+        "bytes": 17,
+        "sha256": "2b9dce10b60cde23b12216093cb4a3da7186602c5a3eee2964fb52751fae157f",
+        "equal": true,
+        "workerThreadId": 1
+      }
+    ],
+    "startedAt": "2026-11-07T12:24:28.474Z",
+    "engineSha256": "5ea6c4b17ceeb3d07c8492bfff0a3195c76267144765cae32d43c52469ef3157",
+    "calendar": {
+      "configured": false,
+      "calendar": null,
+      "summary": null,
+      "fingerprint": "c80caff821ab4a6d8a39069f69cea16fbf82bca88365fd210f0afc931d1b1241"
+    },
+    "day": "2026-11-07",
+    "status": "passed",
+    "finishedAt": "2026-11-07T12:24:58.667Z"
+  },
+  "validation": {
+    "relevantTestFiles": 177,
+    "testCounts": {
+      "tests": 1328,
+      "pass": 1328,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "log": {
+      "file": "/tmp/phase-5-review2-final-regression.txt",
+      "sha256": "aa3311ca1bb3987d8d7d95f557bbe17da2df94047e1f219134ee8cb4210bc810"
+    },
+    "newAsyncRedLog": {
+      "file": "/tmp/phase-5-review2-b1-async-oab-red.txt",
+      "sha256": "e77d126640ba2e84674d4f7821749c54e304de2e67d4bb100db25a090cd03eff"
+    },
+    "existingPositiveAndNegativeGuards": "Preserved; the test error facade now matches production automationError and asserts the English text actually returned in error.message.",
+    "i18n": {
+      "newMissing": 0,
+      "baselineMissing": 0,
+      "rawLog": {
+        "file": "/tmp/phase-5-review2-final-i18n.txt",
+        "sha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb"
+      }
+    },
+    "releaseNotes": {
+      "changes": 32,
+      "status": "passed",
+      "rawLog": {
+        "file": "/tmp/phase-5-review2-final-notes.txt",
+        "sha256": "eedab19716c38ba4de17a9478754ca6103029ef4ad941b204bb3e7ffaa2d50fc"
+      }
+    }
+  },
+  "retainedPreflightFailures": [
+    {
+      "raw": {
+        "file": "/tmp/phase-5-review2-b1-async-oab-http.json",
+        "sha256": "25c395bfc9864b830543de629a34aacad1d2c66b18f18b222c474b788339b959"
+      },
+      "reason": "Runner omitted matching TMPDIR; synthetic-root guard stopped the server before any metadata request. Unique v2 roots and corrected environment were used, no POST was retried."
+    },
+    {
+      "log": {
+        "file": "/tmp/phase-5-review2-final-cohort-launch.log",
+        "sha256": "84b12a9a360f7d27d80e7e342a1f936298cd116218a6a04a74e4a2a7895ba67b"
+      },
+      "reason": "Incorrect full candidate SHA argument rejected before any run, fixture or POST. Correct full git SHA was then used; the original preflight log remains intact."
+    }
+  ],
+  "measuredApplicationFileHashes": {
+    "resources/app/server/server.js": "e12ebadc0487c7f79aa5a9c86c6f16b2c357da9ebe3f8e0f651ded16c041a47e",
+    "resources/app/server/lib/oab-static-metadata.js": "c3cefe7e75b7057dd0dcc9f02c0e85a1d13d16ef92c2f9887549233dc559e77a",
+    "resources/app/server/lib/collection-lfl-source-version.js": "ba8df22491d72ba76884de8bd203f60b9eca5ed6b734403e9e2d8ec3ca6f11c9",
+    "resources/app/server/lib/compute-pool.js": "a0121dbc2e018065c3e6b906149ad0caf6e7a784ccc05e61b5d3460063586266",
+    "resources/app/server/lib/compute-service.js": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+    "resources/app/server/lib/compute-tasks.js": "1a9b0b2b934e15aa6d837f03944f54d6ea11919986f5a9a7d5130e6873893609",
+    "resources/app/server/lib/compute-source-codec.js": "8f5f7a417f7943da456f7bade606600e23cf2a6d47d5b0d9a5a52649aec91959",
+    "resources/app/server/lib/derived-input-keys.js": "80f10f28cbf44662038037dcd532d91d0a75785ae31e9ab863c7e3e4d6ef14a3",
+    "resources/app/server/workers/compute-worker.js": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+    "resources/app/server/workers/excel-worker.js": "81940ef7ea4da5a82b7e96d2ec05777e12745156e4e2fd3d59107000b3e49509"
+  },
+  "applicationChangesAfterMeasuredRevision": []
+}

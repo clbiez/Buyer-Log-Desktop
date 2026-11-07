@@ -68,8 +68,11 @@ function excelDate(value){
 }
 function recordKey(record){ return keyOf(record.slice(0,5)); }
 function recordNoSupplyKey(record){ return keyOf([record[0],record[1],record[3],record[4]]); }
-function buildRuntime(snapshot){
+function validateSnapshot(snapshot){
   if(!snapshot||Number(snapshot.schemaVersion)!==SCHEMA_VERSION||!Array.isArray(snapshot.months)||!Array.isArray(snapshot.records))throw new Error('Endeksmatik snapshot formatı geçersiz.');
+}
+function buildRuntime(snapshot){
+  validateSnapshot(snapshot);
   const monthIndex=new Map(snapshot.months.map((m,i)=>[String(m),i]));
   const byKey=new Map(), byNoSupply=new Map();
   snapshot.records.forEach(record=>{
@@ -80,19 +83,21 @@ function buildRuntime(snapshot){
   });
   return {snapshot,monthIndex,byKey,byNoSupply};
 }
-function readSnapshotFile(file){ return JSON.parse(zlib.gunzipSync(fs.readFileSync(file)).toString('utf8')); }
-function loadSnapshot({force=false}={}){
+function readSnapshotFile(file,options){ return JSON.parse(zlib.gunzipSync(fs.readFileSync(file),options).toString('utf8')); }
+function loadSnapshot({force=false,index=true}={}){
+  const materialize=()=>{if(index&&!cached.byKey)cached=buildRuntime(cached.snapshot);return cached;};
+  const prepare=snapshot=>{validateSnapshot(snapshot);return index?buildRuntime(snapshot):{snapshot};};
   const shared=fromSharedDocument(documents.read(DOCUMENT_ID));
   if(shared){
     const source=`delta:${shared.generatedAt||shared.sourceUpdatedAt||shared._updatedAt||''}`;
-    if(!force&&cached&&cachedFile===source)return cached;
-    cached=buildRuntime(shared); cachedFile=source; return cached;
+    if(!force&&cached&&cachedFile===source)return materialize();
+    cached=prepare(shared); cachedFile=source; return cached;
   }
   const file=fs.existsSync(PERSISTED_FILE)?PERSISTED_FILE:DEFAULT_FILE;
   if(!fs.existsSync(file))throw new Error('Endeksmatik veri snapshotı bulunamadı.');
   const stat=fs.statSync(file),tag=stat.mtimeMs+':'+stat.size+':'+stat.ino;
-  if(!force&&cached&&cachedFile===file&&cachedTag===tag)return cached;
-  cached=buildRuntime(readSnapshotFile(file)); cachedFile=file;cachedTag=tag; return cached;
+  if(!force&&cached&&cachedFile===file&&cachedTag===tag)return materialize();
+  cached=prepare(readSnapshotFile(file)); cachedFile=file;cachedTag=tag; return cached;
 }
 /* Hedef düzeltme yüzdesinin varsayılanı YALNIZ yüklenen dosyadan gelir.
    Eski anlık görüntülerde bu alan yok; onlarda 0 kabul edilir çünkü mevcut
@@ -107,7 +112,7 @@ function publicStatusForSnapshot(snapshot,usingDefault=false){
   return {ok:true,schemaVersion:snapshot.schemaVersion,sourceFile:snapshot.sourceFile||'',season:snapshot.season||'',sourceUpdatedAt:snapshot.sourceUpdatedAt||'',targetAdjustmentPct:defaultAdjustmentPct(snapshot),generatedAt:snapshot.generatedAt||'',recordCount:snapshot.records.length,firstMonth:snapshot.months[0]||'',lastMonth:snapshot.months[snapshot.months.length-1]||'',fxFirst:Object.keys(snapshot.fx||{}).sort()[0]||'',fxLast:Object.keys(snapshot.fx||{}).sort().slice(-1)[0]||'',usingDefault};
 }
 function legacyStatus(){
-  const {snapshot}=loadSnapshot();
+  const {snapshot}=loadSnapshot({index:false});
   return publicStatusForSnapshot(snapshot,cachedFile===DEFAULT_FILE);
 }
 function resolveRecord(input,runtime=loadSnapshot()){
@@ -402,10 +407,12 @@ function readActiveSelection(){
   if(shared)return shared;
   try{return JSON.parse(fs.readFileSync(ACTIVE_FILE,'utf8'));}catch(_){return {};}
 }
+function legacyMetaForStatus(s){
+  return {id:LEGACY_SET_ID,model:'legacy-tl',label:'Eski Endeksmatik (TL şablonu)',region:'',season:s.season,sourceFile:s.sourceFile,sourceUpdatedAt:s.sourceUpdatedAt,uploadedAt:s.generatedAt,version:`legacy:${s.sourceUpdatedAt||''}:${s.generatedAt||''}`,recordCount:s.recordCount,firstMonth:s.firstMonth,lastMonth:s.lastMonth,targetAdjustmentPct:s.targetAdjustmentPct,usingDefault:s.usingDefault};
+}
 function legacyMeta(){
   try{
-    const s=legacyStatus();
-    return {id:LEGACY_SET_ID,model:'legacy-tl',label:'Eski Endeksmatik (TL şablonu)',region:'',season:s.season,sourceFile:s.sourceFile,sourceUpdatedAt:s.sourceUpdatedAt,uploadedAt:s.generatedAt,version:`legacy:${s.sourceUpdatedAt||''}:${s.generatedAt||''}`,recordCount:s.recordCount,firstMonth:s.firstMonth,lastMonth:s.lastMonth,targetAdjustmentPct:s.targetAdjustmentPct,usingDefault:s.usingDefault};
+    return legacyMetaForStatus(legacyStatus());
   }catch(_){return null;}
 }
 function listSets(){
@@ -429,6 +436,36 @@ function publicStatus(){
   }
   const meta=sets.find(s=>s.id===active);
   return {ok:true,...meta,setId:meta.id,activeSetId:active,sets,usingDefault:false};
+}
+function statusFileTag(stat){return [stat.mtimeMs,stat.ctimeMs,stat.size,stat.ino].join(':');}
+function staleStatus(){return Object.assign(new Error('Endeksmatik veri sürümü değişti. / The Endeksmatik data generation changed.'),{code:'COMPUTE_STALE_GENERATION',statusCode:409});}
+function legacyDiskStatusPlan(){
+  // Ölçülen açılış yolu: diskteki tek eski şablon. Yetkili delta belgeleri ve
+  // bağımsız yüklenmiş setler kendi mevcut çözümleyicilerinde kalır.
+  if(fromSharedDocument(documents.read(DOCUMENT_ID))||setIds().length)return null;
+  const file=fs.existsSync(PERSISTED_FILE)?PERSISTED_FILE:DEFAULT_FILE;
+  if(!fs.existsSync(file))throw new Error('Endeksmatik veri snapshotı bulunamadı.');
+  return {file,usingDefault:file===DEFAULT_FILE,tag:statusFileTag(fs.statSync(file))};
+}
+const diskStatusCache=new Map();
+function readLegacyStatusFile(descriptor,maxOutputLength){
+  const file=path.resolve(String(descriptor&&descriptor.file||''));
+  if(![PERSISTED_FILE,DEFAULT_FILE].includes(file))throw Object.assign(new Error('Geçersiz metadata kaynağı. / Invalid metadata source.'),{code:'COMPUTE_JOB_INVALID',statusCode:400});
+  if(statusFileTag(fs.statSync(file))!==descriptor.tag)throw staleStatus();
+  const hit=diskStatusCache.get(file);if(hit&&hit.tag===descriptor.tag)return hit.status;
+  let snapshot;
+  try{snapshot=readSnapshotFile(file,{maxOutputLength});}
+  catch(error){if(error.code==='ERR_BUFFER_TOO_LARGE')throw Object.assign(new Error('Metadata kaynağı bellek bütçesine sığmıyor. / Metadata source exceeds the memory budget.'),{code:'COMPUTE_SOURCE_TOO_LARGE',statusCode:413});throw error;}
+  validateSnapshot(snapshot);
+  const status=publicStatusForSnapshot(snapshot,file===DEFAULT_FILE);
+  if(statusFileTag(fs.statSync(file))!==descriptor.tag)throw staleStatus();
+  diskStatusCache.set(file,{tag:descriptor.tag,status});return status;
+}
+async function publicStatusAsync(readLegacyFile){
+  const plan=legacyDiskStatusPlan();if(!plan)return publicStatus();
+  const status=await readLegacyFile(plan),current=legacyDiskStatusPlan();
+  if(!current||current.file!==plan.file||current.tag!==plan.tag)throw staleStatus();
+  return {...status,model:'legacy-tl',setId:LEGACY_SET_ID,activeSetId:LEGACY_SET_ID,sets:[legacyMetaForStatus(status)]};
 }
 function resolveSetForCalculation(setId){
   const requested=String(setId||'').trim();
@@ -559,4 +596,4 @@ async function restoreLegacyReceipt(snapshot,active,wasDefault,options={}){retur
   if(documents.writesLegacy)fs.rmSync(PERSISTED_FILE,{force:true});if(selection)writeActiveLegacy(selection);cached=null;cachedFile='';
  }else await saveSnapshot(snapshot,{...options,activeSelectionId:active});return publicStatus();
 });}
-module.exports={normalizeLabel,restoreLegacyReceipt,removeImportedSet:(id,active,options={})=>mutate(options,async()=>{return deleteSet(id,{...options,activeSelectionId:active});}),sourceFingerprint,parseImportWorkbook,restoreSet,readSetSnapshot:id=>{const entry=loadSet(id);return entry?entry.snapshot:null;},SCHEMA_VERSION,DEFAULT_FILE,PERSISTED_FILE,COLLECTION,DOCUMENT_ID,COMPONENTS,LEGACY_SET_ID,ACTIVE_DOCUMENT_ID,SETS_DIR,attachDeltaStore,seedMissing,text,norm,keyOf,numberValue,monthCode,loadSnapshot,publicStatus,legacyStatus,resolveRecord,calculate,calculateLegacy,lookup,listSets,activeSetId,setActiveSet:(id,actor,options={})=>mutate(options,()=>setActiveSet(id,actor,options)),saveSet:(snapshot,options={})=>mutate(options,()=>saveSet(snapshot,options)),renameSet:(id,label,options={})=>mutate(options,()=>renameSet(id,label,options)),deleteSet:(id,options={})=>mutate(options,()=>deleteSet(id,options)),parseWorkbookBuffer,saveSnapshot:(snapshot,options={})=>mutate(options,()=>saveSnapshot(snapshot,options)),importWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importWorkbookBuffer(buffer,name,options)),importLegacyWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importLegacyWorkbookBuffer(buffer,name,options))};
+module.exports={normalizeLabel,restoreLegacyReceipt,removeImportedSet:(id,active,options={})=>mutate(options,async()=>{return deleteSet(id,{...options,activeSelectionId:active});}),sourceFingerprint,parseImportWorkbook,restoreSet,readSetSnapshot:id=>{const entry=loadSet(id);return entry?entry.snapshot:null;},SCHEMA_VERSION,DEFAULT_FILE,PERSISTED_FILE,COLLECTION,DOCUMENT_ID,COMPONENTS,LEGACY_SET_ID,ACTIVE_DOCUMENT_ID,SETS_DIR,attachDeltaStore,seedMissing,text,norm,keyOf,numberValue,monthCode,loadSnapshot,publicStatus,publicStatusAsync,readLegacyStatusFile,legacyStatus,resolveRecord,calculate,calculateLegacy,lookup,listSets,activeSetId,setActiveSet:(id,actor,options={})=>mutate(options,()=>setActiveSet(id,actor,options)),saveSet:(snapshot,options={})=>mutate(options,()=>saveSet(snapshot,options)),renameSet:(id,label,options={})=>mutate(options,()=>renameSet(id,label,options)),deleteSet:(id,options={})=>mutate(options,()=>deleteSet(id,options)),parseWorkbookBuffer,saveSnapshot:(snapshot,options={})=>mutate(options,()=>saveSnapshot(snapshot,options)),importWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importWorkbookBuffer(buffer,name,options)),importLegacyWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importLegacyWorkbookBuffer(buffer,name,options))};
