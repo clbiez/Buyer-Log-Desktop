@@ -4,11 +4,32 @@ Date: 7 November 2026. [Türkçe](local-db-sqlite-2026-11-07.tr.md).
 
 ## Decision and scope
 
-**Recommendation: keep product storage unchanged; consider a separate,
-user-approved SQLite compatibility and packaging pilot.** [Muhtemel / Likely]
-SQLite's startup, indexed-query and compaction advantages in this synthetic
-local workload justify another experiment. This PR performs no migration,
-does not authorize one, and **must not merge before the user's decision**.
+**User decision: keep #900 as an unmerged draft on hold. Do not start a new
+pilot, migration, product change or TEST/STABLE publication.** Preserve the
+existing evidence and both reports.
+
+Decision-summary limits:
+
+- Startup is not UI startup; SQLite does not load all records.
+- At 200k, full-record reading takes JSON→SQLite **24.7→1188.1 ms**: the existing
+  whole-state API does not automatically benefit.
+- Backup guarantees differ; total disk differences are not direct savings.
+- SIGKILL results do not establish power-loss durability.
+- Measured **Electron 39.0.0** differs from the current **Electron 44.3.0**
+  target; these results do not validate the 44/Windows target.
+
+**Merging the prototype PR, authorizing a compatibility pilot and authorizing
+live migration are three separate decisions; none automatically permits the
+others.** Phase 6's full `npm test` requirement remains in force. Complete the
+required full regression and review on the current integration before merge
+evaluation; targeted tests and PR fast checks do not replace that requirement.
+This handoff update does not start that work.
+
+[Muhtemel / Likely] SQLite's synthetic startup, indexed-query and compaction
+advantages support considering a separate future compatibility pilot; that
+technical recommendation is not authorization. The separate
+[SHARED_LEASE_LOST follow-up finding](local-db-sqlite-2026-11-07/shared-lease-lost-follow-up.md)
+hands off the observation only; root cause and impact remain unknown.
 
 Evidence labels: **[Doğrulandı / Verified]** direct source/test/runtime evidence;
 **[Muhtemel / Likely]** strong indirect evidence; **[Hipotez / Hypothesis]**
@@ -200,11 +221,10 @@ were also run; see [validation.md](local-db-sqlite-2026-11-07/validation.md).
 
 [Doğrulandı] The 200k JSON measurements emitted `renew:failed /
 SHARED_LEASE_LOST` warnings; API calls returned and result assertions passed.
-The warnings are disclosed and product code is unchanged. [Hipotez] A race
-between renewal rejecting a completed scope and renewal draining during cleanup
-could explain them, based on the lease source; the root cause is unproven.
-[Bilinmiyor] Effect under concurrent writers. Investigate separately; the
-validation record retains the observation.
+The warnings are disclosed and product code is unchanged. [Bilinmiyor] Root
+cause, whether data loss occurred, and concurrent-writer consequences. Passing
+tests do not establish a harmless race. The observation is handed off as a
+separate finding; no production fix or new investigation starts in this PR.
 
 [Bilinmiyor] SIGKILL is not power loss: host caches and the disk controller stay
 alive. Hardware flush behavior, disk-full failures, bit rot, every
@@ -254,9 +274,10 @@ backup/restore and complete synchronization regressions. No live migration
 before a complete bidirectional exporter and rollback preserving post-switch
 writes are accepted.
 
-User options: retain JSON/WAL; approve a separate SQLite compatibility pilot;
-request additional target-device measurements. Merging this prototype and
-authorizing live migration are separate decisions. No TEST/STABLE publication.
+The current user decision is to wait. Future prototype merge, compatibility
+pilot and live migration decisions need separate evaluation and authorization.
+Before merge evaluation, complete Phase 6's full `npm test`, required regression
+and review on the current integration. No TEST/STABLE publication.
 
 ## Sources and reproduction
 

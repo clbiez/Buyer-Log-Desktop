@@ -4,11 +4,33 @@ Tarih: 7 Kasım 2026. [English](local-db-sqlite-2026-11-07.en.md).
 
 ## Karar ve kapsam
 
-**Öneri: mevcut ürün depolamasını koru; SQLite için ayrı, kullanıcı onaylı bir
-uyumluluk/paketleme pilotuna geçmeyi değerlendir.** [Muhtemel] Bu sentetik yerel
-iş yükünde SQLite'ın açılış, indeksli sorgu ve compaction avantajı bir sonraki
-deneyi haklı çıkarıyor. Bu PR migrasyon yapmaz, migrasyon onayı sayılmaz ve
-**kullanıcı kararı olmadan merge edilmemelidir**.
+**Kullanıcı kararı: #900 taslak ve merge edilmemiş olarak bekleyecek. Yeni pilot,
+migrasyon, ürün değişikliği veya TEST/STABLE yayını başlatılmayacak.** Mevcut
+kanıtlar ve TR/EN raporları korunur.
+
+Karar özetinin sınırları:
+
+- Açılış ölçümü UI açılışı değildir; SQLite tüm kayıtları yüklemez.
+- 200k tam kayıt okuması JSON→SQLite **24,7→1188,1 ms**: mevcut tüm-state
+  API'siyle otomatik kazanım yoktur.
+- Yedekleme güvenceleri eşit değildir; toplam disk farkı doğrudan tasarruf
+  sayılamaz.
+- SIGKILL sonuçları elektrik kesintisi dayanıklılığını kanıtlamaz.
+- Ölçülen **Electron 39.0.0** ile güncel **Electron 44.3.0** hedefi ayrıdır;
+  sonuçlar 44/Windows hedefini doğrulamaz.
+
+**Prototip PR'ını merge etmek, uyumluluk pilotunu başlatmak ve canlı migrasyon
+üç ayrı karardır; hiçbiri diğerine otomatik izin vermez.** Faz 6'nın tam
+`npm test` şartı kaldırılmadı. Merge değerlendirmesinden önce güncel entegrasyon
+üzerinde gerekli tam regresyon ve inceleme tamamlanmalıdır; mevcut hedefli
+testler ve PR hızlı kontrolleri bu şartın yerine geçmez. Bu teslim güncellemesi
+bu çalışmaları başlatmaz.
+
+[Muhtemel] Sentetik iş yükündeki SQLite açılış, indeksli sorgu ve compaction
+avantajları gelecekte ayrı bir uyumluluk pilotunu değerlendirmeyi destekler;
+bu teknik öneri pilot veya migrasyon izni değildir. Ayrı
+[SHARED_LEASE_LOST takip bulgusu](local-db-sqlite-2026-11-07/shared-lease-lost-follow-up.md)
+yalnız gözlemi teslim eder; kök neden ve etki bilinmiyor.
 
 [Doğrulandı] Değişiklik yalnız `scripts/prototypes/` ve `docs/` altındadır.
 Ürün kodu, manifest/lock dosyaları ve sürüm notları değişmedi. Veri tamamen
@@ -198,10 +220,10 @@ testleri de çalıştırıldı; ayrıntı [validation.md](local-db-sqlite-2026-1
 
 [Doğrulandı] 200k JSON ölçümlerinde `renew:failed / SHARED_LEASE_LOST` uyarıları
 gözlendi; API çağrıları döndü ve sonuç doğrulamaları geçti. Bu uyarı gizlenmedi
-ve ürün kodu değiştirilmedi. [Hipotez] Lease kaynağında tamamlanmış kapsamı
-reddeden yenileme ile bitişteki renewal drain arasındaki yarış bunu
-açıklayabilir; kök neden kanıtlanmış değildir. [Bilinmiyor] Eşzamanlı yazanlar
-altındaki etkisi. Bağımsız takipte sınanmalıdır; ayrıntı doğrulama kaydındadır.
+ve ürün kodu değiştirilmedi. [Bilinmiyor] Kök neden, veri kaybı olup olmadığı
+ve eşzamanlı yazanlar altındaki etkisi. Başarılı testler zararsız yarış sonucunu
+kanıtlamaz. Gözlem ayrı takip bulgusu olarak teslim edildi; bu PR'da üretim
+düzeltmesi veya yeni inceleme çalışması başlatılmaz.
 
 [Bilinmiyor] SIGKILL elektrik kesintisi değildir: host cache ve disk kontrolcüsü
 çalışır. Donanım flush doğruluğu, disk dolması, bit çürümesi, tüm rename/rotation
@@ -248,9 +270,10 @@ soğuk/sıcak açılış, UI/HTTP gecikmesi, eşzamanlı yerel süreç, disk-ful
 backup/restore ve bütün sync regresyonları gerekir. Tam çift yönlü exporter ve
 geçiş sonrası yazıları koruyan rollback kabul edilmeden canlı migrasyon yok.
 
-Kullanıcı seçenekleri: mevcut JSON/WAL ile devam; ayrı SQLite uyumluluk pilotunu
-onayla; ek hedef cihaz ölçümü iste. Bu prototip PR'ının merge kararı ile canlı
-migrasyon kararı ayrı tutulmalıdır. TEST/STABLE yayını yapılmadı.
+Güncel kullanıcı kararı beklemektir. İleride prototip PR'ının merge kararı,
+uyumluluk pilotu ve canlı migrasyon ayrı ayrı değerlendirilir ve yetkilendirilir.
+Merge değerlendirmesinden önce güncel entegrasyonda Faz 6 tam `npm test`, gerekli
+regresyon ve inceleme tamamlanmalıdır. TEST/STABLE yayını yapılmadı.
 
 ## Kaynaklar ve tekrar çalıştırma
 

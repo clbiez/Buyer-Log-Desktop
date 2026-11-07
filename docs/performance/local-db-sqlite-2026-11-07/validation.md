@@ -17,15 +17,23 @@ needs a separate P1 assessment.
 | Mevcut local-db compaction/crash/WAL/business/HLC | [Doğrulandı] 45/45 | [local-db-tests.tap](local-db-tests.tap) |
 | Agent/i18n/release-note sözleşmeleri / contracts | [Doğrulandı] 19/19 | [contract-tests.tap](contract-tests.tap) |
 
-TR: Yerel testler CI sonucu değildir. Tam `npm test` çalıştırılmadı; ürün
-değişmediği için hedefli DB ve sözleşme kontrolleri seçildi. Son testlerden
+TR: Yerel testler CI sonucu değildir. Tam `npm test` çalıştırılmadı; bu teslimde
+yalnız hedefli DB ve sözleşme kontrolleri tamamlandı. **Faz 6'nın tam `npm test`
+şartı kaldırılmadı. Merge değerlendirmesinden önce güncel entegrasyonda gerekli
+tam regresyon ve inceleme tamamlanmalıdır.** Ürün değişmemiş olması bu şartı
+kaldırmaz; hedefli test/PR hızlı kontrolleri yerine geçmez. Şimdilik bu çalışma
+başlatılmıyor. Son testlerden
 sonra çalışma zamanını etkileyen prototip kodu değiştirilmedi. Rapor
 üreticisinin başlık/medyan hesapları ayrı çalıştırıldı. Kaynak hash'leri gerçek
 ölçümde yürütülen dört çekirdek prototip dosyasıyla ve iki ürün kaynağıyla eşleşti.
 
 EN: Local tests do not establish CI status. The full `npm test` suite was not
-run; targeted DB and contract checks were selected because product behavior is
-unchanged. No runtime-affecting prototype change followed the final tests.
+run; only targeted DB and contract checks were completed for this delivery.
+**Phase 6's full `npm test` requirement is not waived. Complete the required full
+regression and review on the current integration before merge evaluation.**
+Unchanged product behavior does not remove this requirement; targeted tests/PR
+fast checks do not replace it. That work is on hold. No runtime-affecting
+prototype change followed the final tests.
 Report formatting/median generation was run separately. Recorded source hashes
 match the four executed core prototype files and two product source files.
 
@@ -85,13 +93,13 @@ placeholders below.
 [LEASE] renew:failed instanceId=<trial-id> pid=<worker-pid> resource=<synthetic-trial>/BuyerLogLocal.db error=SHARED_LEASE_LOST
 ```
 
-**[Hipotez / Hypothesis]** `shared-file-transaction.js` rejects renewal for a
-completed scope, and drains any outstanding renewal during cleanup
-(`acquireAsync`, `renew`, `drainRenewal`, `withFileLeaseAsync`). A completion/renewal
-race could explain this warning, but no focused reproduction established the
-root cause. **[Bilinmiyor / Unknown]** Concurrent-writer consequences.
-TR: Ayrı takip gerekir; bu PR ürün koduna dokunmaz. / EN: Follow up separately;
-this PR does not change product code.
+**[Bilinmiyor / Unknown]** Kök neden, veri kaybı olup olmadığı, zararsız yarış
+olup olmadığı ve eşzamanlı yazanlar altındaki etki. / Root cause, whether data
+loss occurred, whether this is a harmless race, and concurrent-writer impact.
+TR: [Ayrı takip bulgusu](shared-lease-lost-follow-up.md) teslim edildi; bu PR'da
+üretim düzeltmesi veya yeni inceleme başlatılmaz. / EN: The
+[separate follow-up finding](shared-lease-lost-follow-up.md) is handed off; no
+production fix or new investigation starts in this PR.
 
 TR: Native `better-sqlite3`, imzalı Windows paketleme, Electron 44, tam sync
 eşitliği, cold-cache/disk-full/güç kesme ve bütün compaction kesinti aralıkları
@@ -100,7 +108,11 @@ complete sync equivalence, cold cache/disk full/power loss and all compaction
 interruption boundaries were not tested.
 
 TR: PR ve GitHub checks'in canlı durumu PR sayfasındadır; bu dosya CI başarısı
-iddia etmez. Merge için kullanıcı kararı gerekir. TEST/STABLE yayınlanmadı.
+iddia etmez. #900 taslak ve merge edilmemiş kalır. Merge, uyumluluk pilotu ve
+canlı migrasyon üç ayrı karardır; hiçbiri diğerine izin vermez. TEST/STABLE
+yayınlanmadı.
 
 EN: The PR page holds live GitHub check status; this file makes no CI-success
-claim. Merge requires the user's decision. No TEST/STABLE publication.
+claim. #900 remains an unmerged draft. Merge, compatibility pilot and live
+migration are three separate decisions; none authorizes the others. No
+TEST/STABLE publication.
