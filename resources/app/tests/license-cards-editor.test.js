@@ -8,7 +8,15 @@ const rule={id:'rate',license:'Demo License',licensor:'Demo Owner',royalty:13,tr
 const initial=()=>({revision:1,pricingRevision:3,canEdit:true,cards:[{id:'demo',license:'Demo License',licensor:'Demo Owner',editToken:'original',workingNotes:'Original',rules:[clone(rule)]}]});
 function page(){
  let remote=initial(),gets=0,puts=0,renders=0,putBody,held,focused=null;
- const host={dataset:{},getClientRects:()=>[{}],querySelector:sel=>sel==='.lcPage'?{}:null,querySelectorAll:()=>[],addEventListener(){},contains:el=>Boolean(el&&el===focused),set innerHTML(value){this.html=value;renders++;}};
+ let editor=null;
+ const pageNode={insertAdjacentHTML(_position,html){
+  host.html+=html;
+  const detail={scrollTop:0};
+  editor={dataset:{detail:html.match(/data-detail="([^"]+)"/)[1]},showModal(){},close(){},addEventListener(){},
+   querySelector:sel=>sel==='.lcDetailIn'?detail:null,
+   remove(){host.html=host.html.replace(/<dialog\b[\s\S]*?<\/dialog>/,'');editor=null;}};
+ }};
+ const host={dataset:{},getClientRects:()=>[{}],querySelector:sel=>sel==='.lcPage'?pageNode:sel==='.lcEditor'?editor:null,querySelectorAll:()=>[],addEventListener(){},contains:el=>Boolean(el&&el===focused),set innerHTML(value){this.html=value;editor=null;renders++;}};
  const window={BLLicenseCardsEngine:require('../public/license-cards-engine'),BL_CLIENT_ID:'my-tab'};
  const document={getElementById:()=>host,get activeElement(){return focused;},addEventListener(){},createElement:()=>({})};
  const context={window,document,CSS:{escape:v=>v},appLang:'en',Intl,setTimeout,fetch:async(url,options={})=>{
@@ -70,11 +78,13 @@ test('a delayed image upload cannot attach to a replacement draft',async()=>{
 
 test('card editor is a separate dialog with optional history and licensor form',async()=>{
  const p=page(),data=initial();data.cards[0].rules.push({...clone(rule),id:'past',opdStart:'2025-01-01',opdEnd:'2025-12-31'});p.remote(data);await p.open();
+ const before=p.renders;
  p.t().act({dataset:{lcAct:'expand',id:'demo'}});
  assert.match(p.host.html,/<dialog[^>]+class="lcEditor lcDetail"/);
  assert.doesNotMatch(p.host.html,/data-lc-profile="artworkBrief"|data-lc-new-licensor=|data-lc-rule="past"/);
  p.t().act({dataset:{lcAct:'history',id:'demo'}});assert.match(p.host.html,/data-lc-rule="past"/);
  p.t().act({dataset:{lcAct:'toggleLicensor',id:'demo'}});assert.match(p.host.html,/data-lc-new-licensor="demo"/);
+ assert.equal(p.renders,before,'opening and updating details must preserve the list');
 });
 
 test('closing and reopening a card retains its draft and resets optional sections',async()=>{
