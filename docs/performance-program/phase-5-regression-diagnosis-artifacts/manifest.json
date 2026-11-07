@@ -301,5 +301,10 @@
     "BuyerOnlyForeign_OrderCodes": [
       1002
     ]
+  },
+  "originalFailureBatchCounts": {
+    "3": 6,
+    "4": 2,
+    "5": 6
   }
 }
