@@ -1,5 +1,9 @@
 # Faz 5 · İkinci inceleme sonucu / Second-review result
 
+TR/EN: Bu belge fa580f89/270228a4 serisinin tarihsel kaydıdır. /
+This is the historical fa580f89/270228a4 cohort.
+[Güncel Main entegrasyonu sonucu / Current Main integration result](phase-5-review2-main-current-report.md).
+
 **B1 AÇIK / OPEN. Merge edilmedi / Not merged. TEST ve STABLE yayımlanmadı / Neither published.**
 
 TR: Bu kapanış çalışması yeni özellik eklemez; Claude'un kullanıcı üzerinden

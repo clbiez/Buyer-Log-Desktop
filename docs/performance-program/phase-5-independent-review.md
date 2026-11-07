@@ -1,7 +1,7 @@
 # Faz 5 · Bağımsız inceleme / Independent review
 
 TR/EN: Güncel durum / Latest status: **B1 AÇIK / OPEN; merge yok / no merge**.
-[İkinci inceleme sonuçları ve son 3+3+3 seri / Second-review results](phase-5-review2-report.md).
+[İkinci inceleme sonuçları ve son 3+3+3 seri / Second-review results](phase-5-review2-main-current-report.md).
 
 TR: Kullanıcının P1 kuralı kapsamında `gpt-6-astra`, temel
 `ad198bfe245a93c5ccd90184082d209bb4c3dfb7` ile
@@ -247,3 +247,44 @@ is claimed. Three async cold samples lack the earlier 262 ms gap, but the
 overall 200 ms criterion still fails. A final diagnostic reproduced gaps
 without establishing the native-statistics hypothesis. The remaining cause
 is unknown; no speculative optimization or threshold change was made.
+
+### Main entegrasyonu sonrası son kayıt / Final record after Main integration
+
+TR: `1ff5038e` kullanıcıya delta SHA'sı olarak bildirildikten sonra Main'in
+`c93e2544` (#886/#887) olduğu ve next.json çakışmasının checks'i engellediği
+canlı GitHub/Git verisiyle doğrulandı. Kilitli dosyalar alınmadan önce
+kullanıcı bilgilendirildi; bu dosyalar Main ile birebir, özel değişiklik yok.
+`0ad9f159` merge commit'i rebase/force-push olmadan Main'i aldı; 29 Main
+notu + 5 kendi notumuz korundu. Yeni Main Excel testindeki sync API
+varsayımı RED → await → GREEN; assertion silinmedi veya gevşetilmedi.
+Native Office eşdeğerliği yeni biçimli XLSX alanlarını da içerir.
+
+EN: After the 1ff handoff, live GitHub/Git evidence showed newer Main and a
+release-note conflict preventing checks. Locked files were taken verbatim
+after notifying the user. Merge 0ad9 retains all 29 Main notes plus our five,
+without rebase/force-push. A new Main test's sync assumption was corrected
+RED → await → GREEN, with every assertion retained. Native Office equality
+also covers the newly supported formatting fields.
+
+TR: Son kaynak `0ad9f159`, baz `c93e2544`: sabit 3+3+3 tamamlandı;
+6 F0 ve 3 açılış doğruluk kontrolleri, 15 tam JSON çifti geçti.
+Refresh 63,045 → 66,922 sn (+%6,15), CP aynı-sekme 8,857 → 8,452 sn,
+Orders 2,408 → 2,924 sn (+%21,43). Main'in CP kazancı iki kolda da bulunur.
+200 ms kabulü başarısız; ayrı GF 143,645 / 605,744 / 446,375 ms, Backlog
+167,512 / 1.248,511 / 179,623 ms. Bir CPU tanısı bu aşımı yeniden üretmedi;
+bir Chrome tanı çifti ortak tablo/yerleşim işi ve bekleme gösterdi, tam
+kök neden kanıtlanmadı. Bu tanılar normal kabul yerine kullanılmadı.
+B1 **açık**; ürün ödünleşimi kabul edilmedi ve merge yok.
+
+EN: The final current-Main cohort passes correctness and exact projection
+bytes but fails responsiveness. Refresh regresses 6.15%, same-tab Orders
+21.43%; the complete remaining causes are unresolved. Separate diagnostics
+are not acceptance replacements. B1 stays open; no product acceptance or merge.
+
+TR/EN: İlgili kontroller / relevant checks: **203 dosya / 1,494 test PASS**,
+failure/skip/cancel 0; i18n 0/0; 34 release notes PASS.
+[Son rapor / final report](phase-5-review2-main-current-report.md),
+[normal seri / normal cohort](phase-5-review2-main-current-results.json),
+[tanısal profiller / diagnostic profiles](phase-5-review2-current-profiles.json).
+Bu yeni delta bağımsız inceleme almış sayılmaz; son SHA PR'da sabitlenir. /
+This new delta is not independently reviewed; its final SHA is pinned in the PR.

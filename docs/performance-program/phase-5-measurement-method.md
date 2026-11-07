@@ -1,10 +1,10 @@
 # Faz 5 · Ölçüm koşulları / Measurement conditions
 
 TR/EN: Güncel ikinci-inceleme sonucu / Latest second-review result:
-[phase-5-review2-report.md](phase-5-review2-report.md).
-Son sabit 3+3+3 seri `fa580f89` üzerinde tamamlandı; doğruluk geçti,
-performans kabulü başarısız. / The final fixed cohort passed correctness,
-failed responsiveness. Aşağıdaki eski seriler tarihsel kanıttır. /
+[phase-5-review2-main-current-report.md](phase-5-review2-main-current-report.md).
+Son sabit 3+3+3 seri `c93e2544` bazına karşı `0ad9f159` üzerinde tamamlandı;
+doğruluk geçti, performans kabulü başarısız. / The latest fixed cohort
+passed correctness, failed responsiveness. Aşağıdaki eski seriler tarihsel kanıttır. /
 Earlier cohorts below remain historical evidence.
 
 TR: Bu belge bir performans kabulü veya kök neden onayı değildir. Sonuçlar
