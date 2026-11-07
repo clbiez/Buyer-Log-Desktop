@@ -9,6 +9,7 @@ const { fork } = require('node:child_process');
 const { PowerBiImportDashboardConnector, createDashboardCheckpointStore,
   createDashboardRefreshManifest, applyDashboardBatchResult, assertDashboardManifestComplete } = require('../server/lib/power-bi-import-dashboard');
 const { createFixture, identity, assertEquivalent } = require('../scripts/lib/powerbi-checkpoint-fixture');
+const { createHash } = require('node:crypto');
 
 const helper = path.join(__dirname, 'helpers/powerbi-checkpoint-process.cjs');
 
@@ -89,6 +90,24 @@ for (const scenario of ['steady', 'split-retry']) {
       if (boundary === baseline.checkpoints) assert.equal(resumed.queriedCodes.length, 0);
     }
   });
+
+  test(`INT-06 ${scenario}: repeated crashes in one refresh preserve every prior durable batch`, async t => {
+    const config = { orders: 12, batchSize: 4, scenario }, root = temp(t);
+    const fixture = createFixture(config);
+    let previousCount = 0;
+    for (let index = 0; index < (scenario === 'steady' ? 3 : 7); index += 1) {
+      await subprocess({ ...config, root, killAt: 1 });
+      const saved = createDashboardCheckpointStore({ root, userId: 'synthetic' }).load();
+      assert.ok(saved.processedOrders > previousCount, 'each new process commits another batch');
+      const states = fixture.expected.orderStates;
+      for (const [code, state] of Object.entries(saved.orderStates)) assert.equal(state, states[code]);
+      assert.deepEqual(saved.rows, fixture.expected.rows.filter(row => saved.orderStates[identity(row['Sipariş Kod'])]));
+      previousCount = saved.processedOrders;
+    }
+    const resumed = await subprocess({ ...config, root });
+    assert.equal(resumed.queriedCodes.length, 0, 'last durable batch completes the same refresh');
+    assertEquivalent(resumed.result, fixture.expected);
+  });
 }
 
 test('INT-06 cancellation before query and between split batches persists then resumes identically', async t => {
@@ -136,7 +155,10 @@ test('INT-06 cancellation inside query/retry never marks unfinished orders termi
 test('INT-06 frozen schema-v1 checkpoint resumes all three terminal states without reinterpretation', async t => {
   const root = temp(t), fixture = createFixture({ orders: 12, batchSize: 4, scenario: 'split-retry' });
   const store = createDashboardCheckpointStore({ root, userId: 'synthetic' });
-  fs.copyFileSync(path.join(__dirname, 'fixtures/powerbi-checkpoint-v1.json'), store.file);
+  const frozenFile = path.join(__dirname, 'fixtures/powerbi-checkpoint-v1.json');
+  assert.equal(createHash('sha256').update(fs.readFileSync(frozenFile)).digest('hex'),
+    '8cb6fc65977e761d6ba75c3f7958dfa22d59ef8bab2fe16690e5c1b58a2c4840', 'v1 fixture must remain frozen');
+  fs.copyFileSync(frozenFile, store.file);
   const saved = store.load();
   assert.equal(saved.schemaVersion, 1);
   assert.deepEqual([saved.successfulOrders, saved.notFoundOrders, saved.failedOrders], [8, 2, 1]);

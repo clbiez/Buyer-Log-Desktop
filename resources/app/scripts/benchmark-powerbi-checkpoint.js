@@ -6,11 +6,10 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const assert = require('node:assert/strict');
-const { execFileSync } = require('node:child_process');
-const { createHash } = require('node:crypto');
 const { performance } = require('node:perf_hooks');
 const { createFixture, assertEquivalent, digest } = require('./lib/powerbi-checkpoint-fixture');
 const { observeCheckpointWrites } = require('./lib/powerbi-checkpoint-metrics');
+const { fileSha, captureSource, assertSourceUnchanged, acquireMeasurementLock } = require('./lib/powerbi-checkpoint-provenance');
 
 function parseArgs(args) {
   const flags = new Map();
@@ -28,16 +27,18 @@ function parseArgs(args) {
     appRoot: path.resolve(flags.get('--app-root') || path.join(__dirname, '..')), output: flags.get('--output') };
 }
 
-const fileSha = file => createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const harnessSha = () => digest([fileSha(__filename), fileSha(path.join(__dirname, 'lib/powerbi-checkpoint-fixture.js')),
-  fileSha(path.join(__dirname, 'lib/powerbi-checkpoint-metrics.js'))]);
+  fileSha(path.join(__dirname, 'lib/powerbi-checkpoint-metrics.js')), fileSha(path.join(__dirname, 'lib/powerbi-checkpoint-provenance.js'))]);
 
 async function run(options) {
+  const release = acquireMeasurementLock();
+  try { return await measure(options); } finally { release(); }
+}
+
+async function measure(options) {
   const modulePath = path.join(options.appRoot, 'server/lib/power-bi-import-dashboard.js');
-  const moduleSha256 = fileSha(modulePath);
+  const target = captureSource(options.appRoot);
   const harnessSha256 = harnessSha();
-  let revision = null;
-  try { revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: options.appRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch (_) { /* source hash remains authoritative */ }
   const { PowerBiImportDashboardConnector, createDashboardCheckpointStore } = require(modulePath);
   const fixture = createFixture(options), transport = fixture.transport({ trace: false });
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'powerbi-checkpoint-bench-'));
@@ -45,6 +46,7 @@ async function run(options) {
   const observer = observeCheckpointWrites(root);
   let checkpoints = 0, progressEvents = 0;
   let storeSaveWallMs = 0, storeSaveCpuUserMs = 0, storeSaveCpuSystemMs = 0;
+  let completed = false;
   try {
     const connector = new PowerBiImportDashboardConnector({ transport, batchSize: options.batchSize, maxRetries: 1, backoffMs: 1 });
     const cpu = process.cpuUsage(), start = performance.now();
@@ -64,7 +66,7 @@ async function run(options) {
     // Capture before load/oracle/hash allocation. Linux/macOS Node reports KiB.
     const peakRssBytes = process.resourceUsage().maxRSS * 1024;
     observer.restore();
-    assert.equal(fileSha(modulePath), moduleSha256, 'Target source changed during measurement');
+    assertSourceUnchanged(options.appRoot, target);
     assert.equal(harnessSha(), harnessSha256, 'Harness source changed during measurement');
     assert.ok(observer.metrics.calls > 0, 'No supported checkpoint writes observed');
     const saved = store.load();
@@ -73,8 +75,9 @@ async function run(options) {
     const files = fs.readdirSync(root).filter(name => fs.statSync(path.join(root, name)).isFile());
     const finalCheckpointBytes = files.reduce((sum, name) => sum + fs.statSync(path.join(root, name)).size, 0);
     const amplification = observer.metrics.bytes / finalCheckpointBytes;
+    completed = true;
     return { schemaVersion: 1, stage: 'preparation-rehearsal', measuredAt: new Date().toISOString(),
-      target: { appRoot: options.appRoot, revision, moduleSha256 }, harnessSha256,
+      target, harnessSha256,
       environment: { node: process.version, platform: process.platform, arch: process.arch,
         cpu: os.cpus()[0].model, availableParallelism: os.availableParallelism(), peakRssMethod: 'process.resourceUsage().maxRSS KiB × 1024; process lifetime before oracle/load' },
       fixture: { orders: options.orders, batchSize: options.batchSize, scenario: options.scenario, version: 1 },
@@ -89,12 +92,28 @@ async function run(options) {
         'Logical successful sync writeFileSync/appendFileSync payload bytes; no physical I/O or power-loss durability claim.',
         'CPU/wall cover refresh with real disk checkpoints and progress; RSS is process lifetime high water.',
         'Preparation only. Re-run paired before/after on post-885 Main; no forced GC or cold-cache claim.'] };
-  } finally { observer.restore(); fs.rmSync(root, { recursive: true, force: true }); }
+  } catch (error) {
+    error.measurement = { target, harnessSha256, scratchRoot: root,
+      checkpoints, progressEvents, transport: transport.stats, checkpointWrites: { ...observer.metrics } };
+    throw error;
+  } finally {
+    observer.restore();
+    if (completed) fs.rmSync(root, { recursive: true, force: true });
+  }
 }
 
 if (require.main === module) {
   (async () => {
-    const options = parseArgs(process.argv.slice(2)), report = await run(options);
+    const options = parseArgs(process.argv.slice(2));
+    let report;
+    try { report = await run(options); }
+    catch (error) {
+      report = { schemaVersion: 1, stage: 'preparation-rehearsal', measuredAt: new Date().toISOString(), parity: false,
+        fixture: { orders: options.orders, batchSize: options.batchSize, scenario: options.scenario, version: 1 },
+        ...error.measurement, failure: { code: error.code || 'BENCHMARK_FAILED', message: error.message, stack: error.stack } };
+      console.error(error);
+      process.exitCode = 1;
+    }
     const json = JSON.stringify(report, null, 2) + '\n';
     if (options.output) fs.writeFileSync(options.output, json);
     process.stdout.write(json);
