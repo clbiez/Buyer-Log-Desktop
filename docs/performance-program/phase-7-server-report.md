@@ -1,21 +1,21 @@
 # Faz 7 · Sunucu kalan işler / Remaining server work
 
-Ön koşul geçti: #885 main'e merge; baz #902 `63159fb3`. Bu teslim **merge öncesi** durur. TEST/STABLE yapılmadı. Üç bağımsız P1 PR kapsamı: DS-08; INT-04/05; INT-11. `public/**` değişmedi.
+Ön koşul geçti: #885 main'e merge; baz #902 `63159fb3`. Bu teslim **merge öncesi** durur. TEST/STABLE yapılmadı. DS-08, INT-04/05 ve INT-11 uygulandı; son kabul bekliyor. #909/#910/#911 yalnız kendi üretim/test deltalarını taşır; ortak 12 dosyanın sahibi `perf/phase7-shared-evidence` altyapı PR’ıdır. Paketleme ve son dal doğrulamaları [devir kaydında](phase-7-packaging-handoff.md); üretim kodu ve ölçümler tekrar değiştirilmedi. `public/**` değişmedi.
 
 [Ölçüm yöntemi / Method](phase-7-server-method.md) · [66 nihai ham kayıt ve özet / Final raw records](phase-7-server-results.json) · [Bağımsız inceleme / Independent review](phase-7-independent-review.md) · [TR/EN notlar ve gerçek PNG / Notes and actual PNGs](phase-7-release-notes.md).
 
 | Madde | Karar | Süre medyanı, ms (before → after) | Koşu başına max-gap medyanı, ms |
 | --- | --- | ---: | ---: |
-| DS-08 | Uygulandı; kabul edilen worker işleri | 374.920 → 404.012 | 319.655 → 47.562 |
-| DS-11 | **Atlandı: gerçek SMB/RTT ölçülemedi** | N/A | N/A |
-| INT-04 | Uygulandı; 300 tamamen yerel görsel | 21.809 → 3.548 | 12.726 → 12.166 |
-| INT-05 | Uygulandı; 200 × 4.100 byte, gerçek yerel pack yayını | 2851.865 → 257.209 | 13.284 → 11.177 |
-| INT-07 | **Atlandı: gerçek PLM oturumu/ölçümü yok** | N/A | N/A |
-| INT-10 | **Atlandı: upstream kapasite/kazanç doğrulanmadı** | Beş sahte upload: 204.993 → 204.512 | 12.110 → 10.946 |
-| INT-11 | Uygulandı; beş küçük EML, 5 → 2 ayrık süreç | 681.646 → 273.170 | 18.886 → 18.077 |
-| ADMIN-02 | **Atlandı: korumalarla birlikte güvenli I/O kazancı kanıtlanmadı** | %0 kontrol: 1036.409 → 1023.737 | 13.219 → 13.138 |
+| DS-08 | Uygulandı; son kabul bekliyor (worker admission) | 374.920 → 404.012 | 319.655 → 47.562 |
+| DS-11 | **Açık: gerekli gerçek SMB/RTT ortamı ölçülemedi** | N/A | N/A |
+| INT-04 | Uygulandı; son kabul bekliyor (300 yerel görsel) | 21.809 → 3.548 | 12.726 → 12.166 |
+| INT-05 | Uygulandı; son kabul bekliyor (200 yerel pack girdisi) | 2851.865 → 257.209 | 13.284 → 11.177 |
+| INT-07 | **Açık: gerekli gerçek PLM ortamı ölçülemedi** | N/A | N/A |
+| INT-10 | **Açık: upstream kapasitesi/kazanç doğrulanmadı** | Beş sahte upload: 204.993 → 204.512 | 12.110 → 10.946 |
+| INT-11 | Uygulandı; son kabul bekliyor (beş küçük EML) | 681.646 → 273.170 | 18.886 → 18.077 |
+| ADMIN-02 | **Açık: güvenli kazanç gösteren aday yok; kontrol süreleri hızlanma kanıtı değil** | %0 kontrol: 1036.409 → 1023.737 | 13.219 → 13.138 |
 
-EN: Four items are implemented in three separate changes. DS-11/INT-07 lack required real services; INT-10 lacks upstream capacity evidence; ADMIN-02 has no demonstrated safe I/O improvement. Skipped items remain open. Unchanged controls are not speedup claims.
+EN: DS-08, INT-04/05 and INT-11 are implemented, pending final acceptance. The shared evidence PR owns the common files; each dependent production PR owns only its production/test delta. DS-11/INT-07 lack required real services; INT-10 lacks upstream capacity evidence; ADMIN-02 has no demonstrated safe I/O improvement. Skipped items remain open. Unchanged controls are not speedup claims.
 
 ## DS-08 — dayanıklılık ve ölçülen ödünleşim
 
@@ -58,10 +58,12 @@ EN: Five small reports use two job-local processes. Priority reduces the short a
 
 ## Doğrulama ve teslim
 
-- Tam `npm test`: 1.294 dosya, 8.937 test; **8.872 PASS, 0 fail, 0 cancel, 65 platform/opt-in skip**, 115.4s. Skip'ler başarılı zorunlu Windows/soak doğrulaması sayılmaz. İki eski çevrim fixture-preload hatasıyla durdu: altı ve bir mevcut test; ikisi de değişmemiş bazda çoğaltıldı. Son preloader normal temp/LOCAL_DATA default politikasını korur; son tam çevrim exit 0.
+- **Tarihsel birleşik ağaç** tam `npm test` (üç bağımsız dalın tam regresyonu değildir): 1.294 dosya, 8.937 test; **8.872 PASS, 0 fail, 0 cancel, 65 platform/opt-in skip**, 115.4s. Skip'ler başarılı zorunlu Windows/soak doğrulaması sayılmaz. İki eski çevrim fixture-preload hatasıyla durdu: altı ve bir mevcut test; ikisi de değişmemiş bazda çoğaltıldı. Son preloader normal temp/LOCAL_DATA default politikasını korur; son tam çevrim exit 0.
 - Birleşik ilgili paket: 65/65 PASS. Ayrık PR kollarının hedefli sonuçları artifact manifestinde. Bağımsız ikinci model incelemesi ve P1 kapanış testi tamamlandı.
 - i18n yeni/baseline: 0/0. Değişmemiş pending release notes: 38 kayıt doğrulandı. Kullanıcı sınırı gereği yeni TR/EN notları ve PNG'ler docs altında; public ağacı aynı.
 - Gerçek post-change Chromium / demo Koleksiyon: TR/açık ve EN/koyu; altı satır, owner-editable scope, 12 katalog, dil/tema assertion ve JS errors=[] kontrolleri geçti. PNG'ler agent tarafından açılıp incelendi. Runtime smoke'dur; büyük DB/SMB/PLM veya gecikme kanıtı değildir.
 - Üç ayrı taslak PR, main'e merge edilmez. TEST yapılmadı. STABLE yapılmadı. CI durumunu PR üzerindeki gerçek check sonucu belirler; yerel full test CI yerine geçmez.
 
-EN: Full npm test completes with 8,872 passes, zero failures/cancellations and 65 explicit platform/opt-in skips. Real bilingual post-change demo screenshots were inspected. Three isolated draft PRs stop before merge; no TEST/STABLE publication. Remaining skipped items are open, and local CI claims are kept separate from actual GitHub check results.
+EN: The historical combined-tree full npm test completed with 8,872 passes, zero failures/cancellations and 65 explicit platform/opt-in skips. Real bilingual post-change demo screenshots were inspected. Three isolated draft PRs stop before merge; no TEST/STABLE publication. Remaining skipped items are open, and local CI claims are kept separate from actual GitHub check results.
+
+TR/EN: Paketleme sonrası her nihai üretim dalının tam test ve gerçek GitHub checks sonucu ayrı kaydedilir; birleşik sonuç onların yerine kullanılamaz. / Each final production branch receives its own full regression and actual GitHub checks; the historical combined result is not a substitute. [Devir / Handoff](phase-7-packaging-handoff.md).
