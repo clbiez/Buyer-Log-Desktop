@@ -1,6 +1,11 @@
 # #901 — tek bağımsız Codex inceleme paketi
 
-**Durum: paket hazır; bağımsız inceleme henüz yapılmadı.** Özinceleme bağımsız onay sayılmaz. Bu paket Claude'a veya başka bir üretim düzeltmesine bağımlı değildir. Yeni optimizasyon, ikinci PR, merge, TEST veya STABLE yetkisi vermez.
+**Güncel durum: tek bağımsız ikinci model incelemesi tamamlandı.** `gpt-6-astra`,
+`b50a9d91bf9935ca89347ea6a1bc20fbb23ab5df` üzerinde raporlanabilir P1/P2
+bulmadı. Aşağıdaki paket o dondurulmuş ilk kabul kapsamının tarihsel kaydıdır;
+#912 sonrası normal Main entegrasyonu ve yeni gerçek doğrulamalar
+[ayrı kapanış ekindedir](2026-11-07-pricing-post-912-acceptance.md).
+Bu kayıt GitHub `APPROVED` submission veya TEST/STABLE yetkisi değildir.
 
 ## Dondurulmuş kapsam
 
@@ -32,3 +37,23 @@ Son komut boş olmalıdır. Dondurulmuş üretim/test/not diff'inin kayıpsız k
 8. **Sahiplik ve release notları:** Main'in 38 ve önceki head'in 34 not nesnesi korunur; birleşim 40'tır. İki kendi TR/EN notu ve gerçek post-change PNG'ler aynı kalır. Server ağacı, app-main.js, index.html, perf-runtime.js, CSS, model-image-cache.js, canonical alanlar, runner, i18n guard/baseline ve #906/#908 kodu Main ile eşittir. Ortak next.json dışında bu PR'larla dosya çakışması yoktur. Motion+ ve reduced-motion sözleşmeleri değiştirilmez.
 
 P1/P2 bulgu varsa dosya/satır veya sembol, somut bozulan davranış, tekrarlanabilir girdi ve en küçük öneriyi bildir. Bilinen açık kapsamı yeni regresyon diye sınıflandırma; kanıtlanmamış runtime davranışını onaylama. Son inceleme SHA'sını ve kalan belirsizlikleri açıkça yaz. Gerekli doğrulama/bağımsız inceleme tamamlanmadan merge yoktur; TEST/STABLE yayımlanmaz.
+
+## Tamamlanan tek inceleme / Completed independent review
+
+- Owner indeksi yalnız senkron okuma boyunca yaşar ve `finally` ile bırakılır;
+  owner/ilk eşleşme/legacy/grouped override sınırları korunur.
+- Üretici karnesinin dar hesabı 40 seed'li parity testiyle aynı normalizasyon,
+  duplicate/drop, tied wins ve model indeksini korur.
+- Arama yalnız navigasyonu yeniler; aktif talep, detay, editör ve commit yolu
+  korunur. Ön Maliyet aynı motor/FX snapshot/yuvarlama sırasıyla bütün toplamları
+  hesaplar; azaltılan iş satır DOM yenilemesidir.
+- İnceleyen kaynak/test/CI kayıtlarını okudu; test/benchmark çalıştırmadı,
+  sıkıştırılmış ham logları ve PNG'leri bağımsız doğrulamadı. CPR-06 DOM
+  pencerelemesi açık kapsamdır, yeni regresyon bulgusu değildir.
+
+One independent read-only second-model review found no reportable P1/P2 at the
+frozen head above. It checked owner isolation, lookup lifetime, pricing parity,
+search/editor retention and unchanged financial totals. Tests/benchmarks and
+PNG/raw-log verification were not independently rerun. The post-#912 integration
+does not change any of the six measured pricing source files; it imports the
+already reviewed Orders/profiler Main change and preserves both note sets.
