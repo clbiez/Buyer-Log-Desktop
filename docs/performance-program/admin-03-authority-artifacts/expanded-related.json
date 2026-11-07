@@ -1,0 +1,17 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "user-access",
+    "user-management",
+    "iam",
+    "credential",
+    "access-area",
+    "security-hardening"
+  ],
+  "TMPDIR": "/tmp/buyerlog-authority-expanded-related-_s1pr9uv",
+  "returncode": 1,
+  "elapsedSeconds": 13.701488018035889,
+  "testChange": "sessionProfile function boundary adapts to optional store parameter; all original assertions retained"
+}

@@ -1,0 +1,11 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "local-iam-migration-authority"
+  ],
+  "TMPDIR": "/tmp/buyerlog-auth-fixture-red-h6pcp4kw",
+  "returncode": 1,
+  "expected": "new sibling-isolation fixture regression fails before fixture boundary correction"
+}

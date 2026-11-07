@@ -1,0 +1,18 @@
+{
+  "reviewer": "gpt-6-astra",
+  "generalRounds": 1,
+  "reviewedCodeCommit": "e49df45936383e876431bad11c825933b020821e",
+  "findingsP1P2": [],
+  "narrowClosures": [
+    "ERP test locates actual session function, preserving credential/access/status assertions",
+    "Per-fixture installation family isolation; seven original recovery tests retained plus deterministic sibling case"
+  ],
+  "integratedCodeCommit": "8fc8208654b4cb0bf6ae76cf3d65b7bb3fbfde6e",
+  "productionModuleAnd16NativeTestsUnchanged": true,
+  "limits": [
+    "No reviewer test/browser/benchmark run",
+    "No deployed endpoint exploit proved",
+    "No new commit-time guard after every asynchronous route",
+    "No separate inherited-grant scenario among the16 new native cases"
+  ]
+}
