@@ -148,7 +148,8 @@
     "observerTraceFiles": [
       "fx-trace-2883.json",
       "fx-trace-2903.json"
-    ]
+    ],
+    "archive": "exact-missing-startup.tar.gz"
   },
   {
     "directory": "buyerlog-startup-fx-exact-overlay-valid",
@@ -239,6 +240,7 @@
     "observerTraceFiles": [
       "fx-trace-5077.json",
       "fx-trace-5107.json"
-    ]
+    ],
+    "archive": "canonical-startup.tar.gz"
   }
 ]

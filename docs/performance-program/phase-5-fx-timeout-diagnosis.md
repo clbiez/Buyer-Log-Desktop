@@ -204,7 +204,7 @@ resmî serinin yerine geçmez ve hızlanma iddiası oluşturmaz.
 Kanonik geçerli KUR ile FX queueWait **0.022–0.154 ms**; ilk görev MAIN
 params serialization **0.045 ms**, postMessage **5.064 ms**, native duration
 **282.678 ms**, worker execution **276.592 ms**. Dört sonraki kontrol revision'ı
-artırmaz. Gerçek kalıcı [FX store](phase-5-fx-timeout-evidence/buyerlog-startup-fx-canonical-valid/final-fx-store.json)
+artırmaz. Gerçek kalıcı [FX store](phase-5-fx-timeout-evidence/fx-final-store.json)
 revision **1**, source fingerprint
 `466eb00813b0690828d1e42d813bc278b4c8d3e73417ef1da2bbfd04ac2931f3` ve Kasım
 USD=1 / TRY=40 / EUR=0.95 içerir. Bu taze F0 store'u, önceden revision 1 ile
@@ -283,3 +283,19 @@ doğrulamaları eklenmiştir. Source hash'leri manifestte ayrıdır. Eski başar
 Office deneyi ve kısa yük serisi `matrix-01.tar.gz` / `matrix-02.tar.gz`,
 ek keşif açılışları `supplemental-startups.tar.gz` içindedir. Ham JSON/log
 baytları SHA manifestiyle korunur; CPU profiler açılmamıştır.
+
+Ham JSON ve terminal logları, terminalin kendi whitespace'i dahil değiştirilmeden
+arşivlenmiştir. [Manifest](phase-5-fx-timeout-evidence/manifest.json) hem arşivlerin
+hem içlerindeki her dosyanın açılmış byte/SHA değerini saklar. `matrix-03.tar.gz`
+tam nihai matrisi, `canonical-startup.tar.gz` ve `exact-missing-startup.tar.gz`
+nihai 30k tekrarlarını, `validation-logs.tar.gz` bütün RED/GREEN ve test loglarını
+içerir. Örneğin saklanmış matrisi yeniden doğrulamak için:
+
+```sh
+# Repo kökünden; bu işlem benchmark çalıştırmaz.
+mkdir -p /tmp/buyerlog-fx-evidence-replay
+tar -xzf docs/performance-program/phase-5-fx-timeout-evidence/matrix-03.tar.gz \
+  -C /tmp/buyerlog-fx-evidence-replay
+node resources/app/scripts/diagnose-fx-timeout.js verify \
+  /tmp/buyerlog-fx-evidence-replay/matrix-03
+```
