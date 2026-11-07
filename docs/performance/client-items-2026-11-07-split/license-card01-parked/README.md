@@ -38,8 +38,11 @@ reason; license functional output checks remain available without that flag.
 The screenshot tool keeps license draft/reopen/discard checks, parks only the
 license identity assertion, and no longer overwrites its historical license PNG.
 
-All frozen measurements, profiles, RED/GREEN captures, validation logs and five
-release PNGs remain byte-identical. Their exact Git blobs are recorded in the
+All frozen measurements, profiles, RED/GREEN captures and validation logs remain
+byte-identical. All five frozen release PNGs are retained byte-exact under
+`original-release-pngs/` and in the original commits. The two still-active card
+images were recaptured after the later narrow directory-read fix; this does not
+rewrite the frozen captures. Their exact Git blobs are recorded in the
 manifest; the old P2 closure and full-suite green results describe the frozen
 feature, not this removal delta. Both license release records become historical;
 their PNGs remain preserved but are no longer active release-note references.
