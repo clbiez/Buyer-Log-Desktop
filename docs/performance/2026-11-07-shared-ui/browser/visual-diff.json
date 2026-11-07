@@ -1,0 +1,82 @@
+[
+  {
+    "view": "cp-en-modal.png",
+    "changedPixels": 14922,
+    "bounds": [
+      217,
+      183,
+      1600,
+      237
+    ]
+  },
+  {
+    "view": "cp-en.png",
+    "changedPixels": 7830,
+    "bounds": [
+      232,
+      184,
+      1592,
+      222
+    ]
+  },
+  {
+    "view": "cp-tr-modal.png",
+    "changedPixels": 14969,
+    "bounds": [
+      217,
+      180,
+      1600,
+      237
+    ]
+  },
+  {
+    "view": "cp-tr.png",
+    "changedPixels": 7911,
+    "bounds": [
+      232,
+      184,
+      1592,
+      222
+    ]
+  },
+  {
+    "view": "orders-en-modal.png",
+    "changedPixels": 18641,
+    "bounds": [
+      217,
+      175,
+      1600,
+      237
+    ]
+  },
+  {
+    "view": "orders-en.png",
+    "changedPixels": 10602,
+    "bounds": [
+      232,
+      184,
+      1592,
+      222
+    ]
+  },
+  {
+    "view": "orders-tr-modal.png",
+    "changedPixels": 18349,
+    "bounds": [
+      217,
+      175,
+      1600,
+      237
+    ]
+  },
+  {
+    "view": "orders-tr.png",
+    "changedPixels": 10477,
+    "bounds": [
+      232,
+      184,
+      1592,
+      222
+    ]
+  }
+]

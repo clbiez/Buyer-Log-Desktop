@@ -13,13 +13,8 @@
   function update(wrap){
     const table=wrap.querySelector('table'),thead=table&&table.tHead;
     if(!thead||!wrap.clientWidth)return;
-    const viewport=wrap.getBoundingClientRect();
-    const frozenEdge=thead.querySelector('tr.colRow th.frzLEdge');
-    // İki bölmeli dondurmada donmuş bölme kendi içinde kayar; sınırı bölme genişliğidir.
-    const pane=Number(table.getAttribute('data-bl-freeze-pane'))||0;
-    const paneRight=pane?viewport.left+wrap.clientLeft+pane:Infinity;
-    const freezeRight=frozenEdge?Math.min(frozenEdge.getBoundingClientRect().right,paneRight):viewport.left;
-    const frozenView={left:viewport.left,right:Math.min(viewport.right,paneRight)};
+    // Prepare new captions before measuring; header renderers replace rows.
+    const labels=[];
     thead.querySelectorAll('tr.groupRow th[data-grp]').forEach(th=>{
       let label=th.querySelector(':scope > .blGroupFollowLabel');
       if(!label){
@@ -30,12 +25,32 @@
         th.insertBefore(label,nodes[0]);
         nodes.forEach(node=>label.appendChild(node));
       }
+      labels.push({th,label});
+    });
+    const viewport=wrap.getBoundingClientRect();
+    const frozenEdge=thead.querySelector('tr.colRow th.frzLEdge');
+    // İki bölmeli dondurmada donmuş bölme kendi içinde kayar; sınırı bölme genişliğidir.
+    const pane=Number(table.getAttribute('data-bl-freeze-pane'))||0;
+    const paneRight=pane?viewport.left+wrap.clientLeft+pane:Infinity;
+    const freezeRight=frozenEdge?Math.min(frozenEdge.getBoundingClientRect().right,paneRight):viewport.left;
+    const frozenView={left:viewport.left,right:Math.min(viewport.right,paneRight)};
+    const groupHeight=thead.querySelector('tr.groupRow')?.offsetHeight||0;
+    const columns=groupHeight?[...thead.querySelectorAll('tr.colRow th')]:[];
+    const measured=labels.map(({th,label})=>{
       const frozen=th.classList.contains('frzL');
       const result=computeTrack(th.getBoundingClientRect(),frozen?frozenView:viewport,freezeRight,frozen);
-      label.style.visibility=result.visible?'visible':'hidden';
+      return {label,result};
+    });
+    // Wrapping captions can change the band height after the renderer's rAF.
+    const top=groupHeight+'px';
+    columns.forEach(th=>{if(th.style.top!==top)th.style.top=top;});
+    measured.forEach(({label,result})=>{
+      const visibility=result.visible?'visible':'hidden';
+      if(label.style.visibility!==visibility)label.style.visibility=visibility;
       if(result.visible){
-        label.style.maxWidth=result.maxWidth+'px';
-        label.style.transform='translate3d('+result.dx+'px,0,0)';
+        const maxWidth=result.maxWidth+'px',transform='translate3d('+result.dx+'px, 0px, 0px)';
+        if(label.style.maxWidth!==maxWidth)label.style.maxWidth=maxWidth;
+        if(label.style.transform!==transform)label.style.transform=transform;
       }
     });
   }
