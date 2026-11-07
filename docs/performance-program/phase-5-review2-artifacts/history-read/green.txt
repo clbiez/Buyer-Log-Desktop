@@ -1,0 +1,29 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js refresh-history
+
+[Buyer Log tests] 4 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (4 dosya)
+✔ ASAS & ANTREPO history records can be deleted with optimistic revision control (35.824249ms)
+✔ history button is renamed in both languages and selected records expose a delete action (93.576751ms)
+✔ v6.17 Antrepo row order changes do not create false history details (7.162423ms)
+✔ v6.17 compares every real source field with explicit previous and new values (2.509787ms)
+✔ v6.17 preserves duplicate partial rows while matching unchanged copies first (0.65665ms)
+✔ v6.17 history UI is independent of screen CP filters and exposes all subdetails (6.974361ms)
+✔ reading already-trimmed history preserves revision, timestamp and file bytes (437.344886ms)
+✔ oversized legacy history is trimmed once and keeps the original total (318.679044ms)
+✔ a legacy string total is normalized once without repeated writes (218.521816ms)
+✔ v4.55 ASAS & ANTREPO history persists only the latest 10 records and supports clear all (591.063122ms)
+✔ v4.55 history modal includes Delete all and the server exposes a collection delete endpoint (17.148627ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1341.434224
+[Buyer Log tests] Batch 1/1 süresi: 1.4s.
+
+[Buyer Log tests] PASS — 4 test dosyası (1.4s).

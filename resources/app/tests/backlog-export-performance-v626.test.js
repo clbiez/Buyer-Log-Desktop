@@ -11,10 +11,17 @@ const CSS=fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
 const SERVER=fs.readFileSync(path.join(ROOT,'server','server.js'),'utf8');
 const PARSE=fs.readFileSync(path.join(ROOT,'server','lib','parse.js'),'utf8');
 
-test('v6.26 Backlog export no longer renders a preview panel',()=>{
+test('v6.26 Backlog export no longer renders a preview panel',async()=>{
   assert.doesNotMatch(APP,/previewLimit:'100'/);
-  assert.match(SERVER,/const previewLimit=Math\.min\(500/);
-  assert.match(SERVER,/totalRows:detailRows\.totalRows\|\|detailRows\.length/);
+  const capture=require('./helpers/computed-backlog-request'),tasks=require('../server/lib/compute-tasks'),parse=require('../server/lib/parse');
+  const capped=await capture({format:'json',previewLimit:'20000'});assert.equal(capped.parts.previewLimit,500);
+  const full=await capture({format:'json'});assert.equal(full.parts.previewLimit,0);
+  const orders=Array.from({length:600},(_,i)=>({ocode:4100000+i,model:'Demo',ccode:'01',colour:'Blue',season:'W6',countryRaw:'MISIR',manufacturer:'DEMO',buyerGrup:'DEMO',qty:1,kalan:1,fob:5,ex:new Date(2026,9,1),retail:new Date(2027,0,1),mb:new Date(2026,11,1)})),source={asasOrders:orders,antrepoMap:{}},grouped=parse.buildBacklogGrouped;
+  parse.buildBacklogGrouped=()=>{throw Error('Export must not build a grouped report');};
+  try{
+    const preview=tasks.buildBacklog('export',source,{...capped.parts,headers:['Sipariş Kod'],overrides:{}});assert.equal(preview.rows.length,500);assert.equal(preview.totalRows,600);
+    const complete=tasks.buildBacklog('export',source,{...full.parts,headers:['Sipariş Kod'],overrides:{}});assert.equal(complete.rows.length,600);assert.equal(complete.totalRows,600);
+  }finally{parse.buildBacklogGrouped=grouped;}
   const route=SERVER.slice(SERVER.indexOf("app.get('/api/backlog-export'"),SERVER.indexOf("app.post('/api/backlog-detail'"));
   assert.doesNotMatch(route,/buildBacklogGrouped\(/);
 });

@@ -44,13 +44,13 @@ test('LCW AI bilgisi: MB, Ex-Factory ile karıştırılmaz', () => {
   }
 });
 
-test('hesaplanmış tablo → Excel: LCW AI çağrılmaz, değerler birebir, satır kırpılması reddedilir', () => {
+test('hesaplanmış tablo → Excel: LCW AI çağrılmaz, değerler birebir, satır kırpılması reddedilir', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-dq-'));
   const engine = { chat() { throw new Error('LCW AI çağrılmamalı'); } };
   const service = createOutputService({ engine, storeOptions: { root: path.join(dir, 'ai-outputs') } });
   const result = { columns: [{ label: 'MB (ay)', kind: 'text' }, { label: 'Kids', kind: 'number' }], rows: [['2026-08', 250], ['2026-09', null]], total: ['Toplam', 250] };
   const workbook = Q.toWorkbook(result, { title: 'MAG CU4E W6', lines: ['Veri: Siparişler — tüm kayıtlar'], lang: 'tr' });
-  const output = service.createTable('u1', { data: workbook, lang: 'tr' });
+  const output = (await service.createTable('u1', { data: workbook, lang: 'tr' }));
   assert.equal(output.format, 'xlsx');
   assert.match(output.draftId, /^[a-f0-9]{24}$/, 'düzenlenebilir taslak');
   const file = fs.readdirSync(path.join(dir, 'ai-outputs'), { recursive: true }).map(String).find(name => name.endsWith('.xlsx'));
@@ -66,7 +66,7 @@ test('hesaplanmış tablo → Excel: LCW AI çağrılmaz, değerler birebir, sat
 test('rota: /api/lcwai/outputs/table yalnız Buyer Log tablosunu kabul eder', () => {
   const routes = fs.readFileSync(path.join(ROOT, 'server', 'routes', 'lcwai-routes.js'), 'utf8');
   assert.match(routes, /app\.post\('\/api\/lcwai\/outputs\/table', express\.json\(\{ limit: '24mb' \}\)/);
-  assert.match(routes, /outputsOf\(\)\.createTable\(ownerOf\(req\), \{ data: body\.data, lang: body\.lang \}\)/);
+  assert.match(routes, /await outputsOf\(\)\.createTable\(ownerOf\(req\), \{ data: body\.data, lang: body\.lang,assertCurrent \}\)/);
 });
 
 test('LCW AI bilgisi: Merch Calendar gerçek takvimden türetilir; bugünkü LCW dönemi ve ay aralıkları verilir', () => {
