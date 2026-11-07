@@ -245,8 +245,14 @@
     const engine = typeof module === 'object' && module.exports ? require('./checklist-answer-merge-engine') : root.BLChecklistAnswerMergeEngine;
     state.applyingRemote = true;
     try {
-      s.answers = engine.merge(s.answers, payload, state.pendingAnswers);
-      if (root.BLCpAssistant && typeof root.BLCpAssistant.persistChecklistAnswers === 'function') root.BLCpAssistant.persistChecklistAnswers({ recovered: true });
+      const merged = engine.merge(s.answers, payload, state.pendingAnswers);
+      // Ortak kayıt yerel cevaplarla aynıysa kararlar değişmez: yeniden yazmak
+      // CP kararlarının tamamını geçersiz kılıp yeniden hesaplatıyordu (25 bin
+      // satırda ~6 sn). Okunamayan yerel kayıt kurtarılırken yazım korunur.
+      if (s.answerStoreError || !sameJson(merged, s.answers)) {
+        s.answers = merged;
+        if (root.BLCpAssistant && typeof root.BLCpAssistant.persistChecklistAnswers === 'function') root.BLCpAssistant.persistChecklistAnswers({ recovered: true });
+      }
     } finally {
       state.applyingRemote = false;
     }
