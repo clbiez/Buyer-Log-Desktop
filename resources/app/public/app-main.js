@@ -1054,9 +1054,13 @@ const _unifiedPriorityCache={cp:null,orders:null};
 // Tablo başına revizyon: bir tablonun verisi yüklenince diğerinin kararları
 // geçersiz sayılmaz (Siparişler yüklenince CP ≈1 sn boşuna yeniden hesaplanıyordu).
 const _unifiedPriorityTableRevision={cp:1,orders:1};
-window.BL_CP_DECISION_DATA_REVISION=()=>_unifiedPriorityTableRevision.cp;
+// Karar motoru girdisi olan CP SATIR verisinin revizyonu. Kişisel karar bağlamı
+// (checklist cevabı, kural) satır verisi değildir; tablo revizyonu artsa da bu artmaz.
+let _cpDecisionInputRevision=1;
+window.BL_CP_DECISION_DATA_REVISION=()=>_cpDecisionInputRevision;
 function invalidateUnifiedPriorityDecisions(reason,tables=null){
   _unifiedPriorityDataRevision+=1;
+  if(reason!=='personal-decision-context'&&(!Array.isArray(tables)||!tables.length||tables.includes('cp')))_cpDecisionInputRevision+=1;
   for(const key of Array.isArray(tables)&&tables.length?tables:['cp','orders']){_unifiedPriorityTableRevision[key]=(_unifiedPriorityTableRevision[key]||0)+1;_unifiedPriorityCache[key]=null;}
   window.BLPerf?.mark?.('UNIFIED_PRIORITY_INVALIDATED',{reason:reason||'data',revision:_unifiedPriorityDataRevision});
   // Global Flow Map CP/Orders verisini ızgara DOM'undan değil bu revizyondan izler.

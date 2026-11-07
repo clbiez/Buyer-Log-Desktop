@@ -570,11 +570,48 @@
     // Özel kontroller sipariş bazında değişir (kapsam koşulu): çağıran her
     // sipariş için hangilerinin geçerli olduğunu verir.
     const customFor = typeof context.customItemsFor === 'function' ? context.customItemsFor : () => [];
-    for (const analysis of list) {
+    // İsteğe bağlı sipariş katkısı önbelleği (analiz nesnesine bağlı). Çağıran,
+    // ayarlar/PLM/cevaplar gibi girdiler değiştiğinde yeni bir WeakMap verir veya
+    // etkilenen analizi siler; toplama sırası ve sonuç önbelleksiz yolla aynıdır.
+    const contributionCache = context.contributionCache instanceof WeakMap ? context.contributionCache : null;
+    const contributionOf = analysis => {
       const customItems = customFor(analysis);
       const itemContext = { settings, answers, customItems, plmEvidence: context.plmEvidence, managedItemIds: context.managedItemIds };
       const open = openItems(analysis, itemContext);
-      for (const entry of open) {
+      let answered = 0, plmAnswered = 0;
+      if (settings.enabled) {
+        // Cevaplanmış ve hâlâ geçerli olan kontroller: "bu kadarını hallettin".
+        const countResolved = item => {
+          const itemId = item.id;
+          const scopedContext = { ...itemContext, item };
+          const status = statusOf(analysis, itemId, scopedContext);
+          if (!isResolved(status)) return;
+          answered += 1;
+          const answer = answers[answerKey(analysis.orderKey, itemId)];
+          const direct = answer && normalizeStatus(answer.state);
+          const reusableKey = approvalScopeOf(scopedContext, itemId) === 'option' ? optionAnswerKey(analysis, itemId) : '';
+          const reusable = reusableKey ? answers[reusableKey] : null;
+          const reusableApproved = reusable && normalizeStatus(reusable.state) === 'approved';
+          if (!direct && !reusableApproved && !componentsFor(analysis, itemContext).length) plmAnswered += 1;
+        };
+        for (const item of customItems) countResolved(item);
+        for (const item of ITEMS) {
+          if (managedItemIds.has(item.id)) continue;
+          if (!itemApplies(item, settings.items[item.id], analysis, settings)) continue;
+          countResolved(item);
+        }
+      }
+      return { open, answered, plmAnswered };
+    };
+    for (const analysis of list) {
+      let contribution = contributionCache ? contributionCache.get(analysis) : null;
+      if (!contribution) {
+        contribution = contributionOf(analysis);
+        if (contributionCache) contributionCache.set(analysis, contribution);
+      }
+      answeredTotal += contribution.answered;
+      plmAnsweredTotal += contribution.plmAnswered;
+      for (const entry of contribution.open) {
         if (!buckets.has(entry.id)) buckets.set(entry.id, { id: entry.id, group: entry.group, tr: entry.tr, en: entry.en, questionTr: entry.questionTr, questionEn: entry.questionEn, rows: 0, qty: 0, rejected: 0, reopened: 0, plmOpen: 0, plmRejected: 0, orders: [] });
         const bucket = buckets.get(entry.id);
         bucket.rows += 1;
@@ -585,27 +622,6 @@
         if (entry.plm && entry.plm.state === 'rejected') bucket.plmRejected += 1;
         bucket.orders.push(analysis);
         openTotal += 1;
-      }
-      if (!settings.enabled) continue;
-      // Cevaplanmış ve hâlâ geçerli olan kontroller: "bu kadarını hallettin".
-      const countResolved = item => {
-        const itemId = item.id;
-        const scopedContext = { ...itemContext, item };
-        const status = statusOf(analysis, itemId, scopedContext);
-        if (!isResolved(status)) return;
-        answeredTotal += 1;
-        const answer = answers[answerKey(analysis.orderKey, itemId)];
-        const direct = answer && normalizeStatus(answer.state);
-        const reusableKey = approvalScopeOf(scopedContext, itemId) === 'option' ? optionAnswerKey(analysis, itemId) : '';
-        const reusable = reusableKey ? answers[reusableKey] : null;
-        const reusableApproved = reusable && normalizeStatus(reusable.state) === 'approved';
-        if (!direct && !reusableApproved && !componentsFor(analysis, itemContext).length) plmAnsweredTotal += 1;
-      };
-      for (const item of customItems) countResolved(item);
-      for (const item of ITEMS) {
-        if (managedItemIds.has(item.id)) continue;
-        if (!itemApplies(item, settings.items[item.id], analysis, settings)) continue;
-        countResolved(item);
       }
     }
 
