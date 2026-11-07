@@ -1,0 +1,490 @@
+[
+  {
+    "mode": "green",
+    "lang": "tr",
+    "theme": "light",
+    "errors": [],
+    "checks": [
+      "first order drill-down is styled without visiting Backlog",
+      "drawer close control works",
+      "Backlog reuses the shared link, request and original anchor"
+    ],
+    "initial": {
+      "backlogLoaded": false,
+      "sharedLinks": 0
+    },
+    "manufacturersReadyMs": 407.69999999925494,
+    "featureReadyMs": 40.799999999813735,
+    "drillReadyMs": 2005.9000000003725,
+    "drawer": {
+      "rootPosition": "fixed",
+      "drawerPosition": "absolute",
+      "display": "flex",
+      "rootRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1000
+      },
+      "drawerRect": {
+        "x": 320,
+        "y": 0,
+        "width": 1280,
+        "height": 1000
+      },
+      "tableRows": 500,
+      "title": "NILE KNIT · Tüm siparişler",
+      "subtitle": "Üreticiler · Sipariş alt detayı",
+      "closeTitle": "Kapat",
+      "tabCalls": [
+        "manufacturers"
+      ],
+      "backlogLoaded": false,
+      "sharedLinks": 1,
+      "resources": [
+        {
+          "url": "http://127.0.0.1:40859/backlog-plan-actual.css?v=7.0.339&h=e7a34375cbb956cb&rev=2",
+          "decodedBytes": 8404,
+          "transferBytes": 2610
+        }
+      ]
+    },
+    "cascade": {
+      "links": 1,
+      "same": true,
+      "beforeAnchor": true,
+      "requests": 1
+    },
+    "status": "passed"
+  },
+  {
+    "mode": "green",
+    "lang": "tr",
+    "theme": "dark",
+    "errors": [],
+    "checks": [
+      "first order drill-down is styled without visiting Backlog",
+      "drawer close control works",
+      "Backlog reuses the shared link, request and original anchor"
+    ],
+    "initial": {
+      "backlogLoaded": false,
+      "sharedLinks": 0
+    },
+    "manufacturersReadyMs": 453.5,
+    "featureReadyMs": 58.200000000186265,
+    "drillReadyMs": 1923.4000000003725,
+    "drawer": {
+      "rootPosition": "fixed",
+      "drawerPosition": "absolute",
+      "display": "flex",
+      "rootRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1000
+      },
+      "drawerRect": {
+        "x": 320,
+        "y": 0,
+        "width": 1280,
+        "height": 1000
+      },
+      "tableRows": 500,
+      "title": "NILE KNIT · Tüm siparişler",
+      "subtitle": "Üreticiler · Sipariş alt detayı",
+      "closeTitle": "Kapat",
+      "tabCalls": [
+        "manufacturers"
+      ],
+      "backlogLoaded": false,
+      "sharedLinks": 1,
+      "resources": [
+        {
+          "url": "http://127.0.0.1:40859/backlog-plan-actual.css?v=7.0.339&h=e7a34375cbb956cb&rev=2",
+          "decodedBytes": 8404,
+          "transferBytes": 2610
+        }
+      ]
+    },
+    "cascade": {
+      "links": 1,
+      "same": true,
+      "beforeAnchor": true,
+      "requests": 1
+    },
+    "status": "passed"
+  },
+  {
+    "mode": "green",
+    "lang": "en",
+    "theme": "light",
+    "errors": [],
+    "checks": [
+      "first order drill-down is styled without visiting Backlog",
+      "drawer close control works",
+      "Backlog reuses the shared link, request and original anchor"
+    ],
+    "initial": {
+      "backlogLoaded": false,
+      "sharedLinks": 0
+    },
+    "manufacturersReadyMs": 537.4000000003725,
+    "featureReadyMs": 90.80000000074506,
+    "drillReadyMs": 1705.300000000745,
+    "drawer": {
+      "rootPosition": "fixed",
+      "drawerPosition": "absolute",
+      "display": "flex",
+      "rootRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1000
+      },
+      "drawerRect": {
+        "x": 320,
+        "y": 0,
+        "width": 1280,
+        "height": 1000
+      },
+      "tableRows": 500,
+      "title": "NILE KNIT · All orders",
+      "subtitle": "Manufacturers · Order drill-down",
+      "closeTitle": "Close",
+      "tabCalls": [
+        "manufacturers"
+      ],
+      "backlogLoaded": false,
+      "sharedLinks": 1,
+      "resources": [
+        {
+          "url": "http://127.0.0.1:40859/backlog-plan-actual.css?v=7.0.339&h=e7a34375cbb956cb&rev=2",
+          "decodedBytes": 8404,
+          "transferBytes": 2610
+        }
+      ]
+    },
+    "cascade": {
+      "links": 1,
+      "same": true,
+      "beforeAnchor": true,
+      "requests": 1
+    },
+    "status": "passed"
+  },
+  {
+    "mode": "green",
+    "lang": "en",
+    "theme": "dark",
+    "errors": [],
+    "checks": [
+      "first order drill-down is styled without visiting Backlog",
+      "drawer close control works",
+      "Backlog reuses the shared link, request and original anchor"
+    ],
+    "initial": {
+      "backlogLoaded": false,
+      "sharedLinks": 0
+    },
+    "manufacturersReadyMs": 374.59999999962747,
+    "featureReadyMs": 34.59999999962747,
+    "drillReadyMs": 1852.5999999996275,
+    "drawer": {
+      "rootPosition": "fixed",
+      "drawerPosition": "absolute",
+      "display": "flex",
+      "rootRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1000
+      },
+      "drawerRect": {
+        "x": 320,
+        "y": 0,
+        "width": 1280,
+        "height": 1000
+      },
+      "tableRows": 500,
+      "title": "NILE KNIT · All orders",
+      "subtitle": "Manufacturers · Order drill-down",
+      "closeTitle": "Close",
+      "tabCalls": [
+        "manufacturers"
+      ],
+      "backlogLoaded": false,
+      "sharedLinks": 1,
+      "resources": [
+        {
+          "url": "http://127.0.0.1:40859/backlog-plan-actual.css?v=7.0.339&h=e7a34375cbb956cb&rev=2",
+          "decodedBytes": 8404,
+          "transferBytes": 2610
+        }
+      ]
+    },
+    "cascade": {
+      "links": 1,
+      "same": true,
+      "beforeAnchor": true,
+      "requests": 1
+    },
+    "status": "passed"
+  },
+  {
+    "mode": "delayed",
+    "lang": "tr",
+    "theme": "light",
+    "errors": [],
+    "checks": [
+      "shared CSS gates the first Manufacturers paint",
+      "first order drill-down is styled without visiting Backlog",
+      "drawer close control works",
+      "Backlog reuses the shared link, request and original anchor"
+    ],
+    "initial": {
+      "backlogLoaded": false,
+      "sharedLinks": 0
+    },
+    "delayed": {
+      "visibility": "hidden",
+      "featureLoaded": false,
+      "drawer": false
+    },
+    "manufacturersReadyMs": 779.4000000003725,
+    "featureReadyMs": 411.5,
+    "drillReadyMs": 1060.5,
+    "drawer": {
+      "rootPosition": "fixed",
+      "drawerPosition": "absolute",
+      "display": "flex",
+      "rootRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1000
+      },
+      "drawerRect": {
+        "x": 320,
+        "y": 0,
+        "width": 1280,
+        "height": 1000
+      },
+      "tableRows": 500,
+      "title": "NILE KNIT · Tüm siparişler",
+      "subtitle": "Üreticiler · Sipariş alt detayı",
+      "closeTitle": "Kapat",
+      "tabCalls": [
+        "manufacturers"
+      ],
+      "backlogLoaded": false,
+      "sharedLinks": 1,
+      "resources": [
+        {
+          "url": "http://127.0.0.1:40859/backlog-plan-actual.css?v=7.0.339&h=e7a34375cbb956cb&rev=2",
+          "decodedBytes": 8404,
+          "transferBytes": 2610
+        }
+      ]
+    },
+    "cascade": {
+      "links": 1,
+      "same": true,
+      "beforeAnchor": true,
+      "requests": 1
+    },
+    "status": "passed"
+  },
+  {
+    "mode": "delayed",
+    "lang": "tr",
+    "theme": "dark",
+    "errors": [],
+    "checks": [
+      "shared CSS gates the first Manufacturers paint",
+      "first order drill-down is styled without visiting Backlog",
+      "drawer close control works",
+      "Backlog reuses the shared link, request and original anchor"
+    ],
+    "initial": {
+      "backlogLoaded": false,
+      "sharedLinks": 0
+    },
+    "delayed": {
+      "visibility": "hidden",
+      "featureLoaded": false,
+      "drawer": false
+    },
+    "manufacturersReadyMs": 729,
+    "featureReadyMs": 395.40000000037253,
+    "drillReadyMs": 1734.2000000001863,
+    "drawer": {
+      "rootPosition": "fixed",
+      "drawerPosition": "absolute",
+      "display": "flex",
+      "rootRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1000
+      },
+      "drawerRect": {
+        "x": 320,
+        "y": 0,
+        "width": 1280,
+        "height": 1000
+      },
+      "tableRows": 500,
+      "title": "NILE KNIT · Tüm siparişler",
+      "subtitle": "Üreticiler · Sipariş alt detayı",
+      "closeTitle": "Kapat",
+      "tabCalls": [
+        "manufacturers"
+      ],
+      "backlogLoaded": false,
+      "sharedLinks": 1,
+      "resources": [
+        {
+          "url": "http://127.0.0.1:40859/backlog-plan-actual.css?v=7.0.339&h=e7a34375cbb956cb&rev=2",
+          "decodedBytes": 8404,
+          "transferBytes": 2610
+        }
+      ]
+    },
+    "cascade": {
+      "links": 1,
+      "same": true,
+      "beforeAnchor": true,
+      "requests": 1
+    },
+    "status": "passed"
+  },
+  {
+    "mode": "delayed",
+    "lang": "en",
+    "theme": "light",
+    "errors": [],
+    "checks": [
+      "shared CSS gates the first Manufacturers paint",
+      "first order drill-down is styled without visiting Backlog",
+      "drawer close control works",
+      "Backlog reuses the shared link, request and original anchor"
+    ],
+    "initial": {
+      "backlogLoaded": false,
+      "sharedLinks": 0
+    },
+    "delayed": {
+      "visibility": "hidden",
+      "featureLoaded": false,
+      "drawer": false
+    },
+    "manufacturersReadyMs": 708,
+    "featureReadyMs": 396.5,
+    "drillReadyMs": 1737.8999999994412,
+    "drawer": {
+      "rootPosition": "fixed",
+      "drawerPosition": "absolute",
+      "display": "flex",
+      "rootRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1000
+      },
+      "drawerRect": {
+        "x": 320,
+        "y": 0,
+        "width": 1280,
+        "height": 1000
+      },
+      "tableRows": 500,
+      "title": "NILE KNIT · All orders",
+      "subtitle": "Manufacturers · Order drill-down",
+      "closeTitle": "Close",
+      "tabCalls": [
+        "manufacturers"
+      ],
+      "backlogLoaded": false,
+      "sharedLinks": 1,
+      "resources": [
+        {
+          "url": "http://127.0.0.1:40859/backlog-plan-actual.css?v=7.0.339&h=e7a34375cbb956cb&rev=2",
+          "decodedBytes": 8404,
+          "transferBytes": 2610
+        }
+      ]
+    },
+    "cascade": {
+      "links": 1,
+      "same": true,
+      "beforeAnchor": true,
+      "requests": 1
+    },
+    "status": "passed"
+  },
+  {
+    "mode": "delayed",
+    "lang": "en",
+    "theme": "dark",
+    "errors": [],
+    "checks": [
+      "shared CSS gates the first Manufacturers paint",
+      "first order drill-down is styled without visiting Backlog",
+      "drawer close control works",
+      "Backlog reuses the shared link, request and original anchor"
+    ],
+    "initial": {
+      "backlogLoaded": false,
+      "sharedLinks": 0
+    },
+    "delayed": {
+      "visibility": "hidden",
+      "featureLoaded": false,
+      "drawer": false
+    },
+    "manufacturersReadyMs": 696.6999999992549,
+    "featureReadyMs": 398.69999999925494,
+    "drillReadyMs": 1756.699999999255,
+    "drawer": {
+      "rootPosition": "fixed",
+      "drawerPosition": "absolute",
+      "display": "flex",
+      "rootRect": {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 1000
+      },
+      "drawerRect": {
+        "x": 320,
+        "y": 0,
+        "width": 1280,
+        "height": 1000
+      },
+      "tableRows": 500,
+      "title": "NILE KNIT · All orders",
+      "subtitle": "Manufacturers · Order drill-down",
+      "closeTitle": "Close",
+      "tabCalls": [
+        "manufacturers"
+      ],
+      "backlogLoaded": false,
+      "sharedLinks": 1,
+      "resources": [
+        {
+          "url": "http://127.0.0.1:40859/backlog-plan-actual.css?v=7.0.339&h=e7a34375cbb956cb&rev=2",
+          "decodedBytes": 8404,
+          "transferBytes": 2610
+        }
+      ]
+    },
+    "cascade": {
+      "links": 1,
+      "same": true,
+      "beforeAnchor": true,
+      "requests": 1
+    },
+    "status": "passed"
+  }
+]

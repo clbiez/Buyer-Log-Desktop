@@ -1,0 +1,15 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "release:notes:validate"
+  ],
+  "revision": "8fc8208654b4cb0bf6ae76cf3d65b7bb3fbfde6e",
+  "appTree": "2ef7c8e0203e576869809d3c3b7831af775df3a7",
+  "main": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+  "TMPDIR": "/tmp/buyerlog-auth-final-release-notes-integrated-main-ovekdtpz",
+  "node": "v24.19.0",
+  "concurrency": "default4/nooverrides",
+  "elapsedSeconds": 1.2375047206878662,
+  "returncode": 0
+}

@@ -1,0 +1,115 @@
+{
+  "codeSha": "23519cedb9a0d601d6ee00a5d989a1179c56436d",
+  "canonicalNpmPassed": true,
+  "nativeContinuation": false,
+  "batches": [
+    {
+      "batch": 1,
+      "files": 300,
+      "tests": 1798,
+      "pass": 1738,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 60,
+      "todo": 0
+    },
+    {
+      "batch": 2,
+      "files": 300,
+      "tests": 2341,
+      "pass": 2338,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 3,
+      "todo": 0
+    },
+    {
+      "batch": 3,
+      "files": 300,
+      "tests": 2051,
+      "pass": 2051,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    {
+      "batch": 4,
+      "files": 300,
+      "tests": 2001,
+      "pass": 2000,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 1,
+      "todo": 0
+    },
+    {
+      "batch": 5,
+      "files": 87,
+      "tests": 692,
+      "pass": 692,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    {
+      "batch": 6,
+      "files": 1,
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    {
+      "batch": 7,
+      "files": 1,
+      "tests": 12,
+      "pass": 12,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    {
+      "batch": 8,
+      "files": 1,
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    {
+      "batch": 9,
+      "files": 1,
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    {
+      "batch": 10,
+      "files": 1,
+      "tests": 15,
+      "pass": 14,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 1,
+      "todo": 0
+    }
+  ],
+  "total": {
+    "files": 1292,
+    "tests": 8930,
+    "pass": 8865,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  }
+}
