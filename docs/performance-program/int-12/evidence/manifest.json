@@ -1,0 +1,63 @@
+{
+  "status": "STOPPED_EQUIVALENCE_RED",
+  "baseMainWith892": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "branch": "test/int12-oab-parallel-preparation",
+  "environment": {
+    "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+    "node": "v24.19.0",
+    "cpuCount": 5,
+    "cpuMax": "400000 100000",
+    "memoryMax": "17179869184"
+  },
+  "protectedReadOnlySha256": {
+    "CLAUDE.md": "ea5ed1dc10a47546e2c4af51af1d414744da021cd07492ef6fb5eebc0e4fb5ce",
+    "AGENTS.md": "ad2a6dd0c30551e92512cba413b31bf0314c0d1edb598d813a490952c07a98bc",
+    "resources/app/server/server.js": "cbe33b674853050862c2929f66210131a1011c5d6852f97a1f59e337209743ca",
+    "resources/app/server/lib/oab-batch-service.js": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+    "resources/app/public/app-main.js": "c8dd4e64c09734f23f51d8ecd6e9349b787a59ce998b29de36dfd15f549d9570",
+    "resources/app/public/canonical-fields.js": "94936da8af26904db6f996291a762b1890464566e47da03f00044a21a6203b53",
+    "resources/app/server/lib/canonical-fields.js": "22359a397b5fac356587e081057f70c05bf5fab087bde3c612b1ec4dc2c1e2d5",
+    "resources/app/public/cp-overview-assistant.js": "cb93dadb7ed943729b26944e93009f9eab0cd4be36fdb2b9a38bbadda0ba5c21",
+    "resources/app/public/cp-checklist-engine.js": "f5dc8a580731af7c22451d99352aadc0dd7aa128472bfc6bfb6d3a9d63877119",
+    "resources/app/public/checklist-supplier-sync.js": "21b12faa5bfffc0ac480197e6c63e15df1709981b65c53a2a7e1621cef9a2b9e",
+    "resources/app/tests/fixtures/i18n-coverage-baseline.json": "20a8ac09f090a7e86be2d626769455a17b636e8822ef0db9967b38a9e151978d"
+  },
+  "files": {
+    "docs/performance-program/int-12/README.md": "f7dac0c6ddb3d11ee803bedae8312199dad429bcab5ab5df202d8bb12180f654",
+    "docs/performance-program/int-12/evidence/harness-red.txt": "f68cafe249fabcfaaa21569e17f6a0fe7abd1b1a11e86493b01957e753d72676",
+    "docs/performance-program/int-12/evidence/i18n.txt": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b",
+    "docs/performance-program/int-12/evidence/native-baseline.json": "89644fe5f63571db57636bb328f62b4d5f0c3d509f97dc6e14dccfb992b84c7a",
+    "docs/performance-program/int-12/evidence/native-trace.json.gz": "57b611834b2eb4b4087feab573310c2f36885b2e893477c24652d72039580997",
+    "docs/performance-program/int-12/evidence/preparation-first.txt.gz": "e469c153a10a8494f6fdfa04faee7d534b177d461126dd004d84c0a31e4147d3",
+    "docs/performance-program/int-12/evidence/summary.json": "de6b3157bd99a446afd5b583cce18b61f53fe8fc7136f8eec2ec98cd265d3955",
+    "resources/app/tests/fixtures/oab-int12.json": "50c64f71cfd4d5f44b9a983383fcce681f4f912a8457776f497fd9de59d5ce87",
+    "resources/app/tests/helpers/oab-int12-harness.cjs": "c84705633a0c860f868cd924c08b802fe384fd82707f4e7ce956e295d2cea0c6",
+    "resources/app/tests/oab-int12-preparation.test.js": "cd422d729ce8e92419ec58c91cc1a788c80e5c861dfe51fceceee1c0e6b68f33"
+  },
+  "validation": {
+    "newSuite": {
+      "pass": 16,
+      "fail": 1,
+      "skip": 0,
+      "cancel": 0
+    },
+    "i18n": {
+      "new": 0,
+      "baseline": 0
+    },
+    "officialThreePairs": "NOT_RUN_STOPPED",
+    "existingOabRegression": "NOT_RUN_STOPPED",
+    "fullRegression": "NOT_RUN_STOPPED",
+    "releaseNotes": "NOT_NEEDED_NO_VISIBLE_CHANGE"
+  },
+  "github": {
+    "prCreated": false,
+    "ciTriggered": false,
+    "merged": false
+  },
+  "publication": {
+    "test": false,
+    "stable": false
+  },
+  "failedSuiteLogUncompressedSha256": "7b9cfe124fe78d0c42280c12ec42f24c8d014b730cedb14261369360eba6136b"
+}

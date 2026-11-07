@@ -1,0 +1,99 @@
+{
+  "status": "STOPPED_EQUIVALENCE_RED",
+  "officialABComplete": false,
+  "baselineOnly": {
+    "cold": {
+      "n": 3,
+      "p50Ms": 253.182909,
+      "p95Ms": 283.28204999999997,
+      "reportsPerRun": [
+        12,
+        12,
+        12
+      ],
+      "cacheHitsPerRun": [
+        0,
+        0,
+        0
+      ]
+    },
+    "fresh-half": {
+      "n": 3,
+      "p50Ms": 133.56838599999992,
+      "p95Ms": 137.98834100000005,
+      "reportsPerRun": [
+        6,
+        6,
+        6
+      ],
+      "cacheHitsPerRun": [
+        6,
+        6,
+        6
+      ]
+    },
+    "fresh-all": {
+      "n": 3,
+      "p50Ms": 32.00204999999983,
+      "p95Ms": 32.623406999999986,
+      "reportsPerRun": [
+        0,
+        0,
+        0
+      ],
+      "cacheHitsPerRun": [
+        12,
+        12,
+        12
+      ]
+    },
+    "batch-supported": {
+      "n": 3,
+      "p50Ms": 85.78791100000001,
+      "p95Ms": 85.86124100000006,
+      "reportsPerRun": [
+        4,
+        4,
+        4
+      ],
+      "cacheHitsPerRun": [
+        0,
+        0,
+        0
+      ]
+    },
+    "probe-verified": {
+      "n": 3,
+      "p50Ms": 85.06485099999998,
+      "p95Ms": 88.20693900000015,
+      "reportsPerRun": [
+        4,
+        4,
+        4
+      ],
+      "cacheHitsPerRun": [
+        0,
+        0,
+        0
+      ]
+    },
+    "probe-fallback": {
+      "n": 3,
+      "p50Ms": 279.92874299999994,
+      "p95Ms": 280.76754600000004,
+      "reportsPerRun": [
+        13,
+        13,
+        13
+      ],
+      "cacheHitsPerRun": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "traceUncompressedSha256": "93bf74b14ec424423a37914841fa6a8059ccabe98f577f4d41b994a47f7f1bc3",
+  "productionChange": false,
+  "enterpriseMeasurement": false
+}

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "sourceSha256": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+  "mainWith892": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "seasons": ["S6", "S7"],
+  "mags": ["M1", "M2"],
+  "buyers": ["A", "B", "C"],
+  "latencyMs": [24, 8, 18, 12, 22, 10, 16, 8, 20, 10, 18, 12],
+  "emptyIndex": 8,
+  "faultIndex": 5
+}
