@@ -46,6 +46,30 @@ test('a real fresh Node process records a 260ms block with the 10ms observer',()
     assert.equal(events.filter(e=>e.kind==='start').length,1);assert.equal(events.filter(e=>e.kind==='stop').length,1);
   }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
+test('native observations retain thread CPU and GC without classifying GC records as timer gaps',()=>{
+  const root=fixture();
+  try{
+    const code=`const p=require(${JSON.stringify(probeFile)}).startLoopProbe({fixtureRoot:process.argv[1]});setTimeout(()=>{const until=performance.now()+80;while(performance.now()<until){}global.gc();setTimeout(()=>p.stop(),60);},35);`;
+    const run=spawnSync(process.execPath,['--expose-gc','-e',code,root],{encoding:'utf8',timeout:10000});assert.equal(run.status,0,run.stderr);
+    const events=probe.readProbeEvents(root,{requireStopped:true}),gap=events.filter(e=>e.kind==='gap').sort((a,b)=>b.gapMs-a.gapMs)[0];
+    assert.equal(events[0].cpuScope,typeof process.threadCpuUsage==='function'?'thread':'unavailable');
+    assert.ok(Number.isFinite(gap.userCpuMs)&&gap.userCpuMs>=0);assert.ok(Number.isFinite(gap.systemCpuMs)&&gap.systemCpuMs>=0);
+    const gc=events.filter(e=>e.kind==='gc');assert.ok(gc.length>0,'a real explicit GC must be retained');
+    assert.ok(gc.every(e=>Number.isFinite(e.durationMs)&&e.durationMs>=0&&e.toMs>=e.fromMs));
+    assert.equal(events.at(-1).gcRecords,gc.length);assert.equal(events.at(-1).recorded,events.filter(e=>e.kind==='gap').length);
+    const fakeGc={kind:'gc',pid:1,fromMs:0,toMs:500,durationMs:500,gcKind:4,gcFlags:0};
+    assert.equal(probe.summarizeGaps([fakeGc]).gapsOver200ms,0);
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+test('numeric CPU and GC observations preserve strict record validation and avoid memory sampling on MAIN',()=>{
+  const root=fixture();
+  try{
+    for(const event of [{kind:'gc',pid:1,fromMs:10,toMs:5,durationMs:5,gcKind:4,gcFlags:0},{kind:'gap',pid:1,fromMs:0,toMs:100,gapMs:100,delayMs:90,userCpuMs:-1,systemCpuMs:0}]){
+      fs.writeFileSync(path.join(root,'event-loop-probe-1.jsonl'),JSON.stringify(event)+'\n');assert.throws(()=>probe.readProbeEvents(root),/record/i);
+    }
+    assert.doesNotMatch(fs.readFileSync(probeFile,'utf8'),/process\.memoryUsage|Error\(\)\.stack/);
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
 test('F0 observer is opt-in and server child alone loads the preload',()=>{
   const source=fs.readFileSync(path.join(__dirname,'../scripts/benchmark-startup-orders.js'),'utf8');
   assert.match(source,/--server-loop-probe/);assert.match(source,/--require/);assert.match(source,/server-loop-probe\.js/);

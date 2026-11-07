@@ -1,7 +1,7 @@
 'use strict';
 // Yalnız benchmark: ürün sunucusu bu modülü normal açılışta yüklemez.
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
-const {performance}=require('node:perf_hooks'),{isMainThread,Worker}=require('node:worker_threads');
+const {performance,PerformanceObserver}=require('node:perf_hooks'),{isMainThread,Worker}=require('node:worker_threads');
 const INTERVAL_MS=10,REPORT_FROM_MS=20;
 function assertSyntheticFixture(value){
   const root=path.resolve(String(value||''));
@@ -17,30 +17,36 @@ function assertSyntheticFixture(value){
 function startLoopProbe({fixtureRoot}={}){
   const root=assertSyntheticFixture(fixtureRoot),file=path.join(root,`event-loop-probe-${process.pid}.jsonl`);
   const capacity=8192,control=new Int32Array(new SharedArrayBuffer(8*Int32Array.BYTES_PER_ELEMENT));
-  const records=new Float64Array(new SharedArrayBuffer(capacity*4*Float64Array.BYTES_PER_ELEMENT));
+  const recordWidth=8,records=new Float64Array(new SharedArrayBuffer(capacity*recordWidth*Float64Array.BYTES_PER_ELEMENT));
+  const cpuScope=typeof process.threadCpuUsage==='function'?'thread':'unavailable';
+  const readCpu=cpuScope==='thread'?()=>process.threadCpuUsage():()=>({user:0,system:0});
   // Ana thread yalnız önceden ayrılmış halkaya sayıları yazar. JSON/UTF-8 ve
   // dosya I/O'su ölçülen event loop'a ait değildir. Taşma sessizce atlanmaz.
   const writer=new Worker(path.join(__dirname,'server-loop-probe-writer.js'),{execArgv:[],resourceLimits:{maxOldGenerationSizeMb:64},
-    workerData:{fixtureRoot:root,pid:process.pid,atMs:Date.now(),intervalMs:INTERVAL_MS,reportFromMs:REPORT_FROM_MS,capacity,control:control.buffer,records:records.buffer}});
+    workerData:{fixtureRoot:root,pid:process.pid,atMs:Date.now(),intervalMs:INTERVAL_MS,reportFromMs:REPORT_FROM_MS,capacity,recordWidth,cpuScope,control:control.buffer,records:records.buffer}});
   writer.on('error',()=>{Atomics.store(control,5,1);});writer.unref();
   Atomics.wait(control,3,0,5000);
   if(!Atomics.load(control,3)||Atomics.load(control,5)){void writer.terminate();throw Error('Event-loop observer writer failed to start');}
-  let previous=performance.now(),closed=false;const signalHandlers=new Map();
+  let previous=performance.now(),previousCpu=readCpu(),closed=false;const signalHandlers=new Map();
+  function publish(kind,fromMs,toMs,durationMs,detail,userOrFlags,systemCpuMs=0){
+    const published=Atomics.load(control,0),consumed=Atomics.load(control,1);
+    if(published-consumed>=capacity){Atomics.store(control,6,1);return;}
+    const offset=(published%capacity)*recordWidth;
+    records[offset]=kind;records[offset+1]=fromMs;records[offset+2]=toMs;records[offset+3]=durationMs;
+    records[offset+4]=detail;records[offset+5]=userOrFlags;records[offset+6]=systemCpuMs;
+    Atomics.store(control,0,published+1);
+  }
+  const recordGc=entries=>{for(const entry of entries)publish(2,performance.timeOrigin+entry.startTime,performance.timeOrigin+entry.startTime+entry.duration,entry.duration,entry.detail?.kind||0,entry.detail?.flags||0);};
+  const gcObserver=new PerformanceObserver(list=>recordGc(list.getEntries()));gcObserver.observe({entryTypes:['gc']});
   const timer=setInterval(()=>{
-    const now=performance.now(),gapMs=now-previous;
+    const now=performance.now(),cpu=readCpu(),gapMs=now-previous;
     if(gapMs>=REPORT_FROM_MS){
-      const published=Atomics.load(control,0),consumed=Atomics.load(control,1);
-      if(published-consumed>=capacity)Atomics.store(control,6,1);
-      else{
-        const offset=(published%capacity)*4;
-        records[offset]=performance.timeOrigin+previous;records[offset+1]=performance.timeOrigin+now;records[offset+2]=gapMs;records[offset+3]=Math.max(0,gapMs-INTERVAL_MS);
-        Atomics.store(control,0,published+1);
-      }
+      publish(1,performance.timeOrigin+previous,performance.timeOrigin+now,gapMs,Math.max(0,gapMs-INTERVAL_MS),Math.max(0,cpu.user-previousCpu.user)/1000,Math.max(0,cpu.system-previousCpu.system)/1000);
     }
-    previous=now;
+    previous=now;previousCpu=cpu;
   },INTERVAL_MS);timer.unref();
   const stop=()=>{
-    if(closed)return;closed=true;clearInterval(timer);process.removeListener('exit',stop);
+    if(closed)return;clearInterval(timer);recordGc(gcObserver.takeRecords());gcObserver.disconnect();closed=true;process.removeListener('exit',stop);
     for(const [signal,handler] of signalHandlers)process.removeListener(signal,handler);
     Atomics.store(control,2,1);Atomics.notify(control,0);Atomics.wait(control,4,0,5000);
     if(!Atomics.load(control,4)||Atomics.load(control,5)||Atomics.load(control,6))throw Error('Event-loop observer writer failed or overflowed');
@@ -66,8 +72,10 @@ function readProbeEvents(root,{requireStopped=false}={}){
     let started=false,stopped=false;
     for(const line of lines){
       let value;try{value=JSON.parse(line);}catch(_){throw Error('Invalid event-loop probe record: '+name);}
-      if(!['start','gap','stop'].includes(value.kind)||!Number.isSafeInteger(value.pid)||value.pid<1)throw Error('Invalid event-loop probe record: '+name);
+      if(!['start','gap','gc','stop'].includes(value.kind)||!Number.isSafeInteger(value.pid)||value.pid<1)throw Error('Invalid event-loop probe record: '+name);
       if(value.kind==='gap'&&(![value.fromMs,value.toMs,value.gapMs,value.delayMs].every(Number.isFinite)||value.toMs<value.fromMs||value.gapMs<0||Math.abs(value.toMs-value.fromMs-value.gapMs)>.01))throw Error('Invalid event-loop gap record: '+name);
+      if(value.kind==='gap'&&(value.userCpuMs!==undefined||value.systemCpuMs!==undefined)&&(![value.userCpuMs,value.systemCpuMs].every(Number.isFinite)||value.userCpuMs<0||value.systemCpuMs<0))throw Error('Invalid event-loop CPU record: '+name);
+      if(value.kind==='gc'&&(![value.fromMs,value.toMs,value.durationMs].every(Number.isFinite)||value.toMs<value.fromMs||value.durationMs<0||Math.abs(value.toMs-value.fromMs-value.durationMs)>.01||![value.gcKind,value.gcFlags].every(v=>Number.isInteger(v)&&v>=0)))throw Error('Invalid GC record: '+name);
       if(value.kind==='start')started=true;if(value.kind==='stop')stopped=true;
       events.push(value);
     }
