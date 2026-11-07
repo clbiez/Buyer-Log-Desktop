@@ -165,7 +165,7 @@ test('INT-06 source snapshot detects integration, canonical and #892 working-tre
   }
 });
 
-test('INT-06 cohort CLI retains six fresh samples and refuses to overwrite evidence', t => {
+test('INT-06 cohort CLI requires #892 ancestry, retains samples and refuses to overwrite evidence', t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'powerbi-cohort-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const output = path.join(root, 'cohort');
@@ -175,6 +175,17 @@ test('INT-06 cohort CLI retains six fresh samples and refuses to overwrite evide
     '--orders', '12', '--batch-size', '4', '--scenario', 'split-retry', '--output-dir', output];
   const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
   const child = spawnSync(process.execPath, args, { env, encoding: 'utf8' });
+  // A shallow CI checkout cannot prove ancestry. Assert fail-closed behavior
+  // there, without fetching history, skipping the test or relaxing the gate.
+  const { captureSource } = require('../scripts/lib/powerbi-checkpoint-provenance');
+  if (!captureSource(appRoot).contains892) {
+    assert.equal(child.status, 1, child.stderr);
+    const failure = JSON.parse(fs.readFileSync(path.join(output, 'failure.json'), 'utf8'));
+    assert.equal(failure.completedSamples, 0);
+    assert.match(failure.failure.message, /must include merged #892/);
+    assert.deepEqual(fs.readdirSync(output), ['failure.json']);
+    return;
+  }
   assert.equal(child.status, 0, child.stderr);
   const summary = JSON.parse(fs.readFileSync(path.join(output, 'summary.json'), 'utf8'));
   assert.deepEqual(summary.order, ['before', 'after', 'after', 'before', 'before', 'after']);

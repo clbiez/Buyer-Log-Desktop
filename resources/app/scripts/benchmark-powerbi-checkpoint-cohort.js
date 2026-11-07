@@ -60,6 +60,7 @@ function run(args) {
   for (const flag of ['--before-app-root', '--after-app-root', '--output-dir']) assert.ok(flags.get(flag), `${flag} required`);
   const output = path.resolve(flags.get('--output-dir'));
   fs.mkdirSync(output); // Never overwrite evidence from an earlier/failed invocation.
+  const runnerSha256 = fileSha(__filename);
   const samples = [];
   try {
     const roots = Object.fromEntries(['before', 'after'].map(arm => [arm, path.resolve(flags.get(`--${arm}-app-root`))]));
@@ -75,11 +76,12 @@ function run(args) {
       const child = spawnSync(process.execPath, [script, ...common, '--app-root', roots[arm], '--output', jsonPath], { env, encoding: 'utf8' });
       fs.writeFileSync(path.join(output, `${name}.log`), `${child.stdout || ''}${child.stderr || ''}`);
       assert.equal(child.status, 0, `${name} failed; retained JSON/log, no retry`);
+      assert.equal(fileSha(__filename), runnerSha256, 'Cohort runner changed during measurement');
       const report = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
       assert.deepEqual(report.target, sources[arm], 'Source changed since cohort preflight');
       samples.push({ arm, report });
     }
-    const summary = { ...summarize(samples), runnerSha256: fileSha(__filename),
+    const summary = { ...summarize(samples), runnerSha256,
       order: samples.map(sample => sample.arm), measuredAt: new Date().toISOString() };
     fs.writeFileSync(path.join(output, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
     return summary;
