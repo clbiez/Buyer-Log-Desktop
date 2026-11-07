@@ -1,16 +1,31 @@
 'use strict';
 const path=require('node:path'),{fork}=require('node:child_process'),Policy=require('../../public/file-parser-policy');
+const REPORT_BATCH_FILES=4,REPORT_BATCH_BYTES=1024*1024;
 function createParserClient({workerFile=path.join(__dirname,'../workers/file-parser-process.js'),maxPending=8,maxQueuedBytes=64*1024*1024,timeoutMs=Policy.LIMITS.timeoutMs}={}){
- const queue=[];let active=false,queuedBytes=0;
- function run(operation,payload,{signal,timeoutMs:deadline=timeoutMs}={}){
+ const queue=[];let active=false,queuedBytes=0,interactiveStreak=0;
+ function run(operation,payload,{signal,timeoutMs:deadline=timeoutMs,priority=['endeksmatik','endeksmatik-legacy','test-report-batch'].includes(operation)?'background':'interactive'}={}){
   if(signal?.aborted)return Promise.reject(Policy.fail('FILE_PARSE_CANCELLED'));
+  if(!['interactive','background'].includes(priority))return Promise.reject(Policy.fail('FILE_PARSE_INPUT'));
   const limits=['endeksmatik','endeksmatik-legacy'].includes(operation)?Policy.ENDEKSMATIK_LIMITS:Policy.LIMITS;
-  const size=payload?.buffer?.byteLength||0;if(size>limits.bytes)return Promise.reject(Policy.fail());
+  let size=payload?.buffer?.byteLength||0;
+  if(operation==='test-report-batch'){
+   if(!Array.isArray(payload?.files)||!payload.files.length||payload.files.length>REPORT_BATCH_FILES)return Promise.reject(Policy.fail());
+   size=0;let expanded=0;
+   try{for(const file of payload.files){const info=Policy.inspectBytes(file.buffer);size+=info.bytes;expanded+=info.expandedBytes||info.bytes;}}catch(error){return Promise.reject(error);}
+   if(size>REPORT_BATCH_BYTES||expanded>limits.expandedBytes)return Promise.reject(Policy.fail());
+  }
+  if(size>limits.bytes)return Promise.reject(Policy.fail());
   if(queue.length>=maxPending||queuedBytes+size>maxQueuedBytes)return Promise.reject(Policy.fail('FILE_PARSE_BUSY'));
-  return new Promise((resolve,reject)=>{const job={operation,payload,signal,deadline:Math.max(1,Math.min(120000,Number(deadline)||timeoutMs)),size,resolve,reject};job.abort=()=>{const index=queue.indexOf(job);if(index>=0){queue.splice(index,1);queuedBytes-=job.size;job.payload=null;reject(Policy.fail('FILE_PARSE_CANCELLED'));}};signal?.addEventListener('abort',job.abort,{once:true});queue.push(job);queuedBytes+=size;pump();});
+  return new Promise((resolve,reject)=>{const job={operation,payload,signal,priority,deadline:Math.max(1,Math.min(120000,Number(deadline)||timeoutMs)),size,resolve,reject};job.abort=()=>{const index=queue.indexOf(job);if(index>=0){queue.splice(index,1);queuedBytes-=job.size;job.payload=null;reject(Policy.fail('FILE_PARSE_CANCELLED'));}};signal?.addEventListener('abort',job.abort,{once:true});queue.push(job);queuedBytes+=size;pump();});
  }
  function pump(){
-  if(active||!queue.length)return;const job=queue.shift();queuedBytes-=job.size;job.signal?.removeEventListener('abort',job.abort);active=true;
+  if(active||!queue.length)return;
+  // FIFO within each class. After three interactive jobs, admit the oldest
+  // background job so a long import cannot starve under steady interaction.
+  const preferred=interactiveStreak>=3?'background':'interactive';
+  let index=queue.findIndex(job=>job.priority===preferred);if(index<0)index=0;
+  const [job]=queue.splice(index,1);interactiveStreak=job.priority==='interactive'?Math.min(3,interactiveStreak+1):0;
+  queuedBytes-=job.size;job.signal?.removeEventListener('abort',job.abort);active=true;
   let child,timer,settled=false,completed=false,value,error;const finish=(err,result)=>{if(settled)return;settled=true;error=err;value=result;clearTimeout(timer);job.signal?.removeEventListener('abort',abort);job.payload=null;if(child?.pid&&child.exitCode===null){child.kill();}else complete();};
   const complete=()=>{if(completed)return;completed=true;if(!settled){settled=true;error=Policy.fail('FILE_PARSE_EXIT');}clearTimeout(timer);job.signal?.removeEventListener('abort',abort);job.payload=null;active=false;error?job.reject(error):job.resolve(value);pump();};
   const abort=()=>finish(Policy.fail('FILE_PARSE_CANCELLED'));
@@ -25,4 +40,4 @@ function createParserClient({workerFile=path.join(__dirname,'../workers/file-par
 async function readFileBounded(file){
  const handle=await require('node:fs/promises').open(file,'r');try{const stat=await handle.stat();if(!stat.isFile()||stat.size>Policy.LIMITS.bytes)throw Policy.fail();const buffer=Buffer.alloc(stat.size+1);let offset=0;while(offset<buffer.length){const {bytesRead}=await handle.read(buffer,offset,buffer.length-offset,null);if(!bytesRead)break;offset+=bytesRead;}if(offset>stat.size)throw Policy.fail();return buffer.subarray(0,offset);}finally{await handle.close();}
 }
-module.exports={createParserClient,readFileBounded,...createParserClient()};
+module.exports={createParserClient,readFileBounded,REPORT_BATCH_FILES,REPORT_BATCH_BYTES,...createParserClient()};
