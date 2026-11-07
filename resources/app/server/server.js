@@ -86,7 +86,7 @@ if (backendCompileCacheState.status !== 'disabled') markStartup('COMPILE_CACHE_'
 
 // Local-first bootstrap. The retired whole-folder legacy import is deliberately
 // not part of startup; business data remains in the local DB + delta registry.
-const localDb = createLocalDb(LOCAL_DB_FILE, { trace:markStartup });
+const localDb = createLocalDb(LOCAL_DB_FILE, { trace:markStartup, encodeSnapshot:state=>require('./lib/compute-runtime').getComputeService().encodeLocalDbSnapshot(state) });
 let rejectedOwnerDeltas = 0;
 function sharedHubDeltaFilter(direction) {
   return deltas => sharedSyncPolicy.filterDeltas(filterCollectionWorkspaceDeltas(deltas), direction).filter(delta => {
