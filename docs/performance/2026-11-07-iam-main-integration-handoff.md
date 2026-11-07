@@ -4,11 +4,17 @@
 
 ## Karşılaştırılan kaynaklar
 
-- Main: `2083ffd73ba026067d92ccf257c4551afa2e5f00`.
+- İlk karşılaştırmanın main’i: `2083ffd73ba026067d92ccf257c4551afa2e5f00`.
 - #901 ölçülen üretim kodu: `ba3e165a70af78416eebab8ed599df7f379e4f6b`.
-- Her iki committe `resources/app/server` Git tree SHA: `7df589bc1168069d02fd5ee25d16d70abf13a3c6`.
-- Her iki committe test Git blob SHA: `46bb902c46b58fabbe7a42f3bfe0368d281a4ed4`.
+- İlk main/PR çiftinin her iki commitinde `resources/app/server` Git tree SHA: `7df589bc1168069d02fd5ee25d16d70abf13a3c6`.
+- İlk main/PR çiftinin her iki commitinde test Git blob SHA: `46bb902c46b58fabbe7a42f3bfe0368d281a4ed4`.
 - Taze karşılaştırmanın commitleri, komutları, çalışma dizinleri, ortamı ve ilgili dosyaların Git/SHA-256 değerleri: [`comparison.json`](../performance-program/evidence/pricing-client-cost-20261107/iam-integration/comparison.json).
+
+## Main ilerlediğinde yapılan ek doğrulama
+
+Teslim sırasında main, Faz 5 entegrasyonu #902 ile `63159fb32ff3d5bdc5f142b4a8f16ca6a3983240` SHA'sına ilerledi. Ayrı `/tmp/buyerlog-startup-pricing-main-63159fb3` checkout'unda aynı tam IAM test dosyası yeniden çalıştırıldı: **6 pass, 1 fail, 0 skipped; exit 1**. Test blob SHA'sı aynı kalırken güncel sunucu tree SHA'sı `f1cde600d20ca2f6a4a4cd1e3c2213ea0d66e97e` oldu. Dolayısıyla ilk main/PR eşitliği tarihsel karşılaştırma olarak korunur; güncel main'in bütün sunucu ağacının PR ile aynı olduğu iddia edilmez. Ortak IAM engeli güncel main'de de devam eder ve bu dala alınabilecek bir yeşil IAM düzeltmesi doğrulanmış değildir.
+
+Ek tam komut, ortam, dosya SHA'ları ve çıktı `comparison.json` içindeki `latestMainRun` kaydında; [güncel main ham TAP logu](../performance-program/evidence/pricing-client-cost-20261107/iam-integration/latest-main-63159fb3-iam-reproduction.tap.gz) aynı pakettedir. İlk ek komut repo kökünde çalıştırıldığı için test yolunu bulamadı; bu kurulum hatası ayrıca kayıpsız saklandı ve IAM sonucu sayılmadı. Yukarıdaki 7 testin sonucu doğru `resources/app` çalışma dizinindeki düzeltilmiş komuta aittir.
 
 ## Beklenen / gözlenen
 
@@ -32,6 +38,7 @@ Ham taze hata logları kayıpsız gzip olarak saklanır; sıkıştırılmış ve
 
 - [Main TAP](../performance-program/evidence/pricing-client-cost-20261107/iam-integration/main-iam-reproduction.tap.gz)
 - [PR TAP](../performance-program/evidence/pricing-client-cost-20261107/iam-integration/pricing-pr-iam-reproduction.tap.gz)
+- [Güncel main #902 TAP](../performance-program/evidence/pricing-client-cost-20261107/iam-integration/latest-main-63159fb3-iam-reproduction.tap.gz)
 
 Önceki tekil hata logları ve tam paket hata bölümü kayıpsız `.gz` olarak aynı dizinde korunur. Açmak için `gzip -dc <dosya.gz>` kullanılabilir. Eski tam paket komutu:
 

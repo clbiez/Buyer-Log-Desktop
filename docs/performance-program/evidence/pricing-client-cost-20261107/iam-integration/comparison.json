@@ -135,5 +135,73 @@
     "acceptedAsFullRegression": false
   },
   "behaviorChanges": "None: no production/test/assertion/IAM override changes",
-  "status": "blocked-reproduced"
+  "status": "blocked-reproduced",
+  "latestMainRun": {
+    "name": "latest-main",
+    "commit": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+    "checkout": "/tmp/buyerlog-startup-pricing-main-63159fb3",
+    "cwd": "/tmp/buyerlog-startup-pricing-main-63159fb3/resources/app",
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "--test",
+      "--test-reporter=tap",
+      "tests/local-iam-migration-authority.test.js"
+    ],
+    "startedAt": "2026-11-07T17:57:35.240Z",
+    "finishedAt": "2026-11-07T17:57:36.267Z",
+    "node": "v24.19.0",
+    "environmentOverrides": {},
+    "exitCode": 1,
+    "counts": {
+      "tests": 7,
+      "pass": 6,
+      "fail": 1,
+      "skipped": 0,
+      "cancelled": 0,
+      "todo": 0
+    },
+    "logFile": "latest-main-63159fb3-iam-reproduction.tap.gz",
+    "logSha256": "e146f8bb29710b6468c5c0f4464d45371880e7962bc78392012a0ac97795e8a6",
+    "uncompressedLogSha256": "9d4aaa01d2fab53461206c3f3b1838bf53125b80a1c781eb36085b1f5e372ec4",
+    "serverTree": "f1cde600d20ca2f6a4a4cd1e3c2213ea0d66e97e",
+    "testBlob": "46bb902c46b58fabbe7a42f3bfe0368d281a4ed4",
+    "files": {
+      "resources/app/tests/local-iam-migration-authority.test.js": {
+        "gitBlob": "46bb902c46b58fabbe7a42f3bfe0368d281a4ed4",
+        "sha256": "2e298dd15f6149d559054b368f01cec1f1bb695175fd6ffb7d9ada08348ba213"
+      },
+      "resources/app/server/lib/user-access.js": {
+        "gitBlob": "b2aca4aabb6ce75753f5ffdc2333affe969c9b0c",
+        "sha256": "6280f282b696ce26abdabd7061b2e5c74bd1d9ba27b4298e12ba16293b72bf55"
+      },
+      "resources/app/server/lib/iam-core.js": {
+        "gitBlob": "f621e83d058a5efe8ceab3648cc047d794489472",
+        "sha256": "456b96fa95e4bfdfc7d464d2a6533d35aea4d838858e418999cadb53415a2144"
+      },
+      "resources/app/server/user-data.js": {
+        "gitBlob": "94c18475fb731a29ca83515d88c1ecc17e6ab9c5",
+        "sha256": "568828212ea6976cc72743fe8f528be549ec2cb3f2e4a24e2e2c7d14125242d5"
+      },
+      "resources/app/package-lock.json": {
+        "gitBlob": "118772f69e3a52dd40187bf29789b977caa75242",
+        "sha256": "163da1945a88215e07fe182b4819013e4b68b3e347187088de4c7165a7cac5b5"
+      }
+    }
+  },
+  "latestMainSetupCorrection": {
+    "initialCommand": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+      "--test",
+      "--test-reporter=tap",
+      "tests/local-iam-migration-authority.test.js"
+    ],
+    "initialCwd": "/workspace/Buyer-Log-Desktop",
+    "initialExitCode": 1,
+    "initialLogFile": "latest-main-initial-wrong-cwd.txt.gz",
+    "initialLogSha256": "d560b3e361c0d6ce7c151475869104da39ce9b70616b729e726f523067299eee",
+    "reason": "First command used repository root and could not locate the test. The corrected command above ran the entire file from resources/app; setup error is not treated as an IAM result."
+  },
+  "latestMainStillBlocked": true,
+  "latestMainTestUnchanged": true,
+  "latestMainServerTreeMatchesOld": false
 }
