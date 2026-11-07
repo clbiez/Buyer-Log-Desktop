@@ -7,7 +7,7 @@
     "height": 1000
   },
   "reducedMotion": "reduce",
-  "data": "3 synthetic users and moderator; no order/business/service/credential data",
+  "data": "3 synthetic users and moderator; synthetic demo-only password, no real business/service/credential data",
   "scope": "Current profile UI; pending-request denial is separately proven by native tests",
   "images": {
     "tr": {
@@ -20,5 +20,8 @@
     }
   },
   "agentInspected": true,
-  "consolePageErrors": []
+  "consolePageErrors": [],
+  "productionUserAccessSha256": "1fc672e9391f422f62e3c8c7a7f7366dd6a09a4990560d7e3e4c79044506c4ec",
+  "shellRuntimeBase": "63159fb3; captured after authority fix, before later shell integration",
+  "profileState": "seeded current no-personal-management-grant state; pending revoke proved separately by real native commits"
 }

@@ -349,10 +349,25 @@
      null döner: başka bir sahibin satırı ASLA eşlenmez. Bağlam bilinmiyorsa
      (eski kurulum / test) eski davranış korunur. */
   const qRowCollections=new WeakMap();
+  // İndeksler yalnız tek senkron okuma/çizim boyunca yaşar. Yerel yapısal
+  // değişiklikler sunucu revizyonunu beklemeden bir sonraki okumada görülür.
+  let qCollectionRead=null;
+  function qWithCollectionRead(read){
+    if(qCollectionRead)return read();
+    qCollectionRead={owners:new Map(),readers:new Map()};
+    try{return read();}finally{qCollectionRead=null;}
+  }
   function qLoadedWorkspaceOwner(){return typeof kolWorkspaceOwnerId!=='undefined'?qNorm(kolWorkspaceOwnerId):'';}
   function qLoadedWorkspaceMode(){return typeof kolWorkspaceMode!=='undefined'?String(kolWorkspaceMode||''):'';}
   function qSharedWorkspaceMode(){return typeof kolWorkspaceSharedMode!=='undefined'&&Boolean(kolWorkspaceSharedMode);}
   function qRowsForOwner(ownerId){
+    const owner=qNorm(ownerId);
+    if(qCollectionRead?.owners.has(owner))return qCollectionRead.owners.get(owner);
+    const scope=qResolveRowsForOwner(owner);
+    if(qCollectionRead)qCollectionRead.owners.set(owner,scope);
+    return scope;
+  }
+  function qResolveRowsForOwner(ownerId){
     const loaded=typeof kolRows!=='undefined'&&Array.isArray(kolRows)?kolRows:null;
     const owner=qNorm(ownerId),loadedOwner=qLoadedWorkspaceOwner();
     if(!owner||!loadedOwner)return loaded?{rows:loaded,idOf:row=>row.id}:null;
@@ -366,10 +381,21 @@
     if(!scope) return null;
     const rows=scope.rows,idOf=scope.idOf;
     let found=null;
-    if(Number.isFinite(Number(line.rowId))){
+    if(qCollectionRead){
+      if(!scope.byId){
+        scope.byId=new Map();scope.byOrder=new Map();
+        rows.forEach(row=>{
+          const id=Number(idOf(row)),order=qNorm(row._sourceOrderCode).toLocaleLowerCase('tr-TR');
+          if(Number.isFinite(id)&&!scope.byId.has(id))scope.byId.set(id,row);
+          if(!scope.byOrder.has(order))scope.byOrder.set(order,row);
+        });
+      }
+      found=scope.byId.get(Number(line.rowId))||null;
+      if(!found&&line.orderCode)found=scope.byOrder.get(line.orderCode.toLocaleLowerCase('tr-TR'))||null;
+    }else if(Number.isFinite(Number(line.rowId))){
       found=rows.find(r=>Number(idOf(r))===Number(line.rowId))||null;
     }
-    if(!found&&line.orderCode){
+    if(!qCollectionRead&&!found&&line.orderCode){
       found=rows.find(r=>qNorm(r._sourceOrderCode).toLocaleLowerCase('tr-TR')===line.orderCode.toLocaleLowerCase('tr-TR'))||null;
     }
     if(found)qRowCollections.set(found,scope.all||rows);
@@ -410,6 +436,10 @@
     try{
       const api=window.BLCollectionModelGroups;
       const rows=row&&qRowCollections.get(row)||(typeof kolRows!=='undefined'&&Array.isArray(kolRows)?kolRows:null);
+      if(qCollectionRead&&api?.createValueReader&&rows){
+        if(!qCollectionRead.readers.has(rows))qCollectionRead.readers.set(rows,api.createValueReader(rows,{lazy:true}));
+        return qCollectionRead.readers.get(rows)(row,key);
+      }
       if(api?.effectiveValue&&rows)return api.effectiveValue(row,key,rows);
     }catch(_){ }
     return row?.[key];
@@ -1077,9 +1107,13 @@
   }
 
   function qPricingEngine(){ return window.BLPricingWorkspaceEngine||null; }
+  let qNavStats=null;
   function qRequestMatchesStatus(req,key=qStatusFilter){
     const engine=qPricingEngine();
-    if(engine?.requestMatchesFilter)return engine.requestMatchesFilter(req,key);
+    if(engine?.requestMatchesFilter){
+      if(qNavStats&&!qNavStats.has(req))qNavStats.set(req,engine.requestStats?.(req));
+      return engine.requestMatchesFilter(req,key,qNavStats?.get(req));
+    }
     if(key==='all')return true;
     if(key==='active'||key==='in_progress')return req.status!=='closed';
     if(key==='closed')return req.status==='closed';
@@ -1118,6 +1152,10 @@
   }
 
   function qRenderNav(query=''){
+    qNavStats=new Map();
+    try{return qWithCollectionRead(()=>qRenderNavContent(query));}finally{qNavStats=null;}
+  }
+  function qRenderNavContent(query=''){
     const host=document.getElementById('quotationNav');if(!host)return;
     const list=qVisibleRequests(qActiveSource,query);
     const count=document.getElementById('quotationCount');if(count)count.textContent=qLang(`${list.length} kayıt`,`${list.length} records`);
@@ -1399,6 +1437,9 @@
     return `<div class="quotationOptions${list.length?' hasOptions':''}" title="${qEsc(tip)}">${control}${list.length?`<span class="quotationOptionsText">${qEsc(summary)}</span>`:''}</div>`;
   }
   function qRenderDetail(){
+    return qWithCollectionRead(()=>qRenderDetailContent());
+  }
+  function qRenderDetailContent(){
     qCloseTableFilter();
     const host=document.getElementById('quotationDetail'); if(!host) return;
     const previousWrap=host.querySelector('.quotationTableWrap');
@@ -2025,7 +2066,7 @@
     </div>`;
     const search=host.querySelector('#quotationSearch');
     host.addEventListener('pointerdown',event=>{const active=document.activeElement;if(active!==event.target&&active?.classList?.contains('quotationPriceInput'))qCommitActivePriceInput(qActiveRequest(),host);},true);
-    search?.addEventListener('input',()=>qRenderWorkspaceAll(search.value));
+    search?.addEventListener('input',()=>qRenderNav(search.value));
     host.querySelector('#quotationStatusTabs')?.addEventListener('click',event=>{
       const button=event.target.closest('[data-quotation-status-filter]');if(!button)return;qCommitActivePriceInput(qActiveRequest(),host);
       qStatusFilter=button.dataset.quotationStatusFilter||'active';const list=qVisibleRequests(qActiveSource,search?.value||'');
@@ -2905,7 +2946,7 @@
   const qDeskApi={
     ready:()=>qReady,hydrate:(force=true)=>qHydrateShared(force),flush:()=>qFlushSaves(),
     requests:()=>qLoad().requests,profiles:()=>qProfiles,currentUserId:qCurrentUserId,isModerator:qIsModerator,
-    canEdit:qCanEditRequest,canManage:qCanManageAccess,findRow:qFindCollectionRow,rowValue:qCollectionEffectiveValue,
+    canEdit:qCanEditRequest,canManage:qCanManageAccess,findRow:qFindCollectionRow,rowValue:qCollectionEffectiveValue,withCollectionRead:qWithCollectionRead,
     identityMatchesRow:qLineMatchesCollectionIdentity,
     imageSrc:qCollectionImageSrc,thumb:qCachedModelThumb,itemCategory:qItemCategory,itemTarget:qItemTargetPrice,itemFabric:qItemFabric,
     targetDelta:qTargetDelta,ownerLabel:qOwnerLabel,profileName:qProfileName,requestTitle:qRequestTitle,workspaceTitle:qWorkspaceRequestTitle,

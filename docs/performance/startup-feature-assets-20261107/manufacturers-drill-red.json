@@ -1,0 +1,42 @@
+{
+  "mode": "red",
+  "lang": "tr",
+  "theme": "light",
+  "errors": [],
+  "checks": [],
+  "initial": {
+    "backlogLoaded": false,
+    "sharedLinks": 0
+  },
+  "manufacturersReadyMs": 372.70000000018626,
+  "featureReadyMs": 29.899999999441206,
+  "drillReadyMs": 1952.3999999994412,
+  "drawer": {
+    "rootPosition": "static",
+    "drawerPosition": "static",
+    "display": "block",
+    "rootRect": {
+      "x": 208,
+      "y": 388.953125,
+      "width": 1392,
+      "height": 21819.25
+    },
+    "drawerRect": {
+      "x": 208,
+      "y": 388.953125,
+      "width": 1392,
+      "height": 21819.25
+    },
+    "tableRows": 500,
+    "title": "NILE KNIT · Tüm siparişler",
+    "subtitle": "Üreticiler · Sipariş alt detayı",
+    "closeTitle": "Kapat",
+    "tabCalls": [
+      "manufacturers"
+    ],
+    "backlogLoaded": false,
+    "sharedLinks": 0,
+    "resources": []
+  },
+  "status": "red-confirmed"
+}
