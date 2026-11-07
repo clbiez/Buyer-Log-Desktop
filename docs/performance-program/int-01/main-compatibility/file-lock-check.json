@@ -1,0 +1,77 @@
+{
+  "observedAt": "2026-11-07 18:11:42 UTC",
+  "repository": "clbiez/Buyer-Log-Desktop",
+  "scope": "post-#885 preparation compatibility",
+  "pullRequests": [
+    {
+      "number": 907,
+      "fileCount": 19,
+      "int01Intersections": []
+    },
+    {
+      "number": 906,
+      "fileCount": 34,
+      "int01Intersections": []
+    },
+    {
+      "number": 905,
+      "fileCount": 68,
+      "int01Intersections": []
+    },
+    {
+      "number": 904,
+      "fileCount": 18,
+      "int01Intersections": []
+    },
+    {
+      "number": 903,
+      "fileCount": 118,
+      "int01Intersections": []
+    },
+    {
+      "number": 901,
+      "fileCount": 33,
+      "int01Intersections": []
+    },
+    {
+      "number": 900,
+      "fileCount": 15,
+      "int01Intersections": []
+    },
+    {
+      "number": 899,
+      "fileCount": 46,
+      "int01Intersections": []
+    },
+    {
+      "number": 897,
+      "fileCount": 37,
+      "int01Intersections": []
+    },
+    {
+      "number": 896,
+      "fileCount": 39,
+      "int01Intersections": []
+    },
+    {
+      "number": 895,
+      "fileCount": 120,
+      "int01Intersections": []
+    },
+    {
+      "number": 893,
+      "fileCount": 8,
+      "int01Intersections": []
+    },
+    {
+      "number": 891,
+      "fileCount": 7,
+      "int01Intersections": []
+    },
+    {
+      "number": 890,
+      "fileCount": 83,
+      "int01Intersections": []
+    }
+  ]
+}

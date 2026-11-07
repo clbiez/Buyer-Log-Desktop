@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "preparation": {
+    "tr": "Hazırlık tamamlandı.",
+    "en": "Preparation completed."
+  },
+  "fullCopyCandidate": {
+    "productionDecision": "rejected",
+    "tr": "Tam kopyalama adayı üretim için reddedildi.",
+    "en": "The full-copy candidate is rejected for production."
+  },
+  "implementation": {
+    "state": "waiting",
+    "dependencies": [
+      "phase_7_ordering",
+      "phase_6c_source_ownership_contract"
+    ],
+    "productionIntegrationImplemented": false
+  },
+  "historicalMeasurement": {
+    "scope": "synthetic mocked-DB refresh chain; not real-server acceptance",
+    "productionBaseSha": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+    "packageSha": "3c11c6e0cbbc260f1cc436b58f6708bcc8b4bc37",
+    "samplesPerArm": 3,
+    "parseCalls": {
+      "before": {
+        "asas": 4,
+        "ias": 3
+      },
+      "fullCopy": {
+        "asas": 1,
+        "ias": 1
+      }
+    },
+    "wallSeconds": {
+      "before": 7.121587264,
+      "fullCopy": 8.928241735
+    },
+    "eventLoopMaxSeconds": {
+      "before": 7.134511103,
+      "fullCopy": 8.942256127
+    },
+    "peakRssMiB": {
+      "before": 1009.24609375,
+      "fullCopy": 830.125
+    },
+    "parseCountReductionAloneIsGain": false
+  },
+  "mainCompatibility": {
+    "mainSha": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+    "normalMergeSha": "fa632abe4a2023e75f57b2d65707be14508843d6",
+    "harnessChanged": false,
+    "anchorChanged": false,
+    "newPerformanceCampaign": false,
+    "newCandidate": false,
+    "validation": "main-compatibility/compatibility.json"
+  },
+  "designInput": {
+    "artifact": "6c-design-input.md",
+    "recipient": "Buyer Log sunucu entegrasyonunu sürdür",
+    "delivery": "PR #898 artifact; cross-chat send tool unavailable",
+    "directMessageSent": false
+  },
+  "independentReview": "not_started_per_current_user_instruction",
+  "fullRegression": {
+    "required": true,
+    "when": "phase 6 / final program PR on pinned post-#885 Main plus implementation SHA",
+    "cwd": "resources/app",
+    "command": "npm test",
+    "filtered": false,
+    "targetedChecksReplaceFullRegression": false,
+    "state": "pending"
+  },
+  "merge": "stop_before_merge",
+  "release": {
+    "TEST": "not_published",
+    "STABLE": "not_published"
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "historicalPackageSha": "3c11c6e0cbbc260f1cc436b58f6708bcc8b4bc37",
+  "historicalProductionBaseSha": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "mainSha": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "normalMergeSha": "fa632abe4a2023e75f57b2d65707be14508843d6",
+  "mergeParents": [
+    "3c11c6e0cbbc260f1cc436b58f6708bcc8b4bc37",
+    "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240"
+  ],
+  "harnessFixtureTestAndCollectorBytesUnchanged": true,
+  "anchorsUnchangedAndUnique": [
+    "async function loadFromModelConnections(items, options = {}) {",
+    "parseASASRows(entry.run.rows, options.matchRule)",
+    "parseAntrepoRows(run.rows, options.matchRule)"
+  ],
+  "historicalArtifactBytesUnchanged": true,
+  "historicalManifestPassAtOriginalSha": 39,
+  "productionDiffFromMain": false,
+  "currentSourcePins": {
+    "resources/app/scripts/benchmark-int-01-parse.js": "11492109ea72b4e3869c4f86fd44667fbc44485f5c94c666d68882365bcbe0bf",
+    "resources/app/scripts/lib/int-01-fixture.js": "a53ca2dd0e5c157fc30c9b21228d81b38fe6cd0dfc6445d5ab6c9d8185ae84c3",
+    "resources/app/scripts/lib/int-01-refresh-harness.js": "aeab18bc1053689e364f94da8fd08b54d2e5c0c60151221546c73f240ea1f2f7",
+    "resources/app/scripts/lib/int-01-parse-prototype.js": "c0f7c9f84e6fb5dffd1d6d1abe4eedb41d85246303756995bec8817f4ed76282",
+    "docs/performance-program/int-01/measure.cjs": "04d63545dd9e17e8da6107303a35680c2f849c7383259ac096672eae75a5ac9a",
+    "resources/app/scripts/generate-demo-data.js": "b3519667d9b6a33eb929423eb8799cb41762c1a4cffab173f6c5a308439d13b6",
+    "resources/app/server/lib/model-refresh.js": "a12c5dc049e2532e72a4597b9777d6d134dae9e90db43e2db484b1383ae86d70",
+    "resources/app/server/lib/parse.js": "554c4a2360516955f0443bfa76efe43c85fd295182df39ccdb67c8d843e2d2d5",
+    "resources/app/server/lib/lfl.js": "5bd0c5685c51c934a19432225e53c5c84b8b8b167684a48f66b75cf3d49b3d33",
+    "resources/app/server/lib/canonical-fields.js": "22359a397b5fac356587e081057f70c05bf5fab087bde3c612b1ec4dc2c1e2d5",
+    "resources/app/public/canonical-fields.js": "94936da8af26904db6f996291a762b1890464566e47da03f00044a21a6203b53",
+    "resources/app/public/business-rules.js": "1c5ec8c9c1a7302d3e72548f8b08a6206e517bc365b3deb52d1cc037d87ce9e6",
+    "resources/app/public/cp-readiness-engine.js": "08d5f0f3981889682e10f791244a929ebf5d2d88319445a9d7dedf502ce352f8",
+    "resources/app/public/order-importance.js": "538fdd02ebfe97039aedb9d903bcbda73b6934d8fd6401af9a83e66421d6a08e",
+    "resources/app/public/date-dimension.js": "de49767201e345baf0c0fca04716d8f3955a5d25375dba234329f900b26592c3",
+    "resources/app/public/excel-date-utils.js": "3c1195dbf3b4eab58f5546112da1a44a61cc035798eb8943b2c94d9e0acae39d",
+    "resources/app/server/lib/horizon-source-planner.js": "5015aacb602a9d7da2647df5a549c848ed11d4a22a281e867a4a5a87b6662e8b",
+    "resources/app/server/lib/model-scopes.js": "7d4d7ec78c3f14f6ae1aa5eaaf0b27a60d86c3295e87064891ab9c7f45002503",
+    "resources/app/server/lib/model-fields.js": "eaa1b9fa77ce7e7e3eb4723024027200c2afe2bff7cde125e99521177a887550",
+    "resources/app/public/app-main.js": "844dea07238be03461a899051491cb4dca1995a54cb753b5fa3c616845e8531d",
+    "resources/app/public/cp-overview-assistant.js": "cb93dadb7ed943729b26944e93009f9eab0cd4be36fdb2b9a38bbadda0ba5c21",
+    "resources/app/public/cp-checklist-engine.js": "f5dc8a580731af7c22451d99352aadc0dd7aa128472bfc6bfb6d3a9d63877119",
+    "resources/app/public/checklist-supplier-sync.js": "21b12faa5bfffc0ac480197e6c63e15df1709981b65c53a2a7e1621cef9a2b9e"
+  },
+  "changedPinsFromHistoricalCohort": [
+    "resources/app/public/app-main.js"
+  ],
+  "historicalPinsNotRewritten": true,
+  "tests": {
+    "files": 16,
+    "tests": 140,
+    "pass": 140,
+    "fail": 0,
+    "skip": 0,
+    "cancel": 0
+  },
+  "i18n": {
+    "newMissing": 0,
+    "baseline": 0
+  },
+  "newPerformanceCampaign": false,
+  "newCandidate": false,
+  "independentReviewStarted": false,
+  "fullRegression": "pending: mandatory at phase 6 / final program PR; targeted compatibility is not a substitute",
+  "logs": {
+    "i18n.log.gz": {
+      "sha256": "4fdd8fa2af0a2b9d0794f73a873c4e028cc282a6a8eb301fa638c2fd1219181a",
+      "rawSha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b",
+      "rawBytes": 333
+    },
+    "targeted-tests.log.gz": {
+      "sha256": "8b38fc43c681608de0e5d2fb3bd679663add8c2aef072248a487cb42a7ab38a7",
+      "rawSha256": "b8462dd9c7188fdfa28d00d31877fd25d6937f2b9db3bea7fb4d204feebccb2a",
+      "rawBytes": 13215
+    }
+  }
+}

@@ -1,12 +1,32 @@
 # INT-01 — DB ortak parse tanı ve test hazırlığı
 
-**Durum: yalnız hazırlık. Üretim optimizasyonu uygulanmadı; Faz 7 sırası ve
-Faz 6c kaynak sahipliği sözleşmesi bekleniyor. Merge / TEST / STABLE yok.**
+**Hazırlık tamamlandı. Tam kopyalama adayı üretim için reddedildi. INT-01
+uygulaması Faz 7 sırasını ve 6c kaynak sahipliği sözleşmesini bekliyor.
+PR merge'i / TEST / STABLE yok.**
 
-EN: Preparation only. No production optimization or worker integration. Phase 7
-ordering and the phase 6c source-ownership contract remain prerequisites.
+EN: Preparation completed. The full-copy candidate is rejected for production.
+INT-01 implementation awaits phase 7 ordering and the phase 6c source-ownership
+contract. No merge or TEST/STABLE publication.
 
-## Kaynak ve sınır
+#885 sonrası Main `63159fb32ff3d5bdc5f142b4a8f16ca6a3983240` normal merge ile
+alındı; merge commit'i `fa632abe4a2023e75f57b2d65707be14508843d6`.
+Harness/fixture/test kodu, parse anchor'ları ve eski ölçümler değiştirilmedi.
+Yeni uyumluluk kanıtı [main-compatibility](main-compatibility/) altındadır:
+**16 dosya / 140 test PASS; fail/skip/cancel=0**, i18n **0 yeni / 0 baseline**.
+Bu turda yeni performans kampanyası veya aday geliştirme yapılmadı.
+
+[6c sahibine tasarım girdisi](6c-design-input.md): tam grafik kopyalamanın
+parse tasarrufunu tüketmesi; immutable taban sahibi, ince mutable overlay,
+run/rule/parser sürümü, generation ve commit öncesi yayın sınırının birlikte
+tasarlanması. Worker'a taşıma tek başına kopyalama maliyetini çözmüş sayılmaz.
+Bağımsız inceleme kullanıcının güncel talimatıyla başlatılmadı.
+
+EN: Main after #885 was incorporated by a normal merge. Harness, fixture, test
+code, parse anchors and historical measurements remain unchanged. Compatibility
+passes 140 tests in 16 files and i18n 0/0; no new benchmark/candidate was run.
+The linked design input is for the 6c owner. Independent review is not started.
+
+## İlk ölçümün kaynağı ve sınırı
 
 - Bulgudaki INT-01, `server/lib/model-refresh.js` içindeki `runRoleScopes` →
   `loadFromModelConnections` zincirinde doğrulandı. Aynı connection/scope bir
@@ -85,7 +105,13 @@ listesinde node/MainThread seçimiyle düzeltildi. Ham loglar whitespace dahil b
 API'siyle alınan RED loglarının ikisi de saklıdır; beklenen parse-count
 regresyonları GREEN raporuyla birlikte okunmalıdır.
 
-Repo kökünden, başka test/benchmark çalışmıyorken:
+Tarihsel tekrar üretme komutu yalnız ilk teslim SHA'sı
+`3c11c6e0cbbc260f1cc436b58f6708bcc8b4bc37` checkout'unda geçerlidir.
+Collector'ın sabit eski baz kontrolü yeni Main için değiştirilmedi; güncel
+merge üzerinde yeni kampanya başlatılmayacak. Eski kanıtların manifesti de
+yalnız o SHA'nın dosyalarıyla doğrulanır; güncel README'ye göre yenilenmez.
+
+Eski checkout'ta, başka test/benchmark çalışmıyorken:
 
 ```sh
 node docs/performance-program/int-01/measure.cjs /tmp/int01-new-cohort
@@ -151,7 +177,7 @@ metadata mutation, alias/descriptor ve null-LFL eşdeğerliğini sınar.
 uygulayan RED tanısıdır; varsayılan test her zaman aday stratejiyi çalıştırır.
 Mevcut test/assertion/validator veya i18n baseline değiştirilmez.
 
-Son yerel ilgili paket: **16 dosya / 137 test PASS; fail/skip/cancel=0**
+İlk teslim SHA'sındaki yerel ilgili paket: **16 dosya / 137 test PASS; fail/skip/cancel=0**
 (`artifacts/targeted-tests-final.log.gz`). Yeni hazırlık testleri **10/10**.
 i18n **0 yeni / 0 baseline** (`i18n.log.gz`); mevcut release-note paketi **32 OK**
 (`release-notes.log.gz`). Test kapsamı parser tarih/Excel timezone, canonical
@@ -160,7 +186,7 @@ Tam `npm test` bu hazırlıkta çalıştırılmadı. PR fast checks gerçek head
 ayrıca değerlendirilir; yerel sonuç uzak CI başarısı sayılmaz. Main dal koruması
 bu hazırlıkta doğrulanmadı; etkinmiş gibi varsayılmaz.
 
-EN: Final local validation passes 137 tests in 16 files, including all 10 new
+EN: Historical first-delivery validation passed 137 tests in 16 files, including all 10 new
 preparation tests, with zero failures/skips/cancellations. i18n remains 0/0;
 the existing 32 pending release notes validate. Full regression was not run.
 Remote fast checks are evaluated separately; branch protection is unverified.
@@ -183,16 +209,18 @@ be renewed after relevant code changes. There is no visible product change;
 the later implementation still requires its own bilingual note and reviewed
 real post-change screenshot.
 
-## Ana sohbet / tek Claude inceleme paketi
+## Ana sohbet / bağımsız inceleme durumu
 
 Ana sohbetten istenecek: Faz 7 sırası ve 6c sahibi netleşince DB parse'ın mevcut
 ortak worker/owner yoluna entegrasyon sınırı, sürüm anahtarı ve hedef overlay
 sözleşmesi. Yeni worker veya DB migrasyonu önerilmedi/kurulmadı. Owner handle,
 generation, yetki, commit/snapshot ve raw-source yaşam döngüsü bu PR'ın dışında.
 
-Kullanıcı üzerinden Claude'a **en fazla bir bağımsız P1 inceleme turu** için:
+**Güncel talimat: bağımsız inceleme başlatma.** PR'ın incelemeye hazır olması
+üretim adayının onayı veya bağımsız model turunun başlatılması değildir.
+Aşağıdaki tek turluk kapsam ancak ayrıca istendiğinde kullanılacak:
 
-1. PR'ın sabit head SHA'sını ve baz `5a1656e98deeb573f6245f4b24a8135cc77a0d7b`
+1. PR'ın sabit head SHA'sını ve alınan Main `63159fb32ff3d5bdc5f142b4a8f16ca6a3983240`
    farkını verin; inceleme bitene kadar bu SHA'lara rebase/force-push yapmayın.
 2. Yalnız bu yeni INT-01 script/test/kanıt dosyalarını ve INT-01/6c sözleşmesini
    inceleyin. Claude'un veya açık diğer PR'ların dosyalarını düzenlemeyin.
@@ -205,6 +233,8 @@ Kullanıcı üzerinden Claude'a **en fazla bir bağımsız P1 inceleme turu** i�
 İnceleme bu sohbetten gönderilmedi/gerçekleştirilmedi. Kullanıcıya somut PR ve
 kanıt paketi teslim edilir; inceleme sonucu yokken yapılmış denmez.
 
-EN: A single independent P1 review packet is prepared for the user to relay to
-Claude. It is not sent or claimed completed. Production worker/owner integration
-must be requested in the main chat after the phase-order and ownership gates.
+EN: Independent review is not started per the current instruction. The single
+P1 review scope is retained for a later explicit request, against the merged Main
+and the PR's pinned head. Ready-for-review status is not approval of the rejected
+production candidate or initiation of an independent model review. Production
+worker/owner integration still awaits the phase-order and ownership gates.
