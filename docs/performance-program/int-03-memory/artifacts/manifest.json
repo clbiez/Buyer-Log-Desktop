@@ -1,0 +1,201 @@
+{
+  "base": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "rawEvidenceCompression": "lossless gzip; original raw SHA and per-rotation gzip SHA in cohort.json.gz",
+  "files": [
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/before-1.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/before-1.stdout.json.gz",
+      "bytes": 222008,
+      "sha256": "212af0ce9aa3a427673794abe0cceed77aba8e95499d3a1fa5617173474d17b9"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/before-1.trace.1.json.gz",
+      "bytes": 4671076,
+      "sha256": "3c1190451c0cd807f83a6bb21f26b99914e2f02737b7623f1be1c43675ca4abb"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/before-1.trace.2.json.gz",
+      "bytes": 458613,
+      "sha256": "9db669047021438ac95bf124eca4b54347b92e488d70fa8deb0ec8a1f62d6fb3"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/before-2.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/before-2.stdout.json.gz",
+      "bytes": 220815,
+      "sha256": "4e4d93d66a1341bf834482f76c706ac5849ecdaffee302e71b5215f7e6271b53"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/before-2.trace.1.json.gz",
+      "bytes": 4674205,
+      "sha256": "8c67f5bdc48a0f6bc1aa8e557a53fc19f3cd853b1abb2b7d2776bb186c9bd710"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/before-2.trace.2.json.gz",
+      "bytes": 461242,
+      "sha256": "a069c73730b03d62272dbc1b9b1a95515df091bf5d425ad7d97738b84579ba5f"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/before-3.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/before-3.stdout.json.gz",
+      "bytes": 222243,
+      "sha256": "740a39ac57634787c41e012a726a7ee5c88ebb3489e6e6ff915f148b16d94200"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/before-3.trace.1.json.gz",
+      "bytes": 4644116,
+      "sha256": "0682a8b372f7896e7bedec187be0df9ad6864637a8a5efff6400c2b2babfebfc"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/before-3.trace.2.json.gz",
+      "bytes": 462284,
+      "sha256": "2a026c7fdc9fed15042b7a465a22c54a7ba878dd6e232467b24057165ae5c730"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/cohort-metadata.json",
+      "bytes": 12110,
+      "sha256": "93c754210b420b524faf9759c9fd7a43c0eed66684ba8120fd928fcac8a6aaeb"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/cohort.json.gz",
+      "bytes": 684807,
+      "sha256": "53ed43654ab5f8ca69b441b045c0e27178921466a8b0001368be1c964620c41d"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before/summary.json",
+      "bytes": 405,
+      "sha256": "e3394f0f1eb7286c16c9f3245da61359bb436979ea885c781965a38e4cd022fa"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/before-runner.txt",
+      "bytes": 667,
+      "sha256": "1ef746545de017ac326f4fc6fc49d9a986176dcaada0133fc1473321548a5c3a"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/comparison-pending.txt",
+      "bytes": 43,
+      "sha256": "977d105741bc83abbde536ab1963508e9209c81ebe54699a5881ddb7651cb7e9"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/diff-check-failure.txt.gz",
+      "bytes": 184,
+      "sha256": "ffe0d97e97a3b4dbd0350e9ee7fe1c9b7ffd04712858940ecfc0a37b90d58799"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/evidence-audit.json",
+      "bytes": 879,
+      "sha256": "72b5f23c74ed391f58f3999e57335fa00050dc4e3a3d8e4393db63386123daa7"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/harness-green.txt",
+      "bytes": 597,
+      "sha256": "7a4bfa98dd75d7926aad812c84117f65f3947025a271fd7dadcbf7983f32ed39"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/harness-red.txt.gz",
+      "bytes": 1177,
+      "sha256": "2ce5c0eedae3e3c603620a82e9b8c7c5069c4a83fdd45772df670da62c1a9ddb"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/i18n.txt",
+      "bytes": 333,
+      "sha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/initial-partial-trace/before-1.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/initial-partial-trace/before-1.stdout.json.gz",
+      "bytes": 221744,
+      "sha256": "53c5fa4ff55e9dcfbbddee3588b73e07df215395a15779f1119cf08fed40021a"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/initial-partial-trace/before-1.trace.json.gz",
+      "bytes": 461640,
+      "sha256": "9b276212615550dba16b89a7a884e5b4659991342dd21cd226f751a24f7179d2"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/initial-partial-trace/before-2.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/initial-partial-trace/before-2.stdout.json.gz",
+      "bytes": 222011,
+      "sha256": "89f00aee99fc093e625a1dd10efebfca9e8926603def7e889ac35babb20bb08f"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/initial-partial-trace/before-2.trace.json.gz",
+      "bytes": 467773,
+      "sha256": "e1a3311f9855d3c2a1e7ba4cd2cb994c0f66fa8d15c0b4cca070fa85cd2407ac"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/initial-partial-trace/before-3.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/initial-partial-trace/before-3.stdout.json.gz",
+      "bytes": 221367,
+      "sha256": "97a79104cd534ab4bd77a0755533865c83dbf9c42791297a1fa7de52b102ef5d"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/initial-partial-trace/before-3.trace.json.gz",
+      "bytes": 462285,
+      "sha256": "f4ef157dccb0deb2f9e738d9de1c25f649e05a163fd8bfd08bfa0b3456c7fe34"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/initial-partial-trace/cohort-metadata.json",
+      "bytes": 10353,
+      "sha256": "2cd6694e1508fbd168ed3be18da3998d3f6cdbad1ba92f2b350d75966f5e2197"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/initial-partial-trace/cohort.json.gz",
+      "bytes": 684228,
+      "sha256": "66058e19cf0ac37c5a5d077eae9a8b0e239fd28653edc01398daf4e20ac3f3a1"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/initial-partial-trace/summary.json",
+      "bytes": 393,
+      "sha256": "12a1086ace2b05f14943d30b806af6b2e80d9b63b0adf85b03e8cdc84685b761"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/initial-partial-trace-runner.txt",
+      "bytes": 655,
+      "sha256": "8e9c07d31b1ed04adc7486f07aa91438c03dad2533726565ec4d47a3a9dd715d"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/intermediate-preparation-tests.txt",
+      "bytes": 1089,
+      "sha256": "5f7bf8e27287d2eeb3dabb35bf054cc0c93015d73ed8d892ac8b6f14710e2588"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/open-pr-scope.json",
+      "bytes": 1294,
+      "sha256": "a40271c40e505d269ab47955db438676c9b78640cccdf872208920cff4b5a582"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/release-notes.txt",
+      "bytes": 334,
+      "sha256": "0e3c2a5dbd60ea28d367386990eb66ac7ac6dee7d6e16daea3f470bd6de978c7"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/artifacts/targeted-tests.txt",
+      "bytes": 11465,
+      "sha256": "e62bafebc2a7be3bb2e8471783791a9d34b38a165fc3e2603b0c5ecb5b8553f3"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "initialCohortDisposition": "rejected as primary trace evidence: fixed trace filename overwrote earlier rotation; raw memory observations retained",
+  "finalCohort": [
+    {
+      "segments": 2,
+      "events": 578750,
+      "firstNonMetadataAfterProcessMs": -3.004,
+      "oracleMatches": true,
+      "retainedBytes": 356515840,
+      "sourceCommit": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b"
+    },
+    {
+      "segments": 2,
+      "events": 579198,
+      "firstNonMetadataAfterProcessMs": -3.421,
+      "oracleMatches": true,
+      "retainedBytes": 356515840,
+      "sourceCommit": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b"
+    },
+    {
+      "segments": 2,
+      "events": 579359,
+      "firstNonMetadataAfterProcessMs": -3.533,
+      "oracleMatches": true,
+      "retainedBytes": 356515840,
+      "sourceCommit": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b"
+    }
+  ]
+}

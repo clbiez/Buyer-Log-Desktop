@@ -1,0 +1,16 @@
+before 1/3: RSS=662.4 MiB; external=412.1 MiB; first-link=18289.6 ms; total=18311.8 ms
+before 2/3: RSS=639.8 MiB; external=411.8 MiB; first-link=16832.1 ms; total=16856.2 ms
+before 3/3: RSS=664.1 MiB; external=412.4 MiB; first-link=17260.6 ms; total=17282.0 ms
+{
+  "arm": "before",
+  "median": {
+    "osPeakRssBytes": 694583296,
+    "sampledPeakRssBytes": 694583296,
+    "sampledPeakExternalBytes": 432141791,
+    "sampledPeakArrayBufferBytes": 429356472,
+    "firstCanonicalLinkMs": 17260.647434000002,
+    "totalMs": 17282.010656000002,
+    "peakCommitInputBytes": 356515840
+  },
+  "productionAcceptance": "pending Phase 7 implementation and paired after cohort"
+}

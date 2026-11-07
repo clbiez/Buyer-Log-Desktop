@@ -1,0 +1,13 @@
+✔ INT-03 diagnostic observes retained bytes and the first durable canonical link (262.728021ms)
+✔ real ingest preserves manual ownership, URL/content dedup and no-op revision (180.252706ms)
+✔ partial failure and cancellation only link completed valid downloads (344.016212ms)
+✔ dropOldFiles keeps an aliased old ref and the false option keeps all old files (366.810251ms)
+✔ failed canonical link commit rolls back newly created files and preserves revision (210.913585ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1459.64555

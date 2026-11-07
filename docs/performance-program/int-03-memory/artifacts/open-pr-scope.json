@@ -1,0 +1,44 @@
+{
+  "base": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "branch": "diag/int-03-memory-preparation",
+  "runtimeChanged": false,
+  "overlap": false,
+  "checkedOpenPrs": [
+    {
+      "number": 885,
+      "head": "69950f289a012f0bb7c61290bec9890f340f6c64",
+      "scope": "server/common compute; app-main; related tests and docs (protected, untouched)"
+    },
+    {
+      "number": 890,
+      "head": "e31e4bb2699d4d89cf54a1f50ccb6ed6422f9e06",
+      "scope": "INT-06 checkpoint preparation"
+    },
+    {
+      "number": 891,
+      "head": "5736f3370fb55bbd62414585956ca8c53d37ce82",
+      "scope": "phase-6a field inventory docs"
+    },
+    {
+      "number": 893,
+      "head": "a2d6c6774cd863b6e60347e336fbd3c6e888eec3",
+      "scope": "phase-5-fx-diagnosis docs"
+    },
+    {
+      "number": 895,
+      "head": "e165be5d22bcc14fa08d696510a06f5401ac8dc2",
+      "scope": "ana-12 docs/diagnostic preparation"
+    },
+    {
+      "number": 896,
+      "head": "04de59cdcfa959eab9923b9566ee09373daddee2",
+      "scope": "admin-01 backup diagnosis preparation"
+    }
+  ],
+  "pr892": {
+    "merged": true,
+    "mergeSha": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+    "appMainExceptionGrantedToThisChat": false
+  },
+  "reviewShaPolicy": "No rebase or force-push; upstream review heads untouched"
+}

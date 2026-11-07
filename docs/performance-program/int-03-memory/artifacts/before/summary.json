@@ -1,0 +1,13 @@
+{
+  "arm": "before",
+  "median": {
+    "osPeakRssBytes": 694583296,
+    "sampledPeakRssBytes": 694583296,
+    "sampledPeakExternalBytes": 432141791,
+    "sampledPeakArrayBufferBytes": 429356472,
+    "firstCanonicalLinkMs": 17260.647434000002,
+    "totalMs": 17282.010656000002,
+    "peakCommitInputBytes": 356515840
+  },
+  "productionAcceptance": "pending Phase 7 implementation and paired after cohort"
+}
