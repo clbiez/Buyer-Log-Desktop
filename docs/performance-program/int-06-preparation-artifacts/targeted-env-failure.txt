@@ -1,0 +1,76 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js powerbi-checkpoint power-bi-import-dashboard powerbi-dashboard
+
+[Buyer Log tests] 4 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (4 dosya)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/power-bi-import-dashboard.test.js (75.719305ms)
+✔ tests/powerbi-checkpoint-preparation.test.js (184.218533ms)
+✔ tests/powerbi-checkpoint-resume.test.js (2350.188902ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/powerbi-dashboard-schema-wait-v912.test.js (70.449789ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 2
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2363.130917
+
+✖ failing tests:
+
+test at tests/power-bi-import-dashboard.test.js:1:1
+✖ tests/power-bi-import-dashboard.test.js (75.719305ms)
+  'test failed'
+
+test at tests/powerbi-dashboard-schema-wait-v912.test.js:1:1
+✖ tests/powerbi-dashboard-schema-wait-v912.test.js (70.449789ms)
+  'test failed'
+[Buyer Log tests] Batch 1/1 süresi: 2.4s.
+[Buyer Log tests] Batch 1 başarısız. ZIP teslim edilmemeli.
+[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.

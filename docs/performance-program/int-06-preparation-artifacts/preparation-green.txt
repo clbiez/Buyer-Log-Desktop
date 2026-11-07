@@ -1,0 +1,20 @@
+✔ INT-06 fixture has deterministic rows and independent SUCCESS/NOT_FOUND/FAILED coverage (4.190287ms)
+✔ INT-06 write observer counts actual UTF-8 snapshot and journal payload once, ignoring other files (1.187779ms)
+✔ INT-06 benchmark transport uses connector attempt metadata without retaining query history (0.500051ms)
+✔ INT-06 benchmark runs a real store and rejects an intentionally impossible byte budget (100.190221ms)
+✔ INT-06 repeated batch/state transitions never double count terminal orders (6.706114ms)
+✔ INT-06 steady: kill and disk-only resume at EVERY committed batch boundary (606.797017ms)
+ℹ steady: SIGKILL/resume checked at all 3 committed boundaries
+✔ INT-06 split-retry: kill and disk-only resume at EVERY committed batch boundary (1289.780877ms)
+ℹ split-retry: SIGKILL/resume checked at all 7 committed boundaries
+✔ INT-06 cancellation before query and between split batches persists then resumes identically (500.482282ms)
+✔ INT-06 cancellation inside query/retry never marks unfinished orders terminal (224.927665ms)
+✔ INT-06 frozen schema-v1 checkpoint resumes all three terminal states without reinterpretation (61.237821ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2813.880249

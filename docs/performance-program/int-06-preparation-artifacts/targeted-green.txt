@@ -1,0 +1,22 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js powerbi-checkpoint power-bi-import-dashboard powerbi-dashboard
+
+[Buyer Log tests] 4 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (4 dosya)
+✔ tests/power-bi-import-dashboard.test.js (5211.410708ms)
+✔ tests/powerbi-checkpoint-preparation.test.js (201.751585ms)
+✔ tests/powerbi-checkpoint-resume.test.js (2274.155388ms)
+✔ tests/powerbi-dashboard-schema-wait-v912.test.js (278.250534ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5218.699944
+[Buyer Log tests] Batch 1/1 süresi: 5.3s.
+
+[Buyer Log tests] PASS — 4 test dosyası (5.3s).

@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "stage": "preparation-rehearsal",
+  "measuredAt": "2026-11-07T16:09:38.336Z",
+  "target": {
+    "appRoot": "/workspace/Buyer-Log-Desktop/resources/app",
+    "revision": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+    "moduleSha256": "5ed838337012f63ffe2ad93bb1e26333f345ef822bcc261b5738dac6792e80d2"
+  },
+  "harnessSha256": "f90921866de92419135935d9c6d165caa6a88e945e75ad35a20d6bde83348977",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "availableParallelism": 4,
+    "peakRssMethod": "process.resourceUsage().maxRSS KiB × 1024; process lifetime before oracle/load"
+  },
+  "fixture": {
+    "orders": 30000,
+    "batchSize": 250,
+    "scenario": "steady",
+    "version": 1
+  },
+  "fixtureSha256": "33cc69c767a3525cd3981674a7c94e02f0409f14738a9cebf8fb50006c8c6c22",
+  "outputSha256": "3bd684a5c8ef5942cdaf2c9945ac77ee1fef1bff8fbc817b413f7115980df28a",
+  "parity": true,
+  "checkpoints": 120,
+  "progressEvents": 120,
+  "transport": {
+    "queries": 120,
+    "splitRejections": 0,
+    "transientFailures": 0,
+    "terminalFailures": 0
+  },
+  "coverage": {
+    "totalOrders": 30000,
+    "processedOrders": 30000,
+    "successfulOrders": 30000,
+    "notFoundOrders": 0,
+    "failedOrders": 0
+  },
+  "metrics": {
+    "checkpointBytes": 612127225,
+    "checkpointWrites": 120,
+    "finalCheckpointBytes": 8883443,
+    "writeAmplification": 68.90652925898213,
+    "wallMs": 146295.723848,
+    "cpuUserMs": 145633.702,
+    "cpuSystemMs": 812.954,
+    "peakRssBytes": 298340352
+  },
+  "budget": null,
+  "limitations": [
+    "Synthetic zero-latency transport; no Power BI service, Electron, Windows or SMB claim.",
+    "Logical successful sync writeFileSync/appendFileSync payload bytes; no physical I/O or power-loss durability claim.",
+    "CPU/wall cover refresh with real disk checkpoints and progress; RSS is process lifetime high water.",
+    "Preparation only. Re-run paired before/after on post-885 Main; no forced GC or cold-cache claim."
+  ]
+}

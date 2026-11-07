@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "stage": "preparation-rehearsal",
+  "measuredAt": "2026-11-07T16:24:20.909Z",
+  "target": {
+    "appRoot": "/workspace/Buyer-Log-Desktop/resources/app",
+    "revision": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+    "moduleSha256": "5ed838337012f63ffe2ad93bb1e26333f345ef822bcc261b5738dac6792e80d2"
+  },
+  "harnessSha256": "948b6a366e520956a0f29d558c938f0ee4d689bb11d702c2f88678caa9c2e577",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "availableParallelism": 4,
+    "peakRssMethod": "process.resourceUsage().maxRSS KiB × 1024; process lifetime before oracle/load"
+  },
+  "fixture": {
+    "orders": 12,
+    "batchSize": 4,
+    "scenario": "split-retry",
+    "version": 1
+  },
+  "fixtureSha256": "825347705214c8aca3897faac0d72f9a199135213ef5eaa6958ed76e646d29aa",
+  "outputSha256": "fedfa9409f064491aee446c73eb369a1861c5e260ce739f4db97508d5dc4042f",
+  "parity": true,
+  "checkpoints": 7,
+  "progressEvents": 7,
+  "transport": {
+    "queries": 19,
+    "splitRejections": 6,
+    "transientFailures": 3,
+    "terminalFailures": 4
+  },
+  "coverage": {
+    "totalOrders": 12,
+    "processedOrders": 12,
+    "successfulOrders": 9,
+    "notFoundOrders": 2,
+    "failedOrders": 1
+  },
+  "metrics": {
+    "checkpointBytes": 18449,
+    "checkpointWrites": 7,
+    "finalCheckpointBytes": 3367,
+    "writeAmplification": 5.4793584793584795,
+    "wallMs": 66.374554,
+    "cpuUserMs": 57.893,
+    "cpuSystemMs": 1.352,
+    "peakRssBytes": 40108032,
+    "storeSaveWallMs": 0.8295269999999917,
+    "storeSaveCpuUserMs": 0.86,
+    "storeSaveCpuSystemMs": 0.034
+  },
+  "budget": {
+    "maxWriteAmplification": 0,
+    "passed": false
+  },
+  "limitations": [
+    "Synthetic zero-latency transport; no Power BI service, Electron, Windows or SMB claim.",
+    "Logical successful sync writeFileSync/appendFileSync payload bytes; no physical I/O or power-loss durability claim.",
+    "CPU/wall cover refresh with real disk checkpoints and progress; RSS is process lifetime high water.",
+    "Preparation only. Re-run paired before/after on post-885 Main; no forced GC or cold-cache claim."
+  ]
+}
