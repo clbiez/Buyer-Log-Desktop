@@ -4,6 +4,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const Q = require('../public/lcwai-data-query.js');
+const DD = require('../public/date-dimension.js');
+const fixture = require('./helpers/merch-calendar-fixture');
+
+// Dönemler LCW Merch Calendar'a göre hesaplanır; testler 4-4-5 fikstürüyle çalışır.
+DD.setMerchCalendar(fixture.build());
 
 const d = (y, m, day) => new Date(y, m - 1, day);
 function orders() {
@@ -73,8 +78,8 @@ test('kullanıcının örnek isteği: MAG CU4E, W6, ülke ve buying group hariç
   const result = Q.execute(norm.spec, ds);
   // Kalan: PO2 (2 satır, 08), PO4 (09), PO10 (10) → BANGLADEŞ Kids 250 / ÇİN Woman 400 / HİNDİSTAN Man 1000
   assert.equal(result.matched, 4);
-  assert.deepEqual(result.columns.map(c => c.label), ['In-Store (ay)', 'Kids', 'Man', 'Woman', 'Toplam']);
-  assert.deepEqual(result.rows, [['2026-08', 250, null, null, 250], ['2026-09', null, null, 400, 400], ['2026-10', null, 1000, null, 1000]]);
+  assert.deepEqual(result.columns.map(c => c.label), ['In-Store (LCW ay)', 'Kids', 'Man', 'Woman', 'Toplam']);
+  assert.deepEqual(result.rows, [['Ağustos 2026', 250, null, null, 250], ['Eylül 2026', null, null, 400, 400], ['Ekim 2026', null, 1000, null, 1000]]);
   assert.deepEqual(result.total, ['Toplam', 250, 1000, 400, 1650]);
   const lines = Q.describe(norm.spec, ds, result, 'tr').join('\n');
   assert.match(lines, /Merch Alt Grup = CU4E/);
@@ -89,11 +94,11 @@ test('dağınık istek: sipariş geçme (OPD) ayı × model bütçe ayı, W6; bo
   assert.equal(norm.ok, true, norm.errors.join());
   const result = Q.execute(norm.spec, ds);
   assert.equal(result.matched, 10);
-  assert.deepEqual(result.rows.map(r => r[0]), ['2026-01', '2026-02', '2026-03', '(boş)']);
-  assert.deepEqual(result.columns.map(c => c.label).slice(0, 2), ['OPD (ay)', '2026-08']);
+  assert.deepEqual(result.rows.map(r => r[0]), ['Ocak 2026', 'Şubat 2026', 'Mart 2026', '(boş)']);
+  assert.deepEqual(result.columns.map(c => c.label).slice(0, 2), ['OPD (LCW ay)', 'Ağustos 2026']);
   // Ocak: PO1 (08), PO2 (08) → 2 farklı PO; Şubat: PO2(08), PO3(09), PO4(09), PO5(09)
-  assert.deepEqual(result.rows[0].slice(0, 3), ['2026-01', 2, null]);
-  assert.deepEqual(result.rows[1].slice(0, 3), ['2026-02', 1, 3]);
+  assert.deepEqual(result.rows[0].slice(0, 3), ['Ocak 2026', 2, null]);
+  assert.deepEqual(result.rows[1].slice(0, 3), ['Şubat 2026', 1, 3]);
   assert.equal(result.total.at(-1), 9, 'toplam farklı PO sayısı tüm eşleşen kayıtlardan yeniden hesaplanır (toplanmaz)');
 });
 
@@ -134,13 +139,15 @@ test('yapısal hatalar LCW AI düzeltmesi için raporlanır', () => {
 test('tarih aralığı, dönem filtresi, liste modu, sıralama ve limit', () => {
   const ds = orders();
   const between = Q.normalizeSpec({ dataset: 'orders', filters: [{ field: 'OPD', op: 'between', from: '2026-02', to: 'mart 2026' }], measures: [{ agg: 'count' }] }, [ds]);
-  assert.equal(between.spec.filters[0].from, '2026-02-01');
-  assert.equal(between.spec.filters[0].to, '2026-03-31');
+  // LCW Şubat 2026 = 2026-01-26 … 2026-02-22, LCW Mart 2026 = 2026-02-23 … 2026-03-29 (fikstür).
+  assert.equal(between.spec.filters[0].from, '2026-01-26');
+  assert.equal(between.spec.filters[0].to, '2026-03-29');
   assert.equal(Q.execute(between.spec, ds).rows[0][0], 7);
   const period = Q.normalizeSpec({ dataset: 'orders', filters: [{ field: 'MB', values: ['09.2026'] }], list: ['Order Code', 'Order Quantity'], sort: { by: 'Order Quantity', dir: 'desc' }, limit: 2 }, [ds]);
   const list = Q.execute(period.spec, ds);
   assert.equal(list.kind, 'list');
-  assert.deepEqual(list.rows, [['PO7', 700], ['PO6', 600]]);
+  // LCW Eylül 2026 = 2026-08-24 … 2026-09-27: 30 Eylül (PO6/PO7) LCW Ekim'dir.
+  assert.deepEqual(list.rows, [['PO5', 500], ['PO4', 400]]);
   const top = Q.normalizeSpec({ dataset: 'orders', rows: ['Country'], measures: [{ agg: 'sum', field: 'Order Quantity' }], sort: { by: 0, dir: 'desc' }, limit: 1 }, [ds]);
   const topResult = Q.execute(top.spec, ds);
   assert.deepEqual(topResult.rows, [['ÇİN', 2400]]);
@@ -177,4 +184,68 @@ test('serbest yazım: veri isteği ve ekran sezgisi Türkçe karakter ve yazım 
   assert.deepEqual(Q.screensIn('sıparıslerden W6 toplamı'), ['orders']);
   assert.equal(Q.looksLikeDataRequest('Bu maili daha profesyonel yaz'), false);
   assert.equal(Q.looksLikeDataRequest('kaç sipariş var'), true);
+});
+
+test('LCW Merch Calendar: ay ve hafta LCW dönemidir; miladi ay yalnız açıkça istenirse', () => {
+  const ds = orders();
+  const plan = calendar => ({ dataset: 'orders', calendar, filters: [{ field: 'Season', values: ['W6'] }], rows: [{ field: 'MB', bucket: 'month' }], measures: [{ agg: 'sum', field: 'Order Quantity' }] });
+  const lcw = Q.normalizeSpec(plan(undefined), [ds]);
+  assert.equal(lcw.spec.calendar, 'merch', 'varsayılan LCW Merch Calendar');
+  const lcwRows = Q.execute(lcw.spec, ds).rows;
+  // 30.09.2026 (PO6/PO7 = 1300) LCW Ekim'e düşer; miladi takvimde Eylül'dür.
+  assert.deepEqual(lcwRows.find(r => r[0] === 'Ekim 2026'), ['Ekim 2026', 1300 + 1900]);
+  const greg = Q.normalizeSpec(plan('gregorian'), [ds]);
+  const gregRows = Q.execute(greg.spec, ds).rows;
+  assert.deepEqual(gregRows.find(r => r[0] === 'Eylül 2026'), ['Eylül 2026', 300 + 400 + 500 + 1300]);
+  const lines = Q.describe(lcw.spec, ds, null, 'tr').join('\n');
+  assert.match(lines, /Satırlar: In-Store \(LCW ay\)/);
+  assert.match(lines, /Dönem: LCW Merch Calendar \(yüklü takvim 2025-12-29 … 2027-12-26\)/);
+  assert.match(Q.describe(greg.spec, ds, null, 'tr').join('\n'), /Dönem: miladi takvim \(istendiği için/);
+  const weeks = Q.execute(Q.normalizeSpec({ dataset: 'orders', filters: [{ field: 'MB', values: ['2026-W36'] }], rows: [{ field: 'MB', bucket: 'week' }], measures: [{ agg: 'count' }] }, [ds]).spec, ds);
+  assert.deepEqual(weeks.rows, [['36. Hafta Eylül 2026', 1]], 'LCW 36. hafta = 2026-08-31 … 09-06 (PO3, 01.09)');
+});
+
+test('LCW çeyrek/yıl ve dönem kenarları: > ayın son gününden, < ilk gününden', () => {
+  const ds = orders();
+  assert.deepEqual(Q.merchRange(Q.periodOf('2026-Q3')), { start: '2026-06-29', end: '2026-09-27' });
+  assert.deepEqual(Q.merchRange(Q.periodOf('2026')), { start: '2025-12-29', end: '2026-12-27' });
+  const count = filter => Q.execute(Q.normalizeSpec({ dataset: 'orders', filters: [filter], measures: [{ agg: 'count' }] }, [ds]).spec, ds).rows[0][0];
+  assert.equal(count({ field: 'OPD', op: 'gt', values: ['2026-02'] }), 4, 'LCW Şubat sonrası: 01.03 ×2, 09.03, 01.06');
+  assert.equal(count({ field: 'OPD', op: 'gte', values: ['2026-02'] }), 8);
+  assert.equal(count({ field: 'OPD', op: 'lt', values: ['2026-02'] }), 2, 'LCW Şubat öncesi: 10.01, 20.01');
+  assert.equal(count({ field: 'OPD', op: 'lte', values: ['2026-02'] }), 6);
+  const q = Q.execute(Q.normalizeSpec({ dataset: 'orders', rows: [{ field: 'MB', bucket: 'quarter' }], measures: [{ agg: 'count' }] }, [ds]).spec, ds);
+  assert.deepEqual(q.rows.map(r => r[0]), ['2026 Ç3', '2026 Ç4', '2027 Ç1']);
+});
+
+test('takvim dışı tarih ayrı gösterilir; takvim yüklü değilse kullanıcı açıkça uyarılır', () => {
+  const ds = orders();
+  ds.rows.push({ ...ds.rows[0], 'In-Store (Model Budget)': d(2029, 5, 5), 'Order Code': 'PO99' });
+  const norm = Q.normalizeSpec({ dataset: 'orders', rows: [{ field: 'MB', bucket: 'month' }], measures: [{ agg: 'count' }] }, [ds]);
+  const result = Q.execute(norm.spec, ds);
+  assert.deepEqual(result.rows.at(-1), ['(Merch Calendar dışı)', 1]);
+  assert.equal(result.outsideCalendar, 1);
+  assert.match(Q.describe(norm.spec, ds, result, 'tr').join('\n'), /Merch Calendar dışı: 1 kayıt ayrı satır/);
+  DD.clearMerchCalendar();
+  try {
+    assert.match(Q.describe(norm.spec, orders(), null, 'tr').join('\n'), /LCW Merch Calendar yüklü değil — ay ve haftalar Buyer Log’un geçici hafta düzeniyle/);
+    assert.match(Q.describe(norm.spec, orders(), null, 'en').join('\n'), /LCW Merch Calendar is not loaded/);
+  } finally { DD.setMerchCalendar(fixture.build()); }
+});
+
+test('takvim yüklü değilken dönem aralığı, gruplama/üyelikle aynı geçici hafta düzenini kullanır', () => {
+  DD.clearMerchCalendar();
+  try {
+    const ds = orders();
+    ds.rows.push({ ...ds.rows[0], OPD: d(2026, 3, 30), 'Order Code': 'PO30' }); // pazartesi; haftanın pazarı 5 Nisan → geçici düzende Nisan
+    const count = filter => Q.execute(Q.normalizeSpec({ dataset: 'orders', filters: [filter], measures: [{ agg: 'count' }] }, [ds]).spec, ds).rows[0][0];
+    const inMarch = count({ field: 'OPD', op: 'in', values: ['2026-03'] });
+    assert.equal(count({ field: 'OPD', op: 'between', from: '2026-03', to: '2026-03' }), inMarch, 'in ve between aynı Mart');
+    assert.equal(count({ field: 'OPD', op: 'gte', values: ['2026-04'] }) + count({ field: 'OPD', op: 'lt', values: ['2026-04'] }), ds.rows.filter(r => r.OPD).length, 'kenarlar boşluksuz ve çakışmasız');
+    assert.equal(Q.bucketOf('2026-03-30', 'month'), '2026-04');
+    assert.deepEqual(Q.merchRange(Q.periodOf('2026-03')), { start: '2026-02-23', end: '2026-03-29' }, 'Mart: pazarı Mart’ta olan haftalar');
+    const q1 = Q.merchRange(Q.periodOf('2026-Q1')), y = Q.merchRange(Q.periodOf('2026'));
+    assert.equal(q1.start, Q.merchRange(Q.periodOf('2026-01')).start);
+    assert.equal(y.end, Q.merchRange(Q.periodOf('2026-12')).end);
+  } finally { DD.setMerchCalendar(fixture.build()); }
 });

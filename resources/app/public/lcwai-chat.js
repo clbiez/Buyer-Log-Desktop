@@ -960,6 +960,12 @@
     }
     return out;
   }
+  /* Dönemler LCW Merch Calendar'a göre hesaplanır: takvim açılışta yüklenir
+     (merch-calendar-runtime.js); sorgu yüklenmesini bekler. */
+  async function merchCalendarReady() {
+    const ready = window.BLMerchCalendarReady;
+    if (ready && typeof ready.then === 'function') { try { await ready; } catch (_) { /* takvim yoksa geçici düzen + uyarı */ } }
+  }
   function wantsDataQuery(conv, userMessage) {
     const engine = DQ();
     const text = String(userMessage.text || '');
@@ -998,6 +1004,7 @@
     const lang = isEn() ? 'en' : 'tr';
     answer.phase = L('Buyer Log verisi hazırlanıyor…', 'Preparing Buyer Log data…');
     renderMessages();
+    await merchCalendarReady();
     const datasets = await queryDatasets(userMessage.contextIds, userMessage.text);
     if (!datasets.length) return 'chat';
     answer.phase = L('İstek yorumlanıyor…', 'Interpreting the request…');
@@ -1073,6 +1080,7 @@
     try {
       let memo = answerResults.get(message);
       if (!memo) {
+        await merchCalendarReady();
         const datasets = await queryDatasets(message.query.contextIds || [], '');
         const norm = engine.normalizeSpec(message.query.spec, datasets.filter(item => item.id === message.query.dataset), { lang });
         if (!norm.ok || norm.clarify) throw Object.assign(new Error('stale'), { code: 'LCWAI_OUTPUT_RENDER_FAILED' });

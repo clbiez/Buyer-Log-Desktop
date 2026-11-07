@@ -68,3 +68,23 @@ test('rota: /api/lcwai/outputs/table yalnız Buyer Log tablosunu kabul eder', ()
   assert.match(routes, /app\.post\('\/api\/lcwai\/outputs\/table', express\.json\(\{ limit: '24mb' \}\)/);
   assert.match(routes, /await outputsOf\(\)\.createTable\(ownerOf\(req\), \{ data: body\.data, lang: body\.lang,assertCurrent \}\)/);
 });
+
+test('LCW AI bilgisi: Merch Calendar gerçek takvimden türetilir; bugünkü LCW dönemi ve ay aralıkları verilir', () => {
+  const DD = require(path.join(ROOT, 'public', 'date-dimension.js'));
+  const fixture = require('./helpers/merch-calendar-fixture');
+  DD.setMerchCalendar(fixture.build());
+  try {
+    const tr = knowledge.merchCalendarKnowledge('tr', { now: new Date(2026, 8, 30) });
+    assert.match(tr, /Bugün \(2026-09-30\) LCW 2026 yılı, Ekim ayı \(LCW ay 2026-10\), LCW 40\. hafta \(2026-09-28 … 2026-10-04\)/, '30 Eylül LCW Ekim’dir');
+    assert.match(tr, /LCW 2026: Ocak 2025-12-29…2026-01-25 \(hf 1–4\);/);
+    assert.match(tr, /LCW 2027: Ocak 2026-12-28…/);
+    assert.match(tr, /miladi ayına bakarak eşleme/);
+    const en = knowledge.merchCalendarKnowledge('en', { now: new Date(2026, 8, 30) });
+    assert.match(en, /Today \(2026-09-30\) is LCW 2026, October \(LCW month 2026-10\), LCW week 40/);
+    // Hem planlayıcıya hem genel sohbete gider.
+    assert.match(prompts.buildPrompt({ source: 'data-query', task: 'bu ay sipariş adedi', lang: 'tr' }).prompt, /=== BUYER LOG BİLGİSİ ===[\s\S]*LCW Merch Calendar:[\s\S]*LCW 2026: Ocak/);
+    assert.match(prompts.buildChatPrompt({ message: 'bu ayın siparişlerini yorumla', lang: 'tr' }).prompt, /LCW Merch Calendar:[\s\S]*Bugün \(/);
+    assert.match(prompts.buildPrompt({ source: 'data-query', task: 'x', lang: 'en' }).prompt, /"YYYY-MM" = LCW month[\s\S]*"calendar":"gregorian" in specJson ONLY when the user explicitly asks/);
+  } finally { DD.clearMerchCalendar(); }
+  assert.match(knowledge.merchCalendarKnowledge('tr'), /Merch Calendar Buyer Log'a YÜKLENMEMİŞ; kesin LCW dönemleri bilinmiyor: LCW ay veya haftası tahmin etme/);
+});

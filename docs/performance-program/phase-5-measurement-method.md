@@ -243,3 +243,23 @@ Görsel koşunun veri kontrolleri geçti, timing sonucu başarısız kaldı ve
 kabul ölçümü sayılmadı. / Only the visual fixture uses S6/S7 seasons; the
 30k anchor is unchanged. Visual correctness passed; its failed timing
 result is retained and is not acceptance evidence.
+
+## Matching the current main baseline
+
+TR: Faz 5 taslağı açıldığında `main` ayrıca #882 (avatar), #884 (yenileme
+sırasında sunucu yeniden başlaması) ve #883 (LCW AI Merch Calendar) değişikliklerini
+almıştı. Birleştirmede yalnız pending sürüm notları çakıştı; 30 ve 27 kaydın
+ortak kimlikleri korunarak 32 kayıt elde edildi. Yeni eşleşen serinin baz
+kodu `270228a4` olacak; bu üç değişiklik önce/sonra iki tarafta da bulunur.
+Eski `4fb38773` baz checkout'u ve ölçümleri tarihsel kanıt olarak korunur.
+Ana dal ile birleşik ilgili kapsam 174 dosyada 1.321 test geçti; i18n 0/0,
+sürüm notları validator'ı 32 kayıt geçti.
+
+EN: When the Phase 5 draft opened, main had also received #882 (avatar),
+#884 (refresh-server restart detection) and #883 (LCW AI Merch Calendar).
+Only pending release notes conflicted; retaining the common IDs from the
+30- and 27-entry versions produced 32 entries. The new matched cohort will
+use `270228a4` as its baseline so both arms contain those three changes.
+The old `4fb38773` checkout and measurements remain historical evidence.
+The combined main integration passed 1,321 relevant tests in 174 files,
+i18n 0/0 and validation of all 32 release-note entries.

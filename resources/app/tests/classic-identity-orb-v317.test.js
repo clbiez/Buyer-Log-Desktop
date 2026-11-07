@@ -18,3 +18,15 @@ test('startup orb uses its 7.0.294 inline size and placement while retaining rea
  assert.match(read('ui-startup.css'),/data-ready="1"\] \.blBootOrb/);
  assert.match(read('index.html'),/BLThinkingOrbBreathing\.attach/);
 });
+
+test('user menu and topbar initials share one appearance rule',()=>{
+ const css=read('ui-components.css');
+ const outer=css.match(/html\[data-ui-system="manifest"\] \.userMenu \.userMenuHead \.userMenuAvatar\s*\{([^}]+)\}/);
+ const shared=css.match(/html\[data-ui-system="manifest"\] #currentUserBtn #currentUserInitials,\s*html\[data-ui-system="manifest"\] \.userMenu \.userMenuHead \.userMenuAvatar \.blSteelInitials\s*\{([^}]+)\}/);
+ assert.ok(outer,'menu avatar container uses the shared 34px dimensions');
+ assert.ok(shared,'menu and topbar initials share one 30px surface');
+ for(const rule of [/width:34px/,/height:34px/,/background:transparent!important/])assert.match(outer[1],rule);
+ for(const rule of [/width:30px/,/height:30px/,/background:var\(--ui-mark-paper\)!important/,/color:var\(--ui-avatar-ink\)!important/,/font-size:var\(--ui-font-sm\)!important/])assert.match(shared[1],rule);
+ const ui=read('user-access-ui.js');
+ assert.match(ui,/class="userMenuAvatar"><span class="blSteelInitials">/);
+});
