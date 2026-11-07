@@ -1,3 +1,5 @@
+> **Son teslim / Latest handoff:** [e493546c son kod raporu / final-code report](phase-5-review2-final-report.md). Aşağıdaki revizyona ait tarihsel kanıt korunur / Historical evidence below remains at its recorded revision.
+
 # Faz 5 · Main entegrasyonu sonrası sonuç / Result after Main integration
 
 **B1 AÇIK / OPEN. B2 ve B3 düzeltildi / fixed. Merge yok / no merge.**

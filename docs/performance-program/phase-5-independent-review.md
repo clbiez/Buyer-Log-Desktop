@@ -288,3 +288,37 @@ failure/skip/cancel 0; i18n 0/0; 34 release notes PASS.
 [tanısal profiller / diagnostic profiles](phase-5-review2-current-profiles.json).
 Bu yeni delta bağımsız inceleme almış sayılmaz; son SHA PR'da sabitlenir. /
 This new delta is not independently reviewed; its final SHA is pinned in the PR.
+
+
+## İkinci inceleme · son e493 teslimi / Final delta handoff
+
+TR: B2/B3 düzeltmeleri korunur. B1 için son kaynak Main #888 / e493546c;
+208 dosya / 1508 test PASS, i18n 0/0, 36 note. Üç baz korunup üç son aday +
+üç ayrı açılış tamamlandı; kollar artık zamanda dönüşümlü değildir.
+15 tam projection çifti byte-eşdeğer; üç ayrı açılışın hepsi 200 ms kabulünü
+geçemedi. Refresh 52.760 → 64.684 sn (+22.60%).
+
+EN: Final relevant tests and exact projection equality pass, but all three
+separate openings fail responsiveness and refresh regresses. No product
+acceptance, merge or release. Retained baseline samples are not interleaved
+with final candidate samples.
+
+TR: Gerçek CPU izindeki gereksiz history fsync yazımı tek koşulla düzeltildi;
+yeni üç RED → GREEN, legacy/limit/gerçek güncelleme korunur. Mikro 198,904 →
+32,612 ms, fsync 30 → 0; gerçek API/UI byte/mtime/revision sabit. Bu, bütün
+normal stall kök nedenini açıklamaz. Ek FX otomatik okumasında baz 0,
+aday 1/2/1 compute timeout; kuyruk/yürütme ayrımı bilinmiyor, catch saveFx
+çağırmaz. Yük altındaki durum eşdeğerliği kapatılmış sayılmaz.
+
+EN: The proven history no-op write is fixed, with regression/micro/UI proof,
+but it does not explain every normal gap. Additional automatic FX timeouts
+remain open; no claim of wrong stored rates or complete healthy-path parity.
+
+TR: Son delta 1ff5038e..son-SHA kullanıcı üzerinden Claude
+incelemesine verilir; yeni inceleme yapılmış sayılmaz. Kapsam donuk,
+rebase/force-push yok. B1 açık; merge öncesi duruldu.
+
+EN: The post-1ff delta is handed off via the user; independent review is
+pending. No new scope, rebase/force-push or merge.
+
+[Son rapor / Final report](phase-5-review2-final-report.md) · [Tüm veriler / Data](phase-5-review2-final-results.json).

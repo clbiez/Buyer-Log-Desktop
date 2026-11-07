@@ -1,3 +1,5 @@
+> **Son teslim / Latest handoff:** [e493546c son kod raporu / final-code report](phase-5-review2-final-report.md). Aşağıdaki revizyona ait tarihsel kanıt korunur / Historical evidence below remains at its recorded revision.
+
 # B1 · Gereksiz geçmiş yazımı / Redundant history writes
 
 TR: #888 sabit bazındaki b2c9bdac normal 3+3+3 serisi bütün doğruluk

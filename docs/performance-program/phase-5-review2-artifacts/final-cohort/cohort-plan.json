@@ -1,0 +1,222 @@
+{
+  "synthetic": true,
+  "repetitions": 3,
+  "revision": "e493546c583773f1239d30b22a8e56deaa5f5d49",
+  "beforeRevision": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+  "f0HarnessSha256": "f6a619c0002d40cc4bfae67adf051fa55323d933ffad2d3553fb492f619797dc",
+  "openingHarnessSha256": "d2fd64fca073959f264f24566ab2771c4ebcf3e4ed4f47c2b5e50f59e3bc8952",
+  "observerSha256": "8449c87695aacf881ff4f01ccdb8ef32630b7aa6b6a99709e4f5df3f448672b0",
+  "fixtureHashes": {
+    "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+    "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+    "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+  },
+  "cpuQuota": "1600000 400000",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "temporaryRoot": "/workspace/buyerlog-benchmark-temp",
+  "sourceFixture": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-source-anchor-30k/source",
+  "sameSourceBytesAs": "/tmp/buyerlog-startup-baseline-1/source",
+  "fixedOrder": [
+    [
+      "v3",
+      "after",
+      1
+    ],
+    [
+      "openings",
+      "after",
+      1
+    ],
+    [
+      "v3",
+      "after",
+      2
+    ],
+    [
+      "openings",
+      "after",
+      2
+    ],
+    [
+      "v3",
+      "after",
+      3
+    ],
+    [
+      "openings",
+      "after",
+      3
+    ]
+  ],
+  "completed": [
+    {
+      "kind": "v3",
+      "arm": "before",
+      "rep": 1,
+      "report": "/tmp/phase-5-review2-main888-v3-before-1.json",
+      "status": "passed",
+      "finishedAt": "2026-11-07T15:35:41.548Z"
+    },
+    {
+      "kind": "v3",
+      "arm": "before",
+      "rep": 2,
+      "report": "/tmp/phase-5-review2-main888-v3-before-2.json",
+      "status": "passed",
+      "finishedAt": "2026-11-07T15:51:53.163Z"
+    },
+    {
+      "kind": "v3",
+      "arm": "before",
+      "rep": 3,
+      "report": "/tmp/phase-5-review2-main888-v3-before-3.json",
+      "status": "passed",
+      "finishedAt": "2026-11-07T15:56:32.973Z"
+    },
+    {
+      "kind": "v3",
+      "arm": "after",
+      "rep": 1,
+      "report": "/tmp/phase-5-review2-main888-history-v3-after-1.json",
+      "status": "passed",
+      "finishedAt": "2026-11-07T16:19:43.245Z",
+      "overviewResponsivenessPassed": true,
+      "overviewMaxGapMs": 67.90066800000204
+    },
+    {
+      "kind": "openings",
+      "arm": "after",
+      "rep": 1,
+      "report": "/tmp/phase-5-review2-main888-history-openings-after-1.json",
+      "status": "failed",
+      "finishedAt": "2026-11-07T16:21:27.779Z",
+      "responsivenessPassed": false,
+      "gaps": [
+        {
+          "scenario": "overview-global-flow",
+          "recordedGaps": 65,
+          "maxGapMs": 215.3758459999999,
+          "maxDelayMs": 205.3758459999999,
+          "gapsOver200ms": 1,
+          "maxGapUpperBoundMs": 215.3758459999999,
+          "intervalMs": 10,
+          "reportFromMs": 20,
+          "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+        },
+        {
+          "scenario": "backlog",
+          "recordedGaps": 55,
+          "maxGapMs": 197.2753320000047,
+          "maxDelayMs": 187.2753320000047,
+          "gapsOver200ms": 0,
+          "maxGapUpperBoundMs": 197.2753320000047,
+          "intervalMs": 10,
+          "reportFromMs": 20,
+          "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+        }
+      ]
+    },
+    {
+      "kind": "v3",
+      "arm": "after",
+      "rep": 2,
+      "report": "/tmp/phase-5-review2-main888-history-v3-after-2.json",
+      "status": "passed",
+      "finishedAt": "2026-11-07T16:25:40.601Z",
+      "overviewResponsivenessPassed": false,
+      "overviewMaxGapMs": 213.78740400000243
+    },
+    {
+      "kind": "openings",
+      "arm": "after",
+      "rep": 2,
+      "report": "/tmp/phase-5-review2-main888-history-openings-after-2.json",
+      "status": "failed",
+      "finishedAt": "2026-11-07T16:27:24.567Z",
+      "responsivenessPassed": false,
+      "gaps": [
+        {
+          "scenario": "overview-global-flow",
+          "recordedGaps": 77,
+          "maxGapMs": 254.50990699999966,
+          "maxDelayMs": 244.50990699999966,
+          "gapsOver200ms": 1,
+          "maxGapUpperBoundMs": 254.50990699999966,
+          "intervalMs": 10,
+          "reportFromMs": 20,
+          "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+        },
+        {
+          "scenario": "backlog",
+          "recordedGaps": 64,
+          "maxGapMs": 390.19595899999695,
+          "maxDelayMs": 380.19595899999695,
+          "gapsOver200ms": 2,
+          "maxGapUpperBoundMs": 390.19595899999695,
+          "intervalMs": 10,
+          "reportFromMs": 20,
+          "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+        }
+      ]
+    },
+    {
+      "kind": "v3",
+      "arm": "after",
+      "rep": 3,
+      "report": "/tmp/phase-5-review2-main888-history-v3-after-3.json",
+      "status": "passed",
+      "finishedAt": "2026-11-07T16:31:54.013Z",
+      "overviewResponsivenessPassed": true,
+      "overviewMaxGapMs": 154.11111899999378
+    },
+    {
+      "kind": "openings",
+      "arm": "after",
+      "rep": 3,
+      "report": "/tmp/phase-5-review2-main888-history-openings-after-3.json",
+      "status": "failed",
+      "finishedAt": "2026-11-07T16:33:39.555Z",
+      "responsivenessPassed": false,
+      "gaps": [
+        {
+          "scenario": "overview-global-flow",
+          "recordedGaps": 67,
+          "maxGapMs": 248.55220199999894,
+          "maxDelayMs": 238.55220199999894,
+          "gapsOver200ms": 2,
+          "maxGapUpperBoundMs": 248.55220199999894,
+          "intervalMs": 10,
+          "reportFromMs": 20,
+          "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+        },
+        {
+          "scenario": "backlog",
+          "recordedGaps": 14,
+          "maxGapMs": 126.36926600000152,
+          "maxDelayMs": 116.36926600000152,
+          "gapsOver200ms": 0,
+          "maxGapUpperBoundMs": 126.36926600000152,
+          "intervalMs": 10,
+          "reportFromMs": 20,
+          "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+        }
+      ]
+    }
+  ],
+  "conditions": "Normal benchmark only; no diagnostic preload, CPU profiler flag, extra control worker/process, forced GC or affinity changes. The shared-ring observer records numeric timer gaps and GC; CPU is sampled only by its writer worker from Linux procfs and explicitly labelled as approximate surrounding windows. Both arms use the same observer and private overlayfs TMPDIR.",
+  "profilingDifference": "BL_STALL_PROFILE unset both arms. Before enables runtime CPU profiling by default; after opts in explicitly. This production behaviour difference is disclosed.",
+  "historicalEvidence": "Fixed new matched cohort after the measured B3 worker-per-request rollback and B1 asynchronous local OAB file-I/O fix. B2 is extracted to one helper. Every earlier failed normal and diagnostic cohort remains retained. No rebase, affinity change, forced GC, extra worker mechanism, CPU profiler or threshold change. Both arms include Main PRs 886, 887 and 888, including the exact same client checklist optimization and XLSX contract. Its client speedup is not attributed to Phase 5. Both arms use the same source bytes, user-approved Main 888 frozen baseline, F0 harness and numeric observer. This is not a retake of only failed samples. The final candidate includes the one-line history idempotence fix in db.js; no projection, worker or authorization code changed after b2c9bdac. The baseline is unchanged, and its three earlier samples are retained explicitly rather than claiming alternating final arms.",
+  "startedAt": "2026-11-07T16:15:40.452438+00:00",
+  "retainedBeforeReports": {
+    "plan": "/tmp/phase-5-review2-main888-cohort-plan.json",
+    "reason": "The exact frozen Main #888 baseline and all three completed baseline samples are unchanged. Final candidate samples follow the newly proven history-read fix. Baseline/candidate are not alternating in time; no outlier or failed sample was excluded. Earlier pre-fix candidate reports remain separate evidence."
+  },
+  "status": "failed-responsiveness",
+  "finishedAt": "2026-11-07T16:33:49.672402+00:00"
+}

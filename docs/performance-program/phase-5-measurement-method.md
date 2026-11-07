@@ -1,3 +1,5 @@
+> **Son teslim / Latest handoff:** [e493546c son kod raporu / final-code report](phase-5-review2-final-report.md). Aşağıdaki revizyona ait tarihsel kanıt korunur / Historical evidence below remains at its recorded revision.
+
 # Faz 5 · Ölçüm koşulları / Measurement conditions
 
 TR/EN: Güncel ikinci-inceleme sonucu / Latest second-review result:
