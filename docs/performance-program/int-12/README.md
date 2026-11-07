@@ -1,4 +1,4 @@
-> Güncel devam raporu / Current follow-up: [FOLLOWUP.md](FOLLOWUP.md). Aşağıdaki metin `8bbbb2bb` ilk turunun tarihsel RED kaydı ve değişmeden korunan inceleme paketidir / The text below is the historical first-round RED record and preserved review packet.
+> Güncel Main entegrasyonu / Current Main integration: [MAIN-INTEGRATION.md](MAIN-INTEGRATION.md). Önceki devam raporu / Earlier follow-up: [FOLLOWUP.md](FOLLOWUP.md). Aşağıdaki metin `8bbbb2bb` ilk turunun tarihsel RED kaydı ve değişmeden korunan inceleme paketidir / The text below is the historical first-round RED record and preserved review packet.
 
 # INT-12 — tanı / fixture hazırlığı: RED, durduruldu
 

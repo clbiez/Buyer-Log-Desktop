@@ -16,19 +16,28 @@ const percentile = (values, q) => {
   const sorted = [...values].sort((a, b) => a - b); // Numeric timing samples only; never result/failure arrays.
   return sorted[Math.ceil(sorted.length * q) - 1];
 };
-const output = path.resolve(process.argv[2] || path.join(repo, 'docs/performance-program/int-12/followup-evidence/ab-3pairs'));
+const preflightOnly = process.argv.includes('--preflight-only');
+const output = path.resolve(process.argv.slice(2).find(arg => arg !== '--preflight-only') || path.join(repo, 'docs/performance-program/int-12/followup-evidence/ab-3pairs'));
 const lock = path.join(os.tmpdir(), 'buyerlog-int12-measure.lock');
 
 async function main() {
   const identity = sourceIdentity();
-  const gate = JSON.parse(read('docs/performance-program/int-12/followup-evidence/green-gate.json'));
+  // Versioned integration evidence; historical GREEN/RED/measurements stay intact.
+  const gate = JSON.parse(read('docs/performance-program/int-12/main-integration/green-gate.json'));
   assert.deepEqual(gate.counts, { tests: 17, pass: 17, fail: 0, skipped: 0, cancelled: 0 });
   assert.equal(gate.harnessSha256, identity.harnessSha256, 'Harness changed after GREEN');
   assert.equal(gate.testSha256, sha(read('resources/app/tests/oab-int12-preparation.test.js')), 'Tests changed after GREEN');
-  assert.equal(gate.logSha256, sha(read('docs/performance-program/int-12/followup-evidence/preparation-green.txt')));
+  assert.equal(gate.logSha256, sha(read('docs/performance-program/int-12/main-integration/preparation-green.txt')));
+  assert.equal(gate.authHelperSha256, identity.authHelperSha256, 'Native auth changed after GREEN');
   assert.equal(identity.serviceSha256, identity.expectedServiceSha256);
   git(['merge-base', '--is-ancestor', identity.mainWith892, 'HEAD']);
-  assert.equal(git(['diff', '--name-only', identity.mainWith892, '--', 'resources/app/server', 'resources/app/public', 'CLAUDE.md', 'AGENTS.md']), '', 'Protected production files changed');
+  assert.match(gate.productionBase, /^[a-f0-9]{40}$/);
+  git(['merge-base', '--is-ancestor', gate.productionBase, 'HEAD']);
+  assert.equal(git(['diff', '--name-only', gate.productionBase, '--', 'resources/app/server', 'resources/app/public', 'CLAUDE.md', 'AGENTS.md']), '', 'Protected production files changed');
+  if (preflightOnly) {
+    console.log(JSON.stringify({ mode: 'preflight-only', productionBase: gate.productionBase, identity, measurementRun: false }));
+    return;
+  }
   const processes = execFileSync('ps', ['-eo', 'pid=,comm='], { encoding: 'utf8' }).trim();
   const competing = processes.split('\n').map(line => line.trim().split(/\s+/)).filter(([pid, name]) =>
     Number(pid) !== process.pid && /^(node|nodejs|chromium|chrome|firefox)$/.test(name));

@@ -1,0 +1,112 @@
+TAP version 13
+# Subtest: INT-12 pins native source and both arms to Main including \#892
+ok 1 - INT-12 pins native source and both arms to Main including \#892
+  ---
+  duration_ms: 1.542446
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: cold
+ok 2 - INT-12 native/2 bounded equivalence: cold
+  ---
+  duration_ms: 544.882842
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: fresh-half
+ok 3 - INT-12 native/2 bounded equivalence: fresh-half
+  ---
+  duration_ms: 293.877565
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: fresh-all
+ok 4 - INT-12 native/2 bounded equivalence: fresh-all
+  ---
+  duration_ms: 82.090936
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: force-refresh
+ok 5 - INT-12 native/2 bounded equivalence: force-refresh
+  ---
+  duration_ms: 473.985022
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: batch-supported
+ok 6 - INT-12 native/2 bounded equivalence: batch-supported
+  ---
+  duration_ms: 163.433414
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: probe-verified
+ok 7 - INT-12 native/2 bounded equivalence: probe-verified
+  ---
+  duration_ms: 170.040767
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: probe-fallback
+ok 8 - INT-12 native/2 bounded equivalence: probe-fallback
+  ---
+  duration_ms: 499.538708
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: partial
+ok 9 - INT-12 native/2 bounded equivalence: partial
+  ---
+  duration_ms: 508.051013
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: throttle
+ok 10 - INT-12 native/2 bounded equivalence: throttle
+  ---
+  duration_ms: 493.988804
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: auth-recovery
+ok 11 - INT-12 native/2 bounded equivalence: auth-recovery
+  ---
+  duration_ms: 503.36301
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: auth-fatal
+ok 12 - INT-12 native/2 bounded equivalence: auth-fatal
+  ---
+  duration_ms: 465.286922
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: revoke-auth
+ok 13 - INT-12 native/2 bounded equivalence: revoke-auth
+  ---
+  duration_ms: 8.424663
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: revoke-response
+ok 14 - INT-12 native/2 bounded equivalence: revoke-response
+  ---
+  duration_ms: 59.962625
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: revoke-recovery
+ok 15 - INT-12 native/2 bounded equivalence: revoke-recovery
+  ---
+  duration_ms: 65.126182
+  type: 'test'
+  ...
+# Subtest: INT-12 native/2 bounded equivalence: cancel
+ok 16 - INT-12 native/2 bounded equivalence: cancel
+  ---
+  duration_ms: 73.083399
+  type: 'test'
+  ...
+# Subtest: INT-12 refuses an unbounded or unsupported experiment width
+ok 17 - INT-12 refuses an unbounded or unsupported experiment width
+  ---
+  duration_ms: 0.613164
+  type: 'test'
+  ...
+1..17
+# tests 17
+# suites 0
+# pass 17
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4510.205678

@@ -1,0 +1,87 @@
+TAP version 13
+# Buyer Log sunucusu çalışıyor: http://localhost:47311
+# Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+# Moderatör kaynak klasörü: (seçilmedi)
+# [RUNTIME] heap-limit heapUsedMb=47 heapLimitMb=4288 rssMb=145
+# [RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1
+# Subtest: v7.20 plan ucu kombinasyon ve maliyeti hesaplar, karşılıksızları bildirir
+ok 1 - v7.20 plan ucu kombinasyon ve maliyeti hesaplar, karşılıksızları bildirir
+  ---
+  duration_ms: 147.355451
+  type: 'test'
+  ...
+# Subtest: v7.20 toplu parametre UYGULANIYORSA tek istekle çok grup gelir ve öğrenilir
+ok 2 - v7.20 toplu parametre UYGULANIYORSA tek istekle çok grup gelir ve öğrenilir
+  ---
+  duration_ms: 38.900692
+  type: 'test'
+  ...
+# Subtest: v7.20 toplu parametre YOK SAYILIYORSA sessizce eksik rapor verilmez
+ok 3 - v7.20 toplu parametre YOK SAYILIYORSA sessizce eksik rapor verilmez
+  ---
+  duration_ms: 50.723581
+  type: 'test'
+  ...
+# Subtest: v7.20 öğrenilen "unsupported" sonraki işte tekrar denenmez
+ok 4 - v7.20 öğrenilen "unsupported" sonraki işte tekrar denenmez
+  ---
+  duration_ms: 45.068033
+  type: 'test'
+  ...
+# Subtest: v7.20 bir kombinasyon patlarsa diğerleri korunur ve hata adıyla raporlanır
+ok 5 - v7.20 bir kombinasyon patlarsa diğerleri korunur ve hata adıyla raporlanır
+  ---
+  duration_ms: 33.496423
+  type: 'test'
+  ...
+# Subtest: v7.20 iptal edilen iş, o ana kadar çekilen veriyi KORUR
+ok 6 - v7.20 iptal edilen iş, o ana kadar çekilen veriyi KORUR
+  ---
+  duration_ms: 437.290642
+  type: 'test'
+  ...
+# Subtest: v7.20 aynı kullanıcı için ikinci iş paralel başlatılamaz
+ok 7 - v7.20 aynı kullanıcı için ikinci iş paralel başlatılamaz
+  ---
+  duration_ms: 224.972407
+  type: 'test'
+  ...
+# Subtest: v7.20 tekil kombinasyonlar önbelleğe yazılır, ikinci turda PASS'e gidilmez
+ok 8 - v7.20 tekil kombinasyonlar önbelleğe yazılır, ikinci turda PASS'e gidilmez
+  ---
+  duration_ms: 52.344545
+  type: 'test'
+  ...
+# Subtest: v7.20 hiçbir geçerli kombinasyon yoksa iş başlatılmaz
+ok 9 - v7.20 hiçbir geçerli kombinasyon yoksa iş başlatılmaz
+  ---
+  duration_ms: 1.986465
+  type: 'test'
+  ...
+# Subtest: masaüstü OAB isteği gizli oturumun RAM token'ıyla doğrudan PASS API'den çekilir; dış tarayıcıya gidilmez
+ok 10 - masaüstü OAB isteği gizli oturumun RAM token'ıyla doğrudan PASS API'den çekilir; dış tarayıcıya gidilmez
+  ---
+  duration_ms: 4.613257
+  type: 'test'
+  ...
+# Subtest: masaüstü OAB oturumu yoksa OAB_AUTH_REQUIRED döner; Edge/CDP yakalamasına düşülmez
+ok 11 - masaüstü OAB oturumu yoksa OAB_AUTH_REQUIRED döner; Edge/CDP yakalamasına düşülmez
+  ---
+  duration_ms: 2.920083
+  type: 'test'
+  ...
+# Subtest: masaüstü toplu OAB işi başlatan isteğin taşımasını korur
+ok 12 - masaüstü toplu OAB işi başlatan isteğin taşımasını korur
+  ---
+  duration_ms: 35.420013
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1579.347912

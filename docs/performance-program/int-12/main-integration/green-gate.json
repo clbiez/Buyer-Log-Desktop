@@ -1,0 +1,14 @@
+{
+  "counts": {
+    "tests": 17,
+    "pass": 17,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0
+  },
+  "productionBase": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "harnessSha256": "4e8d6c0f4731953054ea136737789bf9dcf2294d10c43b020ca78c6d3082284e",
+  "testSha256": "20c79fa3403e5f58079eb681d867b73e8b0c5d9a534fbb80ee94b194ea068870",
+  "authHelperSha256": "d94b7d0845b46538b481145636caae6d58ec1733ec7e54cb93a59cc7ce2761dc",
+  "logSha256": "1ec0ff7751b5ea1ea4689de858d794ffa029987fd7d9d47cae6fb11b8c4b2de6"
+}

@@ -1,0 +1,9 @@
+{
+  "kind": "source-comparison-tooling-failure",
+  "measurementRun": false,
+  "reason": "The initial comparison tried to read the preparation-only harness from Main rather than the merged preparation head.",
+  "ref": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "path": "resources/app/tests/helpers/oab-int12-harness.cjs",
+  "exitCode": 128,
+  "correction": "Compare pre-integration preparation 2e150649 against merge 24131b85; native files in the merged tree must also match Main."
+}

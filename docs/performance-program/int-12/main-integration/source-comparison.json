@@ -1,0 +1,82 @@
+{
+  "before": "2e1506490d997247aaf37def69a739d9048b2f03",
+  "main": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "merged": "24131b856d14b3a196058602c7f15f13dca28d39",
+  "mainIncludes885And892": true,
+  "normalMergeParentsVerified": true,
+  "ownProductionDelta": [],
+  "beforeFiles": {
+    "resources/app/tests/helpers/oab-int12-harness.cjs": "4e8d6c0f4731953054ea136737789bf9dcf2294d10c43b020ca78c6d3082284e",
+    "resources/app/server/lib/oab-batch-service.js": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+    "resources/app/server/lib/oab-job-store.js": "4f5c1fc01e8325dd859c6a4b207c1f251edc1e145c7a13966dceedc0609fd13d",
+    "resources/app/server/lib/shared-file-transaction.js": "c97b75950ddd726ce58d73a256c0953a98987451d6165bb99112a0e93faa1881",
+    "resources/app/server/lib/lease-worker-registry.js": "5adc794a1101671859a16c78a2e7fc55399551080286c995bb6343927627038d",
+    "resources/app/server/user-data.js": "568828212ea6976cc72743fe8f528be549ec2cb3f2e4a24e2e2c7d14125242d5",
+    "resources/app/server/lib/backup-sensitivity.js": "1bf0f94dc7758e2b0b3a069aabe63e3bda096f9140039df7b7e8ddc5f8143b66",
+    "resources/app/server/lib/durable-file-recovery.js": "ae283d148821f117e43c206f54cb1d9f8deb6d071d298b6f45a5ecbf42fd0c62",
+    "resources/app/server/lib/oab-session-store.js": "2dcdc7683440cc74526a96c5e75053f2ca26f63af18f801c1a1aba4a62efdd6b",
+    "resources/app/server/lib/oab-batch.js": "42c408307937a7a6a400bebb228eed20e7ae21210e228f20eda8a54daf3aeb3a",
+    "resources/app/tests/fixtures/oab-int12.json": "50c64f71cfd4d5f44b9a983383fcce681f4f912a8457776f497fd9de59d5ce87"
+  },
+  "afterFiles": {
+    "resources/app/tests/helpers/oab-int12-harness.cjs": "4e8d6c0f4731953054ea136737789bf9dcf2294d10c43b020ca78c6d3082284e",
+    "resources/app/server/lib/oab-batch-service.js": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+    "resources/app/server/lib/oab-job-store.js": "4f5c1fc01e8325dd859c6a4b207c1f251edc1e145c7a13966dceedc0609fd13d",
+    "resources/app/server/lib/shared-file-transaction.js": "c97b75950ddd726ce58d73a256c0953a98987451d6165bb99112a0e93faa1881",
+    "resources/app/server/lib/lease-worker-registry.js": "5adc794a1101671859a16c78a2e7fc55399551080286c995bb6343927627038d",
+    "resources/app/server/user-data.js": "568828212ea6976cc72743fe8f528be549ec2cb3f2e4a24e2e2c7d14125242d5",
+    "resources/app/server/lib/backup-sensitivity.js": "1bf0f94dc7758e2b0b3a069aabe63e3bda096f9140039df7b7e8ddc5f8143b66",
+    "resources/app/server/lib/durable-file-recovery.js": "ae283d148821f117e43c206f54cb1d9f8deb6d071d298b6f45a5ecbf42fd0c62",
+    "resources/app/server/lib/oab-session-store.js": "2dcdc7683440cc74526a96c5e75053f2ca26f63af18f801c1a1aba4a62efdd6b",
+    "resources/app/server/lib/oab-batch.js": "42c408307937a7a6a400bebb228eed20e7ae21210e228f20eda8a54daf3aeb3a",
+    "resources/app/tests/fixtures/oab-int12.json": "50c64f71cfd4d5f44b9a983383fcce681f4f912a8457776f497fd9de59d5ce87"
+  },
+  "changed": [],
+  "beforeAuth": {
+    "serverSha256": "cbe33b674853050862c2929f66210131a1011c5d6852f97a1f59e337209743ca",
+    "helperSha256": "d94b7d0845b46538b481145636caae6d58ec1733ec7e54cb93a59cc7ce2761dc",
+    "start": "function assertOabCurrentAccess(",
+    "end": "async function oabDesktopSessionReady()",
+    "startLine": 5419,
+    "endLine": 5468
+  },
+  "afterAuth": {
+    "serverSha256": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5",
+    "helperSha256": "d94b7d0845b46538b481145636caae6d58ec1733ec7e54cb93a59cc7ce2761dc",
+    "start": "function assertOabCurrentAccess(",
+    "end": "async function oabDesktopSessionReady()",
+    "startLine": 5433,
+    "endLine": 5482
+  },
+  "anchorCounts": {
+    "for (const item of job.queue) {": 1,
+    "const result = await oabFetchOneCombination(userId, currentUser, item, job.forceRefresh, job.transport, job);": 1
+  },
+  "excluded": [
+    {
+      "file": "resources/app/server/lib/oab-static-metadata.js",
+      "beforeSha256": "fff11fbbdb3aa079b01bbd980b86c8727d02c2004d89c71d9527072dec1ab690",
+      "afterSha256": "c3cefe7e75b7057dd0dcc9f02c0e85a1d13d16ef92c2f9887549233dc559e77a",
+      "reason": "The unchanged harness injects fake metadata/access dependencies; this production module is not loaded by the measured path."
+    },
+    {
+      "file": "resources/app/server/lib/user-access.js",
+      "beforeSha256": "4d2d0beae715dc2559fcfe88f65e0f6e38168052921b37a168ff579c51995142",
+      "afterSha256": "6280f282b696ce26abdabd7061b2e5c74bd1d9ba27b4298e12ba16293b72bf55",
+      "reason": "The unchanged harness injects fake metadata/access dependencies; this production module is not loaded by the measured path."
+    }
+  ],
+  "preservedHistoricalFiles": 112,
+  "evidenceChanged": [],
+  "servicePinUnchanged": true,
+  "measuredIdentityMatches": {
+    "service": true,
+    "auth": true,
+    "harness": true,
+    "fixture": true
+  },
+  "nativeContractByteIdentical": true,
+  "measurementRun": false,
+  "measurementPathChanged": false,
+  "node": "v24.19.0"
+}

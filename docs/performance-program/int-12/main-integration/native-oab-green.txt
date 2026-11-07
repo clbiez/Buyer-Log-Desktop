@@ -1,0 +1,677 @@
+TAP version 13
+# Subtest: all-buyer plan supplies a valid filtered auth context without a PASS request
+ok 1 - all-buyer plan supplies a valid filtered auth context without a PASS request
+  ---
+  duration_ms: 2.998031
+  type: 'test'
+  ...
+# Subtest: native shared plan uses existing metadata, worst-case estimates, skips and cached counts
+ok 2 - native shared plan uses existing metadata, worst-case estimates, skips and cached counts
+  ---
+  duration_ms: 0.297769
+  type: 'test'
+  ...
+# Subtest: native start/status uses original worker, session transport, atomic persisted snapshot and audit
+ok 3 - native start/status uses original worker, session transport, atomic persisted snapshot and audit
+  ---
+  duration_ms: 36.844426
+  type: 'test'
+  ...
+# Subtest: native cached-only worker does not request auth and reads the same cache keys
+ok 4 - native cached-only worker does not request auth and reads the same cache keys
+  ---
+  duration_ms: 13.500016
+  type: 'test'
+  ...
+# Subtest: failed native combinations retain successful rows and native explicit retry merges snapshot selection
+ok 5 - failed native combinations retain successful rows and native explicit retry merges snapshot selection
+  ---
+  duration_ms: 26.829536
+  type: 'test'
+  ...
+# Subtest: native batched response must verify before use; unsupported probe falls back without duplicating rows
+ok 6 - native batched response must verify before use; unsupported probe falls back without duplicating rows
+  ---
+  duration_ms: 19.730592
+  type: 'test'
+  ...
+# Subtest: native verified probe is reused once and never written under a single-group cache key
+ok 7 - native verified probe is reused once and never written under a single-group cache key
+  ---
+  duration_ms: 11.090884
+  type: 'test'
+  ...
+# Subtest: cancel preserves current successful response, stops remaining queue and isolates owner jobs
+ok 8 - cancel preserves current successful response, stops remaining queue and isolates owner jobs
+  ---
+  duration_ms: 13.319014
+  type: 'test'
+  ...
+# Subtest: latest native IAM is required before start/status/cancel even when caller retains an old profile
+ok 9 - latest native IAM is required before start/status/cancel even when caller retains an old profile
+  ---
+  duration_ms: 0.675409
+  type: 'test'
+  ...
+# Subtest: revocation after auth await stops before actual report request and native snapshot/cache writes
+ok 10 - revocation after auth await stops before actual report request and native snapshot/cache writes
+  ---
+  duration_ms: 5.564731
+  type: 'test'
+  ...
+# Subtest: revocation after fetch await prevents cache/snapshot writes and stops remaining combinations
+ok 11 - revocation after fetch await prevents cache/snapshot writes and stops remaining combinations
+  ---
+  duration_ms: 4.849522
+  type: 'test'
+  ...
+# Subtest: trusted authority guard is rechecked after network waits and before native capability save
+ok 12 - trusted authority guard is rechecked after network waits and before native capability save
+  ---
+  duration_ms: 7.099294
+  type: 'test'
+  ...
+# Subtest: required selection, no valid combination and actual 400-combination bound reject before launch
+ok 13 - required selection, no valid combination and actual 400-combination bound reject before launch
+  ---
+  duration_ms: 0.852546
+  type: 'test'
+  ...
+# Subtest: native HTTP facade keeps start acknowledgement, owner status and cancellation through the same service
+ok 14 - native HTTP facade keeps start acknowledgement, owner status and cancellation through the same service
+  ---
+  duration_ms: 16.197393
+  type: 'test'
+  ...
+# Subtest: OAB client reports native authority stop in TR/EN without private error echo or false completion
+ok 15 - OAB client reports native authority stop in TR/EN without private error echo or false completion
+  ---
+  duration_ms: 10.887006
+  type: 'test'
+  ...
+# Subtest: production browser recovery IAM revocation prevents the actual second report request
+ok 16 - production browser recovery IAM revocation prevents the actual second report request
+  ---
+  duration_ms: 12.704367
+  type: 'test'
+  ...
+# Subtest: production browser recovery agent revocation prevents the actual second report request
+ok 17 - production browser recovery agent revocation prevents the actual second report request
+  ---
+  duration_ms: 8.062497
+  type: 'test'
+  ...
+# Subtest: production browser storage IAM revocation prevents subsequent auth capture and fetch
+ok 18 - production browser storage IAM revocation prevents subsequent auth capture and fetch
+  ---
+  duration_ms: 7.959822
+  type: 'test'
+  ...
+# Subtest: production browser storage agent revocation prevents subsequent auth capture and fetch
+ok 19 - production browser storage agent revocation prevents subsequent auth capture and fetch
+  ---
+  duration_ms: 8.200675
+  type: 'test'
+  ...
+# Subtest: production helper default native UI authority guards recovery even without an Office callback
+ok 20 - production helper default native UI authority guards recovery even without an Office callback
+  ---
+  duration_ms: 2.580852
+  type: 'test'
+  ...
+# Subtest: native start audit failure cannot leave a running ghost job or launch network work
+ok 21 - native start audit failure cannot leave a running ghost job or launch network work
+  ---
+  duration_ms: 0.830392
+  type: 'test'
+  ...
+# Subtest: native continuation preview uses verified exact pairs, not a Cartesian selection or completed counter
+ok 22 - native continuation preview uses verified exact pairs, not a Cartesian selection or completed counter
+  ---
+  duration_ms: 13.990116
+  type: 'test'
+  ...
+# Subtest: actual approved native continuation fetches only missing pair and saves original plus new rows
+ok 23 - actual approved native continuation fetches only missing pair and saves original plus new rows
+  ---
+  duration_ms: 26.418005
+  type: 'test'
+  ...
+# Subtest: zero-row success is retained and is never requested again
+ok 24 - zero-row success is retained and is never requested again
+  ---
+  duration_ms: 18.86774
+  type: 'test'
+  ...
+# Subtest: all captured results still require approved persistent completion but no new network request
+ok 25 - all captured results still require approved persistent completion but no new network request
+  ---
+  duration_ms: 17.111698
+  type: 'test'
+  ...
+# Subtest: native continuation requires explicit confirmation and matching preview
+ok 26 - native continuation requires explicit confirmation and matching preview
+  ---
+  duration_ms: 8.900671
+  type: 'test'
+  ...
+# Subtest: changed snapshot, including empty save-clear ABA, cannot be overwritten by interrupted continuation
+ok 27 - changed snapshot, including empty save-clear ABA, cannot be overwritten by interrupted continuation
+  ---
+  duration_ms: 8.907822
+  type: 'test'
+  ...
+# Subtest: cancelled original command does not gain continuation authorization
+ok 28 - cancelled original command does not gain continuation authorization
+  ---
+  duration_ms: 6.562105
+  type: 'test'
+  ...
+# Subtest: corrupted original rows are rejected, never replaced by the owner report
+ok 29 - corrupted original rows are rejected, never replaced by the owner report
+  ---
+  duration_ms: 4.737604
+  type: 'test'
+  ...
+# Subtest: approval is bound to original receipt revision and current user authority
+ok 30 - approval is bound to original receipt revision and current user authority
+  ---
+  duration_ms: 7.589975
+  type: 'test'
+  ...
+# Subtest: same approved continuation is idempotent after service reconstruction
+ok 31 - same approved continuation is idempotent after service reconstruction
+  ---
+  duration_ms: 21.060296
+  type: 'test'
+  ...
+# Subtest: actual shared owner reservation rejects a newer parent revision after preview
+ok 32 - actual shared owner reservation rejects a newer parent revision after preview
+  ---
+  duration_ms: 10.421033
+  type: 'test'
+  ...
+# Subtest: actual shared reservation rejects a competing native job installed after continuation preview
+ok 33 - actual shared reservation rejects a competing native job installed after continuation preview
+  ---
+  duration_ms: 10.252609
+  type: 'test'
+  ...
+# Subtest: snapshot changed during native audit is checked again before command persistence or RPC
+ok 34 - snapshot changed during native audit is checked again before command persistence or RPC
+  ---
+  duration_ms: 9.289632
+  type: 'test'
+  ...
+# Subtest: changed current authority within native audit stops continuation before RPC
+ok 35 - changed current authority within native audit stops continuation before RPC
+  ---
+  duration_ms: 7.508281
+  type: 'test'
+  ...
+# Subtest: native continuation source read rechecks access after result file read
+ok 36 - native continuation source read rechecks access after result file read
+  ---
+  duration_ms: 5.320212
+  type: 'test'
+  ...
+# Subtest: unsupported or changed native metadata cannot silently shrink the approved original pairs
+ok 37 - unsupported or changed native metadata cannot silently shrink the approved original pairs
+  ---
+  duration_ms: 4.460906
+  type: 'test'
+  ...
+# Subtest: native retry continuation preserves original merge policy and unrelated actual snapshot rows
+ok 38 - native retry continuation preserves original merge policy and unrelated actual snapshot rows
+  ---
+  duration_ms: 24.82958
+  type: 'test'
+  ...
+# Subtest: unsupported prior source overlap fails closed rather than double-counting retained rows
+ok 39 - unsupported prior source overlap fails closed rather than double-counting retained rows
+  ---
+  duration_ms: 4.525564
+  type: 'test'
+  ...
+# Subtest: native continuation retains forced-refresh semantics despite a newly fresh cache
+ok 40 - native continuation retains forced-refresh semantics despite a newly fresh cache
+  ---
+  duration_ms: 18.694729
+  type: 'test'
+  ...
+# Subtest: actual client continuation decline performs no start
+ok 41 - actual client continuation decline performs no start
+  ---
+  duration_ms: 1.28022
+  type: 'test'
+  ...
+# Subtest: actual client continuation uses approved fingerprint then verified persisted report
+ok 42 - actual client continuation uses approved fingerprint then verified persisted report
+  ---
+  duration_ms: 0.936212
+  type: 'test'
+  ...
+# Subtest: native HTTP continuation facade uses authenticated owner and trusted transport, not posted identity or params
+ok 43 - native HTTP continuation facade uses authenticated owner and trusted transport, not posted identity or params
+  ---
+  duration_ms: 18.948763
+  type: 'test'
+  ...
+# Subtest: native job-specific poll reads the requested actual receipt after another job becomes latest
+ok 44 - native job-specific poll reads the requested actual receipt after another job becomes latest
+  ---
+  duration_ms: 33.195936
+  type: 'test'
+  ...
+# Subtest: native completed snapshot restore is bound to actual persisted job output, not a later report
+ok 45 - native completed snapshot restore is bound to actual persisted job output, not a later report
+  ---
+  duration_ms: 18.941851
+  type: 'test'
+  ...
+# Subtest: native exact completed snapshot load rechecks current authority within and after the file lease
+ok 46 - native exact completed snapshot load rechecks current authority within and after the file lease
+  ---
+  duration_ms: 16.420039
+  type: 'test'
+  ...
+# Subtest: actual expected-job client poll rejects missing job rather than reporting completion
+ok 47 - actual expected-job client poll rejects missing job rather than reporting completion
+  ---
+  duration_ms: 1.142943
+  type: 'test'
+  ...
+# Subtest: actual expected-job client poll rejects another job rather than reporting completion
+ok 48 - actual expected-job client poll rejects another job rather than reporting completion
+  ---
+  duration_ms: 0.852836
+  type: 'test'
+  ...
+# Subtest: new snapshot continuation and restore cannot alias another legacy sanitized owner path
+ok 49 - new snapshot continuation and restore cannot alias another legacy sanitized owner path
+  ---
+  duration_ms: 4.471282
+  type: 'test'
+  ...
+# Subtest: native durable receipt stores actual whitelisted progress and omits tokens/functions/row payloads
+ok 50 - native durable receipt stores actual whitelisted progress and omits tokens/functions/row payloads
+  ---
+  duration_ms: 10.492231
+  type: 'test'
+  ...
+# Subtest: native owner job reservation is exclusive across actual store instances and cancellation is durable
+ok 51 - native owner job reservation is exclusive across actual store instances and cancellation is durable
+  ---
+  duration_ms: 7.131102
+  type: 'test'
+  ...
+# Subtest: native completed receipt survives fresh store construction and is owner-isolated
+ok 52 - native completed receipt survives fresh store construction and is owner-isolated
+  ---
+  duration_ms: 4.057708
+  type: 'test'
+  ...
+# Subtest: native lost executor is interrupted without blind replay or a fabricated completed snapshot
+ok 53 - native lost executor is interrupted without blind replay or a fabricated completed snapshot
+  ---
+  duration_ms: 4.575519
+  type: 'test'
+  ...
+# Subtest: native current authority is checked inside reservation/checkpoint and unsafe identities are rejected
+ok 54 - native current authority is checked inside reservation/checkpoint and unsafe identities are rejected
+  ---
+  duration_ms: 3.900201
+  type: 'test'
+  ...
+# Subtest: native restart detects an actual terminated other process and retains its verified progress
+ok 55 - native restart detects an actual terminated other process and retains its verified progress
+  ---
+  duration_ms: 55.241336
+  type: 'test'
+  ...
+# Subtest: actual native worker receipts and verified row chunks survive service reconstruction
+ok 56 - actual native worker receipts and verified row chunks survive service reconstruction
+  ---
+  duration_ms: 30.811489
+  type: 'test'
+  ...
+# Subtest: actual native worker sees durable cancellation from another service and keeps only its current result
+ok 57 - actual native worker sees durable cancellation from another service and keeps only its current result
+  ---
+  duration_ms: 16.763247
+  type: 'test'
+  ...
+# Subtest: native trusted command key reuses the same actual receipt while running and after completion
+ok 58 - native trusted command key reuses the same actual receipt while running and after completion
+  ---
+  duration_ms: 16.739781
+  type: 'test'
+  ...
+# Subtest: native busy receipt returned to another caller excludes private owner/executor/source metadata
+ok 59 - native busy receipt returned to another caller excludes private owner/executor/source metadata
+  ---
+  duration_ms: 5.238108
+  type: 'test'
+  ...
+# Subtest: native job receipt corruption is not silently downgraded to an absent or completed job
+ok 60 - native job receipt corruption is not silently downgraded to an absent or completed job
+  ---
+  duration_ms: 2.117714
+  type: 'test'
+  ...
+# Subtest: native durable reserve race honours reused commands without a second audit or reservation
+ok 61 - native durable reserve race honours reused commands without a second audit or reservation
+  ---
+  duration_ms: 1.748216
+  type: 'test'
+  ...
+# Subtest: actual OAB client rejects a recovered receipt without rows rather than completing the report
+ok 62 - actual OAB client rejects a recovered receipt without rows rather than completing the report
+  ---
+  duration_ms: 1.710509
+  type: 'test'
+  ...
+# Subtest: actual native maximum cached-only job retains all 400 rows and durable completion without auth calls
+ok 63 - actual native maximum cached-only job retains all 400 rows and durable completion without auth calls
+  ---
+  duration_ms: 1496.273803
+  type: 'test'
+  ...
+# 400 cached combinations and durable checkpoints: 1495 ms
+# Subtest: actual native status rechecks IAM after the real owner lease blocks across revocation
+ok 64 - actual native status rechecks IAM after the real owner lease blocks across revocation
+  ---
+  duration_ms: 255.701755
+  type: 'test'
+  ...
+# Subtest: actual native cancel rechecks IAM after the real owner lease blocks across revocation
+ok 65 - actual native cancel rechecks IAM after the real owner lease blocks across revocation
+  ---
+  duration_ms: 255.249657
+  type: 'test'
+  ...
+# Subtest: actual native final receipt failure remains a client error even when fetched rows and snapshot exist
+ok 66 - actual native final receipt failure remains a client error even when fetched rows and snapshot exist
+  ---
+  duration_ms: 11.690077
+  type: 'test'
+  ...
+# Subtest: actual native progress receipt failure cannot resolve a partial queue as normal completion
+ok 67 - actual native progress receipt failure cannot resolve a partial queue as normal completion
+  ---
+  duration_ms: 7.681483
+  type: 'test'
+  ...
+# Subtest: ignored native request credentials do not enter even the durable command fingerprint
+ok 68 - ignored native request credentials do not enter even the durable command fingerprint
+  ---
+  duration_ms: 11.680092
+  type: 'test'
+  ...
+# Subtest: durable native receipt preserves exact explicit retry pairs instead of inventing a Cartesian plan
+ok 69 - durable native receipt preserves exact explicit retry pairs instead of inventing a Cartesian plan
+  ---
+  duration_ms: 2.70566
+  type: 'test'
+  ...
+# Subtest: actual native result chunks survive reconstruction and preserve exact fields/refs/values/timestamps
+ok 70 - actual native result chunks survive reconstruction and preserve exact fields/refs/values/timestamps
+  ---
+  duration_ms: 15.847696
+  type: 'test'
+  ...
+# Subtest: native interrupted partial result survives without replay or overwriting the report snapshot
+ok 71 - native interrupted partial result survives without replay or overwriting the report snapshot
+  ---
+  duration_ms: 7.053576
+  type: 'test'
+  ...
+# Subtest: native result payload corruption fails closed with no substitute backup or fabricated rows
+ok 72 - native result payload corruption fails closed with no substitute backup or fabricated rows
+  ---
+  duration_ms: 5.067541
+  type: 'test'
+  ...
+# Subtest: native immutable result slot cannot be silently replaced by another row payload
+ok 73 - native immutable result slot cannot be silently replaced by another row payload
+  ---
+  duration_ms: 5.685332
+  type: 'test'
+  ...
+# Subtest: actual native status returns verified original rows/sources after reconstructed service without a new request
+ok 74 - actual native status returns verified original rows/sources after reconstructed service without a new request
+  ---
+  duration_ms: 29.225188
+  type: 'test'
+  ...
+# Subtest: actual native retry result recovers only new rows instead of substituting the merged owner snapshot
+ok 75 - actual native retry result recovers only new rows instead of substituting the merged owner snapshot
+  ---
+  duration_ms: 17.369291
+  type: 'test'
+  ...
+# Subtest: native result load authority is checked again after the trusted artifact read
+ok 76 - native result load authority is checked again after the trusted artifact read
+  ---
+  duration_ms: 16.567552
+  type: 'test'
+  ...
+# Subtest: actual native status declares corrupted result unavailability instead of reading a different snapshot
+ok 77 - actual native status declares corrupted result unavailability instead of reading a different snapshot
+  ---
+  duration_ms: 20.345137
+  type: 'test'
+  ...
+# Subtest: native captured result becomes deeply immutable instead of invalidating its cached digest silently
+ok 78 - native captured result becomes deeply immutable instead of invalidating its cached digest silently
+  ---
+  duration_ms: 5.187472
+  type: 'test'
+  ...
+# Subtest: native zero-row responses retain actual successful combination receipts and no invented rows
+ok 79 - native zero-row responses retain actual successful combination receipts and no invented rows
+  ---
+  duration_ms: 4.964886
+  type: 'test'
+  ...
+# Subtest: actual fresh Node process verifies the same native compressed row result
+ok 80 - actual fresh Node process verifies the same native compressed row result
+  ---
+  duration_ms: 48.752592
+  type: 'test'
+  ...
+# Subtest: actual client rejects corrupt durable rows with a fixed message and no private error echo
+ok 81 - actual client rejects corrupt durable rows with a fixed message and no private error echo
+  ---
+  duration_ms: 3.336141
+  type: 'test'
+  ...
+# Subtest: cold and hot metadata snapshots use async I/O, one shared load, and the canonical getters
+ok 82 - cold and hot metadata snapshots use async I/O, one shared load, and the canonical getters
+  ---
+  duration_ms: 8.970286
+  type: 'test'
+  ...
+# Subtest: mtime-preserving replacement invalidates the async snapshot without a synchronous fallback
+ok 83 - mtime-preserving replacement invalidates the async snapshot without a synchronous fallback
+  ---
+  duration_ms: 4.480025
+  type: 'test'
+  ...
+# Subtest: a superseded in-flight file read cannot replace a newer successful generation
+ok 84 - a superseded in-flight file read cannot replace a newer successful generation
+  ---
+  duration_ms: 3.213997
+  type: 'test'
+  ...
+# Subtest: an older stat completion cannot roll admission back after a newer generation is published
+ok 85 - an older stat completion cannot roll admission back after a newer generation is published
+  ---
+  duration_ms: 2.781895
+  type: 'test'
+  ...
+# Subtest: the fixed bundled source has a byte limit before any file content is read
+ok 86 - the fixed bundled source has a byte limit before any file content is read
+  ---
+  duration_ms: 1.656177
+  type: 'test'
+  ...
+# Subtest: bundled OAB routes retain area/capability gates and exact payloads without a worker trip
+ok 87 - bundled OAB routes retain area/capability gates and exact payloads without a worker trip
+  ---
+  duration_ms: 26.743055
+  type: 'test'
+  ...
+# Subtest: bundled OAB routes preserve required-reference validation before any metadata read
+ok 88 - bundled OAB routes preserve required-reference validation before any metadata read
+  ---
+  duration_ms: 1.192538
+  type: 'test'
+  ...
+# Subtest: async metadata reads recheck the actual session, active profile, area and capability before sending
+ok 89 - async metadata reads recheck the actual session, active profile, area and capability before sending
+  ---
+  duration_ms: 13.664565
+  type: 'test'
+  ...
+# Subtest: awaited current agent authority is checked before cached data or corporate fetch
+ok 90 - awaited current agent authority is checked before cached data or corporate fetch
+  ---
+  duration_ms: 13.155567
+  type: 'test'
+  ...
+# Subtest: agent change during native authentication wait prevents the actual report request
+ok 91 - agent change during native authentication wait prevents the actual report request
+  ---
+  duration_ms: 7.714312
+  type: 'test'
+  ...
+# Subtest: agent change during corporate fetch prevents cache, result capture and snapshot writes
+ok 92 - agent change during corporate fetch prevents cache, result capture and snapshot writes
+  ---
+  duration_ms: 7.674603
+  type: 'test'
+  ...
+# Subtest: native status remains running while a critical snapshot guard is waiting
+ok 93 - native status remains running while a critical snapshot guard is waiting
+  ---
+  duration_ms: 13.180344
+  type: 'test'
+  ...
+# Subtest: successful snapshot write stays a factual saved receipt when agent authority changes after the critical write
+ok 94 - successful snapshot write stays a factual saved receipt when agent authority changes after the critical write
+  ---
+  duration_ms: 14.944374
+  type: 'test'
+  ...
+# Subtest: durable cancellation during authentication does not dispatch the first report or invent a failed combination
+ok 95 - durable cancellation during authentication does not dispatch the first report or invent a failed combination
+  ---
+  duration_ms: 6.785862
+  type: 'test'
+  ...
+# Subtest: cancellation during initial batch probe authentication does not invent a failed combination
+ok 96 - cancellation during initial batch probe authentication does not invent a failed combination
+  ---
+  duration_ms: 6.884711
+  type: 'test'
+  ...
+# Subtest: native snapshot CAS detects actual changed content and preserves the newer report
+ok 97 - native snapshot CAS detects actual changed content and preserves the newer report
+  ---
+  duration_ms: 8.084861
+  type: 'test'
+  ...
+# Subtest: native snapshot transaction rechecks live authority before CAS and executes merge under the existing file lease
+ok 98 - native snapshot transaction rechecks live authority before CAS and executes merge under the existing file lease
+  ---
+  duration_ms: 4.488639
+  type: 'test'
+  ...
+# Subtest: native snapshot clear and owner isolation invalidate exactly the affected source
+ok 99 - native snapshot clear and owner isolation invalidate exactly the affected source
+  ---
+  duration_ms: 4.65514
+  type: 'test'
+  ...
+# Subtest: actual other process native snapshot save invalidates the old writer
+ok 100 - actual other process native snapshot save invalidates the old writer
+  ---
+  duration_ms: 52.701722
+  type: 'test'
+  ...
+# Subtest: native legacy snapshots still load and snapshots retain actual unique write identities
+ok 101 - native legacy snapshots still load and snapshots retain actual unique write identities
+  ---
+  duration_ms: 3.132533
+  type: 'test'
+  ...
+# Subtest: native slow batch refuses to overwrite newer manual snapshot; initial snapshot false
+ok 102 - native slow batch refuses to overwrite newer manual snapshot; initial snapshot false
+  ---
+  duration_ms: 18.147134
+  type: 'test'
+  ...
+# Subtest: native slow batch refuses to overwrite newer manual snapshot; initial snapshot true
+ok 103 - native slow batch refuses to overwrite newer manual snapshot; initial snapshot true
+  ---
+  duration_ms: 10.194432
+  type: 'test'
+  ...
+# Subtest: native explicit retry also refuses stale merge instead of clobbering a newer report
+ok 104 - native explicit retry also refuses stale merge instead of clobbering a newer report
+  ---
+  duration_ms: 11.57253
+  type: 'test'
+  ...
+# Subtest: native successful batch explicitly verifies persistence; native disk failure never claims snapshot saved
+ok 105 - native successful batch explicitly verifies persistence; native disk failure never claims snapshot saved
+  ---
+  duration_ms: 16.40759
+  type: 'test'
+  ...
+# Subtest: native snapshot transformer executes inside the actual shared lease and 20k-row report is preserved
+ok 106 - native snapshot transformer executes inside the actual shared lease and 20k-row report is preserved
+  ---
+  duration_ms: 49.537175
+  type: 'test'
+  ...
+# Subtest: OAB client marks detached batch results as unpersisted in TR/EN and highlights warning
+ok 107 - OAB client marks detached batch results as unpersisted in TR/EN and highlights warning
+  ---
+  duration_ms: 1.395384
+  type: 'test'
+  ...
+# Subtest: async native transformer cannot silently replace a report with empty data
+ok 108 - async native transformer cannot silently replace a report with empty data
+  ---
+  duration_ms: 2.031814
+  type: 'test'
+  ...
+# Subtest: native empty-source save/clear ABA cannot resurrect an old running batch
+ok 109 - native empty-source save/clear ABA cannot resurrect an old running batch
+  ---
+  duration_ms: 9.86768
+  type: 'test'
+  ...
+# Subtest: native repeated empty clear revisions persist across actual fresh process and reject old CAS
+ok 110 - native repeated empty clear revisions persist across actual fresh process and reject old CAS
+  ---
+  duration_ms: 40.405751
+  type: 'test'
+  ...
+# Subtest: native corrupt deletion identity fails closed and cannot use an older backup generation
+ok 111 - native corrupt deletion identity fails closed and cannot use an older backup generation
+  ---
+  duration_ms: 2.104293
+  type: 'test'
+  ...
+1..111
+# tests 111
+# suites 0
+# pass 111
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3759.808523
