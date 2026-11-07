@@ -1,0 +1,17 @@
+✔ INT-06 fixture has deterministic rows and independent SUCCESS/NOT_FOUND/FAILED coverage (6.864297ms)
+✔ INT-06 write observer counts actual UTF-8 snapshot and journal payload once, ignoring other files (1.610535ms)
+✔ INT-06 benchmark transport uses connector attempt metadata without retaining query history (0.533634ms)
+✔ INT-06 benchmark runs a real store and rejects an intentionally impossible byte budget (145.565874ms)
+✔ INT-06 failed benchmark preserves structured failure evidence (44.328669ms)
+✔ INT-06 paired preparation reports enforce source/fixture parity and use three medians (5.891142ms)
+✔ INT-06 measurement lock prevents overlapping fresh benchmark processes and retains rejection (38.805782ms)
+✔ INT-06 source snapshot detects integration, canonical and #892 working-tree changes (87.154241ms)
+✔ INT-06 cohort CLI requires #892 ancestry, retains samples and refuses to overwrite evidence (70.80606ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 425.782709

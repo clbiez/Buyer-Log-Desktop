@@ -1,0 +1,125 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js powerbi-checkpoint power-bi-import-dashboard powerbi-dashboard
+
+[Buyer Log tests] 4 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (4 dosya)
+✔ Power BI decoder resolves descriptor columns, dictionaries and null bitmap (2.592715ms)
+✔ Dashboard rows normalize to the existing IAS field names and preserve nulls (6.975034ms)
+✔ Dashboard schema discovery also reads fields from the semantic query request (0.926435ms)
+✔ Dashboard refresh selects the query template carrying the most IAS fields (0.849039ms)
+✔ Dashboard schema validation reports every missing required IAS field (1.452788ms)
+✔ Dashboard schema requires Renk Tanım and does not require Renk Kod (3.246459ms)
+✔ Dashboard color adapter matches ASAS Renk without mixing same-order colors (13.322434ms)
+✔ Dashboard batches unique order codes without visible-row limits (35.530319ms)
+✔ Dashboard manifest accounts for success, not-found and failed orders exactly once (3.337957ms)
+✔ Dashboard connector retries a failed batch and checkpoints terminal states (507.907862ms)
+✔ Dashboard connector adaptively splits a permanently failing batch (4515.396314ms)
+✔ Dashboard connector resumes terminal checkpoint rows and queries only remaining orders (14.7607ms)
+✔ Dashboard query filter is added to the semantic query by field name, not column index (1.669394ms)
+✔ Dashboard is a persisted third Antrepo source in the existing source flow (22.837939ms)
+✔ Dashboard batch and retry limits are configurable and bounded (0.615196ms)
+✔ Power BI navigation abort yalnız güvenli SSO redirectinde recover edilir (0.512031ms)
+✔ Power BI navigation failures are classified instead of flattened to one error (0.621556ms)
+✔ Power BI diagnostik URL query ve token bilgisini loga taşımaz (0.136386ms)
+✔ Power BI bağlantısı güvenli navigation recovery ve tekrar kullanılabilir session cache içerir (2.919276ms)
+✔ INT-06 fixture has deterministic rows and independent SUCCESS/NOT_FOUND/FAILED coverage (6.85875ms)
+✔ INT-06 write observer counts actual UTF-8 snapshot and journal payload once, ignoring other files (1.874643ms)
+✔ INT-06 benchmark transport uses connector attempt metadata without retaining query history (0.616859ms)
+✔ INT-06 benchmark runs a real store and rejects an intentionally impossible byte budget (181.386773ms)
+✔ INT-06 failed benchmark preserves structured failure evidence (48.514008ms)
+✔ INT-06 paired preparation reports enforce source/fixture parity and use three medians (4.693498ms)
+✔ INT-06 measurement lock prevents overlapping fresh benchmark processes and retains rejection (54.020272ms)
+✔ INT-06 source snapshot detects integration, canonical and #892 working-tree changes (88.63084ms)
+✔ INT-06 cohort CLI retains six fresh samples and refuses to overwrite evidence (887.483272ms)
+✔ INT-06 repeated batch/state transitions never double count terminal orders (10.809069ms)
+✔ INT-06 steady: kill and disk-only resume at EVERY committed batch boundary (590.746659ms)
+ℹ steady: SIGKILL/resume checked at all 3 committed boundaries
+✔ INT-06 steady: repeated crashes in one refresh preserve every prior durable batch (221.268626ms)
+✔ INT-06 split-retry: kill and disk-only resume at EVERY committed batch boundary (1107.414951ms)
+ℹ split-retry: SIGKILL/resume checked at all 7 committed boundaries
+✔ INT-06 split-retry: repeated crashes in one refresh preserve every prior durable batch (397.159007ms)
+✔ INT-06 cancellation before query and between split batches persists then resumes identically (416.111349ms)
+✔ INT-06 cancellation inside query/retry never marks unfinished orders terminal (212.479555ms)
+✔ INT-06 frozen schema-v1 checkpoint resumes all three terminal states without reinterpretation (51.143673ms)
+✔ tam şema Antrepo için yeterli sayılır (3.11404ms)
+✔ dashboardSchemaMissingFields ile validateDashboardSchema aynı listeyi üretir (1.856586ms)
+✔ REGRESYON: ilk görselin yanıtı geldi diye "hazır" denmez (0.728707ms)
+✔ gerekli alanların TAMAMI toplanınca hazır olunur (0.441736ms)
+✔ görseller sırayla geldikçe karar wait → wait → ready ilerler (1.569133ms)
+✔ görsellerin GELİŞ SIRASI sonucu değiştirmez (eksik listesinin oynamasının sebebi buydu) (6.303023ms)
+✔ uçuşta okuma varken sessizlik penceresi dolsa bile pes edilmez (0.814576ms)
+✔ akış gerçekten durduysa "incomplete" ile çıkılır — sonsuza kadar beklenmez (1.098494ms)
+✔ querydata şablonu veya kolon henüz yokken beklenir (0.120291ms)
+✔ bekleme döngüsü artık "ilk yanıt" koşulunu kullanmıyor (0.304198ms)
+✔ Sipariş Kod taşıyan şablon tanınır, taşımayan tanınmaz (0.505442ms)
+✔ REGRESYON: şema TAM olsa bile kullanılabilir şablon yoksa hazır denmez (0.946085ms)
+✔ şema TAM ve kullanılabilir şablon geldiyse hazır olunur (0.314063ms)
+✔ şablon hiç gelmeyecekse sonsuza kadar beklenmez (0.339411ms)
+✔ hata, görülen Select adlarını taşır — bir dahakine tahmin gerekmesin (0.477319ms)
+✔ şablon bulununca sorguya Sipariş Kod filtresi eklenir (0.788647ms)
+✔ tırnak içeren sipariş kodu SQL benzeri kaçışla korunur (0.141083ms)
+✔ CDP büyük gövdeleri ayrıca istenir — sessizce elenmez (0.477699ms)
+✔ REGRESYON: Name "Sum(...)" ile süslenmişse bile Sipariş Kod tanınır (0.934457ms)
+✔ gerçek şablondan doğru Column ifadesiyle Where kurulur (0.422756ms)
+✔ Aggregation ile sarılmış kolon da tanınır ve içindeki kolonla filtrelenir (0.264439ms)
+✔ ölçüm (Measure) Sipariş Kod sanılıp filtre kurulmaz (0.272821ms)
+✔ gerçek sayfadaki DİĞER üç sorgu Sipariş Kod taşımaz — yanlış şablon seçilmez (0.54408ms)
+✔ REGRESYON: ürettiğimiz filtre Power BI'nin kendi filtresiyle BİREBİR aynı (2.002545ms)
+✔ kodlar tamamen rakam olsa bile TIRNAKLI metin literali gönderilir (0.3255ms)
+✔ çoklu arama gerçekten çoklu: tüm kodlar TEK In koşuluna girer (1.075711ms)
+✔ parti boyutu: 7192 sipariş 250'şerlik partilere bölünür, tek tek değil (20.216005ms)
+✔ kalıcı hatalar tekrar denenmez ve parti bölünmez (0.130056ms)
+✔ bölme 1'e kadar inebilir — bu KASITLI; çözüm kalıcı hataları ayırmakta (0.262996ms)
+✔ connector 4xx ile 5xx'i ayırır (429 ve 408 geçici sayılır) (0.207322ms)
+✔ REGRESYON: "Sum(...)" ile süslü satır anahtarından Sipariş Kod okunur (7.323369ms)
+✔ bütünlük kontrolünün aradığı üçlü artık birlikte bulunur (7.903633ms)
+✔ süsleme soyma yalnız gerçek sarmalayıcıya uygulanır (0.137076ms)
+✔ süslü ad, adı ÇAKIŞAN temiz bir kolonu gölgelemez (5.20595ms)
+✔ üç eşleştirme noktası da aynı soyma kuralını paylaşır (10.543584ms)
+✔ REGRESYON: her sonuç kümesi KENDİ descriptor'ıyla çözülür (1.379818ms)
+✔ çok sonuçlu yanıttan sipariş kodları okunabilir (NOT_FOUND selinin sebebi) (8.214666ms)
+✔ tek sonuç kümeli yanıtlar eskisi gibi çalışmaya devam eder (0.274774ms)
+✔ descriptor hiç yoksa yine net bir hata verilir (0.211188ms)
+✔ uçtan uca: ölçülen yanıt anahtarlarından üretilen IAS kaydı ASAS siparişiyle eşleşir (15.090116ms)
+✔ eşleşmeyen değer sessizce geçmez: diag sayacı sebebi ayırt eder (6.811268ms)
+✔ sıfır eşleşme artık uyarı üretir — sessizce başarılı sayılmaz (0.602888ms)
+✔ Sipariş Kod taşıyan en iyi şablon sabitlenir ve eskitilmez (0.173181ms)
+✔ seçim, sabitlenmiş şablonu da aday olarak değerlendirir (0.174803ms)
+✔ kart görselinin şablonu Sipariş Kod taşımaz — sabitlenmeye aday değildir (0.680855ms)
+✔ REGRESYON: sayfadaki Sipariş Kod filtresi bizimkiyle VE'lenmez (0.612122ms)
+✔ raporun DİĞER filtreleri korunur — kapsam daraltmaları meşrudur (0.347613ms)
+✔ filtre yokken davranış değişmez (0.407143ms)
+✔ aynı adlı ama BAŞKA tablodan gelen kolon yanlışlıkla silinmez (0.322205ms)
+✔ REGRESYON: sözlüklü hücreler indis değil GERÇEK değer olarak çözülür (0.572912ms)
+✔ şema yalnız ilk satırda gelir, sonraki satırlar onu yeniden kullanır (0.317208ms)
+✔ DN taşımayan kolon (tarih/ölçüm) ham değeriyle kalır (0.25245ms)
+✔ "S" varlığı ara toplam sanılmaz — yalnız ölçüm yuvalı satır toplamdır (0.248534ms)
+✔ çözülen satırlar ASAS anahtarıyla BİREBİR eşleşir (uçtan uca) (23.820414ms)
+✔ REGRESYON: 32. bitten sonraki null biti okunur (maske taşması) (0.128323ms)
+✔ 38 kolonlu satırda ölçüm alanları doğru hücreyi alır (0.612823ms)
+✔ tekrar (R) maskesi de 32 bit üstünde doğru çalışır (0.65756ms)
+✔ REGRESYON: kolon adı yuva adından çözülür, descriptor sırasından değil (0.41171ms)
+✔ miktar alanına tarih/başka kolon değeri düşmez (0.142625ms)
+✔ yuva haritası yokken eski konumsal davranış korunur (0.112509ms)
+✔ yuva eşlemesi null maskesiyle birlikte doğru çalışır (0.18584ms)
+✔ aynı sipariş birden çok parsiyelle eşleşir ve hepsi korunur (11.674633ms)
+✔ "ambiguous" sayacı hata değil, çoklu parsiyelin göstergesidir (9.548069ms)
+✔ dashboard'da bulunmayan sipariş üretimde sayılır — hata üretilmez (5.157708ms)
+ℹ tests 100
+ℹ suites 0
+ℹ pass 100
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5252.655049
+[Buyer Log tests] Batch 1/1 süresi: 5.3s.
+
+[Buyer Log tests] PASS — 4 test dosyası (5.3s).
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
