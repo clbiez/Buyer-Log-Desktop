@@ -91,5 +91,8 @@ test('v4.71 Orders ekranı, hızlı aktif/pasif filtreleri ve bağımsız yenile
   // v2026-10-30 — Orders yenilemesi Diğer modülleri (tek sorgu) ve CP'yi yeniler.
   assert.match(INDEX, /options\.push\(\['linked',`\$\{refreshTargetsLabel\(members\)\} \+ CP`,linkedTargets\]\)/);
   assert.match(INDEX, /DEFAULT_LINKED_REFRESH_TARGETS=Object\.freeze\(\['orders','backlog','lfl','priceanalysis'\]\)/);
-  assert.match(SERVER, /orders: \{ rows: ordersRows \},\s*'order-summary': \{ rows: orderSummaryRows \}/);
+  // Faz 5 (#885): Orders ve sipariş özeti projeksiyonları compute worker'ında ayrı modül olarak üretilir.
+  const TASKS = fs.readFileSync(path.join(__dirname, '..', 'server', 'lib', 'compute-tasks.js'), 'utf8');
+  assert.match(TASKS, /if\(wanted\.has\('orders'\)\)out\.orders=\{rows:pair\.orders\};/);
+  assert.match(TASKS, /out\['order-summary'\]=\{rows\};/);
 });

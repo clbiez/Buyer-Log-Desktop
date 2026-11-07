@@ -219,12 +219,12 @@ test('servis: kaynak satırları yalnız istenen anahtarlar için alınır, tasl
   const service = createOutputService({ engine: fakeEngine(answer), storeOptions: { root: path.join(tempDir(), 'out') } });
   const first = await service.create('u1', { message: 'kartlar', output: { format: 'pptx' } });
   assert.equal(first.output.pending, 'images');
-  const done = service.completeImages('u1', first.output.pendingId, { 'KOL-1': pngUrl }, { 'KOL-1': [['Tedarikçi', 'Eureko'], ['BL Image', 'KOL-1'], ['Boş', '']], 'KOL-77': [['Gizli', 'x']] });
+  const done = (await service.completeImages('u1', first.output.pendingId, { 'KOL-1': pngUrl }, { 'KOL-1': [['Tedarikçi', 'Eureko'], ['BL Image', 'KOL-1'], ['Boş', '']], 'KOL-77': [['Gizli', 'x']] }));
   assert.ok(done.id);
   const draft = service.getDraft('u1', first.output.draftId);
   assert.deepEqual(draft.records, { 'KOL-1': [['Tedarikçi', 'Eureko'], ['Boş', '']] }, 'istenmeyen anahtar ve anahtar sütunu atılır; boş değerli başlık seçici için kalır');
   const data = { ...draft.data, layout: { cardFields: ['Tedarikçi', 'Renk'] } };
-  const rendered = service.renderDraft('u1', draft.id, { data });
+  const rendered = (await service.renderDraft('u1', draft.id, { data }));
   const files = unzip(fs.readFileSync(rendered.output.path));
   assert.match(files['ppt/slides/slide2.xml'], /<a:t>Eureko<\/a:t>[\s\S]*<a:t>Siyah<\/a:t>/, 'seçim sırası: önce Tedarikçi (kaynak), sonra Renk');
   assert.deepEqual(outputImages.normalizeRecords({ 'kol-1': [['A', { x: 1 }], ['B', 2]], 'KOL-2': 'x' }, ['KOL-1', 'KOL-2']), { 'KOL-1': [['A', ''], ['B', '2']] }, 'boş değerli sütun başlığı korunur');

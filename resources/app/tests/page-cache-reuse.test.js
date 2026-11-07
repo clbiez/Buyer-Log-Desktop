@@ -9,7 +9,13 @@ const SERVER=read('server/server.js'),APP=read('public/app-main.js'),LAYOUT=read
 
 test('Backlog endpoints hydrate the model snapshot before falling back to an Excel read', () => {
   assert.doesNotMatch(SERVER,/if\(!runtime\.asasOrders\) await loadFromDisk\(id,false\);/);
-  assert.equal((SERVER.match(/if\(!runtime\.asasOrders\) await ensureBacklogRuntime\(id\);/g)||[]).length,2);
+  // Faz 5 (#885): Backlog uçları worker'ın kaynak bilgisini alır; disk snapshot'ı
+  // yoksa tek yol ensureBacklogRuntime (önce snapshot, sonra Excel).
+  assert.match(SERVER,/if\(!info\.loadedAt\)\{\s*const id=sourceUserId\(req\),runtime=await ensureBacklogRuntime\(id\);/);
+  for(const route of ["app.get('/api/backlog-export'","app.get('/api/backlog-filter-values'","app.post('/api/backlog-map-details'"]){
+    const body=SERVER.slice(SERVER.indexOf(route),SERVER.indexOf('\n});',SERVER.indexOf(route)));
+    assert.match(body,/await prepareComputeBacklog\(req\);/,route);
+  }
   const helper=SERVER.slice(SERVER.indexOf('async function ensureBacklogRuntime(id){'),SERVER.indexOf('// KUR.xlsx seçili kaynak klasöründen'));
   assert.match(helper,/const runtime=await ensureDataLoaded\(id\);\s*if\(runtime&&runtime\.loadedAt&&Array\.isArray\(runtime\.asasOrders\)\)return runtime;\s*return loadFromDisk\(id,false\);/);
 });

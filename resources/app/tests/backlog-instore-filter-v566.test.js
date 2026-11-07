@@ -57,12 +57,14 @@ test('v5.66 In Store filtresi boş Model Bütçe tarihli satırı yalnız filtre
   assert.equal(backlog(rows,{inStoreFrom:'2026-01-01'}).totalOrders, 1);
 });
 
-test('v5.66 UI state, API sorgusu, detay ve Excel export aynı In Store aralığını taşır', ()=>{
+test('v5.66 UI state, API sorgusu, detay ve Excel export aynı In Store aralığını taşır', async()=>{
   assert.match(APP, /inStoreFrom:\s*document\.getElementById\('backlogInStoreFrom'\)/);
   assert.match(APP, /inStoreTo:\s*document\.getElementById\('backlogInStoreTo'\)/);
   assert.match(APP, /setVal\('backlogInStoreFrom',saved\.inStoreFrom\)/);
   assert.match(APP, /In Store tarih aralığı/);
-  assert.match(SERVER, /const \{ retailFrom, retailTo, inStoreFrom, inStoreTo,[^}]+\} = req\.query/);
   assert.match(SERVER, /inStoreFrom: body\.inStoreFrom \|\| '', inStoreTo: body\.inStoreTo \|\| ''/);
-  assert.match(SERVER, /filterOpts=\{retailFrom,retailTo,inStoreFrom,inStoreTo,/);
+  const capture=require('./helpers/computed-backlog-request'),from='2026-11-01',to='2026-11-30';
+  for(const [route,format,task]of [['/api/backlog','json','backlog-grouped'],['/api/backlog-export','json','backlog-export'],['/api/backlog-export','xlsx','backlog-workbook']]){
+    const result=await capture({format,inStoreFrom:from,inStoreTo:to},route);assert.equal(result.task,task);assert.equal(result.parts.options.inStoreFrom,from);assert.equal(result.parts.options.inStoreTo,to);
+  }
 });

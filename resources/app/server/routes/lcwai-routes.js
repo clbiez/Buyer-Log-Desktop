@@ -26,6 +26,16 @@ module.exports = function registerLcwAiRoutes(app, deps) {
   const platform = deps.platform || require('../lib/platform');
   const loginErrors = new Map();
   const ownerOf = req => String(req.currentUser && req.currentUser.id || 'default');
+  function captureOutputGuard(req){
+    const read=()=>typeof userAccess.sessionProfile==='function'?userAccess.sessionProfile(req):req.currentUser;
+    const initial=read(),owner=ownerOf(req),accessRevision=initial?.accessRevision||0,credentialRevision=initial?.credentialRevision||0;
+    const assertCurrent=()=>{
+      const live=read();
+      if(!initial||!live||String(live.id)!==owner||live.enabled===false||(live.status&&live.status!=='ACTIVE')
+        ||(live.accessRevision||0)!==accessRevision||(live.credentialRevision||0)!==credentialRevision)throw lcwAiError('CANCELLED');
+    };
+    assertCurrent();return assertCurrent;
+  }
   const audit = (req, action, details) => { try { userAccess.appendAudit(req.currentUser, action, 'lcwai', details); } catch (_) {} };
   const fail = (res, error) => {
     const safe = isLcwAiError(error) ? error : lcwAiError('INTERNAL');
@@ -178,7 +188,9 @@ app.post('/api/lcwai/chat', express.json({ limit: '2mb' }), async (req, res) => 
         signal: controller.signal,
         onProgress: event => write({ type: 'progress', ...event }),
       };
-      const result = output ? await outputsOf().create(owner, { ...input, output }) : await engineOf().chat(owner, input);
+      const assertCurrent=output?captureOutputGuard(req):null;
+      const result = output ? await outputsOf().create(owner, { ...input, output,assertCurrent }) : await engineOf().chat(owner, input);
+      assertCurrent?.();
       audit(req, 'LCWAI_CHAT', { ok: true, continued: Boolean(body.chatId), contexts: contexts.length, attachments: Array.isArray(body.attachments) ? body.attachments.length : 0, output: output ? String(output.format || '').slice(0, 8) : undefined });
       write({ type: 'result', result });
     } catch (error) {
@@ -245,10 +257,11 @@ app.post('/api/lcwai/output-studio', express.json({ limit: '48mb' }), (req, res)
   });
 
   /* Doğal dil veri sorgusunun Buyer Log tarafından hesaplanan sonucu → Excel. */
-app.post('/api/lcwai/outputs/table', express.json({ limit: '24mb' }), (req, res) => {
+app.post('/api/lcwai/outputs/table', express.json({ limit: '24mb' }), async (req, res) => {
     try {
       const body = req.body && typeof req.body === 'object' ? req.body : {};
-      const output = outputsOf().createTable(ownerOf(req), { data: body.data, lang: body.lang });
+      const assertCurrent=captureOutputGuard(req),output = await outputsOf().createTable(ownerOf(req), { data: body.data, lang: body.lang,assertCurrent });
+      assertCurrent();
       audit(req, 'LCWAI_DATA_QUERY_EXPORT', { format: 'xlsx' });
       res.set('Cache-Control', 'no-store').json({ ok: true, output });
     } catch (error) {
@@ -269,10 +282,11 @@ app.post('/api/lcwai/output-studio/:id/images', express.json({ limit: '48mb' }),
     } catch (error) { fail(res, error); }
   });
 
-app.post('/api/lcwai/output-drafts/:id/render', express.json({ limit: '48mb' }), (req, res) => {
+app.post('/api/lcwai/output-drafts/:id/render', express.json({ limit: '48mb' }), async (req, res) => {
     try {
       const body = req.body || {};
-      const result = outputsOf().renderDraft(ownerOf(req), req.params.id, { data: body.data, title: body.title, orientation: body.orientation, format: body.format, lang: body.lang });
+      const assertCurrent=captureOutputGuard(req),result = await outputsOf().renderDraft(ownerOf(req), req.params.id, { data: body.data, title: body.title, orientation: body.orientation, format: body.format, lang: body.lang,assertCurrent });
+      assertCurrent();
       audit(req, 'LCWAI_OUTPUT_EDIT', { format: result.output.format, pending: result.output.pending || undefined });
       res.set('Cache-Control', 'no-store').json({ ok: true, ...result });
     } catch (error) {
@@ -370,9 +384,10 @@ app.get('/api/lcwai/outputs', (req, res) => {
   // Çıktının kullandığı model görselleri: renderer yerel depodan çözer
   // ({ anahtar: dataURL }); sunucu doğrular ve dosyayı görsellerle oluşturur.
   // records: aynı anahtarların bağlam satırı (kart bilgisi kaynak değerleri).
-app.post('/api/lcwai/outputs/:pendingId/images', express.json({ limit: '48mb' }), (req, res) => {
+app.post('/api/lcwai/outputs/:pendingId/images', express.json({ limit: '48mb' }), async (req, res) => {
     try {
-      const output = outputsOf().completeImages(ownerOf(req), req.params.pendingId, req.body && req.body.images, req.body && req.body.records);
+      const assertCurrent=captureOutputGuard(req),output = await outputsOf().completeImages(ownerOf(req), req.params.pendingId, req.body && req.body.images, req.body && req.body.records,{assertCurrent});
+      assertCurrent();
       audit(req, 'LCWAI_OUTPUT_IMAGES', { requested: output.imagesRequested, used: output.imagesUsed });
       res.set('Cache-Control', 'no-store').json({ ok: true, output });
     } catch (error) {

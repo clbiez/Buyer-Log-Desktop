@@ -27,13 +27,13 @@ function createReferenceCache({directory}){
     }catch(error){if(error.code!=='ENOENT'&&!(error instanceof SyntaxError))throw error;}
     return null;
   }
-  async function get({identity,version,loadRows,rebuild=false}){
+  async function get({identity,version,loadRows,buildReferences,assertCurrent=()=>{},rebuild=false}){
     const id=digest(identity),file=path.join(directory,id+'.json'),revision=String(version);
     // Serialize publication per identity, including requests for different source versions.
     const previous=pending.get(id);
     if(previous){
       if(previous.version===revision&&previous.rebuild===rebuild)return previous.task;
-      await previous.task.catch(()=>{});return get({identity,version,loadRows,rebuild});
+      await previous.task.catch(()=>{});return get({identity,version,loadRows,buildReferences,assertCurrent,rebuild});
     }
     const task=(async()=>{
       const saved=await read({identity});
@@ -42,9 +42,13 @@ function createReferenceCache({directory}){
       const upgrade=Boolean(saved&&!rebuild);
       // Upgrade only from the same source revision; newer source data still needs an explicit refresh.
       if(upgrade&&saved.version!==revision)return saved;
-      let sourceRows;
-      try{sourceRows=await loadRows();}catch(error){if(upgrade)return saved;throw error;}
-      const snapshot={schema:SCHEMA,version:revision,calculatedAt:upgrade?saved.calculatedAt:new Date().toISOString(),references:Engine.buildReferences(sourceRows)};
+      let references,calculatedAt;
+      try{
+        if(buildReferences){calculatedAt=new Date().toISOString();references=await buildReferences();}
+        else{const sourceRows=await loadRows();calculatedAt=new Date().toISOString();references=Engine.buildReferences(sourceRows);}
+        await assertCurrent();
+      }catch(error){if(upgrade)return saved;throw error;}
+      const snapshot={schema:SCHEMA,version:revision,calculatedAt:upgrade?saved.calculatedAt:calculatedAt,references};
       const keys=new Set(snapshot.references.map(item=>item.key));
       // An upgrade must reproduce every saved summary exactly; a same-key but smaller source keeps the saved values.
       if(upgrade&&!sameSummaries(saved.references,snapshot.references))return saved;
@@ -55,7 +59,7 @@ function createReferenceCache({directory}){
       // Empty first reads are retryable; they are never a durable reference.
       if(!snapshot.references.length)return snapshot;
       const temp=file+'.'+crypto.randomUUID()+'.tmp';
-      try{await fs.mkdir(directory,{recursive:true});await fs.writeFile(temp,JSON.stringify(snapshot));await fs.rename(temp,file);}
+      try{await assertCurrent();await fs.mkdir(directory,{recursive:true});await fs.writeFile(temp,JSON.stringify(snapshot));await assertCurrent();await fs.rename(temp,file);}
       catch(error){await fs.rm(temp,{force:true}).catch(()=>{});throw error;}
       return remember(id,snapshot);
     })();
