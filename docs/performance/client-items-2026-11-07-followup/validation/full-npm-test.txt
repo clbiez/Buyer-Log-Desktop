@@ -1,0 +1,63 @@
+[Buyer Log tests] 1292 test dosyası, 10 batch, concurrency=4.
+[Buyer Log tests] Batch 1/10 (300 dosya)
+ℹ tests 1798
+ℹ pass 1738
+ℹ fail 0
+ℹ skipped 60
+[Buyer Log tests] Batch 1/10 süresi: 25.1s.
+[Buyer Log tests] Batch 2/10 (300 dosya)
+ℹ tests 2332
+ℹ pass 2329
+ℹ fail 0
+ℹ skipped 3
+[Buyer Log tests] Batch 2/10 süresi: 22.9s.
+[Buyer Log tests] Batch 3/10 (300 dosya)
+ℹ tests 2048
+ℹ pass 2048
+ℹ fail 0
+ℹ skipped 0
+[Buyer Log tests] Batch 3/10 süresi: 21.1s.
+[Buyer Log tests] Batch 4/10 (300 dosya)
+ℹ tests 2000
+ℹ pass 1999
+ℹ fail 0
+ℹ skipped 1
+[Buyer Log tests] Batch 4/10 süresi: 27.6s.
+[Buyer Log tests] Batch 5/10 (87 dosya)
+✔ v7.14 development metrics cover server timing, parse, hydrate, filters, render and first interaction (7.13481ms)
+ℹ tests 691
+ℹ pass 691
+ℹ fail 0
+ℹ skipped 0
+[Buyer Log tests] Batch 5/10 süresi: 7.2s.
+[Buyer Log tests] Batch 6/10 (1 dosya)
+ℹ tests 4
+ℹ pass 4
+ℹ fail 0
+ℹ skipped 0
+[Buyer Log tests] Batch 6/10 süresi: 0.2s.
+[Buyer Log tests] Batch 7/10 (1 dosya)
+ℹ tests 12
+ℹ pass 12
+ℹ fail 0
+ℹ skipped 0
+[Buyer Log tests] Batch 7/10 süresi: 1.6s.
+[Buyer Log tests] Batch 8/10 (1 dosya)
+ℹ tests 8
+ℹ pass 8
+ℹ fail 0
+ℹ skipped 0
+[Buyer Log tests] Batch 8/10 süresi: 0.1s.
+[Buyer Log tests] Batch 9/10 (1 dosya)
+ℹ tests 8
+ℹ pass 8
+ℹ fail 0
+ℹ skipped 0
+[Buyer Log tests] Batch 9/10 süresi: 4.0s.
+[Buyer Log tests] Batch 10/10 (1 dosya)
+ℹ tests 15
+ℹ pass 14
+ℹ fail 0
+ℹ skipped 1
+[Buyer Log tests] Batch 10/10 süresi: 7.6s.
+[Buyer Log tests] PASS — 1292 test dosyası (117.3s).
