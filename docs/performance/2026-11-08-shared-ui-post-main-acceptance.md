@@ -89,3 +89,23 @@ separately reviewed and merged current-authority fix. Evidence-only additions
 after these checks do not change source, tests, validators or CI. Historical
 benchmark limitations remain. Actual final-head CI and merge approval are still
 separate. **No TEST/STABLE publication.**
+
+
+## #904 sonrası son kabul / Final acceptance after #904
+
+Main `0dc9f094` normal merge `e0502653` ile alındı; iki üretim
+modülü inceleme `7c842910` ile birebir. Diğer49 Main kayıt + bir kendi
+kayıt korunur. Standart tam npm test bütün10 batch tek çağrıda:
+**1.301 dosya / 8.930 PASS / 0 FAIL / 65 mevcut SKIP / 0 CANCEL**; varsayılan
+concurrency4, izole TMPDIR, NODE_OPTIONS/preload yok. İlgili131PASS, i18n0/0,
+50not PASS. Test edilen uygulama ağacı `dca525e71f1f4cb9bbee855428efa2a5f66ab592`.
+Ölçülen kendi kaynakları değişmedi; kıyas gereksiz tekrarlanmadı.
+
+Main `0dc9f094` was merged normally. The two reviewed runtime blobs are
+byte-exact `7c842910`. Standard full runner again passed all ten batches in one
+invocation:1301 files,8930PASS,0FAIL,65existingSKIP,0CANCEL; defaultconcurrency4,
+privateTMPDIR,noNODE_OPTIONS. Related131PASS,i18n0/0,50visualnotes valid.
+Evidence-only final changes preserve source/test/CI. Actual final-head CI remains
+a separate gate under explicit conditional merge permission. Historical combined
+timings and browser acceptance retain their original sources/limits. INT-08
+remains open/unmeasured in this PR. No TEST/STABLE.

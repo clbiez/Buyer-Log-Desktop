@@ -1,0 +1,22 @@
+{
+  "counts": {
+    "pass": 8930,
+    "fail": 0,
+    "skipped": 65,
+    "cancelled": 0
+  },
+  "files": 1301,
+  "related": 131,
+  "notes": 50,
+  "main": "0dc9f0947cf5c38be3b8281eca6743a532e99eab",
+  "testedRevision": "e0502653cde7ca3b0e1c14c931ce9260e4345fe7",
+  "appTree": "dca525e71f1f4cb9bbee855428efa2a5f66ab592",
+  "allTenBatchesOneInvocation": true,
+  "defaultConcurrency": 4,
+  "nodeOptions": null,
+  "reviewedOwnSourcesExact": {
+    "resources/app/public/table-header-tracking.js": "b955c8cc95989d481eadcef4fae830ec0fd84cd7",
+    "resources/app/public/workspace-blur.js": "c860b2b02a00f66e2b5fa6ef3a740cd871586e7f"
+  },
+  "performanceRepeat": "not repeated: own measured runtime unchanged"
+}
