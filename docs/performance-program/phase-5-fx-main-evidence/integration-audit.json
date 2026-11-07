@@ -1,0 +1,43 @@
+{
+  "scope": "integration-only; not performance acceptance or P1 review",
+  "comparedMainSha": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "normalMergeCommit": "2d1e2498fe7dccd8acf8fe562716e234d9ecc548",
+  "historicalDeliveryCommit": "6d09a4c2ec2c56f7e750d3e1c78eb20524dbb73d",
+  "historicalChangedPaths": [],
+  "historicalManifestSha256": "514442af0b20183e459a21342a9ab8aee4fae31fda1386580ae8043cef5f5692",
+  "productionDiffToMain": [],
+  "historicalQueueExhaustion": "confirmed in original controlled experiment",
+  "historicalFourIndividualCauses": "unknown",
+  "frozenReplay": [
+    {
+      "case": "missing",
+      "reviewSha": "69950f289a012f0bb7c61290bec9890f340f6c64",
+      "status": "completed",
+      "reason": "KUR Excel bulunamad\u0131",
+      "revision": 1
+    },
+    {
+      "case": "valid",
+      "reviewSha": "69950f289a012f0bb7c61290bec9890f340f6c64",
+      "status": "completed",
+      "reason": "apply",
+      "revision": 2
+    }
+  ],
+  "frozenReplayScriptSha256": "586c9b9d76f03815ea591f7ea1a832fa40e26d19f43750c41cb88d1ea8128e46",
+  "frozenReplayTestSha256": "7b687f8eff16249acb03a37c7fbfaf7d16185c3a8fb3ab38cfb186f39cd534a1",
+  "mainNarrowCases": 5,
+  "mainNarrowQueueWaitMs": 6175.791082000001,
+  "newTests": 3,
+  "relatedTestFiles": 47,
+  "relatedTests": 197,
+  "failures": 0,
+  "i18nNew": 0,
+  "i18nBaseline": 0,
+  "releaseNoteCount": 38,
+  "newThirtyThousandCampaign": false,
+  "productionFix": false,
+  "mergePerformedFor907": false,
+  "testPublished": false,
+  "stablePublished": false
+}

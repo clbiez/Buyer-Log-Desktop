@@ -1,0 +1,105 @@
+'use strict';
+// Current-Main diagnostic, separate from the immutable 69950f28 experiment.
+const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
+const assert=require('node:assert/strict'),{Worker}=require('node:worker_threads'),{spawnSync}=require('node:child_process');
+const APP=path.resolve(__dirname,'..'),REPO=path.resolve(APP,'../..');
+const SOURCE=path.join(REPO,'docs/performance-program/phase-5-fx-main-evidence/source-comparison.json');
+const MAIN='63159fb32ff3d5bdc5f142b4a8f16ca6a3983240';
+const now=()=>performance.timeOrigin+performance.now(),plain=v=>JSON.parse(JSON.stringify(v));
+const sha=file=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+function assertMainSource(){
+  const comparison=JSON.parse(fs.readFileSync(SOURCE));assert.equal(comparison.comparedMainSha,MAIN);
+  for(const file of comparison.files)assert.equal(sha(path.join(REPO,file.path)),file.mainSha256,'Main source mismatch: '+file.path);
+}
+function verifyCase(report){
+  assert.equal(report.computeCalls,0,'automatic FX must not enter the shared compute pool');
+  assert.equal(report.excelCalls.length,1);
+  assert.deepEqual(report.excelCalls[0].options,{timeoutMs:5000,serializationKey:'shared-fx'});
+  if(report.kind.endsWith('queue-full')){
+    assert.equal(report.errors[0]?.code,'EXCEL_WORKER_BUSY');assert.equal(report.response.reason,'parse-failed');
+    assert.equal(report.response.updated,false);assert.equal(report.after._revision,report.before._revision);
+    const {folderSync:beforeStatus,...before}=report.before,{folderSync:afterStatus,...after}=report.after;
+    assert.deepEqual(before,after);assert.equal(afterStatus.reason,'parse-failed');
+    assert.equal(report.atSubmit.pending,64);assert.equal(report.atSubmit.activeWorkers,report.atSubmit.maxWorkers);
+  }else{
+    assert.equal(report.errors.length,0);assert.equal(report.after.folderSync,null);
+    if(report.kind.startsWith('missing')){assert.equal(report.response.reason,'KUR Excel bulunamadı');assert.deepEqual(report.before,report.after);}
+    else{assert.equal(report.response.updated,true,'valid KUR must be updated');assert.equal(report.after._revision,report.before._revision+1,'FX revision');}
+    if(report.kind==='valid-queued')assert.ok(report.fxMetrics.queueWaitMs>5000,'native Excel queue wait must exceed five seconds');
+  }
+}
+async function runCase({root,kind,pin=true}){
+  const allowed=['missing-empty','valid-empty','valid-queued','missing-queue-full','valid-queue-full'];
+  assert.ok(allowed.includes(kind),'unknown narrow scenario');if(pin)assertMainSource();
+  root=path.resolve(root);const old=require('./diagnose-fx-timeout');old.prepareRoot(root);
+  for(const [key,dir] of Object.entries({BUYER_LOG_DATA_ROOT:'app',BUYER_LOG_SERVER_DATA_ROOT:'data',BUYER_LOG_AUTH_DATA_ROOT:'auth',BUYER_LOG_LOCAL_DATA_ROOT:'local',BUYER_LOG_TEMP_ROOT:'tmp'})){
+    process.env[key]=path.join(root,dir);fs.mkdirSync(process.env[key],{recursive:true});
+  }
+  process.env.BUYER_LOG_LOCAL_DB=path.join(root,'local/BuyerLogLocal.db');process.env.BUYER_LOG_CONFIG_PATH=path.join(root,'config.json');process.env.BUYER_LOG_CENTRAL_IAM_ENABLED='0';
+  const source=path.join(root,'source');fs.mkdirSync(source);if(kind.startsWith('valid'))old.writeKurFixture(source);
+  const report={schemaVersion:1,synthetic:true,scope:pin?'current-main-narrow-probe':'runtime-contract-only',
+    comparedMainSha:pin?MAIN:null,historicalEvidence:false,kind,startedAt:new Date().toISOString(),computeCalls:0,excelCalls:[],fxMetrics:null,errors:[],events:[],
+    sourceHashes:JSON.parse(fs.readFileSync(SOURCE)).files.map(file=>({path:file.path,sha256:sha(path.join(REPO,file.path))})),
+    node:process.version,cpuQuota:fs.readFileSync('/sys/fs/cgroup/cpu.max','utf8').trim()};
+  const emit=(type,data={})=>report.events.push({type,atMs:now(),...data});
+  const exits=[];
+  class ObservedExcelWorker extends Worker{
+    constructor(...args){super(...args);emit('native-excel-created',{threadId:this.threadId});exits.push(new Promise(resolve=>this.once('exit',code=>{emit('native-excel-exit',{code});resolve();})));}
+    postMessage(message,...args){emit('native-excel-dispatch',{task:message.task,id:message.id});return super.postMessage(message,...args);}
+  }
+  const client=require('../server/excel-worker-client').createExcelWorkerClient({WorkerClass:ObservedExcelWorker});
+  const db=require('../server/db');db.saveFx({base:'USD',months:{'2026-09':{TRY:38},'2026-10':{CHF:.88}},reportMonth:'2026-09'},db.loadFx()._revision);
+  const controllers=[],pressure=[];
+  const context={require:require('node:module').createRequire(path.join(APP,'server/server.js')),__dirname:path.join(APP,'server'),path,
+    sourceUserId:()=> 'synthetic-buyer',sourceFolderForUser:()=>source,loadFx:db.loadFx,saveFx:db.saveFx,folderFxSyncStatus:null,publishSharedMasterChange(){},
+    serverCompute(){report.computeCalls++;throw Error('unexpected shared compute FX call');},
+    logRuntimeFailure:(key,error)=>report.errors.push({key,code:error.code,message:error.message}),
+    runExcelTask(task,payload,options){
+      report.excelCalls.push({task,options:plain(options)});emit('fx-submit');
+      return client.runExcelTask(task,payload,{...options,onMetrics:metrics=>{report.fxMetrics=metrics;emit('fx-native-finish',{metrics});}});
+    }};
+  const {extractFunction}=require('../tests/helpers/app-main-functions');
+  vm.createContext(context);vm.runInContext(extractFunction(fs.readFileSync(path.join(APP,'server/server.js'),'utf8'),'syncFxFromKurWorkbook'),context);
+  const app=require('express')(),allow=(_req,_res,next)=>next();
+  require('../server/routes/costing-fx-shipping-routes')(app,{loadFx:db.loadFx,getFolderFxSyncStatus:()=>context.folderFxSyncStatus,
+    userAccess:{requireAnyArea:()=>allow,requireArea:()=>allow,requirePermission:()=>allow}});
+  const handler=app._router.stack.find(layer=>layer.route?.path==='/api/fx'&&layer.route.methods.get).route.stack.at(-1).handle;
+  const snapshot=()=>{let data;handler({}, {set(){},json(v){data=plain(v);}});return data;};
+  try{
+    if(kind==='valid-queued'||kind.endsWith('queue-full')){
+      // Existing native tasks and unmodified default queue/worker/memory limits.
+      // Queue-full uses 2 active + 64 pending health jobs in one parent turn;
+      // queued uses six existing <=2000ms diagnosticSpin jobs on two slots.
+      const full=kind.endsWith('queue-full'),count=full?client.getExcelWorkerStats().maxWorkers+64:6;
+      for(let i=0;i<count;i++){
+        const control=new AbortController();controllers.push(control);
+        pressure.push(client.runExcelTask(full?'health':'diagnosticSpin',full?{}:{ms:2000},{timeoutMs:5000,signal:control.signal})
+          .then(()=>({ok:true}),error=>({code:error.code})));
+      }
+    }
+    report.atSubmit=client.getExcelWorkerStats();report.before=snapshot();
+    report.response=plain(await context.syncFxFromKurWorkbook('synthetic-buyer'));emit('fx-return');report.after=snapshot();
+    verifyCase(report);report.status='verified';
+  }catch(error){report.status='failed';report.error={message:error.message,stack:error.stack};throw error;}
+  finally{
+    for(const control of controllers)control.abort();report.pressureResults=await Promise.all(pressure);
+    await Promise.all(exits);await new Promise(resolve=>setImmediate(resolve));report.finalClient=client.getExcelWorkerStats();
+    report.finishedAt=new Date().toISOString();fs.writeFileSync(path.join(root,'result.json'),JSON.stringify(report,null,2)+'\n');
+  }
+  return report;
+}
+async function main(){
+  const [mode,root,kind]=process.argv.slice(2);
+  if(mode==='case')return runCase({root,kind});
+  if(mode!=='run'||!root)throw Error('Usage: diagnose-fx-main.js run FRESH_ROOT | case FRESH_ROOT KIND');
+  assertMainSource();require('./diagnose-fx-timeout').prepareRoot(path.resolve(root));const index=[];
+  for(const scenario of ['missing-empty','valid-empty','valid-queued','missing-queue-full','valid-queue-full']){
+    const dir=path.resolve(root,scenario);fs.mkdirSync(dir);const log=fs.openSync(path.join(dir,'run.log'),'wx');
+    const child=spawnSync(process.execPath,[__filename,'case',dir,scenario],{cwd:APP,stdio:['ignore',log,log],timeout:30000});fs.closeSync(log);
+    index.push({scenario,exitCode:child.status,signal:child.signal,error:child.error?.message});
+    fs.writeFileSync(path.resolve(root,'index.json'),JSON.stringify(index,null,2)+'\n');console.log(scenario+' exit='+child.status);
+  }
+  if(index.some(item=>item.exitCode!==0))process.exitCode=1;
+}
+module.exports={runCase,verifyCase,assertMainSource};
+if(require.main===module)main().catch(error=>{console.error(error);process.exitCode=1;});

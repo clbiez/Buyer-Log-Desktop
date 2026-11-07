@@ -1,0 +1,76 @@
+{
+  "scope": "current-main-read-only-comparison",
+  "historicalReviewSha": "69950f289a012f0bb7c61290bec9890f340f6c64",
+  "historicalExcludes892": true,
+  "comparedMainSha": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "mainIncludes892": true,
+  "pr885": {
+    "state": "closed",
+    "merged": true,
+    "mergedAt": "2026-11-07T17:56:03Z",
+    "mergeCommit": "76ddbaf4a2a85132d2ad9dff8d1465377e1f81aa"
+  },
+  "fxRoutingChangeCommit": "d0bab2acc839fee71a84b436eebe14b6feb57ae7",
+  "files": [
+    {
+      "path": "resources/app/server/server.js",
+      "historicalSha256": "e12ebadc0487c7f79aa5a9c86c6f16b2c357da9ebe3f8e0f651ded16c041a47e",
+      "mainSha256": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5",
+      "equal": false
+    },
+    {
+      "path": "resources/app/server/excel-worker-client.js",
+      "historicalSha256": "ae9ec7e3706ba0852641d6f778f3bff05cea2490be749051742c624230b45f1a",
+      "mainSha256": "ae9ec7e3706ba0852641d6f778f3bff05cea2490be749051742c624230b45f1a",
+      "equal": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-pool.js",
+      "historicalSha256": "a0121dbc2e018065c3e6b906149ad0caf6e7a784ccc05e61b5d3460063586266",
+      "mainSha256": "a0121dbc2e018065c3e6b906149ad0caf6e7a784ccc05e61b5d3460063586266",
+      "equal": true
+    },
+    {
+      "path": "resources/app/server/lib/compute-service.js",
+      "historicalSha256": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+      "mainSha256": "8cd1a18b052e4ec2a4e0656f12981a2703fbfb9568a68cf575764429d7ba221b",
+      "equal": true
+    },
+    {
+      "path": "resources/app/server/workers/compute-worker.js",
+      "historicalSha256": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+      "mainSha256": "b9c584483f88fffca54a8a17a20efe1100b6812f49aee2f4672e46537c6132b1",
+      "equal": true
+    },
+    {
+      "path": "resources/app/server/workers/excel-worker.js",
+      "historicalSha256": "81940ef7ea4da5a82b7e96d2ec05777e12745156e4e2fd3d59107000b3e49509",
+      "mainSha256": "81940ef7ea4da5a82b7e96d2ec05777e12745156e4e2fd3d59107000b3e49509",
+      "equal": true
+    },
+    {
+      "path": "resources/app/server/lib/fxWorkbook.js",
+      "historicalSha256": "e95e4ff480e9fab02c0e2ba3b5bde76277d2347678baaea127e749cb2ec455cd",
+      "mainSha256": "e95e4ff480e9fab02c0e2ba3b5bde76277d2347678baaea127e749cb2ec455cd",
+      "equal": true
+    },
+    {
+      "path": "resources/app/server/db.js",
+      "historicalSha256": "c2b9a25c9550ccb7737491610abae2253186f3e729ede73b57a71b9137425360",
+      "mainSha256": "c2b9a25c9550ccb7737491610abae2253186f3e729ede73b57a71b9137425360",
+      "equal": true
+    },
+    {
+      "path": "resources/app/public/fx-import-engine.js",
+      "historicalSha256": "a2491522e01ff4f3eb99d9643f8e63d231c9377447457bfbd6766c30a801e6af",
+      "mainSha256": "a2491522e01ff4f3eb99d9643f8e63d231c9377447457bfbd6766c30a801e6af",
+      "equal": true
+    },
+    {
+      "path": "resources/app/server/routes/costing-fx-shipping-routes.js",
+      "historicalSha256": "01c98eadb3318876e2ea6b99196d819a182d5053738c81fa385867dda90d01aa",
+      "mainSha256": "01c98eadb3318876e2ea6b99196d819a182d5053738c81fa385867dda90d01aa",
+      "equal": true
+    }
+  ]
+}
