@@ -66,13 +66,52 @@ test('working orb stops by itself once its canvas leaves the document', () => {
   assert.equal(frames, 5);
 });
 
-test('identical Backlog requests reuse one computation keyed by every input', () => {
+test('identical Backlog requests reuse one computation keyed by every input', async () => {
   const server = read('server/server.js');
-  assert.match(server, /const detailRows=cachedBacklogTemplateRows\(detailRowsKey,\(\)=>buildBacklogTemplateRows\(/);
-  const keyFn = server.slice(server.indexOf('function backlogRowsCacheKey'), server.indexOf('function cachedBacklogTemplateRows'));
-  for (const input of ['asasOrdersByTarget', "antrepoForTarget(active,'backlog')", 'cpupdateOverrides', 'overrides._revision', 'overrides._revisions', 'accessRevision', 'localIamRevision()', 'getDate()', 'parts'])
-    assert.ok(keyFn.includes(input), 'cache key includes ' + input);
-  assert.match(server, /BACKLOG_ROWS_CACHE_MS=60\*1000/);
+  // Phase 5 moved the computation and its bounded result cache to computeReads.
+  // Keep testing reuse/invalidation on the live route, not its unused predecessor.
+  const route = server.slice(server.indexOf("app.get('/api/backlog-export'"), server.indexOf("app.get('/api/backlog-filter-values'"));
+  assert.match(route, /computeReads\.run\(req,'backlog',task,/);
+  assert.match(route, /\{cache:json\}\)/);
+  assert.doesNotMatch(route, /buildBacklogTemplateRows|cachedBacklogTemplateRows/);
+  const capture = require('./helpers/computed-backlog-request');
+  const query = {format:'json',retailFrom:'2026-01-01',retailTo:'2026-12-31',inStoreFrom:'2026-02-01',inStoreTo:'2026-11-30',exFactoryFrom:'2026-03-01',exFactoryTo:'2026-10-31',buyerGrup:'DEMO',groupBy:'buyer,season',dimFilters:'{"Sezon":["S7"]}',analysisFilters:'late',antrepoFrom:'2026-04-01',antrepoTo:'2026-09-30',antrepoDateLevels:'month,week',sourceColumns:'DEMO_A,DEMO_B',previewLimit:'10',includeSourceDetails:'1',projection:'global-flow'};
+  const selected = await capture(query);
+  assert.equal(selected.task, 'backlog-export');
+  assert.equal(selected.options.cache, true);
+  const contextStart = server.indexOf('function computeReadContext(');
+  const contextFn = server.slice(contextStart, server.indexOf('\nconst computeReadGuard=', contextStart));
+  for (const input of ['pageProjectionContext(profile)', 'shared._revision', 'shared._revisions', 'fingerprint()', 'getFullYear()', 'getMonth()', 'getDate()'])
+    assert.ok(contextFn.includes(input), 'live cache context includes ' + input);
+  const guardWiring = server.slice(server.indexOf('const computeReadGuard='),server.indexOf('\nfunction computeParamsFor('));
+  assert.match(guardWiring,/contextFor:computeReadContext/);
+  assert.match(guardWiring,/accessFor:profile=>userAccess\.computeAccessContext\(profile\)/);
+  assert.match(guardWiring,/sourceTokenFor:computeSourceToken/);
+
+  const {createComputeReadService} = require('../server/lib/compute-read-service');
+  const {createComputeReadGuard} = require('../server/lib/compute-read-guard');
+  const profile = {id:'demo',status:'ACTIVE',enabled:true};
+  let revision = {source:'g1',context:'c1',access:'a1'}, calls = 0, clock = 0, releases = 0;
+  const guard = createComputeReadGuard({sessionProfile:()=>profile,profileById:()=>profile,hasArea:()=>true,contextFor:()=>({contextHash:revision.context}),accessFor:()=>({accessHash:revision.access}),sourceTokenFor:()=>revision.source});
+  const service = createComputeReadService({guard,sourceFor:async()=>({generation:revision.source}),paramsFor:(_profile,_source,_task,parts)=>parts,now:()=>clock,
+    compute:{run:async()=>({value:{build:++calls},metrics:{outputBytes:1},release:()=>releases++})}});
+  const run = () => service.run({},'backlog',selected.task,selected.parts,selected.options);
+  const [first,shared] = await Promise.all([run(),run()]);
+  assert.equal(first.value,shared.value);first.release();shared.release();
+  const cached = await run();assert.equal(cached.value,first.value);cached.release();assert.equal(calls,1);
+  for (const key of Object.keys(query).filter(key=>key!=='format')) {
+    const replacement = key==='dimFilters'?'{}':key==='previewLimit'?'11':key==='includeSourceDetails'?'0':key==='projection'?'full':query[key]+'-changed';
+    const changed = await capture({...query,[key]:replacement});
+    assert.notDeepEqual(changed.parts,selected.parts,key+' must reach the live cache key');
+    const lease = await service.run({},'backlog',changed.task,changed.parts,changed.options);
+    assert.notEqual(lease.value,first.value,key+' must invalidate the cached result');lease.release();
+  }
+  for (const key of ['source','context','access']) {
+    revision = {...revision,[key]:revision[key]+'-changed'};
+    const previous = calls, lease = await run();assert.equal(calls,previous+1,key+' invalidates a cached response');lease.release();
+  }
+  clock=60001;const previous=calls,expired=await run();assert.equal(calls,previous+1,'the production 60 second TTL expires');expired.release();
+  service.clear();assert.equal(releases,calls,'every computed buffer is released');
 });
 
 test('deferred UI scripts download in parallel and the profile gate loads early', () => {

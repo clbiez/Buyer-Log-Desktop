@@ -1,0 +1,263 @@
+{
+  "protectedHead": "2f15610f840aadb3c90c1f866564eb7ac405987c",
+  "main": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "mergeCommit": "30f5315474fc898bec99e2630a0cd4c378b39eb0",
+  "parents": [
+    "2f15610f840aadb3c90c1f866564eb7ac405987c",
+    "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240"
+  ],
+  "releaseNotes": {
+    "mainCount": 38,
+    "protectedCount": 34,
+    "mergedCount": 40,
+    "allMainObjectsPreserved": true,
+    "allProtectedObjectsPreserved": true,
+    "mainOrderPreserved": true,
+    "ownIds": [
+      "pricing-client-calculation-cost",
+      "open-costing-line-calculation-cost"
+    ]
+  },
+  "historicalFiles": [
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/browser-results.json",
+      "sha256": "d61e49520f8af58232da792a4b039b436e988aedf929645a453bddd4bff16341",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/collection-results.json",
+      "sha256": "051b48f1c72417fdfa336eb0b28d54b303e0783420bffbb030a109121a97a8e9",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/cost-results.json",
+      "sha256": "0d82c4746cb3f546405f5ec9302b8daedfc92318fb96510a7df463d50f2d63da",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/cpr05-isolated-rerun-runner.cjs",
+      "sha256": "9539da5af19f2c6f33eaf2637823e25fbff9b061e3c3e7d2bcfe792c1c148f7a",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/cpr05-isolated-rerun.json",
+      "sha256": "a5cc5801f82dfdf52d3d51b510bfad57dfc94d03f545d46ffa6b66f4193ec247",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/environment.json",
+      "sha256": "f9475d21b6467fdc5b244fe80b9e8575fa521854667c7c5c4c9df293013ac282",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/iam-baseline.txt",
+      "sha256": "f59b00e3c7ea68b98b9302fc9acfd2725365f489e44d1d90f22ff199e2f3aff9",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/iam-integration/comparison.json",
+      "sha256": "dfa3ff3b51dfa49f0248d77c29827a5487ef1241841dc29de198c2c651af9f38",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/iam-integration/latest-main-63159fb3-iam-reproduction.tap.gz",
+      "sha256": "e146f8bb29710b6468c5c0f4464d45371880e7962bc78392012a0ac97795e8a6",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/iam-integration/latest-main-initial-wrong-cwd.txt.gz",
+      "sha256": "d560b3e361c0d6ce7c151475869104da39ce9b70616b729e726f523067299eee",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/iam-integration/main-iam-reproduction.tap.gz",
+      "sha256": "778a96dc27132a67db34f249ff86a7159f7fec55604ee25c86b87f397821d5ae",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/iam-integration/original-full-suite-failure.txt.gz",
+      "sha256": "a0c4e63699be5c974f5416005650a5a7fb7a26d03246d932be3c142d3b617048",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/iam-integration/original-iam-baseline.log.gz",
+      "sha256": "9348f70a9beadab8a6c00f5f38e3ec552ba82ce1f32965b2cca8d766f5a51903",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/iam-integration/original-iam-recheck.log.gz",
+      "sha256": "2ccbae1ca42d169325134282e507d7a46b61aed00210b88e0d2f99580018c11c",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/iam-integration/pricing-pr-iam-reproduction.tap.gz",
+      "sha256": "abf684f94b7ad49c8efaacf8d848898765b3529d379df48f0360a5a6e0bb735a",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/matrix-results.json",
+      "sha256": "3961db45edd0fe3da641127825f121ec57bb38b37f8554a77b78f626da5fe699",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/red-green.txt",
+      "sha256": "7638939384729e40e772172fe19d354dc7dad228b5b2dcfd8dffa225f9b95dc4",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/evidence/pricing-client-cost-20261107/test-results.json",
+      "sha256": "5678e727d7cc5e61a27ffa1b7f9b8c59026900798c830c417eeb9bf3aa4e1e35",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/probes/pricing-client-cost-browser.cjs",
+      "sha256": "f3181d02e46aaf785e1d936b2a01dff215627c0cf111cfad4918b835db10cd62",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/probes/pricing-client-cost-collection.cjs",
+      "sha256": "d1330e4e288a6c227ef6a52f86b4ef48e1a5ce75cf50167cd314a4bccb961e37",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/probes/pricing-client-cost-cost.cjs",
+      "sha256": "b51c4d791ca7fc08572004914772d202c8493fd9e506c7cde7aee753612af1f0",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance-program/probes/pricing-client-cost-matrix.cjs",
+      "sha256": "c5ee7c1262ee519194616ef32d9bc21f17c09215dc486816f945f5aa690992e5",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance/2026-11-07-iam-main-integration-handoff.md",
+      "sha256": "fab898247e3a893b4916038ca2c5b39bcce0354d13009d1874f8e3e9e9ad8cf4",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "docs/performance/2026-11-07-pricing-client-cost.md",
+      "sha256": "9133b48c5cd972f1b75f7d08235b73d35bd8034e598120ed3f350cd4b7b946f3",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "resources/app/public/open-costing.js",
+      "sha256": "59b831e1e0678c1a44caf5111a758e462e7624d5eb6362d297f345b135533040",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "resources/app/public/pricing-desk-engine.js",
+      "sha256": "43ad70871caa0eca373ca1c48769dd078b530a506c85abb676089b14d4e53127",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "resources/app/public/pricing-desk.js",
+      "sha256": "e56861d1ef59fd5c1684f3a98162dad348b3860d792d3f6f00004fced7feeac9",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "resources/app/public/pricing-workspace-engine.js",
+      "sha256": "e9286f03b066fc29b6012e1ac213626d8164b8d63c008693376ab2a68071606b",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "resources/app/public/quotations.js",
+      "sha256": "559006387243704a69053eca68be1c18bd2433cb247712a136fcbec0ebf0904f",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "resources/app/public/release-notes/next-assets/open-costing-client-cost.png",
+      "sha256": "b0bc5c407b36b8149c91268923495b73061863ac7f7cd41479ecca04241e9175",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "resources/app/public/release-notes/next-assets/pricing-client-cost.png",
+      "sha256": "5194bda05f08e5f55da4797c949837d7b61fb00f96cd7d835b7fcd340ab5de9f",
+      "byteIdenticalAtMerge": true
+    },
+    {
+      "path": "resources/app/tests/pricing-client-cost-v20261107.test.js",
+      "sha256": "91973b31b038de84b62f7ff937b3b19a7f2b39c9b86e336ac2d8f66e77e7588b",
+      "byteIdenticalAtMerge": true
+    }
+  ],
+  "measuredSources": [
+    {
+      "file": "pricing-desk.js",
+      "sha256": "e56861d1ef59fd5c1684f3a98162dad348b3860d792d3f6f00004fced7feeac9",
+      "matchesMeasuredAfter": true
+    },
+    {
+      "file": "pricing-desk-engine.js",
+      "sha256": "43ad70871caa0eca373ca1c48769dd078b530a506c85abb676089b14d4e53127",
+      "matchesMeasuredAfter": true
+    },
+    {
+      "file": "quotations.js",
+      "sha256": "559006387243704a69053eca68be1c18bd2433cb247712a136fcbec0ebf0904f",
+      "matchesMeasuredAfter": true
+    },
+    {
+      "file": "pricing-workspace-engine.js",
+      "sha256": "e9286f03b066fc29b6012e1ac213626d8164b8d63c008693376ab2a68071606b",
+      "matchesMeasuredAfter": true
+    },
+    {
+      "file": "open-costing.js",
+      "sha256": "59b831e1e0678c1a44caf5111a758e462e7624d5eb6362d297f345b135533040",
+      "matchesMeasuredAfter": true
+    },
+    {
+      "file": "open-costing-engine.js",
+      "sha256": "c1587eaf5a87183426c6a030ec4ba9d85da0661e15187383e17858d76279687c",
+      "matchesMeasuredAfter": true
+    }
+  ],
+  "readOnlyPaths": [
+    {
+      "path": "resources/app/server",
+      "gitObject": "f1cde600d20ca2f6a4a4cd1e3c2213ea0d66e97e",
+      "identicalToMain": true
+    },
+    {
+      "path": "resources/app/public/app-main.js",
+      "gitObject": "a561a31779ca3d56f55b619235c78cf0dea33d34",
+      "identicalToMain": true
+    },
+    {
+      "path": "resources/app/public/index.html",
+      "gitObject": "bc99a9a017e2ec13c71dd1c6bdffb3be7e827faf",
+      "identicalToMain": true
+    },
+    {
+      "path": "resources/app/public/perf-runtime.js",
+      "gitObject": "99d57de0133c5b5ae7185fb90966fdbbc9da14ce",
+      "identicalToMain": true
+    },
+    {
+      "path": "resources/app/public/model-image-cache.js",
+      "gitObject": "b8e952b9181cb7ce20e6efe0949e83b1ee8b2d5e",
+      "identicalToMain": true
+    },
+    {
+      "path": ".github/workflows/buyerlog-pr-fast-checks.yml",
+      "gitObject": "f034e81ed59b0a0fcdb1f651c444accc85f7bb57",
+      "identicalToMain": true
+    },
+    {
+      "path": "resources/app/tests/run-tests.js",
+      "gitObject": "f10e26facafef82334cff530f60f694b03459b0c",
+      "identicalToMain": true
+    },
+    {
+      "path": "resources/app/tests/fixtures/i18n-coverage-baseline.json",
+      "gitObject": "39563c6e20403878214f5d0456b1fdda2a5b4a47",
+      "identicalToMain": true
+    }
+  ],
+  "fixtureArchiveSha256": "5913414603984b02b1c30b87f1f9231da3718ab797a007f4bd14067ec6cd5c70",
+  "cssIdenticalToMain": true,
+  "reviewPatchSha256": "cbca09d3d738a3bd1249c7a847935f649fc0d211396194c66f092f08eed7c98b",
+  "benchmarksRepeated": false,
+  "visualEvidenceRefreshed": false,
+  "reason": "Six measured source files and both existing post-change demo PNGs unchanged; no new visual behavior introduced by branch delta."
+}

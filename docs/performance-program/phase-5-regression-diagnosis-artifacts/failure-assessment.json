@@ -1,0 +1,212 @@
+[
+  {
+    "test": "v4.39 Backlog Excel aktif Backlog kapsamı ve filtrelerini kullanır",
+    "redLocation": "tests/matching-rule-v439.test.js:169:1",
+    "batch": 3,
+    "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /const prepared=backlogQueryForRequest\\(req,filterOpts\\)/.",
+    "contractAndOwner": "Backlog hedefi + Horizon + Buyer + IAS/ASAS filtreleri; server → computeParamsFor → compute-tasks → Excel worker",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "Taşınmış uygulama doğrulandı: native JSON byte eşitliği, yalnız sipariş 1001 / 30 adet ve aynı filtreli XLSX. Davranış gerekli; bozulma gözlenmedi.",
+    "originalLog": "full.log.gz"
+  },
+  {
+    "test": "Backlog panels reuse rows of an unchanged server revision instead of re-normalising and re-analysing",
+    "redLocation": "tests/module-first-open-perf-v251.test.js:40:1",
+    "batch": 3,
+    "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /const rowsRevision=crypto\\.createHash\\('sha1'\\)\\.update\\(BACKLOG_ROWS_PROCESS_NONCE\\)\\.update\\(detailRowsKey\\)/.",
+    "contractAndOwner": "Opak rowsRevision ve ortak satır reuse; computeParamsFor + compute-read-service + Backlog panelleri",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "SHA1 ifadesi değişmiş; gerekli kimlik/reuse davranışı native doğrulandı. Aynı istek tek hesap, filtre/yetki/generation değişince farklı kimlik; mevcut panel testleri korundu.",
+    "originalLog": "full.log.gz"
+  },
+  {
+    "test": "Legacy Backlog: üretici yükleme teyidi sütunu kalktı, yerine aynı konumda ÖNEM ETİKETİ geldi",
+    "redLocation": "tests/order-importance-v20261021.test.js:105:1",
+    "batch": 3,
+    "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /importanceValues:BLOrderImportance\\.excelValues\\(overrides\\.importanceSettings\\)/.",
+    "contractAndOwner": "Önem etiketi kolon konumu ve zorunlu dropdown; compute-worker backlog-workbook → excel-worker",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "Çağrı worker’a taşınmış. Native XLSX, değiştirilen Demo BTS etiketini ve allowBlank=0 list doğrulamasını içeriyor; eski kaldırılmış sütun yok.",
+    "originalLog": "full.log.gz"
+  },
+  {
+    "test": "v4.71 Orders ekranı, hızlı aktif/pasif filtreleri ve bağımsız yenileme hedefi vardır",
+    "redLocation": "tests/orders-page-v471.test.js:82:1",
+    "batch": 3,
+    "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /orders: \\{ rows: ordersRows \\},\\s*'order-summary': \\{ rows: orderSummaryRows \\}/.",
+    "contractAndOwner": "Bağımsız Orders satırları ve ayrı CP kaynaklı order-summary; compute-tasks + ensureComputedProjection",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "Üretim iki modülü native üretip ayrı gzip olarak yayımlıyor; Orders payload’unda gömülü özet yok. UI/hedef assertion’ları korundu.",
+    "originalLog": "full.log.gz"
+  },
+  {
+    "test": "sunucu özeti ayrı modülden, yoksa eski gömülü alandan okur; ikisi de yoksa isabet saymaz",
+    "redLocation": "tests/orders-summary-split-v20260926.test.js:52:1",
+    "batch": 3,
+    "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /'order-summary': \\{ rows: orderSummaryRows \\}/.",
+    "contractAndOwner": "Ayrı özet, eski gömülü özet fallback’i, ikisi de yoksa cache miss; loadCachedPageProjectionSet",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "Gerekli davranış korundu: gerçek cache okuyucusunda split/legacy HIT, missing MISS. Native Orders miss ayrıca özet modülünü diske yayımlar.",
+    "originalLog": "full.log.gz"
+  },
+  {
+    "test": "Backlog endpoints hydrate the model snapshot before falling back to an Excel read",
+    "redLocation": "tests/page-cache-reuse.test.js:10:1",
+    "batch": 3,
+    "actualError": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: Actual 0, expected 2 (0 !== 2).",
+    "contractAndOwner": "Snapshot doğrulanmadan Excel fallback yok; prepareComputeBacklog + computeSourceFor",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "İki eski çağrı yerine dört route ortak hazırlığı bekliyor. Native cold-source testi: disk kimliği, fallback yayını, byte eşitliği ve yabancı Buyer reddi.",
+    "originalLog": "full.log.gz"
+  },
+  {
+    "test": "startup kritik yolu sunucu dinlemeden önce ağdaki KUR dosyasına erişmez",
+    "redLocation": "tests/startup-complete-local-first-v781.test.js:19:1",
+    "batch": 4,
+    "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /runExcelTask\\('loadFxWorkbookFromDirectories'/.",
+    "contractAndOwner": "UI hazır olmadan ve 2500 ms arka plan gecikmesinden önce FX çağrısı yok; scheduleBackgroundServices",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "Facade taşınmış. Çalışan scheduler testi UI-ready öncesi 0 çağrı ve timer sonrası tek çağrı; mevcut FX wiring testi kuyruk sözleşmesini korur. FX timeout tanısı/kabulü yapılmadı.",
+    "originalLog": "full-batch-4.log.gz"
+  },
+  {
+    "test": "LFL and Backlog show the shared loading state on first load instead of an unready screen",
+    "redLocation": "tests/startup-trivia-v20261001.test.js:189:1",
+    "batch": 4,
+    "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /async function fetchBacklog\\(params\\)\\{\\s*backlogPrefetch=null;\\s*showBacklogLoadingState\\(\\);/.",
+    "contractAndOwner": "Prefetch temizliği + ilk loading state; fetchBacklog → fetchBacklogData",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "Gövde taşınmış; public wrapper çalıştırıldı: loading ilk await öncesi, eski yanıt uygulanmıyor. LFL assertion’ları korunur.",
+    "originalLog": "full-batch-4.log.gz"
+  },
+  {
+    "test": "istemci: yenileme sonrası açık olmayan sayfalar çizilmeden arka planda hazırlanır",
+    "redLocation": "tests/unified-refresh-link-group-v20260929.test.js:193:1",
+    "batch": 5,
+    "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /async function fetchBacklog\\(params\\)\\{\\s*backlogPrefetch=null;/.",
+    "contractAndOwner": "Yenileme prewarm kapsamı, prefetch tüketimi/temizliği; fetchBacklogData",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "Gövde taşınmış. Native wrapper ve Chart/Overview/Delivery ortak istek testleri geçti; yetkisiz/görünür alan/prewarm assertion’ları değişmedi.",
+    "originalLog": "full-batch-5.log.gz"
+  },
+  {
+    "test": "temporary server data roots keep durable recovery records inside the temporary root",
+    "redLocation": "tests/user-data-temp-root-recovery.test.js:12:1",
+    "batch": 5,
+    "actualError": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: Actual false, expected true (false !== true).",
+    "contractAndOwner": "Varsayılan recovery kökü ve açık LOCAL override’ının sahipliği; user-data WRITE_RECOVERY_ROOT",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "Fixture değişkeni doğrulandı: yalnız BUYER_LOG_LOCAL_DATA_ROOT kalıtımı eski testi RED yapıyor. Aynı tam-paket ayarlarıyla fixture GREEN; açık override ve izin dışı yazma reddi de sınandı.",
+    "originalLog": "full-batch-5.log.gz"
+  },
+  {
+    "test": "v7.14 refresh sharing, row/image cache patching and bounded facet cache are wired",
+    "redLocation": "tests/v714-complete-performance.test.js:67:1",
+    "batch": 5,
+    "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /BL_PROJECTION_WORKER_MIN_ROWS/.",
+    "contractAndOwner": "Ana thread fallback’i olmadan byte bütçeli worker dispatch; buildAndWriteComputedPageProjectionCache + ortak havuz",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "Eski satır eşiği artık sözleşme değil; bağlı byte admission ve worker yürütmesi gerekli. Gerçek küçük miss native thread’de ve mevcut bounded-pool negatif testleri geçti.",
+    "originalLog": "full-batch-5.log.gz"
+  },
+  {
+    "test": "v7.14 startup keeps projection parsing out of the critical path and lazy-loads active data",
+    "redLocation": "tests/v714-performance-hardening.test.js:44:1",
+    "batch": 5,
+    "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /readProjectionCompressed\\(ctx\\.id, module, ctx\\.contextHash\\)/.",
+    "contractAndOwner": "Hazır gzip, lazy yükleme, canlı guard; ensureComputedProjection + sendComputedResponse",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "Okuma helper’a taşınmış. Native miss/hit: MAIN yeniden hesaplamıyor, aynı gzip baytları; HTTP gzip/identity ve son yetki reddi testleri geçti.",
+    "originalLog": "full-batch-5.log.gz"
+  },
+  {
+    "test": "v7.14 development metrics cover server timing, parse, hydrate, filters, render and first interaction",
+    "redLocation": "tests/v714-performance-hardening.test.js:57:1",
+    "batch": 5,
+    "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /firstUsableInteractionMs/.",
+    "contractAndOwner": "Gerçek ilk kullanılabilirlik metriği; index.html boot dismiss/reveal",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "Main #894 (2083ffd7) yalnız test kaynağını APP+INDEX olarak uyarlamış; f52adde5 ile alındı. Çalışan startup-guide harness örtü kalkmadan metrik olmadığını, human-wait çıkarımını doğrular.",
+    "originalLog": "full-batch-5.log.gz"
+  },
+  {
+    "test": "v7.14 visual metadata does not invalidate large business projections",
+    "redLocation": "tests/v714-performance-hardening.test.js:67:1",
+    "batch": 5,
+    "actualError": "AssertionError [ERR_ASSERTION]: The input was expected to not match the regular expression /imagemap|plmStyleLinks|modelImages/.",
+    "contractAndOwner": "Görsel metadata business context/gzip’i geçersiz kılmaz; pageProjectionContext",
+    "comparison": {
+      "redCodeSha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "redEvidenceHead": "f7b2ff53",
+      "prePhase5Main": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+      "currentCodeSha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d"
+    },
+    "classificationAndEvidence": "Fixture dilimi ilgisiz compute fonksiyonlarını da kapsıyordu. Tam fonksiyon çıkarımı + native metadata-only cache HIT/aynı byte; iş revizyonu/yetki değişiminde farklı context. DS-03 kapsamı genişletilmedi.",
+    "originalLog": "full-batch-5.log.gz"
+  }
+]

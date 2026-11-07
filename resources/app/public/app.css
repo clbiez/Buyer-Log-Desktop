@@ -3722,3 +3722,6 @@ button.ovNoteCount{cursor:pointer;}
 .blExcelMenu{min-width:260px;}
 .blExcelMenu .tableActionIconOnly{width:auto!important;min-width:0!important;justify-content:flex-start!important;}
 .blExcelMenu .tableActionIconOnly>span{display:inline!important;}
+
+/* A newly activated module waits for its stylesheet before its first paint. */
+[data-bl-styles-loading]{visibility:hidden!important}

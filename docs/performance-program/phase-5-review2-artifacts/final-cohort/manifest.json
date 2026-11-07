@@ -1,0 +1,185 @@
+{
+  "synthetic": true,
+  "baselineRevision": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+  "candidateRevision": "e493546c583773f1239d30b22a8e56deaa5f5d49",
+  "retainedBaseline": {
+    "plan": "/tmp/phase-5-review2-main888-cohort-plan.json",
+    "reason": "The exact frozen Main #888 baseline and all three completed baseline samples are unchanged. Final candidate samples follow the newly proven history-read fix. Baseline/candidate are not alternating in time; no outlier or failed sample was excluded. Earlier pre-fix candidate reports remain separate evidence."
+  },
+  "files": [
+    {
+      "archive": "phase-5-review2-main888-v3-before-1.json.gz",
+      "source": "/tmp/phase-5-review2-main888-v3-before-1.json",
+      "sourceSha256": "336e3f640cb774bede4d8281e1b1c292efe0e07d71ef41ac33f817ad35544765",
+      "archiveSha256": "620a5b7d616a235e7ba9e2d3ae46966813f2812b9c5808c905cee1a2708fe8da",
+      "arm": "before",
+      "rep": 1,
+      "kind": "v3"
+    },
+    {
+      "archive": "phase-5-review2-main888-v3-before-1.server.log.gz",
+      "source": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-1/server.log",
+      "sourceSha256": "09c6b2cd97b4b372576efd91e397fe4be950620c402ab4d29b3910ecb4f42d3b",
+      "archiveSha256": "7cba4ef54b2f7c393fba6ca4f9317819ea8a85d3116ac40f5fa2a89115a365ef",
+      "arm": "before",
+      "rep": 1,
+      "kind": "v3"
+    },
+    {
+      "archive": "phase-5-review2-main888-v3-before-2.json.gz",
+      "source": "/tmp/phase-5-review2-main888-v3-before-2.json",
+      "sourceSha256": "fd17c64a3af0e40ef44e7f909cb2096b6376900255bd66690b57ee3fb4c9a1b6",
+      "archiveSha256": "5e2b1c4c8758ecc696a98ee9d74ffc5be81a2af613a33443e4c9a42bdd464fe0",
+      "arm": "before",
+      "rep": 2,
+      "kind": "v3"
+    },
+    {
+      "archive": "phase-5-review2-main888-v3-before-2.server.log.gz",
+      "source": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-2/server.log",
+      "sourceSha256": "8fc0d8dac31e2a0f4dd6ba6d06749f6c48fa852ab9d462605be3a63f4a5f712b",
+      "archiveSha256": "1201cf7cb49f6730bd7744abbe9c1e2893b55018b9730541aaf5458c12a28a73",
+      "arm": "before",
+      "rep": 2,
+      "kind": "v3"
+    },
+    {
+      "archive": "phase-5-review2-main888-v3-before-3.json.gz",
+      "source": "/tmp/phase-5-review2-main888-v3-before-3.json",
+      "sourceSha256": "36ff3792cc1f8dd2faa1f103f52f0f15fb80eb9628ae38518b699e1cba0f3a45",
+      "archiveSha256": "3eb65042bb348148076effb183f4a48cabd642881a99d8c1cec34e2ae00da938",
+      "arm": "before",
+      "rep": 3,
+      "kind": "v3"
+    },
+    {
+      "archive": "phase-5-review2-main888-v3-before-3.server.log.gz",
+      "source": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-3/server.log",
+      "sourceSha256": "ca3defbb8a8af89f6555965eecc6a05dcd02a165f09287fa722d9895a3c0f317",
+      "archiveSha256": "fb01a74463db8355214a7da64b26eb558c6b9cba74f58ad5be8a7d7dc3357fc2",
+      "arm": "before",
+      "rep": 3,
+      "kind": "v3"
+    },
+    {
+      "archive": "phase-5-review2-main888-history-v3-after-1.json.gz",
+      "source": "/tmp/phase-5-review2-main888-history-v3-after-1.json",
+      "sourceSha256": "ec483d41e98d0884406a1a237605511546430148259579484c753d6622e53083",
+      "archiveSha256": "12b8b61d1d30b86b8202989c6ac9cd79c74cbfe49e5d7355ed5a3c522e2603fb",
+      "arm": "after",
+      "rep": 1,
+      "kind": "v3"
+    },
+    {
+      "archive": "phase-5-review2-main888-history-v3-after-1.server.log.gz",
+      "source": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-1/server.log",
+      "sourceSha256": "d0a553cff72da7218b5152da8274fed49d760f46e8d7f92afd7b9c7b5a63bc01",
+      "archiveSha256": "f2c54f7e4f65245cc0316258bf2982d1ed92aa3ec39d2859a8ce736d566dba93",
+      "arm": "after",
+      "rep": 1,
+      "kind": "v3"
+    },
+    {
+      "archive": "phase-5-review2-main888-history-openings-after-1.json.gz",
+      "source": "/tmp/phase-5-review2-main888-history-openings-after-1.json",
+      "sourceSha256": "cac3a551665044700d7eb8431b5b797a8e44f14a33b19711336bce5c0039b876",
+      "archiveSha256": "f6318e00574af0171699ccee03cdee286359b876485ea77149d3b01693221ba2",
+      "arm": "after",
+      "rep": 1,
+      "kind": "openings"
+    },
+    {
+      "archive": "phase-5-review2-main888-history-openings-after-1.server.log.gz",
+      "source": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-openings-after-1/interactive-server.log",
+      "sourceSha256": "7d0220243fc9d80da387228c03a746a72c40e54b4b0821547ce8e9425b1126fe",
+      "archiveSha256": "4f21e74fa664755a53e81ddc165b3b58ce0bb859c99d2979dcebc95e028193f5",
+      "arm": "after",
+      "rep": 1,
+      "kind": "openings"
+    },
+    {
+      "archive": "phase-5-review2-main888-history-v3-after-2.json.gz",
+      "source": "/tmp/phase-5-review2-main888-history-v3-after-2.json",
+      "sourceSha256": "883c5af1b83fcff9135013150b1a72184b1ed804cc7cc881b906678637ccad9e",
+      "archiveSha256": "805143ecb6cf406f1354c0fa8e9db41d7511daae30816f69c4ab6502af0b31f4",
+      "arm": "after",
+      "rep": 2,
+      "kind": "v3"
+    },
+    {
+      "archive": "phase-5-review2-main888-history-v3-after-2.server.log.gz",
+      "source": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-2/server.log",
+      "sourceSha256": "d486d2d6ff79c772fed924943a21f6ad31d618a81ab967f07d3480a1a17cb98e",
+      "archiveSha256": "fdee8c0b0703b24f3cbfac8e3a15e12f767e55c8761f9ef2badf0c45f294d140",
+      "arm": "after",
+      "rep": 2,
+      "kind": "v3"
+    },
+    {
+      "archive": "phase-5-review2-main888-history-openings-after-2.json.gz",
+      "source": "/tmp/phase-5-review2-main888-history-openings-after-2.json",
+      "sourceSha256": "8c3a6af3d053648a1d42b39c02422803e22c4460874921eabb16e6b0db72838f",
+      "archiveSha256": "9a41d637676c511531d4d2aac67b9774e7dcb9381ab91a2f2b955d2c0de8b09b",
+      "arm": "after",
+      "rep": 2,
+      "kind": "openings"
+    },
+    {
+      "archive": "phase-5-review2-main888-history-openings-after-2.server.log.gz",
+      "source": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-openings-after-2/interactive-server.log",
+      "sourceSha256": "ac04d4467bb3016a4f2c30f9f54fff4fb969d783b574fdc1a67fce44d65f9464",
+      "archiveSha256": "3c735a178dcda9aa0a8f9b4f7bf450c64ab24122edfaf71d43453b874830ea6f",
+      "arm": "after",
+      "rep": 2,
+      "kind": "openings"
+    },
+    {
+      "archive": "phase-5-review2-main888-history-v3-after-3.json.gz",
+      "source": "/tmp/phase-5-review2-main888-history-v3-after-3.json",
+      "sourceSha256": "c16f514e4c5a8094ce7e8392554e220e505656c909ff5815a1db2fa6395d1f3a",
+      "archiveSha256": "03dd438b68ddc9a121c0f9df3c79834b810d628fe942dbd1c675033d5e870af9",
+      "arm": "after",
+      "rep": 3,
+      "kind": "v3"
+    },
+    {
+      "archive": "phase-5-review2-main888-history-v3-after-3.server.log.gz",
+      "source": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-3/server.log",
+      "sourceSha256": "66945be1b0b458f4b65bf2b0b64a1b97f77dc800fb3315d4124765333d3ec0be",
+      "archiveSha256": "845b04368bce71a07422554a8f6a67e32324940afd8dc0ccb2b010f0575ac9d5",
+      "arm": "after",
+      "rep": 3,
+      "kind": "v3"
+    },
+    {
+      "archive": "phase-5-review2-main888-history-openings-after-3.json.gz",
+      "source": "/tmp/phase-5-review2-main888-history-openings-after-3.json",
+      "sourceSha256": "20ddeb939191c240a4d23b8f6e82b1f30e9486ca6159bd4a918b54d5831fc432",
+      "archiveSha256": "3737db502fa2196016fcdce4c263c1f1ebad16c4eae550afbc745f5f5857086f",
+      "arm": "after",
+      "rep": 3,
+      "kind": "openings"
+    },
+    {
+      "archive": "phase-5-review2-main888-history-openings-after-3.server.log.gz",
+      "source": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-openings-after-3/interactive-server.log",
+      "sourceSha256": "3ab54caf0fa078214aac02b672d97101be9b5bbeaa1237b3817b36b33463c72b",
+      "archiveSha256": "245576e6ecbc3de9b8e7c030d83c51f1e0f06f7167f69a9b77482da8cc6b4e20",
+      "arm": "after",
+      "rep": 3,
+      "kind": "openings"
+    },
+    {
+      "archive": "cohort-plan.json",
+      "source": "/tmp/phase-5-review2-main888-history-cohort-plan.json",
+      "sourceSha256": "a78ff92cc36d854d7c7020eacc19499960809dcfb384a2ab8bd218a922767e4d",
+      "archiveSha256": "a78ff92cc36d854d7c7020eacc19499960809dcfb384a2ab8bd218a922767e4d"
+    },
+    {
+      "archive": "projection-equality.json",
+      "source": "/tmp/phase-5-review2-main888-history-projection-equality.json",
+      "sourceSha256": "e9f830c7b9f6954f09262662e4e6c1b986b1d74eeaa3539247d09433ab2b55bb",
+      "archiveSha256": "e9f830c7b9f6954f09262662e4e6c1b986b1d74eeaa3539247d09433ab2b55bb"
+    }
+  ]
+}

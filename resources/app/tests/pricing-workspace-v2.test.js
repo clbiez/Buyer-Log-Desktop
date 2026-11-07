@@ -21,7 +21,7 @@ test('new pricing pages inherit Collection authorization instead of inventing a 
 });
 
 test('collectionTools loads deterministic pricing engine before quotation workspace code',()=>{
-  assert.match(perf,/collectionTools:\['pricing-workspace-engine\.js[^']*','quotations\.js/);
+  assert.match(perf,/collectionTools:\['collection-spreadsheet-engine\.js[^']*','collection-spreadsheet\.js[^']*','pricing-workspace-engine\.js[^']*','quotations\.js/);
 });
 
 test('Send to Pricing is task-specific but reuses the reliable Prepare E-Mail implementation',()=>{

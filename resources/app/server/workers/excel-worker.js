@@ -1,6 +1,6 @@
 'use strict';
 
-const { parentPort } = require('worker_threads');
+const { parentPort, workerData } = require('worker_threads');
 const { performance } = require('perf_hooks');
 
 const BLBacklogExcel = require('../../public/backlog-excel-formulas');
@@ -248,14 +248,21 @@ async function execute(task, payload = {}) {
   throw new Error(`Desteklenmeyen Excel worker görevi: ${task}`);
 }
 
-parentPort.on('message', async message => {
+if(parentPort&&!workerData?.buyerLogComputePool)parentPort.on('message', async message => {
   const id = message && message.id;
   const startedAt = performance.now();
   const metrics = () => ({ executionMs: performance.now() - startedAt, heapUsedBytes: process.memoryUsage().heapUsed });
   try {
     const result = await execute(message.task, message.payload);
-    parentPort.postMessage({ id, ok: true, result, metrics: metrics() });
+    const completedMetrics=metrics();
+    if(message.resultPort){
+      const postStarted=performance.now();
+      message.resultPort.postMessage({id,result});
+      completedMetrics.workerPostMessageMs=performance.now()-postStarted;
+      parentPort.postMessage({id,type:'result-ready',ok:true,metrics:completedMetrics});
+    }else parentPort.postMessage({ id, ok: true, result, metrics: completedMetrics });
   } catch (error) {
     parentPort.postMessage({ id, ok: false, error: { message: error && error.message || String(error), stack: error && error.stack || '' }, metrics: metrics() });
-  }
+  }finally{message.resultPort?.close();}
 });
+module.exports={execute};

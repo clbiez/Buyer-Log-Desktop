@@ -64,12 +64,19 @@ test('Benzer isimli iki şema sütunu ayrı kimlik alır ve doğru değere bağl
   assert.strictEqual(rows[0][requested[2].label], 'ÜÇÜNCÜ');
 });
 
-test('Sunucu katalog uç noktası aktif kaynağın ham başlıklarından üretilir', () => {
+test('Sunucu katalog uç noktası aktif kaynağın ham başlıklarından üretilir', async() => {
   const start = SERVER.indexOf("app.get('/api/backlog-source-columns'");
   assert.ok(start > -1, '/api/backlog-source-columns tanımlı olmalı');
   const block = SERVER.slice(start, SERVER.indexOf("app.get('/api/backlog-export'", start));
-  assert.match(block, /await ensureBacklogSourceFields\(id\)/);
-  assert.match(block, /parseLib\.backlogCustomDimensionContext\(/);
+  assert.match(block, /await prepareComputeBacklog\(req\)/);
+  const preparation=require('./helpers/app-main-functions').extractFunction(SERVER,'prepareComputeBacklog');
+  assert.match(preparation,/await ensureBacklogSourceFields\(id\)/);
+  const request=await require('./helpers/computed-backlog-request')({},'/api/backlog-source-columns');assert.equal(request.task,'backlog-source-columns');
+  const orders=[order({_sourceFields:{'Yeni ASAS Sütunu':'demo'}})],antrepo={demo:{_sourceFields:{'Yeni Antrepo Sütunu':'demo'}}};
+  const result=require('../server/lib/compute-tasks').buildBacklog('source-columns',{asasOrders:orders,antrepoMap:antrepo},{overrides,headers:[]});
+  assert.deepEqual(result.columns,parse.backlogCustomDimensionContext(orders,antrepo).customDimensions);
+  assert.ok(result.columns.some(column=>column.key==='Yeni ASAS Sütunu'||column.label.includes('Yeni ASAS Sütunu')));
+  assert.ok(result.columns.some(column=>column.key==='Yeni Antrepo Sütunu'||column.label.includes('Yeni Antrepo Sütunu')));
   assert.doesNotMatch(block, /BACKLOG_DEFAULT_EXPORT_HEADERS/);
 });
 

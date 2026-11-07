@@ -1,0 +1,33 @@
+Initial RED (before production edits):
+✖ CPR-05: one operation indexes each owner once and keeps first-match/owner/legacy semantics (33.317989ms)
+✔ CPR-05: grouped values use one parent index but see local parent/override changes on next operation (4.45621ms)
+✖ CPR-06: scorecards read each price once, retaining tied wins and dropped/duplicate supplier rules (4.160814ms)
+✖ CPR-07: workspace search updates navigation without replacing active detail/editor (2.252617ms)
+✖ CPR-07: precomputed status statistics avoid rescanning request items (2.393119ms)
+✖ CPR-12: a line edit writes only its line amount and shares one FX snapshot (10.463761ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 1
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 128.641469
+✖ failing tests:
+
+Final GREEN (7 tests, including broader parity cases):
+✔ CPR-05: one operation indexes each owner once and keeps first-match/owner/legacy semantics (42.770541ms)
+✔ CPR-05: grouped values use one parent index but see local parent/override changes on next operation (3.912797ms)
+✔ CPR-06: scorecards read each price once, retaining tied wins and dropped/duplicate supplier rules (3.75855ms)
+✔ CPR-07: workspace search updates navigation without replacing active detail/editor (1.463861ms)
+✔ CPR-07: precomputed status statistics avoid rescanning request items (1.403483ms)
+✔ CPR-12: a line edit writes only its line amount and shares one FX snapshot (23.615368ms)
+✔ CPR-06: scorecards equal the general analysis for sparse, tied, legacy and duplicate cells (69.124803ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 269.960692

@@ -370,6 +370,31 @@ function shipmentPartialsFromRows(rows,source){
   });
   return out;
 }
+// Harita ve karar motorunun gerçekten okuduğu alanlar aynı sözleşmeden gelir.
+// Salt detay sütunları ancak kullanıcı çekmeceyi açınca istenir.
+function projectBacklogMapRows(rows){
+  const engine=typeof module==='object'&&module.exports?require('./backlog-delivery-engine'):globalThis.BLBacklogDeliveryEngine;
+  const wanted=new Set([...Object.values(FIELD_CANDIDATES).flat(),...RECORD_FIELDS.flatMap(field=>canonicalKeys(field,'backlog')), ...Object.values(engine?.FIELDS||{})].map(norm));
+  return (rows||[]).map(row=>({...Object.fromEntries(Object.entries(row).filter(([key])=>wanted.has(norm(key))||key==='_partial'||key==='_backlogExcel')),_flowThin:1}));
+}
+async function resolveMapDetailRecords(records,{request=globalThis.fetch,signal}={}){
+  const pending=(records||[]).filter(record=>record.source==='backlog'&&record.raw?._flowThin===1);
+  if(!pending.length)return records;
+  const revisions=new Set(pending.map(record=>record.raw._flowSourceRevision));
+  if(revisions.size!==1||!pending[0].raw._flowSourceRevision)throw new Error('Kaynak sürümü değişti. / Source generation changed.');
+  const identities=[...new Map(pending.map(record=>[record.orderKey,{orderCode:record.orderCode,modelName:record.model,colourCode:record.colourCode}])).values()];
+  const key=record=>JSON.stringify([record.orderKey,record.sourceRow,record.partialKind,record.partialNo]),details=new Map();
+  for(let offset=0;offset<identities.length;offset+=5000){
+    const response=await request('/api/backlog-map-details',{method:'POST',credentials:'same-origin',cache:'no-store',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({identities:identities.slice(offset,offset+5000),sourceRevision:pending[0].raw._flowSourceRevision})});
+    const data=await response.json();if(!response.ok)throw new Error(data.error||'HTTP '+response.status);
+    shipmentPartialsFromRows(data.rows,'backlog').forEach(record=>details.set(key(record),record.raw));
+  }
+  return records.map(record=>{
+    if(record.source!=='backlog'||record.raw?._flowThin!==1)return record;
+    const raw=details.get(key(record));if(!raw)throw new Error('Detay kaydı değişti. Haritayı yenileyin. / Detail record changed. Refresh the map.');
+    return {...record,raw};
+  });
+}
 function recordKey(rec){
   const key=orderKeyOf(rec);if(key)return key;
   return (rec&&rec.source||'')+'|'+(rec&&rec.id||'');
@@ -888,7 +913,7 @@ function routeTransportModes(edge){
 if(typeof document==='undefined'){
   return {ISTANBUL,COLOMBO,ROUTING,referenceHubs,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,mapSurfacePalette,QUICK_FILTERS,DEFAULT_QUICK_FILTERS,SEA_AIR_AIR_LEG_DAYS,PROGRESS_BUCKET,SYMBOL_MIN_DISTANCE,VEHICLE_CLUSTER_DISTANCE,
     clean,norm,toNumber,pick,createFieldResolver,countryCoordinate,detectMode,operationalStage,classifyState,actionPriorityCode,
-    normalizeRecord,expandSourceRow,shipmentPartialsFromRows,partialIdentity,recordKey,dedupeRecords,aggregateRecords,uniqueValues,
+    normalizeRecord,expandSourceRow,shipmentPartialsFromRows,projectBacklogMapRows,resolveMapDetailRecords,partialIdentity,recordKey,dedupeRecords,aggregateRecords,uniqueValues,
     parseDateMs,resolveRecordTransitDays,recordRouteProgress,distancePointToSegment,distanceToPolyline,decodeWorldTopology,
     seaRouteCoordinates,seaAirRouteCoordinates,colomboSeaCoordinates,usesColomboTransit,routeLegsFor,routeEdges,routeCorridorKey,pointAlongLeg,
     transitPlacement,groupTransitPlacements,buildFlowModel,resolveSymbolCollisions,clusterVehicleSymbols,vehicleClusterDistanceForZoom,routeRecordGroups,routeTransportModes,globeDragDelta,pickHit,routeHighlightEdges,
@@ -980,10 +1005,11 @@ async function backlogPartials(force){
   if(!force&&state.lastBacklogRows&&signature===state.lastBacklogSignature)return state.lastBacklogRows;
   if(typeof backlogExportQueryParams!=='function')return [];
   const params=backlogExportQueryParams()||{};
-  const [response]=await Promise.all([fetch('/api/backlog-export?'+new URLSearchParams({...params,includeSourceDetails:'1'}).toString(),{credentials:'same-origin',cache:'no-store'}),ensureDecisionEngine()]);
-  const data=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(data&&data.error?data.error:'HTTP '+response.status);
-  const records=shipmentPartialsFromRows(Array.isArray(data.rows)?data.rows:[],'backlog');
+  const query={...params,projection:'global-flow'};delete query.includeSourceDetails;
+  if(force)window.BLBacklogRows?.invalidate?.();
+  const load=window.BLBacklogRows?.loadData?window.BLBacklogRows.loadData(query):fetch('/api/backlog-export?'+new URLSearchParams(query).toString(),{credentials:'same-origin',cache:'no-store'}).then(async response=>{const data=await response.json();if(!response.ok)throw new Error(data.error||'HTTP '+response.status);return data;});
+  const [data]=await Promise.all([load,ensureDecisionEngine()]);
+  const records=shipmentPartialsFromRows((Array.isArray(data.rows)?data.rows:[]).map(row=>({...row,_flowSourceRevision:data.sourceRevision})),'backlog');
   state.lastBacklogRows=records;state.lastBacklogSignature=signature;return records;
 }
 async function sourceRecords(source,force){
@@ -1795,8 +1821,27 @@ function detailContextColumns(){
   ];
 }
 
-function openRecordsDrawer(title,records,subtitle){
-  const rows=(records||[]).filter(Boolean);if(!rows.length)return;
+let detailRequestGeneration=0,detailRequestAbort=null;
+function drawerDetailState(title,subtitle,kind){
+  const drawer=$('globalFlowDrawer');if(!drawer)return;
+  drawer.innerHTML='<div class="gfDrawerHead"><div><b>'+esc(title)+'</b><span>'+esc(subtitle||'')+'</span></div><button type="button" data-gf-drawer-close>×</button></div><div class="gfDrawerBody"><div data-gf-detail-state></div></div>';
+  const host=drawer.querySelector('[data-gf-detail-state]'),message=kind==='loading'?L('Kaynak detayları yükleniyor…','Loading source details…'):L('Kaynak detayları yüklenemedi. Haritayı yenileyip yeniden deneyin.','Source details could not be loaded. Refresh the map and try again.');
+  if(window.BLUI?.renderState)window.BLUI.renderState(host,{kind,title:message});else if(host)host.textContent=message;
+  drawer.classList.add('is-open');drawer.setAttribute('aria-hidden','false');drawer.querySelector('[data-gf-drawer-close]')?.addEventListener('click',closeDrawer);
+  if(flowMotionAllowed())window.BLMotionPlus?.play?.('overlay',drawer);
+}
+async function openRecordsDrawer(title,records,subtitle){
+  const generation=++detailRequestGeneration;detailRequestAbort?.abort();detailRequestAbort=null;
+  let rows=(records||[]).filter(Boolean);if(!rows.length)return;
+  if(rows.some(record=>record.source==='backlog'&&record.raw?._flowThin===1)){
+    const controller=new AbortController();detailRequestAbort=controller;window.BLDetailDrawer?.close?.();drawerDetailState(title,subtitle,'loading');
+    try{
+      rows=await resolveMapDetailRecords(rows,{signal:controller.signal});
+      if(controller.signal.aborted||generation!==detailRequestGeneration)return;
+      const drawer=$('globalFlowDrawer');drawer?.classList.remove('is-open');drawer?.setAttribute('aria-hidden','true');
+    }catch(_){if(!controller.signal.aborted&&generation===detailRequestGeneration)drawerDetailState(title,subtitle,'error');return;}
+    finally{if(detailRequestAbort===controller)detailRequestAbort=null;}
+  }
   if(window.BLDetailDrawer&&typeof window.BLDetailDrawer.open==='function'){
     const actions=rows.length===1?[{label:L('Kaynakta Aç','Open source'),run:()=>jumpToSource(rows[0])}]:[];
     window.BLDetailDrawer.open({storageKey:'overview.globalFlow.detail',pageScope:'overview.globalFlow',moduleId:'cp',source:'global-flow',tableSetup:'cp',title,subtitle:subtitle||'',rows:cpDetailRows(rows),columns:detailContextColumns(),images:true,fileName:'Global_Flow_'+title,actions,note:L('Araç konumu canlı GPS/AIS değildir; parsiyel Handover tarihi ve ülke/yükleme yol süresi kuralından hesaplanan operasyonel ilerlemedir. Aynı Gemi Ad taşıyan parsiyeller tek araçta gösterilir.','Vehicle position is not live GPS/AIS; it is operational progress calculated from the partial Handover date and the country/transport lead-time rule. Partials with the same vessel name are shown as one vehicle.')});return;
@@ -1840,7 +1885,7 @@ function hitTitle(hit){
   if(hit.type==='cluster')return nf().format(hit.vehicles.length)+' '+L('araç','vehicles');
   return '';
 }
-function closeDrawer(){const drawer=$('globalFlowDrawer');if(drawer){drawer.classList.remove('is-open');drawer.setAttribute('aria-hidden','true');}window.BLDetailDrawer?.close?.();}
+function closeDrawer(){++detailRequestGeneration;detailRequestAbort?.abort();detailRequestAbort=null;const drawer=$('globalFlowDrawer');if(drawer){drawer.classList.remove('is-open');drawer.setAttribute('aria-hidden','true');}window.BLDetailDrawer?.close?.();}
 function jumpToSource(rec){
   if(!rec)return;const tab=document.querySelector('nav.tabs button[data-tab="'+rec.source+'"]');if(tab)tab.click();const searchId=rec.source==='cp'?'cpSearch':rec.source==='orders'?'ordersSearch':'';
   if(searchId&&rec.orderCode)setTimeout(()=>{const input=$(searchId);if(!input)return;input.value=rec.orderCode;input.dispatchEvent(new Event('input',{bubbles:true}));input.focus();},80);closeDrawer();

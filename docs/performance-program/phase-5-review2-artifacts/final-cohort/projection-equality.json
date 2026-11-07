@@ -1,0 +1,310 @@
+{
+  "synthetic": true,
+  "kind": "exact uncompressed projection JSON bytes",
+  "beforeRevision": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+  "afterRevision": "e493546c583773f1239d30b22a8e56deaa5f5d49",
+  "fixtureHashes": {
+    "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+    "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+    "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+  },
+  "results": [
+    {
+      "module": "cp",
+      "pairs": [
+        {
+          "rep": 1,
+          "equal": true,
+          "before": {
+            "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3",
+            "bytes": 61859722,
+            "generation": "mw6k7b7j-7640b1c2efa5",
+            "report": "/tmp/phase-5-review2-main888-v3-before-1.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-1/local/page-cache/moderator/mw6k7b7j-7640b1c2efa5/cp.json.gz"
+          },
+          "after": {
+            "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3",
+            "bytes": 61859722,
+            "generation": "mw6lw0rs-d766393e6b68",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-1.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-1/local/page-cache/moderator/mw6lw0rs-d766393e6b68/cp.json.gz"
+          }
+        },
+        {
+          "rep": 2,
+          "equal": true,
+          "before": {
+            "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3",
+            "bytes": 61859722,
+            "generation": "mw6kvs2v-57ce7340d38b",
+            "report": "/tmp/phase-5-review2-main888-v3-before-2.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-2/local/page-cache/moderator/mw6kvs2v-57ce7340d38b/cp.json.gz"
+          },
+          "after": {
+            "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3",
+            "bytes": 61859722,
+            "generation": "mw6m3qlh-aabdf7b4ce61",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-2.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-2/local/page-cache/moderator/mw6m3qlh-aabdf7b4ce61/cp.json.gz"
+          }
+        },
+        {
+          "rep": 3,
+          "equal": true,
+          "before": {
+            "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3",
+            "bytes": 61859722,
+            "generation": "mw6l1cwn-764a55f4a5cc",
+            "report": "/tmp/phase-5-review2-main888-v3-before-3.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-3/local/page-cache/moderator/mw6l1cwn-764a55f4a5cc/cp.json.gz"
+          },
+          "after": {
+            "sha256": "b71bec8a97aceaec458c556b31e5c02233c636e56fa48fbb72882f7ccfc9e2a3",
+            "bytes": 61859722,
+            "generation": "mw6mbe08-567c1673bbfa",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-3.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-3/local/page-cache/moderator/mw6mbe08-567c1673bbfa/cp.json.gz"
+          }
+        }
+      ]
+    },
+    {
+      "module": "orders",
+      "pairs": [
+        {
+          "rep": 1,
+          "equal": true,
+          "before": {
+            "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "bytes": 73145820,
+            "generation": "mw6k7b7j-7640b1c2efa5",
+            "report": "/tmp/phase-5-review2-main888-v3-before-1.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-1/local/page-cache/moderator/mw6k7b7j-7640b1c2efa5/orders.json.gz"
+          },
+          "after": {
+            "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "bytes": 73145820,
+            "generation": "mw6lw0rs-d766393e6b68",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-1.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-1/local/page-cache/moderator/mw6lw0rs-d766393e6b68/orders.json.gz"
+          }
+        },
+        {
+          "rep": 2,
+          "equal": true,
+          "before": {
+            "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "bytes": 73145820,
+            "generation": "mw6kvs2v-57ce7340d38b",
+            "report": "/tmp/phase-5-review2-main888-v3-before-2.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-2/local/page-cache/moderator/mw6kvs2v-57ce7340d38b/orders.json.gz"
+          },
+          "after": {
+            "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "bytes": 73145820,
+            "generation": "mw6m3qlh-aabdf7b4ce61",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-2.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-2/local/page-cache/moderator/mw6m3qlh-aabdf7b4ce61/orders.json.gz"
+          }
+        },
+        {
+          "rep": 3,
+          "equal": true,
+          "before": {
+            "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "bytes": 73145820,
+            "generation": "mw6l1cwn-764a55f4a5cc",
+            "report": "/tmp/phase-5-review2-main888-v3-before-3.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-3/local/page-cache/moderator/mw6l1cwn-764a55f4a5cc/orders.json.gz"
+          },
+          "after": {
+            "sha256": "b437e567a676344fc9b0eca9dadc07267e9eae14bc536bef24a05d6319baebe1",
+            "bytes": 73145820,
+            "generation": "mw6mbe08-567c1673bbfa",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-3.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-3/local/page-cache/moderator/mw6mbe08-567c1673bbfa/orders.json.gz"
+          }
+        }
+      ]
+    },
+    {
+      "module": "overview",
+      "pairs": [
+        {
+          "rep": 1,
+          "equal": true,
+          "before": {
+            "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a",
+            "bytes": 12516431,
+            "generation": "mw6k7b7j-7640b1c2efa5",
+            "report": "/tmp/phase-5-review2-main888-v3-before-1.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-1/local/page-cache/moderator/mw6k7b7j-7640b1c2efa5/overview.json.gz"
+          },
+          "after": {
+            "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a",
+            "bytes": 12516431,
+            "generation": "mw6lw0rs-d766393e6b68",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-1.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-1/local/page-cache/moderator/mw6lw0rs-d766393e6b68/overview.json.gz"
+          }
+        },
+        {
+          "rep": 2,
+          "equal": true,
+          "before": {
+            "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a",
+            "bytes": 12516431,
+            "generation": "mw6kvs2v-57ce7340d38b",
+            "report": "/tmp/phase-5-review2-main888-v3-before-2.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-2/local/page-cache/moderator/mw6kvs2v-57ce7340d38b/overview.json.gz"
+          },
+          "after": {
+            "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a",
+            "bytes": 12516431,
+            "generation": "mw6m3qlh-aabdf7b4ce61",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-2.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-2/local/page-cache/moderator/mw6m3qlh-aabdf7b4ce61/overview.json.gz"
+          }
+        },
+        {
+          "rep": 3,
+          "equal": true,
+          "before": {
+            "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a",
+            "bytes": 12516431,
+            "generation": "mw6l1cwn-764a55f4a5cc",
+            "report": "/tmp/phase-5-review2-main888-v3-before-3.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-3/local/page-cache/moderator/mw6l1cwn-764a55f4a5cc/overview.json.gz"
+          },
+          "after": {
+            "sha256": "e624fcb1fa9dad693cf12ee77dadd5534ccba07458ad4eb24b0dd05a8a68080a",
+            "bytes": 12516431,
+            "generation": "mw6mbe08-567c1673bbfa",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-3.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-3/local/page-cache/moderator/mw6mbe08-567c1673bbfa/overview.json.gz"
+          }
+        }
+      ]
+    },
+    {
+      "module": "order-summary",
+      "pairs": [
+        {
+          "rep": 1,
+          "equal": true,
+          "before": {
+            "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc",
+            "bytes": 40655622,
+            "generation": "mw6k7b7j-7640b1c2efa5",
+            "report": "/tmp/phase-5-review2-main888-v3-before-1.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-1/local/page-cache/moderator/mw6k7b7j-7640b1c2efa5/order-summary.json.gz"
+          },
+          "after": {
+            "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc",
+            "bytes": 40655622,
+            "generation": "mw6lw0rs-d766393e6b68",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-1.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-1/local/page-cache/moderator/mw6lw0rs-d766393e6b68/order-summary.json.gz"
+          }
+        },
+        {
+          "rep": 2,
+          "equal": true,
+          "before": {
+            "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc",
+            "bytes": 40655622,
+            "generation": "mw6kvs2v-57ce7340d38b",
+            "report": "/tmp/phase-5-review2-main888-v3-before-2.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-2/local/page-cache/moderator/mw6kvs2v-57ce7340d38b/order-summary.json.gz"
+          },
+          "after": {
+            "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc",
+            "bytes": 40655622,
+            "generation": "mw6m3qlh-aabdf7b4ce61",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-2.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-2/local/page-cache/moderator/mw6m3qlh-aabdf7b4ce61/order-summary.json.gz"
+          }
+        },
+        {
+          "rep": 3,
+          "equal": true,
+          "before": {
+            "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc",
+            "bytes": 40655622,
+            "generation": "mw6l1cwn-764a55f4a5cc",
+            "report": "/tmp/phase-5-review2-main888-v3-before-3.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-3/local/page-cache/moderator/mw6l1cwn-764a55f4a5cc/order-summary.json.gz"
+          },
+          "after": {
+            "sha256": "a43787026751857139b1de5ca4fba2fcec1a06cee3baa8ce247f1f8e6b6436bc",
+            "bytes": 40655622,
+            "generation": "mw6mbe08-567c1673bbfa",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-3.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-3/local/page-cache/moderator/mw6mbe08-567c1673bbfa/order-summary.json.gz"
+          }
+        }
+      ]
+    },
+    {
+      "module": "collection-catalog",
+      "pairs": [
+        {
+          "rep": 1,
+          "equal": true,
+          "before": {
+            "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4",
+            "bytes": 1619,
+            "generation": "mw6k7b7j-7640b1c2efa5",
+            "report": "/tmp/phase-5-review2-main888-v3-before-1.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-1/local/page-cache/moderator/mw6k7b7j-7640b1c2efa5/collection-catalog.json.gz"
+          },
+          "after": {
+            "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4",
+            "bytes": 1619,
+            "generation": "mw6lw0rs-d766393e6b68",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-1.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-1/local/page-cache/moderator/mw6lw0rs-d766393e6b68/collection-catalog.json.gz"
+          }
+        },
+        {
+          "rep": 2,
+          "equal": true,
+          "before": {
+            "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4",
+            "bytes": 1619,
+            "generation": "mw6kvs2v-57ce7340d38b",
+            "report": "/tmp/phase-5-review2-main888-v3-before-2.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-2/local/page-cache/moderator/mw6kvs2v-57ce7340d38b/collection-catalog.json.gz"
+          },
+          "after": {
+            "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4",
+            "bytes": 1619,
+            "generation": "mw6m3qlh-aabdf7b4ce61",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-2.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-2/local/page-cache/moderator/mw6m3qlh-aabdf7b4ce61/collection-catalog.json.gz"
+          }
+        },
+        {
+          "rep": 3,
+          "equal": true,
+          "before": {
+            "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4",
+            "bytes": 1619,
+            "generation": "mw6l1cwn-764a55f4a5cc",
+            "report": "/tmp/phase-5-review2-main888-v3-before-3.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-v3-before-3/local/page-cache/moderator/mw6l1cwn-764a55f4a5cc/collection-catalog.json.gz"
+          },
+          "after": {
+            "sha256": "ed0bf417b4c5a7b81f1173fd89a197abe9bb2a3e0f9b8fc3f5208a3940f6e9f4",
+            "bytes": 1619,
+            "generation": "mw6mbe08-567c1673bbfa",
+            "report": "/tmp/phase-5-review2-main888-history-v3-after-3.json",
+            "file": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase-5-review2-main888-history-v3-after-3/local/page-cache/moderator/mw6mbe08-567c1673bbfa/collection-catalog.json.gz"
+          }
+        }
+      ]
+    }
+  ],
+  "createdAt": "2026-11-07T16:35:01.284289+00:00",
+  "passed": true
+}

@@ -99,7 +99,11 @@ test('Backlog screen wiring: overview panel, Excel Legacy + Excel Backlog V3 wit
   assert.match(HTML, /id="backlogExportV3Btn"/);
   assert.match(HTML, /data-blv-export="includePlanActual"/);
   assert.match(HTML, /data-blv-export="includeLegacy"/);
-  const order = ['backlog-plan-actual-report.js', 'backlog-plan-actual.js?', 'backlog-v3-report.js', 'backlog-overview.js'].map(f => HTML.indexOf(f));
+  const PERF=read('public/perf-runtime.js');
+  const order = ['backlog-v3-report.js', 'backlog-overview.js'].map(f => HTML.indexOf(f));
+  assert.ok(PERF.indexOf('backlog-plan-actual-report.js') < PERF.indexOf('backlog-plan-actual.js?'));
+  assert.match(PERF,/backlogAnalysis:\[[^\]]*backlog-plan-actual-report\.js[^\]]*backlog-plan-actual\.js/);
+  assert.doesNotMatch(HTML,/<script src="backlog-plan-actual/);
   assert.ok(order.every((v, i) => v > 0 && (i === 0 || v > order[i - 1])), 'report engines load before their panels');
   assert.match(APP, /window\.BLBacklogOverview\?\.onBacklogRendered\?\.\(data\)/);
   assert.match(APP, /exportBacklogToExcel\(null,\{buttonId:'backlogExportV3Btn',onLegacyWorkbook:/);

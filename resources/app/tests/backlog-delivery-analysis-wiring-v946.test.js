@@ -50,8 +50,8 @@ test('v9.46 Backlog her çizildiğinde analiz haberdar edilir (ayrı fetch döng
 });
 
 test('v9.46 modül lazy yüklenir; motorlar görünümden ÖNCE gelir', () => {
-  assert.match(PERF, /backlogAnalysis:\['backlog-delivery-engine\.js','backlog-delivery-insights\.js','backlog-delivery-analysis\.js'\]/);
-  assert.match(PERF, /if\(name==='backlogAnalysis'&&global\.BLBacklogAnalysis\)return;/);
+  assert.match(PERF, /backlogAnalysis:\['backlog-delivery-engine\.js','backlog-delivery-insights\.js','backlog-delivery-analysis\.js','backlog-plan-actual-report\.js/);
+  assert.match(PERF, /if\(name==='backlogAnalysis'&&global\.BLBacklogAnalysis&&global\.BLBacklogPlanActual&&global\.BLBacklogPresentation\)return true;/);
   assert.match(APP, /ensureFeature\?\.\('backlogAnalysis'\)/);
 });
 

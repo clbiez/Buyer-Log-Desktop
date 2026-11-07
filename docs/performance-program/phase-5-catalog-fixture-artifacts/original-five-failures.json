@@ -1,0 +1,32 @@
+[
+  {
+    "location": "tests/client-computation-performance.test.js:19:1",
+    "name": "real projection worker and server share complete v3 catalog semantics across canonical fields",
+    "error": "ReferenceError: createComputeReadGuard is not defined",
+    "trace": "tests/client-computation-performance.test.js:19:1\n✖ real projection worker and server share complete v3 catalog semantics across canonical fields (18.83454ms)\n  ReferenceError: createComputeReadGuard is not defined\n      at eval (eval at serverCatalog (/workspace/Buyer-Log-Desktop/resources/app/tests/client-computation-performance.test.js:11:10), <anonymous>:202:24)\n      at serverCatalog (/workspace/Buyer-Log-Desktop/resources/app/tests/client-computation-performance.test.js:11:229)\n      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/client-computation-performance.test.js:20:16)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "location": "tests/collection-asas-excel-grid-v489.test.js:23:1",
+    "name": "v4.89 Collection option catalogs are produced once from ASAS-backed Orders rows",
+    "error": "ReferenceError: createComputeReadGuard is not defined",
+    "trace": "tests/collection-asas-excel-grid-v489.test.js:23:1\n✖ v4.89 Collection option catalogs are produced once from ASAS-backed Orders rows (5.714638ms)\n  ReferenceError: createComputeReadGuard is not defined\n      at eval (eval at <anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/collection-asas-excel-grid-v489.test.js:25:19), <anonymous>:202:24)\n      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/collection-asas-excel-grid-v489.test.js:26:129)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "location": "tests/collection-product-main-definition-suggestions-v829.test.js:23:1",
+    "name": "Collection Product Main Definition önerileri gerçek ASAS canonical kaynağından distinct üretilir",
+    "error": "ReferenceError: createComputeReadGuard is not defined",
+    "trace": "tests/collection-product-main-definition-suggestions-v829.test.js:23:1\n✖ Collection Product Main Definition önerileri gerçek ASAS canonical kaynağından distinct üretilir (2.481618ms)\n  ReferenceError: createComputeReadGuard is not defined\n      at eval (eval at <anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/collection-product-main-definition-suggestions-v829.test.js:25:19), <anonymous>:202:24)\n      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/collection-product-main-definition-suggestions-v829.test.js:26:66)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.start (node:internal/test_runner/test:1242:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)"
+  },
+  {
+    "location": "tests/collection-product-main-definition-suggestions-v829.test.js:78:1",
+    "name": "raw ASAS normalized row -> lightweight Overview -> Collection catalog zinciri Product Main Definition değerini düşürmez",
+    "error": "ReferenceError: createComputeReadGuard is not defined",
+    "trace": "tests/collection-product-main-definition-suggestions-v829.test.js:78:1\n✖ raw ASAS normalized row -> lightweight Overview -> Collection catalog zinciri Product Main Definition değerini düşürmez (0.910511ms)\n  ReferenceError: createComputeReadGuard is not defined\n      at eval (eval at <anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/collection-product-main-definition-suggestions-v829.test.js:80:19), <anonymous>:202:24)\n      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/collection-product-main-definition-suggestions-v829.test.js:81:39)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n      at Test.postRun (node:internal/test_runner/test:1522:19)\n      at Test.run (node:internal/test_runner/test:1447:12)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"
+  },
+  {
+    "location": "tests/collection-product-main-definition-suggestions-v829.test.js:115:1",
+    "name": "server eski/partial collection-catalog projection cache şemasını reddeder",
+    "error": "ReferenceError: createComputeReadGuard is not defined",
+    "trace": "tests/collection-product-main-definition-suggestions-v829.test.js:115:1\n✖ server eski/partial collection-catalog projection cache şemasını reddeder (0.826044ms)\n  ReferenceError: createComputeReadGuard is not defined\n      at eval (eval at <anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/collection-product-main-definition-suggestions-v829.test.js:117:19), <anonymous>:202:24)\n      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/collection-product-main-definition-suggestions-v829.test.js:118:15)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1382:25)\n      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)\n      at Test.postRun (node:internal/test_runner/test:1522:19)\n      at Test.run (node:internal/test_runner/test:1447:12)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)\n[Buyer Log tests] Batch 1/1 süresi: 0.3s.\n[Buyer Log tests] Batch 1 başarısız. ZIP teslim edilmemeli.\n[Buyer Log tests] Hatanın kaynağı için üstteki \"not ok\" kaydındaki location ve error alanlarını inceleyin.\nnpm notice\nnpm notice New major version of npm available! 11.9.0 -> 12.2.2\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2\nnpm notice To update run: npm install -g npm@12.2.2\nnpm notice"
+  }
+]
