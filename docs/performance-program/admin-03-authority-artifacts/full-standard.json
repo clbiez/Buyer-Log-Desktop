@@ -1,0 +1,14 @@
+{
+  "label": "full-standard",
+  "command": [
+    "npm",
+    "test"
+  ],
+  "revision": "e49df45936383e876431bad11c825933b020821e",
+  "appTree": "37c51a19e192080b6b0b21aa6bf5d3a86303aa20",
+  "TMPDIR": "/tmp/buyerlog-authority-full-standard-d5r8nf5x",
+  "node": "v24.19.0",
+  "testConcurrency": "runner default 4; no override",
+  "elapsedSeconds": 205.40309524536133,
+  "returncode": 1
+}
