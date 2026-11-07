@@ -1,0 +1,112 @@
+{
+  "baseline": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "commonBranch": "perf/phase7-shared-evidence",
+  "originalCommonCommit": "0d796bcdbfca01eac250d13b87b3c8fed8b4ce07",
+  "originalCommonPaths": [
+    "docs/performance-program/assets/phase7-server-en-dark.png",
+    "docs/performance-program/assets/phase7-server-tr-light.png",
+    "docs/performance-program/phase-7-artifacts/diagnostics.tar.gz",
+    "docs/performance-program/phase-7-artifacts/manifest.json",
+    "docs/performance-program/phase-7-independent-review.md",
+    "docs/performance-program/phase-7-release-notes.md",
+    "docs/performance-program/phase-7-server-method.md",
+    "docs/performance-program/phase-7-server-report.md",
+    "docs/performance-program/phase-7-server-results.json",
+    "resources/app/scripts/phase7-parser-probe.cjs",
+    "resources/app/scripts/phase7-server-benchmark.cjs",
+    "resources/app/scripts/phase7-test-env.cjs"
+  ],
+  "production": {
+    "snapshot": {
+      "pr": 909,
+      "originalReviewHead": "3390971d7530a6bd83b2cb4f90c0205142339649",
+      "reviewedProductionCommit": "109292a1f9008ffccbd48a481cdacc2a1d343f54",
+      "ownedFiles": {
+        "resources/app/server/lib/compute-service.js": {
+          "gitBlob": "8de564444f2be3181a7859b36fbf3e347881881d",
+          "sha256": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05"
+        },
+        "resources/app/server/lib/local-db.js": {
+          "gitBlob": "424e643c1cb570c605f957b6a3f3d90faefbfb09",
+          "sha256": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269"
+        },
+        "resources/app/server/server.js": {
+          "gitBlob": "132676bf3bd34c90c3610cf2e15f600f01b27a29",
+          "sha256": "9d928e124bf2173633c5179e051e135b005b621b9b7a9b6f562f8ed9d3f88705"
+        },
+        "resources/app/server/workers/compute-worker.js": {
+          "gitBlob": "a0c5b6354f1a96503133dd6c2f59fc68d928cad7",
+          "sha256": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c"
+        },
+        "resources/app/tests/phase7-snapshot-compute.test.js": {
+          "gitBlob": "5a8602cb8b72fa7529c893bcfbe02cadcca1e199",
+          "sha256": "b13e9e2314cd81dd59f89f6c54199a2e12e9d5c3fbd9e43e7af05083d27df6bd"
+        },
+        "resources/app/tests/phase7-snapshot-durability.test.js": {
+          "gitBlob": "cf614e174ee17f9c26705db75d9f8f376abf2a22",
+          "sha256": "160bda5a260244b51c481853c2609fccf3a569d345d6b9d3f2048d5eb85c2701"
+        }
+      }
+    },
+    "images": {
+      "pr": 910,
+      "originalReviewHead": "71c403275f6caafa6a92750b9357af246c4042fb",
+      "reviewedProductionCommit": "384fea2cd5ba368cb07ec864723961165dd55b17",
+      "ownedFiles": {
+        "resources/app/server/lib/model-image-distribution.js": {
+          "gitBlob": "83c0ca2ccb6e39c7377fbb31fdaa7f8de9ac2633",
+          "sha256": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f"
+        },
+        "resources/app/server/lib/shared-image-store.js": {
+          "gitBlob": "faf9077b2352d57f4babf6b0291046df81bb3dbd",
+          "sha256": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54"
+        },
+        "resources/app/tests/helpers/phase7-pack-child.cjs": {
+          "gitBlob": "e1390059b39258295d53f4f08ad29d722c4f434b",
+          "sha256": "54c6028c668968e74d5aebfea8997d440175a03ea913e5bd0aeb4786f5f79365"
+        },
+        "resources/app/tests/phase7-local-images.test.js": {
+          "gitBlob": "9791c339bb07ae1c1d8f2c93ddab5d2bec08a3e9",
+          "sha256": "9e94963014be7a4722710f68b259aa48e89af5dabba671350f8541fe1d7a0c42"
+        },
+        "resources/app/tests/phase7-pack-batch.test.js": {
+          "gitBlob": "816dcfae8fde2d86deac7997c5d9d0f379bfa8dd",
+          "sha256": "b7d34942f1949bf86fb046a3fc85726c2e01409f132c6ef1837a5b3ba5b699c3"
+        }
+      }
+    },
+    "parser": {
+      "pr": 911,
+      "originalReviewHead": "5789337dfa606123f43eb6b7572868c70b9f163f",
+      "reviewedProductionCommit": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+      "ownedFiles": {
+        "resources/app/server/lib/parser-process-client.js": {
+          "gitBlob": "e2d0cd1d192fa676f0b8b087f88cecd79be58685",
+          "sha256": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8"
+        },
+        "resources/app/server/lib/test-reports/isolated-extract.js": {
+          "gitBlob": "5a0e77a77e99a253e0f847dc2be69817418d13b1",
+          "sha256": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59"
+        },
+        "resources/app/server/workers/file-parser-process.js": {
+          "gitBlob": "61e5b6f28d652cef3ab6509e3be288515ec4372d",
+          "sha256": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267"
+        },
+        "resources/app/tests/phase7-parser-batch.test.js": {
+          "gitBlob": "b895aa26eb1a145e5f3440858defd337a40366df",
+          "sha256": "01a29e1a00ab91e2b249e129bcaff46123b5f8888f4e85643f0d6c1693b6b5bb"
+        }
+      }
+    }
+  },
+  "policy": {
+    "newProductionCode": false,
+    "newPerformanceMeasurements": false,
+    "newGeneralIndependentReview": false,
+    "forcePush": false,
+    "rebase": false,
+    "mergeMain": false,
+    "testPublication": false,
+    "stablePublication": false
+  }
+}
