@@ -1,0 +1,40 @@
+{
+  "full": {
+    "files": 1293,
+    "batches": 10,
+    "tests": 8930,
+    "pass": 8865,
+    "fail": 0,
+    "skipped": 65,
+    "durationSeconds": 114.7,
+    "exitCode": 0
+  },
+  "related": {
+    "files": 64,
+    "tests": 542,
+    "pass": 542,
+    "fail": 0,
+    "skipped": 0,
+    "exitCode": 0
+  },
+  "i18n": {
+    "newMissing": 0,
+    "baselineMissing": 0,
+    "exitCode": 0
+  },
+  "releaseNotes": {
+    "entries": 43,
+    "exitCode": 0
+  },
+  "browserGreenFinal": {
+    "cases": 6,
+    "allChecksPassed": true,
+    "exitCode": 0
+  },
+  "nodeSyntaxAndDiffCheck": "passed",
+  "environmentOverrides": {
+    "APPDATA": "/tmp/buyerlog-client-tests/roaming",
+    "LOCALAPPDATA": "/tmp/buyerlog-client-tests/localapp",
+    "BUYER_LOG_SERVER_DATA_ROOT": "/tmp/buyerlog-client-tests/server"
+  }
+}

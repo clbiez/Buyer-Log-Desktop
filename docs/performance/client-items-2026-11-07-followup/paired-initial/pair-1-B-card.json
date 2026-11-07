@@ -1,0 +1,356 @@
+{
+  "processId": 61727,
+  "chromium": "154.0.8037.57",
+  "results": [
+    {
+      "module": "license-cards",
+      "count": 500,
+      "select": {
+        "samples": 10,
+        "observationsMs": [
+          72.10000000009313,
+          117.89999999990687,
+          149.89999999990687,
+          129.1999999997206,
+          113.8000000002794,
+          118.60000000009313,
+          117.29999999981374,
+          116.20000000018626,
+          114.39999999990687,
+          113.5
+        ],
+        "p50Ms": 117.29999999981374,
+        "p95Ms": 149.89999999990687
+      },
+      "search": {
+        "samples": 10,
+        "observationsMs": [
+          62.299999999813735,
+          213.70000000018626,
+          61.60000000009313,
+          164.89999999990687,
+          64.39999999990687,
+          265.70000000018626,
+          70.60000000009313,
+          187.6999999997206,
+          69.3000000002794,
+          255.59999999962747
+        ],
+        "p50Ms": 164.89999999990687,
+        "p95Ms": 265.70000000018626
+      },
+      "save": {
+        "samples": 5,
+        "observationsMs": [
+          466.60000000009313,
+          362.39999999990687,
+          396.39999999990687,
+          421.29999999981374,
+          413.29999999981374
+        ],
+        "p50Ms": 413.29999999981374,
+        "p95Ms": 466.60000000009313
+      },
+      "retainedList": true,
+      "retainedRow": true,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 500,
+      "requests": 5,
+      "requestSha256": "c52959655f96f5cc64ceb84d51b80ba312deb297809ec3922080f36faecfe21c"
+    },
+    {
+      "module": "manufacturers",
+      "count": 500,
+      "select": {
+        "samples": 10,
+        "observationsMs": [
+          1.8000000002793968,
+          2.2000000001862645,
+          1.5,
+          1.400000000372529,
+          1.8000000002793968,
+          1.8000000002793968,
+          1.900000000372529,
+          1.599999999627471,
+          1.5,
+          1.7999999998137355
+        ],
+        "p50Ms": 1.8000000002793968,
+        "p95Ms": 2.2000000001862645
+      },
+      "search": {
+        "samples": 10,
+        "observationsMs": [
+          14.200000000186265,
+          34.10000000009313,
+          13.799999999813735,
+          36.39999999990687,
+          12.799999999813735,
+          35.700000000186265,
+          12.5,
+          33,
+          18.300000000279397,
+          34.59999999962747
+        ],
+        "p50Ms": 33,
+        "p95Ms": 36.39999999990687
+      },
+      "save": null,
+      "retainedList": true,
+      "retainedRow": true,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 500,
+      "requests": 0,
+      "requestSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "module": "email-groups",
+      "count": 500,
+      "select": {
+        "samples": 10,
+        "observationsMs": [
+          2.3999999999068677,
+          2.5,
+          1.2000000001862645,
+          1.1999999997206032,
+          1.3000000002793968,
+          1.6000000000931323,
+          1.1999999997206032,
+          1.3999999999068677,
+          1.3000000002793968,
+          1.3999999999068677
+        ],
+        "p50Ms": 1.3999999999068677,
+        "p95Ms": 2.5
+      },
+      "search": {
+        "samples": 10,
+        "observationsMs": [
+          13.400000000372529,
+          23,
+          11.600000000093132,
+          22.5,
+          11.799999999813735,
+          21.40000000037253,
+          12,
+          24.799999999813735,
+          12.100000000093132,
+          22.399999999906868
+        ],
+        "p50Ms": 21.40000000037253,
+        "p95Ms": 24.799999999813735
+      },
+      "save": {
+        "samples": 5,
+        "observationsMs": [
+          30.100000000093132,
+          28.700000000186265,
+          31.200000000186265,
+          33.6999999997206,
+          40
+        ],
+        "p50Ms": 31.200000000186265,
+        "p95Ms": 40
+      },
+      "retainedList": true,
+      "retainedRow": true,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 500,
+      "requests": 5,
+      "requestSha256": "3667fef91b377a5b6ff6b9947a6037eb35c31da7194446997f9a4bae15a97701"
+    },
+    {
+      "module": "license-cards",
+      "count": 5000,
+      "select": {
+        "samples": 10,
+        "observationsMs": [
+          694,
+          1341.6000000000931,
+          1240.8000000002794,
+          1190.3999999999069,
+          1215.1000000000931,
+          1292.7999999998137,
+          1173.7999999998137,
+          1389.5999999996275,
+          1313.2000000001863,
+          1423
+        ],
+        "p50Ms": 1292.7999999998137,
+        "p95Ms": 1423
+      },
+      "search": {
+        "samples": 10,
+        "observationsMs": [
+          384.40000000037253,
+          2294.2999999998137,
+          317.89999999990687,
+          1952,
+          343.29999999981374,
+          2657.8000000002794,
+          413.10000000009313,
+          2090.5,
+          312.5,
+          2157.899999999907
+        ],
+        "p50Ms": 1952,
+        "p95Ms": 2657.8000000002794
+      },
+      "save": {
+        "samples": 5,
+        "observationsMs": [
+          4878.299999999814,
+          3421.600000000093,
+          3678.399999999907,
+          3826.2999999998137,
+          3398.899999999907
+        ],
+        "p50Ms": 3678.399999999907,
+        "p95Ms": 4878.299999999814
+      },
+      "retainedList": true,
+      "retainedRow": true,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 5000,
+      "requests": 5,
+      "requestSha256": "c52959655f96f5cc64ceb84d51b80ba312deb297809ec3922080f36faecfe21c"
+    },
+    {
+      "module": "manufacturers",
+      "count": 5000,
+      "select": {
+        "samples": 10,
+        "observationsMs": [
+          3,
+          1.8999999999068677,
+          1.1999999997206032,
+          2,
+          1.5,
+          1.8999999999068677,
+          1.2999999998137355,
+          1.7000000001862645,
+          1.2999999998137355,
+          1.3000000002793968
+        ],
+        "p50Ms": 1.7000000001862645,
+        "p95Ms": 3
+      },
+      "search": {
+        "samples": 10,
+        "observationsMs": [
+          48.3000000002794,
+          336.20000000018626,
+          47.10000000009313,
+          331.79999999981374,
+          45.90000000037253,
+          334.10000000009313,
+          44.5,
+          332.60000000009313,
+          50,
+          358.70000000018626
+        ],
+        "p50Ms": 331.79999999981374,
+        "p95Ms": 358.70000000018626
+      },
+      "save": null,
+      "retainedList": true,
+      "retainedRow": true,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 5000,
+      "requests": 0,
+      "requestSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "module": "email-groups",
+      "count": 5000,
+      "select": {
+        "samples": 10,
+        "observationsMs": [
+          1,
+          1.6000000000931323,
+          1.599999999627471,
+          2.5,
+          1.2000000001862645,
+          1.3000000002793968,
+          1.7999999998137355,
+          1.3999999999068677,
+          1.3999999999068677,
+          1.5
+        ],
+        "p50Ms": 1.5,
+        "p95Ms": 2.5
+      },
+      "search": {
+        "samples": 10,
+        "observationsMs": [
+          77.10000000009313,
+          198.20000000018626,
+          73.10000000009313,
+          203,
+          76,
+          270.29999999981374,
+          79.60000000009313,
+          202.5,
+          76,
+          202.70000000018626
+        ],
+        "p50Ms": 198.20000000018626,
+        "p95Ms": 270.29999999981374
+      },
+      "save": {
+        "samples": 5,
+        "observationsMs": [
+          247.39999999990687,
+          248.20000000018626,
+          231.79999999981374,
+          274.6999999997206,
+          227.10000000009313
+        ],
+        "p50Ms": 247.39999999990687,
+        "p95Ms": 274.6999999997206
+      },
+      "retainedList": true,
+      "retainedRow": true,
+      "scrollTop": 120,
+      "listEquivalent": true,
+      "listDifference": null,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "lockRefreshed": true,
+      "renderedRows": 5000,
+      "requests": 5,
+      "requestSha256": "3667fef91b377a5b6ff6b9947a6037eb35c31da7194446997f9a4bae15a97701"
+    }
+  ]
+}
