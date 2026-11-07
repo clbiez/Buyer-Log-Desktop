@@ -1,5 +1,11 @@
 # Buyer Log — açılış varlıklarını özellik bazında yükleme
 
+**Güncel Main kapanışı:** #912 ve #901 sonrasındaki yeni üç çift,
+8.879 geçen test ve bütün ilk-kullanım ödünleşimleri
+[post-901 kabul ekindedir](2026-11-07-startup-post-901-acceptance.md).
+Aşağıdaki ilk seri kendi `63159fb3` / `d61d9434` kaynaklarının tarihsel
+kanıtıdır; yeni Main sonucu diye kullanılmaz.
+
 Tarih: 2026-11-07. SHELL-03 / SHELL-04. Kapsam: `app-main.js` çağrılarını değiştirmeden senkron JS ve blocking CSS azaltımı. Risk: açılış ve global kayıt sırası; iş verisi, hesaplama, yetki ve sunucu protokolü değişmiyor.
 
 ## Uygulama ve bağımlılık denetimi

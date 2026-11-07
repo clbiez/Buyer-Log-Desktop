@@ -1,5 +1,10 @@
 # Ölçüm kanıtları
 
+Güncel #912/#901 sonrası altı koşu, 96 ilk-açılış örneği, tam test ve kaynak/
+çıktı hash'leri [`post-901/`](post-901/) içindedir. Yeni kapanış raporu:
+[2026-11-07-startup-post-901-acceptance.md](../2026-11-07-startup-post-901-acceptance.md).
+Aşağıdaki özgün seri tarihsel kalır.
+
 Bu dizin uygulamanın çalışma paketine eklenmez. Ana rapor: [2026-11-07-startup-feature-assets.md](../2026-11-07-startup-feature-assets.md).
 
 - `measurements.json.gz`: güncel `63159fb3` tabanına karşı üç dönüşümlü önce/sonra tam açılış çifti ve her modülün ilk açılması. Altı koşunun 30 navigasyonunda kaynak tamponu taşması sıfırdır. İlk denemenin 250 kayıtla kesilen kaynak listeleri dahil değildir.
