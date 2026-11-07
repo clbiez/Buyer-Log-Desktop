@@ -1,0 +1,32 @@
+[PERF] APP_BOOT_START +1ms
+[PERF] LOCAL_CONFIG_READY +149ms
+[PERF] DELTA_STORE_MODE +224ms
+[PERF] COLLECTION_IMAGE_SCOPE_MIGRATION +414ms
+Buyer Log runtime config: /tmp/buyerlog-startup-analytics-smoke-main5b8/config.json · port=6497 · host=127.0.0.1
+[PERF] SERVER_READY +581ms
+Buyer Log sunucusu çalışıyor: http://localhost:6497
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: /tmp/buyerlog-startup-analytics-smoke-main5b8/source
+[RUNTIME] heap-limit heapUsedMb=44 heapLimitMb=4288 rssMb=149
+[RUNTIME] stall-profiler enabled=0 optIn=BL_STALL_PROFILE=1
+[PERF] LOCAL_DB_CONFIG_PATH +587ms
+[PERF] SHARED_SYNC_ROOT +587ms
+[PERF] SHARED_HUB_BOOTSTRAP +634ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +691ms
+[PERF] LOCAL_DB_READY +691ms
+[PERF] LOCAL_STATE_READY +691ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +710ms
+[2026-11-07T21:37:10.566Z] [ASAS Excel] [pivot-refresh] START category=wait
+[2026-11-07T21:37:10.566Z] [ASAS Excel] [pivot-refresh] END duration=0ms category=wait error=ASAS Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.
+[2026-11-07T21:37:10.566Z] [ASAS Excel] [file-parse] START category=wait
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +4755ms
+[PERF] DELTA_STORE_HYDRATED +4757ms
+[2026-11-07T21:37:23.620Z] [ASAS Excel] [file-parse] END duration=13054ms category=wait
+[2026-11-07T21:37:23.763Z] [ANTREPO Excel] [pivot-refresh] START category=wait
+[2026-11-07T21:37:23.763Z] [ANTREPO Excel] [pivot-refresh] END duration=0ms category=wait error=Antrepo Excel pivot tabloları yenilenmeden veri okunamaz. Bu işlem Windows ve Microsoft Excel gerektirir.
+[2026-11-07T21:37:23.764Z] [ANTREPO Excel] [file-parse] START category=wait
+[2026-11-07T21:37:25.173Z] [ANTREPO Excel] [file-parse] END duration=1409ms category=wait
+[2026-11-07T21:37:26.607Z] [Refresh] [comparison] START category=wait
+[2026-11-07T21:37:27.744Z] [Refresh] [comparison] END duration=1137ms category=wait
+[2026-11-07T21:37:27.745Z] [Local storage] [snapshot-save] START category=save
+[RUNTIME] event-loop-stall blockedMs=4044 cpuMs=10231 heapUsedMb=238 heapLimitMb=4288 rssMb=1079

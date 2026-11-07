@@ -634,6 +634,13 @@
     const year = filter.year === '*' ? '' : (filter.year && opts.years.includes(String(filter.year)) ? String(filter.year) : (opts.years[0] || ''));
     const scoped = records.filter(r => r.basis === basis && (!year || r.year === year)
       && (filter.vehicle == null || filter.vehicle === '*' || r.vehicle === filter.vehicle));
+    const stepsByGroup = new Map();
+    steps.forEach(step => {
+      if (step.basis !== basis || (year && step.year !== year)) return;
+      const id = JSON.stringify([step.vehicle, countryKey(step.country)]);
+      if (!stepsByGroup.has(id)) stepsByGroup.set(id, []);
+      stepsByGroup.get(id).push(step);
+    });
     const groups = new Map();
     scoped.forEach(rec => {
       const id = rec.vehicle + '|' + countryKey(rec.country);
@@ -648,7 +655,7 @@
       const metrics = {};
       MAIN_METRICS.forEach(m => { metrics[m] = round(weightedMean(list, r => r[m], recW), 1); });
       const loadingToWarehouse = rec => (rec.transit == null && rec.customs == null) ? null : (Number(rec.transit) || 0) + (Number(rec.customs) || 0);
-      const stepList = steps.filter(s => s.basis === basis && (!year || s.year === year) && s.vehicle === first.vehicle && countryKey(s.country) === countryKey(first.country))
+      const stepList = (stepsByGroup.get(JSON.stringify([first.vehicle, countryKey(first.country)])) || [])
         .sort((a, b) => Number(a.code.split('.')[0]) - Number(b.code.split('.')[0]) || a.code.localeCompare(b.code));
       const producerStep = stepList.find(s => s.code === '1');
       const last = ordered.slice(-3);

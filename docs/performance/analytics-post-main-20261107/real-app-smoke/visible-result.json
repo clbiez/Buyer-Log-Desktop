@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "sourceRoot": "/tmp/buyerlog-startup-analytics-smoke-main5b8-v2",
+  "synthetic": true,
+  "refreshPosts": 0,
+  "moduleContinuesClicked": 1,
+  "workerResult": true,
+  "analysisVisible": true,
+  "errors": []
+}
