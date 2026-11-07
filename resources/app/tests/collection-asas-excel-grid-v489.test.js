@@ -9,8 +9,7 @@ const ROOT = path.join(__dirname, '..');
 const INDEX = (fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8'));
 const CSS = require('./helpers/manifest-css')(['ui-tokens.css','app.css','design.css','experience.css','ui-components.css'] );
 const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
-const canonicalFields = require('../server/lib/canonical-fields');
-const collectionCatalog = require('../server/lib/collection-catalog');
+const serverCatalog = require('./helpers/server-collection-catalog');
 
 function extractBetween(source, startText, endText) {
   const start = source.indexOf(startText);
@@ -21,9 +20,7 @@ function extractBetween(source, startText, endText) {
 }
 
 test('v4.89 Collection option catalogs are produced once from ASAS-backed Orders rows', () => {
-  const block = extractBetween(SERVER, 'const COLLECTION_CATALOG_FIELDS', 'async function buildResponse');
-  const factory = new Function('canonicalFields','BLBusinessRules','collectionCatalog', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,COLLECTION_CATALOG_SCHEMA_VERSION,collectionCatalogsComplete,buildCollectionCatalogs};`);
-  const { COLLECTION_CATALOG_FIELDS, COLLECTION_CATALOG_SCHEMA_VERSION, collectionCatalogsComplete, buildCollectionCatalogs } = factory(canonicalFields,require('../public/business-rules'),collectionCatalog);
+  const { COLLECTION_CATALOG_FIELDS, COLLECTION_CATALOG_SCHEMA_VERSION, collectionCatalogsComplete, buildCollectionCatalogs } = serverCatalog();
 
   assert.equal(COLLECTION_CATALOG_FIELDS.category, 'Category');
   assert.equal(COLLECTION_CATALOG_FIELDS.mag, 'Merch Alt Grup Kod');
@@ -49,9 +46,14 @@ test('v4.89 Collection option catalogs are produced once from ASAS-backed Orders
   // Katalog artık Refresh sonunda page projection cache'e bir kez yazılıyor.
   // Schema version eski/partial collection-catalog cache'lerinin güvenle
   // yalnız bu projection için rebuild edilmesini sağlar.
-  assert.match(SERVER, /let catalogRows=ordersRows/);
-  assert.match(SERVER, /catalogRows=\(await pageProjectionCache\.decodeProjection\(reused\.projections\.orders\.buffer\)\)\.rows\|\|\[\]/);
-  assert.match(SERVER, /'collection-catalog': \{[\s\S]{0,240}?catalogs: cpDataAllowed \? buildCollectionCatalogs\(catalogRows\.length \? catalogRows : overviewRows\) : \{\},[\s\S]{0,120}?catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION/);
+  // The same cache/build contract now runs in the common worker. Keep the
+  // dispatch, verified Orders reuse, permission gate and v3 publication checks.
+  // collection-catalog-compute-contract also exercises these paths natively.
+  const worker = fs.readFileSync(path.join(ROOT, 'server/workers/compute-worker.js'), 'utf8');
+  const tasks = fs.readFileSync(path.join(ROOT, 'server/lib/compute-tasks.js'), 'utf8');
+  assert.match(SERVER, /catalogOrdersBuffer:wanted\.has\('collection-catalog'\)\?reused\.projections\.orders\?\.buffer:null/);
+  assert.match(worker, /if\(params\.catalogOrdersBuffer\)\{const raw=await promisify\(zlib\.gunzip\)\(Buffer\.from\(params\.catalogOrdersBuffer\)\);params\.catalogRows=JSON\.parse\(raw\.toString\('utf8'\)\)\.rows\|\|\[\];\}/);
+  assert.match(tasks, /out\['collection-catalog'\]=\{catalogs:allowed\?buildCollectionCatalogs\(rows\.length\?rows:overview\):\{\},catalogSchemaVersion:COLLECTION_CATALOG_SCHEMA_VERSION\}/);
 });
 
 test('v4.89 Collection cells use ASAS suggestions without an LFL dependency or strict selection', () => {

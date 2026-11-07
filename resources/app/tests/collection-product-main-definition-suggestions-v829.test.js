@@ -9,7 +9,7 @@ const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
 const canonicalFields = require('../server/lib/canonical-fields');
-const collectionCatalog = require('../server/lib/collection-catalog');
+const serverCatalog = require('./helpers/server-collection-catalog');
 const parse = require('../server/lib/parse');
 
 function extractBetween(source, startText, endText) {
@@ -21,9 +21,7 @@ function extractBetween(source, startText, endText) {
 }
 
 test('Collection Product Main Definition önerileri gerçek ASAS canonical kaynağından distinct üretilir', () => {
-  const block = extractBetween(SERVER, 'const COLLECTION_CATALOG_FIELDS', 'async function buildResponse');
-  const factory = new Function('canonicalFields', 'collectionCatalog', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,buildCollectionCatalogs};`);
-  const { COLLECTION_CATALOG_FIELDS, buildCollectionCatalogs } = factory(canonicalFields, collectionCatalog);
+  const { COLLECTION_CATALOG_FIELDS, buildCollectionCatalogs } = serverCatalog();
 
   assert.equal(COLLECTION_CATALOG_FIELDS.productMainDefinition, 'Ürün Ana Tanım');
   assert.equal(canonicalFields.canonicalId('overview', 'Ürün Ana Tanım'), 'productDescription');
@@ -76,9 +74,7 @@ test('Collection Product Main Definition suggestion cache is not fetched per cel
 
 
 test('raw ASAS normalized row -> lightweight Overview -> Collection catalog zinciri Product Main Definition değerini düşürmez', () => {
-  const block = extractBetween(SERVER, 'const COLLECTION_CATALOG_FIELDS', 'async function buildResponse');
-  const factory = new Function('canonicalFields', 'collectionCatalog', `${block}\nreturn {buildCollectionCatalogs};`);
-  const { buildCollectionCatalogs } = factory(canonicalFields, collectionCatalog);
+  const { buildCollectionCatalogs } = serverCatalog();
 
   const overviewRows = parse.buildOverviewSummaryRowsFromASAS([{
     kalan: 8,
@@ -113,9 +109,7 @@ test('client partial Collection catalog cache hazır sayılmaz, tam catalog tekr
 });
 
 test('server eski/partial collection-catalog projection cache şemasını reddeder', () => {
-  const block = extractBetween(SERVER, 'const COLLECTION_CATALOG_FIELDS', 'async function buildResponse');
-  const factory = new Function('canonicalFields', 'collectionCatalog', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,COLLECTION_CATALOG_SCHEMA_VERSION,collectionCatalogsComplete,collectionCatalogProjectionComplete};`);
-  const api = factory(canonicalFields, collectionCatalog);
+  const api = serverCatalog();
   const full = Object.fromEntries(Object.keys(api.COLLECTION_CATALOG_FIELDS).map(key => [key, []]));
 
   assert.equal(api.COLLECTION_CATALOG_SCHEMA_VERSION, 3);
@@ -126,7 +120,9 @@ test('server eski/partial collection-catalog projection cache şemasını redded
   assert.equal(api.collectionCatalogProjectionComplete({ catalogSchemaVersion:2, catalogs:full }), false, 'pre-manufacturer v2 cache must rebuild');
   assert.equal(api.collectionCatalogProjectionComplete({ catalogSchemaVersion:3, catalogs:full }), true);
 
-  assert.match(SERVER, /collectionCatalogProjectionComplete\(cached\.data\)/);
+  assert.match(SERVER, /collectionCatalogProjectionComplete\(cachedCatalogData\)/);
+  const worker = fs.readFileSync(path.join(ROOT, 'server/workers/compute-worker.js'), 'utf8');
+  assert.match(worker, /if\(data\.params\.legacyModule==='collection-catalog'&&!catalog\.collectionCatalogProjectionComplete\(values\['collection-catalog'\]\)\)return \{needsRebuild:true\}/);
   assert.match(SERVER, /catalogSchemaVersion:\s*COLLECTION_CATALOG_SCHEMA_VERSION/);
 });
 

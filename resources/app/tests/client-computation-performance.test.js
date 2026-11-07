@@ -5,12 +5,7 @@ const {Worker}=require('node:worker_threads');
 const ROOT=path.join(__dirname,'..'),Groups=require('../public/collection-model-groups');
 const APP=fs.readFileSync(path.join(ROOT,'public/app-main.js'),'utf8');
 function block(source,start,end){const a=source.indexOf(start),b=source.indexOf(end,a+start.length);assert.ok(a>=0&&b>a);return source.slice(a,b);}
-function serverCatalog(){
-  const source=fs.readFileSync(path.join(ROOT,'server/server.js'),'utf8');
-  const common=path.join(ROOT,'server/lib/collection-catalog.js');
-  return new Function('canonicalFields','BLBusinessRules','collectionCatalog',block(source,'const COLLECTION_CATALOG_FIELDS','async function buildResponse')+';return {buildCollectionCatalogs,COLLECTION_CATALOG_SCHEMA_VERSION};')(
-    require('../server/lib/canonical-fields'),require('../public/business-rules'),fs.existsSync(common)?require(common):null);
-}
+const serverCatalog=require('./helpers/server-collection-catalog');
 async function workerCatalog(rows){
   const worker=new Worker(path.join(ROOT,'server/projection-worker.js'),{workerData:{modules:['collection-catalog'],catalogOrdersBuffer:zlib.gzipSync(JSON.stringify({rows}))}});
   try{return await new Promise((resolve,reject)=>{worker.once('message',resolve);worker.once('error',reject);worker.once('exit',code=>{if(code)reject(Error('worker exit '+code));});});}
