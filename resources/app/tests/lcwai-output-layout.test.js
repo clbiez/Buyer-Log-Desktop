@@ -130,7 +130,7 @@ test('PDF: model galerisi sütun × satır sayfalarına bölünür; HTML dosyas�
 });
 
 test('Excel: yazı boyutu, başlık satırı yüksekliği ve hücre görseli boyutu yerleşimden gelir', () => {
-  const workbook = contracts.normalizeWorkbook({ title: 'Liste', subtitle: 'x', layout: { titleSize: 20, bodySize: 9, headerHeight: 30, imageSize: 100 }, sheets: [{ name: 'S', columns: [{ header: 'Görsel', type: 'image' }, { header: 'Model', type: 'text' }], rows: [['KOL-1', 'A']] }] }).data;
+  const workbook = contracts.normalizeWorkbook({ title: 'Liste', subtitle: 'x', notes: ['Özet notu'], layout: { titleSize: 20, bodySize: 9, headerHeight: 30, imageSize: 100 }, sheets: [{ name: 'S', columns: [{ header: 'Görsel', type: 'image' }, { header: 'Model', type: 'text' }], rows: [['KOL-1', 'A']] }] }).data;
   const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
   const files = unzip(renderWorkbook(workbook, { lang: 'tr', images: { 'KOL-1': { buffer: png, ext: 'png', width: 1, height: 1 } } }));
   assert.match(files['xl/styles.xml'], /<font><sz val="9"\/>/);

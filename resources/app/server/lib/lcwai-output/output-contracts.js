@@ -100,10 +100,16 @@ function workbookInstruction(english) {
     'Return ONLY one JSON object (no Markdown) in this WORKBOOK shape; Buyer Log builds the .xlsx with its own styling:',
     '{"title":"…","subtitle":"…","currency":"TRY|USD|EUR","kpis":[{"label":"…","value":123,"note":"…"}],"notes":["…"],"sheets":[{"name":"…","columns":[{"header":"…","type":"text|integer|number|percent|currency|date|image"}],"rows":[["…",12,0.25,"2026-10-05"]]}]}',
     'Rules: each row has exactly as many cells as columns; numbers are JSON numbers (no thousands separators); percent values are fractions (0.25 = 25%); dates are "YYYY-MM-DD"; sheet names ≤ 31 characters; formulas may be given as {"f":"SUM(B2:B10)"} (no external references). kpis/notes go to a Summary sheet and are optional.',
+    'Styling: by default Buyer Log builds a clean, plain table (grey header, thin row lines, no stripes, no colour scales). Add formatting ONLY when the user asks for it or a rule is essential to the question (e.g. "flag late orders"); never add it for decoration. Optional fields, all limited to the Buyer Log palette:',
+    'column: {"width":6-80,"align":"left|center|right","total":"sum|avg|count|min|max","bar":true,"highlight":[{"op":"<|<=|>|>=|=|!=|between|contains","value":0,"value2":10,"tone":"ok|warn|risk|info"}]}; sheet: {"style":{"zebra":true,"freezeColumns":1}}.',
+    `Formatting rules: "total" adds one total row under the table (filter-aware SUBTOTAL) — do NOT also write a manual total row; "bar" = in-cell data bar, numeric columns only, at most ${BLOutputLayout.XLSX_FORMAT.limits.bars} per sheet; at most ${BLOutputLayout.XLSX_FORMAT.limits.rulesPerColumn} highlight rules per column and ${BLOutputLayout.XLSX_FORMAT.limits.rulesPerSheet} per sheet; percent rule values are fractions, date values "YYYY-MM-DD", text columns allow only = != contains; "zebra" = striped rows, only if asked; "freezeColumns" ≤ 3.`,
   ].join('\n') : [
     'YALNIZ tek bir JSON nesnesi döndür (Markdown yok), şu WORKBOOK biçiminde; .xlsx dosyasını kendi stiliyle Buyer Log oluşturur:',
     '{"title":"…","subtitle":"…","currency":"TRY|USD|EUR","kpis":[{"label":"…","value":123,"note":"…"}],"notes":["…"],"sheets":[{"name":"…","columns":[{"header":"…","type":"text|integer|number|percent|currency|date|image"}],"rows":[["…",12,0.25,"2026-10-05"]]}]}',
     'Kurallar: her satırda sütun sayısı kadar hücre; sayılar JSON sayısı (binlik ayırıcı yok); yüzdeler oran (0.25 = %25); tarihler "YYYY-MM-DD"; sayfa adı ≤ 31 karakter; formül {"f":"SUM(B2:B10)"} biçiminde verilebilir (dış başvuru yok). kpis/notes Özet sayfasına gider, isteğe bağlıdır.',
+    'Biçim: Buyer Log varsayılan olarak sade bir tablo kurar (gri başlık, ince satır çizgisi, zebra yok, renk ölçeği yok). Biçimi YALNIZ kullanıcı isterse ya da bir kural sorunun özüyse (ör. "geciken siparişleri işaretle") ekle; süs için asla ekleme. İsteğe bağlı alanlar, hepsi Buyer Log paletiyle sınırlı:',
+    'sütun: {"width":6-80,"align":"left|center|right","total":"sum|avg|count|min|max","bar":true,"highlight":[{"op":"<|<=|>|>=|=|!=|between|contains","value":0,"value2":10,"tone":"ok|warn|risk|info"}]}; sayfa: {"style":{"zebra":true,"freezeColumns":1}}.',
+    `Biçim kuralları: "total" tablonun altına tek toplam satırı ekler (filtreye duyarlı SUBTOTAL) — ayrıca elle toplam satırı YAZMA; "bar" = hücre içi veri çubuğu, yalnız sayısal sütun, sayfa başına en fazla ${BLOutputLayout.XLSX_FORMAT.limits.bars}; sütun başına en fazla ${BLOutputLayout.XLSX_FORMAT.limits.rulesPerColumn}, sayfa başına ${BLOutputLayout.XLSX_FORMAT.limits.rulesPerSheet} vurgu kuralı; yüzde kural değeri oran, tarih "YYYY-MM-DD", metin sütununda yalnız = != contains; "zebra" = çizgili satırlar, yalnız istenirse; "freezeColumns" ≤ 3.`,
   ].join('\n');
 }
 
@@ -215,7 +221,9 @@ function normalizeWorkbook(raw, { lang = 'tr', date } = {}) {
     let columns = asArray(sheet.columns).slice(0, LIMITS.sheetCols).map((column, i) => {
       if (typeof column === 'string') return { header: clean(column, 120) || `${english ? 'Column' : 'Sütun'} ${i + 1}`, type: 'text' };
       const type = String(column && column.type || 'text').toLowerCase();
-      return { header: clean(column && (column.header || column.name || column.label), 120) || `${english ? 'Column' : 'Sütun'} ${i + 1}`, type: COLUMN_TYPES.includes(type) ? type : 'text' };
+      const known = COLUMN_TYPES.includes(type) ? type : 'text';
+      // İsteğe bağlı biçim (hizalama, genişlik, toplam, çubuk, vurgu): yalnız beyaz liste.
+      return { header: clean(column && (column.header || column.name || column.label), 120) || `${english ? 'Column' : 'Sütun'} ${i + 1}`, type: known, ...BLOutputLayout.normalizeXlsxColumnFormat(column, known) };
     });
     let rows = asArray(sheet.rows);
     // Satırlar nesne olarak geldiyse ({Başlık: değer}) sütunlara çevrilir.
@@ -251,7 +259,9 @@ function normalizeWorkbook(raw, { lang = 'tr', date } = {}) {
       const values = plain.map(r => rows[r][i]);
       if (values.length && values.every(value => Math.abs(value) <= 100) && values.some(value => Math.abs(value) > 1.5)) plain.forEach(r => { rows[r][i] /= 100; });
     });
-    sheets.push({ name: sheetName(sheet.name || sheet.title, index, english), columns, rows });
+    const format = BLOutputLayout.normalizeXlsxSheetFormat(sheet.style, columns, raw.style);
+    warnings.push(...format.warnings);
+    sheets.push({ name: sheetName(sheet.name || sheet.title, index, english), columns, rows, style: format.style });
   });
   const title = clean(raw.title, LIMITS.titleChars) || (english ? 'LCW AI Workbook' : 'LCW AI Çalışma Kitabı');
   const workbook = {
