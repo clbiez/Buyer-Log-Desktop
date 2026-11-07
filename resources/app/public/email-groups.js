@@ -65,14 +65,17 @@
   }
   function absorb(data) {
     if (!data) return;
-    if (Array.isArray(data.countries)) S.data.countries = data.countries;
-    if (Array.isArray(data.types)) S.data.types = data.types;
-    if (Array.isArray(data.records)) S.data.records = data.records;
-    if (data.revision != null) S.data.revision = data.revision;
-    if (data.lockTtlMs) S.data.lockTtlMs = data.lockTtlMs;
-    if (data.currentUserId) S.currentUserId = data.currentUserId;
-    const signature=JSON.stringify({data:S.data,currentUserId:S.currentUserId});
+    const next = { ...S.data };
+    if (Array.isArray(data.countries)) next.countries = data.countries;
+    if (Array.isArray(data.types)) next.types = data.types;
+    if (Array.isArray(data.records)) next.records = data.records;
+    if (data.revision != null) next.revision = data.revision;
+    if (data.lockTtlMs) next.lockTtlMs = data.lockTtlMs;
+    const currentUserId = data.currentUserId || S.currentUserId;
+    const signature=JSON.stringify({data:next,currentUserId});
     if(signature===snapshotSignature){directoryLoadedAt=Date.now();return false;}
+    Object.assign(S.data, next);
+    S.currentUserId = currentUserId;
     snapshotSignature=signature;
     rebuildDirectory();
     const classification=JSON.stringify(S.data.records.filter(record=>record.dtrStatus==='NON-DTR').map(record=>[record.manufacturer,...(record.aliases||[])]).sort());
@@ -302,23 +305,39 @@
     S.modal.querySelectorAll('[data-eg-add],[data-eg-headings],[data-eg-edit],[data-eg-delete]').forEach(el => el.remove());
   }
 
+  let directoryView = null;
   function render() {
     if (!S.modal) return;
     const body = S.modal.querySelector('[data-eg-body]');
-    const list = sections();
-    const flat=list.flatMap(section=>section.records);
+    const key = JSON.stringify([S.search, S.filterCountry, S.filterType, S.groupBy, S.currentUserId, en(), canManage()]);
+    const changed = !directoryView || directoryView.body !== body || directoryView.signature !== snapshotSignature || directoryView.records !== S.data.records || directoryView.key !== key;
+    const list = changed ? sections() : directoryView.list;
+    const byId = changed ? new Map(S.data.records.map(record => [record.id, record])) : directoryView.byId;
+    const flat = changed ? list.flatMap(section => section.records) : directoryView.flat;
     const total=S.data.records.length, shown=flat.length;
-    if (!S.selectedId || !S.data.records.some(r=>r.id===S.selectedId)) S.selectedId=flat[0]?.id||S.data.records[0]?.id||'';
+    if (!S.selectedId || !byId.has(S.selectedId)) S.selectedId=flat[0]?.id||S.data.records[0]?.id||'';
     S.modal.querySelector('[data-eg-count]').textContent = shown===total ? T(`${total} kayıt`,`${total} records`) : T(`${shown} / ${total} kayıt`,`${shown} / ${total} records`);
-    const directoryMarkup=list.length?list.map(section=>`<section class="egDirectorySection"><h4>${esc(section.name)}<span>${section.records.length}</span></h4>${section.records.map(directoryRowHtml).join('')}</section>`).join(''):`<div class="egEmpty">${esc(total?T('Filtreye uyan kayıt yok.','No record matches the filter.'):T('Henüz kayıt yok. “Kayıt Ekle” ile başlayın.','No records yet. Start with “Add record”.'))}</div>`;
-    const selected=S.data.records.find(r=>r.id===S.selectedId)||null;
-    body.innerHTML=`<aside class="egDirectory"><div class="egDirectoryScroll">${directoryMarkup}</div></aside><main class="egDetailPane">${detailPaneHtml(selected)}</main>`;
+    const selected = byId.get(S.selectedId) || null;
+    const top = body.querySelector('.egDirectoryScroll')?.scrollTop || 0;
+    if (!body.querySelector('.egDirectoryScroll')) body.innerHTML = '<aside class="egDirectory"><div class="egDirectoryScroll"></div></aside><main class="egDetailPane"></main>';
+    if (changed) body.querySelector('.egDirectoryScroll').innerHTML = list.length?list.map(section=>`<section class="egDirectorySection"><h4>${esc(section.name)}<span>${section.records.length}</span></h4>${section.records.map(directoryRowHtml).join('')}</section>`).join(''):`<div class="egEmpty">${esc(total?T('Filtreye uyan kayıt yok.','No record matches the filter.'):T('Henüz kayıt yok. “Kayıt Ekle” ile başlayın.','No records yet. Start with “Add record”.'))}</div>`;
+    else if (directoryView.selected !== selected) {
+      body.querySelector('.egDirectoryRow.isSelected')?.classList.remove('isSelected');
+      if (selected) body.querySelector(`[data-eg-select="${CSS.escape(selected.id)}"]`)?.classList.add('isSelected');
+    }
+    body.querySelector('.egDirectoryScroll').scrollTop = top;
+    const detail = body.querySelector('.egDetailPane');
+    const sameDetail = directoryView && directoryView.detail === detail && directoryView.selected === selected && directoryView.editingId === S.editingId && directoryView.lang === en() && directoryView.manage === canManage() && directoryView.signature === snapshotSignature;
+    const editingFocus = sameDetail && S.editingId && detail.contains(document.activeElement) && document.activeElement.matches('input,textarea,select');
+    const redrawDetail = !sameDetail || (directoryView.draft !== S.draft && !editingFocus);
+    if (redrawDetail) detail.innerHTML = detailPaneHtml(selected);
+    directoryView = { body, signature: snapshotSignature, records: S.data.records, key, list, flat, byId, selected, detail, editingId: S.editingId, draft: S.draft, lang: en(), manage: canManage() };
 
     const filters=S.modal.querySelector('[data-eg-filter-country]');
-    if(filters)filters.innerHTML=`<option value="">${esc(T('Tüm ülkeler','All countries'))}</option>${optionsHtml(S.data.countries,S.filterCountry)}`;
+    if(changed&&filters)filters.innerHTML=`<option value="">${esc(T('Tüm ülkeler','All countries'))}</option>${optionsHtml(S.data.countries,S.filterCountry)}`;
     const typeFilter=S.modal.querySelector('[data-eg-filter-type]');
-    if(typeFilter)typeFilter.innerHTML=`<option value="">${esc(T('Tüm üretim alanları','All production areas'))}</option>${optionsHtml(S.data.types,S.filterType)}`;
-    if(S.editingId)setTimeout(()=>S.modal?.querySelector('[data-eg-input="manufacturer"]')?.focus(),0);
+    if(changed&&typeFilter)typeFilter.innerHTML=`<option value="">${esc(T('Tüm üretim alanları','All production areas'))}</option>${optionsHtml(S.data.types,S.filterType)}`;
+    if(S.editingId&&redrawDetail)setTimeout(()=>S.modal?.querySelector('[data-eg-input="manufacturer"]')?.focus(),0);
     applyReadOnly();
   }
 

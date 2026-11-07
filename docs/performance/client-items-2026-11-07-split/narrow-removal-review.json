@@ -1,0 +1,46 @@
+{
+  "scope": "narrow removal closure, within previous one independent review round; no new general review",
+  "reviewer": "gpt-6-astra",
+  "reviewedRemoval": "261238c28ad937d10af07634ea107bfad8a6606a",
+  "integratedHead": "af1cb62f4f140ca718ce1482ce8989370104190b",
+  "main": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+  "findings": [],
+  "outcome": "no introduced reportable P1/P2",
+  "functionalAssertions": "all 14 Quick FOB functional test bodies and assertions unchanged; baseline full-render host fixture",
+  "notes": "42 Main objects and 3 retained own objects exact; two license own records parked",
+  "remainingProduction": [
+    {
+      "path": "resources/app/public/manufacturers.js",
+      "frozenBlob": "bf5302c3708e4c57e93db6f2fd86b623693e34f7",
+      "integratedBlob": "bf5302c3708e4c57e93db6f2fd86b623693e34f7"
+    },
+    {
+      "path": "resources/app/public/email-groups.js",
+      "frozenBlob": "4b28beb31d3d25b35519eb2c721ca38fcb587e04",
+      "integratedBlob": "4b28beb31d3d25b35519eb2c721ca38fcb587e04"
+    },
+    {
+      "path": "resources/app/public/lcwai-chat.js",
+      "frozenBlob": "03f54c5b3ff9757c2b8427ed952c89f032563b8c",
+      "integratedBlob": "03f54c5b3ff9757c2b8427ed952c89f032563b8c"
+    },
+    {
+      "path": "resources/app/public/cp-rules-engine.js",
+      "frozenBlob": "f13758a1ee0099f120cb17cbc5d36a8e51cba5ea",
+      "integratedBlob": "f13758a1ee0099f120cb17cbc5d36a8e51cba5ea"
+    }
+  ],
+  "restored": [
+    {
+      "path": "resources/app/public/license-cards.js",
+      "MainBlob": "ec5639d3e38fe28df3ede6b0df9bdbf040176fe6",
+      "integratedBlob": "ec5639d3e38fe28df3ede6b0df9bdbf040176fe6"
+    },
+    {
+      "path": "resources/app/tests/license-cards-editor.test.js",
+      "MainBlob": "774d1d40cb889271e498fb9eba04e05d76f69ed3",
+      "integratedBlob": "774d1d40cb889271e498fb9eba04e05d76f69ed3"
+    }
+  ],
+  "limitations": "read-only source inspection; no reviewer tests/browser/benchmark; final integrated acceptance pending"
+}

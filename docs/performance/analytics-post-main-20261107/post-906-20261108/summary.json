@@ -1,0 +1,27 @@
+{
+  "counts": {
+    "pass": 8926,
+    "fail": 0,
+    "skipped": 65,
+    "cancelled": 0
+  },
+  "files": 1300,
+  "related": 227,
+  "notes": 49,
+  "main": "9cac38237205e83b2806e492d580bfa601220690",
+  "testedRevision": "2ffed133c5a13ee47fee2d2aee9d65e1c94fa0d0",
+  "appTree": "044c2d8d6c8fc4336675a8e0e45e2c566492bebe",
+  "allTenBatchesOneInvocation": true,
+  "defaultConcurrency": 4,
+  "nodeOptions": null,
+  "reviewedOwnSourcesExact": {
+    "resources/app/public/backlog-delivery-analysis.js": "682182e55cf88992f89b4fb561ea6f2ad7065304",
+    "resources/app/public/backlog-delivery-worker.js": "9fb1016e4a91bfa58bd87a02fc09e642771e4586",
+    "resources/app/public/backlog-delivery-engine.js": "71c7ef4ca1286b9495cb7d909285a6b3fcac0c4a",
+    "resources/app/public/lfl.js": "4029952fdeede4bee647c7c347940de6d79a779a",
+    "resources/app/public/lfl-calculation-engine.js": "b7e2cd68294d69f9324e7a4791b1b779baae97e9",
+    "resources/app/public/transit-analysis.js": "604f07234a51345a8cbbd36825361e0540121899",
+    "resources/app/public/transit-analysis-ui.js": "d8020817eca70dfa104c7de67abd8505da4e00c3"
+  },
+  "performanceRepeat": "not repeated: own measured runtime unchanged"
+}

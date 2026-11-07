@@ -1,0 +1,18 @@
+{
+  "chromium": "154.0.8037.57",
+  "historyMessages": 100,
+  "paints": 40,
+  "mdCalls": 40,
+  "p50Ms": 2.1999999999825377,
+  "p95Ms": 3.5,
+  "frameP95Ms": 18.5,
+  "longTasks": [],
+  "sameHistory": true,
+  "sameSelection": true,
+  "scrollTop": 120,
+  "safe": true,
+  "streamingEquivalent": true,
+  "finalEquivalent": true,
+  "languageEquivalent": true,
+  "conversationEquivalent": true
+}

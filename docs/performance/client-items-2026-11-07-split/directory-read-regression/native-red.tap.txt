@@ -1,0 +1,80 @@
+TAP version 13
+# Subtest: an unchanged real directory read retains list inputs and resolved records
+not ok 1 - an unchanged real directory read retains list inputs and resolved records
+  ---
+  duration_ms: 11.019023
+  type: 'test'
+  location: '/workspace/buyerlog-post-main-acceptance/resources/app/tests/email-directory-snapshot-identity.test.js:29:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    unchanged read must not make the next selection rebuild the list
+    
+    [
+      {
+        aliases: [
+          'Demo Alias'
+        ],
+        email: 'demo@example.test',
+        id: 'demo-a',
+        lock: null,
+        manufacturer: 'Demo A'
+      }
+    ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0:
+      id: 'demo-a'
+      manufacturer: 'Demo A'
+      aliases:
+        0: 'Demo Alias'
+      email: 'demo@example.test'
+      lock: ~
+  actual:
+    0:
+      id: 'demo-a'
+      manufacturer: 'Demo A'
+      aliases:
+        0: 'Demo Alias'
+      email: 'demo@example.test'
+      lock: ~
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/buyerlog-post-main-acceptance/resources/app/tests/email-directory-snapshot-identity.test.js:38:10)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: changed lock, revision and recipients still replace the snapshot and publish it
+ok 2 - changed lock, revision and recipients still replace the snapshot and publish it
+  ---
+  duration_ms: 4.479909
+  type: 'test'
+  ...
+# Subtest: partial reads preserve omitted fields, and explicit empty records clear aliases
+ok 3 - partial reads preserve omitted fields, and explicit empty records clear aliases
+  ---
+  duration_ms: 3.618587
+  type: 'test'
+  ...
+# Subtest: headings and current-user changes remain part of snapshot invalidation
+ok 4 - headings and current-user changes remain part of snapshot invalidation
+  ---
+  duration_ms: 3.600603
+  type: 'test'
+  ...
+# Subtest: concurrent forced reads still share one in-flight request
+ok 5 - concurrent forced reads still share one in-flight request
+  ---
+  duration_ms: 2.744591
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 4
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 309.977841

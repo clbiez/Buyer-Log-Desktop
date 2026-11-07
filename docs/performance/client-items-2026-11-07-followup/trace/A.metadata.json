@@ -1,0 +1,33 @@
+{
+  "processId": 64258,
+  "sourceDir": "/tmp/client-followup-sources/A",
+  "fixture": "unchanged full acceptance sequence; tracing only 5000 license records / 10 search observations",
+  "before": {
+    "at": "2026-11-07T18:33:51.847Z",
+    "heap": {
+      "usedSize": 20300676,
+      "totalSize": 82374656,
+      "embedderHeapUsedSize": 1807391576,
+      "backingStorageSize": 367365
+    },
+    "dom": {
+      "documents": 3,
+      "nodes": 4584976,
+      "jsEventListeners": 28
+    }
+  },
+  "after": {
+    "at": "2026-11-07T18:34:10.081Z",
+    "heap": {
+      "usedSize": 20257036,
+      "totalSize": 84471808,
+      "embedderHeapUsedSize": 1412377464,
+      "backingStorageSize": 367358
+    },
+    "dom": {
+      "documents": 3,
+      "nodes": 6630677,
+      "jsEventListeners": 28
+    }
+  }
+}

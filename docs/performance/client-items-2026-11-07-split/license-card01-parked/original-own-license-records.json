@@ -1,0 +1,61 @@
+[
+  {
+    "id": "license-card-separate-detail",
+    "type": "improvement",
+    "module": {
+      "tr": "Lisans kartları",
+      "en": "License cards"
+    },
+    "title": {
+      "tr": "Kart ayrıntıları listeyi yeniden kurmadan açılır",
+      "en": "Card details open without rebuilding the list"
+    },
+    "body": {
+      "tr": "Lisans kartı açma, kapatma ve sözleşme geçmişi geçişleri artık tüm listeyi yeniden çizmez. Taslaklar ve liste konumu korunur; liste ve sayaçlar aynı filtre sonucunu kullanır.",
+      "en": "Opening and closing a license card and toggling contract history no longer redraw the entire list. Drafts and list position are preserved; the list and counters share the same filter result."
+    },
+    "visual": {
+      "kind": "screenshot",
+      "capture": "post-change",
+      "src": "license-card-separate-detail.png",
+      "alt": {
+        "tr": "Gerçek Buyer Log lisans kartında demo sözleşme ve iletişim taslağı",
+        "en": "Demo contract and contact draft in an actual Buyer Log license card"
+      },
+      "caption": {
+        "tr": "Gerçek Buyer Log, izole sentetik siparişler ve demo kartlar. Liste düğümlerinin seçim sırasında korunduğu tarayıcıda doğrulandı.",
+        "en": "Actual Buyer Log with isolated synthetic orders and demo cards. List nodes were verified to survive selection in the browser."
+      }
+    }
+  },
+  {
+    "id": "license-quick-fob-draft-close",
+    "type": "fix",
+    "module": {
+      "tr": "Lisans kartları",
+      "en": "License cards"
+    },
+    "title": {
+      "tr": "Editör kapanınca Hızlı FOB taslakla eşleşir",
+      "en": "Quick FOB follows the draft when the editor closes"
+    },
+    "body": {
+      "tr": "Sözleşmenin royalty oranını değiştirip kaydetmeden editörü kapattığınızda Hızlı FOB seçeneği ve hesabı taslak oranıyla güncellenir. Taslak dönemi iptal ederseniz kaldırılan sözleşme seçiciden çıkar ve mevcut yedek seçim uygulanır. Girdiğiniz tutar, geçerli sözleşme seçiminiz ve liste konumu korunur.",
+      "en": "When you change a contract’s royalty and close the editor without saving, the Quick FOB option and calculation update to the draft rate. Cancelling a draft period removes its contract from the selector and applies the existing fallback selection. Your entered amount, valid contract selection and list position are preserved."
+    },
+    "visual": {
+      "kind": "screenshot",
+      "capture": "post-change",
+      "src": "license-quick-fob-draft-close.png",
+      "alt": {
+        "tr": "Lisans kartında taslak royalty 20, Hızlı FOB tutarı 100,00 ve güncel önizleme 128,31",
+        "en": "License card with draft royalty 20, Quick FOB input 100.00 and updated preview 128.31"
+      },
+      "caption": {
+        "tr": "Gerçek Buyer Log ve demo veri: royalty 8’den 20’ye değiştirildi, editör kaydetmeden kapatıldı; tutar ve sözleşme seçimi korunarak FOB yenilendi.",
+        "en": "Actual Buyer Log with demo data: royalty changed from 8 to 20, then the editor closed without saving; FOB refreshed while preserving the amount and contract selection."
+      }
+    }
+  }
+]
+

@@ -32,12 +32,13 @@ test('panels share in-flight rows across grouping changes and invalidate on sour
 test('returning to a cached filter prevents an older delivery request from replacing the current result',async()=>{
  const source=fs.readFileSync(require.resolve('../public/backlog-delivery-analysis.js'),'utf8');
  const start=source.indexOf('let refreshGeneration='),end=source.indexOf('/* -------------------------------------------------------------- drilldown */',start);
- let signature='W6',resolveOld;
- const current=[{Sezon:'S7'}],sandbox={state:{open:true,rows:current,rowsSignature:'S7'},window:{},currentSignature:()=>signature,fetchRows:()=>new Promise(resolve=>resolveOld=resolve),computeModel(){},render(){}};
+ let signature='W6',resolveOld,cancellations=0;
+ const current=[{Sezon:'S7'}],sandbox={state:{open:true,rows:current,rowsSignature:'S7'},window:{},currentSignature:()=>signature,fetchRows:()=>new Promise(resolve=>resolveOld=resolve),cancelAnalysis(){cancellations++;},computeModel(){},render(){}};
  vm.createContext(sandbox);vm.runInContext(source.slice(start,end),sandbox);
  const old=vm.runInContext('refresh(false)',sandbox);signature='S7';await vm.runInContext('refresh(false)',sandbox);
  resolveOld([{Sezon:'W6'}]);await old;
  assert.equal(sandbox.state.rows,current);assert.equal(sandbox.state.loading,false);
+ assert.equal(cancellations,2,'both refresh generations cancel an obsolete analysis');
 });
 test('explicit reload reuses row identity only when the server confirms the same query revision',async()=>{
  const source=fs.readFileSync(require.resolve('../public/backlog-overview.js'),'utf8');

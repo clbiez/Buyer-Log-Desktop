@@ -1,0 +1,18 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "license-quick-fob-close",
+    "license-cards-editor",
+    "manufacturers",
+    "email-groups",
+    "cp-rules",
+    "lcwai-chat",
+    "card-detail"
+  ],
+  "TMPDIR": "/tmp/buyerlog-906-split-related-qxyg4m_n",
+  "revision": "af1cb62f4f140ca718ce1482ce8989370104190b",
+  "returncode": 0,
+  "elapsedSeconds": 1.8201398849487305
+}
