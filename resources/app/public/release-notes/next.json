@@ -1125,20 +1125,20 @@
         "en": "Optional modules load on demand"
       },
       "body": {
-        "tr": "Backlog ek raporları, Excel içe aktarma sihirbazı ve Koleksiyon spreadsheet kodu ilgili özellik açıldığında yüklenir. LFL, Üreticiler, Lisans Kartları, Pricing Desk, Veri Yönetimi ve diğer isteğe bağlı ekranların stilleri ilk açılışa ertelenir. Ekran, stilleri ve kodu hazır olduğunda gösterilir; ortak stillerin önceliği korunur. Rehber ve açılış kartlarının verisi HTML ayrıştırmasını bekletmeden yüklenir.",
-        "en": "Additional Backlog reports, the Excel import wizard and Collection spreadsheet code load when the feature is opened. Styles for LFL, Manufacturers, License Cards, Pricing Desk, Data Management and other optional screens are deferred until first use. Screens appear when their styles and code are ready, preserving the priority of shared styles. Guide and startup-card data load without blocking HTML parsing."
+        "tr": "Backlog ek raporları, Excel içe aktarma sihirbazı ve Koleksiyon spreadsheet kodu ilgili özellik açıldığında yüklenir. LFL, Üreticiler, Lisans Kartları, Pricing Desk, Veri Yönetimi ve diğer isteğe bağlı ekranların stilleri ilk açılışa ertelenir. Ekran, stilleri ve kodu hazır olduğunda gösterilir; ortak stillerin önceliği korunur. Rehber ve açılış kartlarının verisi HTML ayrıştırmasını bekletmeden yüklenir. Üreticilerde sipariş alt detayı, Backlog daha önce açılmamış olsa da doğru yerleşimle gösterilir.",
+        "en": "Additional Backlog reports, the Excel import wizard and Collection spreadsheet code load when the feature is opened. Styles for LFL, Manufacturers, License Cards, Pricing Desk, Data Management and other optional screens are deferred until first use. Screens appear when their styles and code are ready, preserving the priority of shared styles. Guide and startup-card data load without blocking HTML parsing. Manufacturer order details display correctly even when Backlog has not been opened."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "startup-feature-assets.png",
         "alt": {
-          "tr": "İsteğe bağlı yükleme sonrasında Koleksiyon spreadsheet ekranı",
-          "en": "Collection spreadsheet after on-demand loading"
+          "tr": "Backlog açılmadan Üreticilerden açılan stilli sipariş alt detayı",
+          "en": "Styled order drill-down opened from Manufacturers before visiting Backlog"
         },
         "caption": {
-          "tr": "Gerçek Buyer Log, izole 30 bin satırlık sentetik kaynak: Koleksiyon açıldı, örnek model hücresi seçildi ve klavye gezintisi doğrulandı.",
-          "en": "Actual Buyer Log with an isolated synthetic 30,000-row source: Collection opened, a demo model cell was selected and keyboard navigation was verified."
+          "tr": "Gerçek Buyer Log, 30 bin satırlık sentetik kaynak: Üreticilerden açılan 500 satırlık sipariş alt detayı. Backlog sekmesi daha önce açılmadı.",
+          "en": "Actual Buyer Log with a synthetic 30,000-row source: a 500-row order drill-down opened from Manufacturers. The Backlog tab has not been opened."
         }
       }
     }

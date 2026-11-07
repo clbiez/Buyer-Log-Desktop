@@ -5,14 +5,16 @@
     "status": "passed",
     "exitCode": 0,
     "batches": 10,
-    "command": "APPDATA=/tmp/buyerlog-current-test-profile/appdata LOCALAPPDATA=/tmp/buyerlog-current-test-profile/localappdata npm test"
+    "command": "APPDATA=/tmp/buyerlog-p2-test-profile/appdata LOCALAPPDATA=/tmp/buyerlog-p2-test-profile/localappdata npm test",
+    "runnerSeconds": 140.5,
+    "runtimeSha256": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6"
   },
   "assertionsByBatch": {
     "tests": [
       1803,
       2330,
       2050,
-      2008,
+      2009,
       677,
       4,
       12,
@@ -24,7 +26,7 @@
       1743,
       2327,
       2050,
-      2007,
+      2008,
       677,
       4,
       12,
@@ -100,5 +102,44 @@
     "width": 1600,
     "height": 1000
   },
-  "lockedFilesDiff": "none"
+  "lockedFilesDiff": "none",
+  "p2": {
+    "baseRevision": "54174143",
+    "change": "Add backlog-plan-actual.css to Manufacturers style dependencies; loader and anchors unchanged.",
+    "redBrowser": "confirmed: static drawer layout and no shared stylesheet before visiting Backlog",
+    "redRegression": "exact final test fails on 54174143 for missing shared stylesheet",
+    "targeted": {
+      "tests": 37,
+      "pass": 37,
+      "fail": 0
+    },
+    "measurements": {
+      "alternatingPairs": 3,
+      "manufacturersMedianBeforeMs": 357.6,
+      "manufacturersMedianAfterMs": 385.3,
+      "sharedCssDecodedBytes": 8404,
+      "sharedCssTransferBytes": 2610
+    },
+    "browser": {
+      "status": "passed",
+      "normalFirstOpens": 4,
+      "delayedSharedCssFirstOpens": 4,
+      "languages": [
+        "tr",
+        "en"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "errors": 0,
+      "drawerRows": 500,
+      "backlogVisitedBeforeDrill": false,
+      "commonStyleLinksAndRequests": 1,
+      "cascadeAnchorPreserved": true,
+      "concurrentPromiseDedup": "runtime regression passed",
+      "normalMatrix": "manufacturers-drill-green-matrix.png",
+      "delayedMatrix": "manufacturers-drill-delayed-matrix.png"
+    }
+  }
 }

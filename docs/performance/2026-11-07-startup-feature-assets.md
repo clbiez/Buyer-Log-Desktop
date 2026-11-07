@@ -31,7 +31,7 @@ Dosya varlığına dayalı eski testler, aynı sıra ve tek ortak motor koşulla
 | `openCosting` | `open-costing.css` |
 | `automations` | `automations-fields.css` |
 | `lfl` | `lfl.css` |
-| `manufacturers` | `manufacturers.css` |
+| `manufacturers` | `manufacturers.css`, `backlog-plan-actual.css` (ortak sipariş drawer yerleşimi) |
 | `licensecards` | `license-cards.css` |
 | `collectionTools` | `collection-analytics.css`, `price-supplier-analysis.css`, `pricing-workspace.css`, `pricing-desk.css`, `collection-spreadsheet.css` |
 | `backlogAnalysis` | `backlog-delivery-analysis.css`, `backlog-plan-actual.css`, `backlog-presentation.css` |
@@ -43,6 +43,8 @@ Dosya varlığına dayalı eski testler, aynı sıra ve tek ortak motor koşulla
 İndirilen scriptler preload ile paralel hazırlanır; yürütme bağımlılık sırasını izler ve CSS bitmeden başlamaz. İlgili sekmeler CSS ve script kayıtları tamamlanana kadar `visibility:hidden` ile bekler. Başarısız link kaldırılır; promise ve görünmezlik kilidi temizlenir, sonraki `ensureFeature` tekrar deneyebilir. Mevcut bir global, henüz yüklenmemiş CSS'in atlanmasına yol açmaz. Globali hazır olan özellikler de başarılı yükleme kaydını alır.
 
 `collectionTools` mevcut ortak bir gruptur: Pricing Desk veya Koleksiyon açıldığında aynı script/CSS grubu yüklenir. Veri yenilemesinin mevcut LFL / priceanalysis prewarm çağrıları da `ensureFeature` kullanmayı sürdürür; bu çağrıları değiştirmek `app-main` kilidini aşardı. Genel Bakış'ta görünür İstisna Kutusu varsa kendi CSS'i ilk açılışta gerçekten gereklidir. Rehber/trivia açılış perdesinde kullanıldığı için yine ilk açılışta istenir; kazanım parser'ın bu veriyi senkron beklememesidir.
+
+Üreticiler sipariş alt detayı `BLBacklogOverview.openItems()` üzerinden `.bpaDrawerRoot` / `.bpaDrawer` kullanır. Bu ortak yerleşim `backlog-plan-actual.css` içindedir. P2 düzeltmesiyle stil hem `manufacturers` hem `backlogAnalysis` bağımlılığıdır; ortak `styleStates` promise'i ve özgün anchor tekilleştirmeyi korur. Backlog'un önce açılması gerekmez. Ayrıntı ve yeni kabul kanıtları aşağıdaki P2 kapanış bölümündedir.
 
 ## Ölçüm yöntemi
 
@@ -127,6 +129,8 @@ Bu navigasyonlarda context cache’i ilk Overview ve aynı-sekme geçişleriyle 
 
 ### İlk açılış süreleri
 
+Bu tablo `d61d9434` tam serisinin tarihsel sonucudur. Üreticiler ortak drawer CSS bağımlılığına ilişkin sonraki P2 düzeltmesinin ilgili ölçümü aşağıda ayrıca verilir.
+
 Ölçütler: Veri Yönetimi ilk kontroller; Üreticiler hesaplanmış sonuç; Lisans Kartları busy durumu bitişi; LFL görünür KPI ve yükleyici bitişi; Backlog dolu pivot; Planlanan/Gerçekleşen dönem kontrolü; sunum `open()` tamamlanması ve iframe; Excel sihirbaz DOM’u; Kullanıcı Yönetimi dialog’u; İstisna Kutusu veri ve tür düğmeleri. Promise/kod hazır süreleri ayrıca ham JSON’dadır. İsteğe bağlı okuma/Devam bekleyişi kullanıcı düşünme süresi olarak dışarıda tutulur.
 
 Pricing Desk ortak grubu ilk kez yükler; ana senaryodaki sonraki Koleksiyon geçişinde bu grup sıcaktır. Son iki satır ayrı, yeni HTTP context’te ve arka plan core hazırlığı bittikten sonra ölçülür. Planlanan/Gerçekleşen ve sunum satırları Backlog grubu yükleme süresine ek ilk işlem maliyetidir.
@@ -162,7 +166,7 @@ Gerçek Buyer Log'da 30k sentetik fixture ile doğrulanan işlemler: Veri Yönet
 
 Contact sheet kayıtları: [TR açık](startup-feature-assets-20261107/visual-tr-light.png), [TR koyu](startup-feature-assets-20261107/visual-tr-dark.png), [EN açık](startup-feature-assets-20261107/visual-en-light.png), [EN koyu](startup-feature-assets-20261107/visual-en-dark.png). Bunlar gerçek PNG kayıtlarından inceleme için küçültülmüş derlemelerdir.
 
-Release note görseli `resources/app/public/release-notes/next-assets/startup-feature-assets.png`: gerçek uygulama, sentetik demo satırı, 1600×1000 PNG. `next.json` içinde yalnız bu PR'ın TR/EN kaydı eklendi.
+Release note görseli `resources/app/public/release-notes/next-assets/startup-feature-assets.png`: gerçek uygulamada 30k sentetik fixture ile Backlog'a girilmeden açılan Üreticiler sipariş alt detayı, 1600×1000 PNG. `next.json` içinde yalnız bu PR'ın TR/EN kaydı eklendi ve P2 kapanışıyla güncellendi.
 
 ## Test sonucu ve PR durumu
 
@@ -172,3 +176,33 @@ Release note görseli `resources/app/public/release-notes/next-assets/startup-fe
 - Merge, TEST ve STABLE yapılmadı.
 
 [Test ve tarayıcı kontrol listesi](startup-feature-assets-20261107/validation.json), [npm test özeti](startup-feature-assets-20261107/npm-summary.txt).
+
+
+## P2 kapanışı — Üreticilerden ilk sipariş alt detayı
+
+Bağımsız inceleme `54174143` üzerinde ortak drawer yerleşiminin yalnız `backlogAnalysis` grubuna bağlandığını buldu. [Doğrulandı] Bu revizyonda gerçek Chromium'da Overview → Üreticiler → **Siparişleri aç** yolu izlendi; Backlog'a girilmedi ve `BLPerf.isFeatureLoaded('backlogAnalysis') === false` kaldı. `backlog-plan-actual.css` için istek/link yoktu. 500 satırlık drawer'ın kökü ve `aside` öğesi `position: static`, display `block`, yüksekliği 21.819 px oldu. [RED JSON](startup-feature-assets-20261107/manufacturers-drill-red.json), [gerçek RED ekranı](startup-feature-assets-20261107/manufacturers-drill-red.png).
+
+Önceki kabul smoke'u Üreticiler aramasını doğruluyor, sipariş alt detayı düğmesine ilerlemiyordu. Bu nedenle global `openItems()` bağımlılığı denetlenmiş olsa da ortak CSS bağımlılığı kaçtı. En küçük düzeltme `featureStyles.manufacturers` listesine `backlog-plan-actual.css` eklemektir. Loader, anchor, promise ve modül kodu değişmedi; kilitli dosyalara dokunulmadı.
+
+Yeni runtime regression, ilk Üreticiler açılışının ortak CSS bitmeden tamamlanmadığını, sonraki Backlog yüklemesinin aynı öğeyi tekrar kullandığını ve iki grubun eşzamanlı isteğinde de tek ortak link oluştuğunu doğrular. Mevcut gerçek çağrı ve drawer sınıfı/CSS konumu da sözleşmeye bağlandı. Son testin aynısı `54174143` üzerinde yalnız bu eksik bağımlılıktan RED oldu; düzeltmeyle ilgili 37 test GREEN oldu. [RED test çıktısı](startup-feature-assets-20261107/manufacturers-unit-red.txt).
+
+### Yalnız etkilenen ilk açılışın yeniden ölçümü
+
+Sıra önce-1 → sonra-1 → önce-2 → sonra-2 → önce-3 → sonra-3. Önce: `54174143`; sonra: tek CSS manifest düzeltmesi (runtime SHA-256 ham kayıtta). Her koşu aynı arşivi yeni `/tmp/buyerlog-startup-p2-<variant>-<n>/source/` altına açtı; fixture metadata/hash eşitliği doğrulandı. Aynı backend veri/cache snapshot'ının ayrı kopyaları ve yeni HTTP browser context'leri kullanıldı. Core hazırlığı bittikten sonra özgün modül probe'undaki önceki Veri Yönetimi açılışı takip edildi. Bu seri, soğuk backend açılış serisi değildir; yalnız P2 düzeltmesinin ek yükünü ölçer. Ölçümle eşzamanlı test veya başka browser koşusu çalıştırılmadı.
+
+| Ölçüt (ms), medyan (min–max), n=3 | P2 öncesi | P2 sonrası |
+| --- | ---: | ---: |
+| Üreticiler feature promise hazır | 29.5 (28.3–31.5) | 38.1 (31.0–42.1) |
+| Üreticiler hesaplanmış ilk ekran hazır | 357.6 (354.4–367.9) | 385.3 (370.4–424.5) |
+
+Üreticiler ilk ekrana kadar medyan ek maliyet 27.7 ms (+%7,7). Ortak CSS 8.404 decoded bayt, bu Chromium koşularında 2.610 transfer baytıdır. Düzeltilmiş 500 satırlık sipariş alt detayı tıklamadan iki frame sonrasına medyan 1.770,5 ms'de hazırdı. Öncesinde yerleşim bozuk olduğundan drawer sürelerinden hızlanma sonucu çıkarılmaz. Backlog kodu, bu ilk drawer açılışı sırasında yüklenmedi; daha sonraki Backlog feature çağrısında ortak CSS'in tekrar istenmediği denetlendi. [Altı ham ölçüm](startup-feature-assets-20261107/manufacturers-measurements.json).
+
+Üreticiler açılmayan başlangıç yolu bu yeni stil bağımlılığına girmez. Özgün DCL/uzun görev serisi yeniden koşturulmadı; yukarıdaki rakamlar ölçülen eski revizyonun kanıtıdır. Runtime manifesti 26 bayt büyüdü: son statik senkron JS toplamı 5.643.431 bayt, script sayısı 112 ve blocking CSS sayısı 27'dir. Başlangıç CSS listesi/baytı değişmedi. Benchmark ve `scripts/lib/*` yine değiştirilmedi.
+
+### Son tarayıcı ve test kabulü
+
+TR/EN × açık/koyu tema için dört yeni normal ve dört geciktirilmiş ortak CSS koşusu **geçti**. Her biri yeni browser/context ile Overview → Üreticiler → Siparişleri aç yolunu izledi. İlk drill-down sırasında Backlog ziyaret edilmedi ve `backlogAnalysis` yüklenmedi. Her drawer sabit kök / absolute flex panel, 1280×1000 yerleşim ve 500 veri satırıyla açıldı; dildeki başlık/kapat kontrolü ve kapanma işlevi doğrulandı. CSS bekletildiğinde modül görünmez, feature tamamlanmamış ve drawer kapalı kaldı. Yanıt bırakıldığında stilli ekran açıldı. Sonraki Backlog yüklemesi aynı linki, tek isteği ve özgün anchor konumunu korudu. Browser page-error sayısı sekiz koşuda da 0. [Ham kabul JSON](startup-feature-assets-20261107/manufacturers-browser.json), [dört normal görünüm](startup-feature-assets-20261107/manufacturers-drill-green-matrix.png), [dört CSS bekleme/sonrası çifti](startup-feature-assets-20261107/manufacturers-drill-delayed-matrix.png). Matrisler gerçek kayıtlardan küçültülmüş inceleme derlemeleridir; incelendi. Bu görsel koşuların süreleri performans medyanlarına katılmadı.
+
+Son runtime SHA-256 `b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6` üzerinde ilgili **37 test** ve tam `npm test` **1290 dosya / 10 batch / 8916 test: 8851 pass, 0 fail, 65 mevcut skip** ile geçti (140.5 sn). Yeni skip yok. `i18n:check`: yeni/baseline eksik 0. `release:notes:validate`: 39 kayıt geçti; yalnız kendi TR/EN kaydı güncellendi ve gerçek değişiklik sonrası drawer PNG'si eklendi. Kod tam testten sonra değişmedi.
+
+Yeni regression, PR fast checks'in mevcut lazy yükleme adımına dahildir. Gerçek CI sonucu [PR #914 kontrollerinde](https://github.com/clbiez/Buyer-Log-Desktop/pull/914/checks) dalın son commit'i için izlenir. Yeni genel inceleme turu açılmadı. Rebase, force-push, merge, TEST ve STABLE yapılmadı.

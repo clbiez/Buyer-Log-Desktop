@@ -204,7 +204,7 @@
   // Inert anchors retain the original cascade position, including shared overrides.
   const featureStyles={
     openCosting:['open-costing.css'],automations:['automations-fields.css'],lfl:['lfl.css'],
-    manufacturers:['manufacturers.css'],licensecards:['license-cards.css'],
+    manufacturers:['manufacturers.css','backlog-plan-actual.css'],licensecards:['license-cards.css'],
     collectionTools:['collection-analytics.css','price-supplier-analysis.css','pricing-workspace.css','pricing-desk.css','collection-spreadsheet.css'],
     backlogAnalysis:['backlog-delivery-analysis.css','backlog-plan-actual.css','backlog-presentation.css'],
     excelImport:['excel-import.css'],dataManagement:['data-maintenance.css','data-management.css'],

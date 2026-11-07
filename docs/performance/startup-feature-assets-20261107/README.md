@@ -15,4 +15,15 @@ Geçici alanda kullanılan yardımcıların denetlenebilir kaynak kopyaları:
 - `visual-probe.cjs` → `/tmp/buyerlog-current-visual-probe.cjs`: dil/tema görselleri ve geciktirilmiş CSS kontrolü. Performans medyanlarına bu ek görsel koşunun süreleri katılmaz.
 - `full-series.py` → `/tmp/buyerlog-current-series.py`: özgün benchmark komutunu çağıran sıralı orkestrasyon. Uygulama ve benchmark kaynakları değiştirilmez. Yerel depo, Playwright ve fixture dizinleri bu oturuma aittir; başka ortamda yollar uyarlanmalıdır. Aynı fixture kökünü yeniden kullanmamak için seri mevcut dizin üzerine yazmayı reddeder.
 
-Uygulama kaynakları `d61d9434` revizyonunda ölçüldü; bu revizyondan sonraki değişiklikler kanıt, dokümantasyon ve release-note görsel/metniyle sınırlıdır. Özgün benchmark ve `scripts/lib/*` bu PR'da değiştirilmedi.
+İlk tam ölçüm serisinin uygulama kaynakları `d61d9434` revizyonudur. `54174143` incelemesinden sonra P2 için yalnız `manufacturers` stil listesine ortak `backlog-plan-actual.css` eklendi. Bu kapanışın RED/GREEN, dil/tema, geciktirilmiş CSS ve yalnız etkilenen ilk-açılış ölçümleri `manufacturers-*` kanıtlarındadır. Özgün benchmark ve `scripts/lib/*` bu PR'da değiştirilmedi.
+
+P2 kapanış kanıtları:
+
+- `manufacturers-drill-red.json` / `.png`: Backlog'a girmeden ilk drawer açılışının eksik stilini gerçek tarayıcıda doğrular.
+- `manufacturers-unit-red.txt` / `manufacturers-targeted-green.txt`: aynı regression'ın eski kodda RED ve düzeltmeyle GREEN olması; ilgili 37 test.
+- `manufacturers-measurements.json`: yalnız etkilenen Üreticiler ilk açılışının üç dönüşümlü çifti. Aynı backend snapshot'ı ve yeni HTTP context kullanılır; tam soğuk açılış serisiyle karıştırılmaz.
+- `manufacturers-drill-probe.cjs`, `manufacturers-measure-series.py`, `manufacturers-visual-series.py`: geçici alanda kullanılan hedefli gerçek tarayıcı kontrolü ve sıralı çalıştırıcılar.
+- `npm-summary.txt` ve `validation.json`: P2 sonrası son kodun yenilenmiş tam regresyon sonuçlarıdır.
+
+- `manufacturers-browser.json`: sekiz yeni ilk açılışın assertion sonuçları; normal ve geciktirilmiş CSS matrisi.
+- `manufacturers-drill-green-matrix.png` / `manufacturers-drill-delayed-matrix.png`: gerçek TR/EN açık/koyu ekran kayıtlarından normal ve bekleme/sonrası derlemeleri.
