@@ -155,3 +155,91 @@ new storage and observer conditions. No storage speedup versus historical
 numbers or cold OS-cache claim is made. Historical files were archived only
 between runs, with byte/SHA and mtime preservation and symlinks retaining
 their original paths. No audit or identity files were moved.
+
+## 2026-11-07 — complete worker-observer cohort and the OAB follow-up
+
+TR: [Doğrulandı] `764079b3` için sabit dokuz koşuluk seri tamamlandı:
+üç baz, üç yeni-kod F0 ve üç ayrı açılış. Altı F0 koşusunun satır,
+revizyon ve generation kontrolleri geçti. Yeni kodda Overview maksimumları
+190,432 / 108,901 / 198,294 ms idi; ayrı açılışların üçü de kabulü geçemedi.
+Global Flow maksimumları 1841,462 / 107,716 / 203,630 ms, Backlog
+82,695 / 255,292 / 112,158 ms oldu. Başarısız örnekler korunur.
+`phase-5-worker-observer-cohort-summary.json` tüm tekrarları ve medyanları
+saklar. Yenileme iş medyanı 48,775 → 63,760 sn ile kötüleşti; aynı-sekme
+CP 43,890 → 53,790 sn, Orders 2,348 → 2,844 sn oldu. Bunlar OAB ek
+çalışmasından önceki sürümün sonuçlarıdır. Sonraki kod için kazanç iddiası
+çıkarılmaz. Yeni kodda refresh health p95 medyanı 277,012 ms idi. Baz
+sürümde `/api/health` 404 döndüğü için başarılı health baz çizgisi yoktur;
+başarısız isteklerin duvar süreleri ayrı tutulur.
+
+EN: [Verified] The fixed nine-run cohort at `764079b3` completed: three
+baseline F0, three after F0 and three separate openings. All six F0 row,
+revision and generation checks passed. After-version Overview maxima were
+190.432 / 108.901 / 198.294 ms; all three separate openings failed acceptance.
+Global Flow maxima were 1841.462 / 107.716 / 203.630 ms and Backlog maxima
+82.695 / 255.292 / 112.158 ms. Failed samples are retained. The adjacent
+cohort JSON contains all repeats and medians. Median refresh job time regressed
+48.775 → 63.760 s; same-tab CP was 43.890 → 53.790 s and Orders
+2.348 → 2.844 s. These results precede the OAB follow-up and establish no gain
+for later code. Median after-version refresh health p95 was 277.012 ms.
+The baseline `/api/health` returned 404, so no successful health baseline
+exists; failed-request wall times are kept separately.
+
+TR: Seri bittikten sonra 180 tamamlanmış sentetik XLSX kopyası
+(4.430.298.480 bayt) overlayfs arşivine taşındı; SHA, boyut ve mtime doğrulandı,
+eski dosya yolları atomik symlink ile korundu. Ana fixture, marker, audit ve
+kimlik dosyaları değiştirilmedi. `/tmp` doluluğu yaklaşık 8,5 → 4,4 GB oldu.
+Bu bakım bir hızlanma veya kök neden kanıtı değildir. Sonrasında alınan üç
+native tanılama koşusu ayrı tutulur; CPU profiler ve çağrı sarmalayıcıları
+normal kabul ölçümüne dahil değildir. Son tanılamada çok saniyeli timer/HTTP
+beklemeleri de görüldü. Profil örnek ağırlıkları duvar süresidir; CPU süresi
+olarak yorumlanmaz. Bu yardımcıda koşu başına monotonic/epoch offset'i
+kaydedilmediğinden profile-window hizalaması sonradan ölçülen offset ile
+**yaklaşıktır**; native çağrı, GC ve timer epoch kayıtları doğrudandır.
+
+EN: After the cohort, 180 completed synthetic XLSX copies (4,430,298,480 bytes)
+were archived to overlayfs with verified SHA, size and mtime; atomic symlinks
+preserve their former paths. The anchor, markers, audit and identity files
+were untouched. Tmpfs usage fell from about 8.5 to 4.4 GB. This maintenance
+establishes neither a speedup nor a root cause. Three subsequent native
+diagnostic runs remain separate: CPU profiling and call wrappers are not
+normal acceptance measurements. The final diagnostic also saw multi-second
+timer/HTTP delays. Profile sample weights are wall time, not CPU time.
+That helper omitted a per-run monotonic/epoch offset, so profile-window
+alignment uses a later offset and is **approximate**. Native-call, GC and
+timer epoch records are direct.
+
+TR: [Doğrulandı] Bir native trace'te OAB'nin 1.892.622 karakterlik sabit
+filtre kaynağının senkron okuması 176,976 ms, JSON parse'ı 98,595 ms sürdü;
+ikisi 389 ms'lik aynı MAIN aralığındaydı. `8c575ecd` üç filtre ucunun
+okuma/parse/indeksleme ve serileştirmesini ortak havuza taşır. Sabit dosya
+kimliği, gerçek bayt bütçesi, sıralı generation kabulü, canlı oturum + alan +
+OAB.VIEW kapıları ve hazır gzip kullanılır. Mtime korunarak dosya değiştiğinde
+worker indeksleri de yenilenir. Ayrıca gerçek HTTP RED testi, istemci iş
+bitmeden koparsa tamamlanan çıktı lease'inin bırakılmadığını gösterdi;
+ortak yanıt yolu artık bu durumda baytları bırakır. Son doğrulama:
+168 dosyada 1.278 test geçti, i18n yeni/baseline eksik 0/0. Bu değişikliklerin
+büyük tanılama beklemelerinin tamamını açıkladığı veya yeni 30k kabulünü
+geçtiği henüz doğrulanmış değildir.
+
+EN: [Verified] One native trace recorded a 176.976 ms synchronous read and
+98.595 ms JSON parse for the 1,892,622-character bundled OAB filter source,
+inside the same 389 ms MAIN gap. `8c575ecd` moves reading, parsing, indexing
+and serialization for all three filter endpoints into the common pool.
+It uses a fixed file identity, actual byte admission, ordered generation
+admission, live session/area/OAB.VIEW gates and ready gzip. Worker indexes
+also refresh when a replacement preserves mtime. A real HTTP RED test
+additionally proved that a client disconnect before completion leaked the
+completed output lease; the common response path now releases those bytes.
+Validation passed 1,278 tests in 168 files, with i18n new/baseline gaps 0/0.
+These fixes do not yet establish the cause of every long diagnostic delay
+or a passing new 30k acceptance cohort.
+
+TR/EN: Gerçek görsel kanıt / actual visual evidence:
+`phase-5-visual-evidence.json`, `assets/phase5-lfl-reference-en-dark.png`,
+`assets/phase5-oab-filters-en-dark.png` ve pending release-note PNG'leri.
+Yalnız görsel fixture S6/S7 sezonlarını kullanır; 30k anchor değişmez.
+Görsel koşunun veri kontrolleri geçti, timing sonucu başarısız kaldı ve
+kabul ölçümü sayılmadı. / Only the visual fixture uses S6/S7 seasons; the
+30k anchor is unchanged. Visual correctness passed; its failed timing
+result is retained and is not acceptance evidence.

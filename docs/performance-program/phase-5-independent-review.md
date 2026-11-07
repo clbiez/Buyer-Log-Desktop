@@ -124,3 +124,25 @@ publication and response. New regressions first failed RED; native workers,
 metadata-only refresh and corrupt-primary backup recovery also have coverage.
 This additional primary-agent fix was not sent for another independent pass;
 final performance acceptance requires measurements at the new code revision.
+
+TR: Sonraki native trace'te ölçülen OAB sabit metadata okuma/parse/indeksleme
+maliyeti de `8c575ecd` ile ortak havuza taşındı. Dosya kimliği ve generation
+kabulü, source yüklemeden bayt bütçesi, canlı cookie/alan/OAB.VIEW kapıları,
+mtime korunmuş replacement ve birebir JSON byte çıktısı testlidir. Gerçek
+HTTP testiyle bulunan, sonuç hazır olmadan bağlantısı kopan istemcinin
+çıktı lease'ini tutması da RED → GREEN düzeltildi. Bu ek değişiklikler ana
+agent tarafından incelendi; son kapsam 168 dosyada 1.278 test geçirdi.
+Kullanıcının faz başına en fazla bir bağımsız tur sınırı nedeniyle ikinci
+inceleme tekrarlanmadı; önceki bağımsız inceleme bu son ekleri kapsamaz.
+Yeni sürüm için 30k performans kabulü ayrıca gereklidir.
+
+EN: A later native trace measured bundled OAB metadata read/parse/index cost;
+`8c575ecd` moves it into the common pool. File identity and ordered generation
+admission, source-free byte accounting, live cookie/area/OAB.VIEW gates,
+mtime-preserving replacement and exact JSON bytes have coverage. A real HTTP
+test also found and fixed RED → GREEN an output lease retained after a client
+disconnected before completion. The primary agent reviewed these additions;
+the final scope passed 1,278 tests in 168 files. The user's one-independent-pass
+limit was respected: no second pass was requested, and the earlier independent
+review does not cover these final additions. New-version 30k performance
+acceptance remains required.
