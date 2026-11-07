@@ -1,0 +1,87 @@
+{
+  "main": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "preservedLocalHead": "e5b1900d85f291bb94a31e7ba5fc5f127d693a88",
+  "integrationMerge": "47fa7850c95ba1c53c34c6b8066e42eced8db99f",
+  "testedCode": "23519cedb9a0d601d6ee00a5d989a1179c56436d",
+  "frozen885IsAncestorOfMain": true,
+  "mainContains892": true,
+  "mainContains894": true,
+  "localOnlyNonMergeCommits": [
+    {
+      "sha": "e5b1900d85f291bb94a31e7ba5fc5f127d693a88",
+      "subject": "docs: align regression table with original batch evidence",
+      "isAncestorOfMain": false,
+      "preservedInNewBranch": true
+    },
+    {
+      "sha": "af248f4630bab21d8419fa240625a3525fe68870",
+      "subject": "docs: correct original failure batch labels from preserved log",
+      "isAncestorOfMain": false,
+      "preservedInNewBranch": true
+    },
+    {
+      "sha": "006ed65a8815b2d96432788ec522243b9a236cfa",
+      "subject": "docs: assess fourteen regressions and retain new native-profiler gate",
+      "isAncestorOfMain": false,
+      "preservedInNewBranch": true
+    },
+    {
+      "sha": "84add5f4c78c57b4ee38535460d8ccf2b1c4523d",
+      "subject": "fix: scope Orders hydration and verify moved phase-5 regression contracts",
+      "isAncestorOfMain": false,
+      "preservedInNewBranch": true
+    },
+    {
+      "sha": "f7b2ff53946bd2430b87de7a7565ebc1abcc8b08",
+      "subject": "docs: retain catalog RED/GREEN and all ten regression batch results",
+      "isAncestorOfMain": false,
+      "preservedInNewBranch": true
+    },
+    {
+      "sha": "7bf0cfd4ab0d56225dd6e02c98b01e7e76b97207",
+      "subject": "test(cp): cover full hydration context while awaiting Orders fix",
+      "isAncestorOfMain": false,
+      "preservedInNewBranch": true
+    },
+    {
+      "sha": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+      "subject": "test: isolate catalog fixtures and cover native worker contracts",
+      "isAncestorOfMain": false,
+      "preservedInNewBranch": true
+    },
+    {
+      "sha": "9d53bb9bb0917b7fb583511741b40dfd53aa8a73",
+      "subject": "test(perf): prepare phase 6 client revision contract and preserve RED evidence",
+      "isAncestorOfMain": false,
+      "preservedInNewBranch": true
+    },
+    {
+      "sha": "d876f26abd754a532657a7e396689d260af37f9d",
+      "subject": "docs: retain Main #892 integration and failed full regression gate",
+      "isAncestorOfMain": false,
+      "preservedInNewBranch": true
+    }
+  ],
+  "cpOrders84InMain": false,
+  "cpOrdersTwoCallsRetainedExactlyOnce": true,
+  "appMainIdenticalTo84add5f4": true,
+  "allServerProductionIdenticalToMain": true,
+  "mainProfilerFix": "0f106b2bbc7e46057a787e65d7b24c3e256dcb11",
+  "profilerWorkerIdenticalToMain": true,
+  "first7ProfilerTestsPreservedVerbatim": true,
+  "redAndGreenRegressionTestBytesIdentical": true,
+  "netChangedCodeAndTestPaths": [
+    ".github/workflows/buyerlog-pr-fast-checks.yml",
+    "resources/app/public/app-main.js",
+    "resources/app/public/release-notes/next-assets/cp-orders-hydration-scope.png",
+    "resources/app/public/release-notes/next.json",
+    "resources/app/tests/collection-catalog-compute-contract.test.js",
+    "resources/app/tests/cp-orders-hydration-revision.test.js",
+    "resources/app/tests/fixtures/cp-orders-revision.cjs",
+    "resources/app/tests/helpers/profiler-native-close.cjs",
+    "resources/app/tests/helpers/server-collection-catalog.js",
+    "resources/app/tests/phase5-regression-behavior.test.js",
+    "resources/app/tests/runtime-profiler-worker.test.js",
+    "resources/app/tests/user-data-temp-root-recovery.test.js"
+  ]
+}

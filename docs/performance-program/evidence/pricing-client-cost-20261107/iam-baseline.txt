@@ -1,0 +1,40 @@
+✔ cold local IAM keeps an established disabled decision even beside richer/newer historical copies (88.177277ms)
+✔ cold local IAM keeps an established deleted decision even beside richer/newer historical copies (141.463313ms)
+✔ a credential-free placeholder still recovers a usable historical directory (171.185552ms)
+✔ a partial credential-bearing primary with missing moderator recovers protected administrator credentials (152.023065ms)
+✔ a partial credential-bearing primary with invalid moderator recovers protected administrator credentials (156.992273ms)
+✖ a partial established local directory without a valid recovery copy fails closed (257.916755ms)
+✔ central mode preserves validated-cache priority and rejects unvalidated historical cache substitution (273.919795ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1375.368675
+
+✖ failing tests:
+
+test at ../../tmp/buyerlog-startup-pricing-baseline/resources/app/tests/local-iam-migration-authority.test.js:18:1
+✖ a partial established local directory without a valid recovery copy fails closed (257.916755ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - 'IAM_LOCAL_INVALID'
+
+      at TestContext.<anonymous> (/tmp/buyerlog-startup-pricing-baseline/resources/app/tests/local-iam-migration-authority.test.js:18:185)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'IAM_LOCAL_INVALID',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

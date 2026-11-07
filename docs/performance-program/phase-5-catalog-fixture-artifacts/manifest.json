@@ -1,0 +1,219 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "priorHead": "d876f26a",
+  "frozenReview": "69950f289a012f0bb7c61290bec9890f340f6c64",
+  "mainIntegration": "1d8572056887558e4dbaa2ca57dca48e4d68f80e",
+  "testedCodeCommit": "bcc072542b0dd57bb14c5c330f3a44347ed63c45",
+  "targeted": {
+    "files": 9,
+    "pass": 39,
+    "fail": 0,
+    "skip": 0,
+    "cancel": 0
+  },
+  "originalReferenceErrors": {
+    "red": 5,
+    "green": 0
+  },
+  "fullAudit": {
+    "npmExitCode": 1,
+    "canonicalCompletedBatches": 3,
+    "nativeContinuationBatches": 7,
+    "allBatchesRun": true,
+    "files": 1289,
+    "tests": 8908,
+    "pass": 8829,
+    "fail": 14,
+    "skipped": 65,
+    "cancelled": 0
+  },
+  "i18n": {
+    "newMissing": 0,
+    "baselineMissing": 0
+  },
+  "releaseNotes": {
+    "count": 38,
+    "byteUnchanged": true
+  },
+  "status": "blocked-by-other-full-regression-failures",
+  "pushed": false,
+  "newGitHubChecksRun": false,
+  "newBenchmarkRun": false,
+  "protectedSourceChecks": [
+    {
+      "file": "resources/app/public/app-main.js",
+      "unchangedFromPriorHead": true,
+      "sha256": "844dea07238be03461a899051491cb4dca1995a54cb753b5fa3c616845e8531d"
+    },
+    {
+      "file": "resources/app/public/index.html",
+      "unchangedFromPriorHead": true,
+      "sha256": "b71b2084dbb57f4a99f1d7ef88a4f2806f7d61a03a28d57f5f6ee92969bc1efe"
+    },
+    {
+      "file": "resources/app/public/perf-runtime.js",
+      "unchangedFromPriorHead": true,
+      "sha256": "3927eaf22f11c8a7ccd03103164d82ce01d7e396801e988404a77c94e4310056"
+    },
+    {
+      "file": "resources/app/public/release-notes/next.json",
+      "unchangedFromPriorHead": true,
+      "sha256": "3136d18be3e2cf80589001f3b42f0e4ff04b1cc670744ae26ffeae329c15165d"
+    },
+    {
+      "file": "resources/app/server/server.js",
+      "unchangedFromPriorHead": true,
+      "sha256": "e12ebadc0487c7f79aa5a9c86c6f16b2c357da9ebe3f8e0f651ded16c041a47e"
+    },
+    {
+      "file": "resources/app/server/lib/compute-read-guard.js",
+      "unchangedFromPriorHead": true,
+      "sha256": "aea78f24f7b3608816b8bd131070d58442685a6bf04c0ea5c341a7edbd57fae5"
+    },
+    {
+      "file": "resources/app/tests/fixtures/i18n-coverage-baseline.json",
+      "unchangedFromPriorHead": true,
+      "sha256": "20a8ac09f090a7e86be2d626769455a17b636e8822ef0db9967b38a9e151978d"
+    },
+    {
+      "file": "resources/app/tests/run-tests.js",
+      "unchangedFromPriorHead": true,
+      "sha256": "e1fc5914a854f2d19708fc34c761c720e119621603a3699a523e5ab7bc339cad"
+    }
+  ],
+  "logs": [
+    {
+      "file": "continuation.log.gz",
+      "rawBytes": 225,
+      "rawSha256": "510ce1b7b0a880193a8e9b8a96f30cfb65467d7a3c2ca8abd0d111246df65c24",
+      "gzipSha256": "fc6ed5edcb68d298fde17f754ade3c21ed9d995d3d130bd3d5d705395f884d2c"
+    },
+    {
+      "file": "environment-check.log.gz",
+      "rawBytes": 2204,
+      "rawSha256": "8e850fe6970cca01ca918dac13281fe3d51f73d2d6d0fde9f4b44580e3dec7e4",
+      "gzipSha256": "a8bd90620bff9c6eecd81bde2ec369449f93db5bc07941a6852db0f885f94058"
+    },
+    {
+      "file": "fixture-only.log.gz",
+      "rawBytes": 50347,
+      "rawSha256": "7244ea7c24dbf8f6c3b4be82059f49e7ef40107f76b4c9a5281386c06269d3fc",
+      "gzipSha256": "757ca668cf2ab24d32886240ff85d03c94bc2aa7a51f4c1618515d41cea83339"
+    },
+    {
+      "file": "full-batch-10.log.gz",
+      "rawBytes": 2676,
+      "rawSha256": "600519235323113c7e8e4e1b9dcb90c01a201e7241da37587629bc2d9bacfb6d",
+      "gzipSha256": "03d87a810f37ee035fd4fce5b8a3c10f59d7dc3082d6839591f2ce8e200cec12"
+    },
+    {
+      "file": "full-batch-4.log.gz",
+      "rawBytes": 238133,
+      "rawSha256": "621fd66b2535cd8ba776953c239588dd0093e074a1fd372e810ab616e575eda3",
+      "gzipSha256": "9f12e282a63acb110ce0ffe8fee2a5f06bd475ebcc6f14da79908907b90cec74"
+    },
+    {
+      "file": "full-batch-5.log.gz",
+      "rawBytes": 180538,
+      "rawSha256": "5a576a470fde63aa339b514d70ad652858b5989ac16d1ef4208c5fa6f519c85f",
+      "gzipSha256": "f896ea288bfad9eb1962bf7d229c63f39faf2c0efb31b22a3b918348d91f75ac"
+    },
+    {
+      "file": "full-batch-6.log.gz",
+      "rawBytes": 512,
+      "rawSha256": "f11808d0344fa4ef5c6716f58798581e60fbd2fc65d568133564835544a4d452",
+      "gzipSha256": "979289cde2acf2ae142d6b0016039ef5a5294d2f25d23ee629f3d46d7ad21883"
+    },
+    {
+      "file": "full-batch-7.log.gz",
+      "rawBytes": 1523,
+      "rawSha256": "716c454870e62af92e0efa695cccac3e32c19fc7152842feba527491e89235e4",
+      "gzipSha256": "af8903afebbfd12747ce1138a0eadee83580bb4f652466dfbacdea909831ee97"
+    },
+    {
+      "file": "full-batch-8.log.gz",
+      "rawBytes": 856,
+      "rawSha256": "b927641a0c2e1ae6844999dbd5a017b522962dae986ee0a9aa1afb43f491d883",
+      "gzipSha256": "298283f3a0708ecd9b7327a8bd7511005900e207db076c0d79907113567c1a81"
+    },
+    {
+      "file": "full-batch-9.log.gz",
+      "rawBytes": 923,
+      "rawSha256": "83392ffb57b94a59c4b1e14990fe10e5086dafbae09c07df7f7c954d84fdf9b8",
+      "gzipSha256": "81c2bc4114f46a706b6a435f434215fb628f0402a70a27bc1f491995a828df45"
+    },
+    {
+      "file": "full-restricted-temp-root.log.gz",
+      "rawBytes": 402183,
+      "rawSha256": "cbe8edc4b91540c0798010e499b9ea1a08e716e5035ad6d15d5de58dbc55f414",
+      "gzipSha256": "1fb1c64be8c9b800f322ed2bf0d69c3c007bc01d5c5b66751f95fb4a6c117fcd"
+    },
+    {
+      "file": "full-shared-auth-root.log.gz",
+      "rawBytes": 396340,
+      "rawSha256": "03bd1e9af3da124fede7402b2f781925c32299e252598c3e1b8cd89ebc7f14a5",
+      "gzipSha256": "86ffc6bce26e9d26d8b1a4ece1c8c04f6c2d6d82eee503e4001e428217017b6c"
+    },
+    {
+      "file": "full.log.gz",
+      "rawBytes": 697771,
+      "rawSha256": "cd193f37a42cda18d0ad2f45bccb66ae0ead58ccb4d3d75d6585dc76313bd8c7",
+      "gzipSha256": "039f441e6cb4f4e4ad23d66fe0c61ae83e62782b0c5b2e8b44f1042193b4b178"
+    },
+    {
+      "file": "green.log.gz",
+      "rawBytes": 5077,
+      "rawSha256": "0d9345faf780d8bef29da52aac9d3541832a859514a9528af4f5757648a7fef9",
+      "gzipSha256": "48ebc1a8542e17efb51b86dd0344c20b8ed538f33957b65dd7eb7d4e94c98758"
+    },
+    {
+      "file": "i18n-final.log.gz",
+      "rawBytes": 333,
+      "rawSha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b",
+      "gzipSha256": "4fdd8fa2af0a2b9d0794f73a873c4e028cc282a6a8eb301fa638c2fd1219181a"
+    },
+    {
+      "file": "i18n.log.gz",
+      "rawBytes": 333,
+      "rawSha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b",
+      "gzipSha256": "4fdd8fa2af0a2b9d0794f73a873c4e028cc282a6a8eb301fa638c2fd1219181a"
+    },
+    {
+      "file": "node-only-ci.log.gz",
+      "rawBytes": 4346,
+      "rawSha256": "f35930c7d3f93e6aef1ea29169fb2718446bfad5802041ff675d6dc81d706421",
+      "gzipSha256": "55d14ea5bd64a3b0d43aad43ce5adec8a422f11a80eb4865f1bb1ea9207465df"
+    },
+    {
+      "file": "red.log.gz",
+      "rawBytes": 8798,
+      "rawSha256": "59c771afb8cc131d3a26faced80f0fd51bdfab7505f6758e184172626f9f02a0",
+      "gzipSha256": "e198171daff211a66565d546335e674fa30f5d56ef050c544763f0e7338682bc"
+    },
+    {
+      "file": "release-notes-final.log.gz",
+      "rawBytes": 334,
+      "rawSha256": "9ccab6c340545089e7b742ddc9091cddd0443a02c063d45711894404fd6f53bd",
+      "gzipSha256": "5f73a2c4b7fde5efa83d2c57ba1d44281c802a24b8e1b17270c1f473996cb4da"
+    },
+    {
+      "file": "release-notes.log.gz",
+      "rawBytes": 334,
+      "rawSha256": "9ccab6c340545089e7b742ddc9091cddd0443a02c063d45711894404fd6f53bd",
+      "gzipSha256": "5f73a2c4b7fde5efa83d2c57ba1d44281c802a24b8e1b17270c1f473996cb4da"
+    },
+    {
+      "file": "temp-root-check.log.gz",
+      "rawBytes": 708,
+      "rawSha256": "c652c76e892a2fa1e61f70a118d0bb82ee910cf46f18d1451e8f50a97a77bafb",
+      "gzipSha256": "e60ed016c220c7a300bb9b54840a46c26efb699c800c147c3802e7500a6f873e"
+    },
+    {
+      "file": "unaffected.log.gz",
+      "rawBytes": 3471,
+      "rawSha256": "962e31e9efbfc77d643c4524fd96815dcc46282bfbd1b4705cf554b2a05b7c77",
+      "gzipSha256": "2505c75844884975559ff78f64a05902fb024cda7688612c4e2452095ad2da28"
+    }
+  ]
+}

@@ -1,0 +1,223 @@
+{
+  "testedCommit": "30f5315474fc898bec99e2630a0cd4c378b39eb0",
+  "appTree": "a173a6d79bf9ed798586fc1657d9c077d4075b72",
+  "node": "v24.19.0",
+  "concurrency": "runner default 4",
+  "environmentOverrides": "TMPDIR only; no BUYER_LOG_* or NODE_OPTIONS overrides",
+  "execution": "outside filesystem sandbox; actual newly empty default /home/agent/.buyer-log available; no app-root overrides",
+  "runs": [
+    {
+      "name": "related",
+      "argv": [
+        "npm",
+        "test",
+        "--",
+        "pricing",
+        "quotation",
+        "open-costing",
+        "local-iam-migration-authority",
+        "v714"
+      ],
+      "cwd": "/workspace/Buyer-Log-Desktop/resources/app",
+      "environmentOverrides": {
+        "TMPDIR": "/tmp/bl-pr901-related-ptamdg4l"
+      },
+      "startedAt": "2026-11-07T19:15:53.999341+00:00",
+      "endedAt": "2026-11-07T19:15:57.217835+00:00",
+      "seconds": 3.219,
+      "exitCode": 0,
+      "stdoutBytes": 30036,
+      "stderrBytes": 208,
+      "stdoutSha256": "c38a6caf884704b12db43d80c52482d7bfdabe36ba843c95416a6a2f2c7cf65b",
+      "stderrSha256": "509db3e3576a5ddeede99380db64011156c8602eb204903675e7cb44eae64ef7",
+      "batches": [
+        {
+          "number": 1,
+          "total": 1,
+          "files": 50,
+          "tests": 312,
+          "pass": 312,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        }
+      ]
+    },
+    {
+      "name": "full",
+      "argv": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/workspace/Buyer-Log-Desktop/resources/app",
+      "environmentOverrides": {
+        "TMPDIR": "/tmp/bl-pr901-full-r9akqm08"
+      },
+      "startedAt": "2026-11-07T19:15:57.222381+00:00",
+      "endedAt": "2026-11-07T19:18:20.733842+00:00",
+      "seconds": 143.512,
+      "exitCode": 0,
+      "stdoutBytes": 859187,
+      "stderrBytes": 0,
+      "stdoutSha256": "2c63138c858ed63a0ad226cf54a7d706a3bc772280ed8a6fe58b6768d57e59bb",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "batches": [
+        {
+          "number": 1,
+          "total": 10,
+          "files": 300,
+          "tests": 1803,
+          "pass": 1743,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 60,
+          "todo": 0
+        },
+        {
+          "number": 2,
+          "total": 10,
+          "files": 300,
+          "tests": 2330,
+          "pass": 2327,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 3,
+          "todo": 0
+        },
+        {
+          "number": 3,
+          "total": 10,
+          "files": 300,
+          "tests": 2050,
+          "pass": 2050,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        {
+          "number": 4,
+          "total": 10,
+          "files": 300,
+          "tests": 2009,
+          "pass": 2008,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 1,
+          "todo": 0
+        },
+        {
+          "number": 5,
+          "total": 10,
+          "files": 85,
+          "tests": 677,
+          "pass": 677,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        {
+          "number": 6,
+          "total": 10,
+          "files": 1,
+          "tests": 4,
+          "pass": 4,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        {
+          "number": 7,
+          "total": 10,
+          "files": 1,
+          "tests": 12,
+          "pass": 12,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        {
+          "number": 8,
+          "total": 10,
+          "files": 1,
+          "tests": 8,
+          "pass": 8,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        {
+          "number": 9,
+          "total": 10,
+          "files": 1,
+          "tests": 8,
+          "pass": 8,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        {
+          "number": 10,
+          "total": 10,
+          "files": 1,
+          "tests": 15,
+          "pass": 14,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 1,
+          "todo": 0
+        }
+      ]
+    },
+    {
+      "name": "i18n",
+      "argv": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "cwd": "/workspace/Buyer-Log-Desktop/resources/app",
+      "environmentOverrides": {
+        "TMPDIR": "/tmp/bl-pr901-i18n-wgarhyf5"
+      },
+      "startedAt": "2026-11-07T19:18:20.818975+00:00",
+      "endedAt": "2026-11-07T19:18:22.493988+00:00",
+      "seconds": 1.675,
+      "exitCode": 0,
+      "stdoutBytes": 125,
+      "stderrBytes": 0,
+      "stdoutSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "batches": [],
+      "tapSummary": {}
+    },
+    {
+      "name": "release-notes",
+      "argv": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "cwd": "/workspace/Buyer-Log-Desktop/resources/app",
+      "environmentOverrides": {
+        "TMPDIR": "/tmp/bl-pr901-release-notes-hkbstr08"
+      },
+      "startedAt": "2026-11-07T19:18:22.495557+00:00",
+      "endedAt": "2026-11-07T19:18:23.127503+00:00",
+      "seconds": 0.632,
+      "exitCode": 0,
+      "stdoutBytes": 126,
+      "stderrBytes": 0,
+      "stdoutSha256": "4b26d8f9e56fb0940a6375e5168fb9f3c0c74a6d9bf0d3c13cfd0e4fb3fb341d",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "batches": [],
+      "tapSummary": {}
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "frozenReview": "69950f289a012f0bb7c61290bec9890f340f6c64",
+  "main": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "integration": "1d8572056887558e4dbaa2ca57dca48e4d68f80e",
+  "newPerformanceCohortRun": false,
+  "status": "blocked-by-full-regression",
+  "targeted": {
+    "files": 51,
+    "pass": 232,
+    "fail": 0,
+    "skip": 0,
+    "cancel": 0
+  },
+  "full": {
+    "plannedBatches": 10,
+    "executedBatches": 1,
+    "testsInExecutedBatch": 1803,
+    "pass": 1738,
+    "fail": 5,
+    "skip": 60,
+    "cancel": 0,
+    "complete": false
+  },
+  "i18n": {
+    "newMissing": 0,
+    "baselineMissing": 0
+  },
+  "releaseNotes": 38,
+  "retainedArtifacts": [
+    {
+      "file": "targeted.log.gz",
+      "rawBytes": 29732,
+      "rawSha256": "4d0d8fede05878aeab9648673955f01cba1bc2f5658135f1241ceab46ef22176",
+      "gzipSha256": "6382b2b8667fb9e89bf1a6d330fb89bb47f7f61ec7461245608e5735d959ac11"
+    },
+    {
+      "file": "targeted-isolated.log.gz",
+      "rawBytes": 24828,
+      "rawSha256": "672f40f1eef197f994a6c655bd5a71fc95c7ae29450c3db76a9a0f07f3bf8e2d",
+      "gzipSha256": "a77606a6971b1a58bdb9a141561736f670c404465129da25c9818960d0a0e5bd"
+    },
+    {
+      "file": "full.log.gz",
+      "rawBytes": 177750,
+      "rawSha256": "241d882eaf4fce09c94c895121255fa7e1ef8e1612d6da9ae7d5366fdd5d0bc9",
+      "gzipSha256": "0a90a5cf79d312dc4d7bfa2ceebf8dfd0e248aabf52bb6ebefca9aaf286fa6b3"
+    },
+    {
+      "file": "i18n.log.gz",
+      "rawBytes": 333,
+      "rawSha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b",
+      "gzipSha256": "4fdd8fa2af0a2b9d0794f73a873c4e028cc282a6a8eb301fa638c2fd1219181a"
+    },
+    {
+      "file": "release-notes.log.gz",
+      "rawBytes": 334,
+      "rawSha256": "9ccab6c340545089e7b742ddc9091cddd0443a02c063d45711894404fd6f53bd",
+      "gzipSha256": "5f73a2c4b7fde5efa83d2c57ba1d44281c802a24b8e1b17270c1f473996cb4da"
+    }
+  ],
+  "unchangedFailureSources": [
+    {
+      "file": "resources/app/server/server.js",
+      "sha256": "e12ebadc0487c7f79aa5a9c86c6f16b2c357da9ebe3f8e0f651ded16c041a47e",
+      "identicalToFrozenReview": true
+    },
+    {
+      "file": "resources/app/tests/client-computation-performance.test.js",
+      "sha256": "6030c060ebc11c7160f3c0736e2e7ecdeddbab8901a1b4d52cff79663e9c8761",
+      "identicalToFrozenReview": true
+    },
+    {
+      "file": "resources/app/tests/collection-asas-excel-grid-v489.test.js",
+      "sha256": "c4c5d78d3784ee9a21f6b28be0a60cb17a830d9babff135b9e9db1bc1d3908c0",
+      "identicalToFrozenReview": true
+    },
+    {
+      "file": "resources/app/tests/collection-product-main-definition-suggestions-v829.test.js",
+      "sha256": "bf5c0c98c8a84f302ec71c29390a97e3ecdd2c81603e85c2e17f8cf0de7b806a",
+      "identicalToFrozenReview": true
+    }
+  ]
+}
