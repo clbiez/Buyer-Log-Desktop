@@ -1,0 +1,14 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "release:notes:validate"
+  ],
+  "revision": "e1d342939a8aee49b237e5e1ef9e725b66f83021",
+  "appTree": "cd7c3afb986d9200060d0e3271a1e29e0cf2bb42",
+  "TMPDIR": "/tmp/buyerlog-shell-post901-release-notes-q8ewedq6",
+  "node": "v24.19.0",
+  "testConcurrency": "default4/nooverride",
+  "returncode": 0,
+  "elapsedSeconds": 1.2796285152435303
+}

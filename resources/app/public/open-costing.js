@@ -177,7 +177,7 @@ function renderRecordList(){
   if(!items.length){list.innerHTML=`<div class="ocSidebarEmpty">${tx('Kayıt bulunamadı. Yeni bir ön maliyet oluşturabilirsin.','No costing found. Create a new preliminary costing.')}</div>`;return;}
   list.innerHTML=items.map(r=>`<button type="button" class="ocRecordItem ${current&&current.id===r.id?'active':''}" data-id="${safe(r.id)}"><div class="ocRecordItemTitle"><span>${safe(r.title||tx('İsimsiz Maliyet','Untitled Costing'))}</span></div><div class="ocRecordItemMeta">${safe([r.meta?.modelCode,r.meta?.manufacturer,r.meta?.season].filter(Boolean).join(' · ')||tx('Maliyet çalışması','Costing sheet'))}</div></button>`).join('');
 }
-function lineTotal(row,record=current,missing){return window.BLOpenCostingEngine.lineTotal(row,record,missing,record?fxSnapFor(record):null);}
+function lineTotal(row,record=current,missing,snapshot){return window.BLOpenCostingEngine.lineTotal(row,record,missing,snapshot||(record?fxSnapFor(record):null));}
 function calculateRecord(record){return window.BLOpenCostingEngine.calculateRecord(record,fxSnapFor(record));}
 function calculate(){return calculateRecord(current);}
 function setTextAll(selector,text){document.querySelectorAll(selector).forEach(el=>{el.textContent=text;});}
@@ -193,21 +193,27 @@ function finalAlternativeCurrencies(cur){
   const fixed=cur==='USD'?['TRY','EUR']:cur==='TRY'?['USD','EUR']:cur==='EUR'?['USD','TRY']:['USD','TRY'];
   const pool=[...fixed,...currencyPool(current)].filter(c=>c&&c!==cur);return [...new Set(pool)].slice(0,2);
 }
-function finalAlternativesHtml(finalFob){
+function finalAlternativesHtml(finalFob,snapshot){
   if(!current)return '';
-  const cur=current.meta.currency||'USD',snap=fxSnapFor(current);
+  const cur=current.meta.currency||'USD',snap=snapshot||fxSnapFor(current);
   return finalAlternativeCurrencies(cur).map(code=>{const v=BLFX.convert(Number(finalFob)||0,cur,code,snap);return `<span>${safe(code)}: <strong>${v==null?'—':money(roundHalfUp(v,2),code)}</strong></span>`;}).join('<span class="ocFxAltSep">·</span>');
 }
-function updateCalculatedDom(){
-  if(!current)return;const c=calculate(),cur=current.meta.currency||'USD';current.summary=c;
-  SECTION_DEFS.forEach(d=>{setTextAll(`[data-oc-section-total="${d.key}"]`,money(c.sectionTotals[d.key],cur));const sectionRows=current.sections[d.key]||[];sectionRows.forEach(row=>setTextAll(`[data-oc-line="${row.id}"]`,money(lineTotal(row,current),cur)));setTextAll(`[data-oc-qty-total="${d.key}"]`,sectionRows.reduce((sum,row)=>sum+n(row.qty),0).toLocaleString('tr-TR',{maximumFractionDigits:4}));});
+function updateCalculatedDom(changed){
+  if(!current)return;const snapshot=fxSnapFor(current),c=window.BLOpenCostingEngine.calculateRecord(current,snapshot),cur=current.meta.currency||'USD';current.summary=c;
+  SECTION_DEFS.forEach(d=>{
+    setTextAll(`[data-oc-section-total="${d.key}"]`,money(c.sectionTotals[d.key],cur));
+    if(changed&&changed.section!==d.key)return;
+    const sectionRows=current.sections[d.key]||[];
+    (changed?[changed.row]:sectionRows).forEach(row=>setTextAll(`[data-oc-line="${row.id}"]`,money(lineTotal(row,current,undefined,snapshot),cur)));
+    setTextAll(`[data-oc-qty-total="${d.key}"]`,sectionRows.reduce((sum,row)=>sum+n(row.qty),0).toLocaleString('tr-TR',{maximumFractionDigits:4}));
+  });
   const values={direct:c.direct,productionWaste:c.productionWaste,afterWaste:c.afterWaste,overhead:c.overhead,afterOverhead:c.afterOverhead,finance:c.finance,afterFinance:c.afterFinance,profit:c.profit,finalFob:c.finalFob,target:c.target,gap:c.gap,orderTotal:c.orderTotal};
   Object.entries(values).forEach(([key,value])=>setTextAll(`[data-oc-value="${key}"]`,money(value,cur)));
   setTextAll('[data-oc-value="quantity"]',quantityText(current.meta.quantity));
   const gapBox=$('ocGapMetric');if(gapBox){gapBox.classList.toggle('over',!!c.target&&c.gap>0);gapBox.classList.toggle('under',!!c.target&&c.gap<=0);}
   syncSummaryZeroVisibility(c);
-  const alt=$('ocFinalFxAlternatives');if(alt)alt.innerHTML=finalAlternativesHtml(c.finalFob);
-  const line=$('ocFxBadgeLine');if(line)line.innerHTML=fxEditorBadgeHtml(c);
+  const alt=$('ocFinalFxAlternatives');if(alt)alt.innerHTML=finalAlternativesHtml(c.finalFob,snapshot);
+  const line=$('ocFxBadgeLine');if(line)line.innerHTML=fxEditorBadgeHtml(c,snapshot);
 }
 function textInput(section,row,field){return `<textarea rows="1" class="ocAutoGrow" data-section="${section}" data-row="${row.id}" data-field="${field}">${safe(row[field]||'')}</textarea>`;}
 function numberInput(section,row,field,kind,placeholder){return `<input type="text" inputmode="decimal" class="ocNum" data-oc-number="${kind}" data-section="${section}" data-row="${row.id}" data-field="${field}" value="${safe(formatByKind(row[field],kind))}" placeholder="${placeholder||''}">`;}
@@ -323,10 +329,11 @@ function normalizeNumericInput(el){
   if(!el?.dataset?.ocNumber)return;
   const formatted=formatByKind(el.value,el.dataset.ocNumber);el.value=formatted;
   if(!current)return;
+  let changed;
   if(el.dataset.ocMeta)current.meta[el.dataset.ocMeta]=formatted;
   else if(el.dataset.rate)current.rates[el.dataset.rate]=formatted;
-  else if(el.dataset.section&&el.dataset.row&&el.dataset.field){const row=current.sections[el.dataset.section]?.find(r=>r.id===el.dataset.row);if(row)row[el.dataset.field]=formatted;}
-  updateCalculatedDom();
+  else if(el.dataset.section&&el.dataset.row&&el.dataset.field){const row=current.sections[el.dataset.section]?.find(r=>r.id===el.dataset.row);if(row){row[el.dataset.field]=formatted;changed={section:el.dataset.section,row};}}
+  updateCalculatedDom(changed);
 }
 function resizeImageDataUrl(dataUrl){
   return new Promise(resolve=>{
@@ -788,9 +795,9 @@ function fxSnapFor(record){
 }
 function fxMonthLabel(mk){return BLFX.monthLabel(mk,!tr());}
 // Editörde: bu maliyetin hangi kurla çalıştığını gösteren rozet
-function fxEditorBadgeHtml(calc){
+function fxEditorBadgeHtml(calc,snapshot){
   if(!current)return '';
-  const cur=current.meta.currency||'USD',snap=fxSnapFor(current),base=snap.base||'USD',monthTxt=snap.month?fxMonthLabel(snap.month):'—';
+  const cur=current.meta.currency||'USD',snap=snapshot||fxSnapFor(current),base=snap.base||'USD',monthTxt=snap.month?fxMonthLabel(snap.month):'—';
   const staleTag=snap.exact===false?` · ${tx('en yakın ay','nearest month')}`:'';
   let main='';
   if(cur===base)main=`<span class="ocFxBadge">${tx('Hesap para birimi baz ('+base+')','Calculation currency is base ('+base+')')} · ${safe(monthTxt)}${staleTag}</span>`;
@@ -911,7 +918,7 @@ function bind(){
       if(['modelCode','manufacturer','season'].includes(key))renderRecordList();
       return;}
     if(el.dataset.rate){current.rates[el.dataset.rate]=el.value;setDirty(true);updateCalculatedDom();return;}
-    if(el.dataset.section&&el.dataset.row&&el.dataset.field){const row=current.sections[el.dataset.section].find(r=>r.id===el.dataset.row);if(row){row[el.dataset.field]=el.value;if(el.dataset.field==='currency')row._currencyAuto=false;if(el.classList.contains('ocAutoGrow'))autoGrowCostTextareas(el.parentElement);setDirty(true);updateCalculatedDom();}}
+    if(el.dataset.section&&el.dataset.row&&el.dataset.field){const row=current.sections[el.dataset.section].find(r=>r.id===el.dataset.row);if(row){row[el.dataset.field]=el.value;if(el.dataset.field==='currency')row._currencyAuto=false;if(el.classList.contains('ocAutoGrow'))autoGrowCostTextareas(el.parentElement);setDirty(true);updateCalculatedDom({section:el.dataset.section,row});}}
   });
   $('ocEditor')?.addEventListener('focusout',e=>{if(e.target.matches?.('[data-oc-number]'))normalizeNumericInput(e.target);});
   $('ocEditor')?.addEventListener('keydown',e=>{if(handleOcMetaSuggestKeydown(e))return;if(e.key==='Enter'&&e.target.matches?.('[data-oc-number]')){e.preventDefault();e.target.blur();}});

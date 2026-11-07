@@ -1,0 +1,108 @@
+✔ browser and server use one canonical registry (1.444058ms)
+✔ all current data-heavy modules have canonical bindings (0.698521ms)
+✔ verified shared dimensions resolve across Collection, CP, Orders and LFL (0.230412ms)
+✔ OPD resolves through one canonical Order Placement Date field without mutating source keys (0.749447ms)
+✔ same-looking but different PLM/ASAS semantics are protected (1.193756ms)
+✔ Product Description never falls back to Product Main Definition (0.222624ms)
+✔ canonical joins work even when module keys and visible headers differ (1.203224ms)
+✔ canonical enrichment can bring real ASAS Product Description into Collection without renaming source keys (1.012588ms)
+✔ Quotations and OAB module bindings load globally with safe semantics (26.361749ms)
+✔ new modules must explicitly register bindings before safe joins (0.911888ms)
+✔ ASAS compact runtime keys stay canonical across order-backed modules (0.90724ms)
+✔ unchanged rows keep their cells; a changed answer rewrites only its row (11.222908ms)
+✔ a new analysis object or a changed global input rewrites rows (3.865181ms)
+✔ cached and uncached summaries are identical (13.957255ms)
+✔ dropping a contribution recomputes that order with the current answers (1.6732ms)
+✔ background personal decisions match the synchronous canonical engine and reuse final results (110.547508ms)
+✔ a context change during a background pass cannot publish previous personal decisions (7.291362ms)
+✔ the canonical PLM change event invalidates cached personal checklist decisions (13.317188ms)
+✔ Web Worker personal priority, checklist formulas, answers and filtered row cache match synchronous decisions (558.896281ms)
+✔ personal decision context invalidates priorities but not the decision input revision (3.643932ms)
+✔ real CP data changes still bump the decision input revision (1.45693ms)
+✔ cooperative CP uses identical canonical results and reuses rows across table and filtered overview (42.678475ms)
+✔ data/user/rule changes during an async CP job discard stale results (0.470299ms)
+✔ verified ASAS owner can write; shared MAG/MMYG manager cannot substitute for owner (4.77918ms)
+✔ unknown authority/order/user/owner identity preserves legacy behavior (0.976935ms)
+✔ ASAS stable identity survives IAM rename; ambiguous identity is not treated as verified ownership (2.908602ms)
+✔ legacy order key covers every authoritative ASAS row; resolver is pure and reusable (0.650498ms)
+✔ canonical line with multiple known owners preserves unknown-line fallback without inventing model/color ownership (0.528324ms)
+✔ unregistered sender cannot substitute for a known owner; missing sender remains legacy (0.352262ms)
+✔ missing buyer, empty authority rows and ambiguous legacy account names retain unknown ownership (0.38228ms)
+✔ owner identity remains known while disabled; actor role must be resolved by the trusted IAM integration (0.379139ms)
+✔ buyer resolution is memoised per resolver without changing decisions (0.496277ms)
+✔ v10.90 dışa aktarım paleti aydınlıktır: her anlamlı dolgunun üstünde koyu okunur yazı kalır (6.669715ms)
+✔ v10.90 cellStyleFor aynı paletten okur ve Excel sayı biçimini korur (0.471942ms)
+✔ v10.90 model görseli KAYITTAN çözülür; ekrandaki <img> durumu kimliği değiştirmez (3.308571ms)
+✔ v10.90 CP/Orders panosu: N mantıksal satır → tam olarak N Excel satırı (6.831728ms)
+✔ v10.90 hücre içi satır sonu/sekme Excel satırını bölemez (2.489092ms)
+✔ v10.90 tek satır kopyası tek satır yapıştırır ve görseli aynı hücrede taşır (2.696485ms)
+✔ seçili kayıt filtre dışında kalsa bile CP/Orders Copy kayıt kaynağından dışa aktarır (2.705153ms)
+✔ v10.90 görseli olmayan satır sahte placeholder almaz, diğer satırların görseli etkilenmez (3.579747ms)
+✔ v10.90 pano biçimi kanonik aydınlık paletten gelir, ekranın temasından değil (3.700516ms)
+✔ v10.91 çok satırlı kopyalama satır başına tek kez hesaplar ve görseli model başına bir kez çözer (10.604525ms)
+✔ v10.91 sınırlı eşzamanlılık: aynı anda çalışan görsel çözümü sınırı aşmaz (20.697805ms)
+✔ v10.92 görsel hücresi TEK satır içi <img> taşır — blok kutu, yüzde ölçü ve sarmalayıcı yok (0.734771ms)
+✔ v10.92 kare olmayan görsel hücre kutusuna zorlanmaz (2.570726ms)
+✔ v10.90 CP/Orders "Copy" düğmesi ekran DOM’unu değil kayıt yolunu kullanır (0.319392ms)
+✔ v10.90 doğrudan XLSX dışa aktarımı tema renklerini serialize etmez (26.306733ms)
+✔ v10.90 XLSX model görselleri viewport/lazy DOM durumuna bağlı değildir (5.031187ms)
+✔ one changed answer re-evaluates only its order and matches a full recomputation (91.30764ms)
+✔ an option-scoped approval re-evaluates every order of that option (55.945436ms)
+✔ a change consumed by a subset computation is still applied to the full list (59.559974ms)
+✔ a non-answer change recomputes every order (29.606377ms)
+✔ v5.70 Orders column filter normalizes displayed string values (1.55318ms)
+✔ v5.70 Orders filter panel exposes remove-filter action for every column (0.353147ms)
+node:fs:1411
+  const result = binding.mkdir(
+                         ^
+
+Error: ENOENT: no such file or directory, mkdir '/home/agent/.buyer-log/write-recovery'
+    at Object.mkdirSync (node:fs:1411:26)
+    at Object.recoverSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/durable-file-recovery.js:321:8)
+    at Object.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/server/user-data.js:91:50)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.require (node:internal/modules/cjs/loader:1617:12)
+    at require (node:internal/modules/helpers:153:16) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'mkdir',
+  path: '/home/agent/.buyer-log/write-recovery'
+}
+
+Node.js v24.19.0
+✖ tests/overview-global-flow-partials-v20260926.test.js (185.240019ms)
+✔ Global Flow taşıma tiplerini ayırır (7.281724ms)
+✔ operasyon durumları üretim, loading, transit ve İstanbul aşamalarını ayırır (1.194728ms)
+✔ satır adaptörü sevkiyat dosyası, handover ve PLM kimliğini korur (5.148217ms)
+✔ Combined önceliği Backlog > Orders > CP (0.380041ms)
+✔ ülke merkezi ve grup toplaması rota metasını üretir (0.887526ms)
+✔ Bangladesh deniz rotası Suez ve Çanakkale koridorundan İstanbul’a gelir (0.851118ms)
+✔ araç ilerlemesi Handover + yol süresi kuralından hesaplanır (0.947254ms)
+✔ rota hit testi örnekleme noktaları arasındaki tüm segmentte çalışır (0.258591ms)
+✔ rota hover ortak koridorda yalnız segmenti değil ilişkili tam güzergâhı vurgular (1.483462ms)
+✔ Natural Earth TopoJSON decoder gerçek polygon üretir (8.897868ms)
+✔ Global Flow accurate world, square loading marker ve ortak detay çekmecesi ile bağlıdır (1.109005ms)
+✔ Global Flow widget global section hidden kuralını override eder (1.004786ms)
+✔ 2D dünya görünümü ekran oranından bağımsız 2:1 en/boy oranını korur (0.15447ms)
+✔ 2D ve 3D yakınlaştırma sınırları detay incelemeye izin verir (0.128907ms)
+✔ aydınlık harita paleti kara, deniz ve sınırları daha belirgin ayırır (0.122941ms)
+✔ 3D globe sürükleme bırakıldıktan sonra inertia ile akıcı devam eder (1.082101ms)
+✔ 3D globe fare sürüklemesi yüzeyi tutup çekiyormuş gibi yatay yönde hareket eder (0.563366ms)
+ℹ tests 72
+ℹ suites 0
+ℹ pass 71
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1202.112475
+
+✖ failing tests:
+
+test at tests/overview-global-flow-partials-v20260926.test.js:1:1
+✖ tests/overview-global-flow-partials-v20260926.test.js (185.240019ms)
+  'test failed'
