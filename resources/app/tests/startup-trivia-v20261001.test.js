@@ -192,7 +192,9 @@ test('LFL and Backlog show the shared loading state on first load instead of an 
   assert.match(LFL,/BLUI\.renderState\(host,\{kind:'loading'/);assert.match(LFL,/if\(state\.initialized&&!state\.serverRows\.length\)setLoadingView\(true\);/);
   assert.match(LFL,/setLoadingView\(false\);\s*if\(state\.initialized\)\{fillControls\(\);render\(\);\}/,'loading view is lifted before the first render');
   assert.match(LFLCSS,/#view-lfl\.lflIsLoading>:not\(#lflLoadingState\)\{display:none!important\}/);
-  assert.match(APP,/async function fetchBacklog\(params\)\{\s*backlogPrefetch=null;\s*showBacklogLoadingState\(\);/);
+  // Faz 5 (#885): fetchBacklog yalnız eski isteği bırakıp fetchBacklogData'ya devreder.
+  assert.match(APP,/async function fetchBacklog\(params\)\{[\s\S]{0,400}?return fetchBacklogData\(params\)/);
+  assert.match(APP,/async function fetchBacklogData\(params\)\{\s*backlogPrefetch=null;\s*showBacklogLoadingState\(\);/);
   assert.match(APP,/function applyBacklogData\(data\)\{\s*restoreBacklogEmptyState\(\);/);
   assert.match(APP,/window\.BLUI\.renderState\(empty,\{kind:'loading',title,detail\}\);else empty\.textContent=title;\s*empty\.style\.display='block';content\.style\.display='none';/);
 });

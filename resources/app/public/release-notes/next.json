@@ -4,8 +4,8 @@
     "en": "Two-pane Freeze Columns · Workspace and module transition improvements and LCW AI history · Backlog performance · Royalty for agency licenses · Clean LCW AI Excel output"
   },
   "summary": {
-    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır. Sözleşmeleri yalnız DTR dışı lisansörle tanımlı lisanslarda (ör. Formula 1) siparişler artık otomatik DTR sayılmaz; Supp. FOB Türkiye ve yurt dışı siparişlerinde royalty ile hesaplanır. Yenileme sırasında sunucu yeniden başlarsa sayaç donmaz; birkaç saniyede açık bir hata penceresi gösterilir. LCW AI Excel dosyaları artık varsayılan olarak sade: zebra satırlar ve her sayısal sütuna eklenen veri çubukları kaldırıldı; toplam satırı, vurgu kuralı, veri çubuğu, zebra ve sabit sütun yalnız istendiğinde Buyer Log renkleriyle eklenir. CP açılışında kontrol listesi başlıkları sipariş başına bir kez belirlenir ve değişmeyen ortak cevaplar kararları yeniden hesaplatmaz; demo veride tarayıcı işlem süresi yaklaşık dörtte bire, en uzun donma 79 sn'den 9 sn'ye indi. Toplu kontrol listesi güncellemeleri CP'yi her cevap için değil işlemin sonunda bir kez yeniler; 100 siparişlik toplu onay dakikalar yerine saniyeler sürer. Kontrol listesi değişikliğinden sonra CP sütunları aynı kararla ikinci kez hazırlanmaz. Kontrol listesi durumunu değiştirmek yalnız ilgili siparişleri yeniden hesaplar; tek değişiklik CP'yi 8 sn yerine yaklaşık yarım saniye meşgul eder.",
-    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still. Orders of licenses whose contracts name only non-DTR licensors (e.g. Formula 1) are no longer classified DTR automatically; Supp. FOB includes royalty for Turkey and overseas orders. If the server restarts during a refresh, the counter no longer freezes; a clear error dialog appears within seconds. LCW AI Excel files are now plain by default: striped rows and the data bars added to every numeric column are gone; a total row, highlight rules, data bars, stripes and frozen columns are added in Buyer Log colours only when requested. When CP opens, checklist headings are resolved once per order and unchanged shared answers no longer trigger a full recompute; on demo data browser processing time fell to about a quarter and the longest freeze from 79 s to 9 s. Bulk checklist updates refresh CP once at the end rather than after every answer; bulk approval of 100 orders takes seconds instead of minutes. After a checklist change, CP columns are no longer rebuilt a second time with the same decision. Changing a checklist status recalculates only the affected orders; a single change keeps CP busy for about half a second instead of 8 s."
+    "tr": "Donmuş sol bölme artık kendi içinde sağa sola kaydırılabilir; sağ taraf ayrı kayar ve bölme sınırı sürüklenerek genişletilir. Lisans kartlarına kullanıcıya özel favoriler, favori filtresi ve atlas için favorileri tek seferde seçme eklendi. Başarılı girişten sonra genel kültür ekranının animasyondan önce kısa süre görünmesi ve giriş ekranının yeniden belirmesi düzeltildi. Fiyat çekmecesinde ülkeler açılan listeden tiklenerek seçilir veya kaldırılır. Liste kapanınca seçili ülkeler altta etiket olarak gösterilmez. Veri Yönetimi bölümleri ilk açılışta daraltılmış gelir; entegrasyon laboratuvarı ve bağlantı ayarları tek açılır bölümde toplanır. Kontrol ve Kurallar Merkezi, solda aranabilir liste ve sağda seçili kuralın ayarlarıyla yenilendi; LCW AI ile hazırlama ilk sırada. Modüller arasında başlık, özet ve ana içerik kademeli akışla açılır. Buton menülerinin açılırken sıçraması ve açık menülerin içerideki tıklamalarla tekrar animasyon alması düzeltildi. LCW AI sohbetleri silinebilir; oluşturulan dosyalar ve düzenlenebilir taslaklar 60 gün korunur ve Dosyalarım ekranından yeniden açılır. Geniş horizon üzerinde dar Backlog analizleri daha hızlı hazırlanır; paneller filtreli veriyi paylaşırken filtre seçenekleri korunur. Tablolarda hücre renk dalgası yerine seçilen sıralı satır geçişi uygulanır; başlık ve kaydırma alanı sabit kalır. Sözleşmeleri yalnız DTR dışı lisansörle tanımlı lisanslarda (ör. Formula 1) siparişler artık otomatik DTR sayılmaz; Supp. FOB Türkiye ve yurt dışı siparişlerinde royalty ile hesaplanır. Yenileme sırasında sunucu yeniden başlarsa sayaç donmaz; birkaç saniyede açık bir hata penceresi gösterilir. LCW AI Excel dosyaları artık varsayılan olarak sade: zebra satırlar ve her sayısal sütuna eklenen veri çubukları kaldırıldı; toplam satırı, vurgu kuralı, veri çubuğu, zebra ve sabit sütun yalnız istendiğinde Buyer Log renkleriyle eklenir. CP açılışında kontrol listesi başlıkları sipariş başına bir kez belirlenir ve değişmeyen ortak cevaplar kararları yeniden hesaplatmaz; demo veride tarayıcı işlem süresi yaklaşık dörtte bire, en uzun donma 79 sn'den 9 sn'ye indi. Toplu kontrol listesi güncellemeleri CP'yi her cevap için değil işlemin sonunda bir kez yeniler; 100 siparişlik toplu onay dakikalar yerine saniyeler sürer. Kontrol listesi değişikliğinden sonra CP sütunları aynı kararla ikinci kez hazırlanmaz. Kontrol listesi durumunu değiştirmek yalnız ilgili siparişleri yeniden hesaplar; tek değişiklik CP'yi 8 sn yerine yaklaşık yarım saniye meşgul eder. Küresel Akış kaynak ayrıntılarını çekmece açıldığında alır; Backlog panelleri ilk açılışta aynı satır isteğini paylaşır. Excel ve PowerPoint dosyaları arka planda hazırlanır. Koleksiyon fiyat referansları ortak worker havuzunda hazırlanır. OAB filtrelerinin ilk dosya okuması asenkron yapılır; seçenekler ve önbellek korunur. Değişmeyen yenileme geçmişi okumaları revision artırıp dosyayı yeniden yazmaz.",
+    "en": "The frozen left pane now scrolls left and right on its own; the right side scrolls separately and the pane boundary can be dragged wider or narrower. License cards now have personal favorites, a favorites filter and one-click favorite selection for the atlas. Fixed trivia briefly appearing before the sign-in animation and the sign-in screen reappearing. In the price drawer, countries are selected or removed using checkboxes in an expandable list. Selected countries are no longer repeated as tags below the closed list. Data Management sections start collapsed, with the integration lab and connection settings grouped into one expandable section. Checklist & Rules Studio now has a searchable list on the left and selected-rule settings on the right, with LCW AI preparation first. Module navigation reveals the header, summaries and main content in a staggered flow. Fixed button menus jumping on opening and replaying their entrance when clicking inside an open menu. LCW AI chats can be deleted; created files and editable drafts are retained for 60 days and can be reopened from My files. Narrow Backlog analyses prepare faster within a broad horizon; panels share filtered data while retaining filter choices. Tables now use the selected staggered-row entrance instead of the cell tint wave, while headers and scroll containers stay still. Orders of licenses whose contracts name only non-DTR licensors (e.g. Formula 1) are no longer classified DTR automatically; Supp. FOB includes royalty for Turkey and overseas orders. If the server restarts during a refresh, the counter no longer freezes; a clear error dialog appears within seconds. LCW AI Excel files are now plain by default: striped rows and the data bars added to every numeric column are gone; a total row, highlight rules, data bars, stripes and frozen columns are added in Buyer Log colours only when requested. When CP opens, checklist headings are resolved once per order and unchanged shared answers no longer trigger a full recompute; on demo data browser processing time fell to about a quarter and the longest freeze from 79 s to 9 s. Bulk checklist updates refresh CP once at the end rather than after every answer; bulk approval of 100 orders takes seconds instead of minutes. After a checklist change, CP columns are no longer rebuilt a second time with the same decision. Changing a checklist status recalculates only the affected orders; a single change keeps CP busy for about half a second instead of 8 s. Global Flow fetches source details when the drawer opens, and Backlog panels share the same initial row request. Excel and PowerPoint files are prepared in the background. Collection price references prepare in the common worker pool. The initial OAB filter file read is asynchronous; options and caching are preserved. Unchanged refresh-history reads no longer advance the revision or rewrite the file."
   },
   "schemaVersion": 1,
   "publishedAt": "2026-11-05",
@@ -936,6 +936,180 @@
         "caption": {
           "tr": "İzole sentetik 30.000 siparişlik demo fixture (seed 7) ile gerçek uygulama, 1440×1000; diğer satırlardaki onaylar önceki demo işlemlerinden kalmadır. Süreler aynı makinede ölçüldü; Windows/Electron ölçümü değildir.",
           "en": "Actual app with the isolated synthetic 30,000-order demo fixture (seed 7), 1440×1000; approvals in other rows remain from earlier demo operations. Timings were measured on the same machine, not on Windows/Electron."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-global-flow-details",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview · Küresel Akış",
+        "en": "Overview · Global Flow"
+      },
+      "title": {
+        "tr": "Harita kaynak ayrıntılarını çekmece açılınca yükler",
+        "en": "Map source details load when the drawer opens"
+      },
+      "body": {
+        "tr": "Küresel Akış haritaya gereken alanları yükler; kaynak ayrıntıları bir nokta veya rota açıldığında alınır. Detay çekmecesi aynı siparişleri, parsiyelleri ve kaynak alanlarını gösterir. Backlog detayları ve kaynak ayrıntılı Excel akışı korunur.",
+        "en": "Global Flow loads the fields needed by the map and fetches source details when a point or route is opened. The detail drawer retains the same orders, partials and source fields. Backlog detail and source-detailed Excel workflows remain available."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-globalflow-details-tr-light.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log demo verisinde İstanbul çekmecesi: üç sipariş ve 11.900 adet",
+          "en": "Actual Buyer Log demo: the Istanbul drawer with three orders and 11,900 units"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, Türkçe ve açık tema; harita tıklamasından sonra kaynak ayrıntıları yetkili istekle yüklendi.",
+          "en": "Actual post-change app in Turkish and light theme; an authorized request loaded source details after clicking the map."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-backlog-shared-rows",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Backlog panelleri ilk açılışta aynı veri isteğini paylaşır",
+        "en": "Backlog panels share the same request on first opening"
+      },
+      "body": {
+        "tr": "Genel Bakış, Teslimat Analizi ve Grafik, pivotun kaynak revizyonu belli olduktan sonra ortak satır verisini kullanır. Sayfa açılırken Delivery hazırlığının erken başlaması aynı detay isteğini yeniden başlatmaz. Filtreler, sipariş kapsamı ve ekran toplamları korunur.",
+        "en": "Overview, Delivery Analysis and Chart use shared rows once the pivot source revision is known. Early Delivery preparation no longer restarts the same detail request during opening. Filters, order scope and screen totals are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-backlog-shared-rows-tr-light.png",
+        "alt": {
+          "tr": "Gerçek Backlog demo ekranında 20 sipariş ve 71.200 adetlik ortak operasyon özeti",
+          "en": "Actual Backlog demo screen with 20 orders and a shared operation summary of 71,200 units"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama: Genel Bakış özeti hazır; kabul koşusu tüm görünür raporların hazır olmasını ve Delivery toplam eşitliğini ayrıca doğrular.",
+          "en": "Actual post-change app with the Overview summary ready; the acceptance scenario separately verifies all visible reports and matching Delivery totals."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-office-background",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · Dosyalarım",
+        "en": "LCW AI · My files"
+      },
+      "title": {
+        "tr": "Excel ve PowerPoint dosyaları arka planda hazırlanır",
+        "en": "Excel and PowerPoint files are prepared in the background"
+      },
+      "body": {
+        "tr": "Excel ve PowerPoint oluşturma sürerken Buyer Log diğer sunucu isteklerini işlemeye devam eder. Dosyalar aynı biçim ve içerik kurallarıyla Dosyalarım listesine kaydedilir; yayımlanmadan önce oturum ve dosya sahipliği yeniden doğrulanır.",
+        "en": "Buyer Log continues handling other server requests while Excel and PowerPoint files are being created. Files retain the same format and content rules in My files; session and file ownership are checked again before publication."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-office-files-en-dark.png",
+        "alt": {
+          "tr": "Gerçek Dosyalarım ekranında oluşturulmuş demo Excel ve PowerPoint dosyaları",
+          "en": "Actual My files screen with generated demo Excel and PowerPoint files"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, İngilizce ve koyu tema. Demo dosyalar gerçek yerel API ve dosya üreticileriyle oluşturuldu; harici AI oturumu veya credential kullanılmadı.",
+          "en": "Actual post-change app in English and dark theme. Demo files were created through the real local API and renderers, without an external AI session or credentials."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-collection-lfl-background",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon fiyat referansları",
+        "en": "Collection price references"
+      },
+      "title": {
+        "tr": "LFL fiyat referansları arka planda hazırlanır",
+        "en": "LFL price references prepare in the background"
+      },
+      "body": {
+        "tr": "Fiyat çekmecesinin LFL ve Previous Season özetleri arka planda hazırlanır. Güncelleme tamamlanana kadar kayıtlı referanslar görüntülenmeye devam eder.",
+        "en": "LFL and Previous Season summaries for the price drawer prepare in the background. Saved references remain visible until the update completes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-lfl-reference-tr-light.png",
+        "alt": {
+          "tr": "Gerçek demo fiyat çekmecesinde 9,82 USD LFL ve Previous Season referansları",
+          "en": "Actual demo price drawer with a USD 9.82 LFL reference and Previous Season comparison"
+        },
+        "caption": {
+          "tr": "20 sentetik sipariş ve S6/S7 sezonlu görsel demo verisiyle gerçek uygulama; fiyat referansları ve örnek model karşılaştırması hazır.",
+          "en": "Actual app with 20 synthetic orders and S6/S7 visual demo seasons; price references and the sample model comparison are ready."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-oab-async-file-read",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview · OAB",
+        "en": "Overview · OAB"
+      },
+      "title": {
+        "tr": "OAB filtreleri ilk dosya okumasını asenkron yapar",
+        "en": "OAB filters read their file asynchronously on first use"
+      },
+      "body": {
+        "tr": "Paketlenmiş OAB filtre dosyası ilk kullanımda asenkron okunur; aynı dosya sürümünü bekleyen istekler tek yüklemeyi paylaşır. Sonraki istekler mevcut yerel indeksleri kullanır. Sezon, MAG ve Buyer Group seçenekleri korunur; yanıt öncesi oturum ve OAB görüntüleme yetkisi yeniden doğrulanır.",
+        "en": "The bundled OAB filter file is read asynchronously on first use; requests waiting for the same file version share one load. Later requests reuse the local indexes. Season, MAG and Buyer Group options are preserved; the session and OAB view permission are checked again before the response."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-oab-async-filters-tr-light.png",
+        "alt": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log demo ekranında açık OAB sezon listesi",
+          "en": "Open OAB season list in the actual post-change Buyer Log demo"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama, Türkçe ve açık tema. Paketlenmiş seçenekler asenkron yerel dosya okumasından sonra gösterilir.",
+          "en": "Actual app in Turkish and light theme. Bundled options appear after the asynchronous local file read."
+        }
+      }
+    },
+    {
+      "id": "perf-phase5-history-idempotent-read",
+      "type": "fix",
+      "module": {
+        "tr": "Kaynak veriler · Geçmiş",
+        "en": "Source data · History"
+      },
+      "title": {
+        "tr": "Değişmeyen geçmiş okumaları dosyayı yeniden yazmaz",
+        "en": "Unchanged history reads no longer rewrite the file"
+      },
+      "body": {
+        "tr": "Detayları sınıra indirilmiş yenileme geçmişi tekrar açıldığında içerik değişmediyse revision artırılmaz ve dosya yeniden yazılmaz. Toplam değişiklik sayısı, saklanan detaylar, gerçek değişikliklerin kaydı ve mevcut saklama sınırları korunur.",
+        "en": "Reopening a refresh history whose details are already capped no longer advances its revision or rewrites the file when its contents are unchanged. Total changes, retained details, real updates and existing retention limits are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "phase5-history-read-tr-light.png",
+        "alt": {
+          "tr": "Gerçek demo uygulamada 42.726 değişiklik içeren kaynak geçmişi",
+          "en": "Source history with 42,726 changes in the actual demo app"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek uygulama, Türkçe ve açık tema. Geçmiş içeriği korunur; yazılmama durumu dosya ve revision kontrolleriyle doğrulanır.",
+          "en": "Actual post-change app in Turkish and light theme. History content is preserved; file and revision checks verify the absence of writes."
         }
       }
     }

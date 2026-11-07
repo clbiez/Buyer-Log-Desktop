@@ -69,7 +69,8 @@ test('v7.14 refresh sharing, row/image cache patching and bounded facet cache ar
   assert.match(SERVER,/sameProjectionSourceRows/);
   assert.match(SERVER,/rewriteProjectionCacheForRowPatches/);
   assert.match(SERVER,/rewriteProjectionCacheForImageItems/);
-  assert.match(SERVER,/BL_PROJECTION_WORKER_MIN_ROWS/);
+  // Faz 5 (#885): eşik yerine tüm sayfa projeksiyonları ortak compute worker'ında üretilir.
+  assert.match(SERVER,/computeParamsFor\(currentUser,descriptor,'projections',/);
   assert.match(APP,/FACET_CACHE_MAX_ENTRIES=96/);
   assert.match(APP,/facetFilterSignature/);
   assert.match(APP,/invalidateCoreFacetCaches/);

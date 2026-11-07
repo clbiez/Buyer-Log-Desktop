@@ -103,7 +103,14 @@ test('parallel actual Excel work preserves canonical calculations and user-speci
       return { file, expected: parseASASWorkbook(XLSX.readFile(file, { cellDates: false, raw: true })) };
     });
     const client = createExcelWorkerClient({ maxWorkers: 2 });
-    const results = await Promise.all(files.map(({ file }, index) => client.runExcelTask('parseAsasFile', { fullPath: file }, { serializationKey: `source:demo-${index}` })));
+    const timings = [];
+    const results = await Promise.all(files.map(({ file }, index) => client.runExcelTask('parseAsasFile', { fullPath: file }, { serializationKey: `source:demo-${index}`, onMetrics: metrics => { timings[index] = metrics; } })));
+    timings.forEach(metrics => {
+      assert.equal(metrics.resultTransport, 'message-port');
+      assert.ok(Number.isFinite(metrics.mainReceiveMs) && metrics.mainReceiveMs >= 0);
+      assert.ok(Number.isFinite(metrics.workerPostMessageMs) && metrics.workerPostMessageMs >= 0);
+      assert.ok(metrics.mainReceiveMs <= metrics.durationMs);
+    });
     results.forEach((result, index) => assert.deepEqual(result.parsedAsas, files[index].expected));
     assert.equal(results[0].parsedAsas.orders[0].model, 'DEMO-A');
     assert.equal(results[1].parsedAsas.orders[0].model, 'DEMO-B');
