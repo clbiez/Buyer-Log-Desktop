@@ -1,7 +1,7 @@
 name: Buyer Log PR fast checks
 on:
   pull_request:
-    branches: [main]
+    branches: [main, perf/phase7-shared-evidence]
 permissions:
   contents: read
 concurrency:
