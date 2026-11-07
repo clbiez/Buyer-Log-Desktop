@@ -554,10 +554,10 @@ test('v7.00 eski yönetim arayüzü kaldırıldı ve yenisi yükleniyor', () => 
   }
   assert.match(ACCESS_UI, /window\.BLUserManagement/, 'menü yeni ekrana yönlendirmeli');
   assert.match(ACCESS_UI, /Kullanıcılar ve Hiyerarşi/, 'yükseltme tanılaması için eski ekran adı yorumda kalmalı');
-  // v7.69: 138 KB'lık ekran betiği açılışta eager değil; stil dosyası eager
-  // kalıyor çünkü katman sırası (design-butunluk.css sonrası) korunmalı.
+  // Script and stylesheet are lazy; the inert anchor preserves cascade order.
   assertLazy('user-management.js');
-  assert.match(INDEX, /<link rel="stylesheet" href="user-management\.css\?v=__BL_ASSET_VERSION__">/);
+  assert.match(INDEX, /<template data-bl-style="user-management\.css" data-href="user-management\.css\?v=__BL_ASSET_VERSION__"><\/template>/);
+  assert.doesNotMatch(INDEX, /<link[^>]+href="user-management\.css/);
   // Yeni katman en sonda yüklenmeli ki app.css / design.css ile çakışmasın.
   assert.ok(INDEX.indexOf('user-management.css') > INDEX.indexOf('design-butunluk.css'));
 });
