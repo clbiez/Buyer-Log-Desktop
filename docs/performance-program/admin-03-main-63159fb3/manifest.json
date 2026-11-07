@@ -1,0 +1,43 @@
+{
+  "mainCommit": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "status": "RED-0-pass-2-fail",
+  "oldEvidenceVerified": true,
+  "assertionsUnchanged": true,
+  "files": [
+    {
+      "path": "docs/performance-program/admin-03-main-63159fb3/README.md",
+      "bytes": 10224,
+      "sha256": "247911c9f6d8ff3f9e61377ef1cec18d9dd3506bc8fceccc0196bb840098adeb"
+    },
+    {
+      "path": "docs/performance-program/admin-03-main-63159fb3/artifacts/pending-central.json",
+      "bytes": 429,
+      "sha256": "81b60034656a49382b7e8c384d22ab6386941bfba63b7ba79467eee1de6a310d"
+    },
+    {
+      "path": "docs/performance-program/admin-03-main-63159fb3/artifacts/pending-local.json",
+      "bytes": 427,
+      "sha256": "0da7a78812a77d2451437dc70727261555be5e177b9c815350040c45c8702261"
+    },
+    {
+      "path": "docs/performance-program/admin-03-main-63159fb3/artifacts/pending-request.log.gz",
+      "bytes": 656,
+      "sha256": "17fe89137c762487769bd6d8d1eea76626b2bd9fe72d5a6b3ee474f35e99561f"
+    },
+    {
+      "path": "docs/performance-program/admin-03-main-63159fb3/fixture.cjs",
+      "bytes": 2569,
+      "sha256": "75a6b554bc10bbd20305d517724f1874b0ff17fa5836ba4257d5a73750bf8c28"
+    },
+    {
+      "path": "docs/performance-program/admin-03-main-63159fb3/pending-request.test.cjs",
+      "bytes": 4017,
+      "sha256": "66c228b6e3339f611a793cdbfe6bcb2ed1668919450741d456024e24a442ed32"
+    },
+    {
+      "path": "docs/performance-program/admin-03-main-63159fb3/run.json",
+      "bytes": 1273,
+      "sha256": "888c3e2989e96fb10aec7e1dd74a27c995633b4bc2feb40251fec4be03790450"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "mainCommit": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "branchMergeCommit": "2d809546404e3c900f98aa8a9b61dadc45eec031",
+  "startedAt": "2026-11-07T18:07:58.181779+00:00",
+  "endedAt": "2026-11-07T18:07:58.585499+00:00",
+  "command": [
+    "node",
+    "--test",
+    "docs/performance-program/admin-03-main-63159fb3/pending-request.test.cjs"
+  ],
+  "exitCode": 1,
+  "node": "v24.19.0",
+  "unchangedAssertions": true,
+  "sameTestBytes": "66c228b6e3339f611a793cdbfe6bcb2ed1668919450741d456024e24a442ed32",
+  "sameFixtureBytes": "75a6b554bc10bbd20305d517724f1874b0ff17fa5836ba4257d5a73750bf8c28",
+  "sourceTest": "docs/performance-program/admin-03/pending-request.test.cjs",
+  "sourceFixture": "docs/performance-program/admin-03/fixture.cjs",
+  "productionHashes": {
+    "resources/app/server/lib/user-access.js": "6280f282b696ce26abdabd7061b2e5c74bd1d9ba27b4298e12ba16293b72bf55",
+    "resources/app/server/lib/iam-core.js": "456b96fa95e4bfdfc7d464d2a6533d35aea4d838858e418999cadb53415a2144",
+    "resources/app/server/server.js": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5"
+  },
+  "logRawBytes": 1989,
+  "logRawSha256": "893e1bbdf706cc2dd4b8dfb7f87fcbc777c12ede5c2374e57df66fb25a9bbe4a",
+  "newBenchmark": false,
+  "independentReview": false
+}
