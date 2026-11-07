@@ -1,0 +1,77 @@
+{
+  "testedRevision": "ff37743feb3edd53acc6b6dc954056f53c433c7e",
+  "appTree": "2c829c02148f4896089bdcbef8a824049a7dec1c",
+  "fullTotals": {
+    "tests": 8937,
+    "pass": 8872,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65,
+    "todo": 0
+  },
+  "allBatches": [
+    [
+      "1",
+      "47.2"
+    ],
+    [
+      "2",
+      "45.3"
+    ],
+    [
+      "3",
+      "42.1"
+    ],
+    [
+      "4",
+      "57.5"
+    ],
+    [
+      "5",
+      "14.8"
+    ],
+    [
+      "6",
+      "0.4"
+    ],
+    [
+      "7",
+      "2.2"
+    ],
+    [
+      "8",
+      "0.2"
+    ],
+    [
+      "9",
+      "8.2"
+    ],
+    [
+      "10",
+      "14.9"
+    ]
+  ],
+  "logs": [
+    {
+      "file": "release-notes.log.gz",
+      "rawSha256": "209a4d8d564cc04b5a5b852468f6ca036d9216295fd1966b6198bcdcd9e996a9",
+      "gzipSha256": "8fde7c0676deb0b1dfbf5255d58ea87413ca4801a7370b3f75816425b4071a4c"
+    },
+    {
+      "file": "i18n.log.gz",
+      "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+      "gzipSha256": "1990e3930a54568227c02bc6f9726dc426b61475f998ccc493e96dcc68738c41"
+    },
+    {
+      "file": "full.log.gz",
+      "rawSha256": "bb3779a336810314b6c5f873529ea7719cb9e765949f64ea4eb51f8fb25b7712",
+      "gzipSha256": "ba2b02443c72b36e5812d7351884f8dfde4c7f0074cecd66c38436aa03d1e5ce"
+    },
+    {
+      "file": "related.log.gz",
+      "rawSha256": "7839005e7153d5ec5c513ba10e201986f66ad584413ccd374a48866dac0fe3f2",
+      "gzipSha256": "3855a35dd20bf80919160ff6919661bc2c1d1fad9876d0dfd3190d483c177746"
+    }
+  ],
+  "productionPricingDiffFromReviewedHead": []
+}

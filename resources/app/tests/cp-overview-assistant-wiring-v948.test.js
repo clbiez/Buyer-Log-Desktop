@@ -69,7 +69,7 @@ test('v9.48 lazy yükleme listesi kanonik teslimat motorunu da içerir ve sıra 
   // PLM numune talepleri (kontrol listesi kanıtı) görünümden önce yüklenir.
   assert.match(PERF, /cpAssistant:\['backlog-delivery-engine\.js','cp-readiness-engine\.js','cp-checklist-engine\.js','cp-rules-engine\.js','plm-sample-requests-engine\.js','plm-sample-requests\.js','cp-decision-runtime\.js','cp-managed-rules\.js(?:\?[^']*)?','cp-overview-assistant\.js(?:\?[^']*)?'\]/);
   assert.doesNotMatch(PERF, /cpAssistant:\[[^\]]*'order-decision-engine\.js'/);
-  assert.match(PERF, /if\(name==='cpAssistant'&&global\.BLCpAssistant&&typeof global\.BLCpAssistant\.computeDecisionsForRows==='function'\)return;/);
+  assert.match(PERF, /if\(name==='cpAssistant'&&global\.BLCpAssistant&&typeof global\.BLCpAssistant\.computeDecisionsForRows==='function'\)return true;/);
   // Görünüm üç motoru da window'dan okur; biri eksikse hiç kurulmamalı
   // (yarım kurulmuş panel sessiz yanlış sonuçtan iyidir).
   assert.match(VIEW, /if \(!Engine \|\| !Checklist \|\| !Rules\) return;/);

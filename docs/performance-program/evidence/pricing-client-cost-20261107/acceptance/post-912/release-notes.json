@@ -1,0 +1,14 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "release:notes:validate"
+  ],
+  "revision": "ff37743feb3edd53acc6b6dc954056f53c433c7e",
+  "appTree": "2c829c02148f4896089bdcbef8a824049a7dec1c",
+  "TMPDIR": "/tmp/buyerlog-pricing-post912-release-notes-rbiyomtc",
+  "node": "v24.19.0",
+  "testConcurrency": "default 4; no NODE_OPTIONS or root overrides",
+  "returncode": 0,
+  "elapsedSeconds": 1.0664288997650146
+}

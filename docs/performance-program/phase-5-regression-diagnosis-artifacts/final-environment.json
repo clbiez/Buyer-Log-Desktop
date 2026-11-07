@@ -1,0 +1,11 @@
+{
+  "synthetic": true,
+  "tmpdir": "/tmp/bl-regression-suite-S17NKx",
+  "app": "/tmp/bl-regression-suite-S17NKx/runner/app",
+  "local": "/tmp/bl-regression-suite-S17NKx/runner/local",
+  "server": "/tmp/bl-regression-suite-S17NKx/runner/server",
+  "config": "/tmp/bl-regression-suite-S17NKx/runner/config.json",
+  "centralIamEnabled": "0",
+  "authRootOverride": false,
+  "tempRootOverride": false
+}

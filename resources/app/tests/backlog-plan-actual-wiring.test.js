@@ -9,6 +9,7 @@ const ROOT=path.join(__dirname,'..');
 const read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
 const SERVER=read('server/server.js');
 const HTML=read('public/index.html');
+const PERF=read('public/perf-runtime.js');
 const UI=read('public/backlog-plan-actual.js');
 const CSS=read('public/backlog-plan-actual.css');
 // Manifest appearance lives in the shared contract; module CSS retains layout.
@@ -36,7 +37,8 @@ test('Backlog mounts a movable collapsible panel and loads its isolated assets',
   assert.match(HTML,/id="backlogPlanActualToggle"/);
   assert.match(HTML,/id="backlogPlanActualMoveUp"/);
   assert.match(HTML,/backlog-plan-actual\.css/);
-  assert.match(HTML,/backlog-plan-actual\.js/);
+  assert.match(PERF,/backlogAnalysis:\[[^\]]*backlog-plan-actual\.js/);
+  assert.doesNotMatch(HTML,/<script src="backlog-plan-actual\.js/);
   assert.match(UI,/type="datetime-local"/);
   assert.match(UI,/data-bpa-filter="buyer"/);
   assert.match(UI,/data-bpa-filter="buyingGroup"/);
@@ -67,7 +69,7 @@ test('plan actual module uses shared theme tokens without light-theme fallbacks'
 
 test('plan realisation view: plan window, grouped bars with tooltip + drawer, Excel export',()=>{
   const REPORT=read('public/backlog-plan-actual-report.js');
-  assert.ok(HTML.indexOf('backlog-plan-actual-report.js')>0&&HTML.indexOf('backlog-plan-actual-report.js')<HTML.indexOf('backlog-plan-actual.js?'),'report engine loads before the panel');
+  assert.ok(PERF.indexOf('backlog-plan-actual-report.js')>0&&PERF.indexOf('backlog-plan-actual-report.js')<PERF.indexOf('backlog-plan-actual.js?'),'report engine loads before the panel');
   assert.match(SERVER,/planFrom:dayParam\(req\.query\.planFrom\)/);
   assert.match(SERVER,/plan:comparison\.plan/);
   assert.match(UI,/data-bpa-control="planMode"/);

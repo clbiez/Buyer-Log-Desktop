@@ -1,0 +1,1278 @@
+{
+  "before": {
+    "js": {
+      "tags": 127,
+      "uniquePaths": 127,
+      "localFileBytes": 6254780,
+      "files": [
+        {
+          "path": "/user-context.js",
+          "bytes": null
+        },
+        {
+          "path": "analysis-cache.js",
+          "bytes": 1880
+        },
+        {
+          "path": "app-main.js",
+          "bytes": 3079270
+        },
+        {
+          "path": "backlog-chart.js",
+          "bytes": 89199
+        },
+        {
+          "path": "backlog-date-range.js",
+          "bytes": 14038
+        },
+        {
+          "path": "backlog-excel-formulas.js",
+          "bytes": 24449
+        },
+        {
+          "path": "backlog-overview.js",
+          "bytes": 62308
+        },
+        {
+          "path": "backlog-plan-actual-report.js",
+          "bytes": 43613
+        },
+        {
+          "path": "backlog-plan-actual.js",
+          "bytes": 52657
+        },
+        {
+          "path": "backlog-presentation-report.js",
+          "bytes": 50578
+        },
+        {
+          "path": "backlog-presentation.js",
+          "bytes": 14649
+        },
+        {
+          "path": "backlog-radar-layout.js",
+          "bytes": 18373
+        },
+        {
+          "path": "backlog-v3-report.js",
+          "bytes": 38585
+        },
+        {
+          "path": "bulk-operations.js",
+          "bytes": 11183
+        },
+        {
+          "path": "business-rules.js",
+          "bytes": 51395
+        },
+        {
+          "path": "buyerlog-guide-data.js",
+          "bytes": 99395
+        },
+        {
+          "path": "buyerlog-guide.js",
+          "bytes": 21312
+        },
+        {
+          "path": "buyerlog-trivia-data.js",
+          "bytes": 76256
+        },
+        {
+          "path": "buyerlog-trivia.js",
+          "bytes": 29482
+        },
+        {
+          "path": "canonical-fields.js",
+          "bytes": 35490
+        },
+        {
+          "path": "capacity-request-export.js",
+          "bytes": 15166
+        },
+        {
+          "path": "checklist-answer-merge-engine.js",
+          "bytes": 1703
+        },
+        {
+          "path": "checklist-components-engine.js",
+          "bytes": 6542
+        },
+        {
+          "path": "checklist-supplier-sync.js",
+          "bytes": 182335
+        },
+        {
+          "path": "chronological-values.js",
+          "bytes": 4411
+        },
+        {
+          "path": "collection-artwork-detail.js",
+          "bytes": 14467
+        },
+        {
+          "path": "collection-lfl-engine.js",
+          "bytes": 12973
+        },
+        {
+          "path": "collection-lfl.js",
+          "bytes": 30413
+        },
+        {
+          "path": "collection-model-groups.js",
+          "bytes": 30993
+        },
+        {
+          "path": "collection-order-backfill.js",
+          "bytes": 12797
+        },
+        {
+          "path": "collection-plm-drag-import.js",
+          "bytes": 17423
+        },
+        {
+          "path": "collection-price-drawer.js",
+          "bytes": 26435
+        },
+        {
+          "path": "collection-pricing-engine.js",
+          "bytes": 9066
+        },
+        {
+          "path": "collection-spreadsheet-engine.js",
+          "bytes": 5906
+        },
+        {
+          "path": "collection-spreadsheet.js",
+          "bytes": 60275
+        },
+        {
+          "path": "collection-status-catalog.js",
+          "bytes": 5688
+        },
+        {
+          "path": "collection-status-ui.js",
+          "bytes": 7395
+        },
+        {
+          "path": "column-display-names.js",
+          "bytes": 17965
+        },
+        {
+          "path": "column-schema.js",
+          "bytes": 16604
+        },
+        {
+          "path": "command-palette.js",
+          "bytes": 10578
+        },
+        {
+          "path": "contextual-commands.js",
+          "bytes": 1390
+        },
+        {
+          "path": "corporate-connections-toolbar.js",
+          "bytes": 8989
+        },
+        {
+          "path": "cp-plm-details.js",
+          "bytes": 4781
+        },
+        {
+          "path": "date-dimension.js",
+          "bytes": 13418
+        },
+        {
+          "path": "detail-drawer.js",
+          "bytes": 58068
+        },
+        {
+          "path": "detail-report-layout.js",
+          "bytes": 3682
+        },
+        {
+          "path": "dual-week-datepicker.js",
+          "bytes": 8629
+        },
+        {
+          "path": "excel-date-utils.js",
+          "bytes": 17419
+        },
+        {
+          "path": "excel-import-ai.js",
+          "bytes": 11461
+        },
+        {
+          "path": "excel-import-mapping.js",
+          "bytes": 15120
+        },
+        {
+          "path": "excel-import-match.js",
+          "bytes": 7430
+        },
+        {
+          "path": "excel-import-plan.js",
+          "bytes": 27937
+        },
+        {
+          "path": "excel-import-profiles.js",
+          "bytes": 10537
+        },
+        {
+          "path": "excel-import-wizard.js",
+          "bytes": 80816
+        },
+        {
+          "path": "excel-import-workbook.js",
+          "bytes": 23103
+        },
+        {
+          "path": "excel-template-engine.js",
+          "bytes": 6844
+        },
+        {
+          "path": "excel-templates.js",
+          "bytes": 16755
+        },
+        {
+          "path": "excel-workbook-guards.js",
+          "bytes": 29531
+        },
+        {
+          "path": "fabric-cards-engine.js",
+          "bytes": 27412
+        },
+        {
+          "path": "file-parser-policy.js",
+          "bytes": 8103
+        },
+        {
+          "path": "file-parser.js",
+          "bytes": 2699
+        },
+        {
+          "path": "freight-calc.js",
+          "bytes": 14105
+        },
+        {
+          "path": "grid-clipboard.js",
+          "bytes": 24497
+        },
+        {
+          "path": "grid-range-select.js",
+          "bytes": 3788
+        },
+        {
+          "path": "hologram-request-export.js",
+          "bytes": 3136
+        },
+        {
+          "path": "i18n-dictionary.js",
+          "bytes": 654851
+        },
+        {
+          "path": "i18n-runtime.js",
+          "bytes": 14659
+        },
+        {
+          "path": "image-search.js",
+          "bytes": 8288
+        },
+        {
+          "path": "kol-plm-list-import.js",
+          "bytes": 13066
+        },
+        {
+          "path": "kpi-motion.js",
+          "bytes": 3111
+        },
+        {
+          "path": "layer-system.js",
+          "bytes": 10361
+        },
+        {
+          "path": "license-royalty-commissions.js",
+          "bytes": 30807
+        },
+        {
+          "path": "merch-calendar-runtime.js",
+          "bytes": 1688
+        },
+        {
+          "path": "model-asset-scope.js",
+          "bytes": 12337
+        },
+        {
+          "path": "model-image-cache.js",
+          "bytes": 18236
+        },
+        {
+          "path": "model-option-stats.js",
+          "bytes": 3972
+        },
+        {
+          "path": "motion-plus-theme.js",
+          "bytes": 21611
+        },
+        {
+          "path": "motion-plus.js",
+          "bytes": 32378
+        },
+        {
+          "path": "order-decision-engine.js",
+          "bytes": 18546
+        },
+        {
+          "path": "order-importance-ui.js",
+          "bytes": 25425
+        },
+        {
+          "path": "order-importance.js",
+          "bytes": 9557
+        },
+        {
+          "path": "order-line-peer-index.js",
+          "bytes": 2426
+        },
+        {
+          "path": "overview-breakdown.js",
+          "bytes": 12867
+        },
+        {
+          "path": "overview-collection-dashboard.js",
+          "bytes": 28265
+        },
+        {
+          "path": "overview-collection-summary.js",
+          "bytes": 13917
+        },
+        {
+          "path": "overview-flow-routes.js",
+          "bytes": 12140
+        },
+        {
+          "path": "overview-global-flow.js",
+          "bytes": 158284
+        },
+        {
+          "path": "overview-home.js",
+          "bytes": 34524
+        },
+        {
+          "path": "overview-launchpad.js",
+          "bytes": 40297
+        },
+        {
+          "path": "overview-layout.js",
+          "bytes": 18230
+        },
+        {
+          "path": "overview-premium.js",
+          "bytes": 22903
+        },
+        {
+          "path": "perf-runtime.js",
+          "bytes": 19937
+        },
+        {
+          "path": "personal-order-notes.js",
+          "bytes": 3862
+        },
+        {
+          "path": "plm-auth-recovery.js",
+          "bytes": 7207
+        },
+        {
+          "path": "plm-bom.js",
+          "bytes": 8893
+        },
+        {
+          "path": "plm-colour-utils.js",
+          "bytes": 2253
+        },
+        {
+          "path": "plm-licence-utils.js",
+          "bytes": 478
+        },
+        {
+          "path": "plm-sync-guide.js",
+          "bytes": 22417
+        },
+        {
+          "path": "preset-store.js",
+          "bytes": 6419
+        },
+        {
+          "path": "price-lineage.js",
+          "bytes": 2881
+        },
+        {
+          "path": "private-order-notes.js",
+          "bytes": 7848
+        },
+        {
+          "path": "release-notes.js",
+          "bytes": 21293
+        },
+        {
+          "path": "revision-display.js",
+          "bytes": 6039
+        },
+        {
+          "path": "selection-action-bar.js",
+          "bytes": 8746
+        },
+        {
+          "path": "shipping-engine.js",
+          "bytes": 9111
+        },
+        {
+          "path": "startup-module-preparation.js",
+          "bytes": 2387
+        },
+        {
+          "path": "tab-system.js",
+          "bytes": 2701
+        },
+        {
+          "path": "table-column-resize.js",
+          "bytes": 10574
+        },
+        {
+          "path": "table-density.js",
+          "bytes": 1472
+        },
+        {
+          "path": "table-export.js",
+          "bytes": 8612
+        },
+        {
+          "path": "table-freeze.js",
+          "bytes": 24768
+        },
+        {
+          "path": "table-header-tracking.js",
+          "bytes": 3528
+        },
+        {
+          "path": "table-range.js",
+          "bytes": 1387
+        },
+        {
+          "path": "table-search-help.js",
+          "bytes": 11934
+        },
+        {
+          "path": "table-search-row-groups.js",
+          "bytes": 7108
+        },
+        {
+          "path": "table-toolbar-action-cleanup.js",
+          "bytes": 6248
+        },
+        {
+          "path": "table-view-drawers.js",
+          "bytes": 7349
+        },
+        {
+          "path": "thinking-orb-breathing.js",
+          "bytes": 8121
+        },
+        {
+          "path": "thinking-orb-working.js",
+          "bytes": 4086
+        },
+        {
+          "path": "toolbar-responsive.js",
+          "bytes": 22182
+        },
+        {
+          "path": "ui-appearance.js",
+          "bytes": 839
+        },
+        {
+          "path": "ui-primitives.js",
+          "bytes": 15320
+        },
+        {
+          "path": "ui-tooltip.js",
+          "bytes": 3715
+        },
+        {
+          "path": "user-initials.js",
+          "bytes": 2194
+        },
+        {
+          "path": "user-storage.js",
+          "bytes": 20174
+        },
+        {
+          "path": "view-context.js",
+          "bytes": 3734
+        },
+        {
+          "path": "workspace-blur.js",
+          "bytes": 3320
+        }
+      ]
+    },
+    "css": {
+      "tags": 45,
+      "uniquePaths": 45,
+      "localFileBytes": 1887478,
+      "files": [
+        {
+          "path": "app.css",
+          "bytes": 299931
+        },
+        {
+          "path": "automations-fields.css",
+          "bytes": 4549
+        },
+        {
+          "path": "backlog-date-range.css",
+          "bytes": 2329
+        },
+        {
+          "path": "backlog-delivery-analysis.css",
+          "bytes": 8359
+        },
+        {
+          "path": "backlog-overview.css",
+          "bytes": 10116
+        },
+        {
+          "path": "backlog-plan-actual.css",
+          "bytes": 8404
+        },
+        {
+          "path": "backlog-presentation.css",
+          "bytes": 2156
+        },
+        {
+          "path": "bulk-operations.css",
+          "bytes": 902
+        },
+        {
+          "path": "buyerlog-guide.css",
+          "bytes": 8260
+        },
+        {
+          "path": "collection-analytics.css",
+          "bytes": 9412
+        },
+        {
+          "path": "collection-spreadsheet.css",
+          "bytes": 16102
+        },
+        {
+          "path": "command-palette.css",
+          "bytes": 1105
+        },
+        {
+          "path": "cp-overview-assistant.css",
+          "bytes": 46942
+        },
+        {
+          "path": "data-maintenance.css",
+          "bytes": 4389
+        },
+        {
+          "path": "data-management.css",
+          "bytes": 29519
+        },
+        {
+          "path": "design.css",
+          "bytes": 15052
+        },
+        {
+          "path": "detail-drawer.css",
+          "bytes": 7249
+        },
+        {
+          "path": "dual-week-datepicker.css",
+          "bytes": 1164
+        },
+        {
+          "path": "excel-import.css",
+          "bytes": 4387
+        },
+        {
+          "path": "excel-templates.css",
+          "bytes": 1048
+        },
+        {
+          "path": "exception-inbox.css",
+          "bytes": 789
+        },
+        {
+          "path": "experience.css",
+          "bytes": 14906
+        },
+        {
+          "path": "lcwai-assistant.css",
+          "bytes": 22776
+        },
+        {
+          "path": "lfl.css",
+          "bytes": 49278
+        },
+        {
+          "path": "license-cards.css",
+          "bytes": 18100
+        },
+        {
+          "path": "manufacturers.css",
+          "bytes": 4562
+        },
+        {
+          "path": "open-costing.css",
+          "bytes": 24105
+        },
+        {
+          "path": "overview-global-flow.css",
+          "bytes": 11130
+        },
+        {
+          "path": "overview-home.css",
+          "bytes": 31289
+        },
+        {
+          "path": "plm-sync-guide.css",
+          "bytes": 2948
+        },
+        {
+          "path": "price-supplier-analysis.css",
+          "bytes": 12632
+        },
+        {
+          "path": "pricing-desk.css",
+          "bytes": 21011
+        },
+        {
+          "path": "pricing-workspace.css",
+          "bytes": 9963
+        },
+        {
+          "path": "release-notes.css",
+          "bytes": 5651
+        },
+        {
+          "path": "table-density.css",
+          "bytes": 1627
+        },
+        {
+          "path": "table-freeze.css",
+          "bytes": 1140
+        },
+        {
+          "path": "table-header-tracking.css",
+          "bytes": 878
+        },
+        {
+          "path": "table-search-help.css",
+          "bytes": 1724
+        },
+        {
+          "path": "table-view-drawers.css",
+          "bytes": 1746
+        },
+        {
+          "path": "thinking-orbs.css",
+          "bytes": 1119
+        },
+        {
+          "path": "ui-components.css",
+          "bytes": 1130693
+        },
+        {
+          "path": "ui-motion.css",
+          "bytes": 3128
+        },
+        {
+          "path": "ui-startup.css",
+          "bytes": 7383
+        },
+        {
+          "path": "ui-tokens.css",
+          "bytes": 9675
+        },
+        {
+          "path": "user-management.css",
+          "bytes": 17850
+        }
+      ]
+    }
+  },
+  "after": {
+    "js": {
+      "tags": 112,
+      "uniquePaths": 112,
+      "localFileBytes": 5643405,
+      "files": [
+        {
+          "path": "/user-context.js",
+          "bytes": null
+        },
+        {
+          "path": "analysis-cache.js",
+          "bytes": 1880
+        },
+        {
+          "path": "app-main.js",
+          "bytes": 3079270
+        },
+        {
+          "path": "backlog-chart.js",
+          "bytes": 89199
+        },
+        {
+          "path": "backlog-date-range.js",
+          "bytes": 14038
+        },
+        {
+          "path": "backlog-excel-formulas.js",
+          "bytes": 24449
+        },
+        {
+          "path": "backlog-overview.js",
+          "bytes": 62308
+        },
+        {
+          "path": "backlog-radar-layout.js",
+          "bytes": 18373
+        },
+        {
+          "path": "backlog-v3-report.js",
+          "bytes": 38585
+        },
+        {
+          "path": "bulk-operations.js",
+          "bytes": 11183
+        },
+        {
+          "path": "business-rules.js",
+          "bytes": 51395
+        },
+        {
+          "path": "canonical-fields.js",
+          "bytes": 35490
+        },
+        {
+          "path": "capacity-request-export.js",
+          "bytes": 15166
+        },
+        {
+          "path": "checklist-answer-merge-engine.js",
+          "bytes": 1703
+        },
+        {
+          "path": "checklist-components-engine.js",
+          "bytes": 6542
+        },
+        {
+          "path": "checklist-supplier-sync.js",
+          "bytes": 182335
+        },
+        {
+          "path": "chronological-values.js",
+          "bytes": 4411
+        },
+        {
+          "path": "collection-artwork-detail.js",
+          "bytes": 14467
+        },
+        {
+          "path": "collection-lfl-engine.js",
+          "bytes": 12973
+        },
+        {
+          "path": "collection-lfl.js",
+          "bytes": 30413
+        },
+        {
+          "path": "collection-model-groups.js",
+          "bytes": 30993
+        },
+        {
+          "path": "collection-order-backfill.js",
+          "bytes": 12797
+        },
+        {
+          "path": "collection-plm-drag-import.js",
+          "bytes": 17423
+        },
+        {
+          "path": "collection-price-drawer.js",
+          "bytes": 26435
+        },
+        {
+          "path": "collection-pricing-engine.js",
+          "bytes": 9066
+        },
+        {
+          "path": "collection-status-catalog.js",
+          "bytes": 5688
+        },
+        {
+          "path": "collection-status-ui.js",
+          "bytes": 7395
+        },
+        {
+          "path": "column-display-names.js",
+          "bytes": 17965
+        },
+        {
+          "path": "column-schema.js",
+          "bytes": 16604
+        },
+        {
+          "path": "command-palette.js",
+          "bytes": 10578
+        },
+        {
+          "path": "contextual-commands.js",
+          "bytes": 1390
+        },
+        {
+          "path": "corporate-connections-toolbar.js",
+          "bytes": 8989
+        },
+        {
+          "path": "cp-plm-details.js",
+          "bytes": 4781
+        },
+        {
+          "path": "date-dimension.js",
+          "bytes": 13418
+        },
+        {
+          "path": "detail-drawer.js",
+          "bytes": 58068
+        },
+        {
+          "path": "detail-report-layout.js",
+          "bytes": 3682
+        },
+        {
+          "path": "dual-week-datepicker.js",
+          "bytes": 8629
+        },
+        {
+          "path": "excel-date-utils.js",
+          "bytes": 17419
+        },
+        {
+          "path": "excel-import-mapping.js",
+          "bytes": 15120
+        },
+        {
+          "path": "excel-template-engine.js",
+          "bytes": 6844
+        },
+        {
+          "path": "excel-templates.js",
+          "bytes": 16755
+        },
+        {
+          "path": "excel-workbook-guards.js",
+          "bytes": 29531
+        },
+        {
+          "path": "fabric-cards-engine.js",
+          "bytes": 27412
+        },
+        {
+          "path": "file-parser-policy.js",
+          "bytes": 8103
+        },
+        {
+          "path": "file-parser.js",
+          "bytes": 2699
+        },
+        {
+          "path": "freight-calc.js",
+          "bytes": 14105
+        },
+        {
+          "path": "grid-clipboard.js",
+          "bytes": 24497
+        },
+        {
+          "path": "grid-range-select.js",
+          "bytes": 3788
+        },
+        {
+          "path": "hologram-request-export.js",
+          "bytes": 3136
+        },
+        {
+          "path": "i18n-dictionary.js",
+          "bytes": 654851
+        },
+        {
+          "path": "i18n-runtime.js",
+          "bytes": 14659
+        },
+        {
+          "path": "image-search.js",
+          "bytes": 8288
+        },
+        {
+          "path": "kol-plm-list-import.js",
+          "bytes": 13066
+        },
+        {
+          "path": "kpi-motion.js",
+          "bytes": 3111
+        },
+        {
+          "path": "layer-system.js",
+          "bytes": 10361
+        },
+        {
+          "path": "license-royalty-commissions.js",
+          "bytes": 30807
+        },
+        {
+          "path": "merch-calendar-runtime.js",
+          "bytes": 1688
+        },
+        {
+          "path": "model-asset-scope.js",
+          "bytes": 12337
+        },
+        {
+          "path": "model-image-cache.js",
+          "bytes": 18236
+        },
+        {
+          "path": "model-option-stats.js",
+          "bytes": 3972
+        },
+        {
+          "path": "motion-plus-theme.js",
+          "bytes": 21611
+        },
+        {
+          "path": "motion-plus.js",
+          "bytes": 32378
+        },
+        {
+          "path": "order-decision-engine.js",
+          "bytes": 18546
+        },
+        {
+          "path": "order-importance-ui.js",
+          "bytes": 25425
+        },
+        {
+          "path": "order-importance.js",
+          "bytes": 9557
+        },
+        {
+          "path": "order-line-peer-index.js",
+          "bytes": 2426
+        },
+        {
+          "path": "overview-breakdown.js",
+          "bytes": 12867
+        },
+        {
+          "path": "overview-collection-dashboard.js",
+          "bytes": 28265
+        },
+        {
+          "path": "overview-collection-summary.js",
+          "bytes": 13917
+        },
+        {
+          "path": "overview-flow-routes.js",
+          "bytes": 12140
+        },
+        {
+          "path": "overview-global-flow.js",
+          "bytes": 158284
+        },
+        {
+          "path": "overview-home.js",
+          "bytes": 34524
+        },
+        {
+          "path": "overview-launchpad.js",
+          "bytes": 40297
+        },
+        {
+          "path": "overview-layout.js",
+          "bytes": 18230
+        },
+        {
+          "path": "overview-premium.js",
+          "bytes": 22903
+        },
+        {
+          "path": "perf-runtime.js",
+          "bytes": 23213
+        },
+        {
+          "path": "personal-order-notes.js",
+          "bytes": 3862
+        },
+        {
+          "path": "plm-auth-recovery.js",
+          "bytes": 7207
+        },
+        {
+          "path": "plm-bom.js",
+          "bytes": 8893
+        },
+        {
+          "path": "plm-colour-utils.js",
+          "bytes": 2253
+        },
+        {
+          "path": "plm-licence-utils.js",
+          "bytes": 478
+        },
+        {
+          "path": "plm-sync-guide.js",
+          "bytes": 22417
+        },
+        {
+          "path": "preset-store.js",
+          "bytes": 6419
+        },
+        {
+          "path": "price-lineage.js",
+          "bytes": 2881
+        },
+        {
+          "path": "private-order-notes.js",
+          "bytes": 7848
+        },
+        {
+          "path": "release-notes.js",
+          "bytes": 21293
+        },
+        {
+          "path": "revision-display.js",
+          "bytes": 6039
+        },
+        {
+          "path": "selection-action-bar.js",
+          "bytes": 8746
+        },
+        {
+          "path": "shipping-engine.js",
+          "bytes": 9111
+        },
+        {
+          "path": "startup-feature-entrypoints.js",
+          "bytes": 756
+        },
+        {
+          "path": "startup-module-preparation.js",
+          "bytes": 2387
+        },
+        {
+          "path": "tab-system.js",
+          "bytes": 2701
+        },
+        {
+          "path": "table-column-resize.js",
+          "bytes": 10574
+        },
+        {
+          "path": "table-density.js",
+          "bytes": 1472
+        },
+        {
+          "path": "table-export.js",
+          "bytes": 8612
+        },
+        {
+          "path": "table-freeze.js",
+          "bytes": 24768
+        },
+        {
+          "path": "table-header-tracking.js",
+          "bytes": 3528
+        },
+        {
+          "path": "table-range.js",
+          "bytes": 1387
+        },
+        {
+          "path": "table-search-help.js",
+          "bytes": 11934
+        },
+        {
+          "path": "table-search-row-groups.js",
+          "bytes": 7108
+        },
+        {
+          "path": "table-toolbar-action-cleanup.js",
+          "bytes": 6248
+        },
+        {
+          "path": "table-view-drawers.js",
+          "bytes": 7349
+        },
+        {
+          "path": "thinking-orb-breathing.js",
+          "bytes": 8121
+        },
+        {
+          "path": "thinking-orb-working.js",
+          "bytes": 4086
+        },
+        {
+          "path": "toolbar-responsive.js",
+          "bytes": 22182
+        },
+        {
+          "path": "ui-appearance.js",
+          "bytes": 839
+        },
+        {
+          "path": "ui-primitives.js",
+          "bytes": 15320
+        },
+        {
+          "path": "ui-tooltip.js",
+          "bytes": 3715
+        },
+        {
+          "path": "user-initials.js",
+          "bytes": 2194
+        },
+        {
+          "path": "user-storage.js",
+          "bytes": 20174
+        },
+        {
+          "path": "view-context.js",
+          "bytes": 3734
+        },
+        {
+          "path": "workspace-blur.js",
+          "bytes": 3320
+        }
+      ]
+    },
+    "css": {
+      "tags": 27,
+      "uniquePaths": 27,
+      "localFileBytes": 1642046,
+      "files": [
+        {
+          "path": "app.css",
+          "bytes": 300066
+        },
+        {
+          "path": "backlog-date-range.css",
+          "bytes": 2329
+        },
+        {
+          "path": "backlog-overview.css",
+          "bytes": 10116
+        },
+        {
+          "path": "bulk-operations.css",
+          "bytes": 902
+        },
+        {
+          "path": "buyerlog-guide.css",
+          "bytes": 8260
+        },
+        {
+          "path": "command-palette.css",
+          "bytes": 1105
+        },
+        {
+          "path": "cp-overview-assistant.css",
+          "bytes": 46942
+        },
+        {
+          "path": "design.css",
+          "bytes": 15052
+        },
+        {
+          "path": "detail-drawer.css",
+          "bytes": 7249
+        },
+        {
+          "path": "dual-week-datepicker.css",
+          "bytes": 1164
+        },
+        {
+          "path": "excel-templates.css",
+          "bytes": 1048
+        },
+        {
+          "path": "experience.css",
+          "bytes": 14906
+        },
+        {
+          "path": "lcwai-assistant.css",
+          "bytes": 22776
+        },
+        {
+          "path": "overview-global-flow.css",
+          "bytes": 11130
+        },
+        {
+          "path": "overview-home.css",
+          "bytes": 31289
+        },
+        {
+          "path": "plm-sync-guide.css",
+          "bytes": 2948
+        },
+        {
+          "path": "release-notes.css",
+          "bytes": 5651
+        },
+        {
+          "path": "table-density.css",
+          "bytes": 1627
+        },
+        {
+          "path": "table-freeze.css",
+          "bytes": 1140
+        },
+        {
+          "path": "table-header-tracking.css",
+          "bytes": 878
+        },
+        {
+          "path": "table-search-help.css",
+          "bytes": 1724
+        },
+        {
+          "path": "table-view-drawers.css",
+          "bytes": 1746
+        },
+        {
+          "path": "thinking-orbs.css",
+          "bytes": 1119
+        },
+        {
+          "path": "ui-components.css",
+          "bytes": 1130693
+        },
+        {
+          "path": "ui-motion.css",
+          "bytes": 3128
+        },
+        {
+          "path": "ui-startup.css",
+          "bytes": 7383
+        },
+        {
+          "path": "ui-tokens.css",
+          "bytes": 9675
+        }
+      ]
+    }
+  }
+}

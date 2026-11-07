@@ -1,0 +1,128 @@
+[
+  {
+    "run": 1,
+    "mode": "baseline",
+    "item": "q12",
+    "results": [
+      {
+        "size": 100,
+        "ms": 3.560000000009313,
+        "fxCalls": 101,
+        "queries": 134,
+        "sha": "73ac73458f466f16543bd3d15e9f0b6b857ea93857bd37c676510cbe5cbb1186"
+      },
+      {
+        "size": 1000,
+        "ms": 15.220000000018626,
+        "fxCalls": 1001,
+        "queries": 1034,
+        "sha": "b68c3546a10f8fcb04e4f2b53a3a98a78c980c86aee3d6134a102989cf2bfcb3"
+      }
+    ]
+  },
+  {
+    "run": 1,
+    "mode": "after",
+    "item": "q12",
+    "results": [
+      {
+        "size": 100,
+        "ms": 0.5600000000093133,
+        "fxCalls": 1,
+        "queries": 27,
+        "sha": "73ac73458f466f16543bd3d15e9f0b6b857ea93857bd37c676510cbe5cbb1186"
+      },
+      {
+        "size": 1000,
+        "ms": 1.2,
+        "fxCalls": 1,
+        "queries": 27,
+        "sha": "b68c3546a10f8fcb04e4f2b53a3a98a78c980c86aee3d6134a102989cf2bfcb3"
+      }
+    ]
+  },
+  {
+    "run": 2,
+    "mode": "after",
+    "item": "q12",
+    "results": [
+      {
+        "size": 100,
+        "ms": 0.45999999998603014,
+        "fxCalls": 1,
+        "queries": 27,
+        "sha": "73ac73458f466f16543bd3d15e9f0b6b857ea93857bd37c676510cbe5cbb1186"
+      },
+      {
+        "size": 1000,
+        "ms": 1.4800000000046567,
+        "fxCalls": 1,
+        "queries": 27,
+        "sha": "b68c3546a10f8fcb04e4f2b53a3a98a78c980c86aee3d6134a102989cf2bfcb3"
+      }
+    ]
+  },
+  {
+    "run": 2,
+    "mode": "baseline",
+    "item": "q12",
+    "results": [
+      {
+        "size": 100,
+        "ms": 2.8600000000093133,
+        "fxCalls": 101,
+        "queries": 134,
+        "sha": "73ac73458f466f16543bd3d15e9f0b6b857ea93857bd37c676510cbe5cbb1186"
+      },
+      {
+        "size": 1000,
+        "ms": 13.060000000009314,
+        "fxCalls": 1001,
+        "queries": 1034,
+        "sha": "b68c3546a10f8fcb04e4f2b53a3a98a78c980c86aee3d6134a102989cf2bfcb3"
+      }
+    ]
+  },
+  {
+    "run": 3,
+    "mode": "baseline",
+    "item": "q12",
+    "results": [
+      {
+        "size": 100,
+        "ms": 2.9,
+        "fxCalls": 101,
+        "queries": 134,
+        "sha": "73ac73458f466f16543bd3d15e9f0b6b857ea93857bd37c676510cbe5cbb1186"
+      },
+      {
+        "size": 1000,
+        "ms": 17.339999999990688,
+        "fxCalls": 1001,
+        "queries": 1034,
+        "sha": "b68c3546a10f8fcb04e4f2b53a3a98a78c980c86aee3d6134a102989cf2bfcb3"
+      }
+    ]
+  },
+  {
+    "run": 3,
+    "mode": "after",
+    "item": "q12",
+    "results": [
+      {
+        "size": 100,
+        "ms": 0.4800000000046566,
+        "fxCalls": 1,
+        "queries": 27,
+        "sha": "73ac73458f466f16543bd3d15e9f0b6b857ea93857bd37c676510cbe5cbb1186"
+      },
+      {
+        "size": 1000,
+        "ms": 1.9199999999953434,
+        "fxCalls": 1,
+        "queries": 27,
+        "sha": "b68c3546a10f8fcb04e4f2b53a3a98a78c980c86aee3d6134a102989cf2bfcb3"
+      }
+    ]
+  }
+]
