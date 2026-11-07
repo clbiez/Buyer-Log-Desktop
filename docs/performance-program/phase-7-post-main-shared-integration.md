@@ -67,3 +67,26 @@ i18n 0/0; 42 notes passed. Production/test/CI sources remain unchanged after
 this evidence-only addition. Final-head actual GitHub checks remain required.
 This accepts the common records/tools package only, not the runtime leaf PRs.
 **No merge, TEST or STABLE.**
+
+
+## #915 sonrası son kabul / Final acceptance after #915
+
+8 Kasım 2026: Main `d77f83e5` (#915, kullanıcı onayıyla merge edildi)
+normal merge `ff047b73` ile alındı. Test edilen uygulama ağacı
+`01a6437e12dccd15bb0df365e9d7a279f8aa49a5`. Standart `npm test`, tek çağrıda bütün
+10 batch, varsayılan concurrency=4, izole TMPDIR ve NODE_OPTIONS/preload
+olmadan: **1295 dosya / 8896 PASS / 0 FAIL / 65 mevcut SKIP /
+0 CANCEL**. İlgili paket **227 PASS**, i18n **0/0**, sürüm notları
+**43 PASS**. Tarihsel sonuçlar korunur; bu kayıt yeni performans
+kazancı iddiası değildir. Son commit'in gerçek GitHub kontrolleri ayrı kapıdır.
+
+Main `d77f83e5` was imported by normal merge without rewriting the frozen review
+history. The unchanged standard runner passed all ten batches in one invocation:
+**1295 files / 8896 PASS / 0 FAIL / 65 existing SKIP / 0 CANCEL**,
+default concurrency4, private TMPDIR, no NODE_OPTIONS/preload. Related package
+227 PASS; i18n0/0; 43 visual notes valid. Own production changes
+and their reviewed behavior were preserved; the new runtime delta imports the
+separately reviewed and merged current-authority fix. Evidence-only additions
+after these checks do not change source, tests, validators or CI. Historical
+benchmark limitations remain. Actual final-head CI and merge approval are still
+separate. **No TEST/STABLE publication.**
