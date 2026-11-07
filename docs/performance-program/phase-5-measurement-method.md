@@ -263,3 +263,33 @@ use `270228a4` as its baseline so both arms contain those three changes.
 The old `4fb38773` checkout and measurements remain historical evidence.
 The combined main integration passed 1,321 relevant tests in 174 files,
 i18n 0/0 and validation of all 32 release-note entries.
+
+## PR fast-check regression
+
+TR: GitHub run `42363483382`, job `128376521934` başarısız oldu: navigation
+testi, worker'a taşınan Backlog export'un eski MAIN çağrısını arıyordu. Yerel
+1.321 test filtresi navigation dosyasını içermediği için bunu kaçırdı.
+Korunan regresyon silinmedi: aynı test artık gerçek route'un worker ve cache
+bağlantısını, tüm query girdilerinin cache anahtarına ulaşmasını, gerçek ortak
+read-service üzerinde in-flight paylaşımını, kaynak/kapsam/yetki değişimlerini,
+60 saniyelik TTL'yi ve bütün çıktı lease'lerinin bırakılmasını doğrular.
+Test önce RED, sonra 7/7 GREEN oldu. Workflow'un 24 adımı Node 24.19'da
+harici paket yüklemeleri engellenerek, özel demo veri/temp köklerinde
+çalıştırıldı: 728 test, sıfır başarısızlık ve skip. İlk yerel yardımcıda
+`TMPDIR` özel temp köküyle eşleşmediği için PLM testleri güvenli yazma sınırına
+takıldı; yardımcı düzeltildi, üretim yazma sınırları değiştirilmedi ve ilk
+başarısız kayıt korundu. Bu yerel sonuç GitHub CI sonucunun yerine geçmez.
+
+EN: GitHub run `42363483382`, job `128376521934` failed because the navigation
+test expected the old MAIN call for Backlog export, which now runs in a
+worker. The local 1,321-test filter omitted that navigation file. The protected
+regression remains: the same test now checks the live route's worker/cache
+wiring, every query input reaching the cache key, in-flight sharing through
+the actual read-service, source/context/authority invalidation, the 60-second
+TTL and release of every output lease. It failed RED before passing 7/7.
+All 24 workflow steps then ran locally on Node 24.19 with external package
+loads blocked and isolated demo data/temp roots: 728 tests, zero failures or
+skips. The first local helper did not align `TMPDIR` with its private temp
+root, so PLM tests hit the safe-write boundary. Only the helper was corrected;
+production write boundaries and the failed log remain unchanged. Local
+success does not substitute for actual GitHub CI.
