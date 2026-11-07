@@ -1,6 +1,8 @@
 {
   "schema": 1,
   "phase": 7,
+  "preparationCompatibilityMain": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "preparationOnly": true,
   "productionImplementation": "pending-phase-order",
   "backendOwner": "main-conversation; accepted via user, not implemented",
   "syntheticOnly": true,

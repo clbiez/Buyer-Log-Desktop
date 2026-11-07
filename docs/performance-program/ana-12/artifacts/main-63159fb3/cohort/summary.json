@@ -1,0 +1,160 @@
+{
+  "comparison": "A/A preparation control; unchanged production code, NOT optimization before/after acceptance",
+  "pin": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "includes892": true,
+  "fixtureSha": "7e6f563f463b24fa420a6659704a280f09a9a388e6f50b61b67fefee779fe3a3",
+  "sourceHashes": {
+    "backlog-plan-actual.js": "a3815dbf2d0f15ed535710e03db56497c81d866f811196438af67e773ae5ecd1",
+    "backlog-overview.js": "8ef917dcad4e373327b720dcaef15f72c0f998675253aa073d7f191639a66e64",
+    "backlog-chart.js": "d234cf736c671d77998aeb2e72b18aa8765ba1070e408583dea53d6d50340d4f"
+  },
+  "node": "v24.19.0",
+  "platform": "linux",
+  "arch": "x64",
+  "medians": {
+    "plan": {
+      "before-preparation": {
+        "requests": 10,
+        "peakActiveRequests": 10,
+        "parsedBytes": 30331020,
+        "staleParsedBytes": 27297918,
+        "parseMs": 103.49980100000357,
+        "staleParseMs": 95.91786700000375,
+        "processCpuMs": 255.466,
+        "processCpuAfterSupersessionMs": 233.197,
+        "wallMs": 580.7557629999992,
+        "aborts": 0,
+        "signals": 0,
+        "completedAfterClose": null,
+        "heapDeltaUncollectedBytes": -18349464,
+        "backendJobs": null,
+        "postCancellationCpuMs": null
+      },
+      "after-preparation": {
+        "requests": 10,
+        "peakActiveRequests": 10,
+        "parsedBytes": 30331020,
+        "staleParsedBytes": 27297918,
+        "parseMs": 99.19440000000031,
+        "staleParseMs": 91.52965399999812,
+        "processCpuMs": 286.568,
+        "processCpuAfterSupersessionMs": 271.394,
+        "wallMs": 597.4474810000002,
+        "aborts": 0,
+        "signals": 0,
+        "completedAfterClose": null,
+        "heapDeltaUncollectedBytes": -19923416,
+        "backendJobs": null,
+        "postCancellationCpuMs": null
+      }
+    },
+    "shared": {
+      "before-preparation": {
+        "requests": 10,
+        "peakActiveRequests": 10,
+        "parsedBytes": 30331020,
+        "staleParsedBytes": 27297918,
+        "parseMs": 86.93587900000057,
+        "staleParseMs": 79.58284200000162,
+        "processCpuMs": 301.314,
+        "processCpuAfterSupersessionMs": 251.093,
+        "wallMs": 580.8755849999998,
+        "aborts": 0,
+        "signals": 0,
+        "completedAfterClose": null,
+        "heapDeltaUncollectedBytes": -28125192,
+        "backendJobs": null,
+        "postCancellationCpuMs": null
+      },
+      "after-preparation": {
+        "requests": 10,
+        "peakActiveRequests": 10,
+        "parsedBytes": 30331020,
+        "staleParsedBytes": 27297918,
+        "parseMs": 103.66123399999924,
+        "staleParseMs": 94.54515399999855,
+        "processCpuMs": 298.619,
+        "processCpuAfterSupersessionMs": 283.196,
+        "wallMs": 600.775407000001,
+        "aborts": 0,
+        "signals": 0,
+        "completedAfterClose": null,
+        "heapDeltaUncollectedBytes": -29401912,
+        "backendJobs": null,
+        "postCancellationCpuMs": null
+      }
+    },
+    "chart-fallback": {
+      "before-preparation": {
+        "requests": 10,
+        "peakActiveRequests": 10,
+        "parsedBytes": 30331020,
+        "staleParsedBytes": 27297918,
+        "parseMs": 111.4491969999981,
+        "staleParseMs": 101.00222199999735,
+        "processCpuMs": 268.797,
+        "processCpuAfterSupersessionMs": 248.72,
+        "wallMs": 591.9291590000003,
+        "aborts": 0,
+        "signals": 0,
+        "completedAfterClose": null,
+        "heapDeltaUncollectedBytes": -62555288,
+        "backendJobs": null,
+        "postCancellationCpuMs": null
+      },
+      "after-preparation": {
+        "requests": 10,
+        "peakActiveRequests": 10,
+        "parsedBytes": 30331020,
+        "staleParsedBytes": 27297918,
+        "parseMs": 85.15942600000017,
+        "staleParseMs": 77.57431700000052,
+        "processCpuMs": 262.139,
+        "processCpuAfterSupersessionMs": 247.575,
+        "wallMs": 586.8345130000016,
+        "aborts": 0,
+        "signals": 0,
+        "completedAfterClose": null,
+        "heapDeltaUncollectedBytes": -54412008,
+        "backendJobs": null,
+        "postCancellationCpuMs": null
+      }
+    },
+    "shared-close": {
+      "before-preparation": {
+        "requests": 10,
+        "peakActiveRequests": 10,
+        "parsedBytes": 30331020,
+        "staleParsedBytes": 27297918,
+        "parseMs": 92.38293600000043,
+        "staleParseMs": 83.66640600000028,
+        "processCpuMs": 289.304,
+        "processCpuAfterSupersessionMs": 246.373,
+        "wallMs": 587.7302760000002,
+        "aborts": 0,
+        "signals": 0,
+        "completedAfterClose": 10,
+        "heapDeltaUncollectedBytes": -39662328,
+        "backendJobs": null,
+        "postCancellationCpuMs": null
+      },
+      "after-preparation": {
+        "requests": 10,
+        "peakActiveRequests": 10,
+        "parsedBytes": 30331020,
+        "staleParsedBytes": 27297918,
+        "parseMs": 99.94263600000522,
+        "staleParseMs": 90.62344600000506,
+        "processCpuMs": 324.205,
+        "processCpuAfterSupersessionMs": 295.081,
+        "wallMs": 588.7780420000017,
+        "aborts": 0,
+        "signals": 0,
+        "completedAfterClose": 10,
+        "heapDeltaUncollectedBytes": -13485600,
+        "backendJobs": null,
+        "postCancellationCpuMs": null
+      }
+    }
+  }
+}

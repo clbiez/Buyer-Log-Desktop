@@ -1,0 +1,35 @@
+✔ agent reference documents listed on demand exist in the repository (1.605911ms)
+✔ Claude and Codex share evidence, PR gates and honest release reporting (0.369385ms)
+✔ lightweight PR checks are distinct from manual full regression (0.260164ms)
+✔ Motion+ loads after canonical styles before first paint and mounts controls after the document is parsed (3.241765ms)
+✔ Table entrance staggers rows, preserves cell text and only replays on activation (3.79424ms)
+✔ Active cell is skipped and reduced motion, hidden tab and opt-out bypass animation (3.737076ms)
+✔ Motion+ never creates full-table observers, infinite animations or new hard-coded colors (0.507169ms)
+✔ Overview page slides follow direction, shared timing and cancellation (1.066164ms)
+✔ Overview page slides respect motion and visibility preferences (2.897437ms)
+✔ KPI counter does not overlap Motion+ and returns the exact canonical string (1.13808ms)
+✔ KPI counter drops out if its cell is rerendered during animation (1.024913ms)
+✔ module entry follows header, summaries and content, with one animation per block (6.802271ms)
+✔ late lazy content enters once, without replaying already visible blocks (1.945232ms)
+✔ fast navigation cancels the old sequence and leaves only the current module running (3.132574ms)
+✔ flow respects reduced motion, hidden documents and user opt-out (6.101747ms)
+✔ editing, selection and interaction keep the data block stable (3.659642ms)
+✔ table rows never overlap a moving parent or fall back to a cell wave (2.782937ms)
+✔ settled empty states animate while loading placeholders stay still (3.009922ms)
+✔ a visible empty lazy host does not consume the later content entrance (1.26648ms)
+✔ the real shell page title leads the flow when a module has no local heading (1.521025ms)
+✔ layout scroll restoration does not cancel entry; user scrolling does (1.622706ms)
+✔ row entrance measures its bounded queue before any animation writes (5.347063ms)
+✔ protected and offscreen rows stay still without changing cell state (1.071802ms)
+✔ lazy tables enter once; redraws and same-module clicks never replay rows (1.006506ms)
+✔ row effects respect motion preferences, visibility and software compositing (3.91563ms)
+✔ interaction and navigation cancel old row effects and stop pending retries (1.907876ms)
+✔ deep saved scroll positions have a bounded measurement budget (71.890882ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 203.373203

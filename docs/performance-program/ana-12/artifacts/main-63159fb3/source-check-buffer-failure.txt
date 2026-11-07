@@ -1,0 +1,59 @@
+node:child_process:981
+    throw err;
+    ^
+
+<ref *1> Error: spawnSync git ENOBUFS
+    at Object.spawnSync (node:internal/child_process:1160:20)
+    at spawnSync (node:child_process:928:24)
+    at Object.execFileSync (node:child_process:971:15)
+    at show (/workspace/Buyer-Log-Desktop/docs/performance-program/ana-12/compatibility-check.cjs:9:27)
+    at text (/workspace/Buyer-Log-Desktop/docs/performance-program/ana-12/compatibility-check.cjs:10:24)
+    at Object.<anonymous> (/workspace/Buyer-Log-Desktop/docs/performance-program/ana-12/compatibility-check.cjs:22:17)
+    at Module._compile (node:internal/modules/cjs/loader:1872:14)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12) {
+  errno: -105,
+  code: 'ENOBUFS',
+  syscall: 'spawnSync git',
+  path: 'git',
+  spawnargs: [
+    'show',
+    '63159fb32ff3d5bdc5f142b4a8f16ca6a3983240:resources/app/public/app-main.js'
+  ],
+  error: [Circular *1],
+  status: null,
+  signal: 'SIGTERM',
+  output: [
+    null,
+    Buffer(1114112) [Uint8Array] [
+      119, 105, 110, 100, 111, 119,  46,  66,  76,  80, 101, 114,
+      102,  63,  46, 109,  97, 114, 107,  63,  46,  40,  39,  76,
+       79,  67,  65,  76,  95,  67,  79,  78,  70,  73,  71,  95,
+       82,  69,  65,  68,  89,  39,  41,  59,  10,  47,  47,  32,
+       85, 121, 103, 117, 108,  97, 109,  97,  32, 100, 105, 108,
+      105,  58,  32,  97, 195, 167, 196, 177, 108, 196, 177, 197,
+      159, 116,  97,  32,  39, 116, 114,  39,  59,  32, 107,  97,
+      121, 196, 177, 116, 108, 196, 177,  32, 116, 101, 114,  99,
+      105, 104,  32,  97,
+      ... 1114012 more items
+    ],
+    Buffer(0) [Uint8Array] []
+  ],
+  pid: 3098,
+  stdout: Buffer(1114112) [Uint8Array] [
+    119, 105, 110, 100, 111, 119,  46,  66,  76,  80, 101, 114,
+    102,  63,  46, 109,  97, 114, 107,  63,  46,  40,  39,  76,
+     79,  67,  65,  76,  95,  67,  79,  78,  70,  73,  71,  95,
+     82,  69,  65,  68,  89,  39,  41,  59,  10,  47,  47,  32,
+     85, 121, 103, 117, 108,  97, 109,  97,  32, 100, 105, 108,
+    105,  58,  32,  97, 195, 167, 196, 177, 108, 196, 177, 197,
+    159, 116,  97,  32,  39, 116, 114,  39,  59,  32, 107,  97,
+    121, 196, 177, 116, 108, 196, 177,  32, 116, 101, 114,  99,
+    105, 104,  32,  97,
+    ... 1114012 more items
+  ],
+  stderr: Buffer(0) [Uint8Array] []
+}
+
+Node.js v24.19.0

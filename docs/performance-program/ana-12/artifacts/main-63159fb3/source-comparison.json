@@ -1,0 +1,379 @@
+{
+  "currentMain": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "mergeCommit": "4ae0730103d438c049dfe1419a41eed9489ba1ad",
+  "previousPreparation": "e165be5d22bcc14fa08d696510a06f5401ac8dc2",
+  "previousProductionPin": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "previousPoolReview": "69950f289a012f0bb7c61290bec9890f340f6c64",
+  "includes892": true,
+  "measuredExecutionPathChanged": true,
+  "reason": "Only public change: loadRows awaits whenRowsReady before loadData. Adapted harness shares one readiness-provider stub between overview/delivery/chart. Real pivot/backend is not measured.",
+  "originalSevenTestsVerbatim": true,
+  "historicalManifest119HashesVerifiedAt": "e165be5d22bcc14fa08d696510a06f5401ac8dc2",
+  "historicalArtifactsUnmodified": true,
+  "blocks": [
+    {
+      "name": "plan lifecycle",
+      "file": "backlog-plan-actual.js",
+      "start": "function openModule(value){",
+      "beforeEnd": "function hydrateFilterValidity(){",
+      "afterEnd": "function hydrateFilterValidity(){",
+      "beforeSha256": "5dad176d38be1075206e2927ee8e39ace79d4b69a3762487828ba6f6d43590c4",
+      "afterSha256": "5dad176d38be1075206e2927ee8e39ace79d4b69a3762487828ba6f6d43590c4",
+      "changed": false
+    },
+    {
+      "name": "rows loader including readiness",
+      "file": "backlog-overview.js",
+      "start": "const rowsCache=new Map()",
+      "beforeEnd": "\nfunction queryParams()",
+      "afterEnd": "\nfunction queryParams()",
+      "beforeSha256": "70115c42c0f18065b1cda222b2b21ba1d246c9c0640bbd34b4ba197f7a479d3b",
+      "afterSha256": "66b97119b76234b53819142699cebe6cd6720cdd5826edd04b5b96779994b8ed",
+      "changed": true
+    },
+    {
+      "name": "row cache and transport",
+      "file": "backlog-overview.js",
+      "start": "const rowsCache=new Map()",
+      "beforeEnd": "\nfunction loadRows(",
+      "afterEnd": "\nasync function loadRows(",
+      "beforeSha256": "6ff481c418238b741b13ca93ab24b9bbf11ef365ffd1e5b5501b1b44de1263f5",
+      "afterSha256": "6ff481c418238b741b13ca93ab24b9bbf11ef365ffd1e5b5501b1b44de1263f5",
+      "changed": false
+    },
+    {
+      "name": "overview refresh",
+      "file": "backlog-overview.js",
+      "start": "async function refresh(force){",
+      "beforeEnd": "\nlet pendingTimer=",
+      "afterEnd": "\nlet pendingTimer=",
+      "beforeSha256": "58910c4fa4c3e4e33674fabb38ff2d38f4c37ad54a34b4cf9a0bc360bff1567b",
+      "afterSha256": "58910c4fa4c3e4e33674fabb38ff2d38f4c37ad54a34b4cf9a0bc360bff1567b",
+      "changed": false
+    },
+    {
+      "name": "overview close",
+      "file": "backlog-overview.js",
+      "start": "function setOpen(value){",
+      "beforeEnd": "\nfunction bind(){",
+      "afterEnd": "\nfunction bind(){",
+      "beforeSha256": "72b6e540299889787781b695270b0f716f63274444ced050d8067ab42deee477",
+      "afterSha256": "72b6e540299889787781b695270b0f716f63274444ced050d8067ab42deee477",
+      "changed": false
+    },
+    {
+      "name": "chart lifecycle",
+      "file": "backlog-chart.js",
+      "start": "  function cacheSignature(params) {",
+      "beforeEnd": "  function optionHtml(",
+      "afterEnd": "  function optionHtml(",
+      "beforeSha256": "816bd6a315244550c8dce13f56cb0a78f24a12874dca21773e27dba6941593dd",
+      "afterSha256": "816bd6a315244550c8dce13f56cb0a78f24a12874dca21773e27dba6941593dd",
+      "changed": false
+    }
+  ],
+  "sources": [
+    {
+      "ref": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+      "path": "resources/app/public/backlog-plan-actual.js",
+      "sha256": "a3815dbf2d0f15ed535710e03db56497c81d866f811196438af67e773ae5ecd1",
+      "previousRef": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+      "previousSha256": "a3815dbf2d0f15ed535710e03db56497c81d866f811196438af67e773ae5ecd1",
+      "unchangedSincePreviousEvidence": true,
+      "anchors": [
+        {
+          "text": "function openModule(value)",
+          "lines": [
+            125
+          ]
+        },
+        {
+          "text": "const generation=++refreshGeneration",
+          "lines": [
+            137
+          ]
+        },
+        {
+          "text": "await fetch('/api/backlog-plan-actual",
+          "lines": [
+            145
+          ]
+        },
+        {
+          "text": "if(generation!==refreshGeneration)",
+          "lines": [
+            147
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+      "path": "resources/app/public/backlog-overview.js",
+      "sha256": "8ef917dcad4e373327b720dcaef15f72c0f998675253aa073d7f191639a66e64",
+      "previousRef": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+      "previousSha256": "267e812333f5537a4161d6c93190712d69fb0795a014da8ee27f13e7890004c2",
+      "unchangedSincePreviousEvidence": false,
+      "anchors": [
+        {
+          "text": "const rowsCache=new Map()",
+          "lines": [
+            158
+          ]
+        },
+        {
+          "text": "const rowsQueryKey=",
+          "lines": [
+            160
+          ]
+        },
+        {
+          "text": "window.BLBacklogRows=",
+          "lines": [
+            189
+          ]
+        },
+        {
+          "text": "function setOpen(value)",
+          "lines": [
+            691
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+      "path": "resources/app/public/backlog-chart.js",
+      "sha256": "d234cf736c671d77998aeb2e72b18aa8765ba1070e408583dea53d6d50340d4f",
+      "previousRef": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+      "previousSha256": "d234cf736c671d77998aeb2e72b18aa8765ba1070e408583dea53d6d50340d4f",
+      "unchangedSincePreviousEvidence": true,
+      "anchors": [
+        {
+          "text": "async function loadDetail",
+          "lines": [
+            889
+          ]
+        },
+        {
+          "text": "if(root.BLBacklogRows?.loadData)",
+          "lines": [
+            898
+          ]
+        },
+        {
+          "text": "cache={signature:sig",
+          "lines": [
+            906
+          ]
+        },
+        {
+          "text": "if(generation!==renderGeneration)",
+          "lines": [
+            920,
+            940
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+      "path": "resources/app/public/backlog-delivery-analysis.js",
+      "sha256": "313bdcf69dcacfcd0997394ff10ad373d4ab51ee52348bfc61e379dd1d38a0a1",
+      "previousRef": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+      "previousSha256": "313bdcf69dcacfcd0997394ff10ad373d4ab51ee52348bfc61e379dd1d38a0a1",
+      "unchangedSincePreviousEvidence": true,
+      "anchors": [
+        {
+          "text": "async function fetchRows",
+          "lines": [
+            93
+          ]
+        },
+        {
+          "text": "window.BLBacklogRows.load(params)",
+          "lines": [
+            96
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+      "path": "resources/app/public/backlog-overview.js",
+      "sha256": "8ef917dcad4e373327b720dcaef15f72c0f998675253aa073d7f191639a66e64",
+      "previousRef": "69950f289a012f0bb7c61290bec9890f340f6c64",
+      "previousSha256": "8ef917dcad4e373327b720dcaef15f72c0f998675253aa073d7f191639a66e64",
+      "unchangedSincePreviousEvidence": true,
+      "anchors": [
+        {
+          "text": "async function loadRows",
+          "lines": [
+            183
+          ]
+        },
+        {
+          "text": "whenRowsReady",
+          "lines": [
+            186
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+      "path": "resources/app/server/lib/compute-read-service.js",
+      "sha256": "2b219dee54a61695c310b7b458b46064d608fc1dad8022649d83770d0deb0181",
+      "previousRef": "69950f289a012f0bb7c61290bec9890f340f6c64",
+      "previousSha256": "2b219dee54a61695c310b7b458b46064d608fc1dad8022649d83770d0deb0181",
+      "unchangedSincePreviousEvidence": true,
+      "anchors": [
+        {
+          "text": "entry.refs++",
+          "lines": [
+            11,
+            36
+          ]
+        },
+        {
+          "text": "await compute.run",
+          "lines": [
+            28
+          ]
+        },
+        {
+          "text": "captured.assertResponse()",
+          "lines": [
+            38
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+      "path": "resources/app/server/lib/compute-pool.js",
+      "sha256": "a0121dbc2e018065c3e6b906149ad0caf6e7a784ccc05e61b5d3460063586266",
+      "previousRef": "69950f289a012f0bb7c61290bec9890f340f6c64",
+      "previousSha256": "a0121dbc2e018065c3e6b906149ad0caf6e7a784ccc05e61b5d3460063586266",
+      "unchangedSincePreviousEvidence": true,
+      "anchors": [
+        {
+          "text": "function retire(",
+          "lines": [
+            59
+          ]
+        },
+        {
+          "text": "function run(",
+          "lines": [
+            155
+          ]
+        },
+        {
+          "text": "job.onAbort=",
+          "lines": [
+            175
+          ]
+        },
+        {
+          "text": "setGeneration",
+          "lines": [
+            137,
+            193
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+      "path": "resources/app/server/lib/compute-response.js",
+      "sha256": "5d9bef0dca1c1238ac33464a49f0212710285f904bf777adb62da577cee65155",
+      "previousRef": "69950f289a012f0bb7c61290bec9890f340f6c64",
+      "previousSha256": "5d9bef0dca1c1238ac33464a49f0212710285f904bf777adb62da577cee65155",
+      "unchangedSincePreviousEvidence": true,
+      "anchors": [
+        {
+          "text": "res.once('finish',release)",
+          "lines": [
+            13
+          ]
+        },
+        {
+          "text": "res.once('close',release)",
+          "lines": [
+            13
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+      "path": "resources/app/public/app-main.js",
+      "sha256": "844dea07238be03461a899051491cb4dca1995a54cb753b5fa3c616845e8531d",
+      "anchors": [
+        {
+          "text": "async function prepareBacklogChartQuery(){",
+          "lines": [
+            19738
+          ]
+        },
+        {
+          "text": "async function waitForBacklogRowsReady(){",
+          "lines": [
+            19742
+          ]
+        },
+        {
+          "text": "window.BLBacklogChartContext={",
+          "lines": [
+            19565
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+      "path": "resources/app/server/server.js",
+      "sha256": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5",
+      "anchors": [
+        {
+          "text": "app.get('/api/backlog-export'",
+          "lines": [
+            8834
+          ]
+        },
+        {
+          "text": "app.get('/api/backlog-plan-actual'",
+          "lines": [
+            9017
+          ]
+        },
+        {
+          "text": "const lease=await computeReads.run(req,'backlog',task,",
+          "lines": [
+            8840
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+      "path": "resources/app/server/lib/compute-read-guard.js",
+      "sha256": "aea78f24f7b3608816b8bd131070d58442685a6bf04c0ea5c341a7edbd57fae5",
+      "anchors": [
+        {
+          "text": "function stamp(profile)",
+          "lines": [
+            8
+          ]
+        },
+        {
+          "text": "assertResponse:()=>unchanged(sessionProfile(req))",
+          "lines": [
+            16
+          ]
+        }
+      ]
+    }
+  ]
+}

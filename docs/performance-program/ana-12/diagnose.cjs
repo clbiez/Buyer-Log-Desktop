@@ -5,7 +5,7 @@ const http=require('node:http'),crypto=require('node:crypto'),inspector=require(
 const zlib=require('node:zlib'),assert=require('node:assert/strict');
 const {performance}=require('node:perf_hooks'),{execFileSync}=require('node:child_process');
 const ROOT=path.resolve(__dirname,'../../..'),APP=path.join(ROOT,'resources/app');
-const PIN='5a1656e98deeb573f6245f4b24a8135cc77a0d7b';
+const PIN='63159fb32ff3d5bdc5f142b4a8f16ca6a3983240';
 const fixture=require('./fixture.json');
 const sha=value=>crypto.createHash('sha256').update(value).digest('hex');
 const read=name=>fs.readFileSync(path.join(APP,'public',name),'utf8');
@@ -15,10 +15,12 @@ function extractBlock(source,start,end){
   return source.slice(a,b);
 }
 function context(extra){return vm.createContext({URLSearchParams,Map,Set,JSON,Intl,Date,Promise,AbortController,...extra});}
-function createClient(scenario,fetch){
+function createClient(scenario,fetch,preparation={}){
   let active={},plotted='';
   const host={style:{},classList:{toggle(){}},setAttribute(){},querySelector:()=>null};
   const window={BLMerchCalendarReady:Promise.resolve()};
+  const whenRowsReady=preparation.whenRowsReady||(()=>Promise.resolve());
+  window.BLBacklogChartContext={queryParams:()=>active,whenRowsReady,prepareQuery:async()=>{await whenRowsReady();}};
   let rows,overview,chart,plan;
   if(scenario==='plan'){
     plan=context({fetch,window,rangeIso:()=>({from:fixture.from,to:fixture.to}),planWindow:()=>({from:'2026-10-26',to:'2026-11-02'}),buildBacklogParams:()=>active,
@@ -37,7 +39,7 @@ function createClient(scenario,fetch){
       vm.runInContext(extractBlock(source,'function setOpen(value){','\nfunction bind(){'),overview);
       rows=window.BLBacklogRows;
     }
-    const root={fetch,document:{getElementById:()=>host},BLBacklogRows:rows,BLBacklogChartContext:{queryParams:()=>active},BLMerchCalendarReady:Promise.resolve()};
+    const root={fetch,document:{getElementById:()=>host},BLBacklogRows:rows,BLBacklogChartContext:window.BLBacklogChartContext,BLMerchCalendarReady:Promise.resolve()};
     chart=context({root,cache:{signature:'',headers:[],rows:[]},renderGeneration:0,state:{enabled:true,timeField:'demoDate'},
       normalizeHeaders:h=>h,inferState:(_h,_r,s)=>s,saveState(s){chart.state=s;},
       buildModel:(_r,_h,s)=>({state:s,categories:['demo'],series:[{}]}),

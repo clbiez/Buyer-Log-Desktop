@@ -1,0 +1,17 @@
+✔ source extraction fails closed on missing or ambiguous anchors (1.586331ms)
+✔ shared rows preserve scope, generation and source detail variants; only grouping shares (3.645801ms)
+✔ baseline deduplicates pending consumers and invalidation leaves their transport alive (2.01876ms)
+✔ plan generation keeps final query while still parsing the older response (1.76831ms)
+✔ closing overview leaves a shared chart consumer alive on the exact current source (3.389383ms)
+✔ three per arm, same fixture/source, no overlap and exact final results are mandatory (4.865712ms)
+✔ future cancellation contract rejects the actual uncancellable baseline (6.396011ms)
+✔ current Main readiness gate precedes all shared fetches and preserves serial sharing (7.881373ms)
+✔ shared load propagates readiness rejection before starting a transport (2.575361ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 104.51373

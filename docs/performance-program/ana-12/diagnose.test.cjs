@@ -67,3 +67,21 @@ test('future cancellation contract rejects the actual uncancellable baseline',as
     return {requests,subscribe:p=>({promise:client.rows.loadData(p),release(){}}),flush:async()=>{},dispose:async()=>{for(const r of requests)r.resolve({ok:true,json:async()=>({rows:[]})});}};
   }),/signal/);
 });
+test('current Main readiness gate precedes all shared fetches and preserves serial sharing',async()=>{
+  let release,waits=0,calls=0;
+  const ready=new Promise(resolve=>{release=resolve;});
+  const client=createClient('shared',async()=>{calls++;return {ok:true,json:async()=>({rows:[{_ana12Query:'demo-final'}]})};},{whenRowsReady:()=>{waits++;return ready;}});
+  const query={analysisFilters:'demo-final'},delivery=client.rows.load(query),panels=client.start(query);
+  await new Promise(setImmediate);
+  assert.equal(calls,0,'no row transport may start before pivot readiness');
+  assert.equal(waits,3,'delivery, overview and chart preparation must all traverse readiness');
+  release();const [rows]=await Promise.all([delivery,panels]);
+  assert.equal(calls,1);assert.equal(rows[0]._ana12Query,'demo-final');
+  assert.deepEqual(client.result(),{overview:'demo-final',chart:'demo-final'});
+});
+test('shared load propagates readiness rejection before starting a transport',async()=>{
+  let calls=0;
+  const client=createClient('shared',async()=>{calls++;return {ok:true,json:async()=>({rows:[]})};},{whenRowsReady:async()=>{throw Error('synthetic readiness failure');}});
+  await assert.rejects(client.rows.load({q:'demo'}),/synthetic readiness failure/);
+  assert.equal(calls,0);
+});

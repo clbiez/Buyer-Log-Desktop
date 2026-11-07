@@ -2,6 +2,10 @@
 
 **Durum: yalnız hazırlık. Üretim iptali uygulanmadı. Merge, TEST ve STABLE yok.**
 
+Güncel uyumluluk bazı **`63159fb32ff3d5bdc5f142b4a8f16ca6a3983240`** (#885 entegrasyonu #902 üzerinden Main'de). Normal merge **`4ae0730103d438c049dfe1419a41eed9489ba1ad`**; rebase/force-push yok. Çalışan harness bu yeni pine bağlıdır. [Güncel uyumluluk raporu](main-compatibility.md), [kaynak karşılaştırması](artifacts/main-63159fb3/source-comparison.json), [yenilenen 24 koşu](artifacts/main-63159fb3/cohort/summary.json) ve [ana sunucu sahibine devir](handoff.md) esas alınır. Aşağıdaki ilk teslim bölümü kendi eski SHA/kanıtlarıyla tarihsel kayıttır; güncel Main ölçümü diye kullanılmaz. ANA-12 açık kalır.
+
+## İlk hazırlık teslimi — tarihsel kayıt
+
 Kaynak sözleşmesi: `CLAUDE.md` ve `docs/performance/2026-11-05-codex-review-findings.md`, ANA-12. Sabit Main **`5a1656e98deeb573f6245f4b24a8135cc77a0d7b`**, #892 dahil. Ayrı dal: `diag/ana-12-cancellation-preparation`. Yalnız bu dizinde yeni dosyalar vardır; `resources/app` ağacı bazla aynıdır. #892'nin dar `app-main.js` istisnası genişletilmedi. #885 inceleme SHA'sı **`69950f289a012f0bb7c61290bec9890f340f6c64`** salt okunur incelendi; rebase/force-push yok.
 
 ## Kaynakla doğrulanan sınır
@@ -55,6 +59,7 @@ Tekrar üretme (repo kökünden):
 ```sh
 node --test docs/performance-program/ana-12/diagnose.test.cjs
 node docs/performance-program/ana-12/diagnose.cjs /tmp/ana12-new-empty-output
+node docs/performance-program/ana-12/compatibility-check.cjs
 ```
 
 Çıktı dizini boş olmalı; önceki kanıtın üzerine yazma engellenir. Üretim ağacı pin ile aynı değilse kampanya durur. Kaynak çapaları belirsizleşirse extraction durur. Yeni fixture/benchmark kodunda ölçümü yenile; mevcut sonuçları yeni kodun sonucu diye kullanma. Gerçek server/login/refresh başlatılmaz, refresh POST retry yok.

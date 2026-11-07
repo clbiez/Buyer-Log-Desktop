@@ -1,0 +1,5 @@
+Initial inline source-comparison preflight failed before writing source-comparison.json.
+Expected changed blocks: ["rows loader including readiness"].
+Observed changed blocks: ["rows loader including readiness", "row cache and transport"].
+Reason: the end anchor "function loadRows(" left the new declaration's "async " prefix in the cache block. No cache implementation difference was found. The corrected checker excludes the entire declaration prefix on each side and also reconstructs the complete old overview source from the reviewed wrapper replacement; all other bytes must match.
+The shell proceeded to the independent harness/campaign after this failed inline check because that command did not enable fail-fast. The current-code campaign's own source pin preflight passed. No failed run was dropped. compatibility-check.cjs subsequently verifies the full source delta, original assertions, historical hashes and every current run/profile. This orchestration failure is retained here; it is not reported as a successful preflight.

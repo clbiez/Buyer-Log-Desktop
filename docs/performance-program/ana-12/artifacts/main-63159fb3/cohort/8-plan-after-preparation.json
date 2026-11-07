@@ -1,0 +1,233 @@
+{
+  "scenario": "plan",
+  "arm": "after-preparation",
+  "index": 8,
+  "fixtureSha": "7e6f563f463b24fa420a6659704a280f09a9a388e6f50b61b67fefee779fe3a3",
+  "sourceHashes": {
+    "backlog-plan-actual.js": "a3815dbf2d0f15ed535710e03db56497c81d866f811196438af67e773ae5ecd1",
+    "backlog-overview.js": "8ef917dcad4e373327b720dcaef15f72c0f998675253aa073d7f191639a66e64",
+    "backlog-chart.js": "d234cf736c671d77998aeb2e72b18aa8765ba1070e408583dea53d6d50340d4f"
+  },
+  "startedAtMs": 1794074820012,
+  "endedAtMs": 1794074820625,
+  "correctFinal": true,
+  "result": "demo-9",
+  "metrics": {
+    "requests": 10,
+    "peakActiveRequests": 10,
+    "parsedBytes": 30331020,
+    "staleParsedBytes": 27297918,
+    "parseMs": 86.29933100000017,
+    "staleParseMs": 77.4450480000005,
+    "processCpuMs": 317.418,
+    "processCpuAfterSupersessionMs": 296.4,
+    "wallMs": 612.941057,
+    "aborts": 0,
+    "signals": 0,
+    "completedAfterClose": null,
+    "heapDeltaUncollectedBytes": -19923416,
+    "backendJobs": null,
+    "postCancellationCpuMs": null
+  },
+  "limitations": [
+    "Synthetic loopback HTTP, delayed response, instrumented text/JSON parsing; no browser/DOM/report cost.",
+    "Process CPU includes both synthetic HTTP server and VM client. Heap is uncollected; not retained heap.",
+    "No real backend or compute pool invoked: backend jobs and CPU after cancellation are unknown. No cancellation occurred."
+  ],
+  "supersededAt": 7455.143316,
+  "closedAt": null,
+  "records": [
+    {
+      "token": "demo-0",
+      "started": 7376.693495,
+      "hasSignal": false,
+      "aborted": false,
+      "parsedBytes": 3033102,
+      "parseMs": 8.577865000000202,
+      "headersAt": 7855.274239,
+      "bodyAt": 7980.071893,
+      "parsedAt": 7989.061125,
+      "ended": 7989.062497
+    },
+    {
+      "token": "demo-1",
+      "started": 7386.116377,
+      "hasSignal": false,
+      "aborted": false,
+      "parsedBytes": 3033102,
+      "parseMs": 7.444381000000249,
+      "headersAt": 7854.654544,
+      "bodyAt": 7971.371286,
+      "parsedAt": 7979.265031,
+      "ended": 7979.266463
+    },
+    {
+      "token": "demo-2",
+      "started": 7394.803604,
+      "hasSignal": false,
+      "aborted": false,
+      "parsedBytes": 3033102,
+      "parseMs": 8.10026999999991,
+      "headersAt": 7854.195456,
+      "bodyAt": 7961.931338,
+      "parsedAt": 7970.428053,
+      "ended": 7970.430227
+    },
+    {
+      "token": "demo-3",
+      "started": 7403.856531,
+      "hasSignal": false,
+      "aborted": false,
+      "parsedBytes": 3033102,
+      "parseMs": 8.676030999999966,
+      "headersAt": 7844.527772,
+      "bodyAt": 7951.342213,
+      "parsedAt": 7960.731827,
+      "ended": 7960.734431
+    },
+    {
+      "token": "demo-4",
+      "started": 7412.462427,
+      "hasSignal": false,
+      "aborted": false,
+      "parsedBytes": 3033102,
+      "parseMs": 7.845013000000108,
+      "headersAt": 7844.345272,
+      "bodyAt": 7898.035886,
+      "parsedAt": 7906.277906,
+      "ended": 7906.279378
+    },
+    {
+      "token": "demo-5",
+      "started": 7420.145582,
+      "hasSignal": false,
+      "aborted": false,
+      "parsedBytes": 3033102,
+      "parseMs": 9.77962000000025,
+      "headersAt": 7844.060111,
+      "bodyAt": 7939.252513,
+      "parsedAt": 7949.48458,
+      "ended": 7949.487645
+    },
+    {
+      "token": "demo-6",
+      "started": 7428.788883,
+      "hasSignal": false,
+      "aborted": false,
+      "parsedBytes": 3033102,
+      "parseMs": 8.201720000000023,
+      "headersAt": 7843.823321,
+      "bodyAt": 7887.428384,
+      "parsedAt": 7896.282467,
+      "ended": 7896.2841
+    },
+    {
+      "token": "demo-7",
+      "started": 7437.505453,
+      "hasSignal": false,
+      "aborted": false,
+      "parsedBytes": 3033102,
+      "parseMs": 9.404125000000022,
+      "headersAt": 7843.420807,
+      "bodyAt": 7875.852493,
+      "parsedAt": 7885.913788,
+      "ended": 7885.915881
+    },
+    {
+      "token": "demo-8",
+      "started": 7446.092582,
+      "hasSignal": false,
+      "aborted": false,
+      "parsedBytes": 3033102,
+      "parseMs": 9.416022999999768,
+      "headersAt": 7811.194054,
+      "bodyAt": 7833.13489,
+      "parsedAt": 7843.017331,
+      "ended": 7843.018423
+    },
+    {
+      "token": "demo-9",
+      "started": 7454.972133,
+      "hasSignal": false,
+      "aborted": false,
+      "parsedBytes": 3033102,
+      "parseMs": 8.854282999999668,
+      "headersAt": 7807.469245,
+      "bodyAt": 7814.545823,
+      "parsedAt": 7823.891712,
+      "ended": 7823.892864
+    }
+  ],
+  "serverRecords": [
+    {
+      "token": "demo-0",
+      "received": 7379.915021,
+      "finished": 7846.631027,
+      "disconnected": null,
+      "bytes": 3033102
+    },
+    {
+      "token": "demo-1",
+      "received": 7386.975616,
+      "finished": 7845.847931,
+      "disconnected": null,
+      "bytes": 3033102
+    },
+    {
+      "token": "demo-2",
+      "received": 7395.694279,
+      "finished": 7845.38023,
+      "disconnected": null,
+      "bytes": 3033102
+    },
+    {
+      "token": "demo-3",
+      "received": 7404.766805,
+      "finished": 7829.24077,
+      "disconnected": null,
+      "bytes": 3033102
+    },
+    {
+      "token": "demo-4",
+      "received": 7413.211574,
+      "finished": 7828.765438,
+      "disconnected": null,
+      "bytes": 3033102
+    },
+    {
+      "token": "demo-5",
+      "received": 7421.047583,
+      "finished": 7828.264138,
+      "disconnected": null,
+      "bytes": 3033102
+    },
+    {
+      "token": "demo-6",
+      "received": 7429.663965,
+      "finished": 7827.564585,
+      "disconnected": null,
+      "bytes": 3033102
+    },
+    {
+      "token": "demo-7",
+      "received": 7438.5193,
+      "finished": 7826.972762,
+      "disconnected": null,
+      "bytes": 3033102
+    },
+    {
+      "token": "demo-8",
+      "received": 7446.763934,
+      "finished": 7810.698893,
+      "disconnected": null,
+      "bytes": 3033102
+    },
+    {
+      "token": "demo-9",
+      "received": 7455.472181,
+      "finished": 7807.082283,
+      "disconnected": null,
+      "bytes": 3033102
+    }
+  ]
+}
