@@ -1,5 +1,8 @@
 # Faz 5 · Bağımsız inceleme / Independent review
 
+TR/EN: Güncel durum / Latest status: **B1 AÇIK / OPEN; merge yok / no merge**.
+[İkinci inceleme sonuçları ve son 3+3+3 seri / Second-review results](phase-5-review2-report.md).
+
 TR: Kullanıcının P1 kuralı kapsamında `gpt-6-astra`, temel
 `ad198bfe245a93c5ccd90184082d209bb4c3dfb7` ile
 `7012eb3f2d978a5f39aa12800e9c5ccb9635697e` arasındaki gerçek diff'i tek turda,
@@ -171,9 +174,9 @@ findings remain. No rebase or force-push occurred during review. Changes after
 
 | Bulgu / Finding | Durum / Status |
 | --- | --- |
-| B1 — Gerileme, aşama maliyetleri ve 200 ms kabul açığı / Regressions, stage costs and 200 ms acceptance | Açık. `639372a4` üzerinde yeni üç önce + üç sonra F0 ve üç ayrı açılış tamamlandı; altı F0 ve üç açılış doğruluk kontrolleri geçti, üç Global Flow penceresi performans kabulünü geçemedi. Aşama analizi sürüyor; refresh ödünleşimi kullanıcı kararı olmadan kabul edilmez. / Open. A new matched three-before/three-after F0 cohort and three openings completed at `639372a4`. All correctness checks passed; all three Global Flow windows failed performance acceptance. Stage analysis is pending; a refresh tradeoff requires the user's decision. |
+| B1 — Gerileme, aşama maliyetleri ve 200 ms kabul açığı / Regressions, stage costs and 200 ms acceptance | **Açık.** `639372a4` serisinin ardından son `fa580f89` kodunda tekrar 3+3 F0 ve üç ayrı açılış tamamlandı. Altı F0 ve üç açılış doğruluk kontrolleri geçti; iki F0 Overview ve iki ayrı açılış performans kabulünü geçemedi. Refresh 52,962 → 64,102 sn (+%21); CP aynı-sekme 59,342 → 53,067 sn, Orders 3,659 → 3,689 sn. Eski CP/Orders gerilemesinin kök nedeni kanıtlanmadı; son seride aynı oranlar yeniden üretilmedi. Aşama tanısı replica/kodlama/yazma/tekrar hash/decode maliyetlerini doğruladı; kuyruk <0,3 ms. OAB soğuk senkron I/O köküne sınırlı düzeltme yapıldı; kalan boşlukların nedeni bilinmiyor. Refresh ödünleşimi kullanıcı kararı bekler. / **Open.** Final matched 3+3+3 completed at `fa580f89`; correctness passes, responsiveness fails. Refresh regresses 21%; the former CP/Orders ratios are not reproduced or claimed fixed. Source lifecycle costs are measured, queue wait is not the cause. The traced OAB cold I/O is fixed, remaining gaps are unresolved, and the refresh tradeoff needs the user. |
 | B2 — LFL sürüm kuralının kopyalanması / Duplicate LFL source-version rule | Düzeltildi. MAIN hydration ve native worker aynı `collection-lfl-source-version.js` yardımcısını kullanır. `lflLoadedAt:null` ve model snapshot'ı mevcutken eski `available:true/version=loadedAt` davranışı korunur; explicit-LFL ve savedAt geri dönüşleri de gerçek worker ile eşdeğerdir. Eski kodda native eşdeğerlik testi geçti, ortak yardımcı sözleşmesi RED oldu; çıkarımdan sonra ikisi de GREEN. / Fixed. MAIN hydration and the native worker share one helper. The pre-existing available/version semantics, including an empty LFL with a model snapshot, explicit LFL time and savedAt fallback, remain equal. Native equality passed before extraction; the shared-helper contract failed RED, then both passed GREEN. |
-| B3 — Paket dışı OAB metadata taşımasının sıcak/soğuk maliyeti / Hot/cold cost of out-of-package OAB metadata offload | Düzeltildi: taşıma geri alındı. Aynı runtime'da eski üç route gövdesiyle yapılan kontrollü HTTP A/B'de soğuk medyan 40,274 → 221,944 ms, sıcak p95'ler Seasons 6,952 → 22,813; MAG 9,189 → 25,325; Buyer Group 6,684 → 24,721 ms oldu. Üç taze süreç çifti ve uç/kol başına 300 sıcak örnek alındı; 1.818 yanıtın baytları eşdeğerdi. Net kazanç doğrulanmadı. Önceki OAB yolu, mevcut alan/capability kapıları ve mtime cache'i geri geldi; INT-12 açık. HTTP bağlantı-kopması lease düzeltmesi korunur. / Fixed by rollback. A controlled HTTP A/B on the same runtime used the exact pre-offload route bodies. Cold median was 40.274 → 221.944 ms; warm p95 values regressed for all three endpoints. Three fresh-process pairs and 300 warm samples per endpoint/arm produced 1,818 byte-equivalent responses. No net gain was established. The existing local route, area/capability gates and mtime cache were restored; INT-12 stays open. The HTTP disconnect lease fix remains. |
+| B3 — Paket dışı OAB metadata taşımasının sıcak/soğuk maliyeti / Hot/cold cost of out-of-package OAB metadata offload | Düzeltildi: taşıma geri alındı. Aynı runtime'da eski üç route gövdesiyle yapılan kontrollü HTTP A/B'de soğuk medyan 40,274 → 221,944 ms, sıcak p95'ler Seasons 6,952 → 22,813; MAG 9,189 → 25,325; Buyer Group 6,684 → 24,721 ms oldu. Üç taze süreç çifti ve uç/kol başına 300 sıcak örnek alındı; 1.818 yanıtın baytları eşdeğerdi. Net kazanç doğrulanmadı. Yerel OAB yolu ve alan/capability kapıları geri geldi; daha sonraki B1 yerel async I/O düzeltmesi aşağıda ayrılır. INT-12 açık. HTTP bağlantı-kopması lease düzeltmesi korunur. / Fixed by rollback. A controlled HTTP A/B on the same runtime used the exact pre-offload route bodies. Cold median was 40.274 → 221.944 ms; warm p95 values regressed for all three endpoints. Three fresh-process pairs and 300 warm samples per endpoint/arm produced 1,818 byte-equivalent responses. No net gain was established. The local route and area/capability gates were restored; the later B1 local async I/O fix is recorded separately below. INT-12 stays open. The HTTP disconnect lease fix remains. |
 
 TR/EN: B2 kanıtı / B2 evidence: `/tmp/phase-5-review2-b2-red.txt`,
 `/tmp/phase-5-review2-b2-green.txt`; yeni native test /
@@ -207,3 +210,40 @@ canonical payloads, guards and 400 validation remain covered by the original
 tests and oab-metadata-local-route.test.js. Original commits/evidence remain
 available. Only the unreleased note for this removed feature was withdrawn;
 main's entries are intact.
+
+
+### 639372a4 sonrası delta / Post-639372a4 delta
+
+- `285d8fe5d57fb987a3b480046983e680ed9f4a8f`: B2 ortak LFL helper ve native eşdeğerlik / shared helper and native equality.
+- `c799fe4143b192db45bac2e5e77b4b44f43707de`: B3 worker OAB geri alımı; HTTP abort lease düzeltmesi korunur / worker OAB rollback, HTTP abort release retained.
+- `06399a53ca504d313b8df66b50756d29d278c773`: B1 ölçülmüş soğuk OAB okumasına yerel async I/O, single-flight, eski yayın reddi ve canlı yetki kapısı / measured cold-read fix with local async I/O, single flight, stale rejection and live authority.
+- `fa580f89c1cdce75160d78b2c56c2876fb315f68`: gerçek TR/EN PNG ve doğru yerel I/O sürüm notu / actual TR/EN captures and accurate local-I/O release note.
+- Son test/doküman deltası / final test/document delta: üretim automationError facade'ı ile birebir hata-metin testi; son 3+3+3, 15 tam JSON eşdeğerliği ve aşama ölçümlerinin raporu. / Exact production error-facade test and the final cohort/equality/stage evidence.
+
+TR: Bu delta Claude tarafından yeniden incelenmiş değildir. Düzeltmeleri
+ana agent uyguladı; son ilgili paket 177 dosya / 1.328 test PASS, atlama ve
+başarısızlık sıfır. i18n 0/0, release notes 32 PASS. Eski inceleme onayı
+yeni SHA'ya taşınmaz. Son SHA, PR açıklaması ve kullanıcıya verilen raporla
+sabitlenir; salt okunur delta incelemesi kullanıcı üzerinden Claude'a gider.
+Rebase/force-push yapılmadı; merge öncesi durulur.
+
+EN: Claude has not reviewed this delta. The primary agent implemented the
+fixes; the final relevant 177-file / 1,328-test package passes with zero
+failures/skips. i18n is 0/0; 32 release notes validate. Earlier review/checks
+do not approve a new SHA. The final SHA is pinned in the PR and user handoff
+for read-only delta review through the user. No rebase/force-push occurred;
+merge remains gated.
+
+TR: B3'ten sonraki yerel async düzeltme her isteğe worker/gzip eklemez.
+Soğuk istek medyanı 45,164 → 77,412 ms; sıcak sonuçlar karışıktır, hızlanma
+diye sunulmaz. Üç soğuk örnekte eski 262 ms boşluk görülmedi fakat genel
+200 ms kabulü sağlanmadı. Son bir tanısal izde kalan boşluklar tekrarlandı;
+process bellek/CPU istatistiği çağrıları hipotezi doğrulanmadı. Kalan kök
+neden bilinmiyor; kanıtsız yeni optimizasyon veya eşik değişikliği yok.
+
+EN: The later async fix does not reintroduce worker/gzip per request. Cold
+median is 45.164 → 77.412 ms, warm results are mixed, and no request speedup
+is claimed. Three async cold samples lack the earlier 262 ms gap, but the
+overall 200 ms criterion still fails. A final diagnostic reproduced gaps
+without establishing the native-statistics hypothesis. The remaining cause
+is unknown; no speculative optimization or threshold change was made.

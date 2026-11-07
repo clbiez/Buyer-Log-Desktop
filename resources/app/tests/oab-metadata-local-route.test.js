@@ -9,7 +9,7 @@ function setup(options={}){
   express:{json:()=> 'json-parser'},oabStaticMetadata:options.metadata||metadata,
   computedOabMetadataForRequest:()=>{throw Error('B3: unchanged bundled metadata must not make a worker round trip');},
   sendComputedResponse:()=>{throw Error('B3: the local metadata route must return its canonical object');},
-  automationError:(res,error)=>res.status(error.statusCode||500).json({error:error.message,errorEn:error.errorEn,code:error.code})};
+  automationError:(res,error)=>res.status(error.statusCode||500).json({error:error.message,code:error.code,details:error.details})};
  const routeStart=source.indexOf("app.get('/api/oab/seasons'"),helperStart=source.indexOf('async function oabMetadataSnapshotForRequest('),start=helperStart>=0?helperStart:routeStart,end=source.indexOf('// OAB verisi: rapor',routeStart);
  assert.ok(start>=0&&end>start);vm.createContext(context);vm.runInContext(source.slice(start,end),context);
  return {routes,guards,state};
@@ -50,7 +50,7 @@ test('async metadata reads recheck the actual session, active profile, area and 
    const pending=request(f,url,body);await new Promise(setImmediate);
    try{assert.equal(reads,1,'every valid route awaits the nonblocking source');mutate(f.state);}
    finally{release();}
-   const result=await pending;assert.ok([401,403].includes(result.code));assert.ok(result.value.errorEn);assert.equal(result.value.ok,undefined);
+   const result=await pending;assert.ok([401,403].includes(result.code));assert.match(result.value.error,/ \/ [A-Z]/);assert.equal(result.value.ok,undefined);
   }
  }
 });

@@ -49,6 +49,19 @@ ve credential kullanılmaz. Yenilemenin gerçek `onMetrics` telemetrisi de aynı
 
 ## Faz 6c için hedef sözleşme
 
+07.11.2026 ek ölçüm: son normal F0 serisinde (`fa580f89`) gerçek ASAS
+worker mesajı MAIN alımı **1.029,277 / 905,603 / 760,739 ms** (medyan
+**905,603 ms**), worker gönderimi **1.505,845 / 1.485,421 / 1.675,775 ms**
+(medyan **1.505,845 ms**) oldu. Bu alanlar gerçek yenileme telemetrisidir.
+Bazda ayrı alım/gönderim alanları bulunmadığından A/B kazanç çıkarılmaz.
+Kaynak hazırlığındaki ek raw-source IPC, replica ve hash maliyetleri
+[ikinci inceleme raporundadır](phase-5-review2-report.md).
+
+EN: The final normal F0 cohort measures actual ASAS worker-message receive
+and send timings above. Baseline has no separate transport fields; these
+are not an A/B speedup. The additional source lifecycle remains a measured
+cost, not an implemented single-owner service.
+
 1. **Tek sahip:** Ham kaynak grafiğini owner/generation anahtarlı servis tutar.
    Excel okuma, parser kancaları, önceki/yeni karşılaştırması ve snapshot üretimi
    bu serviste çalışır. Ana süreç ham grafiği almaz; generation handle,
