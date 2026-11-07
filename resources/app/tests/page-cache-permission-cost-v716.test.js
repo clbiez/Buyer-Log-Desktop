@@ -113,10 +113,13 @@ test('v7.16 rol tanımları aynı kaynak için yeniden kurulmaz', () => {
 test('v7.16 _canEdit kararı satır başına değil kullanıcı ve sipariş kodu başına alınır', () => {
   const block = SERVER.slice(SERVER.indexOf('async function buildAndWritePageProjectionCache'));
   const scoped = block.slice(0, block.indexOf('async function warmPageProjectionCachesFromSnapshots'));
+  const accessSource=fs.readFileSync(path.join(__dirname,'../server/lib/user-access.js'),'utf8');
+  const workerSource=fs.readFileSync(path.join(__dirname,'../server/lib/compute-tasks.js'),'utf8');
   // manageAllOrders kullanıcı düzeyinde bir kez çözülmeli.
-  assert.match(scoped, /const editContext = \{ manageAll:/);
+  assert.match(accessSource, /manageAll:Boolean\(profile&&hasPermission\(profile,'manageAllOrders',store\)\)/);
+  assert.match(SERVER, /access:profile\?userAccess\.computeAccessContext\(profile\)/);
   // Sipariş kodu başına önbellek bulunmalı.
-  assert.match(scoped, /editByOrderCode/);
+  assert.match(workerSource, /const editable=new Map\(\),canEdit=row=>/);
   // Satır başına doğrudan yetki çağrısı kalmamalı.
   assert.doesNotMatch(scoped, /forEach\(row => \{ row\._canEdit = Boolean\(pageProjectionCanEdit/);
 });

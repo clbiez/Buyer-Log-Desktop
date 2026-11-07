@@ -1,0 +1,113 @@
+{
+  "synthetic": true,
+  "visualOnly": true,
+  "acceptanceEligible": false,
+  "revision": "8c575ecd6b34eb60ddfb685921148a740b8c143c",
+  "underlyingHarnessStatus": "failed",
+  "correctness": "passed",
+  "responsivenessPassed": false,
+  "serverExit": {
+    "code": 0,
+    "signal": null,
+    "forced": false
+  },
+  "fixture": {
+    "synthetic": true,
+    "rows": 20,
+    "seed": 7,
+    "hashes": {
+      "ASAS - Demo.xlsx": "66cee75ee64f4da4cf47168aa4a33d1d8fc62a696d4afdec83abf0b222ab2460",
+      "Antrepo - Demo.xlsx": "407c2cd6d597a8c58998e1b6815bfc3f5e47a9a108def294a3cf58f8728e7767",
+      "LFL - Demo.xlsx": "5129a4641962b0cd09a533f4fd90690abfbb2e4f6437cb66f8a51a40c1559389"
+    },
+    "purpose": "visual-only; not the 30k performance fixture",
+    "variant": "S6/S7 seasons accepted by the existing previous-season engine",
+    "transforms": {
+      "6W26": "S6",
+      "6S27": "S7"
+    },
+    "transformedCells": {
+      "ASAS - Demo.xlsx": 20,
+      "Antrepo - Demo.xlsx": 0,
+      "LFL - Demo.xlsx": 20
+    },
+    "originalFixture": "/tmp/buyerlog-startup-phase5-ring-smoke-1/source",
+    "originalHashes": {
+      "ASAS - Demo.xlsx": "a28cc52cf01c11fa600b46353fd6fc3cebedc1a835067308b8f0cfe195cd462e",
+      "Antrepo - Demo.xlsx": "c58cdd578dba5636438015cc24b67f7971e1ea780e6abe745f6705d53e84beb7",
+      "LFL - Demo.xlsx": "3eb718585d05e1fc35cc86d19a0d4147b58e7d4f6ce58456889085acc8b685e7"
+    }
+  },
+  "lfl": {
+    "key": "[\"S6\",\"D4\",\"PIJAMA\",\"USD\",\"2026-11\"]",
+    "average": 9.82,
+    "referenceCount": 43,
+    "collectionRow": {
+      "id": 1,
+      "modelKod": "DEMO-LFL-001",
+      "modelName": "Demo knitwear",
+      "renkKod": "01",
+      "renk": "Demo blue",
+      "season": "S7",
+      "mag": "D4",
+      "urunTipi": "PIJAMA",
+      "inStoreMonth": "2027-11",
+      "quantity": "120",
+      "targetPrice": 9.33,
+      "confirmedManufacturer": "Demo manufacturer",
+      "country": "CHINA"
+    },
+    "save": {
+      "ok": true,
+      "workspace": {
+        "_revision": 2,
+        "_updatedAt": "2026-11-07T09:47:39.566Z",
+        "rowCount": 1
+      },
+      "replication": {
+        "ok": true,
+        "published": false,
+        "reason": "not-configured"
+      }
+    }
+  },
+  "captures": [
+    {
+      "file": "phase5-overview-before-oab.png",
+      "lang": "tr",
+      "theme": "light"
+    },
+    {
+      "file": "phase5-oab-filters-tr-light.png",
+      "lang": "tr",
+      "theme": "light"
+    },
+    {
+      "file": "phase5-oab-filters-en-dark.png",
+      "lang": "en",
+      "theme": "dark"
+    },
+    {
+      "file": "phase5-lfl-reference-tr-light.png",
+      "lang": "tr",
+      "theme": "light"
+    },
+    {
+      "file": "phase5-lfl-reference-en-dark.png",
+      "lang": "en",
+      "theme": "dark"
+    }
+  ],
+  "files": {
+    "phase5-overview-before-oab.png": "c02fcdb309665c4493ee1df8e5d28e59d5b298ce513f81da0671b03085280ec9",
+    "phase5-oab-filters-tr-light.png": "3eb76aef7b1abbdcc88c8fdf02f9e00eda822985fb41cfd00acc8271dc30373b",
+    "phase5-oab-filters-en-dark.png": "9e8576b8d47a0983ef2f8a96726e3403d37b4420a03857ab0b64e69e1eba165f",
+    "phase5-lfl-reference-tr-light.png": "8e752d365de23598ee37018f511f1348ec45a1fc48245e4ed09c383333cc5b47",
+    "phase5-lfl-reference-en-dark.png": "5d7cf6d1c0a2577afe7d6bf2893413daa36b3e60f1e7756aa5d10f47c2bd66d1"
+  },
+  "limitations": [
+    "This workflow adds page changes, a generated Collection row, language/theme switches and captures; it is not a normal 30k acceptance cohort. Its timing failure is retained and no acceptance or speedup is claimed.",
+    "The existing previous-season engine accepts S6/S7-style season codes. This separate visual-only fixture transforms 20 ASAS and 20 LFL season cells; the immutable 30k benchmark fixture is unchanged.",
+    "Existing untranslated LCW AI static labels, INTAKE network-error text and the mixed-language generic warning toast remain recorded for the Phase 6b visual regression work. No screenshot text or DOM was fabricated."
+  ]
+}

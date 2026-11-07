@@ -1,0 +1,37 @@
+{
+  "synthetic": true,
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "beforeRevision": "b2c9bdacd5d1d15cc3587d8c9e2e1f868a8413e9",
+  "change": "Preserve object identity for an already-normalized capped history item.",
+  "confirmed": "Repeated reads caused redundant revision increments and synchronous durable writes; a reproduced 204 ms GF gap contains this path and about 80 ms GC.",
+  "notEstablished": "This is not proof of the complete cause of the separate normal Backlog 476/559 ms gaps. Final candidate measurements follow.",
+  "imagesViewed": true,
+  "microItemsEqual": true,
+  "files": {
+    "stall-2026-11-07T16-05-58-534Z-1.cpuprofile.gz": "40c160d646b11872be42924b400aabb2c902e876dfd8106a204bd139ad811cc3",
+    "cpu-gap-analysis.json": "ab0b62d6cd23943419c214f5178009dba3a3c7ea2118d1998abb43f3a0451df6",
+    "green.txt": "69b9a6d6e2e531121492dbe35d99fa3a947775e56a102e7078cf66ace5e31ed0",
+    "micro.json": "cfc14b7c2b1c4894c090263c49f573b82f109c5a04e4c6169432d8e488d9f8e5",
+    "ui-acceptance.json": "50bf80a26d5436696353971d48891a9ef4dbdd9fcdaae1b8c7afc6f4f2867d66",
+    "cpu-openings.json.gz": "ad6b592e04536a479db3280772e481c11b47a8717c427fb5bde6f3e24875fe26",
+    "cpu-captures.json": "e4b7cbe3471fe31a2cc082f019a2d49be4d091edf6650cbedcb6b564e24f17d1",
+    "red.txt": "d95fe2ce4dd4147de519c00be103e4090d8d83de89e1f2b4988f9204e88f5d9d",
+    "stall-2026-11-07T16-06-31-777Z-2.cpuprofile.gz": "149be61709979744c706c7a6ff88024557b9abd827be34fff1f3cdfbf7b61068"
+  },
+  "validation": {
+    "files": 208,
+    "counts": {
+      "tests": 1508,
+      "pass": 1508,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "i18nNew": 0,
+    "i18nBaseline": 0,
+    "releaseNotes": 36
+  },
+  "postChangeDbSourceSha256": "c2b9a25c9550ccb7737491610abae2253186f3e729ede73b57a71b9137425360",
+  "imageSource": "Post-change working tree atop b2c9bdac; db.js source hash above is checked against the committed candidate before its benchmark."
+}
