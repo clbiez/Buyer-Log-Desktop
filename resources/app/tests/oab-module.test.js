@@ -299,15 +299,21 @@ test('OAB: auth durumu açık tarayıcı connector durumundan raporlanır; crede
 
 test('OAB: metadata uçları paketlenmiş JSON kullanıyor; filtre seçiminde PASS bağlantısı YOK', () => {
   const seasonsBody = SERVER.slice(SERVER.indexOf("app.get('/api/oab/seasons'"), SERVER.indexOf("app.post('/api/oab/mag'"));
-  assert.match(seasonsBody, /oabStaticMetadata\.getSeasons\(\)/);
+  assert.match(seasonsBody, /const snapshot = await oabMetadataSnapshotForRequest\(req\)/);
+  assert.match(seasonsBody, /oabStaticMetadata\.getSeasons\(snapshot\)/);
+  assert.match(seasonsBody, /oabStaticMetadata\.getInfo\(snapshot\)/);
   assert.doesNotMatch(seasonsBody, /ensurePassConnected|fetchPassSeasons|GetReportVariablesWithData/);
 
   const magBody = SERVER.slice(SERVER.indexOf("app.post('/api/oab/mag'"), SERVER.indexOf("app.post('/api/oab/buyer-groups'"));
-  assert.match(magBody, /oabStaticMetadata\.getMag\(seasonRef\)/);
+  assert.match(magBody, /const snapshot = await oabMetadataSnapshotForRequest\(req\)/);
+  assert.match(magBody, /oabStaticMetadata\.getMag\(seasonRef, snapshot\)/);
+  assert.match(magBody, /oabStaticMetadata\.getInfo\(snapshot\)/);
   assert.doesNotMatch(magBody, /ensurePassConnected|fetchPassMagOptions|GetVariableWithData/);
 
   const bgBody = SERVER.slice(SERVER.indexOf("app.post('/api/oab/buyer-groups'"), SERVER.indexOf("// OAB verisi:"));
-  assert.match(bgBody, /oabStaticMetadata\.getBuyerGroups\(merchSubGroupRef\)/);
+  assert.match(bgBody, /const snapshot = await oabMetadataSnapshotForRequest\(req\)/);
+  assert.match(bgBody, /oabStaticMetadata\.getBuyerGroups\(merchSubGroupRef, snapshot\)/);
+  assert.match(bgBody, /oabStaticMetadata\.getInfo\(snapshot\)/);
   assert.doesNotMatch(bgBody, /ensurePassConnected|fetchPassBuyerGroupOptions|GetVariableWithData/);
 });
 

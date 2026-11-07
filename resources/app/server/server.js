@@ -5516,12 +5516,29 @@ app.post('/api/oab/auth/connect', userAccess.requireAnyArea('overview'), userAcc
     res.set('Cache-Control','no-store').json({ ok:true, status:{ ...status, authenticated:Boolean(status && status.connected), transport:transport === OAB_DESKTOP_TRANSPORT ? 'desktop-session' : 'existing-browser-cdp' } });
   } catch (err) { automationError(res, err, 'PASS bağlantısı kurulamadı.'); }
 });
-app.get('/api/oab/seasons', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
+async function oabMetadataSnapshotForRequest(req) {
+  const id = req.currentUser.id;
+  const snapshot = await oabStaticMetadata.getSnapshotAsync();
+  const live = userAccess.sessionProfile(req);
+  if (!live || live.id !== id || live.enabled === false || live.status !== 'ACTIVE') {
+    throw Object.assign(new Error('Oturumunuz artık geçerli değil. / Your session is no longer valid.'), {
+      statusCode: 401, code: 'USER_LOGIN_REQUIRED', errorEn: 'Your session is no longer valid.',
+    });
+  }
+  if (!userAccess.hasArea(live, 'overview') || !userAccess.hasCapability(live, 'OAB.VIEW')) {
+    throw Object.assign(new Error('Güncel OAB görüntüleme yetkisi gerekli. / Current OAB view permission is required.'), {
+      statusCode: 403, code: 'OAB_VIEW_DENIED', errorEn: 'Current OAB view permission is required.',
+    });
+  }
+  return snapshot;
+}
+app.get('/api/oab/seasons', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), async (req, res) => {
   try {
     // Bundled metadata: filtre seçenekleri uygulamayla birlikte gelen JSON'dan
     // okunur; normal filtre kullanımı PASS bağlantısı kurmaz.
-    const seasons = oabStaticMetadata.getSeasons();
-    const metadata = oabStaticMetadata.getInfo();
+    const snapshot = await oabMetadataSnapshotForRequest(req);
+    const seasons = oabStaticMetadata.getSeasons(snapshot);
+    const metadata = oabStaticMetadata.getInfo(snapshot);
     res.set('Cache-Control','no-store').json({
       ok:true,
       seasons,
@@ -5532,12 +5549,13 @@ app.get('/api/oab/seasons', userAccess.requireAnyArea('overview'), userAccess.re
     });
   } catch (err) { automationError(res, err, 'OAB filtre metadata yüklenemedi.'); }
 });
-app.post('/api/oab/mag', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '4kb' }), (req, res) => {
+app.post('/api/oab/mag', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '4kb' }), async (req, res) => {
   try {
     const seasonRef = req.body && req.body.seasonRef;
     if (seasonRef == null || seasonRef === '') return res.status(400).json({ error:'seasonRef zorunlu.', code:'OAB_SEASON_REQUIRED' });
-    const mag = oabStaticMetadata.getMag(seasonRef);
-    const metadata = oabStaticMetadata.getInfo();
+    const snapshot = await oabMetadataSnapshotForRequest(req);
+    const mag = oabStaticMetadata.getMag(seasonRef, snapshot);
+    const metadata = oabStaticMetadata.getInfo(snapshot);
     res.set('Cache-Control','no-store').json({
       ok:true,
       mag,
@@ -5548,12 +5566,13 @@ app.post('/api/oab/mag', userAccess.requireAnyArea('overview'), userAccess.requi
     });
   } catch (err) { automationError(res, err, 'OAB MAG metadata yüklenemedi.'); }
 });
-app.post('/api/oab/buyer-groups', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '4kb' }), (req, res) => {
+app.post('/api/oab/buyer-groups', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '4kb' }), async (req, res) => {
   try {
     const merchSubGroupRef = req.body && req.body.merchSubGroupRef;
     if (merchSubGroupRef == null || merchSubGroupRef === '') return res.status(400).json({ error:'merchSubGroupRef zorunlu.', code:'OAB_MAG_REQUIRED' });
-    const buyerGroups = oabStaticMetadata.getBuyerGroups(merchSubGroupRef);
-    const metadata = oabStaticMetadata.getInfo();
+    const snapshot = await oabMetadataSnapshotForRequest(req);
+    const buyerGroups = oabStaticMetadata.getBuyerGroups(merchSubGroupRef, snapshot);
+    const metadata = oabStaticMetadata.getInfo(snapshot);
     res.set('Cache-Control','no-store').json({
       ok:true,
       buyerGroups,
