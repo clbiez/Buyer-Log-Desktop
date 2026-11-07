@@ -514,7 +514,10 @@
   }
 
   // rowParts: aynı satırın bütün kalemleri için bir kez hesaplanmış parça listesi.
-  function itemApplies(item, analysis, rowParts) {
+  // appliesCache: tek bir senkron geçişte (kural/cevap/ayar sabitken) satırın
+  // geçerli checklist kimlikleri. evaluateOrder sonucu kaleme bağlı değildir;
+  // kalem başına yeniden değerlendirmek 25 bin satırlık CP'de ~80 sn CPU idi.
+  function itemApplies(item, analysis, rowParts, appliesCache) {
     if (!analysis) return true;
     const part = Components.parseItem(item.id);
     if (part) {
@@ -524,17 +527,21 @@
     }
     // Set satırında temel kalem arayüzde geçerli kalır; çalışma kitabı çağıranları
     // onu aşağıda parçaya özel sütunlara açıkça genişletir.
-    // Karar katmanı her sipariş için geçerli checklist başlıklarını zaten
-    // hesapladı; aynı sonucu yeniden değerlendirmeyiz.
+    // Analiz geçerli başlık listesini taşıyorsa doğrudan kullanılır. Bugünkü
+    // karar katmanı bu alanı üretmez; liste aşağıda satır başına bir kez
+    // değerlendirilir ve appliesCache ile aynı geçişte paylaşılır.
     if (Array.isArray(analysis.checklistItemIds)) return analysis.checklistItemIds.indexOf(item.id) >= 0;
     const s = assistantState(), Rules = root.BLCpRulesEngine;
     if (!s || !Rules) return true;
-    const evaluated = typeof Rules.evaluateOrder === 'function'
-      ? Rules.evaluateOrder(analysis, { rules: s.rules, answers: s.answers, checklistEnabled: !s.checklistSettings || s.checklistSettings.enabled !== false })
-      : { customItems: Rules.customChecklistItems(analysis, s.rules, {}) };
-    return evaluated.customItems.some(function (candidate) {
-      return candidate.id === item.id;
-    });
+    let ids = appliesCache && appliesCache.get(analysis);
+    if (!ids) {
+      const evaluated = typeof Rules.evaluateOrder === 'function'
+        ? Rules.evaluateOrder(analysis, { rules: s.rules, answers: s.answers, checklistEnabled: !s.checklistSettings || s.checklistSettings.enabled !== false })
+        : { customItems: Rules.customChecklistItems(analysis, s.rules, {}) };
+      ids = new Set(evaluated.customItems.map(function (candidate) { return candidate.id; }));
+      if (appliesCache) appliesCache.set(analysis, ids);
+    }
+    return ids.has(item.id);
   }
 
   function answerFor(item, analysis, rowParts) {
@@ -605,7 +612,7 @@
     state.appliedColumns = null;
 
     if (rows.length && items.length) {
-      const decision = opts.decision || analysesForRows(rows);
+      const decision = opts.decision || analysesForRows(rows), appliesCache = new WeakMap();
       rows.forEach(function (row) {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
         const statuses = {}, partCells = {}, elementCells = {};
@@ -619,7 +626,7 @@
           // Soru henüz sorulmuyorsa hücre boştur; ancak test raporundan
           // kullanıcıya düşen bekleyen bir iş varsa hücre görünür kalır.
           const pendingTasks = analysis && state.testTasks.get(answerKey(analysis.orderKey, item.id));
-          if (!itemApplies(item, analysis, parts) && !(pendingTasks && pendingTasks.length)) { row[key] = ''; return; }
+          if (!itemApplies(item, analysis, parts, appliesCache) && !(pendingTasks && pendingTasks.length)) { row[key] = ''; return; }
           // Tek doğruluk kaynağı: karar katmanının hesapladığı durum.
           const computed = analysis && analysis.checklistState && analysis.checklistState[item.id];
           // Set satırının durumu aşağıda parçalardan toplanır; bütün kalem cevabı okunmaz.
@@ -888,10 +895,10 @@
   async function chooseSupplierQuestionIds(groups, catalog) {
     if (!root.document) return null;
     const prepared = groups.map(group => {
-      const decision = analysesForRows(group.rows);
+      const decision = analysesForRows(group.rows), appliesCache = new WeakMap();
       const available = catalog.filter(item => group.rows.some(row => {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
-        return itemApplies(item, analysis);
+        return itemApplies(item, analysis, null, appliesCache);
       }));
       return { ...group, available, selected: new Set(supplierQuestionIdsFor(group.supplier)) };
     });
@@ -2149,12 +2156,12 @@
         directAttachment: true,
       });
 
-      const decision = analysesForRows(supplierRows), attachmentMap = new Map();
+      const decision = analysesForRows(supplierRows), attachmentMap = new Map(), appliesCache = new WeakMap();
       supplierRows.forEach(function (row) {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
         if (!analysis) return;
         expandedItems(selectedCatalog, [analysis]).forEach(function (item) {
-          if (!itemApplies(item, analysis)) return;
+          if (!itemApplies(item, analysis, null, appliesCache)) return;
           const answer = answerFor(item, analysis);
           (answer && Array.isArray(answer.attachments) ? answer.attachments : []).forEach(function (entry) {
             if (entry && entry.id && !attachmentMap.has(entry.id)) attachmentMap.set(entry.id, entry);
