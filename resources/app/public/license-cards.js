@@ -253,6 +253,8 @@
   function closeEditor(){
     const id=S.expanded;S.expanded='';S.historyOpen=false;S.addLicensorOpen=false;
     document.activeElement?.blur?.();renderEditor();renderCard(id);
+    const quick=S.host.querySelector('.lcQuick');
+    if(quick){quick.outerHTML=quickHtml();runQuick();}
     S.host.querySelector(`[data-row="${CSS.escape(id)}"] .lcName`)?.focus?.({preventScroll:true});
   }
   function detailHtml(row,d){
