@@ -1,0 +1,15 @@
+/tmp/buyerlog-906-current-ui-trace.cjs:52
+    console.log('EG_TRACE',JSON.stringify(await page.evaluate(()=>({listSame:document.querySelector('.egDirectoryScroll')===demoDirectoryList,rowSame:demoDirectoryList.querySelector('.egDirectoryRow')===demoDirectoryRow,recordsSame:egBeforeRecords===BLEmailGroups.state.data.records,dataSame:egBeforeData===JSON.stringify(BLEmailGroups.state.data),beforeSelected:egBeforeSelected,afterSelected:BLEmailGroups.state.selectedId})))));
+                                                                                                                                                                                                                                                                                                                                                                                                                                             ^
+
+SyntaxError: Unexpected token ')'
+    at wrapSafe (node:internal/modules/cjs/loader:1804:18)
+    at Module._compile (node:internal/modules/cjs/loader:1846:20)
+    at Object..js (node:internal/modules/cjs/loader:2003:10)
+    at Module.load (node:internal/modules/cjs/loader:1594:32)
+    at Module._load (node:internal/modules/cjs/loader:1396:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.19.0

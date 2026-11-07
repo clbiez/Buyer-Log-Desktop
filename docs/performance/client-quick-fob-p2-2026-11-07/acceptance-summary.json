@@ -1,0 +1,459 @@
+{
+  "reviewedHead": "f732c866405e62384c3c023d4a1abbec24c9b9c4",
+  "browserRedExitCode": 1,
+  "browserGreenExitCode": 0,
+  "initial12UnitRedExitCode": 1,
+  "assertionsUnchangedBetweenBrowserRedGreen": true,
+  "cases": [
+    {
+      "phase": "red",
+      "scenario": "rate-close",
+      "source": "supp",
+      "checks": {
+        "quickEquivalent": false,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true
+      },
+      "actualValues": {
+        "supp": "100,00",
+        "yd": "111,21",
+        "tr": "111,21"
+      },
+      "fullRenderOracleValues": {
+        "supp": "100,00",
+        "yd": "128,31",
+        "tr": "128,31"
+      },
+      "actualSelection": "quick-original-alpha",
+      "fullRenderOracleSelection": "quick-original-alpha"
+    },
+    {
+      "phase": "red",
+      "scenario": "period-cancel",
+      "source": "supp",
+      "checks": {
+        "quickEquivalent": false,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": false,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": false,
+        "meaningfulCalculationChange": true
+      },
+      "actualValues": {
+        "supp": "100,00",
+        "yd": "147,16",
+        "tr": "147,16"
+      },
+      "fullRenderOracleValues": {
+        "supp": "100,00",
+        "yd": "111,21",
+        "tr": "111,21"
+      },
+      "actualSelection": "license-rule-1794077847603-yfu0uf8",
+      "fullRenderOracleSelection": "quick-original-alpha"
+    },
+    {
+      "phase": "red",
+      "scenario": "rate-close",
+      "source": "yd",
+      "checks": {
+        "quickEquivalent": false,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true
+      },
+      "actualValues": {
+        "supp": "179,91",
+        "yd": "200,00",
+        "tr": "200,00"
+      },
+      "fullRenderOracleValues": {
+        "supp": "155,92",
+        "yd": "200,00",
+        "tr": "200,00"
+      },
+      "actualSelection": "quick-original-alpha",
+      "fullRenderOracleSelection": "quick-original-alpha"
+    },
+    {
+      "phase": "red",
+      "scenario": "period-cancel",
+      "source": "yd",
+      "checks": {
+        "quickEquivalent": false,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": false,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": false,
+        "meaningfulCalculationChange": true
+      },
+      "actualValues": {
+        "supp": "135,93",
+        "yd": "200,00",
+        "tr": "200,00"
+      },
+      "fullRenderOracleValues": {
+        "supp": "179,91",
+        "yd": "200,00",
+        "tr": "200,00"
+      },
+      "actualSelection": "license-rule-1794077848769-77qivls",
+      "fullRenderOracleSelection": "quick-original-alpha"
+    },
+    {
+      "phase": "red",
+      "scenario": "rate-close",
+      "source": "tr",
+      "checks": {
+        "quickEquivalent": false,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true
+      },
+      "actualValues": {
+        "supp": "269,91",
+        "yd": "300,00",
+        "tr": "300,00"
+      },
+      "fullRenderOracleValues": {
+        "supp": "233,92",
+        "yd": "300,00",
+        "tr": "300,00"
+      },
+      "actualSelection": "quick-original-alpha",
+      "fullRenderOracleSelection": "quick-original-alpha"
+    },
+    {
+      "phase": "red",
+      "scenario": "period-cancel",
+      "source": "tr",
+      "checks": {
+        "quickEquivalent": false,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": false,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": false,
+        "meaningfulCalculationChange": true
+      },
+      "actualValues": {
+        "supp": "203,93",
+        "yd": "300,00",
+        "tr": "300,00"
+      },
+      "fullRenderOracleValues": {
+        "supp": "269,91",
+        "yd": "300,00",
+        "tr": "300,00"
+      },
+      "actualSelection": "license-rule-1794077849869-eji3489",
+      "fullRenderOracleSelection": "quick-original-alpha"
+    },
+    {
+      "phase": "green",
+      "scenario": "rate-close",
+      "source": "supp",
+      "checks": {
+        "quickEquivalent": true,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true
+      },
+      "actualValues": {
+        "supp": "100,00",
+        "yd": "128,31",
+        "tr": "128,31"
+      },
+      "fullRenderOracleValues": {
+        "supp": "100,00",
+        "yd": "128,31",
+        "tr": "128,31"
+      },
+      "actualSelection": "quick-original-alpha",
+      "fullRenderOracleSelection": "quick-original-alpha"
+    },
+    {
+      "phase": "green",
+      "scenario": "period-cancel",
+      "source": "supp",
+      "checks": {
+        "quickEquivalent": true,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true
+      },
+      "actualValues": {
+        "supp": "100,00",
+        "yd": "111,21",
+        "tr": "111,21"
+      },
+      "fullRenderOracleValues": {
+        "supp": "100,00",
+        "yd": "111,21",
+        "tr": "111,21"
+      },
+      "actualSelection": "quick-original-alpha",
+      "fullRenderOracleSelection": "quick-original-alpha"
+    },
+    {
+      "phase": "green",
+      "scenario": "rate-close",
+      "source": "yd",
+      "checks": {
+        "quickEquivalent": true,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true
+      },
+      "actualValues": {
+        "supp": "155,92",
+        "yd": "200,00",
+        "tr": "200,00"
+      },
+      "fullRenderOracleValues": {
+        "supp": "155,92",
+        "yd": "200,00",
+        "tr": "200,00"
+      },
+      "actualSelection": "quick-original-alpha",
+      "fullRenderOracleSelection": "quick-original-alpha"
+    },
+    {
+      "phase": "green",
+      "scenario": "period-cancel",
+      "source": "yd",
+      "checks": {
+        "quickEquivalent": true,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true
+      },
+      "actualValues": {
+        "supp": "179,91",
+        "yd": "200,00",
+        "tr": "200,00"
+      },
+      "fullRenderOracleValues": {
+        "supp": "179,91",
+        "yd": "200,00",
+        "tr": "200,00"
+      },
+      "actualSelection": "quick-original-alpha",
+      "fullRenderOracleSelection": "quick-original-alpha"
+    },
+    {
+      "phase": "green",
+      "scenario": "rate-close",
+      "source": "tr",
+      "checks": {
+        "quickEquivalent": true,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true
+      },
+      "actualValues": {
+        "supp": "233,92",
+        "yd": "300,00",
+        "tr": "300,00"
+      },
+      "fullRenderOracleValues": {
+        "supp": "233,92",
+        "yd": "300,00",
+        "tr": "300,00"
+      },
+      "actualSelection": "quick-original-alpha",
+      "fullRenderOracleSelection": "quick-original-alpha"
+    },
+    {
+      "phase": "green",
+      "scenario": "period-cancel",
+      "source": "tr",
+      "checks": {
+        "quickEquivalent": true,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true
+      },
+      "actualValues": {
+        "supp": "269,91",
+        "yd": "300,00",
+        "tr": "300,00"
+      },
+      "fullRenderOracleValues": {
+        "supp": "269,91",
+        "yd": "300,00",
+        "tr": "300,00"
+      },
+      "actualSelection": "quick-original-alpha",
+      "fullRenderOracleSelection": "quick-original-alpha"
+    }
+  ],
+  "screenshotSha256": {
+    "red/period-cancel.png": "954c10ac6cc2cd3650df31a45329a871f4655c1ab3fd30cb6ef7dff2313e9cbc",
+    "red/rate-close.png": "a24a93a1cd798c80b20f508838a9a8561b3ae7e83fabeda79f5bd6adc149036b",
+    "green/period-cancel.png": "7e1c721e6ab339f961a4cf853056826cc1fb194c56213d94b6032936c6d5f7aa",
+    "green/rate-close.png": "6997f3f668259d85215bcda61e293eb031bceec8bbc63690c0c01c8c1ae24697",
+    "green-final/period-cancel.png": "7e1c721e6ab339f961a4cf853056826cc1fb194c56213d94b6032936c6d5f7aa",
+    "green-final/rate-close.png": "6997f3f668259d85215bcda61e293eb031bceec8bbc63690c0c01c8c1ae24697"
+  },
+  "finalBrowserGreenExitCode": 0,
+  "addedReopenedDetailChecksGreen": true,
+  "finalBrowserChecks": [
+    {
+      "scenario": "rate-close",
+      "source": "supp",
+      "checks": {
+        "quickEquivalent": true,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true,
+        "reopenedDetailEquivalent": true,
+        "reopenedRoyalty": true
+      }
+    },
+    {
+      "scenario": "period-cancel",
+      "source": "supp",
+      "checks": {
+        "quickEquivalent": true,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true,
+        "reopenedDetailEquivalent": true,
+        "reopenedRoyalty": true
+      }
+    },
+    {
+      "scenario": "rate-close",
+      "source": "yd",
+      "checks": {
+        "quickEquivalent": true,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true,
+        "reopenedDetailEquivalent": true,
+        "reopenedRoyalty": true
+      }
+    },
+    {
+      "scenario": "period-cancel",
+      "source": "yd",
+      "checks": {
+        "quickEquivalent": true,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true,
+        "reopenedDetailEquivalent": true,
+        "reopenedRoyalty": true
+      }
+    },
+    {
+      "scenario": "rate-close",
+      "source": "tr",
+      "checks": {
+        "quickEquivalent": true,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true,
+        "reopenedDetailEquivalent": true,
+        "reopenedRoyalty": true
+      }
+    },
+    {
+      "scenario": "period-cancel",
+      "source": "tr",
+      "checks": {
+        "quickEquivalent": true,
+        "rowsEquivalent": true,
+        "detailEquivalent": true,
+        "listRetained": true,
+        "amountRetained": true,
+        "selectionEquivalent": true,
+        "validSelectionRetained": true,
+        "removedRuleAbsent": true,
+        "meaningfulCalculationChange": true,
+        "reopenedDetailEquivalent": true,
+        "reopenedRoyalty": true
+      }
+    }
+  ]
+}

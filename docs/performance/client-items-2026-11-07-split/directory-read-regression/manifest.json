@@ -1,0 +1,47 @@
+{
+  "cause": "open -> forced refresh/render -> sparse-reconcile ensureDirectory(true) -> absorb identical data replaces records without render -> next selection detects new records ref and replaces row nodes",
+  "traceBefore": {
+    "listSame": true,
+    "rowSame": false,
+    "recordsSame": false,
+    "dataSame": true
+  },
+  "nativeBefore": "4 PASS / 1 FAIL",
+  "nativeAfter": "5 PASS / 0 FAIL",
+  "realUiAfter": "unchanged trace assertions passed, recordsSame/dataSame/rowSame/listSame true; draft reopen/discard, manufacturer identity, directory save passed",
+  "review": "pending narrow delta closure",
+  "files": [
+    {
+      "file": "trace-loader-error.log.txt",
+      "sha256": "549d304f6395ad2b95657d9a45d70880af511b27cdcbe09d0d7990b87f623cbf"
+    },
+    {
+      "file": "red.png",
+      "sha256": "e58f0728e746df0207f1eb078de1f42e9eef9ddb5d81da71f64ed1ed1cdc82e3"
+    },
+    {
+      "file": "real-ui-trace-red.log.txt",
+      "sha256": "f9d4078f6db9d29337c5bada0b24ed1e5d0a024cd9fb95fe1206fd64f7c70bb4"
+    },
+    {
+      "file": "native-green.tap.txt",
+      "sha256": "3e859ecf990b378534cc866f7f8c41ba78967a87358ec6762495e9a25f062261"
+    },
+    {
+      "file": "real-ui-green.log.txt",
+      "sha256": "0ae7616a8d17bfa1801869164e8e24e9718e79c1d915956bc1b9d9787de51266"
+    },
+    {
+      "file": "native-red.tap.txt",
+      "sha256": "6d4e0a0fd49e90e0a8423720a7e9245465a9c3284ba3ae9fcfedd61c54dc38e6"
+    },
+    {
+      "file": "real-ui-probe.cjs",
+      "sha256": "29ad48579438e233c9e472c9d0a7a995256cee04c0c50c1940c59798e6b33b71"
+    },
+    {
+      "file": "real-ui-red.log.txt",
+      "sha256": "ed731d6f09ac0cd453a0d55057ca1bd76af4d73f06982bb396c6060385b55401"
+    }
+  ]
+}

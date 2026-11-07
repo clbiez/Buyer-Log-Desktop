@@ -1,0 +1,21 @@
+{
+  "originalFilesVerified": 18,
+  "originalCommitsAreAncestors": true,
+  "runtimeAndTestTrees": {
+    "resources/app/public": {
+      "deliveredTree": "6f7b8f5d03a4d2ea7780407eb747d9b3341fba1e",
+      "currentTree": "6f7b8f5d03a4d2ea7780407eb747d9b3341fba1e",
+      "identical": true
+    },
+    "resources/app/server": {
+      "deliveredTree": "f1cde600d20ca2f6a4a4cd1e3c2213ea0d66e97e",
+      "currentTree": "f1cde600d20ca2f6a4a4cd1e3c2213ea0d66e97e",
+      "identical": true
+    },
+    "resources/app/tests": {
+      "deliveredTree": "81f2e3c609300404f53ba49e8196862f1fd670ae",
+      "currentTree": "81f2e3c609300404f53ba49e8196862f1fd670ae",
+      "identical": true
+    }
+  }
+}

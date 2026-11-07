@@ -1,0 +1,33 @@
+{
+  "processId": 82336,
+  "sourceDir": "/tmp/client-quick-fob-final-source",
+  "fixture": "unchanged full acceptance sequence; tracing only 5000 license records / 10 search observations",
+  "before": {
+    "at": "2026-11-07T19:11:54.014Z",
+    "heap": {
+      "usedSize": 60897964,
+      "totalSize": 115658752,
+      "embedderHeapUsedSize": 1006179240,
+      "backingStorageSize": 28428899
+    },
+    "dom": {
+      "documents": 3,
+      "nodes": 842820,
+      "jsEventListeners": 30
+    }
+  },
+  "after": {
+    "at": "2026-11-07T19:12:10.730Z",
+    "heap": {
+      "usedSize": 20429068,
+      "totalSize": 77656064,
+      "embedderHeapUsedSize": 675449392,
+      "backingStorageSize": 372418
+    },
+    "dom": {
+      "documents": 3,
+      "nodes": 2389439,
+      "jsEventListeners": 21
+    }
+  }
+}

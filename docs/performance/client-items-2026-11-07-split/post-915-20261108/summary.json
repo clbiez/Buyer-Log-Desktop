@@ -1,0 +1,35 @@
+{
+  "pr": 906,
+  "before": "4ed13bee938a71d60a8db349ed0151143cf1639d",
+  "main": "d77f83e55bf06bbf3776aaea5de79d9bdd58e2a8",
+  "merge": "bd82ec0c524d11394dab2b6c04be80d7f8a23dce",
+  "appTree": "8ea2b6e51a065afcfa4f82a630d0e131bbe5821c",
+  "notes": 46,
+  "tree": "/workspace/buyerlog-post-main-acceptance",
+  "ownNoteIds": [
+    "lcwai-active-stream",
+    "manufacturer-separate-detail",
+    "email-directory-separate-detail"
+  ],
+  "counts": {
+    "pass": 8920,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  },
+  "files": 1299,
+  "related": 582,
+  "allTenBatchesOneInvocation": true,
+  "defaultConcurrency": 4,
+  "nodeOptions": null,
+  "i18n": {
+    "new": 0,
+    "baseline": 0
+  },
+  "newPerformanceClaim": false,
+  "realUi": {
+    "status": "passed",
+    "logSha256": "3c616145d710ee86fa4011564a07ef5be0f247363c31300c5b068f592855c391",
+    "note": "Same actual UI identity/data/save/draft assertions; fresh demo root, no performance claim."
+  }
+}
