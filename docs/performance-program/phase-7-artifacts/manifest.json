@@ -5,18 +5,6 @@
     "images": "5c256eac",
     "parser": "6d8d752b"
   },
-  "fullNpmTest": {
-    "files": 1294,
-    "seconds": 115.4,
-    "exitCode": 0,
-    "logInArchive": "npm-test-corrected.log",
-    "tests": 8937,
-    "pass": 8872,
-    "fail": 0,
-    "cancelled": 0,
-    "skipped": 65,
-    "todo": 0
-  },
   "isolatedBranchTargetedTests": {
     "snapshot": {
       "exitCode": 0,
@@ -64,5 +52,24 @@
     "resources/app/scripts/phase7-server-benchmark.cjs": "b234f8ee6c51c60b28a54ff5895b8f64315cbf327d55b7d36f73bdda0764ebe3",
     "resources/app/scripts/phase7-parser-probe.cjs": "ded8a228532210662f16cdb8c88f8e692de84880f121a3d21b5c2116b8bbc553",
     "resources/app/scripts/phase7-test-env.cjs": "ea9f3d5752b419466914132dade081066530ad39352112077e09dc3b9ad3f9fc"
+  },
+  "combinedTreeFullNpmTest": {
+    "files": 1294,
+    "seconds": 115.4,
+    "exitCode": 0,
+    "logInArchive": "npm-test-corrected.log",
+    "tests": 8937,
+    "pass": 8872,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65,
+    "todo": 0,
+    "scope": "Historical combined production tree only; not full regression of the three isolated branches",
+    "productionSourceCommit": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6"
+  },
+  "packaging": {
+    "commonBranch": "perf/phase7-shared-evidence",
+    "contract": "../phase-7-packaging-contract.json",
+    "finalValidation": "../phase-7-packaging-handoff.md"
   }
 }
