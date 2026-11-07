@@ -1,0 +1,410 @@
+[
+  {
+    "variant": "before",
+    "repeat": 1,
+    "baseRevision": "54174143",
+    "runtimeSha256": "a03faf9a31ec5c6901f11dc038787cf595be4e7890bb76b50f5cdded845e4864",
+    "fixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "hashes": {
+        "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+        "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+        "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+      }
+    },
+    "root": "/tmp/buyerlog-startup-p2-before-1",
+    "result": {
+      "mode": "measure-red",
+      "lang": "tr",
+      "theme": "light",
+      "errors": [],
+      "checks": [],
+      "initial": {
+        "backlogLoaded": false,
+        "sharedLinks": 0
+      },
+      "manufacturersReadyMs": 357.59999999962747,
+      "featureReadyMs": 28.299999999813735,
+      "drillReadyMs": 1652.7999999998137,
+      "drawer": {
+        "rootPosition": "static",
+        "drawerPosition": "static",
+        "display": "block",
+        "rootRect": {
+          "x": 208,
+          "y": 388.953125,
+          "width": 1392,
+          "height": 21819.25
+        },
+        "drawerRect": {
+          "x": 208,
+          "y": 388.953125,
+          "width": 1392,
+          "height": 21819.25
+        },
+        "tableRows": 500,
+        "title": "NILE KNIT · Tüm siparişler",
+        "subtitle": "Üreticiler · Sipariş alt detayı",
+        "closeTitle": "Kapat",
+        "tabCalls": [
+          "source",
+          "manufacturers"
+        ],
+        "backlogLoaded": false,
+        "sharedLinks": 0,
+        "resources": []
+      },
+      "status": "red-confirmed"
+    }
+  },
+  {
+    "variant": "after",
+    "repeat": 1,
+    "baseRevision": "54174143",
+    "runtimeSha256": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6",
+    "fixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "hashes": {
+        "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+        "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+        "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+      }
+    },
+    "root": "/tmp/buyerlog-startup-p2-after-1",
+    "result": {
+      "mode": "measure",
+      "lang": "tr",
+      "theme": "light",
+      "errors": [],
+      "checks": [
+        "first order drill-down is styled without visiting Backlog",
+        "drawer close control works",
+        "Backlog reuses the shared link, request and original anchor"
+      ],
+      "initial": {
+        "backlogLoaded": false,
+        "sharedLinks": 0
+      },
+      "manufacturersReadyMs": 424.5,
+      "featureReadyMs": 42.09999999962747,
+      "drillReadyMs": 1770.5,
+      "drawer": {
+        "rootPosition": "fixed",
+        "drawerPosition": "absolute",
+        "display": "flex",
+        "rootRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 1000
+        },
+        "drawerRect": {
+          "x": 320,
+          "y": 0,
+          "width": 1280,
+          "height": 1000
+        },
+        "tableRows": 500,
+        "title": "NILE KNIT · Tüm siparişler",
+        "subtitle": "Üreticiler · Sipariş alt detayı",
+        "closeTitle": "Kapat",
+        "tabCalls": [
+          "source",
+          "manufacturers"
+        ],
+        "backlogLoaded": false,
+        "sharedLinks": 1,
+        "resources": [
+          {
+            "url": "http://127.0.0.1:38791/backlog-plan-actual.css?v=7.0.339&h=e7a34375cbb956cb&rev=2",
+            "decodedBytes": 8404,
+            "transferBytes": 2610
+          }
+        ]
+      },
+      "cascade": {
+        "links": 1,
+        "same": true,
+        "beforeAnchor": true,
+        "requests": 1
+      },
+      "status": "passed"
+    }
+  },
+  {
+    "variant": "before",
+    "repeat": 2,
+    "baseRevision": "54174143",
+    "runtimeSha256": "a03faf9a31ec5c6901f11dc038787cf595be4e7890bb76b50f5cdded845e4864",
+    "fixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "hashes": {
+        "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+        "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+        "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+      }
+    },
+    "root": "/tmp/buyerlog-startup-p2-before-2",
+    "result": {
+      "mode": "measure-red",
+      "lang": "tr",
+      "theme": "light",
+      "errors": [],
+      "checks": [],
+      "initial": {
+        "backlogLoaded": false,
+        "sharedLinks": 0
+      },
+      "manufacturersReadyMs": 354.40000000037253,
+      "featureReadyMs": 29.5,
+      "drillReadyMs": 1672.6000000005588,
+      "drawer": {
+        "rootPosition": "static",
+        "drawerPosition": "static",
+        "display": "block",
+        "rootRect": {
+          "x": 208,
+          "y": 388.953125,
+          "width": 1392,
+          "height": 21819.25
+        },
+        "drawerRect": {
+          "x": 208,
+          "y": 388.953125,
+          "width": 1392,
+          "height": 21819.25
+        },
+        "tableRows": 500,
+        "title": "NILE KNIT · Tüm siparişler",
+        "subtitle": "Üreticiler · Sipariş alt detayı",
+        "closeTitle": "Kapat",
+        "tabCalls": [
+          "source",
+          "manufacturers"
+        ],
+        "backlogLoaded": false,
+        "sharedLinks": 0,
+        "resources": []
+      },
+      "status": "red-confirmed"
+    }
+  },
+  {
+    "variant": "after",
+    "repeat": 2,
+    "baseRevision": "54174143",
+    "runtimeSha256": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6",
+    "fixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "hashes": {
+        "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+        "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+        "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+      }
+    },
+    "root": "/tmp/buyerlog-startup-p2-after-2",
+    "result": {
+      "mode": "measure",
+      "lang": "tr",
+      "theme": "light",
+      "errors": [],
+      "checks": [
+        "first order drill-down is styled without visiting Backlog",
+        "drawer close control works",
+        "Backlog reuses the shared link, request and original anchor"
+      ],
+      "initial": {
+        "backlogLoaded": false,
+        "sharedLinks": 0
+      },
+      "manufacturersReadyMs": 370.40000000037253,
+      "featureReadyMs": 31,
+      "drillReadyMs": 1735.5999999996275,
+      "drawer": {
+        "rootPosition": "fixed",
+        "drawerPosition": "absolute",
+        "display": "flex",
+        "rootRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 1000
+        },
+        "drawerRect": {
+          "x": 320,
+          "y": 0,
+          "width": 1280,
+          "height": 1000
+        },
+        "tableRows": 500,
+        "title": "NILE KNIT · Tüm siparişler",
+        "subtitle": "Üreticiler · Sipariş alt detayı",
+        "closeTitle": "Kapat",
+        "tabCalls": [
+          "source",
+          "manufacturers"
+        ],
+        "backlogLoaded": false,
+        "sharedLinks": 1,
+        "resources": [
+          {
+            "url": "http://127.0.0.1:51381/backlog-plan-actual.css?v=7.0.339&h=e7a34375cbb956cb&rev=2",
+            "decodedBytes": 8404,
+            "transferBytes": 2610
+          }
+        ]
+      },
+      "cascade": {
+        "links": 1,
+        "same": true,
+        "beforeAnchor": true,
+        "requests": 1
+      },
+      "status": "passed"
+    }
+  },
+  {
+    "variant": "before",
+    "repeat": 3,
+    "baseRevision": "54174143",
+    "runtimeSha256": "a03faf9a31ec5c6901f11dc038787cf595be4e7890bb76b50f5cdded845e4864",
+    "fixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "hashes": {
+        "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+        "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+        "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+      }
+    },
+    "root": "/tmp/buyerlog-startup-p2-before-3",
+    "result": {
+      "mode": "measure-red",
+      "lang": "tr",
+      "theme": "light",
+      "errors": [],
+      "checks": [],
+      "initial": {
+        "backlogLoaded": false,
+        "sharedLinks": 0
+      },
+      "manufacturersReadyMs": 367.8999999994412,
+      "featureReadyMs": 31.5,
+      "drillReadyMs": 1873.9000000003725,
+      "drawer": {
+        "rootPosition": "static",
+        "drawerPosition": "static",
+        "display": "block",
+        "rootRect": {
+          "x": 208,
+          "y": 388.953125,
+          "width": 1392,
+          "height": 21819.25
+        },
+        "drawerRect": {
+          "x": 208,
+          "y": 388.953125,
+          "width": 1392,
+          "height": 21819.25
+        },
+        "tableRows": 500,
+        "title": "NILE KNIT · Tüm siparişler",
+        "subtitle": "Üreticiler · Sipariş alt detayı",
+        "closeTitle": "Kapat",
+        "tabCalls": [
+          "source",
+          "manufacturers"
+        ],
+        "backlogLoaded": false,
+        "sharedLinks": 0,
+        "resources": []
+      },
+      "status": "red-confirmed"
+    }
+  },
+  {
+    "variant": "after",
+    "repeat": 3,
+    "baseRevision": "54174143",
+    "runtimeSha256": "b032111999aa6d63dcbec9ae2c163a963f82bada418a4a6432adaf8cfc4013e6",
+    "fixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "hashes": {
+        "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+        "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+        "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+      }
+    },
+    "root": "/tmp/buyerlog-startup-p2-after-3",
+    "result": {
+      "mode": "measure",
+      "lang": "tr",
+      "theme": "light",
+      "errors": [],
+      "checks": [
+        "first order drill-down is styled without visiting Backlog",
+        "drawer close control works",
+        "Backlog reuses the shared link, request and original anchor"
+      ],
+      "initial": {
+        "backlogLoaded": false,
+        "sharedLinks": 0
+      },
+      "manufacturersReadyMs": 385.29999999981374,
+      "featureReadyMs": 38.09999999962747,
+      "drillReadyMs": 1994.9000000003725,
+      "drawer": {
+        "rootPosition": "fixed",
+        "drawerPosition": "absolute",
+        "display": "flex",
+        "rootRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 1000
+        },
+        "drawerRect": {
+          "x": 320,
+          "y": 0,
+          "width": 1280,
+          "height": 1000
+        },
+        "tableRows": 500,
+        "title": "NILE KNIT · Tüm siparişler",
+        "subtitle": "Üreticiler · Sipariş alt detayı",
+        "closeTitle": "Kapat",
+        "tabCalls": [
+          "source",
+          "manufacturers"
+        ],
+        "backlogLoaded": false,
+        "sharedLinks": 1,
+        "resources": [
+          {
+            "url": "http://127.0.0.1:54455/backlog-plan-actual.css?v=7.0.339&h=e7a34375cbb956cb&rev=2",
+            "decodedBytes": 8404,
+            "transferBytes": 2610
+          }
+        ]
+      },
+      "cascade": {
+        "links": 1,
+        "same": true,
+        "beforeAnchor": true,
+        "requests": 1
+      },
+      "status": "passed"
+    }
+  }
+]

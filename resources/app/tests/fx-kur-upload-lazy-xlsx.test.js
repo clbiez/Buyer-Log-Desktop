@@ -125,7 +125,7 @@ test('FX upload paths load fx.js on demand instead of waiting for deferredUi', (
   const openCosting = perf.match(/openCosting:\[([^\]]*)\]/)[1];
   assert.ok(openCosting.indexOf("'fx.js'") >= 0 && openCosting.indexOf("'fx.js'") < openCosting.indexOf("'open-costing.js'"));
   assert.match(perf, /\bfx:\['fx-calculation-engine\.js','fx-import-engine\.js','fx\.js'\]/);
-  assert.match(perf, /name==='openCosting'&&typeof global\.initOpenCosting==='function'&&global\.BLFX\)return;/);
+  assert.match(perf, /name==='openCosting'&&typeof global\.initOpenCosting==='function'&&global\.BLFX\)return true;/);
   const handler = app.slice(app.indexOf("getElementById('sourceFxFile')?.addEventListener"));
   assert.ok(handler.indexOf("ensureFeature('fx')") > 0 && handler.indexOf("ensureFeature('fx')") < handler.indexOf('BLFX.importFile'));
 });

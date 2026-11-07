@@ -1,0 +1,42 @@
+✔ module styles gate execution and preserve their original cascade position and URL (21.534939ms)
+✔ a styled module stays hidden until its scripts finish registering the UI (8.837862ms)
+✔ a failed stylesheet can retry without executing code or latching the feature as ready (21.769272ms)
+✔ an existing module global still waits for its missing stylesheet (1.538506ms)
+✖ first Manufacturers activation waits for order drill-down CSS; Backlog reuses its anchor and promise (12.841295ms)
+✔ startup omits optional scripts and blocking module styles while preserving shared dependencies (5.980121ms)
+✔ the first Excel import click is delivered once after loading; later clicks use the wizard handler (0.995966ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 227.372832
+
+✖ failing tests:
+
+test at tests/startup-feature-assets.test.js:60:1
+✖ first Manufacturers activation waits for order drill-down CSS; Backlog reuses its anchor and promise (12.841295ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+      'manufacturers.css',
+  -   'backlog-plan-actual.css'
+    ]
+  
+      at TestContext.<anonymous> (/tmp/buyerlog-shell-p2-before/resources/app/tests/startup-feature-assets.test.js:65:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'manufacturers.css' ],
+    expected: [ 'manufacturers.css', 'backlog-plan-actual.css' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,45 @@
+✔ plan actual API is Backlog-authorized and snapshots the Backlog target (1.326947ms)
+✔ every successful refresh records a boundary marker without making analysis failure fatal (0.867571ms)
+✔ Backlog mounts a movable collapsible panel and loads its isolated assets (0.52225ms)
+✔ only changed rows are rendered and intermediate revision traffic remains separate (0.182325ms)
+✔ panel preferences are user scoped and synced like existing Backlog analysis (0.209136ms)
+✔ plan actual module uses shared theme tokens without light-theme fallbacks (1.643986ms)
+✔ plan realisation view: plan window, grouped bars with tooltip + drawer, Excel export (0.83394ms)
+✔ Plan and Actual keeps its linear measure and percentage label (0.531173ms)
+✔ Overview circular loaded share clamps invalid values and preserves the visible percentage (0.874893ms)
+✔ stages, loaded share and overdue-not-loaded are derived from canonical Backlog rows (15.68728ms)
+✔ Backlog V3 workbook: V3 sheets first, optional P&A, legacy sheets kept intact as sheet1/sheet2 (253.872458ms)
+✔ Backlog screen wiring: overview panel, Excel Legacy + Excel Backlog V3 with options, shared rows cache (11.871348ms)
+✔ data quality flags blank season, missing dates, retail before Ex-Factory and raw timestamps (0.749183ms)
+✔ V3 detail writes day strings (e.g. order placement date) as real Excel dates (41.997075ms)
+✔ manufacturer and backlog drilldown scripts remain syntactically valid (3.215973ms)
+✔ order summary cards expose drilldown targets (1.057299ms)
+✔ manufacturer drilldown reuses Backlog V3 normalization and native detail drawer (0.288917ms)
+✔ clicked KPI quantity semantics match the summary being opened (0.189457ms)
+✔ clickable summary controls preserve keyboard focus and hover affordance (47.053604ms)
+✔ Manufacturers is a left-menu page with its own lazy section (1.91178ms)
+✔ page access follows the Orders area whose data it reads (0.170198ms)
+✔ analysis reads the shared Orders projection through one bridge (1.320286ms)
+✔ cards are built from the shared directory, never a second list (0.210869ms)
+✔ page CSS uses its own prefix and does not collide with Prepare E-Mail .mfr* rules (0.270108ms)
+✔ store keeps aliases, creates ASAS cards without overwriting and links with the old name kept (38.375183ms)
+✔ existing ASAS connections pick up Initial Inspection Geçme Tarih once, without breaking refresh (42.931502ms)
+✔ source-only ASAS names stay searchable and never masquerade as responsible orders (0.227924ms)
+✔ v9.65 daha önce eager yüklenmiş static script geçmiş load eventini beklemez (4.328865ms)
+✔ v9.65 eager order decision lazy CP/Backlog listelerinde duplicate edilmez (0.680008ms)
+✔ v9.65 cpAssistant yalnız unified decision API gerçekten varsa hazır sayılır (1.469863ms)
+✔ module styles gate execution and preserve their original cascade position and URL (6.842636ms)
+✔ a styled module stays hidden until its scripts finish registering the UI (3.894909ms)
+✔ a failed stylesheet can retry without executing code or latching the feature as ready (2.008967ms)
+✔ an existing module global still waits for its missing stylesheet (0.872109ms)
+✔ first Manufacturers activation waits for order drill-down CSS; Backlog reuses its anchor and promise (6.895706ms)
+✔ startup omits optional scripts and blocking module styles while preserving shared dependencies (7.167117ms)
+✔ the first Excel import click is delivered once after loading; later clicks use the wizard handler (1.127775ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 502.97892
