@@ -1101,7 +1101,9 @@
       });
       const s = assistantState();
       let written = 0, kept = 0, files = 0;
-      groups.forEach(function (group, key) {
+      // Cevaplar tek tek kaydedilir; CP kararları ise döngü sonunda bir kez yenilenir.
+      const batch = typeof assistant().batchChecklistAnswers === 'function' ? assistant().batchChecklistAnswers : function (fn) { return fn(); };
+      batch(function () { groups.forEach(function (group, key) {
         const entry = group.entry;
         const row = rowFor(entry), analysis = analysisFor(row);
         if (!analysis) return;
@@ -1138,7 +1140,7 @@
         else { saved = assistant().setChecklistAnswer(analysis, entry.itemId, suggested.status || group.plan.current || 'open', Object.assign(meta, { source: 'test_report' })); }
         if (!saved) throw new Error(T('Checklist kaydedilemedi.', 'Checklist could not be saved.'));
         if (userOwned && !group.manual) kept += 1; else written += 1;
-      });
+      }); });
       const sync = root.BLChecklistSupplierSync;
       if (sync && typeof sync.syncAnswerChanges === 'function') await sync.syncAnswerChanges();
       if (sync && typeof sync.loadTestReportTasks === 'function') await sync.loadTestReportTasks();
