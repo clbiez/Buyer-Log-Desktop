@@ -39,5 +39,20 @@
   "productionFix": false,
   "mergePerformedFor907": false,
   "testPublished": false,
-  "stablePublished": false
+  "stablePublished": false,
+  "mainTargetRemoteVerification": {
+    "pullRequest": 907,
+    "base": "main",
+    "baseSha": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+    "verifiedHeadSha": "48e6ab4689c1981c1360f77b5e5ef1ce2c9bb805",
+    "githubChangedFiles": 30,
+    "productionFilesInRemoteDiff": [],
+    "olderProductionReverted": false
+  },
+  "serverOwnerHandoff": {
+    "pullRequest": 902,
+    "commentId": 6711347159,
+    "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/902#issuecomment-6711347159",
+    "scope": "diagnostic findings for a separate narrow fix; no production authorization"
+  }
 }

@@ -40,8 +40,8 @@
     },
     {
       "path": "integration-audit.json",
-      "bytes": 1519,
-      "sha256": "30633eed07a9fc417a6f3d1ce9e153955648a87ef653b8075ee509f81af1c26e"
+      "bytes": 2101,
+      "sha256": "992af45c16176509c96d6f8eadd17c04341caee6e968eee7abf34652b47b5d3d"
     },
     {
       "path": "main-narrow-01-preliminary.tar.gz",

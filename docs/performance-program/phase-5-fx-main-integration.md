@@ -100,6 +100,11 @@ admission/bellek kuralları, mevcut store/CAS veya worker mekanizması değişti
 Kapsamı sunucu sahibi ayrı işte değerlendirmelidir. Görünür düzeltmede TR/EN,
 Motion+, reduced-motion ve gerçek post-change PNG release-note sözleşmesi sürer.
 
+Teslim, kullanıcı talimatıyla [#902 sunucu entegrasyon kaydına yorum olarak
+iletildi](https://github.com/clbiez/Buyer-Log-Desktop/pull/902#issuecomment-6711347159).
+#907'nin Main hedefi değiştikten sonra GitHub'daki 30 dosyanın tamamı yeniden
+kontrol edildi: üretim dosyası veya eski üretimi geri alan delta yoktur.
+
 ## Tarihsel tekrar çalıştırılabilirlik / Historical replay
 
 Main üzerinde tarihsel komutun kaynak guard'ı bilerek durur. Guard gevşetilmez.
