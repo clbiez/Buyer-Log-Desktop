@@ -1,0 +1,124 @@
+TAP version 13
+# Subtest: 1 · aynı Order Code: Production parsiyeli ile Depo parsiyeli ayrı varlık ve konumdadır
+ok 1 - 1 · aynı Order Code: Production parsiyeli ile Depo parsiyeli ayrı varlık ve konumdadır
+  ---
+  duration_ms: 6.842946
+  type: 'test'
+  ...
+# Subtest: 2 · aynı Gemi Ad taşıyan parsiyeller aynı segmentte tek araçta toplanır; detayda tüm çocuklar vardır
+ok 2 - 2 · aynı Gemi Ad taşıyan parsiyeller aynı segmentte tek araçta toplanır; detayda tüm çocuklar vardır
+  ---
+  duration_ms: 8.112858
+  type: 'test'
+  ...
+# Subtest: 3 · Gemi Ad boşsa yakın ilerleme birlikte, belirgin farklı ilerleme ayrı kümelenir
+ok 3 - 3 · Gemi Ad boşsa yakın ilerleme birlikte, belirgin farklı ilerleme ayrı kümelenir
+  ---
+  duration_ms: 1.999138
+  type: 'test'
+  ...
+# Subtest: 3b · ortalama yol süresi dolan ama hâlâ yolda olan sevkiyat sarı çerçeve durumu taşır
+ok 4 - 3b · ortalama yol süresi dolan ama hâlâ yolda olan sevkiyat sarı çerçeve durumu taşır
+  ---
+  duration_ms: 2.466788
+  type: 'test'
+  ...
+# Subtest: 4 · Bangladesh Gemi+Uçak: Bangladesh → Colombo deniz, Colombo → İstanbul hava
+ok 5 - 4 · Bangladesh Gemi+Uçak: Bangladesh → Colombo deniz, Colombo → İstanbul hava
+  ---
+  duration_ms: 1.107683
+  type: 'test'
+  ...
+# Subtest: 5 · India Gemi+Uçak aynı Colombo aktarmasını kullanır
+ok 6 - 5 · India Gemi+Uçak aynı Colombo aktarmasını kullanır
+  ---
+  duration_ms: 0.726198
+  type: 'test'
+  ...
+# Subtest: 6 · saf deniz / saf hava rotasına Colombo zorla eklenmez
+ok 7 - 6 · saf deniz / saf hava rotasına Colombo zorla eklenmez
+  ---
+  duration_ms: 0.971739
+  type: 'test'
+  ...
+# Subtest: 7 · Bangladesh + India Colombo → İstanbul ortak segmenti tek shared trunk olarak çizilir
+ok 8 - 7 · Bangladesh + India Colombo → İstanbul ortak segmenti tek shared trunk olarak çizilir
+  ---
+  duration_ms: 3.648524
+  type: 'test'
+  ...
+# Subtest: 8 · aynı İstanbul koordinatındaki semboller birbirini kapatmaz ve tek tek seçilebilir
+ok 9 - 8 · aynı İstanbul koordinatındaki semboller birbirini kapatmaz ve tek tek seçilebilir
+  ---
+  duration_ms: 4.301811
+  type: 'test'
+  ...
+# Subtest: 8b · yakın araçlar düşük zoomda kümelenir, yüksek zoomda tekilleşir
+ok 10 - 8b · yakın araçlar düşük zoomda kümelenir, yüksek zoomda tekilleşir
+  ---
+  duration_ms: 1.636213
+  type: 'test'
+  ...
+# Subtest: 8c · ortak rota aynı koridoru tek anahtarda toplar ve ülke + taşıma seçeneklerini üretir
+ok 11 - 8c · ortak rota aynı koridoru tek anahtarda toplar ve ülke + taşıma seçeneklerini üretir
+  ---
+  duration_ms: 1.445021
+  type: 'test'
+  ...
+# Subtest: 9-10 · CP ve Orders haritası grid görünür satırlarından değil tüm veri kümesinden beslenir
+ok 12 - 9-10 · CP ve Orders haritası grid görünür satırlarından değil tüm veri kümesinden beslenir
+  ---
+  duration_ms: 2.153855
+  type: 'test'
+  ...
+# Subtest: 11 · çoklu seçim filtreleri: alan içi VEYA, alanlar arası VE, deterministik
+ok 13 - 11 · çoklu seçim filtreleri: alan içi VEYA, alanlar arası VE, deterministik
+  ---
+  duration_ms: 4.252938
+  type: 'test'
+  ...
+# Subtest: 12 · hızlı filtreler: Warehouse varsayılanda yok, Critical var, düzenleme kalıcı saklanır
+ok 14 - 12 · hızlı filtreler: Warehouse varsayılanda yok, Critical var, düzenleme kalıcı saklanır
+  ---
+  duration_ms: 0.592602
+  type: 'test'
+  ...
+# Subtest: Critical tek kanonik Unified Action Priority kodundan türetilir
+ok 15 - Critical tek kanonik Unified Action Priority kodundan türetilir
+  ---
+  duration_ms: 1.093088
+  type: 'test'
+  ...
+# Subtest: Birleşik kaynak sipariş başına en öncelikli kaynağı seçer ve o kaynağın bütün parsiyellerini korur
+ok 16 - Birleşik kaynak sipariş başına en öncelikli kaynağı seçer ve o kaynağın bütün parsiyellerini korur
+  ---
+  duration_ms: 0.443721
+  type: 'test'
+  ...
+# Subtest: IAS Gemi Ad, İthalat Dosya No ve Konteyner No CP segmentlerine ve Backlog satırlarına taşınır
+ok 17 - IAS Gemi Ad, İthalat Dosya No ve Konteyner No CP segmentlerine ve Backlog satırlarına taşınır
+  ---
+  duration_ms: 20.538697
+  type: 'test'
+  ...
+# Subtest: alan çözücüsü farklı ara sütunlara sahip aynı uzunluktaki satırları karıştırmaz
+ok 18 - alan çözücüsü farklı ara sütunlara sahip aynı uzunluktaki satırları karıştırmaz
+  ---
+  duration_ms: 1.021812
+  type: 'test'
+  ...
+# Subtest: harita sağlayıcıları Overview koruma yolunu kullanır; gizli ızgarayı çizmez, başarısızlıkta döngüye girmez
+ok 19 - harita sağlayıcıları Overview koruma yolunu kullanır; gizli ızgarayı çizmez, başarısızlıkta döngüye girmez
+  ---
+  duration_ms: 0.257868
+  type: 'test'
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 338.079782
