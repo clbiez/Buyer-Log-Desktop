@@ -1,5 +1,7 @@
 # Fiyatlama / Ön Maliyet istemci hesap maliyeti — 2026-11-07
 
+> **Güncel entegrasyon/kabul:** [Main kabul raporu](2026-11-07-pricing-main-acceptance.md). Main normal merge ile alındı; aynı ölçülen kaynaklarla standart tam testin 10 batch'i 8.851 PASS / 0 FAIL / 65 mevcut SKIP verdi. Özel TMPDIR ile IAM 7/7 PASS; üretim düzeltmesi beklenmiyor. Aşağıdaki eski test/BLOKE kayıtları tarihsel sonuçlardır ve değiştirilmeden korunur. **CPR-06 kısmi:** hesap hazırlığı iyileşti; büyük ilk DOM çiziminin pencerelemesi uygulanmadı. Son head'in CI sonucu ve bağımsız Codex inceleme durumu ayrıca teslim edilir.
+
 CPR-05, CPR-06, CPR-07 ve CPR-12 **ölçülerek, dar kapsamda uygulandı**. Tamamen atlanan madde yok. Sayısal iş kuralları, kayıt/yetki yolları, maliyet motoru ve matrisin mevcut klavye/DOM düzeni değiştirilmedi.
 
 Temel: `2083ffd73ba026067d92ccf257c4551afa2e5f00` (main üzerine rebase edildi; altı hedef dosyanın ilk ölçümdeki baytları bu temelle aynı). Linux, Node 24.19.0, Chromium 154.0.8037.57, AMD EPYC 9V74; CPU kotası 4, bellek sınırı 16 GiB. Windows/Electron ölçümü değildir.

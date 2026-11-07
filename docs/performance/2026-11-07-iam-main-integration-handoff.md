@@ -1,5 +1,7 @@
 # #901 — ortak IAM engeli / ana sunucu entegrasyonu teslimi
 
+> **Tarihsel devir kaydı; eski BLOKE kararı güncel değildir.** #912'nin [teşhis raporu](https://github.com/clbiez/Buyer-Log-Desktop/blob/1f1f155d273c872641c9dedc15ae262c2e1652a0/docs/performance-program/phase-5-regression-diagnosis.md) aynı üretim kodunda özel TMPDIR ile IAM'in 7/7 geçtiğini gösterir. #901'de de yalnız özel TMPDIR ve gerçek varsayılan veri köküyle IAM 7/7, standart tam paketin bütün 10 batch'i 8.851 PASS / 0 FAIL / 65 mevcut SKIP oldu. IAM/güvenlik kodu, fixture, assertion veya global veri-kökü override'ı değiştirilmedi. [Güncel kabul ve inceleme durumu](2026-11-07-pricing-main-acceptance.md) ayrı kayıttadır; aşağıdaki eski karşılaştırmalar ve ham kanıtlar tarihsel olarak aynen korunur.
+
 **Durum: BLOKE.** `local-iam-migration-authority.test.js:18` başarısızlığı main üzerinde de vardır. Bu bulgu tam regresyon şartını kaldırmaz. #901 taslak ve merge edilmemiş kalır; TEST/STABLE yayını yapılmaz. Bu teslimde IAM/kimlik doğrulama üretim kodu, test, assertion veya IAM davranışı değiştirilmez.
 
 ## Karşılaştırılan kaynaklar
