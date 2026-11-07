@@ -1,0 +1,27 @@
+✔ agent reference documents listed on demand exist in the repository (3.100773ms)
+✔ Claude and Codex share evidence, PR gates and honest release reporting (0.448517ms)
+✔ lightweight PR checks are distinct from manual full regression (0.485784ms)
+✔ i18n bekçisi: tarayıcı tek dilli metni yakalar, TR/EN çiftlerini kabul eder (70.775291ms)
+✔ i18n bekçisi: baseline dışında İngilizce karşılığı olmayan Türkçe metin yok (1332.033857ms)
+✔ i18n bekçisi: baseline yalnız küçülür (düzeltilen kayıtlar silinmeli) (1019.086701ms)
+✔ i18n bekçisi: baseline donmuş üst sınırı aşamaz ve yeni dosya içeremez (0.319924ms)
+✔ i18n bekçisi: npm komutları ve çalışma sözleşmesi kuralı yerinde (0.386134ms)
+✔ sayfa Horizon şeritleri yoktur; veri filtresi ve boşluk rezervasyonu korunmadan kaldırılır (29.257393ms)
+✔ visual release notes runtime is syntactically valid and loaded by shell (1.965418ms)
+✔ release archive reuses Buyer Log guide and trivia component language (0.549911ms)
+✔ users several stable versions behind can expand unseen chronological changes from a bounded summary (0.144789ms)
+✔ post-update screen opens directly on every new visual detail card, without summary click (2.905257ms)
+✔ release archive sorts legacy two-part versions below newer semantic versions (0.396339ms)
+✔ release cards always expose readable copy, zoomable visuals and explicit navigation (0.338591ms)
+✔ pending release-note contract has bilingual detail and verified post-change PNG screenshots (301.082211ms)
+✔ release-note image guard detects archived corruption and unreadable crops (5.704124ms)
+✔ Codex and Claude contracts require the same visual release-note workflow (5.566426ms)
+✔ TEST seals notes and STABLE promotion persists immutable archive (0.528829ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2525.739289

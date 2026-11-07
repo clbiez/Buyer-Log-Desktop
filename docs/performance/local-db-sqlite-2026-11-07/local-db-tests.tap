@@ -1,0 +1,280 @@
+TAP version 13
+# Subtest: local compaction keeps current records, tombstones, conflicts/migrations and canonical business hash
+ok 1 - local compaction keeps current records, tombstones, conflicts/migrations and canonical business hash
+  ---
+  duration_ms: 161.924835
+  type: 'test'
+  ...
+# Subtest: compaction preserves unsynced events and compact ACK identities while dropping uploaded full payload history
+ok 2 - compaction preserves unsynced events and compact ACK identities while dropping uploaded full payload history
+  ---
+  duration_ms: 145.242074
+  type: 'test'
+  ...
+# Subtest: stray/incomplete compaction file never replaces valid primary state on restart
+ok 3 - stray/incomplete compaction file never replaces valid primary state on restart
+  ---
+  duration_ms: 46.222501
+  type: 'test'
+  ...
+# Subtest: local journal clocks are monotonic across rollback, batch writes and independent concurrent DB handles
+ok 4 - local journal clocks are monotonic across rollback, batch writes and independent concurrent DB handles
+  ---
+  duration_ms: 62.965304
+  type: 'test'
+  ...
+# Subtest: WAL replay restores exact recorded local, remote and package clocks without physical clock calls
+ok 5 - WAL replay restores exact recorded local, remote and package clocks without physical clock calls
+  ---
+  duration_ms: 20.991216
+  type: 'test'
+  ...
+# Subtest: future remote clock advances local state and emits trace while exact duplicate receives do not tick
+ok 6 - future remote clock advances local state and emits trace while exact duplicate receives do not tick
+  ---
+  duration_ms: 32.905638
+  type: 'test'
+  ...
+# Subtest: same-owner concurrent shared field writes use HLC instead of misleading at timestamps
+ok 7 - same-owner concurrent shared field writes use HLC instead of misleading at timestamps
+  ---
+  duration_ms: 58.152127
+  type: 'test'
+  ...
+# Subtest: legacy remote events retain at/device fallback and do not manufacture a physical receive stamp
+ok 8 - legacy remote events retain at/device fallback and do not manufacture a physical receive stamp
+  ---
+  duration_ms: 12.481716
+  type: 'test'
+  ...
+# Subtest: email ID merge uses item clocks, preserves untouched clocks and carries metadata outside business patch
+ok 9 - email ID merge uses item clocks, preserves untouched clocks and carries metadata outside business patch
+  ---
+  duration_ms: 63.003456
+  type: 'test'
+  ...
+# Subtest: email delete and resurrection decisions use clocks and do not lose unrelated IDs
+ok 10 - email delete and resurrection decisions use clocks and do not lose unrelated IDs
+  ---
+  duration_ms: 46.29152
+  type: 'test'
+  ...
+# Subtest: coalesced events carry the greatest HLC stamp while source sequence boundaries remain unchanged
+ok 11 - coalesced events carry the greatest HLC stamp while source sequence boundaries remain unchanged
+  ---
+  duration_ms: 0.810485
+  type: 'test'
+  ...
+# Subtest: malformed late event clocks or item clocks reject the entire batch before state or WAL mutation
+ok 12 - malformed late event clocks or item clocks reject the entire batch before state or WAL mutation
+  ---
+  duration_ms: 14.070312
+  type: 'test'
+  ...
+# Subtest: coalescing unions per-item clocks and retains the greatest clock independently for each ID
+ok 13 - coalescing unions per-item clocks and retains the greatest clock independently for each ID
+  ---
+  duration_ms: 0.649783
+  type: 'test'
+  ...
+# Subtest: checkpoint recovery observes imported CP and email clocks before a new local edit and persists them
+ok 14 - checkpoint recovery observes imported CP and email clocks before a new local edit and persists them
+  ---
+  duration_ms: 17.063548
+  type: 'test'
+  ...
+# Subtest: business patch metadata cannot poison validated email item clocks
+ok 15 - business patch metadata cannot poison validated email item clocks
+  ---
+  duration_ms: 16.350699
+  type: 'test'
+  ...
+# Subtest: late HLC exhaustion leaves cached and reopened DB equal with no partial batch/package writes
+ok 16 - late HLC exhaustion leaves cached and reopened DB equal with no partial batch/package writes
+  ---
+  duration_ms: 27.983377
+  type: 'test'
+  ...
+# Subtest: warm single-writer appends never reread the accumulated WAL to count entries
+ok 17 - warm single-writer appends never reread the accumulated WAL to count entries
+  ---
+  duration_ms: 605.698471
+  type: 'test'
+  ...
+# Subtest: external writer invalidates both counters and cached business state
+ok 18 - external writer invalidates both counters and cached business state
+  ---
+  duration_ms: 29.095493
+  type: 'test'
+  ...
+# Subtest: a failed partial append invalidates metadata and the next save repairs the actual tail
+ok 19 - a failed partial append invalidates metadata and the next save repairs the actual tail
+  ---
+  duration_ms: 32.25157
+  type: 'test'
+  ...
+# Subtest: same-size WAL replacement with restored mtime cannot reuse stale counters or records
+ok 20 - same-size WAL replacement with restored mtime cannot reuse stale counters or records
+  ---
+  duration_ms: 18.785711
+  type: 'test'
+  ...
+# Subtest: entry counter crosses the 2000-entry checkpoint boundary without losing 2100 durable saves
+ok 21 - entry counter crosses the 2000-entry checkpoint boundary without losing 2100 durable saves
+  ---
+  duration_ms: 4889.035426
+  type: 'test'
+  ...
+# Subtest: ND-003: acknowledged write survives a torn WAL tail (warm writer)
+ok 22 - ND-003: acknowledged write survives a torn WAL tail (warm writer)
+  ---
+  duration_ms: 103.037076
+  type: 'test'
+  ...
+# Subtest: ND-003: acknowledged write survives a torn WAL tail (cold writer)
+ok 23 - ND-003: acknowledged write survives a torn WAL tail (cold writer)
+  ---
+  duration_ms: 45.527921
+  type: 'test'
+  ...
+# Subtest: complete checksummed final entry without a newline remains replayable after append
+ok 24 - complete checksummed final entry without a newline remains replayable after append
+  ---
+  duration_ms: 21.25195
+  type: 'test'
+  ...
+# Subtest: non-tail checksum corruption rejects writes without modifying the WAL
+ok 25 - non-tail checksum corruption rejects writes without modifying the WAL
+  ---
+  duration_ms: 21.013058
+  type: 'test'
+  ...
+# Subtest: non-tail middle corruption rejects writes without modifying the WAL
+ok 26 - non-tail middle corruption rejects writes without modifying the WAL
+  ---
+  duration_ms: 23.058741
+  type: 'test'
+  ...
+# Subtest: non-tail version corruption rejects writes without modifying the WAL
+ok 27 - non-tail version corruption rejects writes without modifying the WAL
+  ---
+  duration_ms: 18.935418
+  type: 'test'
+  ...
+# Subtest: failed quarantine fsync rejects the save and leaves the damaged WAL unchanged
+ok 28 - failed quarantine fsync rejects the save and leaves the damaged WAL unchanged
+  ---
+  duration_ms: 27.488308
+  type: 'test'
+  ...
+# Subtest: transaction cannot checkpoint past checksum corruption
+ok 29 - transaction cannot checkpoint past checksum corruption
+  ---
+  duration_ms: 21.45043
+  type: 'test'
+  ...
+# Subtest: compact cannot checkpoint past checksum corruption
+ok 30 - compact cannot checkpoint past checksum corruption
+  ---
+  duration_ms: 15.393402
+  type: 'test'
+  ...
+# Subtest: rotateDeviceId cannot checkpoint past checksum corruption
+ok 31 - rotateDeviceId cannot checkpoint past checksum corruption
+  ---
+  duration_ms: 14.405659
+  type: 'test'
+  ...
+# Subtest: torn-tail recovery preserves the prior WAL generation and backup fallback
+ok 32 - torn-tail recovery preserves the prior WAL generation and backup fallback
+  ---
+  duration_ms: 33.955269
+  type: 'test'
+  ...
+# Subtest: failure during snapshot keeps evidence and allows a safe retry
+ok 33 - failure during snapshot keeps evidence and allows a safe retry
+  ---
+  duration_ms: 32.922724
+  type: 'test'
+  ...
+# Subtest: failure during rotation keeps evidence and allows a safe retry
+ok 34 - failure during rotation keeps evidence and allows a safe retry
+  ---
+  duration_ms: 35.229061
+  type: 'test'
+  ...
+# Subtest: küçük bir yazma büyük snapshotı yeniden yazmaz; yalnız küçük WAL kaydı ekler
+ok 35 - küçük bir yazma büyük snapshotı yeniden yazmaz; yalnız küçük WAL kaydı ekler
+  ---
+  duration_ms: 242.823617
+  type: 'test'
+  ...
+# Subtest: toplu yazma tek WAL turunda toplanır
+ok 36 - toplu yazma tek WAL turunda toplanır
+  ---
+  duration_ms: 25.733721
+  type: 'test'
+  ...
+# Subtest: WAL satırı fsync edilmeden çağırana dönülmez
+ok 37 - WAL satırı fsync edilmeden çağırana dönülmez
+  ---
+  duration_ms: 13.781445
+  type: 'test'
+  ...
+# Subtest: yarım kalmış son satır atılır, öncekiler korunur
+ok 38 - yarım kalmış son satır atılır, öncekiler korunur
+  ---
+  duration_ms: 15.157285
+  type: 'test'
+  ...
+# Subtest: bozulmuş bir satır ve sonrası uygulanmaz
+ok 39 - bozulmuş bir satır ve sonrası uygulanmaz
+  ---
+  duration_ms: 26.886358
+  type: 'test'
+  ...
+# Subtest: süreç yeniden başladığında WAL oynatılır
+ok 40 - süreç yeniden başladığında WAL oynatılır
+  ---
+  duration_ms: 12.84526
+  type: 'test'
+  ...
+# Subtest: oynatma determinist: kimlik ve zaman damgası yeniden üretilmez
+ok 41 - oynatma determinist: kimlik ve zaman damgası yeniden üretilmez
+  ---
+  duration_ms: 12.036387
+  type: 'test'
+  ...
+# Subtest: WAL eşiği aşınca sıkıştırılır ve veri görüntüye geçer
+ok 42 - WAL eşiği aşınca sıkıştırılır ve veri görüntüye geçer
+  ---
+  duration_ms: 187.14265
+  type: 'test'
+  ...
+# Subtest: sıkıştırma bir kuşak WAL saklar; bozuk görüntüde aradaki yazmalar kurtarılır
+ok 43 - sıkıştırma bir kuşak WAL saklar; bozuk görüntüde aradaki yazmalar kurtarılır
+  ---
+  duration_ms: 10.745626
+  type: 'test'
+  ...
+# Subtest: anlık görüntü biçimi değişmedi — WAL silinse de dosya tek başına okunur
+ok 44 - anlık görüntü biçimi değişmedi — WAL silinse de dosya tek başına okunur
+  ---
+  duration_ms: 11.162776
+  type: 'test'
+  ...
+# Subtest: DB taşınırken WAL geride bırakılmaz
+ok 45 - DB taşınırken WAL geride bırakılmaz
+  ---
+  duration_ms: 10.875733
+  type: 'test'
+  ...
+1..45
+# tests 45
+# suites 0
+# pass 45
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6002.822844
