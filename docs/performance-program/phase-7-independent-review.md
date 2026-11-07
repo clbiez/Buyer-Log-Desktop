@@ -29,3 +29,9 @@ node --test tests/phase7-snapshot-compute.test.js tests/phase7-snapshot-durabili
 TR: INT-04/05/11 kaynak incelemesinde ek raporlanabilir P1/P2 bulmadı. Pack shard→pack kilit sırası, fsync→head→index→manifest sırası ve hata yayılımı; parser tek aktif süreç, sınıf içi FIFO/fairness ve işe özel batch sınırları incelendi. Test ve ölçüm yerine review beyanı kullanılmadı. Gerçek SMB/PLM ve Windows kanıtı yoktur. Merge, TEST ve STABLE yapılmaz.
 
 EN: No additional reportable P1/P2 was found in INT-04/05/11 source review. This does not replace tests or establish real SMB/PLM/Windows behavior. No merge or TEST/STABLE publication.
+
+## Paketleme eşleştirmesi / Packaging correspondence
+
+TR: Yeni genel inceleme turu yoktur. İncelenen sunucu dosyalarının Git blob/sha256 kimlikleri ve eski review head’leri [paketleme sözleşmesinde](phase-7-packaging-contract.json) sabitlenir. Nihai PR SHA eşleştirmesi, eski head’in ancestor kontrolü ve her dalın kendi tam regresyonu [devir kaydında](phase-7-packaging-handoff.md) bulunur.
+
+EN: No new general review. Reviewed production blobs are pinned in the packaging contract; final PR heads, preserved ancestry and per-branch full regression appear in the handoff. The capacity P1 closure evidence remains unchanged.
