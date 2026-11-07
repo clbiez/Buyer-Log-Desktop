@@ -695,7 +695,10 @@
         if(!decision || generation!==assistantRefreshGeneration || currentRows()!==rows)return;
         // Aynı karar zaten hücrelere işlendiyse CP'yi ikinci kez çizmeye gerek yok.
         const already=state.appliedColumns&&state.appliedColumns.rows===rows&&state.appliedColumns.decision===decision&&state.appliedColumns.tasks===state.testTasks;
-        refreshColumns({render:false,decision});
+        // Karar nesnesi kural, cevap, PLM ve bağlam revizyonuyla anahtarlıdır; aynı
+        // karar, satır, görev, başlık ve dil zaten işlendiyse ikinci tam geçiş
+        // (25 bin satırda ~3 sn) yapılmaz. Biri farklıysa reuse tam geçişe düşer.
+        refreshColumns({render:false,decision,reuse:true});
         if(!already&&root.document?.body?.dataset.activeTab==='cp'&&typeof root.renderCP==='function')root.renderCP();
       }).catch(error=>toast(error.message));
     } else refreshColumns({render:false});
@@ -3028,6 +3031,7 @@
     openEvidenceForRow: openEvidenceForRow,
     componentCellHtml, openComponentCountDialog, expandedItems,
     diffAnswers: diffAnswers,
+    refreshAssistantView: refreshAssistantView,
     syncAnswerChanges: syncAnswerChanges,
     latestAnswerAt: latestAnswerAt,
     columnKey: columnKey,
