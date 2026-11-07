@@ -1,0 +1,28 @@
+{
+  "pr": 908,
+  "before": "06a5044398089de5f91df89292bf4ace61a27aa5",
+  "main": "d77f83e55bf06bbf3776aaea5de79d9bdd58e2a8",
+  "merge": "81b94d23e5841be45f352f98ef42f62dab11c8fe",
+  "appTree": "b3a88ec323f20a0fa22e871425e7971153617b8e",
+  "notes": 44,
+  "tree": "/tmp/buyerlog-shared-ui908",
+  "ownNoteIds": [
+    "shared-ui-measured-work"
+  ],
+  "counts": {
+    "pass": 8900,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65
+  },
+  "files": 1296,
+  "related": 131,
+  "allTenBatchesOneInvocation": true,
+  "defaultConcurrency": 4,
+  "nodeOptions": null,
+  "i18n": {
+    "new": 0,
+    "baseline": 0
+  },
+  "newPerformanceClaim": false
+}

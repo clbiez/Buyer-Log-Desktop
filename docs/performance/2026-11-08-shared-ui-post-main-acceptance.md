@@ -66,3 +66,26 @@ synthetic PNG byte test does not close INT-08, which remains open/unmeasured.
 Historical inclusive timings remain scoped to the two changes measured together;
 there is no independent ablation or general responsiveness guarantee.
 **Post-#915 Main integration/final CI remain separate; no merge or TEST/STABLE.**
+
+
+## #915 sonrası son kabul / Final acceptance after #915
+
+8 Kasım 2026: Main `d77f83e5` (#915, kullanıcı onayıyla merge edildi)
+normal merge `81b94d23` ile alındı. Test edilen uygulama ağacı
+`b3a88ec323f20a0fa22e871425e7971153617b8e`. Standart `npm test`, tek çağrıda bütün
+10 batch, varsayılan concurrency=4, izole TMPDIR ve NODE_OPTIONS/preload
+olmadan: **1296 dosya / 8900 PASS / 0 FAIL / 65 mevcut SKIP /
+0 CANCEL**. İlgili paket **131 PASS**, i18n **0/0**, sürüm notları
+**44 PASS**. Tarihsel sonuçlar korunur; bu kayıt yeni performans
+kazancı iddiası değildir. Son commit'in gerçek GitHub kontrolleri ayrı kapıdır.
+
+Main `d77f83e5` was imported by normal merge without rewriting the frozen review
+history. The unchanged standard runner passed all ten batches in one invocation:
+**1296 files / 8900 PASS / 0 FAIL / 65 existing SKIP / 0 CANCEL**,
+default concurrency4, private TMPDIR, no NODE_OPTIONS/preload. Related package
+131 PASS; i18n0/0; 44 visual notes valid. Own production changes
+and their reviewed behavior were preserved; the new runtime delta imports the
+separately reviewed and merged current-authority fix. Evidence-only additions
+after these checks do not change source, tests, validators or CI. Historical
+benchmark limitations remain. Actual final-head CI and merge approval are still
+separate. **No TEST/STABLE publication.**
