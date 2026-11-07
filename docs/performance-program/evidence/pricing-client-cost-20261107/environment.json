@@ -1,0 +1,38 @@
+{
+  "platform": "linux",
+  "node": "v24.19.0",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "cpuQuota": "400000 100000",
+  "memoryLimitBytes": "17179869184",
+  "chromium": "154.0.8037.57",
+  "baseline": "2083ffd73ba026067d92ccf257c4551afa2e5f00",
+  "sourceSha256": {
+    "pricing-desk.js": {
+      "before": "4b29f4e49ed28cdc69fbc11071c5059db94818d868aabb1a3cefdf8bdff806fe",
+      "after": "e56861d1ef59fd5c1684f3a98162dad348b3860d792d3f6f00004fced7feeac9"
+    },
+    "pricing-desk-engine.js": {
+      "before": "0a2993699eb08ded917f869b20ab8f24c3d5bc2dda4b60345e7c30252f85e2da",
+      "after": "43ad70871caa0eca373ca1c48769dd078b530a506c85abb676089b14d4e53127"
+    },
+    "quotations.js": {
+      "before": "3a1ed69efa1e78fd6e1e28c89bd7fb62bb8e4a060a9fc1813635b16f8ac47801",
+      "after": "559006387243704a69053eca68be1c18bd2433cb247712a136fcbec0ebf0904f"
+    },
+    "pricing-workspace-engine.js": {
+      "before": "c901955b83a4d8061473279d2d36a126a4ee5d23471c8625b9d75d354588fc65",
+      "after": "e9286f03b066fc29b6012e1ac213626d8164b8d63c008693376ab2a68071606b"
+    },
+    "open-costing.js": {
+      "before": "c8ba1ed77123c752266c5af2d691ada380927373aeb2fffb14e0d5b24b8dbbea",
+      "after": "59b831e1e0678c1a44caf5111a758e462e7624d5eb6362d297f345b135533040"
+    },
+    "open-costing-engine.js": {
+      "before": "c1587eaf5a87183426c6a030ec4ba9d85da0661e15187383e17858d76279687c",
+      "after": "c1587eaf5a87183426c6a030ec4ba9d85da0661e15187383e17858d76279687c"
+    }
+  },
+  "synthetic": true,
+  "fixtureArchiveSha256": "5913414603984b02b1c30b87f1f9231da3718ab797a007f4bd14067ec6cd5c70",
+  "order": "A B / B A / A B"
+}

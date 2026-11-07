@@ -1,0 +1,184 @@
+TAP version 13
+# Subtest: real personal-context listener preserves CP input revision and invalidates priority consumers
+ok 1 - real personal-context listener preserves CP input revision and invalidates priority consumers
+  ---
+  duration_ms: 3.317762
+  type: 'test'
+  ...
+# Subtest: actual on-demand Orders loader preserves CP revision, cache and local state
+ok 2 - actual on-demand Orders loader preserves CP revision, cache and local state
+  ---
+  duration_ms: 3.913593
+  type: 'test'
+  ...
+# Subtest: cancelled on-demand Orders load publishes no revision or data
+ok 3 - cancelled on-demand Orders load publishes no revision or data
+  ---
+  duration_ms: 0.909529
+  type: 'test'
+  ...
+# Subtest: loadFromServer Orders-only hydrated branch must preserve the CP decision input revision
+not ok 4 - loadFromServer Orders-only hydrated branch must preserve the CP decision input revision
+  ---
+  duration_ms: 2.794099
+  type: 'test'
+  location: '/workspace/Buyer-Log-Desktop/resources/app/tests/cp-orders-hydration-revision.test.js:119:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Orders-only hydrated must not invalidate CP decision inputs
+
+    2 !== 1
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/cp-orders-hydration-revision.test.js:125:12)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: loadFromServer Orders-only deferred branch must preserve the CP decision input revision
+not ok 5 - loadFromServer Orders-only deferred branch must preserve the CP decision input revision
+  ---
+  duration_ms: 1.720849
+  type: 'test'
+  location: '/workspace/Buyer-Log-Desktop/resources/app/tests/cp-orders-hydration-revision.test.js:119:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    Orders-only deferred must not invalidate CP decision inputs
+
+    2 !== 1
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/cp-orders-hydration-revision.test.js:125:12)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: real CP hydration replaces the dataset and advances CP input revision
+ok 6 - real CP hydration replaces the dataset and advances CP input revision
+  ---
+  duration_ms: 1.946899
+  type: 'test'
+  ...
+# Subtest: combined CP and Orders hydration retains CP invalidation without a second CP input increment
+not ok 7 - combined CP and Orders hydration retains CP invalidation without a second CP input increment
+  ---
+  duration_ms: 1.351913
+  type: 'test'
+  location: '/workspace/Buyer-Log-Desktop/resources/app/tests/cp-orders-hydration-revision.test.js:149:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    3 !== 2
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 3
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/cp-orders-hydration-revision.test.js:155:10)
+    Test.runInAsyncScope (node:async_hooks:227:14)
+    Test.run (node:internal/test_runner/test:1382:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+    Test.postRun (node:internal/test_runner/test:1522:19)
+    Test.run (node:internal/test_runner/test:1447:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: full loader retains shared-rule CP invalidation around Orders hydrated
+not ok 8 - full loader retains shared-rule CP invalidation around Orders hydrated
+  ---
+  duration_ms: 3.85506
+  type: 'test'
+  location: '/workspace/Buyer-Log-Desktop/resources/app/tests/cp-orders-hydration-revision.test.js:208:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    shared rules still invalidate CP; Orders adds no extra CP input revision
+
+    3 !== 2
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 3
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/cp-orders-hydration-revision.test.js:221:12)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: full loader retains shared-rule CP invalidation around Orders deferred
+not ok 9 - full loader retains shared-rule CP invalidation around Orders deferred
+  ---
+  duration_ms: 4.101544
+  type: 'test'
+  location: '/workspace/Buyer-Log-Desktop/resources/app/tests/cp-orders-hydration-revision.test.js:208:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    shared rules still invalidate CP; Orders adds no extra CP input revision
+
+    3 !== 2
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  actual: 3
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/cp-orders-hydration-revision.test.js:221:12)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: full loader advances CP input revision for real CP data
+ok 10 - full loader advances CP input revision for real CP data
+  ---
+  duration_ms: 3.389875
+  type: 'test'
+  ...
+# Subtest: full loader advances CP input revision for real CP data plus Orders
+not ok 11 - full loader advances CP input revision for real CP data plus Orders
+  ---
+  duration_ms: 2.5369
+  type: 'test'
+  location: '/workspace/Buyer-Log-Desktop/resources/app/tests/cp-orders-hydration-revision.test.js:233:3'
+  failureType: 'testCodeFailure'
+  error: |-
+    shared-rule and actual CP hydration each advance CP inputs
+
+    4 !== 3
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 3
+  actual: 4
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/cp-orders-hydration-revision.test.js:239:12)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 5
+# fail 6
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 228.7684

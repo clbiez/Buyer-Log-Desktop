@@ -75,8 +75,13 @@ jobs:
         run: node --test tests/checklist-forbidden-retry-v20261027.test.js tests/checklist-durability.test.js
       - name: Collection LFL references and buyer country filter
         run: node --test tests/collection-lfl-country-filter.test.js tests/collection-lfl-reference.test.js tests/collection-lfl-detail.test.js
+      - name: Collection catalog worker contract, live guards and CP input revision
+        run: |
+          node --test tests/client-computation-performance.test.js tests/collection-asas-excel-grid-v489.test.js tests/collection-product-main-definition-suggestions-v829.test.js tests/collection-catalog-compute-contract.test.js tests/compute-read-guard.test.js tests/compute-read-service.test.js tests/compute-projection-route-wiring.test.js tests/compute-bulk-projection-wiring.test.js tests/cp-decision-input-revision.test.js tests/cp-orders-hydration-revision.test.js
       - name: Freeze Columns engine for CP, Orders and Collection
         run: node --test tests/table-freeze-engine.test.js tests/freeze-hover-v508.test.js tests/kol-freeze-colpanel-imgsize-v585.test.js tests/collection-freeze-grid-alignment-v1015.test.js tests/kol-freeze-cache-bust-v1010.test.js tests/table-header-tracking-v70301.test.js
+      - name: Native profiler shutdown and worker ownership
+        run: node --test tests/runtime-profiler-worker.test.js tests/runtime-pressure-monitor.test.js
       - name: Validate nonempty pending release notes
         run: |
           node -e "const n=require('./public/release-notes/next.json');if(n.changes?.length)require('./scripts/release-notes').validateNext();else if(n.publishedAt)throw Error('Empty pending notes must have blank publishedAt')"

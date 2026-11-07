@@ -1,0 +1,66 @@
+{
+  "full-test.log": {
+    "tests": 6443,
+    "pass": 6378,
+    "fail": 1,
+    "skipped": 64
+  },
+  "remaining-tests.log": {
+    "tests": 2264,
+    "pass": 2263,
+    "fail": 0,
+    "skipped": 1
+  },
+  "total": {
+    "tests": 8707,
+    "pass": 8641,
+    "fail": 1,
+    "skipped": 65
+  },
+  "initialCommand": "BUYER_LOG_DATA_ROOT=/tmp/buyerlog-startup-pricing/tests/full-app npm test",
+  "initialResult": "Batch 3 failed; remaining original batches 4–10 executed with the same concurrency and suite env.",
+  "remainingBatches": [
+    {
+      "batch": 4,
+      "files": 300,
+      "status": 0
+    },
+    {
+      "batch": 5,
+      "files": 35,
+      "status": 0
+    },
+    {
+      "batch": 6,
+      "files": 1,
+      "status": 0
+    },
+    {
+      "batch": 7,
+      "files": 1,
+      "status": 0
+    },
+    {
+      "batch": 8,
+      "files": 1,
+      "status": 0
+    },
+    {
+      "batch": 9,
+      "files": 1,
+      "status": 0
+    },
+    {
+      "batch": 10,
+      "files": 1,
+      "status": 0
+    }
+  ],
+  "baselineFailure": {
+    "file": "tests/local-iam-migration-authority.test.js",
+    "line": 18,
+    "assertion": "undefined != IAM_LOCAL_INVALID",
+    "reproducedOn": "2083ffd73ba026067d92ccf257c4551afa2e5f00"
+  },
+  "v714": "passed on rebased main"
+}

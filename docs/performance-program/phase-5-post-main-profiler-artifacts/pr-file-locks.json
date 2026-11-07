@@ -1,0 +1,148 @@
+{
+  "checkedAt": "2026-11-07T18:36:43.528Z",
+  "repo": "clbiez/Buyer-Log-Desktop",
+  "main": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "prs": [
+    {
+      "number": 911,
+      "title": "perf(parser): Faz 7 INT-11 — öncelik ve işe özel küçük rapor batch",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/911",
+      "changedFiles": 16,
+      "relevantOverlap": []
+    },
+    {
+      "number": 910,
+      "title": "perf(images): Faz 7 INT-04/05 — yerel öncelik ve dayanıklı pack batch",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/910",
+      "changedFiles": 17,
+      "relevantOverlap": []
+    },
+    {
+      "number": 909,
+      "title": "perf(store): Faz 7 DS-08 — ortak havuzda snapshot JSON",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/909",
+      "changedFiles": 18,
+      "relevantOverlap": []
+    },
+    {
+      "number": 908,
+      "title": "perf(shell): başlık ve blur işini ölçerek azalt",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/908",
+      "changedFiles": 83,
+      "relevantOverlap": [
+        "resources/app/public/release-notes/next.json"
+      ]
+    },
+    {
+      "number": 907,
+      "title": "diag: Main entegrasyonu ve tarihsel FX kanıtının korunması",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/907",
+      "changedFiles": 30,
+      "relevantOverlap": []
+    },
+    {
+      "number": 906,
+      "title": "perf: CARD-01, INT-09 ve CPR-11 istemci tekrar işlerini azalt",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/906",
+      "changedFiles": 34,
+      "relevantOverlap": [
+        "resources/app/public/release-notes/next.json"
+      ]
+    },
+    {
+      "number": 905,
+      "title": "docs(perf): Faz 3 perde ödünleşimini güncel main’de yeniden ölç (TR/EN)",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/905",
+      "changedFiles": 118,
+      "relevantOverlap": []
+    },
+    {
+      "number": 904,
+      "title": "perf(analytics): ANA-05/07/11 renderer hesap yükünü azalt",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/904",
+      "changedFiles": 18,
+      "relevantOverlap": [
+        "resources/app/public/release-notes/next.json"
+      ]
+    },
+    {
+      "number": 903,
+      "title": "test(perf): INT-12 — Main #885 entegrasyonu ve kontrollü paralellik hazırlığı",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/903",
+      "changedFiles": 130,
+      "relevantOverlap": []
+    },
+    {
+      "number": 901,
+      "title": "perf(pricing): fiyatlama ve ön maliyet istemci hesabını azalt (CPR-05/06/07/12)",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/901",
+      "changedFiles": 33,
+      "relevantOverlap": [
+        "resources/app/public/release-notes/next.json"
+      ]
+    },
+    {
+      "number": 900,
+      "title": "perf: Yerel JSON/WAL–SQLite prototipi ve TR/EN karar raporu",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/900",
+      "changedFiles": 15,
+      "relevantOverlap": []
+    },
+    {
+      "number": 899,
+      "title": "test(perf): INT-03 — PLM görsel bellek tanısı ve Faz 7 hazırlığı",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/899",
+      "changedFiles": 54,
+      "relevantOverlap": []
+    },
+    {
+      "number": 898,
+      "title": "test(perf): INT-01 ortak DB parse tanı ve test hazırlığı",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/898",
+      "changedFiles": 46,
+      "relevantOverlap": []
+    },
+    {
+      "number": 897,
+      "title": "diag(admin): ADMIN-03 maliyet kanıtı ve bekleyen istek yetki RED'i",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/897",
+      "changedFiles": 45,
+      "relevantOverlap": []
+    },
+    {
+      "number": 896,
+      "title": "test(perf): ADMIN-01 CRC/SHA tanı ve snapshot/restore hazırlığı",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/896",
+      "changedFiles": 39,
+      "relevantOverlap": []
+    },
+    {
+      "number": 895,
+      "title": "test(perf): ANA-12 hazırlığını #885 sonrası Main ile doğrula",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/895",
+      "changedFiles": 188,
+      "relevantOverlap": []
+    },
+    {
+      "number": 893,
+      "title": "diag(perf): Faz 5 B1 — FX 5000 ms bütçesi worker'a girmeden kuyrukta doluyor",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/893",
+      "changedFiles": 8,
+      "relevantOverlap": []
+    },
+    {
+      "number": 891,
+      "title": "docs(perf): Faz 6a — alan envanteri ve shadow karşılaştırma hazırlığı",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/891",
+      "changedFiles": 7,
+      "relevantOverlap": []
+    },
+    {
+      "number": 890,
+      "title": "test(perf): INT-06 kaynak uyumu, seri ölçüm ve resume hazırlığı",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/890",
+      "changedFiles": 89,
+      "relevantOverlap": []
+    }
+  ]
+}
