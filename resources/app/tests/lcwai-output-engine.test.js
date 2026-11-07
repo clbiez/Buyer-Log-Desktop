@@ -526,7 +526,7 @@ test('AI Outputs: bozuk metadata ezilmeden yedeklenir', () => {
   assert.equal(store.list('u1').length, 1);
 });
 
-test('dinamik tasarım: HTML’de yalnız-CSS animasyonlar (azaltılmış harekete ve baskıya saygılı), PPTX geçiş + renk geçişi, XLSX veri çubuğu', () => {
+test('dinamik tasarım: HTML’de yalnız-CSS animasyonlar (azaltılmış harekete ve baskıya saygılı), PPTX geçiş + renk geçişi; XLSX varsayılanı sade', () => {
   const screen = theme.reportCss({ print: false });
   assert.match(screen, /@media screen and \(prefers-reduced-motion:no-preference\)\{/);
   for (const name of ['bl-rise', 'bl-pop', 'bl-grow', 'bl-ring', 'bl-shift']) assert.match(screen, new RegExp(`@keyframes ${name}\\{`));
@@ -540,10 +540,9 @@ test('dinamik tasarım: HTML’de yalnız-CSS animasyonlar (azaltılmış hareke
   assert.match(files['ppt/slides/slide2.xml'], /<p:transition spd="slow"><p:push dir="u"\/><\/p:transition><\/p:sld>$/);
   assert.match(files['ppt/slides/slide3.xml'], /<p:transition spd="med"><p:fade\/><\/p:transition><\/p:sld>$/);
   assert.match(files['ppt/slides/slide1.xml'], /<a:alpha val="5000"\/>/);
+  // İstenmeyen koşullu biçim yok: zebra ve veri çubuğu yalnız açıkça istenirse.
   const book = unzip(renderWorkbook(contracts.normalizeWorkbook({ title: 't', sheets: [{ name: 'S', columns: [{ header: 'A', type: 'text' }, { header: 'N', type: 'integer' }], rows: [['a', 1], ['b', 2]] }] }).data));
-  assert.match(book['xl/worksheets/sheet1.xml'], /<cfRule type="dataBar" priority="2">/);
-  assert.match(book['xl/worksheets/sheet1.xml'], /<conditionalFormatting sqref="B2:B3">/);
-  assert.match(book['xl/styles.xml'], /<dxfs count="1">/);
+  assert.doesNotMatch(book['xl/worksheets/sheet1.xml'], /conditionalFormatting|dataBar|MOD\(ROW/);
 });
 
 test('başlıklar: mavi değil Buyer Log tablo başlığı grisi; metin BL logosu siyahı (HTML/PDF/PPTX/XLSX)', () => {

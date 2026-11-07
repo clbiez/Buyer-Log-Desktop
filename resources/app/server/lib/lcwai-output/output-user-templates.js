@@ -37,8 +37,24 @@ function normalizeColumns(list, format) {
     const name = clean(isObject(column) ? (column.name || column.header) : column, LIMITS.columnChars);
     if (!name) return null;
     const type = String(isObject(column) && column.type || '').toLowerCase();
-    return format === 'xlsx' && COLUMN_TYPES.includes(type) && type !== 'text' ? { name, type } : { name };
+    if (format !== 'xlsx') return { name };
+    // Excel şablonu sütun biçimini de saklar (hizalama, toplam, çubuk, vurgu); hücre değeri taşımaz.
+    const known = COLUMN_TYPES.includes(type) ? type : 'text';
+    const look = isObject(column) ? BLOutputLayout.normalizeXlsxColumnFormat(column, known) : {};
+    return { name, ...(known !== 'text' ? { type: known } : {}), ...look };
   }).filter(Boolean);
+}
+
+/* Şablon talimatında sütun biçiminin okunur özeti: "Adet (integer; total: sum; bar; highlight: < 0 → risk)". */
+function columnFormatText(column) {
+  const parts = [];
+  if (column.type) parts.push(column.type);
+  if (column.align) parts.push(`align: ${column.align}`);
+  if (column.width) parts.push(`width: ${column.width}`);
+  if (column.total) parts.push(`total: ${column.total}`);
+  if (column.bar) parts.push('bar');
+  if (column.highlight) parts.push(`highlight: ${column.highlight.map(rule => `${rule.op} ${rule.value}${rule.op === 'between' ? `–${rule.value2}` : ''} → ${rule.tone}`).join(', ')}`);
+  return parts.length ? `${column.name} (${parts.join('; ')})` : column.name;
 }
 
 function normalizeStructure(list, format) {
@@ -48,6 +64,10 @@ function normalizeStructure(list, format) {
     const out = { kind, title: clean(item.title, LIMITS.title) };
     const columns = normalizeColumns(item.columns, format);
     if (columns.length) out.columns = columns;
+    if (format === 'xlsx' && kind === 'sheet' && isObject(item.style)) {
+      const style = BLOutputLayout.normalizeXlsxSheetFormat(item.style, columns).style;
+      if (style.zebra || style.freezeColumns) out.style = style;
+    }
     const parts = asArray(item.parts).map(part => String(part || '').toLowerCase()).filter(part => PARTS.includes(part));
     if (format !== 'pptx' && format !== 'xlsx' && parts.length) out.parts = [...new Set(parts)];
     return out;
@@ -116,7 +136,7 @@ function skeletonFromData(format, data) {
   if (format === 'xlsx') {
     const items = [];
     if (asArray(value.kpis).length || asArray(value.notes).length) items.push({ kind: 'summary', title: '' });
-    for (const sheet of asArray(value.sheets)) items.push({ kind: 'sheet', title: sheet && sheet.name, columns: asArray(sheet && sheet.columns).map(column => ({ name: column.header, type: column.type })) });
+    for (const sheet of asArray(value.sheets)) items.push({ kind: 'sheet', title: sheet && sheet.name, style: sheet && sheet.style, columns: asArray(sheet && sheet.columns).map(column => ({ ...column, name: column.header })) });
     return normalizeStructure(items, format);
   }
   const body = String(value.body || '');
@@ -156,11 +176,17 @@ function templateInstruction(definition, { name = '', lang = 'tr' } = {}) {
       ? `Follow the user's saved template exactly: keep this ${def.format === 'pptx' ? 'slide' : def.format === 'xlsx' ? 'sheet' : 'section'} order, these titles and these table columns (in this order). Fill the content with the CURRENT data; never copy old values. If data for an item is missing, keep the item and say so in it.`
       : `Kullanıcının kayıtlı şablonuna birebir uy: ${def.format === 'pptx' ? 'slayt' : def.format === 'xlsx' ? 'sayfa' : 'bölüm'} sırası, başlıklar ve tablo sütunları (bu sırayla) aşağıdaki gibi olsun. İçeriği GÜNCEL veriyle doldur; eski değer kopyalama. Bir öğenin verisi yoksa öğeyi koru ve bunu içinde belirt.`);
     def.structure.forEach((item, index) => {
-      const columns = item.columns && item.columns.length ? ` — ${english ? 'columns' : 'sütunlar'}: ${item.columns.map(column => column.type ? `${column.name} (${column.type})` : column.name).join(' | ')}` : '';
+      const columns = item.columns && item.columns.length ? ` — ${english ? 'columns' : 'sütunlar'}: ${item.columns.map(column => (def.format === 'xlsx' ? columnFormatText(column) : column.name)).join(' | ')}` : '';
+      const sheetStyle = item.style ? ` — ${english ? 'sheet style' : 'sayfa biçimi'}: ${[item.style.zebra ? 'zebra' : '', item.style.freezeColumns ? `freezeColumns ${item.style.freezeColumns}` : ''].filter(Boolean).join(', ')}` : '';
       const parts = item.parts && item.parts.length ? ` — ${english ? 'components' : 'bileşenler'}: ${item.parts.map(part => PART_LABEL[key][part] || part).join(', ')}` : '';
       const layout = def.format === 'pptx' ? ` (layout: ${item.kind})` : '';
-      lines.push(`${index + 1}. ${KIND_LABEL[key][item.kind] || item.kind}${layout}: ${item.title || (english ? '(untitled)' : '(başlıksız)')}${columns}${parts}`);
+      lines.push(`${index + 1}. ${KIND_LABEL[key][item.kind] || item.kind}${layout}: ${item.title || (english ? '(untitled)' : '(başlıksız)')}${columns}${sheetStyle}${parts}`);
     });
+  }
+  if (def.format === 'xlsx' && def.structure.some(item => item.style || (item.columns || []).some(column => column.align || column.width || column.total || column.bar || column.highlight))) {
+    lines.push(english
+      ? 'Apply the formatting shown in parentheses with the WORKBOOK format fields (align, width, total, bar, highlight; sheet style zebra / freezeColumns). Add no other formatting.'
+      : 'Parantez içindeki biçimi WORKBOOK biçim alanlarıyla uygula (align, width, total, bar, highlight; sayfa biçimi zebra / freezeColumns). Başka biçim ekleme.');
   }
   if (def.keepFull.length) {
     lines.push(english
