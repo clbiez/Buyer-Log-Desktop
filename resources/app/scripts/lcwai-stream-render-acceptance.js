@@ -49,10 +49,11 @@ const instrumented = source.replace('window.BLLcwAiChat = {', 'window.BLLcwAiCha
       const languageEquivalent = box.innerHTML === expectedHtml();
       state.conversations.push({ id: 'other', messages: [{ role: 'ai', text: 'Other' }] }); state.activeId = 'other'; chat._full(); chat._paint();
       const conversationEquivalent = box.innerHTML === expectedHtml();
+      const observationsMs = [...times], frameObservationsMs = [...frames];
       times.sort((a, b) => a - b); frames.sort((a, b) => a - b);
-      return { historyMessages: 100, paints: 40, mdCalls, p50Ms: times[20], p95Ms: times[38], frameP95Ms: frames[38], longTasks, sameHistory, sameSelection, scrollTop, safe, streamingEquivalent: streamingHtml === expected, finalEquivalent, languageEquivalent, conversationEquivalent };
+      return { historyMessages: 100, paints: 40, observationsMs, frameObservationsMs, mdCalls, p50Ms: times[20], p95Ms: times[38], frameP95Ms: frames[38], longTasks, sameHistory, sameSelection, scrollTop, safe, streamingEquivalent: streamingHtml === expected, finalEquivalent, languageEquivalent, conversationEquivalent };
     });
-    console.log(JSON.stringify({ chromium: browser.version(), ...result }, null, 2));
+    console.log(JSON.stringify({ processId: process.pid, chromium: browser.version(), ...result }, null, 2));
     for (const key of ['safe', 'streamingEquivalent', 'finalEquivalent', 'languageEquivalent', 'conversationEquivalent']) assert.equal(result[key], true, key);
     if (process.argv.includes('--assert-optimized')) {
       assert.equal(result.mdCalls, result.paints, 'only active Markdown is parsed per paint');

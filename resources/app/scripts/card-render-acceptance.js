@@ -9,7 +9,7 @@ const sourceDir = arg('--source-dir', path.join(app, 'public'));
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox'] });
   const results = [];
   try {
-    for (const count of (process.argv.includes('--small-only') ? [500] : [500, 5000])) for (const module of (arg('--module', '') ? [arg('--module')] : ['license-cards', 'manufacturers', 'email-groups'])) {
+    for (const count of (arg('--count', '') ? [Number(arg('--count'))] : process.argv.includes('--small-only') ? [500] : [500, 5000])) for (const module of (arg('--module', '') ? [arg('--module')] : ['license-cards', 'manufacturers', 'email-groups'])) {
       const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
       await page.setContent('<div id="licenseCardsPage"></div><div id="manufacturersPage"></div><div id="emailFixture"><span data-eg-count></span><select data-eg-filter-country></select><select data-eg-filter-type></select><div data-eg-body></div></div>');
       await page.addStyleTag({ content: '.lcTable,.mfpListScroll,.egDirectoryScroll{height:500px;overflow:auto}.lcRow{height:44px}.mfpRow,.egDirectoryRow{display:block;height:70px}.mfpBody,[data-eg-body]{display:grid;grid-template-columns:400px 1fr}.lcEditor{width:800px;height:500px}' });
@@ -91,13 +91,13 @@ const sourceDir = arg('--source-dir', path.join(app, 'public'));
           lockRefreshed = !!root.querySelector('.egDirectoryRow.isLocked') && root.querySelector('.egDetailPane').textContent.includes('Demo peer') && !root.querySelector('[data-eg-edit]');
           window.appLang = 'tr'; f.render(); lockRefreshed = lockRefreshed && root.querySelector('.egDetailPane').textContent.includes('düzenliyor');
         }
-        const summary = Object.fromEntries(Object.entries(timings).map(([name, values]) => { values.sort((a, b) => a - b); return [name, values.length ? { samples: values.length, p50Ms: values[Math.floor(values.length / 2)], p95Ms: values[Math.ceil(values.length * .95) - 1] } : null]; }));
+        const summary = Object.fromEntries(Object.entries(timings).map(([name, values]) => { const sorted = [...values].sort((a, b) => a - b); return [name, values.length ? { samples: values.length, observationsMs: values, p50Ms: sorted[Math.floor(values.length / 2)], p95Ms: sorted[Math.ceil(values.length * .95) - 1] } : null]; }));
         return { module, count, ...summary, retainedList, retainedRow, scrollTop, listEquivalent, listDifference, detailEquivalent, draftPreserved, saved, lockRefreshed, renderedRows: root.querySelectorAll(rowSelector).length, requests: __requests.length, requestBodies: __requests };
       }, { module, count, verifyOnly: process.argv.includes('--verify-only') });
       result.requestSha256 = createHash('sha256').update(JSON.stringify(result.requestBodies)).digest('hex'); delete result.requestBodies;
       results.push(result); console.error(module + ' ' + count + ': selection p95=' + result.select.p95Ms.toFixed(1) + ' ms; output=' + (result.listEquivalent && result.detailEquivalent)); await page.close();
     }
-    console.log(JSON.stringify({ chromium: browser.version(), results }, null, 2));
+    console.log(JSON.stringify({ processId: process.pid, chromium: browser.version(), results }, null, 2));
     for (const r of results) {
       assert.equal(r.lockRefreshed, true, r.module + ' lock/language invalidation'); assert.equal(r.listEquivalent, true, r.module + ' list output'); assert.equal(r.detailEquivalent, true, r.module + ' detail output'); assert.equal(r.saved, true, r.module + ' save');
       if (process.argv.includes('--assert-optimized')) {
