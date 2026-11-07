@@ -1,0 +1,28 @@
+{
+  "runtimeCommit": "4622a2cb78081997accecebee7d75ce41d818fc6",
+  "checks": [
+    {
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "plm-image",
+        "plm-sync-image-override",
+        "plm-main-option-image",
+        "plm-option-image",
+        "plm-colour-image",
+        "plm-stale-image",
+        "canonical-fields",
+        "compute-image-registry-params",
+        "global-model-image-registry",
+        "model-image-registry-index",
+        "plm-sync-two-phase",
+        "plm-sync-colours-retry"
+      ],
+      "cwd": "resources/app",
+      "log": "targeted-tests.txt",
+      "exitCode": 1
+    }
+  ],
+  "newMemoryCampaign": false
+}

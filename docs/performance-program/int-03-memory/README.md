@@ -8,7 +8,54 @@ Bu dal yalnız sentetik fixture, gerçek kanonik yol üzerinde tanı, test ve
 beklenir. Üç mevcut-kod koşusu bir **before** kohortudur; **after** uygulama ve
 kabulü beklemededir. Baz sonuçlarını önce/sonra kazanımı olarak sunmayın.
 
-## Kaynak doğrulaması
+## Güncel Main uyumluluğu / Current Main compatibility
+
+#885 sonrası Main `63159fb32ff3d5bdc5f142b4a8f16ca6a3983240`, mevcut dala
+normal merge ile alındı: `4622a2cb78081997accecebee7d75ce41d818fc6`.
+İki parent eski hazırlık head'i `b8fd896c` ve bu Main SHA'sıdır. Rebase veya
+force-push yok. Üretim, korunan dosyalar ve mevcut testlere özgün değişiklik
+eklenmedi; uygulama ağacı entegre edilen Main ile aynıdır.
+
+[Kaynak karşılaştırması](main-compatibility/source-comparison.json) dosya
+hash'lerini ve elle incelenen kanonik blokların tam metin hash'lerini kaydeder:
+
+- Kuyruk, sync, ingest, ownership ve `user-data.js` eski ölçüm kaynağıyla birebir.
+- `db.js` dosya hash'i refresh-history no-op düzeltmesi yüzünden değişti;
+  `patchPlmImageLinks` (1017) byte-eşit. Revision/optimistic concurrency
+  sözleşmesinde bu Main entegrasyonuyla değişiklik yok.
+- `server.js` dosya hash'i değişti. Kanonik ingest factory (4219), PLM sync
+  çağrısı (4907) ve sync sonrası publish/yanıt hazırlığı (4923) eski kaynakla
+  byte-eşit; yalnız konumları kaydı. `app-main.js` farkı da Main'den geliyor.
+- Collector'daki `REQUIRED_MAIN=5a1656e9` **#892 atalık önkoşuludur**; güncel
+  Main veya ölçüm kaynağı pini değildir. Körlemesine değiştirilmedi.
+  Tarihsel cohort pinleri/hash'leri/trace'leri ve artifact manifesti aynen
+  korundu ve doğrulandı. Değişen protected-source hash'leri için karşılaştırma
+  koruması gevşetilmedi; eski cohort güncel kaynak diye yeniden etiketlenemez.
+
+Güncel hazırlık ve ilgili PLM regresyonları: **21 dosya / 166 test PASS**,
+fail/skip/cancel/todo=0 (10 hazırlık testi dahil); i18n **0 yeni / 0 baseline**;
+Main'den gelen mevcut **38 release-note PASS**. Loglar ve exact runtime SHA:
+[main-compatibility/validation.json](main-compatibility/validation.json).
+İlk genişletilmiş çalıştırmada iki BOM test dosyasındaki 12 hata, testlerin
+`os.tmpdir()` kökü ile çalıştırıcının dar `BUYER_LOG_TEMP_ROOT` kökünün
+uyuşmamasından doğdu. Ham hata logu ve ilk validation kaydı
+`main-compatibility/environment-failure/` içinde korunur. `TMPDIR`/`TMP`/`TEMP`
+aynı izole uygulama temp köküne bağlanıp **aynı 21 dosyalık paket** tekrar geçti;
+testler ve yazma koruması değişmedi. Gerçek PLM/iş verisi/credential kullanılmadı.
+
+**Yeni bellek kampanyası başlatılmadı.** Aşağıdaki üç koşu yalnız kendi eski
+SHA'sındaki bazdır. İlk kanonik link UI görünürlüğü değildir. Üretim uygulaması,
+gerçek önce/sonra kabulü, üretim RED→GREEN, gereken tam regresyon ve bağımsız
+inceleme açık kalır. Ana sohbet entegrasyon bağımlılıkları
+[claude-handoff.md](claude-handoff.md) içinde; worker gereksinimi ayrıca kanıtlanır.
+
+EN: Main after #885 was merged normally. Canonical ingest, ownership and PLM
+revision blocks remain equivalent; changed whole-file hashes are explained,
+and historical measurement pins remain intact. All 166 targeted tests, i18n
+and 38 existing release notes pass. The initial temp-root environment failure
+is retained. No new memory campaign or production implementation was started.
+
+## Tarihsel kaynak doğrulaması / Historical measurement source
 
 Kaynak: `5a1656e98deeb573f6245f4b24a8135cc77a0d7b` (Main, #892 dahil).
 `CLAUDE.md` ve `docs/performance/2026-11-05-codex-review-findings.md:560–568`
@@ -126,10 +173,11 @@ atalığı eksikliği veya sayısal olmayan metrik karşılaştırmayı reddeder
 stdout/stderr/trace yerinde kalır; aynı dizine yeniden yazılmaz. Bu araç bir
 performans kabul veya tam eşdeğerlik validator'ı değildir.
 
-#885 sonrası Main değişeceğinden mevcut before nihai Faz 7 kabul bazı değildir.
+#885 artık Main'de; mevcut tarihsel before nihai Faz 7 kabul bazı değildir.
 Güncel before ve aday after aynı #892 ve aynı Main/compute entegrasyonlarını
 içerecek şekilde tekrar alınmalı. Korunan kaynak hash'i değişirse eski kohort
 ile kıyaslama yapmak yerine güncel kaynakta yeni before+after alınır.
+Bu kampanya mevcut uyumluluk turunun kapsamı dışındadır; şimdi başlatılmaz.
 
 ## Doğrulama ve kalan kapılar
 
@@ -140,7 +188,7 @@ patch hatasında dosya rollback/ownership/revision korumasını sınar. Collecto
 testi bug'ın sürmesini zorunlu tutmaz; mevcut biriktirmenin kesin kanıtı ham
 ölçümlerde kalır. Bütün üretim dosyaları, mevcut testler ve i18n baseline aynı.
 
-Son kontroller: **16 dosya / 123 test PASS**, fail/skip/cancel/todo=0 (10 yeni
+İlk hazırlığın tarihsel kontrolleri: **16 dosya / 123 test PASS**, fail/skip/cancel/todo=0 (10 yeni
 hazırlık testi dahil); i18n **0 yeni / 0 baseline**; mevcut **32 release-note
 PASS**. Ham loglar `artifacts/targeted-tests.txt`, `i18n.txt`, `release-notes.txt`.
 `comparison-pending.txt` eksik after kolunun bilerek reddedildiğini gösterir;

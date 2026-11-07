@@ -1,0 +1,522 @@
+{
+  "historicalMeasurementSource": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "historicalPreparationHead": "b8fd896cf5ce02f1b3a57442f8b46b7deacd2245",
+  "integratedMain": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "mainMergeCommit": "4622a2cb78081997accecebee7d75ce41d818fc6",
+  "mergeParents": [
+    "b8fd896cf5ce02f1b3a57442f8b46b7deacd2245",
+    "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240"
+  ],
+  "includes892": true,
+  "includes885Merge": true,
+  "runtimeAndProtectedTreeEqualToMain": true,
+  "historicalArtifactsManifestVerified": true,
+  "newMemoryCampaignStarted": false,
+  "collectorRequiredMainInterpretation": "Historical #892 ancestry prerequisite, not a current-Main or measurement-source pin; intentionally unchanged",
+  "sourceFiles": [
+    {
+      "group": "targetSources",
+      "path": "resources/app/server/lib/plm-image-download-queue.js",
+      "historicalSha256": "052274747446e13ba24ea830a46e3e8ba90079d8ab7e067241da7bbdab1554f9",
+      "currentSha256": "052274747446e13ba24ea830a46e3e8ba90079d8ab7e067241da7bbdab1554f9",
+      "equal": true
+    },
+    {
+      "group": "targetSources",
+      "path": "resources/app/server/lib/plm-image-sync-service.js",
+      "historicalSha256": "a732ddae05e8bca1b052a8be2be594335f9be587f121930495cf53b20c8a466e",
+      "currentSha256": "a732ddae05e8bca1b052a8be2be594335f9be587f121930495cf53b20c8a466e",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/app-main.js",
+      "historicalSha256": "c8dd4e64c09734f23f51d8ecd6e9349b787a59ce998b29de36dfd15f549d9570",
+      "currentSha256": "844dea07238be03461a899051491cb4dca1995a54cb753b5fa3c616845e8531d",
+      "equal": false
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/index.html",
+      "historicalSha256": "b71b2084dbb57f4a99f1d7ef88a4f2806f7d61a03a28d57f5f6ee92969bc1efe",
+      "currentSha256": "b71b2084dbb57f4a99f1d7ef88a4f2806f7d61a03a28d57f5f6ee92969bc1efe",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/perf-runtime.js",
+      "historicalSha256": "3927eaf22f11c8a7ccd03103164d82ce01d7e396801e988404a77c94e4310056",
+      "currentSha256": "3927eaf22f11c8a7ccd03103164d82ce01d7e396801e988404a77c94e4310056",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/app.css",
+      "historicalSha256": "7c3dcb7193fac29b0b81f88bef87b25e847f74ea06ebffb30ff61c875908751e",
+      "currentSha256": "7c3dcb7193fac29b0b81f88bef87b25e847f74ea06ebffb30ff61c875908751e",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/automations-fields.css",
+      "historicalSha256": "a84cd1988b539a3bd091b6628cd1b0abbc407b8d78681f856ef2647ddcf3fe5f",
+      "currentSha256": "a84cd1988b539a3bd091b6628cd1b0abbc407b8d78681f856ef2647ddcf3fe5f",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/backlog-date-range.css",
+      "historicalSha256": "5b3e8565eb3eefb5e80b5e4cf7109e5f7fb9175e397f3a351442552e027306fa",
+      "currentSha256": "5b3e8565eb3eefb5e80b5e4cf7109e5f7fb9175e397f3a351442552e027306fa",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/backlog-delivery-analysis.css",
+      "historicalSha256": "4bf4f599fadf28c9376b689c74a713b9abd296d635bf19c593b6e0a7cfdceff3",
+      "currentSha256": "4bf4f599fadf28c9376b689c74a713b9abd296d635bf19c593b6e0a7cfdceff3",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/backlog-overview.css",
+      "historicalSha256": "740c6110e1ee7aede5a58b7fc83341d124037a1ee77e54f76d9fa0118c20b613",
+      "currentSha256": "740c6110e1ee7aede5a58b7fc83341d124037a1ee77e54f76d9fa0118c20b613",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/backlog-plan-actual.css",
+      "historicalSha256": "e7a34375cbb956cb5c6237f1c969be78ac54c59c21e5bd36382fab717a0cb2c5",
+      "currentSha256": "e7a34375cbb956cb5c6237f1c969be78ac54c59c21e5bd36382fab717a0cb2c5",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/backlog-presentation.css",
+      "historicalSha256": "33b3c2c9e1d22da6e9fe82331cc1af15e1cab79317d69a6a26dd8c5f4cb55403",
+      "currentSha256": "33b3c2c9e1d22da6e9fe82331cc1af15e1cab79317d69a6a26dd8c5f4cb55403",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/bulk-operations.css",
+      "historicalSha256": "86a40a0254993eab8817a80f6168b8edb3b654c4302294ad131a733d5b2e5429",
+      "currentSha256": "86a40a0254993eab8817a80f6168b8edb3b654c4302294ad131a733d5b2e5429",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/buyerlog-guide.css",
+      "historicalSha256": "83097774a83ea5617391f717cbcd9cf0d4f6cbffae2eb2f47ef1d1a7d2a964cb",
+      "currentSha256": "83097774a83ea5617391f717cbcd9cf0d4f6cbffae2eb2f47ef1d1a7d2a964cb",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/collection-analytics.css",
+      "historicalSha256": "93080e96dfac1945eb49f9d532796ca65d33ed11772e71fe5cb10850c288a5d3",
+      "currentSha256": "93080e96dfac1945eb49f9d532796ca65d33ed11772e71fe5cb10850c288a5d3",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/collection-spreadsheet.css",
+      "historicalSha256": "007bfd92e9ef22f650768993b56ff0965094a66157ee618c66a4d1b46f754894",
+      "currentSha256": "007bfd92e9ef22f650768993b56ff0965094a66157ee618c66a4d1b46f754894",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/command-palette.css",
+      "historicalSha256": "134e719e3aee6dc4ffa6bc48a5b5d3e0df4792d10052d9059a7f19ec5a0a2a4a",
+      "currentSha256": "134e719e3aee6dc4ffa6bc48a5b5d3e0df4792d10052d9059a7f19ec5a0a2a4a",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/cp-overview-assistant.css",
+      "historicalSha256": "51675224ffc8f48b3946e9b01eb4a90ec944cd9e7f11089ff815b95f56669050",
+      "currentSha256": "51675224ffc8f48b3946e9b01eb4a90ec944cd9e7f11089ff815b95f56669050",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/data-maintenance.css",
+      "historicalSha256": "cb84e356aa4f33f2f79609409168332928b044fb8c3b29bf6d91378e8a752b20",
+      "currentSha256": "cb84e356aa4f33f2f79609409168332928b044fb8c3b29bf6d91378e8a752b20",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/data-management.css",
+      "historicalSha256": "5d926ff5ac558a3e37c7852fed89fbc42064e4daf6335e7950f8a80e00b1fa68",
+      "currentSha256": "5d926ff5ac558a3e37c7852fed89fbc42064e4daf6335e7950f8a80e00b1fa68",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/design.css",
+      "historicalSha256": "6b2e13aa7261d3f5e2aa09d549961fa81258ecc049366ea078da31a4bf9a081d",
+      "currentSha256": "6b2e13aa7261d3f5e2aa09d549961fa81258ecc049366ea078da31a4bf9a081d",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/detail-drawer.css",
+      "historicalSha256": "57e63d54e5a6d10861f44dcf6c333d17f173497f162d6932ca075df790fa58a1",
+      "currentSha256": "57e63d54e5a6d10861f44dcf6c333d17f173497f162d6932ca075df790fa58a1",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/dual-week-datepicker.css",
+      "historicalSha256": "8952d5baa91042dcca4a32e80a88ecc6ed2b3e7d2a6a26632ff338c541aee6a7",
+      "currentSha256": "8952d5baa91042dcca4a32e80a88ecc6ed2b3e7d2a6a26632ff338c541aee6a7",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/excel-import.css",
+      "historicalSha256": "e767dbf4156f47e62edf1d98ed3d3a13300cab7b41765c736f205e30831aeb7c",
+      "currentSha256": "e767dbf4156f47e62edf1d98ed3d3a13300cab7b41765c736f205e30831aeb7c",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/excel-templates.css",
+      "historicalSha256": "4c78d0d5e76e16f33aea2078d1a0edaf06c7c741773d3bba2e7dcdb4d76eb5de",
+      "currentSha256": "4c78d0d5e76e16f33aea2078d1a0edaf06c7c741773d3bba2e7dcdb4d76eb5de",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/exception-inbox.css",
+      "historicalSha256": "6d9539ba9a357c83c480ff5a3e26912800eee37c5f17c0eaef299ebc8c2dbb02",
+      "currentSha256": "6d9539ba9a357c83c480ff5a3e26912800eee37c5f17c0eaef299ebc8c2dbb02",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/experience.css",
+      "historicalSha256": "248c19286893cebd81a378425a972efd0ef6e63355d22f8e925e89cb49db1417",
+      "currentSha256": "248c19286893cebd81a378425a972efd0ef6e63355d22f8e925e89cb49db1417",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/giris.css",
+      "historicalSha256": "fd3544804032792ea10be9b87c286da39d8fa86bfc36daab9f4c11d7190ba1ca",
+      "currentSha256": "fd3544804032792ea10be9b87c286da39d8fa86bfc36daab9f4c11d7190ba1ca",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/layout-control.css",
+      "historicalSha256": "4f10f28e46f4529c334b298f81df8a2fa42b21535dc5be4602502df5939e07c8",
+      "currentSha256": "4f10f28e46f4529c334b298f81df8a2fa42b21535dc5be4602502df5939e07c8",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/lcwai-assistant.css",
+      "historicalSha256": "89ce68ba248b0fc3179d9d4498ad2e90d5373454195b12417b9bcada0cac24cf",
+      "currentSha256": "89ce68ba248b0fc3179d9d4498ad2e90d5373454195b12417b9bcada0cac24cf",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/lfl.css",
+      "historicalSha256": "745cd0f6647e4a593343fe17ad624982518f46e86bd0ebc84a0288338334b5e8",
+      "currentSha256": "745cd0f6647e4a593343fe17ad624982518f46e86bd0ebc84a0288338334b5e8",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/license-cards.css",
+      "historicalSha256": "53d2e13a812d367d8a9510d17c0c408a7702a0ab9ad29131f33b480eeeedac99",
+      "currentSha256": "53d2e13a812d367d8a9510d17c0c408a7702a0ab9ad29131f33b480eeeedac99",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/manufacturers.css",
+      "historicalSha256": "92919c1aababb18d7541d6021540b1c1997c0caaf379bebd94a8c8c08cfe953c",
+      "currentSha256": "92919c1aababb18d7541d6021540b1c1997c0caaf379bebd94a8c8c08cfe953c",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/open-costing.css",
+      "historicalSha256": "d2d69b26946675e6be4c4b71991a7c9e639016097b11788f342dad13ddb20ff4",
+      "currentSha256": "d2d69b26946675e6be4c4b71991a7c9e639016097b11788f342dad13ddb20ff4",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/overview-global-flow.css",
+      "historicalSha256": "d217dd2ac4197ca43f6ef0ef666b9cb7487a1808ab1e2206506b0286aff5bf78",
+      "currentSha256": "d217dd2ac4197ca43f6ef0ef666b9cb7487a1808ab1e2206506b0286aff5bf78",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/overview-home.css",
+      "historicalSha256": "6054668122723904f75ea45196422cef21e6651cc53c524805a6e131eb0bec2b",
+      "currentSha256": "6054668122723904f75ea45196422cef21e6651cc53c524805a6e131eb0bec2b",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/plm-sync-guide.css",
+      "historicalSha256": "f1cb778d41ff5ec9a2692bf46ad779c625edd0b3d6af321a25cae475d5bbd2e3",
+      "currentSha256": "f1cb778d41ff5ec9a2692bf46ad779c625edd0b3d6af321a25cae475d5bbd2e3",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/price-supplier-analysis.css",
+      "historicalSha256": "7afa57c2740f0aebb28264225cc7415b0f54ad5595e55b13c8ad73428d946703",
+      "currentSha256": "7afa57c2740f0aebb28264225cc7415b0f54ad5595e55b13c8ad73428d946703",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/pricing-desk.css",
+      "historicalSha256": "01e7a0d71ff0238a5eba7e5b521641931d3f090f117e7b898b91e6f37aa27614",
+      "currentSha256": "01e7a0d71ff0238a5eba7e5b521641931d3f090f117e7b898b91e6f37aa27614",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/pricing-workspace.css",
+      "historicalSha256": "2486543e81ae71c9285f45872034237f6178f854de8dca44a9bfe55dc763406f",
+      "currentSha256": "2486543e81ae71c9285f45872034237f6178f854de8dca44a9bfe55dc763406f",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/release-notes.css",
+      "historicalSha256": "8a7e264f0e63e12c74563f3ec836bba14f040b64b0e54c239b29b7d7dab00bfd",
+      "currentSha256": "8a7e264f0e63e12c74563f3ec836bba14f040b64b0e54c239b29b7d7dab00bfd",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/table-density.css",
+      "historicalSha256": "f144482ea1131dbdfdafc41093b9a89a888f72e006404d406dd5906eed83e691",
+      "currentSha256": "f144482ea1131dbdfdafc41093b9a89a888f72e006404d406dd5906eed83e691",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/table-freeze.css",
+      "historicalSha256": "ecb6fe52f00c649dacf590eff5a82daa68e9fd6d972386d958a16a498605b693",
+      "currentSha256": "ecb6fe52f00c649dacf590eff5a82daa68e9fd6d972386d958a16a498605b693",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/table-header-tracking.css",
+      "historicalSha256": "f6d81621ad0ec769a51571cb9c74beb4724bf6430d6827b555d19e5158e75634",
+      "currentSha256": "f6d81621ad0ec769a51571cb9c74beb4724bf6430d6827b555d19e5158e75634",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/table-search-help.css",
+      "historicalSha256": "fb3a540e5a5da3c943c8bf1bda21df9836c0db53315424dcd82140777bdbbf07",
+      "currentSha256": "fb3a540e5a5da3c943c8bf1bda21df9836c0db53315424dcd82140777bdbbf07",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/table-view-drawers.css",
+      "historicalSha256": "8ded96672664250a785f4eb06e285ad179b27cf83f092a390ca43715b4f916be",
+      "currentSha256": "8ded96672664250a785f4eb06e285ad179b27cf83f092a390ca43715b4f916be",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/thinking-orbs.css",
+      "historicalSha256": "e1635b1407c09f2a16e2b354bd50ad9e2061919cf88803f989783cf5e9863eb5",
+      "currentSha256": "e1635b1407c09f2a16e2b354bd50ad9e2061919cf88803f989783cf5e9863eb5",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/ui-components.css",
+      "historicalSha256": "95964f0752ca88d019f3635a75c1bdd5e5bfe81f72ef87ff39b9302d808ddcea",
+      "currentSha256": "95964f0752ca88d019f3635a75c1bdd5e5bfe81f72ef87ff39b9302d808ddcea",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/ui-motion.css",
+      "historicalSha256": "958b40edb70ae1b0c540be66651fb8ce8c694a21624528541144102ab3375d11",
+      "currentSha256": "958b40edb70ae1b0c540be66651fb8ce8c694a21624528541144102ab3375d11",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/ui-startup.css",
+      "historicalSha256": "76a9ee31d92926ff2a365274ab55519086ed054e37adb10873e49f7e4bbba26b",
+      "currentSha256": "76a9ee31d92926ff2a365274ab55519086ed054e37adb10873e49f7e4bbba26b",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/ui-tokens.css",
+      "historicalSha256": "b88b4f86f23ae073f10222fe5832b393d77b1bd920f279c1315663466bcaa359",
+      "currentSha256": "b88b4f86f23ae073f10222fe5832b393d77b1bd920f279c1315663466bcaa359",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/public/user-management.css",
+      "historicalSha256": "bdc80c754b025e681bac8a80435b1e3c0ad4586bb25940a6d483ee3bbf13829a",
+      "currentSha256": "bdc80c754b025e681bac8a80435b1e3c0ad4586bb25940a6d483ee3bbf13829a",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/server/lib/model-image-distribution.js",
+      "historicalSha256": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+      "currentSha256": "2cec9a32bd862d9bce35bd42b986fd90d73fdbfe40542c1567fea4d26af2d82f",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/server/lib/shared-image-store.js",
+      "historicalSha256": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+      "currentSha256": "9b477b26139ead68c5f924c6ff66d7f5de9d32ff0cdfb2f6492caa4a3248294d",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/server/lib/plm-image-ingest.js",
+      "historicalSha256": "a9cd41b6c724978167089043b9d26b96d3a8df98530aa279a61b13f6c5c60dae",
+      "currentSha256": "a9cd41b6c724978167089043b9d26b96d3a8df98530aa279a61b13f6c5c60dae",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/server/lib/plm-image-ownership.js",
+      "historicalSha256": "39bb2a558aeded0b28e684872f832abfef33c77e3ce4c1ffc4ca0bbadc372c28",
+      "currentSha256": "39bb2a558aeded0b28e684872f832abfef33c77e3ce4c1ffc4ca0bbadc372c28",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/server/db.js",
+      "historicalSha256": "3a7ebc718088817927541acf7aa19637899c61b7cfa3f5cb321fd641ec8f151c",
+      "currentSha256": "c2b9a25c9550ccb7737491610abae2253186f3e729ede73b57a71b9137425360",
+      "equal": false
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/server/user-data.js",
+      "historicalSha256": "568828212ea6976cc72743fe8f528be549ec2cb3f2e4a24e2e2c7d14125242d5",
+      "currentSha256": "568828212ea6976cc72743fe8f528be549ec2cb3f2e4a24e2e2c7d14125242d5",
+      "equal": true
+    },
+    {
+      "group": "protectedSources",
+      "path": "resources/app/server/server.js",
+      "historicalSha256": "cbe33b674853050862c2929f66210131a1011c5d6852f97a1f59e337209743ca",
+      "currentSha256": "c68886cf884dd8135a9e9a6cfca95129ac183e77bf7e1a645867a9613c574cb5",
+      "equal": false
+    },
+    {
+      "group": "harnessSources",
+      "path": "resources/app/scripts/benchmark-plm-image-memory.js",
+      "historicalSha256": "4e0b22086a8036c99155822ae16884469f931a72f91d7b3aedc706413c1225da",
+      "currentSha256": "4e0b22086a8036c99155822ae16884469f931a72f91d7b3aedc706413c1225da",
+      "equal": true
+    },
+    {
+      "group": "harnessSources",
+      "path": "resources/app/scripts/lib/plm-image-memory-probe.js",
+      "historicalSha256": "bf747b5c2b9c968197613d6d12409797a11c817b5c049fee1d1ce873f1925ad5",
+      "currentSha256": "bf747b5c2b9c968197613d6d12409797a11c817b5c049fee1d1ce873f1925ad5",
+      "equal": true
+    },
+    {
+      "group": "harnessSources",
+      "path": "resources/app/scripts/lib/plm-image-memory-fixture.js",
+      "historicalSha256": "926c908ce1bc7797635da39c43177105b8588a23ebb4dce9a4f456e8d5f7ef87",
+      "currentSha256": "926c908ce1bc7797635da39c43177105b8588a23ebb4dce9a4f456e8d5f7ef87",
+      "equal": true
+    }
+  ],
+  "reviewedContractBlocks": [
+    {
+      "path": "resources/app/server/server.js",
+      "contract": "canonicalIngestFactory",
+      "historicalStartLine": 4205,
+      "historicalEndLine": 4216,
+      "currentStartLine": 4219,
+      "currentEndLine": 4230,
+      "historicalSha256": "bb5ec5628361862b11fe98e574399ba12478abcb2e2d5f3a072125d320e31871",
+      "currentSha256": "bb5ec5628361862b11fe98e574399ba12478abcb2e2d5f3a072125d320e31871",
+      "exactlyEqual": true
+    },
+    {
+      "path": "resources/app/server/server.js",
+      "contract": "syncInvocation",
+      "historicalStartLine": 4893,
+      "historicalEndLine": 4908,
+      "currentStartLine": 4907,
+      "currentEndLine": 4922,
+      "historicalSha256": "507ca13715b42ab8c94c896b34cbacbba7b9a16b75d695e95c6703871a1e5656",
+      "currentSha256": "507ca13715b42ab8c94c896b34cbacbba7b9a16b75d695e95c6703871a1e5656",
+      "exactlyEqual": true
+    },
+    {
+      "path": "resources/app/server/server.js",
+      "contract": "publishAfterSync",
+      "historicalStartLine": 4909,
+      "historicalEndLine": 4924,
+      "currentStartLine": 4923,
+      "currentEndLine": 4938,
+      "historicalSha256": "2f5c0c760188af5879676f5a116a6e7e4466b4dedfd8200fe2b697c6c7ad2acb",
+      "currentSha256": "2f5c0c760188af5879676f5a116a6e7e4466b4dedfd8200fe2b697c6c7ad2acb",
+      "exactlyEqual": true
+    },
+    {
+      "path": "resources/app/server/db.js",
+      "contract": "patchPlmImageLinks",
+      "historicalStartLine": 1017,
+      "historicalEndLine": 1052,
+      "currentStartLine": 1017,
+      "currentEndLine": 1052,
+      "historicalSha256": "fda7b2453b73aa201878cc14006ad122ede1ff96ba0d5301561ace761d9047b0",
+      "currentSha256": "fda7b2453b73aa201878cc14006ad122ede1ff96ba0d5301561ace761d9047b0",
+      "exactlyEqual": true
+    },
+    {
+      "path": "resources/app/server/lib/plm-image-ownership.js",
+      "contract": "manualWriteGate",
+      "historicalStartLine": 176,
+      "historicalEndLine": 181,
+      "currentStartLine": 176,
+      "currentEndLine": 181,
+      "historicalSha256": "8d0c98ec7a92b2efe8a913eecd9bc30b3cea7c191cb1ce55c19cd0397acd3301",
+      "currentSha256": "8d0c98ec7a92b2efe8a913eecd9bc30b3cea7c191cb1ce55c19cd0397acd3301",
+      "exactlyEqual": true
+    },
+    {
+      "path": "resources/app/server/lib/plm-image-ownership.js",
+      "contract": "rememberAutomatic",
+      "historicalStartLine": 194,
+      "historicalEndLine": 210,
+      "currentStartLine": 194,
+      "currentEndLine": 210,
+      "historicalSha256": "e1c0dc7035fcb1af465dd50017006a752de3db6cfdc176b4a23351c78e465341",
+      "currentSha256": "e1c0dc7035fcb1af465dd50017006a752de3db6cfdc176b4a23351c78e465341",
+      "exactlyEqual": true
+    }
+  ],
+  "dbWholeFileDelta": "Only trimRefreshHistoryDetails no-op identity fix; patchPlmImageLinks block byte-identical",
+  "changedProtectedSourceConsequence": "Existing cohort stays tied to its original source and cannot be relabelled current Main. compareCohorts protectedSources drift check remains unchanged."
+}

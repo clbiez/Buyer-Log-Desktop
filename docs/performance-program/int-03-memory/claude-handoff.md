@@ -7,9 +7,15 @@ Kullanıcı üzerinden en fazla **bir** bağımsız Claude inceleme turu için h
 
 ## Ana sohbetten istenen entegrasyon
 
-Bu dal üretim kodunu değiştirmedi. Faz 7'de `server.js` ve mevcut ortak compute
-havuzu bağlantısını ana sohbet üstlensin. Bu sohbette yeni worker veya paralel
-havuz kurulmayacak. `model-image-distribution.js`, `shared-image-store.js` Claude
+Bu dal üretim koduna özgün değişiklik eklemedi. #885 sonrası Main `63159fb3`
+normal merge ile alındı; kanonik ingest/ownership/PLM revision blokları aynı.
+Uyumluluk kaydı `main-compatibility/source-comparison.json` içinde. Tarihsel
+ölçümler kendi `5a1656e9` kaynak pinleriyle korunur; yeni kampanya başlatılmadı.
+
+Faz 7'de `server.js` ve gerekiyorsa mevcut ortak compute havuzu entegrasyonunu
+ana sohbet üstlensin. **Worker gereksinimi ayrıca kanıtlanacak; worker'a taşımak
+tek başına bellek sınırı çözümü sayılmayacak.** Bu sohbette yeni worker veya
+paralel havuz kurulmayacak. `model-image-distribution.js`, `shared-image-store.js` Claude
 sahipliğinde; `app-main.js`, `index.html`, `perf-runtime.js`, CSS salt okunur.
 #892 istisnası bu sohbete app-main düzenleme izni vermez.
 
@@ -21,6 +27,8 @@ sahipliğinde; `app-main.js`, `index.html`, `perf-runtime.js`, CSS salt okunur.
    Content-Length ve 20 MiB tek görsel sınırını chunk gelmeden hesaba katın.
    chunks+concat örtüşmesi, base64 string ve `saveCollectionImage` decode
    kopyası için headroom tanımlayın; yalnız `image.size` saymak RSS sınırı değildir.
+   İndirme, doğrulama ve commit bekleyen Buffer'ları birlikte sayın.
+   RSS ve reservation bütçesini ayrı metrikler olarak raporlayın.
 2. Mevcut kuyruk concurrency üst sınırını koruyun. Hem in-flight hem commit
    batch baytı sınırlansın. Dolan bütçe yeni indirmeyi durdursun; yavaş commit
    sırasında waiter yığını veya dedup Buffer cache'i oluşmasın. Buffer'lar
@@ -59,7 +67,8 @@ davranışlar henüz uygulanmadı veya doğrulanmadı; Faz 7'de RED→GREEN gere
 | dropOldFiles false/true, eski ref başka kimlikte, aynı işte ileri batch'te kullanım | Aktif/gelecek referans silinmez; kaldırma yalnız başarılı linkten sonra |
 | Revision ve aynı kaynaktan ikinci koşu | Veri/revision/ownership/no-op sözleşmesi; checkpoint diskten resume; kaynak kimliği sabitken ağ yok |
 
-Önce #885 sonrası güncel Main'de yeni before; sonra aynı #892/Main/harness/
+Bu uyumluluk turunda bellek kampanyası yok. Faz 7 uygulama sırası geldiğinde
+önce #885 sonrası güncel Main'de yeni before; sonra aynı #892/Main/harness/
 fixture/ortamda en az üç before + üç after, medyan. İşleri zaman içinde AB/BA/AB
 sıralamak için her süreç çağrısını ayrı koordine edin; mevcut collector bir
 kolu üç ardışık süreçte alır, interleaving yaptığı iddia edilmez. Aynı ortamda
@@ -80,6 +89,9 @@ Linux sentetik sonuçları Windows/Electron/gerçek PLM kabulü saymayın.
 - Merge öncesinde durun. TEST/STABLE yayınlamayın.
 
 EN: Unsent handoff for the main chat and at most one user-mediated independent
-Claude review. The main chat owns server/common compute integration. No runtime
+Claude review. Post-#885 Main was merged without rebasing; old measurements keep
+their original source pins. The main chat owns server integration and any
+separately justified common-pool work; moving work to a worker does not itself
+bound memory. Reservation bytes and RSS are distinct metrics. No runtime
 implementation or review approval is claimed. Resolve cross-batch content dedup,
 revision/manual ownership and safe cleanup before enabling a byte-bounded pipeline.

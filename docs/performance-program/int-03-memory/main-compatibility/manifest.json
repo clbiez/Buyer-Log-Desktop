@@ -1,0 +1,41 @@
+{
+  "integratedMain": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "validatedRuntimeMerge": "4622a2cb78081997accecebee7d75ce41d818fc6",
+  "files": [
+    {
+      "path": "docs/performance-program/int-03-memory/main-compatibility/environment-failure/targeted-tests.txt.gz",
+      "bytes": 7906,
+      "sha256": "78418d85c0c736802d7962638ef92e50ee2baed6de365244e202a136bd626eea"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/main-compatibility/environment-failure/validation.json",
+      "bytes": 666,
+      "sha256": "a95bd640b7bd811824ca4b79152961c454b1f19759947f6d6980a0e48df32ca1"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/main-compatibility/i18n.txt",
+      "bytes": 333,
+      "sha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/main-compatibility/release-notes.txt",
+      "bytes": 334,
+      "sha256": "9ccab6c340545089e7b742ddc9091cddd0443a02c063d45711894404fd6f53bd"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/main-compatibility/source-comparison.json",
+      "bytes": 23066,
+      "sha256": "86f48d59d4208af87f15c8b99f44b22fa284609b06f32b75eccfda7f1e34fadf"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/main-compatibility/targeted-tests.txt",
+      "bytes": 16076,
+      "sha256": "f8e49b40e769959d643f2ad0092e39010b54af66f29c567bfd85ddee37500f74"
+    },
+    {
+      "path": "docs/performance-program/int-03-memory/main-compatibility/validation.json",
+      "bytes": 1151,
+      "sha256": "8fe8902015a8787597b4f0e9f9af0637dcd703b96bd0982085cc88aad0c40f94"
+    }
+  ]
+}
