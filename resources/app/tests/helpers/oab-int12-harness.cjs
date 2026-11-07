@@ -62,14 +62,19 @@ async function* orderedPairs(queue, fetchOne) {
   // Fixed windows of TWO, ordered consumption; no eager queue-sized Promise.all.
   // The native commitGuard holds speculative cache writes until their turn.
   for (let offset = 0; offset < queue.length; offset += 2) {
-    const pending = queue.slice(offset, offset + 2).map(item => {
+    const items = queue.slice(offset, offset + 2);
+    let pending;
+    // Start only INSIDE the native combination try, after its authority/cancel
+    // checks and currentLabel assignment. Iterator.next() must have no auth I/O.
+    const start = () => pending ||= items.map(item => {
       let unlock;
       const slot = { discarded: false, turn: new Promise(resolve => { unlock = resolve; }) };
       const outcome = slots.run(slot, () => fetchOne(item)).then(value => ({ value }), error => ({ error }));
       return { item, slot, unlock, outcome };
     });
     try {
-      for (const entry of pending) yield { item: entry.item, take: async () => {
+      for (const [index, item] of items.entries()) yield { item, take: async () => {
+        const entry = start()[index];
         entry.unlock();
         const outcome = await entry.outcome;
         if (outcome.error) throw outcome.error;
@@ -78,8 +83,8 @@ async function* orderedPairs(queue, fetchOne) {
     } finally {
       // Stop/refusal: release and discard speculative effects, and drain every
       // started operation BEFORE native final snapshot/release. Never detach.
-      for (const entry of pending) { entry.slot.discarded = true; entry.unlock(); }
-      for (const entry of pending) await entry.outcome;
+      for (const entry of pending || []) { entry.slot.discarded = true; entry.unlock(); }
+      for (const entry of pending || []) await entry.outcome;
     }
   }
 }
@@ -99,7 +104,7 @@ function rowsFor(p) {
 const scenarios = ['cold', 'fresh-half', 'fresh-all', 'force-refresh', 'batch-supported', 'probe-verified',
   'probe-fallback', 'partial', 'throttle', 'auth-recovery', 'auth-fatal', 'revoke-auth', 'revoke-response', 'revoke-recovery', 'cancel'];
 
-async function runCase({ scenario, width }) {
+async function runCase({ scenario, width, diagnostics = false }) {
   if (![1, 2].includes(width)) throw Error('width must be 1 or 2');
   if (!scenarios.includes(scenario)) throw Error('Unknown scenario');
   const identity = sourceIdentity();
@@ -111,14 +116,29 @@ async function runCase({ scenario, width }) {
   const events = [], audits = [], failures = [], cache = new Map(), attempts = new Map();
   let service;
   const began = performance.now();
-  const event = (type, extra = {}) => events.push({ ms: performance.now() - began, type, ...extra });
-  const access = { profileById: id => id === owner.id && allowed ? owner : null,
+  const event = (type, extra = {}) => events.push({ seq: events.length + 1, ms: performance.now() - began, type, authorityAllowed: allowed, ...extra });
+  const access = { profileById: id => {
+    if (diagnostics) event('authority-check', { stack: new Error('authority observation').stack });
+    return id === owner.id && allowed ? owner : null;
+  },
     hasArea: (p, a) => p.areas.includes(a), hasCapability: (p, c) => p.permissions.includes(c),
     publicProfile: p => ({ ...p }), appendAudit: (_p, type) => audits.push(type) };
   const rawStore = createOabJobStore({ root: path.join(root, owner.id, 'jobs') });
-  const store = { ...rawStore, checkpoint: (id, job) => {
+  const store = { ...rawStore, reserve: (...args) => {
+    const result = rawStore.reserve(...args), job = args[1];
+    // Observe actual native acceptance, without changing/normalizing any row.
+    if (diagnostics && !result.reused) {
+      const results = job.results;
+      Object.defineProperty(results, 'push', { value: function (...items) {
+        event('result-accept', { results: JSON.parse(JSON.stringify(items)) });
+        return Array.prototype.push.apply(this, items);
+      } });
+    }
+    return result;
+  }, checkpoint: (id, job) => {
     const result = rawStore.checkpoint(id, job);
-    event('checkpoint', { completed: job.completed, running: job.running });
+    event('checkpoint', { completed: job.completed, running: job.running,
+      ...(diagnostics ? { results: JSON.parse(JSON.stringify(job.results)), failures: JSON.parse(JSON.stringify(job.failures)), errorCode: job.errorCode } : {}) });
     if (!job.running) resolveDone?.();
     return result;
   } };
@@ -144,7 +164,7 @@ async function runCase({ scenario, width }) {
     try {
       await sleep(fixture.latencyMs[index]);
       if (faultsEnabled) {
-        if (scenario === 'revoke-response' && index === 0) { allowed = false; event('revoke'); }
+        if (scenario === 'revoke-response' && index === 0) { const wasAllowed = allowed; allowed = false; event('revoke', { key: requestKey, wasAllowed }); }
         if (scenario === 'cancel' && index === 0) { service.cancel(owner); event('cancel'); }
         if (scenario === 'partial' && index === fixture.faultIndex) throw fail('OAB_HTTP_ERROR');
         if (scenario === 'throttle' && index === fixture.faultIndex) throw Object.assign(fail('OAB_HTTP_ERROR'), { statusCode: 429, retryAfter: '1' });
@@ -161,7 +181,7 @@ async function runCase({ scenario, width }) {
     fetchPassReportData: report,
     capturePassAuthorization: async (_id, p) => {
       event('recovery-start', { key: key(p) }); await sleep(2);
-      if (faultsEnabled && scenario === 'revoke-recovery') { allowed = false; event('revoke'); }
+      if (faultsEnabled && scenario === 'revoke-recovery') { const wasAllowed = allowed; allowed = false; event('revoke', { key: key(p), wasAllowed }); }
       event('recovery-end'); return { connected: true };
     },
   };
@@ -172,12 +192,19 @@ async function runCase({ scenario, width }) {
     access, connector, 'desktop', { configured: () => false }, { fetchReportData: () => { throw Error('No real API allowed'); } },
     async () => true, () => fail('OAB_AUTH_REQUIRED'));
   function buildService() {
-    return createService({ jobStore: store, userAccess: access, oabBatch: batch, oabSessionStore: snapshots,
+    return createService({ jobStore: store, userAccess: access, oabBatch: batch, oabSessionStore: {
+      ...snapshots, update: (...args) => {
+        if (diagnostics) event('snapshot-start');
+        const result = snapshots.update(...args);
+        if (diagnostics) event('snapshot-write');
+        return result;
+      },
+    },
       oabStaticMetadata: { planningMetadata: () => ({ seasonRefs: () => fixture.seasons, magRefsForSeason: () => fixture.mags, buyerGroupRefsFor: () => fixture.buyers }),
         labelsFor: i => ({ season: i.seasonRef, mag: i.merchSubGroupRef, buyerGroup: i.buyerGroupRef }) },
       oabStore, ensurePassConnected: async (...args) => {
-        event('auth-check');
-        if (faultsEnabled && scenario === 'revoke-auth') { allowed = false; event('revoke'); }
+        event('auth-check', { key: key(args[1]) });
+        if (faultsEnabled && scenario === 'revoke-auth') { const wasAllowed = allowed; allowed = false; event('revoke', { key: key(args[1]), wasAllowed }); }
         return helpers.ensurePassConnected(...args);
       }, fetchOabReportWithLoginRecovery: helpers.fetchOabReportWithLoginRecovery,
       redactSecrets: String, logRuntimeFailure: (kind, error) => failures.push({ kind, code: error.code }), __int12Window: orderedPairs });
@@ -200,13 +227,24 @@ async function runCase({ scenario, width }) {
     return { ack, wallMs: performance.now() - startTime };
   }
   const { ack, wallMs } = await execute(() => service.start(owner, body, options));
+  const revokeContinuation = diagnostics && !allowed ? {} : null;
   if (!allowed) {
+    event('executor-drained', { activeReports: active });
+    if (diagnostics) {
+      try { revokeContinuation.whileRevoked = { plan: service.continuationPlan(owner, ack.job.jobId, options) }; }
+      catch (error) { revokeContinuation.whileRevoked = { errorCode: error.code }; }
+    }
     try { service.status(owner, ack.job.jobId); throw Error('Revoked owner could read result'); }
     catch (error) { if (error.code !== 'OAB_ACCESS_REVOKED') throw error; }
     allowed = true; // Read diagnostic receipt only after the stopped executor drained.
+    event('diagnostic-access-restored');
   }
   const outcome = service.status(owner, ack.job.jobId);
   const snapshot = snapshots.load(owner.id);
+  if (revokeContinuation) {
+    try { revokeContinuation.afterRestore = { plan: buildService().continuationPlan(owner, ack.job.jobId, options) }; }
+    catch (error) { revokeContinuation.afterRestore = { errorCode: error.code }; }
+  }
   const initialEvents = events.slice();
   const initialCache = [...cache.keys()].sort();
   const metrics = {
@@ -232,7 +270,9 @@ async function runCase({ scenario, width }) {
   }
   finished = true;
   return { scenario, width, identity, plan, capability, metrics, outcome, snapshot, initialCache, continued, continuationPlan,
-    continuationError, events: initialEvents, continuationEvents: events.slice(initialEvents.length), audits, failures };
+    continuationError, events: initialEvents, continuationEvents: events.slice(initialEvents.length), audits, failures,
+    ...(diagnostics ? { revokeContinuation, durableReceipt: rawStore.get(owner.id, ack.job.jobId, { includePlan: false }),
+      durableResults: rawStore.results(owner.id, ack.job.jobId) } : {}) };
 }
 function stableReport(value) {
   if (!value) return null;

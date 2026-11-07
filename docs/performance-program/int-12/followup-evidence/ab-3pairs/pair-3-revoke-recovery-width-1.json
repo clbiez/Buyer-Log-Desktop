@@ -1,0 +1,395 @@
+{
+  "pair": 3,
+  "order": [
+    1,
+    2
+  ],
+  "startedAt": "2026-11-07T17:40:29.139Z",
+  "finishedAt": "2026-11-07T17:40:29.172Z",
+  "scenario": "revoke-recovery",
+  "width": 1,
+  "identity": {
+    "mainWith892": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+    "serviceSha256": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+    "expectedServiceSha256": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+    "authHelperSha256": "d94b7d0845b46538b481145636caae6d58ec1733ec7e54cb93a59cc7ce2761dc",
+    "fixtureSha256": "50c64f71cfd4d5f44b9a983383fcce681f4f912a8457776f497fd9de59d5ce87",
+    "harnessSha256": "4e8d6c0f4731953054ea136737789bf9dcf2294d10c43b020ca78c6d3082284e"
+  },
+  "plan": {
+    "ok": true,
+    "authContext": {
+      "seasonRef": "S6",
+      "merchSubGroupRef": "M1",
+      "buyerGroupRef": "A"
+    },
+    "combinationCount": 12,
+    "requestCount": 12,
+    "cachedCount": 0,
+    "pendingCount": 12,
+    "estimateSeconds": 240,
+    "worstCaseRequestCount": 12,
+    "worstCaseSeconds": 240,
+    "batchUnproven": false,
+    "useBatched": false,
+    "capability": {
+      "state": "unsupported"
+    },
+    "skipped": [],
+    "skippedCount": 0,
+    "maxCombinations": 400
+  },
+  "capability": {
+    "state": "unsupported"
+  },
+  "metrics": {
+    "wallMs": 31.60244799999964,
+    "reports": 1,
+    "peakReports": 1,
+    "errors": 1,
+    "throttles": 0,
+    "recoveries": 1,
+    "authChecks": 1,
+    "cacheHits": 0,
+    "cacheWrites": 0,
+    "cacheReads": 25,
+    "activeAtFinish": 0,
+    "lateEffects": 0,
+    "refreshPostRetries": 0
+  },
+  "outcome": {
+    "ok": true,
+    "job": {
+      "jobId": "oab_44a4ba2e-5f03-4bae-8f3d-c054bf9b6db6",
+      "running": false,
+      "cancelled": false,
+      "startedAt": "2026-11-07T17:40:29.140Z",
+      "finishedAt": "2026-11-07T17:40:29.170Z",
+      "total": 12,
+      "completed": 0,
+      "fromCache": 0,
+      "currentLabel": "S6 · M1 · A",
+      "rowCount": 0,
+      "failures": [
+        {
+          "label": "S6 · M1 · A",
+          "code": "OAB_ACCESS_REVOKED",
+          "message": "OAB_ACCESS_REVOKED",
+          "combinations": [
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "A",
+              "label": "S6 · M1 · A"
+            }
+          ]
+        }
+      ],
+      "skipped": [],
+      "batchedBuyerGroups": "unsupported",
+      "error": "OAB_ACCESS_REVOKED",
+      "errorCode": "OAB_ACCESS_REVOKED",
+      "snapshotSaved": null,
+      "snapshotErrorCode": "",
+      "interrupted": false,
+      "persistence": "native-job-receipt"
+    },
+    "resultAvailable": true,
+    "rows": [],
+    "fields": [],
+    "sources": [],
+    "fetchedAt": "2026-11-07T17:40:29.170Z"
+  },
+  "snapshot": null,
+  "initialCache": [],
+  "continued": null,
+  "continuationPlan": null,
+  "continuationError": null,
+  "events": [
+    {
+      "seq": 1,
+      "ms": 0.04712099999960628,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 2,
+      "ms": 0.04821300000003248,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 3,
+      "ms": 0.048603999999613734,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 4,
+      "ms": 0.04887400000006892,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 5,
+      "ms": 0.049123999999210355,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 6,
+      "ms": 0.04944500000055996,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 7,
+      "ms": 0.04978499999924679,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 8,
+      "ms": 0.050046000000293134,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 9,
+      "ms": 0.05030599999918195,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 10,
+      "ms": 0.050606999999217805,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 11,
+      "ms": 0.05092700000022887,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 12,
+      "ms": 0.05118699999911769,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 13,
+      "ms": 0.0864610000007815,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 14,
+      "ms": 0.0868609999997716,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 15,
+      "ms": 0.08713200000056531,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 16,
+      "ms": 0.08738199999970675,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 17,
+      "ms": 0.08766199999990931,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 18,
+      "ms": 0.08798299999943993,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 19,
+      "ms": 0.08833299999969313,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 20,
+      "ms": 0.08860400000048685,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 21,
+      "ms": 0.08885399999962829,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 22,
+      "ms": 0.08910499999910826,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 23,
+      "ms": 0.08936499999981606,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 24,
+      "ms": 0.08962500000052387,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 25,
+      "ms": 2.349844000000303,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 26,
+      "ms": 2.3529280000002473,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S6|M1|A"
+    },
+    {
+      "seq": 27,
+      "ms": 3.6829340000003867,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S6|M1|A",
+      "index": 0,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 28,
+      "ms": 28.051242999999886,
+      "type": "report-error",
+      "authorityAllowed": true,
+      "key": "S6|M1|A",
+      "code": "PASS_SESSION_EXPIRED",
+      "statusCode": null
+    },
+    {
+      "seq": 29,
+      "ms": 28.059815999999046,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S6|M1|A",
+      "index": 0,
+      "attempt": 1,
+      "errorCode": "PASS_SESSION_EXPIRED",
+      "durationMs": 24.374847999999474,
+      "active": 0
+    },
+    {
+      "seq": 30,
+      "ms": 28.72650099999919,
+      "type": "recovery-start",
+      "authorityAllowed": true,
+      "key": "S6|M1|A"
+    },
+    {
+      "seq": 31,
+      "ms": 30.839818000000378,
+      "type": "revoke",
+      "authorityAllowed": false,
+      "key": "S6|M1|A",
+      "wasAllowed": true
+    },
+    {
+      "seq": 32,
+      "ms": 30.84110999999939,
+      "type": "recovery-end",
+      "authorityAllowed": false
+    },
+    {
+      "seq": 33,
+      "ms": 31.637259999999515,
+      "type": "checkpoint",
+      "authorityAllowed": false,
+      "completed": 0,
+      "running": false
+    },
+    {
+      "seq": 34,
+      "ms": 31.663108999999167,
+      "type": "executor-drained",
+      "authorityAllowed": false,
+      "activeReports": 0
+    },
+    {
+      "seq": 35,
+      "ms": 31.694276000000173,
+      "type": "diagnostic-access-restored",
+      "authorityAllowed": true
+    }
+  ],
+  "continuationEvents": [],
+  "audits": [
+    "OAB_BATCH_START"
+  ],
+  "failures": []
+}

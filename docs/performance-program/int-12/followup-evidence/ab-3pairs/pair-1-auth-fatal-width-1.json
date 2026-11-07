@@ -1,0 +1,1721 @@
+{
+  "pair": 1,
+  "order": [
+    1,
+    2
+  ],
+  "startedAt": "2026-11-07T17:40:20.611Z",
+  "finishedAt": "2026-11-07T17:40:20.885Z",
+  "scenario": "auth-fatal",
+  "width": 1,
+  "identity": {
+    "mainWith892": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+    "serviceSha256": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+    "expectedServiceSha256": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+    "authHelperSha256": "d94b7d0845b46538b481145636caae6d58ec1733ec7e54cb93a59cc7ce2761dc",
+    "fixtureSha256": "50c64f71cfd4d5f44b9a983383fcce681f4f912a8457776f497fd9de59d5ce87",
+    "harnessSha256": "4e8d6c0f4731953054ea136737789bf9dcf2294d10c43b020ca78c6d3082284e"
+  },
+  "plan": {
+    "ok": true,
+    "authContext": {
+      "seasonRef": "S6",
+      "merchSubGroupRef": "M1",
+      "buyerGroupRef": "A"
+    },
+    "combinationCount": 12,
+    "requestCount": 12,
+    "cachedCount": 0,
+    "pendingCount": 12,
+    "estimateSeconds": 240,
+    "worstCaseRequestCount": 12,
+    "worstCaseSeconds": 240,
+    "batchUnproven": false,
+    "useBatched": false,
+    "capability": {
+      "state": "unsupported"
+    },
+    "skipped": [],
+    "skippedCount": 0,
+    "maxCombinations": 400
+  },
+  "capability": {
+    "state": "unsupported"
+  },
+  "metrics": {
+    "wallMs": 49.40115900000001,
+    "reports": 2,
+    "peakReports": 1,
+    "errors": 1,
+    "throttles": 0,
+    "recoveries": 0,
+    "authChecks": 2,
+    "cacheHits": 0,
+    "cacheWrites": 1,
+    "cacheReads": 26,
+    "activeAtFinish": 0,
+    "lateEffects": 0,
+    "refreshPostRetries": 0
+  },
+  "outcome": {
+    "ok": true,
+    "job": {
+      "jobId": "oab_1afc1dfb-f05e-4326-a965-9db2e2e09de5",
+      "running": false,
+      "cancelled": false,
+      "startedAt": "2026-11-07T17:40:20.612Z",
+      "finishedAt": "2026-11-07T17:40:20.658Z",
+      "total": 12,
+      "completed": 1,
+      "fromCache": 0,
+      "currentLabel": "S6 · M1 · B",
+      "rowCount": 1,
+      "failures": [
+        {
+          "label": "S6 · M1 · B",
+          "code": "OAB_AUTH_EXPIRED",
+          "message": "OAB_AUTH_EXPIRED",
+          "combinations": [
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "B",
+              "label": "S6 · M1 · B"
+            }
+          ]
+        }
+      ],
+      "skipped": [],
+      "batchedBuyerGroups": "unsupported",
+      "error": "OAB_AUTH_EXPIRED",
+      "errorCode": "OAB_AUTH_EXPIRED",
+      "snapshotSaved": true,
+      "snapshotErrorCode": "",
+      "interrupted": false,
+      "persistence": "native-job-receipt"
+    },
+    "resultAvailable": true,
+    "rows": [
+      {
+        "Sezon": "S6",
+        "Merch Alt Grup": "M1",
+        "Buyer Grup Tanımı": "A",
+        "Qty": 1
+      }
+    ],
+    "fields": [
+      "Sezon",
+      "Merch Alt Grup",
+      "Buyer Grup Tanımı",
+      "Qty"
+    ],
+    "sources": [
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRefs": [
+          "A"
+        ],
+        "rows": 1,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T00:00:00.000Z"
+      }
+    ],
+    "fetchedAt": "2026-11-07T17:40:20.658Z"
+  },
+  "snapshot": {
+    "schemaVersion": 1,
+    "revisionId": "49d7ca8c-6ae3-4b27-9b51-c71accfb2e92",
+    "savedAt": "2026-11-07T17:40:20.659Z",
+    "selection": {
+      "seasonRef": "S6",
+      "merchSubGroupRef": "M1",
+      "buyerGroupRef": "A",
+      "seasonRefs": [
+        "S6",
+        "S7"
+      ],
+      "merchSubGroupRefs": [
+        "M1",
+        "M2"
+      ],
+      "buyerGroupRefs": [
+        "A",
+        "B",
+        "C"
+      ],
+      "allBuyerGroups": false
+    },
+    "snapshot": {
+      "rows": [
+        {
+          "Sezon": "S6",
+          "Merch Alt Grup": "M1",
+          "Buyer Grup Tanımı": "A",
+          "Qty": 1
+        }
+      ],
+      "fields": [
+        "Sezon",
+        "Merch Alt Grup",
+        "Buyer Grup Tanımı",
+        "Qty"
+      ],
+      "fetchedAt": "2026-11-07T17:40:20.658Z",
+      "fromCache": false
+    }
+  },
+  "initialCache": [
+    "S6|M1|A"
+  ],
+  "continued": {
+    "ok": true,
+    "job": {
+      "jobId": "oab_c513e4ef7561989a78c5651fd901628b37b51c02",
+      "running": false,
+      "cancelled": false,
+      "startedAt": "2026-11-07T17:40:20.665Z",
+      "finishedAt": "2026-11-07T17:40:20.881Z",
+      "total": 12,
+      "completed": 12,
+      "fromCache": 0,
+      "currentLabel": "",
+      "rowCount": 11,
+      "failures": [],
+      "skipped": [],
+      "batchedBuyerGroups": "unsupported",
+      "error": "",
+      "errorCode": "",
+      "snapshotSaved": true,
+      "snapshotErrorCode": "",
+      "interrupted": false,
+      "persistence": "native-job-receipt"
+    },
+    "resultAvailable": true,
+    "rows": [
+      {
+        "Sezon": "S6",
+        "Merch Alt Grup": "M1",
+        "Buyer Grup Tanımı": "A",
+        "Qty": 1
+      },
+      {
+        "Sezon": "S6",
+        "Merch Alt Grup": "M1",
+        "Buyer Grup Tanımı": "B",
+        "Qty": 2
+      },
+      {
+        "Sezon": "S6",
+        "Merch Alt Grup": "M1",
+        "Buyer Grup Tanımı": "C",
+        "Qty": 3
+      },
+      {
+        "Sezon": "S6",
+        "Merch Alt Grup": "M2",
+        "Buyer Grup Tanımı": "A",
+        "Qty": 4
+      },
+      {
+        "Sezon": "S6",
+        "Merch Alt Grup": "M2",
+        "Buyer Grup Tanımı": "B",
+        "Qty": 5
+      },
+      {
+        "Sezon": "S6",
+        "Merch Alt Grup": "M2",
+        "Buyer Grup Tanımı": "C",
+        "Qty": 6
+      },
+      {
+        "Sezon": "S7",
+        "Merch Alt Grup": "M1",
+        "Buyer Grup Tanımı": "A",
+        "Qty": 7
+      },
+      {
+        "Sezon": "S7",
+        "Merch Alt Grup": "M1",
+        "Buyer Grup Tanımı": "B",
+        "Qty": 8,
+        "Optional": null
+      },
+      {
+        "Sezon": "S7",
+        "Merch Alt Grup": "M2",
+        "Buyer Grup Tanımı": "A",
+        "Qty": 10
+      },
+      {
+        "Sezon": "S7",
+        "Merch Alt Grup": "M2",
+        "Buyer Grup Tanımı": "B",
+        "Qty": 11
+      },
+      {
+        "Sezon": "S7",
+        "Merch Alt Grup": "M2",
+        "Buyer Grup Tanımı": "C",
+        "Qty": 12
+      }
+    ],
+    "fields": [
+      "Sezon",
+      "Merch Alt Grup",
+      "Buyer Grup Tanımı",
+      "Qty",
+      "Optional"
+    ],
+    "sources": [
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRefs": [
+          "A"
+        ],
+        "rows": 1,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T00:00:00.000Z"
+      },
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRefs": [
+          "B"
+        ],
+        "rows": 1,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T00:00:00.000Z"
+      },
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRefs": [
+          "C"
+        ],
+        "rows": 1,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T00:00:00.000Z"
+      },
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRefs": [
+          "A"
+        ],
+        "rows": 1,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T00:00:00.000Z"
+      },
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRefs": [
+          "B"
+        ],
+        "rows": 1,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T00:00:00.000Z"
+      },
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRefs": [
+          "C"
+        ],
+        "rows": 1,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T00:00:00.000Z"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRefs": [
+          "A"
+        ],
+        "rows": 1,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T00:00:00.000Z"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRefs": [
+          "B"
+        ],
+        "rows": 1,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T00:00:00.000Z"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRefs": [
+          "C"
+        ],
+        "rows": 0,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T00:00:00.000Z"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRefs": [
+          "A"
+        ],
+        "rows": 1,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T00:00:00.000Z"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRefs": [
+          "B"
+        ],
+        "rows": 1,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T00:00:00.000Z"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRefs": [
+          "C"
+        ],
+        "rows": 1,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T00:00:00.000Z"
+      }
+    ],
+    "fetchedAt": "2026-11-07T17:40:20.881Z"
+  },
+  "continuationPlan": {
+    "ok": true,
+    "jobId": "oab_1afc1dfb-f05e-4326-a965-9db2e2e09de5",
+    "retainedCombinationCount": 1,
+    "retainedResultCount": 1,
+    "combinationCount": 11,
+    "combinations": [
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRef": "B"
+      },
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRef": "C"
+      },
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRef": "A"
+      },
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRef": "B"
+      },
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRef": "C"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRef": "A"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRef": "B"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRef": "C"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRef": "A"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRef": "B"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRef": "C"
+      }
+    ],
+    "requestCount": 11,
+    "cachedCount": 0,
+    "pendingCount": 11,
+    "estimateSeconds": 220,
+    "worstCaseRequestCount": 11,
+    "worstCaseSeconds": 220,
+    "batchUnproven": false,
+    "forceRefresh": false,
+    "maxCombinations": 400,
+    "sourceFingerprint": "8a6459c391298451508a562756a980b8c498dc174300a808bb73f461081003c8"
+  },
+  "continuationError": null,
+  "events": [
+    {
+      "seq": 1,
+      "ms": 0.06591000000025815,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 2,
+      "ms": 0.06679100000019389,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 3,
+      "ms": 0.06718200000022989,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 4,
+      "ms": 0.06750200000033146,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 5,
+      "ms": 0.06778200000007928,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 6,
+      "ms": 0.06808300000011513,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 7,
+      "ms": 0.06837300000006508,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 8,
+      "ms": 0.0699760000002243,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 9,
+      "ms": 0.07028600000012375,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 10,
+      "ms": 0.0705870000001596,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 11,
+      "ms": 0.07090700000026118,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 12,
+      "ms": 0.07119800000009491,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 13,
+      "ms": 0.12292600000000675,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 14,
+      "ms": 0.12345600000026025,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 15,
+      "ms": 0.1237570000002961,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 16,
+      "ms": 0.12404700000024604,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 17,
+      "ms": 0.1243480000002819,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 18,
+      "ms": 0.1257300000002033,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 19,
+      "ms": 0.12622099999998682,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 20,
+      "ms": 0.12655100000029051,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 21,
+      "ms": 0.12685200000032637,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 22,
+      "ms": 0.12713200000007419,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 23,
+      "ms": 0.12743200000022625,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 24,
+      "ms": 0.12772300000005998,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 25,
+      "ms": 6.573484000000008,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 26,
+      "ms": 6.577239000000191,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S6|M1|A"
+    },
+    {
+      "seq": 27,
+      "ms": 7.89957400000003,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S6|M1|A",
+      "index": 0,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 28,
+      "ms": 32.128971999999976,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S6|M1|A",
+      "index": 0,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 24.22642399999995,
+      "active": 0
+    },
+    {
+      "seq": 29,
+      "ms": 34.036809000000176,
+      "type": "cache-write",
+      "authorityAllowed": true,
+      "key": "S6|M1|A",
+      "late": false
+    },
+    {
+      "seq": 30,
+      "ms": 35.71416900000031,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 1,
+      "running": true
+    },
+    {
+      "seq": 31,
+      "ms": 36.62914799999999,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 32,
+      "ms": 36.63183200000003,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S6|M1|B"
+    },
+    {
+      "seq": 33,
+      "ms": 37.82021500000019,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "index": 1,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 34,
+      "ms": 46.02739200000042,
+      "type": "report-error",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "code": "OAB_AUTH_EXPIRED",
+      "statusCode": null
+    },
+    {
+      "seq": 35,
+      "ms": 46.03325100000029,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "index": 1,
+      "attempt": 1,
+      "errorCode": "OAB_AUTH_EXPIRED",
+      "durationMs": 8.210741999999755,
+      "active": 0
+    },
+    {
+      "seq": 36,
+      "ms": 49.462282000000414,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 1,
+      "running": false
+    }
+  ],
+  "continuationEvents": [
+    {
+      "seq": 37,
+      "ms": 50.74920200000042,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 38,
+      "ms": 50.751606000000265,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 39,
+      "ms": 50.75206700000035,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 40,
+      "ms": 50.75242700000035,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 41,
+      "ms": 50.75278800000024,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 42,
+      "ms": 50.75310800000034,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 43,
+      "ms": 50.753479000000425,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 44,
+      "ms": 50.75382900000022,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 45,
+      "ms": 50.75435000000016,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 46,
+      "ms": 50.75578200000018,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 47,
+      "ms": 50.75610300000017,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 48,
+      "ms": 50.76082000000042,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 49,
+      "ms": 50.761261000000104,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 50,
+      "ms": 50.761601000000155,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 51,
+      "ms": 50.76192200000014,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 52,
+      "ms": 50.76223200000004,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 53,
+      "ms": 50.76253200000019,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 54,
+      "ms": 50.7639350000004,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 55,
+      "ms": 50.76431500000035,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 56,
+      "ms": 50.76461600000039,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 57,
+      "ms": 50.764936000000034,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 58,
+      "ms": 50.76524700000027,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 59,
+      "ms": 52.140330000000176,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 60,
+      "ms": 52.18861300000026,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 61,
+      "ms": 52.1894140000004,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 62,
+      "ms": 52.191147,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 63,
+      "ms": 52.191497000000254,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 64,
+      "ms": 52.19183800000019,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 65,
+      "ms": 52.19215800000029,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 66,
+      "ms": 52.192499000000225,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 67,
+      "ms": 52.192879000000175,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 68,
+      "ms": 52.19322000000011,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 69,
+      "ms": 52.19353000000001,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 70,
+      "ms": 52.20167300000003,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 71,
+      "ms": 52.20217300000013,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 72,
+      "ms": 52.20252400000027,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 73,
+      "ms": 52.20282400000042,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 74,
+      "ms": 52.2031350000002,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 75,
+      "ms": 52.2034450000001,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 76,
+      "ms": 52.20375600000034,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 77,
+      "ms": 52.20406600000024,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 78,
+      "ms": 52.20437700000002,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 79,
+      "ms": 52.20599900000025,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 80,
+      "ms": 52.20647000000008,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 81,
+      "ms": 56.596320000000105,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 82,
+      "ms": 56.599545000000035,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S6|M1|B"
+    },
+    {
+      "seq": 83,
+      "ms": 58.3402600000004,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "index": 1,
+      "attempt": 2,
+      "active": 1
+    },
+    {
+      "seq": 84,
+      "ms": 67.14706100000012,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "index": 1,
+      "attempt": 2,
+      "errorCode": "",
+      "durationMs": 8.80295500000011,
+      "active": 0
+    },
+    {
+      "seq": 85,
+      "ms": 68.61517500000036,
+      "type": "cache-write",
+      "authorityAllowed": true,
+      "key": "S6|M1|B",
+      "late": false
+    },
+    {
+      "seq": 86,
+      "ms": 70.00796500000024,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 2,
+      "running": true
+    },
+    {
+      "seq": 87,
+      "ms": 70.91289000000006,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 88,
+      "ms": 70.91520300000002,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S6|M1|C"
+    },
+    {
+      "seq": 89,
+      "ms": 72.31063700000004,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S6|M1|C",
+      "index": 2,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 90,
+      "ms": 90.46507500000007,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S6|M1|C",
+      "index": 2,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 18.15217399999983,
+      "active": 0
+    },
+    {
+      "seq": 91,
+      "ms": 91.85109499999999,
+      "type": "cache-write",
+      "authorityAllowed": true,
+      "key": "S6|M1|C",
+      "late": false
+    },
+    {
+      "seq": 92,
+      "ms": 93.557409,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 3,
+      "running": true
+    },
+    {
+      "seq": 93,
+      "ms": 94.2004780000002,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 94,
+      "ms": 94.2027820000003,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S6|M2|A"
+    },
+    {
+      "seq": 95,
+      "ms": 95.75504300000011,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S6|M2|A",
+      "index": 3,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 96,
+      "ms": 107.91839500000015,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S6|M2|A",
+      "index": 3,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 12.160969000000023,
+      "active": 0
+    },
+    {
+      "seq": 97,
+      "ms": 109.49766700000009,
+      "type": "cache-write",
+      "authorityAllowed": true,
+      "key": "S6|M2|A",
+      "late": false
+    },
+    {
+      "seq": 98,
+      "ms": 110.70230300000003,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 4,
+      "running": true
+    },
+    {
+      "seq": 99,
+      "ms": 111.94416600000022,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 100,
+      "ms": 111.94657000000007,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S6|M2|B"
+    },
+    {
+      "seq": 101,
+      "ms": 113.04491600000028,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S6|M2|B",
+      "index": 4,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 102,
+      "ms": 135.34492500000033,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S6|M2|B",
+      "index": 4,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 22.29781600000024,
+      "active": 0
+    },
+    {
+      "seq": 103,
+      "ms": 136.89554400000043,
+      "type": "cache-write",
+      "authorityAllowed": true,
+      "key": "S6|M2|B",
+      "late": false
+    },
+    {
+      "seq": 104,
+      "ms": 138.35865000000013,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 5,
+      "running": true
+    },
+    {
+      "seq": 105,
+      "ms": 139.15114500000027,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S6|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 106,
+      "ms": 139.15371900000036,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S6|M2|C"
+    },
+    {
+      "seq": 107,
+      "ms": 140.14697700000033,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S6|M2|C",
+      "index": 5,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 108,
+      "ms": 150.2956210000002,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S6|M2|C",
+      "index": 5,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 10.146660999999767,
+      "active": 0
+    },
+    {
+      "seq": 109,
+      "ms": 151.70213300000023,
+      "type": "cache-write",
+      "authorityAllowed": true,
+      "key": "S6|M2|C",
+      "late": false
+    },
+    {
+      "seq": 110,
+      "ms": 152.88237300000037,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 6,
+      "running": true
+    },
+    {
+      "seq": 111,
+      "ms": 153.6635610000003,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|A",
+      "hit": false
+    },
+    {
+      "seq": 112,
+      "ms": 153.66560400000026,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S7|M1|A"
+    },
+    {
+      "seq": 113,
+      "ms": 154.60745400000042,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S7|M1|A",
+      "index": 6,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 114,
+      "ms": 170.75269200000002,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S7|M1|A",
+      "index": 6,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 16.143063999999868,
+      "active": 0
+    },
+    {
+      "seq": 115,
+      "ms": 172.03988300000037,
+      "type": "cache-write",
+      "authorityAllowed": true,
+      "key": "S7|M1|A",
+      "late": false
+    },
+    {
+      "seq": 116,
+      "ms": 173.3489770000001,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 7,
+      "running": true
+    },
+    {
+      "seq": 117,
+      "ms": 174.01176600000008,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|B",
+      "hit": false
+    },
+    {
+      "seq": 118,
+      "ms": 174.01414000000022,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S7|M1|B"
+    },
+    {
+      "seq": 119,
+      "ms": 174.94454300000007,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S7|M1|B",
+      "index": 7,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 120,
+      "ms": 183.07977100000016,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S7|M1|B",
+      "index": 7,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 8.133374999999887,
+      "active": 0
+    },
+    {
+      "seq": 121,
+      "ms": 184.40060300000005,
+      "type": "cache-write",
+      "authorityAllowed": true,
+      "key": "S7|M1|B",
+      "late": false
+    },
+    {
+      "seq": 122,
+      "ms": 185.79703900000004,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 8,
+      "running": true
+    },
+    {
+      "seq": 123,
+      "ms": 186.62481700000035,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M1|C",
+      "hit": false
+    },
+    {
+      "seq": 124,
+      "ms": 186.6269610000004,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S7|M1|C"
+    },
+    {
+      "seq": 125,
+      "ms": 187.72908300000017,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S7|M1|C",
+      "index": 8,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 126,
+      "ms": 207.5784560000002,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S7|M1|C",
+      "index": 8,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 19.846258999999918,
+      "active": 0
+    },
+    {
+      "seq": 127,
+      "ms": 209.38079400000015,
+      "type": "cache-write",
+      "authorityAllowed": true,
+      "key": "S7|M1|C",
+      "late": false
+    },
+    {
+      "seq": 128,
+      "ms": 210.71793100000014,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 9,
+      "running": true
+    },
+    {
+      "seq": 129,
+      "ms": 212.1344570000001,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|A",
+      "hit": false
+    },
+    {
+      "seq": 130,
+      "ms": 212.13769200000024,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S7|M2|A"
+    },
+    {
+      "seq": 131,
+      "ms": 213.45218400000022,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S7|M2|A",
+      "index": 9,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 132,
+      "ms": 223.67685800000027,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S7|M2|A",
+      "index": 9,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 10.220206999999846,
+      "active": 0
+    },
+    {
+      "seq": 133,
+      "ms": 225.6082610000003,
+      "type": "cache-write",
+      "authorityAllowed": true,
+      "key": "S7|M2|A",
+      "late": false
+    },
+    {
+      "seq": 134,
+      "ms": 226.9767750000001,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 10,
+      "running": true
+    },
+    {
+      "seq": 135,
+      "ms": 228.20487200000025,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|B",
+      "hit": false
+    },
+    {
+      "seq": 136,
+      "ms": 228.20730600000024,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S7|M2|B"
+    },
+    {
+      "seq": 137,
+      "ms": 229.50037600000041,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S7|M2|B",
+      "index": 10,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 138,
+      "ms": 247.6716080000001,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S7|M2|B",
+      "index": 10,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 18.1683680000001,
+      "active": 0
+    },
+    {
+      "seq": 139,
+      "ms": 249.35521700000027,
+      "type": "cache-write",
+      "authorityAllowed": true,
+      "key": "S7|M2|B",
+      "late": false
+    },
+    {
+      "seq": 140,
+      "ms": 250.6590130000004,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 11,
+      "running": true
+    },
+    {
+      "seq": 141,
+      "ms": 251.3492940000001,
+      "type": "cache-read",
+      "authorityAllowed": true,
+      "key": "S7|M2|C",
+      "hit": false
+    },
+    {
+      "seq": 142,
+      "ms": 251.3519080000001,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S7|M2|C"
+    },
+    {
+      "seq": 143,
+      "ms": 252.52068100000042,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S7|M2|C",
+      "index": 11,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 144,
+      "ms": 264.7719860000002,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S7|M2|C",
+      "index": 11,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 12.249073000000408,
+      "active": 0
+    },
+    {
+      "seq": 145,
+      "ms": 266.7115610000001,
+      "type": "cache-write",
+      "authorityAllowed": true,
+      "key": "S7|M2|C",
+      "late": false
+    },
+    {
+      "seq": 146,
+      "ms": 269.3404260000002,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 12,
+      "running": true
+    },
+    {
+      "seq": 147,
+      "ms": 272.63241000000016,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 12,
+      "running": false
+    }
+  ],
+  "audits": [
+    "OAB_BATCH_START",
+    "OAB_BATCH_CONTINUE"
+  ],
+  "failures": []
+}

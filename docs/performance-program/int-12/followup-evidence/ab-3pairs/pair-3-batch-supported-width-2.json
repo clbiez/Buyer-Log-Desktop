@@ -1,0 +1,483 @@
+{
+  "pair": 3,
+  "order": [
+    1,
+    2
+  ],
+  "startedAt": "2026-11-07T17:40:26.527Z",
+  "finishedAt": "2026-11-07T17:40:26.585Z",
+  "scenario": "batch-supported",
+  "width": 2,
+  "identity": {
+    "mainWith892": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+    "serviceSha256": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+    "expectedServiceSha256": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+    "authHelperSha256": "d94b7d0845b46538b481145636caae6d58ec1733ec7e54cb93a59cc7ce2761dc",
+    "fixtureSha256": "50c64f71cfd4d5f44b9a983383fcce681f4f912a8457776f497fd9de59d5ce87",
+    "harnessSha256": "4e8d6c0f4731953054ea136737789bf9dcf2294d10c43b020ca78c6d3082284e"
+  },
+  "plan": {
+    "ok": true,
+    "authContext": {
+      "seasonRef": "S6",
+      "merchSubGroupRef": "M1",
+      "buyerGroupRef": "A"
+    },
+    "combinationCount": 12,
+    "requestCount": 4,
+    "cachedCount": 0,
+    "pendingCount": 4,
+    "estimateSeconds": 80,
+    "worstCaseRequestCount": 4,
+    "worstCaseSeconds": 80,
+    "batchUnproven": false,
+    "useBatched": true,
+    "capability": {
+      "state": "supported"
+    },
+    "skipped": [],
+    "skippedCount": 0,
+    "maxCombinations": 400
+  },
+  "capability": {
+    "state": "supported"
+  },
+  "metrics": {
+    "wallMs": 57.021200000001045,
+    "reports": 4,
+    "peakReports": 2,
+    "errors": 0,
+    "throttles": 0,
+    "recoveries": 0,
+    "authChecks": 4,
+    "cacheHits": 0,
+    "cacheWrites": 0,
+    "cacheReads": 0,
+    "activeAtFinish": 0,
+    "lateEffects": 0,
+    "refreshPostRetries": 0
+  },
+  "outcome": {
+    "ok": true,
+    "job": {
+      "jobId": "oab_b5fabbd0-5b18-47b6-a66d-623c4369278c",
+      "running": false,
+      "cancelled": false,
+      "startedAt": "2026-11-07T17:40:26.528Z",
+      "finishedAt": "2026-11-07T17:40:26.583Z",
+      "total": 4,
+      "completed": 4,
+      "fromCache": 0,
+      "currentLabel": "",
+      "rowCount": 11,
+      "failures": [],
+      "skipped": [],
+      "batchedBuyerGroups": "supported",
+      "error": "",
+      "errorCode": "",
+      "snapshotSaved": true,
+      "snapshotErrorCode": "",
+      "interrupted": false,
+      "persistence": "native-job-receipt"
+    },
+    "resultAvailable": true,
+    "rows": [
+      {
+        "Sezon": "S6",
+        "Merch Alt Grup": "M1",
+        "Buyer Grup Tanımı": "A",
+        "Qty": 1
+      },
+      {
+        "Sezon": "S6",
+        "Merch Alt Grup": "M1",
+        "Buyer Grup Tanımı": "B",
+        "Qty": 2
+      },
+      {
+        "Sezon": "S6",
+        "Merch Alt Grup": "M1",
+        "Buyer Grup Tanımı": "C",
+        "Qty": 3
+      },
+      {
+        "Sezon": "S6",
+        "Merch Alt Grup": "M2",
+        "Buyer Grup Tanımı": "A",
+        "Qty": 4
+      },
+      {
+        "Sezon": "S6",
+        "Merch Alt Grup": "M2",
+        "Buyer Grup Tanımı": "B",
+        "Qty": 5
+      },
+      {
+        "Sezon": "S6",
+        "Merch Alt Grup": "M2",
+        "Buyer Grup Tanımı": "C",
+        "Qty": 6
+      },
+      {
+        "Sezon": "S7",
+        "Merch Alt Grup": "M1",
+        "Buyer Grup Tanımı": "A",
+        "Qty": 7
+      },
+      {
+        "Sezon": "S7",
+        "Merch Alt Grup": "M1",
+        "Buyer Grup Tanımı": "B",
+        "Qty": 8,
+        "Optional": null
+      },
+      {
+        "Sezon": "S7",
+        "Merch Alt Grup": "M2",
+        "Buyer Grup Tanımı": "A",
+        "Qty": 10
+      },
+      {
+        "Sezon": "S7",
+        "Merch Alt Grup": "M2",
+        "Buyer Grup Tanımı": "B",
+        "Qty": 11
+      },
+      {
+        "Sezon": "S7",
+        "Merch Alt Grup": "M2",
+        "Buyer Grup Tanımı": "C",
+        "Qty": 12
+      }
+    ],
+    "fields": [
+      "Sezon",
+      "Merch Alt Grup",
+      "Buyer Grup Tanımı",
+      "Qty",
+      "Optional"
+    ],
+    "sources": [
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRefs": [
+          "A",
+          "B",
+          "C"
+        ],
+        "rows": 3,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T17:40:26.557Z"
+      },
+      {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRefs": [
+          "A",
+          "B",
+          "C"
+        ],
+        "rows": 3,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T17:40:26.545Z"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRefs": [
+          "A",
+          "B",
+          "C"
+        ],
+        "rows": 2,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T17:40:26.580Z"
+      },
+      {
+        "seasonRef": "S7",
+        "merchSubGroupRef": "M2",
+        "buyerGroupRefs": [
+          "A",
+          "B",
+          "C"
+        ],
+        "rows": 3,
+        "fromCache": false,
+        "fetchedAt": "2026-11-07T17:40:26.574Z"
+      }
+    ],
+    "fetchedAt": "2026-11-07T17:40:26.583Z"
+  },
+  "snapshot": {
+    "schemaVersion": 1,
+    "revisionId": "06bf3f31-bbba-4984-a39f-1b428ade0edb",
+    "savedAt": "2026-11-07T17:40:26.583Z",
+    "selection": {
+      "seasonRef": "S6",
+      "merchSubGroupRef": "M1",
+      "buyerGroupRef": "A",
+      "seasonRefs": [
+        "S6",
+        "S7"
+      ],
+      "merchSubGroupRefs": [
+        "M1",
+        "M2"
+      ],
+      "buyerGroupRefs": [
+        "A",
+        "B",
+        "C"
+      ],
+      "allBuyerGroups": false
+    },
+    "snapshot": {
+      "rows": [
+        {
+          "Sezon": "S6",
+          "Merch Alt Grup": "M1",
+          "Buyer Grup Tanımı": "A",
+          "Qty": 1
+        },
+        {
+          "Sezon": "S6",
+          "Merch Alt Grup": "M1",
+          "Buyer Grup Tanımı": "B",
+          "Qty": 2
+        },
+        {
+          "Sezon": "S6",
+          "Merch Alt Grup": "M1",
+          "Buyer Grup Tanımı": "C",
+          "Qty": 3
+        },
+        {
+          "Sezon": "S6",
+          "Merch Alt Grup": "M2",
+          "Buyer Grup Tanımı": "A",
+          "Qty": 4
+        },
+        {
+          "Sezon": "S6",
+          "Merch Alt Grup": "M2",
+          "Buyer Grup Tanımı": "B",
+          "Qty": 5
+        },
+        {
+          "Sezon": "S6",
+          "Merch Alt Grup": "M2",
+          "Buyer Grup Tanımı": "C",
+          "Qty": 6
+        },
+        {
+          "Sezon": "S7",
+          "Merch Alt Grup": "M1",
+          "Buyer Grup Tanımı": "A",
+          "Qty": 7
+        },
+        {
+          "Sezon": "S7",
+          "Merch Alt Grup": "M1",
+          "Buyer Grup Tanımı": "B",
+          "Qty": 8,
+          "Optional": null
+        },
+        {
+          "Sezon": "S7",
+          "Merch Alt Grup": "M2",
+          "Buyer Grup Tanımı": "A",
+          "Qty": 10
+        },
+        {
+          "Sezon": "S7",
+          "Merch Alt Grup": "M2",
+          "Buyer Grup Tanımı": "B",
+          "Qty": 11
+        },
+        {
+          "Sezon": "S7",
+          "Merch Alt Grup": "M2",
+          "Buyer Grup Tanımı": "C",
+          "Qty": 12
+        }
+      ],
+      "fields": [
+        "Sezon",
+        "Merch Alt Grup",
+        "Buyer Grup Tanımı",
+        "Qty",
+        "Optional"
+      ],
+      "fetchedAt": "2026-11-07T17:40:26.583Z",
+      "fromCache": false
+    }
+  },
+  "initialCache": [],
+  "continued": null,
+  "continuationPlan": null,
+  "continuationError": null,
+  "events": [
+    {
+      "seq": 1,
+      "ms": 2.2277089999988675,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S6|M1|"
+    },
+    {
+      "seq": 2,
+      "ms": 2.56320500000038,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S6|M2|"
+    },
+    {
+      "seq": 3,
+      "ms": 3.9799719999991794,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S6|M1|A|B|C",
+      "index": 0,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 4,
+      "ms": 3.988283999999112,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S6|M2|A|B|C",
+      "index": 3,
+      "attempt": 1,
+      "active": 2
+    },
+    {
+      "seq": 5,
+      "ms": 16.11483699999917,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S6|M2|A|B|C",
+      "index": 3,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 12.124920000000202,
+      "active": 1
+    },
+    {
+      "seq": 6,
+      "ms": 28.129108999999517,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S6|M1|A|B|C",
+      "index": 0,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 24.14718499999981,
+      "active": 0
+    },
+    {
+      "seq": 7,
+      "ms": 30.495788000000175,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 1,
+      "running": true
+    },
+    {
+      "seq": 8,
+      "ms": 32.25851700000021,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 2,
+      "running": true
+    },
+    {
+      "seq": 9,
+      "ms": 33.352005999999164,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S7|M1|"
+    },
+    {
+      "seq": 10,
+      "ms": 33.787421999999424,
+      "type": "auth-check",
+      "authorityAllowed": true,
+      "key": "S7|M2|"
+    },
+    {
+      "seq": 11,
+      "ms": 35.32469999999921,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S7|M1|A|B|C",
+      "index": 6,
+      "attempt": 1,
+      "active": 1
+    },
+    {
+      "seq": 12,
+      "ms": 35.33694900000046,
+      "type": "report-start",
+      "authorityAllowed": true,
+      "key": "S7|M2|A|B|C",
+      "index": 9,
+      "attempt": 1,
+      "active": 2
+    },
+    {
+      "seq": 13,
+      "ms": 45.45817199999874,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S7|M2|A|B|C",
+      "index": 9,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 10.119880999998713,
+      "active": 1
+    },
+    {
+      "seq": 14,
+      "ms": 51.32505899999887,
+      "type": "report-end",
+      "authorityAllowed": true,
+      "key": "S7|M1|A|B|C",
+      "index": 6,
+      "attempt": 1,
+      "errorCode": "",
+      "durationMs": 15.99780500000088,
+      "active": 0
+    },
+    {
+      "seq": 15,
+      "ms": 53.5099539999992,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 3,
+      "running": true
+    },
+    {
+      "seq": 16,
+      "ms": 54.93424199999936,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 4,
+      "running": true
+    },
+    {
+      "seq": 17,
+      "ms": 57.09320800000023,
+      "type": "checkpoint",
+      "authorityAllowed": true,
+      "completed": 4,
+      "running": false
+    }
+  ],
+  "continuationEvents": [],
+  "audits": [
+    "OAB_BATCH_START"
+  ],
+  "failures": []
+}

@@ -1,3 +1,5 @@
+> Güncel devam raporu / Current follow-up: [FOLLOWUP.md](FOLLOWUP.md). Aşağıdaki metin `8bbbb2bb` ilk turunun tarihsel RED kaydı ve değişmeden korunan inceleme paketidir / The text below is the historical first-round RED record and preserved review packet.
+
 # INT-12 — tanı / fixture hazırlığı: RED, durduruldu
 
 TR: **Eşdeğerlik kapısı başarısız; deney durduruldu.** Üretim kodu ve concurrency değişmedi. Test-only aday merge edilebilir değildir. Başarısız assertion korunur; gevşetilmedi. Ürün uygulaması Faz 7'yi bekler.

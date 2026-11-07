@@ -1,0 +1,594 @@
+{
+  "checks": {
+    "beforeFailureArraysEqual": false,
+    "afterFailureArraysEqual": true,
+    "serialReferenceUnchanged": true,
+    "afterEquivalent": true
+  },
+  "comparisons": {
+    "before": {
+      "serial": {
+        "failures": [
+          {
+            "label": "S6 · M1 · A",
+            "code": "OAB_ACCESS_REVOKED",
+            "message": "OAB_ACCESS_REVOKED",
+            "combinations": [
+              {
+                "seasonRef": "S6",
+                "merchSubGroupRef": "M1",
+                "buyerGroupRef": "A",
+                "label": "S6 · M1 · A"
+              }
+            ]
+          }
+        ],
+        "errorCode": "OAB_ACCESS_REVOKED",
+        "currentLabel": "S6 · M1 · A",
+        "rows": [],
+        "sources": [],
+        "reportStartEnd": [],
+        "revokeEvents": [
+          {
+            "seq": 41,
+            "ms": 11.967939000000001,
+            "type": "revoke",
+            "authorityAllowed": false,
+            "key": "S6|M1|A",
+            "wasAllowed": true
+          }
+        ],
+        "nativeLoopGuardBeforeRevoke": true,
+        "dataEffectsAfterRevoke": [],
+        "checkpointsAfterRevoke": [
+          {
+            "seq": 43,
+            "ms": 13.579237999999997,
+            "type": "checkpoint",
+            "authorityAllowed": false,
+            "completed": 0,
+            "running": false,
+            "results": [],
+            "failures": [
+              {
+                "label": "S6 · M1 · A",
+                "code": "OAB_ACCESS_REVOKED",
+                "message": "OAB_ACCESS_REVOKED",
+                "combinations": [
+                  {
+                    "seasonRef": "S6",
+                    "merchSubGroupRef": "M1",
+                    "buyerGroupRef": "A",
+                    "label": "S6 · M1 · A"
+                  }
+                ]
+              }
+            ],
+            "errorCode": "OAB_ACCESS_REVOKED"
+          }
+        ],
+        "continuation": {
+          "whileRevoked": {
+            "errorCode": "OAB_ACCESS_REVOKED"
+          },
+          "afterRestore": {
+            "plan": {
+              "ok": true,
+              "jobId": "oab_9028d6f1-f50b-4fe2-bd97-55c9b849a7f0",
+              "retainedCombinationCount": 0,
+              "retainedResultCount": 0,
+              "combinationCount": 12,
+              "combinations": [
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "C"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "C"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "C"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "C"
+                }
+              ],
+              "requestCount": 12,
+              "cachedCount": 0,
+              "pendingCount": 12,
+              "estimateSeconds": 240,
+              "worstCaseRequestCount": 12,
+              "worstCaseSeconds": 240,
+              "batchUnproven": false,
+              "forceRefresh": false,
+              "maxCombinations": 400,
+              "sourceFingerprint": "798397832d7ce86e3a7def99c4356b6ffdace15c85a0f924ed74c485c1121fdb"
+            }
+          }
+        },
+        "durableResults": []
+      },
+      "pair": {
+        "failures": [],
+        "errorCode": "OAB_ACCESS_REVOKED",
+        "currentLabel": "",
+        "rows": [],
+        "sources": [],
+        "reportStartEnd": [],
+        "revokeEvents": [
+          {
+            "seq": 41,
+            "ms": 5.545923000000002,
+            "type": "revoke",
+            "authorityAllowed": false,
+            "key": "S6|M1|A",
+            "wasAllowed": true
+          },
+          {
+            "seq": 45,
+            "ms": 5.672995,
+            "type": "revoke",
+            "authorityAllowed": false,
+            "key": "S6|M1|B",
+            "wasAllowed": false
+          }
+        ],
+        "nativeLoopGuardBeforeRevoke": false,
+        "dataEffectsAfterRevoke": [],
+        "checkpointsAfterRevoke": [
+          {
+            "seq": 48,
+            "ms": 7.003061000000002,
+            "type": "checkpoint",
+            "authorityAllowed": false,
+            "completed": 0,
+            "running": false,
+            "results": [],
+            "failures": [],
+            "errorCode": "OAB_ACCESS_REVOKED"
+          }
+        ],
+        "continuation": {
+          "whileRevoked": {
+            "errorCode": "OAB_ACCESS_REVOKED"
+          },
+          "afterRestore": {
+            "plan": {
+              "ok": true,
+              "jobId": "oab_b9f34937-23be-4027-ab44-3889d5247e7c",
+              "retainedCombinationCount": 0,
+              "retainedResultCount": 0,
+              "combinationCount": 12,
+              "combinations": [
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "C"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "C"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "C"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "C"
+                }
+              ],
+              "requestCount": 12,
+              "cachedCount": 0,
+              "pendingCount": 12,
+              "estimateSeconds": 240,
+              "worstCaseRequestCount": 12,
+              "worstCaseSeconds": 240,
+              "batchUnproven": false,
+              "forceRefresh": false,
+              "maxCombinations": 400,
+              "sourceFingerprint": "ff90d3cca24cfaff8a6d45aed2d7e003090ed04aa7265e67a8a8aabf37f52aa3"
+            }
+          }
+        },
+        "durableResults": []
+      }
+    },
+    "after": {
+      "serial": {
+        "failures": [
+          {
+            "label": "S6 · M1 · A",
+            "code": "OAB_ACCESS_REVOKED",
+            "message": "OAB_ACCESS_REVOKED",
+            "combinations": [
+              {
+                "seasonRef": "S6",
+                "merchSubGroupRef": "M1",
+                "buyerGroupRef": "A",
+                "label": "S6 · M1 · A"
+              }
+            ]
+          }
+        ],
+        "errorCode": "OAB_ACCESS_REVOKED",
+        "currentLabel": "S6 · M1 · A",
+        "rows": [],
+        "sources": [],
+        "reportStartEnd": [],
+        "revokeEvents": [
+          {
+            "seq": 41,
+            "ms": 11.366782,
+            "type": "revoke",
+            "authorityAllowed": false,
+            "key": "S6|M1|A",
+            "wasAllowed": true
+          }
+        ],
+        "nativeLoopGuardBeforeRevoke": true,
+        "dataEffectsAfterRevoke": [],
+        "checkpointsAfterRevoke": [
+          {
+            "seq": 43,
+            "ms": 12.892783999999999,
+            "type": "checkpoint",
+            "authorityAllowed": false,
+            "completed": 0,
+            "running": false,
+            "results": [],
+            "failures": [
+              {
+                "label": "S6 · M1 · A",
+                "code": "OAB_ACCESS_REVOKED",
+                "message": "OAB_ACCESS_REVOKED",
+                "combinations": [
+                  {
+                    "seasonRef": "S6",
+                    "merchSubGroupRef": "M1",
+                    "buyerGroupRef": "A",
+                    "label": "S6 · M1 · A"
+                  }
+                ]
+              }
+            ],
+            "errorCode": "OAB_ACCESS_REVOKED"
+          }
+        ],
+        "continuation": {
+          "whileRevoked": {
+            "errorCode": "OAB_ACCESS_REVOKED"
+          },
+          "afterRestore": {
+            "plan": {
+              "ok": true,
+              "jobId": "oab_dcd9da90-e37a-40d6-9d70-e01c29e28a26",
+              "retainedCombinationCount": 0,
+              "retainedResultCount": 0,
+              "combinationCount": 12,
+              "combinations": [
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "C"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "C"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "C"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "C"
+                }
+              ],
+              "requestCount": 12,
+              "cachedCount": 0,
+              "pendingCount": 12,
+              "estimateSeconds": 240,
+              "worstCaseRequestCount": 12,
+              "worstCaseSeconds": 240,
+              "batchUnproven": false,
+              "forceRefresh": false,
+              "maxCombinations": 400,
+              "sourceFingerprint": "8eefc33876f62b30a7e974cbc466da2396c2e7b201facd6023ef7c206c88550a"
+            }
+          }
+        },
+        "durableResults": []
+      },
+      "pair": {
+        "failures": [
+          {
+            "label": "S6 · M1 · A",
+            "code": "OAB_ACCESS_REVOKED",
+            "message": "OAB_ACCESS_REVOKED",
+            "combinations": [
+              {
+                "seasonRef": "S6",
+                "merchSubGroupRef": "M1",
+                "buyerGroupRef": "A",
+                "label": "S6 · M1 · A"
+              }
+            ]
+          }
+        ],
+        "errorCode": "OAB_ACCESS_REVOKED",
+        "currentLabel": "S6 · M1 · A",
+        "rows": [],
+        "sources": [],
+        "reportStartEnd": [],
+        "revokeEvents": [
+          {
+            "seq": 45,
+            "ms": 7.174569999999989,
+            "type": "revoke",
+            "authorityAllowed": false,
+            "key": "S6|M1|A",
+            "wasAllowed": true
+          },
+          {
+            "seq": 49,
+            "ms": 7.319157999999987,
+            "type": "revoke",
+            "authorityAllowed": false,
+            "key": "S6|M1|B",
+            "wasAllowed": false
+          }
+        ],
+        "nativeLoopGuardBeforeRevoke": true,
+        "dataEffectsAfterRevoke": [],
+        "checkpointsAfterRevoke": [
+          {
+            "seq": 51,
+            "ms": 8.346396999999996,
+            "type": "checkpoint",
+            "authorityAllowed": false,
+            "completed": 0,
+            "running": false,
+            "results": [],
+            "failures": [
+              {
+                "label": "S6 · M1 · A",
+                "code": "OAB_ACCESS_REVOKED",
+                "message": "OAB_ACCESS_REVOKED",
+                "combinations": [
+                  {
+                    "seasonRef": "S6",
+                    "merchSubGroupRef": "M1",
+                    "buyerGroupRef": "A",
+                    "label": "S6 · M1 · A"
+                  }
+                ]
+              }
+            ],
+            "errorCode": "OAB_ACCESS_REVOKED"
+          }
+        ],
+        "continuation": {
+          "whileRevoked": {
+            "errorCode": "OAB_ACCESS_REVOKED"
+          },
+          "afterRestore": {
+            "plan": {
+              "ok": true,
+              "jobId": "oab_3d280ba9-4fe3-4364-9a8b-f59732785672",
+              "retainedCombinationCount": 0,
+              "retainedResultCount": 0,
+              "combinationCount": 12,
+              "combinations": [
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "C"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S6",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "C"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M1",
+                  "buyerGroupRef": "C"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "A"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "B"
+                },
+                {
+                  "seasonRef": "S7",
+                  "merchSubGroupRef": "M2",
+                  "buyerGroupRef": "C"
+                }
+              ],
+              "requestCount": 12,
+              "cachedCount": 0,
+              "pendingCount": 12,
+              "estimateSeconds": 240,
+              "worstCaseRequestCount": 12,
+              "worstCaseSeconds": 240,
+              "batchUnproven": false,
+              "forceRefresh": false,
+              "maxCombinations": 400,
+              "sourceFingerprint": "2e79b0f2e7ffbfa18c183670aa44f59d79f2e3f390b40a0cc24aaecdfdcc87c2"
+            }
+          }
+        },
+        "durableResults": []
+      }
+    }
+  }
+}

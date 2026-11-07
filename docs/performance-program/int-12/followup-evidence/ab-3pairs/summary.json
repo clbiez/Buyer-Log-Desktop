@@ -1,0 +1,1611 @@
+{
+  "kind": "mock-only-AB-BA-AB-rehearsal",
+  "status": "REHEARSAL_PASS_ONLY",
+  "identity": {
+    "mainWith892": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+    "serviceSha256": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+    "expectedServiceSha256": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+    "authHelperSha256": "d94b7d0845b46538b481145636caae6d58ec1733ec7e54cb93a59cc7ce2761dc",
+    "fixtureSha256": "50c64f71cfd4d5f44b9a983383fcce681f4f912a8457776f497fd9de59d5ce87",
+    "harnessSha256": "4e8d6c0f4731953054ea136737789bf9dcf2294d10c43b020ca78c6d3082284e"
+  },
+  "samples": 90,
+  "pairCount": 3,
+  "scenarioCount": 15,
+  "percentiles": "nearest rank; n=3 p95=max; no tail/capacity inference",
+  "enterpriseAcceptance": false,
+  "productionChange": false,
+  "finishedAt": "2026-11-07T17:40:29.295Z",
+  "scenarios": {
+    "cold": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          288.080376,
+          244.1485249999996,
+          237.86719300000004
+        ],
+        "wallP50Ms": 244.1485249999996,
+        "wallP95Ms": 288.080376,
+        "reportP50Ms": 12.247901000000013,
+        "reportP95Ms": 24.213976000000002,
+        "reports": [
+          12,
+          12,
+          12
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          1,
+          1,
+          1
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          198.86705999999998,
+          178.6888399999998,
+          169.7807130000001
+        ],
+        "wallP50Ms": 178.6888399999998,
+        "wallP95Ms": 198.86705999999998,
+        "reportP50Ms": 12.143552999999997,
+        "reportP95Ms": 23.837677999999983,
+        "reports": [
+          12,
+          12,
+          12
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          2,
+          2,
+          2
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    "fresh-half": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          140.51326700000004,
+          137.16726299999937,
+          129.263590999999
+        ],
+        "wallP50Ms": 137.16726299999937,
+        "wallP95Ms": 140.51326700000004,
+        "reportP50Ms": 12.192477000000054,
+        "reportP95Ms": 20.236728000000085,
+        "reports": [
+          6,
+          6,
+          6
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          6,
+          6,
+          6
+        ],
+        "peakReports": [
+          1,
+          1,
+          1
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          99.37812300000007,
+          103.52802400000019,
+          92.1288569999997
+        ],
+        "wallP50Ms": 99.37812300000007,
+        "wallP95Ms": 103.52802400000019,
+        "reportP50Ms": 12.27506100000005,
+        "reportP95Ms": 20.088493999999628,
+        "reports": [
+          6,
+          6,
+          6
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          6,
+          6,
+          6
+        ],
+        "peakReports": [
+          2,
+          2,
+          2
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    "fresh-all": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          31.579943999999955,
+          29.007935000000543,
+          27.81451500000003
+        ],
+        "wallP50Ms": 29.007935000000543,
+        "wallP95Ms": 31.579943999999955,
+        "reportP50Ms": null,
+        "reportP95Ms": null,
+        "reports": [
+          0,
+          0,
+          0
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          12,
+          12,
+          12
+        ],
+        "peakReports": [
+          0,
+          0,
+          0
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          31.996901999999977,
+          31.410689000000275,
+          27.886592999999266
+        ],
+        "wallP50Ms": 31.410689000000275,
+        "wallP95Ms": 31.996901999999977,
+        "reportP50Ms": null,
+        "reportP95Ms": null,
+        "reports": [
+          0,
+          0,
+          0
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          12,
+          12,
+          12
+        ],
+        "peakReports": [
+          0,
+          0,
+          0
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    "force-refresh": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          274.0161509999999,
+          256.42054200000075,
+          238.96500399999968
+        ],
+        "wallP50Ms": 256.42054200000075,
+        "wallP95Ms": 274.0161509999999,
+        "reportP50Ms": 12.555543999999827,
+        "reportP95Ms": 24.180885000000103,
+        "reports": [
+          12,
+          12,
+          12
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          1,
+          1,
+          1
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          173.4780679999999,
+          173.77612099999988,
+          167.9232520000005
+        ],
+        "wallP50Ms": 173.4780679999999,
+        "wallP95Ms": 173.77612099999988,
+        "reportP50Ms": 12.55014499999993,
+        "reportP95Ms": 24.09924299999966,
+        "reports": [
+          12,
+          12,
+          12
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          2,
+          2,
+          2
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    "batch-supported": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          82.39997100000005,
+          84.66179300000022,
+          81.95996700000069
+        ],
+        "wallP50Ms": 82.39997100000005,
+        "wallP95Ms": 84.66179300000022,
+        "reportP50Ms": 12.148310999999921,
+        "reportP95Ms": 24.87013500000012,
+        "reports": [
+          4,
+          4,
+          4
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          1,
+          1,
+          1
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          58.64328499999988,
+          61.23573600000054,
+          57.021200000001045
+        ],
+        "wallP50Ms": 58.64328499999988,
+        "wallP95Ms": 61.23573600000054,
+        "reportP50Ms": 12.124920000000202,
+        "reportP95Ms": 24.157900999999583,
+        "reports": [
+          4,
+          4,
+          4
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          2,
+          2,
+          2
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    "probe-verified": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          84.63626299999987,
+          84.67854799999986,
+          83.90325699999994
+        ],
+        "wallP50Ms": 84.63626299999987,
+        "wallP95Ms": 84.67854799999986,
+        "reportP50Ms": 12.688324999999168,
+        "reportP95Ms": 24.611583999999993,
+        "reports": [
+          4,
+          4,
+          4
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          1,
+          1,
+          1
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          69.74910900000009,
+          72.7377319999996,
+          68.35696400000052
+        ],
+        "wallP50Ms": 69.74910900000009,
+        "wallP95Ms": 72.7377319999996,
+        "reportP50Ms": 12.252766999999949,
+        "reportP95Ms": 24.22990000000027,
+        "reports": [
+          4,
+          4,
+          4
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          2,
+          2,
+          2
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    "probe-fallback": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          281.18870300000003,
+          265.39783999999963,
+          263.6214170000003
+        ],
+        "wallP50Ms": 265.39783999999963,
+        "wallP95Ms": 281.18870300000003,
+        "reportP50Ms": 16.146649000000252,
+        "reportP95Ms": 24.204850999999962,
+        "reports": [
+          13,
+          13,
+          13
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          1,
+          1,
+          1
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          206.93958799999996,
+          202.2748330000004,
+          196.40173799999866
+        ],
+        "wallP50Ms": 202.2748330000004,
+        "wallP95Ms": 206.93958799999996,
+        "reportP50Ms": 15.885425000000396,
+        "reportP95Ms": 24.188036000000466,
+        "reports": [
+          13,
+          13,
+          13
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          2,
+          2,
+          2
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    "partial": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          247.07331099999965,
+          237.7980689999995,
+          239.70204599999852
+        ],
+        "wallP50Ms": 239.70204599999852,
+        "wallP95Ms": 247.07331099999965,
+        "reportP50Ms": 12.636435999998866,
+        "reportP95Ms": 24.222869000000173,
+        "reports": [
+          12,
+          12,
+          12
+        ],
+        "transportErrors": [
+          1,
+          1,
+          1
+        ],
+        "combinationFailures": [
+          1,
+          1,
+          1
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          1,
+          1,
+          1
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          181.6325350000002,
+          169.7675960000006,
+          167.24386699999923
+        ],
+        "wallP50Ms": 169.7675960000006,
+        "wallP95Ms": 181.6325350000002,
+        "reportP50Ms": 12.768906000001152,
+        "reportP95Ms": 24.026862999999594,
+        "reports": [
+          12,
+          12,
+          12
+        ],
+        "transportErrors": [
+          1,
+          1,
+          1
+        ],
+        "combinationFailures": [
+          1,
+          1,
+          1
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          2,
+          2,
+          2
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    "throttle": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          241.07900100000006,
+          241.3732890000001,
+          238.3795220000011
+        ],
+        "wallP50Ms": 241.07900100000006,
+        "wallP95Ms": 241.3732890000001,
+        "reportP50Ms": 12.161640000000261,
+        "reportP95Ms": 24.247154000000137,
+        "reports": [
+          12,
+          12,
+          12
+        ],
+        "transportErrors": [
+          1,
+          1,
+          1
+        ],
+        "combinationFailures": [
+          1,
+          1,
+          1
+        ],
+        "throttles": [
+          1,
+          1,
+          1
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          1,
+          1,
+          1
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          177.56058499999972,
+          173.30302699999993,
+          170.89566399999967
+        ],
+        "wallP50Ms": 173.30302699999993,
+        "wallP95Ms": 177.56058499999972,
+        "reportP50Ms": 12.168120000000272,
+        "reportP95Ms": 24.397070999999414,
+        "reports": [
+          12,
+          12,
+          12
+        ],
+        "transportErrors": [
+          1,
+          1,
+          1
+        ],
+        "combinationFailures": [
+          1,
+          1,
+          1
+        ],
+        "throttles": [
+          1,
+          1,
+          1
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          2,
+          2,
+          2
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    "auth-recovery": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          288.84856200000013,
+          284.49000700000033,
+          278.17766500000107
+        ],
+        "wallP50Ms": 284.49000700000033,
+        "wallP95Ms": 288.84856200000013,
+        "reportP50Ms": 12.165375999999924,
+        "reportP95Ms": 24.24886299999889,
+        "reports": [
+          14,
+          14,
+          14
+        ],
+        "transportErrors": [
+          2,
+          2,
+          2
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          2,
+          2,
+          2
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          1,
+          1,
+          1
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          203.40445100000034,
+          206.6494819999998,
+          194.91875299999992
+        ],
+        "wallP50Ms": 203.40445100000034,
+        "wallP95Ms": 206.6494819999998,
+        "reportP50Ms": 12.398607000000084,
+        "reportP95Ms": 23.944048000001203,
+        "reports": [
+          14,
+          14,
+          14
+        ],
+        "transportErrors": [
+          2,
+          2,
+          2
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          2,
+          2,
+          2
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          2,
+          2,
+          2
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      }
+    },
+    "auth-fatal": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          49.40115900000001,
+          45.02664100000038,
+          42.616862999999285
+        ],
+        "wallP50Ms": 45.02664100000038,
+        "wallP95Ms": 49.40115900000001,
+        "reportP50Ms": 8.210741999999755,
+        "reportP95Ms": 24.592185000000427,
+        "reports": [
+          2,
+          2,
+          2
+        ],
+        "transportErrors": [
+          1,
+          1,
+          1
+        ],
+        "combinationFailures": [
+          1,
+          1,
+          1
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          1,
+          1,
+          1
+        ],
+        "errorCodes": [
+          "OAB_AUTH_EXPIRED",
+          "OAB_AUTH_EXPIRED",
+          "OAB_AUTH_EXPIRED"
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          37.622335999999905,
+          34.34174900000016,
+          34.73556699999972
+        ],
+        "wallP50Ms": 34.73556699999972,
+        "wallP95Ms": 37.622335999999905,
+        "reportP50Ms": 8.27902499999982,
+        "reportP95Ms": 24.42181900000014,
+        "reports": [
+          2,
+          2,
+          2
+        ],
+        "transportErrors": [
+          1,
+          1,
+          1
+        ],
+        "combinationFailures": [
+          1,
+          1,
+          1
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          2,
+          2,
+          2
+        ],
+        "errorCodes": [
+          "OAB_AUTH_EXPIRED",
+          "OAB_AUTH_EXPIRED",
+          "OAB_AUTH_EXPIRED"
+        ]
+      }
+    },
+    "revoke-auth": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          3.3422860000000583,
+          2.426097999999911,
+          4.924386999999115
+        ],
+        "wallP50Ms": 3.3422860000000583,
+        "wallP95Ms": 4.924386999999115,
+        "reportP50Ms": null,
+        "reportP95Ms": null,
+        "reports": [
+          0,
+          0,
+          0
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          1,
+          1,
+          1
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          0,
+          0,
+          0
+        ],
+        "errorCodes": [
+          "OAB_ACCESS_REVOKED",
+          "OAB_ACCESS_REVOKED",
+          "OAB_ACCESS_REVOKED"
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          4.139492999999675,
+          3.0962799999997515,
+          4.678885999999693
+        ],
+        "wallP50Ms": 4.139492999999675,
+        "wallP95Ms": 4.678885999999693,
+        "reportP50Ms": null,
+        "reportP95Ms": null,
+        "reports": [
+          0,
+          0,
+          0
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          1,
+          1,
+          1
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          0,
+          0,
+          0
+        ],
+        "errorCodes": [
+          "OAB_ACCESS_REVOKED",
+          "OAB_ACCESS_REVOKED",
+          "OAB_ACCESS_REVOKED"
+        ]
+      }
+    },
+    "revoke-response": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          29.14752499999986,
+          28.23187499999949,
+          30.542905000000246
+        ],
+        "wallP50Ms": 29.14752499999986,
+        "wallP95Ms": 30.542905000000246,
+        "reportP50Ms": 24.183538999999655,
+        "reportP95Ms": 24.186789999999746,
+        "reports": [
+          1,
+          1,
+          1
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          1,
+          1,
+          1
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          1,
+          1,
+          1
+        ],
+        "errorCodes": [
+          "OAB_ACCESS_REVOKED",
+          "OAB_ACCESS_REVOKED",
+          "OAB_ACCESS_REVOKED"
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          30.346914000000652,
+          30.72766799999954,
+          33.208129000000554
+        ],
+        "wallP50Ms": 30.72766799999954,
+        "wallP95Ms": 33.208129000000554,
+        "reportP50Ms": 8.148377999999866,
+        "reportP95Ms": 24.384312000000136,
+        "reports": [
+          2,
+          2,
+          2
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          1,
+          1,
+          1
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          2,
+          2,
+          2
+        ],
+        "errorCodes": [
+          "OAB_ACCESS_REVOKED",
+          "OAB_ACCESS_REVOKED",
+          "OAB_ACCESS_REVOKED"
+        ]
+      }
+    },
+    "revoke-recovery": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          31.986265999999887,
+          31.048992,
+          31.60244799999964
+        ],
+        "wallP50Ms": 31.60244799999964,
+        "wallP95Ms": 31.986265999999887,
+        "reportP50Ms": 24.374847999999474,
+        "reportP95Ms": 24.563954000000194,
+        "reports": [
+          1,
+          1,
+          1
+        ],
+        "transportErrors": [
+          1,
+          1,
+          1
+        ],
+        "combinationFailures": [
+          1,
+          1,
+          1
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          1,
+          1,
+          1
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          1,
+          1,
+          1
+        ],
+        "errorCodes": [
+          "OAB_ACCESS_REVOKED",
+          "OAB_ACCESS_REVOKED",
+          "OAB_ACCESS_REVOKED"
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          32.31772600000022,
+          31.849178999999822,
+          33.5778760000012
+        ],
+        "wallP50Ms": 32.31772600000022,
+        "wallP95Ms": 33.5778760000012,
+        "reportP50Ms": 8.154786999999487,
+        "reportP95Ms": 24.584673999999723,
+        "reports": [
+          2,
+          2,
+          2
+        ],
+        "transportErrors": [
+          1,
+          1,
+          1
+        ],
+        "combinationFailures": [
+          1,
+          1,
+          1
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          1,
+          1,
+          1
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          2,
+          2,
+          2
+        ],
+        "errorCodes": [
+          "OAB_ACCESS_REVOKED",
+          "OAB_ACCESS_REVOKED",
+          "OAB_ACCESS_REVOKED"
+        ]
+      }
+    },
+    "cancel": {
+      "1": {
+        "n": 3,
+        "wallMs": [
+          36.35315199999968,
+          32.51736700000038,
+          40.00288499999988
+        ],
+        "wallP50Ms": 36.35315199999968,
+        "wallP95Ms": 40.00288499999988,
+        "reportP50Ms": 24.88557799999944,
+        "reportP95Ms": 25.390661000000364,
+        "reports": [
+          1,
+          1,
+          1
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          1,
+          1,
+          1
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "2": {
+        "n": 3,
+        "wallMs": [
+          36.477278999999726,
+          35.34707900000103,
+          41.25566500000059
+        ],
+        "wallP50Ms": 36.477278999999726,
+        "wallP95Ms": 41.25566500000059,
+        "reportP50Ms": 8.142319000000498,
+        "reportP95Ms": 25.544426999998905,
+        "reports": [
+          2,
+          2,
+          2
+        ],
+        "transportErrors": [
+          0,
+          0,
+          0
+        ],
+        "combinationFailures": [
+          0,
+          0,
+          0
+        ],
+        "throttles": [
+          0,
+          0,
+          0
+        ],
+        "recoveries": [
+          0,
+          0,
+          0
+        ],
+        "cacheHits": [
+          0,
+          0,
+          0
+        ],
+        "peakReports": [
+          2,
+          2,
+          2
+        ],
+        "errorCodes": [
+          "",
+          "",
+          ""
+        ]
+      }
+    }
+  }
+}

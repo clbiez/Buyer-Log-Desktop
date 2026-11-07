@@ -44,6 +44,14 @@ for (const scenario of scenarios) test('INT-12 native/2 bounded equivalence: ' +
     assert.equal(after.metrics.cacheWrites, 0);
     assert.equal(after.snapshot, null);
   }
+  if (scenario === 'revoke-auth') {
+    assert.equal(after.outcome.job.errorCode, 'OAB_ACCESS_REVOKED');
+    assert.deepEqual(after.outcome.job.failures, [{ label: 'S6 · M1 · A', code: 'OAB_ACCESS_REVOKED',
+      message: 'OAB_ACCESS_REVOKED', combinations: [{ seasonRef: 'S6', merchSubGroupRef: 'M1',
+        buyerGroupRef: 'A', label: 'S6 · M1 · A' }] }]);
+    assert.equal(after.metrics.reports, 0);
+    assert.deepEqual(after.outcome.rows, []);
+  }
   if (scenario === 'cancel') {
     assert.equal(after.outcome.rows.length, 1);
     assert.equal(after.metrics.cacheWrites, 1);

@@ -1,0 +1,1723 @@
+{
+  "kind": "pre-fix-observers-only",
+  "equal": false,
+  "serial": {
+    "scenario": "revoke-auth",
+    "width": 1,
+    "identity": {
+      "mainWith892": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+      "serviceSha256": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+      "expectedServiceSha256": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+      "authHelperSha256": "d94b7d0845b46538b481145636caae6d58ec1733ec7e54cb93a59cc7ce2761dc",
+      "fixtureSha256": "50c64f71cfd4d5f44b9a983383fcce681f4f912a8457776f497fd9de59d5ce87",
+      "harnessSha256": "49400c5a9fbcc3b2260b42dde107a05de5510f083d42a9c871bfa9ec0d1941b6"
+    },
+    "plan": {
+      "ok": true,
+      "authContext": {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRef": "A"
+      },
+      "combinationCount": 12,
+      "requestCount": 12,
+      "cachedCount": 0,
+      "pendingCount": 12,
+      "estimateSeconds": 240,
+      "worstCaseRequestCount": 12,
+      "worstCaseSeconds": 240,
+      "batchUnproven": false,
+      "useBatched": false,
+      "capability": {
+        "state": "unsupported"
+      },
+      "skipped": [],
+      "skippedCount": 0,
+      "maxCombinations": 400
+    },
+    "capability": {
+      "state": "unsupported"
+    },
+    "metrics": {
+      "wallMs": 12.799312,
+      "reports": 0,
+      "peakReports": 0,
+      "errors": 0,
+      "throttles": 0,
+      "recoveries": 0,
+      "authChecks": 1,
+      "cacheHits": 0,
+      "cacheWrites": 0,
+      "cacheReads": 49,
+      "activeAtFinish": 0,
+      "lateEffects": 0,
+      "refreshPostRetries": 0
+    },
+    "outcome": {
+      "ok": true,
+      "job": {
+        "jobId": "oab_9028d6f1-f50b-4fe2-bd97-55c9b849a7f0",
+        "running": false,
+        "cancelled": false,
+        "startedAt": "2026-11-07T17:37:54.226Z",
+        "finishedAt": "2026-11-07T17:37:54.236Z",
+        "total": 12,
+        "completed": 0,
+        "fromCache": 0,
+        "currentLabel": "S6 · M1 · A",
+        "rowCount": 0,
+        "failures": [
+          {
+            "label": "S6 · M1 · A",
+            "code": "OAB_ACCESS_REVOKED",
+            "message": "OAB_ACCESS_REVOKED",
+            "combinations": [
+              {
+                "seasonRef": "S6",
+                "merchSubGroupRef": "M1",
+                "buyerGroupRef": "A",
+                "label": "S6 · M1 · A"
+              }
+            ]
+          }
+        ],
+        "skipped": [],
+        "batchedBuyerGroups": "unsupported",
+        "error": "OAB_ACCESS_REVOKED",
+        "errorCode": "OAB_ACCESS_REVOKED",
+        "snapshotSaved": null,
+        "snapshotErrorCode": "",
+        "interrupted": false,
+        "persistence": "native-job-receipt"
+      },
+      "resultAvailable": true,
+      "rows": [],
+      "fields": [],
+      "sources": [],
+      "fetchedAt": "2026-11-07T17:37:54.236Z"
+    },
+    "snapshot": null,
+    "initialCache": [],
+    "continued": null,
+    "continuationPlan": null,
+    "continuationError": null,
+    "events": [
+      {
+        "seq": 1,
+        "ms": 0.7330460000000016,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 2,
+        "ms": 0.7441120000000012,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 3,
+        "ms": 0.7478380000000016,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 4,
+        "ms": 0.750200999999997,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 5,
+        "ms": 0.7522239999999982,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 6,
+        "ms": 0.7541769999999985,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 7,
+        "ms": 0.7560999999999964,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 8,
+        "ms": 0.7585639999999998,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 9,
+        "ms": 0.7615890000000007,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 10,
+        "ms": 0.7937769999999986,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 11,
+        "ms": 0.7979729999999989,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 12,
+        "ms": 0.7992849999999976,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 13,
+        "ms": 1.4830869999999976,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.start (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:382:23)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:55\n    at execute (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:218:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:33)\n    at [stdin]:4:31\n    at [stdin]:4:1015\n    at runScriptInThisContext (node:internal/vm:219:10)\n    at node:internal/process/execution:451:12"
+      },
+      {
+        "seq": 14,
+        "ms": 1.809629000000001,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.start (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:391:21)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:55\n    at execute (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:218:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:33)\n    at [stdin]:4:31\n    at [stdin]:4:1015\n    at runScriptInThisContext (node:internal/vm:219:10)\n    at node:internal/process/execution:451:12"
+      },
+      {
+        "seq": 15,
+        "ms": 1.8967400000000012,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 16,
+        "ms": 1.898061999999996,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 17,
+        "ms": 1.8987830000000017,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 18,
+        "ms": 1.899253999999999,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 19,
+        "ms": 1.899834999999996,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 20,
+        "ms": 1.9003060000000005,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 21,
+        "ms": 1.9007659999999973,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 22,
+        "ms": 1.9013470000000012,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 23,
+        "ms": 1.9017979999999994,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 24,
+        "ms": 1.902279,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 25,
+        "ms": 1.9027389999999968,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 26,
+        "ms": 1.9031999999999982,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 27,
+        "ms": 3.9255899999999997,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.assertAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:459:42)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:102:29\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:110\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at withFileLeaseSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:35)\n    at locked (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:97:37)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:101:10)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:123:29)"
+      },
+      {
+        "seq": 28,
+        "ms": 4.399814999999997,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.beforeReserve (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:458:30)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:111:27\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:110\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at withFileLeaseSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:35)\n    at locked (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:97:37)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:101:10)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:123:29)"
+      },
+      {
+        "seq": 29,
+        "ms": 4.430520999999999,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.assertAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:459:42)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:111:68\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:110\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at withFileLeaseSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:35)\n    at locked (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:97:37)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:101:10)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:123:29)"
+      },
+      {
+        "seq": 30,
+        "ms": 6.411279,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.assertAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:459:42)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:114:29\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:110\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at withFileLeaseSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:35)\n    at locked (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:97:37)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:101:10)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:123:29)"
+      },
+      {
+        "seq": 31,
+        "ms": 9.184250999999996,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:26:22)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:34:19)\n    at runOabBatchJob (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:147:13)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:495:13\n    at Object.start (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:496:7)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:55\n    at execute (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:218:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:33)"
+      },
+      {
+        "seq": 32,
+        "ms": 9.784425999999996,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:29:15)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:34:19)\n    at runOabBatchJob (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:147:13)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:495:13\n    at Object.start (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:496:7)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:55\n    at execute (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:218:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:33)"
+      },
+      {
+        "seq": 33,
+        "ms": 9.809193,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:26:22)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:35:82)\n    at runOabBatchJob (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:147:13)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:495:13\n    at Object.start (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:496:7)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:55\n    at execute (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:218:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:33)"
+      },
+      {
+        "seq": 34,
+        "ms": 10.213112000000002,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:29:15)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:35:82)\n    at runOabBatchJob (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:147:13)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:495:13\n    at Object.start (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:496:7)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:55\n    at execute (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:218:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:33)"
+      },
+      {
+        "seq": 35,
+        "ms": 11.00761,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:26:22)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:34:19)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:98:9)\n    at runOabBatchJob (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:151:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:495:7"
+      },
+      {
+        "seq": 36,
+        "ms": 11.393202000000002,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:29:15)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:34:19)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:98:9)\n    at runOabBatchJob (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:151:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:495:7"
+      },
+      {
+        "seq": 37,
+        "ms": 11.414493999999998,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:26:22)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:35:82)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:98:9)\n    at runOabBatchJob (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:151:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:495:7"
+      },
+      {
+        "seq": 38,
+        "ms": 11.900337,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:29:15)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:35:82)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:98:9)\n    at runOabBatchJob (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:151:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:495:7"
+      },
+      {
+        "seq": 39,
+        "ms": 11.907277,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 40,
+        "ms": 11.963391999999999,
+        "type": "auth-check",
+        "authorityAllowed": true,
+        "key": "S6|M1|A"
+      },
+      {
+        "seq": 41,
+        "ms": 11.967939000000001,
+        "type": "revoke",
+        "authorityAllowed": false,
+        "key": "S6|M1|A",
+        "wasAllowed": true
+      },
+      {
+        "seq": 42,
+        "ms": 12.089421999999999,
+        "type": "authority-check",
+        "authorityAllowed": false,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertOabCurrentAccess (eval at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:185:19), <anonymous>:4:30)\n    at Object.ensurePassConnected (eval at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:185:19), <anonymous>:10:3)\n    at ensurePassConnected (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:203:24)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:116:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async runOabBatchJob (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:151:24)\n    at async /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:495:7"
+      },
+      {
+        "seq": 43,
+        "ms": 13.579237999999997,
+        "type": "checkpoint",
+        "authorityAllowed": false,
+        "completed": 0,
+        "running": false,
+        "results": [],
+        "failures": [
+          {
+            "label": "S6 · M1 · A",
+            "code": "OAB_ACCESS_REVOKED",
+            "message": "OAB_ACCESS_REVOKED",
+            "combinations": [
+              {
+                "seasonRef": "S6",
+                "merchSubGroupRef": "M1",
+                "buyerGroupRef": "A",
+                "label": "S6 · M1 · A"
+              }
+            ]
+          }
+        ],
+        "errorCode": "OAB_ACCESS_REVOKED"
+      },
+      {
+        "seq": 44,
+        "ms": 13.714222,
+        "type": "executor-drained",
+        "authorityAllowed": false,
+        "activeReports": 0
+      },
+      {
+        "seq": 45,
+        "ms": 13.949095999999997,
+        "type": "authority-check",
+        "authorityAllowed": false,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at continuationState (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:329:17)\n    at Object.continuationPlan (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:362:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:229:63)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:25"
+      },
+      {
+        "seq": 46,
+        "ms": 14.050669,
+        "type": "authority-check",
+        "authorityAllowed": false,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.status (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:501:19)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:232:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:25"
+      },
+      {
+        "seq": 47,
+        "ms": 14.058061000000002,
+        "type": "diagnostic-access-restored",
+        "authorityAllowed": true
+      },
+      {
+        "seq": 48,
+        "ms": 14.070929999999997,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.status (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:501:19)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:237:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:25"
+      },
+      {
+        "seq": 49,
+        "ms": 14.424883999999999,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.status (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:502:5)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:237:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:25"
+      },
+      {
+        "seq": 50,
+        "ms": 14.453586999999999,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.status (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:510:5)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:237:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:25"
+      },
+      {
+        "seq": 51,
+        "ms": 14.502591000000002,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at continuationState (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:329:17)\n    at Object.continuationPlan (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:362:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:240:68)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:25"
+      },
+      {
+        "seq": 52,
+        "ms": 16.237097,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 53,
+        "ms": 16.238878999999997,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 54,
+        "ms": 16.239689999999996,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 55,
+        "ms": 16.241613,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 56,
+        "ms": 16.242184,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 57,
+        "ms": 16.242665000000002,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 58,
+        "ms": 16.243136,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 59,
+        "ms": 16.243626,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 60,
+        "ms": 16.244076999999997,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 61,
+        "ms": 16.244568,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 62,
+        "ms": 16.245049,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 63,
+        "ms": 16.245509,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 64,
+        "ms": 16.256935999999996,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 65,
+        "ms": 16.257967999999998,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 66,
+        "ms": 16.258699,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 67,
+        "ms": 16.25925,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 68,
+        "ms": 16.259731000000002,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 69,
+        "ms": 16.260210999999998,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 70,
+        "ms": 16.260681999999996,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 71,
+        "ms": 16.261153,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 72,
+        "ms": 16.262904999999996,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 73,
+        "ms": 16.263446000000002,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 74,
+        "ms": 16.263917,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 75,
+        "ms": 16.264398,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 76,
+        "ms": 16.306902,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at continuationState (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:354:13)\n    at Object.continuationPlan (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:362:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:240:68)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:25"
+      },
+      {
+        "seq": 77,
+        "ms": 16.791212,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at continuationState (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:357:13)\n    at Object.continuationPlan (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:362:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:240:68)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:25"
+      }
+    ],
+    "continuationEvents": [],
+    "audits": [
+      "OAB_BATCH_START"
+    ],
+    "failures": [],
+    "revokeContinuation": {
+      "whileRevoked": {
+        "errorCode": "OAB_ACCESS_REVOKED"
+      },
+      "afterRestore": {
+        "plan": {
+          "ok": true,
+          "jobId": "oab_9028d6f1-f50b-4fe2-bd97-55c9b849a7f0",
+          "retainedCombinationCount": 0,
+          "retainedResultCount": 0,
+          "combinationCount": 12,
+          "combinations": [
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "A"
+            },
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "B"
+            },
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "C"
+            },
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M2",
+              "buyerGroupRef": "A"
+            },
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M2",
+              "buyerGroupRef": "B"
+            },
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M2",
+              "buyerGroupRef": "C"
+            },
+            {
+              "seasonRef": "S7",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "A"
+            },
+            {
+              "seasonRef": "S7",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "B"
+            },
+            {
+              "seasonRef": "S7",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "C"
+            },
+            {
+              "seasonRef": "S7",
+              "merchSubGroupRef": "M2",
+              "buyerGroupRef": "A"
+            },
+            {
+              "seasonRef": "S7",
+              "merchSubGroupRef": "M2",
+              "buyerGroupRef": "B"
+            },
+            {
+              "seasonRef": "S7",
+              "merchSubGroupRef": "M2",
+              "buyerGroupRef": "C"
+            }
+          ],
+          "requestCount": 12,
+          "cachedCount": 0,
+          "pendingCount": 12,
+          "estimateSeconds": 240,
+          "worstCaseRequestCount": 12,
+          "worstCaseSeconds": 240,
+          "batchUnproven": false,
+          "forceRefresh": false,
+          "maxCombinations": 400,
+          "sourceFingerprint": "798397832d7ce86e3a7def99c4356b6ffdace15c85a0f924ed74c485c1121fdb"
+        }
+      }
+    },
+    "durableReceipt": {
+      "schemaVersion": 1,
+      "ownerId": "int12_1",
+      "revision": 2,
+      "requestFingerprint": "54d2de1888d0002f042620856cd970e9c98839c82677322b2a5f7e59f86de799",
+      "executor": {
+        "pid": 1528,
+        "host": "c1da45334100",
+        "instanceId": "5e3d5a84-56f3-40b4-93d1-a8d8cfc35e39"
+      },
+      "jobId": "oab_9028d6f1-f50b-4fe2-bd97-55c9b849a7f0",
+      "running": false,
+      "cancelled": false,
+      "startedAt": "2026-11-07T17:37:54.226Z",
+      "finishedAt": "2026-11-07T17:37:54.236Z",
+      "total": 12,
+      "completed": 0,
+      "fromCacheCount": 0,
+      "rowCount": 0,
+      "currentLabel": "S6 · M1 · A",
+      "failures": [
+        {
+          "label": "S6 · M1 · A",
+          "code": "OAB_ACCESS_REVOKED",
+          "message": "OAB_ACCESS_REVOKED",
+          "combinations": [
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "A",
+              "label": "S6 · M1 · A"
+            }
+          ]
+        }
+      ],
+      "skipped": [],
+      "batchedBuyerGroups": "unsupported",
+      "error": "OAB_ACCESS_REVOKED",
+      "errorCode": "OAB_ACCESS_REVOKED",
+      "snapshotSaved": null,
+      "snapshotErrorCode": "",
+      "selection": {
+        "seasonRefs": [
+          "S6",
+          "S7"
+        ],
+        "merchSubGroupRefs": [
+          "M1",
+          "M2"
+        ],
+        "buyerGroupRefs": [
+          "A",
+          "B",
+          "C"
+        ],
+        "allBuyerGroups": false
+      },
+      "snapshotFingerprint": "fcd0b950cc19caf16ac4b639ae37dcab8981b7c6828a32705e21a0126cc28776",
+      "planHash": "b6dab7184832d23707c1d3c679520ea4ccdff674a07c66f06dbca4d05ac08d8c",
+      "resultRefs": []
+    },
+    "durableResults": []
+  },
+  "pair": {
+    "scenario": "revoke-auth",
+    "width": 2,
+    "identity": {
+      "mainWith892": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+      "serviceSha256": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+      "expectedServiceSha256": "e23ca7a6d70de4dcaad834fab833e8ff1cb1dfa5eb2d49caf1c3418e59e71f33",
+      "authHelperSha256": "d94b7d0845b46538b481145636caae6d58ec1733ec7e54cb93a59cc7ce2761dc",
+      "fixtureSha256": "50c64f71cfd4d5f44b9a983383fcce681f4f912a8457776f497fd9de59d5ce87",
+      "harnessSha256": "49400c5a9fbcc3b2260b42dde107a05de5510f083d42a9c871bfa9ec0d1941b6"
+    },
+    "plan": {
+      "ok": true,
+      "authContext": {
+        "seasonRef": "S6",
+        "merchSubGroupRef": "M1",
+        "buyerGroupRef": "A"
+      },
+      "combinationCount": 12,
+      "requestCount": 12,
+      "cachedCount": 0,
+      "pendingCount": 12,
+      "estimateSeconds": 240,
+      "worstCaseRequestCount": 12,
+      "worstCaseSeconds": 240,
+      "batchUnproven": false,
+      "useBatched": false,
+      "capability": {
+        "state": "unsupported"
+      },
+      "skipped": [],
+      "skippedCount": 0,
+      "maxCombinations": 400
+    },
+    "capability": {
+      "state": "unsupported"
+    },
+    "metrics": {
+      "wallMs": 6.665231000000006,
+      "reports": 0,
+      "peakReports": 0,
+      "errors": 0,
+      "throttles": 0,
+      "recoveries": 0,
+      "authChecks": 2,
+      "cacheHits": 0,
+      "cacheWrites": 0,
+      "cacheReads": 50,
+      "activeAtFinish": 0,
+      "lateEffects": 0,
+      "refreshPostRetries": 0
+    },
+    "outcome": {
+      "ok": true,
+      "job": {
+        "jobId": "oab_b9f34937-23be-4027-ab44-3889d5247e7c",
+        "running": false,
+        "cancelled": false,
+        "startedAt": "2026-11-07T17:37:54.245Z",
+        "finishedAt": "2026-11-07T17:37:54.250Z",
+        "total": 12,
+        "completed": 0,
+        "fromCache": 0,
+        "currentLabel": "",
+        "rowCount": 0,
+        "failures": [],
+        "skipped": [],
+        "batchedBuyerGroups": "unsupported",
+        "error": "OAB_ACCESS_REVOKED",
+        "errorCode": "OAB_ACCESS_REVOKED",
+        "snapshotSaved": null,
+        "snapshotErrorCode": "",
+        "interrupted": false,
+        "persistence": "native-job-receipt"
+      },
+      "resultAvailable": true,
+      "rows": [],
+      "fields": [],
+      "sources": [],
+      "fetchedAt": "2026-11-07T17:37:54.250Z"
+    },
+    "snapshot": null,
+    "initialCache": [],
+    "continued": null,
+    "continuationPlan": null,
+    "continuationError": null,
+    "events": [
+      {
+        "seq": 1,
+        "ms": 0.3044590000000085,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 2,
+        "ms": 0.306752000000003,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 3,
+        "ms": 0.30764399999999625,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 4,
+        "ms": 0.30824499999999944,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 5,
+        "ms": 0.3087850000000003,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 6,
+        "ms": 0.3092460000000017,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 7,
+        "ms": 0.3097369999999984,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 8,
+        "ms": 0.31020700000000545,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 9,
+        "ms": 0.3107080000000053,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 10,
+        "ms": 0.3111889999999988,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 11,
+        "ms": 0.31171000000000504,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 12,
+        "ms": 0.3121799999999979,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 13,
+        "ms": 0.8111329999999981,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.start (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:382:23)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:55\n    at execute (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:218:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:33)\n    at [stdin]:4:107\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+      },
+      {
+        "seq": 14,
+        "ms": 0.9197369999999978,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.start (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:391:21)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:55\n    at execute (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:218:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:224:33)\n    at [stdin]:4:107\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+      },
+      {
+        "seq": 15,
+        "ms": 0.968040000000002,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 16,
+        "ms": 0.9693419999999975,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 17,
+        "ms": 0.9699820000000017,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 18,
+        "ms": 0.9704930000000047,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 19,
+        "ms": 0.9712740000000082,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 20,
+        "ms": 0.971775000000008,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 21,
+        "ms": 0.9723160000000064,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 22,
+        "ms": 0.9727869999999967,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 23,
+        "ms": 0.9732570000000038,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 24,
+        "ms": 0.9737280000000084,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 25,
+        "ms": 0.9741890000000097,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 26,
+        "ms": 0.9746600000000001,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 27,
+        "ms": 1.4341930000000076,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.assertAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:459:42)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:102:29\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:110\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at withFileLeaseSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:35)\n    at locked (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:97:37)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:101:10)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:123:29)"
+      },
+      {
+        "seq": 28,
+        "ms": 1.6502279999999985,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.beforeReserve (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:458:30)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:111:27\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:110\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at withFileLeaseSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:35)\n    at locked (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:97:37)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:101:10)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:123:29)"
+      },
+      {
+        "seq": 29,
+        "ms": 1.6684160000000077,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.assertAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:459:42)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:111:68\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:110\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at withFileLeaseSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:35)\n    at locked (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:97:37)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:101:10)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:123:29)"
+      },
+      {
+        "seq": 30,
+        "ms": 2.2550999999999988,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.assertAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:459:42)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:114:29\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:110\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at withFileLeaseSync (/workspace/Buyer-Log-Desktop/resources/app/server/lib/shared-file-transaction.js:236:35)\n    at locked (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:97:37)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-job-store.js:101:10)\n    at Object.reserve (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:123:29)"
+      },
+      {
+        "seq": 31,
+        "ms": 4.005300000000005,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:26:22)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:34:19)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:98:9)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:145:75\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:45\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:29\n    at Array.map (<anonymous>)"
+      },
+      {
+        "seq": 32,
+        "ms": 4.382158000000004,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:29:15)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:34:19)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:98:9)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:145:75\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:45\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:29\n    at Array.map (<anonymous>)"
+      },
+      {
+        "seq": 33,
+        "ms": 4.3978620000000035,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:26:22)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:35:82)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:98:9)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:145:75\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:45\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:29\n    at Array.map (<anonymous>)"
+      },
+      {
+        "seq": 34,
+        "ms": 4.828611000000009,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:29:15)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:35:82)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:98:9)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:145:75\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:45\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:29\n    at Array.map (<anonymous>)"
+      },
+      {
+        "seq": 35,
+        "ms": 4.860590000000002,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:26:22)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:34:19)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:98:9)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:145:75\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:45\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:29\n    at Array.map (<anonymous>)"
+      },
+      {
+        "seq": 36,
+        "ms": 5.16182400000001,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:29:15)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:34:19)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:98:9)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:145:75\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:45\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:29\n    at Array.map (<anonymous>)"
+      },
+      {
+        "seq": 37,
+        "ms": 5.175044,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:26:22)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:35:82)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:98:9)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:145:75\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:45\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:29\n    at Array.map (<anonymous>)"
+      },
+      {
+        "seq": 38,
+        "ms": 5.450519,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:29:15)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:35:82)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:98:9)\n    at /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:145:75\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:45\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)\n    at /workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:68:29\n    at Array.map (<anonymous>)"
+      },
+      {
+        "seq": 39,
+        "ms": 5.539242999999999,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 40,
+        "ms": 5.543999999999997,
+        "type": "auth-check",
+        "authorityAllowed": true,
+        "key": "S6|M1|A"
+      },
+      {
+        "seq": 41,
+        "ms": 5.545923000000002,
+        "type": "revoke",
+        "authorityAllowed": false,
+        "key": "S6|M1|A",
+        "wasAllowed": true
+      },
+      {
+        "seq": 42,
+        "ms": 5.6468050000000005,
+        "type": "authority-check",
+        "authorityAllowed": false,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertOabCurrentAccess (eval at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:185:19), <anonymous>:4:30)\n    at Object.ensurePassConnected (eval at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:185:19), <anonymous>:10:3)\n    at ensurePassConnected (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:203:24)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:116:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+      },
+      {
+        "seq": 43,
+        "ms": 5.666505000000001,
+        "type": "cache-read",
+        "authorityAllowed": false,
+        "key": "S6|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 44,
+        "ms": 5.670119999999997,
+        "type": "auth-check",
+        "authorityAllowed": false,
+        "key": "S6|M1|B"
+      },
+      {
+        "seq": 45,
+        "ms": 5.672995,
+        "type": "revoke",
+        "authorityAllowed": false,
+        "key": "S6|M1|B",
+        "wasAllowed": false
+      },
+      {
+        "seq": 46,
+        "ms": 5.686185000000009,
+        "type": "authority-check",
+        "authorityAllowed": false,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertOabCurrentAccess (eval at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:185:19), <anonymous>:4:30)\n    at Object.ensurePassConnected (eval at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:185:19), <anonymous>:10:3)\n    at ensurePassConnected (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:203:24)\n    at oabFetchOneCombination (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:116:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+      },
+      {
+        "seq": 47,
+        "ms": 5.710732000000007,
+        "type": "authority-check",
+        "authorityAllowed": false,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at assertJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:26:22)\n    at assertAsyncJobAuthority (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:34:19)\n    at runOabBatchJob (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:147:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async /workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:495:7"
+      },
+      {
+        "seq": 48,
+        "ms": 7.003061000000002,
+        "type": "checkpoint",
+        "authorityAllowed": false,
+        "completed": 0,
+        "running": false,
+        "results": [],
+        "failures": [],
+        "errorCode": "OAB_ACCESS_REVOKED"
+      },
+      {
+        "seq": 49,
+        "ms": 7.030882000000005,
+        "type": "executor-drained",
+        "authorityAllowed": false,
+        "activeReports": 0
+      },
+      {
+        "seq": 50,
+        "ms": 7.271746000000007,
+        "type": "authority-check",
+        "authorityAllowed": false,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at continuationState (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:329:17)\n    at Object.continuationPlan (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:362:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:229:63)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:101"
+      },
+      {
+        "seq": 51,
+        "ms": 7.352547999999999,
+        "type": "authority-check",
+        "authorityAllowed": false,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.status (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:501:19)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:232:19)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:101"
+      },
+      {
+        "seq": 52,
+        "ms": 7.3604389999999995,
+        "type": "diagnostic-access-restored",
+        "authorityAllowed": true
+      },
+      {
+        "seq": 53,
+        "ms": 7.371285999999998,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.status (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:501:19)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:237:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:101"
+      },
+      {
+        "seq": 54,
+        "ms": 7.686200999999997,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.status (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:502:5)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:237:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:101"
+      },
+      {
+        "seq": 55,
+        "ms": 7.708374000000006,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at Object.status (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:510:5)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:237:27)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:101"
+      },
+      {
+        "seq": 56,
+        "ms": 7.812561000000002,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at continuationState (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:329:17)\n    at Object.continuationPlan (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:362:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:240:68)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:101"
+      },
+      {
+        "seq": 57,
+        "ms": 9.069377000000003,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 58,
+        "ms": 9.072682,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 59,
+        "ms": 9.073423000000005,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 60,
+        "ms": 9.074004000000002,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 61,
+        "ms": 9.074483999999998,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 62,
+        "ms": 9.07497500000001,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 63,
+        "ms": 9.075446,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 64,
+        "ms": 9.075916000000007,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 65,
+        "ms": 9.076397,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 66,
+        "ms": 9.078310000000002,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 67,
+        "ms": 9.07888100000001,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 68,
+        "ms": 9.079372000000006,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 69,
+        "ms": 9.089337,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 70,
+        "ms": 9.090388000000004,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 71,
+        "ms": 9.090949000000009,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 72,
+        "ms": 9.091440000000006,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 73,
+        "ms": 9.091951000000009,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 74,
+        "ms": 9.093553,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S6|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 75,
+        "ms": 9.094093999999998,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|A",
+        "hit": false
+      },
+      {
+        "seq": 76,
+        "ms": 9.094615000000005,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|B",
+        "hit": false
+      },
+      {
+        "seq": 77,
+        "ms": 9.095084999999997,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M1|C",
+        "hit": false
+      },
+      {
+        "seq": 78,
+        "ms": 9.095585999999997,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|A",
+        "hit": false
+      },
+      {
+        "seq": 79,
+        "ms": 9.096077000000008,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|B",
+        "hit": false
+      },
+      {
+        "seq": 80,
+        "ms": 9.096558000000002,
+        "type": "cache-read",
+        "authorityAllowed": true,
+        "key": "S7|M2|C",
+        "hit": false
+      },
+      {
+        "seq": 81,
+        "ms": 9.130198000000007,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at continuationState (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:354:13)\n    at Object.continuationPlan (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:362:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:240:68)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:101"
+      },
+      {
+        "seq": 82,
+        "ms": 9.532634999999999,
+        "type": "authority-check",
+        "authorityAllowed": true,
+        "stack": "Error: authority observation\n    at Object.profileById (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:116:56)\n    at assertAccess (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:16:52)\n    at continuationState (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:357:13)\n    at Object.continuationPlan (/workspace/Buyer-Log-Desktop/resources/app/server/lib/oab-batch-service.js:362:17)\n    at runCase (/workspace/Buyer-Log-Desktop/resources/app/tests/helpers/oab-int12-harness.cjs:240:68)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async [stdin]:4:101"
+      }
+    ],
+    "continuationEvents": [],
+    "audits": [
+      "OAB_BATCH_START"
+    ],
+    "failures": [],
+    "revokeContinuation": {
+      "whileRevoked": {
+        "errorCode": "OAB_ACCESS_REVOKED"
+      },
+      "afterRestore": {
+        "plan": {
+          "ok": true,
+          "jobId": "oab_b9f34937-23be-4027-ab44-3889d5247e7c",
+          "retainedCombinationCount": 0,
+          "retainedResultCount": 0,
+          "combinationCount": 12,
+          "combinations": [
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "A"
+            },
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "B"
+            },
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "C"
+            },
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M2",
+              "buyerGroupRef": "A"
+            },
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M2",
+              "buyerGroupRef": "B"
+            },
+            {
+              "seasonRef": "S6",
+              "merchSubGroupRef": "M2",
+              "buyerGroupRef": "C"
+            },
+            {
+              "seasonRef": "S7",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "A"
+            },
+            {
+              "seasonRef": "S7",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "B"
+            },
+            {
+              "seasonRef": "S7",
+              "merchSubGroupRef": "M1",
+              "buyerGroupRef": "C"
+            },
+            {
+              "seasonRef": "S7",
+              "merchSubGroupRef": "M2",
+              "buyerGroupRef": "A"
+            },
+            {
+              "seasonRef": "S7",
+              "merchSubGroupRef": "M2",
+              "buyerGroupRef": "B"
+            },
+            {
+              "seasonRef": "S7",
+              "merchSubGroupRef": "M2",
+              "buyerGroupRef": "C"
+            }
+          ],
+          "requestCount": 12,
+          "cachedCount": 0,
+          "pendingCount": 12,
+          "estimateSeconds": 240,
+          "worstCaseRequestCount": 12,
+          "worstCaseSeconds": 240,
+          "batchUnproven": false,
+          "forceRefresh": false,
+          "maxCombinations": 400,
+          "sourceFingerprint": "ff90d3cca24cfaff8a6d45aed2d7e003090ed04aa7265e67a8a8aabf37f52aa3"
+        }
+      }
+    },
+    "durableReceipt": {
+      "schemaVersion": 1,
+      "ownerId": "int12_2",
+      "revision": 2,
+      "requestFingerprint": "54d2de1888d0002f042620856cd970e9c98839c82677322b2a5f7e59f86de799",
+      "executor": {
+        "pid": 1528,
+        "host": "c1da45334100",
+        "instanceId": "5e3d5a84-56f3-40b4-93d1-a8d8cfc35e39"
+      },
+      "jobId": "oab_b9f34937-23be-4027-ab44-3889d5247e7c",
+      "running": false,
+      "cancelled": false,
+      "startedAt": "2026-11-07T17:37:54.245Z",
+      "finishedAt": "2026-11-07T17:37:54.250Z",
+      "total": 12,
+      "completed": 0,
+      "fromCacheCount": 0,
+      "rowCount": 0,
+      "currentLabel": "",
+      "failures": [],
+      "skipped": [],
+      "batchedBuyerGroups": "unsupported",
+      "error": "OAB_ACCESS_REVOKED",
+      "errorCode": "OAB_ACCESS_REVOKED",
+      "snapshotSaved": null,
+      "snapshotErrorCode": "",
+      "selection": {
+        "seasonRefs": [
+          "S6",
+          "S7"
+        ],
+        "merchSubGroupRefs": [
+          "M1",
+          "M2"
+        ],
+        "buyerGroupRefs": [
+          "A",
+          "B",
+          "C"
+        ],
+        "allBuyerGroups": false
+      },
+      "snapshotFingerprint": "fcd0b950cc19caf16ac4b639ae37dcab8981b7c6828a32705e21a0126cc28776",
+      "planHash": "2f2a107add303a5f647fbbba4df5f164644d19be217bdad71ba4a8ec6c428f86",
+      "resultRefs": []
+    },
+    "durableResults": []
+  }
+}

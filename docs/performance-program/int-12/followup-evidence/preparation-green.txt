@@ -1,0 +1,25 @@
+✔ INT-12 pins native source and both arms to Main including #892 (1.811822ms)
+✔ INT-12 native/2 bounded equivalence: cold (548.463289ms)
+✔ INT-12 native/2 bounded equivalence: fresh-half (292.513155ms)
+✔ INT-12 native/2 bounded equivalence: fresh-all (94.583223ms)
+✔ INT-12 native/2 bounded equivalence: force-refresh (463.983882ms)
+✔ INT-12 native/2 bounded equivalence: batch-supported (166.333013ms)
+✔ INT-12 native/2 bounded equivalence: probe-verified (171.368092ms)
+✔ INT-12 native/2 bounded equivalence: probe-fallback (517.963049ms)
+✔ INT-12 native/2 bounded equivalence: partial (516.012046ms)
+✔ INT-12 native/2 bounded equivalence: throttle (525.060286ms)
+✔ INT-12 native/2 bounded equivalence: auth-recovery (565.675264ms)
+✔ INT-12 native/2 bounded equivalence: auth-fatal (493.592001ms)
+✔ INT-12 native/2 bounded equivalence: revoke-auth (10.788548ms)
+✔ INT-12 native/2 bounded equivalence: revoke-response (64.173726ms)
+✔ INT-12 native/2 bounded equivalence: revoke-recovery (68.650552ms)
+✔ INT-12 native/2 bounded equivalence: cancel (78.810091ms)
+✔ INT-12 refuses an unbounded or unsupported experiment width (0.579834ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4681.883353
