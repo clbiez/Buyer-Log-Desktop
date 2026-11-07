@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "phase": 7,
+  "productionImplementation": "pending-phase-order",
+  "backendOwner": "main-conversation; accepted via user, not implemented",
+  "syntheticOnly": true,
+  "newWorkerMechanismAllowed": false,
+  "timeoutIncreaseAllowed": false,
+  "refreshPostRetries": 0,
+  "clientContractAdapter": "pending; contracts.cjs supplies assertions only",
+  "officialComparison": {
+    "status": "pending-production-integration",
+    "baseline": "fixed Main after #885, including #892",
+    "candidate": "same baseline including #892 plus authorized ANA-12 integration",
+    "minimumRunsPerArm": 3,
+    "aggregate": "median",
+    "sameFixtureAndEnvironment": true,
+    "overlappingMeasurementsAllowed": false,
+    "retainFailures": true
+  },
+  "requiredValidation": {
+    "behaviorChanges": "RED -> GREEN against old and new production code",
+    "targetedTests": true,
+    "i18n": {"command": "npm run i18n:check", "baselineEntries": 0},
+    "visibleChange": "own TR/EN release note + reviewed real post-change PNG + existing validator",
+    "preserve": ["canonical fields", "TR/EN", "Motion+", "reduced-motion", "scope", "generation", "includeSourceDetails", "query"],
+    "fullRegression": {
+      "requiredAt": "Phase 6 / final program PR closure",
+      "command": "npm test",
+      "cwd": "resources/app",
+      "filters": [],
+      "fixedSource": "post-#885 Main plus integration SHA",
+      "rerunAfterResultAffectingChanges": true,
+      "targetedOrFastChecksAreSubstitutes": false,
+      "requiredFailSkipCancelAllowed": false
+    }
+  },
+  "scenarios": [
+    {"id":"C01","case":"single subscriber; last release aborts fetch and settles promise","status":"pending-production-adapter"},
+    {"id":"C02","case":"two subscribers share pending transport; first release preserves second","status":"baseline-preservation-tested; future adapter pending"},
+    {"id":"C03","case":"last release aborts; duplicate release cannot decrement below zero","status":"pending-production-adapter"},
+    {"id":"C04","case":"normal HTTP completion and subsequent release are not abort","status":"pending-production-adapter-and-backend"},
+    {"id":"C05","case":"query change before/after lazy preparation and before/after body arrival","status":"pending-production-adapter"},
+    {"id":"C06","case":"late old response cannot publish to screen OR chart/shared cache; A -> B -> A","status":"pending-production-adapter"},
+    {"id":"C07","case":"reacquire after abort; old finally cannot delete the replacement entry","status":"pending-production-adapter"},
+    {"id":"C08","case":"scope/generation/query/includeSourceDetails variants stay isolated; grouping alone shares","status":"baseline-key-tested; backend authority proof pending"},
+    {"id":"C09","case":"close plan/overview/chart/settings; hide module; reopen; preserve other consumers including delivery panel","status":"partial baseline VM coverage; real UI pending"},
+    {"id":"C10","case":"ten rapid changes; final response equals independent uncancelled full response","status":"baseline query marker tested; business projection oracle pending"},
+    {"id":"B01","case":"queued last-subscriber abort removes job before dispatch, no worker receive/start","status":"main-conversation pending"},
+    {"id":"B02","case":"running abort/supersession: actual stop acknowledgment, active work and CPU tail recorded","status":"main-conversation pending"},
+    {"id":"B03","case":"HTTP finish vs aborted/incomplete close; exactly once lease release; other HTTP consumer survives","status":"main-conversation pending"},
+    {"id":"B04","case":"request cancellation never bumps shared source generation or cancels shared source preparation","status":"main-conversation pending"},
+    {"id":"B05","case":"request/job IDs; sent/admitted/started/completed/cancelled counters; queue/running cancellation distinguished","status":"main-conversation pending"}
+  ],
+  "stopGates": ["equivalence failure", "authority isolation failure", "data loss", "unexpected red check", "merge", "TEST/STABLE publication"]
+}

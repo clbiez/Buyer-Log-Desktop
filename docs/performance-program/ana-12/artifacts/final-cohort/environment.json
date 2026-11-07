@@ -1,0 +1,20 @@
+{
+  "node": "v24.19.0",
+  "platform": "linux",
+  "arch": "x64",
+  "cpuMax": "400000 100000",
+  "memoryMax": "17179869184",
+  "harnessSha": "3f2605ed8153c091779fc5b9c3837cd93616c12380c0253779003d1fa124abd9",
+  "fixtureSha": "7e6f563f463b24fa420a6659704a280f09a9a388e6f50b61b67fefee779fe3a3",
+  "pin": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "sourceHashes": {
+    "backlog-plan-actual.js": "a3815dbf2d0f15ed535710e03db56497c81d866f811196438af67e773ae5ecd1",
+    "backlog-overview.js": "267e812333f5537a4161d6c93190712d69fb0795a014da8ee27f13e7890004c2",
+    "backlog-chart.js": "d234cf736c671d77998aeb2e72b18aa8765ba1070e408583dea53d6d50340d4f"
+  },
+  "sameProcess": true,
+  "forcedGc": false,
+  "concurrentMeasurements": false,
+  "delayModel": "response timer, not OS bandwidth throttling",
+  "backend": "synthetic loopback HTTP; no real compute jobs"
+}

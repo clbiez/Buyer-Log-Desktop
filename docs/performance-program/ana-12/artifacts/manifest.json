@@ -1,0 +1,607 @@
+{
+  "productionPin": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "phase5ReadOnly": "69950f289a012f0bb7c61290bec9890f340f6c64",
+  "measurementCohort": "artifacts/final-cohort",
+  "priorCohortRetained": true,
+  "failedEvidence": [
+    "artifacts/harness-red.txt",
+    "artifacts/lifecycle-red.txt"
+  ],
+  "files": [
+    {
+      "file": "docs/performance-program/ana-12/README.md",
+      "bytes": 9520,
+      "sha256": "e13af709f104e15281b0863236d49e51f492e3570338171721a80960f6445b7e"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort.log",
+      "bytes": 1346,
+      "sha256": "73cd522af12bac6249a5c0b03f348492f00c469b697b754fe3aa58fd1da2bf68"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/0-plan-before-preparation.cpuprofile.gz",
+      "bytes": 7867,
+      "sha256": "708b1c8c961ab40cbec5d75046fa9888ee567de1fb4b9c3569afac07edcaa916"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/0-plan-before-preparation.json",
+      "bytes": 5888,
+      "sha256": "2eb013c49f1ec0e34f1ea729a37f1a5ed8941440d975af36efbb9a1fbba77078"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/1-shared-before-preparation.cpuprofile.gz",
+      "bytes": 4252,
+      "sha256": "abd4692ebb980d817cf985b87dfed3ac3c57b5678d9de34be2e7f5ed5cb47cc2"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/1-shared-before-preparation.json",
+      "bytes": 6006,
+      "sha256": "0af160e39bd75d75ebda466890c851f2c0cebba12a8a9d74177656fa808bd105"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/10-chart-fallback-after-preparation.cpuprofile.gz",
+      "bytes": 2809,
+      "sha256": "a225d890bf6e3f3aac0f1137aaa81771cbc7da42df9661420103e40031fa8d33"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/10-chart-fallback-after-preparation.json",
+      "bytes": 5963,
+      "sha256": "9f51351489892b9566894bf082b973b05419152b5c35420285da699b3688d1ba"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/11-shared-close-after-preparation.cpuprofile.gz",
+      "bytes": 2755,
+      "sha256": "bc9f429a5e580a725c7b748eea224eea5965c717a84e787f4760492f04457af7"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/11-shared-close-after-preparation.json",
+      "bytes": 6012,
+      "sha256": "c648a023a179b3af18255f3e7e5df695462ec448ad2b2706594980dd2344b51c"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/12-plan-before-preparation.cpuprofile.gz",
+      "bytes": 3694,
+      "sha256": "594a38ad1968867edeb09cf212e06e7a3e13cb2e951ba8874f86fa0eee8bdd44"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/12-plan-before-preparation.json",
+      "bytes": 6016,
+      "sha256": "4e1904c0ab177ba064df77fccab8df6748b0c92d6e9997fcf474d4ace0aa80cd"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/13-shared-before-preparation.cpuprofile.gz",
+      "bytes": 3304,
+      "sha256": "14af6554b8efda580e8ec0a9f41191b4b9c500a6db233bf35a125295e0d7d13e"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/13-shared-before-preparation.json",
+      "bytes": 6083,
+      "sha256": "970d2955adb771d310c0d713988ee76b5b9d09a9efcd7d4f10030c595086d617"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/14-chart-fallback-before-preparation.cpuprofile.gz",
+      "bytes": 3279,
+      "sha256": "b21f5117d293f4b13f6d2d652044ab688ecce298a6c0a611d1eb4e6c18d39160"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/14-chart-fallback-before-preparation.json",
+      "bytes": 6049,
+      "sha256": "f4a970869529f73fb37de3eb88f59e65ad0f54e9e2ff44c46c752ab058b1cbe3"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/15-shared-close-before-preparation.cpuprofile.gz",
+      "bytes": 3139,
+      "sha256": "5ee91ddcf6ab699a18ceb7a27933abbb2a58319d2f64dd240ffe6cad8e9b3ad0"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/15-shared-close-before-preparation.json",
+      "bytes": 6084,
+      "sha256": "5826895955cf32ec931bb85de33ebbb011dfc91968c3f07c40ca531185630cff"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/16-plan-before-preparation.cpuprofile.gz",
+      "bytes": 3227,
+      "sha256": "1ce5ce1575a34446cbd58b9eb0ee0209dcf9d412436f93384f8e6f19b21dc011"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/16-plan-before-preparation.json",
+      "bytes": 6040,
+      "sha256": "229bb8b53ac37672c98f13570644bda61beb4594e34eee17c22f5668d63209ee"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/17-shared-before-preparation.cpuprofile.gz",
+      "bytes": 3491,
+      "sha256": "08e9b6808151ddd51362cbc830a8c5303dc516b454583a47c5350142616c6275"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/17-shared-before-preparation.json",
+      "bytes": 6086,
+      "sha256": "a71a386d125b49c70c72ef58afc716df47414349bb44ab96a7e5941cd2805b19"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/18-chart-fallback-before-preparation.cpuprofile.gz",
+      "bytes": 3244,
+      "sha256": "3c4b179047a1e5b702a465765b0ed482eeab33a45cfa4a9b0a157512784508c7"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/18-chart-fallback-before-preparation.json",
+      "bytes": 6046,
+      "sha256": "f9cc626d6611f2b4545b387091f5f10ad1dd0b2bdc2fdba0e5b51da5d4f5c667"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/19-shared-close-before-preparation.cpuprofile.gz",
+      "bytes": 3317,
+      "sha256": "16d54116a297b51b89e56d5d9152b6eb7abb2aa57dc3b38bdad8ee31d5a9b800"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/19-shared-close-before-preparation.json",
+      "bytes": 6092,
+      "sha256": "074e80f44d291c8d074cfae9be643e3b066c513773860b06785a5de2892db758"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/2-chart-fallback-before-preparation.cpuprofile.gz",
+      "bytes": 3196,
+      "sha256": "565b07f6a4b772ca423af9d31dc43dc3b5935940711ae2a61eaa3b4a981e7171"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/2-chart-fallback-before-preparation.json",
+      "bytes": 5970,
+      "sha256": "4e1e48fa1ac333945376880a3a05467508e001bb84a2849c24b291c182d28d95"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/20-plan-after-preparation.cpuprofile.gz",
+      "bytes": 3490,
+      "sha256": "019b46f5d4eb5f47679e88497d1eacdf68983e11e32595691a1f7ab60c48c9a5"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/20-plan-after-preparation.json",
+      "bytes": 6038,
+      "sha256": "94d39fed818222e4f2d2ab93a8656ce768066f7004ac105b48dba24e828ab972"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/21-shared-after-preparation.cpuprofile.gz",
+      "bytes": 3035,
+      "sha256": "420a1a5630f9c7dc3e19fa42d1aea8b2de7ccefb6cccf151eb54cd5bd98e378f"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/21-shared-after-preparation.json",
+      "bytes": 6086,
+      "sha256": "f0fc7ac6f8d9748a31cc35a8cff3d0ca1e137b0f287a880f08424b535768b3ca"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/22-chart-fallback-after-preparation.cpuprofile.gz",
+      "bytes": 3313,
+      "sha256": "1db5b88f76cdca0e9fd13e087cb4f0a629087b850f23500dca9e166fe0fa70f7"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/22-chart-fallback-after-preparation.json",
+      "bytes": 6050,
+      "sha256": "9fd4b993f163ad1989d53a5e202108e9c50bcc2dc505717d2addd272224e1c4f"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/23-shared-close-after-preparation.cpuprofile.gz",
+      "bytes": 2940,
+      "sha256": "3ebf19173be76d74241afcedbdb0b233619a487d12a4954ce6a3aa1a4254c240"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/23-shared-close-after-preparation.json",
+      "bytes": 6095,
+      "sha256": "3a8f01b82be671e6635aabda33a07f1365b1e800ba093e5178f3e470f6c27c09"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/3-shared-close-before-preparation.cpuprofile.gz",
+      "bytes": 3007,
+      "sha256": "6df20768b4ef9dc6ffc7e40739d197357eb091f7568efbb9fc8fecf97357bc32"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/3-shared-close-before-preparation.json",
+      "bytes": 6014,
+      "sha256": "184ef8c53b9840b62190bac92d7190a5a18e229229b121727b4ec716410c7bff"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/4-plan-after-preparation.cpuprofile.gz",
+      "bytes": 3721,
+      "sha256": "047306b9490848971c43762910cc6747342558a4acade4034cba9dda0781e8f4"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/4-plan-after-preparation.json",
+      "bytes": 5966,
+      "sha256": "8728d1722ba9060141f67c6cae206726a77774e8e45e0efadc5f978e11571873"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/5-shared-after-preparation.cpuprofile.gz",
+      "bytes": 3605,
+      "sha256": "856fd3422b076f2f44a45e60d533b99187c8f954c307600615997e6a04eba9f5"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/5-shared-after-preparation.json",
+      "bytes": 6013,
+      "sha256": "b977dd0ca88d10ce67060fad6e103e6892400153e4f893bb98a17fe40d47c55e"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/6-chart-fallback-after-preparation.cpuprofile.gz",
+      "bytes": 3082,
+      "sha256": "0a3be42da463ff61212788dddc52b100250fdfb6746ebfaee44550dc3deb2baa"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/6-chart-fallback-after-preparation.json",
+      "bytes": 5978,
+      "sha256": "27cdc1ddd6e04f4348f28ee5c8972554f7e965f10a5fd13f6edc3476f9f0c119"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/7-shared-close-after-preparation.cpuprofile.gz",
+      "bytes": 3674,
+      "sha256": "98df6b2d8220529f5aa17edea384a626b107f72dfa4c744560a4018db0e90876"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/7-shared-close-after-preparation.json",
+      "bytes": 6015,
+      "sha256": "98952b4634ac9da249159f21c0bc530649fd7c22e4ec0f80159458ffa9cb5600"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/8-plan-after-preparation.cpuprofile.gz",
+      "bytes": 3636,
+      "sha256": "cbedc7e138f4d98b4c79bf8507a8441ba320104eaf9610e6abe643bdd837eb55"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/8-plan-after-preparation.json",
+      "bytes": 5967,
+      "sha256": "b22030c81ace961e2dd465ef0f9b97ac5d9c13d94f0061d28a0d4c7c58499846"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/9-shared-after-preparation.cpuprofile.gz",
+      "bytes": 3653,
+      "sha256": "dcb3ad66edd2741b13ecfbda2cb5051c56061a1d01198f026e4bd628f3f73592"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/9-shared-after-preparation.json",
+      "bytes": 6015,
+      "sha256": "1f2350ad66787d5191b51cd96133ec81060434cf1074ac98da173b9870ebd4ad"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/cohort/summary.json",
+      "bytes": 4524,
+      "sha256": "01389207eac8016b01c1e440d11da43d2185b35f2be238e5c1067e40c02eed91"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/contracts-green.txt",
+      "bytes": 2544,
+      "sha256": "8f42aa4e61b6c73d17293e44964a8a24aa75ec913b131b1a33af14dc0bbdad95"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/evidence-check.txt",
+      "bytes": 202,
+      "sha256": "e8fd426b9e5b2d6ee5f4e0bfb069ca6bcc4a7142f18b2f6a258d78c507cff455"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort.log",
+      "bytes": 1346,
+      "sha256": "73cd522af12bac6249a5c0b03f348492f00c469b697b754fe3aa58fd1da2bf68"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/0-plan-before-preparation.cpuprofile.gz",
+      "bytes": 8686,
+      "sha256": "f7506444c93e8e1df08f837e37f309e439946b064b730cc67d7f837c40acbe23"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/0-plan-before-preparation.json",
+      "bytes": 5987,
+      "sha256": "4b3e799e17cf9d35f72a44778ece51cfa0c7bd92075dc6313c8fe50c9805be93"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/1-shared-before-preparation.cpuprofile.gz",
+      "bytes": 4664,
+      "sha256": "7c9cbf4dc889ac82cd367c8d141c672324e0c5f612087f406dc9aa676dab1b7d"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/1-shared-before-preparation.json",
+      "bytes": 6090,
+      "sha256": "2647871c48f57f76c59756a0e94b88291c856ebfdd59747f7205cec47057090f"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/10-chart-fallback-after-preparation.cpuprofile.gz",
+      "bytes": 4069,
+      "sha256": "9680f34ed6ecc46db06d35ec64f42a31cf90b23d3b3100cf65ea191a20bb96e3"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/10-chart-fallback-after-preparation.json",
+      "bytes": 6063,
+      "sha256": "13ea7dea86d6079a8834f4a6ffe1c133b2b002d9c4123fcf8066ace09fd7f3b8"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/11-shared-close-after-preparation.cpuprofile.gz",
+      "bytes": 2779,
+      "sha256": "1bfec555e7cbc11a7ea005660bdf119834b8957cf43627cfdd970f4b9502a725"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/11-shared-close-after-preparation.json",
+      "bytes": 6103,
+      "sha256": "3982b239893130d3fb958b2bfef914d7a4049c8b3a5699e8270914ac029299ce"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/12-plan-before-preparation.cpuprofile.gz",
+      "bytes": 2912,
+      "sha256": "99073c66d4e8562306bdfd28f3872e87a5b1b038e0a2ef1a28abb4be6c1686c8"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/12-plan-before-preparation.json",
+      "bytes": 6100,
+      "sha256": "9846d6b60ea6ae5e34c43eff0063aa7b572b8c1337f43d2fc7ad299e25177536"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/13-shared-before-preparation.cpuprofile.gz",
+      "bytes": 2969,
+      "sha256": "6c829f78f62ee6cdf543d73d8a8bb191b0cb4c60d73f3c18b73e02e2ff3cc41c"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/13-shared-before-preparation.json",
+      "bytes": 6164,
+      "sha256": "9c9208263b10dc745d8930bf6f4db65361a02cfdcbd7f5060d199795a12b7267"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/14-chart-fallback-before-preparation.cpuprofile.gz",
+      "bytes": 3337,
+      "sha256": "11f3b7907735795dde06664d087425f379f0d804f3896a9cf30421797873bf7c"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/14-chart-fallback-before-preparation.json",
+      "bytes": 6133,
+      "sha256": "30e84d76a21003b2e560b96969039053553319d8b47323fe5d5fddc082fbbe4b"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/15-shared-close-before-preparation.cpuprofile.gz",
+      "bytes": 3255,
+      "sha256": "b9a70c9b56c5bbd8617d63f4dc5954632396bd4123bcf80ef9b97ab17ba62c7e"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/15-shared-close-before-preparation.json",
+      "bytes": 6172,
+      "sha256": "ed3977f4ef292342c8e8de7fa9b007af9c374533b9e78dd1f706994ca4fa77e9"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/16-plan-before-preparation.cpuprofile.gz",
+      "bytes": 3280,
+      "sha256": "5bc4e20ff8e85cc6c8c6d6ffe07c5bee2ff98f4d36b0ad3c3a4b2d4337aa5abf"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/16-plan-before-preparation.json",
+      "bytes": 6132,
+      "sha256": "ed0656a00afaeecb8b724c75a8c4626bb12ce00cd4493410f884307c464f4c12"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/17-shared-before-preparation.cpuprofile.gz",
+      "bytes": 3365,
+      "sha256": "8facee1a8c9af2426334fde6cda6d1a0247e1f5d7136784910e8660ff3f0a6c0"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/17-shared-before-preparation.json",
+      "bytes": 6173,
+      "sha256": "0d62a23bdb4d4d4946491bb4be3a7a365110807a272f0463ce1bd085b3ec15a2"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/18-chart-fallback-before-preparation.cpuprofile.gz",
+      "bytes": 3029,
+      "sha256": "7be9cd96fb4f643e36df6821db9cb4e52fca67c0b142f53b260a4675e33d0379"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/18-chart-fallback-before-preparation.json",
+      "bytes": 6140,
+      "sha256": "7fb3ab3ab07b3cd458e14ea3743dec95ca31302c3b947cfec5312825972bc6ac"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/19-shared-close-before-preparation.cpuprofile.gz",
+      "bytes": 3662,
+      "sha256": "393cb18dcd97d7b353f6bb08c279503276053b44e7082bf534e81caf8c2ac90d"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/19-shared-close-before-preparation.json",
+      "bytes": 6178,
+      "sha256": "e0e52e40bac5f859cd8b0e3f83a6651b5037ccf391c12cb70bc6e0aac9dd2a69"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/2-chart-fallback-before-preparation.cpuprofile.gz",
+      "bytes": 3435,
+      "sha256": "daf38223e9c18659c054175b9705b7a1d024971aac2506475338ba9befa7659c"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/2-chart-fallback-before-preparation.json",
+      "bytes": 6065,
+      "sha256": "e132d9eebe98ceb054edc1261088d8bf4872bf523cecd72eedf90507098538b6"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/20-plan-after-preparation.cpuprofile.gz",
+      "bytes": 3173,
+      "sha256": "f35887b3d627e0e7ac16d1a01aba41a5a8bf703882d317196f45e4267d6a12ff"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/20-plan-after-preparation.json",
+      "bytes": 6127,
+      "sha256": "a0f5fbdea2c5d2213faaa770fdaa1de85bbf7c08a54f068bf3b93ead12368839"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/21-shared-after-preparation.cpuprofile.gz",
+      "bytes": 2916,
+      "sha256": "476ed9ea1f20a88f59616a45c2be577b57d9ba25b70750ef9ae3a08b4768fb42"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/21-shared-after-preparation.json",
+      "bytes": 6170,
+      "sha256": "3d7d58df0cb935a4b6f4d8ceb71690dfbf1a41aa898b4769679e5eb028547505"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/22-chart-fallback-after-preparation.cpuprofile.gz",
+      "bytes": 2915,
+      "sha256": "b4fb673e72a78f361e4b675a67357fe639ef0013723a2eedf4da2d5d7fdff2e4"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/22-chart-fallback-after-preparation.json",
+      "bytes": 6133,
+      "sha256": "d7ff94e6cbbdcb4d3997c80a0f1764225c47f38c3483278f3d10bad2a2da1a99"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/23-shared-close-after-preparation.cpuprofile.gz",
+      "bytes": 3324,
+      "sha256": "b65ad78da878194facbf08a0ff6edf5deae7d43f184ea4701fda74c3a7feaa4a"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/23-shared-close-after-preparation.json",
+      "bytes": 6175,
+      "sha256": "76632f43ab4fab7edd3618a24de73ea40711ec60f3586e7f9d2778c7f5ab4e36"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/3-shared-close-before-preparation.cpuprofile.gz",
+      "bytes": 3477,
+      "sha256": "e632d8272f5c82483f4784beb29af5141b111a4917746ef15c9d1a5d018e9551"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/3-shared-close-before-preparation.json",
+      "bytes": 6110,
+      "sha256": "a88cded500b61d55afda7457a500bc8d12659cbe541bbf3c74965c71c590a710"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/4-plan-after-preparation.cpuprofile.gz",
+      "bytes": 3737,
+      "sha256": "e62e3197f16629da686e42afac2c3781d0a4d16494e2917d5d66f71a678a5450"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/4-plan-after-preparation.json",
+      "bytes": 6049,
+      "sha256": "5a426fe0c2af70ed93af9855c91b09792161df53c16a7a4a8213d0c0f45a20d4"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/5-shared-after-preparation.cpuprofile.gz",
+      "bytes": 4329,
+      "sha256": "c2451cab30512f6a2659397772d58759cd37cc87b0bc3f1ad334c6a6d2fdd3b0"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/5-shared-after-preparation.json",
+      "bytes": 6100,
+      "sha256": "77ce6e9b414419c11257673913a8d526aede45856268a1b7af5fd8d7f859afa5"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/6-chart-fallback-after-preparation.cpuprofile.gz",
+      "bytes": 3846,
+      "sha256": "1d04326f6af3acf240e7656089ab3bc96417513766ae06c1652eb5fa20519ad0"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/6-chart-fallback-after-preparation.json",
+      "bytes": 6070,
+      "sha256": "1569d5cbf03f0602ff66aec6ae741ecd93105682a6acbefee50bb16a44c5319f"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/7-shared-close-after-preparation.cpuprofile.gz",
+      "bytes": 2995,
+      "sha256": "4fdb4c75fd57c2712050de09d80655ace258a54985cd8fe775efd874a94fcaaf"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/7-shared-close-after-preparation.json",
+      "bytes": 6094,
+      "sha256": "fc1570846d9a0c1eeaad1a788a23aaca99289d3c73321c68580fe7d91b80fb65"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/8-plan-after-preparation.cpuprofile.gz",
+      "bytes": 3823,
+      "sha256": "8f605baa4627f6244621bff6d2b5f2490b48db047e68aece27eb28b54ac814fd"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/8-plan-after-preparation.json",
+      "bytes": 6046,
+      "sha256": "c6e024b46282cf79a31351e201912d761b5a18c62d38a0823102e29d2826b0e8"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/9-shared-after-preparation.cpuprofile.gz",
+      "bytes": 3899,
+      "sha256": "1333814a9782833b9c0ce89df37839195d1a2f5f1b6e1c07bfb31c012be2cfd7"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/9-shared-after-preparation.json",
+      "bytes": 6097,
+      "sha256": "955cfe6eb1577621a3428ef5fef95404132e3b96125ec1e7eb48e4f86bffe80f"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/environment.json",
+      "bytes": 857,
+      "sha256": "6892e08a4adb859ba3a24478a49c482850f83fecebdaf6af4ad994ffb4c4f8db"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/final-cohort/summary.json",
+      "bytes": 5261,
+      "sha256": "ef348e8a0d330c01c212afcf4131c83fad73985c2f2e9881aadecf910f5d4935"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/harness-green.txt",
+      "bytes": 781,
+      "sha256": "2f202339935d410f922b087ef96f031d839331f5a7899528c9eb0106d3e55618"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/harness-red.txt",
+      "bytes": 1422,
+      "sha256": "a7843b8c8dd857bf01fb5cd7b3a985c819bb7bb3f20ef7281ea93b24eb8410dc"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/i18n.txt",
+      "bytes": 333,
+      "sha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/lifecycle-red.txt",
+      "bytes": 1194,
+      "sha256": "e8a65122c514fd42f21c0e36436f35f4ba70dd79d67ed3ee685d5ae4acd48f93"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/release-notes.txt",
+      "bytes": 334,
+      "sha256": "0e3c2a5dbd60ea28d367386990eb66ac7ac6dee7d6e16daea3f470bd6de978c7"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/targeted.txt",
+      "bytes": 9132,
+      "sha256": "675de79b0c7e0f2776ff5fd27ab83bdb074d12fbd3a148978aef55eff17d8f8b"
+    },
+    {
+      "file": "docs/performance-program/ana-12/artifacts/trace-summary.json",
+      "bytes": 16475,
+      "sha256": "b78c4ea889f31f0a7e443d399b1ddc8a5bb44ba2ebf55b2ef1648d27639a3401"
+    },
+    {
+      "file": "docs/performance-program/ana-12/contracts.cjs",
+      "bytes": 3574,
+      "sha256": "30758d4f6f7d2ec0803df4c298c92715e231dc32ddcb90c888f950b4b32164b2"
+    },
+    {
+      "file": "docs/performance-program/ana-12/diagnose.cjs",
+      "bytes": 14139,
+      "sha256": "3f2605ed8153c091779fc5b9c3837cd93616c12380c0253779003d1fa124abd9"
+    },
+    {
+      "file": "docs/performance-program/ana-12/diagnose.test.cjs",
+      "bytes": 4709,
+      "sha256": "37cef9848c5f2bc40b24536845cda95f5f8d2bc6f9d98cc5fc040c0922f3e2de"
+    },
+    {
+      "file": "docs/performance-program/ana-12/fixture.json",
+      "bytes": 319,
+      "sha256": "7e6f563f463b24fa420a6659704a280f09a9a388e6f50b61b67fefee779fe3a3"
+    },
+    {
+      "file": "docs/performance-program/ana-12/handoff.md",
+      "bytes": 4068,
+      "sha256": "99658389d3182e371a7cc5225ff2779703a050e627e504a4597d110139efa75d"
+    },
+    {
+      "file": "docs/performance-program/ana-12/matrix.json",
+      "bytes": 4048,
+      "sha256": "d672d9c1d8cea28c923b111c12799511421729ebe7479b978e51ea8969136304"
+    },
+    {
+      "file": "docs/performance-program/ana-12/open-pr-locks.json",
+      "bytes": 17074,
+      "sha256": "bf184c8ad80a62bdd508f21f688a007dd1a5e527ae9a3d5b2c61ab5363f8cf57"
+    },
+    {
+      "file": "docs/performance-program/ana-12/source-evidence.json",
+      "bytes": 4990,
+      "sha256": "7513d57953f38fcb67ac8c15375efedbb2e09ffa40552f743285b3b7940d48f6"
+    }
+  ]
+}

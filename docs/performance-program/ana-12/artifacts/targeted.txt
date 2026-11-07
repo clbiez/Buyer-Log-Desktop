@@ -1,0 +1,111 @@
+
+> buyer-log-desktop@7.0.339 test
+> node tests/run-tests.js backlog-query-cache backlog-analysis-performance backlog-shared-analysis-filters backlog-plan-actual backlog-dynamic-chart backlog-overview-filters backlog-v3-report canonical-field
+
+[Buyer Log tests] 10 test dosyası, 1 batch, concurrency=4.
+
+[Buyer Log tests] Batch 1/1 (10 dosya)
+✔ narrow analysis skips operational preparation for rejected orders and does not project risk for a season pivot (8.123964ms)
+✔ raw ASAS predicates run before segmentation; IAS predicates retain complete partials when calculating remainder (7.456479ms)
+✔ lazy dimension values preserve alternatives and active values for the requested field (1.162857ms)
+✔ column facets return values outside the analysis selection without serializing detail rows (18.336753ms)
+✔ date facets, notes, blank selections, unknown fields and revised dates preserve report semantics (3.662167ms)
+✔ Backlog chart uses the shared Collection month/week date dimension (4.93083ms)
+✔ Backlog chart filters series inside the chart before applying the series limit (0.651241ms)
+✔ Backlog grafik seri araması gizlenen sonuçları CSS ile tekrar görünür yapmaz (0.888251ms)
+✔ Backlog chart TradingView-style ranges open at a readable window and support presets (4.47691ms)
+✔ Backlog chart zoom range helpers clamp, zoom and pan without losing the data window (0.805039ms)
+✔ Backlog chart renders a current-date marker when today falls inside the visible range (24.821037ms)
+✔ Backlog chart supports a second time field as an overlaid dashed series (0.720604ms)
+✔ Backlog chart uses whole-number nice ticks and compact time labels (0.281325ms)
+✔ Backlog chart average line is calculated from visible plotted data points (0.932897ms)
+✔ Backlog chart average follows the visible window and subtotal is a toggleable dashed line (1.118541ms)
+✔ Backlog chart supports count, distinct count, sum and average aggregations (1.060706ms)
+✔ Chart builder detects date columns and can infer Buyer / quantity defaults (10.564638ms)
+✔ Standalone Backlog chart UI is removed while the chart engine remains for Excel export (2.24221ms)
+✔ Backlog timeline bar layout can switch between side-by-side and stacked and persists the selection (4.071963ms)
+✔ Backlog bar chart reuses the upper timeline column layout instead of the axis-based SVG view (0.805769ms)
+✔ Backlog overview timeline always shows bucket totals and mirrors the interactive chart hover/today language (0.198853ms)
+✔ Backlog render refreshes chart and Excel export appends chart sheets (2.860253ms)
+✔ Excel chart export keeps the selected visible time range and whole-number axis (0.962111ms)
+✔ Excel chart data stays live against the exported BACKLOG sheet (0.546927ms)
+✔ Excel live chart uses the second time-field bucket for overlay series (0.656689ms)
+✔ Excel export creates Grafik and Grafik Verisi sheets with native chart formulas (0.618083ms)
+✔ native Excel chart package contains drawing relationships and reopens as XLSX (99.284509ms)
+✔ Backlog chart uses compact k axis labels in app and Excel when the scale is thousands (0.906649ms)
+✔ Backlog Overview filter script remains syntactically valid (2.87811ms)
+✔ filter button is immediately before refresh in Backlog Overview header (1.001929ms)
+✔ overview filter catalogue exposes CP, ASAS and IAS sources (0.184152ms)
+✔ selected raw source fields are lazily requested from backlog export (0.113498ms)
+✔ overview filters support date ranges and multi-value filters locally (0.218232ms)
+✔ filter editor is not hidden by the global section display rule (0.147127ms)
+✔ filter drawer styling exists (0.126967ms)
+✔ segments add up to planned quantity for every grouping (2.615201ms)
+✔ daily series and ex-factory revision buckets are deterministic (9.627595ms)
+✔ styled workbook carries dashboard, breakdowns, detail sheets and native charts (230.875164ms)
+✔ excel serial is an integer calendar day without timezone drift (0.276658ms)
+✔ plan actual API is Backlog-authorized and snapshots the Backlog target (3.749826ms)
+✔ every successful refresh records a boundary marker without making analysis failure fatal (0.651822ms)
+✔ Backlog mounts a movable collapsible panel and loads its isolated assets (0.466759ms)
+✔ only changed rows are rendered and intermediate revision traffic remains separate (0.185103ms)
+✔ panel preferences are user scoped and synced like existing Backlog analysis (0.215088ms)
+✔ plan actual module uses shared theme tokens without light-theme fallbacks (1.939674ms)
+✔ plan realisation view: plan window, grouped bars with tooltip + drawer, Excel export (1.224367ms)
+✔ Plan and Actual keeps its linear measure and percentage label (0.609319ms)
+✔ Overview circular loaded share clamps invalid values and preserves the visible percentage (0.895732ms)
+✔ snapshot projection keeps plan dimensions and aggregates operational state (3.274915ms)
+✔ snapshot excludes raw orders outside canonical Backlog and uses Backlog-computed remaining qty (0.356476ms)
+✔ plan vs actual diff detects ex-factory drift, ETA drift, status and late actual load (2.053953ms)
+✔ unchanged backlog rows are not returned (0.390066ms)
+✔ missed planned load is visible even when source fields did not otherwise change (0.342405ms)
+✔ refresh history preserves repeated and reverted changes even when net value returns (0.705271ms)
+✔ delta archive resolves requested boundaries without duplicating unchanged rows (1.159582ms)
+✔ plan window classifies on-time, late, overdue, pending, partial and removed lines (9.956781ms)
+✔ IAS load without handover date still realises the plan through the actual load date (0.865267ms)
+✔ legacy start snapshot without loadDates does not count existing loads as new (0.468511ms)
+✔ re-dating an existing partial is not counted as a new load (0.274806ms)
+✔ query cache separates revisions and evicts by row budget, LRU and TTL (1.480987ms)
+✔ panels share in-flight rows across grouping changes and invalidate on source refresh (5.482855ms)
+✔ returning to a cached filter prevents an older delivery request from replacing the current result (2.670934ms)
+✔ explicit reload reuses row identity only when the server confirms the same query revision (3.672522ms)
+✔ persisted pivot variants expire on a new calendar day even when source data is unchanged (10.321489ms)
+✔ export projects the same override snapshot used to select and cache its query (9.093596ms)
+✔ analysis filters constrain pivot, detail and Excel rows and combine with existing dimensions (21.360468ms)
+✔ raw IAS filter selects one partial without bringing back its siblings or production balance (8.484147ms)
+✔ date bounds are inclusive, blanks remain selectable and invalid fields fail closed (6.09602ms)
+✔ all shared client queries serialize saved analysis criteria (17.65685ms)
+✔ historical comparison and activity use the selected Backlog order lines before computing totals (7.642554ms)
+✔ delivery analysis refresh is independent of pivot grouping (14.829364ms)
+✔ shared filter drawer loads column values without fetching overview rows while collapsed (3.766321ms)
+✔ stages, loaded share and overdue-not-loaded are derived from canonical Backlog rows (18.122527ms)
+✔ Backlog V3 workbook: V3 sheets first, optional P&A, legacy sheets kept intact as sheet1/sheet2 (230.111742ms)
+✔ Backlog screen wiring: overview panel, Excel Legacy + Excel Backlog V3 with options, shared rows cache (11.540209ms)
+✔ data quality flags blank season, missing dates, retail before Ex-Factory and raw timestamps (0.655888ms)
+✔ V3 detail writes day strings (e.g. order placement date) as real Excel dates (42.500976ms)
+✔ browser and server use one canonical registry (0.962411ms)
+✔ all current data-heavy modules have canonical bindings (0.585795ms)
+✔ verified shared dimensions resolve across Collection, CP, Orders and LFL (0.300003ms)
+✔ OPD resolves through one canonical Order Placement Date field without mutating source keys (0.335416ms)
+✔ same-looking but different PLM/ASAS semantics are protected (0.44653ms)
+✔ Product Description never falls back to Product Main Definition (0.126617ms)
+✔ canonical joins work even when module keys and visible headers differ (0.46744ms)
+✔ canonical enrichment can bring real ASAS Product Description into Collection without renaming source keys (0.634076ms)
+✔ Quotations and OAB module bindings load globally with safe semantics (12.501999ms)
+✔ new modules must explicitly register bindings before safe joins (0.511566ms)
+✔ ASAS compact runtime keys stay canonical across order-backed modules (0.275667ms)
+ℹ tests 88
+ℹ suites 0
+ℹ pass 88
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 767.12069
+[Buyer Log tests] Batch 1/1 süresi: 0.8s.
+
+[Buyer Log tests] PASS — 10 test dosyası (0.8s).
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

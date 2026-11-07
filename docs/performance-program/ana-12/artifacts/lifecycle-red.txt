@@ -1,0 +1,23 @@
+✔ source extraction fails closed on missing or ambiguous anchors (2.261349ms)
+✔ shared rows preserve scope, generation and source detail variants; only grouping shares (5.584667ms)
+✔ baseline deduplicates pending consumers and invalidation leaves their transport alive (2.260006ms)
+✔ plan generation keeps final query while still parsing the older response (2.030618ms)
+✖ closing overview leaves a shared chart consumer alive on the exact current source (3.442733ms)
+✔ three per arm, same fixture/source, no overlap and exact final results are mandatory (2.131006ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 5
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 91.007393
+
+✖ failing tests:
+
+test at docs/performance-program/ana-12/diagnose.test.cjs:39:1
+✖ closing overview leaves a shared chart consumer alive on the exact current source (3.442733ms)
+  TypeError: client.closeOverview is not a function
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/docs/performance-program/ana-12/diagnose.test.cjs:46:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)

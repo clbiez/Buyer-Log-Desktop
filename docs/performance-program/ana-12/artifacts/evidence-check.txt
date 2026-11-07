@@ -1,0 +1,1 @@
+PASS: 24 traces readable, 24 final results, 3+3 each scenario, ordered/no overlap, same source/fixture/harness, raw byte sums and recomputed medians match. Backend/job/after-cancel metrics remain null.

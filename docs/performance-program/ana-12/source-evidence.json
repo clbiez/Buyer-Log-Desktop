@@ -1,0 +1,215 @@
+{
+  "main": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "phase5ReadOnly": "69950f289a012f0bb7c61290bec9890f340f6c64",
+  "sources": [
+    {
+      "ref": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+      "path": "resources/app/public/backlog-plan-actual.js",
+      "sha256": "a3815dbf2d0f15ed535710e03db56497c81d866f811196438af67e773ae5ecd1",
+      "anchors": [
+        {
+          "text": "function openModule(value)",
+          "lines": [
+            125
+          ]
+        },
+        {
+          "text": "const generation=++refreshGeneration",
+          "lines": [
+            137
+          ]
+        },
+        {
+          "text": "await fetch('/api/backlog-plan-actual",
+          "lines": [
+            145
+          ]
+        },
+        {
+          "text": "if(generation!==refreshGeneration)",
+          "lines": [
+            147
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+      "path": "resources/app/public/backlog-overview.js",
+      "sha256": "267e812333f5537a4161d6c93190712d69fb0795a014da8ee27f13e7890004c2",
+      "anchors": [
+        {
+          "text": "const rowsCache=new Map()",
+          "lines": [
+            158
+          ]
+        },
+        {
+          "text": "const rowsQueryKey=",
+          "lines": [
+            160
+          ]
+        },
+        {
+          "text": "window.BLBacklogRows=",
+          "lines": [
+            184
+          ]
+        },
+        {
+          "text": "function setOpen(value)",
+          "lines": [
+            686
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+      "path": "resources/app/public/backlog-chart.js",
+      "sha256": "d234cf736c671d77998aeb2e72b18aa8765ba1070e408583dea53d6d50340d4f",
+      "anchors": [
+        {
+          "text": "async function loadDetail",
+          "lines": [
+            889
+          ]
+        },
+        {
+          "text": "if(root.BLBacklogRows?.loadData)",
+          "lines": [
+            898
+          ]
+        },
+        {
+          "text": "cache={signature:sig",
+          "lines": [
+            906
+          ]
+        },
+        {
+          "text": "if(generation!==renderGeneration)",
+          "lines": [
+            920,
+            940
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+      "path": "resources/app/public/backlog-delivery-analysis.js",
+      "sha256": "313bdcf69dcacfcd0997394ff10ad373d4ab51ee52348bfc61e379dd1d38a0a1",
+      "anchors": [
+        {
+          "text": "async function fetchRows",
+          "lines": [
+            93
+          ]
+        },
+        {
+          "text": "window.BLBacklogRows.load(params)",
+          "lines": [
+            96
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "69950f289a012f0bb7c61290bec9890f340f6c64",
+      "path": "resources/app/public/backlog-overview.js",
+      "sha256": "8ef917dcad4e373327b720dcaef15f72c0f998675253aa073d7f191639a66e64",
+      "anchors": [
+        {
+          "text": "async function loadRows",
+          "lines": [
+            183
+          ]
+        },
+        {
+          "text": "whenRowsReady",
+          "lines": [
+            186
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "69950f289a012f0bb7c61290bec9890f340f6c64",
+      "path": "resources/app/server/lib/compute-read-service.js",
+      "sha256": "2b219dee54a61695c310b7b458b46064d608fc1dad8022649d83770d0deb0181",
+      "anchors": [
+        {
+          "text": "entry.refs++",
+          "lines": [
+            11,
+            36
+          ]
+        },
+        {
+          "text": "await compute.run",
+          "lines": [
+            28
+          ]
+        },
+        {
+          "text": "captured.assertResponse()",
+          "lines": [
+            38
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "69950f289a012f0bb7c61290bec9890f340f6c64",
+      "path": "resources/app/server/lib/compute-pool.js",
+      "sha256": "a0121dbc2e018065c3e6b906149ad0caf6e7a784ccc05e61b5d3460063586266",
+      "anchors": [
+        {
+          "text": "function retire(",
+          "lines": [
+            59
+          ]
+        },
+        {
+          "text": "function run(",
+          "lines": [
+            155
+          ]
+        },
+        {
+          "text": "job.onAbort=",
+          "lines": [
+            175
+          ]
+        },
+        {
+          "text": "setGeneration",
+          "lines": [
+            137,
+            193
+          ]
+        }
+      ]
+    },
+    {
+      "ref": "69950f289a012f0bb7c61290bec9890f340f6c64",
+      "path": "resources/app/server/lib/compute-response.js",
+      "sha256": "5d9bef0dca1c1238ac33464a49f0212710285f904bf777adb62da577cee65155",
+      "anchors": [
+        {
+          "text": "res.once('finish',release)",
+          "lines": [
+            13
+          ]
+        },
+        {
+          "text": "res.once('close',release)",
+          "lines": [
+            13
+          ]
+        }
+      ]
+    }
+  ]
+}

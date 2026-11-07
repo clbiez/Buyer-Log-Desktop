@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "syntheticOnly": true,
+  "rows": 30000,
+  "changes": 10,
+  "intervalMs": 8,
+  "responseDelayMs": 350,
+  "reverseDelayStepMs": 12,
+  "scope": "demo-buyer-a",
+  "generation": "demo-generation-1",
+  "includeSourceDetails": "0",
+  "from": "2026-10-26T10:00:00.000Z",
+  "to": "2026-11-02T10:00:00.000Z"
+}

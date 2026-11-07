@@ -1,0 +1,938 @@
+[
+  {
+    "name": "0-plan-before-preparation.cpuprofile.gz",
+    "samples": 598,
+    "durationMs": 713.336,
+    "top": [
+      {
+        "samples": 385,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 80,
+        "frame": "json"
+      },
+      {
+        "samples": 8,
+        "frame": "(program)"
+      },
+      {
+        "samples": 8,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 7,
+        "frame": "concat"
+      },
+      {
+        "samples": 6,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 5,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 3,
+        "frame": "writev"
+      }
+    ]
+  },
+  {
+    "name": "1-shared-before-preparation.cpuprofile.gz",
+    "samples": 542,
+    "durationMs": 664.294,
+    "top": [
+      {
+        "samples": 393,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 85,
+        "frame": "json"
+      },
+      {
+        "samples": 7,
+        "frame": ""
+      },
+      {
+        "samples": 6,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 6,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 4,
+        "frame": "writev"
+      },
+      {
+        "samples": 3,
+        "frame": "emit"
+      },
+      {
+        "samples": 3,
+        "frame": "read"
+      }
+    ]
+  },
+  {
+    "name": "2-chart-fallback-before-preparation.cpuprofile.gz",
+    "samples": 530,
+    "durationMs": 686.457,
+    "top": [
+      {
+        "samples": 400,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 79,
+        "frame": "json"
+      },
+      {
+        "samples": 15,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 4,
+        "frame": "writev"
+      },
+      {
+        "samples": 4,
+        "frame": ""
+      },
+      {
+        "samples": 3,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 3,
+        "frame": "concat"
+      },
+      {
+        "samples": 3,
+        "frame": "fetchParams.controller.resume"
+      }
+    ]
+  },
+  {
+    "name": "3-shared-close-before-preparation.cpuprofile.gz",
+    "samples": 521,
+    "durationMs": 633.424,
+    "top": [
+      {
+        "samples": 401,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 75,
+        "frame": "json"
+      },
+      {
+        "samples": 8,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 6,
+        "frame": ""
+      },
+      {
+        "samples": 3,
+        "frame": "writev"
+      },
+      {
+        "samples": 3,
+        "frame": "execute"
+      },
+      {
+        "samples": 3,
+        "frame": "concat"
+      },
+      {
+        "samples": 2,
+        "frame": "runMicrotasks"
+      }
+    ]
+  },
+  {
+    "name": "4-plan-after-preparation.cpuprofile.gz",
+    "samples": 511,
+    "durationMs": 629.874,
+    "top": [
+      {
+        "samples": 394,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 79,
+        "frame": "json"
+      },
+      {
+        "samples": 6,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 5,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 3,
+        "frame": "writev"
+      },
+      {
+        "samples": 3,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 2,
+        "frame": "concat"
+      },
+      {
+        "samples": 2,
+        "frame": ""
+      }
+    ]
+  },
+  {
+    "name": "5-shared-after-preparation.cpuprofile.gz",
+    "samples": 532,
+    "durationMs": 700.477,
+    "top": [
+      {
+        "samples": 388,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 85,
+        "frame": "json"
+      },
+      {
+        "samples": 11,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 7,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 5,
+        "frame": "concat"
+      },
+      {
+        "samples": 3,
+        "frame": "writev"
+      },
+      {
+        "samples": 3,
+        "frame": ""
+      },
+      {
+        "samples": 2,
+        "frame": "connect"
+      }
+    ]
+  },
+  {
+    "name": "6-chart-fallback-after-preparation.cpuprofile.gz",
+    "samples": 520,
+    "durationMs": 683.236,
+    "top": [
+      {
+        "samples": 395,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 77,
+        "frame": "json"
+      },
+      {
+        "samples": 11,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 3,
+        "frame": "writev"
+      },
+      {
+        "samples": 3,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 3,
+        "frame": ""
+      },
+      {
+        "samples": 2,
+        "frame": "runMicrotasks"
+      },
+      {
+        "samples": 1,
+        "frame": "post"
+      }
+    ]
+  },
+  {
+    "name": "7-shared-close-after-preparation.cpuprofile.gz",
+    "samples": 528,
+    "durationMs": 679.478,
+    "top": [
+      {
+        "samples": 396,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 84,
+        "frame": "json"
+      },
+      {
+        "samples": 10,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 7,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 5,
+        "frame": "writev"
+      },
+      {
+        "samples": 4,
+        "frame": ""
+      },
+      {
+        "samples": 4,
+        "frame": "concat"
+      },
+      {
+        "samples": 3,
+        "frame": "fetchParams.controller.resume"
+      }
+    ]
+  },
+  {
+    "name": "8-plan-after-preparation.cpuprofile.gz",
+    "samples": 533,
+    "durationMs": 707.565,
+    "top": [
+      {
+        "samples": 392,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 88,
+        "frame": "json"
+      },
+      {
+        "samples": 8,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 5,
+        "frame": "writev"
+      },
+      {
+        "samples": 4,
+        "frame": "concat"
+      },
+      {
+        "samples": 3,
+        "frame": "execute"
+      },
+      {
+        "samples": 3,
+        "frame": ""
+      },
+      {
+        "samples": 2,
+        "frame": "refresh"
+      }
+    ]
+  },
+  {
+    "name": "9-shared-after-preparation.cpuprofile.gz",
+    "samples": 529,
+    "durationMs": 651.334,
+    "top": [
+      {
+        "samples": 403,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 83,
+        "frame": "json"
+      },
+      {
+        "samples": 9,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 5,
+        "frame": "writev"
+      },
+      {
+        "samples": 4,
+        "frame": "(program)"
+      },
+      {
+        "samples": 4,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 2,
+        "frame": ""
+      },
+      {
+        "samples": 1,
+        "frame": "post"
+      }
+    ]
+  },
+  {
+    "name": "10-chart-fallback-after-preparation.cpuprofile.gz",
+    "samples": 523,
+    "durationMs": 666.878,
+    "top": [
+      {
+        "samples": 394,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 79,
+        "frame": "json"
+      },
+      {
+        "samples": 8,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 6,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 6,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 5,
+        "frame": "concat"
+      },
+      {
+        "samples": 3,
+        "frame": "writev"
+      },
+      {
+        "samples": 2,
+        "frame": "connect"
+      }
+    ]
+  },
+  {
+    "name": "11-shared-close-after-preparation.cpuprofile.gz",
+    "samples": 511,
+    "durationMs": 651.096,
+    "top": [
+      {
+        "samples": 402,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 75,
+        "frame": "json"
+      },
+      {
+        "samples": 11,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 4,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 2,
+        "frame": "writev"
+      },
+      {
+        "samples": 2,
+        "frame": ""
+      },
+      {
+        "samples": 2,
+        "frame": "dispatch"
+      },
+      {
+        "samples": 1,
+        "frame": "post"
+      }
+    ]
+  },
+  {
+    "name": "12-plan-before-preparation.cpuprofile.gz",
+    "samples": 518,
+    "durationMs": 665.21,
+    "top": [
+      {
+        "samples": 393,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 78,
+        "frame": "json"
+      },
+      {
+        "samples": 11,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 5,
+        "frame": "concat"
+      },
+      {
+        "samples": 5,
+        "frame": ""
+      },
+      {
+        "samples": 4,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 3,
+        "frame": "writev"
+      },
+      {
+        "samples": 1,
+        "frame": "post"
+      }
+    ]
+  },
+  {
+    "name": "13-shared-before-preparation.cpuprofile.gz",
+    "samples": 514,
+    "durationMs": 645.514,
+    "top": [
+      {
+        "samples": 385,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 81,
+        "frame": "json"
+      },
+      {
+        "samples": 9,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 7,
+        "frame": ""
+      },
+      {
+        "samples": 6,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 4,
+        "frame": "writev"
+      },
+      {
+        "samples": 3,
+        "frame": "(program)"
+      },
+      {
+        "samples": 2,
+        "frame": "controller.<computed>.pullFulfilled"
+      }
+    ]
+  },
+  {
+    "name": "14-chart-fallback-before-preparation.cpuprofile.gz",
+    "samples": 532,
+    "durationMs": 693.158,
+    "top": [
+      {
+        "samples": 389,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 83,
+        "frame": "json"
+      },
+      {
+        "samples": 16,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 6,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 5,
+        "frame": ""
+      },
+      {
+        "samples": 5,
+        "frame": "concat"
+      },
+      {
+        "samples": 4,
+        "frame": "(program)"
+      },
+      {
+        "samples": 3,
+        "frame": "writev"
+      }
+    ]
+  },
+  {
+    "name": "15-shared-close-before-preparation.cpuprofile.gz",
+    "samples": 525,
+    "durationMs": 658.926,
+    "top": [
+      {
+        "samples": 398,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 83,
+        "frame": "json"
+      },
+      {
+        "samples": 10,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 4,
+        "frame": "writev"
+      },
+      {
+        "samples": 4,
+        "frame": ""
+      },
+      {
+        "samples": 3,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 3,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 3,
+        "frame": "concat"
+      }
+    ]
+  },
+  {
+    "name": "16-plan-before-preparation.cpuprofile.gz",
+    "samples": 532,
+    "durationMs": 684.104,
+    "top": [
+      {
+        "samples": 395,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 83,
+        "frame": "json"
+      },
+      {
+        "samples": 12,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 4,
+        "frame": "(program)"
+      },
+      {
+        "samples": 4,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 4,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 3,
+        "frame": "writev"
+      },
+      {
+        "samples": 3,
+        "frame": ""
+      }
+    ]
+  },
+  {
+    "name": "17-shared-before-preparation.cpuprofile.gz",
+    "samples": 517,
+    "durationMs": 645.022,
+    "top": [
+      {
+        "samples": 394,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 73,
+        "frame": "json"
+      },
+      {
+        "samples": 8,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 8,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 6,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 4,
+        "frame": ""
+      },
+      {
+        "samples": 4,
+        "frame": "concat"
+      },
+      {
+        "samples": 3,
+        "frame": "writev"
+      }
+    ]
+  },
+  {
+    "name": "18-chart-fallback-before-preparation.cpuprofile.gz",
+    "samples": 518,
+    "durationMs": 670.965,
+    "top": [
+      {
+        "samples": 398,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 73,
+        "frame": "json"
+      },
+      {
+        "samples": 15,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 5,
+        "frame": ""
+      },
+      {
+        "samples": 5,
+        "frame": "concat"
+      },
+      {
+        "samples": 4,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 2,
+        "frame": "(program)"
+      },
+      {
+        "samples": 2,
+        "frame": "fetchParams.controller.resume"
+      }
+    ]
+  },
+  {
+    "name": "19-shared-close-before-preparation.cpuprofile.gz",
+    "samples": 500,
+    "durationMs": 643.236,
+    "top": [
+      {
+        "samples": 376,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 77,
+        "frame": "json"
+      },
+      {
+        "samples": 13,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 5,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 3,
+        "frame": "writev"
+      },
+      {
+        "samples": 2,
+        "frame": "(program)"
+      },
+      {
+        "samples": 2,
+        "frame": ""
+      },
+      {
+        "samples": 2,
+        "frame": "concat"
+      }
+    ]
+  },
+  {
+    "name": "20-plan-after-preparation.cpuprofile.gz",
+    "samples": 524,
+    "durationMs": 696.408,
+    "top": [
+      {
+        "samples": 403,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 81,
+        "frame": "json"
+      },
+      {
+        "samples": 10,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 5,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 5,
+        "frame": "concat"
+      },
+      {
+        "samples": 3,
+        "frame": "writev"
+      },
+      {
+        "samples": 2,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 1,
+        "frame": "post"
+      }
+    ]
+  },
+  {
+    "name": "21-shared-after-preparation.cpuprofile.gz",
+    "samples": 507,
+    "durationMs": 641.738,
+    "top": [
+      {
+        "samples": 386,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 75,
+        "frame": "json"
+      },
+      {
+        "samples": 9,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 5,
+        "frame": "(program)"
+      },
+      {
+        "samples": 5,
+        "frame": "writev"
+      },
+      {
+        "samples": 4,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 4,
+        "frame": ""
+      },
+      {
+        "samples": 3,
+        "frame": "decodeUTF8"
+      }
+    ]
+  },
+  {
+    "name": "22-chart-fallback-after-preparation.cpuprofile.gz",
+    "samples": 516,
+    "durationMs": 691.119,
+    "top": [
+      {
+        "samples": 380,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 81,
+        "frame": "json"
+      },
+      {
+        "samples": 18,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 5,
+        "frame": "concat"
+      },
+      {
+        "samples": 5,
+        "frame": ""
+      },
+      {
+        "samples": 5,
+        "frame": "fetchParams.controller.resume"
+      },
+      {
+        "samples": 4,
+        "frame": "runMicrotasks"
+      },
+      {
+        "samples": 3,
+        "frame": "enqueue"
+      }
+    ]
+  },
+  {
+    "name": "23-shared-close-after-preparation.cpuprofile.gz",
+    "samples": 521,
+    "durationMs": 658.273,
+    "top": [
+      {
+        "samples": 390,
+        "frame": "(idle)"
+      },
+      {
+        "samples": 83,
+        "frame": "json"
+      },
+      {
+        "samples": 11,
+        "frame": "(garbage collector)"
+      },
+      {
+        "samples": 6,
+        "frame": ""
+      },
+      {
+        "samples": 4,
+        "frame": "writev"
+      },
+      {
+        "samples": 4,
+        "frame": "decodeUTF8"
+      },
+      {
+        "samples": 4,
+        "frame": "(program)"
+      },
+      {
+        "samples": 2,
+        "frame": "runMicrotasks"
+      }
+    ]
+  }
+]
