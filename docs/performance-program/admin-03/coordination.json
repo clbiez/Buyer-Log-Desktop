@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-11-07T17:32:01.989Z",
+  "scope": "ADMIN-03 preparation new files only",
+  "openPullRequests": [
+    {
+      "number": 894,
+      "title": "test: v714 ilk etkileşim metriğinin inline kaydını kabul et",
+      "changedFileCount": 1,
+      "admin03PathConflicts": [],
+      "locksUserAccess": false
+    },
+    {
+      "number": 893,
+      "title": "diag(perf): Faz 5 B1 — FX 5000 ms bütçesi worker'a girmeden kuyrukta doluyor",
+      "changedFileCount": 8,
+      "admin03PathConflicts": [],
+      "locksUserAccess": false
+    },
+    {
+      "number": 891,
+      "title": "docs(perf): Faz 6a — alan envanteri ve shadow karşılaştırma hazırlığı",
+      "changedFileCount": 7,
+      "admin03PathConflicts": [],
+      "locksUserAccess": false
+    },
+    {
+      "number": 885,
+      "title": "perf: Faz 5 — ortak worker havuzu ve ince Global Flow",
+      "changedFileCount": 182,
+      "admin03PathConflicts": [],
+      "locksUserAccess": true
+    },
+    {
+      "number": 890,
+      "title": "test(perf): INT-06 checkpoint ölçüm ve resume hazırlığı",
+      "changedFileCount": 24,
+      "admin03PathConflicts": [],
+      "locksUserAccess": false
+    }
+  ],
+  "productionFilesEdited": [],
+  "reviewRefsRebased": false,
+  "forcePushed": false
+}

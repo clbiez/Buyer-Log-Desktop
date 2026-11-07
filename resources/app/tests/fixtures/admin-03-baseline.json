@@ -1,0 +1,6163 @@
+{
+  "publicProfiles": [
+    {
+      "id": "moderator",
+      "role": "moderator",
+      "roleLabel": "Moderatör",
+      "systemRole": "moderator",
+      "systemRoleLabel": "Moderatör",
+      "centralIamEnabled": false,
+      "iamRevision": 7,
+      "orgLevel": "job_title",
+      "orgLevelLabel": "Görev Tanımı",
+      "status": "ACTIVE",
+      "username": "demo-moderator",
+      "displayName": "DEMO moderator",
+      "title": "Synthetic",
+      "email": "",
+      "legacySourceAccount": false,
+      "mags": [
+        "MAG0"
+      ],
+      "mmygs": [
+        "MMYG0"
+      ],
+      "buyingGroups": [
+        "BG0"
+      ],
+      "enabled": true,
+      "passwordRequired": false,
+      "pinRequired": false,
+      "needsPasswordSetup": true,
+      "needsPinSetup": true,
+      "supervisorId": null,
+      "scopeMode": "profile",
+      "dataScope": {
+        "mode": "ALL",
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      },
+      "scopes": {
+        "mode": "ALL",
+        "all": true,
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      },
+      "permissions": {
+        "manageBackup": true,
+        "manageBusinessRules": true,
+        "manageModelConnections": true,
+        "manageAllOrders": true,
+        "manageCollections": true
+      },
+      "accessAreas": {
+        "overview": true,
+        "cp": true,
+        "orders": true,
+        "koleksiyon": true,
+        "lfl": true,
+        "priceanalysis": true,
+        "opencosting": true,
+        "backlog": true,
+        "shipping": true,
+        "automations": true,
+        "source": true
+      },
+      "capabilities": [
+        "OVERVIEW.VIEW",
+        "OVERVIEW.EXPORT",
+        "CP.VIEW",
+        "CP.CREATE",
+        "CP.EDIT",
+        "CP.DELETE",
+        "CP.EXPORT",
+        "ORDERS.VIEW",
+        "ORDERS.CREATE",
+        "ORDERS.EDIT",
+        "ORDERS.DELETE",
+        "ORDERS.APPROVE",
+        "ORDERS.EXPORT",
+        "ORDERS.MANAGE",
+        "COLLECTIONS.VIEW",
+        "COLLECTIONS.CREATE",
+        "COLLECTIONS.EDIT",
+        "COLLECTIONS.DELETE",
+        "COLLECTIONS.APPROVE",
+        "COLLECTIONS.EXPORT",
+        "COLLECTIONS.MANAGE",
+        "BACKLOG.VIEW",
+        "BACKLOG.EXPORT",
+        "OAB.VIEW",
+        "OAB.CREATE",
+        "OAB.EDIT",
+        "OAB.DELETE",
+        "OAB.EXPORT",
+        "OAB.MANAGE",
+        "QUOTATIONS.VIEW",
+        "QUOTATIONS.CREATE",
+        "QUOTATIONS.EDIT",
+        "QUOTATIONS.DELETE",
+        "QUOTATIONS.APPROVE",
+        "QUOTATIONS.EXPORT",
+        "ANALYSIS.VIEW",
+        "ANALYSIS.EXPORT",
+        "OPEN_COSTING.VIEW",
+        "OPEN_COSTING.CREATE",
+        "OPEN_COSTING.EDIT",
+        "OPEN_COSTING.DELETE",
+        "OPEN_COSTING.EXPORT",
+        "SHIPPING.VIEW",
+        "SHIPPING.CREATE",
+        "SHIPPING.EDIT",
+        "SHIPPING.DELETE",
+        "SHIPPING.EXPORT",
+        "AUTOMATIONS.VIEW",
+        "AUTOMATIONS.CREATE",
+        "AUTOMATIONS.EDIT",
+        "AUTOMATIONS.DELETE",
+        "AUTOMATIONS.APPROVE",
+        "AUTOMATIONS.MANAGE",
+        "SOURCE_DATA.VIEW",
+        "SOURCE_DATA.CREATE",
+        "SOURCE_DATA.EDIT",
+        "SOURCE_DATA.DELETE",
+        "SOURCE_DATA.EXPORT",
+        "SOURCE_DATA.MANAGE",
+        "USER.VIEW",
+        "USER.CREATE",
+        "USER.EDIT",
+        "USER.MANAGE",
+        "USER.GRANT",
+        "USER.PROFILE_COPY",
+        "ROLE.VIEW",
+        "ROLE.MANAGE",
+        "PERMISSION.VIEW",
+        "PERMISSION.MANAGE",
+        "PERMISSION.GRANT",
+        "SYSTEM.VIEW",
+        "SYSTEM.MANAGE",
+        "SECURITY.VIEW",
+        "SECURITY.MANAGE",
+        "AUDIT.VIEW",
+        "AUDIT.EXPORT"
+      ],
+      "collectionAccess": [
+        {
+          "ownerId": "moderator",
+          "level": "edit"
+        }
+      ],
+      "delegatedUserIds": [
+        "u0",
+        "u1",
+        "u2"
+      ],
+      "canManageUsers": true
+    },
+    {
+      "id": "u0",
+      "role": "manager",
+      "roleLabel": "Müdür",
+      "systemRole": "buyer",
+      "systemRoleLabel": "Buyer",
+      "centralIamEnabled": false,
+      "iamRevision": 7,
+      "orgLevel": "job_title",
+      "orgLevelLabel": "Görev Tanımı",
+      "status": "ACTIVE",
+      "username": "demo-u0",
+      "displayName": "DEMO u0",
+      "title": "Synthetic",
+      "email": "",
+      "legacySourceAccount": false,
+      "mags": [
+        "MAG0"
+      ],
+      "mmygs": [
+        "MMYG0"
+      ],
+      "buyingGroups": [
+        "BG0"
+      ],
+      "enabled": true,
+      "passwordRequired": false,
+      "pinRequired": false,
+      "needsPasswordSetup": false,
+      "needsPinSetup": false,
+      "supervisorId": "moderator",
+      "scopeMode": "profile",
+      "dataScope": {
+        "mode": "TEAM",
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      },
+      "scopes": {
+        "mode": "TEAM",
+        "all": false,
+        "buyers": [
+          "demo-u0",
+          "DEMO u0",
+          "demo-u1",
+          "DEMO u1",
+          "demo-u2",
+          "DEMO u2"
+        ],
+        "mags": [
+          "MAG0",
+          "MAG1",
+          "MAG2"
+        ],
+        "mmygs": [
+          "MMYG0",
+          "MMYG1",
+          "MMYG2"
+        ],
+        "buyingGroups": [
+          "BG0",
+          "BG1"
+        ]
+      },
+      "permissions": {
+        "manageBackup": false,
+        "manageBusinessRules": false,
+        "manageModelConnections": false,
+        "manageAllOrders": false,
+        "manageCollections": false
+      },
+      "accessAreas": {
+        "overview": true,
+        "cp": true,
+        "orders": true,
+        "koleksiyon": true,
+        "lfl": true,
+        "priceanalysis": true,
+        "opencosting": false,
+        "backlog": true,
+        "shipping": false,
+        "automations": true,
+        "source": true
+      },
+      "capabilities": [
+        "CP.VIEW",
+        "ORDERS.VIEW",
+        "COLLECTIONS.VIEW",
+        "BACKLOG.VIEW",
+        "OAB.VIEW",
+        "QUOTATIONS.VIEW",
+        "ANALYSIS.VIEW",
+        "SOURCE_DATA.VIEW",
+        "QUOTATIONS.CREATE",
+        "QUOTATIONS.EDIT",
+        "COLLECTIONS.EDIT",
+        "CP.EDIT"
+      ],
+      "collectionAccess": [
+        {
+          "ownerId": "u0",
+          "level": "edit"
+        }
+      ],
+      "delegatedUserIds": [
+        "u1",
+        "u2"
+      ],
+      "canManageUsers": false
+    },
+    {
+      "id": "u1",
+      "role": "buyer",
+      "roleLabel": "Buyer",
+      "systemRole": "buyer",
+      "systemRoleLabel": "Buyer",
+      "centralIamEnabled": false,
+      "iamRevision": 7,
+      "orgLevel": "job_title",
+      "orgLevelLabel": "Görev Tanımı",
+      "status": "ACTIVE",
+      "username": "demo-u1",
+      "displayName": "DEMO u1",
+      "title": "Synthetic",
+      "email": "",
+      "legacySourceAccount": false,
+      "mags": [
+        "MAG1"
+      ],
+      "mmygs": [
+        "MMYG1"
+      ],
+      "buyingGroups": [
+        "BG1"
+      ],
+      "enabled": true,
+      "passwordRequired": false,
+      "pinRequired": false,
+      "needsPasswordSetup": false,
+      "needsPinSetup": false,
+      "supervisorId": "u0",
+      "scopeMode": "profile",
+      "dataScope": {
+        "mode": "SELF",
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      },
+      "scopes": {
+        "mode": "SELF",
+        "all": false,
+        "buyers": [
+          "demo-u1",
+          "DEMO u1"
+        ],
+        "mags": [
+          "MAG1"
+        ],
+        "mmygs": [
+          "MMYG1"
+        ],
+        "buyingGroups": [
+          "BG1"
+        ]
+      },
+      "permissions": {
+        "manageBackup": false,
+        "manageBusinessRules": false,
+        "manageModelConnections": false,
+        "manageAllOrders": false,
+        "manageCollections": false
+      },
+      "accessAreas": {
+        "overview": true,
+        "cp": true,
+        "orders": true,
+        "koleksiyon": true,
+        "lfl": true,
+        "priceanalysis": true,
+        "opencosting": false,
+        "backlog": true,
+        "shipping": false,
+        "automations": true,
+        "source": true
+      },
+      "capabilities": [
+        "CP.VIEW",
+        "ORDERS.VIEW",
+        "COLLECTIONS.VIEW",
+        "BACKLOG.VIEW",
+        "OAB.VIEW",
+        "QUOTATIONS.VIEW",
+        "ANALYSIS.VIEW",
+        "SOURCE_DATA.VIEW",
+        "QUOTATIONS.CREATE",
+        "QUOTATIONS.EDIT",
+        "COLLECTIONS.EDIT",
+        "CP.EDIT"
+      ],
+      "collectionAccess": [
+        {
+          "ownerId": "u1",
+          "level": "edit"
+        }
+      ],
+      "delegatedUserIds": [],
+      "canManageUsers": false
+    },
+    {
+      "id": "u2",
+      "role": "buyer",
+      "roleLabel": "Buyer",
+      "systemRole": "buyer",
+      "systemRoleLabel": "Buyer",
+      "centralIamEnabled": false,
+      "iamRevision": 7,
+      "orgLevel": "job_title",
+      "orgLevelLabel": "Görev Tanımı",
+      "status": "ACTIVE",
+      "username": "demo-u2",
+      "displayName": "DEMO u2",
+      "title": "Synthetic",
+      "email": "",
+      "legacySourceAccount": false,
+      "mags": [
+        "MAG2"
+      ],
+      "mmygs": [
+        "MMYG2"
+      ],
+      "buyingGroups": [
+        "BG0"
+      ],
+      "enabled": true,
+      "passwordRequired": false,
+      "pinRequired": false,
+      "needsPasswordSetup": false,
+      "needsPinSetup": false,
+      "supervisorId": "u0",
+      "scopeMode": "profile",
+      "dataScope": {
+        "mode": "SELF",
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      },
+      "scopes": {
+        "mode": "SELF",
+        "all": false,
+        "buyers": [
+          "demo-u2",
+          "DEMO u2"
+        ],
+        "mags": [
+          "MAG2"
+        ],
+        "mmygs": [
+          "MMYG2"
+        ],
+        "buyingGroups": [
+          "BG0"
+        ]
+      },
+      "permissions": {
+        "manageBackup": false,
+        "manageBusinessRules": false,
+        "manageModelConnections": false,
+        "manageAllOrders": false,
+        "manageCollections": false
+      },
+      "accessAreas": {
+        "overview": true,
+        "cp": true,
+        "orders": true,
+        "koleksiyon": true,
+        "lfl": true,
+        "priceanalysis": true,
+        "opencosting": false,
+        "backlog": true,
+        "shipping": false,
+        "automations": true,
+        "source": true
+      },
+      "capabilities": [
+        "CP.VIEW",
+        "ORDERS.VIEW",
+        "COLLECTIONS.VIEW",
+        "BACKLOG.VIEW",
+        "OAB.VIEW",
+        "QUOTATIONS.VIEW",
+        "ANALYSIS.VIEW",
+        "SOURCE_DATA.VIEW",
+        "QUOTATIONS.CREATE",
+        "QUOTATIONS.EDIT",
+        "COLLECTIONS.EDIT",
+        "CP.EDIT"
+      ],
+      "collectionAccess": [
+        {
+          "ownerId": "u2",
+          "level": "edit"
+        }
+      ],
+      "delegatedUserIds": [],
+      "canManageUsers": false
+    }
+  ],
+  "adminList": {
+    "actor": {
+      "id": "moderator",
+      "role": "moderator",
+      "roleLabel": "Moderatör",
+      "systemRole": "moderator",
+      "systemRoleLabel": "Moderatör",
+      "centralIamEnabled": false,
+      "iamRevision": 7,
+      "orgLevel": "job_title",
+      "orgLevelLabel": "Görev Tanımı",
+      "status": "ACTIVE",
+      "username": "demo-moderator",
+      "displayName": "DEMO moderator",
+      "title": "Synthetic",
+      "email": "",
+      "legacySourceAccount": false,
+      "mags": [
+        "MAG0"
+      ],
+      "mmygs": [
+        "MMYG0"
+      ],
+      "buyingGroups": [
+        "BG0"
+      ],
+      "enabled": true,
+      "passwordRequired": false,
+      "pinRequired": false,
+      "needsPasswordSetup": true,
+      "needsPinSetup": true,
+      "supervisorId": null,
+      "scopeMode": "profile",
+      "dataScope": {
+        "mode": "ALL",
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      },
+      "scopes": {
+        "mode": "ALL",
+        "all": true,
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      },
+      "permissions": {
+        "manageBackup": true,
+        "manageBusinessRules": true,
+        "manageModelConnections": true,
+        "manageAllOrders": true,
+        "manageCollections": true
+      },
+      "accessAreas": {
+        "overview": true,
+        "cp": true,
+        "orders": true,
+        "koleksiyon": true,
+        "lfl": true,
+        "priceanalysis": true,
+        "opencosting": true,
+        "backlog": true,
+        "shipping": true,
+        "automations": true,
+        "source": true
+      },
+      "capabilities": [
+        "OVERVIEW.VIEW",
+        "OVERVIEW.EXPORT",
+        "CP.VIEW",
+        "CP.CREATE",
+        "CP.EDIT",
+        "CP.DELETE",
+        "CP.EXPORT",
+        "ORDERS.VIEW",
+        "ORDERS.CREATE",
+        "ORDERS.EDIT",
+        "ORDERS.DELETE",
+        "ORDERS.APPROVE",
+        "ORDERS.EXPORT",
+        "ORDERS.MANAGE",
+        "COLLECTIONS.VIEW",
+        "COLLECTIONS.CREATE",
+        "COLLECTIONS.EDIT",
+        "COLLECTIONS.DELETE",
+        "COLLECTIONS.APPROVE",
+        "COLLECTIONS.EXPORT",
+        "COLLECTIONS.MANAGE",
+        "BACKLOG.VIEW",
+        "BACKLOG.EXPORT",
+        "OAB.VIEW",
+        "OAB.CREATE",
+        "OAB.EDIT",
+        "OAB.DELETE",
+        "OAB.EXPORT",
+        "OAB.MANAGE",
+        "QUOTATIONS.VIEW",
+        "QUOTATIONS.CREATE",
+        "QUOTATIONS.EDIT",
+        "QUOTATIONS.DELETE",
+        "QUOTATIONS.APPROVE",
+        "QUOTATIONS.EXPORT",
+        "ANALYSIS.VIEW",
+        "ANALYSIS.EXPORT",
+        "OPEN_COSTING.VIEW",
+        "OPEN_COSTING.CREATE",
+        "OPEN_COSTING.EDIT",
+        "OPEN_COSTING.DELETE",
+        "OPEN_COSTING.EXPORT",
+        "SHIPPING.VIEW",
+        "SHIPPING.CREATE",
+        "SHIPPING.EDIT",
+        "SHIPPING.DELETE",
+        "SHIPPING.EXPORT",
+        "AUTOMATIONS.VIEW",
+        "AUTOMATIONS.CREATE",
+        "AUTOMATIONS.EDIT",
+        "AUTOMATIONS.DELETE",
+        "AUTOMATIONS.APPROVE",
+        "AUTOMATIONS.MANAGE",
+        "SOURCE_DATA.VIEW",
+        "SOURCE_DATA.CREATE",
+        "SOURCE_DATA.EDIT",
+        "SOURCE_DATA.DELETE",
+        "SOURCE_DATA.EXPORT",
+        "SOURCE_DATA.MANAGE",
+        "USER.VIEW",
+        "USER.CREATE",
+        "USER.EDIT",
+        "USER.MANAGE",
+        "USER.GRANT",
+        "USER.PROFILE_COPY",
+        "ROLE.VIEW",
+        "ROLE.MANAGE",
+        "PERMISSION.VIEW",
+        "PERMISSION.MANAGE",
+        "PERMISSION.GRANT",
+        "SYSTEM.VIEW",
+        "SYSTEM.MANAGE",
+        "SECURITY.VIEW",
+        "SECURITY.MANAGE",
+        "AUDIT.VIEW",
+        "AUDIT.EXPORT"
+      ],
+      "collectionAccess": [
+        {
+          "ownerId": "moderator",
+          "level": "edit"
+        }
+      ],
+      "delegatedUserIds": [
+        "u0",
+        "u1",
+        "u2"
+      ],
+      "canManageUsers": true
+    },
+    "profiles": [
+      {
+        "id": "moderator",
+        "role": "moderator",
+        "roleLabel": "Moderatör",
+        "username": "demo-moderator",
+        "displayName": "DEMO moderator",
+        "title": "Synthetic",
+        "email": "",
+        "systemRole": "moderator",
+        "systemRoleLabel": "Moderatör",
+        "orgLevel": "job_title",
+        "orgLevelLabel": "Görev Tanımı",
+        "status": "ACTIVE",
+        "managerId": null,
+        "stableIds": {
+          "employeeId": "",
+          "corporateId": "",
+          "buyerId": "",
+          "sourceId": "SYNTHETIC:moderator",
+          "email": ""
+        },
+        "identityKey": "sourceId:SYNTHETIC:MODERATOR",
+        "external": false,
+        "mags": [
+          "MAG0"
+        ],
+        "mmygs": [
+          "MMYG0"
+        ],
+        "buyingGroups": [
+          "BG0"
+        ],
+        "enabled": true,
+        "legacySourceAccount": false,
+        "hasPassword": false,
+        "supervisorId": null,
+        "scopeMode": "profile",
+        "ownPermissions": {
+          "manageBackup": true,
+          "manageBusinessRules": true,
+          "manageModelConnections": true,
+          "manageAllOrders": true,
+          "manageCollections": true
+        },
+        "ownAccessAreas": {
+          "overview": true,
+          "cp": true,
+          "orders": true,
+          "koleksiyon": true,
+          "lfl": true,
+          "priceanalysis": true,
+          "opencosting": true,
+          "backlog": true,
+          "shipping": true,
+          "automations": true,
+          "source": true
+        },
+        "directCollectionAccess": [],
+        "customScopes": {
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "dataScope": {
+          "mode": "ALL",
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "directPermissions": [],
+        "temporaryPermissions": [],
+        "assignedPermissions": [
+          {
+            "permission": "OVERVIEW.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OVERVIEW.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "CP.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "CP.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "CP.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.APPROVE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.APPROVE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "BACKLOG.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OAB.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OAB.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OAB.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OAB.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OAB.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "QUOTATIONS.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "QUOTATIONS.APPROVE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "QUOTATIONS.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ANALYSIS.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OPEN_COSTING.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OPEN_COSTING.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OPEN_COSTING.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OPEN_COSTING.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OPEN_COSTING.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SHIPPING.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SHIPPING.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SHIPPING.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SHIPPING.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SHIPPING.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUTOMATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUTOMATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUTOMATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUTOMATIONS.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUTOMATIONS.APPROVE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUTOMATIONS.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SOURCE_DATA.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SOURCE_DATA.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SOURCE_DATA.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SOURCE_DATA.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SOURCE_DATA.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "USER.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "USER.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "USER.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "USER.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "USER.GRANT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "USER.PROFILE_COPY",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ROLE.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ROLE.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "PERMISSION.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "PERMISSION.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "PERMISSION.GRANT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SYSTEM.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SYSTEM.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SECURITY.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SECURITY.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUDIT.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUDIT.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          }
+        ],
+        "effectivePermissions": [
+          {
+            "permission": "OVERVIEW.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OVERVIEW.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "CP.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "CP.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "CP.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.APPROVE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ORDERS.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.APPROVE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "COLLECTIONS.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "BACKLOG.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OAB.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OAB.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OAB.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OAB.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OAB.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "QUOTATIONS.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "QUOTATIONS.APPROVE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "QUOTATIONS.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ANALYSIS.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OPEN_COSTING.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OPEN_COSTING.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OPEN_COSTING.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OPEN_COSTING.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "OPEN_COSTING.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SHIPPING.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SHIPPING.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SHIPPING.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SHIPPING.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SHIPPING.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUTOMATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUTOMATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUTOMATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUTOMATIONS.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUTOMATIONS.APPROVE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUTOMATIONS.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SOURCE_DATA.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SOURCE_DATA.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SOURCE_DATA.DELETE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SOURCE_DATA.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SOURCE_DATA.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "USER.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "USER.CREATE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "USER.EDIT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "USER.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "USER.GRANT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "USER.PROFILE_COPY",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ROLE.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "ROLE.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "PERMISSION.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "PERMISSION.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "PERMISSION.GRANT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SYSTEM.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SYSTEM.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SECURITY.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "SECURITY.MANAGE",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUDIT.VIEW",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "AUDIT.EXPORT",
+            "source": "ROLE",
+            "sourceId": "moderator",
+            "sourceLabel": "Moderatör"
+          },
+          {
+            "permission": "CP.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u0",
+            "sourceLabel": "DEMO u0",
+            "inheritedFrom": "u0"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u0",
+            "sourceLabel": "DEMO u0",
+            "inheritedFrom": "u0"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u0",
+            "sourceLabel": "DEMO u0",
+            "inheritedFrom": "u0"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u0",
+            "sourceLabel": "DEMO u0",
+            "inheritedFrom": "u0"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u0",
+            "sourceLabel": "DEMO u0",
+            "inheritedFrom": "u0"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u0",
+            "sourceLabel": "DEMO u0",
+            "inheritedFrom": "u0"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u0",
+            "sourceLabel": "DEMO u0",
+            "inheritedFrom": "u0"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u0",
+            "sourceLabel": "DEMO u0",
+            "inheritedFrom": "u0"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "HIERARCHY",
+            "sourceId": "u0",
+            "sourceLabel": "DEMO u0",
+            "inheritedFrom": "u0"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u0",
+            "sourceLabel": "DEMO u0",
+            "inheritedFrom": "u0"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u0",
+            "sourceLabel": "DEMO u0",
+            "inheritedFrom": "u0"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u0",
+            "sourceLabel": "DEMO u0",
+            "inheritedFrom": "u0"
+          },
+          {
+            "permission": "CP.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "CP.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          }
+        ],
+        "canEdit": true,
+        "roleBundleIds": [],
+        "horizonDefault": null,
+        "updatedAt": null
+      },
+      {
+        "id": "u0",
+        "role": "manager",
+        "roleLabel": "Müdür",
+        "username": "demo-u0",
+        "displayName": "DEMO u0",
+        "title": "Synthetic",
+        "email": "",
+        "systemRole": "buyer",
+        "systemRoleLabel": "Buyer",
+        "orgLevel": "job_title",
+        "orgLevelLabel": "Görev Tanımı",
+        "status": "ACTIVE",
+        "managerId": "moderator",
+        "stableIds": {
+          "employeeId": "",
+          "corporateId": "",
+          "buyerId": "",
+          "sourceId": "SYNTHETIC:u0",
+          "email": ""
+        },
+        "identityKey": "sourceId:SYNTHETIC:U0",
+        "external": false,
+        "mags": [
+          "MAG0"
+        ],
+        "mmygs": [
+          "MMYG0"
+        ],
+        "buyingGroups": [
+          "BG0"
+        ],
+        "enabled": true,
+        "legacySourceAccount": false,
+        "hasPassword": false,
+        "supervisorId": "moderator",
+        "scopeMode": "profile",
+        "ownPermissions": {
+          "manageBackup": false,
+          "manageBusinessRules": false,
+          "manageModelConnections": false,
+          "manageAllOrders": false,
+          "manageCollections": false
+        },
+        "ownAccessAreas": {
+          "overview": false,
+          "cp": false,
+          "orders": false,
+          "koleksiyon": false,
+          "lfl": false,
+          "priceanalysis": true,
+          "opencosting": false,
+          "backlog": false,
+          "shipping": false,
+          "automations": true,
+          "source": false
+        },
+        "directCollectionAccess": [],
+        "customScopes": {
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "dataScope": {
+          "mode": "TEAM",
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "directPermissions": [
+          {
+            "id": "demo-CP.EDIT",
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "reason": "synthetic",
+            "validFrom": null,
+            "validUntil": null,
+            "grantedBy": null,
+            "grantedAt": "2026-11-07T12:00:00.000Z"
+          }
+        ],
+        "temporaryPermissions": [],
+        "assignedPermissions": [
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "sourceId": "demo-CP.EDIT",
+            "reason": "synthetic"
+          }
+        ],
+        "effectivePermissions": [
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "sourceId": "demo-CP.EDIT",
+            "reason": "synthetic"
+          },
+          {
+            "permission": "CP.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "CP.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          }
+        ],
+        "canEdit": true,
+        "roleBundleIds": [],
+        "horizonDefault": null,
+        "updatedAt": null
+      },
+      {
+        "id": "u1",
+        "role": "buyer",
+        "roleLabel": "Buyer",
+        "username": "demo-u1",
+        "displayName": "DEMO u1",
+        "title": "Synthetic",
+        "email": "",
+        "systemRole": "buyer",
+        "systemRoleLabel": "Buyer",
+        "orgLevel": "job_title",
+        "orgLevelLabel": "Görev Tanımı",
+        "status": "ACTIVE",
+        "managerId": "u0",
+        "stableIds": {
+          "employeeId": "",
+          "corporateId": "",
+          "buyerId": "",
+          "sourceId": "SYNTHETIC:u1",
+          "email": ""
+        },
+        "identityKey": "sourceId:SYNTHETIC:U1",
+        "external": false,
+        "mags": [
+          "MAG1"
+        ],
+        "mmygs": [
+          "MMYG1"
+        ],
+        "buyingGroups": [
+          "BG1"
+        ],
+        "enabled": true,
+        "legacySourceAccount": false,
+        "hasPassword": false,
+        "supervisorId": "u0",
+        "scopeMode": "profile",
+        "ownPermissions": {
+          "manageBackup": false,
+          "manageBusinessRules": false,
+          "manageModelConnections": false,
+          "manageAllOrders": false,
+          "manageCollections": false
+        },
+        "ownAccessAreas": {
+          "overview": false,
+          "cp": false,
+          "orders": false,
+          "koleksiyon": false,
+          "lfl": false,
+          "priceanalysis": true,
+          "opencosting": false,
+          "backlog": false,
+          "shipping": false,
+          "automations": true,
+          "source": false
+        },
+        "directCollectionAccess": [],
+        "customScopes": {
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "dataScope": {
+          "mode": "SELF",
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "directPermissions": [
+          {
+            "id": "demo-CP.EDIT",
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "reason": "synthetic",
+            "validFrom": null,
+            "validUntil": null,
+            "grantedBy": null,
+            "grantedAt": "2026-11-07T12:00:00.000Z"
+          }
+        ],
+        "temporaryPermissions": [],
+        "assignedPermissions": [
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "sourceId": "demo-CP.EDIT",
+            "reason": "synthetic"
+          }
+        ],
+        "effectivePermissions": [
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "sourceId": "demo-CP.EDIT",
+            "reason": "synthetic"
+          }
+        ],
+        "canEdit": true,
+        "roleBundleIds": [],
+        "horizonDefault": null,
+        "updatedAt": null
+      },
+      {
+        "id": "u2",
+        "role": "buyer",
+        "roleLabel": "Buyer",
+        "username": "demo-u2",
+        "displayName": "DEMO u2",
+        "title": "Synthetic",
+        "email": "",
+        "systemRole": "buyer",
+        "systemRoleLabel": "Buyer",
+        "orgLevel": "job_title",
+        "orgLevelLabel": "Görev Tanımı",
+        "status": "ACTIVE",
+        "managerId": "u0",
+        "stableIds": {
+          "employeeId": "",
+          "corporateId": "",
+          "buyerId": "",
+          "sourceId": "SYNTHETIC:u2",
+          "email": ""
+        },
+        "identityKey": "sourceId:SYNTHETIC:U2",
+        "external": false,
+        "mags": [
+          "MAG2"
+        ],
+        "mmygs": [
+          "MMYG2"
+        ],
+        "buyingGroups": [
+          "BG0"
+        ],
+        "enabled": true,
+        "legacySourceAccount": false,
+        "hasPassword": false,
+        "supervisorId": "u0",
+        "scopeMode": "profile",
+        "ownPermissions": {
+          "manageBackup": false,
+          "manageBusinessRules": false,
+          "manageModelConnections": false,
+          "manageAllOrders": false,
+          "manageCollections": false
+        },
+        "ownAccessAreas": {
+          "overview": false,
+          "cp": false,
+          "orders": false,
+          "koleksiyon": false,
+          "lfl": false,
+          "priceanalysis": true,
+          "opencosting": false,
+          "backlog": false,
+          "shipping": false,
+          "automations": true,
+          "source": false
+        },
+        "directCollectionAccess": [],
+        "customScopes": {
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "dataScope": {
+          "mode": "SELF",
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "directPermissions": [
+          {
+            "id": "demo-CP.EDIT",
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "reason": "synthetic",
+            "validFrom": null,
+            "validUntil": null,
+            "grantedBy": null,
+            "grantedAt": "2026-11-07T12:00:00.000Z"
+          }
+        ],
+        "temporaryPermissions": [],
+        "assignedPermissions": [
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "sourceId": "demo-CP.EDIT",
+            "reason": "synthetic"
+          }
+        ],
+        "effectivePermissions": [
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "sourceId": "demo-CP.EDIT",
+            "reason": "synthetic"
+          }
+        ],
+        "canEdit": true,
+        "roleBundleIds": [],
+        "horizonDefault": null,
+        "updatedAt": null
+      }
+    ],
+    "centralIam": {
+      "enabled": false
+    },
+    "moderator": {
+      "id": "moderator",
+      "role": "moderator",
+      "roleLabel": "Moderatör",
+      "username": "demo-moderator",
+      "displayName": "DEMO moderator",
+      "title": "Synthetic",
+      "email": "",
+      "systemRole": "moderator",
+      "systemRoleLabel": "Moderatör",
+      "orgLevel": "job_title",
+      "orgLevelLabel": "Görev Tanımı",
+      "status": "ACTIVE",
+      "managerId": null,
+      "stableIds": {
+        "employeeId": "",
+        "corporateId": "",
+        "buyerId": "",
+        "sourceId": "SYNTHETIC:moderator",
+        "email": ""
+      },
+      "identityKey": "sourceId:SYNTHETIC:MODERATOR",
+      "external": false,
+      "mags": [
+        "MAG0"
+      ],
+      "mmygs": [
+        "MMYG0"
+      ],
+      "buyingGroups": [
+        "BG0"
+      ],
+      "enabled": true,
+      "legacySourceAccount": false,
+      "hasPassword": false,
+      "supervisorId": null,
+      "scopeMode": "profile",
+      "ownPermissions": {
+        "manageBackup": true,
+        "manageBusinessRules": true,
+        "manageModelConnections": true,
+        "manageAllOrders": true,
+        "manageCollections": true
+      },
+      "ownAccessAreas": {
+        "overview": true,
+        "cp": true,
+        "orders": true,
+        "koleksiyon": true,
+        "lfl": true,
+        "priceanalysis": true,
+        "opencosting": true,
+        "backlog": true,
+        "shipping": true,
+        "automations": true,
+        "source": true
+      },
+      "directCollectionAccess": [],
+      "customScopes": {
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      },
+      "dataScope": {
+        "mode": "ALL",
+        "buyers": [],
+        "mags": [],
+        "mmygs": [],
+        "buyingGroups": []
+      },
+      "directPermissions": [],
+      "temporaryPermissions": [],
+      "assignedPermissions": [
+        {
+          "permission": "OVERVIEW.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OVERVIEW.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "CP.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "CP.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "CP.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "CP.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "CP.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.APPROVE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.APPROVE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "BACKLOG.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "BACKLOG.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OAB.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OAB.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OAB.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OAB.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OAB.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OAB.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "QUOTATIONS.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "QUOTATIONS.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "QUOTATIONS.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "QUOTATIONS.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "QUOTATIONS.APPROVE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "QUOTATIONS.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ANALYSIS.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ANALYSIS.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OPEN_COSTING.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OPEN_COSTING.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OPEN_COSTING.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OPEN_COSTING.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OPEN_COSTING.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SHIPPING.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SHIPPING.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SHIPPING.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SHIPPING.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SHIPPING.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUTOMATIONS.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUTOMATIONS.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUTOMATIONS.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUTOMATIONS.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUTOMATIONS.APPROVE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUTOMATIONS.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SOURCE_DATA.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SOURCE_DATA.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SOURCE_DATA.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SOURCE_DATA.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SOURCE_DATA.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SOURCE_DATA.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "USER.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "USER.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "USER.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "USER.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "USER.GRANT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "USER.PROFILE_COPY",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ROLE.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ROLE.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "PERMISSION.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "PERMISSION.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "PERMISSION.GRANT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SYSTEM.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SYSTEM.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SECURITY.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SECURITY.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUDIT.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUDIT.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        }
+      ],
+      "effectivePermissions": [
+        {
+          "permission": "OVERVIEW.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OVERVIEW.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "CP.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "CP.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "CP.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "CP.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "CP.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.APPROVE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ORDERS.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.APPROVE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "COLLECTIONS.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "BACKLOG.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "BACKLOG.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OAB.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OAB.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OAB.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OAB.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OAB.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OAB.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "QUOTATIONS.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "QUOTATIONS.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "QUOTATIONS.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "QUOTATIONS.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "QUOTATIONS.APPROVE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "QUOTATIONS.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ANALYSIS.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ANALYSIS.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OPEN_COSTING.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OPEN_COSTING.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OPEN_COSTING.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OPEN_COSTING.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "OPEN_COSTING.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SHIPPING.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SHIPPING.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SHIPPING.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SHIPPING.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SHIPPING.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUTOMATIONS.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUTOMATIONS.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUTOMATIONS.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUTOMATIONS.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUTOMATIONS.APPROVE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUTOMATIONS.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SOURCE_DATA.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SOURCE_DATA.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SOURCE_DATA.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SOURCE_DATA.DELETE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SOURCE_DATA.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SOURCE_DATA.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "USER.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "USER.CREATE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "USER.EDIT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "USER.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "USER.GRANT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "USER.PROFILE_COPY",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ROLE.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "ROLE.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "PERMISSION.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "PERMISSION.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "PERMISSION.GRANT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SYSTEM.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SYSTEM.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SECURITY.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "SECURITY.MANAGE",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUDIT.VIEW",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "AUDIT.EXPORT",
+          "source": "ROLE",
+          "sourceId": "moderator",
+          "sourceLabel": "Moderatör"
+        },
+        {
+          "permission": "CP.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u0",
+          "sourceLabel": "DEMO u0",
+          "inheritedFrom": "u0"
+        },
+        {
+          "permission": "ORDERS.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u0",
+          "sourceLabel": "DEMO u0",
+          "inheritedFrom": "u0"
+        },
+        {
+          "permission": "COLLECTIONS.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u0",
+          "sourceLabel": "DEMO u0",
+          "inheritedFrom": "u0"
+        },
+        {
+          "permission": "BACKLOG.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u0",
+          "sourceLabel": "DEMO u0",
+          "inheritedFrom": "u0"
+        },
+        {
+          "permission": "OAB.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u0",
+          "sourceLabel": "DEMO u0",
+          "inheritedFrom": "u0"
+        },
+        {
+          "permission": "QUOTATIONS.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u0",
+          "sourceLabel": "DEMO u0",
+          "inheritedFrom": "u0"
+        },
+        {
+          "permission": "ANALYSIS.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u0",
+          "sourceLabel": "DEMO u0",
+          "inheritedFrom": "u0"
+        },
+        {
+          "permission": "SOURCE_DATA.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u0",
+          "sourceLabel": "DEMO u0",
+          "inheritedFrom": "u0"
+        },
+        {
+          "permission": "QUOTATIONS.CREATE",
+          "source": "HIERARCHY",
+          "sourceId": "u0",
+          "sourceLabel": "DEMO u0",
+          "inheritedFrom": "u0"
+        },
+        {
+          "permission": "QUOTATIONS.EDIT",
+          "source": "HIERARCHY",
+          "sourceId": "u0",
+          "sourceLabel": "DEMO u0",
+          "inheritedFrom": "u0"
+        },
+        {
+          "permission": "COLLECTIONS.EDIT",
+          "source": "HIERARCHY",
+          "sourceId": "u0",
+          "sourceLabel": "DEMO u0",
+          "inheritedFrom": "u0"
+        },
+        {
+          "permission": "CP.EDIT",
+          "source": "HIERARCHY",
+          "sourceId": "u0",
+          "sourceLabel": "DEMO u0",
+          "inheritedFrom": "u0"
+        },
+        {
+          "permission": "CP.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u1",
+          "sourceLabel": "DEMO u1",
+          "inheritedFrom": "u1"
+        },
+        {
+          "permission": "ORDERS.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u1",
+          "sourceLabel": "DEMO u1",
+          "inheritedFrom": "u1"
+        },
+        {
+          "permission": "COLLECTIONS.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u1",
+          "sourceLabel": "DEMO u1",
+          "inheritedFrom": "u1"
+        },
+        {
+          "permission": "BACKLOG.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u1",
+          "sourceLabel": "DEMO u1",
+          "inheritedFrom": "u1"
+        },
+        {
+          "permission": "OAB.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u1",
+          "sourceLabel": "DEMO u1",
+          "inheritedFrom": "u1"
+        },
+        {
+          "permission": "QUOTATIONS.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u1",
+          "sourceLabel": "DEMO u1",
+          "inheritedFrom": "u1"
+        },
+        {
+          "permission": "ANALYSIS.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u1",
+          "sourceLabel": "DEMO u1",
+          "inheritedFrom": "u1"
+        },
+        {
+          "permission": "SOURCE_DATA.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u1",
+          "sourceLabel": "DEMO u1",
+          "inheritedFrom": "u1"
+        },
+        {
+          "permission": "QUOTATIONS.CREATE",
+          "source": "HIERARCHY",
+          "sourceId": "u1",
+          "sourceLabel": "DEMO u1",
+          "inheritedFrom": "u1"
+        },
+        {
+          "permission": "QUOTATIONS.EDIT",
+          "source": "HIERARCHY",
+          "sourceId": "u1",
+          "sourceLabel": "DEMO u1",
+          "inheritedFrom": "u1"
+        },
+        {
+          "permission": "COLLECTIONS.EDIT",
+          "source": "HIERARCHY",
+          "sourceId": "u1",
+          "sourceLabel": "DEMO u1",
+          "inheritedFrom": "u1"
+        },
+        {
+          "permission": "CP.EDIT",
+          "source": "HIERARCHY",
+          "sourceId": "u1",
+          "sourceLabel": "DEMO u1",
+          "inheritedFrom": "u1"
+        },
+        {
+          "permission": "CP.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u2",
+          "sourceLabel": "DEMO u2",
+          "inheritedFrom": "u2"
+        },
+        {
+          "permission": "ORDERS.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u2",
+          "sourceLabel": "DEMO u2",
+          "inheritedFrom": "u2"
+        },
+        {
+          "permission": "COLLECTIONS.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u2",
+          "sourceLabel": "DEMO u2",
+          "inheritedFrom": "u2"
+        },
+        {
+          "permission": "BACKLOG.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u2",
+          "sourceLabel": "DEMO u2",
+          "inheritedFrom": "u2"
+        },
+        {
+          "permission": "OAB.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u2",
+          "sourceLabel": "DEMO u2",
+          "inheritedFrom": "u2"
+        },
+        {
+          "permission": "QUOTATIONS.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u2",
+          "sourceLabel": "DEMO u2",
+          "inheritedFrom": "u2"
+        },
+        {
+          "permission": "ANALYSIS.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u2",
+          "sourceLabel": "DEMO u2",
+          "inheritedFrom": "u2"
+        },
+        {
+          "permission": "SOURCE_DATA.VIEW",
+          "source": "HIERARCHY",
+          "sourceId": "u2",
+          "sourceLabel": "DEMO u2",
+          "inheritedFrom": "u2"
+        },
+        {
+          "permission": "QUOTATIONS.CREATE",
+          "source": "HIERARCHY",
+          "sourceId": "u2",
+          "sourceLabel": "DEMO u2",
+          "inheritedFrom": "u2"
+        },
+        {
+          "permission": "QUOTATIONS.EDIT",
+          "source": "HIERARCHY",
+          "sourceId": "u2",
+          "sourceLabel": "DEMO u2",
+          "inheritedFrom": "u2"
+        },
+        {
+          "permission": "COLLECTIONS.EDIT",
+          "source": "HIERARCHY",
+          "sourceId": "u2",
+          "sourceLabel": "DEMO u2",
+          "inheritedFrom": "u2"
+        },
+        {
+          "permission": "CP.EDIT",
+          "source": "HIERARCHY",
+          "sourceId": "u2",
+          "sourceLabel": "DEMO u2",
+          "inheritedFrom": "u2"
+        }
+      ],
+      "canEdit": true,
+      "roleBundleIds": [],
+      "horizonDefault": null,
+      "updatedAt": null
+    },
+    "users": [
+      {
+        "id": "u0",
+        "role": "manager",
+        "roleLabel": "Müdür",
+        "username": "demo-u0",
+        "displayName": "DEMO u0",
+        "title": "Synthetic",
+        "email": "",
+        "systemRole": "buyer",
+        "systemRoleLabel": "Buyer",
+        "orgLevel": "job_title",
+        "orgLevelLabel": "Görev Tanımı",
+        "status": "ACTIVE",
+        "managerId": "moderator",
+        "stableIds": {
+          "employeeId": "",
+          "corporateId": "",
+          "buyerId": "",
+          "sourceId": "SYNTHETIC:u0",
+          "email": ""
+        },
+        "identityKey": "sourceId:SYNTHETIC:U0",
+        "external": false,
+        "mags": [
+          "MAG0"
+        ],
+        "mmygs": [
+          "MMYG0"
+        ],
+        "buyingGroups": [
+          "BG0"
+        ],
+        "enabled": true,
+        "legacySourceAccount": false,
+        "hasPassword": false,
+        "supervisorId": "moderator",
+        "scopeMode": "profile",
+        "ownPermissions": {
+          "manageBackup": false,
+          "manageBusinessRules": false,
+          "manageModelConnections": false,
+          "manageAllOrders": false,
+          "manageCollections": false
+        },
+        "ownAccessAreas": {
+          "overview": false,
+          "cp": false,
+          "orders": false,
+          "koleksiyon": false,
+          "lfl": false,
+          "priceanalysis": true,
+          "opencosting": false,
+          "backlog": false,
+          "shipping": false,
+          "automations": true,
+          "source": false
+        },
+        "directCollectionAccess": [],
+        "customScopes": {
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "dataScope": {
+          "mode": "TEAM",
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "directPermissions": [
+          {
+            "id": "demo-CP.EDIT",
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "reason": "synthetic",
+            "validFrom": null,
+            "validUntil": null,
+            "grantedBy": null,
+            "grantedAt": "2026-11-07T12:00:00.000Z"
+          }
+        ],
+        "temporaryPermissions": [],
+        "assignedPermissions": [
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "sourceId": "demo-CP.EDIT",
+            "reason": "synthetic"
+          }
+        ],
+        "effectivePermissions": [
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "sourceId": "demo-CP.EDIT",
+            "reason": "synthetic"
+          },
+          {
+            "permission": "CP.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u1",
+            "sourceLabel": "DEMO u1",
+            "inheritedFrom": "u1"
+          },
+          {
+            "permission": "CP.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "HIERARCHY",
+            "sourceId": "u2",
+            "sourceLabel": "DEMO u2",
+            "inheritedFrom": "u2"
+          }
+        ],
+        "canEdit": true,
+        "roleBundleIds": [],
+        "horizonDefault": null,
+        "updatedAt": null
+      },
+      {
+        "id": "u1",
+        "role": "buyer",
+        "roleLabel": "Buyer",
+        "username": "demo-u1",
+        "displayName": "DEMO u1",
+        "title": "Synthetic",
+        "email": "",
+        "systemRole": "buyer",
+        "systemRoleLabel": "Buyer",
+        "orgLevel": "job_title",
+        "orgLevelLabel": "Görev Tanımı",
+        "status": "ACTIVE",
+        "managerId": "u0",
+        "stableIds": {
+          "employeeId": "",
+          "corporateId": "",
+          "buyerId": "",
+          "sourceId": "SYNTHETIC:u1",
+          "email": ""
+        },
+        "identityKey": "sourceId:SYNTHETIC:U1",
+        "external": false,
+        "mags": [
+          "MAG1"
+        ],
+        "mmygs": [
+          "MMYG1"
+        ],
+        "buyingGroups": [
+          "BG1"
+        ],
+        "enabled": true,
+        "legacySourceAccount": false,
+        "hasPassword": false,
+        "supervisorId": "u0",
+        "scopeMode": "profile",
+        "ownPermissions": {
+          "manageBackup": false,
+          "manageBusinessRules": false,
+          "manageModelConnections": false,
+          "manageAllOrders": false,
+          "manageCollections": false
+        },
+        "ownAccessAreas": {
+          "overview": false,
+          "cp": false,
+          "orders": false,
+          "koleksiyon": false,
+          "lfl": false,
+          "priceanalysis": true,
+          "opencosting": false,
+          "backlog": false,
+          "shipping": false,
+          "automations": true,
+          "source": false
+        },
+        "directCollectionAccess": [],
+        "customScopes": {
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "dataScope": {
+          "mode": "SELF",
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "directPermissions": [
+          {
+            "id": "demo-CP.EDIT",
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "reason": "synthetic",
+            "validFrom": null,
+            "validUntil": null,
+            "grantedBy": null,
+            "grantedAt": "2026-11-07T12:00:00.000Z"
+          }
+        ],
+        "temporaryPermissions": [],
+        "assignedPermissions": [
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "sourceId": "demo-CP.EDIT",
+            "reason": "synthetic"
+          }
+        ],
+        "effectivePermissions": [
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "sourceId": "demo-CP.EDIT",
+            "reason": "synthetic"
+          }
+        ],
+        "canEdit": true,
+        "roleBundleIds": [],
+        "horizonDefault": null,
+        "updatedAt": null
+      },
+      {
+        "id": "u2",
+        "role": "buyer",
+        "roleLabel": "Buyer",
+        "username": "demo-u2",
+        "displayName": "DEMO u2",
+        "title": "Synthetic",
+        "email": "",
+        "systemRole": "buyer",
+        "systemRoleLabel": "Buyer",
+        "orgLevel": "job_title",
+        "orgLevelLabel": "Görev Tanımı",
+        "status": "ACTIVE",
+        "managerId": "u0",
+        "stableIds": {
+          "employeeId": "",
+          "corporateId": "",
+          "buyerId": "",
+          "sourceId": "SYNTHETIC:u2",
+          "email": ""
+        },
+        "identityKey": "sourceId:SYNTHETIC:U2",
+        "external": false,
+        "mags": [
+          "MAG2"
+        ],
+        "mmygs": [
+          "MMYG2"
+        ],
+        "buyingGroups": [
+          "BG0"
+        ],
+        "enabled": true,
+        "legacySourceAccount": false,
+        "hasPassword": false,
+        "supervisorId": "u0",
+        "scopeMode": "profile",
+        "ownPermissions": {
+          "manageBackup": false,
+          "manageBusinessRules": false,
+          "manageModelConnections": false,
+          "manageAllOrders": false,
+          "manageCollections": false
+        },
+        "ownAccessAreas": {
+          "overview": false,
+          "cp": false,
+          "orders": false,
+          "koleksiyon": false,
+          "lfl": false,
+          "priceanalysis": true,
+          "opencosting": false,
+          "backlog": false,
+          "shipping": false,
+          "automations": true,
+          "source": false
+        },
+        "directCollectionAccess": [],
+        "customScopes": {
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "dataScope": {
+          "mode": "SELF",
+          "buyers": [],
+          "mags": [],
+          "mmygs": [],
+          "buyingGroups": []
+        },
+        "directPermissions": [
+          {
+            "id": "demo-CP.EDIT",
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "reason": "synthetic",
+            "validFrom": null,
+            "validUntil": null,
+            "grantedBy": null,
+            "grantedAt": "2026-11-07T12:00:00.000Z"
+          }
+        ],
+        "temporaryPermissions": [],
+        "assignedPermissions": [
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "sourceId": "demo-CP.EDIT",
+            "reason": "synthetic"
+          }
+        ],
+        "effectivePermissions": [
+          {
+            "permission": "CP.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ORDERS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "BACKLOG.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "OAB.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "ANALYSIS.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "SOURCE_DATA.VIEW",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.CREATE",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "QUOTATIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "COLLECTIONS.EDIT",
+            "source": "ROLE",
+            "sourceId": "buyer",
+            "sourceLabel": "Buyer"
+          },
+          {
+            "permission": "CP.EDIT",
+            "source": "DIRECT",
+            "sourceId": "demo-CP.EDIT",
+            "reason": "synthetic"
+          }
+        ],
+        "canEdit": true,
+        "roleBundleIds": [],
+        "horizonDefault": null,
+        "updatedAt": null
+      }
+    ],
+    "roles": {
+      "buyer": "Buyer",
+      "team_lead": "Ekip Lideri",
+      "manager": "Müdür",
+      "moderator": "Moderatör"
+    },
+    "permissionKeys": [
+      "manageBackup",
+      "manageBusinessRules",
+      "manageModelConnections",
+      "manageAllOrders",
+      "manageCollections"
+    ],
+    "areaKeys": [
+      "overview",
+      "cp",
+      "orders",
+      "koleksiyon",
+      "lfl",
+      "priceanalysis",
+      "opencosting",
+      "backlog",
+      "shipping",
+      "automations",
+      "source"
+    ],
+    "orgLevels": {
+      "job_title": "Görev Tanımı",
+      "mmyg": "MMYG",
+      "mag": "MAG",
+      "manager": "Yönetici"
+    },
+    "systemRoles": {
+      "buyer": "Buyer",
+      "manager": "Manager",
+      "senior_manager": "Senior Manager",
+      "moderator": "Moderatör"
+    },
+    "statuses": {
+      "ACTIVE": "Aktif",
+      "INACTIVE": "Pasif",
+      "SUSPENDED": "Askıya Alındı"
+    },
+    "dataScopeModes": {
+      "SELF": "Kendi Verisi",
+      "TEAM": "Ekibi",
+      "MMYG": "MMYG",
+      "MAG": "MAG",
+      "ALL": "Tümü",
+      "CUSTOM": "Özel"
+    },
+    "permissionRegistry": [
+      {
+        "code": "OVERVIEW.VIEW",
+        "resource": "OVERVIEW",
+        "action": "VIEW",
+        "labelTr": "Genel Bakış · VIEW",
+        "labelEn": "Overview · VIEW",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "OVERVIEW.EXPORT",
+        "resource": "OVERVIEW",
+        "action": "EXPORT",
+        "labelTr": "Genel Bakış · EXPORT",
+        "labelEn": "Overview · EXPORT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "CP.VIEW",
+        "resource": "CP",
+        "action": "VIEW",
+        "labelTr": "CP · VIEW",
+        "labelEn": "CP · VIEW",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "CP.CREATE",
+        "resource": "CP",
+        "action": "CREATE",
+        "labelTr": "CP · CREATE",
+        "labelEn": "CP · CREATE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "CP.EDIT",
+        "resource": "CP",
+        "action": "EDIT",
+        "labelTr": "CP · EDIT",
+        "labelEn": "CP · EDIT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "CP.DELETE",
+        "resource": "CP",
+        "action": "DELETE",
+        "labelTr": "CP · DELETE",
+        "labelEn": "CP · DELETE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "CP.EXPORT",
+        "resource": "CP",
+        "action": "EXPORT",
+        "labelTr": "CP · EXPORT",
+        "labelEn": "CP · EXPORT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "ORDERS.VIEW",
+        "resource": "ORDERS",
+        "action": "VIEW",
+        "labelTr": "Siparişler · VIEW",
+        "labelEn": "Orders · VIEW",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "ORDERS.CREATE",
+        "resource": "ORDERS",
+        "action": "CREATE",
+        "labelTr": "Siparişler · CREATE",
+        "labelEn": "Orders · CREATE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "ORDERS.EDIT",
+        "resource": "ORDERS",
+        "action": "EDIT",
+        "labelTr": "Siparişler · EDIT",
+        "labelEn": "Orders · EDIT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "ORDERS.DELETE",
+        "resource": "ORDERS",
+        "action": "DELETE",
+        "labelTr": "Siparişler · DELETE",
+        "labelEn": "Orders · DELETE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "ORDERS.APPROVE",
+        "resource": "ORDERS",
+        "action": "APPROVE",
+        "labelTr": "Siparişler · APPROVE",
+        "labelEn": "Orders · APPROVE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "ORDERS.EXPORT",
+        "resource": "ORDERS",
+        "action": "EXPORT",
+        "labelTr": "Siparişler · EXPORT",
+        "labelEn": "Orders · EXPORT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "ORDERS.MANAGE",
+        "resource": "ORDERS",
+        "action": "MANAGE",
+        "labelTr": "Siparişler · MANAGE",
+        "labelEn": "Orders · MANAGE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "COLLECTIONS.VIEW",
+        "resource": "COLLECTIONS",
+        "action": "VIEW",
+        "labelTr": "Koleksiyon · VIEW",
+        "labelEn": "Collections · VIEW",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "COLLECTIONS.CREATE",
+        "resource": "COLLECTIONS",
+        "action": "CREATE",
+        "labelTr": "Koleksiyon · CREATE",
+        "labelEn": "Collections · CREATE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "COLLECTIONS.EDIT",
+        "resource": "COLLECTIONS",
+        "action": "EDIT",
+        "labelTr": "Koleksiyon · EDIT",
+        "labelEn": "Collections · EDIT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "COLLECTIONS.DELETE",
+        "resource": "COLLECTIONS",
+        "action": "DELETE",
+        "labelTr": "Koleksiyon · DELETE",
+        "labelEn": "Collections · DELETE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "COLLECTIONS.APPROVE",
+        "resource": "COLLECTIONS",
+        "action": "APPROVE",
+        "labelTr": "Koleksiyon · APPROVE",
+        "labelEn": "Collections · APPROVE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "COLLECTIONS.EXPORT",
+        "resource": "COLLECTIONS",
+        "action": "EXPORT",
+        "labelTr": "Koleksiyon · EXPORT",
+        "labelEn": "Collections · EXPORT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "COLLECTIONS.MANAGE",
+        "resource": "COLLECTIONS",
+        "action": "MANAGE",
+        "labelTr": "Koleksiyon · MANAGE",
+        "labelEn": "Collections · MANAGE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "BACKLOG.VIEW",
+        "resource": "BACKLOG",
+        "action": "VIEW",
+        "labelTr": "Backlog · VIEW",
+        "labelEn": "Backlog · VIEW",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "BACKLOG.EXPORT",
+        "resource": "BACKLOG",
+        "action": "EXPORT",
+        "labelTr": "Backlog · EXPORT",
+        "labelEn": "Backlog · EXPORT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "OAB.VIEW",
+        "resource": "OAB",
+        "action": "VIEW",
+        "labelTr": "OAB · VIEW",
+        "labelEn": "OAB · VIEW",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "OAB.CREATE",
+        "resource": "OAB",
+        "action": "CREATE",
+        "labelTr": "OAB · CREATE",
+        "labelEn": "OAB · CREATE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "OAB.EDIT",
+        "resource": "OAB",
+        "action": "EDIT",
+        "labelTr": "OAB · EDIT",
+        "labelEn": "OAB · EDIT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "OAB.DELETE",
+        "resource": "OAB",
+        "action": "DELETE",
+        "labelTr": "OAB · DELETE",
+        "labelEn": "OAB · DELETE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "OAB.EXPORT",
+        "resource": "OAB",
+        "action": "EXPORT",
+        "labelTr": "OAB · EXPORT",
+        "labelEn": "OAB · EXPORT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "OAB.MANAGE",
+        "resource": "OAB",
+        "action": "MANAGE",
+        "labelTr": "OAB · MANAGE",
+        "labelEn": "OAB · MANAGE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "QUOTATIONS.VIEW",
+        "resource": "QUOTATIONS",
+        "action": "VIEW",
+        "labelTr": "Quotations · VIEW",
+        "labelEn": "Quotations · VIEW",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "QUOTATIONS.CREATE",
+        "resource": "QUOTATIONS",
+        "action": "CREATE",
+        "labelTr": "Quotations · CREATE",
+        "labelEn": "Quotations · CREATE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "QUOTATIONS.EDIT",
+        "resource": "QUOTATIONS",
+        "action": "EDIT",
+        "labelTr": "Quotations · EDIT",
+        "labelEn": "Quotations · EDIT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "QUOTATIONS.DELETE",
+        "resource": "QUOTATIONS",
+        "action": "DELETE",
+        "labelTr": "Quotations · DELETE",
+        "labelEn": "Quotations · DELETE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "QUOTATIONS.APPROVE",
+        "resource": "QUOTATIONS",
+        "action": "APPROVE",
+        "labelTr": "Quotations · APPROVE",
+        "labelEn": "Quotations · APPROVE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "QUOTATIONS.EXPORT",
+        "resource": "QUOTATIONS",
+        "action": "EXPORT",
+        "labelTr": "Quotations · EXPORT",
+        "labelEn": "Quotations · EXPORT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "ANALYSIS.VIEW",
+        "resource": "ANALYSIS",
+        "action": "VIEW",
+        "labelTr": "Analizler · VIEW",
+        "labelEn": "Analysis · VIEW",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "ANALYSIS.EXPORT",
+        "resource": "ANALYSIS",
+        "action": "EXPORT",
+        "labelTr": "Analizler · EXPORT",
+        "labelEn": "Analysis · EXPORT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "OPEN_COSTING.VIEW",
+        "resource": "OPEN_COSTING",
+        "action": "VIEW",
+        "labelTr": "Ön Maliyet · VIEW",
+        "labelEn": "Open Costing · VIEW",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "OPEN_COSTING.CREATE",
+        "resource": "OPEN_COSTING",
+        "action": "CREATE",
+        "labelTr": "Ön Maliyet · CREATE",
+        "labelEn": "Open Costing · CREATE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "OPEN_COSTING.EDIT",
+        "resource": "OPEN_COSTING",
+        "action": "EDIT",
+        "labelTr": "Ön Maliyet · EDIT",
+        "labelEn": "Open Costing · EDIT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "OPEN_COSTING.DELETE",
+        "resource": "OPEN_COSTING",
+        "action": "DELETE",
+        "labelTr": "Ön Maliyet · DELETE",
+        "labelEn": "Open Costing · DELETE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "OPEN_COSTING.EXPORT",
+        "resource": "OPEN_COSTING",
+        "action": "EXPORT",
+        "labelTr": "Ön Maliyet · EXPORT",
+        "labelEn": "Open Costing · EXPORT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "SHIPPING.VIEW",
+        "resource": "SHIPPING",
+        "action": "VIEW",
+        "labelTr": "Nakliye Kıyaslama · VIEW",
+        "labelEn": "Shipping Comparison · VIEW",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "SHIPPING.CREATE",
+        "resource": "SHIPPING",
+        "action": "CREATE",
+        "labelTr": "Nakliye Kıyaslama · CREATE",
+        "labelEn": "Shipping Comparison · CREATE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "SHIPPING.EDIT",
+        "resource": "SHIPPING",
+        "action": "EDIT",
+        "labelTr": "Nakliye Kıyaslama · EDIT",
+        "labelEn": "Shipping Comparison · EDIT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "SHIPPING.DELETE",
+        "resource": "SHIPPING",
+        "action": "DELETE",
+        "labelTr": "Nakliye Kıyaslama · DELETE",
+        "labelEn": "Shipping Comparison · DELETE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "SHIPPING.EXPORT",
+        "resource": "SHIPPING",
+        "action": "EXPORT",
+        "labelTr": "Nakliye Kıyaslama · EXPORT",
+        "labelEn": "Shipping Comparison · EXPORT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "AUTOMATIONS.VIEW",
+        "resource": "AUTOMATIONS",
+        "action": "VIEW",
+        "labelTr": "Otomasyonlar · VIEW",
+        "labelEn": "Automations · VIEW",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "AUTOMATIONS.CREATE",
+        "resource": "AUTOMATIONS",
+        "action": "CREATE",
+        "labelTr": "Otomasyonlar · CREATE",
+        "labelEn": "Automations · CREATE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "AUTOMATIONS.EDIT",
+        "resource": "AUTOMATIONS",
+        "action": "EDIT",
+        "labelTr": "Otomasyonlar · EDIT",
+        "labelEn": "Automations · EDIT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "AUTOMATIONS.DELETE",
+        "resource": "AUTOMATIONS",
+        "action": "DELETE",
+        "labelTr": "Otomasyonlar · DELETE",
+        "labelEn": "Automations · DELETE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "AUTOMATIONS.APPROVE",
+        "resource": "AUTOMATIONS",
+        "action": "APPROVE",
+        "labelTr": "Otomasyonlar · APPROVE",
+        "labelEn": "Automations · APPROVE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "AUTOMATIONS.MANAGE",
+        "resource": "AUTOMATIONS",
+        "action": "MANAGE",
+        "labelTr": "Otomasyonlar · MANAGE",
+        "labelEn": "Automations · MANAGE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "SOURCE_DATA.VIEW",
+        "resource": "SOURCE_DATA",
+        "action": "VIEW",
+        "labelTr": "Kaynak Veri · VIEW",
+        "labelEn": "Source Data · VIEW",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "SOURCE_DATA.CREATE",
+        "resource": "SOURCE_DATA",
+        "action": "CREATE",
+        "labelTr": "Kaynak Veri · CREATE",
+        "labelEn": "Source Data · CREATE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "SOURCE_DATA.EDIT",
+        "resource": "SOURCE_DATA",
+        "action": "EDIT",
+        "labelTr": "Kaynak Veri · EDIT",
+        "labelEn": "Source Data · EDIT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "SOURCE_DATA.DELETE",
+        "resource": "SOURCE_DATA",
+        "action": "DELETE",
+        "labelTr": "Kaynak Veri · DELETE",
+        "labelEn": "Source Data · DELETE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "SOURCE_DATA.EXPORT",
+        "resource": "SOURCE_DATA",
+        "action": "EXPORT",
+        "labelTr": "Kaynak Veri · EXPORT",
+        "labelEn": "Source Data · EXPORT",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "SOURCE_DATA.MANAGE",
+        "resource": "SOURCE_DATA",
+        "action": "MANAGE",
+        "labelTr": "Kaynak Veri · MANAGE",
+        "labelEn": "Source Data · MANAGE",
+        "security": false,
+        "inheritable": true
+      },
+      {
+        "code": "USER.VIEW",
+        "resource": "USER",
+        "action": "VIEW",
+        "labelTr": "Kullanıcı Yönetimi · VIEW",
+        "labelEn": "User Management · VIEW",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "USER.CREATE",
+        "resource": "USER",
+        "action": "CREATE",
+        "labelTr": "Kullanıcı Yönetimi · CREATE",
+        "labelEn": "User Management · CREATE",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "USER.EDIT",
+        "resource": "USER",
+        "action": "EDIT",
+        "labelTr": "Kullanıcı Yönetimi · EDIT",
+        "labelEn": "User Management · EDIT",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "USER.MANAGE",
+        "resource": "USER",
+        "action": "MANAGE",
+        "labelTr": "Kullanıcı Yönetimi · MANAGE",
+        "labelEn": "User Management · MANAGE",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "USER.GRANT",
+        "resource": "USER",
+        "action": "GRANT",
+        "labelTr": "Kullanıcı Yönetimi · GRANT",
+        "labelEn": "User Management · GRANT",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "USER.PROFILE_COPY",
+        "resource": "USER",
+        "action": "PROFILE_COPY",
+        "labelTr": "Kullanıcı Yönetimi · PROFILE_COPY",
+        "labelEn": "User Management · PROFILE_COPY",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "ROLE.VIEW",
+        "resource": "ROLE",
+        "action": "VIEW",
+        "labelTr": "Rol Yönetimi · VIEW",
+        "labelEn": "Role Management · VIEW",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "ROLE.MANAGE",
+        "resource": "ROLE",
+        "action": "MANAGE",
+        "labelTr": "Rol Yönetimi · MANAGE",
+        "labelEn": "Role Management · MANAGE",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "PERMISSION.VIEW",
+        "resource": "PERMISSION",
+        "action": "VIEW",
+        "labelTr": "Yetki Yönetimi · VIEW",
+        "labelEn": "Permission Management · VIEW",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "PERMISSION.MANAGE",
+        "resource": "PERMISSION",
+        "action": "MANAGE",
+        "labelTr": "Yetki Yönetimi · MANAGE",
+        "labelEn": "Permission Management · MANAGE",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "PERMISSION.GRANT",
+        "resource": "PERMISSION",
+        "action": "GRANT",
+        "labelTr": "Yetki Yönetimi · GRANT",
+        "labelEn": "Permission Management · GRANT",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "SYSTEM.VIEW",
+        "resource": "SYSTEM",
+        "action": "VIEW",
+        "labelTr": "Sistem Ayarları · VIEW",
+        "labelEn": "System Configuration · VIEW",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "SYSTEM.MANAGE",
+        "resource": "SYSTEM",
+        "action": "MANAGE",
+        "labelTr": "Sistem Ayarları · MANAGE",
+        "labelEn": "System Configuration · MANAGE",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "SECURITY.VIEW",
+        "resource": "SECURITY",
+        "action": "VIEW",
+        "labelTr": "Güvenlik · VIEW",
+        "labelEn": "Security · VIEW",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "SECURITY.MANAGE",
+        "resource": "SECURITY",
+        "action": "MANAGE",
+        "labelTr": "Güvenlik · MANAGE",
+        "labelEn": "Security · MANAGE",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "AUDIT.VIEW",
+        "resource": "AUDIT",
+        "action": "VIEW",
+        "labelTr": "Denetim Kaydı · VIEW",
+        "labelEn": "Audit Log · VIEW",
+        "security": true,
+        "inheritable": false
+      },
+      {
+        "code": "AUDIT.EXPORT",
+        "resource": "AUDIT",
+        "action": "EXPORT",
+        "labelTr": "Denetim Kaydı · EXPORT",
+        "labelEn": "Audit Log · EXPORT",
+        "security": true,
+        "inheritable": false
+      }
+    ],
+    "resources": {
+      "OVERVIEW": {
+        "tr": "Genel Bakış",
+        "en": "Overview",
+        "actions": [
+          "VIEW",
+          "EXPORT"
+        ],
+        "safe": true
+      },
+      "CP": {
+        "tr": "CP",
+        "en": "CP",
+        "actions": [
+          "VIEW",
+          "CREATE",
+          "EDIT",
+          "DELETE",
+          "EXPORT"
+        ],
+        "safe": true
+      },
+      "ORDERS": {
+        "tr": "Siparişler",
+        "en": "Orders",
+        "actions": [
+          "VIEW",
+          "CREATE",
+          "EDIT",
+          "DELETE",
+          "APPROVE",
+          "EXPORT",
+          "MANAGE"
+        ],
+        "safe": true
+      },
+      "COLLECTIONS": {
+        "tr": "Koleksiyon",
+        "en": "Collections",
+        "actions": [
+          "VIEW",
+          "CREATE",
+          "EDIT",
+          "DELETE",
+          "APPROVE",
+          "EXPORT",
+          "MANAGE"
+        ],
+        "safe": true
+      },
+      "BACKLOG": {
+        "tr": "Backlog",
+        "en": "Backlog",
+        "actions": [
+          "VIEW",
+          "EXPORT"
+        ],
+        "safe": true
+      },
+      "OAB": {
+        "tr": "OAB",
+        "en": "OAB",
+        "actions": [
+          "VIEW",
+          "CREATE",
+          "EDIT",
+          "DELETE",
+          "EXPORT",
+          "MANAGE"
+        ],
+        "safe": true
+      },
+      "QUOTATIONS": {
+        "tr": "Quotations",
+        "en": "Quotations",
+        "actions": [
+          "VIEW",
+          "CREATE",
+          "EDIT",
+          "DELETE",
+          "APPROVE",
+          "EXPORT"
+        ],
+        "safe": true
+      },
+      "ANALYSIS": {
+        "tr": "Analizler",
+        "en": "Analysis",
+        "actions": [
+          "VIEW",
+          "EXPORT"
+        ],
+        "safe": true
+      },
+      "OPEN_COSTING": {
+        "tr": "Ön Maliyet",
+        "en": "Open Costing",
+        "actions": [
+          "VIEW",
+          "CREATE",
+          "EDIT",
+          "DELETE",
+          "EXPORT"
+        ]
+      },
+      "SHIPPING": {
+        "tr": "Nakliye Kıyaslama",
+        "en": "Shipping Comparison",
+        "actions": [
+          "VIEW",
+          "CREATE",
+          "EDIT",
+          "DELETE",
+          "EXPORT"
+        ]
+      },
+      "AUTOMATIONS": {
+        "tr": "Otomasyonlar",
+        "en": "Automations",
+        "actions": [
+          "VIEW",
+          "CREATE",
+          "EDIT",
+          "DELETE",
+          "APPROVE",
+          "MANAGE"
+        ]
+      },
+      "SOURCE_DATA": {
+        "tr": "Kaynak Veri",
+        "en": "Source Data",
+        "actions": [
+          "VIEW",
+          "CREATE",
+          "EDIT",
+          "DELETE",
+          "EXPORT",
+          "MANAGE"
+        ]
+      },
+      "USER": {
+        "tr": "Kullanıcı Yönetimi",
+        "en": "User Management",
+        "actions": [
+          "VIEW",
+          "CREATE",
+          "EDIT",
+          "MANAGE",
+          "GRANT",
+          "PROFILE_COPY"
+        ],
+        "security": true
+      },
+      "ROLE": {
+        "tr": "Rol Yönetimi",
+        "en": "Role Management",
+        "actions": [
+          "VIEW",
+          "MANAGE"
+        ],
+        "security": true
+      },
+      "PERMISSION": {
+        "tr": "Yetki Yönetimi",
+        "en": "Permission Management",
+        "actions": [
+          "VIEW",
+          "MANAGE",
+          "GRANT"
+        ],
+        "security": true
+      },
+      "SYSTEM": {
+        "tr": "Sistem Ayarları",
+        "en": "System Configuration",
+        "actions": [
+          "VIEW",
+          "MANAGE"
+        ],
+        "security": true
+      },
+      "SECURITY": {
+        "tr": "Güvenlik",
+        "en": "Security",
+        "actions": [
+          "VIEW",
+          "MANAGE"
+        ],
+        "security": true
+      },
+      "AUDIT": {
+        "tr": "Denetim Kaydı",
+        "en": "Audit Log",
+        "actions": [
+          "VIEW",
+          "EXPORT"
+        ],
+        "security": true
+      }
+    },
+    "actions": [
+      "VIEW",
+      "CREATE",
+      "EDIT",
+      "DELETE",
+      "APPROVE",
+      "EXPORT",
+      "MANAGE",
+      "GRANT",
+      "PROFILE_COPY",
+      "SEARCH",
+      "LINK",
+      "PIN",
+      "TIMELINE_VIEW",
+      "ATTACHMENT_VIEW",
+      "AI_SUMMARY",
+      "ADMIN"
+    ],
+    "roleDefinitions": {
+      "buyer": {
+        "id": "buyer",
+        "nameTr": "Buyer",
+        "nameEn": "Buyer",
+        "defaultDataScope": "SELF",
+        "permissions": [
+          "CP.VIEW",
+          "ORDERS.VIEW",
+          "COLLECTIONS.VIEW",
+          "BACKLOG.VIEW",
+          "OAB.VIEW",
+          "QUOTATIONS.VIEW",
+          "ANALYSIS.VIEW",
+          "SOURCE_DATA.VIEW",
+          "QUOTATIONS.CREATE",
+          "QUOTATIONS.EDIT",
+          "COLLECTIONS.EDIT"
+        ],
+        "system": true,
+        "defaultsRevision": 3
+      },
+      "manager": {
+        "id": "manager",
+        "nameTr": "Manager",
+        "nameEn": "Manager",
+        "defaultDataScope": "MMYG",
+        "permissions": [
+          "OVERVIEW.VIEW",
+          "OVERVIEW.EXPORT",
+          "CP.VIEW",
+          "CP.CREATE",
+          "CP.EDIT",
+          "CP.EXPORT",
+          "ORDERS.VIEW",
+          "ORDERS.CREATE",
+          "ORDERS.EDIT",
+          "ORDERS.APPROVE",
+          "ORDERS.EXPORT",
+          "ORDERS.MANAGE",
+          "COLLECTIONS.VIEW",
+          "COLLECTIONS.CREATE",
+          "COLLECTIONS.EDIT",
+          "COLLECTIONS.APPROVE",
+          "COLLECTIONS.EXPORT",
+          "COLLECTIONS.MANAGE",
+          "BACKLOG.VIEW",
+          "BACKLOG.EXPORT",
+          "OAB.VIEW",
+          "OAB.CREATE",
+          "OAB.EDIT",
+          "OAB.EXPORT",
+          "OAB.MANAGE",
+          "QUOTATIONS.VIEW",
+          "QUOTATIONS.CREATE",
+          "QUOTATIONS.EDIT",
+          "QUOTATIONS.APPROVE",
+          "QUOTATIONS.EXPORT",
+          "ANALYSIS.VIEW",
+          "ANALYSIS.EXPORT",
+          "OPEN_COSTING.VIEW",
+          "OPEN_COSTING.CREATE",
+          "OPEN_COSTING.EDIT",
+          "OPEN_COSTING.EXPORT",
+          "SHIPPING.VIEW",
+          "SHIPPING.CREATE",
+          "SHIPPING.EDIT",
+          "SHIPPING.EXPORT",
+          "AUTOMATIONS.VIEW",
+          "AUTOMATIONS.CREATE",
+          "AUTOMATIONS.EDIT",
+          "AUTOMATIONS.APPROVE",
+          "AUTOMATIONS.MANAGE",
+          "SOURCE_DATA.VIEW",
+          "SOURCE_DATA.CREATE",
+          "SOURCE_DATA.EDIT",
+          "SOURCE_DATA.EXPORT"
+        ],
+        "system": true,
+        "defaultsRevision": 3
+      },
+      "senior_manager": {
+        "id": "senior_manager",
+        "nameTr": "Senior Manager",
+        "nameEn": "Senior Manager",
+        "defaultDataScope": "MAG",
+        "permissions": [
+          "OVERVIEW.VIEW",
+          "OVERVIEW.EXPORT",
+          "CP.VIEW",
+          "CP.CREATE",
+          "CP.EDIT",
+          "CP.DELETE",
+          "CP.EXPORT",
+          "ORDERS.VIEW",
+          "ORDERS.CREATE",
+          "ORDERS.EDIT",
+          "ORDERS.DELETE",
+          "ORDERS.APPROVE",
+          "ORDERS.EXPORT",
+          "ORDERS.MANAGE",
+          "COLLECTIONS.VIEW",
+          "COLLECTIONS.CREATE",
+          "COLLECTIONS.EDIT",
+          "COLLECTIONS.DELETE",
+          "COLLECTIONS.APPROVE",
+          "COLLECTIONS.EXPORT",
+          "COLLECTIONS.MANAGE",
+          "BACKLOG.VIEW",
+          "BACKLOG.EXPORT",
+          "OAB.VIEW",
+          "OAB.CREATE",
+          "OAB.EDIT",
+          "OAB.DELETE",
+          "OAB.EXPORT",
+          "OAB.MANAGE",
+          "QUOTATIONS.VIEW",
+          "QUOTATIONS.CREATE",
+          "QUOTATIONS.EDIT",
+          "QUOTATIONS.DELETE",
+          "QUOTATIONS.APPROVE",
+          "QUOTATIONS.EXPORT",
+          "ANALYSIS.VIEW",
+          "ANALYSIS.EXPORT",
+          "OPEN_COSTING.VIEW",
+          "OPEN_COSTING.CREATE",
+          "OPEN_COSTING.EDIT",
+          "OPEN_COSTING.DELETE",
+          "OPEN_COSTING.EXPORT",
+          "SHIPPING.VIEW",
+          "SHIPPING.CREATE",
+          "SHIPPING.EDIT",
+          "SHIPPING.DELETE",
+          "SHIPPING.EXPORT",
+          "AUTOMATIONS.VIEW",
+          "AUTOMATIONS.CREATE",
+          "AUTOMATIONS.EDIT",
+          "AUTOMATIONS.DELETE",
+          "AUTOMATIONS.APPROVE",
+          "AUTOMATIONS.MANAGE",
+          "SOURCE_DATA.VIEW",
+          "SOURCE_DATA.CREATE",
+          "SOURCE_DATA.EDIT",
+          "SOURCE_DATA.DELETE",
+          "SOURCE_DATA.EXPORT"
+        ],
+        "system": true,
+        "defaultsRevision": 3
+      },
+      "moderator": {
+        "id": "moderator",
+        "nameTr": "Moderatör",
+        "nameEn": "Moderator",
+        "defaultDataScope": "ALL",
+        "permissions": [
+          "OVERVIEW.VIEW",
+          "OVERVIEW.EXPORT",
+          "CP.VIEW",
+          "CP.CREATE",
+          "CP.EDIT",
+          "CP.DELETE",
+          "CP.EXPORT",
+          "ORDERS.VIEW",
+          "ORDERS.CREATE",
+          "ORDERS.EDIT",
+          "ORDERS.DELETE",
+          "ORDERS.APPROVE",
+          "ORDERS.EXPORT",
+          "ORDERS.MANAGE",
+          "COLLECTIONS.VIEW",
+          "COLLECTIONS.CREATE",
+          "COLLECTIONS.EDIT",
+          "COLLECTIONS.DELETE",
+          "COLLECTIONS.APPROVE",
+          "COLLECTIONS.EXPORT",
+          "COLLECTIONS.MANAGE",
+          "BACKLOG.VIEW",
+          "BACKLOG.EXPORT",
+          "OAB.VIEW",
+          "OAB.CREATE",
+          "OAB.EDIT",
+          "OAB.DELETE",
+          "OAB.EXPORT",
+          "OAB.MANAGE",
+          "QUOTATIONS.VIEW",
+          "QUOTATIONS.CREATE",
+          "QUOTATIONS.EDIT",
+          "QUOTATIONS.DELETE",
+          "QUOTATIONS.APPROVE",
+          "QUOTATIONS.EXPORT",
+          "ANALYSIS.VIEW",
+          "ANALYSIS.EXPORT",
+          "OPEN_COSTING.VIEW",
+          "OPEN_COSTING.CREATE",
+          "OPEN_COSTING.EDIT",
+          "OPEN_COSTING.DELETE",
+          "OPEN_COSTING.EXPORT",
+          "SHIPPING.VIEW",
+          "SHIPPING.CREATE",
+          "SHIPPING.EDIT",
+          "SHIPPING.DELETE",
+          "SHIPPING.EXPORT",
+          "AUTOMATIONS.VIEW",
+          "AUTOMATIONS.CREATE",
+          "AUTOMATIONS.EDIT",
+          "AUTOMATIONS.DELETE",
+          "AUTOMATIONS.APPROVE",
+          "AUTOMATIONS.MANAGE",
+          "SOURCE_DATA.VIEW",
+          "SOURCE_DATA.CREATE",
+          "SOURCE_DATA.EDIT",
+          "SOURCE_DATA.DELETE",
+          "SOURCE_DATA.EXPORT",
+          "SOURCE_DATA.MANAGE",
+          "USER.VIEW",
+          "USER.CREATE",
+          "USER.EDIT",
+          "USER.MANAGE",
+          "USER.GRANT",
+          "USER.PROFILE_COPY",
+          "ROLE.VIEW",
+          "ROLE.MANAGE",
+          "PERMISSION.VIEW",
+          "PERMISSION.MANAGE",
+          "PERMISSION.GRANT",
+          "SYSTEM.VIEW",
+          "SYSTEM.MANAGE",
+          "SECURITY.VIEW",
+          "SECURITY.MANAGE",
+          "AUDIT.VIEW",
+          "AUDIT.EXPORT"
+        ],
+        "system": true,
+        "defaultsRevision": 3
+      }
+    },
+    "workspaceTemplates": {
+      "buyer": {
+        "roleId": "buyer",
+        "sourceUserId": null,
+        "sourceName": "",
+        "updatedBy": null,
+        "updatedAt": null,
+        "categories": [],
+        "categoryCounts": {},
+        "horizonModules": [],
+        "entryCount": 0
+      },
+      "manager": {
+        "roleId": "manager",
+        "sourceUserId": null,
+        "sourceName": "",
+        "updatedBy": null,
+        "updatedAt": null,
+        "categories": [],
+        "categoryCounts": {},
+        "horizonModules": [],
+        "entryCount": 0
+      },
+      "senior_manager": {
+        "roleId": "senior_manager",
+        "sourceUserId": null,
+        "sourceName": "",
+        "updatedBy": null,
+        "updatedAt": null,
+        "categories": [],
+        "categoryCounts": {},
+        "horizonModules": [],
+        "entryCount": 0
+      },
+      "moderator": {
+        "roleId": "moderator",
+        "sourceUserId": null,
+        "sourceName": "",
+        "updatedBy": null,
+        "updatedAt": null,
+        "categories": [],
+        "categoryCounts": {},
+        "horizonModules": [],
+        "entryCount": 0
+      }
+    },
+    "roleBundles": [],
+    "identityCandidates": [],
+    "directory": [],
+    "magMmyg": {},
+    "buyingGroupCatalog": {
+      "byMagMmyg": {},
+      "all": []
+    },
+    "authMode": "local",
+    "passwordMinLength": 6,
+    "catalogs": {
+      "titles": [
+        "Buyer",
+        "Ekip Lideri",
+        "Moderatör",
+        "Müdür",
+        "Senior Buyer",
+        "Synthetic"
+      ],
+      "mags": [
+        "MAG0",
+        "MAG1",
+        "MAG2"
+      ],
+      "mmygs": [
+        "MMYG0",
+        "MMYG1",
+        "MMYG2"
+      ],
+      "buyingGroups": [
+        "BG0",
+        "BG1"
+      ]
+    },
+    "canCreate": true,
+    "canCopyProfiles": true,
+    "revision": 7,
+    "audit": []
+  }
+}

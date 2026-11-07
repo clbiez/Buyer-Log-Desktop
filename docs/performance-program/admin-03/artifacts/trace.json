@@ -1,0 +1,106 @@
+{
+  "kind": "diagnostic-node-profile",
+  "label": "diagnostic",
+  "run": 0,
+  "startedAt": "2026-11-07T17:27:12.861Z",
+  "sourceCommit": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "requiredMain": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "sourceHashes": {
+    "user-access.js": "4d2d0beae715dc2559fcfe88f65e0f6e38168052921b37a168ff579c51995142",
+    "iam-core.js": "456b96fa95e4bfdfc7d464d2a6533d35aea4d838858e418999cadb53415a2144"
+  },
+  "harnessSha256": "159c4f868a44889e86bbe4e64f25f20e41a04ed0b1de701aac3465b18b96f8f6",
+  "fixtureSourceSha256": "75a6b554bc10bbd20305d517724f1874b0ff17fa5836ba4257d5a73750bf8c28",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpus": 4,
+    "cpuModel": "AMD EPYC 9V74 80-Core Processor",
+    "memoryBytes": 18882662400,
+    "cpuMax": "400000 100000",
+    "memoryMax": "17179869184"
+  },
+  "scenarios": [
+    {
+      "users": 100,
+      "fanout": 4,
+      "fixtureSha256": "544fa9385b91b39bac616889f3aec8b295a1e2fcb9059d2f46b21f3e00a7d437",
+      "depth": 5,
+      "publicProfile": {
+        "samplesMs": [
+          28.950638000000026,
+          28.384501999999998,
+          50.73799300000002,
+          35.879997,
+          27.109434999999962,
+          27.38964900000002,
+          27.80788100000001,
+          27.66861,
+          28.354356000000053,
+          29.316441000000054,
+          29.349716000000058,
+          30.38291199999992,
+          28.339744999999994,
+          27.216046000000006,
+          27.067250999999942,
+          27.563742000000047,
+          27.004295999999954,
+          27.902594000000022,
+          28.695422000000008,
+          30.25672099999997,
+          29.66450199999997,
+          29.659779999999955,
+          30.90567299999998,
+          29.94476499999996,
+          32.55204100000003,
+          28.757466000000022,
+          27.54667600000016,
+          28.960026999999855,
+          29.936467999999877,
+          28.17443400000002
+        ],
+        "p50Ms": 28.695422000000008,
+        "p95Ms": 35.879997,
+        "cpuMsIncludingHash": 950.877,
+        "dtoSha256": "2abe4240c7141201eb3528844fef0f86f077e9e1a6735b34cd0bd845de4ad2c9"
+      },
+      "adminList": {
+        "samplesMs": [
+          40.030756999999994,
+          37.45735599999989,
+          37.083982000000105,
+          32.853906999999936,
+          31.301249999999982
+        ],
+        "p50Ms": 37.083982000000105,
+        "p95Ms": 40.030756999999994,
+        "cpuMsIncludingHash": 277.994,
+        "dtoSha256": "61272b5c14088a3106b38ba4fc674b245dc5821204acd7d7405c7094b22af773"
+      }
+    }
+  ],
+  "publicProfileCalls": {
+    "user-access.js:publicProfile": 1,
+    "iam-core.js:effectiveDataScope": 1,
+    "iam-core.js:descendants": 6,
+    "iam-core.js:childrenByManager": 6,
+    "user-access.js:descendantProfiles": 3,
+    "user-access.js:reportsByManager": 3,
+    "iam-core.js:effectivePermissionDetails": 5,
+    "iam-core.js:assignedPermissionDetails": 500
+  },
+  "adminListCalls": {
+    "user-access.js:adminListHandler": 1,
+    "user-access.js:adminUser": 101,
+    "iam-core.js:assignedPermissionDetails": 11397,
+    "iam-core.js:effectivePermissionDetails": 208,
+    "iam-core.js:childrenByManager": 208,
+    "iam-core.js:descendants": 208,
+    "user-access.js:publicProfile": 1,
+    "iam-core.js:effectiveDataScope": 1,
+    "user-access.js:descendantProfiles": 3,
+    "user-access.js:reportsByManager": 3
+  },
+  "endedAt": "2026-11-07T17:27:14.384Z"
+}

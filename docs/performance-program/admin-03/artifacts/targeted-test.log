@@ -1,0 +1,128 @@
+[IAM] central-cache-unavailable local=local-store source=local usable=false cache=until-change
+✔ ADMIN-03 full public DTOs and actual admin list match frozen #892 baseline including array order (17.19824ms)
+✔ ADMIN-03 direct and temporary grants activate at validFrom and expire at validUntil on the SAME store object (8.730348ms)
+✔ ADMIN-03 revocation and role replacement are observed even with the same revision (5.749443ms)
+✔ ADMIN-03 team scopes and business grants inherit; security and shared-settings grants do not (3.451568ms)
+✔ ADMIN-03 IAM managerId precedence and legacy supervisorId traversal remain distinct; cycles terminate (1.587089ms)
+✔ ADMIN-03 collection resolver empty/error stays fail-closed and retains only self ownership (3.044473ms)
+✔ ADMIN-03 real central IAM commit changes store identity, role matrix, inherited rights and team scope (74.999901ms)
+✔ Central IAM offline login recovers legacy auth and accepts a credentialed non-Moderator account (273.586655ms)
+✔ packaged desktop recovers user store from data-BACKUP even when SERVER_DATA_ROOT env is set (218.197075ms)
+✔ packaged desktop recovers user store from resources/app/data legacy layout (215.23596ms)
+✔ packaged desktop discovers an older sibling Buyer Log installation even with SERVER_DATA_ROOT set (239.945997ms)
+✔ packaged desktop recursively recovers nested migration-evidence auth copies (219.369768ms)
+✔ Central IAM acceptance: create, second PC login, CP revoke/403, reset, offline login and reconnect (1197.218985ms)
+✔ bulk updates are all-or-none and same-revision stale client cannot overwrite (633.734997ms)
+✔ a no-cache device imports revision 8 with retired direct, temporary and role permissions (28.160825ms)
+✔ an old verified local cache remains usable without access to the share (7.471955ms)
+✔ retired compatibility cannot bypass snapshot or local-cache integrity checks (10.828781ms)
+✔ only historically emitted permission codes are compatible; malformed and invented grants still fail (23.347797ms)
+✔ retired grants cannot replace a live administrator or carry embedded credentials (4.431219ms)
+✔ the next normal IAM mutation drops retired grants without changing passwords or shared history (44.23755ms)
+✔ migration preserves verifiers, effective access and legacy bindings; excludes local/business data (10.335155ms)
+✔ two isolated caches use central commit, reject stale writes and retain offline login source (93.433636ms)
+✔ concurrent writers commit once with one audit transaction (52.091814ms)
+✔ corrupt cache recovers latest backup; invalid remote never replaces cache (46.258504ms)
+✔ offline write is forbidden, no-cache bootstrap never invents admin (19.845684ms)
+✔ validation rejects identity duplicates, malformed verifier, unknown permissions and last administrator (2.135439ms)
+✔ 100 and 1000 users migrate with unchanged semantic baseline (206.691832ms)
+✔ revision regression, equal revision hash conflict, unsupported schema and revision jumps (90.483795ms)
+✔ crash before commit leaves old canonical; crash after commit is explicitly recoverable (57.961817ms)
+✔ elapsed lease age cannot evict a paused active IAM writer or bypass revision checks (1621.181949ms)
+✔ initialization requires admin and never republishes missing authority from central cache (24.367489ms)
+✔ independent legacy users cannot be overwritten by first remote refresh (23.26387ms)
+✔ first-run single Moderator placeholder can be replaced only by a richer Central IAM (43.321695ms)
+✔ bootstrap placeholder override never replaces a real multi-user local directory (24.900765ms)
+✔ short login preflight timeout leaves the event loop responsive (27.641659ms)
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+[IAM] central-cache-unavailable local=missing source=personal-or-empty usable=false cache=until-change
+[IAM] central-cache-unavailable local=unreadable source=personal-or-empty usable=false cache=retry-30s
+[IAM] central-cache-unavailable local=unreadable source=backup usable=true cache=retry-30s
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+[IAM] central-cache-unavailable local=local-store source=local usable=true cache=until-change
+✔ without a valid central cache, a repeated read reuses the resolved directory instead of rescanning (44.401868ms)
+✔ a device without any local directory caches the empty result too (7.669651ms)
+✔ a read blocked by a momentary file lock is not cached; the next read sees the directory (10.902412ms)
+✔ a local file that stays unreadable does not rescan on every read (9.217294ms)
+✔ central mode switched on at startup after an earlier local read still reuses the directory (12.79854ms)
+✔ after a retry window expires the directory is cached again, not re-read on every call (6.289779ms)
+✔ Başka kullanıcının unvanı değişince oturum sürer; kendi erişimi değişince yeni yetkiyle sürer, parolası değişince düşer (1040.722853ms)
+✔ v10.16 readStore() önbellek nesnesini döndürür — izin kontrolü başına klon yok (41.348462ms)
+✔ v10.16 loadStore() ÖZEL KOPYA döndürmeye devam eder — yazan yolların yalıtımı bozulmadı (10.898366ms)
+✔ v10.16 dosya değişince hızlı yol devreden çıkar — bayat yetki servis edilmez (14.585181ms)
+✔ v10.16 türetilmiş yetkiler iki yoldan da AYNI — hız çıktıyı değiştirmedi (15.373703ms)
+✔ v10.16 eski-depo taşıma kontrolü önbellek ıskasına bağlı (0.236678ms)
+✔ v10.16 salt-okuma fonksiyonları readStore, yazan yollar loadStore kullanır (0.276288ms)
+✔ legacy migration is idempotent and preserves Gökberk moderator identity and access (8.007356ms)
+✔ new Buyer role grants safe VIEW permissions plus own source refresh and quotation create/edit (2.310763ms)
+✔ shared-settings permission is never a role default and never inherited through hierarchy (6.951169ms)
+✔ stable identity duplicate detection does not depend on display name (1.544625ms)
+✔ business permission inherits recursively upward while security permission never inherits (3.949997ms)
+✔ an actor cannot grant a permission they do not effectively own (2.305275ms)
+✔ temporary permissions expire without deleting their audit-ready assignment (2.373619ms)
+✔ TEAM and CUSTOM data scopes are enforced by the shared backend predicate (1.628442ms)
+✔ circular manager relationships are rejected (1.653339ms)
+✔ self privilege change is rejected by the backend handler (22.439635ms)
+✔ server and UI expose the five-part centralized IAM workspace (4.526704ms)
+✔ legacy roles migrate idempotently to the four requested roles and keep Gökberk protected (5.638654ms)
+✔ the four roles expose distinct default MAG/MMYG-aware scopes (1.321647ms)
+✖ inactive user can be created, assigned a password and activated by Moderator (62.055658ms)
+✖ direct permissions and MAG/MMYG scope can be copied to multiple users atomically (63.856741ms)
+✔ IAM UI has delegated inactive-card selection, a corrected two-column matrix header and hierarchy editing (4.031645ms)
+✔ live IAM manager retains normal MAG editing but sharedOnly denies another owner (6.29031ms)
+✔ live stable ASAS identity authorizes renamed owner and verified Moderator (0.683514ms)
+✔ incoming event cannot spoof Moderator role or bypass owner by using an unregistered/disabled actor (0.334256ms)
+✔ unknown order and missing sender preserve legacy decisions without broadening normal edit permissions (0.380406ms)
+✔ unverified user refresh cannot replace the Moderators authoritative ownership snapshot (0.607418ms)
+✔ empty verified authority snapshot keeps legacy sharedOnly scope behavior (7.472217ms)
+✔ moderator can edit every order (8.11597ms)
+✔ buyer can edit exact Buyer ownership and cannot edit unrelated orders (11.804937ms)
+✔ buyer can edit an order when MAG, MMYG and Buying Group all match (6.949487ms)
+✔ custom scope replaces automatic scope and empty custom scope is view-only (10.839121ms)
+✔ PINs are salted and validated without storing plain text (106.052764ms)
+✔ per-user storage scopes preferences but keeps shared business records shared (2.638839ms)
+✔ v2.91 contains startup user selection, server-side order enforcement and moderator tools (10.808941ms)
+ℹ tests 77
+ℹ suites 0
+ℹ pass 75
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7890.436796
+
+✖ failing tests:
+
+test at tests/iam-v672.test.js:51:1
+✖ inactive user can be created, assigned a password and activated by Moderator (62.055658ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  500 !== 201
+  
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/iam-v672.test.js:58:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 500,
+    expected: 201,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/iam-v672.test.js:65:1
+✖ direct permissions and MAG/MMYG scope can be copied to multiple users atomically (63.856741ms)
+  TypeError: Cannot read properties of undefined (reading 'id')
+      at create (/workspace/Buyer-Log-Desktop/resources/app/tests/iam-v672.test.js:70:67)
+      at TestContext.<anonymous> (/workspace/Buyer-Log-Desktop/resources/app/tests/iam-v672.test.js:72:20)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)

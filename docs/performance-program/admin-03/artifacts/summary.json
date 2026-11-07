@@ -1,0 +1,198 @@
+{
+  "kind": "preparation-AA-no-production-optimization",
+  "requiredMain": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "runs": [
+    "before-1",
+    "after-1",
+    "after-2",
+    "before-2",
+    "before-3",
+    "after-3"
+  ],
+  "method": "Three fresh processes per arm; AB/BA/AB; identical fixture/harness/production hashes; nearest-rank percentiles; median of three run percentiles. Handler timing excludes response serialization and output hashing.",
+  "sourceHashes": {
+    "user-access.js": "4d2d0beae715dc2559fcfe88f65e0f6e38168052921b37a168ff579c51995142",
+    "iam-core.js": "456b96fa95e4bfdfc7d464d2a6533d35aea4d838858e418999cadb53415a2144"
+  },
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpus": 4,
+    "cpuModel": "AMD EPYC 9V74 80-Core Processor",
+    "memoryBytes": 18882662400,
+    "cpuMax": "400000 100000",
+    "memoryMax": "17179869184"
+  },
+  "scenarios": [
+    {
+      "users": 30,
+      "fanout": 3,
+      "depth": 4,
+      "fixtureSha256": "1465eabcabdb2d954e4e38561aa5895fc88d0aeed2fb92a5e53ca5196e913fc4",
+      "before": {
+        "publicProfile": {
+          "p50Ms": 4.054500999999988,
+          "p95Ms": 4.912067999999977
+        },
+        "adminList": {
+          "p50Ms": 4.918646000000024,
+          "p95Ms": 6.178680999999983
+        }
+      },
+      "after": {
+        "publicProfile": {
+          "p50Ms": 3.7749670000000037,
+          "p95Ms": 4.476898000000006
+        },
+        "adminList": {
+          "p50Ms": 5.012648000000013,
+          "p95Ms": 6.738817999999981
+        }
+      }
+    },
+    {
+      "users": 100,
+      "fanout": 4,
+      "depth": 5,
+      "fixtureSha256": "544fa9385b91b39bac616889f3aec8b295a1e2fcb9059d2f46b21f3e00a7d437",
+      "before": {
+        "publicProfile": {
+          "p50Ms": 27.443865000000073,
+          "p95Ms": 30.33472599999982
+        },
+        "adminList": {
+          "p50Ms": 32.47737900000038,
+          "p95Ms": 36.41300000000001
+        }
+      },
+      "after": {
+        "publicProfile": {
+          "p50Ms": 28.65138500000012,
+          "p95Ms": 31.642888000000085
+        },
+        "adminList": {
+          "p50Ms": 33.272551999999905,
+          "p95Ms": 39.05958099999998
+        }
+      }
+    },
+    {
+      "users": 300,
+      "fanout": 6,
+      "depth": 5,
+      "fixtureSha256": "3acb3f7d9c687a0dc6a485570b11daba2daf492c5024204580eb39b9f88c3a9b",
+      "before": {
+        "publicProfile": {
+          "p50Ms": 217.76193499999863,
+          "p95Ms": 235.98400199999924
+        },
+        "adminList": {
+          "p50Ms": 256.13492899999983,
+          "p95Ms": 275.03977199999645
+        }
+      },
+      "after": {
+        "publicProfile": {
+          "p50Ms": 217.5338840000004,
+          "p95Ms": 244.0022970000009
+        },
+        "adminList": {
+          "p50Ms": 254.06705299999885,
+          "p95Ms": 270.3231400000004
+        }
+      }
+    },
+    {
+      "users": 100,
+      "fanout": 1,
+      "depth": 100,
+      "fixtureSha256": "d52ef71a09923f6cc0ce66fd7b2d6f4f921952b145ab7d1f6c8c758b76b827e0",
+      "before": {
+        "publicProfile": {
+          "p50Ms": 27.877144999998563,
+          "p95Ms": 31.327927999998792
+        },
+        "adminList": {
+          "p50Ms": 45.17261299999882,
+          "p95Ms": 51.76694299999872
+        }
+      },
+      "after": {
+        "publicProfile": {
+          "p50Ms": 27.330849000001763,
+          "p95Ms": 29.68022999999812
+        },
+        "adminList": {
+          "p50Ms": 44.56700600000113,
+          "p95Ms": 50.793399000001955
+        }
+      }
+    }
+  ],
+  "profile": {
+    "sampledMs": 1411.359,
+    "inclusiveFunctionsMsNotAdditive": [
+      [
+        "user-access.js:publicProfile",
+        1046.2270000000012
+      ],
+      [
+        "user-access.js:effectiveScopes",
+        962.6480000000008
+      ],
+      [
+        "iam-core.js:effectiveDataScope",
+        961.5480000000008
+      ],
+      [
+        "iam-core.js:uniq",
+        954.9700000000008
+      ],
+      [
+        "iam-core.js:mergeScopes",
+        906.7970000000005
+      ],
+      [
+        "iam-core.js:normalized",
+        890.0160000000002
+      ],
+      [
+        "user-access.js:adminListHandler",
+        246.495
+      ],
+      [
+        "iam-core.js:effectivePermissionDetails",
+        235.5460000000001
+      ],
+      [
+        "user-access.js:",
+        228.07999999999998
+      ],
+      [
+        "user-access.js:adminUser",
+        219.188
+      ],
+      [
+        "iam-core.js:canAdminUsers",
+        200.922
+      ],
+      [
+        "iam-core.js:effectivePermissionSet",
+        178.28199999999993
+      ],
+      [
+        "user-access.js:canManageTarget",
+        173.05100000000004
+      ],
+      [
+        "iam-core.js:hasPermission",
+        165.12299999999996
+      ],
+      [
+        "iam-core.js:ownScope",
+        51.471000000000004
+      ]
+    ]
+  }
+}

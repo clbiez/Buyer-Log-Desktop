@@ -1,0 +1,20 @@
+{
+  "mode": "central",
+  "startedAt": "2026-11-07T17:33:22.704Z",
+  "endedAt": "2026-11-07T17:33:22.730Z",
+  "beforeRevision": 1,
+  "afterRevision": 2,
+  "currentDirectoryGrant": false,
+  "freshResult": {
+    "status": 403,
+    "passed": false,
+    "code": "CAPABILITY_REQUIRED"
+  },
+  "pendingResult": {
+    "status": 200,
+    "passed": true,
+    "code": null
+  },
+  "expectedPendingStatus": 403,
+  "productionChanged": false
+}

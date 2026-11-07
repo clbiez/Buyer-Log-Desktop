@@ -1,0 +1,36 @@
+{
+  "finding": "ADMIN-03",
+  "phase": 7,
+  "status": "blocked-pending-request-security",
+  "productionImplementationAllowedNow": false,
+  "requiredMainWith892": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "measurement": {
+    "runsPerArmMinimum": 3,
+    "aggregation": "median-of-run-p50-and-p95",
+    "sameFixtureAndEnvironment": true,
+    "sequentialOnly": true,
+    "preserveFailedEvidence": true,
+    "refreshPostRetryAllowed": false,
+    "currentCohort": "AA-preparation-no-optimization",
+    "optimizedComparison": "pending-phase-7"
+  },
+  "securityGate": {
+    "command": "node --test docs/performance-program/admin-03/pending-request.test.cjs",
+    "mustPassBeforeImplementationAcceptance": true,
+    "status": "RED-local-and-central",
+    "expectedRevokedPendingRequestStatus": 403,
+    "revisionOnlyEffectivePermissionCacheAllowed": false
+  },
+  "fullRegression": {
+    "required": true,
+    "stage": "phase-6-or-final-program-PR",
+    "cwd": "resources/app",
+    "command": "npm test",
+    "filtersAllowed": false,
+    "targetedOrFastChecksAreSubstitute": false,
+    "rerunAfterResultAffectingChange": true,
+    "requiredFailureSkipCancelMayCountAsPass": false,
+    "status": "pending"
+  },
+  "publication": { "mergeAllowed": false, "testAllowed": false, "stableAllowed": false }
+}

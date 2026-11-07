@@ -1,0 +1,188 @@
+{
+  "sourceCommit": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+  "productionChanged": false,
+  "securityAcceptance": "RED-local-and-central",
+  "fullRegression": "pending-required-at-phase-6-or-final-program-PR",
+  "files": [
+    {
+      "path": "docs/performance-program/admin-03/README.md",
+      "bytes": 7981,
+      "sha256": "5136596f1b421bfd209203a05bdff94ff0a9564df09af1b8a6cac5ab16aa9245"
+    },
+    {
+      "path": "docs/performance-program/admin-03/RESULTS.md",
+      "bytes": 8741,
+      "sha256": "7e5330c3fd145a37bc17bd9746a3ed40ebb6b480622d601db071199bf0e6b829"
+    },
+    {
+      "path": "docs/performance-program/admin-03/acceptance.json",
+      "bytes": 1295,
+      "sha256": "a16d3e34ff956107b3315b04d67a8005fba530de39df46f95bd486bfc6e10d66"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/after-1.json",
+      "bytes": 13118,
+      "sha256": "df5256f3a501fec0f6df3b5a45fd1139625ddea7333d92d0b19cc65978211e4b"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/after-1.log",
+      "bytes": 489,
+      "sha256": "745201076a5d4483e360e9783e79650669daae4a6dfd41adecb9532d6f588174"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/after-2.json",
+      "bytes": 13094,
+      "sha256": "fb7c6f06353d664d78fc447f0365d0b23ddc32490376066b185b53ef1ea1f1c6"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/after-2.log",
+      "bytes": 489,
+      "sha256": "84ac1ea2abc214f444689d0d49a945dd65ad43418692f0fdec87e65c35f0f9fe"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/after-3.json",
+      "bytes": 13109,
+      "sha256": "76d1e751d0860f6c76e856ee1268d5b88abeeba4b75f5d575b7a6f60c8731c43"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/after-3.log",
+      "bytes": 489,
+      "sha256": "799c94a9457aec34d7d83110c79effa17311952f45c116a4e911880df8d176ef"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/baseline-iam-v672.log",
+      "bytes": 618,
+      "sha256": "83037e24a42c02dc67c67c87a13134a968008b700cd689c0ced574f3b0864b22"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/before-1.json",
+      "bytes": 13105,
+      "sha256": "a06eab9b56825e2f3b93efc22236484ccc3ad14ba5aee01fdb216bedc4653c62"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/before-1.log",
+      "bytes": 490,
+      "sha256": "561eac382af000edbf5454cbf4b18f1ab837e0277316e969eb1954e0b247e256"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/before-2.json",
+      "bytes": 13106,
+      "sha256": "c81f804d2ff37528a6c2e9356649a6b16d30ad8fb7dba1561fba595cd9dd7cb6"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/before-2.log",
+      "bytes": 489,
+      "sha256": "439211e9d01ad41a65f3a63291d96352054c624fd5469483ddb250c6fa6180d7"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/before-3.json",
+      "bytes": 13103,
+      "sha256": "cc7e6e1ed4a9bcacb8b1475c25ee5e9118ed2d552242db23aeead3020ce0d39c"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/before-3.log",
+      "bytes": 491,
+      "sha256": "c00ee39ffc99b74cd49558342b06a714e4563af4e432fa0607ca8bcab4765502"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/i18n.log",
+      "bytes": 333,
+      "sha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/pending-central.json",
+      "bytes": 429,
+      "sha256": "70835264b455c98fb8ff4582441e0b156c7a2c0cc53ba930f595abb5737facc7"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/pending-local.json",
+      "bytes": 427,
+      "sha256": "46eb50a2e1bc15121b2ca87de3d75081068286a460d43a12bf5f8f7bd8bf2e42"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/pending-request-red.log",
+      "bytes": 1929,
+      "sha256": "a500249291f3d4404ee3901427f71b0046eb5ad8c4c816d1e20a61aa6e5f55cf"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/preparation-test-initial.log",
+      "bytes": 1747,
+      "sha256": "ac94c229ddef83044ff1617e531150513539a2eb50dc529aa7cdecf9616aaefa"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/preparation-test.log",
+      "bytes": 1006,
+      "sha256": "d9154fefe772577856aa4d1b3c9d5611f7c5074c6e427509e783480d3d06997c"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/release-notes.log",
+      "bytes": 334,
+      "sha256": "0e3c2a5dbd60ea28d367386990eb66ac7ac6dee7d6e16daea3f470bd6de978c7"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/summary.json",
+      "bytes": 4849,
+      "sha256": "e3c9b6e95fac4220d41e2f7b6d20a7329cd18e6d2f9ad88599589077d374002a"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/targeted-correct-roots.log",
+      "bytes": 8560,
+      "sha256": "473af48ab2cdae0f8da042accd3af1489ef558166c7d5fed979f1fffc812b827"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/targeted-test.log",
+      "bytes": 10248,
+      "sha256": "0c48a61955f55906597bb8440bae0bb821530f63107c3a8dc2a927dec20fbb78"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/trace.json",
+      "bytes": 3462,
+      "sha256": "0ac2195cf288621d31068012466b8e3fa709338e30a0401e545a8cec2008e7fd"
+    },
+    {
+      "path": "docs/performance-program/admin-03/artifacts/trace.json.cpuprofile.gz",
+      "bytes": 5633,
+      "sha256": "3d169edb120f67936b3ca7a034e632c27d9d744e379acc3c5f3ba35986402a2e"
+    },
+    {
+      "path": "docs/performance-program/admin-03/capture.cjs",
+      "bytes": 999,
+      "sha256": "e82779ef4b53137aeabf4cbae8287e0d52d6ff678fc09908f4744f765e2b94cf"
+    },
+    {
+      "path": "docs/performance-program/admin-03/coordination.json",
+      "bytes": 1285,
+      "sha256": "a6ba5a32745665208f798f42b8c57dda93291c228e15a4f95ddfc414d3e00a84"
+    },
+    {
+      "path": "docs/performance-program/admin-03/fixture.cjs",
+      "bytes": 2569,
+      "sha256": "75a6b554bc10bbd20305d517724f1874b0ff17fa5836ba4257d5a73750bf8c28"
+    },
+    {
+      "path": "docs/performance-program/admin-03/measure.cjs",
+      "bytes": 6797,
+      "sha256": "159c4f868a44889e86bbe4e64f25f20e41a04ed0b1de701aac3465b18b96f8f6"
+    },
+    {
+      "path": "docs/performance-program/admin-03/pending-request.test.cjs",
+      "bytes": 4017,
+      "sha256": "66c228b6e3339f611a793cdbfe6bcb2ed1668919450741d456024e24a442ed32"
+    },
+    {
+      "path": "docs/performance-program/admin-03/summarize.cjs",
+      "bytes": 3313,
+      "sha256": "558a83d66eaa83b34a91545374c338a6555350e96b1d6540c23d32a97a0b6634"
+    },
+    {
+      "path": "resources/app/tests/admin-03-preparation.test.js",
+      "bytes": 7597,
+      "sha256": "3258efbaa0be9bcda7552844ecba6528698cea24f02d49384acbf764b0095448"
+    },
+    {
+      "path": "resources/app/tests/fixtures/admin-03-baseline.json",
+      "bytes": 166376,
+      "sha256": "afaa8cdcaea2cc777256925946632bcfe1ccf471dc1f1aba46a8cbbcd85c17bd"
+    }
+  ]
+}
