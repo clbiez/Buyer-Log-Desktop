@@ -1,0 +1,26 @@
+[
+  {
+    "name": "bridge-1-main-first",
+    "status": "failed",
+    "error": {
+      "message": "projection generation mismatch",
+      "stack": "AssertionError [ERR_ASSERTION]: projection generation mismatch\n    at validateFirstTransition (/tmp/phase3-remeasure/main892/resources/app/scripts/lib/first-transition-probe.js:81:10)\n    at /tmp/phase3-remeasure/main892/resources/app/scripts/benchmark-first-transitions.js:83:7"
+    },
+    "input": "/tmp/phase3-remeasure/seed-measurement.json",
+    "fixtureRoot": "/tmp/buyerlog-first-transition-1gGr60",
+    "startedAt": "2026-11-07T17:59:52.224Z",
+    "finishedAt": "2026-11-07T18:00:20.178Z"
+  },
+  {
+    "name": "bridge-1-main-same",
+    "status": "failed",
+    "error": {
+      "message": "The expression evaluated to a falsy value:\n\n  assert.ok(generations.every(value=>value===original.expected.generation))\n",
+      "stack": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(generations.every(value=>value===original.expected.generation))\n\n    at /tmp/phase3-remeasure/same-tab-harness.cjs:71:83"
+    },
+    "input": "/tmp/phase3-remeasure/seed-measurement.json",
+    "fixtureRoot": "/tmp/buyerlog-same-tab-IGrTnj",
+    "startedAt": "2026-11-07T18:00:30.415Z",
+    "finishedAt": "2026-11-07T18:01:10.870Z"
+  }
+]

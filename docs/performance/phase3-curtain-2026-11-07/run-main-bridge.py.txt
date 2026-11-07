@@ -1,0 +1,24 @@
+import os,json,subprocess,time
+from pathlib import Path
+out=Path('/tmp/phase3-remeasure');repo=Path('/workspace/Buyer-Log-Desktop')
+initial=json.loads((out/'initial-schedule.json').read_text())
+for e in initial:
+    e['cohort']='initial'
+    if e['variant']=='main':e['variant']='cp892'
+(out/'initial-schedule.json').write_text(json.dumps(initial,indent=2)+'\n')
+schedule=initial[:]
+apps={'cp892':out/'main892/resources/app','main':repo/'resources/app'}
+env=dict(os.environ,CHROMIUM_PATH='/usr/bin/chromium',PLAYWRIGHT_MODULE='/opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright')
+for block,variants in enumerate([['main','cp892'],['cp892','main'],['main','cp892']],1):
+    for variant in variants:
+        for scenario,script in [('first',out/'main892/resources/app/scripts/benchmark-first-transitions.js'),('same',out/'same-tab-harness.cjs')]:
+            name=f'bridge2-{block}-{variant}-{scenario}'
+            cmd=['node',str(script),'--app-root',str(apps[variant]),'--harness-app',str(out/'main892/resources/app'),'--measurement',str(out/('current-seed-measurement.json' if variant=='main' else 'seed-measurement.json')),'--out',str(out/(name+'.json'))]
+            e=dict(name=name,block=block,variant=variant,cohort='bridge',scenario=scenario,command=cmd,startedAt=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()))
+            print('START '+json.dumps(e),flush=True)
+            with (out/(name+'.log')).open('w') as log:p=subprocess.run(cmd,env=env,cwd=repo,stdout=log,stderr=subprocess.STDOUT)
+            e.update(exitCode=p.returncode,finishedAt=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()))
+            if (out/(name+'.json')).exists():
+                r=json.loads((out/(name+'.json')).read_text());e.update(status=r['status'],transitions=[{k:t.get(k) for k in ['module','status','elapsedMs','legacyRowsMs','startedWithRows','paintedAtMs']} for t in r['transitions']])
+            else:e['status']='missing-report'
+            schedule.append(e);(out/'schedule.json').write_text(json.dumps(schedule,indent=2)+'\n');print('FINISH '+json.dumps(e),flush=True)

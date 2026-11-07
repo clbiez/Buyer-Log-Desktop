@@ -1,17 +1,10 @@
 {
-  "schemaVersion": 1,
-  "mainHeadEquivalence": {
-    "measuredMain": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
-    "latestMain": "2083ffd73ba026067d92ccf257c4551afa2e5f00",
-    "changedPaths": [
-      "resources/app/tests/v714-performance-hardening.test.js"
-    ],
-    "runtimeAndHarnessTreesIdentical": true
-  },
+  "schemaVersion": 2,
   "commits": {
     "before": "873c1f4497535252db12c52f7d7a25155433fa5d",
     "phase3": "873a14f42f6cb0feef18cc76d3fb3dc1cb0e4f1c",
-    "main": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b"
+    "cp892": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+    "main": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240"
   },
   "prerequisite": {
     "pr": 892,
@@ -57,113 +50,333 @@
     },
     "playwrightVersion": "1.62.1"
   },
-  "order": [
-    [
-      "before",
-      "phase3",
-      "main"
+  "cacheInputs": {
+    "initial": {
+      "rows": {
+        "koleksiyon": 0,
+        "cp": 24982,
+        "orders": 30000,
+        "overview": 30000
+      },
+      "generation": "mw6og84o-afebb0328a43",
+      "sourceRevision": "28fbd7f933a3d818fe315f1edd77bc2ef90f5dafe5225d0a2e7e230bebb4567d",
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      }
+    },
+    "current": {
+      "rows": {
+        "koleksiyon": 0,
+        "cp": 24982,
+        "orders": 30000,
+        "overview": 30000
+      },
+      "generation": "mw6pn29z-91d5b5e04f6f",
+      "sourceRevision": "28764d0b4da5320d7e570dbc6c9fc0a1ceff10ed419bcbf96d51a195a3e9e428",
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      }
+    },
+    "sameWorkbookHashes": true,
+    "currentBuilderCheckout": "2f7269caacf7cb27639da84a936498efdc5d15de"
+  },
+  "cohorts": {
+    "initialOrder": [
+      [
+        "before",
+        "phase3",
+        "cp892"
+      ],
+      [
+        "phase3",
+        "cp892",
+        "before"
+      ],
+      [
+        "cp892",
+        "before",
+        "phase3"
+      ]
     ],
-    [
-      "phase3",
-      "main",
-      "before"
-    ],
-    [
-      "main",
-      "before",
-      "phase3"
+    "bridgeOrder": [
+      [
+        "main",
+        "cp892"
+      ],
+      [
+        "cp892",
+        "main"
+      ],
+      [
+        "main",
+        "cp892"
+      ]
     ]
-  ],
+  },
   "results": [
     {
       "name": "1-before-first",
+      "variant": "before",
+      "cohort": "initial",
+      "scenario": "first",
       "status": "passed",
       "error": null
     },
     {
       "name": "1-before-same",
+      "variant": "before",
+      "cohort": "initial",
+      "scenario": "same",
       "status": "passed",
       "error": null
     },
     {
       "name": "1-phase3-first",
+      "variant": "phase3",
+      "cohort": "initial",
+      "scenario": "first",
       "status": "passed",
       "error": null
     },
     {
       "name": "1-phase3-same",
+      "variant": "phase3",
+      "cohort": "initial",
+      "scenario": "same",
       "status": "passed",
       "error": null
     },
     {
       "name": "1-main-first",
+      "variant": "cp892",
+      "cohort": "initial",
+      "scenario": "first",
       "status": "passed",
       "error": null
     },
     {
       "name": "1-main-same",
+      "variant": "cp892",
+      "cohort": "initial",
+      "scenario": "same",
       "status": "passed",
       "error": null
     },
     {
       "name": "2-phase3-first",
+      "variant": "phase3",
+      "cohort": "initial",
+      "scenario": "first",
       "status": "passed",
       "error": null
     },
     {
       "name": "2-phase3-same",
+      "variant": "phase3",
+      "cohort": "initial",
+      "scenario": "same",
       "status": "passed",
       "error": null
     },
     {
       "name": "2-main-first",
+      "variant": "cp892",
+      "cohort": "initial",
+      "scenario": "first",
       "status": "passed",
       "error": null
     },
     {
       "name": "2-main-same",
+      "variant": "cp892",
+      "cohort": "initial",
+      "scenario": "same",
       "status": "passed",
       "error": null
     },
     {
       "name": "2-before-first",
+      "variant": "before",
+      "cohort": "initial",
+      "scenario": "first",
       "status": "passed",
       "error": null
     },
     {
       "name": "2-before-same",
+      "variant": "before",
+      "cohort": "initial",
+      "scenario": "same",
       "status": "passed",
       "error": null
     },
     {
       "name": "3-main-first",
+      "variant": "cp892",
+      "cohort": "initial",
+      "scenario": "first",
       "status": "passed",
       "error": null
     },
     {
       "name": "3-main-same",
+      "variant": "cp892",
+      "cohort": "initial",
+      "scenario": "same",
       "status": "passed",
       "error": null
     },
     {
       "name": "3-before-first",
+      "variant": "before",
+      "cohort": "initial",
+      "scenario": "first",
       "status": "passed",
       "error": null
     },
     {
       "name": "3-before-same",
+      "variant": "before",
+      "cohort": "initial",
+      "scenario": "same",
       "status": "passed",
       "error": null
     },
     {
       "name": "3-phase3-first",
+      "variant": "phase3",
+      "cohort": "initial",
+      "scenario": "first",
       "status": "passed",
       "error": null
     },
     {
       "name": "3-phase3-same",
+      "variant": "phase3",
+      "cohort": "initial",
+      "scenario": "same",
       "status": "passed",
       "error": null
+    },
+    {
+      "name": "bridge2-1-main-first",
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "bridge2-1-main-same",
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "bridge2-1-cp892-first",
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "bridge2-1-cp892-same",
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "bridge2-2-cp892-first",
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "bridge2-2-cp892-same",
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "bridge2-2-main-first",
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "bridge2-2-main-same",
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "bridge2-3-main-first",
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "bridge2-3-main-same",
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "bridge2-3-cp892-first",
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "bridge2-3-cp892-same",
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "bridge-1-main-first",
+      "variant": "main",
+      "cohort": "pilot",
+      "scenario": null,
+      "status": "failed",
+      "error": {
+        "message": "projection generation mismatch",
+        "stack": "AssertionError [ERR_ASSERTION]: projection generation mismatch\n    at validateFirstTransition (/tmp/phase3-remeasure/main892/resources/app/scripts/lib/first-transition-probe.js:81:10)\n    at /tmp/phase3-remeasure/main892/resources/app/scripts/benchmark-first-transitions.js:83:7"
+      }
+    },
+    {
+      "name": "bridge-1-main-same",
+      "variant": "main",
+      "cohort": "pilot",
+      "scenario": null,
+      "status": "failed",
+      "error": {
+        "message": "The expression evaluated to a falsy value:\n\n  assert.ok(generations.every(value=>value===original.expected.generation))\n",
+        "stack": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(generations.every(value=>value===original.expected.generation))\n\n    at /tmp/phase3-remeasure/same-tab-harness.cjs:71:83"
+      }
     }
   ],
   "summary": {
@@ -817,7 +1030,7 @@
         }
       }
     },
-    "main": {
+    "cp892": {
       "first": {
         "cp.continueDispatchDelay": {
           "n": 3,
@@ -1141,12 +1354,663 @@
           "maxMs": 26535.899999999907
         }
       }
+    },
+    "main": {
+      "first": {
+        "cp.continueDispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            91.1999999997206,
+            93.70000000018626,
+            50.200000000186265
+          ],
+          "medianMs": 91.1999999997206,
+          "minMs": 50.200000000186265,
+          "maxMs": 93.70000000018626
+        },
+        "cp.dispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            59.8000000002794,
+            56.39999999990687,
+            37
+          ],
+          "medianMs": 56.39999999990687,
+          "minMs": 37,
+          "maxMs": 59.8000000002794
+        },
+        "cp.gateReady": {
+          "n": 3,
+          "valuesMs": [
+            1436.9000000003725,
+            1425.3999999999069,
+            1648.2000000001863
+          ],
+          "medianMs": 1436.9000000003725,
+          "minMs": 1425.3999999999069,
+          "maxMs": 1648.2000000001863
+        },
+        "cp.gateToCurtain": {
+          "n": 3,
+          "valuesMs": [
+            94.59999999962747,
+            97.3000000002794,
+            58.39999999990687
+          ],
+          "medianMs": 94.59999999962747,
+          "minMs": 58.39999999990687,
+          "maxMs": 97.3000000002794
+        },
+        "cp.intent": {
+          "n": 3,
+          "valuesMs": [
+            12858.5,
+            12859.799999999814,
+            17165.30000000028
+          ],
+          "medianMs": 12859.799999999814,
+          "minMs": 12858.5,
+          "maxMs": 17165.30000000028
+        },
+        "cp.startupComplete": {
+          "n": 3,
+          "valuesMs": [
+            1531.5,
+            1522.7000000001863,
+            1706.6000000000931
+          ],
+          "medianMs": 1531.5,
+          "minMs": 1522.7000000001863,
+          "maxMs": 1706.6000000000931
+        },
+        "cp.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            14390.600000000093,
+            14383,
+            18872.80000000028
+          ],
+          "medianMs": 14390.600000000093,
+          "minMs": 14383,
+          "maxMs": 18872.80000000028
+        },
+        "orders.continueDispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            77.79999999981374,
+            83.70000000018626,
+            112.79999999981374
+          ],
+          "medianMs": 83.70000000018626,
+          "minMs": 77.79999999981374,
+          "maxMs": 112.79999999981374
+        },
+        "orders.dispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            25.199999999720603,
+            18.40000000037253,
+            19.199999999720603
+          ],
+          "medianMs": 19.199999999720603,
+          "minMs": 18.40000000037253,
+          "maxMs": 25.199999999720603
+        },
+        "orders.gateReady": {
+          "n": 3,
+          "valuesMs": [
+            1344.1000000000931,
+            1370.6000000000931,
+            1303
+          ],
+          "medianMs": 1344.1000000000931,
+          "minMs": 1303,
+          "maxMs": 1370.6000000000931
+        },
+        "orders.gateToCurtain": {
+          "n": 3,
+          "valuesMs": [
+            82.79999999981374,
+            87.0,
+            116.39999999990687
+          ],
+          "medianMs": 87.0,
+          "minMs": 82.79999999981374,
+          "maxMs": 116.39999999990687
+        },
+        "orders.intent": {
+          "n": 3,
+          "valuesMs": [
+            2891.600000000093,
+            6720,
+            7210.699999999721
+          ],
+          "medianMs": 6720,
+          "minMs": 2891.600000000093,
+          "maxMs": 7210.699999999721
+        },
+        "orders.startupComplete": {
+          "n": 3,
+          "valuesMs": [
+            1426.8999999999069,
+            1457.6000000000931,
+            1419.3999999999069
+          ],
+          "medianMs": 1426.8999999999069,
+          "minMs": 1419.3999999999069,
+          "maxMs": 1457.6000000000931
+        },
+        "orders.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            4319.100000000093,
+            8178,
+            8630.599999999627
+          ],
+          "medianMs": 8178,
+          "minMs": 4319.100000000093,
+          "maxMs": 8630.599999999627
+        }
+      },
+      "same": {
+        "first.cp.interactive": {
+          "n": 3,
+          "valuesMs": [
+            4561.700000000186,
+            4784.399999999907,
+            4687.100000000093
+          ],
+          "medianMs": 4687.100000000093,
+          "minMs": 4561.700000000186,
+          "maxMs": 4784.399999999907
+        },
+        "first.cp.legacy": {
+          "n": 3,
+          "valuesMs": [
+            4561.600000000093,
+            4784.300000000279,
+            4687
+          ],
+          "medianMs": 4687,
+          "minMs": 4561.600000000093,
+          "maxMs": 4784.300000000279
+        },
+        "first.cp.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            23526.200000000186,
+            23168.899999999907,
+            23032.700000000186
+          ],
+          "medianMs": 23168.899999999907,
+          "minMs": 23032.700000000186,
+          "maxMs": 23526.200000000186
+        },
+        "first.orders.interactive": {
+          "n": 3,
+          "valuesMs": [
+            1136.6999999997206,
+            1308.1000000000931,
+            1265.3000000002794
+          ],
+          "medianMs": 1265.3000000002794,
+          "minMs": 1136.6999999997206,
+          "maxMs": 1308.1000000000931
+        },
+        "first.orders.legacy": {
+          "n": 3,
+          "valuesMs": [
+            1136.5,
+            1307.8999999999069,
+            1264.8999999999069
+          ],
+          "medianMs": 1264.8999999999069,
+          "minMs": 1136.5,
+          "maxMs": 1307.8999999999069
+        },
+        "first.orders.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            25671,
+            25487.700000000186,
+            25327.900000000373
+          ],
+          "medianMs": 25487.700000000186,
+          "minMs": 25327.900000000373,
+          "maxMs": 25671
+        },
+        "return.cp.interactive": {
+          "n": 3,
+          "valuesMs": [
+            292.3000000002794,
+            329.3000000002794,
+            312.59999999962747
+          ],
+          "medianMs": 312.59999999962747,
+          "minMs": 292.3000000002794,
+          "maxMs": 329.3000000002794
+        },
+        "return.cp.legacy": {
+          "n": 3,
+          "valuesMs": [
+            292.10000000009313,
+            329.20000000018626,
+            312.5
+          ],
+          "medianMs": 312.5,
+          "minMs": 292.10000000009313,
+          "maxMs": 329.20000000018626
+        },
+        "return.cp.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            26974.30000000028,
+            26828.80000000028,
+            26651
+          ],
+          "medianMs": 26828.80000000028,
+          "minMs": 26651,
+          "maxMs": 26974.30000000028
+        },
+        "return.orders.interactive": {
+          "n": 3,
+          "valuesMs": [
+            226.79999999981374,
+            242.79999999981374,
+            269.09999999962747
+          ],
+          "medianMs": 242.79999999981374,
+          "minMs": 226.79999999981374,
+          "maxMs": 269.09999999962747
+        },
+        "return.orders.legacy": {
+          "n": 3,
+          "valuesMs": [
+            226.79999999981374,
+            242.70000000018626,
+            269
+          ],
+          "medianMs": 242.70000000018626,
+          "minMs": 226.79999999981374,
+          "maxMs": 269
+        },
+        "return.orders.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            28216.399999999907,
+            28086.899999999907,
+            27935
+          ],
+          "medianMs": 28086.899999999907,
+          "minMs": 27935,
+          "maxMs": 28216.399999999907
+        },
+        "startupComplete": {
+          "n": 3,
+          "valuesMs": [
+            1518,
+            1591.8000000002794,
+            1617.8000000002794
+          ],
+          "medianMs": 1591.8000000002794,
+          "minMs": 1518,
+          "maxMs": 1617.8000000002794
+        },
+        "warmupAfterCurtain": {
+          "n": 3,
+          "valuesMs": [
+            17345.700000000186,
+            16781.399999999907,
+            16711.100000000093
+          ],
+          "medianMs": 16781.399999999907,
+          "minMs": 16711.100000000093,
+          "maxMs": 17345.700000000186
+        },
+        "warmupDone": {
+          "n": 3,
+          "valuesMs": [
+            18863.700000000186,
+            18373.200000000186,
+            18328.900000000373
+          ],
+          "medianMs": 18373.200000000186,
+          "minMs": 18328.900000000373,
+          "maxMs": 18863.700000000186
+        }
+      }
+    }
+  },
+  "bridgeControl": {
+    "first": {
+      "cp.continueDispatchDelay": {
+        "n": 3,
+        "valuesMs": [
+          71.20000000018626,
+          89.6999999997206,
+          89.8000000002794
+        ],
+        "medianMs": 89.6999999997206,
+        "minMs": 71.20000000018626,
+        "maxMs": 89.8000000002794
+      },
+      "cp.dispatchDelay": {
+        "n": 3,
+        "valuesMs": [
+          27.5,
+          23.899999999906868,
+          17.299999999813735
+        ],
+        "medianMs": 23.899999999906868,
+        "minMs": 17.299999999813735,
+        "maxMs": 27.5
+      },
+      "cp.gateReady": {
+        "n": 3,
+        "valuesMs": [
+          1786.2999999998137,
+          1336.7000000001863,
+          1329.6999999997206
+        ],
+        "medianMs": 1336.7000000001863,
+        "minMs": 1329.6999999997206,
+        "maxMs": 1786.2999999998137
+      },
+      "cp.gateToCurtain": {
+        "n": 3,
+        "valuesMs": [
+          77.40000000037253,
+          93.29999999981374,
+          92.8000000002794
+        ],
+        "medianMs": 92.8000000002794,
+        "minMs": 77.40000000037253,
+        "maxMs": 93.29999999981374
+      },
+      "cp.intent": {
+        "n": 3,
+        "valuesMs": [
+          20444.30000000028,
+          22856.899999999907,
+          23541.19999999972
+        ],
+        "medianMs": 22856.899999999907,
+        "minMs": 20444.30000000028,
+        "maxMs": 23541.19999999972
+      },
+      "cp.startupComplete": {
+        "n": 3,
+        "valuesMs": [
+          1863.7000000001863,
+          1430,
+          1422.5
+        ],
+        "medianMs": 1430,
+        "minMs": 1422.5,
+        "maxMs": 1863.7000000001863
+      },
+      "cp.systemToRows": {
+        "n": 3,
+        "valuesMs": [
+          22308.600000000093,
+          24287.399999999907,
+          24964.19999999972
+        ],
+        "medianMs": 24287.399999999907,
+        "minMs": 22308.600000000093,
+        "maxMs": 24964.19999999972
+      },
+      "orders.continueDispatchDelay": {
+        "n": 3,
+        "valuesMs": [
+          88.79999999981374,
+          34.5,
+          117.39999999990687
+        ],
+        "medianMs": 88.79999999981374,
+        "minMs": 34.5,
+        "maxMs": 117.39999999990687
+      },
+      "orders.dispatchDelay": {
+        "n": 3,
+        "valuesMs": [
+          16.200000000186265,
+          25.699999999720603,
+          20.100000000093132
+        ],
+        "medianMs": 20.100000000093132,
+        "minMs": 16.200000000186265,
+        "maxMs": 25.699999999720603
+      },
+      "orders.gateReady": {
+        "n": 3,
+        "valuesMs": [
+          1224,
+          1282,
+          1224.1000000000931
+        ],
+        "medianMs": 1224.1000000000931,
+        "minMs": 1224,
+        "maxMs": 1282
+      },
+      "orders.gateToCurtain": {
+        "n": 3,
+        "valuesMs": [
+          92,
+          38,
+          121.39999999990687
+        ],
+        "medianMs": 92,
+        "minMs": 38,
+        "maxMs": 121.39999999990687
+      },
+      "orders.intent": {
+        "n": 3,
+        "valuesMs": [
+          6741,
+          3752.399999999907,
+          7794.399999999907
+        ],
+        "medianMs": 6741,
+        "minMs": 3752.399999999907,
+        "maxMs": 7794.399999999907
+      },
+      "orders.startupComplete": {
+        "n": 3,
+        "valuesMs": [
+          1316,
+          1320,
+          1345.5
+        ],
+        "medianMs": 1320,
+        "minMs": 1316,
+        "maxMs": 1345.5
+      },
+      "orders.systemToRows": {
+        "n": 3,
+        "valuesMs": [
+          8057.5999999996275,
+          5072.799999999814,
+          9140.5
+        ],
+        "medianMs": 8057.5999999996275,
+        "minMs": 5072.799999999814,
+        "maxMs": 9140.5
+      }
+    },
+    "same": {
+      "first.cp.interactive": {
+        "n": 3,
+        "valuesMs": [
+          4733,
+          4648.800000000279,
+          4699
+        ],
+        "medianMs": 4699,
+        "minMs": 4648.800000000279,
+        "maxMs": 4733
+      },
+      "first.cp.legacy": {
+        "n": 3,
+        "valuesMs": [
+          4732.800000000279,
+          4648.700000000186,
+          4698.9000000003725
+        ],
+        "medianMs": 4698.9000000003725,
+        "minMs": 4648.700000000186,
+        "maxMs": 4732.800000000279
+      },
+      "first.cp.systemToRows": {
+        "n": 3,
+        "valuesMs": [
+          29260.899999999907,
+          29189.100000000093,
+          29803.799999999814
+        ],
+        "medianMs": 29260.899999999907,
+        "minMs": 29189.100000000093,
+        "maxMs": 29803.799999999814
+      },
+      "first.orders.interactive": {
+        "n": 3,
+        "valuesMs": [
+          1308.2999999998137,
+          1243.2999999998137,
+          1205.8000000002794
+        ],
+        "medianMs": 1243.2999999998137,
+        "minMs": 1205.8000000002794,
+        "maxMs": 1308.2999999998137
+      },
+      "first.orders.legacy": {
+        "n": 3,
+        "valuesMs": [
+          1307.7999999998137,
+          1242.6999999997206,
+          1205.8000000002794
+        ],
+        "medianMs": 1242.6999999997206,
+        "minMs": 1205.8000000002794,
+        "maxMs": 1307.7999999998137
+      },
+      "first.orders.systemToRows": {
+        "n": 3,
+        "valuesMs": [
+          31616,
+          31446.299999999814,
+          32098.100000000093
+        ],
+        "medianMs": 31616,
+        "minMs": 31446.299999999814,
+        "maxMs": 32098.100000000093
+      },
+      "return.cp.interactive": {
+        "n": 3,
+        "valuesMs": [
+          289.90000000037253,
+          260,
+          249.3000000002794
+        ],
+        "medianMs": 260,
+        "minMs": 249.3000000002794,
+        "maxMs": 289.90000000037253
+      },
+      "return.cp.legacy": {
+        "n": 3,
+        "valuesMs": [
+          289.8000000002794,
+          259.79999999981374,
+          249.20000000018626
+        ],
+        "medianMs": 259.79999999981374,
+        "minMs": 249.20000000018626,
+        "maxMs": 289.8000000002794
+      },
+      "return.cp.systemToRows": {
+        "n": 3,
+        "valuesMs": [
+          32917.80000000028,
+          32710.399999999907,
+          33361.200000000186
+        ],
+        "medianMs": 32917.80000000028,
+        "minMs": 32710.399999999907,
+        "maxMs": 33361.200000000186
+      },
+      "return.orders.interactive": {
+        "n": 3,
+        "valuesMs": [
+          223.29999999981374,
+          235.5,
+          223.10000000009313
+        ],
+        "medianMs": 223.29999999981374,
+        "minMs": 223.10000000009313,
+        "maxMs": 235.5
+      },
+      "return.orders.legacy": {
+        "n": 3,
+        "valuesMs": [
+          223.20000000018626,
+          235.39999999990687,
+          223
+        ],
+        "medianMs": 223.20000000018626,
+        "minMs": 223,
+        "maxMs": 235.39999999990687
+      },
+      "return.orders.systemToRows": {
+        "n": 3,
+        "valuesMs": [
+          34159.39999999991,
+          33961.10000000009,
+          34601.60000000009
+        ],
+        "medianMs": 34159.39999999991,
+        "minMs": 33961.10000000009,
+        "maxMs": 34601.60000000009
+      },
+      "startupComplete": {
+        "n": 3,
+        "valuesMs": [
+          1546.1000000000931,
+          1420.7999999998137,
+          1470.6000000000931
+        ],
+        "medianMs": 1470.6000000000931,
+        "minMs": 1420.7999999998137,
+        "maxMs": 1546.1000000000931
+      },
+      "warmupAfterCurtain": {
+        "n": 3,
+        "valuesMs": [
+          22971.0,
+          23094.200000000186,
+          23623.5
+        ],
+        "medianMs": 23094.200000000186,
+        "minMs": 22971.0,
+        "maxMs": 23623.5
+      },
+      "warmupDone": {
+        "n": 3,
+        "valuesMs": [
+          24517.100000000093,
+          24515.0,
+          25094.100000000093
+        ],
+        "medianMs": 24517.100000000093,
+        "minMs": 24515.0,
+        "maxMs": 25094.100000000093
+      }
     }
   },
   "observations": [
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.intent",
       "ms": 1747.7999999999884
@@ -1154,6 +2018,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.systemToRows",
       "ms": 76535.29999999999
@@ -1161,6 +2026,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.startupComplete",
       "ms": 74787.09999999998
@@ -1168,6 +2034,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateReady",
       "ms": 13268.399999999994
@@ -1175,6 +2042,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.dispatchDelay",
       "ms": 62.5
@@ -1182,6 +2050,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.continueDispatchDelay",
       "ms": 61515.600000000006
@@ -1189,6 +2058,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateToCurtain",
       "ms": 61518.69999999998
@@ -1196,6 +2066,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.intent",
       "ms": 9495.400000000023
@@ -1203,6 +2074,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.systemToRows",
       "ms": 83180.90000000002
@@ -1210,6 +2082,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.startupComplete",
       "ms": 73685
@@ -1217,6 +2090,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateReady",
       "ms": 11883.100000000035
@@ -1224,6 +2098,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.dispatchDelay",
       "ms": 50.300000000046566
@@ -1231,6 +2106,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.continueDispatchDelay",
       "ms": 61796.5
@@ -1238,6 +2114,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateToCurtain",
       "ms": 61801.899999999965
@@ -1245,6 +2122,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.interactive",
       "ms": 2738.100000000035
@@ -1252,6 +2130,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.legacy",
       "ms": 2737.7000000000116
@@ -1259,6 +2138,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.systemToRows",
       "ms": 75267.60000000003
@@ -1266,6 +2146,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.interactive",
       "ms": 1147.7000000000116
@@ -1273,6 +2154,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.legacy",
       "ms": 1147.4000000000233
@@ -1280,6 +2162,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.systemToRows",
       "ms": 78200.20000000001
@@ -1287,6 +2170,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.interactive",
       "ms": 789.7999999999884
@@ -1294,6 +2178,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.legacy",
       "ms": 789.6999999999534
@@ -1301,6 +2186,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.systemToRows",
       "ms": 80005.40000000002
@@ -1308,6 +2194,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.interactive",
       "ms": 213.69999999995343
@@ -1315,6 +2202,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.legacy",
       "ms": 213.5
@@ -1322,6 +2210,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.systemToRows",
       "ms": 81239.29999999999
@@ -1329,6 +2218,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupDone",
       "ms": 11214.400000000023
@@ -1336,6 +2226,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "startupComplete",
       "ms": 66424.79999999999
@@ -1343,6 +2234,7 @@
     {
       "block": 1,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupAfterCurtain",
       "ms": -55210.399999999965
@@ -1350,6 +2242,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.intent",
       "ms": 41630.70000000001
@@ -1357,6 +2250,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.systemToRows",
       "ms": 43090
@@ -1364,6 +2258,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.startupComplete",
       "ms": 1459
@@ -1371,6 +2266,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateReady",
       "ms": 1410.5999999999767
@@ -1378,6 +2274,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.dispatchDelay",
       "ms": 23.099999999976717
@@ -1385,6 +2282,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.continueDispatchDelay",
       "ms": 45.40000000002328
@@ -1392,6 +2290,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateToCurtain",
       "ms": 48.40000000002328
@@ -1399,6 +2298,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.intent",
       "ms": 3900.4000000000233
@@ -1406,6 +2306,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.systemToRows",
       "ms": 5175.600000000035
@@ -1413,6 +2314,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.startupComplete",
       "ms": 1274.600000000035
@@ -1420,6 +2322,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateReady",
       "ms": 1239.8000000000466
@@ -1427,6 +2330,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.dispatchDelay",
       "ms": 34.100000000034925
@@ -1434,6 +2338,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.continueDispatchDelay",
       "ms": 28.29999999998836
@@ -1441,6 +2346,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateToCurtain",
       "ms": 34.79999999998836
@@ -1448,6 +2354,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.interactive",
       "ms": 26857.099999999977
@@ -1455,6 +2362,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.legacy",
       "ms": 26856.900000000023
@@ -1462,6 +2370,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.systemToRows",
       "ms": 63173.79999999993
@@ -1469,6 +2378,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.interactive",
       "ms": 1249.5
@@ -1476,6 +2386,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.legacy",
       "ms": 1249.4000000000233
@@ -1483,6 +2394,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.systemToRows",
       "ms": 65441.29999999993
@@ -1490,6 +2402,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.interactive",
       "ms": 274.80000000004657
@@ -1497,6 +2410,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.legacy",
       "ms": 274.70000000006985
@@ -1504,6 +2418,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.systemToRows",
       "ms": 66739.59999999998
@@ -1511,6 +2426,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.interactive",
       "ms": 242.5
@@ -1518,6 +2434,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.legacy",
       "ms": 242.30000000004657
@@ -1525,6 +2442,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.systemToRows",
       "ms": 68000.79999999993
@@ -1532,6 +2450,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupDone",
       "ms": 36298
@@ -1539,6 +2458,7 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "startupComplete",
       "ms": 1488.2999999999884
@@ -1546,209 +2466,239 @@
     {
       "block": 1,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupAfterCurtain",
       "ms": 34809.70000000001
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.intent",
       "ms": 18561.699999999953
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.systemToRows",
       "ms": 20159.5
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.startupComplete",
       "ms": 1597.3000000000466
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateReady",
       "ms": 1505.9000000000233
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.dispatchDelay",
       "ms": 19.599999999976717
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.continueDispatchDelay",
       "ms": 88.09999999997672
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateToCurtain",
       "ms": 91.40000000002328
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.intent",
       "ms": 6774.899999999907
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.systemToRows",
       "ms": 8297.599999999977
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.startupComplete",
       "ms": 1522.0999999999767
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateReady",
       "ms": 1438.5
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.dispatchDelay",
       "ms": 23.199999999953434
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.continueDispatchDelay",
       "ms": 79.80000000004657
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateToCurtain",
       "ms": 83.59999999997672
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.interactive",
       "ms": 4856.600000000093
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.legacy",
       "ms": 4856.600000000093
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.systemToRows",
       "ms": 29638.900000000023
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.interactive",
       "ms": 1111
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.legacy",
       "ms": 1110.6999999999534
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.systemToRows",
       "ms": 31763.900000000023
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.interactive",
       "ms": 253.29999999993015
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.legacy",
       "ms": 253.19999999995343
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.systemToRows",
       "ms": 33022.29999999993
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.interactive",
       "ms": 250.69999999995343
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.legacy",
       "ms": 250.5
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.systemToRows",
       "ms": 34284.19999999995
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupDone",
       "ms": 24772.900000000023
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "startupComplete",
       "ms": 1447.9000000000233
     },
     {
       "block": 1,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupAfterCurtain",
       "ms": 23325.0
@@ -1756,6 +2706,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.intent",
       "ms": 42188.39999999991
@@ -1763,6 +2714,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.systemToRows",
       "ms": 43712.19999999995
@@ -1770,6 +2722,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.startupComplete",
       "ms": 1523.4000000000233
@@ -1777,6 +2730,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateReady",
       "ms": 1426.1999999999534
@@ -1784,6 +2738,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.dispatchDelay",
       "ms": 23.79999999993015
@@ -1791,6 +2746,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.continueDispatchDelay",
       "ms": 94.5
@@ -1798,6 +2754,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateToCurtain",
       "ms": 97.20000000006985
@@ -1805,6 +2762,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.intent",
       "ms": 8013.599999999977
@@ -1812,6 +2770,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.systemToRows",
       "ms": 9677.29999999993
@@ -1819,6 +2778,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.startupComplete",
       "ms": 1663.2999999999302
@@ -1826,6 +2786,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateReady",
       "ms": 1568.5
@@ -1833,6 +2794,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.dispatchDelay",
       "ms": 68.09999999997672
@@ -1840,6 +2802,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.continueDispatchDelay",
       "ms": 89.5
@@ -1847,6 +2810,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateToCurtain",
       "ms": 94.79999999993015
@@ -1854,6 +2818,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.interactive",
       "ms": 23476.599999999977
@@ -1861,6 +2826,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.legacy",
       "ms": 23476.399999999907
@@ -1868,6 +2834,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.systemToRows",
       "ms": 57765.5
@@ -1875,6 +2842,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.interactive",
       "ms": 1409.0999999999767
@@ -1882,6 +2850,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.legacy",
       "ms": 1408.6999999999534
@@ -1889,6 +2858,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.systemToRows",
       "ms": 60209.09999999998
@@ -1896,6 +2866,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.interactive",
       "ms": 262.79999999993015
@@ -1903,6 +2874,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.legacy",
       "ms": 262.69999999995343
@@ -1910,6 +2882,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.systemToRows",
       "ms": 61485.29999999993
@@ -1917,6 +2890,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.interactive",
       "ms": 245.79999999993015
@@ -1924,6 +2898,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.legacy",
       "ms": 245.69999999995343
@@ -1931,6 +2906,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.systemToRows",
       "ms": 62750.79999999993
@@ -1938,6 +2914,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupDone",
       "ms": 34274.5
@@ -1945,6 +2922,7 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "startupComplete",
       "ms": 1390.0999999999767
@@ -1952,209 +2930,239 @@
     {
       "block": 2,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupAfterCurtain",
       "ms": 32884.40000000002
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.intent",
       "ms": 20436.79999999993
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.systemToRows",
       "ms": 22177.79999999993
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.startupComplete",
       "ms": 1740.5999999999767
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateReady",
       "ms": 1647.0999999999767
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.dispatchDelay",
       "ms": 54.59999999997672
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.continueDispatchDelay",
       "ms": 90.40000000002328
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateToCurtain",
       "ms": 93.5
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.intent",
       "ms": 7089.5
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.systemToRows",
       "ms": 8627.599999999977
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.startupComplete",
       "ms": 1537.5
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateReady",
       "ms": 1439.5999999999767
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.dispatchDelay",
       "ms": 22.099999999976717
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.continueDispatchDelay",
       "ms": 92.70000000006985
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateToCurtain",
       "ms": 97.90000000002328
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.interactive",
       "ms": 4773.5
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.legacy",
       "ms": 4773.199999999953
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.systemToRows",
       "ms": 31320.099999999977
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.interactive",
       "ms": 1107.5999999999767
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.legacy",
       "ms": 1107.1999999999534
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.systemToRows",
       "ms": 33435.59999999998
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.interactive",
       "ms": 270.0999999999767
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.legacy",
       "ms": 269.89999999990687
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.systemToRows",
       "ms": 34723.09999999998
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.interactive",
       "ms": 223.59999999997672
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.legacy",
       "ms": 223.59999999997672
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.systemToRows",
       "ms": 35956.39999999991
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupDone",
       "ms": 26535.899999999907
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "startupComplete",
       "ms": 1486.6999999999534
     },
     {
       "block": 2,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupAfterCurtain",
       "ms": 25049.199999999953
@@ -2162,6 +3170,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.intent",
       "ms": 1387.1000000000931
@@ -2169,6 +3178,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.systemToRows",
       "ms": 75646.1000000001
@@ -2176,6 +3186,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.startupComplete",
       "ms": 74258.70000000007
@@ -2183,6 +3194,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateReady",
       "ms": 13857.5
@@ -2190,6 +3202,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.dispatchDelay",
       "ms": 42.40000000002328
@@ -2197,6 +3210,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.continueDispatchDelay",
       "ms": 60397.70000000007
@@ -2204,6 +3218,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateToCurtain",
       "ms": 60401.20000000007
@@ -2211,6 +3226,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.intent",
       "ms": 10277.600000000093
@@ -2218,6 +3234,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.systemToRows",
       "ms": 83107.30000000005
@@ -2225,6 +3242,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.startupComplete",
       "ms": 72829.09999999986
@@ -2232,6 +3250,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateReady",
       "ms": 11568.399999999907
@@ -2239,6 +3258,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.dispatchDelay",
       "ms": 53
@@ -2246,6 +3266,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.continueDispatchDelay",
       "ms": 61256.40000000014
@@ -2253,6 +3274,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateToCurtain",
       "ms": 61260.69999999995
@@ -2260,6 +3282,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.interactive",
       "ms": 3250.5
@@ -2267,6 +3290,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.legacy",
       "ms": 3250.0999999998603
@@ -2274,6 +3298,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.systemToRows",
       "ms": 79231.30000000005
@@ -2281,6 +3306,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.interactive",
       "ms": 1197.2000000001863
@@ -2288,6 +3314,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.legacy",
       "ms": 1196.8000000000466
@@ -2295,6 +3322,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.systemToRows",
       "ms": 83049.1000000001
@@ -2302,6 +3330,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.interactive",
       "ms": 882
@@ -2309,6 +3338,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.legacy",
       "ms": 881.9000000001397
@@ -2316,6 +3346,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.systemToRows",
       "ms": 84935.69999999995
@@ -2323,6 +3354,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.interactive",
       "ms": 224.89999999990687
@@ -2330,6 +3362,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.legacy",
       "ms": 224.69999999995343
@@ -2337,6 +3370,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.systemToRows",
       "ms": 86177.5
@@ -2344,6 +3378,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupDone",
       "ms": 12807.100000000093
@@ -2351,6 +3386,7 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "startupComplete",
       "ms": 69634.3999999999
@@ -2358,209 +3394,239 @@
     {
       "block": 2,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupAfterCurtain",
       "ms": -56827.299999999814
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.intent",
       "ms": 22549.90000000014
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.systemToRows",
       "ms": 23947
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.startupComplete",
       "ms": 1396.6999999999534
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateReady",
       "ms": 1299.8000000000466
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.dispatchDelay",
       "ms": 29.9000000001397
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.continueDispatchDelay",
       "ms": 92.89999999990687
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateToCurtain",
       "ms": 96.89999999990687
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.intent",
       "ms": 5331.59999999986
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.systemToRows",
       "ms": 6651
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.startupComplete",
       "ms": 1318.9000000001397
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateReady",
       "ms": 1226
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.dispatchDelay",
       "ms": 47.800000000046566
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.continueDispatchDelay",
       "ms": 87.30000000004657
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateToCurtain",
       "ms": 92.9000000001397
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.interactive",
       "ms": 5515.899999999907
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.legacy",
       "ms": 5515.699999999953
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.systemToRows",
       "ms": 30236.699999999953
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.interactive",
       "ms": 1207.5
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.legacy",
       "ms": 1207.4000000001397
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.systemToRows",
       "ms": 32701.399999999907
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.interactive",
       "ms": 256.5999999998603
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.legacy",
       "ms": 256.39999999990687
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.systemToRows",
       "ms": 33964.39999999991
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.interactive",
       "ms": 247.39999999990687
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.legacy",
       "ms": 247.30000000004657
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.systemToRows",
       "ms": 35222.09999999986
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupDone",
       "ms": 24703.800000000047
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "startupComplete",
       "ms": 1512.5999999998603
     },
     {
       "block": 3,
-      "variant": "main",
+      "variant": "cp892",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupAfterCurtain",
       "ms": 23191.200000000186
@@ -2568,6 +3634,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.intent",
       "ms": 1680.5
@@ -2575,6 +3642,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.systemToRows",
       "ms": 74676.1000000001
@@ -2582,6 +3650,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.startupComplete",
       "ms": 72994.90000000014
@@ -2589,6 +3658,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateReady",
       "ms": 12217
@@ -2596,6 +3666,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.dispatchDelay",
       "ms": 62.89999999990687
@@ -2603,6 +3674,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.continueDispatchDelay",
       "ms": 60771.80000000005
@@ -2610,6 +3682,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateToCurtain",
       "ms": 60777.90000000014
@@ -2617,6 +3690,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.intent",
       "ms": 7317.40000000014
@@ -2624,6 +3698,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.systemToRows",
       "ms": 81869.30000000005
@@ -2631,6 +3706,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.startupComplete",
       "ms": 74551.30000000005
@@ -2638,6 +3714,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateReady",
       "ms": 12829.100000000093
@@ -2645,6 +3722,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.dispatchDelay",
       "ms": 48.10000000009313
@@ -2652,6 +3730,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.continueDispatchDelay",
       "ms": 61718
@@ -2659,6 +3738,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateToCurtain",
       "ms": 61722.19999999995
@@ -2666,6 +3746,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.interactive",
       "ms": 3427.6999999999534
@@ -2673,6 +3754,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.legacy",
       "ms": 3427.5
@@ -2680,6 +3762,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.systemToRows",
       "ms": 76948.90000000014
@@ -2687,6 +3770,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.interactive",
       "ms": 1202.6999999999534
@@ -2694,6 +3778,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.legacy",
       "ms": 1202.3999999999069
@@ -2701,6 +3786,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.systemToRows",
       "ms": 81415.6000000001
@@ -2708,6 +3794,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.interactive",
       "ms": 773.9000000001397
@@ -2715,6 +3802,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.legacy",
       "ms": 773.6999999999534
@@ -2722,6 +3810,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.systemToRows",
       "ms": 83209.70000000019
@@ -2729,6 +3818,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.interactive",
       "ms": 198.20000000018626
@@ -2736,6 +3826,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.legacy",
       "ms": 198
@@ -2743,6 +3834,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.systemToRows",
       "ms": 84425.20000000019
@@ -2750,6 +3842,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupDone",
       "ms": 12116.90000000014
@@ -2757,6 +3850,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "startupComplete",
       "ms": 67523.1000000001
@@ -2764,6 +3858,7 @@
     {
       "block": 3,
       "variant": "before",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupAfterCurtain",
       "ms": -55406.19999999995
@@ -2771,6 +3866,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.intent",
       "ms": 40441.200000000186
@@ -2778,6 +3874,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.systemToRows",
       "ms": 42025.80000000005
@@ -2785,6 +3882,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.startupComplete",
       "ms": 1583.6999999999534
@@ -2792,6 +3890,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateReady",
       "ms": 1537.5
@@ -2799,6 +3898,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.dispatchDelay",
       "ms": 30.600000000093132
@@ -2806,6 +3906,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.continueDispatchDelay",
       "ms": 39.199999999953434
@@ -2813,6 +3914,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "cp.gateToCurtain",
       "ms": 46.199999999953434
@@ -2820,6 +3922,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.intent",
       "ms": 3627.1999999999534
@@ -2827,6 +3930,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.systemToRows",
       "ms": 4924.600000000093
@@ -2834,6 +3938,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.startupComplete",
       "ms": 1297
@@ -2841,6 +3946,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateReady",
       "ms": 1205.4000000001397
@@ -2848,6 +3954,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.dispatchDelay",
       "ms": 18.899999999906868
@@ -2855,6 +3962,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.continueDispatchDelay",
       "ms": 86.5
@@ -2862,6 +3970,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "first",
       "metric": "orders.gateToCurtain",
       "ms": 91.5999999998603
@@ -2869,6 +3978,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.interactive",
       "ms": 24517.300000000047
@@ -2876,6 +3986,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.legacy",
       "ms": 24517
@@ -2883,6 +3994,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.cp.systemToRows",
       "ms": 57926.39999999991
@@ -2890,6 +4002,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.interactive",
       "ms": 1691.3000000000466
@@ -2897,6 +4010,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.legacy",
       "ms": 1690.8000000000466
@@ -2904,6 +4018,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "first.orders.systemToRows",
       "ms": 60897.69999999995
@@ -2911,6 +4026,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.interactive",
       "ms": 300
@@ -2918,6 +4034,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.legacy",
       "ms": 299.80000000004657
@@ -2925,6 +4042,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.cp.systemToRows",
       "ms": 62214.89999999991
@@ -2932,6 +4050,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.interactive",
       "ms": 232.79999999981374
@@ -2939,6 +4058,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.legacy",
       "ms": 232.69999999995343
@@ -2946,6 +4066,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "return.orders.systemToRows",
       "ms": 63470.09999999986
@@ -2953,6 +4074,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupDone",
       "ms": 33394.19999999995
@@ -2960,6 +4082,7 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "startupComplete",
       "ms": 1393.0999999998603
@@ -2967,9 +4090,1402 @@
     {
       "block": 3,
       "variant": "phase3",
+      "cohort": "initial",
       "scenario": "same",
       "metric": "warmupAfterCurtain",
       "ms": 32001.100000000093
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 12858.5
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 14390.600000000093
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 1531.5
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 1436.9000000003725
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 59.8000000002794
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 91.1999999997206
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 94.59999999962747
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 2891.600000000093
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 4319.100000000093
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 1426.8999999999069
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 1344.1000000000931
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 25.199999999720603
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 77.79999999981374
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 82.79999999981374
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 4561.700000000186
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 4561.600000000093
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 23526.200000000186
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1136.6999999997206
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1136.5
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 25671
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 292.3000000002794
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 292.10000000009313
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 26974.30000000028
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 226.79999999981374
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 226.79999999981374
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 28216.399999999907
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 18863.700000000186
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 1518
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": 17345.700000000186
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 20444.30000000028
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 22308.600000000093
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 1863.7000000001863
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 1786.2999999998137
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 27.5
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 71.20000000018626
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 77.40000000037253
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 6741
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 8057.5999999996275
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 1316
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 1224
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 16.200000000186265
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 88.79999999981374
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 92
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 4733
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 4732.800000000279
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 29260.899999999907
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1308.2999999998137
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1307.7999999998137
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 31616
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 289.90000000037253
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 289.8000000002794
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 32917.80000000028
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 223.29999999981374
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 223.20000000018626
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 34159.39999999991
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 24517.100000000093
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 1546.1000000000931
+    },
+    {
+      "block": 1,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": 22971.0
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 22856.899999999907
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 24287.399999999907
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 1430
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 1336.7000000001863
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 23.899999999906868
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 89.6999999997206
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 93.29999999981374
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 3752.399999999907
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 5072.799999999814
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 1320
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 1282
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 25.699999999720603
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 34.5
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 38
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 4648.800000000279
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 4648.700000000186
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 29189.100000000093
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1243.2999999998137
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1242.6999999997206
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 31446.299999999814
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 260
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 259.79999999981374
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 32710.399999999907
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 235.5
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 235.39999999990687
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 33961.10000000009
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 24515.0
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 1420.7999999998137
+    },
+    {
+      "block": 2,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": 23094.200000000186
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 12859.799999999814
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 14383
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 1522.7000000001863
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 1425.3999999999069
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 56.39999999990687
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 93.70000000018626
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 97.3000000002794
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 6720
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 8178
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 1457.6000000000931
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 1370.6000000000931
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 18.40000000037253
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 83.70000000018626
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 87.0
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 4784.399999999907
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 4784.300000000279
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 23168.899999999907
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1308.1000000000931
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1307.8999999999069
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 25487.700000000186
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 329.3000000002794
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 329.20000000018626
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 26828.80000000028
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 242.79999999981374
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 242.70000000018626
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 28086.899999999907
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 18373.200000000186
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 1591.8000000002794
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": 16781.399999999907
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 17165.30000000028
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 18872.80000000028
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 1706.6000000000931
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 1648.2000000001863
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 37
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 50.200000000186265
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 58.39999999990687
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 7210.699999999721
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 8630.599999999627
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 1419.3999999999069
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 1303
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 19.199999999720603
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 112.79999999981374
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 116.39999999990687
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 4687.100000000093
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 4687
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 23032.700000000186
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1265.3000000002794
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1264.8999999999069
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 25327.900000000373
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 312.59999999962747
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 312.5
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 26651
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 269.09999999962747
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 269
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 27935
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 18328.900000000373
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 1617.8000000002794
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": 16711.100000000093
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 23541.19999999972
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 24964.19999999972
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 1422.5
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 1329.6999999997206
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 17.299999999813735
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 89.8000000002794
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 92.8000000002794
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 7794.399999999907
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 9140.5
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 1345.5
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 1224.1000000000931
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 20.100000000093132
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 117.39999999990687
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 121.39999999990687
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 4699
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 4698.9000000003725
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 29803.799999999814
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1205.8000000002794
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1205.8000000002794
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 32098.100000000093
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 249.3000000002794
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 249.20000000018626
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 33361.200000000186
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 223.10000000009313
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 223
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 34601.60000000009
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 25094.100000000093
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 1470.6000000000931
+    },
+    {
+      "block": 3,
+      "variant": "cp892",
+      "cohort": "bridge",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": 23623.5
     }
   ]
 }

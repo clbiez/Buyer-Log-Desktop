@@ -1,0 +1,848 @@
+[
+  {
+    "name": "1-before-first",
+    "block": 1,
+    "variant": "before",
+    "scenario": "first",
+    "command": [
+      "node",
+      "/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-first-transitions.js",
+      "--app-root",
+      "/tmp/phase3-remeasure/before/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/1-before-first.json"
+    ],
+    "startedAt": "2026-11-07T17:29:46Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:32:44Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 1747.7999999999884,
+        "legacyRowsMs": null,
+        "startedWithRows": 24982,
+        "paintedAtMs": 76535.29999999999
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 9495.400000000023,
+        "legacyRowsMs": null,
+        "startedWithRows": 30000,
+        "paintedAtMs": 83180.90000000002
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "1-before-same",
+    "block": 1,
+    "variant": "before",
+    "scenario": "same",
+    "command": [
+      "node",
+      "/tmp/phase3-remeasure/same-tab-harness.cjs",
+      "--app-root",
+      "/tmp/phase3-remeasure/before/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/1-before-same.json"
+    ],
+    "startedAt": "2026-11-07T17:32:44Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:34:17Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 2738.100000000035,
+        "legacyRowsMs": 2737.7000000000116,
+        "startedWithRows": 24982,
+        "paintedAtMs": 75267.60000000003
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 1147.7000000000116,
+        "legacyRowsMs": 1147.4000000000233,
+        "startedWithRows": 30000,
+        "paintedAtMs": 78200.20000000001
+      },
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 789.7999999999884,
+        "legacyRowsMs": 789.6999999999534,
+        "startedWithRows": 24982,
+        "paintedAtMs": 80005.40000000002
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 213.69999999995343,
+        "legacyRowsMs": 213.5,
+        "startedWithRows": 30000,
+        "paintedAtMs": 81239.29999999999
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "1-phase3-first",
+    "block": 1,
+    "variant": "phase3",
+    "scenario": "first",
+    "command": [
+      "node",
+      "/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-first-transitions.js",
+      "--app-root",
+      "/tmp/phase3-remeasure/phase3/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/1-phase3-first.json"
+    ],
+    "startedAt": "2026-11-07T17:34:17Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:35:21Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 41630.70000000001,
+        "legacyRowsMs": null,
+        "startedWithRows": null,
+        "paintedAtMs": 43090
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 3900.4000000000233,
+        "legacyRowsMs": null,
+        "startedWithRows": null,
+        "paintedAtMs": 5175.600000000035
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "1-phase3-same",
+    "block": 1,
+    "variant": "phase3",
+    "scenario": "same",
+    "command": [
+      "node",
+      "/tmp/phase3-remeasure/same-tab-harness.cjs",
+      "--app-root",
+      "/tmp/phase3-remeasure/phase3/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/1-phase3-same.json"
+    ],
+    "startedAt": "2026-11-07T17:35:21Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:36:42Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 26857.099999999977,
+        "legacyRowsMs": 26856.900000000023,
+        "startedWithRows": 24982,
+        "paintedAtMs": 63173.79999999993
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 1249.5,
+        "legacyRowsMs": 1249.4000000000233,
+        "startedWithRows": 30000,
+        "paintedAtMs": 65441.29999999993
+      },
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 274.80000000004657,
+        "legacyRowsMs": 274.70000000006985,
+        "startedWithRows": 24982,
+        "paintedAtMs": 66739.59999999998
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 242.5,
+        "legacyRowsMs": 242.30000000004657,
+        "startedWithRows": 30000,
+        "paintedAtMs": 68000.79999999993
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "1-main-first",
+    "block": 1,
+    "variant": "cp892",
+    "scenario": "first",
+    "command": [
+      "node",
+      "/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-first-transitions.js",
+      "--app-root",
+      "/workspace/Buyer-Log-Desktop/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/1-main-first.json"
+    ],
+    "startedAt": "2026-11-07T17:36:42Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:37:28Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 18561.699999999953,
+        "legacyRowsMs": null,
+        "startedWithRows": null,
+        "paintedAtMs": 20159.5
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 6774.899999999907,
+        "legacyRowsMs": null,
+        "startedWithRows": null,
+        "paintedAtMs": 8297.599999999977
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "1-main-same",
+    "block": 1,
+    "variant": "cp892",
+    "scenario": "same",
+    "command": [
+      "node",
+      "/tmp/phase3-remeasure/same-tab-harness.cjs",
+      "--app-root",
+      "/workspace/Buyer-Log-Desktop/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/1-main-same.json"
+    ],
+    "startedAt": "2026-11-07T17:37:28Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:38:15Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 4856.600000000093,
+        "legacyRowsMs": 4856.600000000093,
+        "startedWithRows": 24982,
+        "paintedAtMs": 29638.900000000023
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 1111,
+        "legacyRowsMs": 1110.6999999999534,
+        "startedWithRows": 30000,
+        "paintedAtMs": 31763.900000000023
+      },
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 253.29999999993015,
+        "legacyRowsMs": 253.19999999995343,
+        "startedWithRows": 24982,
+        "paintedAtMs": 33022.29999999993
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 250.69999999995343,
+        "legacyRowsMs": 250.5,
+        "startedWithRows": 30000,
+        "paintedAtMs": 34284.19999999995
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "2-phase3-first",
+    "block": 2,
+    "variant": "phase3",
+    "scenario": "first",
+    "command": [
+      "node",
+      "/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-first-transitions.js",
+      "--app-root",
+      "/tmp/phase3-remeasure/phase3/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/2-phase3-first.json"
+    ],
+    "startedAt": "2026-11-07T17:38:15Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:39:22Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 42188.39999999991,
+        "legacyRowsMs": null,
+        "startedWithRows": null,
+        "paintedAtMs": 43712.19999999995
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 8013.599999999977,
+        "legacyRowsMs": null,
+        "startedWithRows": null,
+        "paintedAtMs": 9677.29999999993
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "2-phase3-same",
+    "block": 2,
+    "variant": "phase3",
+    "scenario": "same",
+    "command": [
+      "node",
+      "/tmp/phase3-remeasure/same-tab-harness.cjs",
+      "--app-root",
+      "/tmp/phase3-remeasure/phase3/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/2-phase3-same.json"
+    ],
+    "startedAt": "2026-11-07T17:39:22Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:40:38Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 23476.599999999977,
+        "legacyRowsMs": 23476.399999999907,
+        "startedWithRows": 24982,
+        "paintedAtMs": 57765.5
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 1409.0999999999767,
+        "legacyRowsMs": 1408.6999999999534,
+        "startedWithRows": 30000,
+        "paintedAtMs": 60209.09999999998
+      },
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 262.79999999993015,
+        "legacyRowsMs": 262.69999999995343,
+        "startedWithRows": 24982,
+        "paintedAtMs": 61485.29999999993
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 245.79999999993015,
+        "legacyRowsMs": 245.69999999995343,
+        "startedWithRows": 30000,
+        "paintedAtMs": 62750.79999999993
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "2-main-first",
+    "block": 2,
+    "variant": "cp892",
+    "scenario": "first",
+    "command": [
+      "node",
+      "/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-first-transitions.js",
+      "--app-root",
+      "/workspace/Buyer-Log-Desktop/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/2-main-first.json"
+    ],
+    "startedAt": "2026-11-07T17:40:38Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:41:25Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 20436.79999999993,
+        "legacyRowsMs": null,
+        "startedWithRows": null,
+        "paintedAtMs": 22177.79999999993
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 7089.5,
+        "legacyRowsMs": null,
+        "startedWithRows": null,
+        "paintedAtMs": 8627.599999999977
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "2-main-same",
+    "block": 2,
+    "variant": "cp892",
+    "scenario": "same",
+    "command": [
+      "node",
+      "/tmp/phase3-remeasure/same-tab-harness.cjs",
+      "--app-root",
+      "/workspace/Buyer-Log-Desktop/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/2-main-same.json"
+    ],
+    "startedAt": "2026-11-07T17:41:25Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:42:14Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 4773.5,
+        "legacyRowsMs": 4773.199999999953,
+        "startedWithRows": 24982,
+        "paintedAtMs": 31320.099999999977
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 1107.5999999999767,
+        "legacyRowsMs": 1107.1999999999534,
+        "startedWithRows": 30000,
+        "paintedAtMs": 33435.59999999998
+      },
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 270.0999999999767,
+        "legacyRowsMs": 269.89999999990687,
+        "startedWithRows": 24982,
+        "paintedAtMs": 34723.09999999998
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 223.59999999997672,
+        "legacyRowsMs": 223.59999999997672,
+        "startedWithRows": 30000,
+        "paintedAtMs": 35956.39999999991
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "2-before-first",
+    "block": 2,
+    "variant": "before",
+    "scenario": "first",
+    "command": [
+      "node",
+      "/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-first-transitions.js",
+      "--app-root",
+      "/tmp/phase3-remeasure/before/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/2-before-first.json"
+    ],
+    "startedAt": "2026-11-07T17:42:14Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:45:11Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 1387.1000000000931,
+        "legacyRowsMs": null,
+        "startedWithRows": 24982,
+        "paintedAtMs": 75646.1000000001
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 10277.600000000093,
+        "legacyRowsMs": null,
+        "startedWithRows": 30000,
+        "paintedAtMs": 83107.30000000005
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "2-before-same",
+    "block": 2,
+    "variant": "before",
+    "scenario": "same",
+    "command": [
+      "node",
+      "/tmp/phase3-remeasure/same-tab-harness.cjs",
+      "--app-root",
+      "/tmp/phase3-remeasure/before/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/2-before-same.json"
+    ],
+    "startedAt": "2026-11-07T17:45:11Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:46:51Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 3250.5,
+        "legacyRowsMs": 3250.0999999998603,
+        "startedWithRows": 24982,
+        "paintedAtMs": 79231.30000000005
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 1197.2000000001863,
+        "legacyRowsMs": 1196.8000000000466,
+        "startedWithRows": 30000,
+        "paintedAtMs": 83049.1000000001
+      },
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 882,
+        "legacyRowsMs": 881.9000000001397,
+        "startedWithRows": 24982,
+        "paintedAtMs": 84935.69999999995
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 224.89999999990687,
+        "legacyRowsMs": 224.69999999995343,
+        "startedWithRows": 30000,
+        "paintedAtMs": 86177.5
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "3-main-first",
+    "block": 3,
+    "variant": "cp892",
+    "scenario": "first",
+    "command": [
+      "node",
+      "/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-first-transitions.js",
+      "--app-root",
+      "/workspace/Buyer-Log-Desktop/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/3-main-first.json"
+    ],
+    "startedAt": "2026-11-07T17:46:51Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:47:36Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 22549.90000000014,
+        "legacyRowsMs": null,
+        "startedWithRows": null,
+        "paintedAtMs": 23947
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 5331.59999999986,
+        "legacyRowsMs": null,
+        "startedWithRows": null,
+        "paintedAtMs": 6651
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "3-main-same",
+    "block": 3,
+    "variant": "cp892",
+    "scenario": "same",
+    "command": [
+      "node",
+      "/tmp/phase3-remeasure/same-tab-harness.cjs",
+      "--app-root",
+      "/workspace/Buyer-Log-Desktop/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/3-main-same.json"
+    ],
+    "startedAt": "2026-11-07T17:47:36Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:48:24Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 5515.899999999907,
+        "legacyRowsMs": 5515.699999999953,
+        "startedWithRows": 24982,
+        "paintedAtMs": 30236.699999999953
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 1207.5,
+        "legacyRowsMs": 1207.4000000001397,
+        "startedWithRows": 30000,
+        "paintedAtMs": 32701.399999999907
+      },
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 256.5999999998603,
+        "legacyRowsMs": 256.39999999990687,
+        "startedWithRows": 24982,
+        "paintedAtMs": 33964.39999999991
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 247.39999999990687,
+        "legacyRowsMs": 247.30000000004657,
+        "startedWithRows": 30000,
+        "paintedAtMs": 35222.09999999986
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "3-before-first",
+    "block": 3,
+    "variant": "before",
+    "scenario": "first",
+    "command": [
+      "node",
+      "/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-first-transitions.js",
+      "--app-root",
+      "/tmp/phase3-remeasure/before/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/3-before-first.json"
+    ],
+    "startedAt": "2026-11-07T17:48:24Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:51:25Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 1680.5,
+        "legacyRowsMs": null,
+        "startedWithRows": 24982,
+        "paintedAtMs": 74676.1000000001
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 7317.40000000014,
+        "legacyRowsMs": null,
+        "startedWithRows": 30000,
+        "paintedAtMs": 81869.30000000005
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "3-before-same",
+    "block": 3,
+    "variant": "before",
+    "scenario": "same",
+    "command": [
+      "node",
+      "/tmp/phase3-remeasure/same-tab-harness.cjs",
+      "--app-root",
+      "/tmp/phase3-remeasure/before/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/3-before-same.json"
+    ],
+    "startedAt": "2026-11-07T17:51:25Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:53:02Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 3427.6999999999534,
+        "legacyRowsMs": 3427.5,
+        "startedWithRows": 24982,
+        "paintedAtMs": 76948.90000000014
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 1202.6999999999534,
+        "legacyRowsMs": 1202.3999999999069,
+        "startedWithRows": 30000,
+        "paintedAtMs": 81415.6000000001
+      },
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 773.9000000001397,
+        "legacyRowsMs": 773.6999999999534,
+        "startedWithRows": 24982,
+        "paintedAtMs": 83209.70000000019
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 198.20000000018626,
+        "legacyRowsMs": 198,
+        "startedWithRows": 30000,
+        "paintedAtMs": 84425.20000000019
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "3-phase3-first",
+    "block": 3,
+    "variant": "phase3",
+    "scenario": "first",
+    "command": [
+      "node",
+      "/workspace/Buyer-Log-Desktop/resources/app/scripts/benchmark-first-transitions.js",
+      "--app-root",
+      "/tmp/phase3-remeasure/phase3/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/3-phase3-first.json"
+    ],
+    "startedAt": "2026-11-07T17:53:02Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:54:06Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 40441.200000000186,
+        "legacyRowsMs": null,
+        "startedWithRows": null,
+        "paintedAtMs": 42025.80000000005
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 3627.1999999999534,
+        "legacyRowsMs": null,
+        "startedWithRows": null,
+        "paintedAtMs": 4924.600000000093
+      }
+    ],
+    "cohort": "initial"
+  },
+  {
+    "name": "3-phase3-same",
+    "block": 3,
+    "variant": "phase3",
+    "scenario": "same",
+    "command": [
+      "node",
+      "/tmp/phase3-remeasure/same-tab-harness.cjs",
+      "--app-root",
+      "/tmp/phase3-remeasure/phase3/resources/app",
+      "--measurement",
+      "/tmp/phase3-remeasure/seed-measurement.json",
+      "--out",
+      "/tmp/phase3-remeasure/3-phase3-same.json"
+    ],
+    "startedAt": "2026-11-07T17:54:06Z",
+    "exitCode": 0,
+    "finishedAt": "2026-11-07T17:55:22Z",
+    "status": "passed",
+    "transitions": [
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 24517.300000000047,
+        "legacyRowsMs": 24517,
+        "startedWithRows": 24982,
+        "paintedAtMs": 57926.39999999991
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 1691.3000000000466,
+        "legacyRowsMs": 1690.8000000000466,
+        "startedWithRows": 30000,
+        "paintedAtMs": 60897.69999999995
+      },
+      {
+        "module": "cp",
+        "status": "passed",
+        "elapsedMs": 300,
+        "legacyRowsMs": 299.80000000004657,
+        "startedWithRows": 24982,
+        "paintedAtMs": 62214.89999999991
+      },
+      {
+        "module": "orders",
+        "status": "passed",
+        "elapsedMs": 232.79999999981374,
+        "legacyRowsMs": 232.69999999995343,
+        "startedWithRows": 30000,
+        "paintedAtMs": 63470.09999999986
+      }
+    ],
+    "cohort": "initial"
+  }
+]

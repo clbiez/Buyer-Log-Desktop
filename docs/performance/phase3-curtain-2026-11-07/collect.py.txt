@@ -1,51 +1,49 @@
-import json,gzip,hashlib,platform,statistics,subprocess,shutil
+import json,gzip,hashlib,statistics,subprocess,shutil
 from pathlib import Path
-root=Path('/tmp/phase3-remeasure');repo=Path('/workspace/Buyer-Log-Desktop');dest=repo/'docs/performance/phase3-curtain-2026-11-07'
-dest.mkdir(parents=True,exist_ok=True)
-commits={v:subprocess.check_output(['git','rev-parse','HEAD'],cwd=p,text=True).strip() for v,p in [('before',root/'before'),('phase3',root/'phase3'),('main',repo)]}
-commits['main']=json.loads((root/'seed-measurement.json').read_text())['revision']
-metrics=[];results=[]
-def pack(p,name):
- (dest/(name+'.gz')).write_bytes(gzip.compress(p.read_bytes(),mtime=0))
-def metric(entry,name,value):
- metrics.append(dict(block=entry['block'],variant=entry['variant'],scenario=entry['scenario'],metric=name,ms=value))
-schedule=json.loads((root/'schedule.json').read_text())
-for entry in schedule:
- name=entry['name'];r=json.loads((root/(name+'.json')).read_text());results.append(dict(name=name,status=r['status'],error=r.get('error')))
- pack(root/(name+'.json'),name+'.json');pack(root/(name+'.log'),name+'.log')
- pack(Path(r['serverLog']),name+'-server.log')
+root=Path('/tmp/phase3-remeasure');repo=Path('/workspace/Buyer-Log-Desktop');dest=repo/'docs/performance/phase3-curtain-2026-11-07';dest.mkdir(parents=True,exist_ok=True)
+commits={v:subprocess.check_output(['git','rev-parse',ref],cwd=repo,text=True).strip() for v,ref in [('before','873c1f44'),('phase3','873a14f4'),('cp892','5a1656e9'),('main','63159fb3')]}
+schedule=json.loads((root/'schedule.json').read_text());metrics=[];results=[]
+oldSeed=json.loads((root/'seed-measurement.json').read_text());newSeed=json.loads((root/'current-seed-measurement.json').read_text());assert oldSeed['fixture']['hashes']==newSeed['fixture']['hashes']
+def pack(p,name):(dest/(name+'.gz')).write_bytes(gzip.compress(p.read_bytes(),mtime=0))
+def metric(entry,name,value):metrics.append(dict(block=entry['block'],variant=entry['variant'],cohort=entry['cohort'],scenario=entry['scenario'],metric=name,ms=value))
+def collect(entry,pilot=False):
+ name=entry['name'];r=json.loads((root/(name+'.json')).read_text());results.append(dict(name=name,variant=entry.get('variant','main'),cohort='pilot' if pilot else entry['cohort'],scenario=entry.get('scenario'),status=r['status'],error=r.get('error')))
+ pack(root/(name+'.json'),name+'.json');pack(root/(name+'.log'),name+'.log');pack(Path(r['serverLog']),name+'-server.log')
  for i,p in enumerate(sorted((Path(r['fixtureRoot'])/'local/logs/stall-profiles').glob('*.cpuprofile')),1):pack(p,name+f'-profile-{i}.cpuprofile')
- if r['status']!='passed':continue
+ if pilot:return
+ assert r['status']=='passed',name
+ assert r['fixtureHashes']==oldSeed['fixture']['hashes']
  if entry['scenario']=='first':
   for t in r['transitions']:
-   assert t['status']=='passed'; assert t['rows']==r['expected']['rows'][t['module']]; assert t['canAccess'] and t['domRows']>0
-   assert not t['errors'];assert t['revisions']==r['expected']['revisions'];assert t['projectionGenerations'] and all(g==r['expected']['generation'] for g in t['projectionGenerations'])
+   assert t['status']=='passed' and t['canAccess'] and t['domRows']>0;assert t['rows']==r['expected']['rows'][t['module']];assert not t['errors'];assert t['revisions']==r['expected']['revisions'];assert t['projectionGenerations'] and all(g==r['expected']['generation'] for g in t['projectionGenerations'])
    for label,value in [('intent',t['elapsedMs']),('systemToRows',t['paintedAtMs']-t['startup']['userWaitMs']),('startupComplete',t['startup']['systemStartupCompleteMs']),('gateReady',t['startup']['startupReadyMs']),('dispatchDelay',t['dispatchDelayMs']),('continueDispatchDelay',t['startup']['continueDispatchDelayMs']),('gateToCurtain',t['startup']['startupCompleteMs']-t['startup']['startupReadyMs'])]:metric(entry,t['module']+'.'+label,value)
  else:
   assert [t['module'] for t in r['transitions']]==['cp','orders','cp','orders'];assert not r['rendererErrors'];assert r['projectionGenerations'] and all(g==r['expected']['generation'] for g in r['projectionGenerations'])
   for i,t in enumerate(r['transitions']):
-   assert t['status']=='passed';assert t['canAccess'] and t['domRows']>0;assert t['rows']==r['expected']['rows'][t['module']];assert t['revisions']==r['expected']['revisions']
-   metric(entry,('first.' if i<2 else 'return.')+t['module']+'.interactive',t['elapsedMs']);metric(entry,('first.' if i<2 else 'return.')+t['module']+'.legacy',t['legacyRowsMs']);metric(entry,('first.' if i<2 else 'return.')+t['module']+'.systemToRows',t['paintedAtMs']-r['startup']['userWaitMs'])
-  done=next(m for m in r['warmup'] if m['name']=='BACKGROUND_WARMUP_DONE')['atMs']+r['perfOriginMs']
-  metric(entry,'warmupDone',done);metric(entry,'startupComplete',r['startup']['systemStartupCompleteMs']);metric(entry,'warmupAfterCurtain',done-r['startup']['startupCompleteMs'])
-summary={}
-for v in commits:
- summary[v]={}
+   assert t['status']=='passed' and t['canAccess'] and t['domRows']>0;assert t['rows']==r['expected']['rows'][t['module']];assert t['revisions']==r['expected']['revisions']
+   for label,key in [('interactive','elapsedMs'),('legacy','legacyRowsMs')]:metric(entry,('first.' if i<2 else 'return.')+t['module']+'.'+label,t[key])
+   metric(entry,('first.' if i<2 else 'return.')+t['module']+'.systemToRows',t['paintedAtMs']-r['startup']['userWaitMs'])
+  done=next(m for m in r['warmup'] if m['name']=='BACKGROUND_WARMUP_DONE')['atMs']+r['perfOriginMs'];metric(entry,'warmupDone',done);metric(entry,'startupComplete',r['startup']['systemStartupCompleteMs']);metric(entry,'warmupAfterCurtain',done-r['startup']['startupCompleteMs'])
+for entry in schedule:collect(entry)
+for entry in json.loads((root/'pilot-failures.json').read_text()):collect(entry,True)
+def summarize(variant,cohort):
+ chosen=[m for m in metrics if m['variant']==variant and m['cohort']==cohort];out={}
  for scenario in ['first','same']:
-  summary[v][scenario]={}
-  for name in sorted(set(m['metric'] for m in metrics if m['variant']==v and m['scenario']==scenario)):
-   values=[m['ms'] for m in metrics if m['variant']==v and m['scenario']==scenario and m['metric']==name]
-   summary[v][scenario][name]=dict(n=len(values),valuesMs=values,medianMs=statistics.median(values),minMs=min(values),maxMs=max(values))
-pack(root/'seed-measurement.json','seed-measurement.json');pack(root/'seed.log','seed.log');pack(Path('/tmp/buyerlog-startup-phase3-seed/server.log'),'seed-server.log')
-for file,name in [('same-tab-harness.cjs','same-tab-harness.txt'),('run-matrix.py','run-matrix.py.txt'),('collect.py','collect.py.txt'),('validate.py','validate.py.txt')]:shutil.copyfile(root/file,dest/name)
-shutil.copyfile(root/'schedule.json',dest/'schedule.json')
-for name in ['probe-tests.txt','validation.txt','main-head-equivalence.json']:
- if (root/name).exists():shutil.copyfile(root/name,dest/name)
-seed=json.loads((root/'seed-measurement.json').read_text())
-meta={k:seed.get(k) for k in ['platform','node','cpu','cpuCount','availableParallelism','cpuQuota','memoryLimitBytes','chromium','fixture','expected','fixtureConditions']}
-meta['playwrightVersion']=subprocess.check_output(['node','-p',"require('/opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/package.json').version"],text=True).strip()
-summaryDoc=dict(schemaVersion=1,mainHeadEquivalence=json.loads((root/'main-head-equivalence.json').read_text()),commits=commits,prerequisite=dict(pr=892,merged=True,mergeCommit='5a1656e98deeb573f6245f4b24a8135cc77a0d7b'),environment=meta,order=[['before','phase3','main'],['phase3','main','before'],['main','before','phase3']],results=results,summary=summary,observations=metrics)
+  out[scenario]={}
+  for name in sorted(set(m['metric'] for m in chosen if m['scenario']==scenario)):
+   values=[m['ms'] for m in chosen if m['scenario']==scenario and m['metric']==name];assert len(values)==3
+   out[scenario][name]=dict(n=3,valuesMs=values,medianMs=statistics.median(values),minMs=min(values),maxMs=max(values))
+ return out
+summary={v:summarize(v,'bridge' if v=='main' else 'initial') for v in commits};bridgeControl=summarize('cp892','bridge')
+for stem,fixture in [('seed','buyerlog-startup-phase3-seed'),('current-seed','buyerlog-startup-phase3-current-seed')]:
+ pack(root/(stem+'-measurement.json'),stem+'-measurement.json');pack(root/(stem+'.log'),stem+'.log');pack(Path('/tmp')/fixture/'server.log',stem+'-server.log')
+for file,name in [('same-tab-harness.cjs','same-tab-harness.txt'),('run-matrix.py','run-matrix.py.txt'),('run-main-bridge.py','run-main-bridge.py.txt'),('collect.py','collect.py.txt'),('validate.py','validate.py.txt')]:shutil.copyfile(root/file,dest/name)
+for name in ['schedule.json','initial-schedule.json','pilot-failures.json','probe-tests.txt','validation.txt','main-head-equivalence.json','main-runtime-equivalence.json']:shutil.copyfile(root/name,dest/name)
+pack(root/'bridge.log','pilot-scheduler.log')
+meta={k:oldSeed.get(k) for k in ['platform','node','cpu','cpuCount','availableParallelism','cpuQuota','memoryLimitBytes','chromium','fixture','expected','fixtureConditions']};meta['playwrightVersion']=subprocess.check_output(['node','-p',"require('/opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/package.json').version"],text=True).strip()
+summaryDoc=dict(schemaVersion=2,commits=commits,prerequisite=dict(pr=892,merged=True,mergeCommit=commits['cp892']),environment=meta,cacheInputs=dict(initial=oldSeed['expected'],current=newSeed['expected'],sameWorkbookHashes=True,currentBuilderCheckout=newSeed['revision']),cohorts=dict(initialOrder=[['before','phase3','cp892'],['phase3','cp892','before'],['cp892','before','phase3']],bridgeOrder=[['main','cp892'],['cp892','main'],['main','cp892']]),results=results,summary=summary,bridgeControl=bridgeControl,observations=metrics)
 (dest/'summary.json').write_text(json.dumps(summaryDoc,indent=2)+'\n')
-manifest={str(p.relative_to(dest)):dict(bytes=p.stat().st_size,sha256=hashlib.sha256(p.read_bytes()).hexdigest()) for p in sorted(dest.iterdir()) if p.name!='manifest.json'}
-(dest/'manifest.json').write_text(json.dumps(dict(files=manifest,unchangedHarnesses={str(p.relative_to(repo)):hashlib.sha256(p.read_bytes()).hexdigest() for p in [repo/'resources/app/scripts/benchmark-first-transitions.js',repo/'resources/app/scripts/benchmark-startup-orders.js',repo/'resources/app/scripts/lib/first-transition-probe.js',repo/'resources/app/scripts/lib/startup-benchmark.js']}),indent=2)+'\n')
+manifest={p.name:dict(bytes=p.stat().st_size,sha256=hashlib.sha256(p.read_bytes()).hexdigest()) for p in sorted(dest.iterdir()) if p.name!='manifest.json'}
+harnessPaths=['resources/app/scripts/benchmark-first-transitions.js','resources/app/scripts/lib/first-transition-probe.js','resources/app/scripts/lib/startup-benchmark.js']
+(dest/'manifest.json').write_text(json.dumps(dict(files=manifest,unchangedFirstTransitionHarnesses={p:hashlib.sha256((repo/p).read_bytes()).hexdigest() for p in harnessPaths},seedBuilders=dict(initialCommit=commits['cp892'],currentCommit=commits['main'],path='resources/app/scripts/benchmark-startup-orders.js')),indent=2)+'\n')
 print(json.dumps(summary,indent=2))

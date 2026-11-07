@@ -1,24 +1,25 @@
 import json,pathlib,collections,hashlib,subprocess
-root=pathlib.Path('/tmp/phase3-remeasure');repo=pathlib.Path('/workspace/Buyer-Log-Desktop');s=json.loads((root/'schedule.json').read_text())
-assert len(s)==18 and len({e['name'] for e in s})==18
-assert collections.Counter((e['variant'],e['scenario']) for e in s)==collections.Counter({(v,sc):3 for v in ['before','phase3','main'] for sc in ['first','same']})
-assert [(e['block'],e['variant']) for e in s if e['scenario']=='first']==[(b,v) for b,vs in enumerate([['before','phase3','main'],['phase3','main','before'],['main','before','phase3']],1) for v in vs]
-assert all(e['exitCode']==0 and e['status']=='passed' for e in s)
-assert sum(len(e['transitions']) for e in s)==54
-meta=json.loads((repo/'docs/performance-program/fixtures/source-30000-seed7-20261105.json').read_text());seed=json.loads((root/'seed-measurement.json').read_text())
-assert hashlib.sha256((repo/'docs/performance-program/fixtures'/meta['archive']).read_bytes()).hexdigest()==meta['sha256'];assert seed['fixture']['hashes']==meta['sourceHashes'];assert seed['expected']['rows']['cp']==24982 and seed['expected']['rows']['orders']==30000
-harnesses=['scripts/benchmark-first-transitions.js','scripts/benchmark-startup-orders.js','scripts/lib/first-transition-probe.js','scripts/lib/startup-benchmark.js']
-for rel in harnesses:
+root=pathlib.Path('/tmp/phase3-remeasure');repo=pathlib.Path('/workspace/Buyer-Log-Desktop');schedule=json.loads((root/'schedule.json').read_text())
+assert len(schedule)==30 and len({e['name'] for e in schedule})==30
+for cohort,variants in [('initial',['before','phase3','cp892']),('bridge',['cp892','main'])]:
+ entries=[e for e in schedule if e['cohort']==cohort]
+ assert collections.Counter((e['variant'],e['scenario']) for e in entries)==collections.Counter({(v,sc):3 for v in variants for sc in ['first','same']})
+assert all(e['exitCode']==0 and e['status']=='passed' for e in schedule);assert sum(len(e['transitions']) for e in schedule)==90
+meta=json.loads((repo/'docs/performance-program/fixtures/source-30000-seed7-20261105.json').read_text());assert hashlib.sha256((repo/'docs/performance-program/fixtures'/meta['archive']).read_bytes()).hexdigest()==meta['sha256']
+for name in ['seed-measurement.json','current-seed-measurement.json']:
+ seed=json.loads((root/name).read_text());assert seed['status']=='passed' and len(seed['measurements'])==4;assert seed['fixture']['hashes']==meta['sourceHashes'];assert seed['expected']['rows']['cp']==24982 and seed['expected']['rows']['orders']==30000
+for e in schedule:
+ raw=json.loads((root/(e['name']+'.json')).read_text())
+ if e['scenario']=='first':assert raw['transitions'][0]['startedWithRows']==(24982 if e['variant']=='before' else None)
+for rel in ['scripts/benchmark-first-transitions.js','scripts/lib/first-transition-probe.js','scripts/lib/startup-benchmark.js']:
  p=repo/'resources/app'/rel;assert p.read_bytes()==subprocess.check_output(['git','show','5a1656e9:resources/app/'+rel],cwd=repo)
-assert not subprocess.check_output(['git','diff','5a1656e9','--','resources/app/scripts','resources/app/public','resources/app/server','resources/app/package.json','resources/app/package-lock.json'],cwd=repo)
-latest=subprocess.check_output(['git','rev-parse','origin/main'],cwd=repo,text=True).strip()
-diff=subprocess.check_output(['git','diff','--name-only',seed['revision'],latest],cwd=repo,text=True).splitlines()
-assert diff==['resources/app/tests/v714-performance-hardening.test.js']
-(root/'main-head-equivalence.json').write_text(json.dumps(dict(measuredMain=seed['revision'],latestMain=latest,changedPaths=diff,runtimeAndHarnessTreesIdentical=True),indent=2)+'\n')
-print('PASS: 18 scenarios, 54 transitions; n=3 per revision/scenario; exact rotating block order.')
-print('PASS: all exit codes zero; all scenario statuses passed; no failed observation discarded.')
-print('PASS: fixture archive SHA-256 and all workbook hashes match committed fixture metadata.')
-print('PASS: shared seed rows: 24982 CP, 30000 Orders; pinned measured main 5a1656e9.')
-print('PASS: four benchmark scripts/helpers byte-identical to pinned main; git diff for all scripts is empty.')
-print('PASS: latest main 2083ffd7 differs only in v714-performance-hardening.test.js; all runtime and harness files identical.')
-print('Per-transition identity, permission, DOM, generation and revision assertions also execute in collect.py.')
+assert not subprocess.check_output(['git','diff','63159fb3','--','resources/app'],cwd=repo)
+new=json.loads((root/'current-seed-measurement.json').read_text());checkout=new['revision'];changed=subprocess.check_output(['git','diff','--name-only','63159fb3',checkout],cwd=repo,text=True).splitlines();assert changed and all(p.startswith('docs/performance/') for p in changed)
+(root/'main-runtime-equivalence.json').write_text(json.dumps(dict(measuredMain='63159fb32ff3d5bdc5f142b4a8f16ca6a3983240',measurementCheckout=checkout,changedPaths=changed,runtimeAndHarnessTreesIdentical=True),indent=2)+'\n')
+pilots=json.loads((root/'pilot-failures.json').read_text());assert len(pilots)==2 and all(p['status']=='failed' and 'generation' in p['error']['message'] for p in pilots)
+print('PASS: 30 accepted protocol scenarios / 90 transitions. Two failed old-cache pilots retained separately.')
+print('PASS: initial rotating A/B/X and follow-up alternating C/X cohorts, n=3 per revision/scenario/cohort.')
+print('PASS: both native seeds passed four modules; identical committed archive/workbook hashes, CP=24982, Orders=30000.')
+print('PASS: initial-row observations; first-transition harness and helpers byte-identical to 5a1656e9 and current runtime.')
+print('PASS: no product/scripts diff against measured latest main 63159fb3; builder checkout adds only report files.')
+print('Per-transition identity/access/DOM/generation/revision assertions execute in collect.py.')
