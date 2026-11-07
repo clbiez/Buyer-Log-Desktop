@@ -1,0 +1,117 @@
+{
+  "inventoryFiles": 1240,
+  "npmTest": {
+    "command": "APPDATA=/tmp/buyerlog-test-profile/appdata LOCALAPPDATA=/tmp/buyerlog-test-profile/localappdata npm test",
+    "status": "failed",
+    "stoppedAfterBatch": 3,
+    "failure": {
+      "file": "tests/local-iam-migration-authority.test.js",
+      "test": "a partial established local directory without a valid recovery copy fails closed",
+      "expected": "IAM_LOCAL_INVALID",
+      "actual": "undefined"
+    }
+  },
+  "remainingBatches": {
+    "range": [
+      4,
+      10
+    ],
+    "status": "passed",
+    "note": "Temporary copy of the original runner with only TEST_ROOT and initial loop index changed; assertions, concurrency, isolation and failure exit remain unchanged."
+  },
+  "assertionsByBatch": {
+    "npm": {
+      "tests": [
+        1907,
+        2417,
+        2119
+      ],
+      "pass": [
+        1847,
+        2414,
+        2117
+      ],
+      "fail": [
+        0,
+        0,
+        1
+      ],
+      "skipped": [
+        60,
+        3,
+        1
+      ]
+    },
+    "remaining": {
+      "tests": [
+        1947,
+        269,
+        4,
+        12,
+        8,
+        8,
+        15
+      ],
+      "pass": [
+        1947,
+        269,
+        4,
+        12,
+        8,
+        8,
+        14
+      ],
+      "fail": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "skipped": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    }
+  },
+  "baselineReproduction": {
+    "revision": "2083ffd7",
+    "file": "tests/local-iam-migration-authority.test.js",
+    "pass": 6,
+    "fail": 1,
+    "sameFailure": true
+  },
+  "v714": "passed on updated main",
+  "i18n": "passed",
+  "releaseNotes": "passed",
+  "browser": {
+    "status": "passed",
+    "pageErrors": [],
+    "screenshots": 60,
+    "lflSupplement": 4,
+    "checks": [
+      "data-management controls",
+      "manufacturer search",
+      "license cards loaded",
+      "LFL data and KPI controls",
+      "new costing editor",
+      "automation studio controls",
+      "pricing desk history tab",
+      "spreadsheet single click and arrow navigation",
+      "plan/actual data and period controls",
+      "presentation report preview",
+      "Excel workbook parsed and wizard advanced",
+      "user-management dialog",
+      "exception inbox sync",
+      "F1 guide search",
+      "delayed CSS prevents unstyled first paint"
+    ]
+  }
+}

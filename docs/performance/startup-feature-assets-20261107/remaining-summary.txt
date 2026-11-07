@@ -1,0 +1,79 @@
+[Buyer Log tests] 1240 test dosyası, 10 batch, concurrency=4.
+[Buyer Log tests] Batch 4/10 (300 dosya)
+ℹ fabric health RTT while resource held: 12.6 ms; 105.5 ms since write
+ℹ checklist health RTT while resource held: 3.1 ms; 63.2 ms since write
+ℹ preferences health RTT while resource held: 2.7 ms; 63.8 ms since write
+ℹ tests 1947
+ℹ suites 0
+ℹ pass 1947
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 28399.362781
+[Buyer Log tests] Batch 4/10 süresi: 28.4s.
+[Buyer Log tests] Batch 5/10 (35 dosya)
+ℹ tests 269
+ℹ suites 0
+ℹ pass 269
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2274.50387
+[Buyer Log tests] Batch 5/10 süresi: 2.3s.
+[Buyer Log tests] Batch 6/10 (1 dosya)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 125.352677
+[Buyer Log tests] Batch 6/10 süresi: 0.2s.
+[Buyer Log tests] Batch 7/10 (1 dosya)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1644.058991
+[Buyer Log tests] Batch 7/10 süresi: 1.7s.
+[Buyer Log tests] Batch 8/10 (1 dosya)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 68.744358
+[Buyer Log tests] Batch 8/10 süresi: 0.1s.
+[Buyer Log tests] Batch 9/10 (1 dosya)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4096.9387
+[Buyer Log tests] Batch 9/10 süresi: 4.1s.
+[Buyer Log tests] Batch 10/10 (1 dosya)
+ℹ {"seed":1701,"operations":300,"devices":10,"digest":"7f26bfe222c2be0d74a59b5c01b25928e74e03d784f977c5f9e27021f97f6ad6","metrics":{"scheduled":1200,"delivered":1201,"duplicateDeliveries":120,"partialWrites":100,"conflictCopies":1,"reorderedDeliveries":600},"durationMs":1525}
+ℹ {"seed":90210,"operations":300,"devices":10,"digest":"965596950d3a636b4d9e4e2ed30ceb5a5746db9af3d922930bad8ae1e45c9ca2","metrics":{"scheduled":1219,"delivered":1220,"duplicateDeliveries":139,"partialWrites":125,"conflictCopies":1,"reorderedDeliveries":621},"durationMs":1513}
+ℹ {"seed":12648430,"operations":300,"devices":10,"digest":"f546ca8c96704d5a4d56dafdfc7151b1cea92341c7fea716e35845e0019b5a4c","metrics":{"scheduled":1210,"delivered":1211,"duplicateDeliveries":130,"partialWrites":102,"conflictCopies":1,"reorderedDeliveries":604},"durationMs":1295}
+ℹ {"seed":4411,"operations":300,"devices":10,"digest":"8fa08872b9923633ce96cbe45399b3685e12e467cb84c5784b0c851337ba3271","metrics":{"scheduled":1218,"delivered":1219,"duplicateDeliveries":138,"partialWrites":130,"conflictCopies":1,"reorderedDeliveries":613},"durationMs":1266}
+ℹ tests 15
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 6984.106098
+[Buyer Log tests] Batch 10/10 süresi: 7.0s.
+[Buyer Log tests] Remaining batches 4–10 completed — full-suite result remains in the npm test log; inventory 1240 files (43.9s).

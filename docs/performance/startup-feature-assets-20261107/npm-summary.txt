@@ -1,0 +1,38 @@
+[Buyer Log tests] 1240 test dosyası, 10 batch, concurrency=4.
+[Buyer Log tests] Batch 1/10 (300 dosya)
+ℹ tests 1907
+ℹ suites 0
+ℹ pass 1847
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 60
+ℹ todo 0
+ℹ duration_ms 40215.210259
+[Buyer Log tests] Batch 1/10 süresi: 40.3s.
+[Buyer Log tests] Batch 2/10 (300 dosya)
+ℹ tests 2417
+ℹ suites 0
+ℹ pass 2414
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 3
+ℹ todo 0
+ℹ duration_ms 21971.345013
+[Buyer Log tests] Batch 2/10 süresi: 22.0s.
+[Buyer Log tests] Batch 3/10 (300 dosya)
+✖ a partial established local directory without a valid recovery copy fails closed (249.251504ms)
+ℹ 400 cached combinations and durable checkpoints: 1670 ms
+ℹ Concurrent identical BOM reads: 1 network request(s)
+ℹ tests 2119
+ℹ suites 0
+ℹ pass 2117
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 22903.079515
+✖ failing tests:
+✖ a partial established local directory without a valid recovery copy fails closed (249.251504ms)
+[Buyer Log tests] Batch 3/10 süresi: 22.9s.
+[Buyer Log tests] Batch 3 başarısız. ZIP teslim edilmemeli.
+[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.
