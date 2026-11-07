@@ -23,6 +23,13 @@
       "gzipSha256": "a9bbbf89670498658b80dfe118817bf70a375b47bebb724899a0658c4188d6d0"
     },
     {
+      "file": "full-integrated-main.log.gz",
+      "rawFile": "full-integrated-main.log",
+      "rawBytes": 864759,
+      "rawSha256": "965fc0d7ec51dfdb1adae4927fd17926526b0aa3b5c0123cd80af45a8241bda9",
+      "gzipSha256": "fa4119f841f3b92e38875e79cb60ab6d12e911e6a1c55986bdac88ff8991bce4"
+    },
+    {
       "file": "full-standard.log.gz",
       "rawFile": "full-standard.log",
       "rawBytes": 855451,
@@ -63,6 +70,13 @@
       "rawBytes": 503,
       "rawSha256": "9815125916ecd436abb7c3b57d72b5a9088bbc14552c46490add4f83812a32e2",
       "gzipSha256": "701e7fa808b22585ba3f8f5b66cd109787e490c87fe8261b13348443f73c394e"
+    },
+    {
+      "file": "i18n-integrated-main.log.gz",
+      "rawFile": "i18n-integrated-main.log",
+      "rawBytes": 125,
+      "rawSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+      "gzipSha256": "1990e3930a54568227c02bc6f9726dc426b61475f998ccc493e96dcc68738c41"
     },
     {
       "file": "red-corrected-native.log.gz",
@@ -128,11 +142,25 @@
       "gzipSha256": "a96bf005ce8002a68f1df29d2194f5eb3f28834e9882cf74f9c687b32a7dd03f"
     },
     {
+      "file": "related-integrated-main.log.gz",
+      "rawFile": "related-integrated-main.log",
+      "rawBytes": 17241,
+      "rawSha256": "035b4d1827cf6a2ea4fdab16735f2d963b526eeac85bc70e52097c5fa8865885",
+      "gzipSha256": "b2f1da5b25415e18ce48c857d95bfec037db7397215c72a9260bd788889db69c"
+    },
+    {
       "file": "related-tests.log.gz",
       "rawFile": "related-tests.log",
       "rawBytes": 13266,
       "rawSha256": "295ef8b3ab315164743944e09ee3c812787d9f8ecadaf059f8eb5a0c82cf38cc",
       "gzipSha256": "36c3e98630fca7f3353885d8e3a2eea664c63c212c44fa7566182aade753a6d1"
+    },
+    {
+      "file": "release-notes-integrated-main.log.gz",
+      "rawFile": "release-notes-integrated-main.log",
+      "rawBytes": 126,
+      "rawSha256": "e3ed0373394b2824b335c88d2b493d76e40f1e42e6f989937d3350a9c1ca1608",
+      "gzipSha256": "82db21dc51c64c4fcd087d18ffad005766dcb6e12ace1cdf76df0d692a7b5289"
     },
     {
       "file": "ui-capture.log.gz",

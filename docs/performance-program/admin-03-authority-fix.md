@@ -1,5 +1,16 @@
 # ADMIN-03 prerequisite: current authority at a resumed request gate
 
+**Güncel Main doğrulaması / Current Main verification:** #912/#901/#914 içeren
+Main `5b8c1e6f`, normal merge `8fc82086` ile alındı. Son standart tam koşu
+**1.295 dosya, tek çağrıdaki bütün 10 batch, 8.896 PASS / 0 FAIL / 65 mevcut
+SKIP / 0 CANCEL**. İlgili paket **158 PASS**; i18n **0/0**, release notes **43
+PASS**. Main'in 42 not nesnesi ve kendi tek kaydı korunur. İncelenen üretim
+modülü ve 16 native test değişmedi; önceki RED sonuçları tarihsel kalır.
+Kaynak/test/CI ağacı `2ef7c8e0203e576869809d3c3b7831af775df3a7` olarak
+donduruldu. [Son kaynak, komut ve on batch sonucu](admin-03-authority-artifacts/integrated-main-test-summary.json).
+Bu ek yalnız gerçek yeni sonucu bildirir; final-head CI ve 30k regresyon
+karşılaştırması henüz tamamlanmış sayılmaz.
+
 ## TR
 
 Risk **P1**. Bu düzeltme ADMIN-03 performans optimizasyonundan ayrıdır. Kaynak
