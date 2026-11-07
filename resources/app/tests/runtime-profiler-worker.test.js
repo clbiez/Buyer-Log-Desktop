@@ -49,3 +49,22 @@ test('shutdown keeps the native control worker referenced until its actual termi
  wt.Worker=FakeWorker;let p,closing;
  try{p=createStallProfiler({});const start=p.start();worker.reply(0,true);await start;closing=p.stop();worker.reply(1,false);await Promise.resolve();assert.equal(worker.referenced,true);finish(0);await closing;}finally{finish?.(0);await closing;wt.Worker=original;}
 });
+test('native profiler shutdown survives consecutive sessions in four concurrent processes',async()=>{
+ const {spawn}=require('node:child_process'),helper=path.join(__dirname,'helpers/profiler-native-close.cjs'),moduleFile=path.join(__dirname,'../server/lib/runtime-stall-profiler.js');
+ let next=0;const results=[];
+ await Promise.all(Array.from({length:4},async()=>{
+  while(next<24){
+   const attempt=next++;
+   results.push(await new Promise((resolve,reject)=>{
+    const child=spawn(process.execPath,[helper,moduleFile],{env:process.env,stdio:['ignore','pipe','pipe'],windowsHide:true});
+    let stdout='',stderr='';child.stdout.on('data',data=>{stdout+=data;});child.stderr.on('data',data=>{stderr+=data;});
+    child.on('error',reject);child.on('close',(code,signal)=>resolve({attempt,code,signal,stdout,stderr}));
+   }));
+  }
+ }));
+ assert.equal(results.length,24);
+ for(const result of results){
+  assert.equal(result.signal,null,JSON.stringify(result));assert.equal(result.code,0,JSON.stringify(result));
+  assert.equal(result.stderr,'',JSON.stringify(result));assert.equal(result.stdout,'completed 4 native profiler sessions\n',JSON.stringify(result));
+ }
+});
