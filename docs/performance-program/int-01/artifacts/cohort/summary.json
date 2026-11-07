@@ -1,0 +1,40 @@
+{
+  "sampleCountPerArm": 3,
+  "fixture": {
+    "version": 1,
+    "seed": 7,
+    "today": "2026-11-05",
+    "rows": {
+      "asas": 30000,
+      "antrepo": 12726
+    },
+    "sha256": "db4827870c9a364507b27cf4586b2ca1d4e4c71a035851f59b90547f1ff6fa96"
+  },
+  "parity": true,
+  "medians": {
+    "wallMs": {
+      "before": 7121.587264,
+      "after": 8928.241735
+    },
+    "cpuMs": {
+      "before": 9893.341,
+      "after": 10763.371
+    },
+    "peakRssMiB": {
+      "before": 1009.24609375,
+      "after": 830.125
+    },
+    "eventLoopMaxMs": {
+      "before": 7134.511103,
+      "after": 8942.256127
+    },
+    "nativeParseMs": {
+      "before": 4144.619585000001,
+      "after": 1166.1152050000003
+    },
+    "targetCopyAndKeyMs": {
+      "before": 0.1142009999991842,
+      "after": 4669.893286
+    }
+  }
+}

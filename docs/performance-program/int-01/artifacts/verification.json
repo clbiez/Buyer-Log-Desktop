@@ -1,0 +1,11 @@
+{
+  "sourceHashesPass": true,
+  "allSixOutputParityPass": true,
+  "parseCountsPass": true,
+  "threePerArmMediansPass": true,
+  "attemptsNonOverlappingPass": true,
+  "cpuProfileLosslessPass": true,
+  "openPrFileLocksPass": true,
+  "productionFilesChanged": false,
+  "fullRegression": "pending: mandatory at phase 6 / final program closure; not replaced by this preparation"
+}

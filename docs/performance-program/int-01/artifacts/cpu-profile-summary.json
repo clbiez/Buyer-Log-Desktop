@@ -1,0 +1,73 @@
+{
+  "scope": "whole-process sampled CPU profile; inclusive frames overlap; not official A/B timing",
+  "originalSha256": "c852c14439cb72bdf6f560675063b8fb92b3376c8b9b9b03fdb6d38409c9da0c",
+  "sampledMs": 13079.684,
+  "inclusiveFrameMs": {
+    "parseASASRows": 3360.708,
+    "parseAntrepoRows": 478.044,
+    "parseLFLRows": 876.616,
+    "loadFromModelConnections": 6829.792
+  },
+  "topSelfMs": [
+    {
+      "function": "hash",
+      "ms": 3445.361
+    },
+    {
+      "function": "",
+      "ms": 1306.392
+    },
+    {
+      "function": "update",
+      "ms": 1065.073
+    },
+    {
+      "function": "(garbage collector)",
+      "ms": 686.086
+    },
+    {
+      "function": "toOrder",
+      "ms": 655.341
+    },
+    {
+      "function": "normalizeAntrepoMatchConfig",
+      "ms": 396.606
+    },
+    {
+      "function": "turknorm",
+      "ms": 386.132
+    },
+    {
+      "function": "normalizeMatchCondition",
+      "ms": 367.477
+    },
+    {
+      "function": "parseDateOnly",
+      "ms": 296.004
+    },
+    {
+      "function": "norm",
+      "ms": 278.405
+    },
+    {
+      "function": "parseASASMatrix",
+      "ms": 247.438
+    },
+    {
+      "function": "matchRoleKey",
+      "ms": 243.751
+    },
+    {
+      "function": "matchSourcesFromConditions",
+      "ms": 243.325
+    },
+    {
+      "function": "dimensionSignature",
+      "ms": 229.965
+    },
+    {
+      "function": "createFixture",
+      "ms": 222.823
+    }
+  ]
+}

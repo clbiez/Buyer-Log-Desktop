@@ -1,0 +1,146 @@
+{
+  "mode": "before",
+  "fixture": {
+    "version": 1,
+    "seed": 7,
+    "today": "2026-11-05",
+    "rows": {
+      "asas": 30000,
+      "antrepo": 12726
+    },
+    "sha256": "db4827870c9a364507b27cf4586b2ca1d4e4c71a035851f59b90547f1ff6fa96"
+  },
+  "node": "v24.19.0",
+  "platform": "linux",
+  "wallMs": 7121.587264,
+  "cpuMs": 9893.341,
+  "peakRssKiB": 1033468,
+  "eventLoop": {
+    "maxMs": 7134.511103,
+    "p95Ms": 7134.511103
+  },
+  "transportCalls": 2,
+  "parses": [
+    {
+      "kind": "asas",
+      "durationMs": 959.573547,
+      "rows": 30000
+    },
+    {
+      "kind": "asas",
+      "durationMs": 908.176653,
+      "rows": 30000
+    },
+    {
+      "kind": "asas",
+      "durationMs": 830.191437,
+      "rows": 30000
+    },
+    {
+      "kind": "asas",
+      "durationMs": 862.036184,
+      "rows": 30000
+    },
+    {
+      "kind": "antrepo",
+      "durationMs": 175.03657300000032,
+      "rows": 12726
+    },
+    {
+      "kind": "antrepo",
+      "durationMs": 159.67835999999988,
+      "rows": 12726
+    },
+    {
+      "kind": "antrepo",
+      "durationMs": 148.19296599999961,
+      "rows": 12726
+    }
+  ],
+  "targetMaterializations": [
+    {
+      "kind": "asas",
+      "runId": 1,
+      "durationMs": 959.61708,
+      "nativeParseMs": 959.573547
+    },
+    {
+      "kind": "asas",
+      "runId": 1,
+      "durationMs": 908.1922220000001,
+      "nativeParseMs": 908.176653
+    },
+    {
+      "kind": "asas",
+      "runId": 1,
+      "durationMs": 830.2041479999998,
+      "nativeParseMs": 830.191437
+    },
+    {
+      "kind": "asas",
+      "runId": 1,
+      "durationMs": 862.0470920000002,
+      "nativeParseMs": 862.036184
+    },
+    {
+      "kind": "antrepo",
+      "runId": 2,
+      "durationMs": 175.04618400000072,
+      "nativeParseMs": 175.03657300000032
+    },
+    {
+      "kind": "antrepo",
+      "runId": 2,
+      "durationMs": 159.68745099999978,
+      "nativeParseMs": 159.67835999999988
+    },
+    {
+      "kind": "antrepo",
+      "runId": 2,
+      "durationMs": 148.20292299999983,
+      "nativeParseMs": 148.19296599999961
+    }
+  ],
+  "outputs": {
+    "asas": {
+      "cp": {
+        "rows": 30000,
+        "sha256": "d336b844a4dc05026fe27374ec80e9605eb6cdd624800fbe2a710aff41060a80"
+      },
+      "orders": {
+        "rows": 30000,
+        "sha256": "d336b844a4dc05026fe27374ec80e9605eb6cdd624800fbe2a710aff41060a80"
+      },
+      "backlog": {
+        "rows": 30000,
+        "sha256": "d336b844a4dc05026fe27374ec80e9605eb6cdd624800fbe2a710aff41060a80"
+      },
+      "priceanalysis": {
+        "rows": 30000,
+        "sha256": "d336b844a4dc05026fe27374ec80e9605eb6cdd624800fbe2a710aff41060a80"
+      }
+    },
+    "antrepo": {
+      "cp": {
+        "keys": 12726,
+        "sha256": "a5b1c3c611231d1af4e1ff869f8d7c520702e182a1cedcee9a4239f67bf01811",
+        "metadataSha256": "ec65513c612bd2c4325012b6bd3a7a81ac0bdee2b1d7eecfeae31733061d78c3"
+      },
+      "orders": {
+        "keys": 12726,
+        "sha256": "a5b1c3c611231d1af4e1ff869f8d7c520702e182a1cedcee9a4239f67bf01811",
+        "metadataSha256": "ec65513c612bd2c4325012b6bd3a7a81ac0bdee2b1d7eecfeae31733061d78c3"
+      },
+      "backlog": {
+        "keys": 12726,
+        "sha256": "a5b1c3c611231d1af4e1ff869f8d7c520702e182a1cedcee9a4239f67bf01811",
+        "metadataSha256": "ec65513c612bd2c4325012b6bd3a7a81ac0bdee2b1d7eecfeae31733061d78c3"
+      }
+    },
+    "lfl": {
+      "rows": 30000,
+      "sha256": "0b920ac567d739e97eedd5b1eb3983885129975c2ed621fd90999b93f8d33527"
+    },
+    "warningsSha256": "cc963bf21db8d0240fc7b2c0a1cc806ef386c8f858e63fcc1d1a2783d0c07fb8"
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "mode": "before",
+  "fixture": {
+    "version": 1,
+    "seed": 7,
+    "today": "2026-11-05",
+    "rows": {
+      "asas": 30000,
+      "antrepo": 12726
+    },
+    "sha256": "db4827870c9a364507b27cf4586b2ca1d4e4c71a035851f59b90547f1ff6fa96"
+  },
+  "node": "v24.19.0",
+  "platform": "linux",
+  "wallMs": 7554.427707000001,
+  "cpuMs": 11026.031,
+  "peakRssKiB": 1096288,
+  "eventLoop": {
+    "maxMs": 7566.524415,
+    "p95Ms": 7566.524415
+  },
+  "transportCalls": 2,
+  "parses": [
+    {
+      "kind": "asas",
+      "durationMs": 1005.7562010000001,
+      "rows": 30000
+    },
+    {
+      "kind": "asas",
+      "durationMs": 984.9124649999999,
+      "rows": 30000
+    },
+    {
+      "kind": "asas",
+      "durationMs": 885.8127140000001,
+      "rows": 30000
+    },
+    {
+      "kind": "asas",
+      "durationMs": 893.8038829999996,
+      "rows": 30000
+    },
+    {
+      "kind": "antrepo",
+      "durationMs": 208.95146599999953,
+      "rows": 12726
+    },
+    {
+      "kind": "antrepo",
+      "durationMs": 173.44434399999955,
+      "rows": 12726
+    },
+    {
+      "kind": "antrepo",
+      "durationMs": 142.36202799999955,
+      "rows": 12726
+    }
+  ],
+  "outputs": {
+    "asas": {
+      "cp": {
+        "rows": 30000,
+        "sha256": "d336b844a4dc05026fe27374ec80e9605eb6cdd624800fbe2a710aff41060a80"
+      },
+      "orders": {
+        "rows": 30000,
+        "sha256": "d336b844a4dc05026fe27374ec80e9605eb6cdd624800fbe2a710aff41060a80"
+      },
+      "backlog": {
+        "rows": 30000,
+        "sha256": "d336b844a4dc05026fe27374ec80e9605eb6cdd624800fbe2a710aff41060a80"
+      },
+      "priceanalysis": {
+        "rows": 30000,
+        "sha256": "d336b844a4dc05026fe27374ec80e9605eb6cdd624800fbe2a710aff41060a80"
+      }
+    },
+    "antrepo": {
+      "cp": {
+        "keys": 12726,
+        "sha256": "a5b1c3c611231d1af4e1ff869f8d7c520702e182a1cedcee9a4239f67bf01811",
+        "metadataSha256": "ec65513c612bd2c4325012b6bd3a7a81ac0bdee2b1d7eecfeae31733061d78c3"
+      },
+      "orders": {
+        "keys": 12726,
+        "sha256": "a5b1c3c611231d1af4e1ff869f8d7c520702e182a1cedcee9a4239f67bf01811",
+        "metadataSha256": "ec65513c612bd2c4325012b6bd3a7a81ac0bdee2b1d7eecfeae31733061d78c3"
+      },
+      "backlog": {
+        "keys": 12726,
+        "sha256": "a5b1c3c611231d1af4e1ff869f8d7c520702e182a1cedcee9a4239f67bf01811",
+        "metadataSha256": "ec65513c612bd2c4325012b6bd3a7a81ac0bdee2b1d7eecfeae31733061d78c3"
+      }
+    },
+    "lfl": {
+      "rows": 30000,
+      "sha256": "0b920ac567d739e97eedd5b1eb3983885129975c2ed621fd90999b93f8d33527"
+    },
+    "warningsSha256": "cc963bf21db8d0240fc7b2c0a1cc806ef386c8f858e63fcc1d1a2783d0c07fb8"
+  }
+}

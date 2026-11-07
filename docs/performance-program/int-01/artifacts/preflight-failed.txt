@@ -1,0 +1,4 @@
+Initial diagnostic invocation, before any refresh or parser ran:
+exit 1: /bin/bash: line 1: ../../docs/performance-program/int-01/artifacts/diagnosis-before.log: No such file or directory
+Cause: artifact directory was created relative to resources/app instead of repository root.
+Correction: create the absolute repository artifact directory. No measurement discarded; no refresh POST sent.
