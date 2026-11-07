@@ -77,8 +77,11 @@ async function shot(page,name){
   await page.evaluate(()=>{kolRows=[migrateKolRow({id:900001,modelKod:'DEMO LAZY',plmId:'DEMO-001',durum:kolStatusDefaultName(),not:'',pricing:{},pricingSent:{}})];renderKol();});
   await page.waitForSelector('#kolTable tbody tr[data-id]');
   const cell=page.locator('#kolTable tbody td[data-key="modelKod"]').first();await cell.click();
-  await page.keyboard.press('ArrowRight');
-  const active=await page.evaluate(()=>Boolean(BLCollectionSpreadsheet.state.active));if(!active)throw Error('Spreadsheet active-cell navigation failed');
+  const selectedColumn=await page.evaluate(()=>BLCollectionSpreadsheet.state.active?.key);
+  await page.keyboard.press('Escape');await page.keyboard.press('ArrowRight');
+  const movedColumn=await page.evaluate(()=>BLCollectionSpreadsheet.state.active?.key);
+  if(!movedColumn||movedColumn===selectedColumn)throw Error('Spreadsheet arrow did not change the selected column');
+  await page.screenshot({path:path.dirname(out)+'/collection-current.png'});
   report.checks.push('spreadsheet single click and arrow navigation');
   await loaded(page,'backlog','backlogAnalysis','#backlogPlanActualToggle');
   await page.waitForFunction(()=>typeof lastBacklogData!=='undefined'&&lastBacklogData?.totalRows>0,null,{timeout:120000});
@@ -106,8 +109,12 @@ async function shot(page,name){
   await page.evaluate(async()=>{await BLPerf.ensureFeature('userManagement');BLUserManagement.open();});
   await page.waitForSelector('.umShell');report.modules.push({module:'userManagement',uiReadyMs:await page.evaluate(s=>performance.now()-s,t)});
   report.checks.push('user-management dialog');await page.evaluate(()=>BLUserManagement.close());
+  const inboxStarted=await page.evaluate(()=>performance.now());
   await loaded(page,'overview','exceptionInbox','#view-overview');
-  await page.evaluate(()=>BLExceptionInboxView.sync());report.checks.push('exception inbox sync');
+  await page.evaluate(async()=>{document.getElementById('ovExceptionInbox').classList.remove('ovHomeOff');await BLExceptionInboxView.refresh();});
+  await page.waitForSelector('#ovExceptionInbox [data-inbox-type]',{timeout:120000});
+  report.modules[report.modules.length-1].uiReadyMs=await page.evaluate(start=>performance.now()-start,inboxStarted);
+  report.checks.push('exception inbox data, counts and type filters');
   await page.keyboard.press('F1');await page.waitForSelector('[data-guide-search]');
   await page.locator('[data-guide-search]').fill('Excel');report.checks.push('F1 guide search');await page.locator('[data-guide-close]').click();
   if(visual){
@@ -137,9 +144,20 @@ async function shot(page,name){
   }
   if(!visual){
     await page.close();
-    const collection=await context.newPage();await collection.route('https://**',r=>r.abort());await startup(collection);
+    const coldContext=await browser.newContext({viewport:{width:1600,height:1000}});
+    await coldContext.addCookies(await context.cookies());
+    const collection=await coldContext.newPage();await collection.route('https://**',r=>r.abort());await startup(collection);
     await collection.waitForFunction(()=>BLPerf.timeline().some(m=>m.name==='BACKGROUND_WARMUP_DONE'),null,{timeout:180000});
-    await loaded(collection,'koleksiyon','collectionTools','#kolTable');report.modules[report.modules.length-1].module='koleksiyonCold';await collection.close();
+    const guideStarted=await collection.evaluate(()=>performance.now());
+    await collection.keyboard.press('F1');await collection.waitForSelector('[data-guide-search]');
+    await collection.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+    report.modules.push({module:'guideFresh',uiReadyMs:await collection.evaluate(s=>performance.now()-s,guideStarted)});
+    await collection.locator('[data-guide-close]').click();
+    report.collectionInitiallyLoaded=await collection.evaluate(()=>BLPerf.isFeatureLoaded('collectionTools'));
+    if(report.collectionInitiallyLoaded)throw Error('Fresh Collection feature was already loaded');
+    await loaded(collection,'koleksiyon','collectionTools','#kolTable');report.modules[report.modules.length-1].module='koleksiyonFresh';
+    report.collectionAssets=await collection.evaluate(()=>performance.getEntriesByType('resource').filter(r=>/collection-spreadsheet|pricing-workspace/.test(r.name)).map(r=>({path:new URL(r.name).pathname,transferBytes:r.transferSize,decodedBytes:r.decodedBodySize})));
+    await collection.close();await coldContext.close();
   }
   report.status='passed';save();console.log(JSON.stringify({status:report.status,errors:report.errors,checks:report.checks,modules:report.modules}));
  }catch(error){if(currentPage)try{await currentPage.screenshot({path:path.dirname(out)+'/failure.png'});}catch(_){}report.status='failed';report.error=error.stack;save();console.error(error);process.exitCode=1;}

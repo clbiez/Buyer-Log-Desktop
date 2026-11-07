@@ -1133,8 +1133,8 @@
         "capture": "post-change",
         "src": "startup-feature-assets.png",
         "alt": {
-          "tr": "İlk açılışında kodu ve stili yüklenen Koleksiyon spreadsheet ekranı",
-          "en": "Collection spreadsheet after its code and styles load on first opening"
+          "tr": "İsteğe bağlı yükleme sonrasında Koleksiyon spreadsheet ekranı",
+          "en": "Collection spreadsheet after on-demand loading"
         },
         "caption": {
           "tr": "Gerçek Buyer Log, izole 30 bin satırlık sentetik kaynak: Koleksiyon açıldı, örnek model hücresi seçildi ve klavye gezintisi doğrulandı.",

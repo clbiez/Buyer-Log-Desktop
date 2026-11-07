@@ -46,139 +46,119 @@ Dosya varlığına dayalı eski testler, aynı sıra ve tek ortak motor koşulla
 
 ## Ölçüm yöntemi
 
-Tam açılış serisi: önce-1 → sonra-1 → önce-2 → sonra-2 → önce-3 → sonra-3. Her koşu yeni `/tmp/buyerlog-startup-shell-<before|after>-<n>/source/` dizinine aynı `source-30000-seed7-20261105.tar.gz` arşivini açar. Benchmark metadata ve XLSX SHA-256 kontrolleri fixture eşitliğini doğrular. Veri/cache dizinleri koşular arasında kopyalanmaz. Ölçümler sırasında test paketi veya başka benchmark çalıştırılmadı.
+Nihai ölçüm tabanı, görev sırasında ana dala alınan Faz 5 entegrasyonu `63159fb3` üzerine rebase edildikten sonra sabitlendi. Sıra **önce-1 → sonra-1 → önce-2 → sonra-2 → önce-3 → sonra-3**. Her koşu kendi yeni `/tmp/buyerlog-startup-final-<before|after>-<n>/source/` dizinine aynı `source-30000-seed7-20261105.tar.gz` arşivini açar. Metadata ve üç XLSX SHA-256 kontrolü fixture eşitliğini doğrular. Veri/cache dizinleri koşular arasında kopyalanmaz. Ölçüm sırasında test paketi veya başka benchmark çalıştırılmaz.
 
-Her ağaçta özgün komut, benchmark ve yardımcıları değiştirilmeden çalıştırıldı:
-
-```sh
-PLAYWRIGHT_MODULE=/tmp/buyerlog-playwright-probe.cjs \
-CHROMIUM_PATH=/usr/bin/chromium \
-SHELL_METRICS_FILE=/tmp/buyerlog-startup-shell-<variant>-<n>/shell-metrics.json \
-node scripts/benchmark-startup-orders.js --rows 30000 \
-  --fixture-root /tmp/buyerlog-startup-shell-<variant>-<n>
-```
-
-Küçük Playwright gözlemcisi kapanan sayfadan DOMContentLoaded okur. İlk Resource Timing denemesinde Chromium'un varsayılan **250 kayıt** tamponunun dolduğu görüldü: bir örnekte 23.276 ms'de listede yalnız 250 kayıt vardı ve son kaydın başlangıcı 1.673 ms idi. Bu ilk denemenin kaynak adet/bayt verileri rapora alınmadı. Navigation Timing ve özgün `PerformanceObserver` long-task ölçümü bu ayrı tampon sınırından etkilenmez.
-
-Adet/bayt için tamponu navigasyondan önce **20.000** kayda yükselten ek, dönüşümlü altı soğuk Overview koşusu yapıldı:
+Her ağaçta güncel özgün komut, benchmark ve yardımcıları değiştirilmeden çalıştırıldı:
 
 ```sh
 PLAYWRIGHT_MODULE=/tmp/buyerlog-playwright-complete-probe.cjs \
-CHROMIUM_PATH=/usr/bin/chromium SHELL_GUIDE_PROBE=1 \
-SHELL_METRICS_FILE=/tmp/buyerlog-startup-shell-<variant>-<n>/resources-complete.json \
+CHROMIUM_PATH=/usr/bin/chromium SHELL_GUIDE_PROBE=0 \
+SHELL_METRICS_FILE=/tmp/buyerlog-startup-final-<variant>-<n>/shell-metrics.json \
 node scripts/benchmark-startup-orders.js --rows 30000 \
-  --fixture-root /tmp/buyerlog-startup-shell-<variant>-<n> \
-  --skip-refresh --skip-same-tab --module overview \
-  --out /tmp/buyerlog-startup-shell-<variant>-<n>/resource-benchmark.json
+  --fixture-root /tmp/buyerlog-startup-final-<variant>-<n>
 ```
 
-Bu ek seri her koşuda yeni tarayıcı/context açar. Aynı kökün hazırlanmış cache'i kullanılır; fixture, satır sayıları, cache generation ve source revision'ın özgün koşuyla **birebir aynı** olduğu doğrulanır. Yalnız yenileme ve diğer sayfalara geçiş tekrarlanmaz. Her koşuda kaynak tamponu taşma sayısı sıfır olmak zorundadır. `.js` / `.css` kayıtlarının yolu, başlangıç/bitiş zamanı, initiator türü ve decoded/encoded/transfer baytları saklanır. Aynı dosyanın farklı URL ile tekrar istenmesi korunur; istek ve unique dosya sayısı ayrıdır. Özetler hem birincil-ekran olayına kadar başlatılan kaynakları hem 10.000 ms'ye kadar başlatılan kaynakları gösterir.
+Playwright gözlemcisi navigasyondan önce Resource Timing tamponunu **20.000** kayda yükseltir ve `resourcetimingbufferfull` olayını sayar. İlk denemede Chromium'un varsayılan 250 kayıt sınırının dolduğu görüldüğü için, eksik adet/bayt verileri atıldı; nihai altı koşunun tamamı büyütülmüş tamponla tekrarlandı. Gözlemci kapanan sayfadan Navigation/Resource Timing okur; `SHELL_GUIDE_PROBE=0` ile benchmark akışına ek UI işlemi eklemez. Kaynak yolu, başlangıç/bitiş zamanı, initiator türü, decoded/encoded/transfer bayt saklanır. Farklı URL ile tekrarlanan aynı dosya isteği korunur; istek ve unique dosya sayısı ayrıdır. Özetler hem birincil ekran olayına kadar hem 10.000 ms'ye kadar başlatılan `.js` / `.css` kaynaklarını gösterir.
 
-Tamponu büyüten gözlemci, başlangıç ölçümleri tamamlandıktan sonra F1 rehberinin ilk açılışını ölçer. Ardından core-data arka plan hazırlığı bitince, `collectionTools` henüz yüklenmemişken aynı taze context'te Koleksiyon açılır; bu grubun ilk indirme/çalıştırma maliyeti ayrıca ölçülür. Böylece ortak Pricing Desk grubunun önceden açılması Koleksiyonun ilk açılış maliyetini saklamaz. Gözlemci fixture'ı veya benchmark kabul koşullarını değiştirmez.
+`/opt/node22/lib/node_modules/playwright` bu ortamda yoktur; kurulu `/opt/codex/cua_node/lib/node_modules/playwright`, sistem Chromium'u ve Node 24.19.0 iki varyantta aynıdır. İlk `sameTab.overview` navigasyonu yeni tarayıcı/context ve soğuk HTTP cache'tir. Sonraki Overview, Koleksiyon, CP ve Orders navigasyonlarında context cache'i ısınmıştır; bu senaryolar ayrı saklanır. DOMContentLoaded Navigation Timing'den, birincil ekran `bl:primary-screen-ready` olayından alınır. Uzun görevler özgün probe'un navigasyondan başlayan, 10.000 ms sonunda kırpılan penceresidir. Backend açılışı, Continue kapısı ve gerçek perde kapanışı ayrı özgün metriklerdir; birincil ekranla aynı şey değildir.
 
-`/opt/node22/lib/node_modules/playwright` bu ortamda yoktur; kurulu `/opt/codex/cua_node/lib/node_modules/playwright`, sistem Chromium'u ve Node 24.19.0 iki varyantta aynıdır. Tam açılış serisinin `sameTab.overview` ilk navigasyonu da soğuk HTTP cache'tir; sonraki Overview, Koleksiyon, CP ve Orders navigasyonlarının context cache'i ısınmıştır. Bu senaryolar ayrı saklanır. DOMContentLoaded Navigation Timing'den, birincil ekran `bl:primary-screen-ready` olayından alınır. Uzun görevler özgün probe'un navigasyondan başlayan, 10.000 ms sonunda kırpılan penceresidir. Backend açılışı, Continue kapısı ve gerçek perde kapanışı özgün ayrı metriklerdir; birincil ekranla aynı şey değildir.
+Her tam benchmark sonrasında aynı sentetik kök yeniden başlatılarak modüller ilk kez açılır. Core-data arka plan hazırlığı tamamlandıktan sonra `switchTab` / mevcut `ensureFeature` akışı kullanılır. Pricing Desk ortak grubu ilk kez yükler; sonraki Koleksiyon geçişinde grup sıcaktır. **Ayrı yeni HTTP context** açılıp aynı sentetik session cookie'si aktarılır; burada F1 rehberi ve `collectionTools` henüz yüklenmemişken Koleksiyonun gerçek ilk grup indirmesi ayrıca ölçülür. Excel için gerçek menü tıklanır; örnek dosya okunup eşlemeye ilerlenir. Spreadsheet'te Escape'in seçimi/ızgara odağını koruduğu ve ArrowRight'ın aktif sütunu değiştirdiği doğrulanır. İstisna Kutusu veri ve tür kontrolleri hazır olana kadar beklenir. Diğer hazır olma ölçütleri sonuç tablosunda belirtilir.
 
-Her tam benchmark sonrasında aynı sentetik kök yeniden başlatılarak modüller ilk kez açılır. Core-data hazırlığı tamamlandıktan sonra `switchTab` ve mevcut `ensureFeature` akışı kullanılır; stil/kod hazır süresi ile veri/ana kontrol hazır süresi ayrıdır. İlk Pricing Desk açılışı ortak grubu da yükler. Bu ana senaryodaki sonraki Koleksiyon geçişi sıcak gruptur. Ek yeni-belge Koleksiyon örneğinin HTTP cache'i de aynı context'te ısınmıştır; ham kayıttaki `koleksiyonCold` adı yalnız yeni belgedeki global/feature durumunu ifade eder. Gerçek ilk grup indirmesi yukarıdaki kaynak serisinde ayrıca verilir. Excel için gerçek menü tıklanır. Planlanan/Gerçekleşen ve sunum önizlemesinin açılması grup yükleme süresinden ayrıdır. Modülün isteğe bağlı okuma/Devam bekleyişi kullanıcı düşünme süresi olarak dışarıda tutulur. Sentetik Koleksiyon boştur; işlev smoke'unda geçici, kaydedilmeyen bir demo satırı kullanıldı.
+Sentetik Koleksiyon boştur; işlev smoke'unda geçici, kaydedilmeyen bir demo satırı kullanılır. Modülün isteğe bağlı okuma/Devam bekleyişi kullanıcı düşünme süresi olarak dışarıda tutulur. Kaynak fixture, cache generation, source revision ve satır doğrulamaları özgün benchmark'a aittir. Benchmark'ın SHA-256 değeri de her sonuçta saklanır.
 
 Linux headless Chromium ölçümüdür; Windows/Electron, antivirüs ve soğuk OS disk cache'i ölçülmez. Üç tekrar dağılımı görmek içindir; küçük süre farkları genel hızlanma garantisi değildir.
 
 ## Ölçüm sonuçları
 
-Taban `2083ffd7`, uygulama değişikliği `0a57512f`. Node v24.19.0, Chromium 154.0.8037.57, 4 vCPU kota / 16 GiB. Her sütun medyanı, değişken değerlerde parantez içi min–max aralığını gösterir; her varyantta n=3. Ham gözlemler [measurements.json](startup-feature-assets-20261107/measurements.json), statik envanter [inventory.json](startup-feature-assets-20261107/inventory.json).
+Güncel entegrasyon tabanı `63159fb3`, ölçülen uygulama revizyonu `d61d9434`. Node v24.19.0, Chromium 154.0.8037.57, 4 vCPU kota / 16 GiB. Her sütun medyanı, değişken değerlerde parantez içi min–max aralığını gösterir; her varyantta n=3. [Ham JSON (gzip)](startup-feature-assets-20261107/measurements.json.gz), [CSV](startup-feature-assets-20261107/cold-overview.csv), [statik envanter](startup-feature-assets-20261107/inventory.json).
 
-### Kaynak tamponu tamamlanmış soğuk Overview
+Statik HTML'de senkron script sayısı **127 → 112**, yerel dosya toplamı **6.254.780 → 5.643.405 bayt**; blocking stylesheet sayısı **45 → 27**, toplamı **1.887.478 → 1.642.046 bayt**. Net parser/blocking yük azalımı **856.807 bayt**. Dinamik `/user-context.js` yanıtı statik yerel dosya toplamına dahil değildir; gerçek navigasyon ölçümünde sayılır.
 
-Bu tablonun süreleri ve baytları aynı ek altı koşudan gelir. İstek sınırı kaynak başlangıç zamanıdır; decoded/encoded gövde boyutları ve header dahil transfer boyutu ayrı saklanır. Tampon taşması altı koşuda da 0.
+### Soğuk Overview / tam komutun ilk navigasyonu
+
+Süre ve baytlar aynı altı koşudan gelir. Kaynak tamponu navigasyondan önce 20.000 kayda yükseltildi; 30 sayfa navigasyonunun tamamında taşma 0. İstek sınırı kaynak başlangıç zamanıdır. Decoded/encoded gövde ve header dahil transfer boyutu ayrı saklanır.
 
 | Metrik | Önce | Sonra | Medyan farkı |
 | --- | ---: | ---: | ---: |
-| DOMContentLoaded (ms) | 1007.9 (992.0–1249.5) | 869.2 (859.6–993.3) | -13.8% |
-| Birincil ekran hazır (ms) | 1463.2 (1420.4–1802.4) | 1390.7 (1356.8–1510.6) | -5.0% |
-| Continue kapısı hazır (ms) | 1469.1 (1428.2–1812.4) | 1400.3 (1366.5–1521.1) | -4.7% |
-| Perde kapandı (ms) | 1615.3 (1547.5–1908.5) | 1523.8 (1453.1–1600.1) | -5.7% |
-| İlk 10 sn uzun görev toplamı (ms) | 1445.0 (1281.0–1627.0) | 1312.0 (1172.0–1530.0) | -9.2% |
+| DOMContentLoaded (ms) | 955.5 (948.2–1126.4) | 841.9 (833.0–1118.1) | -11.9% |
+| Birincil ekran hazır (ms) | 1585.1 (1546.6–1783.5) | 1483.0 (1393.1–1805.6) | -6.4% |
+| Continue kapısı hazır (ms) | 1594.7 (1555.3–1796.0) | 1501.6 (1398.5–1817.0) | -5.8% |
+| Perde kapandı (ms) | 1680.4 (1648.5–1891.0) | 1586.8 (1454.9–1909.7) | -5.6% |
+| İlk 10 sn uzun görev toplamı (ms) | 6783.5 (6605.2–7283.8) | 7021.8 (6744.2–7025.1) | +3.5% |
 | Birincil ekrana kadar JS istek | 153 | 142 | -7.2% |
 | Birincil ekrana kadar JS unique dosya | 152 | 141 | -7.2% |
-| Birincil ekrana kadar JS decoded bayt | 6.928.636 | 6.543.706 | -5.6% |
-| Birincil ekrana kadar JS encoded bayt | 2.746.188 | 2.631.005 | -4.2% |
-| Birincil ekrana kadar JS transfer bayt | 2.792.088 | 2.673.605 | -4.2% |
+| Birincil ekrana kadar JS decoded bayt | 6.934.403 | 6.549.473 | -5.6% |
+| Birincil ekrana kadar JS encoded bayt | 2.748.136 | 2.632.953 | -4.2% |
+| Birincil ekrana kadar JS transfer bayt | 2.794.036 | 2.675.553 | -4.2% |
 | Birincil ekrana kadar CSS istek | 45 | 27 | -40.0% |
 | Birincil ekrana kadar CSS unique dosya | 45 | 27 | -40.0% |
 | Birincil ekrana kadar CSS decoded bayt | 1.887.478 | 1.642.046 | -13.0% |
 | Birincil ekrana kadar CSS encoded bayt | 1.308.875 | 1.246.579 | -4.8% |
 | Birincil ekrana kadar CSS transfer bayt | 1.322.375 | 1.254.679 | -5.1% |
-| İlk 10 sn JS istek | 182 (182–183) | 171 | -6.0% |
-| İlk 10 sn JS unique dosya | 180 (180–181) | 169 | -6.1% |
-| İlk 10 sn JS decoded bayt | 8.213.733 (8.213.733–8.638.753) | 7.828.803 | -4.7% |
-| İlk 10 sn JS encoded bayt | 3.114.492 (3.114.492–3.257.938) | 2.999.309 | -3.7% |
-| İlk 10 sn JS transfer bayt | 3.169.092 (3.169.092–3.312.838) | 3.050.609 | -3.7% |
+| İlk 10 sn JS istek | 183 | 172 | -6.0% |
+| İlk 10 sn JS unique dosya | 181 | 170 | -6.1% |
+| İlk 10 sn JS decoded bayt | 8.644.520 | 8.259.590 | -4.5% |
+| İlk 10 sn JS encoded bayt | 3.259.886 | 3.144.703 | -3.5% |
+| İlk 10 sn JS transfer bayt | 3.314.786 | 3.196.303 | -3.6% |
 | İlk 10 sn CSS istek | 45 | 28 | -37.8% |
 | İlk 10 sn CSS unique dosya | 45 | 28 | -37.8% |
 | İlk 10 sn CSS decoded bayt | 1.887.478 | 1.642.835 | -13.0% |
 | İlk 10 sn CSS encoded bayt | 1.308.875 | 1.247.368 | -4.7% |
 | İlk 10 sn CSS transfer bayt | 1.322.375 | 1.255.768 | -5.0% |
 
-### Özgün tam komutun diğer açılış senaryoları
+### Tam komutun sonraki açılış senaryoları
 
-Context cache’i bu senaryolarda ilk Overview ve aynı-sekme geçişleriyle ısınmıştır. Süreler yeni sayfa navigasyonlarıdır.
+Bu navigasyonlarda context cache’i ilk Overview ve aynı-sekme geçişleriyle ısınmıştır.
 
 | Senaryo / metrik (ms) | Önce | Sonra | Medyan farkı |
 | --- | ---: | ---: | ---: |
-| overview / DCL | 1934.0 (1902.8–2110.7) | 1990.8 (1971.6–2087.1) | +2.9% |
-| overview / Birincil ekran | 2351.1 (2309.4–2537.0) | 2443.0 (2389.7–2550.8) | +3.9% |
-| overview / İlk 10 sn uzun görev | 6020.8 (5820.0–6080.3) | 5949.1 (5586.6–6156.7) | -1.2% |
-| koleksiyon / DCL | 946.8 (910.0–1095.5) | 837.0 (808.7–1077.1) | -11.6% |
-| koleksiyon / Birincil ekran | 1318.9 (1272.2–1404.1) | 1315.2 (1292.3–1445.5) | -0.3% |
-| koleksiyon / İlk 10 sn uzun görev | 4324.7 (4221.6–4400.3) | 4149.5 (4038.3–4502.5) | -4.1% |
-| cp / DCL | 794.0 (780.7–844.1) | 763.1 (726.5–965.8) | -3.9% |
-| cp / Birincil ekran | 12675.1 (12434.4–12936.1) | 12713.6 (12693.0–12838.7) | +0.3% |
-| cp / İlk 10 sn uzun görev | 8465.9 (8331.8–8510.7) | 8392.5 (8386.6–8417.9) | -0.9% |
-| orders / DCL | 747.0 (736.9–750.3) | 702.0 (660.4–708.6) | -6.0% |
-| orders / Birincil ekran | 3312.6 (3240.0–3358.6) | 3326.7 (3166.3–3434.2) | +0.4% |
-| orders / İlk 10 sn uzun görev | 6505.6 (6313.0–6683.8) | 6364.8 (6298.0–6511.1) | -2.2% |
+| overview / DCL | 1018.6 (904.6–1037.4) | 999.6 (928.2–1089.8) | -1.9% |
+| overview / Birincil ekran | 1503.2 (1388.0–1523.0) | 1495.3 (1442.6–1614.6) | -0.5% |
+| overview / İlk 10 sn uzun görev | 8139.0 (8127.8–8199.9) | 8053.0 (8035.6–8253.5) | -1.1% |
+| koleksiyon / DCL | 922.8 (831.2–1047.2) | 793.4 (763.2–802.7) | -14.0% |
+| koleksiyon / Birincil ekran | 1310.5 (1149.7–1409.6) | 1214.6 (1208.4–1225.8) | -7.3% |
+| koleksiyon / İlk 10 sn uzun görev | 4735.3 (4679.9–4847.2) | 4626.2 (4602.3–4705.9) | -2.3% |
+| cp / DCL | 720.8 (697.8–877.7) | 692.5 (680.3–724.7) | -3.9% |
+| cp / Birincil ekran | 12493.4 (12048.2–15254.3) | 12248.9 (11747.6–12991.3) | -2.0% |
+| cp / İlk 10 sn uzun görev | 9155.1 (8803.9–9211.7) | 8900.1 (8896.9–9119.3) | -2.8% |
+| orders / DCL | 747.8 (737.8–845.4) | 728.4 (725.4–748.7) | -2.6% |
+| orders / Birincil ekran | 3603.3 (3485.0–3633.2) | 3407.0 (3377.1–3509.9) | -5.4% |
+| orders / İlk 10 sn uzun görev | 6660.7 (6459.8–6677.8) | 6447.1 (6241.8–6455.0) | -3.2% |
 
 ### İlk açılış süreleri
 
-Ana kontrol/veri hazır (ms); özellik promise’i ve alt ayrıntılar ham JSON’dadır. Ortak `collectionTools` grubu ilk Pricing Desk girişinde indirilir. Planlanan/Gerçekleşen ve sunum satırları Backlog grubunun yüklenmesinden sonraki ilk işlem süresidir. Son iki satır tamponu tamamlanmış kaynak serisindeki taze context’ten gelir.
+Ölçütler: Veri Yönetimi ilk kontroller; Üreticiler hesaplanmış sonuç; Lisans Kartları busy durumu bitişi; LFL görünür KPI ve yükleyici bitişi; Backlog dolu pivot; Planlanan/Gerçekleşen dönem kontrolü; sunum `open()` tamamlanması ve iframe; Excel sihirbaz DOM’u; Kullanıcı Yönetimi dialog’u; İstisna Kutusu veri ve tür düğmeleri. Promise/kod hazır süreleri ayrıca ham JSON’dadır. İsteğe bağlı okuma/Devam bekleyişi kullanıcı düşünme süresi olarak dışarıda tutulur.
 
-| İlk açılış | Önce | Sonra | Medyan farkı |
+Pricing Desk ortak grubu ilk kez yükler; ana senaryodaki sonraki Koleksiyon geçişinde bu grup sıcaktır. Son iki satır ayrı, yeni HTTP context’te ve arka plan core hazırlığı bittikten sonra ölçülür. Planlanan/Gerçekleşen ve sunum satırları Backlog grubu yükleme süresine ek ilk işlem maliyetidir.
+
+| İlk açılış (ms) | Önce | Sonra | Medyan farkı |
 | --- | ---: | ---: | ---: |
-| Veri Yönetimi | 170.3 (154.0–170.8) | 175.4 (175.0–179.0) | +3.0% |
-| Üreticiler | 337.4 (325.6–352.1) | 349.3 (329.4–383.7) | +3.5% |
-| Lisans Kartları | 892.9 (883.6–911.8) | 894.3 (889.2–1387.7) | +0.2% |
-| LFL | 3845.9 (3446.9–4025.9) | 3483.6 (3416.0–3690.0) | -9.4% |
-| Ön Maliyet | 170.4 (135.5–183.4) | 172.4 (165.8–174.3) | +1.2% |
-| Otomasyon | 79.5 (78.8–92.5) | 88.1 (73.2–94.2) | +10.8% |
-| Pricing Desk / collectionTools ilk yükleme | 107.5 (103.7–109.0) | 142.1 (133.3–148.4) | +32.2% |
-| Koleksiyon / grup zaten yüklü | 283.5 (274.9–293.7) | 274.6 (258.7–314.6) | -3.1% |
-| Backlog / backlogAnalysis ilk yükleme | 2053.4 (1997.1–2182.7) | 2010.3 (2002.5–2133.1) | -2.1% |
-| Planlanan/Gerçekleşen paneli | 41.1 (39.6–47.7) | 38.9 (37.6–42.5) | -5.4% |
-| Sunum önizlemesi | 12720.0 (12306.9–13656.3) | 12523.8 (12338.7–13369.3) | -1.5% |
-| Excel sihirbazı | 1484.7 (1351.2–1589.5) | 1556.7 (1520.9–1820.0) | +4.8% |
-| Kullanıcı Yönetimi | 164.5 (161.6–177.8) | 205.5 (184.7–219.8) | +24.9% |
-| İstisna Kutusu | 187.0 (182.5–190.4) | 188.0 (154.7–208.3) | +0.5% |
-| Koleksiyon / yeni belge, sıcak HTTP cache | 450.4 (372.2–459.7) | 389.1 (330.6–540.3) | -13.6% |
-| F1 rehber / taze context | 167.6 (160.2–6846.5) | 151.1 (126.2–931.4) | -9.8% |
-| Koleksiyon / ortak grubun gerçek ilk indirmesi | 348.6 (331.1–416.9) | 432.4 (416.0–444.6) | +24.0% |
+| Veri Yönetimi | 170.8 (157.0–184.7) | 185.1 (149.8–188.4) | +8.4% |
+| Üreticiler | 367.1 (341.4–405.2) | 402.0 (373.3–411.1) | +9.5% |
+| Lisans Kartları | 2914.7 (2912.0–2927.9) | 2933.9 (2908.4–2947.9) | +0.7% |
+| LFL | 3828.8 (3470.9–4479.0) | 3914.3 (3786.3–4158.2) | +2.2% |
+| Ön Maliyet | 173.0 (151.3–214.8) | 186.9 (182.3–215.9) | +8.0% |
+| Otomasyon | 145.5 (132.7–150.9) | 129.9 (127.7–149.5) | -10.7% |
+| Pricing Desk / collectionTools ilk yükleme | 120.0 (114.5–131.3) | 144.8 (143.6–155.2) | +20.7% |
+| Koleksiyon / grup zaten yüklü | 301.6 (266.1–309.1) | 298.9 (291.5–299.8) | -0.9% |
+| Backlog / backlogAnalysis ilk yükleme | 2553.3 (2487.0–2583.5) | 2536.1 (2531.2–2565.5) | -0.7% |
+| Planlanan/Gerçekleşen paneli | 48.7 (44.6–71.9) | 56.2 (48.0–71.7) | +15.4% |
+| Sunum önizlemesi | 9592.6 (9318.8–9754.9) | 8931.9 (8669.6–9552.5) | -6.9% |
+| Excel sihirbazı | 1653.2 (1554.6–2018.9) | 1526.5 (1450.2–1707.7) | -7.7% |
+| Kullanıcı Yönetimi | 161.7 (142.5–216.5) | 195.1 (183.4–208.2) | +20.7% |
+| İstisna Kutusu / veri hazır | 2243.2 (2212.7–2566.8) | 2449.5 (2397.1–2787.7) | +9.2% |
+| F1 rehber / taze HTTP context | 159.5 (149.0–319.1) | 163.7 (156.0–175.1) | +2.6% |
+| Koleksiyon / taze HTTP context, ilk grup indirmesi | 331.0 (308.2–425.2) | 415.4 (388.2–438.0) | +25.5% |
 
-Veri/cache generation ve fixture kontrolleri 12 benchmark koşusunda geçti. Modül kontrolleri altı tam koşunun tamamında geçti; raporlanan browser page-error sayısı 0. Yeni özellik indirme maliyeti ilk açılışta ödenir; bu tabloda küçük artışlar ve makineye bağlı geniş aralıklar gizlenmez.
+Altı benchmark cache generation, source revision ve satır doğrulamalarıyla geçti. Altı modül kontrolü de geçti; raporlanan browser page-error sayısı 0. Her taze Koleksiyon context’inde `collectionTools` ilk geçişten önce yüklü değildir; transfer boyutları ham JSON’da saklanır.
 
-
-### Sonucun sınırı ve ilk kullanım bedeli
-
-Statik HTML'de senkron script etiketi **127 → 112** (16 büyük dosya çıkarıldı, 756 baytlık giriş betiği eklendi), blocking stylesheet **45 → 27**. Yerel eager JS dosyaları **6.249.013 → 5.637.638 bayt** (−611.375); CSS **1.887.478 → 1.642.046 bayt** (−245.432). `ui-components.css` hâlâ 1.130.693 bayttır; ortak Manifest katmanı bu PR'ın dışında kalır.
-
-Tamponu tamamlanmış Overview'da birincil ekrana kadar JS **6.928.636 → 6.543.706 bayt**, CSS **1.887.478 → 1.642.046 bayt**. İlk 10 saniyede de medyan JS ve CSS gövdeleri azalır. Rehber/trivia açılışta kullanıldığı için dosyaları bu aralıkta hâlâ yüklenir; parser'ı bloklamaları kalkar. İstisna Kutusu ilk Overview'da görünür olduğundan CSS sayısı 10 saniyelik toplamda 27 değil **28** olur.
-
-Soğuk Overview'da DCL medyanı **1007,9 → 869,2 ms**, birincil ekran **1463,2 → 1390,7 ms**, uzun görev toplamı **1445 → 1312 ms**. Buna karşılık cache'i ısınmış Overview, CP ve Orders birincil ekranlarında belirgin kazanç yoktur; warm Overview medyanı yaklaşık 92 ms daha yüksektir ve dağılımlar örtüşür. Bu PR genel 30k render/hesaplama darboğazını çözmüş sayılmaz.
-
-İlk Pricing Desk açılışı yaklaşık **35 ms**, gerçek ilk Koleksiyon grubu indirmesi **84 ms**, Excel sihirbazı **72 ms**, Kullanıcı Yönetimi **41 ms** ek medyan maliyet gösterir. Sunumun mevcut 12–13 sn ilk önizleme maliyeti korunur; lisans kartında tek koşuluk 1,39 sn ve F1 açılışında kuyruk beklemesine bağlı geniş aralık ham tabloda görünür. Tek makinede üç örnekten küçük farklar için nedensellik veya kesin hız garantisi çıkarılmaz.
+[Doğrulandı] Bu koşularda DCL ve birincil ekran medyanları azaldı; ilk 10 saniyedeki JS/CSS bayt ve istek sayısı düştü. Uzun görev toplamı **%3,5 arttı** ve aralıklar örtüşüyor; bu metrikte iyileşme iddiası yoktur. Yükleme maliyetinin bir bölümü ilk kullanıma taşındı: taze context'te Koleksiyon grubu medyanı 331 → 415 ms oldu. Üç tekrar, küçük süre farklarını genel hızlanma garantisine dönüştürmez.
 
 ## Tarayıcı ve görsel kanıt
 
 Gerçek Buyer Log'da 30k sentetik fixture ile doğrulanan işlemler: Veri Yönetimi aç/kapa kontrolleri ve salt okunur bakım paneli; Üreticiler arama; Lisans Kartları yükleme; LFL veri/KPI ekranı; yeni Ön Maliyet formu; Otomasyon çalışma alanı; Pricing Desk Geçmiş sekmesi; spreadsheet hücre seçimi ve ok tuşu gezintisi; Planlanan/Gerçekleşen dönem kontrolleri; sunum raporu iframe önizlemesi; Excel menüsünden ilk açılış, örnek XLSX okuma ve sütun eşlemeye ilerleme; kullanıcı yönetimi dialog'u; İstisna Kutusu; F1 rehber arama.
 
-15 ekranın TR/EN × açık/koyu tema kombinasyonlarında 60 gerçek PNG kaydı alındı ve contact sheet'ler incelendi. LFL'nin okuma sonrası Devam perdesi geçilerek veri ekranı ayrıca dört kombinasyonda kaydedildi. Modül dosyalarının başlangıçta istenmediği Resource Timing ile denetlendi. Üreticiler CSS yanıtı tutularak yeni görünümün gizli kaldığı, CSS serbest bırakıldığında stilli kontrollerin görünür olduğu gerçek tarayıcıda doğrulandı. Yeni animasyon motoru veya hareket ayarı eklenmedi.
+15 ekranın TR/EN × açık/koyu tema kombinasyonlarında 60 gerçek PNG kaydı alındı ve contact sheet'ler incelendi. LFL'nin okuma sonrası Devam perdesi geçilerek dört kombinasyonda veri ekranı kaydedildi. Modül dosyalarının başlangıçta istenmediği Resource Timing ile denetlendi. Üreticiler CSS yanıtı tutularak yeni görünümün gizli kaldığı, CSS serbest bırakıldığında stilli kontrollerin görünür olduğu gerçek tarayıcıda doğrulandı. Yeni animasyon motoru veya hareket ayarı eklenmedi.
 
 Contact sheet kayıtları: [TR açık](startup-feature-assets-20261107/visual-tr-light.png), [TR koyu](startup-feature-assets-20261107/visual-tr-dark.png), [EN açık](startup-feature-assets-20261107/visual-en-light.png), [EN koyu](startup-feature-assets-20261107/visual-en-dark.png). Bunlar gerçek PNG kayıtlarından inceleme için küçültülmüş derlemelerdir.
 
@@ -186,11 +166,9 @@ Release note görseli `resources/app/public/release-notes/next-assets/startup-fe
 
 ## Test sonucu ve PR durumu
 
+- Güncel `63159fb3` tabanına rebase sonrası `npm test` **1290 test dosyası, 10 batch ile geçti**. IAM ve v714 kontrolleri de geçti. Test silinmedi, gevşetilmedi veya yeni skip eklenmedi.
 - İlgili yükleme, import, spreadsheet, Backlog, LFL, lisans ve Veri Yönetimi sözleşmeleri geçti; yeni runtime yükleme testleri PR fast checks'e dahil.
-- `npm test`: ilk üç batch çalıştı, `local-iam-migration-authority.test.js` içindeki “a partial established local directory without a valid recovery copy fails closed” assertion'ında başarısız. Beklenen `IAM_LOCAL_INVALID`, gözlenen `undefined`. Aynı test **değiştirilmemiş `2083ffd7` ana dalında da 6 pass / 1 fail** ile tekrarlandı. Kilitli `server/**` alanına müdahale edilmedi.
-- Runner hata sonrası durduğu için, kaynak runner'ın yalnız `TEST_ROOT`, başlangıç batch indeksi ve rapor etiketi değiştirilen geçici kopyasıyla batch 4–10 da çalıştırıldı. Assertion'lar, concurrency, isolated test listesi ve hata çıkışı değiştirilmedi. Bu yedi batch geçti. Toplam 1240 dosya çalıştırıldı: 8706 test/subtest, 8640 pass, 1 fail, 65 mevcut skip. Test silinmedi, gevşetilmedi veya yeni skip eklenmedi.
-- Ana daldaki v714 düzeltmesi dahil; v714 geçti. `npm run i18n:check`: yeni eksik 0, baseline eksik 0. `npm run release:notes:validate` geçti.
-- Tam test paketi yeşil değildir. PR mevcut IAM hatası nedeniyle taslak tutulur; merge, TEST ve STABLE yapılmadı.
+- `npm run i18n:check`: yeni eksik 0, baseline eksik 0. `npm run release:notes:validate`: son gerçek PNG ile 39 kayıt geçti.
+- Merge, TEST ve STABLE yapılmadı.
 
-[Test özetleri ve browser kontrol listesi](startup-feature-assets-20261107/validation.json). [npm özeti](startup-feature-assets-20261107/npm-summary.txt), [kalan batch özeti](startup-feature-assets-20261107/remaining-summary.txt), [ana dal IAM tekrarı](startup-feature-assets-20261107/baseline-IAM-summary.txt).
-
+[Test ve tarayıcı kontrol listesi](startup-feature-assets-20261107/validation.json), [npm test özeti](startup-feature-assets-20261107/npm-summary.txt).

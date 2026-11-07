@@ -1,101 +1,68 @@
 {
-  "inventoryFiles": 1240,
+  "inventoryFiles": 1290,
+  "baseRevision": "63159fb3",
   "npmTest": {
-    "command": "APPDATA=/tmp/buyerlog-test-profile/appdata LOCALAPPDATA=/tmp/buyerlog-test-profile/localappdata npm test",
-    "status": "failed",
-    "stoppedAfterBatch": 3,
-    "failure": {
-      "file": "tests/local-iam-migration-authority.test.js",
-      "test": "a partial established local directory without a valid recovery copy fails closed",
-      "expected": "IAM_LOCAL_INVALID",
-      "actual": "undefined"
-    }
-  },
-  "remainingBatches": {
-    "range": [
-      4,
-      10
-    ],
     "status": "passed",
-    "note": "Temporary copy of the original runner with only TEST_ROOT and initial loop index changed; assertions, concurrency, isolation and failure exit remain unchanged."
+    "exitCode": 0,
+    "batches": 10,
+    "command": "APPDATA=/tmp/buyerlog-current-test-profile/appdata LOCALAPPDATA=/tmp/buyerlog-current-test-profile/localappdata npm test"
   },
   "assertionsByBatch": {
-    "npm": {
-      "tests": [
-        1907,
-        2417,
-        2119
-      ],
-      "pass": [
-        1847,
-        2414,
-        2117
-      ],
-      "fail": [
-        0,
-        0,
-        1
-      ],
-      "skipped": [
-        60,
-        3,
-        1
-      ]
-    },
-    "remaining": {
-      "tests": [
-        1947,
-        269,
-        4,
-        12,
-        8,
-        8,
-        15
-      ],
-      "pass": [
-        1947,
-        269,
-        4,
-        12,
-        8,
-        8,
-        14
-      ],
-      "fail": [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      "skipped": [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        1
-      ]
-    }
+    "tests": [
+      1803,
+      2330,
+      2050,
+      2008,
+      677,
+      4,
+      12,
+      8,
+      8,
+      15
+    ],
+    "pass": [
+      1743,
+      2327,
+      2050,
+      2007,
+      677,
+      4,
+      12,
+      8,
+      8,
+      14
+    ],
+    "fail": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "skipped": [
+      60,
+      3,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+    ]
   },
-  "baselineReproduction": {
-    "revision": "2083ffd7",
-    "file": "tests/local-iam-migration-authority.test.js",
-    "pass": 6,
-    "fail": 1,
-    "sameFailure": true
-  },
-  "v714": "passed on updated main",
-  "i18n": "passed",
-  "releaseNotes": "passed",
+  "v714": "passed",
+  "localIamMigration": "passed",
   "browser": {
     "status": "passed",
-    "pageErrors": [],
-    "screenshots": 60,
-    "lflSupplement": 4,
+    "styleCaptures": 60,
+    "errors": [],
     "checks": [
       "data-management controls",
       "manufacturer search",
@@ -109,9 +76,29 @@
       "presentation report preview",
       "Excel workbook parsed and wizard advanced",
       "user-management dialog",
-      "exception inbox sync",
+      "exception inbox data, counts and type filters",
       "F1 guide search",
       "delayed CSS prevents unstyled first paint"
-    ]
-  }
+    ],
+    "unopenedResources": [],
+    "alternatingBenchmarkRuns": 6,
+    "moduleFunctionalRuns": 6,
+    "resourceTimingBufferSize": 20000,
+    "resourceTimingOverflowAcross30Navigations": 0,
+    "sourceRevision": "d61d9434"
+  },
+  "i18n": {
+    "status": "passed",
+    "newMissing": 0,
+    "baselineMissing": 0
+  },
+  "releaseNotes": {
+    "status": "passed",
+    "changes": 39,
+    "ownEntryOnly": true,
+    "capture": "post-change",
+    "width": 1600,
+    "height": 1000
+  },
+  "lockedFilesDiff": "none"
 }
