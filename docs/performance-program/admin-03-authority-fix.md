@@ -8,8 +8,10 @@ PASS**. Main'in 42 not nesnesi ve kendi tek kaydı korunur. İncelenen üretim
 modülü ve 16 native test değişmedi; önceki RED sonuçları tarihsel kalır.
 Kaynak/test/CI ağacı `2ef7c8e0203e576869809d3c3b7831af775df3a7` olarak
 donduruldu. [Son kaynak, komut ve on batch sonucu](admin-03-authority-artifacts/integrated-main-test-summary.json).
-Bu ek yalnız gerçek yeni sonucu bildirir; final-head CI ve 30k regresyon
-karşılaştırması henüz tamamlanmış sayılmaz.
+30k regresyon karşılaştırması tamamlandı; aşağıdaki yeni bölüm kapsamı ve
+olumsuz hareketi birlikte bildirir. `df8ca377` için iki gerçek GitHub workflow'u
+SUCCESS (42414788119, 42414788256); bu kanıt commit'inden sonraki final-head CI
+ayrıca doğrulanacaktır.
 
 ## TR
 
@@ -75,8 +77,8 @@ yedeğinin seçildiğini ve dış fixture'daki iki kullanıcının korunduğunu 
 Dosyanın byte düzeyinde değişmediği iddia edilmez.
 
 Son genişletilmiş ilgili paket **21 dosya / 158 PASS / 0 FAIL / 0 SKIP**.
-Tam standart `npm test`, i18n ve release-note sonuçları güncel entegrasyondaki
-son kabul kaydında tamamlanacaktır. Hedefli PASS eski tam RED'i kapatmaz.
+Güncel entegrasyonun tam standart sonucu yukarıda kayıtlıdır: 8.896 PASS, sıfır
+hata; i18n 0/0 ve 43 not geçerli. Eski tam RED tarihsel olarak korunur.
 Raw loglar kayıpsız `.log.gz` olarak ve ham/gzip SHA-256 manifestiyle korunur.
 
 ### Görsel ve entegrasyon sınırı
@@ -135,8 +137,9 @@ sibling-install recovery fixture race. A deterministic regression was **7/1
 RED**; nesting the fixture installation inside its private container preserves
 production recovery and all seven original tests, then adds the isolation
 regression. The expanded package is **21 files / 158 PASS / 0 FAIL / 0 SKIP**.
-The old full failure remains unchanged; final integrated full-suite, i18n,
-release-note and actual CI results remain pending. Inspected TR/EN screenshots come
+The old full failure remains unchanged; final integrated full suite passed with 8,896 tests, zero failures and 65
+existing skips; i18n 0/0 and 43 notes passed. Actual final-head CI remains a
+separate gate. Inspected TR/EN screenshots come
 from the actual isolated demo application; pending-request rejection is proven
 by tests, not the screenshot. Main's existing 38 note objects are preserved.
 
@@ -146,3 +149,51 @@ review at `e49df459` found no reportable P1/P2; subsequent narrow test/fixture
 closures were verified within that round, without rerunning tests. Final
 integrated regression and final-head CI are still required before merge.
 **No merge, TEST or STABLE.**
+
+
+## 30k Phase 0 — güncel Main regresyon karşılaştırması / current Main regression
+
+[Doğrulandı] **A:** Main `5b8c1e6f`; **B:** `df8ca377` (incelenen üretim
+ve son native testler değişmedi). Aynı seed-7 kaynak arşivi, taze source/data/cache/
+server/Chromium ile **A/B–B/A–A/B**, altı koşu PASS. Mevcut Faz 0 betiği
+**değiştirilmedi**: `--rows 30000 --module overview --skip-same-tab
+--server-loop-probe`. Her koşuda satır sayısı, kaynak generation/revizyonu ve
+cache checksum'ları doğrulandı; CP 24.982 / Orders 30.000 / Overview 30.000
+sıralı satır hash'leri üç çiftte de birebir aynı. Refresh POST retry yapılmadı.
+Yerel başka benchmark veya test paketiyle çakışmadı; kurulum/kaynak incelemesi
+çalışmaları sürdü. Ortam Linux, Node 24.19.0, Chromium 154, 4 vCPU quota,
+16 GiB limit; Windows/Electron değildir.
+
+| Medyan / median | Main → fix |
+| --- | --- |
+| Refresh | 50,704 → 49,404 s |
+| Overview primary ready | 3,522 → 2,792 s |
+| Gate ready | 3,534 → 2,805 s |
+| System complete | 3,637 → 2,922 s |
+| Refresh `/api/health` p50 | 7,15 → 5,82 ms |
+| Refresh `/api/health` p95 | 542,41 → 372,14 ms |
+| Overview server maximum timer gap | **126,12 → 185,93 ms** |
+| Whole-run maximum timer gap (refresh included) | 4.925,96 → 4.698,35 ms |
+
+**Olumsuz hareket korunur / adverse movement retained:** Overview maksimumu
+üç çiftte de arttı: **+%72,97 / +%52,53 / +%28,96**. Tüm altı Overview
+penceresinde 200 ms üzeri boşluk sayısı sıfır; bu dar gözlem hard-bound veya
+Global Flow/Backlog kabulü değildir. Artışın yetki yeniden doğrulamasından
+kaynaklandığı kanıtlanmadı. Primary/gate ve health p95 çiftleri karışık; p95
+çiftlerinden biri +%187,03. Medyan azalması bir optimizasyon kazanımı sayılmaz.
+Refresh'teki 4–5 sn boşluklar hâlâ vardır; eski Faz 5 kabul açığını kapatmaz.
+
+The six runs passed with identical ordered projection rows in all three pairs.
+This is an **Overview-only security regression check**, not CP/Orders first-open,
+Global Flow or Backlog performance acceptance. Overview maximum server timer gap
+increased in all pairs (median **126.12→185.93 ms**), while all six windows had
+zero gaps over 200 ms. Its cause is unproven; no speedup or hard-bound claim is
+made. Whole-run refresh stalls remain. Primary/gate and health p95 comparisons
+are mixed; one health pair worsened 187.03%. Health is harness-observed roundtrip,
+not an independent server-only bound. Timer gaps include the normal 10 ms interval.
+
+Lossless run logs, partial/final JSON, event-loop records, real screenshots,
+server stall profiles, input/source hashes and reproduction tools are retained
+under [phase0](admin-03-authority-artifacts/phase0/summary.json). Existing source
+fixtures and historical failures remain at their original locations.
+**Merge approval pending; no TEST or STABLE.**
