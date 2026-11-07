@@ -109,3 +109,24 @@ separately reviewed and merged current-authority fix. Evidence-only additions
 after these checks do not change source, tests, validators or CI. Historical
 benchmark limitations remain. Actual final-head CI and merge approval are still
 separate. **No TEST/STABLE publication.**
+
+
+## #906 sonrası son kabul / Final acceptance after #906
+
+Main `9cac3823` normal merge `2ffed133` ile alındı. Yedi
+analitik üretim modülü inceleme `8657e8ec` ile birebir. Diğer 46 Main notu
+ve üç kendi kayıt korunur. Standart tam npm test bütün 10 batch tek çağrıda:
+**1.300 dosya / 8.926 PASS / 0 FAIL / 65 mevcut SKIP / 0 CANCEL**; varsayılan
+concurrency4, izole TMPDIR, NODE_OPTIONS/preload yok. İlgili227PASS, i18n0/0,
+49 not PASS. Test edilen uygulama ağacı `044c2d8d6c8fc4336675a8e0e45e2c566492bebe`.
+Ölçülen kendi kaynakları değişmedi; aynı kampanya tekrarlanmadı. ANA-05'in
+daha uzun toplam tamamlanma süresi ve eski ham kanıtlar korunur.
+
+Main `9cac3823` was merged normally. The seven reviewed analytics source blobs
+remain byte-exact `8657e8ec`. Standard full runner passed all ten batches in one
+invocation:1300 files,8926PASS,0FAIL,65existingSKIP,0CANCEL; defaultconcurrency4,
+privateTMPDIR,noNODE_OPTIONS. Related227PASS,i18n0/0,49visualnotes valid.
+Final evidence-only changes keep source/test/CI identical. Actual final-head CI
+is a separate gate under explicit conditional sequential merge permission.
+ANA-05's longer completion remains disclosed; no general speedup or input-latency
+claim. No TEST/STABLE.
