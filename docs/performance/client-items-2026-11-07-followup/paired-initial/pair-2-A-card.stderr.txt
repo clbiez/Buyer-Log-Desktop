@@ -1,0 +1,6 @@
+license-cards 500: selection p95=420.7 ms; output=true
+manufacturers 500: selection p95=63.0 ms; output=true
+email-groups 500: selection p95=38.5 ms; output=true
+license-cards 5000: selection p95=4452.6 ms; output=true
+manufacturers 5000: selection p95=461.6 ms; output=true
+email-groups 5000: selection p95=283.2 ms; output=true

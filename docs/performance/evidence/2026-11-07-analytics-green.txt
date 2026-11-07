@@ -1,0 +1,14 @@
+✔ ANA-07: sort/filter only renders its table and reuses prepared rows (5.037106ms)
+✔ ANA-11: step country normalization is linear, preserves duplicates and year scope (34.482971ms)
+✔ ANA-07: persistent column/clear tools call the latest analysis closure (2.472288ms)
+✔ ANA-05: worker cancellation/generation guard and dataset reuse (38.037376ms)
+✔ ANA-05: projected transport restores non-enumerable sourceRow and risk aliases; worker error recovers (35.227003ms)
+✔ ANA-05: worker runs canonical engine with caller ordinals and restores filtered order mapping (10.001763ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 229.057774

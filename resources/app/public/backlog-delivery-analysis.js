@@ -18,6 +18,7 @@
 
   const STORAGE_KEY = 'lcw.backlog.analysis.v1';
   const DIM_TABS = Engine.DIMENSIONS;
+  const WORKER_URL = new URL('backlog-delivery-worker.js', document.currentScript?.src || document.baseURI);
 
   const state = {
     open: true,
@@ -128,38 +129,96 @@
     return null;
   }
 
-  function applyPeriod(rows) {
-    const bounds = periodBounds();
-    if (!bounds) return rows;
-    const ordinal = typeof dateOrdinal === 'function' ? dateOrdinal : Engine.defaultOrdinal;
-    const field = state.settings.targetType === 'inStore' ? Engine.FIELDS.inStore : Engine.FIELDS.retail;
-    return rows.filter(row => {
-      const value = ordinal(row[field]);
-      if (value == null) return false;
-      if (bounds.from != null && value < bounds.from) return false;
-      if (bounds.to != null && value > bounds.to) return false;
-      return true;
+  let analysisWorker = null, workerRows = null, pendingAnalysis = null;
+  function cancelAnalysis() {
+    if (!pendingAnalysis) return;
+    analysisWorker?.terminate(); analysisWorker = null; workerRows = null;
+    pendingAnalysis.resolve(null); pendingAnalysis = null;
+  }
+
+  function analyzeInWorker(rows, options, generation) {
+    if (analysisWorker && workerRows !== rows) {
+      analysisWorker.terminate(); analysisWorker = null; workerRows = null;
+    }
+    if (!analysisWorker) analysisWorker = new Worker(WORKER_URL);
+    const worker = analysisWorker;
+    const promise = new Promise((resolve, reject) => { pendingAnalysis = { generation, resolve, reject, orders: [] }; });
+    worker.onmessage = ({ data }) => {
+      const pending = pendingAnalysis;
+      if (worker !== analysisWorker || !pending || data.generation !== pending.generation || generation !== refreshGeneration) return;
+      if (data.error) { pendingAnalysis = null; worker.terminate(); analysisWorker = null; workerRows = null; pending.reject(new Error(data.error)); return; }
+      if (data.kind === 'orders') {
+        data.orders.forEach((order, index) => {
+          Object.defineProperty(order, 'sourceRow', { value: rows[data.rowIndices[index]], enumerable: false, writable: false });
+          pending.orders.push(order);
+        });
+        return;
+      }
+      data.model.orders = pending.orders;
+      data.model.topRiskOrders = (data.topRiskIndices || []).map(index => pending.orders[index]);
+      pendingAnalysis = null; pending.resolve(data);
+    };
+    worker.onerror = () => {
+      if (worker !== analysisWorker || !pendingAnalysis) return;
+      const pending = pendingAnalysis; pendingAnalysis = null;
+      worker.terminate(); analysisWorker = null; workerRows = null;
+      pending.reject(new Error(L('Analiz hesaplanamadı. Yenilemeyi deneyin.', 'Analysis could not be calculated. Try refreshing.')));
+    };
+    // Worker'a yalnız motorun alanları gider; ilgisiz büyük Excel metası kalır.
+    // Kanonik dateOrdinal her farklı değer için bir kez çalışır. Cevapları
+    // taşıyarak Excel seri sayısı ve yerel tarih biçimleri aynen korunur.
+    const upload = async () => {
+      if (workerRows !== rows) {
+        const ordinal = typeof dateOrdinal === 'function' ? dateOrdinal : Engine.defaultOrdinal;
+        const seenDates = new Set(), fields = Object.values(Engine.FIELDS);
+        const dateFields = [Engine.FIELDS.retail, Engine.FIELDS.inStore, Engine.FIELDS.plannedLoad, Engine.FIELDS.revisedLoad, Engine.FIELDS.antrepo];
+        for (let start = 0; start < rows.length; start += 500) {
+          if (generation !== refreshGeneration || worker !== analysisWorker) return;
+          const ordinals = [];
+          const remember = value => {
+            const key = typeof value + ':' + String(value);
+            if (!seenDates.has(key)) { seenDates.add(key); ordinals.push([key, ordinal(value)]); }
+          };
+          const chunk = rows.slice(start, start + 500).map(row => {
+            const projected = {}; fields.forEach(field => { projected[field] = row[field]; });
+            const meta = row._backlogExcel || {};
+            projected._backlogExcel = { mag: meta.mag, mmyg: meta.mmyg, handoverDate: meta.handoverDate,
+              actualAntrepoDate: meta.actualAntrepoDate, transitDays: meta.transitDays, transitRule: !!meta.transitRule,
+              transitOverdue: meta.transitOverdue, signals: meta.signals };
+            dateFields.forEach(field => remember(row[field])); remember(meta.handoverDate); remember(meta.actualAntrepoDate);
+            return projected;
+          });
+          worker.postMessage({ kind: 'rows', rows: chunk, ordinals });
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
+        if (generation !== refreshGeneration || worker !== analysisWorker) return;
+        workerRows = rows;
+      }
+      worker.postMessage({ generation, ...options });
+    };
+    void upload().catch(error => {
+      if (worker !== analysisWorker || !pendingAnalysis || generation !== refreshGeneration) return;
+      const pending = pendingAnalysis; pendingAnalysis = null;
+      worker.terminate(); analysisWorker = null; workerRows = null; pending.reject(error);
     });
+    return promise;
   }
 
   /* Aynı satır dizisi + aynı ayar/dönem/tercih/dil/gün için model zaten
      hesaplıdır. Eskiden her Genel Bakış çiziminde 33 bin satırda ~2 sn
      baştan hesaplanıyordu. */
   let modelInputs = null;
-  function computeModel() {
+  async function computeModel(generation) {
     const ordinal = typeof dateOrdinal === 'function' ? dateOrdinal : Engine.defaultOrdinal;
     const allRows = state.rows || [];
     const today = ordinal(new Date());
     const key = JSON.stringify([state.settings, periodBounds(), state.preferences, state.customRules, lang(), today]);
     if (!(modelInputs && modelInputs.rows === allRows && modelInputs.key === key && state.model)) {
-      const rows = applyPeriod(allRows);
-      state.periodRowCount = rows.length;
-      state.totalRowCount = allRows.length;
-      const model = Engine.analyze(rows, {
-        settings: state.settings,
-        dateOrdinal: ordinal,
-        today,
-      });
+      const result = await analyzeInWorker(allRows, { settings: state.settings, bounds: periodBounds(), today }, generation);
+      if (!result || generation !== refreshGeneration) return;
+      const model = result.model;
+      state.periodRowCount = result.periodRowCount;
+      state.totalRowCount = result.totalRowCount;
       state.model = model;
       state.insights = Insights.build(model, {
         lang: lang(), preferences: state.preferences, customRules: state.customRules,
@@ -188,15 +247,16 @@
   async function refresh(force) {
     if (!state.open) return;
     const generation=++refreshGeneration;
+    cancelAnalysis();
     const signature = currentSignature();
-    if (!force && state.rows && signature === state.rowsSignature) { state.loading=false;state.error='';computeModel(); render(); return; }
     state.loading = true; state.error = ''; render();
     try {
+      if (!force && state.rows && signature === state.rowsSignature) { await computeModel(generation); return; }
       if(force)window.BLBacklogRows?.invalidate?.();
       const rows=await fetchRows();if(generation!==refreshGeneration)return;
       state.rows = rows;
       state.rowsSignature = signature;
-      computeModel();
+      await computeModel(generation);
     } catch (error) {
       if(generation!==refreshGeneration)return;
       state.error = error && error.message ? error.message : String(error);
@@ -486,12 +546,12 @@
     host.querySelectorAll('[data-control]').forEach(select => {
       select.addEventListener('change', () => {
         const key = select.dataset.control;
-        if (key === 'targetType') { state.settings = { ...state.settings, targetType: select.value }; computeModel(); }
+        if (key === 'targetType') { state.settings = { ...state.settings, targetType: select.value }; }
         else if (key === 'measure') state.measure = select.value;
-        else if (key === 'periodMode') { state.period = { ...state.period, mode: select.value }; computeModel(); }
-        else if (key === 'periodFrom') { state.period = { ...state.period, from: select.value }; computeModel(); }
-        else if (key === 'periodTo') { state.period = { ...state.period, to: select.value }; computeModel(); }
-        save(); render();
+        else if (key === 'periodMode') { state.period = { ...state.period, mode: select.value }; }
+        else if (key === 'periodFrom') { state.period = { ...state.period, from: select.value }; }
+        else if (key === 'periodTo') { state.period = { ...state.period, to: select.value }; }
+        save(); if (key === 'measure') render(); else void refresh(false);
       });
     });
     host.querySelectorAll('[data-action]').forEach(button => {
@@ -648,7 +708,7 @@
         if (input.dataset.setting === 'insightLimit') state.insightLimit = Math.max(3, Math.min(40, value));
         else state.settings = { ...state.settings, [input.dataset.setting]: value };
       });
-      save(); computeModel(); close(); render();
+      save(); close(); void refresh(false);
     });
   }
 

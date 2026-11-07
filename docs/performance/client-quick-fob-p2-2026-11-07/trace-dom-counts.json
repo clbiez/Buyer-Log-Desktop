@@ -1,0 +1,44 @@
+{
+  "A": [
+    {
+      "name": "UpdateLayoutTree",
+      "durationMs": 687.714,
+      "beginData": {
+        "frame": "8B1368B0AE1068FFEF629559C274A040"
+      },
+      "elementCount": 245108
+    },
+    {
+      "name": "Layout",
+      "durationMs": 814.554,
+      "beginData": {
+        "dirtyObjects": 380157,
+        "frame": "8B1368B0AE1068FFEF629559C274A040",
+        "partialLayout": false,
+        "totalObjects": 380166
+      },
+      "elementCount": null
+    }
+  ],
+  "B": [
+    {
+      "name": "UpdateLayoutTree",
+      "durationMs": 871.367,
+      "beginData": {
+        "frame": "43FD7BA72555A4DB67E6F2A4993C5A2F"
+      },
+      "elementCount": 245108
+    },
+    {
+      "name": "Layout",
+      "durationMs": 1127.394,
+      "beginData": {
+        "dirtyObjects": 380157,
+        "frame": "43FD7BA72555A4DB67E6F2A4993C5A2F",
+        "partialLayout": false,
+        "totalObjects": 380166
+      },
+      "elementCount": null
+    }
+  ]
+}

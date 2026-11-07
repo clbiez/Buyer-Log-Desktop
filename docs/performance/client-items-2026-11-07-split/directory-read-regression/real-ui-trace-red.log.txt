@@ -1,0 +1,13 @@
+EG_TRACE {"listSame":true,"rowSame":false,"recordsSame":false,"dataSame":true,"beforeSelected":"em-3b29db1b-f348-40b2-901a-591138571e58","afterSelected":"em-817a60a2-9940-434a-ac66-a3c2374df9b8"}
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+false !== true
+
+    at /tmp/buyerlog-906-current-ui-trace.cjs:53:12 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: 'strictEqual',
+  diff: 'simple'
+}

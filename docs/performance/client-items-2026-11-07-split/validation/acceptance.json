@@ -1,0 +1,122 @@
+{
+  "revision": "af1cb62f4f140ca718ce1482ce8989370104190b",
+  "appTree": "99176ec49e8ecb667b8de08401889184e458d416",
+  "startedAt": "2026-11-07T21:22:17.580425+00:00",
+  "status": "passed",
+  "commands": [
+    {
+      "name": "quick-fob-browser",
+      "command": [
+        "node",
+        "scripts/license-quick-fob-acceptance.js",
+        "/workspace/buyerlog-post-main-acceptance/docs/performance/client-items-2026-11-07-split/validation/quick-fob-browser"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-906-quick-fob-browser-u8qe0to5",
+      "startedAt": "2026-11-07T21:22:17.581371+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:22:36.089569+00:00",
+      "logSha256": "1d204f54ff387d849456a2e83ead1b6a76d795bf72c92054f00d699da7d481d4",
+      "gzipSha256": "a4eff714d633ccffdc3eb9b4530cfb724591a28e835283276efae903c78235df"
+    },
+    {
+      "name": "card-functional-browser",
+      "command": [
+        "node",
+        "scripts/card-render-acceptance.js",
+        "--verify-only",
+        "--assert-optimized",
+        "--count",
+        "500"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-906-card-functional-browser-zj3fg54t",
+      "startedAt": "2026-11-07T21:22:36.093684+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:22:39.560417+00:00",
+      "logSha256": "8cb375b7055ffcf542b3ca616b6423f4d8aad6850efb4502025d5e83681cbbba",
+      "gzipSha256": "447c316b9fb59b7b0dd60dcf9a5299a376c5a3bccc8b76eb88c25dbee5a1d228"
+    },
+    {
+      "name": "chat-functional-browser",
+      "command": [
+        "node",
+        "scripts/lcwai-stream-render-acceptance.js",
+        "--assert-optimized"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-906-chat-functional-browser-nkwt4w6s",
+      "startedAt": "2026-11-07T21:22:39.563195+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:22:43.277603+00:00",
+      "logSha256": "1d68f42fce5404777650c1c535cb2776b6be137604e92c2c5f98807c59cb0f06",
+      "gzipSha256": "52e3ebd1c92fe522b6fc9767a233007806bdf340129d6002916be4e6f35f1398"
+    },
+    {
+      "name": "related-integrated",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "license",
+        "manufacturers",
+        "email-groups",
+        "cp-rule",
+        "lcwai",
+        "card-detail"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-906-related-integrated-2ti7jrrf",
+      "startedAt": "2026-11-07T21:22:43.280292+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:22:51.299667+00:00",
+      "logSha256": "d7c503f70cffc7d2cb4fb110ae536c6c0f8b9fa22620d36d9588fda4f6c5e1b7",
+      "gzipSha256": "fdba7a70d9c21148cbde50f15c6f47bc6ea265c1172ae710965ce849bf6421ba"
+    },
+    {
+      "name": "full-integrated",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-906-full-integrated-rvqtpv6q",
+      "startedAt": "2026-11-07T21:22:51.306059+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:26:35.320895+00:00",
+      "logSha256": "adae7c90f7702be9fc095cbe0c3ccc1de489de5b4c37fa1bc4e2e6cc958067e0",
+      "gzipSha256": "c0b4b7bc7f46df16db012fed07fe8741fac6456091e5ab828d71a8ce31fa72a6"
+    },
+    {
+      "name": "i18n-integrated",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-906-i18n-integrated-himlifra",
+      "startedAt": "2026-11-07T21:26:35.394057+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:26:37.903728+00:00",
+      "logSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+      "gzipSha256": "1990e3930a54568227c02bc6f9726dc426b61475f998ccc493e96dcc68738c41"
+    },
+    {
+      "name": "release-integrated",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "cwd": "/workspace/buyerlog-post-main-acceptance/resources/app",
+      "tmpdir": "/tmp/buyerlog-906-release-integrated-5ib9stkw",
+      "startedAt": "2026-11-07T21:26:37.906232+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:26:38.834370+00:00",
+      "logSha256": "2e0f739efb72bbd7c3ae576183617e96f6a237d97f9d9cf10251cadd976a21d2",
+      "gzipSha256": "b744ca4b8318692a5c63e0b4437a8e2a42c20654288691e8b86da8ca8769ac0a"
+    }
+  ],
+  "finishedAt": "2026-11-07T21:26:38.835122+00:00"
+}

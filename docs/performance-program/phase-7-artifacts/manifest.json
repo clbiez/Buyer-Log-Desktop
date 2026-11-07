@@ -1,0 +1,81 @@
+{
+  "baseline": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "productionCommits": {
+    "snapshot": "109292a1",
+    "images": "5c256eac",
+    "parser": "6d8d752b"
+  },
+  "isolatedBranchTargetedTests": {
+    "snapshot": {
+      "exitCode": 0,
+      "logInArchive": "pr-snapshot-tests.log",
+      "tests": 50,
+      "pass": 50,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "images": {
+      "exitCode": 0,
+      "logInArchive": "pr-images-tests.log",
+      "tests": 33,
+      "pass": 33,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "parser": {
+      "exitCode": 0,
+      "logInArchive": "pr-parser-tests.log",
+      "tests": 19,
+      "pass": 19,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "review": {
+    "model": "gpt-6-astra",
+    "reportedP1": 1,
+    "closedP1": 1,
+    "independentClosureTests": 11
+  },
+  "diagnosticsArchiveSha256": "6a42c9b638e6e12a23579da880283d196e5e17c20235e659c1885785837e5d59",
+  "publicTree": "598bcab4e697cfa641f12e022fa80b2f033d238b",
+  "sha256": {
+    "docs/performance-program/phase-7-server-results.json": "b92282cabeabb23bfdab96e62d64fb0da09ce0a7015de6bc968b891aff5f4c6c",
+    "docs/performance-program/assets/phase7-server-tr-light.png": "aa1a488762d0b870bfabb31ce3186016b45601ba4423348f0a6bf7a2e8c53bfe",
+    "docs/performance-program/assets/phase7-server-en-dark.png": "591a19c12eda01ab933cb383d3a0940fe736401ec4b7c857a30350fdc913bc2f",
+    "resources/app/scripts/phase7-server-benchmark.cjs": "b234f8ee6c51c60b28a54ff5895b8f64315cbf327d55b7d36f73bdda0764ebe3",
+    "resources/app/scripts/phase7-parser-probe.cjs": "ded8a228532210662f16cdb8c88f8e692de84880f121a3d21b5c2116b8bbc553",
+    "resources/app/scripts/phase7-test-env.cjs": "ea9f3d5752b419466914132dade081066530ad39352112077e09dc3b9ad3f9fc"
+  },
+  "combinedTreeFullNpmTest": {
+    "files": 1294,
+    "seconds": 115.4,
+    "exitCode": 0,
+    "logInArchive": "npm-test-corrected.log",
+    "tests": 8937,
+    "pass": 8872,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65,
+    "todo": 0,
+    "scope": "Historical combined production tree only; not full regression of the three isolated branches",
+    "productionSourceCommit": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6"
+  },
+  "packaging": {
+    "commonBranch": "perf/phase7-shared-evidence",
+    "contract": "../phase-7-packaging-contract.json",
+    "finalValidation": "../phase-7-packaging-handoff.md"
+  },
+  "finalBranchRegression": {
+    "results": "final-branch-validation.json",
+    "archive": "final-branch-validation.tar.gz",
+    "archiveSha256": "79585428e3c5d33934828df9a911120a27415daf59ddb5487b7efb219cd1cb5d",
+    "scope": "Each final production PR head individually; historical combined-tree result remains separate"
+  }
+}

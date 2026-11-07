@@ -1,0 +1,137 @@
+[
+  {
+    "path": "failed-smoke-1/failure.json",
+    "sha256": "ab2a3b9f54f23b983988c2bfb69eee52899b1c520819b99b81b13088fed2f34e",
+    "bytes": 481
+  },
+  {
+    "path": "failed-smoke-1/probe.cjs",
+    "sha256": "f70870855678bd2bd2e1de55f9d7d429393dcad00e5c62d47a6b8193efe6d6d4",
+    "bytes": 16755
+  },
+  {
+    "path": "failed-smoke-1/probe.log.txt",
+    "sha256": "7de771ee5442e78d78bc3d0efed7543196cab3d49d23b93fbf56e386836430c0",
+    "bytes": 200
+  },
+  {
+    "path": "failed-smoke-1/server.log.txt",
+    "sha256": "a2021f8965ae3f0ab5ca375124e2bebec82d8a49772dbe4c9482b4c78d36e9ef",
+    "bytes": 2162
+  },
+  {
+    "path": "independent-review.json",
+    "sha256": "4763f3ff1c5f811dde3a4d415e47065dd1dafbf30bcd1b50f76e517647ff2513",
+    "bytes": 534
+  },
+  {
+    "path": "real-app-smoke/analytics-delivery-visible.png",
+    "sha256": "cd8e5e1b00eff90f13a6740a11b8ca8eaf6b8fd25f78a5dc70436d3103ce0a5f",
+    "bytes": 167950
+  },
+  {
+    "path": "real-app-smoke/analytics-lfl-sort.png",
+    "sha256": "19664315dd8984d8fcc68e640ef86095e7025c60aa72fc479b6a7d1de1035313",
+    "bytes": 231385
+  },
+  {
+    "path": "real-app-smoke/analytics-transit-summary.png",
+    "sha256": "cd7ffd334826f9c90a94ddc05043da31646faa39833747daf011e1950d22b800",
+    "bytes": 196458
+  },
+  {
+    "path": "real-app-smoke/capture-resume-server.log.txt",
+    "sha256": "7a6b62b16b857f8cde3b193c78a0b56c25de0ae1ea4f2adf3862944ed5a2eaa7",
+    "bytes": 3713
+  },
+  {
+    "path": "real-app-smoke/delivery-under-curtain-not-accepted.png",
+    "sha256": "b15704d54dda48b50e7473bda47acc66a34a897706f498cca3278d56c0650605",
+    "bytes": 94596
+  },
+  {
+    "path": "real-app-smoke/fixture.json",
+    "sha256": "f101c73ae5eddd490097e217931ac2239f32d8f860e17a12845c8df1ee49768d",
+    "bytes": 349
+  },
+  {
+    "path": "real-app-smoke/probe-v2.cjs",
+    "sha256": "0bdcb7c8bb7028cc1e79702750e652eba03ec00136567671eaeb67a7c731816d",
+    "bytes": 17683
+  },
+  {
+    "path": "real-app-smoke/probe-v2.log.txt",
+    "sha256": "086a11bbabe60cc7c1d4e5d518cccf6e347d2b5a8ad03269c511b4ea48e9e4fe",
+    "bytes": 22099
+  },
+  {
+    "path": "real-app-smoke/result.json",
+    "sha256": "fd920e89f7402252f87b576cb176c2a969e5f61f38eb586ac2d4f009852ace53",
+    "bytes": 355
+  },
+  {
+    "path": "real-app-smoke/resume-visible.cjs",
+    "sha256": "b7c4d66bb96c5f1c72955c2679901138142bf580ff7755c2c0074a7f75cdc63c",
+    "bytes": 13161
+  },
+  {
+    "path": "real-app-smoke/screenshot-inspection.json",
+    "sha256": "4842063fc394d65e00c04a7228ef91e9090ef9649f0ed205a51a9d8c3c9fe82c",
+    "bytes": 559
+  },
+  {
+    "path": "real-app-smoke/server.log.txt",
+    "sha256": "7a2c47eb78f4fdd6193a525716067ed698b94c5ec9d515d04a19f06bcc2ed5f5",
+    "bytes": 5374
+  },
+  {
+    "path": "real-app-smoke/visible-result.json",
+    "sha256": "40f3f05901a837dee01d94d03436dae09dd5423854bdf244473124276be9ed5f",
+    "bytes": 233
+  },
+  {
+    "path": "real-app-smoke/visible.log.txt",
+    "sha256": "490aa8d5e20e7ba7e3167f0bc58233eadab34763b039dca94473059bd0194676",
+    "bytes": 1285
+  },
+  {
+    "path": "source-correspondence.json",
+    "sha256": "acfa5783fedf3264a498eceeda2316099ddf18c4ee25da5ba309b4d9d431f7a7",
+    "bytes": 1380
+  },
+  {
+    "path": "validation/acceptance.json",
+    "sha256": "f0b37057c55411b7cced3cb2fb32132c21acbe2d7fc262e155b8d732ed074e73",
+    "bytes": 2672
+  },
+  {
+    "path": "validation/full-integrated-summary.json",
+    "sha256": "e9ebf870a0bff5170ef09fe1f91aad57f0d87998e0f6987e666b63406ff9ec43",
+    "bytes": 619
+  },
+  {
+    "path": "validation/full-integrated.log.gz",
+    "sha256": "9c84f61f5df81737086a573ab960ba7b0dbea99ac8d2cb14b58027c1506a033b",
+    "bytes": 324305
+  },
+  {
+    "path": "validation/i18n-integrated.log.gz",
+    "sha256": "1990e3930a54568227c02bc6f9726dc426b61475f998ccc493e96dcc68738c41",
+    "bytes": 130
+  },
+  {
+    "path": "validation/related-integrated-summary.json",
+    "sha256": "8df50eb03cfd177528d9c809e83ec90aa8e0dc8d5f95fe02e999d8ce0da5c31f",
+    "bytes": 285
+  },
+  {
+    "path": "validation/related-integrated.log.gz",
+    "sha256": "f98161ebd653639a133c73a5e62adf300180ff31795c2aa37cb1423413be204a",
+    "bytes": 9863
+  },
+  {
+    "path": "validation/release-integrated.log.gz",
+    "sha256": "b744ca4b8318692a5c63e0b4437a8e2a42c20654288691e8b86da8ca8769ac0a",
+    "bytes": 123
+  }
+]

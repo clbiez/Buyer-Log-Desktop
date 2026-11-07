@@ -1,0 +1,417 @@
+{
+  "method": "Only the 10 marked search samples. Main-thread X events clipped to each sample; overlapping/nested spans partitioned with GC > HTML parsing > style/layout > other priority. Other includes JS and unclassified native work; CPU samples are not JS-exclusive. Profiler arms are diagnostics, not additional independent pairs.",
+  "variants": {
+    "A": {
+      "samples": [
+        {
+          "index": 0,
+          "query": "000 (filtered)",
+          "startUs": 4037056826,
+          "endUs": 4037438998,
+          "durationMs": 382.172,
+          "gcRelatedMs": 1.988999999999999,
+          "htmlParsingMs": 7.273,
+          "styleLayoutMs": 44.656,
+          "otherMs": 328.25399999999996
+        },
+        {
+          "index": 1,
+          "query": "clear (5000 rows)",
+          "startUs": 4037463939,
+          "endUs": 4039547796,
+          "durationMs": 2083.857,
+          "gcRelatedMs": 6.958999999999998,
+          "htmlParsingMs": 380.045,
+          "styleLayoutMs": 1444.999,
+          "otherMs": 251.85399999999998
+        },
+        {
+          "index": 2,
+          "query": "000 (filtered)",
+          "startUs": 4040098985,
+          "endUs": 4040461402,
+          "durationMs": 362.417,
+          "gcRelatedMs": 2.155999999999997,
+          "htmlParsingMs": 7.897,
+          "styleLayoutMs": 29.65,
+          "otherMs": 322.714
+        },
+        {
+          "index": 3,
+          "query": "clear (5000 rows)",
+          "startUs": 4040483257,
+          "endUs": 4042523042,
+          "durationMs": 2039.785,
+          "gcRelatedMs": 8.326999999999998,
+          "htmlParsingMs": 324.453,
+          "styleLayoutMs": 1479.9229999999998,
+          "otherMs": 227.08200000000002
+        },
+        {
+          "index": 4,
+          "query": "000 (filtered)",
+          "startUs": 4043091425,
+          "endUs": 4043507663,
+          "durationMs": 416.238,
+          "gcRelatedMs": 2.2989999999999973,
+          "htmlParsingMs": 8.187000000000001,
+          "styleLayoutMs": 35.164,
+          "otherMs": 370.58799999999997
+        },
+        {
+          "index": 5,
+          "query": "clear (5000 rows)",
+          "startUs": 4043545855,
+          "endUs": 4046190167,
+          "durationMs": 2644.312,
+          "gcRelatedMs": 12.534999999999998,
+          "htmlParsingMs": 492.652,
+          "styleLayoutMs": 1849.4270000000001,
+          "otherMs": 289.698
+        },
+        {
+          "index": 6,
+          "query": "000 (filtered)",
+          "startUs": 4046904051,
+          "endUs": 4047301921,
+          "durationMs": 397.87,
+          "gcRelatedMs": 0.77,
+          "htmlParsingMs": 9.066,
+          "styleLayoutMs": 38.362,
+          "otherMs": 349.67199999999997
+        },
+        {
+          "index": 7,
+          "query": "clear (5000 rows)",
+          "startUs": 4047327112,
+          "endUs": 4049679636,
+          "durationMs": 2352.524,
+          "gcRelatedMs": 17.17,
+          "htmlParsingMs": 437.88,
+          "styleLayoutMs": 1633.998,
+          "otherMs": 263.476
+        },
+        {
+          "index": 8,
+          "query": "000 (filtered)",
+          "startUs": 4050325580,
+          "endUs": 4050760808,
+          "durationMs": 435.228,
+          "gcRelatedMs": 0.7320000000000001,
+          "htmlParsingMs": 13.126,
+          "styleLayoutMs": 36.483999999999995,
+          "otherMs": 384.886
+        },
+        {
+          "index": 9,
+          "query": "clear (5000 rows)",
+          "startUs": 4050784485,
+          "endUs": 4053769191,
+          "durationMs": 2984.706,
+          "gcRelatedMs": 516.9160000000034,
+          "htmlParsingMs": 465.294,
+          "styleLayoutMs": 1723.4869999999983,
+          "otherMs": 279.00899999999996
+        }
+      ],
+      "totals": {
+        "durationMs": 14099.108999999999,
+        "gcRelatedMs": 569.8530000000034,
+        "htmlParsingMs": 2145.873,
+        "styleLayoutMs": 8316.149999999998,
+        "otherMs": 3067.233
+      },
+      "sampledModelMs": 494.81700000000023,
+      "sampledSelectorsMs": 107.25299999999997,
+      "topSampledFrames": [
+        [
+          "render @ license-cards-trace.js:353",
+          12833.952999999854
+        ],
+        [
+          "(garbage collector) @ :0",
+          481.4380000000004
+        ],
+        [
+          "date @ /workspace/Buyer-Log-Desktop/resources/app/public/license-cards-engine.js:10",
+          109.61799999999992
+        ],
+        [
+          "querySelector @ :0",
+          107.25299999999997
+        ],
+        [
+          "primaryContract @ /workspace/Buyer-Log-Desktop/resources/app/public/license-cards-engine.js:72",
+          87.302
+        ],
+        [
+          "contracts @ /workspace/Buyer-Log-Desktop/resources/app/public/license-cards-engine.js:22",
+          81.29499999999999
+        ],
+        [
+          "latestContract @ /workspace/Buyer-Log-Desktop/resources/app/public/license-cards-engine.js:26",
+          76.938
+        ],
+        [
+          "rowHtml @ license-cards-trace.js:189",
+          49.88300000000001
+        ],
+        [
+          "rateCell @ license-cards-trace.js:165",
+          37.02899999999999
+        ],
+        [
+          "groupCards @ /workspace/Buyer-Log-Desktop/resources/app/public/license-cards-engine.js:110",
+          32.22
+        ],
+        [
+          "licensorOptions @ /workspace/Buyer-Log-Desktop/resources/app/public/license-cards-engine.js:100",
+          24.287000000000003
+        ],
+        [
+          "(anonymous) @ /workspace/Buyer-Log-Desktop/resources/app/public/license-cards-engine.js:141",
+          20.937000000000005
+        ]
+      ],
+      "memory": {
+        "processId": 64258,
+        "sourceDir": "/tmp/client-followup-sources/A",
+        "fixture": "unchanged full acceptance sequence; tracing only 5000 license records / 10 search observations",
+        "before": {
+          "at": "2026-11-07T18:33:51.847Z",
+          "heap": {
+            "usedSize": 20300676,
+            "totalSize": 82374656,
+            "embedderHeapUsedSize": 1807391576,
+            "backingStorageSize": 367365
+          },
+          "dom": {
+            "documents": 3,
+            "nodes": 4584976,
+            "jsEventListeners": 28
+          }
+        },
+        "after": {
+          "at": "2026-11-07T18:34:10.081Z",
+          "heap": {
+            "usedSize": 20257036,
+            "totalSize": 84471808,
+            "embedderHeapUsedSize": 1412377464,
+            "backingStorageSize": 367358
+          },
+          "dom": {
+            "documents": 3,
+            "nodes": 6630677,
+            "jsEventListeners": 28
+          }
+        }
+      }
+    },
+    "B": {
+      "samples": [
+        {
+          "index": 0,
+          "query": "000 (filtered)",
+          "startUs": 4133077147,
+          "endUs": 4133463293,
+          "durationMs": 386.146,
+          "gcRelatedMs": 37.37500000000003,
+          "htmlParsingMs": 8.358,
+          "styleLayoutMs": 29.756999999999998,
+          "otherMs": 310.656
+        },
+        {
+          "index": 1,
+          "query": "clear (5000 rows)",
+          "startUs": 4133493753,
+          "endUs": 4135426290,
+          "durationMs": 1932.537,
+          "gcRelatedMs": 5.534999999999999,
+          "htmlParsingMs": 327.71799999999996,
+          "styleLayoutMs": 1403.441,
+          "otherMs": 195.84299999999996
+        },
+        {
+          "index": 2,
+          "query": "000 (filtered)",
+          "startUs": 4135980990,
+          "endUs": 4136302673,
+          "durationMs": 321.683,
+          "gcRelatedMs": 0.9630000000000003,
+          "htmlParsingMs": 8.797,
+          "styleLayoutMs": 27.91,
+          "otherMs": 284.01300000000003
+        },
+        {
+          "index": 3,
+          "query": "clear (5000 rows)",
+          "startUs": 4136327540,
+          "endUs": 4138901744,
+          "durationMs": 2574.204,
+          "gcRelatedMs": 221.70300000000563,
+          "htmlParsingMs": 427.133,
+          "styleLayoutMs": 1716.0840000000012,
+          "otherMs": 209.28399999999996
+        },
+        {
+          "index": 4,
+          "query": "000 (filtered)",
+          "startUs": 4139478957,
+          "endUs": 4139810958,
+          "durationMs": 332.001,
+          "gcRelatedMs": 0,
+          "htmlParsingMs": 9.196,
+          "styleLayoutMs": 31.424999999999997,
+          "otherMs": 291.38
+        },
+        {
+          "index": 5,
+          "query": "clear (5000 rows)",
+          "startUs": 4139838242,
+          "endUs": 4141884668,
+          "durationMs": 2046.426,
+          "gcRelatedMs": 5.445999999999999,
+          "htmlParsingMs": 388.568,
+          "styleLayoutMs": 1436.3600000000001,
+          "otherMs": 216.052
+        },
+        {
+          "index": 6,
+          "query": "000 (filtered)",
+          "startUs": 4142414419,
+          "endUs": 4142745783,
+          "durationMs": 331.364,
+          "gcRelatedMs": 1.2259999999999998,
+          "htmlParsingMs": 8.315000000000001,
+          "styleLayoutMs": 27.751,
+          "otherMs": 294.072
+        },
+        {
+          "index": 7,
+          "query": "clear (5000 rows)",
+          "startUs": 4142773243,
+          "endUs": 4144971463,
+          "durationMs": 2198.22,
+          "gcRelatedMs": 5.228000000000001,
+          "htmlParsingMs": 343.581,
+          "styleLayoutMs": 1658.02,
+          "otherMs": 191.391
+        },
+        {
+          "index": 8,
+          "query": "000 (filtered)",
+          "startUs": 4145549477,
+          "endUs": 4145895993,
+          "durationMs": 346.516,
+          "gcRelatedMs": 1.028,
+          "htmlParsingMs": 8.821000000000002,
+          "styleLayoutMs": 35.831,
+          "otherMs": 300.836
+        },
+        {
+          "index": 9,
+          "query": "clear (5000 rows)",
+          "startUs": 4145921595,
+          "endUs": 4149250534,
+          "durationMs": 3328.939,
+          "gcRelatedMs": 311.8370000000059,
+          "htmlParsingMs": 470.491,
+          "styleLayoutMs": 2243.861999999996,
+          "otherMs": 302.74900000000014
+        }
+      ],
+      "totals": {
+        "durationMs": 13798.035999999998,
+        "gcRelatedMs": 590.3410000000116,
+        "htmlParsingMs": 2000.978,
+        "styleLayoutMs": 8610.440999999997,
+        "otherMs": 2596.2760000000003
+      },
+      "sampledModelMs": 130.21499999999995,
+      "sampledSelectorsMs": 217.56199999999995,
+      "topSampledFrames": [
+        [
+          "render @ license-cards-trace.js:406",
+          12925.12099999986
+        ],
+        [
+          "(garbage collector) @ :0",
+          331.80400000000026
+        ],
+        [
+          "querySelector @ :0",
+          217.56199999999995
+        ],
+        [
+          "date @ /workspace/Buyer-Log-Desktop/resources/app/public/license-cards-engine.js:10",
+          77.98599999999998
+        ],
+        [
+          "esc @ license-cards-trace.js:14",
+          39.46399999999999
+        ],
+        [
+          "rateCell @ license-cards-trace.js:183",
+          36.645
+        ],
+        [
+          "rowHtml @ license-cards-trace.js:207",
+          29.145999999999997
+        ],
+        [
+          "key @ /workspace/Buyer-Log-Desktop/resources/app/public/license-cards-engine.js:9",
+          28.756
+        ],
+        [
+          "rows @ /workspace/Buyer-Log-Desktop/resources/app/public/license-cards-engine.js:139",
+          20.04
+        ],
+        [
+          "contracts @ /workspace/Buyer-Log-Desktop/resources/app/public/license-cards-engine.js:22",
+          9.168
+        ],
+        [
+          "licensorOptions @ /workspace/Buyer-Log-Desktop/resources/app/public/license-cards-engine.js:100",
+          9.076
+        ],
+        [
+          "(anonymous) @ /workspace/Buyer-Log-Desktop/resources/app/public/license-cards-engine.js:144",
+          7.712000000000001
+        ]
+      ],
+      "memory": {
+        "processId": 64617,
+        "sourceDir": "/tmp/client-followup-sources/B",
+        "fixture": "unchanged full acceptance sequence; tracing only 5000 license records / 10 search observations",
+        "before": {
+          "at": "2026-11-07T18:35:28.074Z",
+          "heap": {
+            "usedSize": 60853532,
+            "totalSize": 115658752,
+            "embedderHeapUsedSize": 1006311976,
+            "backingStorageSize": 28428681
+          },
+          "dom": {
+            "documents": 3,
+            "nodes": 842742,
+            "jsEventListeners": 30
+          }
+        },
+        "after": {
+          "at": "2026-11-07T18:35:45.727Z",
+          "heap": {
+            "usedSize": 20424028,
+            "totalSize": 77918208,
+            "embedderHeapUsedSize": 675570528,
+            "backingStorageSize": 372200
+          },
+          "dom": {
+            "documents": 3,
+            "nodes": 2385613,
+            "jsEventListeners": 21
+          }
+        }
+      }
+    }
+  }
+}

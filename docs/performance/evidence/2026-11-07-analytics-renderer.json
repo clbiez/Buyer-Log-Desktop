@@ -1,0 +1,355 @@
+{
+  "synthetic": true,
+  "fixture": "source-30000-seed7-20261105.tar.gz",
+  "browser": "154.0.8037.57",
+  "runs": [
+    {
+      "variant": "red",
+      "round": 0,
+      "lfl": {
+        "syncMs": 163.89999999990687,
+        "paintMs": 184.19999999995343,
+        "counts": {
+          "render": 1,
+          "renderKpis": 1,
+          "renderSource": 1,
+          "frameworkRows": 3,
+          "manufacturerVolumes": 1,
+          "renderCustomCompare": 1
+        },
+        "otherDOMPreserved": false,
+        "sha": "a6defdbefd80ba4ef8626fd2b2db9b54ab677f48c85f0b10f2633e19a2fbcbad"
+      },
+      "delivery": {
+        "wallMs": 926.3999999999069,
+        "maxGapMs": 918.5999999998603,
+        "longTasks": [
+          917
+        ],
+        "inputPackets": 0,
+        "inputPostTotalMs": 0,
+        "inputPostMaxMs": 0,
+        "rows": 37708,
+        "sourceRowsRestored": true,
+        "sha": "fabb17760c7b607583ac5783b6d3deb523cc720d4c18ff4816d303a7b41223e5"
+      },
+      "coldDelivery": {
+        "wallMs": 678.8000000000466,
+        "maxGapMs": 673.1000000000931,
+        "longTasks": [
+          674
+        ],
+        "inputPackets": 0,
+        "inputPostTotalMs": 0,
+        "inputPostMaxMs": 0,
+        "rows": 37708,
+        "sourceRowsRestored": true,
+        "sha": "fabb17760c7b607583ac5783b6d3deb523cc720d4c18ff4816d303a7b41223e5"
+      },
+      "transit": {
+        "ms": 249.30000000004657,
+        "rows": 400,
+        "sha": "d782ecdb6c883098e3b16d631d809c5aaa3b83ee32e34e9319907874fd4f66d6"
+      },
+      "cloneDiagnostics": {
+        "inputCloneMs": 576.1999999999534,
+        "projectMs": 145.89999999990687,
+        "projectedCloneMs": 260.80000000004657,
+        "outputCloneMs": 1071.8000000000466
+      }
+    },
+    {
+      "variant": "green",
+      "round": 0,
+      "lfl": {
+        "syncMs": 25.199999999953434,
+        "paintMs": 49.799999999813735,
+        "counts": {},
+        "otherDOMPreserved": true,
+        "sha": "a6defdbefd80ba4ef8626fd2b2db9b54ab677f48c85f0b10f2633e19a2fbcbad"
+      },
+      "delivery": {
+        "wallMs": 1396.1999999999534,
+        "maxGapMs": 484.19999999995343,
+        "longTasks": [
+          100,
+          229
+        ],
+        "inputPackets": 0,
+        "inputPostTotalMs": 0,
+        "inputPostMaxMs": 0,
+        "timing": {
+          "receivedByUI": 1794073495106.7,
+          "receivedAt": 1794073493951.2,
+          "computedAt": 1794073494525.3,
+          "sentAt": 1794073494784.6
+        },
+        "rows": 37708,
+        "sourceRowsRestored": true,
+        "sha": "fabb17760c7b607583ac5783b6d3deb523cc720d4c18ff4816d303a7b41223e5"
+      },
+      "coldDelivery": {
+        "wallMs": 1713.3000000000466,
+        "maxGapMs": 209.0999999998603,
+        "longTasks": [
+          160
+        ],
+        "inputPackets": 76,
+        "inputPostTotalMs": 138.39999999990687,
+        "inputPostMaxMs": 4.699999999953434,
+        "timing": {
+          "receivedByUI": 1794073496889.6,
+          "receivedAt": 1794073495911.7,
+          "computedAt": 1794073496612.5999,
+          "sentAt": 1794073496798.7
+        },
+        "rows": 37708,
+        "sourceRowsRestored": true,
+        "sha": "fabb17760c7b607583ac5783b6d3deb523cc720d4c18ff4816d303a7b41223e5"
+      },
+      "transit": {
+        "ms": 53.799999999813735,
+        "rows": 400,
+        "sha": "d782ecdb6c883098e3b16d631d809c5aaa3b83ee32e34e9319907874fd4f66d6"
+      },
+      "cloneDiagnostics": {
+        "inputCloneMs": 417.10000000009313,
+        "projectMs": 124.80000000004657,
+        "projectedCloneMs": 239,
+        "outputCloneMs": 642
+      }
+    },
+    {
+      "variant": "red",
+      "round": 1,
+      "lfl": {
+        "syncMs": 224.89999999990687,
+        "paintMs": 266.19999999995343,
+        "counts": {
+          "render": 1,
+          "renderKpis": 1,
+          "renderSource": 1,
+          "frameworkRows": 3,
+          "manufacturerVolumes": 1,
+          "renderCustomCompare": 1
+        },
+        "otherDOMPreserved": false,
+        "sha": "a6fe0563b83d7f8c263055baad179d78b9935ecf34c9d53ff16d89ad4b5d3c2d"
+      },
+      "delivery": {
+        "wallMs": 1087.1000000000931,
+        "maxGapMs": 1079.5,
+        "longTasks": [
+          1078
+        ],
+        "inputPackets": 0,
+        "inputPostTotalMs": 0,
+        "inputPostMaxMs": 0,
+        "rows": 37708,
+        "sourceRowsRestored": true,
+        "sha": "b179382f163926685703ccb8a9ab34bf6f13068c3151b2004b0c86929dd40cb5"
+      },
+      "coldDelivery": {
+        "wallMs": 762.0999999998603,
+        "maxGapMs": 756.6999999999534,
+        "longTasks": [
+          757
+        ],
+        "inputPackets": 0,
+        "inputPostTotalMs": 0,
+        "inputPostMaxMs": 0,
+        "rows": 37708,
+        "sourceRowsRestored": true,
+        "sha": "b179382f163926685703ccb8a9ab34bf6f13068c3151b2004b0c86929dd40cb5"
+      },
+      "transit": {
+        "ms": 303.60000000009313,
+        "rows": 400,
+        "sha": "c6b3691a3c8e88bf5bbc3a5706284f29add4540fa451fca8aed9d01312ebcd61"
+      },
+      "cloneDiagnostics": {
+        "inputCloneMs": 472.5999999998603,
+        "projectMs": 137.4000000001397,
+        "projectedCloneMs": 255.19999999995343,
+        "outputCloneMs": 584.6999999999534
+      }
+    },
+    {
+      "variant": "green",
+      "round": 1,
+      "lfl": {
+        "syncMs": 17.0999999998603,
+        "paintMs": 38.199999999953434,
+        "counts": {},
+        "otherDOMPreserved": true,
+        "sha": "a6fe0563b83d7f8c263055baad179d78b9935ecf34c9d53ff16d89ad4b5d3c2d"
+      },
+      "delivery": {
+        "wallMs": 1283.5999999998603,
+        "maxGapMs": 421.80000000004657,
+        "longTasks": [
+          93,
+          144
+        ],
+        "inputPackets": 0,
+        "inputPostTotalMs": 0,
+        "inputPostMaxMs": 0,
+        "timing": {
+          "receivedByUI": 1794073515434.1,
+          "receivedAt": 1794073514305.5,
+          "computedAt": 1794073514866.2,
+          "sentAt": 1794073515067.3
+        },
+        "rows": 37708,
+        "sourceRowsRestored": true,
+        "sha": "b179382f163926685703ccb8a9ab34bf6f13068c3151b2004b0c86929dd40cb5"
+      },
+      "coldDelivery": {
+        "wallMs": 1582.5999999998603,
+        "maxGapMs": 212.80000000004657,
+        "longTasks": [
+          140
+        ],
+        "inputPackets": 76,
+        "inputPostTotalMs": 106.29999999981374,
+        "inputPostMaxMs": 4.7999999998137355,
+        "timing": {
+          "receivedByUI": 1794073517023.8,
+          "receivedAt": 1794073516100.5999,
+          "computedAt": 1794073516715.0999,
+          "sentAt": 1794073516914.5999
+        },
+        "rows": 37708,
+        "sourceRowsRestored": true,
+        "sha": "b179382f163926685703ccb8a9ab34bf6f13068c3151b2004b0c86929dd40cb5"
+      },
+      "transit": {
+        "ms": 51.9000000001397,
+        "rows": 400,
+        "sha": "c6b3691a3c8e88bf5bbc3a5706284f29add4540fa451fca8aed9d01312ebcd61"
+      },
+      "cloneDiagnostics": {
+        "inputCloneMs": 638.3000000000466,
+        "projectMs": 146,
+        "projectedCloneMs": 226.5,
+        "outputCloneMs": 811.1999999999534
+      }
+    },
+    {
+      "variant": "red",
+      "round": 2,
+      "lfl": {
+        "syncMs": 180.30000000004657,
+        "paintMs": 204.10000000009313,
+        "counts": {
+          "render": 1,
+          "renderKpis": 1,
+          "renderSource": 1,
+          "frameworkRows": 3,
+          "manufacturerVolumes": 1,
+          "renderCustomCompare": 1
+        },
+        "otherDOMPreserved": false,
+        "sha": "a6defdbefd80ba4ef8626fd2b2db9b54ab677f48c85f0b10f2633e19a2fbcbad"
+      },
+      "delivery": {
+        "wallMs": 980.9000000001397,
+        "maxGapMs": 973.3000000000466,
+        "longTasks": [
+          967
+        ],
+        "inputPackets": 0,
+        "inputPostTotalMs": 0,
+        "inputPostMaxMs": 0,
+        "rows": 37708,
+        "sourceRowsRestored": true,
+        "sha": "e3f86aa03e6ce9532ec5db50e699849890c097ffa3542166928b4942024f8245"
+      },
+      "coldDelivery": {
+        "wallMs": 675.6000000000931,
+        "maxGapMs": 670,
+        "longTasks": [
+          671
+        ],
+        "inputPackets": 0,
+        "inputPostTotalMs": 0,
+        "inputPostMaxMs": 0,
+        "rows": 37708,
+        "sourceRowsRestored": true,
+        "sha": "e3f86aa03e6ce9532ec5db50e699849890c097ffa3542166928b4942024f8245"
+      },
+      "transit": {
+        "ms": 165,
+        "rows": 400,
+        "sha": "67d669e31d9be2e53d64ab5cafea5622bb431a23946f36656731ad3676bc1bfd"
+      },
+      "cloneDiagnostics": {
+        "inputCloneMs": 388.0999999998603,
+        "projectMs": 112.4000000001397,
+        "projectedCloneMs": 219.19999999995343,
+        "outputCloneMs": 500.60000000009313
+      }
+    },
+    {
+      "variant": "green",
+      "round": 2,
+      "lfl": {
+        "syncMs": 15.599999999860302,
+        "paintMs": 35.199999999953434,
+        "counts": {},
+        "otherDOMPreserved": true,
+        "sha": "a6defdbefd80ba4ef8626fd2b2db9b54ab677f48c85f0b10f2633e19a2fbcbad"
+      },
+      "delivery": {
+        "wallMs": 1361.8000000000466,
+        "maxGapMs": 474.39999999990687,
+        "longTasks": [
+          96,
+          198
+        ],
+        "inputPackets": 0,
+        "inputPostTotalMs": 0,
+        "inputPostMaxMs": 0,
+        "timing": {
+          "receivedByUI": 1794073534821.1,
+          "receivedAt": 1794073533685.8,
+          "computedAt": 1794073534221,
+          "sentAt": 1794073534461.5
+        },
+        "rows": 37708,
+        "sourceRowsRestored": true,
+        "sha": "e3f86aa03e6ce9532ec5db50e699849890c097ffa3542166928b4942024f8245"
+      },
+      "coldDelivery": {
+        "wallMs": 1583.2999999998137,
+        "maxGapMs": 141.29999999981374,
+        "longTasks": [
+          129
+        ],
+        "inputPackets": 76,
+        "inputPostTotalMs": 121.70000000018626,
+        "inputPostMaxMs": 2.699999999953434,
+        "timing": {
+          "receivedByUI": 1794073536493.9,
+          "receivedAt": 1794073535586.9,
+          "computedAt": 1794073536200,
+          "sentAt": 1794073536401.5
+        },
+        "rows": 37708,
+        "sourceRowsRestored": true,
+        "sha": "e3f86aa03e6ce9532ec5db50e699849890c097ffa3542166928b4942024f8245"
+      },
+      "transit": {
+        "ms": 21.5999999998603,
+        "rows": 400,
+        "sha": "67d669e31d9be2e53d64ab5cafea5622bb431a23946f36656731ad3676bc1bfd"
+      },
+      "cloneDiagnostics": {
+        "inputCloneMs": 425.5999999998603,
+        "projectMs": 116.30000000004657,
+        "projectedCloneMs": 224,
+        "outputCloneMs": 524.8000000000466
+      }
+    }
+  ]
+}

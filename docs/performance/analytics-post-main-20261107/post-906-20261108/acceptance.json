@@ -1,0 +1,75 @@
+{
+  "revision": "2ffed133c5a13ee47fee2d2aee9d65e1c94fa0d0",
+  "appTree": "044c2d8d6c8fc4336675a8e0e45e2c566492bebe",
+  "startedAt": "2026-11-07T23:21:58.073327+00:00",
+  "status": "passed",
+  "commands": [
+    {
+      "name": "related-integrated",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "backlog-delivery",
+        "backlog-query-cache",
+        "lfl",
+        "transit-analysis",
+        "analytics-renderer",
+        "lazy-startup",
+        "feature-style"
+      ],
+      "cwd": "/workspace/buyerlog-analytics904/resources/app",
+      "tmpdir": "/tmp/buyerlog-904-related-integrated-hdyf3oxd",
+      "startedAt": "2026-11-07T23:21:58.077004+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T23:22:01.113081+00:00",
+      "logSha256": "5f4cc99f7b0c3c284bdaf2c80000710a92e784b699ee066bcc7cb4fd77eb6c29",
+      "gzipSha256": "4c4121a0e92862405dd376a49ed27c6cdf55bc8378e72df850b9736bb54f48d7"
+    },
+    {
+      "name": "full-integrated",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/workspace/buyerlog-analytics904/resources/app",
+      "tmpdir": "/tmp/buyerlog-904-full-integrated-0gec3e5c",
+      "startedAt": "2026-11-07T23:22:01.117352+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T23:25:33.793864+00:00",
+      "logSha256": "0043fe9361b5e0ecfb32c2601df0ac8333c98eb5ff64b48e57bc7e0b2baa1192",
+      "gzipSha256": "693f998e63ed424427d68bc14552d936d6bf362e99de85f9a42e93254e68dbc2"
+    },
+    {
+      "name": "i18n-integrated",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "cwd": "/workspace/buyerlog-analytics904/resources/app",
+      "tmpdir": "/tmp/buyerlog-904-i18n-integrated-g6z77v90",
+      "startedAt": "2026-11-07T23:25:33.872159+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T23:25:36.297758+00:00",
+      "logSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+      "gzipSha256": "1990e3930a54568227c02bc6f9726dc426b61475f998ccc493e96dcc68738c41"
+    },
+    {
+      "name": "release-integrated",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "cwd": "/workspace/buyerlog-analytics904/resources/app",
+      "tmpdir": "/tmp/buyerlog-904-release-integrated-fvdqnabe",
+      "startedAt": "2026-11-07T23:25:36.300725+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T23:25:38.046425+00:00",
+      "logSha256": "f9b9a8c6ac81c9c2f2cca093896c6293999fbad84b942277d9d5fb0de19d31f9",
+      "gzipSha256": "fb3e470e935fd56c6e6f1e59b08489837d444c0c10ff3f327f600bb4cc00a572"
+    }
+  ],
+  "finishedAt": "2026-11-07T23:25:38.047396+00:00"
+}

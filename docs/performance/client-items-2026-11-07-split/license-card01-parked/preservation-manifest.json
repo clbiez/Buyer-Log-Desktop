@@ -1,0 +1,1629 @@
+{
+  "schemaVersion": 1,
+  "state": "unapplied-preparation-no-validation-run",
+  "frozenHead": "f3636ba3220686e9ad4ec2ae6de9fcc3726ba907",
+  "mainHead": "31004ea08982ffcce849640e5c5e3580448f0914",
+  "activeProductionChange": {
+    "path": "resources/app/public/license-cards.js",
+    "fromGitBlob": "554e54d6a2361ceb0043ec52fd8371872a05c2ca",
+    "toGitBlob": "ec5639d3e38fe28df3ede6b0df9bdbf040176fe6",
+    "policy": "exact current Main bytes; no new license optimization"
+  },
+  "otherProductionByteIdentical": [
+    {
+      "path": "resources/app/public/cp-rules-engine.js",
+      "gitBlob": "f13758a1ee0099f120cb17cbc5d36a8e51cba5ea"
+    },
+    {
+      "path": "resources/app/public/email-groups.js",
+      "gitBlob": "4b28beb31d3d25b35519eb2c721ca38fcb587e04"
+    },
+    {
+      "path": "resources/app/public/lcwai-chat.js",
+      "gitBlob": "03f54c5b3ff9757c2b8427ed952c89f032563b8c"
+    },
+    {
+      "path": "resources/app/public/manufacturers.js",
+      "gitBlob": "bf5302c3708e4c57e93db6f2fd86b623693e34f7"
+    }
+  ],
+  "originalThreeCommits": [
+    {
+      "sha": "eb17dc22df492c84b557c05ea4a17df81d09b392",
+      "subject": "perf(CPR-11): cache failed rule compilation by source and engine version"
+    },
+    {
+      "sha": "cbf9fce4f326a48aba1458db863ac04c7024d4e1",
+      "subject": "perf(INT-09): redraw only the active LCW AI streaming answer"
+    },
+    {
+      "sha": "ed8a425f027813af85123278dfdb9670122a6f68",
+      "subject": "perf(CARD-01): update card lists and selected details independently"
+    }
+  ],
+  "allEightFrozenCommits": [
+    "eb17dc22df492c84b557c05ea4a17df81d09b392",
+    "cbf9fce4f326a48aba1458db863ac04c7024d4e1",
+    "ed8a425f027813af85123278dfdb9670122a6f68",
+    "c1460f01c56e0251df0a19b3ce14fe5936fe5f25",
+    "f732c866405e62384c3c023d4a1abbec24c9b9c4",
+    "ac6d42b6dfba7702e43430f58e7f0dd4709ac9f9",
+    "12c423dc534f6eb702489317b3ea890f24ba20b4",
+    "f3636ba3220686e9ad4ec2ae6de9fcc3726ba907"
+  ],
+  "historyPolicy": "Create parked branch from frozenHead before appending removal commits; no rebase, reset or force-push. Existing eight commits and frozen evidence stay ancestors.",
+  "splitFiles": [
+    {
+      "path": "resources/app/public/license-cards.js",
+      "frozenGitBlob": "554e54d6a2361ceb0043ec52fd8371872a05c2ca",
+      "action": "restore-current-Main"
+    },
+    {
+      "path": "resources/app/tests/license-cards-editor.test.js",
+      "frozenGitBlob": "291c2cbe4744e127e61ff42e8e3ff742ef75873b",
+      "action": "restore-current-Main"
+    },
+    {
+      "path": "resources/app/tests/card-list-model.test.js",
+      "frozenGitBlob": "9e807dddb3a22f11f666c8e2c2d8bedbfb841c45",
+      "action": "park-license-only-file"
+    },
+    {
+      "path": "resources/app/tests/license-quick-fob-close.test.js",
+      "frozenGitBlob": "c81a8b8b17ef0732661a0eca2ecdd3bdc5286a5b",
+      "action": "retain-all-14-functional-assertions-adapt-only-fixture"
+    },
+    {
+      "path": "resources/app/scripts/card-render-acceptance.js",
+      "frozenGitBlob": "b7e370dfbe37c167121da4bd7c84d9e85e988698",
+      "action": "shipping-default-manufacturers-email-explicit-license-optimization-rejected"
+    },
+    {
+      "path": "resources/app/scripts/card-render-screenshots.js",
+      "frozenGitBlob": "3655f72eca6a2e58abf1e0ba59ad802f7f3b84c1",
+      "action": "retain-functional-and-remaining-feature-assertions-park-license-identity-only"
+    },
+    {
+      "path": "resources/app/scripts/license-quick-fob-acceptance.js",
+      "frozenGitBlob": "4afea311372517f8d32def0047708063631ad68f",
+      "action": "retain-browser-functional-checks-park-listRetained-only"
+    }
+  ],
+  "baselineLicenseAndFobFiles": [
+    {
+      "path": "resources/app/tests/collection-delete-license-automation-v831.test.js",
+      "gitBlob": "4f3094bee7af575fed333cc4cbd2b149b6701d7e",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/fixtures/retired-ui/license-atlas-shell.js",
+      "gitBlob": "89dd3d9625b48ce7991d59556cf9836fb2736057",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/fixtures/retired-ui/license-atlas-workspace.js",
+      "gitBlob": "2a1481f9d172a2a043a3d242ab6bcac820bb5b5a",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/fixtures/retired-ui/license-atlas/PROVENANCE.md",
+      "gitBlob": "9760616332e8e26f39ff880450550f8ff2927cfd",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/fixtures/retired-ui/license-atlas/index.html",
+      "gitBlob": "5eb5ae3c72ef92a084b0e030464b5d3ff464c557",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/fixtures/retired-ui/license-atlas/integration.css",
+      "gitBlob": "9078e86bfb2d9561b46798b1ba4e94d576033a8f",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/fixtures/retired-ui/license-atlas/integration.js",
+      "gitBlob": "d20f93d0e1e65cba2da6d975d941ac64bf8aa3fb",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/helpers/license-cards-favorites.browser.cjs",
+      "gitBlob": "1202dca05d5ac268d26d64667499d640d1219b67",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/helpers/license-cards-unified.browser.cjs",
+      "gitBlob": "4ac40160ffa88b0543d41014a3915fafa74f83d9",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/helpers/supp-fob-calculator.browser.cjs",
+      "gitBlob": "cf6068db27ea70aa659ffc8cc2816cf954317956",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-asset-live-authority.test.js",
+      "gitBlob": "00f3d7c41bbea5af0c518f56446f00793f9092c8",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-atlas-original.test.js",
+      "gitBlob": "8056a53c7bb1ec20bb9b36c3fd6803b05ea55ab2",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-atlas.test.js",
+      "gitBlob": "38b2a41594575bebb5744ce5e1e62c4aa63d8c7b",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-card-assets-v20261023.test.js",
+      "gitBlob": "fe931623e4a28341d597e61719b94eb31eb6c02c",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-card-authoritative.test.js",
+      "gitBlob": "d734922fd7fd73b06923adb171d0579a2dc22075",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-card-sync.test.js",
+      "gitBlob": "13008ea0e98eb2c74d460c3707769e700452154e",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-cards-editor.test.js",
+      "gitBlob": "774d1d40cb889271e498fb9eba04e05d76f69ed3",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-cards-engine.test.js",
+      "gitBlob": "7ea0075f4ab23bffa4d558bb23412d3403de7a74",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-cards-favorites.test.js",
+      "gitBlob": "80ac9bda7401e3b5f58ef288bac50850ab07e79a",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-cards-list-v20261022.test.js",
+      "gitBlob": "30c4c112604e0cd65fb37c089cc6e2333135a293",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-cards-load-states.test.js",
+      "gitBlob": "324a3dc312a0a4333d4ee9fbe09f396c33bd335a",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-cards-royalty-hydration.test.js",
+      "gitBlob": "b8c0f27f9f7ec53585d0fd582addc43e33560d64",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-cards-unified.test.js",
+      "gitBlob": "10f67fdd132b09e045eb56b34b0c7cc004f4d0a0",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-cards.test.js",
+      "gitBlob": "72f3766b5bba5e623a53b2d516560a0f971a8a5f",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-details-recovery.test.js",
+      "gitBlob": "36bbb4fdf2fc6ecc5d0d47111d3c38c013487c0a",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-licensor-ambiguity-fob-guard.test.js",
+      "gitBlob": "7810f40a2c403ec9d8d0ebbd68831bec1acdd3f1",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-licensor-dependency-v1051.test.js",
+      "gitBlob": "f043f3e6e650a93f20709fbb42a42f048c88ea0c",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-licensor-merge-v20261022.test.js",
+      "gitBlob": "aca32ea1b6c083fccf6a4dffeed97691716ab538",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-map-save-guard.test.js",
+      "gitBlob": "45025a0fa6a8cd03840b0a81d9e0a7006a7a7ee5",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-royalty-collection-sync-v519.test.js",
+      "gitBlob": "4580c6c27779c11a10b051bf82e8c0e7cd95fb39",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-royalty-commission-v2.test.js",
+      "gitBlob": "807ca319af570b7c458cca92663f16b529c7ccb0",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-royalty-current-contract-v830.test.js",
+      "gitBlob": "70550fe827ace62d01b32fcc97ef1767184bcc7a",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-royalty-licensor-v633.test.js",
+      "gitBlob": "5d527534d95225ae5b0e4d2d042cf4a07e6aa840",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-royalty-missing-warning-v781.test.js",
+      "gitBlob": "b22647faf16ec7c349c734db3fc4e72b3efb6741",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-royalty-refresh-v1023.test.js",
+      "gitBlob": "5d70933b1fe0ac36449281a03452a4756336143c",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-royalty-search-expiry-v772.test.js",
+      "gitBlob": "2238ce1730dcdad6b5a8c40ae489b2f25f0de483",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/license-stage-templates-v20261022.test.js",
+      "gitBlob": "f999d3fd4a7192629b6c0e44fa0a950b49ac21f6",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/royalty-precision-license-cards-v20261021.test.js",
+      "gitBlob": "824d63506f66dd1531c03fdf0420e3fab4c26a34",
+      "policy": "untouched-baseline"
+    },
+    {
+      "path": "resources/app/tests/supp-fob-quick-calculator.test.js",
+      "gitBlob": "9ad6d9a908213c55fec0f3dbf8f831a8dfb28d65",
+      "policy": "untouched-baseline"
+    }
+  ],
+  "remainingFeatureTestsUntouched": [
+    {
+      "path": "resources/app/tests/cp-rule-compile-cache.test.js",
+      "gitBlob": "9045317142ec458ecc0b77b816f94531636c5866"
+    },
+    {
+      "path": "resources/app/tests/lcwai-stream-render.test.js",
+      "gitBlob": "7ced6c56261d6299db4ab8b18f1c356d34760274"
+    }
+  ],
+  "frozenArtifactsAndPngs": [
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/README.md",
+      "gitBlob": "5d4a66796b7d9b25e1c278eef4543df7b0f7a1a5",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/original-evidence.json",
+      "gitBlob": "3977d6a9665f93cc769bb42ecfcb98f620135348",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial-summary.json",
+      "gitBlob": "b1498f54600f3d9935a4b9dd8c2c28a84124cb38",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/manifest.json",
+      "gitBlob": "385d9b33040443f38b1bd196c6df7f11ea436afa",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-A-card.json",
+      "gitBlob": "2d63f26aed06abf7f091d7c7667cbf407868dcd9",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-A-card.stderr.txt",
+      "gitBlob": "dd47fc34d9608ef10f71054a0d2a242897c10ee2",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-A-int.json",
+      "gitBlob": "ba3b68528e46a05f553a6f9ef2b68af02d3922a9",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-A-int.stderr.txt",
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-B-card.json",
+      "gitBlob": "46b6b77f07c2e847b27b9f06478c37f207f16568",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-B-card.stderr.txt",
+      "gitBlob": "23427ffbe0f560e62996b59cfb928f1559addf96",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-B-int.json",
+      "gitBlob": "32fc0e62142c1512d629ecf4a96dc90a9ddef0a1",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-B-int.stderr.txt",
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-A-card.json",
+      "gitBlob": "03ad3a9d059165c5a1acc80852051d9af19a1d27",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-A-card.stderr.txt",
+      "gitBlob": "1d688dd8172df952e35c7d9d7312b72df3416469",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-A-int.json",
+      "gitBlob": "5eccf5be9e0923b7890e9b429c05d5be54e6e9e6",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-A-int.stderr.txt",
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-B-card.json",
+      "gitBlob": "ac17dae67c65c5cbcc17c40056a74bc7c62ff8a1",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-B-card.stderr.txt",
+      "gitBlob": "4118e25e7c18d2b72417feee3e839864327c4a99",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-B-int.json",
+      "gitBlob": "630beea7b26aa603a39cec7e88e415c7fc8ecf82",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-B-int.stderr.txt",
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-A-card.json",
+      "gitBlob": "e72d785cdbf3f500f178e09b0f23bdb6d086a21e",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-A-card.stderr.txt",
+      "gitBlob": "c7fffca00bbb8d443aa3ee752db166697c720551",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-A-int.json",
+      "gitBlob": "f760f3e1fd55eaa2d98e54de7f04b07ddd9c909b",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-A-int.stderr.txt",
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-B-card.json",
+      "gitBlob": "3b3cd62c807bf976c193474d809ea18c59b8b571",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-B-card.stderr.txt",
+      "gitBlob": "4bffb38916b33765a08cf14ffbfb3ad3c87751ee",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-B-int.json",
+      "gitBlob": "159197b36af485e4423259d19b0ae5a1c2dd4bcc",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-B-int.stderr.txt",
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/preservation-check.json",
+      "gitBlob": "c7a1fb9f0213751110b76ef8ce45d1c87e5f5e90",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/report.md",
+      "gitBlob": "b0cecccabfd4417d16d51f9a349582ac4c44d28b",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace-summary.json",
+      "gitBlob": "75e5d2e6a6bea16983a20605bda99492fe698b97",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/A.cpuprofile.json.gz",
+      "gitBlob": "738841a07b177cc4a1df1a79aac8d69a92971e7b",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/A.metadata.json",
+      "gitBlob": "e160eb721eb2b4fb20a7b7ea682946128f21ec2d",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/A.renderer.json",
+      "gitBlob": "12edd6c971233c013a0b31d7b131f72c29d5a81f",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/A.trace.json.gz",
+      "gitBlob": "ec8f076549bcc21b0d4cc591196420bdff0a68b0",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/B.cpuprofile.json.gz",
+      "gitBlob": "68b8e35733eccb203e2e786e20bc84ecbe4e88c8",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/B.metadata.json",
+      "gitBlob": "905acb1355787faca6bbb3271a415be1a5a037d3",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/B.renderer.json",
+      "gitBlob": "d7ccbd75f2d46b5c8484da5e2c4ecac7f827d078",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/B.trace.json.gz",
+      "gitBlob": "e8285cab254530871075b673551f2c3ba4fdcb6c",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/validation/full-npm-test.txt",
+      "gitBlob": "a262db59b1dc1ff45f3553cd3616fcf8dcba4e40",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/validation/i18n.txt",
+      "gitBlob": "8a7bd70b113ead38dc843307102573b3751d09e5",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/validation/npm-test.log.gz",
+      "gitBlob": "a57c758b7e5ca2257acbe7bd747e06a9eae1af2d",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/validation/related-tests.txt",
+      "gitBlob": "544721ae9bb6413a685dad62a0beedb48aae5e68",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/validation/release-notes.txt",
+      "gitBlob": "89e889dd099eb4c6abc6ce17a67db243cb82bdac",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/validation/summary.json",
+      "gitBlob": "5e2e88b1d614462024b74e5647471f391348be36",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/card-01-after.txt",
+      "gitBlob": "296776b172fe257263ccaad6ce7d11bb3f1fabe6",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/card-01-before.txt",
+      "gitBlob": "13663618621dbb3d0b28e54af26dc2914132ee80",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/card-01-model-red.txt",
+      "gitBlob": "a7a4d21474e1e97ee03a80091a39a3186aa0c0fe",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/card-01-red.txt",
+      "gitBlob": "a854157ff9b029ece259b20cb023df708244dd14",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/card-01.md",
+      "gitBlob": "5d5631837a9a5f0f67a605b7970bc248f5991196",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/cpr-11-after.json",
+      "gitBlob": "9f0a449eb854b3f0a81be62ef39f30d839ab736a",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/cpr-11-before.json",
+      "gitBlob": "00f1ee6b51f63e04383273cae22f1d362ea62d51",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/cpr-11-red.txt",
+      "gitBlob": "7da5d1df8e2ef4ec1f1d09eb4a4fb9c408227848",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/cpr-11.md",
+      "gitBlob": "01b79680946900e9a5df82846cf264d0a4bce728",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/full-npm-test.txt",
+      "gitBlob": "93da70988fff8f1447b26e4e6dd431e605ea5e18",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/int-09-after.txt",
+      "gitBlob": "f3bf40c999e110c300daad63ef98ca88e1166214",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/int-09-before.txt",
+      "gitBlob": "cc822e5a071cfa990e647022b27364a7094bbd7a",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/int-09.md",
+      "gitBlob": "993403cb91cf2f4eae08771422d9427f8efe4485",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/validation.md",
+      "gitBlob": "f1c481c814917c45c8db3f87926fae3257bd3866",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/acceptance-summary.json",
+      "gitBlob": "1c2a393ade39fb130e27d44ac75f20a70a4f2739",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green-final/browser.log",
+      "gitBlob": "6f1fee93614c06f128434e0cddba421e20130aef",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green-final/node-regressions.txt",
+      "gitBlob": "da27b3c71baee3a67e01984d00edaedc0cc3f539",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green-final/period-cancel.png",
+      "gitBlob": "36a4f67b796aac1b840a2661c48dcac1764cb7b3",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green-final/rate-close.png",
+      "gitBlob": "c6b017b994656e15160fa7f68161427ed56a90b7",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green-final/result.json",
+      "gitBlob": "95139e07310ce20be5cbd8c47dc34cea01f14fed",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green/browser.log",
+      "gitBlob": "b9df32f2118b3a88a1ca2a7caf330898f692300f",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green/period-cancel.png",
+      "gitBlob": "36a4f67b796aac1b840a2661c48dcac1764cb7b3",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green/rate-close.png",
+      "gitBlob": "c6b017b994656e15160fa7f68161427ed56a90b7",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green/result.json",
+      "gitBlob": "879863aa2d710a484d95bc810a6214ba9c09d0f8",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-paired-summary.json",
+      "gitBlob": "325b912fdf31dce6577d4123fd02ae9a51161025",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/manifest.json",
+      "gitBlob": "c531e8900af2c034d224a894910ab27033fe5e15",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-1-A-card.json",
+      "gitBlob": "7e531f775e8962916c52076754f6919aa1de55ec",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-1-A-card.stderr.txt",
+      "gitBlob": "b258b701a3a9628380bd82a52d06d4acda926a65",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-1-B-card.json",
+      "gitBlob": "6e1932274c7402661caa77398a6e426975f58ac8",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-1-B-card.stderr.txt",
+      "gitBlob": "12efe80b3d7e445b019c13b85bc64d3c2771b508",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-2-A-card.json",
+      "gitBlob": "cdc11cf84f622b5b76ddc44642340285836dc2d8",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-2-A-card.stderr.txt",
+      "gitBlob": "61436bac26b51a914507e7e4455d5eb15364babe",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-2-B-card.json",
+      "gitBlob": "b292c7fb059f868b4db091c08a6191785a4a0191",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-2-B-card.stderr.txt",
+      "gitBlob": "ed8b1ff55a91dc3c9f8b55af920fd92a1cd70627",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-3-A-card.json",
+      "gitBlob": "c8e906bc4fce5e100f6d46e1307f28ebc93af6b7",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-3-A-card.stderr.txt",
+      "gitBlob": "e1c5bbb24e6775da7e4d3e3573ba5518af9479a2",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-3-B-card.json",
+      "gitBlob": "e5db8091bd84af7048ade58263761579954dea39",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-3-B-card.stderr.txt",
+      "gitBlob": "6d4023df6a2f4ca0d6da16cdd9555607fff73e20",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/protocol.log",
+      "gitBlob": "9d0082c29461905a7b17a827abeccdf8fd11678d",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/preservation.json",
+      "gitBlob": "366cfba35cd1f715a497ea79ad6435c446375a2e",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/red/browser.log",
+      "gitBlob": "38aeb46525cd0de89f55c26e4f54a83f670bcaec",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/red/period-cancel.png",
+      "gitBlob": "f6ca9fba07bf88c1400a809b2b97884db5fc9750",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/red/rate-close.png",
+      "gitBlob": "8e84207e0d3a4d5533a636a4d787714e64c3a4ce",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/red/result.json",
+      "gitBlob": "351bafa3335399918dc3955fce5c0c727838141c",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/red/unit.log.gz",
+      "gitBlob": "2101661bae402954e1e0dbdfbca36cd7fd16cd6b",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/report.md",
+      "gitBlob": "2aaf57e745921fb085f2291218a9308749a47cb6",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace-dom-counts.json",
+      "gitBlob": "93dc89b1aa3ceae3d797575d2f774e8807a7ead0",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace-summary.json",
+      "gitBlob": "a076a870f61e2c60127b11c23b1e7d49928b379b",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/A.cpuprofile.json.gz",
+      "gitBlob": "53a38683a73660aa15f5cf1be89f55cf1e49232c",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/A.metadata.json",
+      "gitBlob": "11ffd5011ac754ed807eeda7b0411a01eb74d6c4",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/A.renderer.json",
+      "gitBlob": "c3885a0c843d77f52cb36018290d4cf106b21709",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/A.trace.json.gz",
+      "gitBlob": "cca9d2a37adb8ca60f823b11cc69f35d5ed99c41",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/B.cpuprofile.json.gz",
+      "gitBlob": "16d5ee7041c50add28986e24ac756f817c31f484",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/B.metadata.json",
+      "gitBlob": "c3a9c7270c09f785c338ffc46a35e19ca739447f",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/B.renderer.json",
+      "gitBlob": "d4dca147b86c0282e7c9e7d15a24b2080b751532",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/B.trace.json.gz",
+      "gitBlob": "5708e6b8d3de86fcb577c1662beb6a1ad41169d7",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/full-npm-test.txt",
+      "gitBlob": "240d5b423a708778bb1dc05f5c557e7ead3d0073",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/i18n.log",
+      "gitBlob": "8a7bd70b113ead38dc843307102573b3751d09e5",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/npm-test.log.gz",
+      "gitBlob": "0ab04fb61545f84f6b25d48d521327681206bd87",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/related-final.log.gz",
+      "gitBlob": "154aa921b4cfa89a3167b0c66ea8e73a98e5e86b",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/related.log.gz",
+      "gitBlob": "b186dbe21d38a142afc225a1b8a3982cf5e6fe53",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/release-notes.log",
+      "gitBlob": "69db07ec7b1e0769dd7d8a733574dae599304d8e",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/summary.json",
+      "gitBlob": "e300eb3d98c133c78683b8d353c67ffbf26ac757",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "resources/app/public/release-notes/next-assets/email-directory-separate-detail.png",
+      "gitBlob": "75a49d86e3d5fd4a03b17116d09128f2a406672d",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "resources/app/public/release-notes/next-assets/lcwai-active-stream.png",
+      "gitBlob": "1a9d1752c8ef9e22a31cfc9a909de466aba68255",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "resources/app/public/release-notes/next-assets/license-card-separate-detail.png",
+      "gitBlob": "24e11f8799b26171694a1cbef1d890acf4d93a9b",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "resources/app/public/release-notes/next-assets/license-quick-fob-draft-close.png",
+      "gitBlob": "c6b017b994656e15160fa7f68161427ed56a90b7",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    },
+    {
+      "path": "resources/app/public/release-notes/next-assets/manufacturer-separate-detail.png",
+      "gitBlob": "c751787a6fcac269619324f7d0cad29fce26dd0f",
+      "policy": "preserve-byte-identically; historical-only where license optimization was removed"
+    }
+  ],
+  "allFrozenChangedFiles": [
+    {
+      "path": ".github/workflows/buyerlog-pr-fast-checks.yml",
+      "gitBlob": "83132ab7e01359a3e1b49dfa1c23d864353b212a",
+      "status": "modified"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/README.md",
+      "gitBlob": "5d4a66796b7d9b25e1c278eef4543df7b0f7a1a5",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/original-evidence.json",
+      "gitBlob": "3977d6a9665f93cc769bb42ecfcb98f620135348",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial-summary.json",
+      "gitBlob": "b1498f54600f3d9935a4b9dd8c2c28a84124cb38",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/manifest.json",
+      "gitBlob": "385d9b33040443f38b1bd196c6df7f11ea436afa",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-A-card.json",
+      "gitBlob": "2d63f26aed06abf7f091d7c7667cbf407868dcd9",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-A-card.stderr.txt",
+      "gitBlob": "dd47fc34d9608ef10f71054a0d2a242897c10ee2",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-A-int.json",
+      "gitBlob": "ba3b68528e46a05f553a6f9ef2b68af02d3922a9",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-A-int.stderr.txt",
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-B-card.json",
+      "gitBlob": "46b6b77f07c2e847b27b9f06478c37f207f16568",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-B-card.stderr.txt",
+      "gitBlob": "23427ffbe0f560e62996b59cfb928f1559addf96",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-B-int.json",
+      "gitBlob": "32fc0e62142c1512d629ecf4a96dc90a9ddef0a1",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-1-B-int.stderr.txt",
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-A-card.json",
+      "gitBlob": "03ad3a9d059165c5a1acc80852051d9af19a1d27",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-A-card.stderr.txt",
+      "gitBlob": "1d688dd8172df952e35c7d9d7312b72df3416469",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-A-int.json",
+      "gitBlob": "5eccf5be9e0923b7890e9b429c05d5be54e6e9e6",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-A-int.stderr.txt",
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-B-card.json",
+      "gitBlob": "ac17dae67c65c5cbcc17c40056a74bc7c62ff8a1",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-B-card.stderr.txt",
+      "gitBlob": "4118e25e7c18d2b72417feee3e839864327c4a99",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-B-int.json",
+      "gitBlob": "630beea7b26aa603a39cec7e88e415c7fc8ecf82",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-2-B-int.stderr.txt",
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-A-card.json",
+      "gitBlob": "e72d785cdbf3f500f178e09b0f23bdb6d086a21e",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-A-card.stderr.txt",
+      "gitBlob": "c7fffca00bbb8d443aa3ee752db166697c720551",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-A-int.json",
+      "gitBlob": "f760f3e1fd55eaa2d98e54de7f04b07ddd9c909b",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-A-int.stderr.txt",
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-B-card.json",
+      "gitBlob": "3b3cd62c807bf976c193474d809ea18c59b8b571",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-B-card.stderr.txt",
+      "gitBlob": "4bffb38916b33765a08cf14ffbfb3ad3c87751ee",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-B-int.json",
+      "gitBlob": "159197b36af485e4423259d19b0ae5a1c2dd4bcc",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/paired-initial/pair-3-B-int.stderr.txt",
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/preservation-check.json",
+      "gitBlob": "c7a1fb9f0213751110b76ef8ce45d1c87e5f5e90",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/report.md",
+      "gitBlob": "b0cecccabfd4417d16d51f9a349582ac4c44d28b",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace-summary.json",
+      "gitBlob": "75e5d2e6a6bea16983a20605bda99492fe698b97",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/A.cpuprofile.json.gz",
+      "gitBlob": "738841a07b177cc4a1df1a79aac8d69a92971e7b",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/A.metadata.json",
+      "gitBlob": "e160eb721eb2b4fb20a7b7ea682946128f21ec2d",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/A.renderer.json",
+      "gitBlob": "12edd6c971233c013a0b31d7b131f72c29d5a81f",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/A.trace.json.gz",
+      "gitBlob": "ec8f076549bcc21b0d4cc591196420bdff0a68b0",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/B.cpuprofile.json.gz",
+      "gitBlob": "68b8e35733eccb203e2e786e20bc84ecbe4e88c8",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/B.metadata.json",
+      "gitBlob": "905acb1355787faca6bbb3271a415be1a5a037d3",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/B.renderer.json",
+      "gitBlob": "d7ccbd75f2d46b5c8484da5e2c4ecac7f827d078",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/trace/B.trace.json.gz",
+      "gitBlob": "e8285cab254530871075b673551f2c3ba4fdcb6c",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/validation/full-npm-test.txt",
+      "gitBlob": "a262db59b1dc1ff45f3553cd3616fcf8dcba4e40",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/validation/i18n.txt",
+      "gitBlob": "8a7bd70b113ead38dc843307102573b3751d09e5",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/validation/npm-test.log.gz",
+      "gitBlob": "a57c758b7e5ca2257acbe7bd747e06a9eae1af2d",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/validation/related-tests.txt",
+      "gitBlob": "544721ae9bb6413a685dad62a0beedb48aae5e68",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/validation/release-notes.txt",
+      "gitBlob": "89e889dd099eb4c6abc6ce17a67db243cb82bdac",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07-followup/validation/summary.json",
+      "gitBlob": "5e2e88b1d614462024b74e5647471f391348be36",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/card-01-after.txt",
+      "gitBlob": "296776b172fe257263ccaad6ce7d11bb3f1fabe6",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/card-01-before.txt",
+      "gitBlob": "13663618621dbb3d0b28e54af26dc2914132ee80",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/card-01-model-red.txt",
+      "gitBlob": "a7a4d21474e1e97ee03a80091a39a3186aa0c0fe",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/card-01-red.txt",
+      "gitBlob": "a854157ff9b029ece259b20cb023df708244dd14",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/card-01.md",
+      "gitBlob": "5d5631837a9a5f0f67a605b7970bc248f5991196",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/cpr-11-after.json",
+      "gitBlob": "9f0a449eb854b3f0a81be62ef39f30d839ab736a",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/cpr-11-before.json",
+      "gitBlob": "00f1ee6b51f63e04383273cae22f1d362ea62d51",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/cpr-11-red.txt",
+      "gitBlob": "7da5d1df8e2ef4ec1f1d09eb4a4fb9c408227848",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/cpr-11.md",
+      "gitBlob": "01b79680946900e9a5df82846cf264d0a4bce728",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/full-npm-test.txt",
+      "gitBlob": "93da70988fff8f1447b26e4e6dd431e605ea5e18",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/int-09-after.txt",
+      "gitBlob": "f3bf40c999e110c300daad63ef98ca88e1166214",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/int-09-before.txt",
+      "gitBlob": "cc822e5a071cfa990e647022b27364a7094bbd7a",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/int-09.md",
+      "gitBlob": "993403cb91cf2f4eae08771422d9427f8efe4485",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-items-2026-11-07/validation.md",
+      "gitBlob": "f1c481c814917c45c8db3f87926fae3257bd3866",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/acceptance-summary.json",
+      "gitBlob": "1c2a393ade39fb130e27d44ac75f20a70a4f2739",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green-final/browser.log",
+      "gitBlob": "6f1fee93614c06f128434e0cddba421e20130aef",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green-final/node-regressions.txt",
+      "gitBlob": "da27b3c71baee3a67e01984d00edaedc0cc3f539",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green-final/period-cancel.png",
+      "gitBlob": "36a4f67b796aac1b840a2661c48dcac1764cb7b3",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green-final/rate-close.png",
+      "gitBlob": "c6b017b994656e15160fa7f68161427ed56a90b7",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green-final/result.json",
+      "gitBlob": "95139e07310ce20be5cbd8c47dc34cea01f14fed",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green/browser.log",
+      "gitBlob": "b9df32f2118b3a88a1ca2a7caf330898f692300f",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green/period-cancel.png",
+      "gitBlob": "36a4f67b796aac1b840a2661c48dcac1764cb7b3",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green/rate-close.png",
+      "gitBlob": "c6b017b994656e15160fa7f68161427ed56a90b7",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/green/result.json",
+      "gitBlob": "879863aa2d710a484d95bc810a6214ba9c09d0f8",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-paired-summary.json",
+      "gitBlob": "325b912fdf31dce6577d4123fd02ae9a51161025",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/manifest.json",
+      "gitBlob": "c531e8900af2c034d224a894910ab27033fe5e15",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-1-A-card.json",
+      "gitBlob": "7e531f775e8962916c52076754f6919aa1de55ec",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-1-A-card.stderr.txt",
+      "gitBlob": "b258b701a3a9628380bd82a52d06d4acda926a65",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-1-B-card.json",
+      "gitBlob": "6e1932274c7402661caa77398a6e426975f58ac8",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-1-B-card.stderr.txt",
+      "gitBlob": "12efe80b3d7e445b019c13b85bc64d3c2771b508",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-2-A-card.json",
+      "gitBlob": "cdc11cf84f622b5b76ddc44642340285836dc2d8",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-2-A-card.stderr.txt",
+      "gitBlob": "61436bac26b51a914507e7e4455d5eb15364babe",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-2-B-card.json",
+      "gitBlob": "b292c7fb059f868b4db091c08a6191785a4a0191",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-2-B-card.stderr.txt",
+      "gitBlob": "ed8b1ff55a91dc3c9f8b55af920fd92a1cd70627",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-3-A-card.json",
+      "gitBlob": "c8e906bc4fce5e100f6d46e1307f28ebc93af6b7",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-3-A-card.stderr.txt",
+      "gitBlob": "e1c5bbb24e6775da7e4d3e3573ba5518af9479a2",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-3-B-card.json",
+      "gitBlob": "e5db8091bd84af7048ade58263761579954dea39",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/pair-3-B-card.stderr.txt",
+      "gitBlob": "6d4023df6a2f4ca0d6da16cdd9555607fff73e20",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/license-pairs/protocol.log",
+      "gitBlob": "9d0082c29461905a7b17a827abeccdf8fd11678d",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/preservation.json",
+      "gitBlob": "366cfba35cd1f715a497ea79ad6435c446375a2e",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/red/browser.log",
+      "gitBlob": "38aeb46525cd0de89f55c26e4f54a83f670bcaec",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/red/period-cancel.png",
+      "gitBlob": "f6ca9fba07bf88c1400a809b2b97884db5fc9750",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/red/rate-close.png",
+      "gitBlob": "8e84207e0d3a4d5533a636a4d787714e64c3a4ce",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/red/result.json",
+      "gitBlob": "351bafa3335399918dc3955fce5c0c727838141c",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/red/unit.log.gz",
+      "gitBlob": "2101661bae402954e1e0dbdfbca36cd7fd16cd6b",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/report.md",
+      "gitBlob": "2aaf57e745921fb085f2291218a9308749a47cb6",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace-dom-counts.json",
+      "gitBlob": "93dc89b1aa3ceae3d797575d2f774e8807a7ead0",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace-summary.json",
+      "gitBlob": "a076a870f61e2c60127b11c23b1e7d49928b379b",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/A.cpuprofile.json.gz",
+      "gitBlob": "53a38683a73660aa15f5cf1be89f55cf1e49232c",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/A.metadata.json",
+      "gitBlob": "11ffd5011ac754ed807eeda7b0411a01eb74d6c4",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/A.renderer.json",
+      "gitBlob": "c3885a0c843d77f52cb36018290d4cf106b21709",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/A.trace.json.gz",
+      "gitBlob": "cca9d2a37adb8ca60f823b11cc69f35d5ed99c41",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/B.cpuprofile.json.gz",
+      "gitBlob": "16d5ee7041c50add28986e24ac756f817c31f484",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/B.metadata.json",
+      "gitBlob": "c3a9c7270c09f785c338ffc46a35e19ca739447f",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/B.renderer.json",
+      "gitBlob": "d4dca147b86c0282e7c9e7d15a24b2080b751532",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/trace/B.trace.json.gz",
+      "gitBlob": "5708e6b8d3de86fcb577c1662beb6a1ad41169d7",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/full-npm-test.txt",
+      "gitBlob": "240d5b423a708778bb1dc05f5c557e7ead3d0073",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/i18n.log",
+      "gitBlob": "8a7bd70b113ead38dc843307102573b3751d09e5",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/npm-test.log.gz",
+      "gitBlob": "0ab04fb61545f84f6b25d48d521327681206bd87",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/related-final.log.gz",
+      "gitBlob": "154aa921b4cfa89a3167b0c66ea8e73a98e5e86b",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/related.log.gz",
+      "gitBlob": "b186dbe21d38a142afc225a1b8a3982cf5e6fe53",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/release-notes.log",
+      "gitBlob": "69db07ec7b1e0769dd7d8a733574dae599304d8e",
+      "status": "added"
+    },
+    {
+      "path": "docs/performance/client-quick-fob-p2-2026-11-07/validation/summary.json",
+      "gitBlob": "e300eb3d98c133c78683b8d353c67ffbf26ac757",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/public/cp-rules-engine.js",
+      "gitBlob": "f13758a1ee0099f120cb17cbc5d36a8e51cba5ea",
+      "status": "modified"
+    },
+    {
+      "path": "resources/app/public/email-groups.js",
+      "gitBlob": "4b28beb31d3d25b35519eb2c721ca38fcb587e04",
+      "status": "modified"
+    },
+    {
+      "path": "resources/app/public/lcwai-chat.js",
+      "gitBlob": "03f54c5b3ff9757c2b8427ed952c89f032563b8c",
+      "status": "modified"
+    },
+    {
+      "path": "resources/app/public/license-cards.js",
+      "gitBlob": "554e54d6a2361ceb0043ec52fd8371872a05c2ca",
+      "status": "modified"
+    },
+    {
+      "path": "resources/app/public/manufacturers.js",
+      "gitBlob": "bf5302c3708e4c57e93db6f2fd86b623693e34f7",
+      "status": "modified"
+    },
+    {
+      "path": "resources/app/public/release-notes/next-assets/email-directory-separate-detail.png",
+      "gitBlob": "75a49d86e3d5fd4a03b17116d09128f2a406672d",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/public/release-notes/next-assets/lcwai-active-stream.png",
+      "gitBlob": "1a9d1752c8ef9e22a31cfc9a909de466aba68255",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/public/release-notes/next-assets/license-card-separate-detail.png",
+      "gitBlob": "24e11f8799b26171694a1cbef1d890acf4d93a9b",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/public/release-notes/next-assets/license-quick-fob-draft-close.png",
+      "gitBlob": "c6b017b994656e15160fa7f68161427ed56a90b7",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/public/release-notes/next-assets/manufacturer-separate-detail.png",
+      "gitBlob": "c751787a6fcac269619324f7d0cad29fce26dd0f",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/public/release-notes/next.json",
+      "gitBlob": "ce351bf8494a5b7275d74e698efa227bdf630a26",
+      "status": "modified"
+    },
+    {
+      "path": "resources/app/scripts/analyze-card-search-trace.js",
+      "gitBlob": "7ccf823ade52c6915f3f8e2c0aed2e7907613693",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/scripts/analyze-client-pairs.js",
+      "gitBlob": "18bd3c3e221dd9cb7dc9abbb0d637cb356360f3f",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/scripts/card-render-acceptance.js",
+      "gitBlob": "b7e370dfbe37c167121da4bd7c84d9e85e988698",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/scripts/card-render-screenshots.js",
+      "gitBlob": "3655f72eca6a2e58abf1e0ba59ad802f7f3b84c1",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/scripts/card-search-trace.js",
+      "gitBlob": "73c0ce423ff98af8682803a357725f1ca6bb42b7",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/scripts/client-paired-benchmark.js",
+      "gitBlob": "6e56b0d4712456eb5d203dc1b5431d6787235914",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/scripts/cp-rule-compile-cache-benchmark.js",
+      "gitBlob": "5e8080debbf918d66c4c098a60cd6087b65604ba",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/scripts/lcwai-stream-render-acceptance.js",
+      "gitBlob": "b5b3f2032f64b65cf8daaba9e144273123c651a8",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/scripts/lcwai-stream-screenshot.js",
+      "gitBlob": "473f6b052020e364e461a5d7800cacd5c3a244b1",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/scripts/lib/client-performance-app.js",
+      "gitBlob": "aeaa2685d5602009532dffd3dee3a3a326885de2",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/scripts/license-quick-fob-acceptance.js",
+      "gitBlob": "4afea311372517f8d32def0047708063631ad68f",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/tests/card-list-model.test.js",
+      "gitBlob": "9e807dddb3a22f11f666c8e2c2d8bedbfb841c45",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/tests/cp-rule-compile-cache.test.js",
+      "gitBlob": "9045317142ec458ecc0b77b816f94531636c5866",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/tests/lcwai-stream-render.test.js",
+      "gitBlob": "7ced6c56261d6299db4ab8b18f1c356d34760274",
+      "status": "added"
+    },
+    {
+      "path": "resources/app/tests/license-cards-editor.test.js",
+      "gitBlob": "291c2cbe4744e127e61ff42e8e3ff742ef75873b",
+      "status": "modified"
+    },
+    {
+      "path": "resources/app/tests/license-quick-fob-close.test.js",
+      "gitBlob": "c81a8b8b17ef0732661a0eca2ecdd3bdc5286a5b",
+      "status": "added"
+    }
+  ],
+  "workflow": {
+    "path": ".github/workflows/buyerlog-pr-fast-checks.yml",
+    "frozenGitBlob": "83132ab7e01359a3e1b49dfa1c23d864353b212a",
+    "policy": "No change in this split patch: retained 14 Quick FOB functional cases remain in its existing license step; preserve newer Main/914 steps at integration"
+  },
+  "releaseNotes": {
+    "proposalFile": "release/proposed-own-records.json",
+    "removedOwnIds": [
+      "license-card-separate-detail",
+      "license-quick-fob-draft-close"
+    ],
+    "retainedOwnIds": [
+      "lcwai-active-stream",
+      "manufacturer-separate-detail",
+      "email-directory-separate-detail"
+    ],
+    "pngPolicy": "All five frozen PNGs retained; two license images cease to be referenced by active own notes. Never overwrite other Main/914/901 records or summaries."
+  },
+  "verification": {
+    "testsRun": false,
+    "benchmarksRun": false,
+    "npmOrInstall": false,
+    "prPushOrRepoWrites": false,
+    "approvedForMerge": false
+  },
+  "limitations": [
+    "Patch contents are prepared only; no git apply/test/browser validation is claimed.",
+    "Current Main baseline is pinned31004ea0; after914 integration verify license source/tests remain same before applying restoration.",
+    "P2 historical RED/GREEN and +24.42% license cohort remain historical frozen evidence; old green runs are not validation of this split."
+  ],
+  "preparedFiles": [
+    {
+      "path": "resources/app/public/license-cards.js",
+      "frozenGitBlob": "554e54d6a2361ceb0043ec52fd8371872a05c2ca",
+      "candidateGitBlob": "ec5639d3e38fe28df3ede6b0df9bdbf040176fe6",
+      "candidateSha256": "22334c26a19575d6f264589741e3e10abaf9e3f4609d78f824a0f9b8ababd451"
+    },
+    {
+      "path": "resources/app/tests/license-cards-editor.test.js",
+      "frozenGitBlob": "291c2cbe4744e127e61ff42e8e3ff742ef75873b",
+      "candidateGitBlob": "774d1d40cb889271e498fb9eba04e05d76f69ed3",
+      "candidateSha256": "0ecd536c262828194e62682f056705f8dbd438a0c777c940aa3f84a450d7bfe4"
+    },
+    {
+      "path": "resources/app/tests/card-list-model.test.js",
+      "frozenGitBlob": "9e807dddb3a22f11f666c8e2c2d8bedbfb841c45",
+      "candidateGitBlob": null,
+      "candidateSha256": null
+    },
+    {
+      "path": "resources/app/tests/license-quick-fob-close.test.js",
+      "frozenGitBlob": "c81a8b8b17ef0732661a0eca2ecdd3bdc5286a5b",
+      "candidateGitBlob": "bf483e31fc66178317d7a585d898b2c723216003",
+      "candidateSha256": "61f527705a30c38983f44b4e022c001f6a6f96961685f4a1492b00078b5f43f7"
+    },
+    {
+      "path": "resources/app/scripts/card-render-acceptance.js",
+      "frozenGitBlob": "b7e370dfbe37c167121da4bd7c84d9e85e988698",
+      "candidateGitBlob": "4e1bfcc651edee432bd643a3680b8b4e31254200",
+      "candidateSha256": "f91cd789baca79a590f644d5b426daab8168570de1b70132141e2c1bfc461549"
+    },
+    {
+      "path": "resources/app/scripts/card-render-screenshots.js",
+      "frozenGitBlob": "3655f72eca6a2e58abf1e0ba59ad802f7f3b84c1",
+      "candidateGitBlob": "38ec916a0a75b5184fbb37f747ccb0cf870d87b5",
+      "candidateSha256": "c4186d2a28b8e950a5ddb69bde4307c313f452c1878ef9a43343bc55cc1a5d7d"
+    },
+    {
+      "path": "resources/app/scripts/license-quick-fob-acceptance.js",
+      "frozenGitBlob": "4afea311372517f8d32def0047708063631ad68f",
+      "candidateGitBlob": "ec0275f48fe9f338829a9babf4fb8d2855ac38a5",
+      "candidateSha256": "90858624647a38c6bfa5499395588033cd6ea5d70a57e051d91d1a8d461dbad8"
+    }
+  ],
+  "patches": {
+    "applyFirst": "patches/01-remove-license-card01.patch",
+    "applySecond": "patches/02-record-parked-license-evidence.patch",
+    "reverseForExplicitReactivationOnly": "parked/reapply-license-card01.patch",
+    "firstPatchSha256": "8c315732fc59a8d8dfe44676b9a06b494c66a35eb5da384df755d98b85f68c59",
+    "parkedPatchSha256": "0de7219f6b84b7b0382c9dbb3c3343187769a222dc9cc7c3252df80315783cd5"
+  }
+}
