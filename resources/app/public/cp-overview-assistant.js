@@ -4569,7 +4569,11 @@
     return entry;
   }
 
+  // Bir geçiş boyunca satır set kimliği bir kez okunur (checklist-components-engine).
   function applyPersonalLayer(baseModel, rows, options) {
+    return Checklist.Components.withRowCache(() => applyPersonalLayerNow(baseModel, rows, options));
+  }
+  function applyPersonalLayerNow(baseModel, rows, options) {
     const opts = options || {};
     if (OD && typeof OD.setPriorityCatalog === 'function') OD.setPriorityCatalog(state.priorityCatalog);
     const baseOrders = baseModel && Array.isArray(baseModel.orders) ? baseModel.orders : [];
