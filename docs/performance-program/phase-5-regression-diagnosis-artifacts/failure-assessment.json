@@ -2,7 +2,7 @@
   {
     "test": "v4.39 Backlog Excel aktif Backlog kapsamı ve filtrelerini kullanır",
     "redLocation": "tests/matching-rule-v439.test.js:169:1",
-    "batch": 1,
+    "batch": 3,
     "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /const prepared=backlogQueryForRequest\\(req,filterOpts\\)/.",
     "contractAndOwner": "Backlog hedefi + Horizon + Buyer + IAS/ASAS filtreleri; server → computeParamsFor → compute-tasks → Excel worker",
     "comparison": {
@@ -17,7 +17,7 @@
   {
     "test": "Backlog panels reuse rows of an unchanged server revision instead of re-normalising and re-analysing",
     "redLocation": "tests/module-first-open-perf-v251.test.js:40:1",
-    "batch": 1,
+    "batch": 3,
     "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /const rowsRevision=crypto\\.createHash\\('sha1'\\)\\.update\\(BACKLOG_ROWS_PROCESS_NONCE\\)\\.update\\(detailRowsKey\\)/.",
     "contractAndOwner": "Opak rowsRevision ve ortak satır reuse; computeParamsFor + compute-read-service + Backlog panelleri",
     "comparison": {
@@ -32,7 +32,7 @@
   {
     "test": "Legacy Backlog: üretici yükleme teyidi sütunu kalktı, yerine aynı konumda ÖNEM ETİKETİ geldi",
     "redLocation": "tests/order-importance-v20261021.test.js:105:1",
-    "batch": 1,
+    "batch": 3,
     "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /importanceValues:BLOrderImportance\\.excelValues\\(overrides\\.importanceSettings\\)/.",
     "contractAndOwner": "Önem etiketi kolon konumu ve zorunlu dropdown; compute-worker backlog-workbook → excel-worker",
     "comparison": {
@@ -47,7 +47,7 @@
   {
     "test": "v4.71 Orders ekranı, hızlı aktif/pasif filtreleri ve bağımsız yenileme hedefi vardır",
     "redLocation": "tests/orders-page-v471.test.js:82:1",
-    "batch": 1,
+    "batch": 3,
     "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /orders: \\{ rows: ordersRows \\},\\s*'order-summary': \\{ rows: orderSummaryRows \\}/.",
     "contractAndOwner": "Bağımsız Orders satırları ve ayrı CP kaynaklı order-summary; compute-tasks + ensureComputedProjection",
     "comparison": {
@@ -62,7 +62,7 @@
   {
     "test": "sunucu özeti ayrı modülden, yoksa eski gömülü alandan okur; ikisi de yoksa isabet saymaz",
     "redLocation": "tests/orders-summary-split-v20260926.test.js:52:1",
-    "batch": 1,
+    "batch": 3,
     "actualError": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /'order-summary': \\{ rows: orderSummaryRows \\}/.",
     "contractAndOwner": "Ayrı özet, eski gömülü özet fallback’i, ikisi de yoksa cache miss; loadCachedPageProjectionSet",
     "comparison": {
@@ -77,7 +77,7 @@
   {
     "test": "Backlog endpoints hydrate the model snapshot before falling back to an Excel read",
     "redLocation": "tests/page-cache-reuse.test.js:10:1",
-    "batch": 1,
+    "batch": 3,
     "actualError": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal: Actual 0, expected 2 (0 !== 2).",
     "contractAndOwner": "Snapshot doğrulanmadan Excel fallback yok; prepareComputeBacklog + computeSourceFor",
     "comparison": {
