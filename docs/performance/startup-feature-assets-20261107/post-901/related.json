@@ -1,0 +1,28 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "backlog-delivery-analysis-wiring-v946",
+    "backlog-plan-actual-wiring",
+    "backlog-v3-report",
+    "collection-artwork-detail",
+    "collection-language-contract-v1033",
+    "collection-spreadsheet-wiring",
+    "cp-overview-assistant-wiring-v948",
+    "excel-import-profiles-wiring-v1060",
+    "fx-kur-upload-lazy-xlsx",
+    "pricing-workspace-v2",
+    "startup-feature-assets",
+    "startup-trivia-v20261001",
+    "tab-revisit-perf-v20260926",
+    "user-management-v700"
+  ],
+  "revision": "e1d342939a8aee49b237e5e1ef9e725b66f83021",
+  "appTree": "cd7c3afb986d9200060d0e3271a1e29e0cf2bb42",
+  "TMPDIR": "/tmp/buyerlog-shell-post901-related-ooc895vm",
+  "node": "v24.19.0",
+  "testConcurrency": "default4/nooverride",
+  "returncode": 0,
+  "elapsedSeconds": 4.638354539871216
+}
