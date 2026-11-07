@@ -1,0 +1,56 @@
+[
+  {
+    "run": 1,
+    "mode": "baseline",
+    "item": "q05",
+    "ms": 67732.721221,
+    "sha": "6af1ab72471d55b855e5f1e88f4075aa80121f820c479c8d5f3cd0539f8e8f68",
+    "lines": 10000,
+    "rows": 30000
+  },
+  {
+    "run": 1,
+    "mode": "after",
+    "item": "q05",
+    "ms": 186.95825399999998,
+    "sha": "6af1ab72471d55b855e5f1e88f4075aa80121f820c479c8d5f3cd0539f8e8f68",
+    "lines": 10000,
+    "rows": 30000
+  },
+  {
+    "run": 2,
+    "mode": "after",
+    "item": "q05",
+    "ms": 176.11523400000002,
+    "sha": "6af1ab72471d55b855e5f1e88f4075aa80121f820c479c8d5f3cd0539f8e8f68",
+    "lines": 10000,
+    "rows": 30000
+  },
+  {
+    "run": 2,
+    "mode": "baseline",
+    "item": "q05",
+    "ms": 66717.12644000001,
+    "sha": "6af1ab72471d55b855e5f1e88f4075aa80121f820c479c8d5f3cd0539f8e8f68",
+    "lines": 10000,
+    "rows": 30000
+  },
+  {
+    "run": 3,
+    "mode": "baseline",
+    "item": "q05",
+    "ms": 62862.936967,
+    "sha": "6af1ab72471d55b855e5f1e88f4075aa80121f820c479c8d5f3cd0539f8e8f68",
+    "lines": 10000,
+    "rows": 30000
+  },
+  {
+    "run": 3,
+    "mode": "after",
+    "item": "q05",
+    "ms": 131.43862900000002,
+    "sha": "6af1ab72471d55b855e5f1e88f4075aa80121f820c479c8d5f3cd0539f8e8f68",
+    "lines": 10000,
+    "rows": 30000
+  }
+]

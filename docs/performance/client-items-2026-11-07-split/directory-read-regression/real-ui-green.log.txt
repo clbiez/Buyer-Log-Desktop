@@ -1,0 +1,15 @@
+EG_TRACE {"listSame":true,"rowSame":true,"recordsSame":true,"dataSame":true,"beforeSelected":"em-71ac3315-5d1c-4a93-bf78-98aff60e5c85","afterSelected":"em-9b67ed15-e9b5-46a6-9a84-3e851b7ee771"}
+{
+  "captures": [
+    "/tmp/buyerlog-906-current-ui/manufacturer-separate-detail.png",
+    "/tmp/buyerlog-906-current-ui/email-directory-separate-detail.png"
+  ],
+  "draftReopened": true,
+  "listsRetained": true,
+  "retainedListModules": [
+    "manufacturers",
+    "email-groups"
+  ],
+  "directorySaveVerified": true,
+  "root": "/tmp/bl-client-acceptance-HlUlVf"
+}

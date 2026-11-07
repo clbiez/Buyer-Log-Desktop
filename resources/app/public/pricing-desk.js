@@ -253,6 +253,9 @@
     return `<b title="${esc(card.name)}">${esc(card.name)}</b><small title="${esc(coverage)}" aria-label="${esc(coverage)}">${card.models}/${card.total} · ${card.wins} ${esc(L('en iyi','best'))}</small><small class="${toneOf(card.modelIndex)}" title="${esc(L('Aynı modelin teklif ortalamasına göre fark','Difference to the same model’s average offer'))}">${esc(pctText(card.modelIndex))}</small>`;
   }
   function renderMatrix(host,req){
+    return Q()?.withCollectionRead?Q().withCollectionRead(()=>renderMatrixContent(host,req)):renderMatrixContent(host,req);
+  }
+  function renderMatrixContent(host,req){
     const api=Q();if(!host||!req||!api)return;
     infoCache=new WeakMap();
     const canEdit=api.canEdit(req),layout=E.supplierLayout(E.supplierScorecards(req),Boolean(state.expandedSuppliers[req.id])),matrix={...E.requestMatrix(req),manufacturers:layout.visible.map(s=>s.name)};
@@ -320,7 +323,10 @@
   /* Değer yazıldıktan sonra yalnız ilgili model satırının en iyi/onay/Δ
      bilgisi güncellenir; inputlar yeniden çizilmez, odak ve yazma akışı bozulmaz. */
   function refreshModelRow(host,req,modelKey){
-    const matrix=E.requestMatrix(req),model=matrix.models.find(item=>item.modelKey===modelKey);
+    return Q()?.withCollectionRead?Q().withCollectionRead(()=>refreshModelRowContent(host,req,modelKey)):refreshModelRowContent(host,req,modelKey);
+  }
+  function refreshModelRowContent(host,req,modelKey){
+    const model=E.requestMatrix({...req,items:req.items.filter(item=>item.modelKey===modelKey)}).models[0];
     const tr=host.querySelector(`tr[data-pd-model="${CSS.escape(modelKey)}"]`);
     if(!model||!tr)return;
     infoCache=new WeakMap();

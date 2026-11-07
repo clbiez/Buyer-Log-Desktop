@@ -1,0 +1,16 @@
+{
+  "command": [
+    "npm",
+    "test",
+    "--",
+    "user-access",
+    "iam",
+    "credential",
+    "access-area",
+    "security-hardening"
+  ],
+  "TMPDIR": "/tmp/buyerlog-authority-related-9aeclhpu",
+  "sourceSha256": "1fc672e9391f422f62e3c8c7a7f7366dd6a09a4990560d7e3e4c79044506c4ec",
+  "elapsedSeconds": 9.752572298049927,
+  "returncode": 0
+}

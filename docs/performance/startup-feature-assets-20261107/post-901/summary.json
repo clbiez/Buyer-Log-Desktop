@@ -1,0 +1,2724 @@
+{
+  "before": "31004ea08982ffcce849640e5c5e3580448f0914",
+  "after": "e1d342939a8aee49b237e5e1ef9e725b66f83021",
+  "environment": {
+    "platform": "linux",
+    "node": "v24.19.0",
+    "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+    "cpuCount": 5,
+    "availableParallelism": 4,
+    "cpuQuota": "1600000 400000",
+    "memoryLimitBytes": "17179869184",
+    "chromium": "154.0.8037.57"
+  },
+  "inventory": {
+    "before": {
+      "scripts": {
+        "count": 127,
+        "bytes": 6254802,
+        "files": [
+          {
+            "path": "thinking-orb-breathing.js",
+            "bytes": 8121
+          },
+          {
+            "path": "ui-appearance.js",
+            "bytes": 839
+          },
+          {
+            "path": "buyerlog-guide-data.js",
+            "bytes": 99395
+          },
+          {
+            "path": "buyerlog-trivia-data.js",
+            "bytes": 76256
+          },
+          {
+            "path": "buyerlog-trivia.js",
+            "bytes": 29482
+          },
+          {
+            "path": "buyerlog-guide.js",
+            "bytes": 21312
+          },
+          {
+            "path": "plm-sync-guide.js",
+            "bytes": 22417
+          },
+          {
+            "path": "file-parser-policy.js",
+            "bytes": 8103
+          },
+          {
+            "path": "file-parser.js",
+            "bytes": 2699
+          },
+          {
+            "path": "perf-runtime.js",
+            "bytes": 19937
+          },
+          {
+            "path": "startup-module-preparation.js",
+            "bytes": 2387
+          },
+          {
+            "path": "release-notes.js",
+            "bytes": 21293
+          },
+          {
+            "path": "/user-context.js",
+            "bytes": null
+          },
+          {
+            "path": "user-storage.js",
+            "bytes": 20174
+          },
+          {
+            "path": "i18n-dictionary.js",
+            "bytes": 654851
+          },
+          {
+            "path": "i18n-runtime.js",
+            "bytes": 14659
+          },
+          {
+            "path": "preset-store.js",
+            "bytes": 6419
+          },
+          {
+            "path": "view-context.js",
+            "bytes": 3734
+          },
+          {
+            "path": "chronological-values.js",
+            "bytes": 4411
+          },
+          {
+            "path": "business-rules.js",
+            "bytes": 51395
+          },
+          {
+            "path": "user-initials.js",
+            "bytes": 2194
+          },
+          {
+            "path": "order-decision-engine.js",
+            "bytes": 18546
+          },
+          {
+            "path": "revision-display.js",
+            "bytes": 6039
+          },
+          {
+            "path": "backlog-excel-formulas.js",
+            "bytes": 24449
+          },
+          {
+            "path": "order-importance.js",
+            "bytes": 9557
+          },
+          {
+            "path": "order-importance-ui.js",
+            "bytes": 25425
+          },
+          {
+            "path": "freight-calc.js",
+            "bytes": 14105
+          },
+          {
+            "path": "shipping-engine.js",
+            "bytes": 9111
+          },
+          {
+            "path": "excel-date-utils.js",
+            "bytes": 17419
+          },
+          {
+            "path": "table-export.js",
+            "bytes": 8612
+          },
+          {
+            "path": "table-column-resize.js",
+            "bytes": 10574
+          },
+          {
+            "path": "grid-clipboard.js",
+            "bytes": 24497
+          },
+          {
+            "path": "grid-range-select.js",
+            "bytes": 3788
+          },
+          {
+            "path": "analysis-cache.js",
+            "bytes": 1880
+          },
+          {
+            "path": "table-range.js",
+            "bytes": 1387
+          },
+          {
+            "path": "model-image-cache.js",
+            "bytes": 18236
+          },
+          {
+            "path": "model-asset-scope.js",
+            "bytes": 12337
+          },
+          {
+            "path": "excel-workbook-guards.js",
+            "bytes": 29531
+          },
+          {
+            "path": "canonical-fields.js",
+            "bytes": 35490
+          },
+          {
+            "path": "checklist-components-engine.js",
+            "bytes": 6542
+          },
+          {
+            "path": "capacity-request-export.js",
+            "bytes": 15166
+          },
+          {
+            "path": "hologram-request-export.js",
+            "bytes": 3136
+          },
+          {
+            "path": "excel-template-engine.js",
+            "bytes": 6844
+          },
+          {
+            "path": "excel-templates.js",
+            "bytes": 16755
+          },
+          {
+            "path": "motion-plus-theme.js",
+            "bytes": 21611
+          },
+          {
+            "path": "motion-plus.js",
+            "bytes": 32378
+          },
+          {
+            "path": "date-dimension.js",
+            "bytes": 13418
+          },
+          {
+            "path": "merch-calendar-runtime.js",
+            "bytes": 1688
+          },
+          {
+            "path": "dual-week-datepicker.js",
+            "bytes": 8629
+          },
+          {
+            "path": "column-schema.js",
+            "bytes": 16604
+          },
+          {
+            "path": "overview-layout.js",
+            "bytes": 18230
+          },
+          {
+            "path": "model-option-stats.js",
+            "bytes": 3972
+          },
+          {
+            "path": "collection-status-catalog.js",
+            "bytes": 5688
+          },
+          {
+            "path": "overview-collection-summary.js",
+            "bytes": 13917
+          },
+          {
+            "path": "overview-collection-dashboard.js",
+            "bytes": 28265
+          },
+          {
+            "path": "overview-launchpad.js",
+            "bytes": 40297
+          },
+          {
+            "path": "overview-breakdown.js",
+            "bytes": 12867
+          },
+          {
+            "path": "overview-premium.js",
+            "bytes": 22903
+          },
+          {
+            "path": "overview-home.js",
+            "bytes": 34524
+          },
+          {
+            "path": "detail-report-layout.js",
+            "bytes": 3682
+          },
+          {
+            "path": "detail-drawer.js",
+            "bytes": 58068
+          },
+          {
+            "path": "overview-flow-routes.js",
+            "bytes": 12140
+          },
+          {
+            "path": "thinking-orb-working.js",
+            "bytes": 4086
+          },
+          {
+            "path": "overview-global-flow.js",
+            "bytes": 158284
+          },
+          {
+            "path": "plm-colour-utils.js",
+            "bytes": 2253
+          },
+          {
+            "path": "kol-plm-list-import.js",
+            "bytes": 13066
+          },
+          {
+            "path": "fabric-cards-engine.js",
+            "bytes": 27412
+          },
+          {
+            "path": "plm-licence-utils.js",
+            "bytes": 478
+          },
+          {
+            "path": "collection-model-groups.js",
+            "bytes": 30993
+          },
+          {
+            "path": "collection-order-backfill.js",
+            "bytes": 12797
+          },
+          {
+            "path": "ui-primitives.js",
+            "bytes": 15320
+          },
+          {
+            "path": "ui-tooltip.js",
+            "bytes": 3715
+          },
+          {
+            "path": "layer-system.js",
+            "bytes": 10361
+          },
+          {
+            "path": "toolbar-responsive.js",
+            "bytes": 22182
+          },
+          {
+            "path": "tab-system.js",
+            "bytes": 2701
+          },
+          {
+            "path": "plm-auth-recovery.js",
+            "bytes": 7207
+          },
+          {
+            "path": "corporate-connections-toolbar.js",
+            "bytes": 8989
+          },
+          {
+            "path": "column-display-names.js",
+            "bytes": 17965
+          },
+          {
+            "path": "backlog-date-range.js",
+            "bytes": 14038
+          },
+          {
+            "path": "order-line-peer-index.js",
+            "bytes": 2426
+          },
+          {
+            "path": "table-density.js",
+            "bytes": 1472
+          },
+          {
+            "path": "table-freeze.js",
+            "bytes": 24768
+          },
+          {
+            "path": "contextual-commands.js",
+            "bytes": 1390
+          },
+          {
+            "path": "price-lineage.js",
+            "bytes": 2881
+          },
+          {
+            "path": "bulk-operations.js",
+            "bytes": 11183
+          },
+          {
+            "path": "private-order-notes.js",
+            "bytes": 7848
+          },
+          {
+            "path": "personal-order-notes.js",
+            "bytes": 3862
+          },
+          {
+            "path": "app-main.js",
+            "bytes": 3079292
+          },
+          {
+            "path": "table-view-drawers.js",
+            "bytes": 7349
+          },
+          {
+            "path": "collection-artwork-detail.js",
+            "bytes": 14467
+          },
+          {
+            "path": "checklist-answer-merge-engine.js",
+            "bytes": 1703
+          },
+          {
+            "path": "cp-plm-details.js",
+            "bytes": 4781
+          },
+          {
+            "path": "plm-bom.js",
+            "bytes": 8893
+          },
+          {
+            "path": "checklist-supplier-sync.js",
+            "bytes": 182335
+          },
+          {
+            "path": "table-search-row-groups.js",
+            "bytes": 7108
+          },
+          {
+            "path": "image-search.js",
+            "bytes": 8288
+          },
+          {
+            "path": "command-palette.js",
+            "bytes": 10578
+          },
+          {
+            "path": "kpi-motion.js",
+            "bytes": 3111
+          },
+          {
+            "path": "selection-action-bar.js",
+            "bytes": 8746
+          },
+          {
+            "path": "collection-pricing-engine.js",
+            "bytes": 9066
+          },
+          {
+            "path": "collection-lfl-engine.js",
+            "bytes": 12973
+          },
+          {
+            "path": "collection-lfl.js",
+            "bytes": 30413
+          },
+          {
+            "path": "license-royalty-commissions.js",
+            "bytes": 30807
+          },
+          {
+            "path": "collection-price-drawer.js",
+            "bytes": 26435
+          },
+          {
+            "path": "backlog-chart.js",
+            "bytes": 89199
+          },
+          {
+            "path": "backlog-plan-actual-report.js",
+            "bytes": 43613
+          },
+          {
+            "path": "backlog-plan-actual.js",
+            "bytes": 52657
+          },
+          {
+            "path": "backlog-v3-report.js",
+            "bytes": 38585
+          },
+          {
+            "path": "backlog-overview.js",
+            "bytes": 62308
+          },
+          {
+            "path": "backlog-presentation-report.js",
+            "bytes": 50578
+          },
+          {
+            "path": "backlog-presentation.js",
+            "bytes": 14649
+          },
+          {
+            "path": "backlog-radar-layout.js",
+            "bytes": 18373
+          },
+          {
+            "path": "collection-plm-drag-import.js",
+            "bytes": 17423
+          },
+          {
+            "path": "table-search-help.js",
+            "bytes": 11934
+          },
+          {
+            "path": "table-toolbar-action-cleanup.js",
+            "bytes": 6248
+          },
+          {
+            "path": "collection-status-ui.js",
+            "bytes": 7395
+          },
+          {
+            "path": "collection-spreadsheet-engine.js",
+            "bytes": 5906
+          },
+          {
+            "path": "collection-spreadsheet.js",
+            "bytes": 60275
+          },
+          {
+            "path": "workspace-blur.js",
+            "bytes": 3320
+          },
+          {
+            "path": "table-header-tracking.js",
+            "bytes": 3528
+          },
+          {
+            "path": "excel-import-workbook.js",
+            "bytes": 23103
+          },
+          {
+            "path": "excel-import-mapping.js",
+            "bytes": 15120
+          },
+          {
+            "path": "excel-import-match.js",
+            "bytes": 7430
+          },
+          {
+            "path": "excel-import-plan.js",
+            "bytes": 27937
+          },
+          {
+            "path": "excel-import-profiles.js",
+            "bytes": 10537
+          },
+          {
+            "path": "excel-import-ai.js",
+            "bytes": 11461
+          },
+          {
+            "path": "excel-import-wizard.js",
+            "bytes": 80816
+          }
+        ]
+      },
+      "styles": {
+        "count": 45,
+        "bytes": 1887478,
+        "files": [
+          {
+            "path": "ui-tokens.css",
+            "bytes": 9675
+          },
+          {
+            "path": "buyerlog-guide.css",
+            "bytes": 8260
+          },
+          {
+            "path": "release-notes.css",
+            "bytes": 5651
+          },
+          {
+            "path": "plm-sync-guide.css",
+            "bytes": 2948
+          },
+          {
+            "path": "excel-templates.css",
+            "bytes": 1048
+          },
+          {
+            "path": "app.css",
+            "bytes": 299931
+          },
+          {
+            "path": "automations-fields.css",
+            "bytes": 4549
+          },
+          {
+            "path": "table-search-help.css",
+            "bytes": 1724
+          },
+          {
+            "path": "open-costing.css",
+            "bytes": 24105
+          },
+          {
+            "path": "lfl.css",
+            "bytes": 49278
+          },
+          {
+            "path": "collection-analytics.css",
+            "bytes": 9412
+          },
+          {
+            "path": "price-supplier-analysis.css",
+            "bytes": 12632
+          },
+          {
+            "path": "manufacturers.css",
+            "bytes": 4562
+          },
+          {
+            "path": "license-cards.css",
+            "bytes": 18100
+          },
+          {
+            "path": "pricing-workspace.css",
+            "bytes": 9963
+          },
+          {
+            "path": "pricing-desk.css",
+            "bytes": 21011
+          },
+          {
+            "path": "data-maintenance.css",
+            "bytes": 4389
+          },
+          {
+            "path": "data-management.css",
+            "bytes": 29519
+          },
+          {
+            "path": "dual-week-datepicker.css",
+            "bytes": 1164
+          },
+          {
+            "path": "backlog-delivery-analysis.css",
+            "bytes": 8359
+          },
+          {
+            "path": "backlog-plan-actual.css",
+            "bytes": 8404
+          },
+          {
+            "path": "backlog-date-range.css",
+            "bytes": 2329
+          },
+          {
+            "path": "backlog-overview.css",
+            "bytes": 10116
+          },
+          {
+            "path": "cp-overview-assistant.css",
+            "bytes": 46942
+          },
+          {
+            "path": "lcwai-assistant.css",
+            "bytes": 22776
+          },
+          {
+            "path": "design.css",
+            "bytes": 15052
+          },
+          {
+            "path": "collection-spreadsheet.css",
+            "bytes": 16102
+          },
+          {
+            "path": "excel-import.css",
+            "bytes": 4387
+          },
+          {
+            "path": "user-management.css",
+            "bytes": 17850
+          },
+          {
+            "path": "experience.css",
+            "bytes": 14906
+          },
+          {
+            "path": "table-density.css",
+            "bytes": 1627
+          },
+          {
+            "path": "exception-inbox.css",
+            "bytes": 789
+          },
+          {
+            "path": "bulk-operations.css",
+            "bytes": 902
+          },
+          {
+            "path": "overview-home.css",
+            "bytes": 31289
+          },
+          {
+            "path": "overview-global-flow.css",
+            "bytes": 11130
+          },
+          {
+            "path": "detail-drawer.css",
+            "bytes": 7249
+          },
+          {
+            "path": "command-palette.css",
+            "bytes": 1105
+          },
+          {
+            "path": "backlog-presentation.css",
+            "bytes": 2156
+          },
+          {
+            "path": "table-view-drawers.css",
+            "bytes": 1746
+          },
+          {
+            "path": "ui-components.css",
+            "bytes": 1130693
+          },
+          {
+            "path": "ui-motion.css",
+            "bytes": 3128
+          },
+          {
+            "path": "thinking-orbs.css",
+            "bytes": 1119
+          },
+          {
+            "path": "ui-startup.css",
+            "bytes": 7383
+          },
+          {
+            "path": "table-header-tracking.css",
+            "bytes": 878
+          },
+          {
+            "path": "table-freeze.css",
+            "bytes": 1140
+          }
+        ]
+      }
+    },
+    "after": {
+      "scripts": {
+        "count": 112,
+        "bytes": 5643453,
+        "files": [
+          {
+            "path": "thinking-orb-breathing.js",
+            "bytes": 8121
+          },
+          {
+            "path": "ui-appearance.js",
+            "bytes": 839
+          },
+          {
+            "path": "plm-sync-guide.js",
+            "bytes": 22417
+          },
+          {
+            "path": "file-parser-policy.js",
+            "bytes": 8103
+          },
+          {
+            "path": "file-parser.js",
+            "bytes": 2699
+          },
+          {
+            "path": "perf-runtime.js",
+            "bytes": 23239
+          },
+          {
+            "path": "startup-module-preparation.js",
+            "bytes": 2387
+          },
+          {
+            "path": "release-notes.js",
+            "bytes": 21293
+          },
+          {
+            "path": "/user-context.js",
+            "bytes": null
+          },
+          {
+            "path": "user-storage.js",
+            "bytes": 20174
+          },
+          {
+            "path": "i18n-dictionary.js",
+            "bytes": 654851
+          },
+          {
+            "path": "i18n-runtime.js",
+            "bytes": 14659
+          },
+          {
+            "path": "preset-store.js",
+            "bytes": 6419
+          },
+          {
+            "path": "view-context.js",
+            "bytes": 3734
+          },
+          {
+            "path": "chronological-values.js",
+            "bytes": 4411
+          },
+          {
+            "path": "business-rules.js",
+            "bytes": 51395
+          },
+          {
+            "path": "user-initials.js",
+            "bytes": 2194
+          },
+          {
+            "path": "order-decision-engine.js",
+            "bytes": 18546
+          },
+          {
+            "path": "revision-display.js",
+            "bytes": 6039
+          },
+          {
+            "path": "backlog-excel-formulas.js",
+            "bytes": 24449
+          },
+          {
+            "path": "order-importance.js",
+            "bytes": 9557
+          },
+          {
+            "path": "order-importance-ui.js",
+            "bytes": 25425
+          },
+          {
+            "path": "freight-calc.js",
+            "bytes": 14105
+          },
+          {
+            "path": "shipping-engine.js",
+            "bytes": 9111
+          },
+          {
+            "path": "excel-date-utils.js",
+            "bytes": 17419
+          },
+          {
+            "path": "table-export.js",
+            "bytes": 8612
+          },
+          {
+            "path": "table-column-resize.js",
+            "bytes": 10574
+          },
+          {
+            "path": "grid-clipboard.js",
+            "bytes": 24497
+          },
+          {
+            "path": "grid-range-select.js",
+            "bytes": 3788
+          },
+          {
+            "path": "analysis-cache.js",
+            "bytes": 1880
+          },
+          {
+            "path": "table-range.js",
+            "bytes": 1387
+          },
+          {
+            "path": "model-image-cache.js",
+            "bytes": 18236
+          },
+          {
+            "path": "model-asset-scope.js",
+            "bytes": 12337
+          },
+          {
+            "path": "excel-workbook-guards.js",
+            "bytes": 29531
+          },
+          {
+            "path": "canonical-fields.js",
+            "bytes": 35490
+          },
+          {
+            "path": "checklist-components-engine.js",
+            "bytes": 6542
+          },
+          {
+            "path": "capacity-request-export.js",
+            "bytes": 15166
+          },
+          {
+            "path": "hologram-request-export.js",
+            "bytes": 3136
+          },
+          {
+            "path": "excel-template-engine.js",
+            "bytes": 6844
+          },
+          {
+            "path": "excel-templates.js",
+            "bytes": 16755
+          },
+          {
+            "path": "motion-plus-theme.js",
+            "bytes": 21611
+          },
+          {
+            "path": "motion-plus.js",
+            "bytes": 32378
+          },
+          {
+            "path": "date-dimension.js",
+            "bytes": 13418
+          },
+          {
+            "path": "merch-calendar-runtime.js",
+            "bytes": 1688
+          },
+          {
+            "path": "dual-week-datepicker.js",
+            "bytes": 8629
+          },
+          {
+            "path": "column-schema.js",
+            "bytes": 16604
+          },
+          {
+            "path": "overview-layout.js",
+            "bytes": 18230
+          },
+          {
+            "path": "model-option-stats.js",
+            "bytes": 3972
+          },
+          {
+            "path": "collection-status-catalog.js",
+            "bytes": 5688
+          },
+          {
+            "path": "overview-collection-summary.js",
+            "bytes": 13917
+          },
+          {
+            "path": "overview-collection-dashboard.js",
+            "bytes": 28265
+          },
+          {
+            "path": "overview-launchpad.js",
+            "bytes": 40297
+          },
+          {
+            "path": "overview-breakdown.js",
+            "bytes": 12867
+          },
+          {
+            "path": "overview-premium.js",
+            "bytes": 22903
+          },
+          {
+            "path": "overview-home.js",
+            "bytes": 34524
+          },
+          {
+            "path": "detail-report-layout.js",
+            "bytes": 3682
+          },
+          {
+            "path": "detail-drawer.js",
+            "bytes": 58068
+          },
+          {
+            "path": "overview-flow-routes.js",
+            "bytes": 12140
+          },
+          {
+            "path": "thinking-orb-working.js",
+            "bytes": 4086
+          },
+          {
+            "path": "overview-global-flow.js",
+            "bytes": 158284
+          },
+          {
+            "path": "plm-colour-utils.js",
+            "bytes": 2253
+          },
+          {
+            "path": "kol-plm-list-import.js",
+            "bytes": 13066
+          },
+          {
+            "path": "fabric-cards-engine.js",
+            "bytes": 27412
+          },
+          {
+            "path": "plm-licence-utils.js",
+            "bytes": 478
+          },
+          {
+            "path": "collection-model-groups.js",
+            "bytes": 30993
+          },
+          {
+            "path": "collection-order-backfill.js",
+            "bytes": 12797
+          },
+          {
+            "path": "ui-primitives.js",
+            "bytes": 15320
+          },
+          {
+            "path": "ui-tooltip.js",
+            "bytes": 3715
+          },
+          {
+            "path": "layer-system.js",
+            "bytes": 10361
+          },
+          {
+            "path": "toolbar-responsive.js",
+            "bytes": 22182
+          },
+          {
+            "path": "tab-system.js",
+            "bytes": 2701
+          },
+          {
+            "path": "plm-auth-recovery.js",
+            "bytes": 7207
+          },
+          {
+            "path": "corporate-connections-toolbar.js",
+            "bytes": 8989
+          },
+          {
+            "path": "column-display-names.js",
+            "bytes": 17965
+          },
+          {
+            "path": "backlog-date-range.js",
+            "bytes": 14038
+          },
+          {
+            "path": "order-line-peer-index.js",
+            "bytes": 2426
+          },
+          {
+            "path": "table-density.js",
+            "bytes": 1472
+          },
+          {
+            "path": "table-freeze.js",
+            "bytes": 24768
+          },
+          {
+            "path": "contextual-commands.js",
+            "bytes": 1390
+          },
+          {
+            "path": "price-lineage.js",
+            "bytes": 2881
+          },
+          {
+            "path": "bulk-operations.js",
+            "bytes": 11183
+          },
+          {
+            "path": "private-order-notes.js",
+            "bytes": 7848
+          },
+          {
+            "path": "personal-order-notes.js",
+            "bytes": 3862
+          },
+          {
+            "path": "app-main.js",
+            "bytes": 3079292
+          },
+          {
+            "path": "table-view-drawers.js",
+            "bytes": 7349
+          },
+          {
+            "path": "collection-artwork-detail.js",
+            "bytes": 14467
+          },
+          {
+            "path": "checklist-answer-merge-engine.js",
+            "bytes": 1703
+          },
+          {
+            "path": "cp-plm-details.js",
+            "bytes": 4781
+          },
+          {
+            "path": "plm-bom.js",
+            "bytes": 8893
+          },
+          {
+            "path": "checklist-supplier-sync.js",
+            "bytes": 182335
+          },
+          {
+            "path": "table-search-row-groups.js",
+            "bytes": 7108
+          },
+          {
+            "path": "image-search.js",
+            "bytes": 8288
+          },
+          {
+            "path": "command-palette.js",
+            "bytes": 10578
+          },
+          {
+            "path": "kpi-motion.js",
+            "bytes": 3111
+          },
+          {
+            "path": "selection-action-bar.js",
+            "bytes": 8746
+          },
+          {
+            "path": "collection-pricing-engine.js",
+            "bytes": 9066
+          },
+          {
+            "path": "collection-lfl-engine.js",
+            "bytes": 12973
+          },
+          {
+            "path": "collection-lfl.js",
+            "bytes": 30413
+          },
+          {
+            "path": "license-royalty-commissions.js",
+            "bytes": 30807
+          },
+          {
+            "path": "collection-price-drawer.js",
+            "bytes": 26435
+          },
+          {
+            "path": "backlog-chart.js",
+            "bytes": 89199
+          },
+          {
+            "path": "backlog-v3-report.js",
+            "bytes": 38585
+          },
+          {
+            "path": "backlog-overview.js",
+            "bytes": 62308
+          },
+          {
+            "path": "backlog-radar-layout.js",
+            "bytes": 18373
+          },
+          {
+            "path": "collection-plm-drag-import.js",
+            "bytes": 17423
+          },
+          {
+            "path": "table-search-help.js",
+            "bytes": 11934
+          },
+          {
+            "path": "table-toolbar-action-cleanup.js",
+            "bytes": 6248
+          },
+          {
+            "path": "collection-status-ui.js",
+            "bytes": 7395
+          },
+          {
+            "path": "workspace-blur.js",
+            "bytes": 3320
+          },
+          {
+            "path": "table-header-tracking.js",
+            "bytes": 3528
+          },
+          {
+            "path": "excel-import-mapping.js",
+            "bytes": 15120
+          },
+          {
+            "path": "startup-feature-entrypoints.js",
+            "bytes": 756
+          }
+        ]
+      },
+      "styles": {
+        "count": 27,
+        "bytes": 1642046,
+        "files": [
+          {
+            "path": "ui-tokens.css",
+            "bytes": 9675
+          },
+          {
+            "path": "buyerlog-guide.css",
+            "bytes": 8260
+          },
+          {
+            "path": "release-notes.css",
+            "bytes": 5651
+          },
+          {
+            "path": "plm-sync-guide.css",
+            "bytes": 2948
+          },
+          {
+            "path": "excel-templates.css",
+            "bytes": 1048
+          },
+          {
+            "path": "app.css",
+            "bytes": 300066
+          },
+          {
+            "path": "table-search-help.css",
+            "bytes": 1724
+          },
+          {
+            "path": "dual-week-datepicker.css",
+            "bytes": 1164
+          },
+          {
+            "path": "backlog-date-range.css",
+            "bytes": 2329
+          },
+          {
+            "path": "backlog-overview.css",
+            "bytes": 10116
+          },
+          {
+            "path": "cp-overview-assistant.css",
+            "bytes": 46942
+          },
+          {
+            "path": "lcwai-assistant.css",
+            "bytes": 22776
+          },
+          {
+            "path": "design.css",
+            "bytes": 15052
+          },
+          {
+            "path": "experience.css",
+            "bytes": 14906
+          },
+          {
+            "path": "table-density.css",
+            "bytes": 1627
+          },
+          {
+            "path": "bulk-operations.css",
+            "bytes": 902
+          },
+          {
+            "path": "overview-home.css",
+            "bytes": 31289
+          },
+          {
+            "path": "overview-global-flow.css",
+            "bytes": 11130
+          },
+          {
+            "path": "detail-drawer.css",
+            "bytes": 7249
+          },
+          {
+            "path": "command-palette.css",
+            "bytes": 1105
+          },
+          {
+            "path": "table-view-drawers.css",
+            "bytes": 1746
+          },
+          {
+            "path": "ui-components.css",
+            "bytes": 1130693
+          },
+          {
+            "path": "ui-motion.css",
+            "bytes": 3128
+          },
+          {
+            "path": "thinking-orbs.css",
+            "bytes": 1119
+          },
+          {
+            "path": "ui-startup.css",
+            "bytes": 7383
+          },
+          {
+            "path": "table-header-tracking.css",
+            "bytes": 878
+          },
+          {
+            "path": "table-freeze.css",
+            "bytes": 1140
+          }
+        ]
+      }
+    }
+  },
+  "coldOverviewAndRefreshMedians": {
+    "refreshWallMs": {
+      "before": 53516.240856000004,
+      "after": 51587.601475999996,
+      "pairedPercentChanges": [
+        11.096549339067053,
+        -3.4022619482730443,
+        -26.615346128348804
+      ]
+    },
+    "domContentLoadedMs": {
+      "before": 2120.9000000059605,
+      "after": 1766.699999988079,
+      "pairedPercentChanges": [
+        -15.722940419881104,
+        -16.938943142140715,
+        -24.15483992553533
+      ]
+    },
+    "primaryScreenReadyMs": {
+      "before": 3657.9000000059605,
+      "after": 3177.800000011921,
+      "pairedPercentChanges": [
+        -0.09605282869815657,
+        -19.580328551592164,
+        -13.125017086122014
+      ]
+    },
+    "startupReadyMs": {
+      "before": 3679.699999988079,
+      "after": 3196,
+      "pairedPercentChanges": [
+        -0.2829739068281212,
+        -19.557607033051106,
+        -13.145093349719982
+      ]
+    },
+    "startupCompleteMs": {
+      "before": 3792.800000011921,
+      "after": 3277.5,
+      "pairedPercentChanges": [
+        -0.1771659258822056,
+        -19.248108809995323,
+        -13.58626871995099
+      ]
+    },
+    "userWaitMs": {
+      "before": 0,
+      "after": 0,
+      "pairedPercentChanges": [
+        null,
+        null,
+        null
+      ]
+    },
+    "continueDispatchDelayMs": {
+      "before": 78.7000000178814,
+      "after": 77.2000000178814,
+      "pairedPercentChanges": [
+        8.386276991791553,
+        -3.235747294062663,
+        -21.94135489056751
+      ]
+    },
+    "systemStartupCompleteMs": {
+      "before": 3792.800000011921,
+      "after": 3277.5,
+      "pairedPercentChanges": [
+        -0.1771659258822056,
+        -19.248108809995323,
+        -13.58626871995099
+      ]
+    },
+    "primaryToGateMs": {
+      "before": 21.799999982118607,
+      "after": 18.19999998807907,
+      "pairedPercentChanges": [
+        -24.51361873479837,
+        -13.815789614285546,
+        -16.5137614540937
+      ]
+    },
+    "longTaskCount": {
+      "before": 31,
+      "after": 26,
+      "pairedPercentChanges": [
+        -9.677419354838712,
+        -3.8461538461538436,
+        -16.129032258064512
+      ]
+    },
+    "longTaskTotalMs": {
+      "before": 5572,
+      "after": 6053.899999976158,
+      "pairedPercentChanges": [
+        2.2071062741030767,
+        -3.5355348169418543,
+        8.824375336619772
+      ]
+    },
+    "maxLongTaskMs": {
+      "before": 734,
+      "after": 1192,
+      "pairedPercentChanges": [
+        11.297852474323067,
+        59.52380952380953,
+        81.19891008174388
+      ]
+    },
+    "jsHeapUsedBytes": {
+      "before": 183583072,
+      "after": 172687172,
+      "pairedPercentChanges": [
+        -8.390290711727033,
+        -5.935133278519277,
+        -6.220123777742648
+      ]
+    },
+    "jsRequests10s": {
+      "before": 183,
+      "after": 172,
+      "pairedPercentChanges": [
+        -6.010928961748629,
+        -6.010928961748629,
+        -6.010928961748629
+      ]
+    },
+    "jsUniqueFiles10s": {
+      "before": 181,
+      "after": 170,
+      "pairedPercentChanges": [
+        -6.077348066298338,
+        -6.077348066298338,
+        -6.077348066298338
+      ]
+    },
+    "jsDecodedBytes10s": {
+      "before": 8644542,
+      "after": 8259638,
+      "pairedPercentChanges": [
+        -4.452566717820328,
+        -4.452566717820328,
+        -4.452566717820328
+      ]
+    },
+    "jsEncodedBytes10s": {
+      "before": 3259894,
+      "after": 3144714,
+      "pairedPercentChanges": [
+        -3.533243718967549,
+        -3.533243718967549,
+        -3.533243718967549
+      ]
+    },
+    "jsTransferBytes10s": {
+      "before": 3314794,
+      "after": 3196314,
+      "pairedPercentChanges": [
+        -3.5742794273188605,
+        -3.5742794273188605,
+        -3.5742794273188605
+      ]
+    },
+    "cssRequests10s": {
+      "before": 45,
+      "after": 28,
+      "pairedPercentChanges": [
+        -37.77777777777778,
+        -37.77777777777778,
+        -37.77777777777778
+      ]
+    },
+    "cssUniqueFiles10s": {
+      "before": 45,
+      "after": 28,
+      "pairedPercentChanges": [
+        -37.77777777777778,
+        -37.77777777777778,
+        -37.77777777777778
+      ]
+    },
+    "cssDecodedBytes10s": {
+      "before": 1887478,
+      "after": 1642835,
+      "pairedPercentChanges": [
+        -12.961369615963736,
+        -12.961369615963736,
+        -12.961369615963736
+      ]
+    },
+    "cssEncodedBytes10s": {
+      "before": 1308875,
+      "after": 1247368,
+      "pairedPercentChanges": [
+        -4.699226434915483,
+        -4.699226434915483,
+        -4.699226434915483
+      ]
+    },
+    "cssTransferBytes10s": {
+      "before": 1322375,
+      "after": 1255768,
+      "pairedPercentChanges": [
+        -5.036922204367144,
+        -5.036922204367144,
+        -5.036922204367144
+      ]
+    },
+    "sameTab_cpMs": {
+      "before": 9986.600000023842,
+      "after": 9408.300000011921,
+      "pairedPercentChanges": [
+        -10.946728759642355,
+        -27.18843249966354,
+        22.410926215399883
+      ]
+    },
+    "sameTab_ordersMs": {
+      "before": 2668,
+      "after": 2113.0999999940395,
+      "pairedPercentChanges": [
+        -21.029224905275978,
+        -27.537481258923503,
+        31.36946712079758
+      ]
+    },
+    "sameTab_koleksiyonMs": {
+      "before": 234.10000002384186,
+      "after": 176.59999999403954,
+      "pairedPercentChanges": [
+        -24.562152936329028,
+        -63.837638376383765,
+        82.95964125560538
+      ]
+    },
+    "refreshHealth_p50Ms": {
+      "before": 7.677259000000049,
+      "after": 9.410331999999471,
+      "pairedPercentChanges": [
+        49.20447172701707,
+        33.79658026381258,
+        -51.93875426452863
+      ]
+    },
+    "refreshHealth_p95Ms": {
+      "before": 445.670094000001,
+      "after": 877.9158910000006,
+      "pairedPercentChanges": [
+        -23.2471469995539,
+        166.6810102362396,
+        158.32291980862828
+      ]
+    },
+    "refreshHealth_maxMs": {
+      "before": 5436.282949,
+      "after": 4914.089398,
+      "pairedPercentChanges": [
+        -61.25005699241226,
+        -3.935295366466396,
+        -18.79501611571336
+      ]
+    },
+    "refreshHealth_count": {
+      "before": 83,
+      "after": 79,
+      "pairedPercentChanges": [
+        0.0,
+        -6.0975609756097615,
+        -25.47169811320755
+      ]
+    },
+    "refreshHealth_failed": {
+      "before": 0,
+      "after": 0,
+      "pairedPercentChanges": [
+        null,
+        null,
+        -100.0
+      ]
+    },
+    "runtimeStallLogCount": {
+      "before": 1,
+      "after": 0,
+      "pairedPercentChanges": [
+        null,
+        -100.0,
+        -100.0
+      ]
+    }
+  },
+  "moduleFirstOpenMedians": {
+    "automations": {
+      "uiReadyMs": {
+        "before": 282,
+        "after": 206.19999998807907
+      },
+      "featureReadyMs": {
+        "before": 174.7999999821186,
+        "after": 139.30000001192093
+      }
+    },
+    "backlog": {
+      "uiReadyMs": {
+        "before": 5839.800000011921,
+        "after": 4493.299999982119
+      },
+      "featureReadyMs": {
+        "before": 207.7000000178814,
+        "after": 313.39999997615814
+      }
+    },
+    "backlogPlanActual": {
+      "uiReadyMs": {
+        "before": 67.19999998807907,
+        "after": 89.09999999403954
+      }
+    },
+    "backlogPresentation": {
+      "uiReadyMs": {
+        "before": 18067.90000000596,
+        "after": 17098.70000001788
+      }
+    },
+    "excelImport": {
+      "uiReadyMs": {
+        "before": 2819.800000011921,
+        "after": 2759
+      }
+    },
+    "guideFresh": {
+      "uiReadyMs": {
+        "before": 439.40000000596046,
+        "after": 325.80000001192093
+      }
+    },
+    "koleksiyon": {
+      "uiReadyMs": {
+        "before": 360.90000000596046,
+        "after": 478.40000000596046
+      },
+      "featureReadyMs": {
+        "before": 275.39999997615814,
+        "after": 196.40000000596046
+      }
+    },
+    "koleksiyonFresh": {
+      "uiReadyMs": {
+        "before": 611.5,
+        "after": 793.8000000119209
+      },
+      "featureReadyMs": {
+        "before": 404,
+        "after": 771.6000000238419
+      }
+    },
+    "lfl": {
+      "uiReadyMs": {
+        "before": 7274.4000000059605,
+        "after": 7336.9000000059605
+      },
+      "featureReadyMs": {
+        "before": 163.2999999821186,
+        "after": 109.90000000596046
+      }
+    },
+    "licensecards": {
+      "uiReadyMs": {
+        "before": 7309,
+        "after": 7108.300000011921
+      },
+      "featureReadyMs": {
+        "before": 97.59999999403954,
+        "after": 98.80000001192093
+      }
+    },
+    "manufacturers": {
+      "uiReadyMs": {
+        "before": 487.09999999403954,
+        "after": 627.6000000238419
+      },
+      "featureReadyMs": {
+        "before": 417.30000001192093,
+        "after": 510.30000001192093
+      }
+    },
+    "opencosting": {
+      "uiReadyMs": {
+        "before": 223.59999999403954,
+        "after": 263.2000000178814
+      },
+      "featureReadyMs": {
+        "before": 196.40000000596046,
+        "after": 240.5
+      }
+    },
+    "overview": {
+      "uiReadyMs": {
+        "before": 4848.5999999940395,
+        "after": 4494.5
+      },
+      "featureReadyMs": {
+        "before": 226,
+        "after": 264.19999998807907
+      }
+    },
+    "quotations": {
+      "uiReadyMs": {
+        "before": 213.90000000596046,
+        "after": 267.5
+      },
+      "featureReadyMs": {
+        "before": 165.59999999403954,
+        "after": 249.5
+      }
+    },
+    "source": {
+      "uiReadyMs": {
+        "before": 313.5,
+        "after": 359.5
+      },
+      "featureReadyMs": {
+        "before": 166.09999999403954,
+        "after": 191.80000001192093
+      }
+    },
+    "userManagement": {
+      "uiReadyMs": {
+        "before": 314.2999999821186,
+        "after": 410.2000000178814
+      }
+    }
+  },
+  "runs": [
+    {
+      "pair": 1,
+      "arm": "before",
+      "revision": "31004ea08982ffcce849640e5c5e3580448f0914",
+      "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-1",
+      "refreshWallMs": 53516.240856000004,
+      "domContentLoadedMs": 2096.300000011921,
+      "primaryScreenReadyMs": 3331.5,
+      "startupReadyMs": 3357.199999988079,
+      "startupCompleteMs": 3443.0999999940395,
+      "userWaitMs": 0,
+      "continueDispatchDelayMs": 78.7000000178814,
+      "systemStartupCompleteMs": 3443.0999999940395,
+      "primaryToGateMs": 25.69999998807907,
+      "longTaskCount": 31,
+      "longTaskTotalMs": 6248,
+      "maxLongTaskMs": 1071,
+      "jsHeapUsedBytes": 182586236,
+      "jsRequests10s": 183,
+      "jsUniqueFiles10s": 181,
+      "jsDecodedBytes10s": 8644542,
+      "jsEncodedBytes10s": 3259894,
+      "jsTransferBytes10s": 3314794,
+      "cssRequests10s": 45,
+      "cssUniqueFiles10s": 45,
+      "cssDecodedBytes10s": 1887478,
+      "cssEncodedBytes10s": 1308875,
+      "cssTransferBytes10s": 1322375,
+      "sameTab_cpMs": 10564.800000011921,
+      "sameTab_ordersMs": 2675.800000011921,
+      "sameTab_koleksiyonMs": 234.10000002384186,
+      "refreshHealth_p50Ms": 6.307003999998415,
+      "refreshHealth_p95Ms": 820.9904079999997,
+      "refreshHealth_maxMs": 4616.689123,
+      "refreshHealth_count": 83,
+      "refreshHealth_failed": 0,
+      "runtimeStallLogCount": 0
+    },
+    {
+      "pair": 1,
+      "arm": "after",
+      "revision": "e1d342939a8aee49b237e5e1ef9e725b66f83021",
+      "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-1",
+      "refreshWallMs": 59454.696927000005,
+      "domContentLoadedMs": 1766.699999988079,
+      "primaryScreenReadyMs": 3328.300000011921,
+      "startupReadyMs": 3347.699999988079,
+      "startupCompleteMs": 3437,
+      "userWaitMs": 0,
+      "continueDispatchDelayMs": 85.30000001192093,
+      "systemStartupCompleteMs": 3437,
+      "primaryToGateMs": 19.399999976158142,
+      "longTaskCount": 28,
+      "longTaskTotalMs": 6385.9000000059605,
+      "maxLongTaskMs": 1192,
+      "jsHeapUsedBytes": 167266720,
+      "jsRequests10s": 172,
+      "jsUniqueFiles10s": 170,
+      "jsDecodedBytes10s": 8259638,
+      "jsEncodedBytes10s": 3144714,
+      "jsTransferBytes10s": 3196314,
+      "cssRequests10s": 28,
+      "cssUniqueFiles10s": 28,
+      "cssDecodedBytes10s": 1642835,
+      "cssEncodedBytes10s": 1247368,
+      "cssTransferBytes10s": 1255768,
+      "sameTab_cpMs": 9408.300000011921,
+      "sameTab_ordersMs": 2113.0999999940395,
+      "sameTab_koleksiyonMs": 176.59999999403954,
+      "refreshHealth_p50Ms": 9.410331999999471,
+      "refreshHealth_p95Ms": 630.1335610000024,
+      "refreshHealth_maxMs": 1788.964404000002,
+      "refreshHealth_count": 83,
+      "refreshHealth_failed": 0,
+      "runtimeStallLogCount": 1
+    },
+    {
+      "pair": 2,
+      "arm": "after",
+      "revision": "e1d342939a8aee49b237e5e1ef9e725b66f83021",
+      "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-2",
+      "refreshWallMs": 51587.601475999996,
+      "domContentLoadedMs": 1820.199999988079,
+      "primaryScreenReadyMs": 3089,
+      "startupReadyMs": 3102.0999999940395,
+      "startupCompleteMs": 3170.4000000059605,
+      "userWaitMs": 0,
+      "continueDispatchDelayMs": 62.80000001192093,
+      "systemStartupCompleteMs": 3170.4000000059605,
+      "primaryToGateMs": 13.099999994039536,
+      "longTaskCount": 25,
+      "longTaskTotalMs": 5375,
+      "maxLongTaskMs": 938,
+      "jsHeapUsedBytes": 172687172,
+      "jsRequests10s": 172,
+      "jsUniqueFiles10s": 170,
+      "jsDecodedBytes10s": 8259638,
+      "jsEncodedBytes10s": 3144714,
+      "jsTransferBytes10s": 3196314,
+      "cssRequests10s": 28,
+      "cssUniqueFiles10s": 28,
+      "cssDecodedBytes10s": 1642835,
+      "cssEncodedBytes10s": 1247368,
+      "cssTransferBytes10s": 1255768,
+      "sameTab_cpMs": 7271.4000000059605,
+      "sameTab_ordersMs": 1933.300000011921,
+      "sameTab_koleksiyonMs": 147,
+      "refreshHealth_p50Ms": 10.271909999995842,
+      "refreshHealth_p95Ms": 1188.5175090000012,
+      "refreshHealth_maxMs": 5222.349158000001,
+      "refreshHealth_count": 77,
+      "refreshHealth_failed": 0,
+      "runtimeStallLogCount": 0
+    },
+    {
+      "pair": 2,
+      "arm": "before",
+      "revision": "31004ea08982ffcce849640e5c5e3580448f0914",
+      "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-2",
+      "refreshWallMs": 53404.564658,
+      "domContentLoadedMs": 2191.4000000059605,
+      "primaryScreenReadyMs": 3841.0999999940395,
+      "startupReadyMs": 3856.300000011921,
+      "startupCompleteMs": 3926.0999999940395,
+      "userWaitMs": 0,
+      "continueDispatchDelayMs": 64.90000000596046,
+      "systemStartupCompleteMs": 3926.0999999940395,
+      "primaryToGateMs": 15.200000017881393,
+      "longTaskCount": 26,
+      "longTaskTotalMs": 5572,
+      "maxLongTaskMs": 588,
+      "jsHeapUsedBytes": 183583072,
+      "jsRequests10s": 183,
+      "jsUniqueFiles10s": 181,
+      "jsDecodedBytes10s": 8644542,
+      "jsEncodedBytes10s": 3259894,
+      "jsTransferBytes10s": 3314794,
+      "cssRequests10s": 45,
+      "cssUniqueFiles10s": 45,
+      "cssDecodedBytes10s": 1887478,
+      "cssEncodedBytes10s": 1308875,
+      "cssTransferBytes10s": 1322375,
+      "sameTab_cpMs": 9986.600000023842,
+      "sameTab_ordersMs": 2668,
+      "sameTab_koleksiyonMs": 406.5,
+      "refreshHealth_p50Ms": 7.677259000000049,
+      "refreshHealth_p95Ms": 445.670094000001,
+      "refreshHealth_maxMs": 5436.282949,
+      "refreshHealth_count": 82,
+      "refreshHealth_failed": 0,
+      "runtimeStallLogCount": 1
+    },
+    {
+      "pair": 3,
+      "arm": "before",
+      "revision": "31004ea08982ffcce849640e5c5e3580448f0914",
+      "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-3",
+      "refreshWallMs": 69072.701551,
+      "domContentLoadedMs": 2120.9000000059605,
+      "primaryScreenReadyMs": 3657.9000000059605,
+      "startupReadyMs": 3679.699999988079,
+      "startupCompleteMs": 3792.800000011921,
+      "userWaitMs": 0,
+      "continueDispatchDelayMs": 98.90000000596046,
+      "systemStartupCompleteMs": 3792.800000011921,
+      "primaryToGateMs": 21.799999982118607,
+      "longTaskCount": 31,
+      "longTaskTotalMs": 5563,
+      "maxLongTaskMs": 734,
+      "jsHeapUsedBytes": 189316104,
+      "jsRequests10s": 183,
+      "jsUniqueFiles10s": 181,
+      "jsDecodedBytes10s": 8644542,
+      "jsEncodedBytes10s": 3259894,
+      "jsTransferBytes10s": 3314794,
+      "cssRequests10s": 45,
+      "cssUniqueFiles10s": 45,
+      "cssDecodedBytes10s": 1887478,
+      "cssEncodedBytes10s": 1308875,
+      "cssTransferBytes10s": 1322375,
+      "sameTab_cpMs": 7878.299999982119,
+      "sameTab_ordersMs": 1972.2999999821186,
+      "sameTab_koleksiyonMs": 111.5,
+      "refreshHealth_p50Ms": 15.009045000006154,
+      "refreshHealth_p95Ms": 339.8521089999995,
+      "refreshHealth_maxMs": 6051.462808,
+      "refreshHealth_count": 106,
+      "refreshHealth_failed": 1,
+      "runtimeStallLogCount": 1
+    },
+    {
+      "pair": 3,
+      "arm": "after",
+      "revision": "e1d342939a8aee49b237e5e1ef9e725b66f83021",
+      "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3",
+      "refreshWallMs": 50688.762953,
+      "domContentLoadedMs": 1608.6000000238419,
+      "primaryScreenReadyMs": 3177.800000011921,
+      "startupReadyMs": 3196,
+      "startupCompleteMs": 3277.5,
+      "userWaitMs": 0,
+      "continueDispatchDelayMs": 77.2000000178814,
+      "systemStartupCompleteMs": 3277.5,
+      "primaryToGateMs": 18.19999998807907,
+      "longTaskCount": 26,
+      "longTaskTotalMs": 6053.899999976158,
+      "maxLongTaskMs": 1330,
+      "jsHeapUsedBytes": 177540408,
+      "jsRequests10s": 172,
+      "jsUniqueFiles10s": 170,
+      "jsDecodedBytes10s": 8259638,
+      "jsEncodedBytes10s": 3144714,
+      "jsTransferBytes10s": 3196314,
+      "cssRequests10s": 28,
+      "cssUniqueFiles10s": 28,
+      "cssDecodedBytes10s": 1642835,
+      "cssEncodedBytes10s": 1247368,
+      "cssTransferBytes10s": 1255768,
+      "sameTab_cpMs": 9643.90000000596,
+      "sameTab_ordersMs": 2591,
+      "sameTab_koleksiyonMs": 204,
+      "refreshHealth_p50Ms": 7.213534000000436,
+      "refreshHealth_p95Ms": 877.9158910000006,
+      "refreshHealth_maxMs": 4914.089398,
+      "refreshHealth_count": 79,
+      "refreshHealth_failed": 0,
+      "runtimeStallLogCount": 0
+    }
+  ],
+  "moduleRuns": [
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "source",
+      "feature": "dataManagement",
+      "featureReadyMs": 166.09999999403954,
+      "uiReadyMs": 313.5
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "manufacturers",
+      "feature": "manufacturers",
+      "featureReadyMs": 443.59999999403954,
+      "uiReadyMs": 487.09999999403954
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "licensecards",
+      "feature": "licensecards",
+      "featureReadyMs": 109,
+      "uiReadyMs": 7309
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "lfl",
+      "feature": "lfl",
+      "featureReadyMs": 413.30000001192093,
+      "uiReadyMs": 7274.4000000059605
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "opencosting",
+      "feature": "openCosting",
+      "featureReadyMs": 258.19999998807907,
+      "uiReadyMs": 285.5
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "automations",
+      "feature": "automations",
+      "featureReadyMs": 1001,
+      "uiReadyMs": 1373.7000000178814
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "quotations",
+      "feature": "collectionTools",
+      "featureReadyMs": 165.59999999403954,
+      "uiReadyMs": 236.19999998807907
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "koleksiyon",
+      "feature": "collectionTools",
+      "featureReadyMs": 277.7000000178814,
+      "uiReadyMs": 360.90000000596046
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "backlog",
+      "feature": "backlogAnalysis",
+      "featureReadyMs": 278.5,
+      "uiReadyMs": 7761.5999999940395
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "backlogPlanActual",
+      "uiReadyMs": 67.19999998807907
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "backlogPresentation",
+      "uiReadyMs": 18067.90000000596
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "excelImport",
+      "uiReadyMs": 2200.0999999940395
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "userManagement",
+      "uiReadyMs": 311.7999999821186
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "overview",
+      "feature": "exceptionInbox",
+      "featureReadyMs": 191,
+      "uiReadyMs": 3697.2000000178814
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "guideFresh",
+      "uiReadyMs": 365.5
+    },
+    {
+      "arm": "before",
+      "pair": 1,
+      "module": "koleksiyonFresh",
+      "feature": "collectionTools",
+      "featureReadyMs": 449.7000000178814,
+      "uiReadyMs": 614.4000000059605
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "source",
+      "feature": "dataManagement",
+      "featureReadyMs": 162.30000001192093,
+      "uiReadyMs": 319.7000000178814
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "manufacturers",
+      "feature": "manufacturers",
+      "featureReadyMs": 510.30000001192093,
+      "uiReadyMs": 561.0999999940395
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "licensecards",
+      "feature": "licensecards",
+      "featureReadyMs": 98.80000001192093,
+      "uiReadyMs": 7108.300000011921
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "lfl",
+      "feature": "lfl",
+      "featureReadyMs": 110.7000000178814,
+      "uiReadyMs": 7336.9000000059605
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "opencosting",
+      "feature": "openCosting",
+      "featureReadyMs": 240.5,
+      "uiReadyMs": 263.2000000178814
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "automations",
+      "feature": "automations",
+      "featureReadyMs": 149.89999997615814,
+      "uiReadyMs": 206.19999998807907
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "quotations",
+      "feature": "collectionTools",
+      "featureReadyMs": 249.5,
+      "uiReadyMs": 267.5
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "koleksiyon",
+      "feature": "collectionTools",
+      "featureReadyMs": 184,
+      "uiReadyMs": 413.90000000596046
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "backlog",
+      "feature": "backlogAnalysis",
+      "featureReadyMs": 313.39999997615814,
+      "uiReadyMs": 4493.299999982119
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "backlogPlanActual",
+      "uiReadyMs": 83.09999999403954
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "backlogPresentation",
+      "uiReadyMs": 14694.300000011921
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "excelImport",
+      "uiReadyMs": 3308.5
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "userManagement",
+      "uiReadyMs": 410.2000000178814
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "overview",
+      "feature": "exceptionInbox",
+      "featureReadyMs": 261.5,
+      "uiReadyMs": 4862.800000011921
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "guideFresh",
+      "uiReadyMs": 500.09999999403954
+    },
+    {
+      "arm": "after",
+      "pair": 1,
+      "module": "koleksiyonFresh",
+      "feature": "collectionTools",
+      "featureReadyMs": 771.6000000238419,
+      "uiReadyMs": 793.8000000119209
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "source",
+      "feature": "dataManagement",
+      "featureReadyMs": 191.80000001192093,
+      "uiReadyMs": 359.5
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "manufacturers",
+      "feature": "manufacturers",
+      "featureReadyMs": 84.5,
+      "uiReadyMs": 688.5
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "licensecards",
+      "feature": "licensecards",
+      "featureReadyMs": 90.7999999821186,
+      "uiReadyMs": 7063.299999982119
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "lfl",
+      "feature": "lfl",
+      "featureReadyMs": 109.90000000596046,
+      "uiReadyMs": 6598.700000017881
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "opencosting",
+      "feature": "openCosting",
+      "featureReadyMs": 199.60000002384186,
+      "uiReadyMs": 223.80000001192093
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "automations",
+      "feature": "automations",
+      "featureReadyMs": 139.30000001192093,
+      "uiReadyMs": 249.5
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "quotations",
+      "feature": "collectionTools",
+      "featureReadyMs": 273.69999998807907,
+      "uiReadyMs": 325.59999999403954
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "koleksiyon",
+      "feature": "collectionTools",
+      "featureReadyMs": 196.40000000596046,
+      "uiReadyMs": 478.40000000596046
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "backlog",
+      "feature": "backlogAnalysis",
+      "featureReadyMs": 297.2999999821186,
+      "uiReadyMs": 4089.199999988079
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "backlogPlanActual",
+      "uiReadyMs": 89.09999999403954
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "backlogPresentation",
+      "uiReadyMs": 17098.70000001788
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "excelImport",
+      "uiReadyMs": 2278.5
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "userManagement",
+      "uiReadyMs": 254.89999997615814
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "overview",
+      "feature": "exceptionInbox",
+      "featureReadyMs": 299.5,
+      "uiReadyMs": 4494.5
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "guideFresh",
+      "uiReadyMs": 325.80000001192093
+    },
+    {
+      "arm": "after",
+      "pair": 2,
+      "module": "koleksiyonFresh",
+      "feature": "collectionTools",
+      "featureReadyMs": 845.5999999940395,
+      "uiReadyMs": 886
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "source",
+      "feature": "dataManagement",
+      "featureReadyMs": 124.30000001192093,
+      "uiReadyMs": 260.60000002384186
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "manufacturers",
+      "feature": "manufacturers",
+      "featureReadyMs": 60.19999998807907,
+      "uiReadyMs": 515.6999999880791
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "licensecards",
+      "feature": "licensecards",
+      "featureReadyMs": 97.59999999403954,
+      "uiReadyMs": 7614.299999982119
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "lfl",
+      "feature": "lfl",
+      "featureReadyMs": 111.09999999403954,
+      "uiReadyMs": 6205
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "opencosting",
+      "feature": "openCosting",
+      "featureReadyMs": 196.40000000596046,
+      "uiReadyMs": 223.59999999403954
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "automations",
+      "feature": "automations",
+      "featureReadyMs": 135.09999999403954,
+      "uiReadyMs": 222.69999998807907
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "quotations",
+      "feature": "collectionTools",
+      "featureReadyMs": 155.90000000596046,
+      "uiReadyMs": 191.5
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "koleksiyon",
+      "feature": "collectionTools",
+      "featureReadyMs": 183.69999998807907,
+      "uiReadyMs": 359
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "backlog",
+      "feature": "backlogAnalysis",
+      "featureReadyMs": 159.5,
+      "uiReadyMs": 3333.800000011921
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "backlogPlanActual",
+      "uiReadyMs": 65.90000000596046
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "backlogPresentation",
+      "uiReadyMs": 17005.90000000596
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "excelImport",
+      "uiReadyMs": 2819.800000011921
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "userManagement",
+      "uiReadyMs": 365.90000000596046
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "overview",
+      "feature": "exceptionInbox",
+      "featureReadyMs": 226,
+      "uiReadyMs": 5587.699999988079
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "guideFresh",
+      "uiReadyMs": 458.7999999821186
+    },
+    {
+      "arm": "before",
+      "pair": 2,
+      "module": "koleksiyonFresh",
+      "feature": "collectionTools",
+      "featureReadyMs": 404,
+      "uiReadyMs": 611.5
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "source",
+      "feature": "dataManagement",
+      "featureReadyMs": 230.5,
+      "uiReadyMs": 447
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "manufacturers",
+      "feature": "manufacturers",
+      "featureReadyMs": 417.30000001192093,
+      "uiReadyMs": 481.09999999403954
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "licensecards",
+      "feature": "licensecards",
+      "featureReadyMs": 94.80000001192093,
+      "uiReadyMs": 6707.300000011921
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "lfl",
+      "feature": "lfl",
+      "featureReadyMs": 163.2999999821186,
+      "uiReadyMs": 7499.399999976158
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "opencosting",
+      "feature": "openCosting",
+      "featureReadyMs": 183.19999998807907,
+      "uiReadyMs": 202.5
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "automations",
+      "feature": "automations",
+      "featureReadyMs": 174.7999999821186,
+      "uiReadyMs": 282
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "quotations",
+      "feature": "collectionTools",
+      "featureReadyMs": 186.80000001192093,
+      "uiReadyMs": 213.90000000596046
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "koleksiyon",
+      "feature": "collectionTools",
+      "featureReadyMs": 275.39999997615814,
+      "uiReadyMs": 643.6999999880791
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "backlog",
+      "feature": "backlogAnalysis",
+      "featureReadyMs": 207.7000000178814,
+      "uiReadyMs": 5839.800000011921
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "backlogPlanActual",
+      "uiReadyMs": 231
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "backlogPresentation",
+      "uiReadyMs": 21452.5
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "excelImport",
+      "uiReadyMs": 3207.300000011921
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "userManagement",
+      "uiReadyMs": 314.2999999821186
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "overview",
+      "feature": "exceptionInbox",
+      "featureReadyMs": 232.69999998807907,
+      "uiReadyMs": 4848.5999999940395
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "guideFresh",
+      "uiReadyMs": 439.40000000596046
+    },
+    {
+      "arm": "before",
+      "pair": 3,
+      "module": "koleksiyonFresh",
+      "feature": "collectionTools",
+      "featureReadyMs": 378.30000001192093,
+      "uiReadyMs": 573.8000000119209
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "source",
+      "feature": "dataManagement",
+      "featureReadyMs": 222.69999998807907,
+      "uiReadyMs": 414.7999999821186
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "manufacturers",
+      "feature": "manufacturers",
+      "featureReadyMs": 560.6000000238419,
+      "uiReadyMs": 627.6000000238419
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "licensecards",
+      "feature": "licensecards",
+      "featureReadyMs": 116.5,
+      "uiReadyMs": 9865.699999988079
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "lfl",
+      "feature": "lfl",
+      "featureReadyMs": 98.19999998807907,
+      "uiReadyMs": 8109.9000000059605
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "opencosting",
+      "feature": "openCosting",
+      "featureReadyMs": 522.7000000178814,
+      "uiReadyMs": 548.2000000178814
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "automations",
+      "feature": "automations",
+      "featureReadyMs": 105.90000000596046,
+      "uiReadyMs": 166.09999999403954
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "quotations",
+      "feature": "collectionTools",
+      "featureReadyMs": 199.7000000178814,
+      "uiReadyMs": 251.09999999403954
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "koleksiyon",
+      "feature": "collectionTools",
+      "featureReadyMs": 225,
+      "uiReadyMs": 486.59999999403954
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "backlog",
+      "feature": "backlogAnalysis",
+      "featureReadyMs": 390.2999999821186,
+      "uiReadyMs": 6624.5
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "backlogPlanActual",
+      "uiReadyMs": 100.19999998807907
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "backlogPresentation",
+      "uiReadyMs": 18103.899999976158
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "excelImport",
+      "uiReadyMs": 2759
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "userManagement",
+      "uiReadyMs": 415
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "overview",
+      "feature": "exceptionInbox",
+      "featureReadyMs": 264.19999998807907,
+      "uiReadyMs": 4414.0999999940395
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "guideFresh",
+      "uiReadyMs": 275.40000000596046
+    },
+    {
+      "arm": "after",
+      "pair": 3,
+      "module": "koleksiyonFresh",
+      "feature": "collectionTools",
+      "featureReadyMs": 702.4000000059605,
+      "uiReadyMs": 737.4000000059605
+    }
+  ],
+  "orderedRowEquivalence": [
+    {
+      "pair": 1,
+      "equal": true,
+      "modules": {
+        "cp": {
+          "rows": 24982,
+          "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+        },
+        "orders": {
+          "rows": 30000,
+          "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+        },
+        "overview": {
+          "rows": 30000,
+          "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+        }
+      }
+    },
+    {
+      "pair": 2,
+      "equal": true,
+      "modules": {
+        "cp": {
+          "rows": 24982,
+          "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+        },
+        "orders": {
+          "rows": 30000,
+          "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+        },
+        "overview": {
+          "rows": 30000,
+          "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+        }
+      }
+    },
+    {
+      "pair": 3,
+      "equal": true,
+      "modules": {
+        "cp": {
+          "rows": 24982,
+          "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+        },
+        "orders": {
+          "rows": 30000,
+          "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+        },
+        "overview": {
+          "rows": 30000,
+          "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+        }
+      }
+    }
+  ],
+  "limits": [
+    "Three fresh paired runs per arm; Linux/headless Chromium, not Windows/Electron.",
+    "DOMContentLoaded and cold first Overview are distinct from warm same-tab transitions.",
+    "Health roundtrips include harness scheduling; not an independent server-loop bound.",
+    "Runtime stall log threshold is 3000ms with 5000ms sampling; no log does not imply no stalls above200ms.",
+    "Heap is uncollected and is not retained-heap or peak-memory evidence.",
+    "Collection workspace starts empty; module-probe adds one synthetic row for controls."
+  ]
+}

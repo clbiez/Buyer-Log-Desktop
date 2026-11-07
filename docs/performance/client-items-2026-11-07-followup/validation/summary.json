@@ -1,0 +1,29 @@
+{
+  "allBatchIds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "testCounts": {
+    "tests": 8916,
+    "pass": 8851,
+    "fail": 0,
+    "skipped": 65
+  },
+  "originalEvidenceFilesUnchanged": 18,
+  "originalCommitsPreserved": [
+    "eb17dc22df492c84b557c05ea4a17df81d09b392",
+    "cbf9fce4f326a48aba1458db863ac04c7024d4e1",
+    "ed8a425f027813af85123278dfdb9670122a6f68"
+  ],
+  "main": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "applicationServerTestTreesUnchanged": true,
+  "independentReview": "Not performed; GitHub review and inline comment lists were empty. CI is not an independent review."
+}

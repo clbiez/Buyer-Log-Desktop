@@ -1,0 +1,383 @@
+{
+  "startedAt": "2026-11-07T21:13:12.993177+00:00",
+  "synthetic": true,
+  "before": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+  "after": "df8ca377d85078d29a9524a7812f80cef44b75d6",
+  "fixtureArchiveSha256": "5913414603984b02b1c30b87f1f9231da3718ab797a007f4bd14067ec6cd5c70",
+  "harnessSha256": "f6a619c0002d40cc4bfae67adf051fa55323d933ffad2d3553fb492f619797dc",
+  "resourceProbeSha256": "65c001557aa468bf9f8d52b3668b5fa2e1c70ac8d5cbadcb40229d3823b21a2d",
+  "scope": "overview only; skip same-tab; actual server-loop observer enabled",
+  "order": "A/B-B/A-A/B; fresh source/data/cache/server/browser per arm",
+  "runs": [
+    {
+      "pair": 1,
+      "arm": "before",
+      "revision": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+      "appTree": "cd7c3afb986d9200060d0e3271a1e29e0cf2bb42",
+      "fixtureRoot": "/tmp/buyerlog-startup-auth-20261107T211313-before-1",
+      "startedAt": "2026-11-07T21:13:13.985845+00:00",
+      "fixture": {
+        "synthetic": true,
+        "rows": 30000,
+        "seed": 7,
+        "hashes": {
+          "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+          "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+          "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+        }
+      },
+      "status": "passed",
+      "benchmarkCommand": [
+        "node",
+        "scripts/benchmark-startup-orders.js",
+        "--rows",
+        "30000",
+        "--fixture-root",
+        "/tmp/buyerlog-startup-auth-20261107T211313-before-1",
+        "--module",
+        "overview",
+        "--skip-same-tab",
+        "--server-loop-probe"
+      ],
+      "benchmarkReturncode": 0,
+      "rowHashes": {
+        "generation": "mw6wicp3-a23c31e92811",
+        "sourceRevision": "ff47d626684fc11cee3a91c9a6f8286c804d691e749fc06fab6fa1e3d550cfd2",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "resourceNavigations": 1,
+      "finishedAt": "2026-11-07T21:14:38.552740+00:00"
+    },
+    {
+      "pair": 1,
+      "arm": "after",
+      "revision": "df8ca377d85078d29a9524a7812f80cef44b75d6",
+      "appTree": "2ef7c8e0203e576869809d3c3b7831af775df3a7",
+      "fixtureRoot": "/tmp/buyerlog-startup-auth-20261107T211313-after-1",
+      "startedAt": "2026-11-07T21:14:38.944374+00:00",
+      "fixture": {
+        "synthetic": true,
+        "rows": 30000,
+        "seed": 7,
+        "hashes": {
+          "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+          "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+          "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+        }
+      },
+      "status": "passed",
+      "benchmarkCommand": [
+        "node",
+        "scripts/benchmark-startup-orders.js",
+        "--rows",
+        "30000",
+        "--fixture-root",
+        "/tmp/buyerlog-startup-auth-20261107T211313-after-1",
+        "--module",
+        "overview",
+        "--skip-same-tab",
+        "--server-loop-probe"
+      ],
+      "benchmarkReturncode": 0,
+      "rowHashes": {
+        "generation": "mw6wk4yw-93722f31bb6f",
+        "sourceRevision": "a52ea322f7c61d301504e46ff1533ee6dc59b1d6e6d044d8e1fbb5c64b1916a2",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "resourceNavigations": 1,
+      "finishedAt": "2026-11-07T21:16:05.133698+00:00"
+    },
+    {
+      "pair": 2,
+      "arm": "after",
+      "revision": "df8ca377d85078d29a9524a7812f80cef44b75d6",
+      "appTree": "2ef7c8e0203e576869809d3c3b7831af775df3a7",
+      "fixtureRoot": "/tmp/buyerlog-startup-auth-20261107T211313-after-2",
+      "startedAt": "2026-11-07T21:16:05.602314+00:00",
+      "fixture": {
+        "synthetic": true,
+        "rows": 30000,
+        "seed": 7,
+        "hashes": {
+          "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+          "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+          "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+        }
+      },
+      "status": "passed",
+      "benchmarkCommand": [
+        "node",
+        "scripts/benchmark-startup-orders.js",
+        "--rows",
+        "30000",
+        "--fixture-root",
+        "/tmp/buyerlog-startup-auth-20261107T211313-after-2",
+        "--module",
+        "overview",
+        "--skip-same-tab",
+        "--server-loop-probe"
+      ],
+      "benchmarkReturncode": 0,
+      "rowHashes": {
+        "generation": "mw6wm17d-5dae35230191",
+        "sourceRevision": "383299e90df9c9775f1e5f597937b4b6bea6ebd920835b9eccd92db5db34971a",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "resourceNavigations": 1,
+      "finishedAt": "2026-11-07T21:17:32.270333+00:00"
+    },
+    {
+      "pair": 2,
+      "arm": "before",
+      "revision": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+      "appTree": "cd7c3afb986d9200060d0e3271a1e29e0cf2bb42",
+      "fixtureRoot": "/tmp/buyerlog-startup-auth-20261107T211313-before-2",
+      "startedAt": "2026-11-07T21:17:32.941051+00:00",
+      "fixture": {
+        "synthetic": true,
+        "rows": 30000,
+        "seed": 7,
+        "hashes": {
+          "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+          "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+          "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+        }
+      },
+      "status": "passed",
+      "benchmarkCommand": [
+        "node",
+        "scripts/benchmark-startup-orders.js",
+        "--rows",
+        "30000",
+        "--fixture-root",
+        "/tmp/buyerlog-startup-auth-20261107T211313-before-2",
+        "--module",
+        "overview",
+        "--skip-same-tab",
+        "--server-loop-probe"
+      ],
+      "benchmarkReturncode": 0,
+      "rowHashes": {
+        "generation": "mw6wnxdo-9ecdbba28758",
+        "sourceRevision": "a1f11c2bda25521b4d1037b5981370d4edee0dfe6314bbe1f3267aebe30bb77e",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "resourceNavigations": 1,
+      "finishedAt": "2026-11-07T21:18:57.676384+00:00"
+    },
+    {
+      "pair": 3,
+      "arm": "before",
+      "revision": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+      "appTree": "cd7c3afb986d9200060d0e3271a1e29e0cf2bb42",
+      "fixtureRoot": "/tmp/buyerlog-startup-auth-20261107T211313-before-3",
+      "startedAt": "2026-11-07T21:18:58.065433+00:00",
+      "fixture": {
+        "synthetic": true,
+        "rows": 30000,
+        "seed": 7,
+        "hashes": {
+          "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+          "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+          "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+        }
+      },
+      "status": "passed",
+      "benchmarkCommand": [
+        "node",
+        "scripts/benchmark-startup-orders.js",
+        "--rows",
+        "30000",
+        "--fixture-root",
+        "/tmp/buyerlog-startup-auth-20261107T211313-before-3",
+        "--module",
+        "overview",
+        "--skip-same-tab",
+        "--server-loop-probe"
+      ],
+      "benchmarkReturncode": 0,
+      "rowHashes": {
+        "generation": "mw6wpqfr-821548918a60",
+        "sourceRevision": "2beb4bd0593d1b3a93c4c7fd7a7ce264d0c301d395abc48b3ff42c68e82d5e31",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "resourceNavigations": 1,
+      "finishedAt": "2026-11-07T21:20:24.453136+00:00"
+    },
+    {
+      "pair": 3,
+      "arm": "after",
+      "revision": "df8ca377d85078d29a9524a7812f80cef44b75d6",
+      "appTree": "2ef7c8e0203e576869809d3c3b7831af775df3a7",
+      "fixtureRoot": "/tmp/buyerlog-startup-auth-20261107T211313-after-3",
+      "startedAt": "2026-11-07T21:20:25.020053+00:00",
+      "fixture": {
+        "synthetic": true,
+        "rows": 30000,
+        "seed": 7,
+        "hashes": {
+          "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+          "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+          "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+        }
+      },
+      "status": "passed",
+      "benchmarkCommand": [
+        "node",
+        "scripts/benchmark-startup-orders.js",
+        "--rows",
+        "30000",
+        "--fixture-root",
+        "/tmp/buyerlog-startup-auth-20261107T211313-after-3",
+        "--module",
+        "overview",
+        "--skip-same-tab",
+        "--server-loop-probe"
+      ],
+      "benchmarkReturncode": 0,
+      "rowHashes": {
+        "generation": "mw6wrl1c-6278ce5bacea",
+        "sourceRevision": "cea7c600c43c6c4c18ec1b956ab5527b16e8e9520fa15acb0bb35902fdfba395",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "resourceNavigations": 1,
+      "finishedAt": "2026-11-07T21:22:04.418290+00:00"
+    }
+  ],
+  "status": "passed",
+  "equivalencePairs": [
+    {
+      "pair": 1,
+      "equal": true,
+      "modules": {
+        "cp": {
+          "rows": 24982,
+          "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+        },
+        "orders": {
+          "rows": 30000,
+          "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+        },
+        "overview": {
+          "rows": 30000,
+          "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+        }
+      }
+    },
+    {
+      "pair": 2,
+      "equal": true,
+      "modules": {
+        "cp": {
+          "rows": 24982,
+          "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+        },
+        "orders": {
+          "rows": 30000,
+          "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+        },
+        "overview": {
+          "rows": 30000,
+          "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+        }
+      }
+    },
+    {
+      "pair": 3,
+      "equal": true,
+      "modules": {
+        "cp": {
+          "rows": 24982,
+          "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+        },
+        "orders": {
+          "rows": 30000,
+          "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+        },
+        "overview": {
+          "rows": 30000,
+          "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+        }
+      }
+    }
+  ],
+  "finishedAt": "2026-11-07T21:22:04.419144+00:00"
+}

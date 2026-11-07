@@ -1,0 +1,14 @@
+{
+  "label": "red-final-isolated-native",
+  "sourceBase": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "sourceSha256": "6280f282b696ce26abdabd7061b2e5c74bd1d9ba27b4298e12ba16293b72bf55",
+  "testSha256": "b59206d33f05c425a4bace2095154edbe9b10efce4905f663c3a0b525a7d712d",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+    "--test",
+    "--test-reporter=tap",
+    "/workspace/buyerlog-authority-fix/resources/app/tests/user-access-resumed-authority.test.js"
+  ],
+  "TMPDIR": "/tmp/buyerlog-authority-red-final-isolated-native-1_ygcdx5",
+  "returncode": 1
+}

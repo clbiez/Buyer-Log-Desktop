@@ -1,0 +1,431 @@
+{
+  "commonPr": 913,
+  "commonBranch": "perf/phase7-shared-evidence",
+  "frozenCommonParent": "ae6dd38b326780bf55125ea5f8eabb1703d9d744",
+  "production": {
+    "snapshot": {
+      "head": "634ac27dcdeb0a5655e37c1c5b08f9aba5fa6ef0",
+      "pr": 909,
+      "status": "passed",
+      "startedUtc": "2026-11-07T18:45:18Z",
+      "checks": [
+        {
+          "name": "i18n",
+          "exitCode": 0,
+          "log": "snapshot-i18n.log",
+          "logSha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
+        },
+        {
+          "name": "release-notes",
+          "exitCode": 0,
+          "log": "snapshot-release-notes.log",
+          "logSha256": "9ccab6c340545089e7b742ddc9091cddd0443a02c063d45711894404fd6f53bd"
+        },
+        {
+          "name": "inventory",
+          "exitCode": 0,
+          "log": "snapshot-inventory.log",
+          "logSha256": "d76095351eb90813237d2a8a67eca2cbf1131c9e895bcd34333a33fe844e8286"
+        },
+        {
+          "name": "diff",
+          "exitCode": 0,
+          "log": "snapshot-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "npmTest": {
+        "exitCode": 0,
+        "seconds": 118.773,
+        "log": "snapshot-npm-test.log",
+        "logSha256": "3e493cf18fcb7efb10e6cb80d83ab2e7a1ef9337107d32d88c561a67acbc8ca1",
+        "tests": 8920,
+        "pass": 8855,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 65,
+        "todo": 0,
+        "files": 1291
+      },
+      "finishedUtc": "2026-11-07T18:47:19Z",
+      "github": {
+        "workflow_runs": [
+          {
+            "id": 42402759996,
+            "name": "Buyer Log PR fast checks",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 384,
+            "jobs_url": "https://api.github.com/repos/clbiez/Buyer-Log-Desktop/actions/runs/42402759996/jobs",
+            "logs_url": "https://api.github.com/repos/clbiez/Buyer-Log-Desktop/actions/runs/42402759996/logs",
+            "workflow_id": 395073387
+          }
+        ]
+      },
+      "base": "perf/phase7-shared-evidence",
+      "originalReviewHead": "3390971d7530a6bd83b2cb4f90c0205142339649",
+      "reviewedProductionCommit": "109292a1f9008ffccbd48a481cdacc2a1d343f54",
+      "productionFilesByteIdentical": true,
+      "oldHeadIsAncestor": true,
+      "finalAcceptance": "pending"
+    },
+    "images": {
+      "head": "845f10b0bcd6cc2ea67bc2239909af960876fa8c",
+      "pr": 910,
+      "status": "passed",
+      "startedUtc": "2026-11-07T18:47:19Z",
+      "checks": [
+        {
+          "name": "i18n",
+          "exitCode": 0,
+          "log": "images-i18n.log",
+          "logSha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
+        },
+        {
+          "name": "release-notes",
+          "exitCode": 0,
+          "log": "images-release-notes.log",
+          "logSha256": "9ccab6c340545089e7b742ddc9091cddd0443a02c063d45711894404fd6f53bd"
+        },
+        {
+          "name": "inventory",
+          "exitCode": 0,
+          "log": "images-inventory.log",
+          "logSha256": "d76095351eb90813237d2a8a67eca2cbf1131c9e895bcd34333a33fe844e8286"
+        },
+        {
+          "name": "diff",
+          "exitCode": 0,
+          "log": "images-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "npmTest": {
+        "exitCode": 0,
+        "seconds": 119.573,
+        "log": "images-npm-test.log",
+        "logSha256": "e8323710994a48ff270659ece7bd4e923d0a9a640adec10166810a10b8af5b8e",
+        "tests": 8923,
+        "pass": 8858,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 65,
+        "todo": 0,
+        "files": 1291
+      },
+      "finishedUtc": "2026-11-07T18:49:21Z",
+      "github": {
+        "workflow_runs": [
+          {
+            "id": 42402761355,
+            "name": "Buyer Log PR fast checks",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 385,
+            "jobs_url": "https://api.github.com/repos/clbiez/Buyer-Log-Desktop/actions/runs/42402761355/jobs",
+            "logs_url": "https://api.github.com/repos/clbiez/Buyer-Log-Desktop/actions/runs/42402761355/logs",
+            "workflow_id": 395073387
+          }
+        ]
+      },
+      "base": "perf/phase7-shared-evidence",
+      "originalReviewHead": "71c403275f6caafa6a92750b9357af246c4042fb",
+      "reviewedProductionCommit": "384fea2cd5ba368cb07ec864723961165dd55b17",
+      "productionFilesByteIdentical": true,
+      "oldHeadIsAncestor": true,
+      "finalAcceptance": "pending"
+    },
+    "parser": {
+      "head": "5a2166cfc6ec54d21134d45df5dc9287aa981505",
+      "pr": 911,
+      "status": "passed",
+      "startedUtc": "2026-11-07T18:49:21Z",
+      "checks": [
+        {
+          "name": "i18n",
+          "exitCode": 0,
+          "log": "parser-i18n.log",
+          "logSha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
+        },
+        {
+          "name": "release-notes",
+          "exitCode": 0,
+          "log": "parser-release-notes.log",
+          "logSha256": "9ccab6c340545089e7b742ddc9091cddd0443a02c063d45711894404fd6f53bd"
+        },
+        {
+          "name": "inventory",
+          "exitCode": 0,
+          "log": "parser-inventory.log",
+          "logSha256": "d76095351eb90813237d2a8a67eca2cbf1131c9e895bcd34333a33fe844e8286"
+        },
+        {
+          "name": "diff",
+          "exitCode": 0,
+          "log": "parser-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "npmTest": {
+        "exitCode": 0,
+        "seconds": 117.106,
+        "log": "parser-npm-test.log",
+        "logSha256": "14dce1f4fffbb09b17f2df33cba836b82b3c592b80a4c55dac2b8930f6c2ef7c",
+        "tests": 8912,
+        "pass": 8847,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 65,
+        "todo": 0,
+        "files": 1290
+      },
+      "finishedUtc": "2026-11-07T18:51:20Z",
+      "github": {
+        "workflow_runs": [
+          {
+            "id": 42402759496,
+            "name": "Buyer Log PR fast checks",
+            "status": "completed",
+            "conclusion": "success",
+            "run_number": 383,
+            "jobs_url": "https://api.github.com/repos/clbiez/Buyer-Log-Desktop/actions/runs/42402759496/jobs",
+            "logs_url": "https://api.github.com/repos/clbiez/Buyer-Log-Desktop/actions/runs/42402759496/logs",
+            "workflow_id": 395073387
+          }
+        ]
+      },
+      "base": "perf/phase7-shared-evidence",
+      "originalReviewHead": "5789337dfa606123f43eb6b7572868c70b9f163f",
+      "reviewedProductionCommit": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+      "productionFilesByteIdentical": true,
+      "oldHeadIsAncestor": true,
+      "finalAcceptance": "pending"
+    }
+  },
+  "historicalCombinedTreeFullNpmTest": {
+    "files": 1294,
+    "seconds": 115.4,
+    "exitCode": 0,
+    "logInArchive": "npm-test-corrected.log",
+    "tests": 8937,
+    "pass": 8872,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 65,
+    "todo": 0,
+    "scope": "Historical combined production tree only; not full regression of the three isolated branches",
+    "productionSourceCommit": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6"
+  },
+  "reviewAndOwnership": {
+    "originalReviewedHeadsPreserved": true,
+    "remotePrDiffsPairwiseDisjoint": true,
+    "newGeneralReview": false,
+    "productionChanged": false,
+    "performanceMeasurementsRepeated": false,
+    "production": {
+      "snapshot": {
+        "pr": 909,
+        "head": "634ac27dcdeb0a5655e37c1c5b08f9aba5fa6ef0",
+        "originalReviewHead": "3390971d7530a6bd83b2cb4f90c0205142339649",
+        "ownedFiles": [
+          "resources/app/server/lib/compute-service.js",
+          "resources/app/server/lib/local-db.js",
+          "resources/app/server/server.js",
+          "resources/app/server/workers/compute-worker.js",
+          "resources/app/tests/phase7-snapshot-compute.test.js",
+          "resources/app/tests/phase7-snapshot-durability.test.js"
+        ],
+        "reviewedProductionCommit": "109292a1f9008ffccbd48a481cdacc2a1d343f54",
+        "originalReviewHeadIsAncestor": true,
+        "reviewedProductionDiffSha256": "e313fe582b82559ef4ed734742ed92a24e75f17efb5c0e7b0235d8f1ede041d3",
+        "finalProductionDiffSha256": "e313fe582b82559ef4ed734742ed92a24e75f17efb5c0e7b0235d8f1ede041d3",
+        "files": {
+          "resources/app/server/lib/compute-service.js": {
+            "gitBlob": "8de564444f2be3181a7859b36fbf3e347881881d",
+            "sha256": "fb5a1b25439f1bdacd06ba74826b8509d7d08a6ec5f273f1a0d771fe9bdc9e05",
+            "identicalToOriginalReviewHead": true
+          },
+          "resources/app/server/lib/local-db.js": {
+            "gitBlob": "424e643c1cb570c605f957b6a3f3d90faefbfb09",
+            "sha256": "756495e930a108cae330f03d6cb29303cff72f79d1972a77291ef47404166269",
+            "identicalToOriginalReviewHead": true
+          },
+          "resources/app/server/server.js": {
+            "gitBlob": "132676bf3bd34c90c3610cf2e15f600f01b27a29",
+            "sha256": "9d928e124bf2173633c5179e051e135b005b621b9b7a9b6f562f8ed9d3f88705",
+            "identicalToOriginalReviewHead": true
+          },
+          "resources/app/server/workers/compute-worker.js": {
+            "gitBlob": "a0c5b6354f1a96503133dd6c2f59fc68d928cad7",
+            "sha256": "fc114e9d81910e736f5e2381d9ea69dce3bc2d46d4c07a8a8545576c783a815c",
+            "identicalToOriginalReviewHead": true
+          },
+          "resources/app/tests/phase7-snapshot-compute.test.js": {
+            "gitBlob": "5a8602cb8b72fa7529c893bcfbe02cadcca1e199",
+            "sha256": "b13e9e2314cd81dd59f89f6c54199a2e12e9d5c3fbd9e43e7af05083d27df6bd",
+            "identicalToOriginalReviewHead": true
+          },
+          "resources/app/tests/phase7-snapshot-durability.test.js": {
+            "gitBlob": "cf614e174ee17f9c26705db75d9f8f376abf2a22",
+            "sha256": "160bda5a260244b51c481853c2609fccf3a569d345d6b9d3f2048d5eb85c2701",
+            "identicalToOriginalReviewHead": true
+          }
+        },
+        "github": {
+          "workflow_runs": [
+            {
+              "id": 42402759996,
+              "name": "Buyer Log PR fast checks",
+              "status": "completed",
+              "conclusion": "success",
+              "run_number": 384,
+              "jobs_url": "https://api.github.com/repos/clbiez/Buyer-Log-Desktop/actions/runs/42402759996/jobs",
+              "logs_url": "https://api.github.com/repos/clbiez/Buyer-Log-Desktop/actions/runs/42402759996/logs",
+              "workflow_id": 395073387
+            }
+          ]
+        },
+        "diffPairwiseDisjoint": true,
+        "acceptance": "implemented; final acceptance pending"
+      },
+      "images": {
+        "pr": 910,
+        "head": "845f10b0bcd6cc2ea67bc2239909af960876fa8c",
+        "originalReviewHead": "71c403275f6caafa6a92750b9357af246c4042fb",
+        "ownedFiles": [
+          "resources/app/server/lib/model-image-distribution.js",
+          "resources/app/server/lib/shared-image-store.js",
+          "resources/app/tests/helpers/phase7-pack-child.cjs",
+          "resources/app/tests/phase7-local-images.test.js",
+          "resources/app/tests/phase7-pack-batch.test.js"
+        ],
+        "reviewedProductionCommit": "384fea2cd5ba368cb07ec864723961165dd55b17",
+        "originalReviewHeadIsAncestor": true,
+        "reviewedProductionDiffSha256": "9b83c75c0e7f3d806c0e08a6b07bc7ad8566a431c6e2b560fd7ba0c01dca77b9",
+        "finalProductionDiffSha256": "9b83c75c0e7f3d806c0e08a6b07bc7ad8566a431c6e2b560fd7ba0c01dca77b9",
+        "files": {
+          "resources/app/server/lib/model-image-distribution.js": {
+            "gitBlob": "83c0ca2ccb6e39c7377fbb31fdaa7f8de9ac2633",
+            "sha256": "81ed9d591782648729aa9156126614a7ca83ae734b1a091fc3b23dfa1e3fae6f",
+            "identicalToOriginalReviewHead": true
+          },
+          "resources/app/server/lib/shared-image-store.js": {
+            "gitBlob": "faf9077b2352d57f4babf6b0291046df81bb3dbd",
+            "sha256": "16316a400f9b859d2f0d379ad43cde30ca2541b20c70cdfa4d46bdb5297d8f54",
+            "identicalToOriginalReviewHead": true
+          },
+          "resources/app/tests/helpers/phase7-pack-child.cjs": {
+            "gitBlob": "e1390059b39258295d53f4f08ad29d722c4f434b",
+            "sha256": "54c6028c668968e74d5aebfea8997d440175a03ea913e5bd0aeb4786f5f79365",
+            "identicalToOriginalReviewHead": true
+          },
+          "resources/app/tests/phase7-local-images.test.js": {
+            "gitBlob": "9791c339bb07ae1c1d8f2c93ddab5d2bec08a3e9",
+            "sha256": "9e94963014be7a4722710f68b259aa48e89af5dabba671350f8541fe1d7a0c42",
+            "identicalToOriginalReviewHead": true
+          },
+          "resources/app/tests/phase7-pack-batch.test.js": {
+            "gitBlob": "816dcfae8fde2d86deac7997c5d9d0f379bfa8dd",
+            "sha256": "b7d34942f1949bf86fb046a3fc85726c2e01409f132c6ef1837a5b3ba5b699c3",
+            "identicalToOriginalReviewHead": true
+          }
+        },
+        "github": {
+          "workflow_runs": [
+            {
+              "id": 42402761355,
+              "name": "Buyer Log PR fast checks",
+              "status": "completed",
+              "conclusion": "success",
+              "run_number": 385,
+              "jobs_url": "https://api.github.com/repos/clbiez/Buyer-Log-Desktop/actions/runs/42402761355/jobs",
+              "logs_url": "https://api.github.com/repos/clbiez/Buyer-Log-Desktop/actions/runs/42402761355/logs",
+              "workflow_id": 395073387
+            }
+          ]
+        },
+        "diffPairwiseDisjoint": true,
+        "acceptance": "implemented; final acceptance pending"
+      },
+      "parser": {
+        "pr": 911,
+        "head": "5a2166cfc6ec54d21134d45df5dc9287aa981505",
+        "originalReviewHead": "5789337dfa606123f43eb6b7572868c70b9f163f",
+        "ownedFiles": [
+          "resources/app/server/lib/parser-process-client.js",
+          "resources/app/server/lib/test-reports/isolated-extract.js",
+          "resources/app/server/workers/file-parser-process.js",
+          "resources/app/tests/phase7-parser-batch.test.js"
+        ],
+        "reviewedProductionCommit": "ee18c4c595e1764c19ad3a31bd9aba892d5b4fe6",
+        "originalReviewHeadIsAncestor": true,
+        "reviewedProductionDiffSha256": "58a4dcfbe94df15320767b87e1abfd4dcc2717729db98223bfa0e3ee02503230",
+        "finalProductionDiffSha256": "58a4dcfbe94df15320767b87e1abfd4dcc2717729db98223bfa0e3ee02503230",
+        "files": {
+          "resources/app/server/lib/parser-process-client.js": {
+            "gitBlob": "e2d0cd1d192fa676f0b8b087f88cecd79be58685",
+            "sha256": "8bb5afd23e98b215d6803ef9968e387bf8f86f6ab10fd881da3688f41a8fe5b8",
+            "identicalToOriginalReviewHead": true
+          },
+          "resources/app/server/lib/test-reports/isolated-extract.js": {
+            "gitBlob": "5a0e77a77e99a253e0f847dc2be69817418d13b1",
+            "sha256": "81cdfc9754824745132bb12f33ed8ac90b37ee6f24134aa0d6b621bd5364dc59",
+            "identicalToOriginalReviewHead": true
+          },
+          "resources/app/server/workers/file-parser-process.js": {
+            "gitBlob": "61e5b6f28d652cef3ab6509e3be288515ec4372d",
+            "sha256": "97bf3bb540cd216875eb4f89d2008d20fd615a9d7f6bb9f952e15786d3e49267",
+            "identicalToOriginalReviewHead": true
+          },
+          "resources/app/tests/phase7-parser-batch.test.js": {
+            "gitBlob": "b895aa26eb1a145e5f3440858defd337a40366df",
+            "sha256": "01a29e1a00ab91e2b249e129bcaff46123b5f8888f4e85643f0d6c1693b6b5bb",
+            "identicalToOriginalReviewHead": true
+          }
+        },
+        "github": {
+          "workflow_runs": [
+            {
+              "id": 42402759496,
+              "name": "Buyer Log PR fast checks",
+              "status": "completed",
+              "conclusion": "success",
+              "run_number": 383,
+              "jobs_url": "https://api.github.com/repos/clbiez/Buyer-Log-Desktop/actions/runs/42402759496/jobs",
+              "logs_url": "https://api.github.com/repos/clbiez/Buyer-Log-Desktop/actions/runs/42402759496/logs",
+              "workflow_id": 395073387
+            }
+          ]
+        },
+        "diffPairwiseDisjoint": true,
+        "acceptance": "implemented; final acceptance pending"
+      }
+    },
+    "unchangedExistingEvidence": {
+      "docs/performance-program/phase-7-server-results.json": "b92282cabeabb23bfdab96e62d64fb0da09ce0a7015de6bc968b891aff5f4c6c",
+      "docs/performance-program/assets/phase7-server-tr-light.png": "aa1a488762d0b870bfabb31ce3186016b45601ba4423348f0a6bf7a2e8c53bfe",
+      "docs/performance-program/assets/phase7-server-en-dark.png": "591a19c12eda01ab933cb383d3a0940fe736401ec4b7c857a30350fdc913bc2f",
+      "resources/app/scripts/phase7-server-benchmark.cjs": "b234f8ee6c51c60b28a54ff5895b8f64315cbf327d55b7d36f73bdda0764ebe3",
+      "resources/app/scripts/phase7-parser-probe.cjs": "ded8a228532210662f16cdb8c88f8e692de84880f121a3d21b5c2116b8bbc553",
+      "resources/app/scripts/phase7-test-env.cjs": "ea9f3d5752b419466914132dade081066530ad39352112077e09dc3b9ad3f9fc",
+      "docs/performance-program/phase-7-artifacts/diagnostics.tar.gz": "6a42c9b638e6e12a23579da880283d196e5e17c20235e659c1885785837e5d59"
+    },
+    "capacityP1": {
+      "closed": true,
+      "independentReviewer": "gpt-6-astra",
+      "originalIndependentClosureTests": 11,
+      "originalEvidenceArchiveSha256": "6a42c9b638e6e12a23579da880283d196e5e17c20235e659c1885785837e5d59",
+      "newGeneralReview": false
+    }
+  },
+  "validationArchive": {
+    "file": "final-branch-validation.tar.gz",
+    "sha256": "79585428e3c5d33934828df9a911120a27415daf59ddb5487b7efb219cd1cb5d"
+  },
+  "productionUnchanged": true,
+  "performanceMeasurementsRepeated": false,
+  "newGeneralIndependentReview": false,
+  "mergeMain": false,
+  "testPublication": false,
+  "stablePublication": false
+}

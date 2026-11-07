@@ -1,0 +1,19 @@
+{
+  "counts": {
+    "pass": 8920,
+    "fail": 0,
+    "skipped": 65,
+    "cancelled": 0
+  },
+  "files": 1299,
+  "related": 582,
+  "notes": 46,
+  "main": "6b8362ad059fcf830dabd14330fa813888ec9f5c",
+  "testedRevision": "ea0d5d46081a022f603e78e4c060c4b67607c3fe",
+  "appTree": "d1f573f1dac85dc1aefaa15e566064b9812ba975",
+  "allTenBatchesOneInvocation": true,
+  "defaultConcurrency": 4,
+  "nodeOptions": null,
+  "ownProductionTestsUnchangedSince": "8b305010",
+  "mergePermission": "Explicit user approval conditional on green current Main checks"
+}

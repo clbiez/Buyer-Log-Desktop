@@ -1,0 +1,84 @@
+{
+  "originalCommits": [
+    "eb17dc22df492c84b557c05ea4a17df81d09b392",
+    "cbf9fce4f326a48aba1458db863ac04c7024d4e1",
+    "ed8a425f027813af85123278dfdb9670122a6f68"
+  ],
+  "deliveredHead": "ed8a425f027813af85123278dfdb9670122a6f68",
+  "main": "63159fb32ff3d5bdc5f142b4a8f16ca6a3983240",
+  "normalMergeResult": "Already up to date; origin/main is an ancestor of the delivered head. No rebase or force push.",
+  "evidence": {
+    "docs/performance/client-items-2026-11-07/card-01-after.txt": {
+      "sha256": "6033eda0f1a331372116e4a985bb84ac858b386b0653c8bb82ef7c2cb8a9b78c",
+      "bytes": 4676
+    },
+    "docs/performance/client-items-2026-11-07/card-01-before.txt": {
+      "sha256": "4bb685cdf66568ddb77286e8fa971dbad51ed012060dd899a752679a61c7a55c",
+      "bytes": 4706
+    },
+    "docs/performance/client-items-2026-11-07/card-01-model-red.txt": {
+      "sha256": "d09df8ab14f877e5a473327ca5516a86f11b258f7e8a2e3cb642b74443de1aba",
+      "bytes": 2069
+    },
+    "docs/performance/client-items-2026-11-07/card-01-red.txt": {
+      "sha256": "7517f2d75c0b9a9655f5f52bb9c9ea740cddabab480268ae4b28589db91523a4",
+      "bytes": 3910
+    },
+    "docs/performance/client-items-2026-11-07/card-01.md": {
+      "sha256": "06b5feb76c9fbfa5900d9d95d83398ff8eb2c7550adc48e7fd90f7e6239e246d",
+      "bytes": 5375
+    },
+    "docs/performance/client-items-2026-11-07/cpr-11-after.json": {
+      "sha256": "024f2a7af9d7a4979bf0868786fd185aab8eae9e1b12bb3676884d3d7c9519bb",
+      "bytes": 691
+    },
+    "docs/performance/client-items-2026-11-07/cpr-11-before.json": {
+      "sha256": "538efbfd062b1666efc8387d7f8a8520a8f996c10d2959698a43ba146c46edec",
+      "bytes": 704
+    },
+    "docs/performance/client-items-2026-11-07/cpr-11-red.txt": {
+      "sha256": "61ceb49136cda0fd48d31d159157fc5e7d11860c76b6eb0a0faf5540d22d726e",
+      "bytes": 2111
+    },
+    "docs/performance/client-items-2026-11-07/cpr-11.md": {
+      "sha256": "ce5e14f9fa056eaf75fbdb3cfbd444a97ca2441de51257469199c2820c1cf055",
+      "bytes": 1380
+    },
+    "docs/performance/client-items-2026-11-07/full-npm-test.txt": {
+      "sha256": "ff4031a8bb3243f9e1bf359caec746d00afb2ff2fef6d17ae00b818f0270a51f",
+      "bytes": 1595
+    },
+    "docs/performance/client-items-2026-11-07/int-09-after.txt": {
+      "sha256": "0e85c3ddf8ef97664fd0a6cf9f5f1e898bcf24a69ca2ad39437fb71dd3a28291",
+      "bytes": 387
+    },
+    "docs/performance/client-items-2026-11-07/int-09-before.txt": {
+      "sha256": "7668e780db8d9ac206a7db8ab789f7e6171b562e23b6b5721ee3ff1b6684c15e",
+      "bytes": 1059
+    },
+    "docs/performance/client-items-2026-11-07/int-09.md": {
+      "sha256": "f2b910bf6bdb019a3a086c1180302ebeea8bbe37e569077d3dd217cb2ff895f6",
+      "bytes": 2236
+    },
+    "docs/performance/client-items-2026-11-07/validation.md": {
+      "sha256": "3ad1b4b06e4d04aa894def37240b7fbb95765ad50da321f320346c85b5c55b85",
+      "bytes": 2520
+    },
+    "resources/app/public/release-notes/next-assets/lcwai-active-stream.png": {
+      "sha256": "9ac5a043c4bc2532dcd450f97a28b3bdc28e15c598e3cf84a49a3180d42dc5c3",
+      "bytes": 116291
+    },
+    "resources/app/public/release-notes/next-assets/license-card-separate-detail.png": {
+      "sha256": "675060f01326886dfa364a5950b5e60fb8c0b9e685f70c91af01ac6cd391fb7e",
+      "bytes": 235375
+    },
+    "resources/app/public/release-notes/next-assets/manufacturer-separate-detail.png": {
+      "sha256": "9e987d37d9f957a4e4da6f0552b4f08be01da5cb88c858d0d8b5438dcb871740",
+      "bytes": 159390
+    },
+    "resources/app/public/release-notes/next-assets/email-directory-separate-detail.png": {
+      "sha256": "b9acac3838a71297977fc1f2ee993ba772ebd69b993bca3e99cffd53fc8a21b8",
+      "bytes": 166392
+    }
+  }
+}

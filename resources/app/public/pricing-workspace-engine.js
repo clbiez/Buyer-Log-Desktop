@@ -50,9 +50,10 @@
       manufacturerCount:manufacturerCount(req),
     };
   }
-  function requestMatchesFilter(req,filter){
-    const stats=requestStats(req);
+  function requestMatchesFilter(req,filter,stats){
     if(filter==='all')return true;
+    if(filter!=='closed'&&filter!=='approved'&&filter!=='waiting-approval'&&filter!=='waiting-quote')return req?.status!=='closed';
+    stats=stats||requestStats(req);
     if(filter==='closed')return stats.workflow==='closed';
     if(filter==='approved')return req?.status!=='closed'&&stats.approvedPriceCount>0;
     if(filter==='waiting-approval')return req?.status!=='closed'&&stats.validPriceCount>0&&stats.approvedPriceCount===0;

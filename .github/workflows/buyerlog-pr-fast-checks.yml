@@ -30,6 +30,8 @@ jobs:
       - name: Clipboard, selection and Data Management layout regression
         # Module transitions must not restart or animate selected/edited grids.
         run: node --test tests/motion-plus-module-flow.test.js tests/cp-grid-paste.test.js tests/collection-spreadsheet-wiring.test.js tests/grid-cell-selection-visibility-v70300.test.js tests/compact-selection-filter-copy.test.js tests/cp-orders-external-output-v1090.test.js tests/ui-polish-v70319.test.js tests/horizon-personal-deletion-persist.test.js tests/row-note-clipboard-spacing.test.js
+      - name: Lazy styles, module dependency order and first Excel import click
+        run: node --test tests/startup-feature-assets.test.js tests/perf-runtime-existing-static-script-v965.test.js
       - name: Chronological season and budget-month filters and table sorting
         run: node --test tests/chronological-sorting.test.js tests/business-rules.test.js tests/collection-mb-month-locale-filter.test.js tests/quick-filter-groups-v736.test.js
       - name: Loading approval dates, calculations and edit protection
@@ -39,7 +41,7 @@ jobs:
       - name: Supp. FOB quick calculator and royalty commission regression
         run: node --test tests/supp-fob-quick-calculator.test.js tests/license-royalty-commission-v2.test.js tests/grid-context-copy-v1052.test.js
       - name: Unified license cards, category pricing and legacy peer compatibility
-        run: node --test tests/license-cards-unified.test.js tests/license-cards-editor.test.js tests/collection-pricing-engine.test.js tests/royalty-precision-license-cards-v20261021.test.js
+        run: node --test tests/license-cards-unified.test.js tests/license-cards-editor.test.js tests/license-quick-fob-close.test.js tests/email-directory-snapshot-identity.test.js tests/collection-pricing-engine.test.js tests/royalty-precision-license-cards-v20261021.test.js
       - name: Checklist Worker, formula editor and attention regressions
         run: node --test tests/cp-background-personal-decisions-v249.test.js tests/cp-rule-editor-v980.test.js tests/cp-studio-workspace.test.js tests/cp-attention-exclusions-v959.test.js tests/current-ui-regressions-v20260920.test.js
       - name: Thinking Orbs startup and navigation regression
@@ -73,8 +75,13 @@ jobs:
         run: node --test tests/checklist-forbidden-retry-v20261027.test.js tests/checklist-durability.test.js
       - name: Collection LFL references and buyer country filter
         run: node --test tests/collection-lfl-country-filter.test.js tests/collection-lfl-reference.test.js tests/collection-lfl-detail.test.js
+      - name: Collection catalog worker contract, live guards and CP input revision
+        run: |
+          node --test tests/client-computation-performance.test.js tests/collection-asas-excel-grid-v489.test.js tests/collection-product-main-definition-suggestions-v829.test.js tests/collection-catalog-compute-contract.test.js tests/compute-read-guard.test.js tests/compute-read-service.test.js tests/compute-projection-route-wiring.test.js tests/compute-bulk-projection-wiring.test.js tests/cp-decision-input-revision.test.js tests/cp-orders-hydration-revision.test.js
       - name: Freeze Columns engine for CP, Orders and Collection
         run: node --test tests/table-freeze-engine.test.js tests/freeze-hover-v508.test.js tests/kol-freeze-colpanel-imgsize-v585.test.js tests/collection-freeze-grid-alignment-v1015.test.js tests/kol-freeze-cache-bust-v1010.test.js tests/table-header-tracking-v70301.test.js
+      - name: Native profiler shutdown and worker ownership
+        run: node --test tests/runtime-profiler-worker.test.js tests/runtime-pressure-monitor.test.js
       - name: Validate nonempty pending release notes
         run: |
           node -e "const n=require('./public/release-notes/next.json');if(n.changes?.length)require('./scripts/release-notes').validateNext();else if(n.publishedAt)throw Error('Empty pending notes must have blank publishedAt')"

@@ -1,0 +1,116 @@
+{
+  "revision": "7a3c15c9b388e9b72fede7fb9e73e721737dae43",
+  "appTree": "ebd48562a62b11b5ad6d807a1c3bd3dc7bf444da",
+  "startedAt": "2026-11-07T21:48:49.425820+00:00",
+  "status": "passed",
+  "commands": [
+    {
+      "name": "parser-probe-syntax",
+      "command": [
+        "node",
+        "--check",
+        "scripts/phase7-parser-probe.cjs"
+      ],
+      "cwd": "/tmp/buyerlog-phase7-stack/resources/app",
+      "tmpdir": "/tmp/buyerlog-913-parser-probe-syntax-e4e8rd67",
+      "startedAt": "2026-11-07T21:48:49.426545+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:48:49.520091+00:00",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipSha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+    },
+    {
+      "name": "server-benchmark-syntax",
+      "command": [
+        "node",
+        "--check",
+        "scripts/phase7-server-benchmark.cjs"
+      ],
+      "cwd": "/tmp/buyerlog-phase7-stack/resources/app",
+      "tmpdir": "/tmp/buyerlog-913-server-benchmark-syntax-y9pp8riu",
+      "startedAt": "2026-11-07T21:48:49.521196+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:48:49.606773+00:00",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipSha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+    },
+    {
+      "name": "env-helper-syntax",
+      "command": [
+        "node",
+        "--check",
+        "scripts/phase7-test-env.cjs"
+      ],
+      "cwd": "/tmp/buyerlog-phase7-stack/resources/app",
+      "tmpdir": "/tmp/buyerlog-913-env-helper-syntax-9zziuqgh",
+      "startedAt": "2026-11-07T21:48:49.607362+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:48:49.669049+00:00",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gzipSha256": "f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec"
+    },
+    {
+      "name": "related-integrated",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "compute",
+        "local-db",
+        "startup-benchmark"
+      ],
+      "cwd": "/tmp/buyerlog-phase7-stack/resources/app",
+      "tmpdir": "/tmp/buyerlog-913-related-integrated-z_qsu616",
+      "startedAt": "2026-11-07T21:48:49.669743+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:49:11.988095+00:00",
+      "logSha256": "9b5ac5bd8b1941d88b02ddfd098eb185c32b245de7cf313ebe37025e2ac19f84",
+      "gzipSha256": "49a3434447ad96ba21a07bca5ba3a6dd68634c36b8b0dd15d75a274653ba14df"
+    },
+    {
+      "name": "full-integrated",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "cwd": "/tmp/buyerlog-phase7-stack/resources/app",
+      "tmpdir": "/tmp/buyerlog-913-full-integrated-v7gadcha",
+      "startedAt": "2026-11-07T21:49:11.993982+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:52:51.277344+00:00",
+      "logSha256": "bd46b4f3ae77b22c2113b2da4979eb92f3da925204b34ecaaae034f1e276d3ed",
+      "gzipSha256": "276e2fc512c8a544ff7498c4666157687545285438380b8ec4a67755638407fb"
+    },
+    {
+      "name": "i18n-integrated",
+      "command": [
+        "npm",
+        "run",
+        "i18n:check"
+      ],
+      "cwd": "/tmp/buyerlog-phase7-stack/resources/app",
+      "tmpdir": "/tmp/buyerlog-913-i18n-integrated-3tk2kkvo",
+      "startedAt": "2026-11-07T21:52:51.359533+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:52:54.477235+00:00",
+      "logSha256": "5ec249c8371211a80305757433d1251b38acf550e7f831c4d5a28cbd11c79ccb",
+      "gzipSha256": "1990e3930a54568227c02bc6f9726dc426b61475f998ccc493e96dcc68738c41"
+    },
+    {
+      "name": "release-integrated",
+      "command": [
+        "npm",
+        "run",
+        "release:notes:validate"
+      ],
+      "cwd": "/tmp/buyerlog-phase7-stack/resources/app",
+      "tmpdir": "/tmp/buyerlog-913-release-integrated-frckdymq",
+      "startedAt": "2026-11-07T21:52:54.478187+00:00",
+      "returncode": 0,
+      "finishedAt": "2026-11-07T21:52:55.547843+00:00",
+      "logSha256": "59c14a7a7a60782b6816ba58d37c573df498053d9b52c4d755c0a0ab03aa74b0",
+      "gzipSha256": "4bfacd89e0241c5b76070b5c80e84a9744ac08f071506e259d89df537dd79945"
+    }
+  ],
+  "finishedAt": "2026-11-07T21:52:55.548458+00:00"
+}

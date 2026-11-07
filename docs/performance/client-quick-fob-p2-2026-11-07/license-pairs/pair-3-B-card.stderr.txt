@@ -1,0 +1,2 @@
+license-cards 500: selection p95=142.6 ms; output=true
+license-cards 5000: selection p95=1321.0 ms; output=true

@@ -1,0 +1,171 @@
+{
+  "chromium": "154.0.8037.57",
+  "results": [
+    {
+      "module": "license-cards",
+      "count": 500,
+      "select": {
+        "samples": 10,
+        "p50Ms": 344.29999999998836,
+        "p95Ms": 426.4000000000233
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 190.79999999998836,
+        "p95Ms": 266.5999999999767
+      },
+      "save": {
+        "samples": 5,
+        "p50Ms": 686.7000000000116,
+        "p95Ms": 756.9000000000233
+      },
+      "retainedList": false,
+      "retainedRow": false,
+      "scrollTop": 120,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "renderedRows": 500,
+      "requests": 5
+    },
+    {
+      "module": "manufacturers",
+      "count": 500,
+      "select": {
+        "samples": 10,
+        "p50Ms": 37.70000000001164,
+        "p95Ms": 45.79999999998836
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 30,
+        "p95Ms": 47.09999999997672
+      },
+      "save": null,
+      "retainedList": false,
+      "retainedRow": false,
+      "scrollTop": 120,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "renderedRows": 500,
+      "requests": 0
+    },
+    {
+      "module": "email-groups",
+      "count": 500,
+      "select": {
+        "samples": 10,
+        "p50Ms": 23,
+        "p95Ms": 27.70000000001164
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 18.70000000001164,
+        "p95Ms": 30.29999999998836
+      },
+      "save": {
+        "samples": 5,
+        "p50Ms": 34.79999999998836,
+        "p95Ms": 35.20000000001164
+      },
+      "retainedList": false,
+      "retainedRow": false,
+      "scrollTop": 0,
+      "detailEquivalent": true,
+      "draftPreserved": false,
+      "saved": true,
+      "renderedRows": 500,
+      "requests": 5
+    },
+    {
+      "module": "license-cards",
+      "count": 5000,
+      "select": {
+        "samples": 10,
+        "p50Ms": 3550.7999999999884,
+        "p95Ms": 4236.699999999953
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 1789.8000000000466,
+        "p95Ms": 3705.4000000000233
+      },
+      "save": {
+        "samples": 5,
+        "p50Ms": 6651.599999999977,
+        "p95Ms": 7902.900000000023
+      },
+      "retainedList": false,
+      "retainedRow": false,
+      "scrollTop": 120,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "renderedRows": 5000,
+      "requests": 5
+    },
+    {
+      "module": "manufacturers",
+      "count": 5000,
+      "select": {
+        "samples": 10,
+        "p50Ms": 323.19999999995343,
+        "p95Ms": 438.4000000000233
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 279.0999999999767,
+        "p95Ms": 408.5
+      },
+      "save": null,
+      "retainedList": false,
+      "retainedRow": false,
+      "scrollTop": 120,
+      "detailEquivalent": true,
+      "draftPreserved": true,
+      "saved": true,
+      "renderedRows": 5000,
+      "requests": 0
+    },
+    {
+      "module": "email-groups",
+      "count": 5000,
+      "select": {
+        "samples": 10,
+        "p50Ms": 210.59999999997672,
+        "p95Ms": 257
+      },
+      "search": {
+        "samples": 10,
+        "p50Ms": 186.70000000006985,
+        "p95Ms": 227.5
+      },
+      "save": {
+        "samples": 5,
+        "p50Ms": 299,
+        "p95Ms": 317.69999999995343
+      },
+      "retainedList": false,
+      "retainedRow": false,
+      "scrollTop": 0,
+      "detailEquivalent": true,
+      "draftPreserved": false,
+      "saved": true,
+      "renderedRows": 5000,
+      "requests": 5
+    }
+  ]
+}
+AssertionError [ERR_ASSERTION]: license-cards list identity
+
+false !== true
+
+    at /workspace/Buyer-Log-Desktop/resources/app/scripts/card-render-acceptance.js:88:16 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: 'strictEqual',
+  diff: 'simple'
+}

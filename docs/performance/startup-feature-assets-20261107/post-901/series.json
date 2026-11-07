@@ -1,0 +1,413 @@
+{
+  "startedAt": "2026-11-07T20:13:47.444369+00:00",
+  "synthetic": true,
+  "before": "31004ea08982ffcce849640e5c5e3580448f0914",
+  "after": "e1d342939a8aee49b237e5e1ef9e725b66f83021",
+  "fixtureArchiveSha256": "5913414603984b02b1c30b87f1f9231da3718ab797a007f4bd14067ec6cd5c70",
+  "harnessSha256": "f6a619c0002d40cc4bfae67adf051fa55323d933ffad2d3553fb492f619797dc",
+  "resourceProbeSha256": "65c001557aa468bf9f8d52b3668b5fa2e1c70ac8d5cbadcb40229d3823b21a2d",
+  "moduleProbeSha256": "8e9192f518b42dca6c3420a05ac78c4148606d2c4605650371ddcf3d60816969",
+  "order": "A/B-B/A-A/B; fresh source/data/cache/server/browser per arm",
+  "runs": [
+    {
+      "pair": 1,
+      "arm": "before",
+      "revision": "31004ea08982ffcce849640e5c5e3580448f0914",
+      "appTree": "2c829c02148f4896089bdcbef8a824049a7dec1c",
+      "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-1",
+      "startedAt": "2026-11-07T20:13:48.351239+00:00",
+      "fixture": {
+        "synthetic": true,
+        "rows": 30000,
+        "seed": 7,
+        "hashes": {
+          "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+          "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+          "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+        }
+      },
+      "status": "passed",
+      "benchmarkCommand": [
+        "node",
+        "scripts/benchmark-startup-orders.js",
+        "--rows",
+        "30000",
+        "--fixture-root",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-1"
+      ],
+      "benchmarkReturncode": 0,
+      "rowHashes": {
+        "generation": "mw6udzmu-1876d8c7978f",
+        "sourceRevision": "012e4f5d9fc783b8017d11c8fbf393a74d8ee3f305aabcba826645158d774e97",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "resourceNavigations": 5,
+      "moduleCommand": [
+        "node",
+        "/tmp/buyerlog-shell-post901-tools/module-probe.cjs",
+        "/tmp/buyerlog-post901-baseline/resources/app",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-1",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-1/modules.json"
+      ],
+      "moduleReturncode": 0,
+      "moduleCount": 16,
+      "finishedAt": "2026-11-07T20:20:07.947126+00:00"
+    },
+    {
+      "pair": 1,
+      "arm": "after",
+      "revision": "e1d342939a8aee49b237e5e1ef9e725b66f83021",
+      "appTree": "cd7c3afb986d9200060d0e3271a1e29e0cf2bb42",
+      "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-1",
+      "startedAt": "2026-11-07T20:20:08.911504+00:00",
+      "fixture": {
+        "synthetic": true,
+        "rows": 30000,
+        "seed": 7,
+        "hashes": {
+          "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+          "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+          "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+        }
+      },
+      "status": "passed",
+      "benchmarkCommand": [
+        "node",
+        "scripts/benchmark-startup-orders.js",
+        "--rows",
+        "30000",
+        "--fixture-root",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-1"
+      ],
+      "benchmarkReturncode": 0,
+      "rowHashes": {
+        "generation": "mw6uma7k-6d8fcb363a7d",
+        "sourceRevision": "e5960f6553cc7d75afb26a35fea9e86746f11d86acc211ca0383718fd4872a83",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "resourceNavigations": 5,
+      "moduleCommand": [
+        "node",
+        "/tmp/buyerlog-shell-post901-tools/module-probe.cjs",
+        "/workspace/buyerlog-post-main-acceptance/resources/app",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-1",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-1/modules.json"
+      ],
+      "moduleReturncode": 0,
+      "moduleCount": 16,
+      "finishedAt": "2026-11-07T20:26:25.183769+00:00"
+    },
+    {
+      "pair": 2,
+      "arm": "after",
+      "revision": "e1d342939a8aee49b237e5e1ef9e725b66f83021",
+      "appTree": "cd7c3afb986d9200060d0e3271a1e29e0cf2bb42",
+      "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-2",
+      "startedAt": "2026-11-07T20:26:26.232949+00:00",
+      "fixture": {
+        "synthetic": true,
+        "rows": 30000,
+        "seed": 7,
+        "hashes": {
+          "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+          "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+          "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+        }
+      },
+      "status": "passed",
+      "benchmarkCommand": [
+        "node",
+        "scripts/benchmark-startup-orders.js",
+        "--rows",
+        "30000",
+        "--fixture-root",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-2"
+      ],
+      "benchmarkReturncode": 0,
+      "rowHashes": {
+        "generation": "mw6uu754-8e30e28a33c0",
+        "sourceRevision": "acbf2134dde158dff4b9d9b88f2e3b740cbba2b7cdb5710fd6b54b8a751ee6b8",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "resourceNavigations": 5,
+      "moduleCommand": [
+        "node",
+        "/tmp/buyerlog-shell-post901-tools/module-probe.cjs",
+        "/workspace/buyerlog-post-main-acceptance/resources/app",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-2",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-2/modules.json"
+      ],
+      "moduleReturncode": 0,
+      "moduleCount": 16,
+      "finishedAt": "2026-11-07T20:32:18.187243+00:00"
+    },
+    {
+      "pair": 2,
+      "arm": "before",
+      "revision": "31004ea08982ffcce849640e5c5e3580448f0914",
+      "appTree": "2c829c02148f4896089bdcbef8a824049a7dec1c",
+      "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-2",
+      "startedAt": "2026-11-07T20:32:19.196027+00:00",
+      "fixture": {
+        "synthetic": true,
+        "rows": 30000,
+        "seed": 7,
+        "hashes": {
+          "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+          "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+          "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+        }
+      },
+      "status": "passed",
+      "benchmarkCommand": [
+        "node",
+        "scripts/benchmark-startup-orders.js",
+        "--rows",
+        "30000",
+        "--fixture-root",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-2"
+      ],
+      "benchmarkReturncode": 0,
+      "rowHashes": {
+        "generation": "mw6v1td9-43c0fe0479bd",
+        "sourceRevision": "9851ad3f50c83db1bddd0ebe440c232d5a18545906a39350fca6e8d5896854b4",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "resourceNavigations": 5,
+      "moduleCommand": [
+        "node",
+        "/tmp/buyerlog-shell-post901-tools/module-probe.cjs",
+        "/tmp/buyerlog-post901-baseline/resources/app",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-2",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-2/modules.json"
+      ],
+      "moduleReturncode": 0,
+      "moduleCount": 16,
+      "finishedAt": "2026-11-07T20:38:24.299609+00:00"
+    },
+    {
+      "pair": 3,
+      "arm": "before",
+      "revision": "31004ea08982ffcce849640e5c5e3580448f0914",
+      "appTree": "2c829c02148f4896089bdcbef8a824049a7dec1c",
+      "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-3",
+      "startedAt": "2026-11-07T20:38:25.342604+00:00",
+      "fixture": {
+        "synthetic": true,
+        "rows": 30000,
+        "seed": 7,
+        "hashes": {
+          "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+          "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+          "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+        }
+      },
+      "status": "passed",
+      "benchmarkCommand": [
+        "node",
+        "scripts/benchmark-startup-orders.js",
+        "--rows",
+        "30000",
+        "--fixture-root",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-3"
+      ],
+      "benchmarkReturncode": 0,
+      "rowHashes": {
+        "generation": "mw6v9z53-ca850daf8017",
+        "sourceRevision": "28be02adf941f2559ebb1379d3b82b5c3070d57a2064a5ef21659733a10166b0",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "resourceNavigations": 5,
+      "moduleCommand": [
+        "node",
+        "/tmp/buyerlog-shell-post901-tools/module-probe.cjs",
+        "/tmp/buyerlog-post901-baseline/resources/app",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-3",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-before-3/modules.json"
+      ],
+      "moduleReturncode": 0,
+      "moduleCount": 16,
+      "finishedAt": "2026-11-07T20:44:41.476720+00:00"
+    },
+    {
+      "pair": 3,
+      "arm": "after",
+      "revision": "e1d342939a8aee49b237e5e1ef9e725b66f83021",
+      "appTree": "cd7c3afb986d9200060d0e3271a1e29e0cf2bb42",
+      "fixtureRoot": "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3",
+      "startedAt": "2026-11-07T20:44:42.424396+00:00",
+      "fixture": {
+        "synthetic": true,
+        "rows": 30000,
+        "seed": 7,
+        "hashes": {
+          "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+          "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+          "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+        }
+      },
+      "status": "passed",
+      "benchmarkCommand": [
+        "node",
+        "scripts/benchmark-startup-orders.js",
+        "--rows",
+        "30000",
+        "--fixture-root",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3"
+      ],
+      "benchmarkReturncode": 0,
+      "rowHashes": {
+        "generation": "mw6vhoks-9100b15fc128",
+        "sourceRevision": "592ae0fbdb996d1ba2fca3189d225187c3e3e2690bb61098ad7ccba5ffc4f3f8",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "resourceNavigations": 5,
+      "moduleCommand": [
+        "node",
+        "/tmp/buyerlog-shell-post901-tools/module-probe.cjs",
+        "/workspace/buyerlog-post-main-acceptance/resources/app",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3",
+        "/tmp/buyerlog-startup-shellpost901-20261107T201347-after-3/modules.json"
+      ],
+      "moduleReturncode": 0,
+      "moduleCount": 16,
+      "finishedAt": "2026-11-07T20:51:10.601791+00:00"
+    }
+  ],
+  "status": "passed",
+  "equivalencePairs": [
+    {
+      "pair": 1,
+      "equal": true,
+      "modules": {
+        "cp": {
+          "rows": 24982,
+          "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+        },
+        "orders": {
+          "rows": 30000,
+          "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+        },
+        "overview": {
+          "rows": 30000,
+          "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+        }
+      }
+    },
+    {
+      "pair": 2,
+      "equal": true,
+      "modules": {
+        "cp": {
+          "rows": 24982,
+          "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+        },
+        "orders": {
+          "rows": 30000,
+          "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+        },
+        "overview": {
+          "rows": 30000,
+          "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+        }
+      }
+    },
+    {
+      "pair": 3,
+      "equal": true,
+      "modules": {
+        "cp": {
+          "rows": 24982,
+          "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+        },
+        "orders": {
+          "rows": 30000,
+          "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+        },
+        "overview": {
+          "rows": 30000,
+          "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+        }
+      }
+    }
+  ],
+  "finishedAt": "2026-11-07T20:51:10.603680+00:00"
+}

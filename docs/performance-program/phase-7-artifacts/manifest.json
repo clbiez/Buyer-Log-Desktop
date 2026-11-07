@@ -71,5 +71,11 @@
     "commonBranch": "perf/phase7-shared-evidence",
     "contract": "../phase-7-packaging-contract.json",
     "finalValidation": "../phase-7-packaging-handoff.md"
+  },
+  "finalBranchRegression": {
+    "results": "final-branch-validation.json",
+    "archive": "final-branch-validation.tar.gz",
+    "archiveSha256": "79585428e3c5d33934828df9a911120a27415daf59ddb5487b7efb219cd1cb5d",
+    "scope": "Each final production PR head individually; historical combined-tree result remains separate"
   }
 }

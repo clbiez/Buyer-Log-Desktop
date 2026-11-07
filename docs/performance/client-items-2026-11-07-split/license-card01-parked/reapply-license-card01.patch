@@ -1,0 +1,365 @@
+diff --git a/resources/app/public/license-cards.js b/resources/app/public/license-cards.js
+index ec5639d3e38fe28df3ede6b0df9bdbf040176fe6..554e54d6a2361ceb0043ec52fd8371872a05c2ca 100644
+--- a/resources/app/public/license-cards.js
++++ b/resources/app/public/license-cards.js
+@@ -31,7 +31,25 @@
+   }
+   const rowIds=row=>[row.id,...(row.merged||[]).map(c=>c.id)];
+   const isFavorite=row=>rowIds(row).some(id=>S.favorites.has(id));
+-  const allRows=()=>E.rows(S.data?.cards||[],mergeOpts());
++  let rowView=null,filterView=null;
++  function allRows(){
++    const options=mergeOpts(),day=E.today();
++    if(!rowView||rowView.data!==S.data||rowView.revision!==S.data?.revision||rowView.merges!==S.data?.licensorMerges||rowView.day!==day||rowView.mergeKey!==options.mergeKey||rowView.groupKey!==options.groupKey){
++      rowView={data:S.data,revision:S.data?.revision,merges:S.data?.licensorMerges,day,mergeKey:options.mergeKey,groupKey:options.groupKey,rows:E.rows(S.data?.cards||[],{...options,day})};
++    }
++    return rowView.rows;
++  }
++  function filteredRows(){
++    allRows();
++    const key=JSON.stringify([S.query,S.licensor,S.sort.key,S.sort.dir]);
++    if(!filterView||filterView.base!==rowView||filterView.key!==key){
++      const rows=!S.query&&S.licensor==null&&S.sort.key==='license'&&S.sort.dir==='asc'
++        ? rowView.rows
++        : E.rows(S.data?.cards||[],{query:S.query,licensor:S.licensor,sort:S.sort,...mergeOpts(),day:rowView.day});
++      filterView={base:rowView,key,rows,counts:{all:rows.length,active:rows.filter(r=>r.primary.status==='active').length,missing:rows.filter(r=>r.primary.status!=='active').length,noLicensor:rows.filter(r=>!r.licensor).length,noMap:rows.filter(r=>!r.map.length).length}};
++    }
++    return filterView;
++  }
+   async function toggleFavorite(id){
+     // Merge with the account's hydrated list even if the first click arrives
+     // before startup hydration completes on a browser with an empty cache.
+@@ -234,7 +252,9 @@
+   // Closing keeps pending card edits; Cancel explicitly discards them.
+   function closeEditor(){
+     const id=S.expanded;S.expanded='';S.historyOpen=false;S.addLicensorOpen=false;
+-    document.activeElement?.blur?.();render();
++    document.activeElement?.blur?.();renderEditor();renderCard(id);
++    const quick=S.host.querySelector('.lcQuick');
++    if(quick){quick.outerHTML=quickHtml();runQuick();}
+     S.host.querySelector(`[data-row="${CSS.escape(id)}"] .lcName`)?.focus?.({preventScroll:true});
+   }
+   function detailHtml(row,d){
+@@ -272,7 +292,8 @@
+     </div>${canEdit()?`<footer class="lcDetailFoot"><span>${esc(T('Değişiklikler tüm yetkili kullanıcılarla paylaşılır.','Changes are shared with all authorized users.'))}</span><button type="button" class="lcBtn" data-lc-act="cancelEditor" data-id="${esc(card.id)}">${esc(T('Vazgeç','Cancel'))}</button><button type="button" class="lcBtn primary" data-lc-act="save" data-id="${esc(card.id)}" ${d?.saving||d?.conflict?'disabled':''}>${esc(d?.saving?T('Kaydediliyor…','Saving…'):T('Kaydet','Save'))}</button></footer>`:''}</dialog>`;
+   }
+   function currentRows(){
+-    const cards=S.data?.cards||[],rows=E.rows(cards,{query:S.query,licensor:S.licensor,status:S.status,sort:S.sort,...mergeOpts()}).filter(row=>!S.favoritesOnly||isFavorite(row));
++    const cards=S.data?.cards||[],rows=filteredRows().rows.filter(row=>
++      (S.status==='active'?row.primary.status==='active':S.status==='missing'?row.primary.status!=='active':S.status==='noLicensor'?!row.licensor:S.status==='noMap'?!row.map.length:true)&&(!S.favoritesOnly||isFavorite(row)));
+     // A draft whose card disappeared stays visible (blocked) until the user discards it.
+     for(const [id,d] of S.drafts){
+       if(!cards.some(c=>c.id===id))rows.unshift({...E.rows([d.snapshot])[0],card:d.snapshot});
+@@ -282,8 +303,7 @@
+     return rows;
+   }
+   function counts(){
+-    const cards=S.data?.cards||[],all=E.rows(cards,{query:S.query,licensor:S.licensor,...mergeOpts()});
+-    return {all:all.length,active:all.filter(r=>r.primary.status==='active').length,missing:all.filter(r=>r.primary.status!=='active').length,noLicensor:all.filter(r=>!r.licensor).length,noMap:all.filter(r=>!r.map.length).length};
++    return filteredRows().counts;
+   }
+   function newCardHtml(){
+     if(!S.newCard)return '';
+@@ -350,6 +370,41 @@
+     all.sort((a,b)=>{const x=value(a.r,a.card,sort.key),y=value(b.r,b.card,sort.key);const ordinal=(value,fallback)=>{const day=Date.parse(value);return Number.isFinite(day)?day:fallback;};const cmp=sort.key==='opd'?(ordinal(a.r.opdStart,-Infinity)-ordinal(b.r.opdStart,-Infinity)||ordinal(a.r.opdEnd,Infinity)-ordinal(b.r.opdEnd,Infinity)):['royalty','trCommission','ydCommission','hologramCost','matches'].includes(sort.key)?(x==null?Infinity:Number(x))-(y==null?Infinity:Number(y)):sort.key==='seasons'?window.BLBusinessRules.compareSeasonLists(a.r.seasons||a.r.season,b.r.seasons||b.r.season):String(x||'').localeCompare(String(y||''),'tr');return (sort.dir==='desc'?-cmp:cmp)||String(a.r.id).localeCompare(String(b.r.id));});
+     return `<div class="lcContractFilters" role="group" aria-label="${esc(T('Sözleşme filtreleri ve sıralama','Contract filters and sorting'))}">${F.map(([key,tr,en])=>`<label class="lcField"><button type="button" class="lcSort" data-lc-contract-sort="${key}" aria-label="${esc(T(tr+' sıralama',en+' sort'))}">${esc(T(tr,en))}${sort.key===key?(sort.dir==='asc'?' ↑':' ↓'):''}</button><input type="search" data-lc-contract-filter="${key}" value="${esc(filters[key]||'')}" aria-label="${esc(T(tr+' filtresi',en+' filter'))}"></label>`).join('')}<button type="button" class="lcBtn sm" data-lc-act="clearContractFilters">${esc(T('Filtreleri temizle','Clear filters'))}</button></div><small class="lcMuted">${all.length} ${esc(T('sözleşme','contracts'))}</small><div class="lcContractHead"><span></span><span>${esc(T('OPD başlangıç','OPD start'))}</span><span>${esc(T('OPD bitiş','OPD end'))}</span><span>${esc(T('Sezonlar','Seasons'))}</span><span>${esc(T('Kategoriler','Categories'))}</span><span lang="en">Royalty</span><span>${esc(T('TR kom.','TR comm.'))}</span><span>${esc(T('YD kom.','Intl comm.'))}</span><span lang="en">Hologram</span><span>${esc(T('İşlemler','Actions'))}</span></div>${all.map(({card,d,r})=>`<div class="lcContractRecord"><div class="lcContractIdentity"><label class="lcCheck"><input type="checkbox" data-lc-select="${esc(card.id)}" ${S.selected.has(card.id)?'checked':''} aria-label="${esc(T('Atlas için seç','Select for atlas'))}"></label><b data-no-i18n>${esc(card.license)}</b><span data-no-i18n>${esc(card.licensor)}</span><button type="button" class="lcBtn sm" data-lc-act="openContract" data-rule-id="${esc(r.id)}">${esc(T('Kartı aç','Open card'))}</button>${isDirty(d)?`<button type="button" class="lcBtn primary sm" data-lc-act="save" data-id="${esc(card.id)}" ${d.saving||d.conflict?'disabled':''}>${esc(T('Kaydet','Save'))}</button><button type="button" class="lcBtn sm" data-lc-act="discard" data-id="${esc(card.id)}">${esc(T('Vazgeç','Cancel'))}</button>`:''}${d?.error||d?.conflict?`<span role="alert">${esc(d.conflict?T('Kart değişti; taslağınız korunuyor.','Card changed; your draft is kept.'):d.error)}</span>`:''}</div>${contractRow(card,d,r)}</div>`).join('')||`<p class="lcEmpty">${esc(T('Eşleşen sözleşme yok.','No matching contracts.'))}</p>`}`;
+   }
++  function editorSnapshot(){
++    const editor=S.host?.querySelector('.lcEditor');
++    return {id:editor?.dataset.detail,scroll:editor?.querySelector('.lcDetailIn')?.scrollTop||0};
++  }
++  function detachEditor(){
++    const editor=S.host?.querySelector('.lcEditor');
++    if(editor){window.BLLayerSystem?.closeDialog(editor,{restoreFocus:false});editor.close();editor.remove();}
++  }
++  function renderEditor(previous=editorSnapshot()){
++    if(!visible())return;
++    if(!S.host.querySelector('.lcPage'))return;
++    detachEditor();
++    const rows=currentRows(),row=rows.find(r=>r.id===S.expanded);
++    const oldRow=S.host.querySelector('.lcRow.isOpen');
++    if(oldRow){oldRow.classList.remove('isOpen');oldRow.querySelectorAll('[data-lc-act="expand"]').forEach(button=>button.setAttribute('aria-expanded','false'));}
++    const selected=row&&S.host.querySelector(`[data-row="${CSS.escape(row.id)}"]`);
++    if(selected){selected.classList.add('isOpen');selected.querySelectorAll('[data-lc-act="expand"]').forEach(button=>button.setAttribute('aria-expanded','true'));}
++    if(row)S.host.querySelector('.lcPage').insertAdjacentHTML('beforeend',detailHtml(row,S.drafts.get(row.id)));
++    const sameEditor=previous.id===S.expanded,editorScroll=previous.scroll;
++    const editor=S.host.querySelector('.lcEditor');
++    if(editor){
++      editor.showModal();editor.addEventListener('cancel',event=>{event.preventDefault();closeEditor();});
++      window.BLLayerSystem?.openDialog(editor,{onClose:()=>{
++        if(editor.querySelector('.dateCalendarPopup')&&typeof closeDateCalendarPopup==='function')return closeDateCalendarPopup(true);
++        closeEditor();
++      },initialFocus:S.editorFocus||'[data-lc-act="closeEditor"]'});S.editorFocus=null;
++      editor.querySelector('.lcDetailIn').scrollTop=sameEditor?editorScroll:0;
++      if(!sameEditor)window.BLMotionPlus?.play('overlay',editor);
++    }
++  }
++  function renderCard(id){
++    const rows=currentRows(),index=rows.findIndex(row=>row.id===id),node=S.host?.querySelector(`[data-row="${CSS.escape(id)}"]`);
++    if(node&&index<0)return render(); // Taslak iptali filtre dışında zorla gösterilen satırı kaldırabilir.
++    if(node&&index>=0)node.outerHTML=rowHtml(rows[index],index);
++  }
+   function render(){
+     if(!visible())return;
+     readFavorites();
+@@ -357,9 +412,8 @@
+     const active=document.activeElement;
+     if(S.host.contains(active)&&/^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)&&active.id!=='lcSearch'&&active.dataset?.lcContractFilter==null&&active.type!=='checkbox'&&S.host.querySelector('.lcPage')){S.renderQueued=true;return;}
+     S.renderQueued=false;
+-    const oldEditor=S.host.querySelector('.lcEditor'),sameEditor=oldEditor?.dataset.detail===S.expanded;
+-    const editorScroll=oldEditor?.querySelector('.lcDetailIn')?.scrollTop||0;
+-    if(oldEditor){window.BLLayerSystem?.closeDialog(oldEditor,{restoreFocus:false});oldEditor.close();}
++    const previousEditor=editorSnapshot();
++    detachEditor();
+     const scrollTop=S.host.querySelector('.lcTable')?.scrollTop||0,scrollLeft=S.host.querySelector('.lcTable')?.scrollLeft||0;
+     const searchFocus=active?.id==='lcSearch',filterFocus=active?.dataset?.lcContractFilter,caret=searchFocus||filterFocus!=null?active.selectionStart:null;
+     if(!S.data){
+@@ -374,7 +428,7 @@
+       }
+       return;
+     }
+-    const rows=currentRows(),editorRow=rows.find(r=>r.id===S.expanded),n=counts(),opts=E.licensorOptions(S.data.cards),selectedVisible=rows.filter(r=>S.selected.has(r.id)).length,favoriteCount=allRows().filter(isFavorite).length;
++    const rows=currentRows(),n=counts(),opts=E.licensorOptions(S.data.cards),selectedVisible=rows.filter(r=>S.selected.has(r.id)).length,favoriteCount=allRows().filter(isFavorite).length;
+     const chip=(key,tr,en,count)=>`<button type="button" class="lcChip" data-lc-status="${key}" aria-pressed="${S.status===key}">${esc(T(tr,en))}<small>${count}</small></button>`;
+     const head=(key,tr,en,cls='')=>`<button type="button" class="lcSort ${cls}" data-lc-sort="${key}" ${['royalty','hologramCost'].includes(key)?'lang="en"':''} aria-sort="${S.sort.key===key?(S.sort.dir==='asc'?'ascending':'descending'):'none'}">${esc(T(tr,en))}${S.sort.key===key?`<svg class="ic"><use href="#i-chevron-${S.sort.dir==='asc'?'up':'down'}"/></svg>`:''}</button>`;
+     S.host.innerHTML=`<div class="lcPage">
+@@ -408,22 +462,12 @@
+         </div>
+         ${S.contractView?contractsHtml(rows):rows.map(rowHtml).join('')||`<div class="lcEmpty"><svg class="ic"><use href="#i-license-cards"/></svg><b>${esc(S.query||S.licensor!=null||S.status!=='all'||S.favoritesOnly?T('Eşleşen lisans yok','No matching licenses'):T('Henüz lisans kartı yok','No license cards yet'))}</b><span>${esc(S.favoritesOnly?T('Lisans satırındaki yıldızla kendi favorilerinizi ekleyin veya filtreleri değiştirin.','Use the star on a license row to add your own favorites, or change the filters.'):S.query||S.licensor!=null||S.status!=='all'?T('Arama veya filtreleri değiştirin.','Change the search or filters.'):T('ASAS kaynağını kontrol edip yenileyin.','Check the ASAS source and refresh.'))}</span></div>`}
+       </div>
+-      ${editorRow?detailHtml(editorRow,S.drafts.get(editorRow.id)):''}
+     </div>`;
+     const all=S.host.querySelector('[data-lc-select-all]');if(all)all.indeterminate=selectedVisible>0&&selectedVisible<rows.length;
+     const table=S.host.querySelector('.lcTable');if(table){table.scrollTop=scrollTop;table.scrollLeft=scrollLeft;}
+     S.animate=false;S.flash.clear();
+     runQuick();
+-    const editor=S.host.querySelector('.lcEditor');
+-    if(editor){
+-      editor.showModal();editor.addEventListener('cancel',event=>{event.preventDefault();closeEditor();});
+-      window.BLLayerSystem?.openDialog(editor,{onClose:()=>{
+-        if(editor.querySelector('.dateCalendarPopup')&&typeof closeDateCalendarPopup==='function')return closeDateCalendarPopup(true);
+-        closeEditor();
+-      },initialFocus:S.editorFocus||'[data-lc-act="closeEditor"]'});S.editorFocus=null;
+-      editor.querySelector('.lcDetailIn').scrollTop=sameEditor?editorScroll:0;
+-      if(!sameEditor)window.BLMotionPlus?.play('overlay',editor);
+-    }
++    renderEditor(previousEditor);
+     if(filterFocus!=null){const input=S.host.querySelector(`[data-lc-contract-filter="${CSS.escape(filterFocus)}"]`);input?.focus();input?.setSelectionRange(caret,caret);}
+     if(searchFocus){const input=document.getElementById('lcSearch');input.focus();input.setSelectionRange(caret,caret);}
+   }
+@@ -448,7 +492,7 @@
+       atlas.license.cover=d.cover||'';body.profile.processAtlas=atlas;
+     }
+     if(rules.length)body.rules=rules;
+-    d.saving=true;d.error='';render();
++    d.saving=true;d.error='';renderCard(id);renderEditor();
+     try{
+       const result=await api(`/api/license-cards/${encodeURIComponent(id)}`,{method:'PUT',body:JSON.stringify(body)});
+       dropDraft(id);S.flash.add(id);
+@@ -631,11 +675,11 @@
+     if(a==='deleteRule'){const d=ensureDraft(id);if(!d||d.saving||d.conflict)return;if(!confirm(T('Bu sözleşme silinsin mi? Kaydetmeden önce Vazgeç ile geri alabilirsiniz.','Delete this contract? You can cancel before saving.')))return;const period=d.periods?.[el.dataset.ruleId];if(period){for(const original of period.originalRules){const previous=ruleOf(d,original.id);if(previous)previous.opdEnd=original.opdEnd||'';}delete d.periods[el.dataset.ruleId];if(d.period?.id===el.dataset.ruleId)d.period=null;d.note='';}d.rules=d.rules.filter(r=>r.id!==el.dataset.ruleId);if(d.snapshot.rules.some(r=>r.id===el.dataset.ruleId))d.deletedRuleIds.push(el.dataset.ruleId);d.primaryId=E.primaryContract(d.rules).rule?.id||'';render();return;}
+     if(a==='retry')return load(Boolean(S.loadErrorRefresh));
+     if(a==='refresh'&&canEdit())return load(true);
+-    if(a==='expand'){S.expanded=id;S.historyOpen=false;S.addLicensorOpen=false;return render();}
++    if(a==='expand'){S.expanded=id;S.historyOpen=false;S.addLicensorOpen=false;return renderEditor();}
+     if(a==='closeEditor')return closeEditor();
+     if(a==='cancelEditor'){dropDraft(id);return closeEditor();}
+-    if(a==='history'){S.historyOpen=!S.historyOpen;S.editorFocus='[data-lc-act="history"]';return render();}
+-    if(a==='toggleLicensor'){S.addLicensorOpen=!S.addLicensorOpen;S.editorFocus=S.addLicensorOpen?'[data-lc-new-licensor]':'[data-lc-act="toggleLicensor"]';return render();}
++    if(a==='history'){S.historyOpen=!S.historyOpen;S.editorFocus='[data-lc-act="history"]';return renderEditor();}
++    if(a==='toggleLicensor'){S.addLicensorOpen=!S.addLicensorOpen;S.editorFocus=S.addLicensorOpen?'[data-lc-new-licensor]':'[data-lc-act="toggleLicensor"]';return renderEditor();}
+     if(a==='map'){if(S.expanded)closeEditor();return openMap(id);}
+     if(a==='templates')return openTemplates();
+     if(a==='merges'){S.mergesOpen=!S.mergesOpen||Boolean(el.dataset.key&&!el.classList.contains('lcBtn'));S.mergeFocus=el.dataset.key||'';return render();}
+diff --git a/resources/app/tests/license-cards-editor.test.js b/resources/app/tests/license-cards-editor.test.js
+index 774d1d40cb889271e498fb9eba04e05d76f69ed3..291c2cbe4744e127e61ff42e8e3ff742ef75873b 100644
+--- a/resources/app/tests/license-cards-editor.test.js
++++ b/resources/app/tests/license-cards-editor.test.js
+@@ -8,7 +8,15 @@
+ const initial=()=>({revision:1,pricingRevision:3,canEdit:true,cards:[{id:'demo',license:'Demo License',licensor:'Demo Owner',editToken:'original',workingNotes:'Original',rules:[clone(rule)]}]});
+ function page(){
+  let remote=initial(),gets=0,puts=0,renders=0,putBody,held,focused=null;
+- const host={dataset:{},getClientRects:()=>[{}],querySelector:sel=>sel==='.lcPage'?{}:null,querySelectorAll:()=>[],addEventListener(){},contains:el=>Boolean(el&&el===focused),set innerHTML(value){this.html=value;renders++;}};
++ let editor=null;
++ const pageNode={insertAdjacentHTML(_position,html){
++  host.html+=html;
++  const detail={scrollTop:0};
++  editor={dataset:{detail:html.match(/data-detail="([^"]+)"/)[1]},showModal(){},close(){},addEventListener(){},
++   querySelector:sel=>sel==='.lcDetailIn'?detail:null,
++   remove(){host.html=host.html.replace(/<dialog\b[\s\S]*?<\/dialog>/,'');editor=null;}};
++ }};
++ const host={dataset:{},getClientRects:()=>[{}],querySelector:sel=>sel==='.lcPage'?pageNode:sel==='.lcEditor'?editor:null,querySelectorAll:()=>[],addEventListener(){},contains:el=>Boolean(el&&el===focused),set innerHTML(value){this.html=value;editor=null;renders++;}};
+  const window={BLLicenseCardsEngine:require('../public/license-cards-engine'),BL_CLIENT_ID:'my-tab'};
+  const document={getElementById:()=>host,get activeElement(){return focused;},addEventListener(){},createElement:()=>({})};
+  const context={window,document,CSS:{escape:v=>v},appLang:'en',Intl,setTimeout,fetch:async(url,options={})=>{
+@@ -70,11 +78,13 @@
+ 
+ test('card editor is a separate dialog with optional history and licensor form',async()=>{
+  const p=page(),data=initial();data.cards[0].rules.push({...clone(rule),id:'past',opdStart:'2025-01-01',opdEnd:'2025-12-31'});p.remote(data);await p.open();
++ const before=p.renders;
+  p.t().act({dataset:{lcAct:'expand',id:'demo'}});
+  assert.match(p.host.html,/<dialog[^>]+class="lcEditor lcDetail"/);
+  assert.doesNotMatch(p.host.html,/data-lc-profile="artworkBrief"|data-lc-new-licensor=|data-lc-rule="past"/);
+  p.t().act({dataset:{lcAct:'history',id:'demo'}});assert.match(p.host.html,/data-lc-rule="past"/);
+  p.t().act({dataset:{lcAct:'toggleLicensor',id:'demo'}});assert.match(p.host.html,/data-lc-new-licensor="demo"/);
++ assert.equal(p.renders,before,'opening and updating details must preserve the list');
+ });
+ 
+ test('closing and reopening a card retains its draft and resets optional sections',async()=>{
+diff --git a/resources/app/tests/card-list-model.test.js b/resources/app/tests/card-list-model.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..9e807dddb3a22f11f666c8e2c2d8bedbfb841c45
+--- /dev/null
++++ b/resources/app/tests/card-list-model.test.js
+@@ -0,0 +1,45 @@
++'use strict';
++const test = require('node:test'), assert = require('node:assert/strict');
++const fs = require('node:fs'), vm = require('node:vm');
++const Engine = require('../public/license-cards-engine');
++function load() {
++  let calls = 0, day = '2026-11-07';
++  const window = { BLLicenseCardsEngine: { ...Engine, today: () => day, rows(...args) { calls++; return Engine.rows(...args); } }, addEventListener() {} };
++  const source = fs.readFileSync(require.resolve('../public/license-cards'), 'utf8').replace('window.initLicenseCardsPage=', 'window.fixture={S,currentRows,counts,allRows,ensureDraft};window.initLicenseCardsPage=');
++  vm.runInNewContext(source, { window, document: { getElementById() { return null; } }, appLang: 'en' });
++  return { ...window.fixture, window, get calls() { return calls; }, set day(value) { day = value; } };
++}
++const cards = () => [
++  { id: 'one', license: 'Alpha', licensor: 'Agency', rules: [{ id: 'r1', opdStart: '2026-01-01', opdEnd: '2026-11-07', royalty: 5 }] },
++  { id: 'two', license: 'Beta', licensor: '', rules: [] },
++  { id: 'three', license: 'Gamma', licensor: 'Agency', rules: [] },
++];
++const plain = value => JSON.parse(JSON.stringify(value));
++
++test('license rows/counters share filter results and selection does not rebuild the list model', () => {
++  const p = load(); p.S.data = { revision: 1, cards: cards() };
++  p.currentRows(); p.counts(); p.allRows(); const before = p.calls;
++  p.S.expanded = 'one'; p.S.selected.add('one'); p.currentRows(); p.counts(); p.allRows();
++  assert.equal(p.calls, before, 'selecting or opening a card must not repeat E.rows');
++  for (const query of ['', 'Alpha', 'Agency', 'missing']) for (const status of ['all', 'active', 'missing', 'noLicensor', 'noMap']) {
++    p.S.query = query; p.S.status = status;
++    const expected = Engine.rows(p.S.data.cards, { query, status, sort: p.S.sort, day: '2026-11-07' });
++    assert.deepEqual(plain(p.currentRows()), plain(expected));
++    const all = Engine.rows(p.S.data.cards, { query, day: '2026-11-07' });
++    assert.deepEqual(plain(p.counts()), { all: all.length, active: all.filter(r => r.primary.status === 'active').length, missing: all.filter(r => r.primary.status !== 'active').length, noLicensor: all.filter(r => !r.licensor).length, noMap: all.filter(r => !r.map.length).length });
++  }
++});
++
++test('revision, day, sort, favorite and draft changes preserve engine output and invalidate relevant views', () => {
++  const p = load(); p.S.data = { revision: 1, cards: cards() }; p.S.favoritesOnly = true; p.S.favorites.add('one');
++  assert.deepEqual(plain(p.currentRows().map(r => r.id)), ['one']);
++  p.S.favorites.clear(); assert.equal(p.currentRows().length, 0);
++  p.S.favoritesOnly = false; p.currentRows();
++  p.S.data.cards[0].license = 'Changed'; p.S.data.revision++; assert.equal(p.currentRows()[1].license, 'Changed');
++  p.day = '2026-11-08'; assert.equal(p.currentRows().find(r => r.id === 'one').primary.status, 'expired');
++  p.S.sort = { key: 'license', dir: 'desc' };
++  assert.deepEqual(plain(p.currentRows().map(r => r.id)), ['three', 'one', 'two']);
++  p.ensureDraft('one'); p.S.query = 'Beta'; assert.ok(p.currentRows().some(r => r.id === 'one'), 'filtered draft remains reachable');
++  p.S.data = { revision: 3, cards: [] };
++  assert.equal(p.currentRows()[0].id, 'one', 'deleted card draft remains reachable and unsaved');
++});
+diff --git a/resources/app/tests/license-quick-fob-close.test.js b/resources/app/tests/license-quick-fob-close.test.js
+index bf483e31fc66178317d7a585d898b2c723216003..c81a8b8b17ef0732661a0eca2ecdd3bdc5286a5b 100644
+--- a/resources/app/tests/license-quick-fob-close.test.js
++++ b/resources/app/tests/license-quick-fob-close.test.js
+@@ -10,15 +10,8 @@
+     for (const match of html.matchAll(/<input id="([^"]+)"[^>]*value="([^"]*)"/g)) fields[match[1]] = { value: match[2] };
+     fields.lcQuickStatus = { textContent: '' };
+   } };
+-  // Functional Quick FOB regression: Main deliberately uses the full render.
+-  // The former no-list-rebuild invariant belongs to parked License CARD-01.
+-  const host = { getClientRects: () => [{}], contains: () => false,
+-    querySelector: sel => sel === '.lcQuick' ? quickNode : sel === '.lcPage' ? {} : null,
+-    set innerHTML(html) {
+-      const start = html.indexOf('<div class="lcQuick"'), end = html.indexOf('</small></div>', start);
+-      assert.ok(start >= 0 && end >= 0, 'full render must include the Quick FOB section');
+-      quickNode.outerHTML = html.slice(start, end + '</small></div>'.length);
+-    } };
++  const host = { getClientRects: () => [], querySelector: sel => sel === '.lcQuick' ? quickNode : null,
++    set innerHTML(_) { assert.fail('close must not rebuild the list'); } };
+   const window = { BLLicenseCardsEngine: E, BLBusinessRules: rules };
+   const document = { getElementById: id => fields[id], activeElement: null, addEventListener() {} };
+   vm.runInNewContext(source.replace('window.initLicenseCardsPage=', 'window.quickTest={S,act,ensureDraft,quickHtml,runQuick};window.initLicenseCardsPage='), { window, document, appLang: lang, Intl, CSS: { escape: v => v }, setTimeout });
+diff --git a/resources/app/scripts/card-render-acceptance.js b/resources/app/scripts/card-render-acceptance.js
+index 4e1bfcc651edee432bd643a3680b8b4e31254200..b7e370dfbe37c167121da4bd7c84d9e85e988698 100644
+--- a/resources/app/scripts/card-render-acceptance.js
++++ b/resources/app/scripts/card-render-acceptance.js
+@@ -6,14 +6,10 @@
+ const arg = (name, fallback) => { const i = process.argv.indexOf(name); return i < 0 ? fallback : process.argv[i + 1]; };
+ const sourceDir = arg('--source-dir', path.join(app, 'public'));
+ (async () => {
+-  const modules = arg('--module', '') ? [arg('--module')] : ['manufacturers', 'email-groups'];
+-  if (modules.includes('license-cards') && process.argv.includes('--assert-optimized')) {
+-    throw new Error('License CARD-01 is parked after the +24.42% search cohort; use the frozen parked source for its optimization invariants. Current license functional checks may run without --assert-optimized.');
+-  }
+   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox'] });
+   const results = [];
+   try {
+-    for (const count of (arg('--count', '') ? [Number(arg('--count'))] : process.argv.includes('--small-only') ? [500] : [500, 5000])) for (const module of modules) {
++    for (const count of (arg('--count', '') ? [Number(arg('--count'))] : process.argv.includes('--small-only') ? [500] : [500, 5000])) for (const module of (arg('--module', '') ? [arg('--module')] : ['license-cards', 'manufacturers', 'email-groups'])) {
+       const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+       await page.setContent('<div id="licenseCardsPage"></div><div id="manufacturersPage"></div><div id="emailFixture"><span data-eg-count></span><select data-eg-filter-country></select><select data-eg-filter-type></select><div data-eg-body></div></div>');
+       await page.addStyleTag({ content: '.lcTable,.mfpListScroll,.egDirectoryScroll{height:500px;overflow:auto}.lcRow{height:44px}.mfpRow,.egDirectoryRow{display:block;height:70px}.mfpBody,[data-eg-body]{display:grid;grid-template-columns:400px 1fr}.lcEditor{width:800px;height:500px}' });
+diff --git a/resources/app/scripts/card-render-screenshots.js b/resources/app/scripts/card-render-screenshots.js
+index 38ec916a0a75b5184fbb37f747ccb0cf870d87b5..3655f72eca6a2e58abf1e0ba59ad802f7f3b84c1 100644
+--- a/resources/app/scripts/card-render-screenshots.js
++++ b/resources/app/scripts/card-render-screenshots.js
+@@ -19,14 +19,15 @@
+     await page.waitForSelector('#licenseCardsPage [data-row]', { timeout: 60000 });
+     await page.evaluate(() => BLLicenseCardsPage.invalidate());
+     const cardButton = page.locator('#licenseCardsPage [data-lc-act="expand"]').filter({ hasText: 'Demo Alpha' });
+-    // License CARD-01 identity assertions are preserved in the parked original.
+-    // Retain the existing draft/reopen/discard functional assertions below.
+-    await page.evaluate(id => {
++    const selectedWithoutRefresh = await page.evaluate(id => {
++      window.demoList = document.querySelector('#licenseCardsPage .lcTable'); window.demoFirst = demoList.querySelector('[data-row]'); demoList.scrollTop = 80;
+       document.querySelector(`[data-lc-act="expand"][data-id="${CSS.escape(id)}"]`).click();
++      return { list: document.querySelector('#licenseCardsPage .lcTable') === demoList, row: demoList.querySelector('[data-row]') === demoFirst };
+     }, card.id);
++    assert.deepEqual(selectedWithoutRefresh, { list: true, row: true });
+     await page.waitForSelector('.lcEditor[open]');
+     await page.locator('.lcEditor [data-lc-profile="contactName"]').fill('Demo İletişim');
+-    // Historical license screenshot remains preserved; it is not recaptured for active notes.
++    await capture('license-card-separate-detail');
+     await page.locator('.lcEditor [data-lc-act="closeEditor"]').click();
+     await page.locator('#lcSearch').fill('Demo Beta');
+     await cardButton.click(); assert.equal(await page.locator('.lcEditor [data-lc-profile="contactName"]').inputValue(), 'Demo İletişim');
+@@ -60,6 +61,6 @@
+     const saved = await (await api('/api/email-groups')).json();
+     assert.equal(saved.records.find(r => r.id === editedId).contact, 'Demo taslak · korunuyor');
+     assert.deepEqual(app.errors, []);
+-    console.log(JSON.stringify({ captures, draftReopened: true, listsRetained: true, retainedListModules: ['manufacturers', 'email-groups'], directorySaveVerified: true, root: app.root }, null, 2));
++    console.log(JSON.stringify({ captures, draftReopened: true, listsRetained: true, directorySaveVerified: true, root: app.root }, null, 2));
+   } finally { await app.close(); }
+ })().catch(error => { console.error(error); process.exitCode = 1; });
+diff --git a/resources/app/scripts/license-quick-fob-acceptance.js b/resources/app/scripts/license-quick-fob-acceptance.js
+index ec0275f48fe9f338829a9babf4fb8d2855ac38a5..4afea311372517f8d32def0047708063631ad68f 100644
+--- a/resources/app/scripts/license-quick-fob-acceptance.js
++++ b/resources/app/scripts/license-quick-fob-acceptance.js
+@@ -1,5 +1,5 @@
+ 'use strict';
+-// Baseline Quick FOB functional equivalence; License CARD-01 list identity is parked.
++// Gerçek sunucu/tarayıcıda kısmi kapatmayı aynı durumun tam çizimiyle karşılaştırır.
+ const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
+ const { start } = require('./lib/client-performance-app');
+ const output = path.resolve(process.argv[2] || '/tmp/license-quick-fob-acceptance');
+@@ -78,7 +78,7 @@
+           quickEquivalent: actual.quick === expected.quick,
+           rowsEquivalent: JSON.stringify(actual.rows) === JSON.stringify(expected.rows),
+           detailEquivalent: actual.dialogs === expected.dialogs && actual.dialogs === 0,
+-          // License CARD-01 listRetained invariant lives in the parked original, not this baseline functional gate.
++          listRetained: nodes.list && nodes.other && nodes.scroll,
+           amountRetained: actual.values[source] === amount,
+           selectionEquivalent: actual.selected === expected.selected,
+           validSelectionRetained: scenario !== 'rate-close' || actual.selected === card.ruleId,
+@@ -96,9 +96,9 @@
+       }
+     }
+     assert.deepEqual(app.errors, []);
+-    const result = { scope: 'baseline Quick FOB functional checks; license list-identity optimization parked', root: app.root, fixture: 'real isolated Buyer Log server; 20 source rows; 2 saved license cards; 1440x900 Chromium', cases, errors: app.errors };
++    const result = { root: app.root, fixture: 'real isolated Buyer Log server; 20 source rows; 2 saved license cards; 1440x900 Chromium', cases, errors: app.errors };
+     fs.writeFileSync(path.join(output, 'result.json'), JSON.stringify(result, null, 2) + '\n');
+     console.log(JSON.stringify(cases.map(({ scenario, source, checks }) => ({ scenario, source, checks })), null, 2));
+-    assert.ok(cases.every(c => Object.values(c.checks).every(Boolean)), 'Quick FOB functional close/cancel differs from full render; see ' + output);
++    assert.ok(cases.every(c => Object.values(c.checks).every(Boolean)), 'Quick FOB partial close differs from full render; see ' + output);
+   } finally { await app.close(); }
+ })().catch(error => { console.error(error); process.exitCode = 1; });
