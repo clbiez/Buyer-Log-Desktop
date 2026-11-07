@@ -10,8 +10,15 @@ function fixture(lang, sourceKey) {
     for (const match of html.matchAll(/<input id="([^"]+)"[^>]*value="([^"]*)"/g)) fields[match[1]] = { value: match[2] };
     fields.lcQuickStatus = { textContent: '' };
   } };
-  const host = { getClientRects: () => [], querySelector: sel => sel === '.lcQuick' ? quickNode : null,
-    set innerHTML(_) { assert.fail('close must not rebuild the list'); } };
+  // Functional Quick FOB regression: Main deliberately uses the full render.
+  // The former no-list-rebuild invariant belongs to parked License CARD-01.
+  const host = { getClientRects: () => [{}], contains: () => false,
+    querySelector: sel => sel === '.lcQuick' ? quickNode : sel === '.lcPage' ? {} : null,
+    set innerHTML(html) {
+      const start = html.indexOf('<div class="lcQuick"'), end = html.indexOf('</small></div>', start);
+      assert.ok(start >= 0 && end >= 0, 'full render must include the Quick FOB section');
+      quickNode.outerHTML = html.slice(start, end + '</small></div>'.length);
+    } };
   const window = { BLLicenseCardsEngine: E, BLBusinessRules: rules };
   const document = { getElementById: id => fields[id], activeElement: null, addEventListener() {} };
   vm.runInNewContext(source.replace('window.initLicenseCardsPage=', 'window.quickTest={S,act,ensureDraft,quickHtml,runQuick};window.initLicenseCardsPage='), { window, document, appLang: lang, Intl, CSS: { escape: v => v }, setTimeout });

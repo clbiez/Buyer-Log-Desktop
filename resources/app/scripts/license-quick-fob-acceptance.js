@@ -1,5 +1,5 @@
 'use strict';
-// Gerçek sunucu/tarayıcıda kısmi kapatmayı aynı durumun tam çizimiyle karşılaştırır.
+// Baseline Quick FOB functional equivalence; License CARD-01 list identity is parked.
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
 const { start } = require('./lib/client-performance-app');
 const output = path.resolve(process.argv[2] || '/tmp/license-quick-fob-acceptance');
@@ -78,7 +78,7 @@ fs.mkdirSync(output, { recursive: true });
           quickEquivalent: actual.quick === expected.quick,
           rowsEquivalent: JSON.stringify(actual.rows) === JSON.stringify(expected.rows),
           detailEquivalent: actual.dialogs === expected.dialogs && actual.dialogs === 0,
-          listRetained: nodes.list && nodes.other && nodes.scroll,
+          // License CARD-01 listRetained invariant lives in the parked original, not this baseline functional gate.
           amountRetained: actual.values[source] === amount,
           selectionEquivalent: actual.selected === expected.selected,
           validSelectionRetained: scenario !== 'rate-close' || actual.selected === card.ruleId,
@@ -96,9 +96,9 @@ fs.mkdirSync(output, { recursive: true });
       }
     }
     assert.deepEqual(app.errors, []);
-    const result = { root: app.root, fixture: 'real isolated Buyer Log server; 20 source rows; 2 saved license cards; 1440x900 Chromium', cases, errors: app.errors };
+    const result = { scope: 'baseline Quick FOB functional checks; license list-identity optimization parked', root: app.root, fixture: 'real isolated Buyer Log server; 20 source rows; 2 saved license cards; 1440x900 Chromium', cases, errors: app.errors };
     fs.writeFileSync(path.join(output, 'result.json'), JSON.stringify(result, null, 2) + '\n');
     console.log(JSON.stringify(cases.map(({ scenario, source, checks }) => ({ scenario, source, checks })), null, 2));
-    assert.ok(cases.every(c => Object.values(c.checks).every(Boolean)), 'Quick FOB partial close differs from full render; see ' + output);
+    assert.ok(cases.every(c => Object.values(c.checks).every(Boolean)), 'Quick FOB functional close/cancel differs from full render; see ' + output);
   } finally { await app.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

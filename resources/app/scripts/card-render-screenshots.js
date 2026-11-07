@@ -19,15 +19,14 @@ const { start } = require('./lib/client-performance-app');
     await page.waitForSelector('#licenseCardsPage [data-row]', { timeout: 60000 });
     await page.evaluate(() => BLLicenseCardsPage.invalidate());
     const cardButton = page.locator('#licenseCardsPage [data-lc-act="expand"]').filter({ hasText: 'Demo Alpha' });
-    const selectedWithoutRefresh = await page.evaluate(id => {
-      window.demoList = document.querySelector('#licenseCardsPage .lcTable'); window.demoFirst = demoList.querySelector('[data-row]'); demoList.scrollTop = 80;
+    // License CARD-01 identity assertions are preserved in the parked original.
+    // Retain the existing draft/reopen/discard functional assertions below.
+    await page.evaluate(id => {
       document.querySelector(`[data-lc-act="expand"][data-id="${CSS.escape(id)}"]`).click();
-      return { list: document.querySelector('#licenseCardsPage .lcTable') === demoList, row: demoList.querySelector('[data-row]') === demoFirst };
     }, card.id);
-    assert.deepEqual(selectedWithoutRefresh, { list: true, row: true });
     await page.waitForSelector('.lcEditor[open]');
     await page.locator('.lcEditor [data-lc-profile="contactName"]').fill('Demo İletişim');
-    await capture('license-card-separate-detail');
+    // Historical license screenshot remains preserved; it is not recaptured for active notes.
     await page.locator('.lcEditor [data-lc-act="closeEditor"]').click();
     await page.locator('#lcSearch').fill('Demo Beta');
     await cardButton.click(); assert.equal(await page.locator('.lcEditor [data-lc-profile="contactName"]').inputValue(), 'Demo İletişim');
@@ -61,6 +60,6 @@ const { start } = require('./lib/client-performance-app');
     const saved = await (await api('/api/email-groups')).json();
     assert.equal(saved.records.find(r => r.id === editedId).contact, 'Demo taslak · korunuyor');
     assert.deepEqual(app.errors, []);
-    console.log(JSON.stringify({ captures, draftReopened: true, listsRetained: true, directorySaveVerified: true, root: app.root }, null, 2));
+    console.log(JSON.stringify({ captures, draftReopened: true, listsRetained: true, retainedListModules: ['manufacturers', 'email-groups'], directorySaveVerified: true, root: app.root }, null, 2));
   } finally { await app.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

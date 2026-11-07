@@ -6,10 +6,14 @@ const app = path.resolve(__dirname, '..');
 const arg = (name, fallback) => { const i = process.argv.indexOf(name); return i < 0 ? fallback : process.argv[i + 1]; };
 const sourceDir = arg('--source-dir', path.join(app, 'public'));
 (async () => {
+  const modules = arg('--module', '') ? [arg('--module')] : ['manufacturers', 'email-groups'];
+  if (modules.includes('license-cards') && process.argv.includes('--assert-optimized')) {
+    throw new Error('License CARD-01 is parked after the +24.42% search cohort; use the frozen parked source for its optimization invariants. Current license functional checks may run without --assert-optimized.');
+  }
   const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox'] });
   const results = [];
   try {
-    for (const count of (arg('--count', '') ? [Number(arg('--count'))] : process.argv.includes('--small-only') ? [500] : [500, 5000])) for (const module of (arg('--module', '') ? [arg('--module')] : ['license-cards', 'manufacturers', 'email-groups'])) {
+    for (const count of (arg('--count', '') ? [Number(arg('--count'))] : process.argv.includes('--small-only') ? [500] : [500, 5000])) for (const module of modules) {
       const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
       await page.setContent('<div id="licenseCardsPage"></div><div id="manufacturersPage"></div><div id="emailFixture"><span data-eg-count></span><select data-eg-filter-country></select><select data-eg-filter-type></select><div data-eg-body></div></div>');
       await page.addStyleTag({ content: '.lcTable,.mfpListScroll,.egDirectoryScroll{height:500px;overflow:auto}.lcRow{height:44px}.mfpRow,.egDirectoryRow{display:block;height:70px}.mfpBody,[data-eg-body]{display:grid;grid-template-columns:400px 1fr}.lcEditor{width:800px;height:500px}' });

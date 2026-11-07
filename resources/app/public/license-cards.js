@@ -31,25 +31,7 @@
   }
   const rowIds=row=>[row.id,...(row.merged||[]).map(c=>c.id)];
   const isFavorite=row=>rowIds(row).some(id=>S.favorites.has(id));
-  let rowView=null,filterView=null;
-  function allRows(){
-    const options=mergeOpts(),day=E.today();
-    if(!rowView||rowView.data!==S.data||rowView.revision!==S.data?.revision||rowView.merges!==S.data?.licensorMerges||rowView.day!==day||rowView.mergeKey!==options.mergeKey||rowView.groupKey!==options.groupKey){
-      rowView={data:S.data,revision:S.data?.revision,merges:S.data?.licensorMerges,day,mergeKey:options.mergeKey,groupKey:options.groupKey,rows:E.rows(S.data?.cards||[],{...options,day})};
-    }
-    return rowView.rows;
-  }
-  function filteredRows(){
-    allRows();
-    const key=JSON.stringify([S.query,S.licensor,S.sort.key,S.sort.dir]);
-    if(!filterView||filterView.base!==rowView||filterView.key!==key){
-      const rows=!S.query&&S.licensor==null&&S.sort.key==='license'&&S.sort.dir==='asc'
-        ? rowView.rows
-        : E.rows(S.data?.cards||[],{query:S.query,licensor:S.licensor,sort:S.sort,...mergeOpts(),day:rowView.day});
-      filterView={base:rowView,key,rows,counts:{all:rows.length,active:rows.filter(r=>r.primary.status==='active').length,missing:rows.filter(r=>r.primary.status!=='active').length,noLicensor:rows.filter(r=>!r.licensor).length,noMap:rows.filter(r=>!r.map.length).length}};
-    }
-    return filterView;
-  }
+  const allRows=()=>E.rows(S.data?.cards||[],mergeOpts());
   async function toggleFavorite(id){
     // Merge with the account's hydrated list even if the first click arrives
     // before startup hydration completes on a browser with an empty cache.
@@ -252,9 +234,7 @@
   // Closing keeps pending card edits; Cancel explicitly discards them.
   function closeEditor(){
     const id=S.expanded;S.expanded='';S.historyOpen=false;S.addLicensorOpen=false;
-    document.activeElement?.blur?.();renderEditor();renderCard(id);
-    const quick=S.host.querySelector('.lcQuick');
-    if(quick){quick.outerHTML=quickHtml();runQuick();}
+    document.activeElement?.blur?.();render();
     S.host.querySelector(`[data-row="${CSS.escape(id)}"] .lcName`)?.focus?.({preventScroll:true});
   }
   function detailHtml(row,d){
@@ -292,8 +272,7 @@
     </div>${canEdit()?`<footer class="lcDetailFoot"><span>${esc(T('Değişiklikler tüm yetkili kullanıcılarla paylaşılır.','Changes are shared with all authorized users.'))}</span><button type="button" class="lcBtn" data-lc-act="cancelEditor" data-id="${esc(card.id)}">${esc(T('Vazgeç','Cancel'))}</button><button type="button" class="lcBtn primary" data-lc-act="save" data-id="${esc(card.id)}" ${d?.saving||d?.conflict?'disabled':''}>${esc(d?.saving?T('Kaydediliyor…','Saving…'):T('Kaydet','Save'))}</button></footer>`:''}</dialog>`;
   }
   function currentRows(){
-    const cards=S.data?.cards||[],rows=filteredRows().rows.filter(row=>
-      (S.status==='active'?row.primary.status==='active':S.status==='missing'?row.primary.status!=='active':S.status==='noLicensor'?!row.licensor:S.status==='noMap'?!row.map.length:true)&&(!S.favoritesOnly||isFavorite(row)));
+    const cards=S.data?.cards||[],rows=E.rows(cards,{query:S.query,licensor:S.licensor,status:S.status,sort:S.sort,...mergeOpts()}).filter(row=>!S.favoritesOnly||isFavorite(row));
     // A draft whose card disappeared stays visible (blocked) until the user discards it.
     for(const [id,d] of S.drafts){
       if(!cards.some(c=>c.id===id))rows.unshift({...E.rows([d.snapshot])[0],card:d.snapshot});
@@ -303,7 +282,8 @@
     return rows;
   }
   function counts(){
-    return filteredRows().counts;
+    const cards=S.data?.cards||[],all=E.rows(cards,{query:S.query,licensor:S.licensor,...mergeOpts()});
+    return {all:all.length,active:all.filter(r=>r.primary.status==='active').length,missing:all.filter(r=>r.primary.status!=='active').length,noLicensor:all.filter(r=>!r.licensor).length,noMap:all.filter(r=>!r.map.length).length};
   }
   function newCardHtml(){
     if(!S.newCard)return '';
@@ -370,41 +350,6 @@
     all.sort((a,b)=>{const x=value(a.r,a.card,sort.key),y=value(b.r,b.card,sort.key);const ordinal=(value,fallback)=>{const day=Date.parse(value);return Number.isFinite(day)?day:fallback;};const cmp=sort.key==='opd'?(ordinal(a.r.opdStart,-Infinity)-ordinal(b.r.opdStart,-Infinity)||ordinal(a.r.opdEnd,Infinity)-ordinal(b.r.opdEnd,Infinity)):['royalty','trCommission','ydCommission','hologramCost','matches'].includes(sort.key)?(x==null?Infinity:Number(x))-(y==null?Infinity:Number(y)):sort.key==='seasons'?window.BLBusinessRules.compareSeasonLists(a.r.seasons||a.r.season,b.r.seasons||b.r.season):String(x||'').localeCompare(String(y||''),'tr');return (sort.dir==='desc'?-cmp:cmp)||String(a.r.id).localeCompare(String(b.r.id));});
     return `<div class="lcContractFilters" role="group" aria-label="${esc(T('Sözleşme filtreleri ve sıralama','Contract filters and sorting'))}">${F.map(([key,tr,en])=>`<label class="lcField"><button type="button" class="lcSort" data-lc-contract-sort="${key}" aria-label="${esc(T(tr+' sıralama',en+' sort'))}">${esc(T(tr,en))}${sort.key===key?(sort.dir==='asc'?' ↑':' ↓'):''}</button><input type="search" data-lc-contract-filter="${key}" value="${esc(filters[key]||'')}" aria-label="${esc(T(tr+' filtresi',en+' filter'))}"></label>`).join('')}<button type="button" class="lcBtn sm" data-lc-act="clearContractFilters">${esc(T('Filtreleri temizle','Clear filters'))}</button></div><small class="lcMuted">${all.length} ${esc(T('sözleşme','contracts'))}</small><div class="lcContractHead"><span></span><span>${esc(T('OPD başlangıç','OPD start'))}</span><span>${esc(T('OPD bitiş','OPD end'))}</span><span>${esc(T('Sezonlar','Seasons'))}</span><span>${esc(T('Kategoriler','Categories'))}</span><span lang="en">Royalty</span><span>${esc(T('TR kom.','TR comm.'))}</span><span>${esc(T('YD kom.','Intl comm.'))}</span><span lang="en">Hologram</span><span>${esc(T('İşlemler','Actions'))}</span></div>${all.map(({card,d,r})=>`<div class="lcContractRecord"><div class="lcContractIdentity"><label class="lcCheck"><input type="checkbox" data-lc-select="${esc(card.id)}" ${S.selected.has(card.id)?'checked':''} aria-label="${esc(T('Atlas için seç','Select for atlas'))}"></label><b data-no-i18n>${esc(card.license)}</b><span data-no-i18n>${esc(card.licensor)}</span><button type="button" class="lcBtn sm" data-lc-act="openContract" data-rule-id="${esc(r.id)}">${esc(T('Kartı aç','Open card'))}</button>${isDirty(d)?`<button type="button" class="lcBtn primary sm" data-lc-act="save" data-id="${esc(card.id)}" ${d.saving||d.conflict?'disabled':''}>${esc(T('Kaydet','Save'))}</button><button type="button" class="lcBtn sm" data-lc-act="discard" data-id="${esc(card.id)}">${esc(T('Vazgeç','Cancel'))}</button>`:''}${d?.error||d?.conflict?`<span role="alert">${esc(d.conflict?T('Kart değişti; taslağınız korunuyor.','Card changed; your draft is kept.'):d.error)}</span>`:''}</div>${contractRow(card,d,r)}</div>`).join('')||`<p class="lcEmpty">${esc(T('Eşleşen sözleşme yok.','No matching contracts.'))}</p>`}`;
   }
-  function editorSnapshot(){
-    const editor=S.host?.querySelector('.lcEditor');
-    return {id:editor?.dataset.detail,scroll:editor?.querySelector('.lcDetailIn')?.scrollTop||0};
-  }
-  function detachEditor(){
-    const editor=S.host?.querySelector('.lcEditor');
-    if(editor){window.BLLayerSystem?.closeDialog(editor,{restoreFocus:false});editor.close();editor.remove();}
-  }
-  function renderEditor(previous=editorSnapshot()){
-    if(!visible())return;
-    if(!S.host.querySelector('.lcPage'))return;
-    detachEditor();
-    const rows=currentRows(),row=rows.find(r=>r.id===S.expanded);
-    const oldRow=S.host.querySelector('.lcRow.isOpen');
-    if(oldRow){oldRow.classList.remove('isOpen');oldRow.querySelectorAll('[data-lc-act="expand"]').forEach(button=>button.setAttribute('aria-expanded','false'));}
-    const selected=row&&S.host.querySelector(`[data-row="${CSS.escape(row.id)}"]`);
-    if(selected){selected.classList.add('isOpen');selected.querySelectorAll('[data-lc-act="expand"]').forEach(button=>button.setAttribute('aria-expanded','true'));}
-    if(row)S.host.querySelector('.lcPage').insertAdjacentHTML('beforeend',detailHtml(row,S.drafts.get(row.id)));
-    const sameEditor=previous.id===S.expanded,editorScroll=previous.scroll;
-    const editor=S.host.querySelector('.lcEditor');
-    if(editor){
-      editor.showModal();editor.addEventListener('cancel',event=>{event.preventDefault();closeEditor();});
-      window.BLLayerSystem?.openDialog(editor,{onClose:()=>{
-        if(editor.querySelector('.dateCalendarPopup')&&typeof closeDateCalendarPopup==='function')return closeDateCalendarPopup(true);
-        closeEditor();
-      },initialFocus:S.editorFocus||'[data-lc-act="closeEditor"]'});S.editorFocus=null;
-      editor.querySelector('.lcDetailIn').scrollTop=sameEditor?editorScroll:0;
-      if(!sameEditor)window.BLMotionPlus?.play('overlay',editor);
-    }
-  }
-  function renderCard(id){
-    const rows=currentRows(),index=rows.findIndex(row=>row.id===id),node=S.host?.querySelector(`[data-row="${CSS.escape(id)}"]`);
-    if(node&&index<0)return render(); // Taslak iptali filtre dışında zorla gösterilen satırı kaldırabilir.
-    if(node&&index>=0)node.outerHTML=rowHtml(rows[index],index);
-  }
   function render(){
     if(!visible())return;
     readFavorites();
@@ -412,8 +357,9 @@
     const active=document.activeElement;
     if(S.host.contains(active)&&/^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)&&active.id!=='lcSearch'&&active.dataset?.lcContractFilter==null&&active.type!=='checkbox'&&S.host.querySelector('.lcPage')){S.renderQueued=true;return;}
     S.renderQueued=false;
-    const previousEditor=editorSnapshot();
-    detachEditor();
+    const oldEditor=S.host.querySelector('.lcEditor'),sameEditor=oldEditor?.dataset.detail===S.expanded;
+    const editorScroll=oldEditor?.querySelector('.lcDetailIn')?.scrollTop||0;
+    if(oldEditor){window.BLLayerSystem?.closeDialog(oldEditor,{restoreFocus:false});oldEditor.close();}
     const scrollTop=S.host.querySelector('.lcTable')?.scrollTop||0,scrollLeft=S.host.querySelector('.lcTable')?.scrollLeft||0;
     const searchFocus=active?.id==='lcSearch',filterFocus=active?.dataset?.lcContractFilter,caret=searchFocus||filterFocus!=null?active.selectionStart:null;
     if(!S.data){
@@ -428,7 +374,7 @@
       }
       return;
     }
-    const rows=currentRows(),n=counts(),opts=E.licensorOptions(S.data.cards),selectedVisible=rows.filter(r=>S.selected.has(r.id)).length,favoriteCount=allRows().filter(isFavorite).length;
+    const rows=currentRows(),editorRow=rows.find(r=>r.id===S.expanded),n=counts(),opts=E.licensorOptions(S.data.cards),selectedVisible=rows.filter(r=>S.selected.has(r.id)).length,favoriteCount=allRows().filter(isFavorite).length;
     const chip=(key,tr,en,count)=>`<button type="button" class="lcChip" data-lc-status="${key}" aria-pressed="${S.status===key}">${esc(T(tr,en))}<small>${count}</small></button>`;
     const head=(key,tr,en,cls='')=>`<button type="button" class="lcSort ${cls}" data-lc-sort="${key}" ${['royalty','hologramCost'].includes(key)?'lang="en"':''} aria-sort="${S.sort.key===key?(S.sort.dir==='asc'?'ascending':'descending'):'none'}">${esc(T(tr,en))}${S.sort.key===key?`<svg class="ic"><use href="#i-chevron-${S.sort.dir==='asc'?'up':'down'}"/></svg>`:''}</button>`;
     S.host.innerHTML=`<div class="lcPage">
@@ -462,12 +408,22 @@
         </div>
         ${S.contractView?contractsHtml(rows):rows.map(rowHtml).join('')||`<div class="lcEmpty"><svg class="ic"><use href="#i-license-cards"/></svg><b>${esc(S.query||S.licensor!=null||S.status!=='all'||S.favoritesOnly?T('Eşleşen lisans yok','No matching licenses'):T('Henüz lisans kartı yok','No license cards yet'))}</b><span>${esc(S.favoritesOnly?T('Lisans satırındaki yıldızla kendi favorilerinizi ekleyin veya filtreleri değiştirin.','Use the star on a license row to add your own favorites, or change the filters.'):S.query||S.licensor!=null||S.status!=='all'?T('Arama veya filtreleri değiştirin.','Change the search or filters.'):T('ASAS kaynağını kontrol edip yenileyin.','Check the ASAS source and refresh.'))}</span></div>`}
       </div>
+      ${editorRow?detailHtml(editorRow,S.drafts.get(editorRow.id)):''}
     </div>`;
     const all=S.host.querySelector('[data-lc-select-all]');if(all)all.indeterminate=selectedVisible>0&&selectedVisible<rows.length;
     const table=S.host.querySelector('.lcTable');if(table){table.scrollTop=scrollTop;table.scrollLeft=scrollLeft;}
     S.animate=false;S.flash.clear();
     runQuick();
-    renderEditor(previousEditor);
+    const editor=S.host.querySelector('.lcEditor');
+    if(editor){
+      editor.showModal();editor.addEventListener('cancel',event=>{event.preventDefault();closeEditor();});
+      window.BLLayerSystem?.openDialog(editor,{onClose:()=>{
+        if(editor.querySelector('.dateCalendarPopup')&&typeof closeDateCalendarPopup==='function')return closeDateCalendarPopup(true);
+        closeEditor();
+      },initialFocus:S.editorFocus||'[data-lc-act="closeEditor"]'});S.editorFocus=null;
+      editor.querySelector('.lcDetailIn').scrollTop=sameEditor?editorScroll:0;
+      if(!sameEditor)window.BLMotionPlus?.play('overlay',editor);
+    }
     if(filterFocus!=null){const input=S.host.querySelector(`[data-lc-contract-filter="${CSS.escape(filterFocus)}"]`);input?.focus();input?.setSelectionRange(caret,caret);}
     if(searchFocus){const input=document.getElementById('lcSearch');input.focus();input.setSelectionRange(caret,caret);}
   }
@@ -492,7 +448,7 @@
       atlas.license.cover=d.cover||'';body.profile.processAtlas=atlas;
     }
     if(rules.length)body.rules=rules;
-    d.saving=true;d.error='';renderCard(id);renderEditor();
+    d.saving=true;d.error='';render();
     try{
       const result=await api(`/api/license-cards/${encodeURIComponent(id)}`,{method:'PUT',body:JSON.stringify(body)});
       dropDraft(id);S.flash.add(id);
@@ -675,11 +631,11 @@
     if(a==='deleteRule'){const d=ensureDraft(id);if(!d||d.saving||d.conflict)return;if(!confirm(T('Bu sözleşme silinsin mi? Kaydetmeden önce Vazgeç ile geri alabilirsiniz.','Delete this contract? You can cancel before saving.')))return;const period=d.periods?.[el.dataset.ruleId];if(period){for(const original of period.originalRules){const previous=ruleOf(d,original.id);if(previous)previous.opdEnd=original.opdEnd||'';}delete d.periods[el.dataset.ruleId];if(d.period?.id===el.dataset.ruleId)d.period=null;d.note='';}d.rules=d.rules.filter(r=>r.id!==el.dataset.ruleId);if(d.snapshot.rules.some(r=>r.id===el.dataset.ruleId))d.deletedRuleIds.push(el.dataset.ruleId);d.primaryId=E.primaryContract(d.rules).rule?.id||'';render();return;}
     if(a==='retry')return load(Boolean(S.loadErrorRefresh));
     if(a==='refresh'&&canEdit())return load(true);
-    if(a==='expand'){S.expanded=id;S.historyOpen=false;S.addLicensorOpen=false;return renderEditor();}
+    if(a==='expand'){S.expanded=id;S.historyOpen=false;S.addLicensorOpen=false;return render();}
     if(a==='closeEditor')return closeEditor();
     if(a==='cancelEditor'){dropDraft(id);return closeEditor();}
-    if(a==='history'){S.historyOpen=!S.historyOpen;S.editorFocus='[data-lc-act="history"]';return renderEditor();}
-    if(a==='toggleLicensor'){S.addLicensorOpen=!S.addLicensorOpen;S.editorFocus=S.addLicensorOpen?'[data-lc-new-licensor]':'[data-lc-act="toggleLicensor"]';return renderEditor();}
+    if(a==='history'){S.historyOpen=!S.historyOpen;S.editorFocus='[data-lc-act="history"]';return render();}
+    if(a==='toggleLicensor'){S.addLicensorOpen=!S.addLicensorOpen;S.editorFocus=S.addLicensorOpen?'[data-lc-new-licensor]':'[data-lc-act="toggleLicensor"]';return render();}
     if(a==='map'){if(S.expanded)closeEditor();return openMap(id);}
     if(a==='templates')return openTemplates();
     if(a==='merges'){S.mergesOpen=!S.mergesOpen||Boolean(el.dataset.key&&!el.classList.contains('lcBtn'));S.mergeFocus=el.dataset.key||'';return render();}
