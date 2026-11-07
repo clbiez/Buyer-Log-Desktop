@@ -1,0 +1,88 @@
+# Analytics renderer — current Main acceptance / güncel Main kabulü
+
+## TR
+
+#904, Main `5b8c1e6f` (#912/#901/#914 dahil) ile **normal merge**
+`e5e4a7ed` üzerinden güncellendi. Rebase/force-push yapılmadı. Yedi analitik
+üretim modülü incelenen `8657e8ec` ile byte düzeyinde aynı; yeni optimizasyon yok.
+Main'in 42 kayıt nesnesi ve kendi üç TR/EN kaydı korundu: **45 not**. V946
+loader/worker assertion'ları iki taraftan korundu; query-cache'in Main native
+worker guard testi alındı. Canonical alan, authority veya IAM üretim koduna özgün
+müdahale yoktur. Eski 6/1 IAM koşuları kendi ortam ve SHA'larında tarihsel kalır;
+bu yeni tam PASS genel IAM güvenlik bulgusunun çözümü değildir (#915 ayrı P1).
+
+**Son standart koşu:** `npm test`, varsayılan concurrency4, private TMPDIR,
+NODE_OPTIONS/preload olmadan tek çağrıda **bütün 10 batch**:
+**1.295 dosya / 8.885 PASS / 0 FAIL / 65 mevcut SKIP / 0 CANCEL**, 220,5 sn.
+İlgili paket **227 PASS**; i18n **0/0**, release-note validator **45 PASS**.
+Test edilen uygulama ağacı `991608d7e43443fca8a6f042ab42305c76660a1b`.
+Son kaynak/test/CI değişmedi; bu ek kanıttır. Son SHA'nın gerçek CI'ı ayrıca
+beklenir. Yeni bağımsız genel tur yapılmadı: gpt-6-astra'nın `8657e8ec`
+incelemesinde P1/P2 yok; kaynak eşitliği ayrıca doğrulandı.
+
+### Gerçek 30k uygulama kontrolü
+
+Seed7 arşiviyle taze izole server/cache/browser: LFL **30.000** kayıt,
+Backlog **37.708** export satırı / **30.000** sipariş. Gerçek tarayıcı worker
+cevabı, Backlog parity, LFL sort, yeni analysis revision, reload ve TR/EN değişimi,
+sentetik Transit raporunun gerçek API'den kaydı/görünümü doğrulandı. Page error
+listesi boş. İlk deneme `ECONNRESET` ile durdu; kesin URL/sinyal kaydedilmedi,
+kök neden **[Bilinmiyor]**. Kanıt ve fixture silinmedi. Yeni izole denemede yalnız
+GET status/health için Faz0'ın mevcut sınırlı retry'ı kullanıldı; refresh POST
+tekrarlanmadı. Süreç normal kapandı, kaydedilen cgroup OOM sayacı artmadı.
+
+Görüntü incelemesi, ilk yeni teslimat capture'ının modül perdesini gösterdiğini
+saptadı; analiz görseli olarak kabul edilmedi. Aynı başarılı cache'ten **refresh
+POST olmadan** ayrı doğrulama Continue'a bastı, gerçek analysis panelini
+`elementFromPoint` ile görünür doğruladı ve yeni PNG aldı. LFL, Transit ve bu
+analiz PNG'si incelendi. Mevcut aktif üç sürüm notu PNG'si geçerli ve korunur.
+Bu çalışma performans kıyası veya kullanıcı input-latency testi değildir.
+
+### Korunan tarihsel ölçümler
+
+| Madde/senaryo | Renderer timer aralığı | Toplam tamamlanma |
+| --- | --- | --- |
+| ANA-05 yeni dataset | 673→209 ms | 679→1583 ms |
+| ANA-05 mevcut dataset cache miss | 973→474 ms | 981→1362 ms |
+
+ANA-07 LFL sort **180→17 ms**, ANA-11 Transit özeti **249→52 ms** ayrı işlemlerdir.
+Bu rakamlar önceki ölçüm kaynağına aittir. Worker toplam süreyi uzatır; input
+latency veya genel analiz hızlanması iddia edilmez. Structured-clone maliyeti,
+parçalı aktarım sınırları ve kalan bekleme eski raporda korunur. Ölçülen yedi
+modül değişmediği için bu operasyon kıyasları gereksiz yere tekrarlanmadı.
+
+[Komutlar, gerçek loglar, source blob karşılığı, bağımsız inceleme ve ekran kanıtı](analytics-post-main-20261107/manifest.json).
+**Son CI ve merge onayı beklenir. TEST/STABLE yayımlanmaz.**
+
+## EN
+
+Normal Main merge `e5e4a7ed` includes #912/#901/#914 (`5b8c1e6f`). All seven
+reviewed analytics production modules remain byte-identical to `8657e8ec`;
+no new optimization was added. The 42 Main notes plus three own entries remain
+(45). Both Main lazy-loader expectations and worker regressions are preserved.
+No original IAM/server/authority change was made; historical IAM failures remain
+historical. This full pass does not resolve the separate #915 security finding.
+
+The unchanged standard `npm test`, default concurrency4, private TMPDIR and no
+NODE_OPTIONS/preload passed **all ten batches in one invocation: 1,295 files,
+8,885 PASS / 0 FAIL / 65 existing SKIP / 0 CANCEL**, 220.5 seconds. Related package
+227 PASS; i18n 0/0; 45 visual notes passed. Tested app tree:
+`991608d7e43443fca8a6f042ab42305c76660a1b`. The one gpt-6-astra independent review
+at `8657e8ec` found no reportable P1/P2; the unchanged source correspondence is
+recorded, without a repeated general round. Final-head CI remains separate.
+
+A fresh real 30k demo run confirmed the browser worker result, Backlog parity,
+LFL sort/revision/reload/language handling and saved synthetic Transit UI. The
+first probe failed with ECONNRESET; its precise request/signal cause is unknown
+and evidence is retained. Only status/health GETs received existing Phase0 bounded
+retry in the new fresh run; no refresh POST retry. The process exited normally
+and recorded cgroup OOM counters did not increase. The first new delivery capture
+showed the module curtain and was rejected as an analysis screenshot. A separate
+no-refresh cache-resume check explicitly clicked Continue, verified unobscured
+analysis with elementFromPoint, and produced an inspected correct screenshot.
+
+Historical timings above retain their original source. ANA-05 reduces measured
+renderer timer gaps while increasing total completion; it is not input latency or
+general analysis speedup. Clone/transfer limits remain. ANA-07/11 are separate
+operation gains. This current functional smoke is not a new A/B performance run.
+**Final-head CI and merge approval pending; no TEST or STABLE.**
