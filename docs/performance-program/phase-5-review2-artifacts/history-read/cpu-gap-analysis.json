@@ -1,0 +1,564 @@
+[
+  {
+    "scenario": "overview-global-flow",
+    "profile": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase5-review2-main888-cpu-1/diagnostic-profiles/stall-2026-11-07T16-05-58-534Z-1.cpuprofile",
+    "profileClockFromMs": 1794067492057.1426,
+    "profileClockToMs": 1794067558436.9106,
+    "capture": {
+      "id": 1,
+      "scenario": "overview-global-flow.png",
+      "requestedAtMs": 1794067558434,
+      "clockOffsetMs": 1793914867391.1287,
+      "observerMaximumMs": 204.28123699999924,
+      "completedAtMs": 1794067558742
+    },
+    "top": [
+      [
+        "('(idle)', '', 0)",
+        60789.17799999985
+      ],
+      [
+        "('(program)', '', 0)",
+        370.69999999999993
+      ],
+      [
+        "('subarray', 'node:buffer', 1256)",
+        346.926
+      ],
+      [
+        "('resolveStore', 'server/lib/user-access.js', 653)",
+        328.1860000000001
+      ],
+      [
+        "('(garbage collector)', '', 0)",
+        297.097
+      ],
+      [
+        "('', 'scripts/lib/server-loop-probe.js', 39)",
+        200.39399999999998
+      ],
+      [
+        "('writev', '', 0)",
+        192.60599999999997
+      ],
+      [
+        "('sessionProfile', 'server/lib/user-access.js', 1309)",
+        183.33500000000004
+      ],
+      [
+        "('listOnTimeout', 'node:internal/timers', 576)",
+        167.31099999999995
+      ],
+      [
+        "('', 'server/lib/compute-access.js', 29)",
+        157.11100000000002
+      ],
+      [
+        "('match', 'node_modules/express/lib/router/layer.js', 110)",
+        141.585
+      ],
+      [
+        "('stat', '', 0)",
+        126.20799999999998
+      ]
+    ],
+    "gaps": [
+      {
+        "gap": {
+          "pid": 228677,
+          "kind": "gap",
+          "fromMs": 1794067501522.0063,
+          "toMs": 1794067501726.2876,
+          "gapMs": 204.28123699999924,
+          "delayMs": 194.28123699999924,
+          "cpuApproximate": true,
+          "cpuAvailable": true,
+          "cpuWindowFromMs": 1794067501427.4055,
+          "cpuWindowToMs": 1794067501731.442,
+          "cpuClockResolutionMs": 10,
+          "userCpuMs": 90,
+          "systemCpuMs": 70
+        },
+        "samples": [
+          {
+            "fromMs": 1794067501521.8909,
+            "toMs": 1794067501526.983,
+            "overlapMs": 4.9765625,
+            "chain": [
+              "('(idle)', '', 0)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501526.983,
+            "toMs": 1794067501539.51,
+            "overlapMs": 12.527099609375,
+            "chain": [
+              "('pageProjectionContext', 'server/server.js', 7979)",
+              "('loadCachedPageProjectionSet', 'server/server.js', 8309)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('', 'server/server.js', 8482)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501539.51,
+            "toMs": 1794067501544.584,
+            "overlapMs": 5.073974609375,
+            "chain": [
+              "('applyHorizonOverrides', 'server/lib/user-preferences.js', 656)",
+              "('pageProjectionContext', 'server/server.js', 7979)",
+              "('loadCachedPageProjectionSet', 'server/server.js', 8309)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('', 'server/server.js', 8482)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501544.584,
+            "toMs": 1794067501550.652,
+            "overlapMs": 6.068115234375,
+            "chain": [
+              "('stat', '', 0)",
+              "('statSync', 'node:fs', 1794)",
+              "('storeTag', 'server/lib/user-access.js', 649)",
+              "('resolveStore', 'server/lib/user-access.js', 653)",
+              "('readStore', 'server/lib/user-access.js', 821)",
+              "('publicProfile', 'server/lib/user-access.js', 1116)",
+              "('pageProjectionContext', 'server/server.js', 7979)",
+              "('loadCachedPageProjectionSet', 'server/server.js', 8309)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('', 'server/server.js', 8482)"
+            ]
+          },
+          {
+            "fromMs": 1794067501550.652,
+            "toMs": 1794067501556.298,
+            "overlapMs": 5.64599609375,
+            "chain": [
+              "('deltaMirrorExcluded', 'server/db.js', 107)",
+              "('readFromDelta', 'server/db.js', 139)",
+              "('storeExists', 'server/db.js', 147)",
+              "('loadOverrides', 'server/db.js', 353)",
+              "('sourceFilterReadiness', 'server/server.js', 6776)",
+              "('pageProjectionContext', 'server/server.js', 7979)",
+              "('loadCachedPageProjectionSet', 'server/server.js', 8309)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('', 'server/server.js', 8482)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501556.298,
+            "toMs": 1794067501560.688,
+            "overlapMs": 4.389892578125,
+            "chain": [
+              "('readFileUtf8', '', 0)",
+              "('readFileSync', 'node:fs', 474)",
+              "('loadManifestFile', 'server/lib/page-projection-cache.js', 92)",
+              "('loadManifestCandidates', 'server/lib/page-projection-cache.js', 99)",
+              "('loadManifest', 'server/lib/page-projection-cache.js', 107)",
+              "('loadCachedPageProjectionSet', 'server/server.js', 8309)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('', 'server/server.js', 8482)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501560.688,
+            "toMs": 1794067501566.416,
+            "overlapMs": 5.72802734375,
+            "chain": [
+              "('buildResponse', 'server/server.js', 8339)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501566.416,
+            "toMs": 1794067501571.6,
+            "overlapMs": 5.18408203125,
+            "chain": [
+              "('readFileSync', 'node:fs', 474)",
+              "('readJsonWithValidatedBackup', 'server/lib/safe-json-read.js', 13)",
+              "('readJsonWithBackup', 'server/db.js', 194)",
+              "('loadRefreshHistory', 'server/db.js', 1199)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501571.6,
+            "toMs": 1794067501576.017,
+            "overlapMs": 4.4169921875,
+            "chain": [
+              "('readFileSync', 'node:fs', 474)",
+              "('readJsonWithValidatedBackup', 'server/lib/safe-json-read.js', 13)",
+              "('readJsonWithBackup', 'server/db.js', 194)",
+              "('loadRefreshHistory', 'server/db.js', 1199)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501576.017,
+            "toMs": 1794067501581.261,
+            "overlapMs": 5.243896484375,
+            "chain": [
+              "('readFileSync', 'node:fs', 474)",
+              "('readJsonWithValidatedBackup', 'server/lib/safe-json-read.js', 13)",
+              "('readJsonWithBackup', 'server/db.js', 194)",
+              "('loadRefreshHistory', 'server/db.js', 1199)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501581.261,
+            "toMs": 1794067501586.44,
+            "overlapMs": 5.178955078125,
+            "chain": [
+              "('readJsonWithValidatedBackup', 'server/lib/safe-json-read.js', 13)",
+              "('readJsonWithBackup', 'server/db.js', 194)",
+              "('loadRefreshHistory', 'server/db.js', 1199)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501586.44,
+            "toMs": 1794067501592.896,
+            "overlapMs": 6.4560546875,
+            "chain": [
+              "('atomicWriteJson', 'server/user-data.js', 176)",
+              "('loadRefreshHistory', 'server/db.js', 1199)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501592.896,
+            "toMs": 1794067501597.3489,
+            "overlapMs": 4.452880859375,
+            "chain": [
+              "('atomicWriteJson', 'server/user-data.js', 176)",
+              "('loadRefreshHistory', 'server/db.js', 1199)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501597.3489,
+            "toMs": 1794067501602.4639,
+            "overlapMs": 5.114990234375,
+            "chain": [
+              "('replaceSync', 'server/lib/durable-file-recovery.js', 337)",
+              "('atomicWriteBuffer', 'server/user-data.js', 173)",
+              "('atomicWriteJson', 'server/user-data.js', 176)",
+              "('loadRefreshHistory', 'server/db.js', 1199)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501602.4639,
+            "toMs": 1794067501609.209,
+            "overlapMs": 6.7451171875,
+            "chain": [
+              "('writeBuffer', '', 0)",
+              "('writeSync', 'node:fs', 944)",
+              "('writeFileSync', 'node:fs', 2463)",
+              "('writeNewSync', 'server/lib/durable-file-recovery.js', 60)",
+              "('prepareSync', 'server/lib/durable-file-recovery.js', 246)",
+              "('replaceSync', 'server/lib/durable-file-recovery.js', 337)",
+              "('atomicWriteBuffer', 'server/user-data.js', 173)",
+              "('atomicWriteJson', 'server/user-data.js', 176)",
+              "('loadRefreshHistory', 'server/db.js', 1199)",
+              "('buildResponse', 'server/server.js', 8339)"
+            ]
+          },
+          {
+            "fromMs": 1794067501609.209,
+            "toMs": 1794067501613.903,
+            "overlapMs": 4.694091796875,
+            "chain": [
+              "('fsync', '', 0)",
+              "('fsyncSync', 'node:fs', 1342)",
+              "('fsyncFileSync', 'server/lib/durable-file-recovery.js', 28)",
+              "('writeNewSync', 'server/lib/durable-file-recovery.js', 60)",
+              "('prepareSync', 'server/lib/durable-file-recovery.js', 246)",
+              "('replaceSync', 'server/lib/durable-file-recovery.js', 337)",
+              "('atomicWriteBuffer', 'server/user-data.js', 173)",
+              "('atomicWriteJson', 'server/user-data.js', 176)",
+              "('loadRefreshHistory', 'server/db.js', 1199)",
+              "('buildResponse', 'server/server.js', 8339)"
+            ]
+          },
+          {
+            "fromMs": 1794067501613.903,
+            "toMs": 1794067501620.727,
+            "overlapMs": 6.823974609375,
+            "chain": [
+              "('writeBuffer', '', 0)",
+              "('writeSync', 'node:fs', 944)",
+              "('writeFileSync', 'node:fs', 2463)",
+              "('replaceTargetSync', 'server/lib/durable-file-recovery.js', 151)",
+              "('commitPreparedSync', 'server/lib/durable-file-recovery.js', 290)",
+              "('replaceSync', 'server/lib/durable-file-recovery.js', 337)",
+              "('atomicWriteBuffer', 'server/user-data.js', 173)",
+              "('atomicWriteJson', 'server/user-data.js', 176)",
+              "('loadRefreshHistory', 'server/db.js', 1199)",
+              "('buildResponse', 'server/server.js', 8339)"
+            ]
+          },
+          {
+            "fromMs": 1794067501620.727,
+            "toMs": 1794067501625.7751,
+            "overlapMs": 5.048095703125,
+            "chain": [
+              "('copyFile', '', 0)",
+              "('copyFileSync', 'node:fs', 3176)",
+              "('replaceTargetSync', 'server/lib/durable-file-recovery.js', 151)",
+              "('commitPreparedSync', 'server/lib/durable-file-recovery.js', 290)",
+              "('replaceSync', 'server/lib/durable-file-recovery.js', 337)",
+              "('atomicWriteBuffer', 'server/user-data.js', 173)",
+              "('atomicWriteJson', 'server/user-data.js', 176)",
+              "('loadRefreshHistory', 'server/db.js', 1199)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501625.7751,
+            "toMs": 1794067501634.6582,
+            "overlapMs": 8.883056640625,
+            "chain": [
+              "('fsync', '', 0)",
+              "('fsyncSync', 'node:fs', 1342)",
+              "('fsyncDirSync', 'server/lib/durable-file-recovery.js', 36)",
+              "('replaceTargetSync', 'server/lib/durable-file-recovery.js', 151)",
+              "('commitPreparedSync', 'server/lib/durable-file-recovery.js', 290)",
+              "('replaceSync', 'server/lib/durable-file-recovery.js', 337)",
+              "('atomicWriteBuffer', 'server/user-data.js', 173)",
+              "('atomicWriteJson', 'server/user-data.js', 176)",
+              "('loadRefreshHistory', 'server/db.js', 1199)",
+              "('buildResponse', 'server/server.js', 8339)"
+            ]
+          },
+          {
+            "fromMs": 1794067501634.6582,
+            "toMs": 1794067501636.4482,
+            "overlapMs": 1.7900390625,
+            "chain": [
+              "('commitPreparedSync', 'server/lib/durable-file-recovery.js', 290)",
+              "('replaceSync', 'server/lib/durable-file-recovery.js', 337)",
+              "('atomicWriteBuffer', 'server/user-data.js', 173)",
+              "('atomicWriteJson', 'server/user-data.js', 176)",
+              "('loadRefreshHistory', 'server/db.js', 1199)",
+              "('buildResponse', 'server/server.js', 8339)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501636.4482,
+            "toMs": 1794067501642.0781,
+            "overlapMs": 5.6298828125,
+            "chain": [
+              "('(garbage collector)', '', 0)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501642.0781,
+            "toMs": 1794067501647.197,
+            "overlapMs": 5.118896484375,
+            "chain": [
+              "('(garbage collector)', '', 0)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501647.197,
+            "toMs": 1794067501655.331,
+            "overlapMs": 8.134033203125,
+            "chain": [
+              "('(garbage collector)', '', 0)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501655.331,
+            "toMs": 1794067501663.872,
+            "overlapMs": 8.541015625,
+            "chain": [
+              "('(garbage collector)', '', 0)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501663.872,
+            "toMs": 1794067501668.9722,
+            "overlapMs": 5.10009765625,
+            "chain": [
+              "('(garbage collector)', '', 0)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501668.9722,
+            "toMs": 1794067501674.102,
+            "overlapMs": 5.1298828125,
+            "chain": [
+              "('(garbage collector)', '', 0)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501674.102,
+            "toMs": 1794067501688.371,
+            "overlapMs": 14.26904296875,
+            "chain": [
+              "('(garbage collector)', '', 0)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501688.371,
+            "toMs": 1794067501694.125,
+            "overlapMs": 5.75390625,
+            "chain": [
+              "('(garbage collector)', '', 0)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501694.125,
+            "toMs": 1794067501699.233,
+            "overlapMs": 5.10791015625,
+            "chain": [
+              "('(garbage collector)', '', 0)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501699.233,
+            "toMs": 1794067501707.6318,
+            "overlapMs": 8.39892578125,
+            "chain": [
+              "('(garbage collector)', '', 0)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501707.6318,
+            "toMs": 1794067501713.442,
+            "overlapMs": 5.81005859375,
+            "chain": [
+              "('(garbage collector)', '', 0)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501713.442,
+            "toMs": 1794067501718.9978,
+            "overlapMs": 5.555908203125,
+            "chain": [
+              "('(garbage collector)', '', 0)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501718.9978,
+            "toMs": 1794067501725.8389,
+            "overlapMs": 6.841064453125,
+            "chain": [
+              "('observerCallback', 'node:internal/perf/observe', 530)",
+              "('(root)', '', 0)"
+            ]
+          },
+          {
+            "fromMs": 1794067501725.8389,
+            "toMs": 1794067501739.0159,
+            "overlapMs": 0.44873046875,
+            "chain": [
+              "('handle', 'node_modules/express/lib/router/layer.js', 86)",
+              "('next', 'node_modules/express/lib/router/route.js', 121)",
+              "('dispatch', 'node_modules/express/lib/router/route.js', 101)",
+              "('handle', 'node_modules/express/lib/router/layer.js', 86)",
+              "('', 'node_modules/express/lib/router/index.js', 280)",
+              "('process_params', 'node_modules/express/lib/router/index.js', 338)",
+              "('next', 'node_modules/express/lib/router/index.js', 177)",
+              "('', 'server/server.js', 2253)",
+              "('handle', 'node_modules/express/lib/router/layer.js', 86)",
+              "('trim_prefix', 'node_modules/express/lib/router/index.js', 293)"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "scenario": "backlog",
+    "profile": "/workspace/buyerlog-benchmark-temp/buyerlog-startup-phase5-review2-main888-cpu-1/diagnostic-profiles/stall-2026-11-07T16-06-31-777Z-2.cpuprofile",
+    "profileClockFromMs": 1794067558540.1929,
+    "profileClockToMs": 1794067591764.1357,
+    "capture": {
+      "id": 2,
+      "scenario": "backlog.png",
+      "requestedAtMs": 1794067591763,
+      "clockOffsetMs": 1793914867390.5078,
+      "observerMaximumMs": 76.45004599999811,
+      "completedAtMs": 1794067592142
+    },
+    "top": [
+      [
+        "('(idle)', '', 0)",
+        32145.644000000026
+      ],
+      [
+        "('(program)', '', 0)",
+        400.1780000000001
+      ],
+      [
+        "('next', 'node_modules/express/lib/router/index.js', 177)",
+        75.33000000000001
+      ],
+      [
+        "('match', 'node_modules/express/lib/router/layer.js', 110)",
+        37.443000000000005
+      ],
+      [
+        "('listOnTimeout', 'node:internal/timers', 576)",
+        28.202
+      ],
+      [
+        "('stat', '', 0)",
+        22.250999999999998
+      ],
+      [
+        "('readFileSync', 'node:fs', 474)",
+        21.778
+      ],
+      [
+        "('fsync', '', 0)",
+        16.628999999999998
+      ],
+      [
+        "('trim_prefix', 'node_modules/express/lib/router/index.js', 293)",
+        15.384
+      ],
+      [
+        "('writev', '', 0)",
+        14.393
+      ],
+      [
+        "('', 'server/lib/iam-core.js', 386)",
+        12.158000000000001
+      ],
+      [
+        "('processTimers', 'node:internal/timers', 556)",
+        12.046
+      ]
+    ],
+    "gaps": []
+  }
+]

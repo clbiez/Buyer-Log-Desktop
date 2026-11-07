@@ -1181,7 +1181,9 @@ function trimRefreshHistoryDetails(item) {
   const total = Number.isFinite(Number(item.detailsTotal)) && Number(item.detailsTotal) >= details.length
     ? Number(item.detailsTotal) : details.length;
   if (details.length <= REFRESH_HISTORY_DETAIL_LIMIT) {
-    return total === details.length ? item : { ...item, detailsTotal: total };
+    // Preserve identity after trimming: loadRefreshHistory uses identity to
+    // detect real normalization changes before advancing the revision/writing.
+    return total === details.length || item.detailsTotal === total ? item : { ...item, detailsTotal: total };
   }
   return { ...item, details: details.slice(0, REFRESH_HISTORY_DETAIL_LIMIT), detailsTotal: total };
 }
