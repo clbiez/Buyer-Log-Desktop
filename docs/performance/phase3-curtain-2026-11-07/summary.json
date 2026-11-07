@@ -1,0 +1,2975 @@
+{
+  "schemaVersion": 1,
+  "mainHeadEquivalence": {
+    "measuredMain": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b",
+    "latestMain": "2083ffd73ba026067d92ccf257c4551afa2e5f00",
+    "changedPaths": [
+      "resources/app/tests/v714-performance-hardening.test.js"
+    ],
+    "runtimeAndHarnessTreesIdentical": true
+  },
+  "commits": {
+    "before": "873c1f4497535252db12c52f7d7a25155433fa5d",
+    "phase3": "873a14f42f6cb0feef18cc76d3fb3dc1cb0e4f1c",
+    "main": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b"
+  },
+  "prerequisite": {
+    "pr": 892,
+    "merged": true,
+    "mergeCommit": "5a1656e98deeb573f6245f4b24a8135cc77a0d7b"
+  },
+  "environment": {
+    "platform": "linux",
+    "node": "v24.19.0",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "cpuCount": 5,
+    "availableParallelism": 4,
+    "cpuQuota": "400000 100000",
+    "memoryLimitBytes": "17179869184",
+    "chromium": "154.0.8037.57",
+    "fixture": {
+      "synthetic": true,
+      "rows": 30000,
+      "seed": 7,
+      "hashes": {
+        "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+        "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+        "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+      }
+    },
+    "expected": {
+      "rows": {
+        "koleksiyon": 0,
+        "cp": 24982,
+        "orders": 30000,
+        "overview": 30000
+      },
+      "generation": "mw6og84o-afebb0328a43",
+      "sourceRevision": "28fbd7f933a3d818fe315f1edd77bc2ef90f5dafe5225d0a2e7e230bebb4567d",
+      "revisions": {
+        "orders": 0,
+        "suppFob": 0
+      }
+    },
+    "fixtureConditions": {
+      "maintenanceState": "recent-weekly-check",
+      "stateFile": "/tmp/buyerlog-startup-phase3-seed/local/data-cleanup-state.json"
+    },
+    "playwrightVersion": "1.62.1"
+  },
+  "order": [
+    [
+      "before",
+      "phase3",
+      "main"
+    ],
+    [
+      "phase3",
+      "main",
+      "before"
+    ],
+    [
+      "main",
+      "before",
+      "phase3"
+    ]
+  ],
+  "results": [
+    {
+      "name": "1-before-first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "1-before-same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "1-phase3-first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "1-phase3-same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "1-main-first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "1-main-same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "2-phase3-first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "2-phase3-same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "2-main-first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "2-main-same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "2-before-first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "2-before-same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "3-main-first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "3-main-same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "3-before-first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "3-before-same",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "3-phase3-first",
+      "status": "passed",
+      "error": null
+    },
+    {
+      "name": "3-phase3-same",
+      "status": "passed",
+      "error": null
+    }
+  ],
+  "summary": {
+    "before": {
+      "first": {
+        "cp.continueDispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            61515.600000000006,
+            60397.70000000007,
+            60771.80000000005
+          ],
+          "medianMs": 60771.80000000005,
+          "minMs": 60397.70000000007,
+          "maxMs": 61515.600000000006
+        },
+        "cp.dispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            62.5,
+            42.40000000002328,
+            62.89999999990687
+          ],
+          "medianMs": 62.5,
+          "minMs": 42.40000000002328,
+          "maxMs": 62.89999999990687
+        },
+        "cp.gateReady": {
+          "n": 3,
+          "valuesMs": [
+            13268.399999999994,
+            13857.5,
+            12217
+          ],
+          "medianMs": 13268.399999999994,
+          "minMs": 12217,
+          "maxMs": 13857.5
+        },
+        "cp.gateToCurtain": {
+          "n": 3,
+          "valuesMs": [
+            61518.69999999998,
+            60401.20000000007,
+            60777.90000000014
+          ],
+          "medianMs": 60777.90000000014,
+          "minMs": 60401.20000000007,
+          "maxMs": 61518.69999999998
+        },
+        "cp.intent": {
+          "n": 3,
+          "valuesMs": [
+            1747.7999999999884,
+            1387.1000000000931,
+            1680.5
+          ],
+          "medianMs": 1680.5,
+          "minMs": 1387.1000000000931,
+          "maxMs": 1747.7999999999884
+        },
+        "cp.startupComplete": {
+          "n": 3,
+          "valuesMs": [
+            74787.09999999998,
+            74258.70000000007,
+            72994.90000000014
+          ],
+          "medianMs": 74258.70000000007,
+          "minMs": 72994.90000000014,
+          "maxMs": 74787.09999999998
+        },
+        "cp.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            76535.29999999999,
+            75646.1000000001,
+            74676.1000000001
+          ],
+          "medianMs": 75646.1000000001,
+          "minMs": 74676.1000000001,
+          "maxMs": 76535.29999999999
+        },
+        "orders.continueDispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            61796.5,
+            61256.40000000014,
+            61718
+          ],
+          "medianMs": 61718,
+          "minMs": 61256.40000000014,
+          "maxMs": 61796.5
+        },
+        "orders.dispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            50.300000000046566,
+            53,
+            48.10000000009313
+          ],
+          "medianMs": 50.300000000046566,
+          "minMs": 48.10000000009313,
+          "maxMs": 53
+        },
+        "orders.gateReady": {
+          "n": 3,
+          "valuesMs": [
+            11883.100000000035,
+            11568.399999999907,
+            12829.100000000093
+          ],
+          "medianMs": 11883.100000000035,
+          "minMs": 11568.399999999907,
+          "maxMs": 12829.100000000093
+        },
+        "orders.gateToCurtain": {
+          "n": 3,
+          "valuesMs": [
+            61801.899999999965,
+            61260.69999999995,
+            61722.19999999995
+          ],
+          "medianMs": 61722.19999999995,
+          "minMs": 61260.69999999995,
+          "maxMs": 61801.899999999965
+        },
+        "orders.intent": {
+          "n": 3,
+          "valuesMs": [
+            9495.400000000023,
+            10277.600000000093,
+            7317.40000000014
+          ],
+          "medianMs": 9495.400000000023,
+          "minMs": 7317.40000000014,
+          "maxMs": 10277.600000000093
+        },
+        "orders.startupComplete": {
+          "n": 3,
+          "valuesMs": [
+            73685,
+            72829.09999999986,
+            74551.30000000005
+          ],
+          "medianMs": 73685,
+          "minMs": 72829.09999999986,
+          "maxMs": 74551.30000000005
+        },
+        "orders.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            83180.90000000002,
+            83107.30000000005,
+            81869.30000000005
+          ],
+          "medianMs": 83107.30000000005,
+          "minMs": 81869.30000000005,
+          "maxMs": 83180.90000000002
+        }
+      },
+      "same": {
+        "first.cp.interactive": {
+          "n": 3,
+          "valuesMs": [
+            2738.100000000035,
+            3250.5,
+            3427.6999999999534
+          ],
+          "medianMs": 3250.5,
+          "minMs": 2738.100000000035,
+          "maxMs": 3427.6999999999534
+        },
+        "first.cp.legacy": {
+          "n": 3,
+          "valuesMs": [
+            2737.7000000000116,
+            3250.0999999998603,
+            3427.5
+          ],
+          "medianMs": 3250.0999999998603,
+          "minMs": 2737.7000000000116,
+          "maxMs": 3427.5
+        },
+        "first.cp.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            75267.60000000003,
+            79231.30000000005,
+            76948.90000000014
+          ],
+          "medianMs": 76948.90000000014,
+          "minMs": 75267.60000000003,
+          "maxMs": 79231.30000000005
+        },
+        "first.orders.interactive": {
+          "n": 3,
+          "valuesMs": [
+            1147.7000000000116,
+            1197.2000000001863,
+            1202.6999999999534
+          ],
+          "medianMs": 1197.2000000001863,
+          "minMs": 1147.7000000000116,
+          "maxMs": 1202.6999999999534
+        },
+        "first.orders.legacy": {
+          "n": 3,
+          "valuesMs": [
+            1147.4000000000233,
+            1196.8000000000466,
+            1202.3999999999069
+          ],
+          "medianMs": 1196.8000000000466,
+          "minMs": 1147.4000000000233,
+          "maxMs": 1202.3999999999069
+        },
+        "first.orders.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            78200.20000000001,
+            83049.1000000001,
+            81415.6000000001
+          ],
+          "medianMs": 81415.6000000001,
+          "minMs": 78200.20000000001,
+          "maxMs": 83049.1000000001
+        },
+        "return.cp.interactive": {
+          "n": 3,
+          "valuesMs": [
+            789.7999999999884,
+            882,
+            773.9000000001397
+          ],
+          "medianMs": 789.7999999999884,
+          "minMs": 773.9000000001397,
+          "maxMs": 882
+        },
+        "return.cp.legacy": {
+          "n": 3,
+          "valuesMs": [
+            789.6999999999534,
+            881.9000000001397,
+            773.6999999999534
+          ],
+          "medianMs": 789.6999999999534,
+          "minMs": 773.6999999999534,
+          "maxMs": 881.9000000001397
+        },
+        "return.cp.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            80005.40000000002,
+            84935.69999999995,
+            83209.70000000019
+          ],
+          "medianMs": 83209.70000000019,
+          "minMs": 80005.40000000002,
+          "maxMs": 84935.69999999995
+        },
+        "return.orders.interactive": {
+          "n": 3,
+          "valuesMs": [
+            213.69999999995343,
+            224.89999999990687,
+            198.20000000018626
+          ],
+          "medianMs": 213.69999999995343,
+          "minMs": 198.20000000018626,
+          "maxMs": 224.89999999990687
+        },
+        "return.orders.legacy": {
+          "n": 3,
+          "valuesMs": [
+            213.5,
+            224.69999999995343,
+            198
+          ],
+          "medianMs": 213.5,
+          "minMs": 198,
+          "maxMs": 224.69999999995343
+        },
+        "return.orders.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            81239.29999999999,
+            86177.5,
+            84425.20000000019
+          ],
+          "medianMs": 84425.20000000019,
+          "minMs": 81239.29999999999,
+          "maxMs": 86177.5
+        },
+        "startupComplete": {
+          "n": 3,
+          "valuesMs": [
+            66424.79999999999,
+            69634.3999999999,
+            67523.1000000001
+          ],
+          "medianMs": 67523.1000000001,
+          "minMs": 66424.79999999999,
+          "maxMs": 69634.3999999999
+        },
+        "warmupAfterCurtain": {
+          "n": 3,
+          "valuesMs": [
+            -55210.399999999965,
+            -56827.299999999814,
+            -55406.19999999995
+          ],
+          "medianMs": -55406.19999999995,
+          "minMs": -56827.299999999814,
+          "maxMs": -55210.399999999965
+        },
+        "warmupDone": {
+          "n": 3,
+          "valuesMs": [
+            11214.400000000023,
+            12807.100000000093,
+            12116.90000000014
+          ],
+          "medianMs": 12116.90000000014,
+          "minMs": 11214.400000000023,
+          "maxMs": 12807.100000000093
+        }
+      }
+    },
+    "phase3": {
+      "first": {
+        "cp.continueDispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            45.40000000002328,
+            94.5,
+            39.199999999953434
+          ],
+          "medianMs": 45.40000000002328,
+          "minMs": 39.199999999953434,
+          "maxMs": 94.5
+        },
+        "cp.dispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            23.099999999976717,
+            23.79999999993015,
+            30.600000000093132
+          ],
+          "medianMs": 23.79999999993015,
+          "minMs": 23.099999999976717,
+          "maxMs": 30.600000000093132
+        },
+        "cp.gateReady": {
+          "n": 3,
+          "valuesMs": [
+            1410.5999999999767,
+            1426.1999999999534,
+            1537.5
+          ],
+          "medianMs": 1426.1999999999534,
+          "minMs": 1410.5999999999767,
+          "maxMs": 1537.5
+        },
+        "cp.gateToCurtain": {
+          "n": 3,
+          "valuesMs": [
+            48.40000000002328,
+            97.20000000006985,
+            46.199999999953434
+          ],
+          "medianMs": 48.40000000002328,
+          "minMs": 46.199999999953434,
+          "maxMs": 97.20000000006985
+        },
+        "cp.intent": {
+          "n": 3,
+          "valuesMs": [
+            41630.70000000001,
+            42188.39999999991,
+            40441.200000000186
+          ],
+          "medianMs": 41630.70000000001,
+          "minMs": 40441.200000000186,
+          "maxMs": 42188.39999999991
+        },
+        "cp.startupComplete": {
+          "n": 3,
+          "valuesMs": [
+            1459,
+            1523.4000000000233,
+            1583.6999999999534
+          ],
+          "medianMs": 1523.4000000000233,
+          "minMs": 1459,
+          "maxMs": 1583.6999999999534
+        },
+        "cp.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            43090,
+            43712.19999999995,
+            42025.80000000005
+          ],
+          "medianMs": 43090,
+          "minMs": 42025.80000000005,
+          "maxMs": 43712.19999999995
+        },
+        "orders.continueDispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            28.29999999998836,
+            89.5,
+            86.5
+          ],
+          "medianMs": 86.5,
+          "minMs": 28.29999999998836,
+          "maxMs": 89.5
+        },
+        "orders.dispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            34.100000000034925,
+            68.09999999997672,
+            18.899999999906868
+          ],
+          "medianMs": 34.100000000034925,
+          "minMs": 18.899999999906868,
+          "maxMs": 68.09999999997672
+        },
+        "orders.gateReady": {
+          "n": 3,
+          "valuesMs": [
+            1239.8000000000466,
+            1568.5,
+            1205.4000000001397
+          ],
+          "medianMs": 1239.8000000000466,
+          "minMs": 1205.4000000001397,
+          "maxMs": 1568.5
+        },
+        "orders.gateToCurtain": {
+          "n": 3,
+          "valuesMs": [
+            34.79999999998836,
+            94.79999999993015,
+            91.5999999998603
+          ],
+          "medianMs": 91.5999999998603,
+          "minMs": 34.79999999998836,
+          "maxMs": 94.79999999993015
+        },
+        "orders.intent": {
+          "n": 3,
+          "valuesMs": [
+            3900.4000000000233,
+            8013.599999999977,
+            3627.1999999999534
+          ],
+          "medianMs": 3900.4000000000233,
+          "minMs": 3627.1999999999534,
+          "maxMs": 8013.599999999977
+        },
+        "orders.startupComplete": {
+          "n": 3,
+          "valuesMs": [
+            1274.600000000035,
+            1663.2999999999302,
+            1297
+          ],
+          "medianMs": 1297,
+          "minMs": 1274.600000000035,
+          "maxMs": 1663.2999999999302
+        },
+        "orders.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            5175.600000000035,
+            9677.29999999993,
+            4924.600000000093
+          ],
+          "medianMs": 5175.600000000035,
+          "minMs": 4924.600000000093,
+          "maxMs": 9677.29999999993
+        }
+      },
+      "same": {
+        "first.cp.interactive": {
+          "n": 3,
+          "valuesMs": [
+            26857.099999999977,
+            23476.599999999977,
+            24517.300000000047
+          ],
+          "medianMs": 24517.300000000047,
+          "minMs": 23476.599999999977,
+          "maxMs": 26857.099999999977
+        },
+        "first.cp.legacy": {
+          "n": 3,
+          "valuesMs": [
+            26856.900000000023,
+            23476.399999999907,
+            24517
+          ],
+          "medianMs": 24517,
+          "minMs": 23476.399999999907,
+          "maxMs": 26856.900000000023
+        },
+        "first.cp.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            63173.79999999993,
+            57765.5,
+            57926.39999999991
+          ],
+          "medianMs": 57926.39999999991,
+          "minMs": 57765.5,
+          "maxMs": 63173.79999999993
+        },
+        "first.orders.interactive": {
+          "n": 3,
+          "valuesMs": [
+            1249.5,
+            1409.0999999999767,
+            1691.3000000000466
+          ],
+          "medianMs": 1409.0999999999767,
+          "minMs": 1249.5,
+          "maxMs": 1691.3000000000466
+        },
+        "first.orders.legacy": {
+          "n": 3,
+          "valuesMs": [
+            1249.4000000000233,
+            1408.6999999999534,
+            1690.8000000000466
+          ],
+          "medianMs": 1408.6999999999534,
+          "minMs": 1249.4000000000233,
+          "maxMs": 1690.8000000000466
+        },
+        "first.orders.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            65441.29999999993,
+            60209.09999999998,
+            60897.69999999995
+          ],
+          "medianMs": 60897.69999999995,
+          "minMs": 60209.09999999998,
+          "maxMs": 65441.29999999993
+        },
+        "return.cp.interactive": {
+          "n": 3,
+          "valuesMs": [
+            274.80000000004657,
+            262.79999999993015,
+            300
+          ],
+          "medianMs": 274.80000000004657,
+          "minMs": 262.79999999993015,
+          "maxMs": 300
+        },
+        "return.cp.legacy": {
+          "n": 3,
+          "valuesMs": [
+            274.70000000006985,
+            262.69999999995343,
+            299.80000000004657
+          ],
+          "medianMs": 274.70000000006985,
+          "minMs": 262.69999999995343,
+          "maxMs": 299.80000000004657
+        },
+        "return.cp.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            66739.59999999998,
+            61485.29999999993,
+            62214.89999999991
+          ],
+          "medianMs": 62214.89999999991,
+          "minMs": 61485.29999999993,
+          "maxMs": 66739.59999999998
+        },
+        "return.orders.interactive": {
+          "n": 3,
+          "valuesMs": [
+            242.5,
+            245.79999999993015,
+            232.79999999981374
+          ],
+          "medianMs": 242.5,
+          "minMs": 232.79999999981374,
+          "maxMs": 245.79999999993015
+        },
+        "return.orders.legacy": {
+          "n": 3,
+          "valuesMs": [
+            242.30000000004657,
+            245.69999999995343,
+            232.69999999995343
+          ],
+          "medianMs": 242.30000000004657,
+          "minMs": 232.69999999995343,
+          "maxMs": 245.69999999995343
+        },
+        "return.orders.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            68000.79999999993,
+            62750.79999999993,
+            63470.09999999986
+          ],
+          "medianMs": 63470.09999999986,
+          "minMs": 62750.79999999993,
+          "maxMs": 68000.79999999993
+        },
+        "startupComplete": {
+          "n": 3,
+          "valuesMs": [
+            1488.2999999999884,
+            1390.0999999999767,
+            1393.0999999998603
+          ],
+          "medianMs": 1393.0999999998603,
+          "minMs": 1390.0999999999767,
+          "maxMs": 1488.2999999999884
+        },
+        "warmupAfterCurtain": {
+          "n": 3,
+          "valuesMs": [
+            34809.70000000001,
+            32884.40000000002,
+            32001.100000000093
+          ],
+          "medianMs": 32884.40000000002,
+          "minMs": 32001.100000000093,
+          "maxMs": 34809.70000000001
+        },
+        "warmupDone": {
+          "n": 3,
+          "valuesMs": [
+            36298,
+            34274.5,
+            33394.19999999995
+          ],
+          "medianMs": 34274.5,
+          "minMs": 33394.19999999995,
+          "maxMs": 36298
+        }
+      }
+    },
+    "main": {
+      "first": {
+        "cp.continueDispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            88.09999999997672,
+            90.40000000002328,
+            92.89999999990687
+          ],
+          "medianMs": 90.40000000002328,
+          "minMs": 88.09999999997672,
+          "maxMs": 92.89999999990687
+        },
+        "cp.dispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            19.599999999976717,
+            54.59999999997672,
+            29.9000000001397
+          ],
+          "medianMs": 29.9000000001397,
+          "minMs": 19.599999999976717,
+          "maxMs": 54.59999999997672
+        },
+        "cp.gateReady": {
+          "n": 3,
+          "valuesMs": [
+            1505.9000000000233,
+            1647.0999999999767,
+            1299.8000000000466
+          ],
+          "medianMs": 1505.9000000000233,
+          "minMs": 1299.8000000000466,
+          "maxMs": 1647.0999999999767
+        },
+        "cp.gateToCurtain": {
+          "n": 3,
+          "valuesMs": [
+            91.40000000002328,
+            93.5,
+            96.89999999990687
+          ],
+          "medianMs": 93.5,
+          "minMs": 91.40000000002328,
+          "maxMs": 96.89999999990687
+        },
+        "cp.intent": {
+          "n": 3,
+          "valuesMs": [
+            18561.699999999953,
+            20436.79999999993,
+            22549.90000000014
+          ],
+          "medianMs": 20436.79999999993,
+          "minMs": 18561.699999999953,
+          "maxMs": 22549.90000000014
+        },
+        "cp.startupComplete": {
+          "n": 3,
+          "valuesMs": [
+            1597.3000000000466,
+            1740.5999999999767,
+            1396.6999999999534
+          ],
+          "medianMs": 1597.3000000000466,
+          "minMs": 1396.6999999999534,
+          "maxMs": 1740.5999999999767
+        },
+        "cp.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            20159.5,
+            22177.79999999993,
+            23947
+          ],
+          "medianMs": 22177.79999999993,
+          "minMs": 20159.5,
+          "maxMs": 23947
+        },
+        "orders.continueDispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            79.80000000004657,
+            92.70000000006985,
+            87.30000000004657
+          ],
+          "medianMs": 87.30000000004657,
+          "minMs": 79.80000000004657,
+          "maxMs": 92.70000000006985
+        },
+        "orders.dispatchDelay": {
+          "n": 3,
+          "valuesMs": [
+            23.199999999953434,
+            22.099999999976717,
+            47.800000000046566
+          ],
+          "medianMs": 23.199999999953434,
+          "minMs": 22.099999999976717,
+          "maxMs": 47.800000000046566
+        },
+        "orders.gateReady": {
+          "n": 3,
+          "valuesMs": [
+            1438.5,
+            1439.5999999999767,
+            1226
+          ],
+          "medianMs": 1438.5,
+          "minMs": 1226,
+          "maxMs": 1439.5999999999767
+        },
+        "orders.gateToCurtain": {
+          "n": 3,
+          "valuesMs": [
+            83.59999999997672,
+            97.90000000002328,
+            92.9000000001397
+          ],
+          "medianMs": 92.9000000001397,
+          "minMs": 83.59999999997672,
+          "maxMs": 97.90000000002328
+        },
+        "orders.intent": {
+          "n": 3,
+          "valuesMs": [
+            6774.899999999907,
+            7089.5,
+            5331.59999999986
+          ],
+          "medianMs": 6774.899999999907,
+          "minMs": 5331.59999999986,
+          "maxMs": 7089.5
+        },
+        "orders.startupComplete": {
+          "n": 3,
+          "valuesMs": [
+            1522.0999999999767,
+            1537.5,
+            1318.9000000001397
+          ],
+          "medianMs": 1522.0999999999767,
+          "minMs": 1318.9000000001397,
+          "maxMs": 1537.5
+        },
+        "orders.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            8297.599999999977,
+            8627.599999999977,
+            6651
+          ],
+          "medianMs": 8297.599999999977,
+          "minMs": 6651,
+          "maxMs": 8627.599999999977
+        }
+      },
+      "same": {
+        "first.cp.interactive": {
+          "n": 3,
+          "valuesMs": [
+            4856.600000000093,
+            4773.5,
+            5515.899999999907
+          ],
+          "medianMs": 4856.600000000093,
+          "minMs": 4773.5,
+          "maxMs": 5515.899999999907
+        },
+        "first.cp.legacy": {
+          "n": 3,
+          "valuesMs": [
+            4856.600000000093,
+            4773.199999999953,
+            5515.699999999953
+          ],
+          "medianMs": 4856.600000000093,
+          "minMs": 4773.199999999953,
+          "maxMs": 5515.699999999953
+        },
+        "first.cp.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            29638.900000000023,
+            31320.099999999977,
+            30236.699999999953
+          ],
+          "medianMs": 30236.699999999953,
+          "minMs": 29638.900000000023,
+          "maxMs": 31320.099999999977
+        },
+        "first.orders.interactive": {
+          "n": 3,
+          "valuesMs": [
+            1111,
+            1107.5999999999767,
+            1207.5
+          ],
+          "medianMs": 1111,
+          "minMs": 1107.5999999999767,
+          "maxMs": 1207.5
+        },
+        "first.orders.legacy": {
+          "n": 3,
+          "valuesMs": [
+            1110.6999999999534,
+            1107.1999999999534,
+            1207.4000000001397
+          ],
+          "medianMs": 1110.6999999999534,
+          "minMs": 1107.1999999999534,
+          "maxMs": 1207.4000000001397
+        },
+        "first.orders.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            31763.900000000023,
+            33435.59999999998,
+            32701.399999999907
+          ],
+          "medianMs": 32701.399999999907,
+          "minMs": 31763.900000000023,
+          "maxMs": 33435.59999999998
+        },
+        "return.cp.interactive": {
+          "n": 3,
+          "valuesMs": [
+            253.29999999993015,
+            270.0999999999767,
+            256.5999999998603
+          ],
+          "medianMs": 256.5999999998603,
+          "minMs": 253.29999999993015,
+          "maxMs": 270.0999999999767
+        },
+        "return.cp.legacy": {
+          "n": 3,
+          "valuesMs": [
+            253.19999999995343,
+            269.89999999990687,
+            256.39999999990687
+          ],
+          "medianMs": 256.39999999990687,
+          "minMs": 253.19999999995343,
+          "maxMs": 269.89999999990687
+        },
+        "return.cp.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            33022.29999999993,
+            34723.09999999998,
+            33964.39999999991
+          ],
+          "medianMs": 33964.39999999991,
+          "minMs": 33022.29999999993,
+          "maxMs": 34723.09999999998
+        },
+        "return.orders.interactive": {
+          "n": 3,
+          "valuesMs": [
+            250.69999999995343,
+            223.59999999997672,
+            247.39999999990687
+          ],
+          "medianMs": 247.39999999990687,
+          "minMs": 223.59999999997672,
+          "maxMs": 250.69999999995343
+        },
+        "return.orders.legacy": {
+          "n": 3,
+          "valuesMs": [
+            250.5,
+            223.59999999997672,
+            247.30000000004657
+          ],
+          "medianMs": 247.30000000004657,
+          "minMs": 223.59999999997672,
+          "maxMs": 250.5
+        },
+        "return.orders.systemToRows": {
+          "n": 3,
+          "valuesMs": [
+            34284.19999999995,
+            35956.39999999991,
+            35222.09999999986
+          ],
+          "medianMs": 35222.09999999986,
+          "minMs": 34284.19999999995,
+          "maxMs": 35956.39999999991
+        },
+        "startupComplete": {
+          "n": 3,
+          "valuesMs": [
+            1447.9000000000233,
+            1486.6999999999534,
+            1512.5999999998603
+          ],
+          "medianMs": 1486.6999999999534,
+          "minMs": 1447.9000000000233,
+          "maxMs": 1512.5999999998603
+        },
+        "warmupAfterCurtain": {
+          "n": 3,
+          "valuesMs": [
+            23325.0,
+            25049.199999999953,
+            23191.200000000186
+          ],
+          "medianMs": 23325.0,
+          "minMs": 23191.200000000186,
+          "maxMs": 25049.199999999953
+        },
+        "warmupDone": {
+          "n": 3,
+          "valuesMs": [
+            24772.900000000023,
+            26535.899999999907,
+            24703.800000000047
+          ],
+          "medianMs": 24772.900000000023,
+          "minMs": 24703.800000000047,
+          "maxMs": 26535.899999999907
+        }
+      }
+    }
+  },
+  "observations": [
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 1747.7999999999884
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 76535.29999999999
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 74787.09999999998
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 13268.399999999994
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 62.5
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 61515.600000000006
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 61518.69999999998
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 9495.400000000023
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 83180.90000000002
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 73685
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 11883.100000000035
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 50.300000000046566
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 61796.5
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 61801.899999999965
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 2738.100000000035
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 2737.7000000000116
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 75267.60000000003
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1147.7000000000116
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1147.4000000000233
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 78200.20000000001
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 789.7999999999884
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 789.6999999999534
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 80005.40000000002
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 213.69999999995343
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 213.5
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 81239.29999999999
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 11214.400000000023
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 66424.79999999999
+    },
+    {
+      "block": 1,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": -55210.399999999965
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 41630.70000000001
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 43090
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 1459
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 1410.5999999999767
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 23.099999999976717
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 45.40000000002328
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 48.40000000002328
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 3900.4000000000233
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 5175.600000000035
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 1274.600000000035
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 1239.8000000000466
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 34.100000000034925
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 28.29999999998836
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 34.79999999998836
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 26857.099999999977
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 26856.900000000023
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 63173.79999999993
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1249.5
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1249.4000000000233
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 65441.29999999993
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 274.80000000004657
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 274.70000000006985
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 66739.59999999998
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 242.5
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 242.30000000004657
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 68000.79999999993
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 36298
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 1488.2999999999884
+    },
+    {
+      "block": 1,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": 34809.70000000001
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 18561.699999999953
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 20159.5
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 1597.3000000000466
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 1505.9000000000233
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 19.599999999976717
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 88.09999999997672
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 91.40000000002328
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 6774.899999999907
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 8297.599999999977
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 1522.0999999999767
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 1438.5
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 23.199999999953434
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 79.80000000004657
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 83.59999999997672
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 4856.600000000093
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 4856.600000000093
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 29638.900000000023
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1111
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1110.6999999999534
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 31763.900000000023
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 253.29999999993015
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 253.19999999995343
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 33022.29999999993
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 250.69999999995343
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 250.5
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 34284.19999999995
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 24772.900000000023
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 1447.9000000000233
+    },
+    {
+      "block": 1,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": 23325.0
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 42188.39999999991
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 43712.19999999995
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 1523.4000000000233
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 1426.1999999999534
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 23.79999999993015
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 94.5
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 97.20000000006985
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 8013.599999999977
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 9677.29999999993
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 1663.2999999999302
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 1568.5
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 68.09999999997672
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 89.5
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 94.79999999993015
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 23476.599999999977
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 23476.399999999907
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 57765.5
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1409.0999999999767
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1408.6999999999534
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 60209.09999999998
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 262.79999999993015
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 262.69999999995343
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 61485.29999999993
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 245.79999999993015
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 245.69999999995343
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 62750.79999999993
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 34274.5
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 1390.0999999999767
+    },
+    {
+      "block": 2,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": 32884.40000000002
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 20436.79999999993
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 22177.79999999993
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 1740.5999999999767
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 1647.0999999999767
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 54.59999999997672
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 90.40000000002328
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 93.5
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 7089.5
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 8627.599999999977
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 1537.5
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 1439.5999999999767
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 22.099999999976717
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 92.70000000006985
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 97.90000000002328
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 4773.5
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 4773.199999999953
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 31320.099999999977
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1107.5999999999767
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1107.1999999999534
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 33435.59999999998
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 270.0999999999767
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 269.89999999990687
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 34723.09999999998
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 223.59999999997672
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 223.59999999997672
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 35956.39999999991
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 26535.899999999907
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 1486.6999999999534
+    },
+    {
+      "block": 2,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": 25049.199999999953
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 1387.1000000000931
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 75646.1000000001
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 74258.70000000007
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 13857.5
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 42.40000000002328
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 60397.70000000007
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 60401.20000000007
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 10277.600000000093
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 83107.30000000005
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 72829.09999999986
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 11568.399999999907
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 53
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 61256.40000000014
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 61260.69999999995
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 3250.5
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 3250.0999999998603
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 79231.30000000005
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1197.2000000001863
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1196.8000000000466
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 83049.1000000001
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 882
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 881.9000000001397
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 84935.69999999995
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 224.89999999990687
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 224.69999999995343
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 86177.5
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 12807.100000000093
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 69634.3999999999
+    },
+    {
+      "block": 2,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": -56827.299999999814
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 22549.90000000014
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 23947
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 1396.6999999999534
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 1299.8000000000466
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 29.9000000001397
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 92.89999999990687
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 96.89999999990687
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 5331.59999999986
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 6651
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 1318.9000000001397
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 1226
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 47.800000000046566
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 87.30000000004657
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 92.9000000001397
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 5515.899999999907
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 5515.699999999953
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 30236.699999999953
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1207.5
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1207.4000000001397
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 32701.399999999907
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 256.5999999998603
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 256.39999999990687
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 33964.39999999991
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 247.39999999990687
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 247.30000000004657
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 35222.09999999986
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 24703.800000000047
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 1512.5999999998603
+    },
+    {
+      "block": 3,
+      "variant": "main",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": 23191.200000000186
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 1680.5
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 74676.1000000001
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 72994.90000000014
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 12217
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 62.89999999990687
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 60771.80000000005
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 60777.90000000014
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 7317.40000000014
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 81869.30000000005
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 74551.30000000005
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 12829.100000000093
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 48.10000000009313
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 61718
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 61722.19999999995
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 3427.6999999999534
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 3427.5
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 76948.90000000014
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1202.6999999999534
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1202.3999999999069
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 81415.6000000001
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 773.9000000001397
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 773.6999999999534
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 83209.70000000019
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 198.20000000018626
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 198
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 84425.20000000019
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 12116.90000000014
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 67523.1000000001
+    },
+    {
+      "block": 3,
+      "variant": "before",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": -55406.19999999995
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.intent",
+      "ms": 40441.200000000186
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.systemToRows",
+      "ms": 42025.80000000005
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.startupComplete",
+      "ms": 1583.6999999999534
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.gateReady",
+      "ms": 1537.5
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.dispatchDelay",
+      "ms": 30.600000000093132
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.continueDispatchDelay",
+      "ms": 39.199999999953434
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "cp.gateToCurtain",
+      "ms": 46.199999999953434
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.intent",
+      "ms": 3627.1999999999534
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.systemToRows",
+      "ms": 4924.600000000093
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.startupComplete",
+      "ms": 1297
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.gateReady",
+      "ms": 1205.4000000001397
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.dispatchDelay",
+      "ms": 18.899999999906868
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.continueDispatchDelay",
+      "ms": 86.5
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "first",
+      "metric": "orders.gateToCurtain",
+      "ms": 91.5999999998603
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.cp.interactive",
+      "ms": 24517.300000000047
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.cp.legacy",
+      "ms": 24517
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.cp.systemToRows",
+      "ms": 57926.39999999991
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.orders.interactive",
+      "ms": 1691.3000000000466
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.orders.legacy",
+      "ms": 1690.8000000000466
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "first.orders.systemToRows",
+      "ms": 60897.69999999995
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.cp.interactive",
+      "ms": 300
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.cp.legacy",
+      "ms": 299.80000000004657
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.cp.systemToRows",
+      "ms": 62214.89999999991
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.orders.interactive",
+      "ms": 232.79999999981374
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.orders.legacy",
+      "ms": 232.69999999995343
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "return.orders.systemToRows",
+      "ms": 63470.09999999986
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "warmupDone",
+      "ms": 33394.19999999995
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "startupComplete",
+      "ms": 1393.0999999998603
+    },
+    {
+      "block": 3,
+      "variant": "phase3",
+      "scenario": "same",
+      "metric": "warmupAfterCurtain",
+      "ms": 32001.100000000093
+    }
+  ]
+}

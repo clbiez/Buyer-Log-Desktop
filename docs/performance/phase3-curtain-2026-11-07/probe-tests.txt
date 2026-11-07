@@ -1,0 +1,24 @@
+✔ first intent includes handler dispatch delay and waits for actual visible rows and paint (4.276853ms)
+✔ a denied first transition fails instead of reporting a ready previous screen (1.096776ms)
+✔ an unready first transition has a bounded failure with partial evidence (1.539575ms)
+✔ metadata-only startup is compared with its envelope while actual projection identity remains mandatory (3.061213ms)
+✔ synthetic fixture seeds a recently checked maintenance state without overwriting existing state (22.492027ms)
+✔ heap sampling reads metrics without forcing GC and bounds unresponsive protocol calls (22.19874ms)
+✔ real benchmark wait predicates reject missing probes during document navigation (6.56206ms)
+✔ benchmark retains refresh telemetry without copying raw comparison rows into reports (0.571032ms)
+✔ benchmark retries only transient GET health/status failures, never refresh POST (2.015975ms)
+✔ benchmark health quantiles retain failed attempts and separate refresh samples (0.363729ms)
+✔ benchmark separates missing health endpoint latency from available status latency (0.465914ms)
+✔ benchmark parses runtime stalls without dropping the original evidence (0.523842ms)
+✔ benchmark rejects stale generation, source revision and wrong row count (0.648038ms)
+✔ benchmark records three distinct events, excludes user wait and fixes task window (0.776903ms)
+✔ renderer delay in handling automatic Continue remains system time (0.216497ms)
+✔ benchmark closes each renderer even if measurement or screenshot fails (0.431281ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 133.523355

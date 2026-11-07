@@ -1,0 +1,24 @@
+import json,pathlib,collections,hashlib,subprocess
+root=pathlib.Path('/tmp/phase3-remeasure');repo=pathlib.Path('/workspace/Buyer-Log-Desktop');s=json.loads((root/'schedule.json').read_text())
+assert len(s)==18 and len({e['name'] for e in s})==18
+assert collections.Counter((e['variant'],e['scenario']) for e in s)==collections.Counter({(v,sc):3 for v in ['before','phase3','main'] for sc in ['first','same']})
+assert [(e['block'],e['variant']) for e in s if e['scenario']=='first']==[(b,v) for b,vs in enumerate([['before','phase3','main'],['phase3','main','before'],['main','before','phase3']],1) for v in vs]
+assert all(e['exitCode']==0 and e['status']=='passed' for e in s)
+assert sum(len(e['transitions']) for e in s)==54
+meta=json.loads((repo/'docs/performance-program/fixtures/source-30000-seed7-20261105.json').read_text());seed=json.loads((root/'seed-measurement.json').read_text())
+assert hashlib.sha256((repo/'docs/performance-program/fixtures'/meta['archive']).read_bytes()).hexdigest()==meta['sha256'];assert seed['fixture']['hashes']==meta['sourceHashes'];assert seed['expected']['rows']['cp']==24982 and seed['expected']['rows']['orders']==30000
+harnesses=['scripts/benchmark-first-transitions.js','scripts/benchmark-startup-orders.js','scripts/lib/first-transition-probe.js','scripts/lib/startup-benchmark.js']
+for rel in harnesses:
+ p=repo/'resources/app'/rel;assert p.read_bytes()==subprocess.check_output(['git','show','5a1656e9:resources/app/'+rel],cwd=repo)
+assert not subprocess.check_output(['git','diff','5a1656e9','--','resources/app/scripts','resources/app/public','resources/app/server','resources/app/package.json','resources/app/package-lock.json'],cwd=repo)
+latest=subprocess.check_output(['git','rev-parse','origin/main'],cwd=repo,text=True).strip()
+diff=subprocess.check_output(['git','diff','--name-only',seed['revision'],latest],cwd=repo,text=True).splitlines()
+assert diff==['resources/app/tests/v714-performance-hardening.test.js']
+(root/'main-head-equivalence.json').write_text(json.dumps(dict(measuredMain=seed['revision'],latestMain=latest,changedPaths=diff,runtimeAndHarnessTreesIdentical=True),indent=2)+'\n')
+print('PASS: 18 scenarios, 54 transitions; n=3 per revision/scenario; exact rotating block order.')
+print('PASS: all exit codes zero; all scenario statuses passed; no failed observation discarded.')
+print('PASS: fixture archive SHA-256 and all workbook hashes match committed fixture metadata.')
+print('PASS: shared seed rows: 24982 CP, 30000 Orders; pinned measured main 5a1656e9.')
+print('PASS: four benchmark scripts/helpers byte-identical to pinned main; git diff for all scripts is empty.')
+print('PASS: latest main 2083ffd7 differs only in v714-performance-hardening.test.js; all runtime and harness files identical.')
+print('Per-transition identity, permission, DOM, generation and revision assertions also execute in collect.py.')

@@ -1,0 +1,7 @@
+PASS: 18 scenarios, 54 transitions; n=3 per revision/scenario; exact rotating block order.
+PASS: all exit codes zero; all scenario statuses passed; no failed observation discarded.
+PASS: fixture archive SHA-256 and all workbook hashes match committed fixture metadata.
+PASS: shared seed rows: 24982 CP, 30000 Orders; pinned measured main 5a1656e9.
+PASS: four benchmark scripts/helpers byte-identical to pinned main; git diff for all scripts is empty.
+PASS: latest main 2083ffd7 differs only in v714-performance-hardening.test.js; all runtime and harness files identical.
+Per-transition identity, permission, DOM, generation and revision assertions also execute in collect.py.

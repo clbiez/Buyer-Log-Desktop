@@ -1,0 +1,74 @@
+'use strict';
+// Measurement-only harness. Product code and existing benchmark scripts are unchanged.
+const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),net=require('node:net'),crypto=require('node:crypto'),assert=require('node:assert/strict');
+const {spawn}=require('node:child_process');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const arg=(name,fallback)=>{const i=process.argv.indexOf(name);return i<0?fallback:process.argv[i+1];};
+const harnessApp=path.resolve(arg('--harness-app','/workspace/Buyer-Log-Desktop/resources/app'));
+const {installProbe,requestJson,parseStalls}=require(path.join(harnessApp,'scripts/lib/startup-benchmark'));
+const app=path.resolve(arg('--app-root',harnessApp)),input=path.resolve(arg('--measurement',''));
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-same-tab-'));
+const output=path.resolve(arg('--out',path.join(root,'measurement.json'))),logFile=path.join(root,'server.log');
+const report={schemaVersion:1,synthetic:true,scenario:'same-tab-after-background-warmup',startedAt:new Date().toISOString(),app,input,fixtureRoot:root,status:'running',transitions:[],rendererErrors:[]};
+const env={...process.env,BUYER_LOG_CENTRAL_IAM_ENABLED:'0',BUYER_LOG_SERVER_DATA_ROOT:path.join(root,'data'),BUYER_LOG_AUTH_DATA_ROOT:path.join(root,'data'),BUYER_LOG_DATA_ROOT:path.join(root,'app'),BUYER_LOG_LOCAL_DATA_ROOT:path.join(root,'local'),BUYER_LOG_LOCAL_DB:path.join(root,'local/BuyerLogLocal.db'),BUYER_LOG_CONFIG_PATH:path.join(root,'config.json'),BUYER_LOG_TEMP_ROOT:path.join(root,'tmp')};
+const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+let server,browser;
+function persist(){report.stalls=fs.existsSync(logFile)?parseStalls(fs.readFileSync(logFile,'utf8')):[];report.serverLog=logFile;fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output+'.partial',JSON.stringify(report,null,2)+'\n');}
+async function stop(){if(!server||server.exitCode!==null)return;const done=new Promise(resolve=>server.once('exit',resolve));server.kill('SIGTERM');await Promise.race([done,delay(10000)]);if(server.exitCode===null){server.kill('SIGKILL');await done;}}
+(async()=>{
+  const original=JSON.parse(fs.readFileSync(input,'utf8'));
+  assert.equal(original.synthetic,true);assert.equal(original.status,'passed');assert.equal(original.schemaVersion,3);assert.equal(original.measurements.length,4);
+  const sourceRoot=path.resolve(original.fixtureRoot);assert.equal(path.dirname(sourceRoot),path.resolve(os.tmpdir()));assert.ok(path.basename(sourceRoot).startsWith('buyerlog-startup-'));assert.equal(fs.realpathSync(sourceRoot),sourceRoot);
+  const marker=JSON.parse(fs.readFileSync(path.join(sourceRoot,'source/benchmark-fixture.json'),'utf8'));
+  assert.equal(marker.synthetic,true);assert.equal(marker.rows,original.requestedRows);assert.deepEqual(marker.hashes,original.fixture.hashes);
+  for(const [file,hash] of Object.entries(marker.hashes))assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(sourceRoot,'source',file))).digest('hex'),hash);
+  fs.cpSync(sourceRoot,root,{recursive:true,filter:src=>{const relative=path.relative(sourceRoot,src);return relative!=='server.log'&&!relative.startsWith('local'+path.sep+'logs')&&!(path.dirname(src)===sourceRoot&&src.endsWith('.png'));}});
+  const config=JSON.parse(fs.readFileSync(env.BUYER_LOG_CONFIG_PATH,'utf8')),socket=net.createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
+  config.port=port;config.host='127.0.0.1';config.updates={enabled:false};fs.writeFileSync(env.BUYER_LOG_CONFIG_PATH,JSON.stringify(config));const base='http://127.0.0.1:'+port;
+  report.expected=original.expected;report.fixtureHashes=marker.hashes;report.sourceRows=marker.rows;persist();
+  const log=fs.openSync(logFile,'a');server=spawn(process.execPath,[path.join(app,'server/server.js')],{cwd:app,env,stdio:['ignore',log,log]});fs.closeSync(log);
+  let ready=false;for(let i=0;i<120;i++){if(server.exitCode!==null)throw Error('Synthetic server exited: '+server.exitCode);try{await requestJson(base+'/api/status');ready=true;break;}catch(_){}await delay(250);}assert.ok(ready,'Synthetic server did not start');
+  const login=await fetch(base+'/api/user-login',{method:'POST',signal:AbortSignal.timeout(60000),headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:'moderator',password:'synthetic-startup-only-123'})});assert.ok(login.ok,'Synthetic login failed: '+login.status);
+  const cookie=String(login.headers.get('set-cookie')||'').split(';')[0],split=cookie.indexOf('=');
+  browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox']});report.chromium=browser.version();
+  // Historical Phase 0 sameTab viewport; first-intent benchmark keeps its original 1440x900.
+  const context=await browser.newContext({viewport:{width:1600,height:1000}});await context.addCookies([{name:cookie.slice(0,split),value:cookie.slice(split+1),url:base,httpOnly:true}]);
+  const page=await context.newPage(),generations=[];
+  page.on('pageerror',error=>report.rendererErrors.push(error.message));
+  page.on('console',message=>{if(/^BENCHMARK_LIFECYCLE /.test(message.text()))console.log(message.text());});
+  page.on('response',response=>{if(new URL(response.url()).pathname.startsWith('/api/page-projection/')&&response.status()===200){const generation=response.headers()['x-page-cache-generation'];if(generation)generations.push(generation);}});
+  await page.route('https://**',route=>route.abort());
+  await page.addInitScript(()=>{for(const key of ['bl.releaseNotes.lastSeenStable.v1','bl.user.moderator.bl.releaseNotes.lastSeenStable.v1'])localStorage.setItem(key,'99.0.0');window.__firstTransitionGeneration=null;const json=Response.prototype.json;Response.prototype.json=async function(...args){const value=await json.apply(this,args);if(new URL(this.url,location.href).pathname==='/api/data'&&value.pageCache)window.__firstTransitionGeneration=value.pageCache.generation;return value;};});
+  await page.addInitScript(installProbe,{sampleWindowMs:10000,logEvents:true});
+  await page.goto(base+'/?module=overview',{waitUntil:'domcontentloaded',timeout:120000});
+  await page.waitForFunction(()=>Number.isFinite(window.__startupProbe?.startupReadyMs),null,{timeout:900000,polling:100});
+  await page.evaluate(()=>{const p=window.__startupProbe;p.continueIntentAtMs=p.startupReadyMs;p.continueAtMs=performance.now();window.BLBootGuard.continue({intentAtMs:p.continueIntentAtMs});});
+  await page.waitForFunction(()=>Number.isFinite(window.__startupProbe?.startupCompleteMs),null,{timeout:900000,polling:100});
+  await page.waitForFunction(()=>window.BLPerf?.timeline?.().some(mark=>mark.name==='BACKGROUND_WARMUP_DONE'),null,{timeout:900000,polling:100});
+  Object.assign(report,await page.evaluate(()=>({perfOriginMs:window.BLPerf?.origin?.()??0,startup:window.__startupProbe,initialGeneration:window.__firstTransitionGeneration,warmup:window.BLPerf.timeline().filter(mark=>/^BACKGROUND_WARMUP_/.test(mark.name))})));
+  persist();
+  for(const module of ['cp','orders','cp','orders']){
+    const result=await page.evaluate(({module,expectedRows})=>new Promise(resolve=>{
+      const started=performance.now(),selector=module==='cp'?'#cpTable tbody tr[data-id]':'#ordersTable tbody tr[data-id]',contentId=module==='cp'?'cpContent':'ordersContent';
+      const rows=()=>module==='cp'?state.cp?.rows:state.orders?.rows;
+      const visible=e=>Boolean(e&&!e.hidden&&e.getClientRects().length);
+      const holds=()=>[...document.querySelectorAll('.blTriviaHold')].filter(visible);
+      const clicked=new WeakSet();let legacyPaint=null,interactivePaint=null,legacyPending=false,interactivePending=false,continueCount=0,ended=false;
+      const startedWithRows=rows()?.length??null;
+      function finish(status,error){if(ended)return;ended=true;resolve({module,status,error,startedAtMs:started,startedWithRows,legacyRowsMs:legacyPaint===null?null:legacyPaint-started,elapsedMs:interactivePaint===null?null:interactivePaint-started,paintedAtMs:interactivePaint,rows:rows()?.length??null,domRows:document.querySelectorAll(selector).length,canAccess:window.BLCanAccessArea?.(module)===true,moduleContinueCount:continueCount,observationEndMs:performance.now()-started,revisions:{orders:Number(state.storeRevisions.orders)||0,suppFob:Number(state.storeRevisions.suppFob)||0}});}
+      function tick(){if(ended)return;const now=performance.now();if(now-started>900000)return finish('failed','Same-tab transition timed out');
+        const legacyReady=document.body.dataset.activeTab===module&&document.querySelector(selector),ready=legacyReady&&rows()?.length===expectedRows&&visible(document.getElementById(contentId));
+        if(legacyReady&&legacyPaint===null&&!legacyPending){legacyPending=true;requestAnimationFrame(()=>requestAnimationFrame(()=>{legacyPaint=performance.now();}));}
+        const blockers=holds();if(blockers.length){interactivePaint=null;for(const hold of blockers){const button=hold.querySelector('[data-hold-continue]');if(ready&&visible(button)&&!hold.dataset.leaving&&!clicked.has(button)){clicked.add(button);continueCount++;button.click();}}}
+        else if(ready&&interactivePaint===null&&!interactivePending){interactivePending=true;requestAnimationFrame(()=>requestAnimationFrame(()=>{interactivePending=false;if(document.body.dataset.activeTab===module&&rows()?.length===expectedRows&&visible(document.getElementById(contentId))&&!holds().length)interactivePaint=performance.now();}));}
+        if(interactivePaint!==null&&now-interactivePaint>=1000)return finish('passed');setTimeout(tick,20);
+      }
+      try{if(switchTab(module)===false)return finish('failed','Transition denied');tick();}catch(error){finish('failed',String(error));}
+    }),{module,expectedRows:original.expected.rows[module]});
+    report.transitions.push(result);persist();assert.equal(result.status,'passed',result.error);assert.equal(result.rows,original.expected.rows[module]);assert.ok(result.domRows>0);assert.equal(result.canAccess,true);assert.deepEqual(result.revisions,original.expected.revisions);
+    console.log('same-tab '+module+': legacy '+Math.round(result.legacyRowsMs)+' ms; interactive '+Math.round(result.elapsedMs)+' ms');
+  }
+  report.projectionGenerations=generations;assert.ok(generations.length>0);assert.ok(generations.every(value=>value===original.expected.generation));assert.equal(report.initialGeneration,original.measurements.find(item=>item.module==='overview').initialGeneration);assert.deepEqual(report.rendererErrors,[]);
+  const manifest=JSON.parse(fs.readFileSync(path.join(root,'local/page-cache/moderator/manifest.json'),'utf8'));assert.equal(manifest.activeGeneration,original.expected.generation);assert.equal(manifest.sourceRevisionKey,original.expected.sourceRevision);
+  report.timeline=await page.evaluate(()=>window.BLPerf.timeline());await page.screenshot({path:path.join(root,'orders.png'),timeout:900000});await context.close();report.status='passed';
+})().catch(error=>{report.status='failed';report.error={message:error.message,stack:error.stack};console.error(error);process.exitCode=1;}).finally(async()=>{try{await browser?.close();}finally{await stop();report.finishedAt=new Date().toISOString();persist();fs.renameSync(output+'.partial',output);console.log('Report: '+output+'; retained diagnostics: '+root);}});

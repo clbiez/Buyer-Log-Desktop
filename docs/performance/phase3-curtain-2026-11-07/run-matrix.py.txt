@@ -1,0 +1,23 @@
+import os, json, subprocess, time
+from pathlib import Path
+out=Path('/tmp/phase3-remeasure')
+repo=Path('/workspace/Buyer-Log-Desktop')
+apps={'before':out/'before/resources/app','phase3':out/'phase3/resources/app','main':repo/'resources/app'}
+order=[['before','phase3','main'],['phase3','main','before'],['main','before','phase3']]
+env=dict(os.environ, CHROMIUM_PATH='/usr/bin/chromium',PLAYWRIGHT_MODULE='/opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright')
+schedule=[]
+for block, variants in enumerate(order,1):
+    for variant in variants:
+        for scenario, script in [('first',repo/'resources/app/scripts/benchmark-first-transitions.js'),('same',out/'same-tab-harness.cjs')]:
+            name=f'{block}-{variant}-{scenario}'
+            cmd=['node',str(script),'--app-root',str(apps[variant]),'--measurement',str(out/'seed-measurement.json'),'--out',str(out/(name+'.json'))]
+            entry=dict(name=name,block=block,variant=variant,scenario=scenario,command=cmd,startedAt=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()))
+            print('START '+json.dumps(entry),flush=True)
+            with (out/(name+'.log')).open('w') as log:
+                p=subprocess.run(cmd,env=env,cwd=repo,stdout=log,stderr=subprocess.STDOUT)
+            entry.update(exitCode=p.returncode,finishedAt=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()))
+            if (out/(name+'.json')).exists():
+                r=json.loads((out/(name+'.json')).read_text()); entry.update(status=r['status'],transitions=[{k:t.get(k) for k in ['module','status','elapsedMs','legacyRowsMs','startedWithRows','paintedAtMs']} for t in r['transitions']])
+            else: entry['status']='missing-report'
+            schedule.append(entry);(out/'schedule.json').write_text(json.dumps(schedule,indent=2)+'\n')
+            print('FINISH '+json.dumps(entry),flush=True)
