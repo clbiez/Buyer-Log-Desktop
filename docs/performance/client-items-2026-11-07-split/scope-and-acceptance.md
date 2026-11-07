@@ -148,3 +148,23 @@ benchmark limitations remain. Actual final-head CI and merge approval are still
 separate. **No TEST/STABLE publication.**
 
 Gerçek Buyer Log UI aynı liste/satır/kayıt/veri kimliği, kaydetme ve draft kontrollerini yeniden geçti. Lisans optimizasyonu paketin dışında ve arşiv dalında korunur. / The actual UI again passed the same identity, save and draft checks; rejected license optimization remains parked.
+
+
+## #913 sonrası merge kapısı / Merge gate after #913
+
+Main `6b8362ad` normal merge `ea0d5d46` ile alındı.
+Kendi üretim/test kodu `8b305010` ile birebir; ortak ölçüm scriptleri ve CI
+hedef filtresi eklendi. Standart tam paket yeniden tek çağrıda bütün
+10 batch ile geçti: **1.299 dosya / 8.920 PASS / 0 FAIL / 65 SKIP /
+0 CANCEL**; varsayılan concurrency4, private TMPDIR, NODE_OPTIONS/preload yok.
+İlgili 582 PASS, gerçek kart UI kontrolleri PASS, i18n0/0, 46 not PASS.
+Test edilen uygulama ağacı `d1f573f1dac85dc1aefaa15e566064b9812ba975`.
+Yeni ölçüm veya bağımsız genel tur yok; lisans parçası hâlâ paketin dışında.
+
+Main `6b8362ad` was merged normally. Own production/tests are exact `8b305010`;
+shared scripts and CI target filter were imported. Full standard runner again
+passed all ten batches in one invocation:1299 files,8920PASS,0FAIL,65existingSKIP,
+0CANCEL; default concurrency4/privateTMPDIR/noNODE_OPTIONS. Related582PASS,
+actual card UI PASS, i18n0/0,46notes valid. Final evidence commit changes docs
+only. Explicit sequential merge permission is conditional on this head's actual
+CI success. Rejected license optimization stays parked. No TEST/STABLE.
