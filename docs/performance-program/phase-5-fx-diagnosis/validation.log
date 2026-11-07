@@ -1,0 +1,37 @@
+✔ a real pending timeout with no dispatch is queue-only, not worker execution (0.914431ms)
+✔ dispatch without receiving distinguishes startup/dispatch from queue admission (0.160827ms)
+✔ receiving before timeout distinguishes execution/transport without inventing a parser cause (0.167648ms)
+✔ late dispatch/receive cannot retroactively reclassify a pending deadline (0.15623ms)
+✔ audit-time normalization preserves FX values, revisions, provenance and status differences (0.821564ms)
+✔ all 36 native observations preserve the pinned collector and prove the queue-only failure and parity boundaries (6.835581ms)
+✔ automatic folder FX checks reuse a serialized background pool job and release it after the decision (9.730769ms)
+✔ pool startup warms its existing worker slots and repeated FX checks create no more threads (233.273016ms)
+✔ FX preview retains the existing sparse date-aware workbook contract and reads changed bytes afresh (353.16137ms)
+✔ utility API cannot bypass raw-source admission with arbitrary Excel task names (2.133092ms)
+✔ folder decision covers parse failure, identity, older, current newer and apply (1.390215ms)
+✔ startup and force preserve a newer uploaded report and expose older-report (34.90547ms)
+✔ folder merge keeps uncovered cells and saves report provenance (7.580842ms)
+✔ intervening upload is re-read after conflict and cannot be overwritten (8.20848ms)
+✔ explicit source endpoint enforces permission, fingerprint and revision (116.766933ms)
+✔ deterministic detection preserves merged-header, marker and separator behavior (2.836642ms)
+✔ explicit shifted layout reads only cells and converts direction and scale (0.837477ms)
+✔ validation blocks invalid codes, values, months, collisions, small scope and reversed TRY (1.56343ms)
+✔ named threshold rules warn about jumps, changed cells, gaps and missing favorites (0.296578ms)
+✔ LCW AI contract checks layout shape and discards extra rate fields (5.106075ms)
+✔ grid preview is cropped and addresses cells without exposing paths (0.94104ms)
+✔ both adapters delegate and recovery is user initiated with validation before save (2.19245ms)
+✔ report month includes the earliest header even when all its rate cells are blank (5.131763ms)
+✔ KUR upload loads the lazy XLSX library before parsing (125.070649ms)
+✔ KUR upload accepts a currency code moved to column A and text month headers (58.359853ms)
+✔ KUR upload explains a missing Excel library in both languages (61.596467ms)
+✔ FX upload paths load fx.js on demand instead of waiting for deferredUi (14.769866ms)
+✔ browser and server read the same synthetic merged-header workbook with identical months (59.22705ms)
+✔ a preview saves with its captured revision even if the live store has advanced (47.680518ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 688.20208
