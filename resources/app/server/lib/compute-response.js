@@ -4,6 +4,7 @@ function sendComputedResponse(req,res,lease,{contentType='application/json; char
   let released=false;
   const release=()=>{if(released)return;released=true;lease.release();};
   try{
+    if(req.aborted||res.destroyed||res.writableEnded){release();return res;}
     lease.assertResponse?.();
     const buffer=Buffer.isBuffer(lease.value.buffer)?lease.value.buffer:Buffer.from(lease.value.buffer);
     res.statusCode=200;res.setHeader('Content-Type',contentType);res.setHeader('Cache-Control','no-store');

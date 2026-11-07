@@ -24,3 +24,16 @@ test('ready Office bytes retain their MIME type and are not treated as gzip JSON
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
   const response=await request(server.address().port,'gzip');assert.deepEqual(response.bytes,bytes);assert.equal(response.headers['content-encoding'],undefined);assert.match(response.headers['content-disposition'],/Backlog_Report.xlsx/);assert.equal(released,1);
 });
+test('a client disconnected before worker completion releases ready bytes without writing response headers',async t=>{
+ let started,completed,released=0,headers,error;
+ const ready=new Promise(resolve=>started=resolve),done=new Promise(resolve=>completed=resolve);
+ const server=http.createServer((req,res)=>{
+  res.on('error',()=>{});res.once('close',()=>{
+   try{sendComputedResponse(req,res,{value:{buffer:zlib.gzipSync('SYNTHETIC_RESULT')},assertResponse(){},release(){released++;}});headers=res.getHeader('Content-Type');}
+   catch(e){error=e;}finally{queueMicrotask(completed);}
+  });started();
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
+ const client=http.get({host:'127.0.0.1',port:server.address().port,path:'/'},()=>{});client.on('error',()=>{});
+ await ready;client.destroy();await done;assert.equal(error,undefined);assert.equal(released,1);assert.equal(headers,undefined);
+});

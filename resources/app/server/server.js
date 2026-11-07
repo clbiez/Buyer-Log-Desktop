@@ -5511,52 +5511,44 @@ app.post('/api/oab/auth/connect', userAccess.requireAnyArea('overview'), userAcc
     res.set('Cache-Control','no-store').json({ ok:true, status:{ ...status, authenticated:Boolean(status && status.connected), transport:transport === OAB_DESKTOP_TRANSPORT ? 'desktop-session' : 'existing-browser-cdp' } });
   } catch (err) { automationError(res, err, 'PASS bağlantısı kurulamadı.'); }
 });
-app.get('/api/oab/seasons', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
+function assertOabMetadataRequest(req,id){
+  const live=userAccess.sessionProfile(req);
+  if(!live||String(live.id)!==String(id)||live.enabled===false||live.status!=='ACTIVE')throw Object.assign(new Error('Oturumunuz artık geçerli değil. / Your session is no longer valid.'),{code:'USER_LOGIN_REQUIRED',statusCode:401});
+  try{assertOabCurrentAccess(id);}catch(error){
+    if(error.code==='OAB_ACCESS_REVOKED'){
+      error.message='OAB erişim yetkiniz değişti. / Your OAB access permission changed.';
+      error.errorEn='Your OAB access permission changed.';
+    }
+    throw error;
+  }
+}
+async function computedOabMetadataForRequest(req,operation,ref){
+  const id=req.currentUser.id,assertCurrent=()=>assertOabMetadataRequest(req,id);assertCurrent();
+  const lease=await serverCompute().runOabMetadata(id,operation,ref,{assertCurrent});
+  try{assertCurrent();return {...lease,assertResponse:assertCurrent};}catch(error){lease.release();throw error;}
+}
+app.get('/api/oab/seasons', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), async (req, res) => {
   try {
     // Bundled metadata: filtre seçenekleri uygulamayla birlikte gelen JSON'dan
-    // okunur; normal filtre kullanımı PASS bağlantısı kurmaz.
-    const seasons = oabStaticMetadata.getSeasons();
-    const metadata = oabStaticMetadata.getInfo();
-    res.set('Cache-Control','no-store').json({
-      ok:true,
-      seasons,
-      fromCache:true,
-      source:'bundled-json',
-      fetchedAt:metadata.generatedAt,
-      metadata,
-    });
+    // worker'da okunur; normal filtre kullanımı PASS bağlantısı kurmaz.
+    const lease=await computedOabMetadataForRequest(req,'seasons');
+    return sendComputedResponse(req,res,lease);
   } catch (err) { automationError(res, err, 'OAB filtre metadata yüklenemedi.'); }
 });
-app.post('/api/oab/mag', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '4kb' }), (req, res) => {
+app.post('/api/oab/mag', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '4kb' }), async (req, res) => {
   try {
     const seasonRef = req.body && req.body.seasonRef;
     if (seasonRef == null || seasonRef === '') return res.status(400).json({ error:'seasonRef zorunlu.', code:'OAB_SEASON_REQUIRED' });
-    const mag = oabStaticMetadata.getMag(seasonRef);
-    const metadata = oabStaticMetadata.getInfo();
-    res.set('Cache-Control','no-store').json({
-      ok:true,
-      mag,
-      fromCache:true,
-      source:'bundled-json',
-      fetchedAt:metadata.generatedAt,
-      metadata,
-    });
+    const lease=await computedOabMetadataForRequest(req,'mag',seasonRef);
+    return sendComputedResponse(req,res,lease);
   } catch (err) { automationError(res, err, 'OAB MAG metadata yüklenemedi.'); }
 });
-app.post('/api/oab/buyer-groups', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '4kb' }), (req, res) => {
+app.post('/api/oab/buyer-groups', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '4kb' }), async (req, res) => {
   try {
     const merchSubGroupRef = req.body && req.body.merchSubGroupRef;
     if (merchSubGroupRef == null || merchSubGroupRef === '') return res.status(400).json({ error:'merchSubGroupRef zorunlu.', code:'OAB_MAG_REQUIRED' });
-    const buyerGroups = oabStaticMetadata.getBuyerGroups(merchSubGroupRef);
-    const metadata = oabStaticMetadata.getInfo();
-    res.set('Cache-Control','no-store').json({
-      ok:true,
-      buyerGroups,
-      fromCache:true,
-      source:'bundled-json',
-      fetchedAt:metadata.generatedAt,
-      metadata,
-    });
+    const lease=await computedOabMetadataForRequest(req,'buyer-groups',merchSubGroupRef);
+    return sendComputedResponse(req,res,lease);
   } catch (err) { automationError(res, err, 'OAB Buyer Group metadata yüklenemedi.'); }
 });
 // OAB verisi: rapor cache'i (oabStore, metadata cache'inden AYRI) burada

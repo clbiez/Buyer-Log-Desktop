@@ -16,7 +16,7 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
   const privateRoot=fs.mkdtempSync(path.join(root||os.tmpdir(),'buyerlog-source-replicas-'));
   fs.chmodSync(privateRoot,0o700);
   const records=new Map(),current=new Map(),preparing=new Map();let reservedDiskBytes=0,closed=false,closing,warming,authorityGeneration=0;
-  const lflDescriptors=new WeakSet(),lflAdmissions=new Map();
+  const lflDescriptors=new WeakSet(),lflAdmissions=new Map(),oabAdmissions=new Map();
   const key=(owner,generation)=>JSON.stringify([String(owner),String(generation)]),poolOwner=owner=>'source:'+owner;
   async function discard(record){
     if(record.removing||record.pins||!record.retired)return;
@@ -129,6 +129,32 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
       {ownerKey:'output:'+String(ownerId),generation:'1',priority:'interactive',...options,estimatedBytes,inputBytes,transferList:[encoded]});
     return {...lease,metrics:{...lease.metrics,paramsSerializeMs,paramsBytes:inputBytes-1024}};
   }
+  async function runOabMetadata(ownerId,operation,ref,{assertCurrent=()=>{}}={}){
+    if(closed)throw failure('COMPUTE_POOL_CLOSED');
+    if(!ownerId||!['seasons','mag','buyer-groups'].includes(operation)||typeof assertCurrent!=='function')throw failure('COMPUTE_JOB_INVALID');
+    const metadata=require('./compute-oab-metadata'),ownerKey='oab-filter:'+String(ownerId),normalizedRef=operation==='seasons'?undefined:String(ref??'');
+    if(normalizedRef&&Buffer.byteLength(normalizedRef)>4096)throw failure('COMPUTE_JOB_INVALID');
+    // Stat ve kabul aynı kullanıcı için sıralıdır. Geciken eski bir stat
+    // yeni filtre sürümünün generation'ını geri alamaz.
+    const prior=oabAdmissions.get(ownerKey)||Promise.resolve();
+    const admission=prior.catch(()=>{}).then(async()=>{
+      await assertCurrent();const descriptor=await metadata.descriptor();await assertCurrent();
+      if(closed)throw failure('COMPUTE_POOL_CLOSED');
+      const started=performance.now(),paramsBytes=serializeForTransfer({operation,ref:normalizedRef,descriptor});
+      const paramsSerializeMs=performance.now()-started,inputBytes=paramsBytes.byteLength+1024,estimatedBytes=96*MiB+descriptor.size*8+inputBytes*3;
+      pool.setGeneration(ownerKey,descriptor.tag);
+      const promise=pool.run('oab-static-metadata',{paramsBytes,maxOutputBytes:estimatedBytes},
+        {ownerKey,generation:descriptor.tag,priority:'interactive',estimatedBytes,inputBytes,transferList:[paramsBytes]});
+      promise.catch(()=>{});return {promise,descriptor,paramsSerializeMs,inputBytes};
+    });
+    oabAdmissions.set(ownerKey,admission);let admitted;
+    try{admitted=await admission;}finally{if(oabAdmissions.get(ownerKey)===admission)oabAdmissions.delete(ownerKey);}
+    const lease=await admitted.promise;
+    try{
+      await metadata.assertDescriptor(admitted.descriptor);await assertCurrent();
+      return {...lease,metrics:{...lease.metrics,paramsSerializeMs:admitted.paramsSerializeMs,paramsBytes:admitted.inputBytes-1024}};
+    }catch(error){lease.release();throw error;}
+  }
   async function runEndeksmatikStatus(ownerId,descriptor){
     if(closed)throw failure('COMPUTE_POOL_CLOSED');
     const engine=require('./endeksmatik');
@@ -191,6 +217,6 @@ function createComputeService({pool,root,diskBudgetBytes=2*1024*MiB}={}){
     if(closing)return closing;closed=true;
     closing=(async()=>{await pool.close();await Promise.allSettled([...records.values()].map(record=>record.ready));await fs.promises.rm(privateRoot,{recursive:true,force:true,maxRetries:3,retryDelay:50});records.clear();current.clear();preparing.clear();reservedDiskBytes=0;})();return closing;
   }
-  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,runEndeksmatikStatus,collectionLflSource,runCollectionLfl,hashAccessAuthority,warm,stats,close};
+  return {seedSource,publishSource,coldSource,bindColdSource,run,runExcelUtility,runOffice,runOabMetadata,runEndeksmatikStatus,collectionLflSource,runCollectionLfl,hashAccessAuthority,warm,stats,close};
 }
 module.exports={createComputeService};
