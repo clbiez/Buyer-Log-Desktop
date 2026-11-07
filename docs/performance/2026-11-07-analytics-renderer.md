@@ -31,20 +31,34 @@ Son durumda altı regresyon testi GREEN.
   LFL hazırlık kartı görüldüğünden son üç çift koşuda kart gerçek tıklamayla
   kapatıldı ve sıralanacak başlığın görünürlüğü beklendi.
 
-## Üç dönüşümlü koşu (ms)
+## ANA-05 özeti — timer aralığı ve toplam tamamlanma birlikte
+
+Aşağıdaki değerler aynı üç dönüşümlü koşunun yuvarlanmış medyanlarıdır.
+
+| Senaryo | En uzun renderer timer aralığı, RED → GREEN | Toplam tamamlanma, RED → GREEN |
+|---|---|---|
+| Yeni dataset | **673 → 209 ms** | **679 → 1583 ms** |
+| Mevcut dataset cache miss | **973 → 474 ms** | **981 → 1362 ms** |
+
+Ölçüt 5 ms timer'ın en uzun gözlenen aralığıdır. **Gerçek kullanıcı input
+latency'si ölçülmedi; bu sonuç genel analiz hızlanması değildir.** Her iki
+senaryoda da toplam tamamlanma uzar. Renderer timer aralığı azalırken kalan
+bekleme yeni dataset'te yaklaşık **209 ms**, mevcut dataset cache miss'inde
+**474 ms**'dir; ana iş parçacığındaki bütün bekleme kaldırılmış değildir.
+
+### ANA-05 üç dönüşümlü koşu (ms)
 
 | İş / ölçüt | RED 1 / 2 / 3 | GREEN 1 / 2 / 3 | Medyan RED → GREEN |
 |---|---|---|---|
-| ANA-05 mevcut dataset, en uzun timer aralığı | 918,6 / 1079,5 / 973,3 | 484,2 / 421,8 / 474,4 | **973,3 → 474,4** |
 | ANA-05 yeni dataset, en uzun timer aralığı | 673,1 / 756,7 / 670,0 | 209,1 / 212,8 / 141,3 | **673,1 → 209,1** |
-| ANA-07 sıralama callback’i | 163,9 / 224,9 / 180,3 | 25,2 / 17,1 / 15,6 | **180,3 → 17,1** |
-| ANA-07 iki rAF’a kadar geçen süre | 184,2 / 266,2 / 204,1 | 49,8 / 38,2 / 35,2 | **204,1 → 38,2** |
-| ANA-11 summarize | 249,3 / 303,6 / 165,0 | 53,8 / 51,9 / 21,6 | **249,3 → 51,9** |
+| ANA-05 yeni dataset, toplam tamamlanma | 678,8 / 762,1 / 675,6 | 1713,3 / 1582,6 / 1583,3 | **678,8 → 1583,3** |
+| ANA-05 mevcut dataset cache miss, en uzun timer aralığı | 918,6 / 1079,5 / 973,3 | 484,2 / 421,8 / 474,4 | **973,3 → 474,4** |
+| ANA-05 mevcut dataset cache miss, toplam tamamlanma | 926,4 / 1087,1 / 980,9 | 1396,2 / 1283,6 / 1361,8 | **980,9 → 1361,8** |
 
-Worker’ın ödünleşimi: mevcut dataset cache miss toplamı medyan **980,9 →
-1361,8 ms**, yeni dataset **678,8 → 1583,3 ms**. Hesabın tamamlanması hızlanmadı;
-renderer’ın kesintisiz meşgul kaldığı süre azaldı. Kalan aralıklar ve GC gideri
-sıfırlanmadı. Her üç madde ölçülen kazançla uygulandı; atlanan madde yok.
+Timer gözlemi alıcı maliyetlerini de kapsar; bu koşular kalan aralığı
+deserialize, GC ve çizim gibi bileşenlere tek tek ayırmaz. İşin tamamlanması
+ve timer aralığı farklı ölçütlerdir; yalnız timer azalmasına dayanarak toplam
+hesap süresi veya kullanıcı etkileşim gecikmesi hakkında sonuç çıkarılmaz.
 
 ### Structured clone
 
@@ -58,6 +72,25 @@ input mesajıyla yüklenir: `postMessage` içindeki senkron kopyalama toplamı
 Bu rakamlar alıcı deserialize maliyeti değildir. Mevcut dataset’te **0** input
 paketi; yalnız ayar, bugün, dönem sınırı ve generation gönderilir. Output da
 500 siparişlik paketlere bölünür; ana thread timer ölçümü alıcı maliyetini içerir.
+
+500 satır/sipariş sınırı mesaj boyutuna ilişkindir. Ölçülen tek mesaj süreleri
+garantili bir milisaniye üst sınırı değildir; toplam aktarım ve alıcı işi ortadan
+kalkmaz.
+
+## ANA-07 ve ANA-11 — ayrı istemci yolları
+
+Bu ölçümler ANA-05 worker aktarımından ayrıdır; teslimatın toplam tamamlanma
+süresine veya bütün uygulamanın hızına genellenmez.
+
+| İş / ölçüt | RED 1 / 2 / 3 | GREEN 1 / 2 / 3 | Medyan RED → GREEN |
+|---|---|---|---|
+| ANA-07 sıralama callback’i | 163,9 / 224,9 / 180,3 | 25,2 / 17,1 / 15,6 | **180,3 → 17,1** |
+| ANA-07 iki rAF’a kadar geçen süre | 184,2 / 266,2 / 204,1 | 49,8 / 38,2 / 35,2 | **204,1 → 38,2** |
+| ANA-11 summarize | 249,3 / 303,6 / 165,0 | 53,8 / 51,9 / 21,6 | **249,3 → 51,9** |
+
+Her üç madde önceki ölçülen kazançla uygulandı; atlanan madde yok. Bu takip
+tesliminde yeni optimizasyon, benchmark veya ölçüm eklenmedi; ham koşular ve
+çıktı SHA'ları değiştirilmedi.
 
 ## Eşdeğerlik ve davranış
 
@@ -137,10 +170,56 @@ gerçek tarayıcıda da doğrulandı. TR/EN notları ve gerçek uygulama PNG’l
   beklenen `IAM_LOCAL_INVALID`, gelen `undefined`.
 - Aynı test değiştirilmemiş **2083ffd7** worktree’sinde tek başına da **6 PASS /
   1 FAIL** verdi ([kanıt](evidence/2026-11-07-analytics-iam-baseline.txt)).
-  Bu PR’ın server/IAM değişikliği yoktur. Bilinen v714, tabandaki #894 ile
-  düzeltilmiş durumda; bu hata v714 değildir.
+  Bu, [#901](https://github.com/clbiez/Buyer-Log-Desktop/pull/901)'deki aynı
+  **ortak Main IAM bulgusudur**. Ana kayıt ve ortak düzeltme takibi
+  [ana sunucu entegrasyonu teslimindedir](https://github.com/clbiez/Buyer-Log-Desktop/blob/perf/pricing-costing-cpr-05-06-07-12/docs/performance/2026-11-07-iam-main-integration-handoff.md).
+  #904'ün bu yerel kanıtı o bulguya bağlıdır; ayrı bir IAM düzeltmesi değildir.
+  Ortak teslim güncel main `63159fb3` için de 6 PASS / 1 FAIL kaydeder;
+  bu ek main IAM kaydı #901'in kanıtıdır, #904'te yeniden üretilmedi.
+  Bu PR'ın server/IAM değişikliği yoktur. Bilinen v714, tabandaki #894 ile
+  düzeltilmiş durumda; bu hata v714 değildir. Güvenlik davranışı, test veya
+  assertion gevşetilmedi; IAM'i dışarıdan kapatarak yeşile çevirme yoktur.
 - Runner ilk hatada durduğundan 4–10. batch’ler aynı sıralama, concurrency ve
   assertion’larla bellek içindeki runner devamından ayrıca çalıştırıldı.
   **4–10. batch’ler PASS**. Toplam 1240 dosyadaki 8706 testin
   8640 tanesi geçti, 1 tanesi başarısız, 65 tanesi skip.
-  Tam paketin başarısızlığı saklanmadı; PR bu nedenle taslaktır.
+  Bu sayılar **tanısal birleşik sonuçtur; başarılı tek filtresiz tam paket
+  sayılmaz**. Ortak engelin main'de de bulunması tam regresyon şartını kaldırmaz.
+  Kabul BLOKE; PR taslak ve merge edilmemiş kalır.
+
+## Ortak düzeltme sonrası kabul kapısı — henüz tamamlanmadı
+
+Ortak IAM engeli ana sunucu entegrasyonunda giderilip onaylı düzeltme #904
+dalına alındığında, IAM düzeltme SHA'sı ve entegre son SHA kaydedilir. Bu PR
+içinde yeni IAM düzeltmesi üretilmez. Aşağıdakiler **aynı son commit SHA** için
+yeniden başarılı tamamlanmalıdır:
+
+1. Worker `terminate`/generation, hata-toparlanma, dataset reuse, kanonik tarih
+   ve `sourceRow`/risk alias eşdeğerliği regresyonları aynen korunarak ilgili
+   paket çalışır; başarısız IAM testi de pakete dahil edilir:
+   `npm test -- backlog-delivery backlog-query-cache lfl transit-analysis analytics-renderer local-iam-migration-authority`.
+2. İzole veri kökleriyle **filtresiz `npm test`** tek koşuda bütün batch'leri
+   başarıyla tamamlar. Hata sonrası batch'leri ayrı tamamlamak bu kapıyı açmaz.
+3. `npm run i18n:check` ve `npm run release:notes:validate` yeniden çalışır.
+4. #904 PR kontrolleri aynı son SHA'da yeniden doğrulanır; hızlı kontroller tam
+   paketin veya başarısız güvenlik testinin yerine geçmez.
+5. Ana kod değişikliklerinin ölçülen yola etkisi incelenir. Yolu, fixture'ı
+   veya probe'u etkileyen değişiklik varsa yalnız ilgili ANA kıyası yenilenir;
+   halen geçerli ölçümler gereksiz yere tekrarlanmaz. Şimdilik ek ölçüm yoktur.
+6. Komut, ortam, exit code, log ve son inceleme SHA'sı kaydedilir. Gerekli
+   inceleme ve kontroller tamamlanmadan merge onayı verilmiş sayılmaz.
+
+Ortak engel giderilip bu dala alınmadığı için bu kabul kapısı tamamlanmış
+veya yeşil gösterilmez. Sonucu etkileyen yeni kod değişikliğinde ilgili testler,
+bütün tam regresyon batch'leri, i18n, release-note validator ve PR kontrolleri
+yeniden doğrulanır. **TEST/STABLE yayımlanmaz.**
+
+## İnceleme durumu
+
+Ölçülen üretim/test kodunun son özinceleme SHA'sı
+`b00cf2da8691735881b1bbe6e36b305ece3d861f` olarak korunur. Bu takip yalnız raporu
+ve PR açıklamasını günceller; uygulama, regresyonlar ve mevcut ham kanıtlar
+değiştirilmez. Bağımsız ikinci agent/model incelemesi yoktur; takip başında
+GitHub review submission listesi de boştur. Belge güncellemesinin son inceleme
+SHA'sı teslim mesajında ve PR açıklamasında ayrıca bildirilir; bu kayıt merge
+onayı değildir.
