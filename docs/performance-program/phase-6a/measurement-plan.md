@@ -153,6 +153,16 @@ cache'leri ve worker ömürleri korunur; heap'leri toplayıp iki kez sayma.
 
 ## 6. Sonuç ve kabul
 
+Faz 6 / son program PR'ının kapanışı için sabit #885 sonrası Main + uygulama
+SHA'sında `resources/app` içinden **filtre uygulanmadan `npm test`** ile tam
+regresyon zorunludur. S01–S24, mikro ölçüm self-test'leri, hedefli testler ve
+hızlı PR checks bunun yerine geçmez. Test/assertion kapsamı azaltılmaz,
+eşikler gevşetilmez; zorunlu başarısız/skip/cancel kontrolü geçer sayılmaz.
+Sonucu etkileyen değişiklikten sonra tam test yeniden çalıştırılır. Çıktıda
+tam komut, son kaynak SHA'sı, exit code ve pass/fail/skip/cancel sayıları
+tutulur; çalıştırılmayan tam test `pending` kalır. Bu fazda tam test veya
+Faz 6 kabulünün sağlandığı iddia edilmez.
+
 Her payload profili için ham örnekler, tüm başarısız denemeler, timeout/hata
 sayısı, median/p95, eşli mutlak fark (byte/ms/MiB) ve oranlar birlikte verilir.
 Outlier silme yok; doğruluk başarısız örnek hızlı diye başarıya dahil edilmez.

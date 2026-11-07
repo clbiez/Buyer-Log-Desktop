@@ -118,4 +118,15 @@ Bu paketin baz ölçümü yeni Main'in baz ölçümü sayılamaz. C01–C15 ve S
 kanıtları tamamlanmadan ince alan allowlist'i çıkarılmaz. Çözülemeyen alan,
 dinamik erişim, eksik fixture veya eşdeğerlik farkı kabulü durdurur.
 
+**Faz 6'nın tam test şartı korunur:** Faz 6 / son program PR'ının kapanışında,
+sabitlenmiş #885 sonrası Main + uygulama SHA'sında `resources/app` içinden
+**filtre uygulanmadan `npm test`** çalıştırılmalı ve tam paket geçmelidir.
+Bu hazırlıktaki 6 hedefli test dosyası, araç self-test'leri, S01–S24 ve hızlı
+PR kontrolleri tam regresyonun yerine geçmez. Test silme/gevşetme, assertion
+azaltma, eşik gevşetme veya zorunlu başarısız/skip kontrolü başarılı sayma yok.
+Sonucu etkileyen değişiklikten sonra ilgili kanıtlar ve tam test yenilenir.
+Tam testin durumu şu anda **bekliyor; çalıştırılmadı**. Bu gereklilik
+`shadow-matrix.json.requiredValidation.fullRegression` içinde kayıtlıdır ve
+bağımsız doğrulama aracı şartın kaldırılmasını/gevşetilmesini reddeder.
+
 Bu çalışma ayrı dal/taslak PR içindir. **Merge, TEST ve STABLE yapılmaz.**

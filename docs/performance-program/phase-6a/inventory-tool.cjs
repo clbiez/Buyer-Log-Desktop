@@ -243,6 +243,7 @@ function encode(inventory) {
       JSON.stringify(value, null, 2).replace(/\n/g, '\n  '))).join(',\n') + '\n}\n';
 }
 function validate(inventory, matrix) {
+  validateFullTestGate(matrix);
   assert.equal(inventory.measurementStatus, 'not-measured');
   assert.equal(inventory.projectionImplemented, false);
   assert.equal(inventory.removalAuthorized, false);
@@ -273,7 +274,32 @@ function validate(inventory, matrix) {
   for (const field of inventory.fields) assert.ok(matrix.canonicalCoverage.includes(field.canonicalId));
   assert.ok(matrix.cases.every(c => c.status === 'planned-after-885' && c.oracle && c.fixtures.length && c.assertions.length));
 }
+function validateFullTestGate(matrix) {
+  const gate = matrix.requiredValidation?.fullRegression;
+  assert.ok(gate, 'Phase 6 full regression gate is required');
+  assert.equal(gate.required, true);
+  assert.equal(gate.gate, 'phase-6-or-final-program-pr-closure');
+  assert.equal(gate.cwd, 'resources/app');
+  assert.equal(gate.executable, 'npm');
+  assert.deepEqual(gate.arguments, ['test']);
+  assert.deepEqual(gate.filters, []);
+  assert.equal(gate.scope, 'entire pinned post-885 Main suite plus candidate additions');
+  assert.equal(gate.status, 'pending-after-885-implementation');
+  for (const flag of ['testsMayBeWeakened', 'assertionsMayBeReduced', 'thresholdsMayBeRelaxed', 'mandatoryFailuresMayBeIgnored', 'skippedOrCancelledMandatoryChecksMayPass']) assert.equal(gate[flag], false, flag);
+  assert.equal(gate.finalSourceShaRequired, true);
+  assert.equal(gate.invalidateAfterRelevantChange, true);
+  assert.deepEqual(gate.substitutesAllowed, []);
+  assert.deepEqual(gate.evidence, ['command', 'sourceSha', 'exitCode', 'pass', 'fail', 'skip', 'cancel']);
+}
 function selfTest() {
+  const matrix = JSON.parse(fs.readFileSync(path.join(here, 'shadow-matrix.json'), 'utf8'));
+  validateFullTestGate(matrix);
+  assert.throws(() => validateFullTestGate({}), 'missing full regression gate must fail');
+  for (const patch of [{ required: false }, { arguments: ['test', '--', 'cp'] }, { filters: ['cp'] }, { thresholdsMayBeRelaxed: true }, { assertionsMayBeReduced: true }, { substitutesAllowed: ['fast-checks'] }, { finalSourceShaRequired: false }]) {
+    const weakened = structuredClone(matrix);
+    Object.assign(weakened.requiredValidation.fullRegression, patch);
+    assert.throws(() => validateFullTestGate(weakened), 'weakened full regression gate must fail');
+  }
   const sample = `const F=Object.freeze({qty:'Order Quantity'});const CP_SEARCH_KEYS=['PLM ID','Model Name'];function cpFilter(row){const {Country}=row;return row[F.qty]+(row['Sub-Manufacturer']??row.subManufacturer)+row[key]+row[CP_SEARCH_KEYS[i]];}function cpCompute(row,id){return BLCanonicalFields.canonicalValue(row,'cp',id);}function cpExport(row){return {...row};}`;
   const result = analyze(sample, 'resources/app/public/example.js');
   assert.ok(result.accesses.some(a => a.rawKey === 'Order Quantity'));
@@ -299,7 +325,7 @@ function selfTest() {
       assert.equal(registry.value({ [first]: 'primary', [second]: 'secondary' }, mod, id), 'primary');
     }
   }
-  console.log('PASS: AST detection and synthetic registry fallback sentinels');
+  console.log('PASS: full-test gate rejects weakening; AST detection and synthetic registry fallback sentinels');
 }
 const command = process.argv[2];
 if (command === 'self-test') selfTest();

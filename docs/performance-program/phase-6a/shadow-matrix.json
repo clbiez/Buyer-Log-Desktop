@@ -4,6 +4,27 @@
   "baselineSha": "270228a4d9f195e613ae670db8c30583d9c183fc",
   "executionStatus": "not-run; no thin implementation exists",
   "gate": "#885 merged + selected Main SHA pinned + regenerated inventory + resolved dynamic dependencies required before candidate implementation/measurement",
+  "requiredValidation": {
+    "fullRegression": {
+      "required": true,
+      "gate": "phase-6-or-final-program-pr-closure",
+      "cwd": "resources/app",
+      "executable": "npm",
+      "arguments": ["test"],
+      "filters": [],
+      "scope": "entire pinned post-885 Main suite plus candidate additions",
+      "status": "pending-after-885-implementation",
+      "testsMayBeWeakened": false,
+      "assertionsMayBeReduced": false,
+      "thresholdsMayBeRelaxed": false,
+      "mandatoryFailuresMayBeIgnored": false,
+      "skippedOrCancelledMandatoryChecksMayPass": false,
+      "finalSourceShaRequired": true,
+      "invalidateAfterRelevantChange": true,
+      "substitutesAllowed": [],
+      "evidence": ["command", "sourceSha", "exitCode", "pass", "fail", "skip", "cancel"]
+    }
+  },
   "canonicalCoverage": [
     "plmId",
     "orderCode",
