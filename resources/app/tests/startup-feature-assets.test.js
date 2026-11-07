@@ -7,14 +7,14 @@ const vm=require('node:vm');
 const read=name=>fs.readFileSync(path.join(__dirname,'../public',name),'utf8');
 const source=read('perf-runtime.js'),html=read('index.html');
 
-function harness(){
+function harness({autoLoad=true}={}){
   const scripts=[],styles=[],view={loading:false,setAttribute(){this.loading=true;},removeAttribute(){this.loading=false;}};
   const anchor={dataset:{href:'lfl.css?v=fixture&rev=2'},before(el){styles.push(el);}};
   const document={baseURI:'http://buyerlog/',readyState:'complete',scripts:[],
     currentScript:{src:'http://buyerlog/perf-runtime.js?v=fixture'},getElementById(){return null;},
     querySelector(){return anchor;},querySelectorAll(){return [view];},
     createElement(tag){const handlers={};return {tag,dataset:{},addEventListener(k,fn){handlers[k]=fn;},removeEventListener(k){delete handlers[k];},remove(){this.removed=true;},fire(k){if(handlers[k])handlers[k]();else this['on'+k]?.();}};},
-    head:{appendChild(el){if(el.tag==='script'){scripts.push(el);queueMicrotask(()=>el.fire('load'));}}},
+    head:{appendChild(el){if(el.tag==='script'){scripts.push(el);if(autoLoad)queueMicrotask(()=>el.fire('load'));}}},
   };
   const context={document,URL,setTimeout,clearTimeout,queueMicrotask,performance:{now:()=>1,mark(){}}};context.window=context;
   vm.runInNewContext(source,context);
@@ -29,6 +29,15 @@ test('module styles gate execution and preserve their original cascade position 
   assert.equal(h.view.loading,false);assert.equal(h.context.BLPerf.isFeatureLoaded('lfl'),true);
   assert.deepEqual(h.scripts.map(s=>new URL(s.src,'http://buyerlog/').pathname),['/lfl-calculation-engine.js','/lfl.js']);
   await h.context.BLPerf.ensureFeature('lfl');assert.equal(h.styles.length,1);assert.equal(h.scripts.length,2);
+});
+
+test('a styled module stays hidden until its scripts finish registering the UI',async()=>{
+  const h=harness({autoLoad:false}),pending=h.context.BLPerf.ensureFeature('lfl');
+  h.styles[0].fire('load');await new Promise(setImmediate);
+  assert.equal(h.view.loading,true);assert.equal(h.scripts.length,1);
+  h.scripts[0].fire('load');await new Promise(setImmediate);
+  assert.equal(h.view.loading,true);h.scripts[1].fire('load');await pending;
+  assert.equal(h.view.loading,false);
 });
 
 test('a failed stylesheet can retry without executing code or latching the feature as ready',async()=>{

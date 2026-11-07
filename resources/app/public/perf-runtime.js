@@ -264,12 +264,15 @@
       const codeReady=featureCodeReady(name);
       if(!codeReady)preloadScripts(files);
       pending.set(key,(async()=>{
-        try{await Promise.all((featureStyles[name]||[]).map(loadStyle));}
-        finally{views.forEach(view=>view.removeAttribute('data-bl-styles-loading'));}
-        if(!codeReady){
-          for(const file of files)await loadScriptWithRetry(file);
+        try{
+          await Promise.all((featureStyles[name]||[]).map(loadStyle));
+          if(!codeReady){
+            for(const file of files)await loadScriptWithRetry(file);
+          }
+          loadedFeatures.add(name);
+        }finally{
+          views.forEach(view=>view.removeAttribute('data-bl-styles-loading'));
         }
-        loadedFeatures.add(name);
       })().finally(()=>pending.delete(key)));
     }
     return pending.get(key);
