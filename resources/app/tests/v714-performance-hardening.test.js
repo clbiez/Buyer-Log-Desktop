@@ -13,6 +13,7 @@ process.env.BUYER_LOG_LOCAL_DATA_ROOT = cacheRoot;
 const pageCache = require('../server/lib/page-projection-cache');
 const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
+const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const PERF = fs.readFileSync(path.join(ROOT, 'public', 'perf-runtime.js'), 'utf8');
 
 test.after(() => fs.rmSync(cacheRoot, { recursive:true, force:true }));
@@ -56,9 +57,10 @@ test('v7.14 startup keeps projection parsing out of the critical path and lazy-l
 
 test('v7.14 development metrics cover server timing, parse, hydrate, filters, render and first interaction', () => {
   assert.match(SERVER, /Server-Timing/);
-  for (const metric of ['bootstrapFetchMs','bootstrapJsonParseMs','stateHydrateMs','filterInitializationMs','firstRenderMs','firstUsableInteractionMs']) {
+  for (const metric of ['bootstrapFetchMs','bootstrapJsonParseMs','stateHydrateMs','filterInitializationMs','firstRenderMs']) {
     assert.match(APP, new RegExp(metric));
   }
+  assert.match(`${APP}\n${INDEX}`, /firstUsableInteractionMs/);
   assert.match(PERF, /PerformanceObserver/);
   assert.match(PERF, /longTaskMs/);
   assert.match(PERF, /snapshot/);
