@@ -298,28 +298,16 @@ test('OAB: auth durumu açık tarayıcı connector durumundan raporlanır; crede
 });
 
 test('OAB: metadata uçları paketlenmiş JSON kullanıyor; filtre seçiminde PASS bağlantısı YOK', () => {
-  const bundled = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'compute-oab-metadata.js'), 'utf8');
-  const worker = fs.readFileSync(path.join(ROOT, 'server', 'workers', 'compute-worker.js'), 'utf8');
-  assert.match(bundled, /require\('\.\/oab-static-metadata'\)/);
-  assert.match(worker, /task==='oab-static-metadata'/);
-  assert.match(worker, /metadata\.buildResponse\(operation,ref,descriptor\.tag\)/);
-  assert.doesNotMatch(bundled, /ensurePassConnected|fetchPassSeasons|fetchPassMagOptions|fetchPassBuyerGroupOptions|GetReportVariablesWithData|GetVariableWithData/);
   const seasonsBody = SERVER.slice(SERVER.indexOf("app.get('/api/oab/seasons'"), SERVER.indexOf("app.post('/api/oab/mag'"));
-  assert.match(seasonsBody, /await computedOabMetadataForRequest\(req,'seasons'\)/);
-  assert.match(bundled, /oabStaticMetadata\.getSeasons\(\)/);
-  assert.doesNotMatch(seasonsBody, /oabStaticMetadata\.get/);
+  assert.match(seasonsBody, /oabStaticMetadata\.getSeasons\(\)/);
   assert.doesNotMatch(seasonsBody, /ensurePassConnected|fetchPassSeasons|GetReportVariablesWithData/);
 
   const magBody = SERVER.slice(SERVER.indexOf("app.post('/api/oab/mag'"), SERVER.indexOf("app.post('/api/oab/buyer-groups'"));
-  assert.match(magBody, /await computedOabMetadataForRequest\(req,'mag',seasonRef\)/);
-  assert.match(bundled, /oabStaticMetadata\.getMag\(seasonRef\)/);
-  assert.doesNotMatch(magBody, /oabStaticMetadata\.get/);
+  assert.match(magBody, /oabStaticMetadata\.getMag\(seasonRef\)/);
   assert.doesNotMatch(magBody, /ensurePassConnected|fetchPassMagOptions|GetVariableWithData/);
 
   const bgBody = SERVER.slice(SERVER.indexOf("app.post('/api/oab/buyer-groups'"), SERVER.indexOf("// OAB verisi:"));
-  assert.match(bgBody, /await computedOabMetadataForRequest\(req,'buyer-groups',merchSubGroupRef\)/);
-  assert.match(bundled, /oabStaticMetadata\.getBuyerGroups\(merchSubGroupRef\)/);
-  assert.doesNotMatch(bgBody, /oabStaticMetadata\.get/);
+  assert.match(bgBody, /oabStaticMetadata\.getBuyerGroups\(merchSubGroupRef\)/);
   assert.doesNotMatch(bgBody, /ensurePassConnected|fetchPassBuyerGroupOptions|GetVariableWithData/);
 });
 

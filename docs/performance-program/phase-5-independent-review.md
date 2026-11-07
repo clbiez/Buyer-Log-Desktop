@@ -173,10 +173,37 @@ findings remain. No rebase or force-push occurred during review. Changes after
 | --- | --- |
 | B1 — Gerileme, aşama maliyetleri ve 200 ms kabul açığı / Regressions, stage costs and 200 ms acceptance | Açık. `639372a4` üzerinde yeni üç önce + üç sonra F0 ve üç ayrı açılış tamamlandı; altı F0 ve üç açılış doğruluk kontrolleri geçti, üç Global Flow penceresi performans kabulünü geçemedi. Aşama analizi sürüyor; refresh ödünleşimi kullanıcı kararı olmadan kabul edilmez. / Open. A new matched three-before/three-after F0 cohort and three openings completed at `639372a4`. All correctness checks passed; all three Global Flow windows failed performance acceptance. Stage analysis is pending; a refresh tradeoff requires the user's decision. |
 | B2 — LFL sürüm kuralının kopyalanması / Duplicate LFL source-version rule | Düzeltildi. MAIN hydration ve native worker aynı `collection-lfl-source-version.js` yardımcısını kullanır. `lflLoadedAt:null` ve model snapshot'ı mevcutken eski `available:true/version=loadedAt` davranışı korunur; explicit-LFL ve savedAt geri dönüşleri de gerçek worker ile eşdeğerdir. Eski kodda native eşdeğerlik testi geçti, ortak yardımcı sözleşmesi RED oldu; çıkarımdan sonra ikisi de GREEN. / Fixed. MAIN hydration and the native worker share one helper. The pre-existing available/version semantics, including an empty LFL with a model snapshot, explicit LFL time and savedAt fallback, remain equal. Native equality passed before extraction; the shared-helper contract failed RED, then both passed GREEN. |
-| B3 — Paket dışı OAB metadata taşımasının sıcak/soğuk maliyeti / Hot/cold cost of out-of-package OAB metadata offload | Açık. Gerçek istek p50/p95 ölçümü ve kapsam kararı bekleniyor. PR açıklamasında paket dışı olarak listelendi. INT-12 tamamlanmış sayılmıyor. / Open. Actual request p50/p95 measurements and scope decision are pending. The PR lists this separately and does not claim INT-12 completion. |
+| B3 — Paket dışı OAB metadata taşımasının sıcak/soğuk maliyeti / Hot/cold cost of out-of-package OAB metadata offload | Düzeltildi: taşıma geri alındı. Aynı runtime'da eski üç route gövdesiyle yapılan kontrollü HTTP A/B'de soğuk medyan 40,274 → 221,944 ms, sıcak p95'ler Seasons 6,952 → 22,813; MAG 9,189 → 25,325; Buyer Group 6,684 → 24,721 ms oldu. Üç taze süreç çifti ve uç/kol başına 300 sıcak örnek alındı; 1.818 yanıtın baytları eşdeğerdi. Net kazanç doğrulanmadı. Önceki OAB yolu, mevcut alan/capability kapıları ve mtime cache'i geri geldi; INT-12 açık. HTTP bağlantı-kopması lease düzeltmesi korunur. / Fixed by rollback. A controlled HTTP A/B on the same runtime used the exact pre-offload route bodies. Cold median was 40.274 → 221.944 ms; warm p95 values regressed for all three endpoints. Three fresh-process pairs and 300 warm samples per endpoint/arm produced 1,818 byte-equivalent responses. No net gain was established. The existing local route, area/capability gates and mtime cache were restored; INT-12 stays open. The HTTP disconnect lease fix remains. |
 
 TR/EN: B2 kanıtı / B2 evidence: `/tmp/phase-5-review2-b2-red.txt`,
 `/tmp/phase-5-review2-b2-green.txt`; yeni native test /
 new native test: `compute-collection-lfl-source-version.test.js`.
 Merge beklemede; TEST ve STABLE yayımlanmadı. /
 Merge remains blocked; neither TEST nor STABLE was published.
+
+TR: B3 ölçümünde iki kolda da aynı 30k demo seed, paket metadata SHA'sı,
+yetki kodu, ortak havuzun normal açılış ısınması ve gözlemci kullanıldı. Eski
+kol yalnız üç route'un üretimdeki pre-offload gövdesini dış tanı preload'u
+ile derleme sırasında kurdu; repository dosyaları ölçüm sırasında değişmedi.
+Bu, 30k Chromium açılış kabulünün yerine geçmez ve soğuk OS cache değildir.
+Ham kayıt /tmp/phase-5-review2-b3-http.json içindedir. Geri alma regresyonu
+önce RED oldu; önceki ana dal testleri silinmedi veya gevşetilmedi. Yalnız
+bu PR'da eklenen ve artık çıkarılan worker özelliğine ait iki test dosyası,
+geri alınan kaynakla birlikte PR'dan çıktı; kanonik yanıt/kapı/400
+doğrulamaları mevcut testler ve yeni oab-metadata-local-route.test.js ile
+korunur. Önceki commit'ler ve ölçüm kanıtları saklanır. Yayınlanmamış, yalnız
+bu özelliğe ait sürüm notu kaldırıldı; ana dalın kayıtları korunur.
+
+EN: Both B3 arms used the same 30k demo seed, bundled metadata SHA, authority
+code, normal common-pool startup warmup and observer. The before arm installed
+only the exact three pre-offload production route bodies through an external
+diagnostic compilation preload; repository files stayed unchanged during
+measurement. This is not a substitute for Chromium opening acceptance or a
+cold OS-cache result. Raw samples are retained in
+/tmp/phase-5-review2-b3-http.json. The rollback regression first failed RED.
+No pre-existing main-branch test was deleted or weakened. The two test files
+added solely for the removed worker feature left this PR with that feature;
+canonical payloads, guards and 400 validation remain covered by the original
+tests and oab-metadata-local-route.test.js. Original commits/evidence remain
+available. Only the unreleased note for this removed feature was withdrawn;
+main's entries are intact.

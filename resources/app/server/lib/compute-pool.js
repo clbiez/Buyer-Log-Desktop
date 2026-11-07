@@ -19,9 +19,6 @@ const messages={
   COMPUTE_SOURCE_TOO_LARGE:['Kaynak bellek bütçesine sığmıyor.','Source exceeds the memory budget.',413],
   COMPUTE_SOURCE_BUSY:['Kaynak önbelleği kullanımda.','Source cache is busy.',503],
   BACKLOG_FILTER_FIELD_INVALID:['Bilinmeyen Backlog filtre alanı.','Unknown Backlog filter field.',400],
-  OAB_STATIC_METADATA_MISSING:['OAB filtre dosyası bulunamadı.','OAB filter metadata file was not found.',500],
-  OAB_STATIC_METADATA_PARSE_FAILED:['OAB filtre dosyası okunamadı.','OAB filter metadata file could not be read.',500],
-  OAB_STATIC_METADATA_INVALID:['OAB filtre dosyası geçersiz.','OAB filter metadata file is invalid.',500],
 };
 function failure(code){const [tr,en,statusCode]=messages[code];return Object.assign(Error(`${tr} / ${en}`),{code,statusCode,errorEn:en});}
 const bytes=value=>Number.isSafeInteger(value)&&value>=0;

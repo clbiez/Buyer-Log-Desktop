@@ -48,12 +48,6 @@ async function execute(task,data,transfer){
     return {authorityHash:require('node:crypto').createHash('sha256').update(JSON.stringify(authority)).digest('hex')};
   }
   if(task==='cp-shared-edit-codes')return compress({ok:true,denied:access.sharedEditDeniedCodes(data.params.access,data.params.codes)},'api',transfer);
-  if(task==='oab-static-metadata'){
-    const metadata=require('../lib/compute-oab-metadata'),{operation,ref,descriptor}=data.params;
-    await metadata.assertDescriptor(descriptor);
-    const response=await compress(metadata.buildResponse(operation,ref,descriptor.tag),'api',transfer);
-    await metadata.assertDescriptor(descriptor);return response;
-  }
   if(task==='endeksmatik-legacy-status')return {status:require('../lib/endeksmatik').readLegacyStatusFile(data.params.descriptor,data.params.maxOutputLength)};
   if(task==='office-render'){
     const {format,data:document,options}=data.params;

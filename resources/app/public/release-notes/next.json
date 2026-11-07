@@ -128,35 +128,6 @@
       }
     },
     {
-      "id": "perf-phase5-oab-filter-background",
-      "type": "improvement",
-      "module": {
-        "tr": "Genel Bakış · OAB",
-        "en": "Overview · OAB"
-      },
-      "title": {
-        "tr": "OAB filtre seçenekleri arka planda hazırlanır",
-        "en": "OAB filter options prepare in the background"
-      },
-      "body": {
-        "tr": "Season, MAG ve Buyer Group seçenekleri arka planda hazırlanır. Filtre seçimi için PASS oturumu açılması gerekmez.",
-        "en": "Season, MAG and Buyer Group options prepare in the background. Choosing filters does not require opening a PASS session."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "phase5-oab-filters-tr-light.png",
-        "alt": {
-          "tr": "Gerçek Genel Bakış Ticari sayfasında hazır OAB Season seçenekleri",
-          "en": "Ready OAB Season options on the actual Overview Commercial page"
-        },
-        "caption": {
-          "tr": "İzole demo uygulamasında gerçek OAB seçenek listesi; kurumsal PASS bağlantısı veya gerçek iş verisi kullanılmadı.",
-          "en": "The real OAB options list in an isolated demo app, without a corporate PASS connection or real business data."
-        }
-      }
-    },
-    {
       "id": "refresh-server-restart-lost-job",
       "type": "fix",
       "module": {
