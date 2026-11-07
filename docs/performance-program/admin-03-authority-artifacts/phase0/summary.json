@@ -1,0 +1,1165 @@
+{
+  "status": "passed",
+  "scope": "overview-only Phase0; skip same-tab; server-loop observer; not original phase5 hard acceptance cohort",
+  "seriesBefore": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+  "seriesAfter": "df8ca377d85078d29a9524a7812f80cef44b75d6",
+  "pairs": 3,
+  "order": "A/B-B/A-A/B; fresh source/data/cache/server/browser per arm",
+  "fixtureArchiveSha256": "5913414603984b02b1c30b87f1f9231da3718ab797a007f4bd14067ec6cd5c70",
+  "harnessSha256": "f6a619c0002d40cc4bfae67adf051fa55323d933ffad2d3553fb492f619797dc",
+  "metrics": {
+    "refreshMs": {
+      "before": [
+        48982,
+        50826,
+        50704
+      ],
+      "after": [
+        48397,
+        49974,
+        49404
+      ],
+      "beforeMedian": 50704,
+      "afterMedian": 49404,
+      "pairedPct": [
+        -1.194316279449592,
+        -1.6763074017235313,
+        -2.5639002840012637
+      ]
+    },
+    "primaryReadyMs": {
+      "before": [
+        3007.100000023842,
+        4019.600000023842,
+        3521.9000000059605
+      ],
+      "after": [
+        4331.199999988079,
+        2688.7999999821186,
+        2792.199999988079
+      ],
+      "beforeMedian": 3521.9000000059605,
+      "afterMedian": 2792.199999988079,
+      "pairedPct": [
+        44.03245651803196,
+        -33.10777191844536,
+        -20.718930123417657
+      ]
+    },
+    "gateReadyMs": {
+      "before": [
+        3021.100000023842,
+        4041.2000000178814,
+        3533.9000000059605
+      ],
+      "after": [
+        4347.699999988079,
+        2702.5,
+        2805.4000000059605
+      ],
+      "beforeMedian": 3533.9000000059605,
+      "afterMedian": 2805.4000000059605,
+      "pairedPct": [
+        43.91115818588487,
+        -33.12629911936944,
+        -20.61461841022019
+      ]
+    },
+    "systemCompleteMs": {
+      "before": [
+        3084.7000000178814,
+        4222.800000011921,
+        3637.2999999821186
+      ],
+      "after": [
+        4439.799999982119,
+        2771.699999988079,
+        2922.4000000059605
+      ],
+      "beforeMedian": 3637.2999999821186,
+      "afterMedian": 2922.4000000059605,
+      "pairedPct": [
+        43.929717637254264,
+        -34.36345552760598,
+        -19.65468891704486
+      ]
+    },
+    "healthRefreshP50Ms": {
+      "before": [
+        6.7885260000002745,
+        7.145074000000022,
+        8.083996000001207
+      ],
+      "after": [
+        5.600516000000425,
+        6.944999999999709,
+        5.822938999997859
+      ],
+      "beforeMedian": 7.145074000000022,
+      "afterMedian": 5.822938999997859,
+      "pairedPct": [
+        -17.50026441674969,
+        -2.8001669401928164,
+        -27.96954624919421
+      ]
+    },
+    "healthRefreshP95Ms": {
+      "before": [
+        542.4104860000007,
+        316.39394199999515,
+        730.739982000001
+      ],
+      "after": [
+        372.1375200000002,
+        908.1402940000007,
+        251.31684700000005
+      ],
+      "beforeMedian": 542.4104860000007,
+      "afterMedian": 372.1375200000002,
+      "pairedPct": [
+        -31.39190159387889,
+        187.02834455661437,
+        -65.60789703717079
+      ]
+    },
+    "serverWholeMaxGapMs": {
+      "before": [
+        4925.955623000002,
+        4976.303737000002,
+        4908.596365999998
+      ],
+      "after": [
+        5124.249924,
+        4366.140406999999,
+        4698.353414000001
+      ],
+      "beforeMedian": 4925.955623000002,
+      "afterMedian": 4698.353414000001,
+      "pairedPct": [
+        4.025499135114674,
+        -12.261376359792786,
+        -4.283158286476163
+      ]
+    },
+    "overviewMaxGapMs": {
+      "before": [
+        87.49705300000005,
+        126.12498700000015,
+        144.1805170000007
+      ],
+      "after": [
+        151.3444969999996,
+        192.3793539999997,
+        185.92993899999965
+      ],
+      "beforeMedian": 126.12498700000015,
+      "afterMedian": 185.92993899999965,
+      "pairedPct": [
+        72.97096509067511,
+        52.53072256015334,
+        28.956354761856453
+      ]
+    },
+    "overviewGapsOver200ms": {
+      "before": [
+        0,
+        0,
+        0
+      ],
+      "after": [
+        0,
+        0,
+        0
+      ],
+      "beforeMedian": 0,
+      "afterMedian": 0,
+      "pairedPct": [
+        null,
+        null,
+        null
+      ]
+    },
+    "asasMainReceiveMs": {
+      "before": [
+        898.8097049999997,
+        704.0734780000003,
+        724.2664989999994
+      ],
+      "after": [
+        623.6924220000001,
+        1071.8423110000003,
+        717.1372149999988
+      ],
+      "beforeMedian": 724.2664989999994,
+      "afterMedian": 717.1372149999988,
+      "pairedPct": [
+        -30.609069024237968,
+        52.23443922993503,
+        -0.9843454046050693
+      ]
+    },
+    "asasWorkerPostMessageMs": {
+      "before": [
+        1271.300335,
+        1286.2321759999995,
+        1077.487618000001
+      ],
+      "after": [
+        1229.8933589999997,
+        1499.841133,
+        1179.188757
+      ],
+      "beforeMedian": 1271.300335,
+      "afterMedian": 1229.8933589999997,
+      "pairedPct": [
+        -3.2570569565688157,
+        16.607340493089986,
+        9.438729253220867
+      ]
+    }
+  },
+  "runs": [
+    {
+      "pair": 1,
+      "arm": "before",
+      "values": {
+        "refreshMs": 48982,
+        "primaryReadyMs": 3007.100000023842,
+        "gateReadyMs": 3021.100000023842,
+        "systemCompleteMs": 3084.7000000178814,
+        "healthRefreshP50Ms": 6.7885260000002745,
+        "healthRefreshP95Ms": 542.4104860000007,
+        "serverWholeMaxGapMs": 4925.955623000002,
+        "overviewMaxGapMs": 87.49705300000005,
+        "overviewGapsOver200ms": 0,
+        "asasMainReceiveMs": 898.8097049999997,
+        "asasWorkerPostMessageMs": 1271.300335
+      },
+      "revision": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+      "sourceGeneration": {
+        "rows": {
+          "koleksiyon": 0,
+          "cp": 24982,
+          "orders": 30000,
+          "overview": 30000
+        },
+        "generation": "mw6wicp3-a23c31e92811",
+        "sourceRevision": "ff47d626684fc11cee3a91c9a6f8286c804d691e749fc06fab6fa1e3d550cfd2",
+        "revisions": {
+          "orders": 0,
+          "suppFob": 0
+        }
+      },
+      "stalls": [],
+      "health": {
+        "all": {
+          "count": 103,
+          "successful": 103,
+          "failed": 0,
+          "p50Ms": 7.481697000002896,
+          "p95Ms": 365.3111110000027,
+          "maxMs": 4865.133046999999
+        },
+        "refresh": {
+          "count": 78,
+          "successful": 78,
+          "failed": 0,
+          "p50Ms": 6.7885260000002745,
+          "p95Ms": 542.4104860000007,
+          "maxMs": 4865.133046999999
+        },
+        "endpoint": "/api/health",
+        "readinessEndpoint": "/api/status",
+        "observedStatuses": [
+          200
+        ],
+        "endpointAvailable": true
+      },
+      "refreshPhases": [
+        {
+          "phase": "source-setup",
+          "startedAt": "2026-11-07T21:13:17.002Z",
+          "ms": 3,
+          "running": false
+        },
+        {
+          "phase": "asas-excel-refresh",
+          "startedAt": "2026-11-07T21:13:17.005Z",
+          "ms": 1,
+          "running": false
+        },
+        {
+          "phase": "asas-excel-parse",
+          "startedAt": "2026-11-07T21:13:17.006Z",
+          "ms": 13573,
+          "running": false
+        },
+        {
+          "phase": "database",
+          "startedAt": "2026-11-07T21:13:30.579Z",
+          "ms": 46,
+          "running": false
+        },
+        {
+          "phase": "antrepo-excel-refresh",
+          "startedAt": "2026-11-07T21:13:30.625Z",
+          "ms": 0,
+          "running": false
+        },
+        {
+          "phase": "antrepo-excel-parse",
+          "startedAt": "2026-11-07T21:13:30.625Z",
+          "ms": 2587,
+          "running": false
+        },
+        {
+          "phase": "source-processing",
+          "startedAt": "2026-11-07T21:13:33.212Z",
+          "ms": 0,
+          "running": false
+        },
+        {
+          "phase": "comparing",
+          "startedAt": "2026-11-07T21:13:33.212Z",
+          "ms": 1188,
+          "running": false
+        },
+        {
+          "phase": "saving",
+          "startedAt": "2026-11-07T21:13:34.400Z",
+          "ms": 13727,
+          "running": false
+        },
+        {
+          "phase": "page-cache",
+          "startedAt": "2026-11-07T21:13:48.127Z",
+          "ms": 17800,
+          "running": false
+        },
+        {
+          "phase": "finalizing",
+          "startedAt": "2026-11-07T21:14:05.927Z",
+          "ms": 21,
+          "running": false
+        }
+      ],
+      "rowHashes": {
+        "generation": "mw6wicp3-a23c31e92811",
+        "sourceRevision": "ff47d626684fc11cee3a91c9a6f8286c804d691e749fc06fab6fa1e3d550cfd2",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "serverLoopModule": {
+        "module": "overview",
+        "navigationStartedAtMs": 1794086053175,
+        "observedAtMs": 1794086063233,
+        "recordedGaps": 15,
+        "maxGapMs": 87.49705300000005,
+        "maxDelayMs": 77.49705300000005,
+        "gapsOver200ms": 0,
+        "maxGapUpperBoundMs": 87.49705300000005,
+        "intervalMs": 10,
+        "reportFromMs": 20,
+        "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+      }
+    },
+    {
+      "pair": 1,
+      "arm": "after",
+      "values": {
+        "refreshMs": 48397,
+        "primaryReadyMs": 4331.199999988079,
+        "gateReadyMs": 4347.699999988079,
+        "systemCompleteMs": 4439.799999982119,
+        "healthRefreshP50Ms": 5.600516000000425,
+        "healthRefreshP95Ms": 372.1375200000002,
+        "serverWholeMaxGapMs": 5124.249924,
+        "overviewMaxGapMs": 151.3444969999996,
+        "overviewGapsOver200ms": 0,
+        "asasMainReceiveMs": 623.6924220000001,
+        "asasWorkerPostMessageMs": 1229.8933589999997
+      },
+      "revision": "df8ca377d85078d29a9524a7812f80cef44b75d6",
+      "sourceGeneration": {
+        "rows": {
+          "koleksiyon": 0,
+          "cp": 24982,
+          "orders": 30000,
+          "overview": 30000
+        },
+        "generation": "mw6wk4yw-93722f31bb6f",
+        "sourceRevision": "a52ea322f7c61d301504e46ff1533ee6dc59b1d6e6d044d8e1fbb5c64b1916a2",
+        "revisions": {
+          "orders": 0,
+          "suppFob": 0
+        }
+      },
+      "stalls": [],
+      "health": {
+        "all": {
+          "count": 105,
+          "successful": 105,
+          "failed": 0,
+          "p50Ms": 6.352072999999109,
+          "p95Ms": 193.7517119999975,
+          "maxMs": 5039.8566930000015
+        },
+        "refresh": {
+          "count": 78,
+          "successful": 78,
+          "failed": 0,
+          "p50Ms": 5.600516000000425,
+          "p95Ms": 372.1375200000002,
+          "maxMs": 5039.8566930000015
+        },
+        "endpoint": "/api/health",
+        "readinessEndpoint": "/api/status",
+        "observedStatuses": [
+          200
+        ],
+        "endpointAvailable": true
+      },
+      "refreshPhases": [
+        {
+          "phase": "source-setup",
+          "startedAt": "2026-11-07T21:14:40.880Z",
+          "ms": 4,
+          "running": false
+        },
+        {
+          "phase": "asas-excel-refresh",
+          "startedAt": "2026-11-07T21:14:40.884Z",
+          "ms": 1,
+          "running": false
+        },
+        {
+          "phase": "asas-excel-parse",
+          "startedAt": "2026-11-07T21:14:40.885Z",
+          "ms": 11228,
+          "running": false
+        },
+        {
+          "phase": "database",
+          "startedAt": "2026-11-07T21:14:52.113Z",
+          "ms": 46,
+          "running": false
+        },
+        {
+          "phase": "antrepo-excel-refresh",
+          "startedAt": "2026-11-07T21:14:52.159Z",
+          "ms": 1,
+          "running": false
+        },
+        {
+          "phase": "antrepo-excel-parse",
+          "startedAt": "2026-11-07T21:14:52.160Z",
+          "ms": 2331,
+          "running": false
+        },
+        {
+          "phase": "source-processing",
+          "startedAt": "2026-11-07T21:14:54.491Z",
+          "ms": 0,
+          "running": false
+        },
+        {
+          "phase": "comparing",
+          "startedAt": "2026-11-07T21:14:54.491Z",
+          "ms": 1346,
+          "running": false
+        },
+        {
+          "phase": "saving",
+          "startedAt": "2026-11-07T21:14:55.837Z",
+          "ms": 13277,
+          "running": false
+        },
+        {
+          "phase": "page-cache",
+          "startedAt": "2026-11-07T21:15:09.114Z",
+          "ms": 20114,
+          "running": false
+        },
+        {
+          "phase": "finalizing",
+          "startedAt": "2026-11-07T21:15:29.228Z",
+          "ms": 35,
+          "running": false
+        }
+      ],
+      "rowHashes": {
+        "generation": "mw6wk4yw-93722f31bb6f",
+        "sourceRevision": "a52ea322f7c61d301504e46ff1533ee6dc59b1d6e6d044d8e1fbb5c64b1916a2",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "serverLoopModule": {
+        "module": "overview",
+        "navigationStartedAtMs": 1794086137065,
+        "observedAtMs": 1794086148422,
+        "recordedGaps": 28,
+        "maxGapMs": 151.3444969999996,
+        "maxDelayMs": 141.3444969999996,
+        "gapsOver200ms": 0,
+        "maxGapUpperBoundMs": 151.3444969999996,
+        "intervalMs": 10,
+        "reportFromMs": 20,
+        "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+      }
+    },
+    {
+      "pair": 2,
+      "arm": "after",
+      "values": {
+        "refreshMs": 49974,
+        "primaryReadyMs": 2688.7999999821186,
+        "gateReadyMs": 2702.5,
+        "systemCompleteMs": 2771.699999988079,
+        "healthRefreshP50Ms": 6.944999999999709,
+        "healthRefreshP95Ms": 908.1402940000007,
+        "serverWholeMaxGapMs": 4366.140406999999,
+        "overviewMaxGapMs": 192.3793539999997,
+        "overviewGapsOver200ms": 0,
+        "asasMainReceiveMs": 1071.8423110000003,
+        "asasWorkerPostMessageMs": 1499.841133
+      },
+      "revision": "df8ca377d85078d29a9524a7812f80cef44b75d6",
+      "sourceGeneration": {
+        "rows": {
+          "koleksiyon": 0,
+          "cp": 24982,
+          "orders": 30000,
+          "overview": 30000
+        },
+        "generation": "mw6wm17d-5dae35230191",
+        "sourceRevision": "383299e90df9c9775f1e5f597937b4b6bea6ebd920835b9eccd92db5db34971a",
+        "revisions": {
+          "orders": 0,
+          "suppFob": 0
+        }
+      },
+      "stalls": [],
+      "health": {
+        "all": {
+          "count": 105,
+          "successful": 105,
+          "failed": 0,
+          "p50Ms": 7.192931999999928,
+          "p95Ms": 542.0383120000006,
+          "maxMs": 4312.338672000002
+        },
+        "refresh": {
+          "count": 79,
+          "successful": 79,
+          "failed": 0,
+          "p50Ms": 6.944999999999709,
+          "p95Ms": 908.1402940000007,
+          "maxMs": 4312.338672000002
+        },
+        "endpoint": "/api/health",
+        "readinessEndpoint": "/api/status",
+        "observedStatuses": [
+          200
+        ],
+        "endpointAvailable": true
+      },
+      "refreshPhases": [
+        {
+          "phase": "source-setup",
+          "startedAt": "2026-11-07T21:16:07.745Z",
+          "ms": 3,
+          "running": false
+        },
+        {
+          "phase": "asas-excel-refresh",
+          "startedAt": "2026-11-07T21:16:07.748Z",
+          "ms": 0,
+          "running": false
+        },
+        {
+          "phase": "asas-excel-parse",
+          "startedAt": "2026-11-07T21:16:07.748Z",
+          "ms": 11274,
+          "running": false
+        },
+        {
+          "phase": "database",
+          "startedAt": "2026-11-07T21:16:19.022Z",
+          "ms": 41,
+          "running": false
+        },
+        {
+          "phase": "antrepo-excel-refresh",
+          "startedAt": "2026-11-07T21:16:19.063Z",
+          "ms": 1,
+          "running": false
+        },
+        {
+          "phase": "antrepo-excel-parse",
+          "startedAt": "2026-11-07T21:16:19.064Z",
+          "ms": 2587,
+          "running": false
+        },
+        {
+          "phase": "source-processing",
+          "startedAt": "2026-11-07T21:16:21.651Z",
+          "ms": 1,
+          "running": false
+        },
+        {
+          "phase": "comparing",
+          "startedAt": "2026-11-07T21:16:21.652Z",
+          "ms": 1101,
+          "running": false
+        },
+        {
+          "phase": "saving",
+          "startedAt": "2026-11-07T21:16:22.753Z",
+          "ms": 14109,
+          "running": false
+        },
+        {
+          "phase": "page-cache",
+          "startedAt": "2026-11-07T21:16:36.862Z",
+          "ms": 20804,
+          "running": false
+        },
+        {
+          "phase": "finalizing",
+          "startedAt": "2026-11-07T21:16:57.666Z",
+          "ms": 47,
+          "running": false
+        }
+      ],
+      "rowHashes": {
+        "generation": "mw6wm17d-5dae35230191",
+        "sourceRevision": "383299e90df9c9775f1e5f597937b4b6bea6ebd920835b9eccd92db5db34971a",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "serverLoopModule": {
+        "module": "overview",
+        "navigationStartedAtMs": 1794086223590,
+        "observedAtMs": 1794086234652,
+        "recordedGaps": 27,
+        "maxGapMs": 192.3793539999997,
+        "maxDelayMs": 182.3793539999997,
+        "gapsOver200ms": 0,
+        "maxGapUpperBoundMs": 192.3793539999997,
+        "intervalMs": 10,
+        "reportFromMs": 20,
+        "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+      }
+    },
+    {
+      "pair": 2,
+      "arm": "before",
+      "values": {
+        "refreshMs": 50826,
+        "primaryReadyMs": 4019.600000023842,
+        "gateReadyMs": 4041.2000000178814,
+        "systemCompleteMs": 4222.800000011921,
+        "healthRefreshP50Ms": 7.145074000000022,
+        "healthRefreshP95Ms": 316.39394199999515,
+        "serverWholeMaxGapMs": 4976.303737000002,
+        "overviewMaxGapMs": 126.12498700000015,
+        "overviewGapsOver200ms": 0,
+        "asasMainReceiveMs": 704.0734780000003,
+        "asasWorkerPostMessageMs": 1286.2321759999995
+      },
+      "revision": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+      "sourceGeneration": {
+        "rows": {
+          "koleksiyon": 0,
+          "cp": 24982,
+          "orders": 30000,
+          "overview": 30000
+        },
+        "generation": "mw6wnxdo-9ecdbba28758",
+        "sourceRevision": "a1f11c2bda25521b4d1037b5981370d4edee0dfe6314bbe1f3267aebe30bb77e",
+        "revisions": {
+          "orders": 0,
+          "suppFob": 0
+        }
+      },
+      "stalls": [],
+      "health": {
+        "all": {
+          "count": 107,
+          "successful": 107,
+          "failed": 0,
+          "p50Ms": 7.160038000001805,
+          "p95Ms": 265.99823800000013,
+          "maxMs": 4806.941153
+        },
+        "refresh": {
+          "count": 83,
+          "successful": 83,
+          "failed": 0,
+          "p50Ms": 7.145074000000022,
+          "p95Ms": 316.39394199999515,
+          "maxMs": 4806.941153
+        },
+        "endpoint": "/api/health",
+        "readinessEndpoint": "/api/status",
+        "observedStatuses": [
+          200
+        ],
+        "endpointAvailable": true
+      },
+      "refreshPhases": [
+        {
+          "phase": "source-setup",
+          "startedAt": "2026-11-07T21:17:35.236Z",
+          "ms": 5,
+          "running": false
+        },
+        {
+          "phase": "asas-excel-refresh",
+          "startedAt": "2026-11-07T21:17:35.241Z",
+          "ms": 1,
+          "running": false
+        },
+        {
+          "phase": "asas-excel-parse",
+          "startedAt": "2026-11-07T21:17:35.242Z",
+          "ms": 13280,
+          "running": false
+        },
+        {
+          "phase": "database",
+          "startedAt": "2026-11-07T21:17:48.522Z",
+          "ms": 38,
+          "running": false
+        },
+        {
+          "phase": "antrepo-excel-refresh",
+          "startedAt": "2026-11-07T21:17:48.560Z",
+          "ms": 1,
+          "running": false
+        },
+        {
+          "phase": "antrepo-excel-parse",
+          "startedAt": "2026-11-07T21:17:48.561Z",
+          "ms": 2305,
+          "running": false
+        },
+        {
+          "phase": "source-processing",
+          "startedAt": "2026-11-07T21:17:50.866Z",
+          "ms": 0,
+          "running": false
+        },
+        {
+          "phase": "comparing",
+          "startedAt": "2026-11-07T21:17:50.866Z",
+          "ms": 1056,
+          "running": false
+        },
+        {
+          "phase": "saving",
+          "startedAt": "2026-11-07T21:17:51.922Z",
+          "ms": 15640,
+          "running": false
+        },
+        {
+          "phase": "page-cache",
+          "startedAt": "2026-11-07T21:18:07.562Z",
+          "ms": 18452,
+          "running": false
+        },
+        {
+          "phase": "finalizing",
+          "startedAt": "2026-11-07T21:18:26.014Z",
+          "ms": 37,
+          "running": false
+        }
+      ],
+      "rowHashes": {
+        "generation": "mw6wnxdo-9ecdbba28758",
+        "sourceRevision": "a1f11c2bda25521b4d1037b5981370d4edee0dfe6314bbe1f3267aebe30bb77e",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "serverLoopModule": {
+        "module": "overview",
+        "navigationStartedAtMs": 1794086311607,
+        "observedAtMs": 1794086321726,
+        "recordedGaps": 38,
+        "maxGapMs": 126.12498700000015,
+        "maxDelayMs": 116.12498700000015,
+        "gapsOver200ms": 0,
+        "maxGapUpperBoundMs": 126.12498700000015,
+        "intervalMs": 10,
+        "reportFromMs": 20,
+        "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+      }
+    },
+    {
+      "pair": 3,
+      "arm": "before",
+      "values": {
+        "refreshMs": 50704,
+        "primaryReadyMs": 3521.9000000059605,
+        "gateReadyMs": 3533.9000000059605,
+        "systemCompleteMs": 3637.2999999821186,
+        "healthRefreshP50Ms": 8.083996000001207,
+        "healthRefreshP95Ms": 730.739982000001,
+        "serverWholeMaxGapMs": 4908.596365999998,
+        "overviewMaxGapMs": 144.1805170000007,
+        "overviewGapsOver200ms": 0,
+        "asasMainReceiveMs": 724.2664989999994,
+        "asasWorkerPostMessageMs": 1077.487618000001
+      },
+      "revision": "5b8c1e6fde347df12f211b06af4dd27e5c5fb125",
+      "sourceGeneration": {
+        "rows": {
+          "koleksiyon": 0,
+          "cp": 24982,
+          "orders": 30000,
+          "overview": 30000
+        },
+        "generation": "mw6wpqfr-821548918a60",
+        "sourceRevision": "2beb4bd0593d1b3a93c4c7fd7a7ce264d0c301d395abc48b3ff42c68e82d5e31",
+        "revisions": {
+          "orders": 0,
+          "suppFob": 0
+        }
+      },
+      "stalls": [],
+      "health": {
+        "all": {
+          "count": 103,
+          "successful": 103,
+          "failed": 0,
+          "p50Ms": 8.245850999999675,
+          "p95Ms": 325.1619900000005,
+          "maxMs": 4985.235658000001
+        },
+        "refresh": {
+          "count": 79,
+          "successful": 79,
+          "failed": 0,
+          "p50Ms": 8.083996000001207,
+          "p95Ms": 730.739982000001,
+          "maxMs": 4985.235658000001
+        },
+        "endpoint": "/api/health",
+        "readinessEndpoint": "/api/status",
+        "observedStatuses": [
+          200
+        ],
+        "endpointAvailable": true
+      },
+      "refreshPhases": [
+        {
+          "phase": "source-setup",
+          "startedAt": "2026-11-07T21:18:59.727Z",
+          "ms": 2,
+          "running": false
+        },
+        {
+          "phase": "asas-excel-refresh",
+          "startedAt": "2026-11-07T21:18:59.729Z",
+          "ms": 1,
+          "running": false
+        },
+        {
+          "phase": "asas-excel-parse",
+          "startedAt": "2026-11-07T21:18:59.730Z",
+          "ms": 11673,
+          "running": false
+        },
+        {
+          "phase": "database",
+          "startedAt": "2026-11-07T21:19:11.403Z",
+          "ms": 45,
+          "running": false
+        },
+        {
+          "phase": "antrepo-excel-refresh",
+          "startedAt": "2026-11-07T21:19:11.448Z",
+          "ms": 1,
+          "running": false
+        },
+        {
+          "phase": "antrepo-excel-parse",
+          "startedAt": "2026-11-07T21:19:11.449Z",
+          "ms": 3371,
+          "running": false
+        },
+        {
+          "phase": "source-processing",
+          "startedAt": "2026-11-07T21:19:14.820Z",
+          "ms": 1,
+          "running": false
+        },
+        {
+          "phase": "comparing",
+          "startedAt": "2026-11-07T21:19:14.821Z",
+          "ms": 1571,
+          "running": false
+        },
+        {
+          "phase": "saving",
+          "startedAt": "2026-11-07T21:19:16.392Z",
+          "ms": 13239,
+          "running": false
+        },
+        {
+          "phase": "page-cache",
+          "startedAt": "2026-11-07T21:19:29.631Z",
+          "ms": 20731,
+          "running": false
+        },
+        {
+          "phase": "finalizing",
+          "startedAt": "2026-11-07T21:19:50.362Z",
+          "ms": 62,
+          "running": false
+        }
+      ],
+      "rowHashes": {
+        "generation": "mw6wpqfr-821548918a60",
+        "sourceRevision": "2beb4bd0593d1b3a93c4c7fd7a7ce264d0c301d395abc48b3ff42c68e82d5e31",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "serverLoopModule": {
+        "module": "overview",
+        "navigationStartedAtMs": 1794086397808,
+        "observedAtMs": 1794086407985,
+        "recordedGaps": 31,
+        "maxGapMs": 144.1805170000007,
+        "maxDelayMs": 134.1805170000007,
+        "gapsOver200ms": 0,
+        "maxGapUpperBoundMs": 144.1805170000007,
+        "intervalMs": 10,
+        "reportFromMs": 20,
+        "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+      }
+    },
+    {
+      "pair": 3,
+      "arm": "after",
+      "values": {
+        "refreshMs": 49404,
+        "primaryReadyMs": 2792.199999988079,
+        "gateReadyMs": 2805.4000000059605,
+        "systemCompleteMs": 2922.4000000059605,
+        "healthRefreshP50Ms": 5.822938999997859,
+        "healthRefreshP95Ms": 251.31684700000005,
+        "serverWholeMaxGapMs": 4698.353414000001,
+        "overviewMaxGapMs": 185.92993899999965,
+        "overviewGapsOver200ms": 0,
+        "asasMainReceiveMs": 717.1372149999988,
+        "asasWorkerPostMessageMs": 1179.188757
+      },
+      "revision": "df8ca377d85078d29a9524a7812f80cef44b75d6",
+      "sourceGeneration": {
+        "rows": {
+          "koleksiyon": 0,
+          "cp": 24982,
+          "orders": 30000,
+          "overview": 30000
+        },
+        "generation": "mw6wrl1c-6278ce5bacea",
+        "sourceRevision": "cea7c600c43c6c4c18ec1b956ab5527b16e8e9520fa15acb0bb35902fdfba395",
+        "revisions": {
+          "orders": 0,
+          "suppFob": 0
+        }
+      },
+      "stalls": [],
+      "health": {
+        "all": {
+          "count": 130,
+          "successful": 130,
+          "failed": 0,
+          "p50Ms": 6.07167599999957,
+          "p95Ms": 123.6482279999982,
+          "maxMs": 4549.282777
+        },
+        "refresh": {
+          "count": 80,
+          "successful": 80,
+          "failed": 0,
+          "p50Ms": 5.822938999997859,
+          "p95Ms": 251.31684700000005,
+          "maxMs": 4549.282777
+        },
+        "endpoint": "/api/health",
+        "readinessEndpoint": "/api/status",
+        "observedStatuses": [
+          200
+        ],
+        "endpointAvailable": true
+      },
+      "refreshPhases": [
+        {
+          "phase": "source-setup",
+          "startedAt": "2026-11-07T21:20:27.304Z",
+          "ms": 3,
+          "running": false
+        },
+        {
+          "phase": "asas-excel-refresh",
+          "startedAt": "2026-11-07T21:20:27.307Z",
+          "ms": 1,
+          "running": false
+        },
+        {
+          "phase": "asas-excel-parse",
+          "startedAt": "2026-11-07T21:20:27.308Z",
+          "ms": 11341,
+          "running": false
+        },
+        {
+          "phase": "database",
+          "startedAt": "2026-11-07T21:20:38.649Z",
+          "ms": 39,
+          "running": false
+        },
+        {
+          "phase": "antrepo-excel-refresh",
+          "startedAt": "2026-11-07T21:20:38.688Z",
+          "ms": 0,
+          "running": false
+        },
+        {
+          "phase": "antrepo-excel-parse",
+          "startedAt": "2026-11-07T21:20:38.688Z",
+          "ms": 2431,
+          "running": false
+        },
+        {
+          "phase": "source-processing",
+          "startedAt": "2026-11-07T21:20:41.119Z",
+          "ms": 0,
+          "running": false
+        },
+        {
+          "phase": "comparing",
+          "startedAt": "2026-11-07T21:20:41.119Z",
+          "ms": 1155,
+          "running": false
+        },
+        {
+          "phase": "saving",
+          "startedAt": "2026-11-07T21:20:42.274Z",
+          "ms": 14452,
+          "running": false
+        },
+        {
+          "phase": "page-cache",
+          "startedAt": "2026-11-07T21:20:56.726Z",
+          "ms": 19952,
+          "running": false
+        },
+        {
+          "phase": "finalizing",
+          "startedAt": "2026-11-07T21:21:16.678Z",
+          "ms": 22,
+          "running": false
+        }
+      ],
+      "rowHashes": {
+        "generation": "mw6wrl1c-6278ce5bacea",
+        "sourceRevision": "cea7c600c43c6c4c18ec1b956ab5527b16e8e9520fa15acb0bb35902fdfba395",
+        "modules": {
+          "cp": {
+            "rows": 24982,
+            "orderedRowsSha256": "bcd25ed22a453673b42b16613c950c078d3a730b1faaac0c8b202e045a93f58c"
+          },
+          "orders": {
+            "rows": 30000,
+            "orderedRowsSha256": "96b714d1673347ce3269e8b06b8813ee940460463c1b912db23537ac2729ebe7"
+          },
+          "overview": {
+            "rows": 30000,
+            "orderedRowsSha256": "1fbd82c957743153c66316918abfb190141ede3a4beb0770b5635e539b4b0c3b"
+          }
+        }
+      },
+      "serverLoopModule": {
+        "module": "overview",
+        "navigationStartedAtMs": 1794086484118,
+        "observedAtMs": 1794086502063,
+        "recordedGaps": 27,
+        "maxGapMs": 185.92993899999965,
+        "maxDelayMs": 175.92993899999965,
+        "gapsOver200ms": 0,
+        "maxGapUpperBoundMs": 185.92993899999965,
+        "intervalMs": 10,
+        "reportFromMs": 20,
+        "boundaryPolicy": "overlapping gap is retained in full; gap includes the normal timer interval"
+      }
+    }
+  ],
+  "limitations": [
+    "Health is harness-observed HTTP roundtrip, not a server-only latency bound.",
+    "Scope contains Overview only; no claim for CP/Orders first-open, Global Flow or Backlog hard acceptance.",
+    "Server whole-run maximum includes refresh. Module gaps include their normal 10ms timer interval.",
+    "This is a security regression check, not an optimization gain claim."
+  ]
+}

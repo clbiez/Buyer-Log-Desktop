@@ -1,0 +1,12 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "tests/user-access-resumed-authority.test.js"
+  ],
+  "exitCode": 1,
+  "TMPDIR": "/tmp/buyerlog-authority-green-2yxhyowd",
+  "testSha256": "52c04d3a4268f77189d5e566366761821ee34a993775d4ab18ddc37b26ce0825",
+  "sourceSha256": "1fc672e9391f422f62e3c8c7a7f7366dd6a09a4990560d7e3e4c79044506c4ec"
+}
