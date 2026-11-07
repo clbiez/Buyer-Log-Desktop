@@ -1,0 +1,617 @@
+{
+  "formatVersion": 1,
+  "phase": "6a-preparation",
+  "baselineSha": "270228a4d9f195e613ae670db8c30583d9c183fc",
+  "executionStatus": "not-run; no thin implementation exists",
+  "gate": "#885 merged + selected Main SHA pinned + regenerated inventory + resolved dynamic dependencies required before candidate implementation/measurement",
+  "canonicalCoverage": [
+    "plmId",
+    "orderCode",
+    "fabricComposition",
+    "cashRetailPrice",
+    "modelName",
+    "productDescription",
+    "productMainDefinition",
+    "setPieceCount",
+    "category",
+    "colourCode",
+    "colour",
+    "specialCode",
+    "mag",
+    "mmyg",
+    "buyingGroup",
+    "buyer",
+    "season",
+    "collectionName",
+    "country",
+    "orderStatus",
+    "license",
+    "licensor",
+    "manufacturer",
+    "subManufacturer",
+    "buyingSampleManufacturer",
+    "productGroup",
+    "line",
+    "importance",
+    "brandDirectorate",
+    "currency",
+    "orderQuantity",
+    "shipmentQuantity",
+    "remainingUnits",
+    "deliveryType",
+    "collectionQuantity",
+    "fob",
+    "supplierFob",
+    "inStoreMonth",
+    "inStore",
+    "exFactory",
+    "orderPlacementDate",
+    "retailDate"
+  ],
+  "fixturePolicy": {
+    "syntheticOnly": true,
+    "seed": "buyerlog-phase6a-v1",
+    "rowCounts": [
+      0,
+      1,
+      127,
+      128,
+      129,
+      1000,
+      30000
+    ],
+    "clock": "2026-11-07T12:00:00.000Z",
+    "timezones": [
+      "UTC",
+      "Europe/Istanbul",
+      "America/New_York"
+    ],
+    "languages": [
+      "tr",
+      "en"
+    ],
+    "credentials": false,
+    "realData": false
+  },
+  "comparisonProtocol": [
+    "A ve B aynı yetkili full synthetic snapshot ve source revisiondan türetilir; kullanıcı değişikliği yok. A full read, B gelecekte thin+lazy hydrate.",
+    "S01-S24 full/full kontrolü önce sıfır fark göstermeli; sonra full/shadow. Transport zarfı harici genel ignore listesi yok.",
+    "Compare scalar Object.is/type/own-key, ordered row identity, nested arrays and business model. Date serializer differences explicit boundary contract ile ele alınır.",
+    "Mismatch kaydı: case ID, field canonical/raw ID, consumer/function/location, source/authority/generation versions, expected/actual type/presence/value sentinel, seed/hash.",
+    "Shadow sonuçları yalnız ayrı debug artifacta; UI, write, rule application, automation, DB, cache veya dış sisteme publish edilmez.",
+    "Fail-closed: fark, unknown dependency, missing fixture, timeout veya skipped mandatory case projection kabulünü durdurur."
+  ],
+  "cases": [
+    {
+      "id": "S01",
+      "title": "Tüm canonical ID ve binding anahtarları",
+      "status": "planned-after-885",
+      "fixtures": [
+        "her cp/orders moduleFields ID",
+        "her binding key tek başına",
+        "exact key + token varyantı",
+        "primary/secondary çakışma"
+      ],
+      "oracle": "post-885 Main canonical.value/canonicalValue; full row vs shadow hydrated row",
+      "assertions": [
+        "Her alanın değer ve typeof eşitliği; undefined eksiklikten ayrı raporlanır",
+        "Binding sırası ve token key insertion order değişmez",
+        "Her canonical ID için en az bir vaka, cp/orders bindingi yoksa explicit not-applicable; belirsiz coverage yoksa blok"
+      ],
+      "usageTypes": [
+        "gösterim",
+        "filtre",
+        "sıralama",
+        "hesap",
+        "export/AI"
+      ]
+    },
+    {
+      "id": "S02",
+      "title": "Değer varlığı ve tür köşeleri",
+      "status": "planned-after-885",
+      "fixtures": [
+        "missing",
+        "undefined own key",
+        "null",
+        "empty string",
+        "whitespace",
+        "0",
+        "false",
+        "NaN in-memory",
+        "number/string code",
+        "TR/EN unicode"
+      ],
+      "oracle": "full canonical okuyucu ve rowLookup",
+      "assertions": [
+        "Own-property varlığı ve Object.is değerleri karşılaştırılır",
+        "JSON NaN/null ve omitted undefined dönüşümü ayrı serialization assertion; normalize sonucu ayrıca karşılaştırılır",
+        "Truthy fallback eklenmez"
+      ],
+      "usageTypes": [
+        "hesap",
+        "gösterim"
+      ]
+    },
+    {
+      "id": "S03",
+      "title": "__canonical override ve serialization sınırı",
+      "status": "planned-after-885",
+      "fixtures": [
+        "non-enumerable __canonical",
+        "own undefined/null/empty/0/false override",
+        "raw conflicting value",
+        "JSON round trip"
+      ],
+      "oracle": "full canonicalValue öncelik sözleşmesi",
+      "assertions": [
+        "Bellek içi ve JSON sonrası oracle ayrı",
+        "Override varlığı kaybolunca fark gizlenmez; kaynak hydration sözleşmesi gerekli"
+      ],
+      "usageTypes": [
+        "hesap",
+        "export/AI"
+      ]
+    },
+    {
+      "id": "S04",
+      "title": "Ham kaynak fallback ve semantik çakışma",
+      "status": "planned-after-885",
+      "fixtures": [
+        "plm/ocode/model/ccode/countryRaw/qty/mb/opd/ex only",
+        "Supplier ve Manufacturer çakışması",
+        "Sub Manufacturer DTR/non-DTR",
+        "productDescription/productMainDefinition çakışması"
+      ],
+      "oracle": "full module bindings + cpSubManufacturerValue + compatibility",
+      "assertions": [
+        "CP/Orders ve Collection modelName/manufacturer/fob/date semantiği ayrı",
+        "Ham kaynak anahtarları taşınmasa bile consumer sonucu aynı; hydration eksikse blok",
+        "Alias çakışması sessizce tek IDye indirgenmez"
+      ],
+      "usageTypes": [
+        "hesap",
+        "filtre",
+        "export/AI"
+      ]
+    },
+    {
+      "id": "S05",
+      "title": "Tüm CP ve Orders sütunları",
+      "status": "planned-after-885",
+      "fixtures": [
+        "varsayılan ve tüm gruplar açık",
+        "gizli sütunu aç",
+        "PLM numune/Priority CP only",
+        "Orders active flag"
+      ],
+      "oracle": "cellHtml/ordersCellHtml/cellPlainText on full rows",
+      "assertions": [
+        "Normalize edilmiş hücre metni, değer, revision oku ve permission state eşit",
+        "Orders CP Priority/PLM Numune işini başlatmaz",
+        "Yeni sütun ilk açılışında stale/blank frame yok"
+      ],
+      "usageTypes": [
+        "gösterim"
+      ]
+    },
+    {
+      "id": "S06",
+      "title": "Özel ve kişisel alan aileleri",
+      "status": "planned-after-885",
+      "fixtures": [
+        "__CPX_ ASAS/IAS/model columns",
+        "__f_ formula",
+        "custom note definitions",
+        "private note different owners"
+      ],
+      "oracle": "full COLS_BY_TABLE + private order notes reader",
+      "assertions": [
+        "Tanımlar/anahtarlar/format/tür eşit",
+        "Kişisel not başka kullanıcıya geçmez",
+        "Boş sampleda da katalog korunur; bilinmeyen key payload dışına atılmaz"
+      ],
+      "usageTypes": [
+        "gösterim",
+        "filtre",
+        "sıralama",
+        "hesap",
+        "export/AI"
+      ]
+    },
+    {
+      "id": "S07",
+      "title": "Arama ve boyut filtreleri",
+      "status": "planned-after-885",
+      "fixtures": [
+        "her CP_SEARCH_KEYS alanında tek eşleşme",
+        "unicode/case/contains token",
+        "CP/Orders dims",
+        "checked/unchecked"
+      ],
+      "oracle": "cpPassesBase/ordersPassesBase full result sets",
+      "assertions": [
+        "Sıralı order-line key kümeleri ve seçim sayıları aynı",
+        "Görünmeyen sütun arama sonucu korunur",
+        "row ID mapping aynı generation içinde kararlı"
+      ],
+      "usageTypes": [
+        "filtre"
+      ]
+    },
+    {
+      "id": "S08",
+      "title": "Sütun ve quick filter evreni",
+      "status": "planned-after-885",
+      "fixtures": [
+        "multiple status/delType/arrival",
+        "null/empty/date/range",
+        "revision only no value list",
+        "cross-filter own-group exclusion",
+        "source scopes"
+      ],
+      "oracle": "full preparedColFilterPasses + cpEvaluateAll/ordersEvaluateAll",
+      "assertions": [
+        "all/none ve her grup kapsamı kimlikleri aynı",
+        "Facet seçenekleri, sıraları, sayıları ve boş değerler aynı"
+      ],
+      "usageTypes": [
+        "filtre"
+      ]
+    },
+    {
+      "id": "S09",
+      "title": "Sıralama ve tie kararlılığı",
+      "status": "planned-after-885",
+      "fixtures": [
+        "bütün bilinen + custom keys",
+        "ascending/descending",
+        "date/number/string/empty mix",
+        "season S7/W6",
+        "equal values",
+        "private notes"
+      ],
+      "oracle": "sortRows full stable order",
+      "assertions": [
+        "Order-line key dizisi birebir aynı; yalnız set kıyası yetmez",
+        "Şema türetimi ve null ordering aynı",
+        "Unknown sort field unresolved ise projection kabul edilmez"
+      ],
+      "usageTypes": [
+        "sıralama"
+      ]
+    },
+    {
+      "id": "S10",
+      "title": "Dinamik formül/kural bağımlılığı",
+      "status": "planned-after-885",
+      "fixtures": [
+        "own key > formula alias > model alias",
+        "nested references/cycles/missing",
+        "__CPX_ IAS first nonblank",
+        "empty first 50 rows"
+      ],
+      "oracle": "full formula-columns + cp-rules-engine",
+      "assertions": [
+        "Formül değer/tür/hata/null çıktıları aynı",
+        "Referenced field hydration tamamlanmadan filtre/sort/export çalışmaz",
+        "Alan kataloğu tüm tanımları tutar; boş diye bağımlılık silinmez"
+      ],
+      "usageTypes": [
+        "hesap",
+        "filtre",
+        "sıralama",
+        "export/AI"
+      ]
+    },
+    {
+      "id": "S11",
+      "title": "Readiness/decision/checklist",
+      "status": "planned-after-885",
+      "fixtures": [
+        "fixed now/dateOrdinal",
+        "DTR/non-DTR",
+        "delayed/ready/loading/shortage",
+        "no sample data",
+        "baseline revised dates"
+      ],
+      "oracle": "full analyzeOrder/summary/rules/checklist pure functions",
+      "assertions": [
+        "Signal, reasons, tracking tags, priority, checklist state ve aggregate sayılar eşit",
+        "Unavailable dimensions aynı kalır, yeni varsayım üretilmez"
+      ],
+      "usageTypes": [
+        "hesap",
+        "gösterim",
+        "filtre"
+      ]
+    },
+    {
+      "id": "S12",
+      "title": "Worker/cooperative eşdeğerliği",
+      "status": "planned-after-885",
+      "fixtures": [
+        "127/128/129 rows",
+        "worker failure fallback",
+        "context revision during job",
+        "repeated row references"
+      ],
+      "oracle": "full BLCpDecisionRuntime worker vs cooperative",
+      "assertions": [
+        "Önce full/full worker/cooperative oracle eşdeğerliği",
+        "Sonra shadow sonucu tam sonuçla aynı; iptal/stale job yayın yapmaz",
+        "sourceRow non-enumerable ilişki ve repeated reference davranışı korunur"
+      ],
+      "usageTypes": [
+        "hesap"
+      ]
+    },
+    {
+      "id": "S13",
+      "title": "Detay ham fallback/hydration",
+      "status": "planned-after-885",
+      "fixtures": [
+        "row/raw/source/sourceRow nested",
+        "direct/canonical/token key conflict",
+        "col.value undefined/null/empty",
+        "detail without full row"
+      ],
+      "oracle": "full BLDetailDrawer lookupValue/rawValueOf",
+      "assertions": [
+        "Kaynak önceliği ve gerçek boş sonuç korunur",
+        "Detay açıldığında tüm alanlar, tip, filter/sort/export sonucu eşit",
+        "İnce satırda eksik veri sıfır/boşmuş gibi gösterilmez"
+      ],
+      "usageTypes": [
+        "gösterim",
+        "filtre",
+        "sıralama",
+        "export/AI"
+      ]
+    },
+    {
+      "id": "S14",
+      "title": "Lazy detay yaşam döngüsü",
+      "status": "planned-after-885",
+      "fixtures": [
+        "detail first-open/reopen",
+        "concurrent opens",
+        "abort navigation",
+        "network error/retry",
+        "refresh while pending"
+      ],
+      "oracle": "full detail business output + future revision-aware hydration contract",
+      "assertions": [
+        "Doğru order/model/colour+authority+sourceRevision ile eşleme",
+        "Abort/stale yanıt cache veya görünür satırı bozmaz",
+        "Error ve retry durumu açık, partial record tam sayılmaz"
+      ],
+      "usageTypes": [
+        "gösterim"
+      ]
+    },
+    {
+      "id": "S15",
+      "title": "Export/copy seçilmiş ve filtrelenmiş scope",
+      "status": "planned-after-885",
+      "fixtures": [
+        "all/selected/filtered/partial view",
+        "hidden/custom columns",
+        "notes linebreak",
+        "dates numeric cells",
+        "images placeholders"
+      ],
+      "oracle": "full exportMatrix/buildTSV/excel cell model",
+      "assertions": [
+        "Sıralı kimlikler, header, cell scalar/type, number format ve row count eşit",
+        "PDF/XLSX binary timestamp/zip farkları iş modelinden ayrı tutulur",
+        "Hydration bitmeden dosya/pano yayımlanmaz"
+      ],
+      "usageTypes": [
+        "export/AI"
+      ]
+    },
+    {
+      "id": "S16",
+      "title": "AI kaynak ve local data query",
+      "status": "planned-after-885",
+      "fixtures": [
+        "all moduleFields",
+        "col.* custom fallback",
+        "selected scope",
+        "zero/false/blank",
+        "300 column/budget boundaries"
+      ],
+      "oracle": "full lcwai-output-source.build + lcwai-data-query local only",
+      "assertions": [
+        "values/keys/labels/fields/omittedColumns eşit; capturedAt sabit clock",
+        "Ağ isteği, credential ve gerçek AI çağrısı yok",
+        "Yetkili scope dışı satır veya private metadata bağlama çıkmaz"
+      ],
+      "usageTypes": [
+        "export/AI"
+      ]
+    },
+    {
+      "id": "S17",
+      "title": "Image ve PLM detay",
+      "status": "planned-after-885",
+      "fixtures": [
+        "PLM+colour identity",
+        "tombstone/legacy image key",
+        "no image",
+        "virtual rebind",
+        "fabric/artwork/sample overlays"
+      ],
+      "oracle": "full image resolver + cpPlmDetailsSync",
+      "assertions": [
+        "Identity, URL/ref, deletion precedence ve virtual row association aynı",
+        "Görsel binary boyutu JSON satır kazancına sayılmaz",
+        "Overlay henüz yüklenmediyse missing state aynı"
+      ],
+      "usageTypes": [
+        "gösterim",
+        "filtre",
+        "export/AI"
+      ]
+    },
+    {
+      "id": "S18",
+      "title": "Lojistik segment ve miktar",
+      "status": "planned-after-885",
+      "fixtures": [
+        "no IAS",
+        "multiple partial IAS",
+        "shortage",
+        "all warehouse",
+        "inactive no synthetic production",
+        "fractional quantities"
+      ],
+      "oracle": "full parse + cpLogistic* + readiness",
+      "assertions": [
+        "STATUS/delType/arrival multi-values ve inline details eşit",
+        "Qty/shipped/remaining/percentage/shortage ve source provenance eşit",
+        "Segment alt alanları unknown olduğunda blok"
+      ],
+      "usageTypes": [
+        "hesap",
+        "gösterim",
+        "filtre",
+        "export/AI"
+      ]
+    },
+    {
+      "id": "S19",
+      "title": "Tarih, revizyon ve saat dilimi",
+      "status": "planned-after-885",
+      "fixtures": [
+        "ASAS original/revised values",
+        "loading approval",
+        "Initial Inspection/Original Ex-factory",
+        "ISO/Excel/date string",
+        "DST edges",
+        "UTC/Europe-Istanbul/America-New_York"
+      ],
+      "oracle": "full parse date business functions + revisionInfo + manufacturer performance",
+      "assertions": [
+        "Date-only günleri, baseline, revizyon işareti ve initial promise ayrı eşit",
+        "Sabit now ve sabit timezone ile tekrarlanır; Date→JSON string sınırı kaydedilir"
+      ],
+      "usageTypes": [
+        "hesap",
+        "gösterim",
+        "filtre",
+        "export/AI"
+      ]
+    },
+    {
+      "id": "S20",
+      "title": "Yetki/scope güvenliği",
+      "status": "planned-after-885",
+      "fixtures": [
+        "moderator/buyer/restricted/forbidden synthetic profiles",
+        "different horizon CP vs Orders",
+        "not-ready source filters",
+        "same order code multiple lines"
+      ],
+      "oracle": "full user-access authoritative scoped rows",
+      "assertions": [
+        "Satır ID/küme ve _canEdit/_canEditShared eşit",
+        "Forbidden/full fallback veri sızdırmaz; missing authority izin sayılmaz",
+        "Scope hash/otorite/revizyon cache anahtarına dahil"
+      ],
+      "usageTypes": [
+        "filtre",
+        "gösterim"
+      ]
+    },
+    {
+      "id": "S21",
+      "title": "Shared edit, optimistic rollback ve notlar",
+      "status": "planned-after-885",
+      "fixtures": [
+        "edit/ack/conflict",
+        "server refresh",
+        "undo stale revision",
+        "NotesHtml/Ek NotHtml",
+        "supp FOB meta/manual/imported/rule"
+      ],
+      "oracle": "full local patch/update/undo with mocked transport, no persistence",
+      "assertions": [
+        "Değerler + metadata + baseline + owner korunur",
+        "Shadow write/save/automation tetiklemez",
+        "Pending edit sırasında hydration eski veriyle üzerine yazmaz"
+      ],
+      "usageTypes": [
+        "hesap",
+        "gösterim"
+      ]
+    },
+    {
+      "id": "S22",
+      "title": "Projection cache/generation ve hata yolları",
+      "status": "planned-after-885",
+      "fixtures": [
+        "cold/hit/miss",
+        "same CP/Orders source shared build",
+        "different horizons independent builds",
+        "context change",
+        "refresh/invalidation",
+        "compressed/noncompressed"
+      ],
+      "oracle": "post-885 Main full projection endpoint/cache under synthetic isolated root",
+      "assertions": [
+        "Row/business output oracle aynı generationa ait",
+        "Eski authority/source version shadow ile karışmaz",
+        "Yanlış eşleme/timeout/fallback ayrı failure sayılır; fast result için elenmez"
+      ],
+      "usageTypes": [
+        "hesap",
+        "filtre"
+      ]
+    },
+    {
+      "id": "S23",
+      "title": "CP/Orders → Collection bridge",
+      "status": "planned-after-885",
+      "fixtures": [
+        "same identity different price/date/manufacturer",
+        "zero supplier FOB",
+        "missing PLM/colour",
+        "source order details"
+      ],
+      "oracle": "full cpRowToKolRow/cpKolSourceIdentity/collection backfill dry-run",
+      "assertions": [
+        "Order-line mapping ve projected bridge fields aynı",
+        "Scalar null/zero/false semantics ve source provenance aynı",
+        "Gerçek collection save yapılmaz"
+      ],
+      "usageTypes": [
+        "hesap",
+        "export/AI"
+      ]
+    },
+    {
+      "id": "S24",
+      "title": "Açık dinamik alan ve serializasyon denetimi",
+      "status": "planned-after-885",
+      "fixtures": [
+        "noncanonical unexpected key",
+        "Object.keys/entries/spread",
+        "enumerable vs non-enumerable",
+        "unknown model header",
+        "nested arrays"
+      ],
+      "oracle": "full source-only trace and future synthetic consumer read trace",
+      "assertions": [
+        "Her dynamicAccess ya finite key set/hydration contract ile kapalı ya açık blocker",
+        "İzinli fark allowlisti yalnız taşıma zarfı; iş değerleri/türleri normalize edilerek saklanmaz",
+        "Eksik test/coverage/timeout = başarısız veya blok; unknown hiçbir zaman removable olmaz"
+      ],
+      "usageTypes": [
+        "hesap",
+        "export/AI"
+      ]
+    }
+  ]
+}

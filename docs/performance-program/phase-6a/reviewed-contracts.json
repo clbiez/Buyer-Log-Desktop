@@ -1,0 +1,738 @@
+{
+  "formatVersion": 1,
+  "baseline": {
+    "mainSha": "270228a4d9f195e613ae670db8c30583d9c183fc",
+    "branch": "docs/phase-6a-field-inventory",
+    "phase885": {
+      "number": 885,
+      "state": "open-draft",
+      "observedHeadSha": "1ff5038e2aab145c363fdcb07282afa5c33dce0d",
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/885",
+      "scope": "remote metadata only; no compute implementation changes or final measurement"
+    },
+    "revalidationGate": "#885 sonrası Main SHA üzerinde yeniden envanter + shadow matrisi; ince projection ve nihai ölçüm ertelendi"
+  },
+  "scope": {
+    "files": [
+      "resources/app/public/app-main.js",
+      "resources/app/public/automation-assistant.js",
+      "resources/app/public/backlog-delivery-engine.js",
+      "resources/app/public/backlog-v3-report.js",
+      "resources/app/public/business-rules.js",
+      "resources/app/public/canonical-column-labels.js",
+      "resources/app/public/canonical-fields.js",
+      "resources/app/public/canonical-module-bindings.js",
+      "resources/app/public/capacity-request-export.js",
+      "resources/app/public/checklist-components-engine.js",
+      "resources/app/public/checklist-supplier-sync.js",
+      "resources/app/public/chronological-values.js",
+      "resources/app/public/collection-artwork-detail.js",
+      "resources/app/public/collection-lfl-engine.js",
+      "resources/app/public/collection-lfl.js",
+      "resources/app/public/collection-model-groups.js",
+      "resources/app/public/collection-order-backfill.js",
+      "resources/app/public/column-schema.js",
+      "resources/app/public/cp-checklist-engine.js",
+      "resources/app/public/cp-decision-runtime.js",
+      "resources/app/public/cp-decision-worker.js",
+      "resources/app/public/cp-managed-rules.js",
+      "resources/app/public/cp-overview-assistant.js",
+      "resources/app/public/cp-plm-details.js",
+      "resources/app/public/cp-readiness-engine.js",
+      "resources/app/public/cp-rules-engine.js",
+      "resources/app/public/detail-drawer.js",
+      "resources/app/public/detail-report-layout.js",
+      "resources/app/public/excel-import-mapping.js",
+      "resources/app/public/excel-templates.js",
+      "resources/app/public/exception-inbox-view.js",
+      "resources/app/public/formula-columns.js",
+      "resources/app/public/freight-calc.js",
+      "resources/app/public/hologram-request-export.js",
+      "resources/app/public/layout-control-engine.js",
+      "resources/app/public/lcwai-assistant.js",
+      "resources/app/public/lcwai-chat.js",
+      "resources/app/public/lcwai-data-query.js",
+      "resources/app/public/lcwai-output-editor.js",
+      "resources/app/public/lcwai-output-source.js",
+      "resources/app/public/license-cards.js",
+      "resources/app/public/license-royalty-commissions.js",
+      "resources/app/public/manufacturers.js",
+      "resources/app/public/open-costing.js",
+      "resources/app/public/order-decision-engine.js",
+      "resources/app/public/order-importance.js",
+      "resources/app/public/overview-global-flow.js",
+      "resources/app/public/plm-bom.js",
+      "resources/app/public/plm-sample-requests.js",
+      "resources/app/public/price-supplier-analysis.js",
+      "resources/app/public/private-order-notes.js",
+      "resources/app/public/quick-filter-groups.js",
+      "resources/app/public/quotations.js",
+      "resources/app/public/table-export.js",
+      "resources/app/public/test-report-import.js",
+      "resources/app/public/user-storage.js",
+      "resources/app/server/lib/ai-capability-registry.js",
+      "resources/app/server/lib/automation-field-check.js",
+      "resources/app/server/lib/collection-catalog.js",
+      "resources/app/server/lib/collection-replication.js",
+      "resources/app/server/lib/cp-automation.js",
+      "resources/app/server/lib/cp-coverage.js",
+      "resources/app/server/lib/cp-field-ownership.js",
+      "resources/app/server/lib/cp-image-startup-registry.js",
+      "resources/app/server/lib/cp-rule-preferences.js",
+      "resources/app/server/lib/cp-shared-store.js",
+      "resources/app/server/lib/derived-input-keys.js",
+      "resources/app/server/lib/override-scope.js",
+      "resources/app/server/lib/page-projection-cache.js",
+      "resources/app/server/lib/parse.js",
+      "resources/app/server/lib/user-access.js",
+      "resources/app/server/server.js"
+    ],
+    "selection": "Canonical/state.cp/state.orders doğrudan tüketicileri + CP engine, parser, projection, permission, sütun/filtre/export/formül/AI ve detail bağımlılıkları. Bu SHA için sabit dosya listesi.",
+    "outOfScope": [
+      "gerçek veri dizinleri ve credential",
+      "node_modules, vendor, minified assets",
+      "test fixture içerikleri",
+      "#885 dalının compute uygulaması",
+      "dinamik yüklenen dış model/başlık/formül ayarları; açık sözleşme olarak tutulur"
+    ]
+  },
+  "limitations": [
+    "AST sözdizimsel aday taramasıdır; r/item/source gibi alıcılar başka veri türleri de olabilir. Alana dair her eşleşme runtime okuma ispatı değildir.",
+    "Tür/çağrı grafı analizi yoktur. Fonksiyon bağlamına göre usageTypes tahmindir; doğrulanmış çapraz yollar reviewedContracts içindedir. Boş usageTypes üretici veya çözülemeyen kullanımı belirtir.",
+    "Dinamik erişimler finite literal/map çözülebildiğinde açılır; açık anahtarlar dynamicAccesses içinde tutulur ve removable=false.",
+    "Tüm binding anahtarları sıralı verilir. Token çakışmasında olası tüm canonical IDler korunur; global alias eşitliği semantik eşitlik sayılmaz.",
+    "Ham kaynak nesneleri/yardımcı çağrılar/closure erişimleri için contract kayıtları da okunmalıdır; AST listesi tek başına eksiksiz runtime alan allowlisti değildir.",
+    "Kapsam dışı diğer modüller veya #885 sonrası yeni tüketiciler yok kabul edilmez. Üretim schema ve runtime dosyaları salt okunurdur."
+  ],
+  "contracts": [
+    {
+      "id": "C01",
+      "description": "Canonical value: binding anahtar sırası; undefined/null/boş metni atlar, 0/false korunur. rowLookup exact own key sonra token eşleşmesi. canonicalValue önce own __canonical değerini (boş/null/undefined dahil) döndürür.",
+      "locations": [
+        {
+          "file": "resources/app/public/canonical-fields.js",
+          "line": 205,
+          "anchor": "function rowLookup("
+        },
+        {
+          "file": "resources/app/public/canonical-fields.js",
+          "line": 211,
+          "anchor": "function value("
+        },
+        {
+          "file": "resources/app/public/canonical-fields.js",
+          "line": 263,
+          "anchor": "function canonicalValue("
+        },
+        {
+          "file": "resources/app/server/lib/canonical-fields.js",
+          "line": 6,
+          "anchor": "require('../../public/canonical-module-bindings.js')"
+        }
+      ],
+      "usageTypes": [
+        "gösterim",
+        "filtre",
+        "sıralama",
+        "hesap",
+        "export/AI"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S01",
+        "S02",
+        "S03"
+      ]
+    },
+    {
+      "id": "C02",
+      "description": "ASAS_RUNTIME_KEYS ve modüle özel Supplier/Sub-Manufacturer fallback zincirleri. Aynı ham başlık farklı semantik taşıyabilir; global alias ile birleştirilmez.",
+      "locations": [
+        {
+          "file": "resources/app/public/canonical-module-bindings.js",
+          "line": 27,
+          "anchor": "var ASAS_RUNTIME_KEYS="
+        },
+        {
+          "file": "resources/app/public/canonical-module-bindings.js",
+          "line": 34,
+          "anchor": "extendBinding(moduleId,'manufacturer'"
+        }
+      ],
+      "usageTypes": [
+        "hesap",
+        "filtre",
+        "export/AI"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S01",
+        "S04"
+      ]
+    },
+    {
+      "id": "C03",
+      "description": "CP_COLS kapalı bir ince alan listesi değildir: Orders CP kopyasını kullanır, Priority ve PLM Numune hariç; Active/Inactive eklenir. cellHtml r[c.k] ve cellPlainText export aynı kayıtları okur.",
+      "locations": [
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 3771,
+          "anchor": "const CP_COLS = ["
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 3835,
+          "anchor": "function ordersColumnsFromCp("
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 6054,
+          "anchor": "function cellHtml("
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 6255,
+          "anchor": "function cellPlainText("
+        }
+      ],
+      "usageTypes": [
+        "gösterim",
+        "filtre",
+        "sıralama",
+        "export/AI"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S05",
+        "S06",
+        "S17"
+      ]
+    },
+    {
+      "id": "C04",
+      "description": "Dinamik arama, boyut, sütun ve quick filtreler görünmeyen alanları da okuyabilir; CP_SEARCH_KEYS elemanları statik kataloğa açılır, row[column] çağrıları açık kalır.",
+      "locations": [
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 9122,
+          "anchor": "const CP_SEARCH_KEYS="
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 9159,
+          "anchor": "function cpPassesBase("
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 9542,
+          "anchor": "function ordersPassesBase("
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 6675,
+          "anchor": "function preparedColFilterPasses("
+        }
+      ],
+      "usageTypes": [
+        "filtre"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S07",
+        "S08"
+      ]
+    },
+    {
+      "id": "C05",
+      "description": "sortRows a[key]/b[key] okur; kişisel notlar ayrı okuyucudan gelir; şema, sezon ve kronolojik karşılaştırma/tie sırası korunur.",
+      "locations": [
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 9316,
+          "anchor": "function sortRows("
+        },
+        {
+          "file": "resources/app/public/column-schema.js",
+          "line": 12,
+          "anchor": "resolveColumnSchema"
+        }
+      ],
+      "usageTypes": [
+        "sıralama"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S09"
+      ]
+    },
+    {
+      "id": "C06",
+      "description": "Formula lookup önce own row[name], sonra formula alias, sonra modelAlias. __f_ ve __CPX_ bağımlılıkları kullanıcı ayarından gelir; bilinmeyen başlık silinmez.",
+      "locations": [
+        {
+          "file": "resources/app/public/formula-columns.js",
+          "line": 265,
+          "anchor": "const lookup = (name, row) => {"
+        },
+        {
+          "file": "resources/app/public/formula-columns.js",
+          "line": 268,
+          "anchor": "alias.get(key) || modelAlias.get(key)"
+        }
+      ],
+      "usageTypes": [
+        "hesap",
+        "filtre",
+        "sıralama",
+        "export/AI"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S10"
+      ]
+    },
+    {
+      "id": "C07",
+      "description": "CP readiness F haritası ve kurallar alan kataloğu dinamik okur. Worker satırı structured clone ile gönderir; kaynak satır referansları bellekte tutulur. Yeni alan grafı Main sonrası tekrar çıkarılmalı.",
+      "locations": [
+        {
+          "file": "resources/app/public/cp-readiness-engine.js",
+          "line": 46,
+          "anchor": "const F = Object.freeze({"
+        },
+        {
+          "file": "resources/app/public/cp-readiness-engine.js",
+          "line": 259,
+          "anchor": "function analyzeOrder("
+        },
+        {
+          "file": "resources/app/public/cp-rules-engine.js",
+          "line": 923,
+          "anchor": "function readField("
+        },
+        {
+          "file": "resources/app/public/cp-rules-engine.js",
+          "line": 1107,
+          "anchor": "Object.keys(row || {})"
+        },
+        {
+          "file": "resources/app/public/cp-decision-runtime.js",
+          "line": 73,
+          "anchor": "{reference,row:value}"
+        }
+      ],
+      "usageTypes": [
+        "hesap",
+        "gösterim",
+        "filtre"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S11",
+        "S12"
+      ]
+    },
+    {
+      "id": "C08",
+      "description": "Detail drawer dış/iç row, raw, source ve sourceRow zincirini gezer. Doğrudan alan → canonical → token başlık fallback sırası; col.value undefined ise lookup, null/boş ise geçerli sonuç.",
+      "locations": [
+        {
+          "file": "resources/app/public/detail-drawer.js",
+          "line": 43,
+          "anchor": "function rowSources("
+        },
+        {
+          "file": "resources/app/public/detail-drawer.js",
+          "line": 185,
+          "anchor": "function lookupValue("
+        },
+        {
+          "file": "resources/app/public/detail-drawer.js",
+          "line": 209,
+          "anchor": "function rawValueOf("
+        }
+      ],
+      "usageTypes": [
+        "gösterim",
+        "filtre",
+        "sıralama",
+        "export/AI"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S13",
+        "S14"
+      ]
+    },
+    {
+      "id": "C09",
+      "description": "LCW AI kaynak build tüm moduleFields listesini gezer; ek sütunları col.* metniyle korur. Data query row[field.id]/readValue; mevcut görünür tablo/filtre scope sözleşmesi korunur; ağ AI çağrısı bu fazda yok.",
+      "locations": [
+        {
+          "file": "resources/app/public/lcwai-output-source.js",
+          "line": 60,
+          "anchor": "function build({ module:"
+        },
+        {
+          "file": "resources/app/public/lcwai-output-source.js",
+          "line": 66,
+          "anchor": "for (const id of fields)"
+        },
+        {
+          "file": "resources/app/public/lcwai-data-query.js",
+          "line": 242,
+          "anchor": "row[field.id]"
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 13480,
+          "anchor": "readValue: row => {"
+        }
+      ],
+      "usageTypes": [
+        "export/AI"
+      ],
+      "appliesTo": "all-cp-orders-collection-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S15",
+        "S16"
+      ]
+    },
+    {
+      "id": "C10",
+      "description": "Ham _sourceFields, _sourceValues ve _cpExtra ASAS/IAS parser kaynaklarıdır; __CPX_ ve IAS fallback doldurmaları satıra taşınabilir. __sourceOrder enumerable değildir; JSON ile istemciye taşındığı varsayılmaz. Ham kaynak detay/backlog filtrelerinin de girdisidir.",
+      "locations": [
+        {
+          "file": "resources/app/server/lib/parse.js",
+          "line": 1100,
+          "anchor": "_sourceFields: Object.fromEntries"
+        },
+        {
+          "file": "resources/app/server/lib/parse.js",
+          "line": 2237,
+          "anchor": "function cpIasExtraValues("
+        },
+        {
+          "file": "resources/app/server/lib/parse.js",
+          "line": 707,
+          "anchor": "function attachSourceOrderRef("
+        },
+        {
+          "file": "resources/app/server/lib/parse.js",
+          "line": 2988,
+          "anchor": "column.source==='asas'"
+        }
+      ],
+      "usageTypes": [
+        "hesap",
+        "filtre",
+        "gösterim",
+        "export/AI"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S04",
+        "S10",
+        "S13",
+        "S18"
+      ]
+    },
+    {
+      "id": "C11",
+      "description": "_logisticSegments yalnız drawer detayı değildir: ana hücre, çoklu filtre değerleri, readiness ve shortage hesaplarına gider. Segment bütününü tembel detay saymak için alt alan bağımlılıklarını çözmek gerekir.",
+      "locations": [
+        {
+          "file": "resources/app/server/lib/parse.js",
+          "line": 2192,
+          "anchor": "_logisticSegments: logistic.segments"
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 5805,
+          "anchor": "function cpLogisticSegments("
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 5973,
+          "anchor": "function cpLogisticDetailRowHtml("
+        },
+        {
+          "file": "resources/app/public/cp-readiness-engine.js",
+          "line": 76,
+          "anchor": "shortageQty: '_logisticShortageQty'"
+        }
+      ],
+      "usageTypes": [
+        "gösterim",
+        "filtre",
+        "hesap",
+        "export/AI"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S11",
+        "S18"
+      ]
+    },
+    {
+      "id": "C12",
+      "description": "ASAS baseline/revizyon tarihleri, Original Ex-factory ve üretici ilk söz tarihi farklıdır. _initialInspection üretici performans girdisidir; gösterilmiyor diye silinmez.",
+      "locations": [
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 1248,
+          "anchor": "const CP_BASELINE_DATE_KEYS"
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 5766,
+          "anchor": "function revisionInfo("
+        },
+        {
+          "file": "resources/app/server/lib/parse.js",
+          "line": 2189,
+          "anchor": "_initialInspection: o.initialInspection"
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 30233,
+          "anchor": "day(row._initialInspection||row._asasExFactory)"
+        }
+      ],
+      "usageTypes": [
+        "gösterim",
+        "filtre",
+        "hesap",
+        "export/AI"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [
+        "exFactory",
+        "retailDate",
+        "inStore",
+        "orderPlacementDate"
+      ],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S19"
+      ]
+    },
+    {
+      "id": "C13",
+      "description": "_id seçim için, sipariş/model/renk kimliği kalıcı eşleme için kullanılır. _canEdit/_canEditShared otorite, kişisel not sahibi ve scope hash/revizyon sınırları korunur. Shadow tarafı üretim yazması yapmaz.",
+      "locations": [
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 9889,
+          "anchor": "function cpEditorIdentityAttributes("
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 6061,
+          "anchor": "const canEdit = r._canEdit"
+        },
+        {
+          "file": "resources/app/server/server.js",
+          "line": 8071,
+          "anchor": "function buildAndWritePageProjectionCache("
+        },
+        {
+          "file": "resources/app/server/server.js",
+          "line": 7922,
+          "anchor": "function pageProjectionContext("
+        }
+      ],
+      "usageTypes": [
+        "gösterim",
+        "filtre",
+        "hesap"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S20",
+        "S21",
+        "S22"
+      ]
+    },
+    {
+      "id": "C14",
+      "description": "cpRowToKolRow ve cpKolSourceIdentity farklı fiyat/tarih/üretici fallback zincirleri kullanır. Collection semantiklerini ASAS model/fiyat/tarih semantiğiyle birleştirmek güvenli değildir.",
+      "locations": [
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 39513,
+          "anchor": "function cpRowToKolRow("
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 39596,
+          "anchor": "function cpKolSourceIdentity("
+        },
+        {
+          "file": "resources/app/public/canonical-fields.js",
+          "line": 231,
+          "anchor": "function compatibility("
+        }
+      ],
+      "usageTypes": [
+        "hesap",
+        "export/AI"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S04",
+        "S23"
+      ]
+    },
+    {
+      "id": "C15",
+      "description": "Tam kopya/spread, yerel shared-edit/undo eski ve yeni değerleri, zengin not HTML ve metadata taşıyabilir. Statik okumada bulunmayan alan yok sayılmaz.",
+      "locations": [
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 9910,
+          "anchor": "'Sub-Manufacturer','Supp. FOB','Notes','Ek Not','NotesHtml'"
+        },
+        {
+          "file": "resources/app/public/app-main.js",
+          "line": 13085,
+          "anchor": "notes.NotesHtml=row.NotesHtml"
+        },
+        {
+          "file": "resources/app/server/lib/parse.js",
+          "line": 2214,
+          "anchor": "...(o._cpExtra || {})"
+        }
+      ],
+      "usageTypes": [
+        "hesap",
+        "gösterim",
+        "export/AI"
+      ],
+      "appliesTo": "all-cp-orders-bindings",
+      "canonicalIds": [],
+      "classification": "belirsiz",
+      "removable": false,
+      "matrixIds": [
+        "S10",
+        "S21",
+        "S24"
+      ]
+    }
+  ],
+  "fieldNotes": {},
+  "rawFieldNotes": {
+    "_id": {
+      "classification": "ince satırda gerekli",
+      "rationale": "CP/Orders seçim, satır arama ve render kimliği. Kalıcı order/model/renk anahtarı yerine geçmez."
+    },
+    "_canEdit": {
+      "classification": "ince satırda gerekli",
+      "rationale": "Hücre düzenleme otoritesi. İnce satırda otorite bilgisi korunmalı."
+    },
+    "_canEditShared": {
+      "classification": "ince satırda gerekli",
+      "rationale": "Shared alan otoritesi. Eksiklik true benzeri fallback doğurabilir; eşdeğerlik zorunlu."
+    },
+    "_asasExFactory": {
+      "classification": "ince satırda gerekli",
+      "rationale": "ASAS baseline ve revizyon/hesap girdisi; görünen Ex-factory ile aynı alan değildir."
+    },
+    "_asasRetailDate": {
+      "classification": "ince satırda gerekli",
+      "rationale": "Retail revizyonu ve readiness girdisi."
+    },
+    "_asasInStore": {
+      "classification": "ince satırda gerekli",
+      "rationale": "Model budget revizyonu ve readiness girdisi."
+    },
+    "_logisticSegments": {
+      "classification": "ince satırda gerekli",
+      "rationale": "Inline status ve segment gösterimi, filtre ve readiness için mevcut sözleşmede gereklidir; alt alanları ayrıca incelenmeli."
+    },
+    "_initialInspection": {
+      "classification": "ince satırda gerekli",
+      "rationale": "Üretici performansı fallback girdisi (app-main.js), gizli olmasına rağmen hesap için kullanılıyor."
+    },
+    "_sourceFields": {
+      "classification": "belirsiz",
+      "rationale": "Ham kaynak/fallback/metadata veya editor tüketimi vardır. JSON enumerable sınırı, dinamik kurallar ve hydration çözülmeden kaldırılmaz; reviewedContracts ile birlikte değerlendirilir."
+    },
+    "_sourceValues": {
+      "classification": "belirsiz",
+      "rationale": "Ham kaynak/fallback/metadata veya editor tüketimi vardır. JSON enumerable sınırı, dinamik kurallar ve hydration çözülmeden kaldırılmaz; reviewedContracts ile birlikte değerlendirilir."
+    },
+    "_cpExtra": {
+      "classification": "belirsiz",
+      "rationale": "Ham kaynak/fallback/metadata veya editor tüketimi vardır. JSON enumerable sınırı, dinamik kurallar ve hydration çözülmeden kaldırılmaz; reviewedContracts ile birlikte değerlendirilir."
+    },
+    "__sourceOrder": {
+      "classification": "belirsiz",
+      "rationale": "Ham kaynak/fallback/metadata veya editor tüketimi vardır. JSON enumerable sınırı, dinamik kurallar ve hydration çözülmeden kaldırılmaz; reviewedContracts ile birlikte değerlendirilir."
+    },
+    "NotesHtml": {
+      "classification": "belirsiz",
+      "rationale": "Ham kaynak/fallback/metadata veya editor tüketimi vardır. JSON enumerable sınırı, dinamik kurallar ve hydration çözülmeden kaldırılmaz; reviewedContracts ile birlikte değerlendirilir."
+    },
+    "Ek NotHtml": {
+      "classification": "belirsiz",
+      "rationale": "Ham kaynak/fallback/metadata veya editor tüketimi vardır. JSON enumerable sınırı, dinamik kurallar ve hydration çözülmeden kaldırılmaz; reviewedContracts ile birlikte değerlendirilir."
+    },
+    "_imageRef": {
+      "classification": "belirsiz",
+      "rationale": "Ham kaynak/fallback/metadata veya editor tüketimi vardır. JSON enumerable sınırı, dinamik kurallar ve hydration çözülmeden kaldırılmaz; reviewedContracts ile birlikte değerlendirilir."
+    },
+    "_imageUrl": {
+      "classification": "belirsiz",
+      "rationale": "Ham kaynak/fallback/metadata veya editor tüketimi vardır. JSON enumerable sınırı, dinamik kurallar ve hydration çözülmeden kaldırılmaz; reviewedContracts ile birlikte değerlendirilir."
+    },
+    "_suppFobMeta": {
+      "classification": "belirsiz",
+      "rationale": "Ham kaynak/fallback/metadata veya editor tüketimi vardır. JSON enumerable sınırı, dinamik kurallar ve hydration çözülmeden kaldırılmaz; reviewedContracts ile birlikte değerlendirilir."
+    },
+    "_exFactoryRevision": {
+      "classification": "belirsiz",
+      "rationale": "Ham kaynak/fallback/metadata veya editor tüketimi vardır. JSON enumerable sınırı, dinamik kurallar ve hydration çözülmeden kaldırılmaz; reviewedContracts ile birlikte değerlendirilir."
+    }
+  }
+}
