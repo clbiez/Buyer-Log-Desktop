@@ -1,0 +1,29 @@
+{
+  "sourceSha": "69950f289a012f0bb7c61290bec9890f340f6c64",
+  "baselineSha": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+  "synthetic": true,
+  "repetitions": 3,
+  "collectorSha256": "0d5c2f0510dd51bddaf61f6aa5857a7bafd39cc84dc9f659254f660f13d3c3b3",
+  "observerSha256": "a7b473e0a0764ede07951665f2504faa11b1d11cc971309221078782be0c1f2f",
+  "environment": {
+    "node": "v24.19.0",
+    "v8": "13.6.233.17-node.51",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "parallelism": 4,
+    "cpuQuota": "400000 100000",
+    "memoryLimit": "17179869184"
+  },
+  "runs": [
+    {
+      "rep": 1,
+      "arm": "baseline",
+      "state": "cold",
+      "kur": "missing",
+      "dir": "/tmp/buyerlog-fx-b1-source",
+      "baselineApp": "/workspace/Buyer-Log-FX-B1-Base/resources/app",
+      "failed": true,
+      "exitCode": 1,
+      "stderr": "Error: ENOENT: no such file or directory, open '/workspace/Buyer-Log-FX-B1-Base/resources/app/server/lib/compute-pool.js'\n    at Object.openSync (node:fs:622:18)\n    at Object.readFileSync (node:fs:488:35)\n    at /workspace/Buyer-Log-FX-B1/docs/performance-program/phase-5-fx-diagnosis/diagnose-fx-timeout.cjs:176:134\n    at Array.map (<anonymous>)\n    at child (/workspace/Buyer-Log-FX-B1/docs/performance-program/phase-5-fx-diagnosis/diagnose-fx-timeout.cjs:176:114)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {\n  errno: -2,\n  code: 'ENOENT',\n  syscall: 'open',\n  path: '/workspace/Buyer-Log-FX-B1-Base/resources/app/server/lib/compute-pool.js'\n}\n"
+    }
+  ]
+}

@@ -1,0 +1,320 @@
+{
+  "sourceSha": "69950f289a012f0bb7c61290bec9890f340f6c64",
+  "baselineSha": "1d8e8d39257b66443fad8e80739261b4f0a82227",
+  "productionChanges": false,
+  "newWorkerMechanism": false,
+  "fxTimeoutMs": 5000,
+  "syntheticOnly": true,
+  "phase6aComparison": {
+    "pr": 891,
+    "localSha": "5736f3370fb55bbd62414585956ca8c53d37ce82",
+    "remoteHeadSha": "5736f3370fb55bbd62414585956ca8c53d37ce82",
+    "diffEmpty": true,
+    "additionalFindings": [],
+    "secondInventoryPr": false
+  },
+  "clock": {
+    "source": "process.hrtime.bigint",
+    "unit": "nanosecond",
+    "scope": "same process monotonic clock across native threads",
+    "wallClock": "ISO UTC captured alongside every event",
+    "fakeTimers": false
+  },
+  "design": {
+    "cells": 12,
+    "repetitions": 3,
+    "runs": 36,
+    "order": "baseline/candidate, candidate/baseline, baseline/candidate",
+    "workload": "Two real unmodified projections tasks, each reading the same 30000-row native replica",
+    "baselineScope": "Exact Main #888 sync/client/native Excel worker/store/routes; under the same pinned candidate shared-pool pressure. Controlled diagnostic, not a replay of F0 UI/refresh.",
+    "warmDefinition": "Existing service.warm health jobs; no prior FX parser call",
+    "httpScope": "Real Express FX GET/resolve routes on loopback; synthetic allow middleware, not authentication coverage",
+    "auditTimeComparisonExclusions": [
+      "updatedAt",
+      "_updatedAt"
+    ]
+  },
+  "totals": {
+    "baselineTimeouts": 0,
+    "candidateTimeouts": 6,
+    "candidateQueueOnlyTimeouts": 6,
+    "successfulBlockerJobs": 24
+  },
+  "groups": [
+    {
+      "kur": "missing",
+      "state": "cold",
+      "arm": "baseline",
+      "ms": [
+        131.791776,
+        132.914364,
+        130.63835
+      ],
+      "medianMs": 131.791776,
+      "deadlinePhases": [
+        "no-timeout",
+        "no-timeout",
+        "no-timeout"
+      ],
+      "revisions": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "kur": "missing",
+      "state": "cold",
+      "arm": "candidate",
+      "ms": [
+        155.787698,
+        154.996786,
+        168.992844
+      ],
+      "medianMs": 155.787698,
+      "deadlinePhases": [
+        "no-timeout",
+        "no-timeout",
+        "no-timeout"
+      ],
+      "revisions": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "kur": "missing",
+      "state": "warm",
+      "arm": "baseline",
+      "ms": [
+        139.02627,
+        129.090752,
+        123.970683
+      ],
+      "medianMs": 129.090752,
+      "deadlinePhases": [
+        "no-timeout",
+        "no-timeout",
+        "no-timeout"
+      ],
+      "revisions": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "kur": "missing",
+      "state": "warm",
+      "arm": "candidate",
+      "ms": [
+        99.47129,
+        94.262018,
+        103.912989
+      ],
+      "medianMs": 99.47129,
+      "deadlinePhases": [
+        "no-timeout",
+        "no-timeout",
+        "no-timeout"
+      ],
+      "revisions": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "kur": "missing",
+      "state": "busy",
+      "arm": "baseline",
+      "ms": [
+        152.638126,
+        160.702717,
+        139.177763
+      ],
+      "medianMs": 152.638126,
+      "deadlinePhases": [
+        "no-timeout",
+        "no-timeout",
+        "no-timeout"
+      ],
+      "revisions": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "kur": "missing",
+      "state": "busy",
+      "arm": "candidate",
+      "ms": [
+        5001.606177,
+        5001.182806,
+        5001.415134
+      ],
+      "medianMs": 5001.415134,
+      "deadlinePhases": [
+        "queue",
+        "queue",
+        "queue"
+      ],
+      "revisions": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "kur": "valid",
+      "state": "cold",
+      "arm": "baseline",
+      "ms": [
+        139.163554,
+        156.227176,
+        142.979359
+      ],
+      "medianMs": 142.979359,
+      "deadlinePhases": [
+        "no-timeout",
+        "no-timeout",
+        "no-timeout"
+      ],
+      "revisions": [
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "kur": "valid",
+      "state": "cold",
+      "arm": "candidate",
+      "ms": [
+        164.427467,
+        173.424677,
+        172.075106
+      ],
+      "medianMs": 172.075106,
+      "deadlinePhases": [
+        "no-timeout",
+        "no-timeout",
+        "no-timeout"
+      ],
+      "revisions": [
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "kur": "valid",
+      "state": "warm",
+      "arm": "baseline",
+      "ms": [
+        134.847633,
+        149.310972,
+        139.214663
+      ],
+      "medianMs": 139.214663,
+      "deadlinePhases": [
+        "no-timeout",
+        "no-timeout",
+        "no-timeout"
+      ],
+      "revisions": [
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "kur": "valid",
+      "state": "warm",
+      "arm": "candidate",
+      "ms": [
+        104.310105,
+        104.056367,
+        114.502093
+      ],
+      "medianMs": 104.310105,
+      "deadlinePhases": [
+        "no-timeout",
+        "no-timeout",
+        "no-timeout"
+      ],
+      "revisions": [
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "kur": "valid",
+      "state": "busy",
+      "arm": "baseline",
+      "ms": [
+        150.497626,
+        211.843035,
+        160.74639
+      ],
+      "medianMs": 160.74639,
+      "deadlinePhases": [
+        "no-timeout",
+        "no-timeout",
+        "no-timeout"
+      ],
+      "revisions": [
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "kur": "valid",
+      "state": "busy",
+      "arm": "candidate",
+      "ms": [
+        5001.862819,
+        5001.128198,
+        5001.035075
+      ],
+      "medianMs": 5001.128198,
+      "deadlinePhases": [
+        "queue",
+        "queue",
+        "queue"
+      ],
+      "revisions": [
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "validation": {
+    "command": "NODE_PATH=<existing dependencies> node --test docs/performance-program/phase-5-fx-diagnosis/diagnose-fx-timeout.test.cjs resources/app/tests/compute-utility-workbook.test.js resources/app/tests/compute-fx-wiring.test.js resources/app/tests/fx-folder-kur-guard.test.js resources/app/tests/fx-import-engine.test.js resources/app/tests/fx-kur-upload-lazy-xlsx.test.js",
+    "pass": 29,
+    "fail": 0,
+    "skip": 0,
+    "cancel": 0,
+    "fullSuiteRun": false,
+    "productionParityClaim": false
+  },
+  "limitations": [
+    "Original historical four F0 errors have no per-job phase timestamps; no retrospective assignment of each original event is claimed.",
+    "Controlled deterministic busy-pool reproduction proves queue-only expiration without startup or parser execution. No whole-app performance gain or B1 closure.",
+    "Valid-KUR busy path is not equivalent: no write/revision corruption, but stale data and false parse-failure folder status.",
+    "First metadata preflight failed because baseline does not contain compute-pool.js; artifact retained, excluded from 36 completed runs. Sandbox spawn/listen setup failures preceded measurements; no business test was relaxed."
+  ],
+  "evidenceHashes": {
+    "results.json": "d99fadfa96bff4fbcdaf898fc20a4c35fcacde22ceccddb870ffab3fa513b612",
+    "preflight-failed.json": "bafae8f94dfac6e2c39da9e57d3add3f3cf4a462c7311fd686bcb0b97e2215e3",
+    "diagnose-fx-timeout.cjs": "6b5839b56351fe1b6a9701f45b93ec517ba4644f4eca3d76a884067b8da8fc8f",
+    "worker-observer.cjs": "a7b473e0a0764ede07951665f2504faa11b1d11cc971309221078782be0c1f2f",
+    "diagnose-fx-timeout.test.cjs": "ab1a122155bc190e45090a7994b5b48b351093b1f2f3af30a24ed883a1bdd6d9",
+    "validation.log": "461c028efb60ad24e2c7d51b25c1f2eed2dc131023607ece3cadb35af4fe7db3"
+  }
+}
