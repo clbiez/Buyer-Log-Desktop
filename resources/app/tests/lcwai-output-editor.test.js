@@ -95,7 +95,7 @@ test('taslak: her çıktı düzenlenebilir taslak bırakır; düzenleme yeniden 
   const edited = JSON.parse(JSON.stringify(draft.data));
   edited.slides[1].title = 'Kumaş Detayları (revize)';
   edited.slides.push({ layout: 'kpis', title: 'Özet', kpis: [{ label: 'Model', value: '30', tone: 'ok' }] });
-  const result = service.renderDraft('u1', created.output.draftId, { data: edited, title: 'Kumaş Durumu v2' });
+  const result = (await service.renderDraft('u1', created.output.draftId, { data: edited, title: 'Kumaş Durumu v2' }));
   assert.equal(result.output.edited, true);
   assert.equal(result.output.draftId, created.output.draftId);
   assert.notEqual(result.output.id, created.output.id, 'yeni dosya');
@@ -120,7 +120,7 @@ test('taslak: rapor düzenlemesi yeniden temizlenir; görseller taslakta saklan�
   const created = await service.create('u1', { message: 'rapor', output: { format: 'html' } });
   assert.equal(created.output.pending, 'images');
   assert.ok(created.output.draftId);
-  const record = service.completeImages('u1', created.output.pendingId, { 'KOL-1': PNG });
+  const record = (await service.completeImages('u1', created.output.pendingId, { 'KOL-1': PNG }));
   assert.equal(record.imagesUsed, 1);
   const draft = service.getDraft('u1', created.output.draftId);
   assert.equal(draft.images['KOL-1'].startsWith('data:image/png;base64,'), true, 'görsel taslakta');
@@ -128,7 +128,7 @@ test('taslak: rapor düzenlemesi yeniden temizlenir; görseller taslakta saklan�
   assert.deepEqual(draft.imageKeys, ['KOL-1']);
 
   const body = draft.data.body.replace('Kumaş Listesi', 'Kumaş Listesi (güncel)') + '<script>alert(1)</script><p onclick="x()">ek not</p>';
-  const result = service.renderDraft('u1', created.output.draftId, { data: { body, styles: draft.data.styles } });
+  const result = (await service.renderDraft('u1', created.output.draftId, { data: { body, styles: draft.data.styles } }));
   const html = fs.readFileSync(result.output.path, 'utf8');
   assert.match(html, /Kumaş Listesi \(güncel\)/);
   assert.doesNotMatch(html, /<script|onclick/);
@@ -137,7 +137,7 @@ test('taslak: rapor düzenlemesi yeniden temizlenir; görseller taslakta saklan�
 
   const pdf = createOutputService({ engine: fakeEngine([REPORT.replace(/<img[^>]*>/, '')]), storeOptions: { root: path.join(dir, 'ai-outputs') } });
   const first = await pdf.create('u1', { message: 'rapor', output: { format: 'pdf' } });
-  const pending = pdf.renderDraft('u1', first.output.draftId, { data: pdf.getDraft('u1', first.output.draftId).data, orientation: 'landscape' });
+  const pending = (await pdf.renderDraft('u1', first.output.draftId, { data: pdf.getDraft('u1', first.output.draftId).data, orientation: 'landscape' }));
   assert.equal(pending.output.pending, 'pdf');
   assert.equal(pending.output.landscape, true);
   const saved = pdf.completePdf('u1', pending.output.pendingId, Buffer.from('%PDF-1.7\n'.padEnd(120, 'x')));

@@ -1,0 +1,62 @@
+{
+  "synthetic": true,
+  "visualOnly": true,
+  "acceptanceEligible": false,
+  "sourceRevision": "06399a53ca504d313b8df66b50756d29d278c773",
+  "rawReport": "/tmp/phase-5-review2-async-oab-visual-1.json",
+  "fixture": {
+    "synthetic": true,
+    "rows": 20,
+    "seed": 7,
+    "hashes": {
+      "ASAS - Demo.xlsx": "66cee75ee64f4da4cf47168aa4a33d1d8fc62a696d4afdec83abf0b222ab2460",
+      "Antrepo - Demo.xlsx": "407c2cd6d597a8c58998e1b6815bfc3f5e47a9a108def294a3cf58f8728e7767",
+      "LFL - Demo.xlsx": "5129a4641962b0cd09a533f4fd90690abfbb2e4f6437cb66f8a51a40c1559389"
+    },
+    "purpose": "visual-only; not the 30k performance fixture",
+    "variant": "S6/S7 seasons accepted by the existing previous-season engine",
+    "transforms": {
+      "6W26": "S6",
+      "6S27": "S7"
+    },
+    "transformedCells": {
+      "ASAS - Demo.xlsx": 20,
+      "Antrepo - Demo.xlsx": 0,
+      "LFL - Demo.xlsx": 20
+    },
+    "originalFixture": "/tmp/buyerlog-startup-phase5-ring-smoke-1/source",
+    "originalHashes": {
+      "ASAS - Demo.xlsx": "a28cc52cf01c11fa600b46353fd6fc3cebedc1a835067308b8f0cfe195cd462e",
+      "Antrepo - Demo.xlsx": "c58cdd578dba5636438015cc24b67f7971e1ea780e6abe745f6705d53e84beb7",
+      "LFL - Demo.xlsx": "3eb718585d05e1fc35cc86d19a0d4147b58e7d4f6ce58456889085acc8b685e7"
+    }
+  },
+  "correctness": "passed",
+  "underlyingHarnessStatus": "passed",
+  "errors": [],
+  "serverExit": {
+    "code": 0,
+    "signal": null,
+    "forced": false
+  },
+  "captures": [
+    {
+      "file": "resources/app/public/release-notes/next-assets/phase5-oab-async-filters-tr-light.png",
+      "sha256": "3eb76aef7b1abbdcc88c8fdf02f9e00eda822985fb41cfd00acc8271dc30373b",
+      "lang": "tr",
+      "theme": "light",
+      "agentInspected": true
+    },
+    {
+      "file": "docs/performance-program/assets/phase5-oab-async-filters-en-dark.png",
+      "sha256": "9e8576b8d47a0983ef2f8a96726e3403d37b4420a03857ab0b64e69e1eba165f",
+      "lang": "en",
+      "theme": "dark",
+      "agentInspected": true
+    }
+  ],
+  "limitations": [
+    "Actual Chromium screenshots; no mock DOM or image editing. The 20-row fixture is only visual evidence, never the 30k performance baseline.",
+    "The unchanged pre-existing INTAKE network error is Turkish in the English screenshot; no new OAB text is monolingual. This known module-localization issue remains in the assigned later client work."
+  ]
+}

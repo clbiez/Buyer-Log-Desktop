@@ -198,19 +198,19 @@ test('düzenleyici: Excel biçimi bölümü ve önizleme ortak doğrulayıcıyı
   assert.match(perf, /lcwai-output-layout\.js\?rev=6[^]*lcwai-output-editor\.js\?rev=8/);
 });
 
-test('servis: düzenleyiciden gelen metin değerli biçim doğrulanır, taslakta saklanır ve dosyaya yazılır', () => {
+test('servis: düzenleyiciden gelen metin değerli biçim doğrulanır, taslakta saklanır ve dosyaya yazılır', async () => {
   const os = require('node:os');
   const { createOutputService } = require(path.join(OUT, 'output-service'));
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-xlsx-fmt-'));
   try {
     const service = createOutputService({ engine: { chat() { throw new Error('LCW AI çağrılmamalı'); } }, storeOptions: { root: path.join(dir, 'ai-outputs') } });
-    const first = service.createTable('u1', { data: { title: 'Demo', sheets: [{ name: 'S', columns: [{ header: 'Model', type: 'text' }, { header: 'Oran', type: 'percent' }], rows: [['A', 0.1], ['B', 0.3]] }] }, lang: 'tr' });
+    const first = await service.createTable('u1', { data: { title: 'Demo', sheets: [{ name: 'S', columns: [{ header: 'Model', type: 'text' }, { header: 'Oran', type: 'percent' }], rows: [['A', 0.1], ['B', 0.3]] }] }, lang: 'tr' });
     const draft = service.getDraft('u1', first.draftId);
     // Düzenleyici seçim ve metin kutularından dize yazar; sunucu sayıya çevirir.
     const data = JSON.parse(JSON.stringify(draft.data));
     data.sheets[0].style = { zebra: false, freezeColumns: 1 };
     Object.assign(data.sheets[0].columns[1], { total: 'avg', highlight: [{ op: '>=', value: '0,25', tone: 'warn' }] });
-    const rendered = service.renderDraft('u1', draft.id, { data });
+    const rendered = await service.renderDraft('u1', draft.id, { data });
     const saved = service.getDraft('u1', draft.id);
     assert.deepEqual(saved.data.sheets[0].columns[1], { header: 'Oran', type: 'percent', total: 'avg', highlight: [{ op: '>=', value: 0.25, tone: 'warn' }] });
     const sheet = unzip(fs.readFileSync(rendered.output.path))['xl/worksheets/sheet1.xml'];

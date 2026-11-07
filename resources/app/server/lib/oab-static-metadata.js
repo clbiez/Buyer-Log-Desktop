@@ -19,7 +19,21 @@ const path = require('path');
 const METADATA_FILE = path.join(__dirname, '..', 'resources', 'oab_filter_metadata.json');
 
 let cached = null;
-let cachedMtimeMs = -1;
+let cachedTag = '';
+let pending = null;
+let callSequence = 0;
+let admittedSequence = 0;
+const MAX_METADATA_BYTES = 16 * 1024 * 1024;
+
+function fileTag(stat) {
+  return [stat.dev, stat.ino, stat.size, stat.mtimeNs, stat.ctimeNs].join(':');
+}
+
+function changedError() {
+  return Object.assign(metadataError('OAB filtre metadata değişti; yeniden deneyin. / OAB filter metadata changed; please retry.', 'OAB_STATIC_METADATA_CHANGED'), {
+    statusCode: 409, errorEn: 'OAB filter metadata changed; please retry.',
+  });
+}
 
 function cleanRef(value) {
   return String(value == null ? '' : value).trim();
@@ -97,10 +111,11 @@ function buildIndexes(raw) {
 
 function load() {
   let stat;
-  try { stat = fs.statSync(METADATA_FILE); }
+  try { stat = fs.statSync(METADATA_FILE, { bigint: true }); }
   catch (err) { throw metadataError(`OAB filtre metadata dosyası bulunamadı: ${METADATA_FILE}`, 'OAB_STATIC_METADATA_MISSING'); }
 
-  if (cached && cachedMtimeMs === stat.mtimeMs) return cached;
+  const tag = fileTag(stat);
+  if (cached && cachedTag === tag) return cached;
 
   let raw;
   try { raw = JSON.parse(fs.readFileSync(METADATA_FILE, 'utf8')); }
@@ -108,12 +123,61 @@ function load() {
 
   assertMetadataShape(raw);
   cached = buildIndexes(raw);
-  cachedMtimeMs = stat.mtimeMs;
+  cachedTag = tag;
+  admittedSequence = ++callSequence;
+  pending = null;
   return cached;
 }
 
-function getInfo() {
-  const data = load();
+// Keep the warm canonical indexes in this process; only cold file I/O waits
+// asynchronously. A captured snapshot also prevents mixed-version responses.
+async function getSnapshotAsync() {
+  const sequence = ++callSequence;
+  let stat;
+  try { stat = await fs.promises.stat(METADATA_FILE, { bigint: true }); }
+  catch (_) {
+    throw metadataError('OAB filtre metadata dosyası bulunamadı. / OAB filter metadata file was not found.', 'OAB_STATIC_METADATA_MISSING');
+  }
+  const tag = fileTag(stat);
+  if (sequence < admittedSequence && tag !== (pending ? pending.tag : cachedTag)) throw changedError();
+  admittedSequence = Math.max(admittedSequence, sequence);
+  if (cached && cachedTag === tag) return cached;
+  if (pending && pending.tag === tag) return pending.promise;
+  const ticket = { tag, promise: null };
+  pending = ticket;
+  ticket.promise = (async () => {
+    if (stat.size > BigInt(MAX_METADATA_BYTES)) {
+      throw metadataError('OAB filtre metadata dosyası 16 MB sınırını aşıyor. / OAB filter metadata file exceeds the 16 MB limit.');
+    }
+    let text;
+    const handle = await fs.promises.open(METADATA_FILE, 'r');
+    try {
+      if (fileTag(await handle.stat({ bigint: true })) !== tag) throw changedError();
+      text = await handle.readFile('utf8');
+      if (Buffer.byteLength(text) > MAX_METADATA_BYTES || fileTag(await handle.stat({ bigint: true })) !== tag) throw changedError();
+    } finally { await handle.close(); }
+    // The parser and canonical index builder each get their own event-loop turn.
+    await new Promise(setImmediate);
+    if (pending !== ticket) throw changedError();
+    const raw = JSON.parse(text);
+    await new Promise(setImmediate);
+    if (pending !== ticket) throw changedError();
+    assertMetadataShape(raw);
+    const snapshot = buildIndexes(raw);
+    if (pending !== ticket || fileTag(await fs.promises.stat(METADATA_FILE, { bigint: true })) !== tag) throw changedError();
+    if (pending !== ticket) throw changedError();
+    cached = snapshot;
+    cachedTag = tag;
+    return snapshot;
+  })().catch(error => {
+    if (error.errorEn) throw error;
+    const errorEn = 'OAB filter metadata could not be loaded.';
+    throw Object.assign(metadataError(`OAB filtre metadata yüklenemedi. / ${errorEn}`, error.code && String(error.code).startsWith('OAB_') ? error.code : 'OAB_STATIC_METADATA_PARSE_FAILED'), { errorEn });
+  }).finally(() => { if (pending === ticket) pending = null; });
+  return ticket.promise;
+}
+
+function getInfo(data = load()) {
   return {
     schemaVersion: data.raw.schemaVersion || 1,
     reportRef: data.raw.reportRef,
@@ -123,16 +187,14 @@ function getInfo() {
   };
 }
 
-function getSeasons() {
-  const data = load();
+function getSeasons(data = load()) {
   return data.raw.seasons.map(season => ({
     SeasonRef: season.ref,
     Name: season.name || String(season.ref),
   }));
 }
 
-function getMag(seasonRef) {
-  const data = load();
+function getMag(seasonRef, data = load()) {
   const season = data.seasonByRef.get(cleanRef(seasonRef));
   if (!season) return [];
   return (season.mags || []).map(mag => ({
@@ -141,8 +203,7 @@ function getMag(seasonRef) {
   }));
 }
 
-function getBuyerGroups(merchSubGroupRef) {
-  const data = load();
+function getBuyerGroups(merchSubGroupRef, data = load()) {
   const mag = data.magByRef.get(cleanRef(merchSubGroupRef));
   if (!mag) return [];
   return mag.buyerGroups.map(buyer => ({
@@ -209,6 +270,7 @@ function validateSelectedRefs({ seasonRef, merchSubGroupRef, buyerGroupRef } = {
 
 module.exports = {
   METADATA_FILE,
+  getSnapshotAsync,
   getInfo,
   getSeasons,
   getMag,

@@ -34,7 +34,7 @@ test('v6.32 Backlog Excel files no longer embed image columns while LFL still ca
   assert.match(LFL,/window\.BLDetailImages\.addToExcel/);
 });
 
-test('v6.23 Backlog export options allow ASAS-IAS source columns and formulas',()=>{
+test('v6.23 Backlog export options allow ASAS-IAS source columns and formulas',async()=>{
   assert.doesNotMatch(INDEX,/id="backlogExportPreviewPanel"/);
   assert.match(INDEX,/id="backlogExcelOptionsBtn"/);
   assert.match(APP,/BACKLOG_EXCEL_COLUMNS_KEY/);
@@ -44,6 +44,9 @@ test('v6.23 Backlog export options allow ASAS-IAS source columns and formulas',(
   assert.match(APP,/backlogExportSourceCatalog\(\)\.forEach\(item=>\{/);
   assert.match(APP,/data-col-add>/);
   assert.match(APP,/data-col-selected/);
-  assert.match(SERVER,/req\.query\.sourceColumns/);
+  for(const [format,task]of [['json','backlog-export'],['xlsx','backlog-workbook']]){
+    const result=await require('./helpers/computed-backlog-request')({format,sourceColumns:'asas:Demo, antrepo:Other ,'});
+    assert.equal(result.task,task);assert.deepEqual(result.parts.sourceColumns,['asas:Demo','antrepo:Other']);
+  }
   assert.match(PARSE,/requestedColumns\.forEach/);
 });
