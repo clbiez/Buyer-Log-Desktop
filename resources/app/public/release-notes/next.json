@@ -1141,6 +1141,64 @@
           "en": "Isolated demo source with 20 orders, Turkish and light theme. The CP view and selection remain after the Orders response; revision and event scopes were verified separately."
         }
       }
+    },
+    {
+      "id": "pricing-client-calculation-cost",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Fiyat taleplerinde arama ve hesaplama hızlandı",
+        "en": "Faster quotation search and calculations"
+      },
+      "body": {
+        "tr": "Fiyat taleplerinde arama yalnız sol listeyi yeniler; açık fiyat hücresi ve detay ekranı korunur. Çok buyer içeren büyük fiyat çalışmalarında üretici karşılaştırmaları daha hızlı hazırlanır. Aynı demo veride sonuçlar önceki sürümle birebir eşittir.",
+        "en": "Quotation search refreshes only the left list, preserving the open price cell and detail view. Supplier comparisons are prepared faster in large pricing workspaces with multiple buyers. Results match the previous version exactly on the same demo data."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-client-cost.png",
+        "alt": {
+          "tr": "30 bin teklif satırında arama sonrası açık kalan fiyat hücresi ve üretici matrisi",
+          "en": "Price cell and supplier matrix preserved after searching 30,000 quotation lines"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole demo verisi: 200 talep, 30.000 teklif satırı; arama sırasında aynı fiyat input’u korunur.",
+          "en": "Actual Buyer Log with isolated demo data: 200 requests and 30,000 quotation lines; search preserves the same price input."
+        }
+      }
+    },
+    {
+      "id": "open-costing-line-calculation-cost",
+      "type": "improvement",
+      "module": {
+        "tr": "Ön Maliyet",
+        "en": "Preliminary Costing"
+      },
+      "title": {
+        "tr": "Maliyet satırı düzenlemeleri daha hızlı güncellenir",
+        "en": "Cost line edits update faster"
+      },
+      "body": {
+        "tr": "Bir maliyet kalemi değiştiğinde ilgili satır ve toplamlar daha hızlı güncellenir. Para birimi veya kur ayı değişiminde bütün satırlar yeniden hesaplanır; hesap sırası ve yuvarlama sonuçları korunur.",
+        "en": "Changing a cost item updates its line and totals faster. Changing the currency or FX month recalculates all lines; calculation order and rounding results are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "open-costing-client-cost.png",
+        "alt": {
+          "tr": "100 demo maliyet satırında değiştirilen tüketim ve güncel kumaş ara toplamı",
+          "en": "Edited usage and updated fabric subtotal on 100 demo cost lines"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, anonim demo maliyet: ilk satırın tüketimi 0,03 olarak güncellendi; kumaş ara toplamı 7,18 USD.",
+          "en": "Actual Buyer Log with anonymous demo costing: first-line usage updated to 0.03; fabric subtotal is USD 7.18."
+        }
+      }
     }
   ]
 }

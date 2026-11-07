@@ -129,9 +129,28 @@
     return wins;
   }
   function supplierScorecards(request){
-    const matrix=requestMatrix(request),observations=matrix.models.flatMap(model=>model.lines.filter(line=>!line.dropped&&price(line.price)!=null).map(line=>({identityKey:model.modelKey,manufacturer:line.manufacturer,value:price(line.price),approved:!!line.approved})));
-    const analyzed=new Map(analyze(observations).suppliers.map(s=>[s.key,s]));
-    return matrix.manufacturers.map(name=>{const s=analyzed.get(keyOf(name));return {key:keyOf(name),name,total:matrix.models.length,models:s?.models||0,wins:s?.modelWins||0,approved:s?.approved||0,modelIndex:s?.modelIndex??null};}).sort(compareSuppliers);
+    const matrix=requestMatrix(request),models=new Map(),suppliers=new Map(),entries=[];
+    // Karne yalnız kapsama, model kazanımı ve aynı-model endeksini ister.
+    // Genel analizdeki grup hücrelerini/geçmiş listelerini burada üretme.
+    matrix.models.forEach(model=>model.lines.forEach(line=>{
+      if(line.dropped)return;
+      const value=price(line.price);if(value==null)return;
+      const modelKey=clean(model.modelKey),key=keyOf(line.manufacturer),supplierKey=keyOf(clean(line.manufacturer)||'—');
+      if(!models.has(modelKey))models.set(modelKey,{values:[],suppliers:new Map()});
+      const group=models.get(modelKey);group.values.push(value);
+      if(!group.suppliers.has(key))group.suppliers.set(key,[]);group.suppliers.get(key).push(value);
+      if(!suppliers.has(supplierKey))suppliers.set(supplierKey,{models:new Set(),approved:0,wins:0,indexes:[]});
+      const supplier=suppliers.get(supplierKey);supplier.models.add(modelKey);if(line.approved)supplier.approved++;
+      entries.push({group,supplier,value});
+    }));
+    models.forEach((group,modelKey)=>{
+      group.avg=mean(group.values);
+      if(!modelKey)return;
+      const averages=[...group.suppliers].map(([key,values])=>({key,value:mean(values)})),best=Math.min(...averages.map(item=>item.value));
+      averages.forEach(item=>{if(Math.abs(item.value-best)<1e-9&&suppliers.has(item.key))suppliers.get(item.key).wins++;});
+    });
+    entries.forEach(({group,supplier,value})=>{if(group.suppliers.size>1)supplier.indexes.push(pct(value,group.avg));});
+    return matrix.manufacturers.map(name=>{const s=suppliers.get(keyOf(name));return {key:keyOf(name),name,total:matrix.models.length,models:s?.models.size||0,wins:s?.wins||0,approved:s?.approved||0,modelIndex:s?mean(s.indexes):null};}).sort(compareSuppliers);
   }
   function supplierLayout(cards,expanded=false,limit=8){
     const sorted=cards.slice().sort(compareSuppliers),visible=[],other=[];

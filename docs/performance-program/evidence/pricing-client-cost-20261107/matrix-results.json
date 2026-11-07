@@ -1,0 +1,50 @@
+[
+  {
+    "run": 1,
+    "mode": "baseline",
+    "preparationMs": 881.8152610000002,
+    "editMs": 547.9149659999994,
+    "firstSha": "2e487d8d806bcea8f15673cbd6e4b03cf59f1147380143b4885bc11d608c53b8",
+    "editSha": "6cf5c9f3c3e2a293dea9594da80920d4710cbd9d1f38bea6b89b3b549ffb660a"
+  },
+  {
+    "run": 1,
+    "mode": "after",
+    "preparationMs": 721.6809229999999,
+    "editMs": 284.18738200000007,
+    "firstSha": "2e487d8d806bcea8f15673cbd6e4b03cf59f1147380143b4885bc11d608c53b8",
+    "editSha": "6cf5c9f3c3e2a293dea9594da80920d4710cbd9d1f38bea6b89b3b549ffb660a"
+  },
+  {
+    "run": 2,
+    "mode": "after",
+    "preparationMs": 753.6564200000003,
+    "editMs": 290.0300500000003,
+    "firstSha": "2e487d8d806bcea8f15673cbd6e4b03cf59f1147380143b4885bc11d608c53b8",
+    "editSha": "6cf5c9f3c3e2a293dea9594da80920d4710cbd9d1f38bea6b89b3b549ffb660a"
+  },
+  {
+    "run": 2,
+    "mode": "baseline",
+    "preparationMs": 897.7412950000007,
+    "editMs": 574.8699059999999,
+    "firstSha": "2e487d8d806bcea8f15673cbd6e4b03cf59f1147380143b4885bc11d608c53b8",
+    "editSha": "6cf5c9f3c3e2a293dea9594da80920d4710cbd9d1f38bea6b89b3b549ffb660a"
+  },
+  {
+    "run": 3,
+    "mode": "baseline",
+    "preparationMs": 929.4361879999997,
+    "editMs": 542.8544299999994,
+    "firstSha": "2e487d8d806bcea8f15673cbd6e4b03cf59f1147380143b4885bc11d608c53b8",
+    "editSha": "6cf5c9f3c3e2a293dea9594da80920d4710cbd9d1f38bea6b89b3b549ffb660a"
+  },
+  {
+    "run": 3,
+    "mode": "after",
+    "preparationMs": 719.0105600000006,
+    "editMs": 272.6407339999987,
+    "firstSha": "2e487d8d806bcea8f15673cbd6e4b03cf59f1147380143b4885bc11d608c53b8",
+    "editSha": "6cf5c9f3c3e2a293dea9594da80920d4710cbd9d1f38bea6b89b3b549ffb660a"
+  }
+]

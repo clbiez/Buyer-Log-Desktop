@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "purpose": "CPR-05 exclusive rerun; other valid item measurements are preserved",
+  "status": "passed",
+  "startedAt": "2026-11-07T17:50:24.208Z",
+  "baselineCommit": "2083ffd73ba026067d92ccf257c4551afa2e5f00",
+  "measuredHead": "ba3e165a70af78416eebab8ed599df7f379e4f6b",
+  "node": "v24.19.0",
+  "platform": "linux",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "cpuQuota": "400000 100000",
+  "memoryLimitBytes": "17179869184",
+  "archiveSha256": "5913414603984b02b1c30b87f1f9231da3718ab797a007f4bd14067ec6cd5c70",
+  "sourceHashes": {
+    "ASAS - Demo.xlsx": "2ce763911d9e89525d9254415ca0270ba6241d065acbd9df75f4efc20bb5dc99",
+    "Antrepo - Demo.xlsx": "c4820f94b941c01368e34bafe696d81c4fd72ba20fb177dd5801e7b811493a0d",
+    "LFL - Demo.xlsx": "8f816621fb5fba8868dfa10378b00c646ac6404706b1d4412d63bde98b63019f"
+  },
+  "rowsJsonSha256": "6e2b8737a8a4168bfc1721e7a0df7cf9f7ff71d63906f6354feaeac80abe5bdc",
+  "code": {
+    "probeSha256": "d1330e4e288a6c227ef6a52f86b4ef48e1a5ce75cf50167cd314a4bccb961e37",
+    "baselineQuotationSha256": "3a1ed69efa1e78fd6e1e28c89bd7fb62bb8e4a060a9fc1813635b16f8ac47801",
+    "afterQuotationSha256": "559006387243704a69053eca68be1c18bd2433cb247712a136fcbec0ebf0904f",
+    "sharedValueReaderSha256": "817c0a44a03de12b475119e5f88bcd72b0798e79e301704767a9768b1dc2d464"
+  },
+  "expectedOutputSha256": "6af1ab72471d55b855e5f1e88f4075aa80121f820c479c8d5f3cd0539f8e8f68",
+  "previousEvidenceSha256": "051b48f1c72417fdfa336eb0b28d54b303e0783420bffbb030a109121a97a8e9",
+  "order": [
+    "A/B",
+    "B/A",
+    "A/B"
+  ],
+  "isolation": {
+    "strategy": "One child probe at a time; active Node/Chromium processes checked at boundaries and every second; zombies excluded.",
+    "observations": 198,
+    "unexpectedProcesses": []
+  },
+  "samples": [
+    {
+      "pair": 1,
+      "variant": "A",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "docs/performance-program/probes/pricing-client-cost-collection.cjs",
+        "baseline"
+      ],
+      "startedAt": "2026-11-07T17:50:24.238Z",
+      "finishedAt": "2026-11-07T17:51:29.685Z",
+      "exitCode": 0,
+      "mode": "baseline",
+      "item": "q05",
+      "ms": 65226.119959,
+      "sha": "6af1ab72471d55b855e5f1e88f4075aa80121f820c479c8d5f3cd0539f8e8f68",
+      "lines": 10000,
+      "rows": 30000
+    },
+    {
+      "pair": 1,
+      "variant": "B",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "docs/performance-program/probes/pricing-client-cost-collection.cjs",
+        "after"
+      ],
+      "startedAt": "2026-11-07T17:51:29.701Z",
+      "finishedAt": "2026-11-07T17:51:30.051Z",
+      "exitCode": 0,
+      "mode": "after",
+      "item": "q05",
+      "ms": 146.27965899999998,
+      "sha": "6af1ab72471d55b855e5f1e88f4075aa80121f820c479c8d5f3cd0539f8e8f68",
+      "lines": 10000,
+      "rows": 30000
+    },
+    {
+      "pair": 2,
+      "variant": "B",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "docs/performance-program/probes/pricing-client-cost-collection.cjs",
+        "after"
+      ],
+      "startedAt": "2026-11-07T17:51:30.062Z",
+      "finishedAt": "2026-11-07T17:51:30.393Z",
+      "exitCode": 0,
+      "mode": "after",
+      "item": "q05",
+      "ms": 134.471384,
+      "sha": "6af1ab72471d55b855e5f1e88f4075aa80121f820c479c8d5f3cd0539f8e8f68",
+      "lines": 10000,
+      "rows": 30000
+    },
+    {
+      "pair": 2,
+      "variant": "A",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "docs/performance-program/probes/pricing-client-cost-collection.cjs",
+        "baseline"
+      ],
+      "startedAt": "2026-11-07T17:51:30.406Z",
+      "finishedAt": "2026-11-07T17:52:31.398Z",
+      "exitCode": 0,
+      "mode": "baseline",
+      "item": "q05",
+      "ms": 60794.076942,
+      "sha": "6af1ab72471d55b855e5f1e88f4075aa80121f820c479c8d5f3cd0539f8e8f68",
+      "lines": 10000,
+      "rows": 30000
+    },
+    {
+      "pair": 3,
+      "variant": "A",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "docs/performance-program/probes/pricing-client-cost-collection.cjs",
+        "baseline"
+      ],
+      "startedAt": "2026-11-07T17:52:31.409Z",
+      "finishedAt": "2026-11-07T17:53:32.935Z",
+      "exitCode": 0,
+      "mode": "baseline",
+      "item": "q05",
+      "ms": 61348.452255000004,
+      "sha": "6af1ab72471d55b855e5f1e88f4075aa80121f820c479c8d5f3cd0539f8e8f68",
+      "lines": 10000,
+      "rows": 30000
+    },
+    {
+      "pair": 3,
+      "variant": "B",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node",
+        "docs/performance-program/probes/pricing-client-cost-collection.cjs",
+        "after"
+      ],
+      "startedAt": "2026-11-07T17:53:32.946Z",
+      "finishedAt": "2026-11-07T17:53:33.257Z",
+      "exitCode": 0,
+      "mode": "after",
+      "item": "q05",
+      "ms": 124.17286299999998,
+      "sha": "6af1ab72471d55b855e5f1e88f4075aa80121f820c479c8d5f3cd0539f8e8f68",
+      "lines": 10000,
+      "rows": 30000
+    }
+  ],
+  "medianMs": {
+    "baseline": 61348.452255000004,
+    "after": 134.471384
+  },
+  "reductionPct": 99.78080721019488,
+  "allOutputHashesEqual": true,
+  "finishedAt": "2026-11-07T17:53:33.263Z"
+}
