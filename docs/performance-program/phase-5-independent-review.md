@@ -146,3 +146,37 @@ the final scope passed 1,278 tests in 168 files. The user's one-independent-pass
 limit was respected: no second pass was requested, and the earlier independent
 review does not cover these final additions. New-version 30k performance
 acceptance remains required.
+
+## İkinci inceleme: Claude / Second review: Claude
+
+TR: Kullanıcının 07.11.2026 koordinasyon talimatı, ilk turun kapsamı dışında
+kalan diff için ayrı bir salt okunur Claude incelemesini açıkça istedi.
+Kullanıcı üzerinden alınan sonuç `7012eb3f..639372a4` aralığını kapsar
+(first-parent 10 commit ve `723d7c62` main merge). Claude kod değiştirmedi;
+şüpheli yolları ayrı worktree'de gerçek worker ile probladı. Bu bölüm,
+yukarıdaki tarihsel tek-tur açıklamalarının ardından verilen yeni yetkiyi
+kaydeder. Yeni özellik/optimizasyon kapsamı donduruldu; yalnız Faz 5 kapanışı
+ve inceleme bulguları üzerinde çalışılır. İnceleme sırasında rebase veya
+force-push yapılmadı. `639372a4` sonrası değişiklikler ayrıca delta'dır.
+
+EN: The user's 7 November 2026 coordination instruction explicitly requested
+a separate read-only Claude review of the diff beyond the first review.
+The findings supplied through the user cover `7012eb3f..639372a4`
+(10 first-parent commits and the `723d7c62` main merge). Claude changed no
+code and probed suspect paths with the actual worker in a separate worktree.
+This records the new authorization after the historical one-pass statements
+above. Feature/optimization scope is frozen; only Phase 5 closure and review
+findings remain. No rebase or force-push occurred during review. Changes after
+`639372a4` are a separate delta.
+
+| Bulgu / Finding | Durum / Status |
+| --- | --- |
+| B1 — Gerileme, aşama maliyetleri ve 200 ms kabul açığı / Regressions, stage costs and 200 ms acceptance | Açık. `639372a4` üzerinde yeni üç önce + üç sonra F0 ve üç ayrı açılış tamamlandı; altı F0 ve üç açılış doğruluk kontrolleri geçti, üç Global Flow penceresi performans kabulünü geçemedi. Aşama analizi sürüyor; refresh ödünleşimi kullanıcı kararı olmadan kabul edilmez. / Open. A new matched three-before/three-after F0 cohort and three openings completed at `639372a4`. All correctness checks passed; all three Global Flow windows failed performance acceptance. Stage analysis is pending; a refresh tradeoff requires the user's decision. |
+| B2 — LFL sürüm kuralının kopyalanması / Duplicate LFL source-version rule | Düzeltildi. MAIN hydration ve native worker aynı `collection-lfl-source-version.js` yardımcısını kullanır. `lflLoadedAt:null` ve model snapshot'ı mevcutken eski `available:true/version=loadedAt` davranışı korunur; explicit-LFL ve savedAt geri dönüşleri de gerçek worker ile eşdeğerdir. Eski kodda native eşdeğerlik testi geçti, ortak yardımcı sözleşmesi RED oldu; çıkarımdan sonra ikisi de GREEN. / Fixed. MAIN hydration and the native worker share one helper. The pre-existing available/version semantics, including an empty LFL with a model snapshot, explicit LFL time and savedAt fallback, remain equal. Native equality passed before extraction; the shared-helper contract failed RED, then both passed GREEN. |
+| B3 — Paket dışı OAB metadata taşımasının sıcak/soğuk maliyeti / Hot/cold cost of out-of-package OAB metadata offload | Açık. Gerçek istek p50/p95 ölçümü ve kapsam kararı bekleniyor. PR açıklamasında paket dışı olarak listelendi. INT-12 tamamlanmış sayılmıyor. / Open. Actual request p50/p95 measurements and scope decision are pending. The PR lists this separately and does not claim INT-12 completion. |
+
+TR/EN: B2 kanıtı / B2 evidence: `/tmp/phase-5-review2-b2-red.txt`,
+`/tmp/phase-5-review2-b2-green.txt`; yeni native test /
+new native test: `compute-collection-lfl-source-version.test.js`.
+Merge beklemede; TEST ve STABLE yayımlanmadı. /
+Merge remains blocked; neither TEST nor STABLE was published.

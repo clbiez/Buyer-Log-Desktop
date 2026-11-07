@@ -352,6 +352,7 @@ const { runProjectionWorker } = require('./lib/projection-worker-client');
 const { getComputeService:serverCompute, closeComputeService } = require('./lib/compute-runtime');
 const { createComputeReadGuard } = require('./lib/compute-read-guard');
 const { createComputeReadService } = require('./lib/compute-read-service');
+const { collectionLflSourceVersion } = require('./lib/collection-lfl-source-version');
 const { sendComputedResponse } = require('./lib/compute-response');
 const { projectionRuntimeMeta } = require('./lib/projection-runtime-meta');
 const publishedComputeSources = new Map();
@@ -6808,7 +6809,7 @@ function hydrateSnapshotPayload(value, snapshot, options = {}) {
     fabricHeaderInfo: snapshot.fabricHeaderInfo || null,
     lflRows: hydratedLflRows,
     lflMeta: hydratedLflMeta,
-    lflLoadedAt: snapshot.lflLoadedAt || snapshot.loadedAt || snapshot.savedAt || new Date().toISOString(),
+    lflLoadedAt: collectionLflSourceVersion(snapshot) || new Date().toISOString(),
     // Buyer açılışında Moderatör model snapshot'ı yalnız ham kaynak verisi için
     // kullanılabilir. Kullanıcıya özel CP-update override'ları başka profilden
     // kopyalanmaz.

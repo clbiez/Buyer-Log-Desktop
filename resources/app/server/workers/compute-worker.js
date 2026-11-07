@@ -5,6 +5,7 @@ const v8=require('node:v8');
 const dates=require('../../public/date-dimension'),{createComputeSourceCache}=require('../lib/compute-source-cache');
 const access=require('../lib/compute-access'),catalog=require('../lib/collection-catalog');
 const {projectionRuntimeMeta}=require('../lib/projection-runtime-meta');
+const {collectionLflSourceVersion}=require('../lib/collection-lfl-source-version');
 globalThis.BLCanonicalFields=require('../lib/canonical-fields');
 const gzip=promisify(zlib.gzip),MiB=1024*1024;
 const sourceFingerprints=new WeakMap();
@@ -84,7 +85,7 @@ async function execute(task,data,transfer){
     const lease=await sourceCache.acquire(data.source,data.ownerId);
     try{
       await assertCollectionLflDescriptor(data.source);
-      const source=lease.snapshot,version=source&&(source.lflLoadedAt||source.loadedAt||source.savedAt)||null;
+      const source=lease.snapshot,version=collectionLflSourceVersion(source);
       if(task==='collection-lfl-source-info')return {available:Boolean(version),version};
       const references=require('../../public/collection-lfl-engine').buildReferences(access.filterRows(data.params.access,source?.lflRows||[]));
       const result=await compress({references},'api',transfer);await assertCollectionLflDescriptor(data.source);return result;
