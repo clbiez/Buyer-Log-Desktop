@@ -43,7 +43,7 @@ RED: `red/result.json`, `red/browser.log`, `red/rate-close.png`,
 üç dönem iptalinde seçim/fallback ve kaldırılan seçeneğin yokluğu da bozuldu.
 Tutar, liste ve diğer satır kimliği zaten korunuyordu. Tarayıcı komutu exit 1
 verdi. Sonrasında eklenen ilk 12 Node regression kontrolü de aynı iki nedenden
-RED verdi (`red/unit.log`); bu aşamaların hiçbirinde ürün düzeltmesi yoktu.
+RED verdi (`red/unit.log.gz`); bu aşamaların hiçbirinde ürün düzeltmesi yoktu.
 
 ## En küçük düzeltme ve GREEN
 
