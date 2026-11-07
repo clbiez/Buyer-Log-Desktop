@@ -86,3 +86,26 @@ renderer timer gaps while increasing total completion; it is not input latency o
 general analysis speedup. Clone/transfer limits remain. ANA-07/11 are separate
 operation gains. This current functional smoke is not a new A/B performance run.
 **Final-head CI and merge approval pending; no TEST or STABLE.**
+
+
+## #915 sonrası son kabul / Final acceptance after #915
+
+8 Kasım 2026: Main `d77f83e5` (#915, kullanıcı onayıyla merge edildi)
+normal merge `fe490f5e` ile alındı. Test edilen uygulama ağacı
+`20cc30a171db9121f4809f6997312bc71d02e765`. Standart `npm test`, tek çağrıda bütün
+10 batch, varsayılan concurrency=4, izole TMPDIR ve NODE_OPTIONS/preload
+olmadan: **1296 dosya / 8902 PASS / 0 FAIL / 65 mevcut SKIP /
+0 CANCEL**. İlgili paket **227 PASS**, i18n **0/0**, sürüm notları
+**46 PASS**. Tarihsel sonuçlar korunur; bu kayıt yeni performans
+kazancı iddiası değildir. Son commit'in gerçek GitHub kontrolleri ayrı kapıdır.
+
+Main `d77f83e5` was imported by normal merge without rewriting the frozen review
+history. The unchanged standard runner passed all ten batches in one invocation:
+**1296 files / 8902 PASS / 0 FAIL / 65 existing SKIP / 0 CANCEL**,
+default concurrency4, private TMPDIR, no NODE_OPTIONS/preload. Related package
+227 PASS; i18n0/0; 46 visual notes valid. Own production changes
+and their reviewed behavior were preserved; the new runtime delta imports the
+separately reviewed and merged current-authority fix. Evidence-only additions
+after these checks do not change source, tests, validators or CI. Historical
+benchmark limitations remain. Actual final-head CI and merge approval are still
+separate. **No TEST/STABLE publication.**
