@@ -7501,6 +7501,21 @@ function throwIfRefreshSignalAborted(signal) {
   throw error;
 }
 
+// Kaydedilmiş bir runtime kopyasını aktif runtime'a uygular. saveRuntimeModelSnapshot
+// compute kaynağını yalnız aktif runtime için yayımlar; kopyanın hazırladığı
+// (sayılamaz) descriptor burada aktif runtime'a bağlanıp yayımlanır. Aksi halde
+// replika bütçede kalır ve worker eski kaynak neslini okur.
+async function adoptSavedRuntime(id, runtime, next) {
+  Object.assign(runtime, next);
+  const descriptor = next && next._computeSourceDescriptor;
+  if (descriptor && cacheForUser(id) === runtime) {
+    Object.defineProperty(runtime, '_computeSourceDescriptor', { value:descriptor, enumerable:false, configurable:true });
+    await serverCompute().publishSource(descriptor);
+    rememberComputeSource(id, runtime, descriptor);
+  }
+  return runtime;
+}
+
 async function publishRefreshedRuntime(id, next) {
   const snapshotMetrics = await saveRuntimeModelSnapshot(id, next);
   replaceUserCache(id, next);
@@ -12098,6 +12113,7 @@ require('./routes/model-connection-routes')(app, {
 });
 // ---- LFL verisi route'ları → server/routes/lfl-routes.js ----
 require('./routes/lfl-routes')(app, {
+  adoptSavedRuntime,
   collectionLflCache: require('./lib/collection-lfl-reference').createReferenceCache({directory:path.join(LOCAL_DATA_ROOT,'collection-lfl-reference')}),
   computedCollectionReferenceSource:require('./lib/compute-collection-lfl-reference').createComputedCollectionReferenceSource({
     compute:serverCompute,guard:computeReadGuard,userAccess,calendar:()=>require('./lib/merch-calendar-store').publicProjection()}),

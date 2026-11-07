@@ -25,6 +25,7 @@ module.exports = function registerLflRoutes(app, deps) {
     withFabricDimensions,
     collectionLflCache,
     computedCollectionReferenceSource,
+    adoptSavedRuntime,
   } = deps;
 
 async function collectionReferenceSource(req,res,fallback=null,summaryOnly=false,assertResponse=()=>{}){
@@ -157,7 +158,7 @@ app.post('/api/lfl/upload', userAccess.requireArea('lfl'), async (req, res) => {
       sources:{...(runtime.sources||{}),lfl:name||'Yüklenen dosya'}};
     next.lflMeta=withFabricDimensions(parsed.meta,next.lflRows);
     await saveRuntimeModelSnapshot(id,next);
-    Object.assign(runtime,next);
+    await adoptSavedRuntime(id,runtime,next);
     userAccess.appendAudit(req.currentUser,'LFL_UPLOAD',name||'uploaded',{rowCount:Number(parsed.meta&&parsed.meta.rowCount)||0});
     const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
     const imageAwareRows=attachModelImageIdentities(scopedRows,modelImageIdentityOrders(runtime));
