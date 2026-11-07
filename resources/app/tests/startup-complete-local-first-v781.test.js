@@ -20,7 +20,7 @@ test('startup kritik yolu sunucu dinlemeden önce ağdaki KUR dosyasına erişme
   const beforeListen = SERVER.slice(0, SERVER.indexOf('const httpServer = app.listen'));
   assert.doesNotMatch(beforeListen, /const startupFxSync\s*=\s*syncFxFromKurWorkbook\(/);
   assert.match(WORKER, /task === 'loadFxWorkbookFromDirectories'/);
-  assert.match(SERVER, /runExcelTask\('loadFxWorkbookFromDirectories'/);
+  assert.match(SERVER, /serverCompute\(\)\.runExcelUtility\('loadFxWorkbookFromDirectories'/);
 });
 
 test('UI yerel state ile hazır olur; yardımcı yükler ve sync sonradan başlar', () => {

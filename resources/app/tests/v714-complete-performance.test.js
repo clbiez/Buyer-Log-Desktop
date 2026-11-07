@@ -69,7 +69,8 @@ test('v7.14 refresh sharing, row/image cache patching and bounded facet cache ar
   assert.match(SERVER,/sameProjectionSourceRows/);
   assert.match(SERVER,/rewriteProjectionCacheForRowPatches/);
   assert.match(SERVER,/rewriteProjectionCacheForImageItems/);
-  assert.match(SERVER,/BL_PROJECTION_WORKER_MIN_ROWS/);
+  assert.match(SERVER,/return buildAndWriteComputedPageProjectionCache\(currentUser,active,ctx,wanted,reused,extra,assertCurrent\)/);
+  assert.match(SERVER,/serverCompute\(\)\.run\('projections',descriptor,params/);
   assert.match(APP,/FACET_CACHE_MAX_ENTRIES=96/);
   assert.match(APP,/facetFilterSignature/);
   assert.match(APP,/invalidateCoreFacetCaches/);

@@ -207,7 +207,8 @@ test('istemci: yenileme sonrası açık olmayan sayfalar çizilmeden arka planda
   // Backlog ön yanıtı yalnız aynı sorgu anahtarı ve kısa süre için kullanılır.
   const current = APP.slice(APP.indexOf('function fetchCurrentBacklog(){'), APP.indexOf('function fetchCurrentBacklog(){') + 600);
   assert.match(current, /ready\.key===backlogQueryString\(params\)&&Date\.now\(\)-ready\.at<BACKLOG_PREFETCH_MAX_AGE_MS/);
-  assert.match(APP, /async function fetchBacklog\(params\)\{\s*backlogPrefetch=null;/);
+  assert.match(APP, /async function fetchBacklogData\(params\)\{\s*backlogPrefetch=null;/);
+  assert.match(require('./helpers/app-main-functions').extractFunction(APP,'fetchBacklog'),/return fetchBacklogData\(params\)\.finally/);
   // Fiyat & Üretici: kök yokken DOM çizilmez, ilk girişte hazır küme kullanılır.
   assert.match(ANALYTICS, /async function prepareInBackground\(\)\{\s*if\(root&&root\.dataset\.initialized\)\{invalidate\(\);return;\}/);
   assert.match(ANALYTICS, /if\(prefetched&&!loading\)\{prefetched=false;render\(\);return;\}/);

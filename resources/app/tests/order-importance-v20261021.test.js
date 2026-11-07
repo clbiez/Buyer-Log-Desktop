@@ -112,7 +112,7 @@ test('Legacy Backlog: üretici yükleme teyidi sütunu kalktı, yerine aynı kon
   // Hücre serbest metin kabul etmez: tarayıcı ve sunucu Excel'i liste doğrulaması yazar.
   assert.match(read('public/app-main.js'), /const importanceIndex=list\.indexOf\(BLOrderImportance\.BACKLOG_HEADER\);[\s\S]{0,400}BLOrderImportanceUI\.excelValues\(\)[\s\S]{0,40}allowBlank:false/);
   assert.match(read('server/workers/excel-worker.js'), /const importanceIndex = headers\.indexOf\('ÖNEM ETİKETİ\\n\(IMPORTANCE\)'\);[\s\S]{0,400}payload\.importanceValues/);
-  assert.match(read('server/server.js'), /importanceValues:BLOrderImportance\.excelValues\(overrides\.importanceSettings\)/);
+  assert.match(read('server/workers/compute-worker.js'), /importanceValues:require\('\.\.\/\.\.\/public\/order-importance'\)\.excelValues\(params\.overrides\?\.importanceSettings\)/);
 });
 
 test('kalıcılık: satır anahtarıyla yazılır, bilinmeyen etiket reddedilir, silinen etiketin ataması düşer', () => {

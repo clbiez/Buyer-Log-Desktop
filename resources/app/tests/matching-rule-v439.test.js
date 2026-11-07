@@ -166,16 +166,20 @@ test('v4.39 seçilen model sütununu otomatik sorguya iç eşleştirme alanı ol
   assert.strictEqual(built.headerMap['Orders[Manual Key]'], '__MATCH_manual');
 });
 
-test('v4.39 Backlog Excel aktif Backlog kapsamı ve filtrelerini kullanır', () => {
+test('v4.39 Backlog Excel aktif Backlog kapsamı ve filtrelerini kullanır', async () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
   const start = source.indexOf("app.get('/api/backlog-export'");
   const end = source.indexOf("app.post('/api/backlog-detail'", start);
   const route = source.slice(start, end);
-  assert.match(route, /const prepared=backlogQueryForRequest\(req,filterOpts\)/);
-  const helper=source.slice(source.indexOf('function backlogQueryForRequest('),start);
-  assert.match(helper, /userAccess\.filterRowsByScope\(req.currentUser,filterRowsByEffectiveHorizon\(req.currentUser,'backlog',ordersForTarget\(active,'backlog',overrides\)\)\)/);
-  assert.match(helper, /antrepoForTarget\(active,'backlog'\)/);
-  assert.match(route, /buildBacklogTemplateRows\(backlogOrders,backlogAntrepo,overrides,filterOpts,sourceColumns,/);
+  const analysisFilters=JSON.stringify([{id:'cp:Sezon',source:'cp',header:'Sezon',rowKey:'Sezon',values:['S7']}]);
+  const request=await require('./helpers/computed-backlog-request')({buyerGrup:'G',retailFrom:'2026-03-01',dimFilters:JSON.stringify({buyer:['Buyer A']}),analysisFilters,sourceColumns:'asas:Team'});
+  assert.equal(request.task,'backlog-workbook');
+  assert.equal(request.parts.options.buyerGrup,'G');assert.equal(request.parts.options.retailFrom,'2026-03-01');
+  assert.deepEqual(request.parts.options.dimFilters,{buyer:['Buyer A']});assert.equal(request.parts.options.analysisFilters,analysisFilters);
+  assert.deepEqual(request.parts.sourceColumns,['asas:Team']);
+  // Target/Horizon/Buyer/IAS behavior and XLSX contents run in phase5-regression-behavior.
+  const tasks=fs.readFileSync(path.join(__dirname,'../server/lib/compute-tasks.js'),'utf8');
+  assert.match(tasks,/scopedOrders\(source,target,data\)/);assert.match(tasks,/antrepo=antrepoFor\(source,target\)/);
   assert.doesNotMatch(route, /buildBacklogTemplateRows\(active\.asasOrders/);
 });
 

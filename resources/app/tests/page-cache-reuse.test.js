@@ -7,9 +7,15 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const read=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
 const SERVER=read('server/server.js'),APP=read('public/app-main.js'),LAYOUT=read('public/layout-control.js'),INBOX=read('public/exception-inbox-view.js');
 
-test('Backlog endpoints hydrate the model snapshot before falling back to an Excel read', () => {
+test('Backlog endpoints hydrate the model snapshot before falling back to an Excel read', async () => {
   assert.doesNotMatch(SERVER,/if\(!runtime\.asasOrders\) await loadFromDisk\(id,false\);/);
-  assert.equal((SERVER.match(/if\(!runtime\.asasOrders\) await ensureBacklogRuntime\(id\);/g)||[]).length,2);
+  const capture=require('./helpers/computed-backlog-request');
+  for(const [route,task] of [['/api/backlog','backlog-grouped'],['/api/backlog-source-columns','backlog-source-columns'],['/api/backlog-export','backlog-export'],['/api/backlog-filter-values','backlog-filter-values']]){
+    const request=await capture({format:'json'},route);assert.equal(request.task,task,'each production route awaits source preparation before reading');
+  }
+  const prepare=require('./helpers/app-main-functions').extractFunction(SERVER,'prepareComputeBacklog');
+  assert.match(prepare,/computeReads\.run\(req,'backlog','source-info'/);
+  assert.match(prepare,/if\(!info\.loadedAt\)\{[\s\S]*await ensureBacklogRuntime\(id\)/);
   const helper=SERVER.slice(SERVER.indexOf('async function ensureBacklogRuntime(id){'),SERVER.indexOf('// KUR.xlsx seçili kaynak klasöründen'));
   assert.match(helper,/const runtime=await ensureDataLoaded\(id\);\s*if\(runtime&&runtime\.loadedAt&&Array\.isArray\(runtime\.asasOrders\)\)return runtime;\s*return loadFromDisk\(id,false\);/);
 });

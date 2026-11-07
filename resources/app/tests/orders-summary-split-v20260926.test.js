@@ -59,7 +59,9 @@ test('sunucu özeti ayrı modülden, yoksa eski gömülü alandan okur; ikisi de
   assert.equal(orderSummaryFromCache({ orders: { data: { rows: [] } } }), null);
   assert.match(SERVER, /orderSummary = orderSummaryFromCache\(cached\.byModule\)/);
   assert.match(SERVER, /if \(orderSummaryFromCache\(byModule\) === null\) return \{ ctx, hit: false, manifest \};/);
-  assert.match(SERVER, /'order-summary': \{ rows: orderSummaryRows \}/);
+  const tasks=fs.readFileSync(path.join(__dirname,'../server/lib/compute-tasks.js'),'utf8');
+  assert.match(tasks, /out\['order-summary'\]=\{rows\}/);
   assert.match(SERVER, /projections\['order-summary'\] = \{ rows: orderSummary \|\| \[\] \};/);
-  assert.match(SERVER, /storeOnDemandProjection\(req\.currentUser,ctx,'order-summary',\{rows:orderSummary\},active\)/);
+  assert.match(SERVER, /legacy&&module==='orders'\?\['orders','order-summary','collection-catalog'\]/);
+  assert.match(SERVER, /pageProjectionCache\.writeCompressedGeneration\(ctx\.id,\{contextHash:ctx\.contextHash/);
 });

@@ -15081,10 +15081,10 @@ async function waitForRefreshJob(expectedJob=null){
     if(Array.isArray(data.orders)){
       state.orders = { fname: `Sunucu: ${sourceName}`, rows: data.orders.map(row=>({...row,_canEdit:false})) };
       state.ordersLogisticExpanded.clear();
-      invalidateUnifiedPriorityDecisions('server-orders-hydrated');
+      invalidateUnifiedPriorityDecisions('server-orders-hydrated',['orders']);
     }else if((force||leanReload)&&data.orderSummaryDeferred){
       if(!keepOrdersForPartialRefresh)state.orders=null;state.orderSummary=null;
-      invalidateUnifiedPriorityDecisions('server-orders-deferred');
+      invalidateUnifiedPriorityDecisions('server-orders-deferred',['orders']);
     }
     if(Array.isArray(data.orderSummary)){
       state.orderSummary = { fname: `Sunucu: ${sourceName}`, rows: data.orderSummary };

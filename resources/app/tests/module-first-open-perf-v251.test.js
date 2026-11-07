@@ -39,8 +39,8 @@ test('LFL and Backlog engines memoise their pure text keys with a bounded cache'
 
 test('Backlog panels reuse rows of an unchanged server revision instead of re-normalising and re-analysing', () => {
   const server = read('server/server.js');
-  assert.match(server, /const rowsRevision=crypto\.createHash\('sha1'\)\.update\(BACKLOG_ROWS_PROCESS_NONCE\)\.update\(detailRowsKey\)/);
-  assert.match(server, /sourceColumns, sourceCatalog, rowsRevision, merchCalendar:/);
+  assert.match(server, /data\.rowsRevision=stableHashValue\(\[data\.sourceRevision,parts\]\)/);
+  assert.match(read('server/lib/compute-tasks.js'), /rowsRevision:data\.rowsRevision,merchCalendar:data\.calendar/);
   const overview = read('public/backlog-overview.js');
   assert.match(overview, /previous=rowsRevisions\.get\(sig\)/);
   assert.match(overview, /if\(revision&&previous\?\.revision===revision\)rows=previous.rows;/);
