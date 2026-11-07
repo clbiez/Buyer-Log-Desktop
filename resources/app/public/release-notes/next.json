@@ -1112,6 +1112,35 @@
           "en": "Actual post-change app in Turkish and light theme. History content is preserved; file and revision checks verify the absence of writes."
         }
       }
+    },
+    {
+      "id": "startup-feature-assets",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış · İsteğe bağlı modüller",
+        "en": "Startup · Optional modules"
+      },
+      "title": {
+        "tr": "İsteğe bağlı modüller açılıştan ayrıldı",
+        "en": "Optional modules load on demand"
+      },
+      "body": {
+        "tr": "Backlog ek raporları, Excel içe aktarma sihirbazı ve Koleksiyon spreadsheet kodu ilgili özellik açıldığında yüklenir. LFL, Üreticiler, Lisans Kartları, Pricing Desk, Veri Yönetimi ve diğer isteğe bağlı ekranların stilleri ilk açılışa ertelenir. Ekran, stilleri ve kodu hazır olduğunda gösterilir; ortak stillerin önceliği korunur. Rehber ve açılış kartlarının verisi HTML ayrıştırmasını bekletmeden yüklenir.",
+        "en": "Additional Backlog reports, the Excel import wizard and Collection spreadsheet code load when the feature is opened. Styles for LFL, Manufacturers, License Cards, Pricing Desk, Data Management and other optional screens are deferred until first use. Screens appear when their styles and code are ready, preserving the priority of shared styles. Guide and startup-card data load without blocking HTML parsing."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-feature-assets.png",
+        "alt": {
+          "tr": "İlk açılışında kodu ve stili yüklenen Koleksiyon spreadsheet ekranı",
+          "en": "Collection spreadsheet after its code and styles load on first opening"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, izole 30 bin satırlık sentetik kaynak: Koleksiyon açıldı, örnek model hücresi seçildi ve klavye gezintisi doğrulandı.",
+          "en": "Actual Buyer Log with an isolated synthetic 30,000-row source: Collection opened, a demo model cell was selected and keyboard navigation was verified."
+        }
+      }
     }
   ]
 }
