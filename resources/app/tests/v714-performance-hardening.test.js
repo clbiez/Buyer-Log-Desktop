@@ -44,7 +44,7 @@ test('v7.14 duplicate generation work is single-flight per user/context/module s
 test('v7.14 startup keeps projection parsing out of the critical path and lazy-loads active data', () => {
   assert.match(SERVER, /if \(startup\) return \{ ctx, hit: false, manifest \}/);
   assert.match(SERVER, /const wanted = \['cp','overview','orders','collection-catalog'\]/);
-  assert.match(SERVER, /readProjectionCompressed\(ctx\.id, module, ctx\.contextHash\)/);
+  assert.match(SERVER, /readProjectionCompressed\(ctx\.id,\s*module,\s*ctx\.contextHash\)/);
   assert.match(SERVER, /Content-Encoding', 'gzip'/);
   assert.match(SERVER, /pageProjectionBuildInFlight/);
   assert.match(APP, /function ensureCpLoaded/);
