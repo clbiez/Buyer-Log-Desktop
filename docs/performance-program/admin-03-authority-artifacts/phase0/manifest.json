@@ -1,0 +1,67 @@
+[
+  {
+    "file": "after-1.tar.gz",
+    "bytes": 185691,
+    "sha256": "ee88d6e57f6ba4fc5ce5a45a619e58427383aa4868bef8a22c02f229c063bc31"
+  },
+  {
+    "file": "after-2.tar.gz",
+    "bytes": 186996,
+    "sha256": "67dc86814a7c6b4fd9c88d5f73636f6242fead5b9e7a8de0c0a36194899bfca1"
+  },
+  {
+    "file": "after-3.tar.gz",
+    "bytes": 248130,
+    "sha256": "e577581d853060aae8e775c2e1815557cb85a1bb252bdf55dd8deaad2d43783d"
+  },
+  {
+    "file": "before-1.tar.gz",
+    "bytes": 192675,
+    "sha256": "0604050a4cbd85f7d578b345662e3e8c112a2ef1108b1913b2d14c789d50c028"
+  },
+  {
+    "file": "before-2.tar.gz",
+    "bytes": 187451,
+    "sha256": "03d49d1c119e772f7c7b546e4afcc5c445218f5e4d5abb4588c89b4fa9e54dee"
+  },
+  {
+    "file": "before-3.tar.gz",
+    "bytes": 187172,
+    "sha256": "886c5ae7956655d0eb0c2b52a7b5d843ed9e5b636ec42ee4df2a61a2ccd2417e"
+  },
+  {
+    "file": "cache-row-hashes.cjs",
+    "bytes": 695,
+    "sha256": "15160564acc6344b31fa475fbc934e9e774efd023302ae0a535d69fffc2c979b"
+  },
+  {
+    "file": "resource-probe.cjs",
+    "bytes": 3417,
+    "sha256": "65c001557aa468bf9f8d52b3668b5fa2e1c70ac8d5cbadcb40229d3823b21a2d"
+  },
+  {
+    "file": "series.json",
+    "bytes": 13614,
+    "sha256": "7428b99c2eb33d43ca887af94380e20e0a4e0b9aa31902e02c79858593b1fb08"
+  },
+  {
+    "file": "series.log.txt",
+    "bytes": 537,
+    "sha256": "93015bfc9523e31a497181c18a63ada55edab24d0df7957e6b1c88160ecbdc62"
+  },
+  {
+    "file": "series.py",
+    "bytes": 4593,
+    "sha256": "c4056a71b571c6eeae9d1f37a9fc3896c6583f0015f732809e80b5c8362d3e7d"
+  },
+  {
+    "file": "summarize.py",
+    "bytes": 4086,
+    "sha256": "b1835e8190cc9ed3349bf1e2dd8658ee80d2b4723011d910c3fb5147f1898e79"
+  },
+  {
+    "file": "summary.json",
+    "bytes": 33135,
+    "sha256": "588525ca0dab955392da5919a4e019373f9babecb310292ecd2c6312b712e594"
+  }
+]
