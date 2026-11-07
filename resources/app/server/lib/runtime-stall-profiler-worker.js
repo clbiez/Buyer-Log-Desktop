@@ -41,6 +41,10 @@ function createProfilerController({session,dir=null,keep=3,samplingUs=5000}={}){
       }
     }else if(operation==='close'){
       try{await stop();await post('Profiler.disable');}catch(_){}finally{running=false;session.disconnect();}
+      // Ana thread oturumu kapanır kapanmaz worker'ı bitirmek yük altında
+      // süreci SIGABRT ile düşürüyordu (80 denemede 7). Kısa bekleme ana
+      // thread'deki inspector temizliğinin bitmesine izin verir (160/160).
+      await new Promise(resolve=>setTimeout(resolve,50));
     }else throw Error('Invalid profiler operation');
     return {running,logs};
   }
