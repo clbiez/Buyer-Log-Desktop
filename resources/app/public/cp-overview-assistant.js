@@ -345,6 +345,7 @@
   }
 
   let decisionContextRevision = 0;
+  let answerNotifyBatchDepth = 0, answerNotifyPending = false;
   function notifyDecisionContextChanged(reason) {
     decisionContextRevision += 1;
     try {
@@ -386,8 +387,27 @@
       saved = false;
       if (typeof window.showToast === 'function') window.showToast(L('Checklist yerel kaydı başarısız; sunucu kaydı bekleniyor: ', 'Checklist local save failed; waiting for server save: ') + error.message);
     }
-    if (!options || options.silent !== true) notifyDecisionContextChanged('checklist-answer');
+    if (!options || options.silent !== true) {
+      if (answerNotifyBatchDepth) answerNotifyPending = true;
+      else notifyDecisionContextChanged('checklist-answer');
+    }
     return saved;
+  }
+  /* Toplu checklist güncellemesi: her cevap yerel depoya yine hemen yazılır ve
+     dönüş değeri korunur; yalnız karar bağlamı bildirimi sonda BİR KEZ yayılır.
+     Bildirim başına bütün CP kararları ve kontrol listesi sütunları yeniden
+     hesaplanıyordu (25 bin satırda cevap başına ~7,6 sn). Hata ortada kesse de
+     o ana kadar uygulanan cevaplar için bildirim yayılır. */
+  function batchChecklistAnswers(fn) {
+    answerNotifyBatchDepth += 1;
+    try { return fn(); }
+    finally {
+      answerNotifyBatchDepth -= 1;
+      if (!answerNotifyBatchDepth && answerNotifyPending) {
+        answerNotifyPending = false;
+        notifyDecisionContextChanged('checklist-answer');
+      }
+    }
   }
 
   function setChecklistAnswer(analysis, itemId, status, meta) {
@@ -454,11 +474,13 @@
     const decision = validateHologramOrders(rows), token = value => String(value || '').toLowerCase().replace(/[^a-z]/g, '');
     let item = state.rules.find(rule => rule.kind === 'checklist' && [rule.id, rule.name, rule.nameEn, rule.tr, rule.en].some(value => ['hologramcheck', 'hologramkontrol', 'hologramkontrolu'].includes(token(value))));
     if (!item) item = createChecklistItem({ tr: 'Hologram Check', en: 'Hologram Check' });
-    for (const row of rows) {
-      const analysis = decision.byRow.get(row), parts = Checklist.componentsFor(analysis, { answers: state.answers });
-      const targets = parts.length ? parts.map(part => Checklist.Components.itemId(item.id, part.id)) : [item.id];
-      for (const target of targets) if (!setChecklistAnswer(analysis, target, 'custom:ordered')) throw new Error(L('Checklist kaydedilemedi.', 'Checklist could not be saved.'));
-    }
+    batchChecklistAnswers(() => {
+      for (const row of rows) {
+        const analysis = decision.byRow.get(row), parts = Checklist.componentsFor(analysis, { answers: state.answers });
+        const targets = parts.length ? parts.map(part => Checklist.Components.itemId(item.id, part.id)) : [item.id];
+        for (const target of targets) if (!setChecklistAnswer(analysis, target, 'custom:ordered')) throw new Error(L('Checklist kaydedilemedi.', 'Checklist could not be saved.'));
+      }
+    });
     if (state.answerStoreError) throw new Error(L('Checklist kaydı okunamıyor.', 'Checklist record cannot be read.'));
     return item.id;
   }
@@ -4165,16 +4187,18 @@
         if (!targets.length) return;
         const noteTrimmed = String(bulkNote || '').trim();
         let appliedCount = 0;
-        for (const entry of targets) {
-          const itemIds = entry.parts.length
-            ? entry.parts.map(part => Checklist.Components.itemId(entry.itemId, part.id))
-            : [entry.itemId];
-          for (const id of itemIds) {
-            if (setChecklistAnswer(entry.analysis, id, bulkStatus, noteTrimmed ? { note: noteTrimmed } : undefined)) {
-              appliedCount += 1;
+        batchChecklistAnswers(() => {
+          for (const entry of targets) {
+            const itemIds = entry.parts.length
+              ? entry.parts.map(part => Checklist.Components.itemId(entry.itemId, part.id))
+              : [entry.itemId];
+            for (const id of itemIds) {
+              if (setChecklistAnswer(entry.analysis, id, bulkStatus, noteTrimmed ? { note: noteTrimmed } : undefined)) {
+                appliedCount += 1;
+              }
             }
           }
-        }
+        });
         selectedQueueKeys.clear();
         bulkNote = '';
         recompute();
@@ -4696,6 +4720,7 @@
     setChecklistAnswer,
     setChecklistComponents,
     persistChecklistAnswers: saveAnswers,
+    batchChecklistAnswers,
     adoptSharedChecklistDefinitions,
     validateHologramOrders,
     markHologramOrdered,
