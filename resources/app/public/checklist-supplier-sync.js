@@ -574,6 +574,23 @@
     return null;
   }
 
+  // Son sütun geçişinden beri değişen cevapların sipariş/opsiyon kapsamı.
+  // Kapsamı çözülemeyen bir anahtar null döner (tam geçiş).
+  function answerChangeScope(previous, answers) {
+    if (!(previous instanceof Map)) return null;
+    const orderKeys = new Set(), optionIds = new Set();
+    let known = true;
+    const mark = function (key) {
+      const cut = key.lastIndexOf('::');
+      if (cut <= 0) { known = false; return; }
+      const head = key.slice(0, cut);
+      if (head.indexOf('@option:') === 0) optionIds.add(head.slice(8)); else orderKeys.add(head);
+    };
+    Object.keys(answers).forEach(function (key) { if (previous.get(key) !== answers[key]) mark(key); });
+    previous.forEach(function (_, key) { if (!Object.prototype.hasOwnProperty.call(answers, key)) mark(key); });
+    return known ? { orderKeys: orderKeys, optionIds: optionIds } : null;
+  }
+
   function refreshColumns(options) {
     const opts = options || {};
     const rows = currentRows(), items = itemCatalog();
@@ -619,8 +636,28 @@
 
     if (rows.length && items.length) {
       const decision = opts.decision || analysesForRows(rows), appliesCache = new WeakMap();
+      /* SATIR DELTASI (CPR-09). Hücreler satırın analizi, o siparişin/opsiyonun
+         cevapları ve genel girdilerden (başlıklar+dil, ayarlar, kurallar, durum
+         etiketleri, PLM, test görevleri) üretilir. Genel girdiler ve satır listesi
+         aynıyken, analiz nesnesi aynı kalan ve cevabı değişmeyen satırların
+         hücreleri zaten günceldir; yalnız diğerleri yeniden yazılır. */
+      const sNow = assistantState(), answersNow = (sNow && sNow.answers) || {};
+      const ChecklistEngine = root.BLCpChecklistEngine;
+      const deltaSignature = JSON.stringify([
+        itemsSignature, sNow && sNow.checklistSettings,
+        ChecklistEngine && typeof ChecklistEngine.customStatuses === 'function' ? ChecklistEngine.customStatuses() : null,
+        root.BLPlmSampleRequests && root.BLPlmSampleRequests.updatedAt || '',
+      ]);
+      const previousDelta = state.columnDelta;
+      const scope = previousDelta && previousDelta.rows === rows && previousDelta.signature === deltaSignature
+        && previousDelta.tasks === state.testTasks && previousDelta.rules === (sNow && sNow.rules)
+        ? answerChangeScope(previousDelta.snapshot, answersNow) : null;
+      const appliedAnalyses = scope ? previousDelta.analyses : new WeakMap();
+      const optionIdOf = analysis => (ChecklistEngine && typeof ChecklistEngine.optionIdentity === 'function' ? ChecklistEngine.optionIdentity(analysis) : '') || '';
       rows.forEach(function (row) {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
+        if (scope && analysis && appliedAnalyses.get(row) === analysis && !scope.orderKeys.has(analysis.orderKey)
+          && !(scope.optionIds.size && scope.optionIds.has(optionIdOf(analysis)))) return;
         const statuses = {}, partCells = {}, elementCells = {};
         /* Parça listesi ve set bilgisi satıra bağlıdır, kaleme değil. Hücre başına
            4-6 kez yeniden hesaplanıyordu; 25 bin satırlık CP'nin ilk çiziminin
@@ -663,12 +700,15 @@
           if (list && list.length) tasks[item.id] = list;
         });
         Object.defineProperty(row, '_checklistTasks', { value: tasks, enumerable: false, configurable: true, writable: true });
+        appliedAnalyses.set(row, analysis);
       });
       // Bileşenli sütun, adlar okunabilsin diye genişler (kullanıcı genişliği korunur).
       const withElements = new Set();
       rows.forEach(function (row) { Object.keys(row._checklistElements || {}).forEach(function (id) { withElements.add(id); }); });
       dynamic.forEach(function (col) { col.weight = withElements.has(col.checklistItemId) ? 26 : 12; });
       state.appliedColumns = { rows: rows, decision: decision, items: itemsSignature, tasks: state.testTasks };
+      state.columnDelta = { rows: rows, signature: deltaSignature, tasks: state.testTasks, rules: sNow && sNow.rules,
+        snapshot: new Map(Object.entries(answersNow)), analyses: appliedAnalyses };
     }
     if (opts.render && typeof root.renderCP === 'function') root.renderCP();
     return true;
