@@ -11,8 +11,8 @@
     },
     {
       "path": "docs/performance-program/admin-03/RESULTS.md",
-      "bytes": 8741,
-      "sha256": "7e5330c3fd145a37bc17bd9746a3ed40ebb6b480622d601db071199bf0e6b829"
+      "bytes": 8759,
+      "sha256": "bf7973845ad10cac3655490a2a06f4d743e30945a245bc2394365f3534cfd51e"
     },
     {
       "path": "docs/performance-program/admin-03/acceptance.json",
@@ -25,9 +25,11 @@
       "sha256": "df5256f3a501fec0f6df3b5a45fd1139625ddea7333d92d0b19cc65978211e4b"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/after-1.log",
-      "bytes": 489,
-      "sha256": "745201076a5d4483e360e9783e79650669daae4a6dfd41adecb9532d6f588174"
+      "path": "docs/performance-program/admin-03/artifacts/after-1.log.gz",
+      "bytes": 292,
+      "sha256": "cc7783d5d3be06416c2ec7cb98a9ac27309d717055e346fe3f9cf1f17e136db5",
+      "uncompressedBytes": 489,
+      "uncompressedSha256": "745201076a5d4483e360e9783e79650669daae4a6dfd41adecb9532d6f588174"
     },
     {
       "path": "docs/performance-program/admin-03/artifacts/after-2.json",
@@ -35,9 +37,11 @@
       "sha256": "fb7c6f06353d664d78fc447f0365d0b23ddc32490376066b185b53ef1ea1f1c6"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/after-2.log",
-      "bytes": 489,
-      "sha256": "84ac1ea2abc214f444689d0d49a945dd65ad43418692f0fdec87e65c35f0f9fe"
+      "path": "docs/performance-program/admin-03/artifacts/after-2.log.gz",
+      "bytes": 288,
+      "sha256": "40fde7ea57375a957a843196756f0b06000d81df099bbd3f2c7d95bb8b5dbeda",
+      "uncompressedBytes": 489,
+      "uncompressedSha256": "84ac1ea2abc214f444689d0d49a945dd65ad43418692f0fdec87e65c35f0f9fe"
     },
     {
       "path": "docs/performance-program/admin-03/artifacts/after-3.json",
@@ -45,14 +49,18 @@
       "sha256": "76d1e751d0860f6c76e856ee1268d5b88abeeba4b75f5d575b7a6f60c8731c43"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/after-3.log",
-      "bytes": 489,
-      "sha256": "799c94a9457aec34d7d83110c79effa17311952f45c116a4e911880df8d176ef"
+      "path": "docs/performance-program/admin-03/artifacts/after-3.log.gz",
+      "bytes": 291,
+      "sha256": "54cd83987186889eca61fdbf53798761c7806c47d727f9abf585b672666ed075",
+      "uncompressedBytes": 489,
+      "uncompressedSha256": "799c94a9457aec34d7d83110c79effa17311952f45c116a4e911880df8d176ef"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/baseline-iam-v672.log",
-      "bytes": 618,
-      "sha256": "83037e24a42c02dc67c67c87a13134a968008b700cd689c0ced574f3b0864b22"
+      "path": "docs/performance-program/admin-03/artifacts/baseline-iam-v672.log.gz",
+      "bytes": 409,
+      "sha256": "418e118055db7aca77da8808b15dca4ab90acc13dc536fb22ce70617a47b0bdf",
+      "uncompressedBytes": 618,
+      "uncompressedSha256": "83037e24a42c02dc67c67c87a13134a968008b700cd689c0ced574f3b0864b22"
     },
     {
       "path": "docs/performance-program/admin-03/artifacts/before-1.json",
@@ -60,9 +68,11 @@
       "sha256": "a06eab9b56825e2f3b93efc22236484ccc3ad14ba5aee01fdb216bedc4653c62"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/before-1.log",
-      "bytes": 490,
-      "sha256": "561eac382af000edbf5454cbf4b18f1ab837e0277316e969eb1954e0b247e256"
+      "path": "docs/performance-program/admin-03/artifacts/before-1.log.gz",
+      "bytes": 289,
+      "sha256": "e0155b88991e1532357e946088c263fbb2e2cf9f63116ccca2844e19a4fa6ea3",
+      "uncompressedBytes": 490,
+      "uncompressedSha256": "561eac382af000edbf5454cbf4b18f1ab837e0277316e969eb1954e0b247e256"
     },
     {
       "path": "docs/performance-program/admin-03/artifacts/before-2.json",
@@ -70,9 +80,11 @@
       "sha256": "c81f804d2ff37528a6c2e9356649a6b16d30ad8fb7dba1561fba595cd9dd7cb6"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/before-2.log",
-      "bytes": 489,
-      "sha256": "439211e9d01ad41a65f3a63291d96352054c624fd5469483ddb250c6fa6180d7"
+      "path": "docs/performance-program/admin-03/artifacts/before-2.log.gz",
+      "bytes": 289,
+      "sha256": "872a6254cfe1015228f569fdf16261d5c9b8c35be80507912b782857264ce1bb",
+      "uncompressedBytes": 489,
+      "uncompressedSha256": "439211e9d01ad41a65f3a63291d96352054c624fd5469483ddb250c6fa6180d7"
     },
     {
       "path": "docs/performance-program/admin-03/artifacts/before-3.json",
@@ -80,14 +92,18 @@
       "sha256": "cc7e6e1ed4a9bcacb8b1475c25ee5e9118ed2d552242db23aeead3020ce0d39c"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/before-3.log",
-      "bytes": 491,
-      "sha256": "c00ee39ffc99b74cd49558342b06a714e4563af4e432fa0607ca8bcab4765502"
+      "path": "docs/performance-program/admin-03/artifacts/before-3.log.gz",
+      "bytes": 291,
+      "sha256": "84f4fa9d6b25e3058f4893551cabcb3887758965a0beab492294989ccac6ffba",
+      "uncompressedBytes": 491,
+      "uncompressedSha256": "c00ee39ffc99b74cd49558342b06a714e4563af4e432fa0607ca8bcab4765502"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/i18n.log",
-      "bytes": 333,
-      "sha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
+      "path": "docs/performance-program/admin-03/artifacts/i18n.log.gz",
+      "bytes": 242,
+      "sha256": "4fdd8fa2af0a2b9d0794f73a873c4e028cc282a6a8eb301fa638c2fd1219181a",
+      "uncompressedBytes": 333,
+      "uncompressedSha256": "50f47770192466e4bfdcc7f10f0eaca2f664abe1ab4270a2496c53936ba8173b"
     },
     {
       "path": "docs/performance-program/admin-03/artifacts/pending-central.json",
@@ -100,24 +116,32 @@
       "sha256": "46eb50a2e1bc15121b2ca87de3d75081068286a460d43a12bf5f8f7bd8bf2e42"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/pending-request-red.log",
-      "bytes": 1929,
-      "sha256": "a500249291f3d4404ee3901427f71b0046eb5ad8c4c816d1e20a61aa6e5f55cf"
+      "path": "docs/performance-program/admin-03/artifacts/pending-request-red.log.gz",
+      "bytes": 644,
+      "sha256": "24cc5349d3d6e65df330f2ef6b453564e84ea1a26633c5b18a94a99df4df3701",
+      "uncompressedBytes": 1929,
+      "uncompressedSha256": "a500249291f3d4404ee3901427f71b0046eb5ad8c4c816d1e20a61aa6e5f55cf"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/preparation-test-initial.log",
-      "bytes": 1747,
-      "sha256": "ac94c229ddef83044ff1617e531150513539a2eb50dc529aa7cdecf9616aaefa"
+      "path": "docs/performance-program/admin-03/artifacts/preparation-test-initial.log.gz",
+      "bytes": 868,
+      "sha256": "d28a2a37982dd998471ce51e16f26a96e3c0bf54c76f6fa8802f21dc49b7c402",
+      "uncompressedBytes": 1747,
+      "uncompressedSha256": "ac94c229ddef83044ff1617e531150513539a2eb50dc529aa7cdecf9616aaefa"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/preparation-test.log",
-      "bytes": 1006,
-      "sha256": "d9154fefe772577856aa4d1b3c9d5611f7c5074c6e427509e783480d3d06997c"
+      "path": "docs/performance-program/admin-03/artifacts/preparation-test.log.gz",
+      "bytes": 606,
+      "sha256": "4eec33ce4a2277d4b67a1e90d9fe343981eb6ab30120d143b2c11d02ae04e871",
+      "uncompressedBytes": 1006,
+      "uncompressedSha256": "d9154fefe772577856aa4d1b3c9d5611f7c5074c6e427509e783480d3d06997c"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/release-notes.log",
-      "bytes": 334,
-      "sha256": "0e3c2a5dbd60ea28d367386990eb66ac7ac6dee7d6e16daea3f470bd6de978c7"
+      "path": "docs/performance-program/admin-03/artifacts/release-notes.log.gz",
+      "bytes": 232,
+      "sha256": "22cf9adce4fea8b8c16a203540dfc53e05ae04858cd865c30943a7e8d71ab944",
+      "uncompressedBytes": 334,
+      "uncompressedSha256": "0e3c2a5dbd60ea28d367386990eb66ac7ac6dee7d6e16daea3f470bd6de978c7"
     },
     {
       "path": "docs/performance-program/admin-03/artifacts/summary.json",
@@ -125,14 +149,18 @@
       "sha256": "e3c9b6e95fac4220d41e2f7b6d20a7329cd18e6d2f9ad88599589077d374002a"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/targeted-correct-roots.log",
-      "bytes": 8560,
-      "sha256": "473af48ab2cdae0f8da042accd3af1489ef558166c7d5fed979f1fffc812b827"
+      "path": "docs/performance-program/admin-03/artifacts/targeted-correct-roots.log.gz",
+      "bytes": 3717,
+      "sha256": "1a46e94ac379a6e525811a3942921e5662274b9ebd2b7556e6a84ef12576d344",
+      "uncompressedBytes": 8560,
+      "uncompressedSha256": "473af48ab2cdae0f8da042accd3af1489ef558166c7d5fed979f1fffc812b827"
     },
     {
-      "path": "docs/performance-program/admin-03/artifacts/targeted-test.log",
-      "bytes": 10248,
-      "sha256": "0c48a61955f55906597bb8440bae0bb821530f63107c3a8dc2a927dec20fbb78"
+      "path": "docs/performance-program/admin-03/artifacts/targeted-test.log.gz",
+      "bytes": 4136,
+      "sha256": "855523fc8ee9b2c98925931ff9e481168811e8bd5528f58c16b8247c725ba037",
+      "uncompressedBytes": 10248,
+      "uncompressedSha256": "0c48a61955f55906597bb8440bae0bb821530f63107c3a8dc2a927dec20fbb78"
     },
     {
       "path": "docs/performance-program/admin-03/artifacts/trace.json",
